@@ -1,0 +1,1 @@
+pm2 start exhibits.js -i 0 --env production --node-args="--max-old-space-size=6096"

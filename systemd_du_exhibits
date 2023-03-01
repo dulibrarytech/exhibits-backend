@@ -1,0 +1,13 @@
+# Systemd unit file for DU Exhibits
+[Unit]
+Description=Starts up DU Exhibits Application
+
+[Service]
+ExecStart=/home/appuser/duexhibits-backend/startup.sh
+ExecStop=/bin/kill -15 $MAINPID
+
+User=appuser
+Group=appuser
+
+[Install]
+WantedBy=multi-user.target
