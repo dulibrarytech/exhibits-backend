@@ -24,14 +24,14 @@ const ENDPOINT = '/authenticate/';
 const ENDPOINTS = {
     auth: {
         login: {
-            endpoint: `${PREFIX}${VERSION}${ENDPOINT}login`,
+            endpoint: `/login`,
             description: 'Used to check if application token exists and redirect user to sso login or dashboard',
             get: {
                 params: 'none'
             }
         },
         sso: {
-            endpoint: `${PREFIX}${VERSION}${ENDPOINT}sso`,
+            endpoint: `/sso`,
             description: 'Accepts DU authproxy payload after SSO authentication has occurred',
             post: {
                 description: 'Authenticates admin user',
@@ -39,7 +39,7 @@ const ENDPOINTS = {
             }
         },
         logout: {
-            endpoint: `${PREFIX}${VERSION}${ENDPOINT}logout`,
+            endpoint: `/logout`,
             description: 'Terminates application token and redirects user to SSO logout page',
             get: {
                 params: 'none'

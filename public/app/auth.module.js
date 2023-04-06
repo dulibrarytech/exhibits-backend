@@ -30,7 +30,7 @@ const authModule = (function () {
      */
     obj.getUserToken = function () {
 
-        let data = JSON.parse(window.sessionStorage.getItem('repo_token'));
+        let data = JSON.parse(window.sessionStorage.getItem('exhibits_token'));
 
         if (data !== null && data.token === null) {
 
@@ -103,7 +103,7 @@ const authModule = (function () {
      */
     obj.sessionExpired = function () {
         obj.reset();
-        window.sessionStorage.removeItem('repo_user');
+        window.sessionStorage.removeItem('exhibits_user');
         setTimeout(function () {
             window.location.replace('/login');
         }, 500);
@@ -114,7 +114,7 @@ const authModule = (function () {
      * @returns {boolean}
      */
     obj.checkUserAuthData = function () {
-        let data = window.sessionStorage.getItem('repo_user');
+        let data = window.sessionStorage.getItem('exhibits_user');
 
         if (data !== null) {
             return true;
@@ -134,17 +134,8 @@ const authModule = (function () {
             name: DOMPurify.sanitize(data.user_data.data[0].first_name) + ' ' + DOMPurify.sanitize(data.user_data.data[0].last_name)
         };
 
-        endpointsModule.save_repo_endpoints(data);
-        window.sessionStorage.setItem('repo_user', JSON.stringify(user));
-
-        /*
-        window.localStorage.setItem('repo_endpoints_users', JSON.stringify(data.endpoints.users));
-        window.localStorage.setItem('repo_endpoints_stats', JSON.stringify(data.endpoints.stats));
-        window.localStorage.setItem('repo_endpoints_repository', JSON.stringify(data.endpoints.repository));
-        window.localStorage.setItem('repo_endpoints_search', JSON.stringify(data.endpoints.search));
-        window.localStorage.setItem('repo_endpoints_qa', JSON.stringify(data.endpoints.qa));
-         */
-
+        endpointsModule.save_exhibits_endpoints(data);
+        window.sessionStorage.setItem('exhibits_user', JSON.stringify(user));
     };
 
     /**

@@ -1,6 +1,6 @@
 /**
 
- Copyright 2019 University of Denver
+ Copyright 2023 University of Denver
 
  Licensed under the Apache License, Version 2.0 (the "License");
  you may not use this file except in compliance with the License.
@@ -23,8 +23,8 @@ const CONFIG = require('../config/app_config')();
 exports.get_dashboard_home = (req, res) => {
     res.render('dashboard-home', {
         host: CONFIG.host,
-        appname: CONFIG.appName,
-        appversion: CONFIG.appVersion,
+        appname: CONFIG.app_name,
+        appversion: CONFIG.app_version,
         organization: CONFIG.organization
     });
 };

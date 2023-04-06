@@ -19,7 +19,8 @@
 'use strict';
 
 const DB =require('../config/db_config')();
-const TABLE = 'tbl_users_test';
+const DB_TABLES =require('../config/db_tables_config')();
+const TABLE = DB_TABLES.exhibits.exhibits_users;
 const AUTH_TASKS = require("../auth/tasks/auth_tasks");
 const EXHIBITS_ENDPOINTS = require('../exhibits/endpoints')();
 const USERS_ENDPOINTS = require('../users/endpoints')();
