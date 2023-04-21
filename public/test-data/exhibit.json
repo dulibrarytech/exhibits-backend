@@ -1,0 +1,49 @@
+[{
+    "uuid": "1",
+    "type": "exhibit",
+    "title": "Vertical Scroll Exhibit",
+    "subtitle": "Display full row and grid exhibit components on the vertical scroll template",
+    "banner": "banner_1",
+    "hero_image": "test-small-image.jpg", // to local storage
+    "description": "<span style='font-size: 1.7em'>Sed ut perspiciatis</span> unde omnis iste natus error sit <strong>voluptatem accusantium doloremque laudantium</strong>, totam rem aperiam, eaque ipsa quae ab illo inventore veritatis et quasi architecto beatae vitae dicta sunt explicabo. Nemo enim ipsam voluptatem quia voluptas sit aspernatur aut odit aut fugit, sed quia consequuntur magni dolores eos qui ratione voluptatem sequi nesciunt. Neque porro quisquam est, qui dolorem ipsum quia dolor sit amet, consectetur, adipisci velit, sed quia non numquam eius modi tempora incidunt ut labore et dolore magnam aliquam quaerat voluptatem</p> ",
+    "template": "vertical_scroll",
+    "css": {
+      "hero": {
+        "image": {
+          "fontStyle": "Courier New",
+          "fontFamily": "Courier New",
+          "color": "white",
+          "textJustify": "right",
+          "fontWeight": "bolder"
+        },
+        "intro": {
+          "background": "darkgoldenrod",
+          "color": "white"
+        }
+      },
+      "exhibit": {
+        "fontStyle": "Arial",
+        "color": "black",
+        "fontSize": "18px"
+      }
+    },
+    "is_published": 1,
+    "created": "2022-10-13T20:24:20.000Z"
+  },
+  {
+    "uuid": "2",
+    "type": "exhibit",
+    "title": "MARS: The Mars Test Timeline Exhibit",
+    "subtitle": "Scroll down to explore the connections between Colorado and Mars",
+    "banner": "banner_1",
+    "hero_image": "mars-banner.png", // to local storage
+    "description": "<p>Theatre is sometimes imagined as an art form at risk – from talking pictures in the 1920s and television in the 1950s to coronavirus in the 2020s. But, over the last hundred years, theatre in Sydney is a story of growth: more venues, presenting more performances, in a wider range of genres, to growing audiences.<p> " +
+      "<p>This exhibition draws on the AusStage database of live performance and theatre programs from the Wolanski collection of performing arts. Maps and visualisations show where theatres were located and when they became active. Theatre programs illustrate what was presented to audiences in Sydney and how the repertoire in performance has changed over time.</p>" +  
+      "<p>The changes have been significant. From the 1920s to the 1950s, theatres in Sydney clustered in the city, operating as commercial ventures, or sustained by amateur energies, channeling the currents of international entertainment and modern drama..</p>" +
+      "<p>Between the 1960s and the 1990s, the model of production shifted. Theatres entered into alliance with government, businesses, and universities, extracting governmental value from theatrical performance, providing working opportunities for professional artists, and cultivating the values of an educated audience.</p>" +
+      "<p>In the 2000s and 2010s, performance venues became festival curators. Genres of performance aligned with audience segments, as relations between companies, artists and venues became transient. State governments and city councils invested in artist-led creative spaces and redeveloped cultural precincts for cultural promotion.</p>" + 
+      "<p>This exhibition maps the story of theatre in Sydney to reveal the contours of these changes over the last one hundred years.</p> ",
+    "template": "vertical_scroll",
+    "is_published": 1,
+    "created": "2022-10-13T20:24:20.000Z"
+}]
