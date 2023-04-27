@@ -26,8 +26,6 @@ const homeModule = (function () {
 
         if (authModule.checkUserAuthData() === false) {
             authModule.getAuthUserData();
-        } else {
-            userModule.renderUserName();
         }
 
         history.replaceState({}, '', '/dashboard/home');

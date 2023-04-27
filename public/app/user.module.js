@@ -22,70 +22,60 @@ const userModule = (function () {
 
     const api = configModule.getApi();
     const endpoints = endpointsModule.get_users_endpoints();
+    const users_table = '#users-data-table';
     let obj = {};
 
     /**
      * Renders user profile data
      * @param data
      */
-    const renderUsers = function (data) {
+    const renderUsers = (data) => {
 
-        if (data.length === 0) {
-            domModule.html('.loading', null);
-            domModule.html('.table', null);
-            helperModule.renderError('Unable to get users.');
-            return false;
-        }
-
-        let actives = '';
-        let inactives = '';
+        let users = '';
         let user;
-        let inactive = [];
+
+        users += `<thead>
+        <tr>
+            <th>First Name</th>
+            <th>Last Name</th>
+            <th>Email</th>
+            <th>Active</th>
+            <th>Edit</th>
+        </tr>
+        </thead>`;
+
+        users += '<tbody>';
 
         for (let i = 0; i < data.length; i++) {
 
             user = data[i];
 
+            users += '<tr>';
+            users += '<td>' + DOMPurify.sanitize(user.first_name) + '</td>';
+            users += '<td>' + DOMPurify.sanitize(user.last_name) + '</td>';
+            users += '<td>' + DOMPurify.sanitize(user.email) + '</td>';
+
             if (user.is_active === 1) {
-
-                actives += '<tr>';
-                actives += '<td>' + DOMPurify.sanitize(user.first_name) + '</td>';
-                actives += '<td>' + DOMPurify.sanitize(user.last_name) + '</td>';
-                actives += '<td>' + DOMPurify.sanitize(user.email) + '</td>';
-                actives += '<td>Active</td>';
-                actives += '<td>';
-                actives += '&nbsp;';
-                actives += '<a class="btn btn-xs btn-default" href="/dashboard/users/edit?id=' + DOMPurify.sanitize(user.id) + '" title="Edit User"><i class="fa fa-edit"></i></a>&nbsp;&nbsp;&nbsp;&nbsp;';
-                actives += '</td>';
-                actives += '</tr>';
-
+                users += '<td>Active</td>';
+            } else if (user.is_active === 0) {
+                users += '<td>Inactive</td>';
             }
 
-            if (user.is_active === 0) {
-                inactive.push(user);
-            }
+            users += '<td>';
+            users += '&nbsp;';
+            users += '<a class="btn btn-xs btn-default" href="/dashboard/edit-user?id=' + DOMPurify.sanitize(user.id) + '" title="Edit User"><i class="fa fa-edit"></i></a>&nbsp;&nbsp;&nbsp;&nbsp;';
+            users += '</td>';
+            users += '</tr>';
         }
 
-        for (let i = 0; i < inactive.length; i++) {
+        users += '</tbody>';
 
-            user = inactive[i];
+        domModule.html(users_table, users);
 
-            inactives += '<tr>';
-            inactives += '<td>' + DOMPurify.sanitize(user.first_name) + '</td>';
-            inactives += '<td>' + DOMPurify.sanitize(user.last_name) + '</td>';
-            inactives += '<td>' + DOMPurify.sanitize(user.email) + '</td>';
-            inactives += '<td style="background: red;color: white">Inactive</td>';
-            inactives += '<td>';
-            inactives += '&nbsp;';
-            inactives += '<a class="btn btn-xs btn-default" href="/dashboard/users/edit?id=' + DOMPurify.sanitize(user.id) + '" title="Edit User"><i class="fa fa-edit"></i></a>&nbsp;&nbsp;&nbsp;&nbsp;';
-            inactives += '<a class="btn btn-xs btn-danger" href="/dashboard/users/delete?id=' + DOMPurify.sanitize(user.id) + '" title="Delete User"><i class="fa fa-times"></i></a>';
-            inactives += '</td>';
-            inactives += '</tr>';
-        }
-
-        domModule.html('#active-users', actives);
-        domModule.html('#inactive-users', inactives);
-        domModule.html('.loading', null);
+        $(users_table).DataTable({
+            responsive: true,
+            order: [[2, 'asc']]
+        });
 
         return false;
     };
@@ -94,16 +84,7 @@ const userModule = (function () {
      * Renders user profile data for edit form
      * @param data
      */
-    const renderUserDetails = function (data) {
-
-        if (data.length === 0) {
-            domModule.html('#user-update-form', null);
-            helperModule.renderError('Unable to get profile data.');
-            setTimeout(function () {
-                window.location.replace('/dashboard/users');
-            }, 3000);
-            return false;
-        }
+    const renderUserDetails = (data) => {
 
         let user;
 
@@ -112,7 +93,7 @@ const userModule = (function () {
             user = data[i];
 
             domModule.val('#id', user.id);
-            domModule.val('#du_id', user.du_id);
+            domModule.val('#username', user.du_id);
             domModule.val('#email', user.email);
             domModule.val('#first_name', user.first_name);
             domModule.val('#last_name', user.last_name);
@@ -124,103 +105,71 @@ const userModule = (function () {
             }
         }
 
-        domModule.html('.loading', null);
-
         return false;
     };
 
     /**
      * Gets all users
      */
-    obj.getUsers = function () {
+    obj.getUsers = () => {
 
-        let token = authModule.getUserToken();
-        let url = api + endpoints.users.endpoint,
-            request = new Request(url, {
+        (async () => {
+
+            let response = await httpModule.req({
                 method: 'GET',
-                mode: 'cors',
+                url: api + endpoints.users.endpoint,
                 headers: {
                     'Content-Type': 'application/json',
-                    'x-access-token': token
+                    'x-access-token': authModule.getUserToken()
                 }
             });
 
-        const callback = function (response) {
-
             if (response.status === 200) {
-
-                response.json().then(function (data) {
-                    renderUsers(data);
-                });
-
+                renderUsers(response.data);
             } else if (response.status === 401) {
-
-                helperModule.renderError('Error: (HTTP status ' + response.status + '). Your session has expired.  You will be redirected to the login page momentarily.');
-
-                setTimeout(function () {
-                    window.location.replace('/login');
-                }, 4000);
-
+                window.location.replace('/login');
             } else {
-                helperModule.renderError('Error: (HTTP status ' + response.status + '). Unable to retrieve users.');
+                window.location.replace('/dashboard/error?e=' + DOMPurify.sanitize(response.status));
             }
-        };
 
-        httpModule.req(request, callback);
-
-        return false;
+        })();
     };
 
     /**
      * Retrieves user profile data for edit form
      */
-    obj.getUserDetails = function () {
+    obj.getUserDetails = () => {
 
-        let id = helperModule.getParameterByName('id');
-        let token = authModule.getUserToken();
-        let url = api + endpoints.users.endpoint + '?id=' + id,
-            request = new Request(url, {
+        (async () => {
+
+            let id = helperModule.getParameterByName('id');
+            let response = await httpModule.req({
                 method: 'GET',
-                mode: 'cors',
+                url: api + endpoints.users.endpoint + '?id=' + id,
                 headers: {
                     'Content-Type': 'application/json',
-                    'x-access-token': token
+                    'x-access-token': authModule.getUserToken()
                 }
             });
 
-        const callback = function (response) {
-
             if (response.status === 200) {
-
-                response.json().then(function (data) {
-                    renderUserDetails(data);
-                });
-
+                renderUserDetails(response.data);
             } else if (response.status === 401) {
-
-                helperModule.renderError('Error: (HTTP status ' + response.status + '). Your session has expired.  You will be redirected to the login page momentarily.');
-
-                setTimeout(function () {
-                    window.location.replace('/login');
-                }, 4000);
-
+                window.location.replace('/login');
             } else {
-                helperModule.renderError('Error: (HTTP status ' + response.status + '). Unable to retrieve users.');
+                window.location.replace('/dashboard/error?e=' + DOMPurify.sanitize(response.status));
             }
-        };
 
-        httpModule.req(request, callback);
-
-        return false;
+        })();
     };
 
     /**
      * Checks if user data is in session storage
      * @returns {boolean}
      */
-    obj.checkUserData = function () {
+    obj.checkUserData = () => {
 
-        let data = window.sessionStorage.getItem('repo_user');
+        let data = window.sessionStorage.getItem('oclc_reclamation_user');
 
         if (data !== null) {
             return true;
@@ -230,207 +179,142 @@ const userModule = (function () {
     };
 
     /**
-     * Renders authenticated username in top menu bar
+     * Validate user form fields
+     * @param div_id
+     * @param value
+     * @return {boolean/string}
      */
-    obj.renderUserName = function () {
-
-        domModule.html('.username', '<strong>Loading...</strong>');
-
-        setTimeout(function () {
-
-            let data = JSON.parse(window.sessionStorage.getItem('repo_user'));
-
-            if (data !== null) {
-
-                domModule.html('.username', '<strong>' + DOMPurify.sanitize(data.name) + '</strong>');
-
-            } else if (data === null && domModule.html('.username')) {
-
-                 helperModule.renderError('Unable to get user profile data.');
-
-                 setTimeout(function () {
-                    window.location.replace('/login');
-                 }, 5000);
-            }
-
-        }, 500);
+    const validate = (div_id, value) => {
+        if (value.length === 0) {
+            domModule.html(`#${div_id}_error`, '<span style="color: red"><i class="fa fa-exclamation-circle"></i> Please enter a value</span>')
+            return false;
+        } else {
+            domModule.html(`#${div_id}_error`, '');
+            return value;
+        }
     };
 
     /**
      * Retrieves user form data
-     * @param id
-     * @returns {string}
+     * @returns {object}
      */
-    const getUserFormData = function (id) {
-        return domModule.serialize(id);
-    };
-
-    /**
-     * Gets update data
-     * @returns {{}}
-     */
-    const getUserFormUpateData = function () {
-
-        let User = {};
-        User.id = domModule.val('#id', null);
-        User.first_name = domModule.val('#first_name', null);
-        User.last_name = domModule.val('#last_name', null);
-
-        if ($('#is_active').prop('checked')) {
-            User.is_active = 1;
-        } else {
-            User.is_active = 0;
-        }
-
-        return User;
-    };
-
-    /**
-     * Gets user's full name
-     * @returns {*|Color}
-     */
-    obj.getUserFullName = function () {
-        let data = JSON.parse(window.sessionStorage.getItem('repo_user'));
-        return DOMPurify.sanitize(data.name);
+    const getUserFormData = () => {
+        return {
+            du_id: validate('username', domModule.val('#username', null)),
+            email: validate('email', domModule.val('#email', null)),
+            first_name: validate('first_name', domModule.val('#first_name', null)),
+            last_name: validate('last_name', domModule.val('#last_name', null))
+        };
     };
 
     /**
      * Adds new user
      */
-    const addUser = function () {
+    obj.addUser = (event) => {
 
-        let user = getUserFormData('#user-form');
-        let arr = user.split('&');
-        let obj = {};
+        event.preventDefault();
 
-        domModule.hide('#user-form');
-        domModule.html('#message', '<div class="alert alert-info">Saving User...</div>');
+        (async () => {
 
-        for (let i=0;i<arr.length;i++) {
-            let propsVal = decodeURIComponent(arr[i]).split('=');
-            obj[propsVal[0]] = propsVal[1];
-        }
+            let user = getUserFormData();
 
-        let token = authModule.getUserToken();
-        let url = api + endpoints.users.endpoint,
-            request = new Request(url, {
+            for (let prop in user) {
+                if (user[prop] === false) {
+                    return false;
+                }
+            }
+
+            domModule.hide('#user-form');
+            domModule.html('#message', '<div class="alert alert-info">Adding User...</div>');
+
+            let response = await httpModule.req({
                 method: 'POST',
+                url: api + endpoints.users.endpoint,
                 headers: {
                     'Content-Type': 'application/json',
-                    'x-access-token': token
+                    'x-access-token': authModule.getUserToken()
                 },
-                body: JSON.stringify(obj),
-                mode: 'cors'
+                data: JSON.stringify(user),
             });
 
-        const callback = function (response) {
-
             if (response.status === 201) {
+                domModule.html('#message', '<div class="alert alert-success">User added.</div>');
 
-                domModule.html('#message', '<div class="alert alert-success">User created</div>');
-                domModule.hide('#user-form');
-                document.querySelector('#user-form').reset();
-
-                setTimeout(function () {
-                    domModule.html('#message', null);
-                    domModule.show('#user-form');
+                setTimeout(() => {
+                    window.location.replace('/dashboard/users');
                 }, 3000);
 
-                return false;
-
             } else if (response.status === 401) {
-
-                response.json().then(function (response) {
-
-                    helperModule.renderError('Error: (HTTP status ' + response.status + '). Your session has expired.  You will be redirected to the login page momentarily.');
-
-                    setTimeout(function () {
-                        window.location.replace('/login');
-                    }, 4000);
-                });
-
-            } else if (response.status === 200) {
-
-                domModule.html('#message', '<div class="alert alert-warning">User with DU ID ' + obj.du_id + ' is already in the system</div>');
-                domModule.show('#user-form');
-
+                window.location.replace('/login');
             } else if (response.status === 400) {
-
-                response.json().then(function (json) {
-
-                    let html = json.errors[0].message;
-                    helperModule.renderError(html);
-                    domModule.show('#user-form');
-
-                    setTimeout(function () {
-                        domModule.html('#message', null);
-                    }, 3000);
-                });
+                console.log(response);
             } else {
-                helperModule.renderError('Error: (HTTP status ' + response.status + ').  Unable to add user.');
+                window.location.replace('/dashboard/error?e=' + DOMPurify.sanitize(response.status));
             }
-        };
 
-        httpModule.req(request, callback);
+        })();
+
+        return false;
     };
 
     /**
      * Updates user data
      */
-    const updateUser = function () {
+    obj.updateUser = (event) => {
 
-        domModule.hide('#user-update-form');
-        domModule.html('#message', '<div class="alert alert-info">Updating User...</div>');
+        event.preventDefault();
 
-        let obj = getUserFormUpateData();
-        let token = authModule.getUserToken();
-        let url = api + endpoints.users.endpoint,
-            request = new Request(url, {
+        (async () => {
+
+            let user = getUserFormData();
+            user.id = helperModule.getParameterByName('id');
+
+            if ($('#is_active').prop('checked')) {
+                user.is_active = 1;
+            } else {
+                user.is_active = 0;
+            }
+
+            for (let prop in user) {
+                if (user[prop] === false) {
+                    return false;
+                }
+            }
+
+            domModule.hide('#user-form');
+            domModule.html('#message', '<div class="alert alert-info">Updating User...</div>');
+
+            let response = await httpModule.req({
                 method: 'PUT',
+                url: api + endpoints.users.endpoint,
                 headers: {
                     'Content-Type': 'application/json',
-                    'x-access-token': token
+                    'x-access-token': authModule.getUserToken()
                 },
-                body: JSON.stringify(obj),
-                mode: 'cors'
+                data: JSON.stringify(user),
             });
-
-        const callback = function (response) {
 
             if (response.status === 201) {
 
-                domModule.html('#message', '<div class="alert alert-success">User updated</div>');
-                domModule.hide('#user-update-form');
-                setTimeout(function () {
-                    domModule.html('#message', null);
+                domModule.html('#message', '<div class="alert alert-success">User updated.</div>');
+
+                setTimeout(() => {
                     window.location.replace('/dashboard/users');
                 }, 3000);
 
-                return false;
-
             } else if (response.status === 401) {
-
-                response.json().then(function (response) {
-
-                    helperModule.renderError('Error: (HTTP status ' + response.status + '). Your session has expired.  You will be redirected to the login page momentarily.');
-
-                    setTimeout(function () {
-                        window.location.replace('/login');
-                    }, 3000);
-                });
-
+                window.location.replace('/login');
             } else {
-                helperModule.renderError('Error: (HTTP status ' + response.status + ').  Unable to update user.');
+                window.location.replace('/dashboard/error?e=' + DOMPurify.sanitize(response.status));
             }
-        };
 
-        httpModule.req(request, callback);
+        })();
     };
 
-    /**
+    /** TODO:
      * Deletes user data
      */
-    obj.deleteUser = function () {
+    obj.deleteUser = () => {
 
         // const endpoints = endpointsModule.endpoints();
         let id = helperModule.getParameterByName('id');
@@ -479,38 +363,9 @@ const userModule = (function () {
         httpModule.req(request, callback);
     };
 
-    /**
-     * Applies user form validation when adding new user
-     */
-    obj.userFormValidation = function () {
-        document.addEventListener('DOMContentLoaded', function() {
-            $('#user-form').validate({
-                submitHandler: function () {
-                    addUser();
-                }
-            });
-        });
-    };
-
-    /**
-     * Applies user form validation when updating a user
-     */
-    obj.userUpdateFormValidation = function () {
-        document.addEventListener('DOMContentLoaded', function() {
-            $('#user-update-form').validate({
-                submitHandler: function () {
-                    updateUser();
-                }
-            });
-        });
-    };
-
     obj.init = function () {
-        userModule.renderUserName();
     };
 
     return obj;
 
 }());
-
-userModule.init();

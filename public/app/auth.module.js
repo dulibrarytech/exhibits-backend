@@ -26,9 +26,9 @@ const authModule = (function () {
 
     /**
      * Gets token from session storage
-     * @returns {*|Color}
+     * @returns token
      */
-    obj.getUserToken = function () {
+    obj.getUserToken = () => {
 
         let data = JSON.parse(window.sessionStorage.getItem('exhibits_token'));
 
@@ -48,34 +48,28 @@ const authModule = (function () {
     /**
      * Gets user profile data after authentication
      */
-    obj.getAuthUserData = function () {
+    obj.getAuthUserData = () => {
 
         let id = helperModule.getParameterByName('id');
         authModule.saveToken();
 
         if (id !== null) {
 
-            let token = authModule.getUserToken();
-            let url = api + init_endpoints.authenticate + '?id=' + id,
-                request = new Request(url, {
+            (async () => {
+
+                let token = authModule.getUserToken();
+                let url = api + init_endpoints.authenticate + '?id=' + id;
+                let response = await httpModule.req({
                     method: 'GET',
-                    mode: 'cors',
+                    url: url,
                     headers: {
                         'Content-Type': 'application/json',
                         'x-access-token': token
                     }
                 });
 
-            const callback = function (response) {
-
                 if (response.status === 200) {
-
-                    response.json().then(function (data) {
-                        console.log(data);
-                        authModule.saveUserAuthData(data);
-                        userModule.renderUserName();
-                    });
-
+                    authModule.saveUserAuthData(response.data);
                 } else if (response.status === 401) {
 
                     helperModule.renderError('Error: (HTTP status ' + response.status + '). Your session has expired.  You will be redirected to the login page momentarily.');
@@ -88,32 +82,16 @@ const authModule = (function () {
                     helperModule.renderError('Error: (HTTP status ' + response.status + '). Unable to retrieve user profile.');
                     window.location.replace('/login');
                 }
-            };
 
-            httpModule.req(request, callback);
-
-        } else {
-            userModule.renderUserName();
+            })();
         }
-    };
-
-
-    /** TODO: reference in logout ejs template
-     * Destroys session data and redirects user to login
-     */
-    obj.sessionExpired = function () {
-        obj.reset();
-        window.sessionStorage.removeItem('exhibits_user');
-        setTimeout(function () {
-            window.location.replace('/login');
-        }, 500);
     };
 
     /**
      * Checks if user data is in session storage
      * @returns {boolean}
      */
-    obj.checkUserAuthData = function () {
+    obj.checkUserAuthData = () => {
         let data = window.sessionStorage.getItem('exhibits_user');
 
         if (data !== null) {
@@ -127,7 +105,7 @@ const authModule = (function () {
      * Saves user profile data to session storage
      * @param data
      */
-    obj.saveUserAuthData = function (data) {
+    obj.saveUserAuthData = (data) => {
 
         let user = {
             uid: DOMPurify.sanitize(data.user_data.data[0].id),
@@ -141,7 +119,7 @@ const authModule = (function () {
     /**
      * Gets session token from URL params
      */
-    obj.saveToken = function () {
+    obj.saveToken = () => {
 
         let token = helperModule.getParameterByName('t');
 
@@ -151,15 +129,8 @@ const authModule = (function () {
                 token: DOMPurify.sanitize(token)
             };
 
-            window.sessionStorage.setItem('repo_token', JSON.stringify(data));
+            window.sessionStorage.setItem('exhibits_token', JSON.stringify(data));
         }
-    };
-
-    /**
-     * Clears out session storage - used when user logs out
-     */
-    obj.reset = function () {
-        window.sessionStorage.clear();
     };
 
     obj.init = function () {};
@@ -167,5 +138,3 @@ const authModule = (function () {
     return obj;
 
 }());
-
-authModule.init();

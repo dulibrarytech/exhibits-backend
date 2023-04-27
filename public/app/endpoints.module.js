@@ -37,7 +37,11 @@ const endpointsModule = (function () {
         return JSON.parse(exhibits_endpoints_repository);
     };
 
-    obj.init = function () {};
+    obj.init = () => {
+        return {
+            authenticate: '/api/v1/authenticate'
+        }
+    };
 
     return obj;
 
