@@ -198,15 +198,17 @@ const Exhibit_item_record_tasks = class {
 
     /**
      * Deletes item record
+     * @param is_member_of_exhibit
      * @param uuid
      * @return {Promise<unknown | boolean>}
      */
-    delete_item_record(uuid) {
+    delete_item_record(is_member_of_exhibit, uuid) {
 
         let promise = new Promise((resolve, reject) => {
 
             this.DB(this.TABLE)
             .where({
+                is_member_of_exhibit: is_member_of_exhibit,
                 uuid: uuid
             })
             .delete()

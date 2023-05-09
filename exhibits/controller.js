@@ -70,7 +70,7 @@ exports.update_exhibit_record = (req, res) => {
 
 exports.delete_exhibit_record = (req, res) => {
 
-    let uuid = req.query.uuid;
+    let uuid = req.params.exhibit_id;
 
     if (uuid === undefined) {
         res.status(400).send('Bad request.');

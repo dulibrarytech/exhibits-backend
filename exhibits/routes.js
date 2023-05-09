@@ -37,7 +37,7 @@ module.exports = (app) => {
         .put(CONTROLLER.update_exhibit_record); // TOKEN.verify,
 
     app.route(ENDPOINTS().exhibits.exhibit_records.endpoints.delete.endpoint)
-        .delete(TOKEN.verify, CONTROLLER.delete_exhibit_record);
+        .delete(CONTROLLER.delete_exhibit_record);  // TOKEN.verify,
 
     app.route(ENDPOINTS().exhibits.item_records.post.endpoint)
         .post(CONTROLLER.create_item_record);  // TOKEN.verify,

@@ -221,6 +221,20 @@ exports.delete_exhibit_record = (uuid, callback) => {
         try {
 
             const TASK = new EXHIBIT_RECORD_TASKS(DB, TABLES.exhibit_records);
+            const ITEM_TASK = new EXHIBIT_ITEM_RECORD_TASKS(DB, TABLES.item_records);
+            let results = await ITEM_TASK.get_item_records(uuid);
+
+            if (results.length > 0) {
+
+                callback({
+                    status: 200,
+                    message: 'Cannot delete exhibit',
+                    data:  await TASK.delete_exhibit_record(uuid)
+                });
+
+                return false;
+            }
+
 
             callback({
                 status: 204,
@@ -432,10 +446,11 @@ exports.update_item_record = (is_member_of_exhibit, uuid, data, callback) => {
 
 /**
  * Deletes item record
+ * @param is_member_of_exhibit
  * @param uuid
  * @param callback
  */
-exports.delete_item_record = (uuid, callback) => {
+exports.delete_item_record = (is_member_of_exhibit, uuid, callback) => {
 
     (async () => {
 
@@ -446,7 +461,7 @@ exports.delete_item_record = (uuid, callback) => {
             callback({
                 status: 204,
                 message: 'Record deleted',
-                data:  await TASK.delete_item_record(uuid)
+                data:  await TASK.delete_item_record(is_member_of_exhibit, uuid)
             });
 
         } catch (error) {
