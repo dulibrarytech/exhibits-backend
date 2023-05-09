@@ -20,7 +20,7 @@
 
 const DB =require('../config/db_config')();
 const DB_TABLES =require('../config/db_tables_config')();
-const TABLE = DB_TABLES.exhibits.exhibits_users;
+const TABLE = DB_TABLES.exhibits.user_records;
 const AUTH_TASKS = require("../auth/tasks/auth_tasks");
 const EXHIBITS_ENDPOINTS = require('../exhibits/endpoints')();
 const USERS_ENDPOINTS = require('../users/endpoints')();

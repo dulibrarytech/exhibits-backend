@@ -22,36 +22,136 @@ const MODEL = require('../exhibits/model');
 
 exports.create_exhibit_record = (req, res) => {
 
-    let is_member_of_exhibit = req.body.is_member_of_exhibit;
+    const data = req.body;
 
-    if (is_member_of_exhibit === undefined) {
+    if (data === undefined) {
         res.status(400).send('Bad request.');
+        return false;
     }
 
-    MODEL.create_exhibit_record(is_member_of_exhibit, (data) => {
-        res.status(data.status).send(data.data);
+    MODEL.create_exhibit_record(data, (data) => {
+        res.status(data.status).send(data);
     });
 };
 
 exports.get_exhibit_records = (req, res) => {
+    MODEL.get_exhibit_records((data) => {
+        res.status(data.status).send(data);
+    });
+};
 
-    if (req.query.uuid === undefined || req.query.uuid.length === 0) {
+exports.get_exhibit_record = (req, res) => {
+
+    const uuid = req.params.exhibit_id;
+
+    if (uuid === undefined || uuid.length === 0) {
         res.status(400).send('Bad request.');
         return false;
     }
+
+    MODEL.get_exhibit_record(uuid, (data) => {
+        res.status(data.status).send(data);
+    });
 };
 
-exports.update_exhibit_record = () => {
+exports.update_exhibit_record = (req, res) => {
 
+    const data = req.body;
+
+    if (data === undefined) {
+        res.status(400).send('Bad request.');
+        return false;
+    }
+
+    MODEL.update_exhibit_record(data, (data) => {
+        res.status(data.status).send(data);
+    });
 };
 
-exports.delete_record = (req, res) => {
+exports.delete_exhibit_record = (req, res) => {
 
     let uuid = req.query.uuid;
-    let delete_reason = req.query.delete_reason;
 
-    if (uuid === undefined || delete_reason === undefined) {
+    if (uuid === undefined) {
         res.status(400).send('Bad request.');
         return false;
     }
+
+    MODEL.delete_exhibit_record(uuid, (data) => {
+        res.status(data.status).send(data);
+    });
+};
+
+exports.create_item_record = (req, res) => {
+
+    const is_member_of_exhibit = req.params.exhibit_id;
+    const data = req.body;
+
+    if (data === undefined || is_member_of_exhibit === undefined) {
+        res.status(400).send('Bad request.');
+        return false;
+    }
+
+    MODEL.create_item_record(is_member_of_exhibit, data, (data) => {
+        res.status(data.status).send(data);
+    });
+};
+
+exports.get_item_records = (req, res) => {
+
+    const is_member_of_exhibit = req.params.exhibit_id;
+
+    MODEL.get_item_records(is_member_of_exhibit,(data) => {
+        res.status(data.status).send(data);
+    });
+};
+
+exports.get_item_record = (req, res) => {
+
+    const is_member_of_exhibit = req.params.exhibit_id;
+    const uuid = req.params.item_id;
+
+    if (uuid === undefined || uuid.length === 0 && is_member_of_exhibit === undefined || is_member_of_exhibit.length === 0) {
+        res.status(400).send('Bad request.');
+        return false;
+    }
+
+    MODEL.get_item_record(is_member_of_exhibit, uuid, (data) => {
+        res.status(data.status).send(data);
+    });
+};
+
+exports.update_item_record = (req, res) => {
+
+    const is_member_of_exhibit = req.params.exhibit_id;
+    const uuid = req.params.item_id;
+    const data = req.body;
+
+    if (uuid === undefined || uuid.length === 0 && is_member_of_exhibit === undefined || is_member_of_exhibit.length === 0) {
+        res.status(400).send('Bad request.');
+        return false;
+    }
+
+    if (data === undefined) {
+        res.status(400).send('Bad request.');
+        return false;
+    }
+
+    MODEL.update_item_record(is_member_of_exhibit, uuid, data, (data) => {
+        res.status(data.status).send(data);
+    });
+};
+
+exports.delete_item_record = (req, res) => {
+
+    let uuid = req.query.uuid;
+
+    if (uuid === undefined) {
+        res.status(400).send('Bad request.');
+        return false;
+    }
+
+    MODEL.delete_item_record(uuid, (data) => {
+        res.status(data.status).send(data);
+    });
 };

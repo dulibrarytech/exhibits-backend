@@ -24,24 +24,56 @@ const ENDPOINT = '/exhibits';
 const ENDPOINTS = {
     exhibits: {
         exhibit_records: {
+            description: 'Gets all exhibit records',
             endpoint: `${PREFIX}${VERSION}${ENDPOINT}`,
-            description: 'exhibit records',
+            endpoints: {
+                get: {
+                    description: 'Retrieves exhibit record by id',
+                    endpoint: `${PREFIX}${VERSION}${ENDPOINT}/:exhibit_id`,
+                    params: 'token or api_key, gets all records by exhibit via uuid param'
+                },
+                post: {
+                    description: 'Creates exhibit record',
+                    endpoint: `${PREFIX}${VERSION}${ENDPOINT}`,
+                    params: 'token or api_key',
+                    body: 'is_member_of_exhibit, record data'
+                },
+                put: {
+                    description: 'Updates exhibit record',
+                    endpoint: `${PREFIX}${VERSION}${ENDPOINT}`,
+                    params: 'token or api_key, uuid',
+                    body: 'record data'
+                },
+                delete: {
+                    description: 'Deletes exhibit record',
+                    endpoint: `${PREFIX}${VERSION}${ENDPOINT}/:exhibit_id`,
+                    params: 'token or api_key, uuid, delete_reason'
+                }
+            }
+        },
+        item_records: {
+            description: 'Gets all exhibit items',
+            endpoint: `${PREFIX}${VERSION}${ENDPOINT}/:exhibit_id/items`,
             get: {
-                description: 'Retrieves exhibit records',
+                description: 'Retrieves all item records by exhibit',
+                endpoint: `${PREFIX}${VERSION}${ENDPOINT}/:exhibit_id/items/:item_id`,
                 params: 'token or api_key, gets all records by exhibit via uuid param'
             },
             post: {
-                description: 'Creates exhibit record',
+                description: 'Creates item record',
+                endpoint: `${PREFIX}${VERSION}${ENDPOINT}/:exhibit_id/items`,
                 params: 'token or api_key',
                 body: 'is_member_of_exhibit, record data'
             },
             put: {
-                description: 'Updates exhibit record',
+                description: 'Updates item record',
+                endpoint: `${PREFIX}${VERSION}${ENDPOINT}/:exhibit_id/items/:item_id`,
                 params: 'token or api_key',
                 body: 'record data'
             },
             delete: {
-                description: 'Deletes exhibit record',
+                description: 'Deletes item record',
+                endpoint: `${PREFIX}${VERSION}${ENDPOINT}/:exhibit_id/items/:item_id`,
                 params: 'token or api_key, uuid, delete_reason'
             }
         }

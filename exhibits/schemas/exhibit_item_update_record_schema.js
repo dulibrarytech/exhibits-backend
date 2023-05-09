@@ -18,15 +18,25 @@
 
 'use strict';
 
-const DB_TABLES_CONFIG = {
-    exhibits: {
-        exhibit_records: process.env.EXHIBIT_RECORDS,
-        item_records: process.env.ITEM_RECORDS,
-        heading_records: process.env.HEADING_RECORDS,
-        user_records: process.env.USER_RECORDS
-    }
-};
-
 module.exports = () => {
-    return DB_TABLES_CONFIG;
+
+    return {
+        is_member_of_exhibit: {type: 'string'},
+        uuid: {type: 'string'},
+        date: {type: 'string'},
+        type: {type: 'string'},
+        title: {type: 'string'},
+        caption: {type: 'string'},
+        description: {type: 'string'},
+        template: {type: 'string'},
+        item_type: {type: 'string'},
+        url: {type: 'string'},
+        text: {type: 'string'},
+        layout: {type: 'string'},
+        styles: {type: 'string'},
+        columns: {type: 'number'},
+        order: {type: 'number'},
+        is_published: {type: 'number'},
+        is_active: {type: 'number'}
+    }
 };
