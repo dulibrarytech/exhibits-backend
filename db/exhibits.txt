@@ -7,7 +7,7 @@
 #
 # Host: 127.0.0.1 (MySQL 5.7.26)
 # Database: exhibits
-# Generation Time: 2023-03-01 06:05:19 +0000
+# Generation Time: 2023-05-09 18:36:37 +0000
 # ************************************************************
 
 
@@ -20,18 +20,82 @@
 /*!40111 SET @OLD_SQL_NOTES=@@SQL_NOTES, SQL_NOTES=0 */;
 
 
-# Dump of table tbl_records
+# Dump of table tbl_exhibits
 # ------------------------------------------------------------
 
-DROP TABLE IF EXISTS `tbl_records`;
+DROP TABLE IF EXISTS `tbl_exhibits`;
 
-CREATE TABLE `tbl_records` (
+CREATE TABLE `tbl_exhibits` (
   `id` int(11) unsigned NOT NULL AUTO_INCREMENT,
-  `uuid` varchar(255) NOT NULL DEFAULT '',
-  `is_member_of_exhibits` varchar(255) NOT NULL,
-  `json_record` longtext NOT NULL,
-  `created` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  `uuid` varchar(255) DEFAULT NULL COMMENT 'String',
+  `type` varchar(255) DEFAULT 'exhibit' COMMENT 'String',
+  `title` varchar(255) DEFAULT NULL COMMENT 'String',
+  `subtitle` varchar(255) DEFAULT NULL COMMENT 'String',
+  `banner` varchar(255) DEFAULT NULL COMMENT 'String',
+  `hero_image` varchar(255) DEFAULT NULL COMMENT 'String',
+  `description` longtext COMMENT 'String',
+  `page_layout` varchar(255) DEFAULT NULL COMMENT 'String',
+  `template` varchar(255) DEFAULT NULL COMMENT 'String',
+  `styles` longtext COMMENT 'JSON',
+  `is_published` tinyint(1) DEFAULT '0',
+  `is_active` tinyint(1) DEFAULT '1',
+  `created` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
+  PRIMARY KEY (`id`),
+  KEY `uuid_index` (`uuid`),
+  KEY `is_published_index` (`is_published`),
+  KEY `is_active_index` (`is_active`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8;
+
+
+
+# Dump of table tbl_headings
+# ------------------------------------------------------------
+
+DROP TABLE IF EXISTS `tbl_headings`;
+
+CREATE TABLE `tbl_headings` (
+  `id` int(11) unsigned NOT NULL AUTO_INCREMENT,
+  `is_member_of_exhibit` varchar(255) DEFAULT NULL,
+  `uuid` varchar(255) DEFAULT NULL,
+  `type` varchar(100) DEFAULT 'heading',
+  `text` longtext,
+  `order` int(11) DEFAULT '0',
+  `created` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
   PRIMARY KEY (`id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8;
+
+
+
+# Dump of table tbl_items
+# ------------------------------------------------------------
+
+DROP TABLE IF EXISTS `tbl_items`;
+
+CREATE TABLE `tbl_items` (
+  `id` int(11) unsigned NOT NULL AUTO_INCREMENT,
+  `is_member_of_exhibit` varchar(255) DEFAULT NULL,
+  `uuid` varchar(255) DEFAULT NULL,
+  `type` varchar(255) NOT NULL DEFAULT 'item',
+  `date` varchar(255) DEFAULT NULL,
+  `title` varchar(255) DEFAULT NULL,
+  `description` text,
+  `caption` mediumtext,
+  `template` varchar(255) DEFAULT NULL,
+  `item_type` varchar(255) DEFAULT NULL,
+  `url` varchar(255) DEFAULT NULL,
+  `text` longtext,
+  `layout` varchar(255) DEFAULT NULL,
+  `styles` longtext COMMENT 'JSON',
+  `columns` int(11) NOT NULL DEFAULT '0',
+  `order` int(11) DEFAULT '0',
+  `is_published` tinyint(1) DEFAULT '0',
+  `is_active` tinyint(1) DEFAULT '1',
+  `created` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
+  PRIMARY KEY (`id`),
+  KEY `is_member_of_exhibit_index` (`is_member_of_exhibit`),
+  KEY `uuid_index` (`uuid`),
+  KEY `is_published_index` (`is_published`),
+  KEY `is_active_index` (`is_active`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 
 
