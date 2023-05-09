@@ -144,14 +144,15 @@ exports.update_item_record = (req, res) => {
 
 exports.delete_item_record = (req, res) => {
 
-    let uuid = req.query.uuid;
+    const is_member_of_exhibit = req.params.exhibit_id;
+    const uuid = req.params.item_id;
 
-    if (uuid === undefined) {
+    if (uuid === undefined || uuid.length === 0 && is_member_of_exhibit === undefined || is_member_of_exhibit.length === 0) {
         res.status(400).send('Bad request.');
         return false;
     }
 
-    MODEL.delete_item_record(uuid, (data) => {
+    MODEL.delete_item_record(is_member_of_exhibit, uuid, (data) => {
         res.status(data.status).send(data);
     });
 };

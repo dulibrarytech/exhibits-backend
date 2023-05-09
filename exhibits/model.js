@@ -456,7 +456,7 @@ exports.delete_item_record = (is_member_of_exhibit, uuid, callback) => {
 
         try {
 
-            const TASK = new EXHIBIT_ITEM_RECORD_TASKS(DB, TABLES.exhibit_records);
+            const TASK = new EXHIBIT_ITEM_RECORD_TASKS(DB, TABLES.item_records);
 
             callback({
                 status: 204,

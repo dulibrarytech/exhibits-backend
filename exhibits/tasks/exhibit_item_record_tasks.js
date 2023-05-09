@@ -200,7 +200,7 @@ const Exhibit_item_record_tasks = class {
      * Deletes item record
      * @param is_member_of_exhibit
      * @param uuid
-     * @return {Promise<unknown | boolean>}
+     * @return boolean
      */
     delete_item_record(is_member_of_exhibit, uuid) {
 

@@ -52,7 +52,7 @@ module.exports = (app) => {
         .put(CONTROLLER.update_item_record);  // TOKEN.verify,
 
     app.route(ENDPOINTS().exhibits.item_records.delete.endpoint)
-        .delete(TOKEN.verify, CONTROLLER.delete_item_record);
+        .delete(CONTROLLER.delete_item_record);  // TOKEN.verify,
 
     // TODO: headings
 
