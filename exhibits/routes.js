@@ -25,7 +25,7 @@ const TOKEN = require('../libs/tokens');
 module.exports = (app) => {
 
     app.route(ENDPOINTS().exhibits.exhibit_records.endpoints.post.endpoint)
-        .post(CONTROLLER.create_exhibit_record);  // TOKEN.verify, VALIDATE schema
+        .post(CONTROLLER.create_exhibit_record);  // TOKEN.verify,
 
     app.route(ENDPOINTS().exhibits.exhibit_records.endpoint)
         .get(CONTROLLER.get_exhibit_records); // TOKEN.verify,
@@ -55,5 +55,7 @@ module.exports = (app) => {
         .delete(CONTROLLER.delete_item_record);  // TOKEN.verify,
 
     // TODO: headings
+    app.route(ENDPOINTS().exhibits.heading_records.post.endpoint)
+        .post(CONTROLLER.create_heading_record);  // TOKEN.verify,
 
 };

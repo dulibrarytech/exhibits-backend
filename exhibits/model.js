@@ -474,3 +474,63 @@ exports.delete_item_record = (is_member_of_exhibit, uuid, callback) => {
 
     })();
 };
+
+/**
+ * Create heading record
+ * @param is_member_of_exhibit
+ * @param data
+ * @param callback
+ */
+exports.create_heading_record = (is_member_of_exhibit, data, callback) => {
+
+    (async () => {
+
+        try {
+
+            const HELPER_TASK = new HELPER();
+            data.uuid = HELPER_TASK.create_uuid();
+            data.is_member_of_exhibit = is_member_of_exhibit;
+            data.columns = parseInt(data.columns);
+            data.order = parseInt(data.order);
+
+            const VALIDATE_TASK = new VALIDATOR(EXHIBITS_CREATE_HEADING_SCHEMA);
+            let is_valid = VALIDATE_TASK.validate(data);
+
+            if (is_valid !== true) {
+
+                LOGGER.module().error('ERROR: [/exhibits/model (create_heading_record)] ' + is_valid[0].message);
+
+                callback({
+                    status: 400,
+                    message: is_valid
+                });
+
+                return false;
+            }
+
+            const CREATE_RECORD_TASK = new EXHIBIT_HEADING_RECORD_TASKS(DB, TABLES.item_records);
+            let result = await CREATE_RECORD_TASK.create_heading_record(data);
+
+            if (result === false) {
+                callback({
+                    status: 200,
+                    message: 'Unable to create heading record'
+                });
+            } else {
+                callback({
+                    status: 201,
+                    message: 'Heading record created',
+                    data: data.uuid
+                });
+            }
+
+        } catch (error) {
+
+            callback({
+                status: 200,
+                message: 'Unable to create record ' + error.message
+            });
+        }
+
+    })();
+};

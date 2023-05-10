@@ -156,3 +156,18 @@ exports.delete_item_record = (req, res) => {
         res.status(data.status).send(data);
     });
 };
+
+exports.create_heading_record = (req, res) => {
+
+    const is_member_of_exhibit = req.params.exhibit_id;
+    const data = req.body;
+
+    if (data === undefined || is_member_of_exhibit === undefined) {
+        res.status(400).send('Bad request.');
+        return false;
+    }
+
+    MODEL.create_heading_record(is_member_of_exhibit, data, (data) => {
+        res.status(data.status).send(data);
+    });
+};
