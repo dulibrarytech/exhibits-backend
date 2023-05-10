@@ -23,7 +23,6 @@ module.exports = () => {
     return {
         is_member_of_exhibit: {type: 'string'},
         uuid: {type: 'string'},
-        type: {type: 'string'},
         text: {type: 'string'},
         subtext: {type: 'string'},
         order: {type: 'number'}

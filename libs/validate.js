@@ -16,6 +16,7 @@
 
 'use strict';
 
+const VALIDATOR = require('validator');
 const AJV_LIB = require('ajv');
 const AJV = new AJV_LIB();
 const LOGGER = require('../libs/log4');
@@ -34,7 +35,7 @@ const Validator = class {
      * Validates schema
      * @param data
      */
-    validate = (data) => {
+    validate(data) {
 
         try {
 
@@ -58,6 +59,15 @@ const Validator = class {
             LOGGER.module().error('ERROR: [/validate_lib)] unable to validate record ' + error.message);
             return false;
         }
+    }
+
+    /**
+     * Unescapes strings
+     * @param data
+     * @return {*}
+     */
+    validator_unescape(data) {
+        return VALIDATOR.unescape(data);
     }
 };
 

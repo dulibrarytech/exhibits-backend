@@ -25,8 +25,10 @@ const EXHIBITS_CREATE_RECORD_SCHEMA = require('../exhibits/schemas/exhibit_creat
 const EXHIBITS_UPDATE_RECORD_SCHEMA = require('../exhibits/schemas/exhibit_update_record_schema')();
 const EXHIBITS_CREATE_ITEM_SCHEMA = require('../exhibits/schemas/exhibit_item_create_record_schema')();
 const EXHIBITS_UPDATE_ITEM_SCHEMA = require('../exhibits/schemas/exhibit_item_update_record_schema')();
+const EXHIBITS_CREATE_HEADING_SCHEMA = require('../exhibits/schemas/exhibit_heading_create_record_schema')();
 const EXHIBIT_RECORD_TASKS = require('../exhibits/tasks/exhibit_record_tasks');
 const EXHIBIT_ITEM_RECORD_TASKS = require('../exhibits/tasks/exhibit_item_record_tasks');
+const EXHIBIT_HEADING_RECORD_TASKS = require('../exhibits/tasks/exhibit_heading_record_tasks');
 const HELPER = require('../libs/helper');
 const VALIDATOR = require('../libs/validate');
 const LOGGER = require('../libs/log4');
@@ -58,6 +60,12 @@ exports.create_exhibit_record = (data, callback) => {
                 });
 
                 return false;
+            }
+
+            if (data.styles.length === 0) {
+                data.styles = '{}';
+            } else {
+                data.styles = VALIDATE_TASK.validator_unescape(data.styles);
             }
 
             const CREATE_RECORD_TASK = new EXHIBIT_RECORD_TASKS(DB, TABLES.exhibit_records);
@@ -316,6 +324,12 @@ exports.create_item_record = (is_member_of_exhibit, data, callback) => {
                 return false;
             }
 
+            if (data.styles.length === 0) {
+                data.styles = '{}';
+            } else {
+                data.styles = VALIDATE_TASK.validator_unescape(data.styles);
+            }
+
             const CREATE_RECORD_TASK = new EXHIBIT_ITEM_RECORD_TASKS(DB, TABLES.item_records);
             let result = await CREATE_RECORD_TASK.create_item_record(data);
 
@@ -490,7 +504,6 @@ exports.create_heading_record = (is_member_of_exhibit, data, callback) => {
             const HELPER_TASK = new HELPER();
             data.uuid = HELPER_TASK.create_uuid();
             data.is_member_of_exhibit = is_member_of_exhibit;
-            data.columns = parseInt(data.columns);
             data.order = parseInt(data.order);
 
             const VALIDATE_TASK = new VALIDATOR(EXHIBITS_CREATE_HEADING_SCHEMA);
@@ -508,7 +521,7 @@ exports.create_heading_record = (is_member_of_exhibit, data, callback) => {
                 return false;
             }
 
-            const CREATE_RECORD_TASK = new EXHIBIT_HEADING_RECORD_TASKS(DB, TABLES.item_records);
+            const CREATE_RECORD_TASK = new EXHIBIT_HEADING_RECORD_TASKS(DB, TABLES.heading_records);
             let result = await CREATE_RECORD_TASK.create_heading_record(data);
 
             if (result === false) {

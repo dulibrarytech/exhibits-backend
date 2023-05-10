@@ -52,6 +52,30 @@ exports.sanitize_req_body = function(req, res, next) {
 };
 
 /**
+ * Middleware function used to sanitize param string inputs
+ * @param req
+ * @param res
+ * @param next
+ */
+exports.sanitize_req_params = function(req, res, next) {
+
+    if (req.params === undefined) {
+        next();
+    }
+
+    let keys = Object.keys(req.params);
+
+    keys.map(function (prop) {
+
+        if (req.params.hasOwnProperty(prop) && typeof req.params[prop] === 'string') {
+            req.params[prop] = DOMPURIFY.sanitize(VALIDATOR.isUUID(VALIDATOR.escape(VALIDATOR.trim(req.params[prop]))));
+        }
+    });
+
+    next();
+};
+
+/**
  * Middleware function used to sanitize query string inputs
  * @param req
  * @param res
@@ -73,43 +97,4 @@ exports.sanitize_req_query = function(req, res, next) {
     });
 
     next();
-};
-
-/**
- * Validates uuids in query string
- * @param req
- * @param res
- * @param next
- */
-exports.validate_uuid = function(req, res, next) {
-
-    if (req.query.sip_uuid !== undefined && Array.isArray(req.query.sip_uuid)) {
-        req.query.sip_uuid = req.query.sip_uuid.pop();
-    } else if (req.query.pid !== undefined && Array.isArray(req.query.pid)) {
-        req.query.pid = req.query.pid.pop();
-    }
-
-    if (Object.entries(req.query).length !== 0 && req.query.sip_uuid !== undefined) {
-
-        if (VALIDATOR.isUUID(req.query.sip_uuid)) {
-            next();
-        } else {
-            res.status(404).send({
-                message: 'Resource not found.'
-            });
-        }
-
-    } else if (Object.entries(req.query).length !== 0 && req.query.pid !== undefined) {
-
-        if (VALIDATOR.isUUID(req.query.pid) || req.query.pid === 'codu:root') {
-            next();
-        } else {
-            res.status(404).send({
-                message: 'Resource not found.'
-            });
-        }
-
-    } else {
-        next();
-    }
 };
