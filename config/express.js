@@ -53,6 +53,7 @@ module.exports = () => {
     require('../auth/routes.js')(APP);
     require('../dashboard/routes.js')(APP);
     require('../exhibits/routes.js')(APP);
+    require('../indexer/routes.js')(APP);
     require('../users/routes.js')(APP);
 
     SERVER.listen(process.env.APP_PORT);

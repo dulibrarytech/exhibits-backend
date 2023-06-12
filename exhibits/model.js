@@ -154,7 +154,7 @@ exports.get_exhibit_record = (uuid, callback) => {
     })();
 };
 
-/**
+/** TODO: version insert instead of update
  * Updates exhibit record
  * @param data
  * @param callback
