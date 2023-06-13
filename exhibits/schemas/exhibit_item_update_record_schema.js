@@ -37,6 +37,6 @@ module.exports = () => {
         columns: {type: 'number'},
         order: {type: 'number'},
         is_published: {type: 'number'},
-        is_active: {type: 'number'}
+        is_locked: {type: 'number'}
     }
 };

@@ -35,5 +35,5 @@ module.exports = () => {
         styles: {type: 'string'},
         columns: {type: 'number'},
         order: {type: 'number'}
-    }
+    };
 };

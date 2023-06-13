@@ -165,9 +165,9 @@ exports.update_exhibit_record = (data, callback) => {
 
         try {
 
-            if (data.is_published !== undefined && data.is_active !== undefined) {
+            if (data.is_published !== undefined && data.is_locked !== undefined) {
                 data.is_published = parseInt(data.is_published);
-                data.is_active = parseInt(data.is_active);
+                data.is_locked = parseInt(data.is_locked);
             } else {
                 callback({
                     status: 400,
@@ -400,9 +400,9 @@ exports.update_item_record = (is_member_of_exhibit, uuid, data, callback) => {
 
         try {
 
-            if (data.is_published !== undefined && data.is_active !== undefined) {
+            if (data.is_published !== undefined && data.is_locked !== undefined) {
                 data.is_published = parseInt(data.is_published);
-                data.is_active = parseInt(data.is_active);
+                data.is_locked = parseInt(data.is_locked);
                 data.columns = parseInt(data.columns);
                 data.order = parseInt(data.order);
             } else {

@@ -18,6 +18,7 @@
 
 'use strict';
 
+const HELPER = require('../../libs/helper');
 const LOGGER = require('../../libs/log4');
 
 /**
@@ -96,7 +97,7 @@ const Exhibit_item_record_tasks = class {
             )
             .where({
                 is_member_of_exhibit: is_member_of_exhibit,
-                is_active: 1
+                is_deleted: 0
             })
             .then((data) => {
                 resolve(data);
@@ -141,15 +142,35 @@ const Exhibit_item_record_tasks = class {
                 'columns',
                 'order',
                 'is_published',
+                'is_locked',
                 'created'
             )
             .where({
                 is_member_of_exhibit: is_member_of_exhibit,
                 uuid: uuid,
-                is_active: 1
+                is_deleted: 0
             })
             .then((data) => {
-                resolve(data);
+
+                if (data[0].is_locked === 0) {
+
+                    (async () => {
+
+                        try {
+
+                            const HELPER_TASK = new HELPER();
+                            await HELPER_TASK.lock_record(uuid, this.DB, this.TABLE);
+                            resolve(data);
+
+                        } catch(error) {
+                            LOGGER.module().error('ERROR: [/exhibits/exhibit_item_record_tasks (get_exhibit_records)] unable to lock record ' + error.message);
+                        }
+
+                    })();
+
+                } else {
+                    resolve(data);
+                }
             })
             .catch((error) => {
                 LOGGER.module().error('ERROR: [/exhibits/exhibit_item_record_tasks (get_exhibit_records)] unable to get records ' + error.message);
@@ -164,13 +185,13 @@ const Exhibit_item_record_tasks = class {
         });
     }
 
-    /**
+    /** TODO: unlock record / version record / update only if unlocked
      * Updates item record
      * @param data
      * @return {Promise<unknown | boolean>}
      */
     update_item_record(data) {
-
+        // TODO: version record via data.uuid?
         let promise = new Promise((resolve, reject) => {
 
             this.DB(this.TABLE)

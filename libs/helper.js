@@ -33,7 +33,7 @@ const Helper = class {
      * Generates uuid
      * @returns Promise string
      */
-    create_uuid = () => {
+    create_uuid() {
 
         try {
             return uuidv4();
@@ -44,12 +44,73 @@ const Helper = class {
     }
 
     /**
+     * Locks record
+     * @param uuid
+     * @param db
+     * @param table
+     */
+    lock_record(uuid, db, table){
+
+        let promise = new Promise((resolve, reject) => {
+
+            db(table)
+            .where({
+                uuid: uuid
+            })
+            .update({
+                is_locked: 1
+            })
+            .then((data) => {
+                LOGGER.module().info('INFO: [/exhibits/helper (lock_record)] record locked.');
+                this.lock_timer(uuid, db, table);
+                resolve(true);
+            })
+            .catch((error) => {
+                LOGGER.module().error('ERROR: [/exhibits/helper (lock_record)] unable to lock record ' + error.message);
+                reject(false);
+            });
+        });
+
+        return promise.then((result) => {
+            return result;
+        }).catch(() => {
+            return false;
+        });
+    }
+
+    /**
+     * Unlocks record after a period of inactivity
+     * @param uuid
+     * @param db
+     * @param table
+     */
+    lock_timer(uuid, db, table) {
+
+        setTimeout(() => {
+
+            db(table)
+            .where({
+                uuid: uuid
+            })
+            .update({
+                is_locked: 0
+            })
+            .then((data) => {
+                LOGGER.module().info('INFO: [/exhibits/helper (lock_record)] record unlocked.');
+            })
+            .catch((error) => {
+                LOGGER.module().error('ERROR: [/exhibits/helper (lock_record)] unable to unlock record ' + error.message);
+            });
+        }, 60000*30); // 30 min
+    }
+
+    /**
      * Converts byte size to human readable format
      * @param bytes
      * @param decimals
      * @return {string|{batch_size: number, size_type: string}}
      */
-    format_bytes = (bytes, decimals = 2) => {
+    format_bytes(bytes, decimals = 2) {
 
         if (!+bytes) return '0 Bytes';
         const k = 1024;

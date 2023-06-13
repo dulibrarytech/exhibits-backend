@@ -32,6 +32,6 @@ module.exports = () => {
         template: {type: 'string'},
         styles: {type: 'string'},
         is_published: {type: 'number'},
-        is_active: {type: 'number'}
+        is_locked: {type: 'number'}
     }
 };
