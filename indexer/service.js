@@ -32,7 +32,7 @@ const CLIENT = new Client({
  */
 exports.create_indices = (callback) => {
 
-    // TODO: check if index exists?
+    // TODO: check if index exists
 
     try {
         delete_index(INDEX);

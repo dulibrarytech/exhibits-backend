@@ -163,7 +163,9 @@ const Exhibit_heading_record_tasks = class {
                 is_member_of_exhibit: is_member_of_exhibit,
                 uuid: uuid
             })
-            .delete()
+            .update({
+                is_deleted: 1
+            })
             .then(() => {
                 LOGGER.module().info('INFO: [/exhibits/exhibit_heading_record_tasks (delete_heading_record)] Heading record deleted.');
                 resolve(true);

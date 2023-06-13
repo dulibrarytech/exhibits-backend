@@ -194,7 +194,10 @@ const Exhibit_record_tasks = class {
             .where({
                 uuid: uuid
             })
-            .delete()
+            // .delete()
+            .update({
+                is_deleted: 1
+            })
             .then(() => {
                 LOGGER.module().info('INFO: [/exhibits/exhibit_record_tasks (delete_exhibit_record)] Exhibit record deleted.');
                 resolve(true);

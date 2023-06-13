@@ -197,7 +197,7 @@ const Exhibit_item_record_tasks = class {
     }
 
     /**
-     * Deletes item record
+     * "Deletes" item record (sets to inactive)
      * @param is_member_of_exhibit
      * @param uuid
      * @return boolean
@@ -211,7 +211,9 @@ const Exhibit_item_record_tasks = class {
                 is_member_of_exhibit: is_member_of_exhibit,
                 uuid: uuid
             })
-            .delete()
+            .update({
+                is_deleted: 1
+            })
             .then(() => {
                 LOGGER.module().info('INFO: [/exhibits/exhibit_item_record_tasks (delete_item_record)] Item record deleted.');
                 resolve(true);
