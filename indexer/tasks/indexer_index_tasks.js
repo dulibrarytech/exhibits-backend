@@ -116,7 +116,7 @@ const Indexer_index_tasks = class {
     }
 
     /**
-     * Gets record full indexing
+     * Gets record for full indexing
      * returns Promise string
      */
     get_record = () => {
@@ -126,7 +126,8 @@ const Indexer_index_tasks = class {
             this.DB(this.TABLE)
                 .select('*')
                 .where({
-                    is_active: 1,
+                    is_published: 1,
+                    is_deleted: 0,
                     is_indexed: 0
                 })
                 .limit(1)
@@ -164,7 +165,8 @@ const Indexer_index_tasks = class {
             .select('*')
             .where({
                 uuid: uuid,
-                is_active: 1
+                is_published: 1,
+                is_deleted: 0
             })
             .limit(1)
             .then((data) => {
@@ -238,7 +240,7 @@ const Indexer_index_tasks = class {
             this.DB(this.TABLE)
                 .where({
                     is_indexed: 1,
-                    is_active: 1
+                    is_deleted: 0
                 })
                 .update({
                     is_indexed: 0
