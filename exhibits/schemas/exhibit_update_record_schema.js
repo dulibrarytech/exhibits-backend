@@ -33,5 +33,5 @@ module.exports = () => {
         styles: {type: 'string'},
         is_published: {type: 'number'},
         is_locked: {type: 'number'}
-    }
+    };
 };

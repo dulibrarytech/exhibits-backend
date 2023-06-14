@@ -171,3 +171,54 @@ exports.create_heading_record = (req, res) => {
         res.status(data.status).send(data);
     });
 };
+
+exports.get_heading_record = (req, res) => {
+
+    const is_member_of_exhibit = req.params.exhibit_id;
+    const uuid = req.params.heading_id;
+
+    if (uuid === undefined || uuid.length === 0 && is_member_of_exhibit === undefined || is_member_of_exhibit.length === 0) {
+        res.status(400).send('Bad request.');
+        return false;
+    }
+
+    MODEL.get_heading_record(is_member_of_exhibit, uuid, (data) => {
+        res.status(data.status).send(data);
+    });
+};
+
+exports.update_heading_record = (req, res) => {
+
+    const is_member_of_exhibit = req.params.exhibit_id;
+    const uuid = req.params.heading_id;
+    const data = req.body;
+
+    if (uuid === undefined || uuid.length === 0 && is_member_of_exhibit === undefined || is_member_of_exhibit.length === 0) {
+        res.status(400).send('Bad request.');
+        return false;
+    }
+
+    if (data === undefined) {
+        res.status(400).send('Bad request.');
+        return false;
+    }
+
+    MODEL.update_heading_record(is_member_of_exhibit, uuid, data,(data) => {
+        res.status(data.status).send(data);
+    });
+};
+
+exports.delete_heading_record = (req, res) => {
+
+    const is_member_of_exhibit = req.params.exhibit_id;
+    const uuid = req.params.heading_id;
+
+    if (uuid === undefined || uuid.length === 0 && is_member_of_exhibit === undefined || is_member_of_exhibit.length === 0) {
+        res.status(400).send('Bad request.');
+        return false;
+    }
+
+    MODEL.delete_heading_record(is_member_of_exhibit, uuid, (data) => {
+        res.status(data.status).send(data);
+    });
+};

@@ -38,5 +38,5 @@ module.exports = () => {
         order: {type: 'number'},
         is_published: {type: 'number'},
         is_locked: {type: 'number'}
-    }
+    };
 };

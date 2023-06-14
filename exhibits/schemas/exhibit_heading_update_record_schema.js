@@ -21,18 +21,13 @@
 module.exports = () => {
 
     return {
+        is_member_of_exhibit: {type: 'string'},
         uuid: {type: 'string'},
         type: {type: 'string'},
-        title: {type: 'string'},
-        subtitle: {type: 'string'},
-        banner: {type: 'string'},
-        hero_image: {type: 'string'},
-        description: {type: 'string'},
-        page_layout: {type: 'string'},
-        template: {type: 'string'},
-        styles: {type: 'string'},
+        text: {type: 'string'},
+        subtext: {type: 'string'},
+        order: {type: 'number'},
         is_published: {type: 'number'},
-        is_locked: {type: 'number'},
-        created: {type: 'object'}
+        is_locked: {type: 'number'}
     };
 };

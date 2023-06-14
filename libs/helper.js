@@ -101,7 +101,7 @@ const Helper = class {
             .catch((error) => {
                 LOGGER.module().error('ERROR: [/exhibits/helper (lock_record)] unable to unlock record ' + error.message);
             });
-        }, 60000*30); // 30 min
+        }, 60000); // 30 min *30
     }
 
     /**

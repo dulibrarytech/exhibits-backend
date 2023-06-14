@@ -19,6 +19,7 @@
 'use strict';
 
 const LOGGER = require('../../libs/log4');
+const HELPER = require("../../libs/helper");
 
 /**
  * Object contains tasks used to manage exhibit item records
@@ -80,31 +81,42 @@ const Exhibit_heading_record_tasks = class {
             .select('is_member_of_exhibit',
                 'uuid',
                 'type',
-                'date',
-                'title',
-                'description',
-                'caption',
-                'template',
-                'item_type',
-                'url',
                 'text',
-                'layout',
-                'styles',
-                'columns',
+                'subtext',
                 'order',
                 'is_published',
+                'is_locked',
                 'created'
             )
             .where({
                 is_member_of_exhibit: is_member_of_exhibit,
                 uuid: uuid,
-                is_active: 1
+                is_deleted: 0
             })
             .then((data) => {
-                resolve(data);
+
+                if (data.length !== 0 && data[0].is_locked === 0) {
+
+                    (async () => {
+
+                        try {
+
+                            const HELPER_TASK = new HELPER();
+                            await HELPER_TASK.lock_record(uuid, this.DB, this.TABLE);
+                            resolve(data);
+
+                        } catch(error) {
+                            LOGGER.module().error('ERROR:[/exhibits/exhibit_heading_record_tasks (get_heading_record)] unable to lock record ' + error.message);
+                        }
+
+                    })();
+
+                } else {
+                    resolve(data);
+                }
             })
             .catch((error) => {
-                LOGGER.module().error('ERROR: [/exhibits/exhibit_heading_record_tasks (get_heading_records)] unable to get records ' + error.message);
+                LOGGER.module().error('ERROR: [/exhibits/exhibit_heading_record_tasks (get_heading_record)] unable to get records ' + error.message);
                 reject(false);
             });
         });
@@ -185,52 +197,3 @@ const Exhibit_heading_record_tasks = class {
 };
 
 module.exports = Exhibit_heading_record_tasks;
-
-/** TODO: do I need this?
- * Gets  records
- * @param is_member_of_exhibit
- * @return {Promise<unknown | boolean>}
-
-get_item_records(is_member_of_exhibit) {
-
-    let promise = new Promise((resolve, reject) => {
-
-        this.DB(this.TABLE)
-        .select('is_member_of_exhibit',
-            'uuid',
-            'type',
-            'date',
-            'title',
-            'description',
-            'caption',
-            'template',
-            'item_type',
-            'url',
-            'text',
-            'layout',
-            'styles',
-            'columns',
-            'order',
-            'is_published',
-            'created'
-        )
-        .where({
-            is_member_of_exhibit: is_member_of_exhibit,
-            is_active: 1
-        })
-        .then((data) => {
-            resolve(data);
-        })
-        .catch((error) => {
-            LOGGER.module().error('ERROR: [/exhibits/exhibit_item_record_tasks (get_exhibit_records)] unable to get records ' + error.message);
-            reject(false);
-        });
-    });
-
-    return promise.then((records) => {
-        return records;
-    }).catch(() => {
-        return false;
-    });
-}
- */

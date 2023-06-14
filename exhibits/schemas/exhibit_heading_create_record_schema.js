@@ -26,5 +26,5 @@ module.exports = () => {
         text: {type: 'string'},
         subtext: {type: 'string'},
         order: {type: 'number'}
-    }
+    };
 };

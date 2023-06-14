@@ -152,7 +152,7 @@ const Exhibit_item_record_tasks = class {
             })
             .then((data) => {
 
-                if (data[0].is_locked === 0) {
+                if (data.length !== 0 && data[0].is_locked === 0) {
 
                     (async () => {
 
@@ -163,7 +163,7 @@ const Exhibit_item_record_tasks = class {
                             resolve(data);
 
                         } catch(error) {
-                            LOGGER.module().error('ERROR: [/exhibits/exhibit_item_record_tasks (get_exhibit_records)] unable to lock record ' + error.message);
+                            LOGGER.module().error('ERROR: [/exhibits/exhibit_item_record_tasks (get_item_record)] unable to lock record ' + error.message);
                         }
 
                     })();
@@ -173,7 +173,7 @@ const Exhibit_item_record_tasks = class {
                 }
             })
             .catch((error) => {
-                LOGGER.module().error('ERROR: [/exhibits/exhibit_item_record_tasks (get_exhibit_records)] unable to get records ' + error.message);
+                LOGGER.module().error('ERROR: [/exhibits/exhibit_item_record_tasks (get_item_record)] unable to get records ' + error.message);
                 reject(false);
             });
         });
@@ -185,7 +185,7 @@ const Exhibit_item_record_tasks = class {
         });
     }
 
-    /** TODO: unlock record / version record / update only if unlocked
+    /** TODO: version record / update only if unlocked
      * Updates item record
      * @param data
      * @return {Promise<unknown | boolean>}

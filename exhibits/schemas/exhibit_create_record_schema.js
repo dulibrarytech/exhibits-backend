@@ -30,5 +30,5 @@ module.exports = () => {
         page_layout: {type: 'string'},
         template: {type: 'string'},
         styles: {type: 'string'}
-    }
+    };
 };

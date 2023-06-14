@@ -26,6 +26,7 @@ const EXHIBITS_UPDATE_RECORD_SCHEMA = require('../exhibits/schemas/exhibit_updat
 const EXHIBITS_CREATE_ITEM_SCHEMA = require('../exhibits/schemas/exhibit_item_create_record_schema')();
 const EXHIBITS_UPDATE_ITEM_SCHEMA = require('../exhibits/schemas/exhibit_item_update_record_schema')();
 const EXHIBITS_CREATE_HEADING_SCHEMA = require('../exhibits/schemas/exhibit_heading_create_record_schema')();
+const EXHIBITS_UPDATE_HEADING_SCHEMA = require('../exhibits/schemas/exhibit_heading_update_record_schema')();
 const EXHIBIT_RECORD_TASKS = require('../exhibits/tasks/exhibit_record_tasks');
 const EXHIBIT_ITEM_RECORD_TASKS = require('../exhibits/tasks/exhibit_item_record_tasks');
 const EXHIBIT_HEADING_RECORD_TASKS = require('../exhibits/tasks/exhibit_heading_record_tasks');
@@ -542,6 +543,137 @@ exports.create_heading_record = (is_member_of_exhibit, data, callback) => {
             callback({
                 status: 200,
                 message: 'Unable to create record ' + error.message
+            });
+        }
+
+    })();
+};
+
+/**
+ * Gets heading record
+ * @param is_member_of_exhibit
+ * @param uuid
+ * @param callback
+ */
+exports.get_heading_record = (is_member_of_exhibit, uuid, callback) => {
+
+    (async () => {
+
+        try {
+
+            const TASK = new EXHIBIT_HEADING_RECORD_TASKS(DB, TABLES.heading_records);
+
+            callback({
+                status: 200,
+                message: 'Heading record',
+                data:  await TASK.get_heading_record(is_member_of_exhibit, uuid)
+            });
+
+        } catch (error) {
+
+            callback({
+                status: 400,
+                message: error.message
+            });
+        }
+
+    })();
+};
+
+/**
+ * Updates heading record
+ * @param is_member_of_exhibit
+ * @param uuid
+ * @param data
+ * @param callback
+ */
+exports.update_heading_record = (is_member_of_exhibit, uuid, data, callback) => {
+
+    (async () => {
+
+        try {
+
+            if (data.is_published !== undefined && data.is_locked !== undefined) {
+                data.is_published = parseInt(data.is_published);
+                data.is_locked = parseInt(data.is_locked);
+                data.order = parseInt(data.order);
+            } else {
+                callback({
+                    status: 400,
+                    message: 'Bad Request.'
+                });
+
+                return false;
+            }
+
+            data.is_member_of_exhibit = is_member_of_exhibit;
+            data.uuid = uuid;
+
+            const VALIDATE_TASK = new VALIDATOR(EXHIBITS_UPDATE_HEADING_SCHEMA);
+            let is_valid = VALIDATE_TASK.validate(data);
+
+            if (is_valid !== true) {
+
+                LOGGER.module().error('ERROR: [/exhibits/model (update_heading_record)] ' + is_valid[0].message);
+
+                callback({
+                    status: 400,
+                    message: is_valid
+                });
+
+                return false;
+            }
+
+            const UPDATE_RECORD_TASK = new EXHIBIT_HEADING_RECORD_TASKS(DB, TABLES.heading_records);
+            let result = await UPDATE_RECORD_TASK.update_heading_record(data);
+
+            if (result === false) {
+                callback({
+                    status: 400,
+                    message: 'Unable to update heading record'
+                });
+            } else {
+                callback({
+                    status: 204,
+                    message: 'Heading record updated'
+                });
+            }
+
+        } catch (error) {
+            callback({
+                status: 400,
+                message: 'Unable to update record ' + error.message
+            });
+        }
+
+    })();
+};
+
+/**
+ * Deletes heading record
+ * @param is_member_of_exhibit
+ * @param uuid
+ * @param callback
+ */
+exports.delete_heading_record = (is_member_of_exhibit, uuid, callback) => {
+
+    (async () => {
+
+        try {
+
+            const TASK = new EXHIBIT_HEADING_RECORD_TASKS(DB, TABLES.heading_records);
+
+            callback({
+                status: 204,
+                message: 'Record deleted',
+                data:  await TASK.delete_heading_record(is_member_of_exhibit, uuid)
+            });
+
+        } catch (error) {
+
+            callback({
+                status: 400,
+                message: error.message
             });
         }
 

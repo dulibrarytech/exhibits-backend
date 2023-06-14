@@ -54,8 +54,15 @@ module.exports = (app) => {
     app.route(ENDPOINTS().exhibits.item_records.delete.endpoint)
         .delete(CONTROLLER.delete_item_record);  // TOKEN.verify,
 
-    // TODO: headings
     app.route(ENDPOINTS().exhibits.heading_records.post.endpoint)
         .post(CONTROLLER.create_heading_record);  // TOKEN.verify,
 
+    app.route(ENDPOINTS().exhibits.heading_records.get.endpoint)
+        .get(CONTROLLER.get_heading_record);
+
+    app.route(ENDPOINTS().exhibits.heading_records.put.endpoint)
+        .put(CONTROLLER.update_heading_record); // TOKEN.verify,
+
+    app.route(ENDPOINTS().exhibits.heading_records.delete.endpoint)
+        .delete(CONTROLLER.delete_heading_record);
 };

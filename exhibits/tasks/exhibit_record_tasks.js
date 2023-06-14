@@ -18,6 +18,7 @@
 
 'use strict';
 
+const HELPER = require('../../libs/helper');
 const LOGGER = require('../../libs/log4');
 
 /**
@@ -128,17 +129,37 @@ const Exhibit_record_tasks = class {
                 'template',
                 'styles',
                 'is_published',
+                'is_locked',
                 'created'
             )
             .where({
                 uuid: uuid,
-                is_active: 1
+                is_deleted: 0
             })
             .then((data) => {
-                resolve(data);
+
+                if (data.length !== 0 && data[0].is_locked === 0) {
+
+                    (async () => {
+
+                        try {
+
+                            const HELPER_TASK = new HELPER();
+                            await HELPER_TASK.lock_record(uuid, this.DB, this.TABLE);
+                            resolve(data);
+
+                        } catch(error) {
+                            LOGGER.module().error('ERROR: [/exhibits/exhibit_record_tasks (get_exhibit_record)] unable to lock record ' + error.message);
+                        }
+
+                    })();
+
+                } else {
+                    resolve(data);
+                }
             })
             .catch((error) => {
-                LOGGER.module().error('ERROR: [/exhibits/exhibit_record_tasks (get_exhibit_records)] unable to get records ' + error.message);
+                LOGGER.module().error('ERROR: [/exhibits/exhibit_record_tasks (get_exhibit_record)] unable to get records ' + error.message);
                 reject(false);
             });
         });
