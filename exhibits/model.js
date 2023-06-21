@@ -679,3 +679,58 @@ exports.delete_heading_record = (is_member_of_exhibit, uuid, callback) => {
 
     })();
 };
+
+/** TODO
+ * Get all trashed records
+ * @param callback
+ */
+exports.get_trashed_records = (callback) => {
+
+    (async () => {
+
+        try {
+
+            const TASK = new EXHIBIT_ITEM_RECORD_TASKS(DB, TABLES.item_records);
+
+            callback({
+                status: 200,
+                message: 'Exhibit item records',
+                data:  await TASK.get_item_records(is_member_of_exhibit)
+            });
+
+        } catch (error) {
+
+            callback({
+                status: 400,
+                message: error.message
+            });
+        }
+
+    })();
+};
+
+// TODO:
+exports.delete_trashed_record = (is_member_of_exhibit, uuid, callback) => {
+
+    (async () => {
+
+        try {
+
+            const TASK = new EXHIBIT_HEADING_RECORD_TASKS(DB, TABLES.heading_records);
+
+            callback({
+                status: 204,
+                message: 'Record deleted',
+                data:  await TASK.delete_heading_record(is_member_of_exhibit, uuid)
+            });
+
+        } catch (error) {
+
+            callback({
+                status: 400,
+                message: error.message
+            });
+        }
+
+    })();
+};

@@ -74,7 +74,7 @@ const ENDPOINTS = {
             delete: {
                 description: 'Deletes item record',
                 endpoint: `${PREFIX}${VERSION}${ENDPOINT}/:exhibit_id/items/:item_id`,
-                params: 'token or api_key, uuid, delete_reason'
+                params: 'token or api_key, uuid'
             }
         },
         heading_records: {
@@ -99,6 +99,23 @@ const ENDPOINTS = {
                 description: 'Deletes heading record',
                 endpoint: `${PREFIX}${VERSION}${ENDPOINT}/:exhibit_id/headings/:heading_id`,
                 params: 'token or api_key, uuid, delete_reason'
+            }
+        },
+        trashed_records: {
+            get: {
+                description: 'Retrieves all records flagged as deleted',
+                endpoint: `${PREFIX}${VERSION}${ENDPOINT}/trash`,
+                params: 'token or api_key'
+            },
+            delete: {
+                description: 'Permanently deletes a record',
+                endpoint: `${PREFIX}${VERSION}${ENDPOINT}/trash/:uuid`,
+                params: 'token or api_key, gets all deleted records'
+            },
+            post: {
+                description: 'Permanently deletes all trash records',
+                endpoint: `${PREFIX}${VERSION}${ENDPOINT}/trash`,
+                params: 'token or api_key, gets all trash records'
             }
         }
     }

@@ -65,4 +65,10 @@ module.exports = (app) => {
 
     app.route(ENDPOINTS().exhibits.heading_records.delete.endpoint)
         .delete(CONTROLLER.delete_heading_record);
+
+    app.route(ENDPOINTS().exhibits.trashed_records.get.endpoint)
+    .delete(CONTROLLER.get_trashed_records);
+
+    app.route(ENDPOINTS().exhibits.trashed_records.delete.endpoint)
+        .delete(CONTROLLER.delete_trashed_record);
 };

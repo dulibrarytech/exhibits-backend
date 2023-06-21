@@ -222,3 +222,26 @@ exports.delete_heading_record = (req, res) => {
         res.status(data.status).send(data);
     });
 };
+
+exports.delete_trashed_record = (req, res) => {
+
+    const uuid = req.params.uuid;
+
+    if (uuid === undefined || uuid.length === 0) {
+        res.status(400).send('Bad request.');
+        return false;
+    }
+
+    MODEL.delete_trashed_record(uuid, (data) => {
+        res.status(data.status).send(data);
+    });
+};
+
+exports.get_trashed_records = (req, res) => {
+
+    const uuid = req.params.uuid;
+
+    MODEL.get_trashed_records(uuid,(data) => {
+        res.status(data.status).send(data);
+    });
+};

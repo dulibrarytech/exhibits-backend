@@ -90,7 +90,7 @@ const Exhibit_record_tasks = class {
                 'created'
                 )
             .where({
-                is_active: 1
+                is_deleted: 0
             })
             .then((data) => {
                 resolve(data);
@@ -219,6 +219,38 @@ const Exhibit_record_tasks = class {
             .update({
                 is_deleted: 1
             })
+            .then(() => {
+                LOGGER.module().info('INFO: [/exhibits/exhibit_record_tasks (delete_exhibit_record)] Exhibit record deleted.');
+                resolve(true);
+            })
+            .catch((error) => {
+                LOGGER.module().error('ERROR: [/exhibits/exhibit_record_tasks (delete_item_record)] unable to delete record ' + error.message);
+                reject(false);
+            });
+        });
+
+        return promise.then((result) => {
+            return result;
+        }).catch(() => {
+            return false;
+        });
+    }
+
+    /**
+     * // TODO
+     * @param uuid
+     * @return {Promise<unknown | boolean>}
+     * @private
+     */
+    delete_exhibit_record_(uuid) {
+
+        let promise = new Promise((resolve, reject) => {
+
+            this.DB(this.TABLE)
+            .where({
+                uuid: uuid
+            })
+            .delete()
             .then(() => {
                 LOGGER.module().info('INFO: [/exhibits/exhibit_record_tasks (delete_exhibit_record)] Exhibit record deleted.');
                 resolve(true);
