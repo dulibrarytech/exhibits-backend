@@ -104,17 +104,17 @@ const ENDPOINTS = {
         trashed_records: {
             get: {
                 description: 'Retrieves all records flagged as deleted',
-                endpoint: `${PREFIX}${VERSION}${ENDPOINT}/trash`,
+                endpoint: `${PREFIX}${VERSION}/trash`,
                 params: 'token or api_key'
             },
             delete: {
                 description: 'Permanently deletes a record',
-                endpoint: `${PREFIX}${VERSION}${ENDPOINT}/trash/:uuid`,
+                endpoint: `${PREFIX}${VERSION}/trash/:uuid`,
                 params: 'token or api_key, gets all deleted records'
             },
             post: {
                 description: 'Permanently deletes all trash records',
-                endpoint: `${PREFIX}${VERSION}${ENDPOINT}/trash`,
+                endpoint: `${PREFIX}${VERSION}/trash`,
                 params: 'token or api_key, gets all trash records'
             }
         }

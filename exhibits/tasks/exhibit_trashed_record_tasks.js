@@ -41,7 +41,7 @@ const Trashed_record_tasks = class {
 
         let promise = new Promise((resolve, reject) => {
 
-            this.DB(this.TABLE)
+            this.DB(this.TABLE.exhibit_records)
             .select('uuid',
                 'type',
                 'title',
@@ -83,7 +83,7 @@ const Trashed_record_tasks = class {
 
         let promise = new Promise((resolve, reject) => {
 
-            this.DB(this.TABLE)
+            this.DB(this.TABLE.heading_records)
             .select('is_member_of_exhibit',
                 'uuid',
                 'type',
@@ -122,7 +122,7 @@ const Trashed_record_tasks = class {
 
         let promise = new Promise((resolve, reject) => {
 
-            this.DB(this.TABLE)
+            this.DB(this.TABLE.item_records)
             .select('is_member_of_exhibit',
                 'uuid',
                 'type',
@@ -193,7 +193,7 @@ const Trashed_record_tasks = class {
     }
 
     /**
-     *
+     * Restores trashed records
      * @param uuid
      * @return {Promise<unknown | boolean>}
      */

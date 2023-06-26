@@ -27,6 +27,8 @@ module.exports = (app) => {
     app.route(ENDPOINTS().exhibits.exhibit_records.endpoints.post.endpoint)
         .post(CONTROLLER.create_exhibit_record);  // TOKEN.verify,
 
+    console.log(ENDPOINTS().exhibits.exhibit_records.endpoint);
+
     app.route(ENDPOINTS().exhibits.exhibit_records.endpoint)
         .get(CONTROLLER.get_exhibit_records); // TOKEN.verify,
 
@@ -66,8 +68,11 @@ module.exports = (app) => {
     app.route(ENDPOINTS().exhibits.heading_records.delete.endpoint)
         .delete(CONTROLLER.delete_heading_record);
 
+    // trashed records
+    console.log(ENDPOINTS().exhibits.trashed_records.get.endpoint);
+
     app.route(ENDPOINTS().exhibits.trashed_records.get.endpoint)
-    .delete(CONTROLLER.get_trashed_records);
+        .get(CONTROLLER.get_trashed_records);
 
     app.route(ENDPOINTS().exhibits.trashed_records.delete.endpoint)
         .delete(CONTROLLER.delete_trashed_record);

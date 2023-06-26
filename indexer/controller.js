@@ -22,12 +22,12 @@ const MODEL = require('../indexer/model');
 const SERVICE = require('../indexer/service');
 
 /**
- * Creates public and admin indicies
+ * Creates exhibits index
  * @param req
  * @param res
  */
-exports.create_indices = function (req, res) {
-    SERVICE.create_indices((data) => {
+exports.create_index = function (req, res) {
+    SERVICE.create_index((data) => {
         res.status(data.status).send(data);
     });
 };

@@ -238,10 +238,7 @@ exports.delete_trashed_record = (req, res) => {
 };
 
 exports.get_trashed_records = (req, res) => {
-
-    const uuid = req.params.uuid;
-
-    MODEL.get_trashed_records(uuid,(data) => {
+    MODEL.get_trashed_records((data) => {
         res.status(data.status).send(data);
     });
 };

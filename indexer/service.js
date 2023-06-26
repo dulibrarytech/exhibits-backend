@@ -28,44 +28,40 @@ const CLIENT = new Client({
 });
 
 /**
- * Initiates index creation for public and admin indexes
+ * Checks if index exists.  If it does, it deletes it.
  */
-exports.create_indices = (callback) => {
-
-    // TODO: check if index exists
+const check_index = async () => {
 
     try {
-        delete_index(INDEX);
-    } catch(error) {
-        console.log('delete index: ', error);
-    }
 
-    setTimeout(() => {
+        const INDEX_UTILS_TASKS = new INDEXER_UTILS_TASKS(INDEX, CLIENT, ES_CONFIG);
+        let exists = await INDEX_UTILS_TASKS.check_index(INDEX);
+        let is_deleted = false;
 
-        try {
-            create_index(INDEX);
-        } catch(error) {
-            console.log('create index: ', error);
+        if (exists === true) {
+            is_deleted = delete_index(INDEX);
+            if (is_deleted === true) {
+                LOGGER.module().error('ERROR: [/indexer/service module (check_index)] Index checked and deleted.');
+            }
         }
 
-    }, 5000);
-
-    callback({
-        status: 201,
-        data: 'Creating index...'
-    });
+    } catch (error) {
+        LOGGER.module().error('ERROR: [/indexer/service module (check_index)] Unable to check index.');
+        return false;
+    }
 };
 
 /**
  * Create new index and mapping
  */
-const create_index = (INDEX_NAME) => {
+exports.create_index = (callback) => {
 
     (async () => {
 
         try {
 
-            const INDEX_UTILS_TASKS = new INDEXER_UTILS_TASKS(INDEX_NAME, CLIENT, ES_CONFIG);
+            await check_index(INDEX);
+            const INDEX_UTILS_TASKS = new INDEXER_UTILS_TASKS(INDEX, CLIENT, ES_CONFIG);
             let is_index_created = await INDEX_UTILS_TASKS.create_index();
 
             if (is_index_created === true) {
@@ -90,19 +86,23 @@ const create_index = (INDEX_NAME) => {
         }
 
     })();
+
+    callback({
+        status: 201,
+        data: 'Creating index...'
+    });
 };
 
 /**
  * Deletes index
- * @param INDEX_NAME
  */
-const delete_index = (INDEX_NAME) => {
+const delete_index = () => {
 
     (async () => {
 
         try {
 
-            const INDEX_UTILS_TASKS = new INDEXER_UTILS_TASKS(INDEX_NAME, CLIENT, ES_CONFIG);
+            const INDEX_UTILS_TASKS = new INDEXER_UTILS_TASKS(INDEX, CLIENT, ES_CONFIG);
             let is_index_deleted = await INDEX_UTILS_TASKS.delete_index();
 
             if (is_index_deleted === true) {

@@ -152,7 +152,7 @@ const Indexer_index_tasks = class {
         });
     }
 
-    /**
+    /** TODO: redundant - combine with get_record?
      * Gets record for single record index
      * @param uuid
      * @return {Promise<unknown | boolean>}

@@ -35,9 +35,40 @@ const Indexer_index_utils_tasks = class {
     }
 
     /**
+     * Checks if index exists
+     */
+    check_index() {
+
+        let promise = new Promise((resolve, reject) => {
+
+            (async () => {
+
+                this.CLIENT.indices.exists({
+                    index: this.INDEX_NAME
+                }).then((response) => {
+
+                    if (response.statusCode === 200) {
+                        LOGGER.module().info('INFO: [/indexer/tasks (check_index)] index exists');
+                        resolve(true);
+                    } else {
+                        LOGGER.module().error('ERROR: [/indexer/tasks (check_index)] index does not exist');
+                        reject(false);
+                    }
+                });
+            })();
+        });
+
+        return promise.then((response) => {
+            return response;
+        }).catch(() => {
+            return false;
+        });
+    }
+
+    /**
      * Creates ES index
      */
-    create_index = () => {
+    create_index() {
 
         let promise = new Promise((resolve, reject) => {
 
@@ -77,7 +108,7 @@ const Indexer_index_utils_tasks = class {
     /**
      * Creates ES index mappings
      */
-    create_mappings = () => {
+    create_mappings() {
 
         let promise = new Promise((resolve, reject) => {
 
@@ -111,7 +142,7 @@ const Indexer_index_utils_tasks = class {
     /**
      *  Gets field mappings
      */
-    get_mappings = () => {
+    get_mappings() {
         return JSON.parse(FS.readFileSync(ES_MAPPINGS, 'utf8'));
     }
 
@@ -119,7 +150,7 @@ const Indexer_index_utils_tasks = class {
      * Deletes index
      * @return {Promise<boolean>}
      */
-    delete_index = () => {
+    delete_index() {
 
         let promise = new Promise((resolve, reject) => {
 

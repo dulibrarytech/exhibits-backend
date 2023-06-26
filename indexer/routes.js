@@ -25,7 +25,7 @@ const TOKEN = require('../libs/tokens');
 module.exports = (app) => {
 
     app.route(ENDPOINTS().indexer.index_utils.post.endpoint)
-        .post(CONTROLLER.create_indices);  // TOKEN.verify,
+        .post(CONTROLLER.create_index);  // TOKEN.verify,
 
     app.route(ENDPOINTS().indexer.index_records.endpoint)
         .post(CONTROLLER.index_records);  // TOKEN.verify,

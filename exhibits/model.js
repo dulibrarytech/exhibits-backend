@@ -30,6 +30,7 @@ const EXHIBITS_UPDATE_HEADING_SCHEMA = require('../exhibits/schemas/exhibit_head
 const EXHIBIT_RECORD_TASKS = require('../exhibits/tasks/exhibit_record_tasks');
 const EXHIBIT_ITEM_RECORD_TASKS = require('../exhibits/tasks/exhibit_item_record_tasks');
 const EXHIBIT_HEADING_RECORD_TASKS = require('../exhibits/tasks/exhibit_heading_record_tasks');
+const EXHIBIT_TRASHED_RECORD_TASKS = require('../exhibits/tasks/exhibit_trashed_record_tasks');
 const HELPER = require('../libs/helper');
 const VALIDATOR = require('../libs/validate');
 const LOGGER = require('../libs/log4');
@@ -690,12 +691,28 @@ exports.get_trashed_records = (callback) => {
 
         try {
 
-            const TASK = new EXHIBIT_ITEM_RECORD_TASKS(DB, TABLES.item_records);
+            const TASKS = new EXHIBIT_TRASHED_RECORD_TASKS(DB, TABLES);
+            let exhibit_records = await TASKS.get_trashed_exhibit_records();
+            let exhibit_heading_records = await TASKS.get_trashed_heading_records();
+            let exhibit_item_records = await TASKS.get_trashed_item_records();
+            let data = {};
+
+            if (exhibit_records.length > 0) {
+                data.exhibit_records = exhibit_records;
+            }
+
+            if (exhibit_heading_records.length > 0) {
+                data.exhibit_heading_records = exhibit_heading_records;
+            }
+
+            if (exhibit_item_records.length > 0) {
+                data.exhibit_item_records = exhibit_item_records;
+            }
 
             callback({
                 status: 200,
-                message: 'Exhibit item records',
-                data:  await TASK.get_item_records(is_member_of_exhibit)
+                message: 'Trashed records',
+                data: data
             });
 
         } catch (error) {
