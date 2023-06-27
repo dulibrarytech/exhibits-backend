@@ -755,7 +755,40 @@ exports.delete_trashed_record = (is_member_of_exhibit, uuid, type, callback) => 
 
             callback({
                 status: 204,
-                message: 'Record deleted'
+                message: 'Record permanently deleted'
+            });
+
+        } catch (error) {
+
+            callback({
+                status: 400,
+                message: error.message
+            });
+        }
+
+    })();
+};
+
+/**
+ * Permanently deletes all trashed records
+ * @param callback
+ */
+exports.delete_all_trashed_records = (callback) => {
+
+    (async () => {
+
+        try {
+
+            let tables = [TABLES.exhibit_records, TABLES.heading_records, TABLES.item_records];
+
+            tables.forEach((table) => {
+                const TASKS = new EXHIBIT_TRASHED_RECORD_TASKS(DB, table);
+                TASKS.delete_all_trashed_records();
+            });
+
+            callback({
+                status: 204,
+                message: 'Records permanently deleted'
             });
 
         } catch (error) {

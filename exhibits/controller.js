@@ -249,3 +249,10 @@ exports.delete_trashed_record = (req, res) => {
         res.status(data.status).send(data);
     });
 };
+
+exports.delete_all_trashed_records = (req, res) => {
+
+    MODEL.delete_all_trashed_records((data) => {
+        res.status(data.status).send(data);
+    });
+};

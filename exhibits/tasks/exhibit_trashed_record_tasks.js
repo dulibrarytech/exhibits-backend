@@ -195,6 +195,37 @@ const Trashed_record_tasks = class {
     }
 
     /**
+     * Permanently deletes all trashed records
+     * @return {Promise<unknown | boolean>}
+     */
+    delete_all_trashed_records() {
+
+        let promise = new Promise((resolve, reject) => {
+
+            this.DB(this.TABLE)
+            .where({
+                is_published: 0,
+                is_deleted: 1
+            })
+            .delete()
+            .then(() => {
+                LOGGER.module().info('INFO: [/exhibits/exhibit_trashed_record_tasks (delete_all_trashed_records)] Record permanently deleted.');
+                resolve(true);
+            })
+            .catch((error) => {
+                LOGGER.module().error('ERROR: [/exhibits/exhibit_trashed_record_tasks (delete_all_trashed_records)] unable to delete record ' + error.message);
+                reject(false);
+            });
+        });
+
+        return promise.then((result) => {
+            return result;
+        }).catch(() => {
+            return false;
+        });
+    }
+
+    /**
      * Restores trashed records
      * @param uuid
      * @return {Promise<unknown | boolean>}
