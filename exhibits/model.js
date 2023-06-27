@@ -801,3 +801,45 @@ exports.delete_all_trashed_records = (callback) => {
 
     })();
 };
+
+/**
+ * Restores trashed record
+ * @param is_member_of_exhibit
+ * @param uuid
+ * @param type
+ * @param callback
+ */
+exports.restore_trashed_record = (is_member_of_exhibit, uuid, type, callback) => {
+
+    (async () => {
+
+        try {
+
+            let table;
+
+            if (type === 'exhibit') {
+                table = TABLES.exhibit_records;
+            } else if (type === 'heading') {
+                table = TABLES.heading_records;
+            } else if (type === 'item') {
+                table = TABLES.item_records;
+            }
+
+            const TASKS = new EXHIBIT_TRASHED_RECORD_TASKS(DB, table);
+            TASKS.restore_trashed_record(is_member_of_exhibit, uuid);
+
+            callback({
+                status: 204,
+                message: 'Record permanently deleted'
+            });
+
+        } catch (error) {
+
+            callback({
+                status: 400,
+                message: error.message
+            });
+        }
+
+    })();
+};

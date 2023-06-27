@@ -74,4 +74,7 @@ module.exports = (app) => {
 
     app.route(ENDPOINTS().exhibits.trashed_records.post.endpoint)
         .post(CONTROLLER.delete_all_trashed_records);
+
+    app.route(ENDPOINTS().exhibits.trashed_records.put.endpoint)
+        .put(CONTROLLER.restore_trashed_record);
 };

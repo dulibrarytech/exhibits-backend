@@ -255,3 +255,24 @@ exports.delete_all_trashed_records = (req, res) => {
         res.status(data.status).send(data);
     });
 };
+
+exports.restore_trashed_record = (req, res) => {
+
+    const is_member_of_exhibit = req.params.exhibit_id;
+    const uuid = req.params.uuid;
+    const type = req.params.type;
+
+    if (uuid === undefined || uuid.length === 0 && is_member_of_exhibit === undefined || is_member_of_exhibit.length === 0) {
+        res.status(400).send('Bad request.');
+        return false;
+    }
+
+    if (type === undefined) {
+        res.status(400).send('Bad request.');
+        return false;
+    }
+
+    MODEL.restore_trashed_record(is_member_of_exhibit, uuid, type, (data) => {
+        res.status(data.status).send(data);
+    });
+};
