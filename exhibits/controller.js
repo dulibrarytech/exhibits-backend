@@ -231,9 +231,9 @@ exports.get_trashed_records = (req, res) => {
 
 exports.delete_trashed_record = (req, res) => {
 
-    const is_member_of_exhibit = req.query.is_member_of_exhibit;
-    const uuid = req.query.uuid;
-    const type = req.query.type;
+    const is_member_of_exhibit = req.params.exhibit_id;
+    const uuid = req.params.uuid;
+    const type = req.params.type;
 
     if (uuid === undefined || uuid.length === 0 && is_member_of_exhibit === undefined || is_member_of_exhibit.length === 0) {
         res.status(400).send('Bad request.');
@@ -251,7 +251,6 @@ exports.delete_trashed_record = (req, res) => {
 };
 
 exports.delete_all_trashed_records = (req, res) => {
-
     MODEL.delete_all_trashed_records((data) => {
         res.status(data.status).send(data);
     });

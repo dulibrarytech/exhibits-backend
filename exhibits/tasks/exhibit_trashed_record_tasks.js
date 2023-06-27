@@ -227,19 +227,21 @@ const Trashed_record_tasks = class {
 
     /**
      * Restores trashed records
+     * @param is_member_of_exhibit
      * @param uuid
      * @return {Promise<unknown | boolean>}
      */
-    restore_trashed_record(uuid) {
+    restore_trashed_record(is_member_of_exhibit, uuid) {
 
         let promise = new Promise((resolve, reject) => {
 
             this.DB(this.TABLE)
             .where({
+                is_member_of_exhibit: is_member_of_exhibit,
                 uuid: uuid
             })
             .update({
-                is_deleted: 0
+                is_deleted: 1
             })
             .then(() => {
                 LOGGER.module().info('INFO: [/exhibits/exhibit_trashed_record_tasks (restore_trashed_record)] Trashed record restored.');

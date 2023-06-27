@@ -98,7 +98,7 @@ const ENDPOINTS = {
             delete: {
                 description: 'Deletes heading record',
                 endpoint: `${PREFIX}${VERSION}${ENDPOINT}/:exhibit_id/headings/:heading_id`,
-                params: 'token or api_key, uuid, delete_reason'
+                params: 'token or api_key'
             }
         },
         trashed_records: {
@@ -109,13 +109,18 @@ const ENDPOINTS = {
             },
             delete: {
                 description: 'Permanently deletes a record',
-                endpoint: `${PREFIX}${VERSION}/trash`,
-                params: 'token or api_key, is_member_of_exhibit, uuid, type'
+                endpoint: `${PREFIX}${VERSION}/trash/:exhibit_id/:uuid/:type`,
+                params: 'token or api_key'
             },
             post: {
                 description: 'Permanently deletes all trash records',
-                endpoint: `${PREFIX}${VERSION}/trash`,
-                params: 'token or api_key, gets all trash records'
+                endpoint: `${PREFIX}${VERSION}/trash/:exhibit_id/:uuid/:type`,
+                params: 'token or api_key'
+            },
+            put: {
+                description: 'Restores trashed record',
+                endpoint: `${PREFIX}${VERSION}/trash/:exhibit_id/:uuid/:type`,
+                params: 'token or api_key'
             }
         }
     }
