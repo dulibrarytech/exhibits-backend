@@ -37,14 +37,14 @@ exports.create_index = function (req, res) {
  * @param req
  * @param res
  */
-exports.index_records = (req, res) => {
-    MODEL.index_records((data) => {
+exports.index_all_records = (req, res) => {
+    MODEL.index_all_records((data) => {
         res.status(data.status).send(data);
     });
 };
 
 /**
- * Indexes admin record
+ * Indexes single record
  * @param req
  * @param res
  * @return {boolean}

@@ -39,7 +39,7 @@ const Indexer_index_tasks = class {
      * Indexes record
      * @param record
      */
-    index_record = (record) => {
+    index_record(record) {
 
         let promise = new Promise((resolve, reject) => {
 
@@ -80,7 +80,7 @@ const Indexer_index_tasks = class {
      * @param uuid
      * @return {Promise<unknown | boolean>}
      */
-    delete_record = (uuid) => {
+    delete_record(uuid) {
 
         let promise = new Promise((resolve, reject) => {
 
@@ -119,7 +119,7 @@ const Indexer_index_tasks = class {
      * Gets record for full indexing
      * returns Promise string
      */
-    get_record = () => {
+    get_record() {
 
         let promise = new Promise((resolve, reject) => {
 
@@ -157,7 +157,7 @@ const Indexer_index_tasks = class {
      * @param uuid
      * @return {Promise<unknown | boolean>}
      */
-    get_index_record = (uuid) => {
+    get_index_record(uuid) {
 
         let promise = new Promise((resolve, reject) => {
 

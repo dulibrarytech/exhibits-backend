@@ -24,7 +24,7 @@ const LOGGER = require('../../libs/log4');
  * Object contains tasks used to create ES index
  * @param DB
  * @param TABLE
- * @type {Indexer_display_record_tasks}
+ * @type {Indexer_index_utils_tasks}
  */
 const Indexer_index_utils_tasks = class {
 

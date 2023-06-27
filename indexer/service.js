@@ -39,7 +39,7 @@ const check_index = async () => {
         let is_deleted = false;
 
         if (exists === true) {
-            is_deleted = delete_index(INDEX);
+            is_deleted = await delete_index(INDEX);
             if (is_deleted === true) {
                 LOGGER.module().error('ERROR: [/indexer/service module (check_index)] Index checked and deleted.');
             }
@@ -96,25 +96,21 @@ exports.create_index = (callback) => {
 /**
  * Deletes index
  */
-const delete_index = () => {
+const delete_index = async () => {
 
-    (async () => {
+    try {
 
-        try {
+        const INDEX_UTILS_TASKS = new INDEXER_UTILS_TASKS(INDEX, CLIENT, ES_CONFIG);
+        let is_index_deleted = await INDEX_UTILS_TASKS.delete_index();
 
-            const INDEX_UTILS_TASKS = new INDEXER_UTILS_TASKS(INDEX, CLIENT, ES_CONFIG);
-            let is_index_deleted = await INDEX_UTILS_TASKS.delete_index();
-
-            if (is_index_deleted === true) {
-                return true;
-            } else {
-                return false;
-            }
-
-        } catch (error) {
-            LOGGER.module().error('ERROR: [/indexer/service module (delete_index)] Unable to delete index ' + error.message);
+        if (is_index_deleted === true) {
+            return true;
+        } else {
             return false;
         }
 
-    })();
+    } catch (error) {
+        LOGGER.module().error('ERROR: [/indexer/service module (delete_index)] Unable to delete index ' + error.message);
+        return false;
+    }
 };

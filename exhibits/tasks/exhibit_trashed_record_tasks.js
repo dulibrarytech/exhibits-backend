@@ -163,15 +163,17 @@ const Trashed_record_tasks = class {
 
     /**
      * Permanently deletes trashed record
+     * @param is_member_of_exhibit
      * @param uuid
      * @return {Promise<unknown | boolean>}
      */
-    delete_trashed_record(uuid) {
+    delete_trashed_record(is_member_of_exhibit, uuid) {
 
         let promise = new Promise((resolve, reject) => {
 
             this.DB(this.TABLE)
             .where({
+                is_member_of_exhibit: is_member_of_exhibit,
                 uuid: uuid
             })
             .delete()

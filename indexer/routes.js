@@ -28,7 +28,7 @@ module.exports = (app) => {
         .post(CONTROLLER.create_index);  // TOKEN.verify,
 
     app.route(ENDPOINTS().indexer.index_records.endpoint)
-        .post(CONTROLLER.index_records);  // TOKEN.verify,
+        .post(CONTROLLER.index_all_records);  // TOKEN.verify,
 
     app.route(ENDPOINTS().indexer.index_records.endpoints.post.endpoint)
         .post(CONTROLLER.index_record);  // TOKEN.verify,

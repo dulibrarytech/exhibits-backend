@@ -223,22 +223,29 @@ exports.delete_heading_record = (req, res) => {
     });
 };
 
-exports.delete_trashed_record = (req, res) => {
-
-    const uuid = req.params.uuid;
-
-    if (uuid === undefined || uuid.length === 0) {
-        res.status(400).send('Bad request.');
-        return false;
-    }
-
-    MODEL.delete_trashed_record(uuid, (data) => {
+exports.get_trashed_records = (req, res) => {
+    MODEL.get_trashed_records((data) => {
         res.status(data.status).send(data);
     });
 };
 
-exports.get_trashed_records = (req, res) => {
-    MODEL.get_trashed_records((data) => {
+exports.delete_trashed_record = (req, res) => {
+
+    const is_member_of_exhibit = req.query.is_member_of_exhibit;
+    const uuid = req.query.uuid;
+    const type = req.query.type;
+
+    if (uuid === undefined || uuid.length === 0 && is_member_of_exhibit === undefined || is_member_of_exhibit.length === 0) {
+        res.status(400).send('Bad request.');
+        return false;
+    }
+
+    if (type === undefined) {
+        res.status(400).send('Bad request.');
+        return false;
+    }
+
+    MODEL.delete_trashed_record(is_member_of_exhibit, uuid, type, (data) => {
         res.status(data.status).send(data);
     });
 };

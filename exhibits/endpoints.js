@@ -109,8 +109,8 @@ const ENDPOINTS = {
             },
             delete: {
                 description: 'Permanently deletes a record',
-                endpoint: `${PREFIX}${VERSION}/trash/:uuid`,
-                params: 'token or api_key, gets all deleted records'
+                endpoint: `${PREFIX}${VERSION}/trash`,
+                params: 'token or api_key, is_member_of_exhibit, uuid, type'
             },
             post: {
                 description: 'Permanently deletes all trash records',

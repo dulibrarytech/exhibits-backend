@@ -156,7 +156,7 @@ exports.get_exhibit_record = (uuid, callback) => {
     })();
 };
 
-/** TODO: version insert instead of update
+/** TODO: version record
  * Updates exhibit record
  * @param data
  * @param callback
@@ -390,7 +390,8 @@ exports.get_item_record = (is_member_of_exhibit, uuid, callback) => {
     })();
 };
 
-/** Updates item record
+/** TODO: version record
+ * Updates item record
  * @param is_member_of_exhibit
  * @param uuid
  * @param data
@@ -581,7 +582,7 @@ exports.get_heading_record = (is_member_of_exhibit, uuid, callback) => {
     })();
 };
 
-/**
+/** TODO: version record
  * Updates heading record
  * @param is_member_of_exhibit
  * @param uuid
@@ -681,7 +682,7 @@ exports.delete_heading_record = (is_member_of_exhibit, uuid, callback) => {
     })();
 };
 
-/** TODO
+/**
  * Get all trashed records
  * @param callback
  */
@@ -726,19 +727,35 @@ exports.get_trashed_records = (callback) => {
     })();
 };
 
-// TODO:
-exports.delete_trashed_record = (is_member_of_exhibit, uuid, callback) => {
+/**
+ * Permanently deletes trashed record
+ * @param is_member_of_exhibit
+ * @param uuid
+ * @param type
+ * @param callback
+ */
+exports.delete_trashed_record = (is_member_of_exhibit, uuid, type, callback) => {
 
     (async () => {
 
         try {
 
-            const TASK = new EXHIBIT_HEADING_RECORD_TASKS(DB, TABLES.heading_records);
+            let table;
+
+            if (type === 'exhibit') {
+                table = TABLES.exhibit_records;
+            } else if (type === 'heading') {
+                table = TABLES.heading_records;
+            } else if (type === 'item') {
+                table = TABLES.item_records;
+            }
+
+            const TASKS = new EXHIBIT_TRASHED_RECORD_TASKS(DB, table);
+            TASKS.delete_trashed_record(is_member_of_exhibit, uuid);
 
             callback({
                 status: 204,
-                message: 'Record deleted',
-                data:  await TASK.delete_heading_record(is_member_of_exhibit, uuid)
+                message: 'Record deleted'
             });
 
         } catch (error) {

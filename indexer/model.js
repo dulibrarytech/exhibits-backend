@@ -171,7 +171,7 @@ exports.index_record = (uuid, type, callback) => {
  * @param callback
  * @returns {boolean}
  */
-exports.index_records = (callback) => {
+exports.index_all_records = (callback) => {
 
     LOGGER.module().info('INFO: [/indexer/model (index_records)] indexing...');
     index_exhibit_records(ES_CONFIG.elasticsearch_index);
