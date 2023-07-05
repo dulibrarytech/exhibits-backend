@@ -24,6 +24,7 @@ const TABLE = DB_TABLES.exhibits.user_records;
 const AUTH_TASKS = require("../auth/tasks/auth_tasks");
 const EXHIBITS_ENDPOINTS = require('../exhibits/endpoints')();
 const USERS_ENDPOINTS = require('../users/endpoints')();
+const INDEXER_ENDPOINTS = require('../indexer/endpoints')();
 const LOGGER = require('../libs/log4');
 
 /**
@@ -64,7 +65,8 @@ exports.get_auth_user_data = (id, callback) => {
                 user_data: DATA,
                 endpoints: {
                     exhibits: EXHIBITS_ENDPOINTS,
-                    users: USERS_ENDPOINTS
+                    users: USERS_ENDPOINTS,
+                    indexer: INDEXER_ENDPOINTS
                 }
             };
 

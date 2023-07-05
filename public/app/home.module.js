@@ -22,10 +22,10 @@ const homeModule = (function () {
 
     let obj = {};
 
-    obj.init = function () {
+    obj.init = () => {
 
-        if (authModule.checkUserAuthData() === false) {
-            authModule.getAuthUserData();
+        if (authModule.check_user_auth_data() === false) {
+            authModule.get_auth_user_data();
         }
 
         history.replaceState({}, '', '/dashboard/home');

@@ -26,7 +26,7 @@ const helperModule = (function () {
      * Renders error message
      * @param message
      */
-    obj.renderError = function (message) {
+    obj.render_error = function (message) {
         domModule.html('#message', '<div class="alert alert-danger"><i class="fa fa-exclamation-circle"></i> ' + DOMPurify.sanitize(message) + '</div>');
         window.scrollTo({ top: 0, behavior: 'smooth' });
         return false;
@@ -38,7 +38,7 @@ const helperModule = (function () {
      * @param url
      * @returns {*}
      */
-    obj.getParameterByName = function (name, url) {
+    obj.get_parameter_by_name = function (name, url) {
 
         if (!url) {
             url = window.location.href;
@@ -63,7 +63,7 @@ const helperModule = (function () {
     /**
      * Gets current year
      */
-    obj.getCurrentYear = function () {
+    obj.get_current_year = () => {
         let cdate = new Date().getFullYear();
         domModule.html('#cdate', DOMPurify.sanitize(cdate));
     };
@@ -77,7 +77,7 @@ const helperModule = (function () {
     obj.pagination = function (uuid, total_records) {
 
         let path = window.location.pathname,
-            q = helperModule.getParameterByName('q')
+            q = helperModule.get_parameter_by_name('q')
 
         if (uuid === null && q === null) {
             uuid = 'root';

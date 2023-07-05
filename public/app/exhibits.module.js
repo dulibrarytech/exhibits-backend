@@ -20,14 +20,28 @@ const exhibitsModule = (function () {
 
     'use strict';
 
-    const api = configModule.getApi();
     const endpoints = endpointsModule.get_exhibits_endpoints();
     let obj = {};
 
     /**
+     * Gets all exhibits
+     */
+    const get_exhibits = () => {
+        console.log('get_exhibits');
+    };
+
+    /**
+     * Displays exhibits
+     */
+    const display_exhibits = () => {
+        get_exhibits();
+        console.log('display_exhibits');
+    };
+
+    /**
      * Example
      */
-    const addExhibit = function () {
+    const create_exhibit = function () {
 
         domModule.hide('#exhibit-form');
         domModule.html('#message', '<div class="alert alert-info">Saving Exhibit...</div>');
@@ -81,6 +95,10 @@ const exhibitsModule = (function () {
         };
 
         httpModule.req(request, callback);
+    };
+
+    obj.init = () => {
+        display_exhibits();
     };
 
     return obj;

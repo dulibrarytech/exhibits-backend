@@ -24,17 +24,20 @@ const endpointsModule = (function () {
 
     obj.save_exhibits_endpoints = (data) => {
         window.localStorage.setItem('exhibits_endpoints_users', JSON.stringify(data.endpoints.users));
-        window.localStorage.setItem('exhibits_endpoints_repository', JSON.stringify(data.endpoints.exhibits));
+        window.localStorage.setItem('exhibits_endpoints', JSON.stringify(data.endpoints.exhibits));
+        window.localStorage.setItem('exhibits_endpoints_indexer', JSON.stringify(data.endpoints.indexer));
     };
 
     obj.get_users_endpoints = () => {
-        const exhibits_endpoints_users = window.localStorage.getItem('exhibits_endpoints_users');
-        return JSON.parse(exhibits_endpoints_users);
+        return JSON.parse(window.localStorage.getItem('exhibits_endpoints_users'));
+    };
+
+    obj.get_indexer_endpoints = () => {
+        return JSON.parse(window.localStorage.getItem('exhibits_endpoints_indexer'));
     };
 
     obj.get_exhibits_endpoints = () => {
-        const exhibits_endpoints_repository = window.localStorage.getItem('exhibits_endpoints_repository');
-        return JSON.parse(exhibits_endpoints_repository);
+        return JSON.parse(window.localStorage.getItem('exhibits_endpoints'));
     };
 
     obj.init = () => {

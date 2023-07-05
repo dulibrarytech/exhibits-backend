@@ -76,7 +76,7 @@ const Indexer_index_tasks = class {
     }
 
     /**
-     * Deletes record from admin index
+     * Deletes record from index
      * @param uuid
      * @return {Promise<unknown | boolean>}
      */
@@ -152,7 +152,7 @@ const Indexer_index_tasks = class {
         });
     }
 
-    /** TODO: redundant - combine with get_record?
+    /**
      * Gets record for single record index
      * @param uuid
      * @return {Promise<unknown | boolean>}

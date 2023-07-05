@@ -20,7 +20,7 @@ const authModule = (function () {
 
     'use strict';
 
-    const api = configModule.getApi();
+    // const api = configModule.getApi();
     const init_endpoints = endpointsModule.init();
     let obj = {};
 
@@ -28,7 +28,7 @@ const authModule = (function () {
      * Gets token from session storage
      * @returns token
      */
-    obj.getUserToken = () => {
+    obj.get_user_token = () => {
 
         let data = JSON.parse(window.sessionStorage.getItem('exhibits_token'));
 
@@ -48,17 +48,17 @@ const authModule = (function () {
     /**
      * Gets user profile data after authentication
      */
-    obj.getAuthUserData = () => {
+    obj.get_auth_user_data = () => {
 
-        let id = helperModule.getParameterByName('id');
-        authModule.saveToken();
+        let id = helperModule.get_parameter_by_name('id');
+        authModule.save_token();
 
         if (id !== null) {
 
             (async () => {
 
-                let token = authModule.getUserToken();
-                let url = api + init_endpoints.authenticate + '?id=' + id;
+                let token = authModule.get_user_token();
+                let url = init_endpoints.authenticate + '?id=' + id;
                 let response = await httpModule.req({
                     method: 'GET',
                     url: url,
@@ -69,19 +69,26 @@ const authModule = (function () {
                 });
 
                 if (response.status === 200) {
-                    authModule.saveUserAuthData(response.data);
-                } else if (response.status === 401) {
 
-                    helperModule.renderError('Error: (HTTP status ' + response.status + '). Your session has expired.  You will be redirected to the login page momentarily.');
+                    authModule.save_user_auth_data(response.data);
+
+                }
+
+                /*
+                else if (response.status === 401) {
+
+                    helperModule.render_error('Error: (HTTP status ' + response.status + '). Your session has expired.  You will be redirected to the login page momentarily.');
 
                     setTimeout(function () {
                         window.location.replace('/login');
                     }, 3000);
 
                 } else {
-                    helperModule.renderError('Error: (HTTP status ' + response.status + '). Unable to retrieve user profile.');
+                    helperModule.render_error('Error: (HTTP status ' + response.status + '). Unable to retrieve user profile.');
                     window.location.replace('/login');
                 }
+
+                 */
 
             })();
         }
@@ -91,7 +98,7 @@ const authModule = (function () {
      * Checks if user data is in session storage
      * @returns {boolean}
      */
-    obj.checkUserAuthData = () => {
+    obj.check_user_auth_data = () => {
         let data = window.sessionStorage.getItem('exhibits_user');
 
         if (data !== null) {
@@ -105,8 +112,8 @@ const authModule = (function () {
      * Saves user profile data to session storage
      * @param data
      */
-    obj.saveUserAuthData = (data) => {
-
+    obj.save_user_auth_data = (data) => {
+        console.log('save_user_auth_data: ', data);
         let user = {
             uid: DOMPurify.sanitize(data.user_data.data[0].id),
             name: DOMPurify.sanitize(data.user_data.data[0].first_name) + ' ' + DOMPurify.sanitize(data.user_data.data[0].last_name)
@@ -119,9 +126,9 @@ const authModule = (function () {
     /**
      * Gets session token from URL params
      */
-    obj.saveToken = () => {
+    obj.save_token = () => {
 
-        let token = helperModule.getParameterByName('t');
+        let token = helperModule.get_parameter_by_name('t');
 
         if (token !== null) {
 
