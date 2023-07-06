@@ -30,7 +30,7 @@ const CLIENT = new Client({
 /**
  * Checks if index exists.  If it does, it deletes it.
  */
-const check_index = async () => {
+const check_index = async function () {
 
     try {
 
@@ -54,49 +54,50 @@ const check_index = async () => {
 /**
  * Create new index and mapping
  */
-exports.create_index = (callback) => {
+exports.create_index = async function (callback) {
 
-    (async () => {
+    try {
 
-        try {
+        await check_index(INDEX);
+        const INDEX_UTILS_TASKS = new INDEXER_UTILS_TASKS(INDEX, CLIENT, ES_CONFIG);
+        let is_index_created = await INDEX_UTILS_TASKS.create_index();
 
-            await check_index(INDEX);
-            const INDEX_UTILS_TASKS = new INDEXER_UTILS_TASKS(INDEX, CLIENT, ES_CONFIG);
-            let is_index_created = await INDEX_UTILS_TASKS.create_index();
+        if (is_index_created === true) {
 
-            if (is_index_created === true) {
+            let is_mappings_created = await INDEX_UTILS_TASKS.create_mappings();
 
-                let is_mappings_created = await INDEX_UTILS_TASKS.create_mappings();
-
-                if (is_mappings_created === true) {
-                    return true;
-                } else {
-                    LOGGER.module().error('ERROR: [/indexer/service module (create_index)] Unable to create index.');
-                    return false;
-                }
+            if (is_mappings_created === true) {
+                callback({
+                    status: 201,
+                    data: 'Index created'
+                });
 
             } else {
                 LOGGER.module().error('ERROR: [/indexer/service module (create_index)] Unable to create index.');
-                return false;
+                callback({
+                    status: 200,
+                    data: 'Unable to create index'
+                });
             }
 
-        } catch (error) {
-            LOGGER.module().error('ERROR: [/indexer/service module (create_index)] Unable to create index. ' + error.message);
+        } else {
+            LOGGER.module().error('ERROR: [/indexer/service module (create_index)] Unable to create index.');
             return false;
         }
 
-    })();
-
-    callback({
-        status: 201,
-        data: 'Creating index...'
-    });
+    } catch (error) {
+        LOGGER.module().error('ERROR: [/indexer/service module (create_index)] Unable to create index. ' + error.message);
+        callback({
+            status: 200,
+            data: 'Unable to create index'
+        });
+    }
 };
 
 /**
  * Deletes index
  */
-const delete_index = async () => {
+const delete_index = async function () {
 
     try {
 
