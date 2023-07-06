@@ -208,7 +208,7 @@ const helperModule = (function () {
         return DOMPurify.sanitize(html);
     };
 
-    obj.init = function () {};
+    obj.init = function() {};
 
     return obj;
 

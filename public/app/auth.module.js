@@ -20,7 +20,6 @@ const authModule = (function () {
 
     'use strict';
 
-    // const api = configModule.getApi();
     const init_endpoints = endpointsModule.init();
     let obj = {};
 
@@ -28,7 +27,7 @@ const authModule = (function () {
      * Gets token from session storage
      * @returns token
      */
-    obj.get_user_token = () => {
+    obj.get_user_token = function() {
 
         let data = JSON.parse(window.sessionStorage.getItem('exhibits_token'));
 
@@ -48,7 +47,7 @@ const authModule = (function () {
     /**
      * Gets user profile data after authentication
      */
-    obj.get_auth_user_data = () => {
+    obj.get_auth_user_data = function() {
 
         let id = helperModule.get_parameter_by_name('id');
         authModule.save_token();
@@ -98,7 +97,7 @@ const authModule = (function () {
      * Checks if user data is in session storage
      * @returns {boolean}
      */
-    obj.check_user_auth_data = () => {
+    obj.check_user_auth_data = function() {
         let data = window.sessionStorage.getItem('exhibits_user');
 
         if (data !== null) {
@@ -112,7 +111,7 @@ const authModule = (function () {
      * Saves user profile data to session storage
      * @param data
      */
-    obj.save_user_auth_data = (data) => {
+    obj.save_user_auth_data = function(data) {
         console.log('save_user_auth_data: ', data);
         let user = {
             uid: DOMPurify.sanitize(data.user_data.data[0].id),
@@ -126,7 +125,7 @@ const authModule = (function () {
     /**
      * Gets session token from URL params
      */
-    obj.save_token = () => {
+    obj.save_token = function() {
 
         let token = helperModule.get_parameter_by_name('t');
 

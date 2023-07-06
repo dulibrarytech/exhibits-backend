@@ -22,25 +22,25 @@ const endpointsModule = (function () {
 
     let obj = {};
 
-    obj.save_exhibits_endpoints = (data) => {
+    obj.save_exhibits_endpoints = function(data) {
         window.localStorage.setItem('exhibits_endpoints_users', JSON.stringify(data.endpoints.users));
         window.localStorage.setItem('exhibits_endpoints', JSON.stringify(data.endpoints.exhibits));
         window.localStorage.setItem('exhibits_endpoints_indexer', JSON.stringify(data.endpoints.indexer));
     };
 
-    obj.get_users_endpoints = () => {
+    obj.get_users_endpoints = function() {
         return JSON.parse(window.localStorage.getItem('exhibits_endpoints_users'));
     };
 
-    obj.get_indexer_endpoints = () => {
+    obj.get_indexer_endpoints = function() {
         return JSON.parse(window.localStorage.getItem('exhibits_endpoints_indexer'));
     };
 
-    obj.get_exhibits_endpoints = () => {
+    obj.get_exhibits_endpoints = function() {
         return JSON.parse(window.localStorage.getItem('exhibits_endpoints'));
     };
 
-    obj.init = () => {
+    obj.init = function() {
         return {
             authenticate: '/api/v1/authenticate'
         }

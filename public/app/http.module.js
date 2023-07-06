@@ -16,18 +16,18 @@
 
  */
 
-const httpModule = (() => {
+const httpModule = (function() {
 
     'use strict';
 
     const HTTP = axios;
     let obj = {};
-    obj.req = async (request) => {
+    obj.req = async function(request) {
 
         try {
             return await HTTP(request);
         } catch(error) {
-            console.log(error.message);
+            console.log('HTTP ERROR: ', error.message);
             return error;
         }
     };

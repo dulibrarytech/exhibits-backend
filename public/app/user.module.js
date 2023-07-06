@@ -29,7 +29,7 @@ const userModule = (function () {
      * Renders user profile data
      * @param data
      */
-    const renderUsers = (data) => {
+    function render_users(data) {
 
         let users = '';
         let user;
@@ -78,13 +78,13 @@ const userModule = (function () {
         });
 
         return false;
-    };
+    }
 
     /**
      * Renders user profile data for edit form
      * @param data
      */
-    const renderUserDetails = (data) => {
+    function render_user_details(data) {
 
         let user;
 
@@ -106,12 +106,12 @@ const userModule = (function () {
         }
 
         return false;
-    };
+    }
 
     /**
      * Gets all users
      */
-    obj.getUsers = () => {
+    obj.get_users = function() {
 
         (async () => {
 
@@ -120,12 +120,12 @@ const userModule = (function () {
                 url: api + endpoints.users.endpoint,
                 headers: {
                     'Content-Type': 'application/json',
-                    'x-access-token': authModule.getUserToken()
+                    'x-access-token': authModule.get_user_token()
                 }
             });
 
             if (response.status === 200) {
-                renderUsers(response.data);
+                render_users(response.data);
             } else if (response.status === 401) {
                 window.location.replace('/login');
             } else {
@@ -138,7 +138,7 @@ const userModule = (function () {
     /**
      * Retrieves user profile data for edit form
      */
-    obj.getUserDetails = () => {
+    obj.getUserDetails = function() {
 
         (async () => {
 
@@ -167,7 +167,7 @@ const userModule = (function () {
      * Checks if user data is in session storage
      * @returns {boolean}
      */
-    obj.checkUserData = () => {
+    obj.check_user_data = function() {
 
         let data = window.sessionStorage.getItem('oclc_reclamation_user');
 
@@ -184,7 +184,7 @@ const userModule = (function () {
      * @param value
      * @return {boolean/string}
      */
-    const validate = (div_id, value) => {
+    function validate(div_id, value) {
         if (value.length === 0) {
             domModule.html(`#${div_id}_error`, '<span style="color: red"><i class="fa fa-exclamation-circle"></i> Please enter a value</span>')
             return false;
@@ -198,25 +198,25 @@ const userModule = (function () {
      * Retrieves user form data
      * @returns {object}
      */
-    const getUserFormData = () => {
+    function get_user_form_data() {
         return {
             du_id: validate('username', domModule.val('#username', null)),
             email: validate('email', domModule.val('#email', null)),
             first_name: validate('first_name', domModule.val('#first_name', null)),
             last_name: validate('last_name', domModule.val('#last_name', null))
         };
-    };
+    }
 
     /**
      * Adds new user
      */
-    obj.addUser = (event) => {
+    obj.add_user = function(event) {
 
         event.preventDefault();
 
         (async () => {
 
-            let user = getUserFormData();
+            let user = get_user_form_data();
 
             for (let prop in user) {
                 if (user[prop] === false) {
@@ -260,14 +260,14 @@ const userModule = (function () {
     /**
      * Updates user data
      */
-    obj.updateUser = (event) => {
+    obj.update_user = function(event) {
 
         event.preventDefault();
 
         (async () => {
 
-            let user = getUserFormData();
-            user.id = helperModule.getParameterByName('id');
+            let user = get_user_form_data();
+            user.id = helperModule.get_parameter_by_name('id');
 
             if ($('#is_active').prop('checked')) {
                 user.is_active = 1;
@@ -289,7 +289,7 @@ const userModule = (function () {
                 url: api + endpoints.users.endpoint,
                 headers: {
                     'Content-Type': 'application/json',
-                    'x-access-token': authModule.getUserToken()
+                    'x-access-token': authModule.get_user_token()
                 },
                 data: JSON.stringify(user),
             });
@@ -314,14 +314,14 @@ const userModule = (function () {
     /** TODO:
      * Deletes user data
      */
-    obj.deleteUser = () => {
+    obj.delete_user = function() {
 
         // const endpoints = endpointsModule.endpoints();
-        let id = helperModule.getParameterByName('id');
+        let id = helperModule.get_parameter_by_name('id');
         domModule.hide('#user-delete-form');
         domModule.html('#message', '<div class="alert alert-info">Deleting User...</div>');
 
-        let token = authModule.getUserToken();
+        let token = authModule.get_user_token();
         let url = api + endpoints.users.endpoint + '?id=' + id,
             request = new Request(url, {
                 method: 'DELETE',
@@ -363,8 +363,7 @@ const userModule = (function () {
         httpModule.req(request, callback);
     };
 
-    obj.init = function () {
-    };
+    obj.init = function () {};
 
     return obj;
 

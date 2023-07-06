@@ -22,7 +22,7 @@ const homeModule = (function () {
 
     let obj = {};
 
-    obj.init = () => {
+    obj.init = function() {
 
         if (authModule.check_user_auth_data() === false) {
             authModule.get_auth_user_data();

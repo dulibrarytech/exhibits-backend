@@ -27,7 +27,7 @@ const itemsModule = (function () {
     /**
      * Gets exhibit items
      */
-    obj.getItems = function () {};
+    obj.get_items = function () {};
 
     obj.init = function () {};
 

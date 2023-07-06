@@ -26,22 +26,22 @@ const exhibitsModule = (function () {
     /**
      * Gets all exhibits
      */
-    const get_exhibits = () => {
+    function get_exhibits() {
         console.log('get_exhibits');
-    };
+    }
 
     /**
      * Displays exhibits
      */
-    const display_exhibits = () => {
+    function display_exhibits() {
         get_exhibits();
         console.log('display_exhibits');
-    };
+    }
 
     /**
      * Example
      */
-    const create_exhibit = function () {
+    function create_exhibit()  {
 
         domModule.hide('#exhibit-form');
         domModule.html('#message', '<div class="alert alert-info">Saving Exhibit...</div>');
@@ -97,7 +97,7 @@ const exhibitsModule = (function () {
         httpModule.req(request, callback);
     };
 
-    obj.init = () => {
+    obj.init = function() {
         display_exhibits();
     };
 
