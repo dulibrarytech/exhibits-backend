@@ -16,25 +16,14 @@
 
  */
 
-const homeModule = (function () {
+'use strict';
 
-    'use strict';
+const UPLOAD_CONFIG = {
+    exhibits_upload_path: process.env.EXHIBITS_UPLOAD_PATH,
+    headings_upload_path: process.env.HEADINGS_UPLOAD_PATH,
+    items_upload_path: process.env.ITEMS_UPLOAD_PATH
+};
 
-    let obj = {};
-
-    obj.init = () => {
-
-        if (authModule.check_user_auth_data() === false) {
-            authModule.get_auth_user_data();
-        }
-
-        history.replaceState({}, '', '/dashboard/home');
-        history.pushState({}, '', '/dashboard/home');
-        exhibitsModule.init();
-    };
-
-    return obj;
-
-}());
-
-homeModule.init();
+module.exports = () => {
+    return UPLOAD_CONFIG;
+};
