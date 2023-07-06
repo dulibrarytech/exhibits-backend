@@ -20,7 +20,7 @@
 
 const MODEL = require('../exhibits/model');
 
-exports.create_exhibit_record = (req, res) => {
+exports.create_exhibit_record = function (req, res) {
 
     const data = req.body;
 
@@ -34,13 +34,13 @@ exports.create_exhibit_record = (req, res) => {
     });
 };
 
-exports.get_exhibit_records = (req, res) => {
+exports.get_exhibit_records = function (req, res) {
     MODEL.get_exhibit_records((data) => {
         res.status(data.status).send(data);
     });
 };
 
-exports.get_exhibit_record = (req, res) => {
+exports.get_exhibit_record = function (req, res) {
 
     const uuid = req.params.exhibit_id;
 
@@ -54,7 +54,7 @@ exports.get_exhibit_record = (req, res) => {
     });
 };
 
-exports.update_exhibit_record = (req, res) => {
+exports.update_exhibit_record = function (req, res) {
 
     const data = req.body;
 
@@ -68,7 +68,7 @@ exports.update_exhibit_record = (req, res) => {
     });
 };
 
-exports.delete_exhibit_record = (req, res) => {
+exports.delete_exhibit_record = function (req, res) {
 
     let uuid = req.params.exhibit_id;
 
@@ -82,7 +82,7 @@ exports.delete_exhibit_record = (req, res) => {
     });
 };
 
-exports.create_item_record = (req, res) => {
+exports.create_item_record = function (req, res) {
 
     const is_member_of_exhibit = req.params.exhibit_id;
     const data = req.body;
@@ -97,16 +97,16 @@ exports.create_item_record = (req, res) => {
     });
 };
 
-exports.get_item_records = (req, res) => {
+exports.get_item_records = function (req, res) {
 
     const is_member_of_exhibit = req.params.exhibit_id;
 
-    MODEL.get_item_records(is_member_of_exhibit,(data) => {
+    MODEL.get_item_records(is_member_of_exhibit, (data) => {
         res.status(data.status).send(data);
     });
 };
 
-exports.get_item_record = (req, res) => {
+exports.get_item_record = function (req, res) {
 
     const is_member_of_exhibit = req.params.exhibit_id;
     const uuid = req.params.item_id;
@@ -121,7 +121,7 @@ exports.get_item_record = (req, res) => {
     });
 };
 
-exports.update_item_record = (req, res) => {
+exports.update_item_record = function (req, res) {
 
     const is_member_of_exhibit = req.params.exhibit_id;
     const uuid = req.params.item_id;
@@ -142,7 +142,7 @@ exports.update_item_record = (req, res) => {
     });
 };
 
-exports.delete_item_record = (req, res) => {
+exports.delete_item_record = function (req, res) {
 
     const is_member_of_exhibit = req.params.exhibit_id;
     const uuid = req.params.item_id;
@@ -157,7 +157,7 @@ exports.delete_item_record = (req, res) => {
     });
 };
 
-exports.create_heading_record = (req, res) => {
+exports.create_heading_record = function (req, res) {
 
     const is_member_of_exhibit = req.params.exhibit_id;
     const data = req.body;
@@ -172,7 +172,7 @@ exports.create_heading_record = (req, res) => {
     });
 };
 
-exports.get_heading_record = (req, res) => {
+exports.get_heading_record = function (req, res) {
 
     const is_member_of_exhibit = req.params.exhibit_id;
     const uuid = req.params.heading_id;
@@ -187,7 +187,7 @@ exports.get_heading_record = (req, res) => {
     });
 };
 
-exports.update_heading_record = (req, res) => {
+exports.update_heading_record = function (req, res) {
 
     const is_member_of_exhibit = req.params.exhibit_id;
     const uuid = req.params.heading_id;
@@ -203,12 +203,12 @@ exports.update_heading_record = (req, res) => {
         return false;
     }
 
-    MODEL.update_heading_record(is_member_of_exhibit, uuid, data,(data) => {
+    MODEL.update_heading_record(is_member_of_exhibit, uuid, data, (data) => {
         res.status(data.status).send(data);
     });
 };
 
-exports.delete_heading_record = (req, res) => {
+exports.delete_heading_record = function (req, res) {
 
     const is_member_of_exhibit = req.params.exhibit_id;
     const uuid = req.params.heading_id;
@@ -223,13 +223,13 @@ exports.delete_heading_record = (req, res) => {
     });
 };
 
-exports.get_trashed_records = (req, res) => {
+exports.get_trashed_records = function (req, res) {
     MODEL.get_trashed_records((data) => {
         res.status(data.status).send(data);
     });
 };
 
-exports.delete_trashed_record = (req, res) => {
+exports.delete_trashed_record = function (req, res) {
 
     const is_member_of_exhibit = req.params.exhibit_id;
     const uuid = req.params.uuid;
@@ -250,13 +250,13 @@ exports.delete_trashed_record = (req, res) => {
     });
 };
 
-exports.delete_all_trashed_records = (req, res) => {
+exports.delete_all_trashed_records = function (req, res) {
     MODEL.delete_all_trashed_records((data) => {
         res.status(data.status).send(data);
     });
 };
 
-exports.restore_trashed_record = (req, res) => {
+exports.restore_trashed_record = function (req, res) {
 
     const is_member_of_exhibit = req.params.exhibit_id;
     const uuid = req.params.uuid;

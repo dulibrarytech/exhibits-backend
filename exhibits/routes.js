@@ -22,59 +22,59 @@ const CONTROLLER = require('../exhibits/controller');
 const ENDPOINTS = require('../exhibits/endpoints');
 const TOKEN = require('../libs/tokens');
 
-module.exports = (app) => {
+module.exports = function (app) {
 
     app.route(ENDPOINTS().exhibits.exhibit_records.endpoints.post.endpoint)
-        .post(CONTROLLER.create_exhibit_record);  // TOKEN.verify,
+    .post(CONTROLLER.create_exhibit_record);  // TOKEN.verify,
 
     app.route(ENDPOINTS().exhibits.exhibit_records.endpoint)
-        .get(CONTROLLER.get_exhibit_records); // TOKEN.verify,
+    .get(CONTROLLER.get_exhibit_records); // TOKEN.verify,
 
     app.route(ENDPOINTS().exhibits.exhibit_records.endpoints.get.endpoint)
-        .get(CONTROLLER.get_exhibit_record); // TOKEN.verify,
+    .get(CONTROLLER.get_exhibit_record); // TOKEN.verify,
 
     app.route(ENDPOINTS().exhibits.exhibit_records.endpoints.put.endpoint)
-        .put(CONTROLLER.update_exhibit_record); // TOKEN.verify,
+    .put(CONTROLLER.update_exhibit_record); // TOKEN.verify,
 
     app.route(ENDPOINTS().exhibits.exhibit_records.endpoints.delete.endpoint)
-        .delete(CONTROLLER.delete_exhibit_record);  // TOKEN.verify,
+    .delete(CONTROLLER.delete_exhibit_record);  // TOKEN.verify,
 
     app.route(ENDPOINTS().exhibits.item_records.post.endpoint)
-        .post(CONTROLLER.create_item_record);  // TOKEN.verify,
+    .post(CONTROLLER.create_item_record);  // TOKEN.verify,
 
     app.route(ENDPOINTS().exhibits.item_records.endpoint)
-        .get(CONTROLLER.get_item_records);  // TOKEN.verify,
+    .get(CONTROLLER.get_item_records);  // TOKEN.verify,
 
     app.route(ENDPOINTS().exhibits.item_records.get.endpoint)
-        .get(CONTROLLER.get_item_record);  // TOKEN.verify,
+    .get(CONTROLLER.get_item_record);  // TOKEN.verify,
 
     app.route(ENDPOINTS().exhibits.item_records.put.endpoint)
-        .put(CONTROLLER.update_item_record);  // TOKEN.verify,
+    .put(CONTROLLER.update_item_record);  // TOKEN.verify,
 
     app.route(ENDPOINTS().exhibits.item_records.delete.endpoint)
-        .delete(CONTROLLER.delete_item_record);  // TOKEN.verify,
+    .delete(CONTROLLER.delete_item_record);  // TOKEN.verify,
 
     app.route(ENDPOINTS().exhibits.heading_records.post.endpoint)
-        .post(CONTROLLER.create_heading_record);  // TOKEN.verify,
+    .post(CONTROLLER.create_heading_record);  // TOKEN.verify,
 
     app.route(ENDPOINTS().exhibits.heading_records.get.endpoint)
-        .get(CONTROLLER.get_heading_record);
+    .get(CONTROLLER.get_heading_record);
 
     app.route(ENDPOINTS().exhibits.heading_records.put.endpoint)
-        .put(CONTROLLER.update_heading_record); // TOKEN.verify,
+    .put(CONTROLLER.update_heading_record); // TOKEN.verify,
 
     app.route(ENDPOINTS().exhibits.heading_records.delete.endpoint)
-        .delete(CONTROLLER.delete_heading_record);
+    .delete(CONTROLLER.delete_heading_record);
 
     app.route(ENDPOINTS().exhibits.trashed_records.get.endpoint)
-        .get(CONTROLLER.get_trashed_records);
+    .get(CONTROLLER.get_trashed_records);
 
     app.route(ENDPOINTS().exhibits.trashed_records.delete.endpoint)
-        .delete(CONTROLLER.delete_trashed_record);
+    .delete(CONTROLLER.delete_trashed_record);
 
     app.route(ENDPOINTS().exhibits.trashed_records.post.endpoint)
-        .post(CONTROLLER.delete_all_trashed_records);
+    .post(CONTROLLER.delete_all_trashed_records);
 
     app.route(ENDPOINTS().exhibits.trashed_records.put.endpoint)
-        .put(CONTROLLER.restore_trashed_record);
+    .put(CONTROLLER.restore_trashed_record);
 };
