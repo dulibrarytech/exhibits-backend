@@ -93,7 +93,6 @@ const Exhibit_record_tasks = class {
                 is_deleted: 0
             })
             .then((data) => {
-                // TODO: unescape
                 resolve(data);
             })
             .catch((error) => {

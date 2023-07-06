@@ -35,7 +35,7 @@ const CLIENT = new Client({
  * @param record
  * @return {{hero_image: *, template, page_layout: *, is_published: (number|*), created: *, subtitle: *, banner: *, description, styles, type, title, uuid}}
  */
-const construct_exhibit_index_record = (record) => {
+const construct_exhibit_index_record = function (record) {
 
     return {
         uuid: record.uuid,
@@ -58,7 +58,7 @@ const construct_exhibit_index_record = (record) => {
  * @param record
  * @return {{subtext: ({type: string}|*), is_published: (number|*), created: *, text, type, uuid, is_member_of_exhibit: *, order}}
  */
-const construct_heading_index_record = (record) => {
+const construct_heading_index_record = function (record) {
 
     return {
         is_member_of_exhibit: record.is_member_of_exhibit,
@@ -77,7 +77,7 @@ const construct_heading_index_record = (record) => {
  * @param record
  * @return {{date, template, item_type: *, columns, is_published: (number|*), created: *, description, caption, type, title, uuid, url, layout, styles, text, is_member_of_exhibit: *, order}}
  */
-const construct_item_index_record = (record) => {
+const construct_item_index_record = function (record) {
 
     return {
         is_member_of_exhibit: record.is_member_of_exhibit,
@@ -107,63 +107,59 @@ const construct_item_index_record = (record) => {
  * @param callback
  * @returns {boolean}
  */
-exports.index_record = (uuid, type, callback) => {
+exports.index_record = async function (uuid, type, callback) {
 
-    (async () => {
+    try {
 
-        try {
+        let table;
+        let index_record;
+        let response;
+        let result = true;
 
-            let table;
-            let index_record;
-            let response;
-            let result = true;
+        if (type === 'exhibit') {
+            table = TABLES.exhibit_records;
+        } else if (type === 'heading') {
+            table = TABLES.heading_records;
+        } else if (type === 'item') {
+            table = TABLES.item_records;
+        }
 
-            if (type === 'exhibit') {
-                table = TABLES.exhibit_records;
-            } else if (type === 'heading') {
-                table = TABLES.heading_records;
-            } else if (type === 'item') {
-                table = TABLES.item_records;
+        const INDEX_TASKS = new INDEXER_INDEX_TASKS(DB, table, CLIENT, ES_CONFIG.elasticsearch_index);
+        let record = await INDEX_TASKS.get_index_record(uuid);
+
+        if (type === 'exhibit') {
+            index_record = construct_exhibit_index_record(record);
+        } else if (type === 'heading') {
+            index_record = construct_heading_index_record(record);
+        } else if (type === 'item') {
+            index_record = construct_item_index_record(record);
+        }
+
+        response = await INDEX_TASKS.index_record(index_record);
+
+        if (response === true) {
+
+            LOGGER.module().info('INFO: [/indexer/model (index_admin_record)] ' + record.uuid + ' indexed.');
+
+            result = await INDEX_TASKS.update_indexing_status(record.uuid);
+
+            if (result !== true) {
+                LOGGER.module().error('ERROR: [/indexer/model (index_admin_record)] index status update failed.');
             }
 
-            const INDEX_TASKS = new INDEXER_INDEX_TASKS(DB, table, CLIENT, ES_CONFIG.elasticsearch_index);
-            let record = await INDEX_TASKS.get_index_record(uuid);
-
-            if (type === 'exhibit') {
-                index_record = construct_exhibit_index_record(record);
-            } else if (type === 'heading') {
-                index_record = construct_heading_index_record(record);
-            } else if (type === 'item') {
-                index_record = construct_item_index_record(record);
-            }
-
-            response = await INDEX_TASKS.index_record(index_record);
-
-            if (response === true) {
-
-                LOGGER.module().info('INFO: [/indexer/model (index_admin_record)] ' + record.uuid + ' indexed.');
-
-                result = await INDEX_TASKS.update_indexing_status(record.uuid);
-
-                if (result !== true) {
-                    LOGGER.module().error('ERROR: [/indexer/model (index_admin_record)] index status update failed.');
-                }
-
-                callback({
-                    status: 201,
-                    message: 'Record indexed'
-                });
-            }
-
-        } catch (error) {
-            LOGGER.module().error('ERROR: [/indexer/model (index_admin_record)] ' + error.message);
             callback({
-                status: 200,
-                message: 'Unable to index record'
+                status: 201,
+                message: 'Record indexed'
             });
         }
 
-    })();
+    } catch (error) {
+        LOGGER.module().error('ERROR: [/indexer/model (index_admin_record)] ' + error.message);
+        callback({
+            status: 200,
+            message: 'Unable to index record'
+        });
+    }
 };
 
 /**
@@ -171,7 +167,7 @@ exports.index_record = (uuid, type, callback) => {
  * @param callback
  * @returns {boolean}
  */
-exports.index_all_records = (callback) => {
+exports.index_all_records = function (callback) {
 
     LOGGER.module().info('INFO: [/indexer/model (index_records)] indexing...');
     index_exhibit_records(ES_CONFIG.elasticsearch_index);
@@ -187,157 +183,145 @@ exports.index_all_records = (callback) => {
 /**
  * Index exhibit records
  */
-const index_exhibit_records = (INDEX) => {
+const index_exhibit_records = async function (INDEX) {
 
-   (async () => {
+    const EXHIBITS_INDEX_TASKS = new INDEXER_INDEX_TASKS(DB, TABLES.exhibit_records, CLIENT, INDEX);
+    let is_exhibits_reset = await EXHIBITS_INDEX_TASKS.reset_indexed_flags();
 
-        const EXHIBITS_INDEX_TASKS = new INDEXER_INDEX_TASKS(DB, TABLES.exhibit_records, CLIENT, INDEX);
-        let is_exhibits_reset = await EXHIBITS_INDEX_TASKS.reset_indexed_flags();
+    if (is_exhibits_reset === false) {
+        LOGGER.module().error('ERROR: [/indexer/model (index_records)] is_exhibits flag reset failed.');
+        return false;
+    }
 
-        if (is_exhibits_reset === false) {
-            LOGGER.module().error('ERROR: [/indexer/model (index_records)] is_exhibits flag reset failed.');
-            return false;
-        }
+    let exhibit_index_timer = setInterval(async () => {
 
-        let exhibit_index_timer = setInterval(async () => {
+        try {
 
-            try {
+            let response;
+            let result;
+            let record = await EXHIBITS_INDEX_TASKS.get_record();
 
-                let response;
-                let result;
-                let record = await EXHIBITS_INDEX_TASKS.get_record();
-
-                if (record === 0 || record === undefined) {
-                    clearInterval(exhibit_index_timer);
-                    LOGGER.module().info('INFO: [/indexer/model (index_exhibit_records)] Exhibit records indexing complete.');
-                    return false;
-                }
-
-                response = await EXHIBITS_INDEX_TASKS.index_record(construct_exhibit_index_record(record));
-
-                if (response === true) {
-
-                    LOGGER.module().info('INFO: [/indexer/model (index_records)] ' + record.uuid + ' (' + record.title + ') indexed.');
-
-                    result = await EXHIBITS_INDEX_TASKS.update_indexing_status(record.uuid);
-
-                    if (result !== true) {
-                        console.log('index status update failed.');
-                        LOGGER.module().error('ERROR: [/indexer/model (index_records)] index status update failed.');
-                    }
-                }
-
-            } catch(error) {
-                LOGGER.module().error('ERROR: [/indexer/model (index_records)] Unable to index record(s). ' + error.message);
+            if (record === 0 || record === undefined) {
+                clearInterval(exhibit_index_timer);
+                LOGGER.module().info('INFO: [/indexer/model (index_exhibit_records)] Exhibit records indexing complete.');
+                return false;
             }
 
-        }, INDEX_TIMER);
+            response = await EXHIBITS_INDEX_TASKS.index_record(construct_exhibit_index_record(record));
 
-    })();
+            if (response === true) {
+
+                LOGGER.module().info('INFO: [/indexer/model (index_records)] ' + record.uuid + ' (' + record.title + ') indexed.');
+
+                result = await EXHIBITS_INDEX_TASKS.update_indexing_status(record.uuid);
+
+                if (result !== true) {
+                    console.log('index status update failed.');
+                    LOGGER.module().error('ERROR: [/indexer/model (index_records)] index status update failed.');
+                }
+            }
+
+        } catch (error) {
+            LOGGER.module().error('ERROR: [/indexer/model (index_records)] Unable to index record(s). ' + error.message);
+        }
+
+    }, INDEX_TIMER);
 };
 
 /**
  * Index heading records
  * @param INDEX
  */
-const index_heading_records = (INDEX) => {
+const index_heading_records = async function (INDEX) {
 
-    (async () => {
+    const HEADINGS_INDEX_TASKS = new INDEXER_INDEX_TASKS(DB, TABLES.heading_records, CLIENT, INDEX);
+    let is_headings_reset = await HEADINGS_INDEX_TASKS.reset_indexed_flags();
 
-        const HEADINGS_INDEX_TASKS = new INDEXER_INDEX_TASKS(DB, TABLES.heading_records, CLIENT, INDEX);
-        let is_headings_reset = await HEADINGS_INDEX_TASKS.reset_indexed_flags();
+    if (is_headings_reset === false) {
+        LOGGER.module().error('ERROR: [/indexer/model (index_records)] is_headings flag reset failed.');
+        return false;
+    }
 
-        if (is_headings_reset === false) {
-            LOGGER.module().error('ERROR: [/indexer/model (index_records)] is_headings flag reset failed.');
-            return false;
-        }
+    let heading_index_timer = setInterval(async () => {
 
-        let heading_index_timer = setInterval(async () => {
+        try {
 
-            try {
+            let response;
+            let result;
+            let record = await HEADINGS_INDEX_TASKS.get_record();
 
-                let response;
-                let result;
-                let record = await HEADINGS_INDEX_TASKS.get_record();
-
-                if (record === 0 || record === undefined) {
-                    clearInterval(heading_index_timer);
-                    LOGGER.module().info('INFO: [/indexer/model (index_heading_records)] Heading records indexing complete.');
-                    return false;
-                }
-
-                response = await HEADINGS_INDEX_TASKS.index_record(construct_heading_index_record(record));
-
-                if (response === true) {
-
-                    LOGGER.module().info('INFO: [/indexer/model (index_heading_records)] ' + record.uuid + ' (' + record.text + ') indexed.');
-
-                    result = await HEADINGS_INDEX_TASKS.update_indexing_status(record.uuid);
-
-                    if (result !== true) {
-                        LOGGER.module().error('ERROR: [/indexer/model (index_heading_records)] index status update failed.');
-                    }
-                }
-
-            } catch(error) {
-                LOGGER.module().error('ERROR: [/indexer/model (index_heading_records)] Unable to index record(s). ' + error.message);
+            if (record === 0 || record === undefined) {
+                clearInterval(heading_index_timer);
+                LOGGER.module().info('INFO: [/indexer/model (index_heading_records)] Heading records indexing complete.');
+                return false;
             }
 
-        }, INDEX_TIMER);
+            response = await HEADINGS_INDEX_TASKS.index_record(construct_heading_index_record(record));
 
-    })();
+            if (response === true) {
+
+                LOGGER.module().info('INFO: [/indexer/model (index_heading_records)] ' + record.uuid + ' (' + record.text + ') indexed.');
+
+                result = await HEADINGS_INDEX_TASKS.update_indexing_status(record.uuid);
+
+                if (result !== true) {
+                    LOGGER.module().error('ERROR: [/indexer/model (index_heading_records)] index status update failed.');
+                }
+            }
+
+        } catch (error) {
+            LOGGER.module().error('ERROR: [/indexer/model (index_heading_records)] Unable to index record(s). ' + error.message);
+        }
+
+    }, INDEX_TIMER);
 };
 
 /**
  * Index item records
  * @param INDEX
  */
-const index_item_records = (INDEX) => {
+const index_item_records = async function (INDEX) {
 
-    (async () => {
+    const ITEMS_INDEX_TASKS = new INDEXER_INDEX_TASKS(DB, TABLES.item_records, CLIENT, INDEX);
+    let is_items_reset = await ITEMS_INDEX_TASKS.reset_indexed_flags();
 
-        const ITEMS_INDEX_TASKS = new INDEXER_INDEX_TASKS(DB, TABLES.item_records, CLIENT, INDEX);
-        let is_items_reset = await ITEMS_INDEX_TASKS.reset_indexed_flags();
+    if (is_items_reset === false) {
+        LOGGER.module().error('ERROR: [/indexer/model (index_item_records)] is_items flag reset failed.');
+        return false;
+    }
 
-        if (is_items_reset === false) {
-            LOGGER.module().error('ERROR: [/indexer/model (index_item_records)] is_items flag reset failed.');
-            return false;
-        }
+    let item_index_timer = setInterval(async () => {
 
-        let item_index_timer = setInterval(async () => {
+        try {
 
-            try {
+            let response;
+            let result;
+            let record = await ITEMS_INDEX_TASKS.get_record();
 
-                let response;
-                let result;
-                let record = await ITEMS_INDEX_TASKS.get_record();
-
-                if (record === 0 || record === undefined) {
-                    clearInterval(item_index_timer);
-                    LOGGER.module().info('INFO: [/indexer/model (index_item_records)] Item records indexing complete.');
-                    return false;
-                }
-
-                response = await ITEMS_INDEX_TASKS.index_record(construct_item_index_record(record));
-
-                if (response === true) {
-
-                    LOGGER.module().info('INFO: [/indexer/model (index_item_records)] ' + record.uuid + ' (' + record.title + ') indexed.');
-
-                    result = await ITEMS_INDEX_TASKS.update_indexing_status(record.uuid);
-
-                    if (result !== true) {
-                        LOGGER.module().error('ERROR: [/indexer/model (index_item_records)] index status update failed.');
-                    }
-                }
-
-            } catch(error) {
-                LOGGER.module().error('ERROR: [/indexer/model (index_item_records)] Unable to index record(s). ' + error.message);
+            if (record === 0 || record === undefined) {
+                clearInterval(item_index_timer);
+                LOGGER.module().info('INFO: [/indexer/model (index_item_records)] Item records indexing complete.');
+                return false;
             }
 
-        }, INDEX_TIMER);
+            response = await ITEMS_INDEX_TASKS.index_record(construct_item_index_record(record));
 
-    })();
+            if (response === true) {
+
+                LOGGER.module().info('INFO: [/indexer/model (index_item_records)] ' + record.uuid + ' (' + record.title + ') indexed.');
+
+                result = await ITEMS_INDEX_TASKS.update_indexing_status(record.uuid);
+
+                if (result !== true) {
+                    LOGGER.module().error('ERROR: [/indexer/model (index_item_records)] index status update failed.');
+                }
+            }
+
+        } catch (error) {
+            LOGGER.module().error('ERROR: [/indexer/model (index_item_records)] Unable to index record(s). ' + error.message);
+        }
+
+    }, INDEX_TIMER);
 };
 
 /**
@@ -345,26 +329,22 @@ const index_item_records = (INDEX) => {
  * @param uuid
  * @param callback
  */
-exports.delete_record = (uuid, callback) => {
+exports.delete_record = async function (uuid, callback) {
 
-    (async () => {
+    const INDEX_TASKS = new INDEXER_INDEX_TASKS(DB, TABLES, CLIENT, ES_CONFIG.elasticsearch_index);
+    let is_deleted = await INDEX_TASKS.delete_record(uuid);
 
-        const INDEX_TASKS = new INDEXER_INDEX_TASKS(DB, TABLES, CLIENT, ES_CONFIG.elasticsearch_index);
-        let is_deleted = await INDEX_TASKS.delete_record(uuid);
-
-        if (is_deleted === true) {
-            callback({
-                status: 204,
-                message: 'record deleted.'
-            });
-
-            return false;
-        }
-
+    if (is_deleted === true) {
         callback({
-            status: 200,
-            message: 'Unable to delete record.'
+            status: 204,
+            message: 'record deleted.'
         });
 
-    })();
+        return false;
+    }
+
+    callback({
+        status: 200,
+        message: 'Unable to delete record.'
+    });
 };

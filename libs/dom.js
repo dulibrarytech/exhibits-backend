@@ -43,7 +43,7 @@ exports.sanitize_req_body = function(req, res, next) {
         if (req.body.hasOwnProperty(prop)) {
 
             if (prop !== 'is_active' && typeof req.body[prop] === 'string') {
-                req.body[prop] = VALIDATOR.escape(VALIDATOR.trim(req.body[prop])); // DOMPURIFY.sanitize()
+                req.body[prop] = VALIDATOR.escape(VALIDATOR.trim(req.body[prop]));
             }
         }
     });
