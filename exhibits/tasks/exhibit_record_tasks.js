@@ -88,11 +88,12 @@ const Exhibit_record_tasks = class {
                 'styles',
                 'is_published',
                 'created'
-                )
+            )
             .where({
                 is_deleted: 0
             })
             .then((data) => {
+                // TODO: unescape
                 resolve(data);
             })
             .catch((error) => {
@@ -136,23 +137,19 @@ const Exhibit_record_tasks = class {
                 uuid: uuid,
                 is_deleted: 0
             })
-            .then((data) => {
+            .then(async (data) => {
 
                 if (data.length !== 0 && data[0].is_locked === 0) {
 
-                    (async () => {
+                    try {
 
-                        try {
+                        const HELPER_TASK = new HELPER();
+                        await HELPER_TASK.lock_record(uuid, this.DB, this.TABLE);
+                        resolve(data);
 
-                            const HELPER_TASK = new HELPER();
-                            await HELPER_TASK.lock_record(uuid, this.DB, this.TABLE);
-                            resolve(data);
-
-                        } catch(error) {
-                            LOGGER.module().error('ERROR: [/exhibits/exhibit_record_tasks (get_exhibit_record)] unable to lock record ' + error.message);
-                        }
-
-                    })();
+                    } catch (error) {
+                        LOGGER.module().error('ERROR: [/exhibits/exhibit_record_tasks (get_exhibit_record)] unable to lock record ' + error.message);
+                    }
 
                 } else {
                     resolve(data);
@@ -185,7 +182,7 @@ const Exhibit_record_tasks = class {
                 uuid: data.uuid
             })
             .update(data)
-            .then((data) => {
+            .then(() => {
                 LOGGER.module().info('INFO: [/exhibits/exhibit_record_tasks (update_exhibit_record)] Exhibit record updated.');
                 resolve(true);
             })
@@ -215,7 +212,6 @@ const Exhibit_record_tasks = class {
             .where({
                 uuid: uuid
             })
-            // .delete()
             .update({
                 is_deleted: 1
             })
@@ -237,11 +233,11 @@ const Exhibit_record_tasks = class {
     }
 
     /**
-     * // TODO
+     * Permanently deletes record
      * @param uuid
      * @return {Promise<unknown | boolean>}
      * @private
-     */
+
     delete_exhibit_record_(uuid) {
 
         let promise = new Promise((resolve, reject) => {
@@ -267,6 +263,7 @@ const Exhibit_record_tasks = class {
             return false;
         });
     }
+     */
 };
 
 module.exports = Exhibit_record_tasks;

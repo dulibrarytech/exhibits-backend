@@ -95,7 +95,7 @@ const Helper = class {
             .update({
                 is_locked: 0
             })
-            .then((data) => {
+            .then(() => {
                 LOGGER.module().info('INFO: [/exhibits/helper (lock_record)] record unlocked.');
             })
             .catch((error) => {

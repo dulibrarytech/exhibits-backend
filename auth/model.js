@@ -18,8 +18,8 @@
 
 'use strict';
 
-const DB =require('../config/db_config')();
-const DB_TABLES =require('../config/db_tables_config')();
+const DB = require('../config/db_config')();
+const DB_TABLES = require('../config/db_tables_config')();
 const TABLE = DB_TABLES.exhibits.user_records;
 const AUTH_TASKS = require("../auth/tasks/auth_tasks");
 const EXHIBITS_ENDPOINTS = require('../exhibits/endpoints')();
@@ -32,20 +32,16 @@ const LOGGER = require('../libs/log4');
  * @param username
  * @param callback
  */
-exports.check_auth_user = (username, callback) => {
+exports.check_auth_user = async function (username, callback) {
 
-    (async () => {
-
-        try {
-            const TASKS = new AUTH_TASKS(DB, TABLE);
-            const data = await TASKS.check_auth_user(username);
-            callback(data);
-        } catch (error) {
-            LOGGER.module().error('ERROR: [/auth/model (check_auth_user)] unable to check user auth data ' + error.message);
-            callback(false);
-        }
-
-    })();
+    try {
+        const TASKS = new AUTH_TASKS(DB, TABLE);
+        const data = await TASKS.check_auth_user(username);
+        callback(data);
+    } catch (error) {
+        LOGGER.module().error('ERROR: [/auth/model (check_auth_user)] unable to check user auth data ' + error.message);
+        callback(false);
+    }
 };
 
 /**
@@ -53,43 +49,39 @@ exports.check_auth_user = (username, callback) => {
  * @param id
  * @param callback
  */
-exports.get_auth_user_data = (id, callback) => {
+exports.get_auth_user_data = async function (id, callback) {
 
-    (async () => {
+    try {
 
-        try {
-
-            const TASKS = new AUTH_TASKS(DB, TABLE);
-            const DATA = await TASKS.get_auth_user_data(id);
-            let auth_data = {
-                user_data: DATA,
-                endpoints: {
-                    exhibits: EXHIBITS_ENDPOINTS,
-                    users: USERS_ENDPOINTS,
-                    indexer: INDEXER_ENDPOINTS
-                }
-            };
-
-            let response = {
-                status: 200,
-                message: 'User data retrieved.',
-                data: auth_data
-            };
-
-            if (DATA === false) {
-                response = {
-                    status: 500,
-                    message: 'Unable to retrieve user data.',
-                    data: []
-                }
+        const TASKS = new AUTH_TASKS(DB, TABLE);
+        const DATA = await TASKS.get_auth_user_data(id);
+        let auth_data = {
+            user_data: DATA,
+            endpoints: {
+                exhibits: EXHIBITS_ENDPOINTS,
+                users: USERS_ENDPOINTS,
+                indexer: INDEXER_ENDPOINTS
             }
+        };
 
-            callback(response);
+        let response = {
+            status: 200,
+            message: 'User data retrieved.',
+            data: auth_data
+        };
 
-        } catch (error) {
-            LOGGER.module().error('ERROR: [/auth/model (get_auth_user_data)] unable to get user auth data ' + error.message);
-            callback(false);
+        if (DATA === false) {
+            response = {
+                status: 500,
+                message: 'Unable to retrieve user data.',
+                data: []
+            };
         }
 
-    })();
+        callback(response);
+
+    } catch (error) {
+        LOGGER.module().error('ERROR: [/auth/model (get_auth_user_data)] unable to get user auth data ' + error.message);
+        callback(false);
+    }
 };

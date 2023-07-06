@@ -61,6 +61,17 @@ const helperModule = (function () {
     };
 
     /**
+     * https://stackoverflow.com/questions/7394748/whats-the-right-way-to-decode-a-string-that-has-special-html-entities-in-it
+     * Unescapes HTML elements
+     * @param data
+     */
+    obj.unescape = function(data) {
+        let elem = document.createElement('textarea');
+        elem.innerHTML = data;
+        return elem.value;
+    };
+
+    /**
      * Gets current year
      */
     obj.get_current_year = () => {

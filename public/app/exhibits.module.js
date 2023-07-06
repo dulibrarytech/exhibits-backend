@@ -20,28 +20,88 @@ const exhibitsModule = (function () {
 
     'use strict';
 
-    const endpoints = endpointsModule.get_exhibits_endpoints();
+    const EXHIBITS_ENDPOINTS = endpointsModule.get_exhibits_endpoints();
     let obj = {};
 
     /**
      * Gets all exhibits
      */
-    function get_exhibits() {
-        console.log('get_exhibits');
+    async function get_exhibits() {
+
+        try {
+
+            let token = authModule.get_user_token();
+            let response = await httpModule.req({
+                method: 'GET',
+                url: EXHIBITS_ENDPOINTS.exhibits.exhibit_records.endpoint,
+                headers: {
+                    'Content-Type': 'application/json',
+                    'x-access-token': token
+                }
+            });
+
+            if (response !== undefined && response.status === 200) {
+                // domModule.html('#message', null);
+                return response.data.data;
+            }
+
+        } catch (error) {
+            console.log('ERROR: ', error.message);
+            // TODO: authModule.session_expired();
+        }
     }
 
     /**
      * Displays exhibits
      */
-    function display_exhibits() {
-        get_exhibits();
-        console.log('display_exhibits');
+    async function display_exhibits() {
+
+        let exhibits = await get_exhibits();
+        let exhibit_cards = '';
+            exhibit_cards += '<div class="row">';
+
+        for (let i=0;i<exhibits.length;i++) {
+
+            console.log(exhibits[i]);
+
+            let title = helperModule.unescape(exhibits[i].title);
+            let description = helperModule.unescape(exhibits[i].description);
+
+            exhibit_cards += `
+                <div class="col-md-4">
+                    <div class="card">
+                        <div class="card-header">
+                            <strong class="card-title mb-3">${title}</strong>
+                        </div>
+                        <div class="card-body">
+                            <div class="mx-auto d-block">
+                                <img class="rounded-circle mx-auto d-block" src="../../images/thumbnail.jpg"
+                                     alt="exhibit thumbnail here?">
+                                <div class="location text-sm-center"><i class=""></i> ${description}</div>
+                            </div>
+                            <hr>
+                            <div class="card-text text-sm-center">
+                                <a href="#" title="Add Items"><i class="fa fa-plus pr-1"></i> </a>&nbsp;
+                                <a href="#" title="Edit Items"><i class="fa fa-edit pr-1"></i> </a>&nbsp;
+                                <a href="#" title="Delete items"><i class="fa fa-minus pr-1"></i> </a>
+                            </div>
+                        </div>
+                    </div>
+                </div>`;
+
+            if (i % 3 === 2) {
+                exhibit_cards += '</div>';
+                exhibit_cards += '<div class="row">';
+            }
+        }
+
+        document.querySelector('#exhibits').innerHTML = exhibit_cards;
     }
 
     /**
      * Example
      */
-    function create_exhibit()  {
+    function create_exhibit() {
 
         domModule.hide('#exhibit-form');
         domModule.html('#message', '<div class="alert alert-info">Saving Exhibit...</div>');
@@ -50,7 +110,7 @@ const exhibitsModule = (function () {
         let arr = exhibit.split('&');
         let obj = {};
 
-        for (let i=0;i<arr.length;i++) {
+        for (let i = 0; i < arr.length; i++) {
             let propsVal = decodeURIComponent(arr[i]).split('=');
             obj[propsVal[0]] = propsVal[1];
         }
@@ -97,8 +157,8 @@ const exhibitsModule = (function () {
         httpModule.req(request, callback);
     };
 
-    obj.init = function() {
-        display_exhibits();
+    obj.init = async function () {
+        await display_exhibits();
     };
 
     return obj;

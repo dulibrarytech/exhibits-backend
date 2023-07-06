@@ -150,23 +150,19 @@ const Exhibit_item_record_tasks = class {
                 uuid: uuid,
                 is_deleted: 0
             })
-            .then((data) => {
+            .then(async (data) => {
 
                 if (data.length !== 0 && data[0].is_locked === 0) {
 
-                    (async () => {
+                    try {
 
-                        try {
+                        const HELPER_TASK = new HELPER();
+                        await HELPER_TASK.lock_record(uuid, this.DB, this.TABLE);
+                        resolve(data);
 
-                            const HELPER_TASK = new HELPER();
-                            await HELPER_TASK.lock_record(uuid, this.DB, this.TABLE);
-                            resolve(data);
-
-                        } catch(error) {
-                            LOGGER.module().error('ERROR: [/exhibits/exhibit_item_record_tasks (get_item_record)] unable to lock record ' + error.message);
-                        }
-
-                    })();
+                    } catch (error) {
+                        LOGGER.module().error('ERROR: [/exhibits/exhibit_item_record_tasks (get_item_record)] unable to lock record ' + error.message);
+                    }
 
                 } else {
                     resolve(data);
@@ -191,7 +187,7 @@ const Exhibit_item_record_tasks = class {
      * @return {Promise<unknown | boolean>}
      */
     update_item_record(data) {
-        // TODO: version record via data.uuid?
+
         let promise = new Promise((resolve, reject) => {
 
             this.DB(this.TABLE)
@@ -200,7 +196,7 @@ const Exhibit_item_record_tasks = class {
                 uuid: data.uuid
             })
             .update(data)
-            .then((data) => {
+            .then(() => {
                 LOGGER.module().info('INFO: [/exhibits/exhibit_item_record_tasks (update_item_record)] Item record updated.');
                 resolve(true);
             })
