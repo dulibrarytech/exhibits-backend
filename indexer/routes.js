@@ -22,17 +22,17 @@ const CONTROLLER = require('../indexer/controller');
 const ENDPOINTS = require('../indexer/endpoints');
 const TOKEN = require('../libs/tokens');
 
-module.exports = (app) => {
+module.exports = function (app) {
 
     app.route(ENDPOINTS().indexer.index_utils.post.endpoint)
-        .post(CONTROLLER.create_index);  // TOKEN.verify,
+    .post(CONTROLLER.create_index);  // TOKEN.verify,
 
     app.route(ENDPOINTS().indexer.index_records.endpoint)
-        .post(CONTROLLER.index_all_records);  // TOKEN.verify,
+    .post(CONTROLLER.index_all_records);  // TOKEN.verify,
 
     app.route(ENDPOINTS().indexer.index_records.endpoints.post.endpoint)
-        .post(CONTROLLER.index_record);  // TOKEN.verify,
+    .post(CONTROLLER.index_record);  // TOKEN.verify,
 
     app.route(ENDPOINTS().indexer.index_records.endpoints.delete.endpoint)
-        .delete(CONTROLLER.delete_record);  // TOKEN.verify,
+    .delete(CONTROLLER.delete_record);  // TOKEN.verify,
 };

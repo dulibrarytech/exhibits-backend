@@ -37,7 +37,7 @@ exports.create_index = function (req, res) {
  * @param req
  * @param res
  */
-exports.index_all_records = (req, res) => {
+exports.index_all_records = function (req, res) {
     MODEL.index_all_records((data) => {
         res.status(data.status).send(data);
     });
@@ -49,7 +49,7 @@ exports.index_all_records = (req, res) => {
  * @param res
  * @return {boolean}
  */
-exports.index_record = (req, res) => {
+exports.index_record = function (req, res) {
 
     let uuid = req.params.uuid;
     let type = req.query.type;
@@ -74,11 +74,11 @@ exports.index_record = (req, res) => {
  * @param req
  * @param res
  */
-exports.delete_record = (req, res) => {
+exports.delete_record = function (req, res) {
 
     let uuid = req.params.uuid;
 
-    MODEL.delete_record(uuid,(data) => {
+    MODEL.delete_record(uuid, (data) => {
         res.status(data.status).send(data);
     });
 };
