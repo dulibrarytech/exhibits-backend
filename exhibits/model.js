@@ -38,9 +38,8 @@ const LOGGER = require('../libs/log4');
 /**
  * Creates exhibit record
  * @param data
- * @param callback
  */
-exports.create_exhibit_record = async function (data, callback) {
+exports.create_exhibit_record = async function (data) {
 
     try {
 
@@ -54,12 +53,10 @@ exports.create_exhibit_record = async function (data, callback) {
 
             LOGGER.module().error('ERROR: [/exhibits/model (create_exhibit_record)] ' + is_valid[0].message);
 
-            callback({
+            return {
                 status: 400,
                 message: is_valid
-            });
-
-            return false;
+            };
         }
 
         if (data.styles.length === 0) {
@@ -72,84 +69,81 @@ exports.create_exhibit_record = async function (data, callback) {
         let result = await CREATE_RECORD_TASK.create_exhibit_record(data);
 
         if (result === false) {
-            callback({
+            return {
                 status: 200,
                 message: 'Unable to create exhibit record'
-            });
+            };
         } else {
-            callback({
+            return {
                 status: 201,
                 message: 'Exhibit record created',
                 data: data.uuid
-            });
+            };
         }
 
     } catch (error) {
 
-        callback({
+        return {
             status: 200,
             message: 'Unable to create record ' + error.message
-        });
+        };
     }
 };
 
 /**
- * Gets exhibit records
- * @param callback
+ * Gets all exhibit records
  */
-exports.get_exhibit_records = async function (callback) {
+exports.get_exhibit_records = async function () {
 
     try {
 
         const TASK = new EXHIBIT_RECORD_TASKS(DB, TABLES.exhibit_records);
 
-        callback({
+        return {
             status: 200,
             message: 'Exhibit records',
             data: await TASK.get_exhibit_records()
-        });
+        };
 
     } catch (error) {
-
-        callback({
+        LOGGER.module().error('ERROR: [/exhibits/model (get_exhibit_records)] ' + error.message);
+        return {
             status: 400,
             message: error.message
-        });
+        };
     }
 };
 
 /**
  * Gets exhibit record by uuid
  * @param uuid
- * @param callback
  */
-exports.get_exhibit_record = async function (uuid, callback) {
+exports.get_exhibit_record = async function (uuid) {
 
     try {
 
         const TASK = new EXHIBIT_RECORD_TASKS(DB, TABLES.exhibit_records);
 
-        callback({
+        return {
             status: 200,
             message: 'Exhibit records',
             data: await TASK.get_exhibit_record(uuid)
-        });
+        };
 
     } catch (error) {
-
-        callback({
+        LOGGER.module().error('ERROR: [/exhibits/model (get_exhibit_record)] ' + error.message);
+        return {
             status: 400,
             message: error.message
-        });
+        };
     }
 };
 
 /** TODO: version record
  * Updates exhibit record
  * @param data
- * @param callback
  */
-exports.update_exhibit_record = async function (data, callback) {
+exports.update_exhibit_record = async function (data) {
 
     try {
 
@@ -157,11 +151,11 @@ exports.update_exhibit_record = async function (data, callback) {
             data.is_published = parseInt(data.is_published);
             data.is_locked = parseInt(data.is_locked);
         } else {
-            callback({
+
+            return {
                 status: 400,
                 message: 'Missing data'
-            });
-            return false;
+            };
         }
 
         const VALIDATE_TASK = new VALIDATOR(EXHIBITS_UPDATE_RECORD_SCHEMA);
@@ -171,31 +165,29 @@ exports.update_exhibit_record = async function (data, callback) {
 
             LOGGER.module().error('ERROR: [/exhibits/model (update_exhibit_record)] ' + is_valid[0].message);
 
-            callback({
+            return {
                 status: 400,
                 message: is_valid
-            });
-
-            return false;
+            };
         }
 
         const CREATE_RECORD_TASK = new EXHIBIT_RECORD_TASKS(DB, TABLES.exhibit_records);
         let result = await CREATE_RECORD_TASK.update_exhibit_record(data);
 
         if (result === false) {
-            callback({
+            return {
                 status: 400,
                 message: 'Unable to update exhibit record'
-            });
+            };
         } else {
-            callback({
+            return {
                 status: 204,
                 message: 'Exhibit record updated'
-            });
+            };
         }
 
     } catch (error) {
-
+        LOGGER.module().error('ERROR: [/exhibits/model (update_exhibit_record)] ' + error.message);
         callback({
             status: 400,
             message: 'Unable to update record ' + error.message
@@ -206,9 +198,8 @@ exports.update_exhibit_record = async function (data, callback) {
 /**
  * Deletes exhibit record
  * @param uuid
- * @param callback
  */
-exports.delete_exhibit_record = async function (uuid, callback) {
+exports.delete_exhibit_record = async function (uuid) {
 
     try {
 
@@ -218,62 +209,25 @@ exports.delete_exhibit_record = async function (uuid, callback) {
 
         if (results.length > 0) {
 
-            callback({
+            return {
                 status: 200,
                 message: 'Cannot delete exhibit',
                 data: await TASK.delete_exhibit_record(uuid)
-            });
-
-            return false;
+            };
         }
 
-
-        callback({
+        return {
             status: 204,
             message: 'Record deleted',
             data: await TASK.delete_exhibit_record(uuid)
-        });
+        };
 
     } catch (error) {
-
-        callback({
+        LOGGER.module().error('ERROR: [/exhibits/model (delete_exhibit_record)] ' + error.message);
+        return {
             status: 400,
             message: error.message
-        });
-    }
-};
-
-/**
- * Gets item records by exhibit
- * @param is_member_of_exhibit
- * @param callback
- */
-exports.get_item_records = async function (is_member_of_exhibit, callback) {
-
-    try {
-
-        const ITEM_TASK = new EXHIBIT_ITEM_RECORD_TASKS(DB, TABLES.item_records);
-        const HEADING_TASK = new EXHIBIT_HEADING_RECORD_TASKS(DB, TABLES.heading_records);
-        let items =  await ITEM_TASK.get_item_records(is_member_of_exhibit);
-        let headings = await HEADING_TASK.get_heading_records(is_member_of_exhibit);
-        let records = [...items,  ...headings];
-
-        records.sort((a, b) => {
-            return a.order - b.order;
-        });
-
-        callback({
-            status: 200,
-            message: 'Exhibit item and heading records',
-            data: records
-        });
-
-    } catch (error) {
-
-        callback({
-            status: 400,
-            message: error.message
-        });
+        };
     }
 };
 
@@ -281,9 +235,8 @@ exports.get_item_records = async function (is_member_of_exhibit, callback) {
  * Creates item record
  * @param is_member_of_exhibit
  * @param data
- * @param callback
  */
-exports.create_item_record = async function (is_member_of_exhibit, data, callback) {
+exports.create_item_record = async function (is_member_of_exhibit, data) {
 
     try {
 
@@ -300,12 +253,10 @@ exports.create_item_record = async function (is_member_of_exhibit, data, callbac
 
             LOGGER.module().error('ERROR: [/exhibits/model (create_item_record)] ' + is_valid[0].message);
 
-            callback({
+            return {
                 status: 400,
                 message: is_valid
-            });
-
-            return false;
+            };
         }
 
         if (data.styles.length === 0) {
@@ -318,24 +269,58 @@ exports.create_item_record = async function (is_member_of_exhibit, data, callbac
         let result = await CREATE_RECORD_TASK.create_item_record(data);
 
         if (result === false) {
-            callback({
+            LOGGER.module().error('ERROR: [/exhibits/model (create_item_record)] Unable to create item record');
+            return {
                 status: 200,
                 message: 'Unable to create item record'
-            });
+            };
         } else {
-            callback({
+            return {
                 status: 201,
                 message: 'Item record created',
                 data: data.uuid
-            });
+            };
         }
 
     } catch (error) {
-
-        callback({
+        LOGGER.module().error('ERROR: [/exhibits/model (create_item_record)] Unable to create item record' + error.message);
+        return {
             status: 200,
             message: 'Unable to create record ' + error.message
+        };
+    }
+};
+
+/**
+ * Gets item records by exhibit
+ * @param is_member_of_exhibit
+ */
+exports.get_item_records = async function (is_member_of_exhibit) {
+
+    try {
+
+        const ITEM_TASK = new EXHIBIT_ITEM_RECORD_TASKS(DB, TABLES.item_records);
+        const HEADING_TASK = new EXHIBIT_HEADING_RECORD_TASKS(DB, TABLES.heading_records);
+        let items =  await ITEM_TASK.get_item_records(is_member_of_exhibit);
+        let headings = await HEADING_TASK.get_heading_records(is_member_of_exhibit);
+        let records = [...items,  ...headings];
+
+        records.sort((a, b) => {
+            return a.order - b.order;
         });
+
+        return {
+            status: 200,
+            message: 'Exhibit item and heading records',
+            data: records
+        };
+
+    } catch (error) {
+        LOGGER.module().error('ERROR: [/exhibits/model (get_item_records)] Unable to get item records ' + error.message);
+        return {
+            status: 400,
+            message: error.message
+        };
     }
 };
 
@@ -343,26 +328,25 @@ exports.create_item_record = async function (is_member_of_exhibit, data, callbac
  * Gets item record by uuid and is_member_of_exhibit
  * @param is_member_of_exhibit
  * @param uuid
- * @param callback
  */
-exports.get_item_record = async function (is_member_of_exhibit, uuid, callback) {
+exports.get_item_record = async function (is_member_of_exhibit, uuid) {
 
     try {
 
         const TASK = new EXHIBIT_ITEM_RECORD_TASKS(DB, TABLES.item_records);
 
-        callback({
+        return {
             status: 200,
             message: 'Item record',
             data: await TASK.get_item_record(is_member_of_exhibit, uuid)
-        });
+        };
 
     } catch (error) {
-
-        callback({
+        LOGGER.module().error('ERROR: [/exhibits/model (get_item_record)] Unable to get item record ' + error.message);
+        return {
             status: 400,
             message: error.message
-        });
+        };
     }
 };
 
@@ -371,9 +355,8 @@ exports.get_item_record = async function (is_member_of_exhibit, uuid, callback) 
  * @param is_member_of_exhibit
  * @param uuid
  * @param data
- * @param callback
  */
-exports.update_item_record = async function (is_member_of_exhibit, uuid, data, callback) {
+exports.update_item_record = async function (is_member_of_exhibit, uuid, data) {
 
     try {
 
@@ -383,12 +366,10 @@ exports.update_item_record = async function (is_member_of_exhibit, uuid, data, c
             data.columns = parseInt(data.columns);
             data.order = parseInt(data.order);
         } else {
-            callback({
+            return {
                 status: 400,
                 message: 'Bad Request.'
-            });
-
-            return false;
+            };
         }
 
         data.is_member_of_exhibit = is_member_of_exhibit;
@@ -401,35 +382,33 @@ exports.update_item_record = async function (is_member_of_exhibit, uuid, data, c
 
             LOGGER.module().error('ERROR: [/exhibits/model (update_item_record)] ' + is_valid[0].message);
 
-            callback({
+            return {
                 status: 400,
                 message: is_valid
-            });
-
-            return false;
+            };
         }
 
         const UPDATE_RECORD_TASK = new EXHIBIT_ITEM_RECORD_TASKS(DB, TABLES.item_records);
         let result = await UPDATE_RECORD_TASK.update_item_record(data);
 
         if (result === false) {
-            callback({
+            return {
                 status: 400,
                 message: 'Unable to update item record'
-            });
+            };
         } else {
-            callback({
+            return {
                 status: 204,
                 message: 'Item record updated'
-            });
+            };
         }
 
     } catch (error) {
-
-        callback({
+        LOGGER.module().error('ERROR: [/exhibits/model (update_item_record)] ' + error.message);
+        return {
             status: 400,
             message: 'Unable to update record ' + error.message
-        });
+        };
     }
 };
 
@@ -437,26 +416,25 @@ exports.update_item_record = async function (is_member_of_exhibit, uuid, data, c
  * Deletes item record
  * @param is_member_of_exhibit
  * @param uuid
- * @param callback
  */
-exports.delete_item_record = async function (is_member_of_exhibit, uuid, callback) {
+exports.delete_item_record = async function (is_member_of_exhibit, uuid) {
 
     try {
 
         const TASK = new EXHIBIT_ITEM_RECORD_TASKS(DB, TABLES.item_records);
 
-        callback({
+        return {
             status: 204,
             message: 'Record deleted',
             data: await TASK.delete_item_record(is_member_of_exhibit, uuid)
-        });
+        };
 
     } catch (error) {
-
-        callback({
+        LOGGER.module().error('ERROR: [/exhibits/model (delete_item_record)] ' + error.message);
+        return {
             status: 400,
             message: error.message
-        });
+        };
     }
 };
 
@@ -464,9 +442,8 @@ exports.delete_item_record = async function (is_member_of_exhibit, uuid, callbac
  * Create heading record
  * @param is_member_of_exhibit
  * @param data
- * @param callback
  */
-exports.create_heading_record = async function (is_member_of_exhibit, data, callback) {
+exports.create_heading_record = async function (is_member_of_exhibit, data) {
 
     try {
 
@@ -482,32 +459,30 @@ exports.create_heading_record = async function (is_member_of_exhibit, data, call
 
             LOGGER.module().error('ERROR: [/exhibits/model (create_heading_record)] ' + is_valid[0].message);
 
-            callback({
+            return {
                 status: 400,
                 message: is_valid
-            });
-
-            return false;
+            };
         }
 
         const CREATE_RECORD_TASK = new EXHIBIT_HEADING_RECORD_TASKS(DB, TABLES.heading_records);
         let result = await CREATE_RECORD_TASK.create_heading_record(data);
 
         if (result === false) {
-            callback({
+            return {
                 status: 200,
                 message: 'Unable to create heading record'
-            });
+            };
         } else {
-            callback({
+            return {
                 status: 201,
                 message: 'Heading record created',
                 data: data.uuid
-            });
+            };
         }
 
     } catch (error) {
-
+        LOGGER.module().error('ERROR: [/exhibits/model (create_heading_record)] ' + error.message);
         callback({
             status: 200,
             message: 'Unable to create record ' + error.message
@@ -519,26 +494,25 @@ exports.create_heading_record = async function (is_member_of_exhibit, data, call
  * Gets heading record
  * @param is_member_of_exhibit
  * @param uuid
- * @param callback
  */
-exports.get_heading_record = async function (is_member_of_exhibit, uuid, callback) {
+exports.get_heading_record = async function (is_member_of_exhibit, uuid) {
 
     try {
 
         const TASK = new EXHIBIT_HEADING_RECORD_TASKS(DB, TABLES.heading_records);
 
-        callback({
+        return {
             status: 200,
             message: 'Heading record',
             data: await TASK.get_heading_record(is_member_of_exhibit, uuid)
-        });
+        };
 
     } catch (error) {
-
-        callback({
+        LOGGER.module().error('ERROR: [/exhibits/model (get_heading_record)] ' + error.message);
+        return {
             status: 400,
             message: error.message
-        });
+        };
     }
 };
 
@@ -547,9 +521,8 @@ exports.get_heading_record = async function (is_member_of_exhibit, uuid, callbac
  * @param is_member_of_exhibit
  * @param uuid
  * @param data
- * @param callback
  */
-exports.update_heading_record = async function (is_member_of_exhibit, uuid, data, callback) {
+exports.update_heading_record = async function (is_member_of_exhibit, uuid, data) {
 
     try {
 
@@ -558,12 +531,10 @@ exports.update_heading_record = async function (is_member_of_exhibit, uuid, data
             data.is_locked = parseInt(data.is_locked);
             data.order = parseInt(data.order);
         } else {
-            callback({
+            return {
                 status: 400,
                 message: 'Bad Request.'
-            });
-
-            return false;
+            };
         }
 
         data.is_member_of_exhibit = is_member_of_exhibit;
@@ -576,34 +547,33 @@ exports.update_heading_record = async function (is_member_of_exhibit, uuid, data
 
             LOGGER.module().error('ERROR: [/exhibits/model (update_heading_record)] ' + is_valid[0].message);
 
-            callback({
+            return {
                 status: 400,
                 message: is_valid
-            });
-
-            return false;
+            };
         }
 
         const UPDATE_RECORD_TASK = new EXHIBIT_HEADING_RECORD_TASKS(DB, TABLES.heading_records);
         let result = await UPDATE_RECORD_TASK.update_heading_record(data);
 
         if (result === false) {
-            callback({
+            return {
                 status: 400,
                 message: 'Unable to update heading record'
-            });
+            };
         } else {
-            callback({
+            return {
                 status: 204,
                 message: 'Heading record updated'
-            });
+            };
         }
 
     } catch (error) {
-        callback({
+        LOGGER.module().error('ERROR: [/exhibits/model (update_heading_record)] ' + error.message);
+        return {
             status: 400,
             message: 'Unable to update record ' + error.message
-        });
+        };
     }
 };
 
@@ -611,34 +581,32 @@ exports.update_heading_record = async function (is_member_of_exhibit, uuid, data
  * Deletes heading record
  * @param is_member_of_exhibit
  * @param uuid
- * @param callback
  */
-exports.delete_heading_record = async function (is_member_of_exhibit, uuid, callback) {
+exports.delete_heading_record = async function (is_member_of_exhibit, uuid) {
 
     try {
 
         const TASK = new EXHIBIT_HEADING_RECORD_TASKS(DB, TABLES.heading_records);
 
-        callback({
+        return {
             status: 204,
             message: 'Record deleted',
             data: await TASK.delete_heading_record(is_member_of_exhibit, uuid)
-        });
+        };
 
     } catch (error) {
-
-        callback({
+        LOGGER.module().error('ERROR: [/exhibits/model (delete_heading_record)] ' + error.message);
+        return {
             status: 400,
             message: error.message
-        });
+        };
     }
 };
 
 /**
  * Get all trashed records
- * @param callback
  */
-exports.get_trashed_records = async function (callback) {
+exports.get_trashed_records = async function () {
 
     try {
 
@@ -660,18 +628,18 @@ exports.get_trashed_records = async function (callback) {
             data.exhibit_item_records = exhibit_item_records;
         }
 
-        callback({
+        return {
             status: 200,
             message: 'Trashed records',
             data: data
-        });
+        };
 
     } catch (error) {
-
-        callback({
+        LOGGER.module().error('ERROR: [/exhibits/model (get_trashed_records)] ' + error.message);
+        return {
             status: 400,
             message: error.message
-        });
+        };
     }
 };
 
@@ -680,9 +648,8 @@ exports.get_trashed_records = async function (callback) {
  * @param is_member_of_exhibit
  * @param uuid
  * @param type
- * @param callback
  */
-exports.delete_trashed_record = async function (is_member_of_exhibit, uuid, type, callback) {
+exports.delete_trashed_record = async function (is_member_of_exhibit, uuid, type) {
 
     try {
 
@@ -699,25 +666,24 @@ exports.delete_trashed_record = async function (is_member_of_exhibit, uuid, type
         const TASKS = new EXHIBIT_TRASHED_RECORD_TASKS(DB, table);
         await TASKS.delete_trashed_record(is_member_of_exhibit, uuid);
 
-        callback({
+        return {
             status: 204,
             message: 'Record permanently deleted'
-        });
+        };
 
     } catch (error) {
-
-        callback({
+        LOGGER.module().error('ERROR: [/exhibits/model (delete_trashed_record)] ' + error.message);
+        return {
             status: 400,
             message: error.message
-        });
+        };
     }
 };
 
 /**
  * Permanently deletes all trashed records
- * @param callback
  */
-exports.delete_all_trashed_records = function (callback) {
+exports.delete_all_trashed_records = function () {
 
     try {
 
@@ -728,17 +694,17 @@ exports.delete_all_trashed_records = function (callback) {
             await TASKS.delete_all_trashed_records();
         });
 
-        callback({
+        return {
             status: 204,
             message: 'Records permanently deleted'
-        });
+        };
 
     } catch (error) {
-
-        callback({
+        LOGGER.module().error('ERROR: [/exhibits/model (delete_all_trashed_records)] ' + error.message);
+        return {
             status: 400,
             message: error.message
-        });
+        };
     }
 };
 
@@ -747,9 +713,8 @@ exports.delete_all_trashed_records = function (callback) {
  * @param is_member_of_exhibit
  * @param uuid
  * @param type
- * @param callback
  */
-exports.restore_trashed_record = async function (is_member_of_exhibit, uuid, type, callback) {
+exports.restore_trashed_record = async function (is_member_of_exhibit, uuid, type) {
 
     try {
 
@@ -766,16 +731,16 @@ exports.restore_trashed_record = async function (is_member_of_exhibit, uuid, typ
         const TASKS = new EXHIBIT_TRASHED_RECORD_TASKS(DB, table);
         await TASKS.restore_trashed_record(is_member_of_exhibit, uuid);
 
-        callback({
+        return {
             status: 204,
             message: 'Record permanently deleted'
-        });
+        };
 
     } catch (error) {
-
-        callback({
+        LOGGER.module().error('ERROR: [/exhibits/model (restore_trashed_record)] ' + error.message);
+        return {
             status: 400,
             message: error.message
-        });
+        };
     }
 };

@@ -20,7 +20,7 @@
 
 const MODEL = require('../exhibits/model');
 
-exports.create_exhibit_record = function (req, res) {
+exports.create_exhibit_record = async function (req, res) {
 
     const data = req.body;
 
@@ -29,18 +29,16 @@ exports.create_exhibit_record = function (req, res) {
         return false;
     }
 
-    MODEL.create_exhibit_record(data, (data) => {
-        res.status(data.status).send(data);
-    });
+    const result = await MODEL.create_exhibit_record(data);
+    res.status(result.status).send(result);
 };
 
-exports.get_exhibit_records = function (req, res) {
-    MODEL.get_exhibit_records((data) => {
-        res.status(data.status).send(data);
-    });
+exports.get_exhibit_records = async function (req, res) {
+    const data = await MODEL.get_exhibit_records();
+    res.status(data.status).send(data);
 };
 
-exports.get_exhibit_record = function (req, res) {
+exports.get_exhibit_record = async function (req, res) {
 
     const uuid = req.params.exhibit_id;
 
@@ -49,12 +47,11 @@ exports.get_exhibit_record = function (req, res) {
         return false;
     }
 
-    MODEL.get_exhibit_record(uuid, (data) => {
-        res.status(data.status).send(data);
-    });
+    const data = await MODEL.get_exhibit_record(uuid);
+    res.status(data.status).send(data);
 };
 
-exports.update_exhibit_record = function (req, res) {
+exports.update_exhibit_record = async function (req, res) {
 
     const data = req.body;
 
@@ -63,12 +60,11 @@ exports.update_exhibit_record = function (req, res) {
         return false;
     }
 
-    MODEL.update_exhibit_record(data, (data) => {
-        res.status(data.status).send(data);
-    });
+    const result = await MODEL.update_exhibit_record(data);
+    res.status(result.status).send(result);
 };
 
-exports.delete_exhibit_record = function (req, res) {
+exports.delete_exhibit_record = async function (req, res) {
 
     let uuid = req.params.exhibit_id;
 
@@ -77,12 +73,11 @@ exports.delete_exhibit_record = function (req, res) {
         return false;
     }
 
-    MODEL.delete_exhibit_record(uuid, (data) => {
-        res.status(data.status).send(data);
-    });
+    const result = await MODEL.delete_exhibit_record(uuid);
+    res.status(result.status).send(result);
 };
 
-exports.create_item_record = function (req, res) {
+exports.create_item_record = async function (req, res) {
 
     const is_member_of_exhibit = req.params.exhibit_id;
     const data = req.body;
@@ -92,20 +87,17 @@ exports.create_item_record = function (req, res) {
         return false;
     }
 
-    MODEL.create_item_record(is_member_of_exhibit, data, (data) => {
-        res.status(data.status).send(data);
-    });
+    const result = await MODEL.create_item_record(is_member_of_exhibit, data);
+    res.status(result.status).send(result);
 };
 
 exports.get_item_records = async function (req, res) {
-
     const is_member_of_exhibit = req.params.exhibit_id;
-    await MODEL.get_item_records(is_member_of_exhibit, (data) => {
-        res.status(data.status).send(data);
-    });
+    const data = await MODEL.get_item_records(is_member_of_exhibit);
+    res.status(data.status).send(data);
 };
 
-exports.get_item_record = function (req, res) {
+exports.get_item_record = async function (req, res) {
 
     const is_member_of_exhibit = req.params.exhibit_id;
     const uuid = req.params.item_id;
@@ -115,12 +107,11 @@ exports.get_item_record = function (req, res) {
         return false;
     }
 
-    MODEL.get_item_record(is_member_of_exhibit, uuid, (data) => {
-        res.status(data.status).send(data);
-    });
+    const data = await MODEL.get_item_record(is_member_of_exhibit, uuid);
+    res.status(data.status).send(data);
 };
 
-exports.update_item_record = function (req, res) {
+exports.update_item_record = async function (req, res) {
 
     const is_member_of_exhibit = req.params.exhibit_id;
     const uuid = req.params.item_id;
@@ -136,12 +127,11 @@ exports.update_item_record = function (req, res) {
         return false;
     }
 
-    MODEL.update_item_record(is_member_of_exhibit, uuid, data, (data) => {
-        res.status(data.status).send(data);
-    });
+    const result = await MODEL.update_item_record(is_member_of_exhibit, uuid, data);
+    res.status(result.status).send(result);
 };
 
-exports.delete_item_record = function (req, res) {
+exports.delete_item_record = async function (req, res) {
 
     const is_member_of_exhibit = req.params.exhibit_id;
     const uuid = req.params.item_id;
@@ -151,12 +141,11 @@ exports.delete_item_record = function (req, res) {
         return false;
     }
 
-    MODEL.delete_item_record(is_member_of_exhibit, uuid, (data) => {
-        res.status(data.status).send(data);
-    });
+    const result = await MODEL.delete_item_record(is_member_of_exhibit, uuid);
+    res.status(result.status).send(result);
 };
 
-exports.create_heading_record = function (req, res) {
+exports.create_heading_record = async function (req, res) {
 
     const is_member_of_exhibit = req.params.exhibit_id;
     const data = req.body;
@@ -166,12 +155,11 @@ exports.create_heading_record = function (req, res) {
         return false;
     }
 
-    MODEL.create_heading_record(is_member_of_exhibit, data, (data) => {
-        res.status(data.status).send(data);
-    });
+    const result = await MODEL.create_heading_record(is_member_of_exhibit, data);
+    res.status(result.status).send(result);
 };
 
-exports.get_heading_record = function (req, res) {
+exports.get_heading_record = async function (req, res) {
 
     const is_member_of_exhibit = req.params.exhibit_id;
     const uuid = req.params.heading_id;
@@ -181,12 +169,11 @@ exports.get_heading_record = function (req, res) {
         return false;
     }
 
-    MODEL.get_heading_record(is_member_of_exhibit, uuid, (data) => {
-        res.status(data.status).send(data);
-    });
+    const data = await MODEL.get_heading_record(is_member_of_exhibit, uuid);
+    res.status(data.status).send(data);
 };
 
-exports.update_heading_record = function (req, res) {
+exports.update_heading_record = async function (req, res) {
 
     const is_member_of_exhibit = req.params.exhibit_id;
     const uuid = req.params.heading_id;
@@ -202,12 +189,11 @@ exports.update_heading_record = function (req, res) {
         return false;
     }
 
-    MODEL.update_heading_record(is_member_of_exhibit, uuid, data, (data) => {
-        res.status(data.status).send(data);
-    });
+    const result = await MODEL.update_heading_record(is_member_of_exhibit, uuid, data);
+    res.status(result.status).send(result);
 };
 
-exports.delete_heading_record = function (req, res) {
+exports.delete_heading_record = async function (req, res) {
 
     const is_member_of_exhibit = req.params.exhibit_id;
     const uuid = req.params.heading_id;
@@ -217,18 +203,16 @@ exports.delete_heading_record = function (req, res) {
         return false;
     }
 
-    MODEL.delete_heading_record(is_member_of_exhibit, uuid, (data) => {
-        res.status(data.status).send(data);
-    });
+    const result = await MODEL.delete_heading_record(is_member_of_exhibit, uuid);
+    res.status(result.status).send(result);
 };
 
-exports.get_trashed_records = function (req, res) {
-    MODEL.get_trashed_records((data) => {
-        res.status(data.status).send(data);
-    });
+exports.get_trashed_records = async function (req, res) {
+    const data = await MODEL.get_trashed_records();
+    res.status(data.status).send(data);
 };
 
-exports.delete_trashed_record = function (req, res) {
+exports.delete_trashed_record = async function (req, res) {
 
     const is_member_of_exhibit = req.params.exhibit_id;
     const uuid = req.params.uuid;
@@ -244,18 +228,16 @@ exports.delete_trashed_record = function (req, res) {
         return false;
     }
 
-    MODEL.delete_trashed_record(is_member_of_exhibit, uuid, type, (data) => {
-        res.status(data.status).send(data);
-    });
+    const result = await MODEL.delete_trashed_record(is_member_of_exhibit, uuid, type);
+    res.status(result.status).send(result);
 };
 
 exports.delete_all_trashed_records = function (req, res) {
-    MODEL.delete_all_trashed_records((data) => {
-        res.status(data.status).send(data);
-    });
+    const result = MODEL.delete_all_trashed_records();
+    res.status(result.status).send(result);
 };
 
-exports.restore_trashed_record = function (req, res) {
+exports.restore_trashed_record = async function (req, res) {
 
     const is_member_of_exhibit = req.params.exhibit_id;
     const uuid = req.params.uuid;
@@ -271,7 +253,6 @@ exports.restore_trashed_record = function (req, res) {
         return false;
     }
 
-    MODEL.restore_trashed_record(is_member_of_exhibit, uuid, type, (data) => {
-        res.status(data.status).send(data);
-    });
+    const result = await MODEL.restore_trashed_record(is_member_of_exhibit, uuid, type);
+    res.status(result.status).send(result);
 };
