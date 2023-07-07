@@ -68,7 +68,7 @@ const Exhibit_item_record_tasks = class {
     }
 
     /**
-     * Gets item records
+     * Gets item records by exhibit
      * @param is_member_of_exhibit
      * @return {Promise<unknown | boolean>}
      */

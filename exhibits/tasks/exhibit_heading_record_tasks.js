@@ -68,6 +68,45 @@ const Exhibit_heading_record_tasks = class {
     }
 
     /**
+     * Gets all heading records by exhibit
+     * @param is_member_of_exhibit
+     * @return {Promise<unknown | boolean>}
+     */
+    get_heading_records(is_member_of_exhibit) {
+
+        let promise = new Promise((resolve, reject) => {
+
+            this.DB(this.TABLE)
+            .select('is_member_of_exhibit',
+                'uuid',
+                'type',
+                'text',
+                'subtext',
+                'order',
+                'is_published',
+                'created'
+            )
+            .where({
+                is_member_of_exhibit: is_member_of_exhibit,
+                is_deleted: 0
+            })
+            .then((data) => {
+                resolve(data);
+            })
+            .catch((error) => {
+                LOGGER.module().error('ERROR: [/exhibits/exhibit_heading_record_tasks (get_heading_records)] unable to get records ' + error.message);
+                reject(false);
+            });
+        });
+
+        return promise.then((records) => {
+            return records;
+        }).catch(() => {
+            return false;
+        });
+    }
+
+    /**
      * Gets heading record
      * @param is_member_of_exhibit
      * @param uuid

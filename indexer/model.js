@@ -325,7 +325,7 @@ const index_item_records = async function (INDEX) {
 };
 
 /**
- * Deletes record from admin index
+ * Deletes record from index
  * @param uuid
  * @param callback
  */

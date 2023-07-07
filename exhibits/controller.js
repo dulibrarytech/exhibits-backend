@@ -97,11 +97,10 @@ exports.create_item_record = function (req, res) {
     });
 };
 
-exports.get_item_records = function (req, res) {
+exports.get_item_records = async function (req, res) {
 
     const is_member_of_exhibit = req.params.exhibit_id;
-
-    MODEL.get_item_records(is_member_of_exhibit, (data) => {
+    await MODEL.get_item_records(is_member_of_exhibit, (data) => {
         res.status(data.status).send(data);
     });
 };

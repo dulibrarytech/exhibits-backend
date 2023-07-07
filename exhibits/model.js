@@ -252,12 +252,20 @@ exports.get_item_records = async function (is_member_of_exhibit, callback) {
 
     try {
 
-        const TASK = new EXHIBIT_ITEM_RECORD_TASKS(DB, TABLES.item_records);
+        const ITEM_TASK = new EXHIBIT_ITEM_RECORD_TASKS(DB, TABLES.item_records);
+        const HEADING_TASK = new EXHIBIT_HEADING_RECORD_TASKS(DB, TABLES.heading_records);
+        let items =  await ITEM_TASK.get_item_records(is_member_of_exhibit);
+        let headings = await HEADING_TASK.get_heading_records(is_member_of_exhibit);
+        let records = [...items,  ...headings];
+
+        records.sort((a, b) => {
+            return a.order - b.order;
+        });
 
         callback({
             status: 200,
-            message: 'Exhibit item records',
-            data: await TASK.get_item_records(is_member_of_exhibit)
+            message: 'Exhibit item and heading records',
+            data: records
         });
 
     } catch (error) {
