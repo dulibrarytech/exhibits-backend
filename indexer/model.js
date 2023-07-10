@@ -101,13 +101,27 @@ const construct_item_index_record = function (record) {
 };
 
 /**
+ * Indexes all exhibit records
+ */
+exports.index_all_records = function () {
+
+    LOGGER.module().info('INFO: [/indexer/model (index_records)] indexing...');
+    index_exhibit_records(ES_CONFIG.elasticsearch_index);
+    index_heading_records(ES_CONFIG.elasticsearch_index);
+    index_item_records(ES_CONFIG.elasticsearch_index);
+
+    return {
+        status: 201,
+        message: 'Indexing records...'
+    };
+};
+
+/**
  * Indexes single admin record
  * @param uuid
  * @param type
- * @param callback
- * @returns {boolean}
  */
-exports.index_record = async function (uuid, type, callback) {
+exports.index_record = async function (uuid, type) {
 
     try {
 
@@ -147,37 +161,19 @@ exports.index_record = async function (uuid, type, callback) {
                 LOGGER.module().error('ERROR: [/indexer/model (index_admin_record)] index status update failed.');
             }
 
-            callback({
+            return {
                 status: 201,
                 message: 'Record indexed'
-            });
+            };
         }
 
     } catch (error) {
         LOGGER.module().error('ERROR: [/indexer/model (index_admin_record)] ' + error.message);
-        callback({
+        return {
             status: 200,
             message: 'Unable to index record'
-        });
+        };
     }
-};
-
-/**
- * Indexes all exhibit records
- * @param callback
- * @returns {boolean}
- */
-exports.index_all_records = function (callback) {
-
-    LOGGER.module().info('INFO: [/indexer/model (index_records)] indexing...');
-    index_exhibit_records(ES_CONFIG.elasticsearch_index);
-    index_heading_records(ES_CONFIG.elasticsearch_index);
-    index_item_records(ES_CONFIG.elasticsearch_index);
-
-    callback({
-        status: 201,
-        message: 'Indexing records...'
-    });
 };
 
 /**
@@ -327,24 +323,21 @@ const index_item_records = async function (INDEX) {
 /**
  * Deletes record from index
  * @param uuid
- * @param callback
  */
-exports.delete_record = async function (uuid, callback) {
+exports.delete_record = async function (uuid) {
 
     const INDEX_TASKS = new INDEXER_INDEX_TASKS(DB, TABLES, CLIENT, ES_CONFIG.elasticsearch_index);
     let is_deleted = await INDEX_TASKS.delete_record(uuid);
 
     if (is_deleted === true) {
-        callback({
+        return {
             status: 204,
             message: 'record deleted.'
-        });
-
-        return false;
+        };
     }
 
-    callback({
+    return {
         status: 200,
         message: 'Unable to delete record.'
-    });
+    };
 };

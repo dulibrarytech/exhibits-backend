@@ -30,26 +30,25 @@ const LOGGER = require('../libs/log4');
 /**
  * Checks auth user
  * @param username
- * @param callback
  */
-exports.check_auth_user = async function (username, callback) {
+exports.check_auth_user = async function (username) {
 
     try {
+
         const TASKS = new AUTH_TASKS(DB, TABLE);
-        const data = await TASKS.check_auth_user(username);
-        callback(data);
+        return await TASKS.check_auth_user(username);
+
     } catch (error) {
         LOGGER.module().error('ERROR: [/auth/model (check_auth_user)] unable to check user auth data ' + error.message);
-        callback(false);
+        return false;
     }
 };
 
 /**
  * Gets user auth data
  * @param id
- * @param callback
  */
-exports.get_auth_user_data = async function (id, callback) {
+exports.get_auth_user_data = async function (id) {
 
     try {
 
@@ -78,10 +77,10 @@ exports.get_auth_user_data = async function (id, callback) {
             };
         }
 
-        callback(response);
+        return response;
 
     } catch (error) {
         LOGGER.module().error('ERROR: [/auth/model (get_auth_user_data)] unable to get user auth data ' + error.message);
-        callback(false);
+        return false;
     }
 };

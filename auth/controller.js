@@ -22,37 +22,35 @@ const CONFIG = require('../config/webservices_config')();
 const TOKEN = require('../libs/tokens');
 const MODEL = require('../auth/model');
 
-exports.sso = (req, res) => {
+exports.sso = async function (req, res) {
 
     const SSO_HOST = req.body.HTTP_HOST;
     const USERNAME = req.body.employeeID;
 
     if (SSO_HOST === CONFIG.ssoHost && USERNAME !== undefined) {
 
+        let result;
         let token = TOKEN.create(USERNAME);
         token = encodeURIComponent(token);
+        result = await MODEL.check_auth_user(USERNAME);
 
-        MODEL.check_auth_user(USERNAME, (result) => {
-
-            if (result.auth === true) {
-                res.redirect('/dashboard/home?t=' + token + '&id=' + result.data);
-            } else {
-                res.status(401).send({
-                    message: 'Authenticate failed.'
-                });
-            }
-        });
+        if (result.auth === true) {
+            res.redirect('/dashboard/home?t=' + token + '&id=' + result.data);
+        } else {
+            res.status(401).send({
+                message: 'Authenticate failed.'
+            });
+        }
     }
 };
 
-exports.get_auth_user_data = (req, res) => {
+exports.get_auth_user_data = async function (req, res) {
     const ID = req.query.id;
-    MODEL.get_auth_user_data(ID, (data) => {
-        res.status(data.status).send(data.data);
-    });
+    const data = MODEL.get_auth_user_data(ID);
+    res.status(data.status).send(data.data);
 };
 
-exports.logout = (req, res) => {
+exports.logout = function (req, res) {
 
     res.render('logout', {
         host: CONFIG.host,

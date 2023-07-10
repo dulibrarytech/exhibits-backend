@@ -20,7 +20,7 @@
 
 const CONFIG = require('../config/app_config')();
 
-exports.get_dashboard_home = (req, res) => {
+exports.get_dashboard_home = function (req, res) {
     res.render('dashboard-home', {
         host: CONFIG.host,
         appname: CONFIG.app_name,
@@ -29,7 +29,7 @@ exports.get_dashboard_home = (req, res) => {
     });
 };
 
-exports.get_dashboard_exhibits_add_form = (req, res) => {
+exports.get_dashboard_exhibits_add_form = function (req, res) {
     res.renderStatic('dashboard-add-exhibit', {
         host: CONFIG.host,
         appname: CONFIG.appName,
@@ -38,7 +38,7 @@ exports.get_dashboard_exhibits_add_form = (req, res) => {
     });
 };
 
-exports.get_dashboard_items = (req, res) => {
+exports.get_dashboard_items = function (req, res) {
     res.render('dashboard-items', {
         host: CONFIG.host,
         appname: CONFIG.appName,
@@ -47,7 +47,7 @@ exports.get_dashboard_items = (req, res) => {
     });
 };
 
-exports.delete_dashboard_item = (req, res) => {
+exports.delete_dashboard_item = function (req, res) {
     res.render('dashboard-delete-item', {
         host: CONFIG.host,
         appname: CONFIG.appName,
@@ -56,7 +56,7 @@ exports.delete_dashboard_item = (req, res) => {
     });
 };
 
-exports.get_dashboard_users = (req, res) => {
+exports.get_dashboard_users = function (req, res) {
     res.render('dashboard-users', {
         host: CONFIG.host,
         appname: CONFIG.appName,
@@ -65,7 +65,7 @@ exports.get_dashboard_users = (req, res) => {
     });
 };
 
-exports.get_dashboard_user_detail = (req, res) => {
+exports.get_dashboard_user_detail = function (req, res) {
     res.render('dashboard-users-detail', {
         host: CONFIG.host,
         appname: CONFIG.appName,
@@ -74,7 +74,7 @@ exports.get_dashboard_user_detail = (req, res) => {
     });
 };
 
-exports.get_dashboard_user_add_form = (req, res) => {
+exports.get_dashboard_user_add_form = function (req, res) {
     res.renderStatic('dashboard-add-user', {
         host: CONFIG.host,
         appname: CONFIG.appName,
@@ -83,7 +83,7 @@ exports.get_dashboard_user_add_form = (req, res) => {
     });
 };
 
-exports.get_dashboard_user_edit_form = (req, res) => {
+exports.get_dashboard_user_edit_form = function (req, res) {
     res.render('dashboard-edit-user', {
         host: CONFIG.host,
         appname: CONFIG.appName,
@@ -92,7 +92,7 @@ exports.get_dashboard_user_edit_form = (req, res) => {
     });
 };
 
-exports.get_dashboard_user_delete_form = (req, res) => {
+exports.get_dashboard_user_delete_form = function (req, res) {
     res.render('dashboard-delete-user', {
         host: CONFIG.host,
         appname: CONFIG.appName,

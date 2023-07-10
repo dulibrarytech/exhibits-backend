@@ -20,30 +20,30 @@
 
 const CONTROLLER = require('../dashboard/controller');
 
-module.exports = (app) => {
+module.exports = function (app) {
 
     app.route('/dashboard/home')
-        .get(CONTROLLER.get_dashboard_home);
+    .get(CONTROLLER.get_dashboard_home);
 
     app.route('/dashboard/exhibits/add')
-        .get(CONTROLLER.get_dashboard_exhibits_add_form);
+    .get(CONTROLLER.get_dashboard_exhibits_add_form);
 
     app.route('/dashboard/items')
-        .get(CONTROLLER.get_dashboard_items);
+    .get(CONTROLLER.get_dashboard_items);
 
 
     app.route('/dashboard/items/delete')
-        .get(CONTROLLER.delete_dashboard_item);
+    .get(CONTROLLER.delete_dashboard_item);
 
     app.route('/dashboard/users')
-        .get(CONTROLLER.get_dashboard_users);
+    .get(CONTROLLER.get_dashboard_users);
 
     app.route('/dashboard/users/edit')
-        .get(CONTROLLER.get_dashboard_user_edit_form);
+    .get(CONTROLLER.get_dashboard_user_edit_form);
 
     app.route('/dashboard/users/add')
-        .get(CONTROLLER.get_dashboard_user_add_form);
+    .get(CONTROLLER.get_dashboard_user_add_form);
 
     app.route('/dashboard/users/delete')
-        .get(CONTROLLER.get_dashboard_user_delete_form);
+    .get(CONTROLLER.get_dashboard_user_delete_form);
 };

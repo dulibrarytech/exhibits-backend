@@ -54,7 +54,7 @@ const check_index = async function () {
 /**
  * Create new index and mapping
  */
-exports.create_index = async function (callback) {
+exports.create_index = async function () {
 
     try {
 
@@ -67,17 +67,17 @@ exports.create_index = async function (callback) {
             let is_mappings_created = await INDEX_UTILS_TASKS.create_mappings();
 
             if (is_mappings_created === true) {
-                callback({
+                return {
                     status: 201,
                     data: 'Index created'
-                });
+                };
 
             } else {
                 LOGGER.module().error('ERROR: [/indexer/service module (create_index)] Unable to create index.');
-                callback({
+                return {
                     status: 200,
                     data: 'Unable to create index'
-                });
+                };
             }
 
         } else {
@@ -87,10 +87,10 @@ exports.create_index = async function (callback) {
 
     } catch (error) {
         LOGGER.module().error('ERROR: [/indexer/service module (create_index)] Unable to create index. ' + error.message);
-        callback({
+        return {
             status: 200,
             data: 'Unable to create index'
-        });
+        };
     }
 };
 

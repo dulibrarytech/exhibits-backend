@@ -18,21 +18,4 @@
 
 'use strict';
 
-const CONTROLLER = require('../auth/controller');
-const ENDPOINTS = require('../auth/endpoints');
-const TOKENS = require('../libs/tokens');
-
-module.exports = function (app) {
-
-    app.route(ENDPOINTS().auth.login.endpoint)
-    .get(TOKENS.verify);
-
-    app.route(ENDPOINTS().auth.sso.endpoint)
-    .post(CONTROLLER.sso);
-
-    app.route(ENDPOINTS().auth.logout.endpoint)
-    .get(CONTROLLER.logout);
-
-    app.route(ENDPOINTS().auth.authentication.endpoint)
-    .get(TOKENS.verify, CONTROLLER.get_auth_user_data);
-};
+import {it, expect} from 'vitest';

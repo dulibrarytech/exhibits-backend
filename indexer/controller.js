@@ -27,9 +27,8 @@ const SERVICE = require('../indexer/service');
  * @param res
  */
 exports.create_index = function (req, res) {
-    SERVICE.create_index((data) => {
-        res.status(data.status).send(data);
-    });
+    const result = SERVICE.create_index();
+    res.status(result.status).send(result);
 };
 
 /**
@@ -38,9 +37,8 @@ exports.create_index = function (req, res) {
  * @param res
  */
 exports.index_all_records = function (req, res) {
-    MODEL.index_all_records((data) => {
-        res.status(data.status).send(data);
-    });
+    const result = MODEL.index_all_records();
+    res.status(result.status).send(result);
 };
 
 /**
@@ -49,7 +47,7 @@ exports.index_all_records = function (req, res) {
  * @param res
  * @return {boolean}
  */
-exports.index_record = function (req, res) {
+exports.index_record = async function (req, res) {
 
     let uuid = req.params.uuid;
     let type = req.query.type;
@@ -64,9 +62,8 @@ exports.index_record = function (req, res) {
         return false;
     }
 
-    MODEL.index_record(uuid, type, (data) => {
-        res.status(data.status).send(data);
-    });
+    let result = await MODEL.index_record(uuid, type);
+    res.status(result.status).send(result);
 };
 
 /**
@@ -74,11 +71,8 @@ exports.index_record = function (req, res) {
  * @param req
  * @param res
  */
-exports.delete_record = function (req, res) {
-
+exports.delete_record = async function (req, res) {
     let uuid = req.params.uuid;
-
-    MODEL.delete_record(uuid, (data) => {
-        res.status(data.status).send(data);
-    });
+    let result = await MODEL.delete_record(uuid);
+    res.status(result.status).send(result);
 };

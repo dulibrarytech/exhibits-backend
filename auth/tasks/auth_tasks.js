@@ -35,7 +35,7 @@ const Auth_tasks = class {
      * Checks user access
      * @param username
      */
-    check_auth_user = (username) => {
+    check_auth_user(username) {
 
         let promise = new Promise((resolve, reject) => {
 
@@ -79,7 +79,7 @@ const Auth_tasks = class {
      * Gets user data
      * @param id
      */
-    get_auth_user_data = (id) => {
+    get_auth_user_data(id) {
 
         let promise = new Promise((resolve, reject) => {
 
