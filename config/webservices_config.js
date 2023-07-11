@@ -18,6 +18,7 @@
 
 'use strict';
 
+const HELPER = require("../libs/helper");
 const WEBSERVICES_CONFIG = {
     ssoHost: process.env.SSO_HOST,
     ssoUrl: process.env.SSO_URL,
@@ -26,5 +27,6 @@ const WEBSERVICES_CONFIG = {
 };
 
 module.exports = () => {
-    return WEBSERVICES_CONFIG;
+    const HELPER_TASK = new HELPER();
+    return HELPER_TASK.check_config(WEBSERVICES_CONFIG);
 };

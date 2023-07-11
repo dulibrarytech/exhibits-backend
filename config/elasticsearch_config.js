@@ -18,6 +18,7 @@
 
 'use strict';
 
+const HELPER = require('../libs/helper');
 const ELASTICSEARCH_CONFIG = {
     elasticsearch_host: process.env.ELASTICSEARCH_HOST,
     elasticsearch_index: process.env.ELASTICSEARCH_INDEX,
@@ -26,5 +27,6 @@ const ELASTICSEARCH_CONFIG = {
 };
 
 module.exports = function () {
-    return ELASTICSEARCH_CONFIG;
+    const HELPER_TASK = new HELPER();
+    return HELPER_TASK.check_config(ELASTICSEARCH_CONFIG);
 };

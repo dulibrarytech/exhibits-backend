@@ -18,6 +18,7 @@
 
 'use strict';
 
+const HELPER = require('../libs/helper');
 const APP_CONFIG = {
     host: process.env.HOST,
     app_name: process.env.APP_NAME,
@@ -28,6 +29,7 @@ const APP_CONFIG = {
     api_url: process.env.API_URL
 };
 
-module.exports = () => {
-    return APP_CONFIG;
+module.exports = function () {
+    const HELPER_TASK = new HELPER();
+    return HELPER_TASK.check_config(APP_CONFIG);
 };

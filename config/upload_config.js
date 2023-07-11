@@ -18,12 +18,14 @@
 
 'use strict';
 
+const HELPER = require("../libs/helper");
 const UPLOAD_CONFIG = {
     exhibits_upload_path: process.env.EXHIBITS_UPLOAD_PATH,
     headings_upload_path: process.env.HEADINGS_UPLOAD_PATH,
     items_upload_path: process.env.ITEMS_UPLOAD_PATH
 };
 
-module.exports = () => {
-    return UPLOAD_CONFIG;
+module.exports = function () {
+    const HELPER_TASK = new HELPER();
+    return HELPER_TASK.check_config(UPLOAD_CONFIG);
 };

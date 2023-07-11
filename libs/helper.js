@@ -20,6 +20,7 @@
 
 const {v4: uuidv4} = require('uuid');
 const LOGGER = require('../libs/log4');
+const VALIDATOR = require("validator");
 
 /**
  * Object contains helper tasks
@@ -102,6 +103,32 @@ const Helper = class {
                 LOGGER.module().error('ERROR: [/exhibits/helper (lock_record)] unable to unlock record ' + error.message);
             });
         }, 60000); // 30 min *30
+    }
+
+    /**
+     * Checks if required env config values are set
+     * @param config
+     */
+    check_config(config) {
+
+        let obj = {};
+        let keys = Object.keys(config);
+
+        keys.map((prop) => {
+
+            if (config[prop].length === 0) {
+                LOGGER.module().error('ERROR: [/config/app_config] ' + prop + ' env is missing config value');
+                return false;
+            }
+
+            if (VALIDATOR.isURL(config[prop]) === true) {
+                obj[prop] = encodeURI(config[prop]);
+            }
+
+            obj[prop] = VALIDATOR.escape(VALIDATOR.trim(config[prop]));
+        });
+
+        return obj;
     }
 
     /**

@@ -18,15 +18,18 @@
 
 'use strict';
 
+const HELPER = require("../libs/helper");
+const HELPER_TASK = new HELPER();
+const TABLES = {
+    exhibit_records: process.env.EXHIBIT_RECORDS,
+    item_records: process.env.ITEM_RECORDS,
+    heading_records: process.env.HEADING_RECORDS,
+    user_records: process.env.USER_RECORDS
+};
 const DB_TABLES_CONFIG = {
-    exhibits: {
-        exhibit_records: process.env.EXHIBIT_RECORDS,
-        item_records: process.env.ITEM_RECORDS,
-        heading_records: process.env.HEADING_RECORDS,
-        user_records: process.env.USER_RECORDS
-    }
+    exhibits: HELPER_TASK.check_config(TABLES)
 };
 
-module.exports = () => {
+module.exports = function () {
     return DB_TABLES_CONFIG;
 };
