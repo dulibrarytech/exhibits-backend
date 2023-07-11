@@ -41,7 +41,7 @@ const check_index = async function () {
         if (exists === true) {
             is_deleted = await delete_index(INDEX);
             if (is_deleted === true) {
-                LOGGER.module().error('ERROR: [/indexer/service module (check_index)] Index checked and deleted.');
+                LOGGER.module().info('INFO: [/indexer/service module (check_index)] Index checked and deleted.');
             }
         }
 

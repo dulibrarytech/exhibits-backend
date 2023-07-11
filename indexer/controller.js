@@ -26,8 +26,8 @@ const SERVICE = require('../indexer/service');
  * @param req
  * @param res
  */
-exports.create_index = function (req, res) {
-    const result = SERVICE.create_index();
+exports.create_index = async function (req, res) {
+    const result = await SERVICE.create_index();
     res.status(result.status).send(result);
 };
 

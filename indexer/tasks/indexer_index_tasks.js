@@ -39,226 +39,153 @@ const Indexer_index_tasks = class {
      * Indexes record
      * @param record
      */
-    index_record(record) {
+    async index_record(record) {
 
-        let promise = new Promise((resolve, reject) => {
+        try {
 
-            (async () => {
+            let response = await this.CLIENT.index({
+                index: this.INDEX,
+                id: record.uuid,
+                body: record,
+                refresh: true
+            });
 
-                try {
+            if (response.statusCode === 201 || response.statusCode === 200) {
+                return true;
+            } else {
+                return false;
+            }
 
-                    let response = await this.CLIENT.index({
-                        index: this.INDEX,
-                        id: record.uuid,
-                        body: record,
-                        refresh: true
-                    });
-
-                    if (response.statusCode === 201 || response.statusCode === 200) {
-                        resolve(true);
-                    } else {
-                        resolve(false);
-                    }
-
-                } catch (error) {
-                    LOGGER.module().error('ERROR: [/indexer/indexer_index_tasks (index_record)] unable to index record ' + error.message);
-                    reject(false);
-                }
-
-            })();
-        });
-
-        return promise.then((response) => {
-            return response;
-        }).catch(() => {
-            return false;
-        });
+        } catch (error) {
+            LOGGER.module().error('ERROR: [/indexer/indexer_index_tasks (index_record)] unable to index record ' + error.message);
+        }
     }
 
     /**
      * Deletes record from index
      * @param uuid
-     * @return {Promise<unknown | boolean>}
      */
-    delete_record(uuid) {
+    async delete_record(uuid) {
 
-        let promise = new Promise((resolve, reject) => {
+        try {
 
-            (async () => {
+            let response = await this.CLIENT.delete({
+                index: this.INDEX,
+                id: uuid,
+                refresh: true
+            });
 
-                try {
+            if (response.statusCode === 200) {
+                return true;
+            } else {
+                return false;
+            }
 
-                    let response = await this.CLIENT.delete({
-                        index: this.INDEX,
-                        id: uuid,
-                        refresh: true
-                    });
-
-                    if (response.statusCode === 200) {
-                        resolve(true);
-                    } else {
-                        resolve(false);
-                    }
-
-                } catch (error) {
-                    LOGGER.module().error('ERROR: [/indexer/indexer_index_tasks (delete_record)] unable to index record ' + error.message);
-                    reject(false);
-                }
-
-            })();
-        });
-
-        return promise.then((response) => {
-            return response;
-        }).catch(() => {
-            return false;
-        });
+        } catch (error) {
+            LOGGER.module().error('ERROR: [/indexer/indexer_index_tasks (delete_record)] unable to index record ' + error.message);
+        }
     }
 
     /**
      * Gets record for full indexing
-     * returns Promise string
      */
-    get_record() {
+    async get_record() {
 
-        let promise = new Promise((resolve, reject) => {
+        try {
 
-            this.DB(this.TABLE)
-                .select('*')
-                .where({
-                    is_published: 1,
-                    is_deleted: 0,
-                    is_indexed: 0
-                })
-                .limit(1)
-                .then((data) => {
+            const data = await this.DB(this.TABLE)
+            .select('*')
+            .where({
+                is_published: 1,
+                is_deleted: 0,
+                is_indexed: 0
+            })
+            .limit(1);
 
-                    if (data === undefined || data.length === 0) {
-                        resolve(0);
-                    }
+            if (data === undefined || data.length === 0) {
+                return 0;
+            }
 
-                    resolve(data[0]);
-                })
-                .catch((error) => {
-                    LOGGER.module().error('ERROR: [/indexer/indexer_index_tasks (get_record)] unable to get record ' + error.message);
-                    reject(false);
-                });
-        });
+            return data[0];
 
-        return promise.then((record) => {
-            return record;
-        }).catch(() => {
-            return false;
-        });
+        } catch (error) {
+            LOGGER.module().error('ERROR: [/indexer/indexer_index_tasks (get_record)] unable to get record ' + error.message);
+        }
     }
 
     /**
      * Gets record for single record index
      * @param uuid
-     * @return {Promise<unknown | boolean>}
      */
-    get_index_record(uuid) {
+    async get_index_record(uuid) {
 
-        let promise = new Promise((resolve, reject) => {
+        try {
 
-            this.DB(this.TABLE)
+            const data = await this.DB(this.TABLE)
             .select('*')
             .where({
                 uuid: uuid,
                 is_published: 1,
                 is_deleted: 0
             })
-            .limit(1)
-            .then((data) => {
+            .limit(1);
 
-                if (data === undefined || data.length === 0) {
-                    resolve(0);
-                }
+            if (data === undefined || data.length === 0) {
+                return 0;
+            }
 
-                resolve(data[0]);
-            })
-            .catch((error) => {
-                LOGGER.module().error('ERROR: [/indexer/indexer_index_tasks (get_index_record)] unable to get record ' + error.message);
-                reject(false);
-            });
-        });
+            return data[0];
 
-        return promise.then((record) => {
-            return record;
-        }).catch(() => {
-            return false;
-        });
+        } catch (error) {
+            LOGGER.module().error('ERROR: [/indexer/indexer_index_tasks (get_index_record)] unable to get record ' + error.message);
+        }
     }
 
     /**
      * Updates is_indexed status flag after a successful record index
      * @param uuid
-     * @returns {Promise<unknown>}
      */
-    update_indexing_status = (uuid) => {
+    async update_indexing_status(uuid) {
 
-        let promise = new Promise((resolve, reject) => {
+        try {
 
-            this.DB(this.TABLE)
-                .where({
-                    uuid: uuid
-                })
-                .update({
-                    is_indexed: 1
-                })
-                .then((data) => {
+            await this.DB(this.TABLE)
+            .where({
+                uuid: uuid
+            })
+            .update({
+                is_indexed: 1
+            });
 
-                    if (data === 1) {
-                        resolve(true);
-                    } else {
-                        LOGGER.module().error('ERROR: [/indexer/model module (index_records)] more than one record was updated');
-                        reject(false);
-                    }
+            return true;
 
-                })
-                .catch((error) => {
-                    LOGGER.module().error('ERROR: [/indexer/model module (index_records)] unable to update is_indexed field ' + error.message);
-                    reject(false);
-                });
-        });
-
-        return promise.then((result) => {
-            return result;
-        }).catch(() => {
-            return false;
-        });
+        } catch (error) {
+            LOGGER.module().error('ERROR: [/indexer/model module (index_records)] unable to update is_indexed field ' + error.message);
+        }
     }
 
     /**
      * Resets is_indexed DB flags
      * returns Promise string
      */
-    reset_indexed_flags = () => {
+    async reset_indexed_flags() {
 
-        let promise = new Promise((resolve, reject) => {
+        try {
 
-            this.DB(this.TABLE)
-                .where({
-                    is_indexed: 1,
-                    is_deleted: 0
-                })
-                .update({
-                    is_indexed: 0
-                })
-                .then((data) => {
-                    resolve(true);
-                })
-                .catch((error) => {
-                    LOGGER.module().error('ERROR: [/indexer/model module (index_records)] unable to reset is_indexed fields ' + error.message);
-                    reject(false);
-                });
-        });
+            await this.DB(this.TABLE)
+            .where({
+                is_indexed: 1,
+                is_deleted: 0
+            })
+            .update({
+                is_indexed: 0
+            });
 
-        return promise.then((result) => {
-            return result;
-        }).catch(() => {
-            return false;
-        });
+            return true;
+
+        } catch (error) {
+            LOGGER.module().error('ERROR: [/indexer/model module (index_records)] unable to reset is_indexed fields ' + error.message);
+        }
     }
 };
 

@@ -37,106 +37,87 @@ const Indexer_index_utils_tasks = class {
     /**
      * Checks if index exists
      */
-    check_index() {
+    async check_index() {
 
-        let promise = new Promise((resolve, reject) => {
+        try {
 
-            (async () => {
+            const response = await this.CLIENT.indices.exists({
+                index: this.INDEX_NAME
+            });
 
-                this.CLIENT.indices.exists({
-                    index: this.INDEX_NAME
-                }).then((response) => {
+            if (response.statusCode === 200) {
+                LOGGER.module().info('INFO: [/indexer/tasks (check_index)] index exists');
+                return true;
+            } else {
+                LOGGER.module().error('ERROR: [/indexer/tasks (check_index)] index does not exist');
+                return false;
+            }
 
-                    if (response.statusCode === 200) {
-                        LOGGER.module().info('INFO: [/indexer/tasks (check_index)] index exists');
-                        resolve(true);
-                    } else {
-                        LOGGER.module().error('ERROR: [/indexer/tasks (check_index)] index does not exist');
-                        reject(false);
-                    }
-                });
-            })();
-        });
-
-        return promise.then((response) => {
-            return response;
-        }).catch(() => {
-            return false;
-        });
+        } catch (error) {
+            LOGGER.module().error('ERROR: [/indexer/tasks (check_index)] unable to check index ' + error.message);
+        }
     }
 
     /**
      * Creates ES index
      */
-    create_index() {
+   async create_index() {
 
-        let promise = new Promise((resolve, reject) => {
+       try {
 
-            (async () => {
+           const response = await this.CLIENT.indices.create({
+               index: this.INDEX_NAME,
+               body: {
+                   'settings': {
+                       'index': {
+                           'number_of_shards': this.CONFIG.number_of_shards,
+                           'number_of_replicas': this.CONFIG.number_of_replicas
+                       }
+                   }
+               }
+           });
 
-                this.CLIENT.indices.create({
-                    index: this.INDEX_NAME,
-                    body: {
-                        'settings': {
-                            'index': {
-                                'number_of_shards': this.CONFIG.number_of_shards,
-                                'number_of_replicas': this.CONFIG.number_of_replicas
-                            }
-                        }
-                    }
+           if (response.statusCode === 200) {
+               LOGGER.module().info('INFO: [/indexer/tasks (create_index)] new index created');
+               return true;
+           } else {
+               LOGGER.module().error('ERROR: [/indexer/tasks (create_index)] unable to create new index');
+               return false;
+           }
 
-                }).then((response) => {
-
-                    if (response.statusCode === 200) {
-                        LOGGER.module().info('INFO: [/indexer/tasks (create_index)] new index created');
-                        resolve(true);
-                    } else {
-                        LOGGER.module().error('ERROR: [/indexer/tasks (create_index)] unable to create new index');
-                        reject(false);
-                    }
-                });
-            })();
-        });
-
-        return promise.then((response) => {
-            return response;
-        }).catch(() => {
-            return false;
-        });
+       } catch (error) {
+           LOGGER.module().error('ERROR: [/indexer/tasks (create_index)] unable to create new index ' + error.message);
+       }
     }
 
     /**
      * Creates ES index mappings
      */
-    create_mappings() {
+    async create_mappings() {
 
-        let promise = new Promise((resolve, reject) => {
+        try {
 
             let mappings_obj = this.get_mappings(),
                 body = {
                     properties: mappings_obj
                 };
 
-            this.CLIENT.indices.putMapping({
+            const response = await this.CLIENT.indices.putMapping({
                 index: this.INDEX_NAME,
                 body: body
-            }).then(function (response) {
-
-                if (response.statusCode === 200) {
-                    LOGGER.module().info('INFO: [/indexer/tasks (create_mappings)] mappings created');
-                   resolve(true);
-                } else {
-                    LOGGER.module().error('ERROR: [/indexer/tasks (create_mappings)] unable to create mappings');
-                    reject(true);
-                }
             });
-        });
 
-        return promise.then(() => {
-            return true;
-        }).catch(() => {
-            return false;
-        });
+            if (response.statusCode === 200) {
+                LOGGER.module().info('INFO: [/indexer/tasks (create_mappings)] mappings created');
+                return true;
+            } else {
+                LOGGER.module().error('ERROR: [/indexer/tasks (create_mappings)] unable to create mappings');
+                return true;
+            }
+
+        } catch (error) {
+            LOGGER.module().error('ERROR: [/indexer/tasks (create_mappings)] unable to create mappings ' + error.message);
+        }
     }
 
     /**
@@ -148,35 +129,23 @@ const Indexer_index_utils_tasks = class {
 
     /**
      * Deletes index
-     * @return {Promise<boolean>}
      */
-    delete_index() {
+    async delete_index() {
 
-        let promise = new Promise((resolve, reject) => {
+        try {
 
-            try {
+            const response = await this.CLIENT.indices.delete({
+                index: this.INDEX_NAME
+            });
 
-                this.CLIENT.indices.delete({
-                    index: this.INDEX_NAME
-                }).then((response) => {
-
-                    if (response.statusCode === 200) {
-                        LOGGER.module().info('INFO: [/indexer/service module (delete_index)] index deleted');
-                        resolve(true);
-                    }
-                });
-
-            } catch(error) {
-                LOGGER.module().error('ERROR: [/indexer/service module (delete_index)] unable to delete index ' + error.message );
-                reject(false);
+            if (response.statusCode === 200) {
+                LOGGER.module().info('INFO: [/indexer/service module (delete_index)] index deleted');
+                return true;
             }
-        });
 
-        return promise.then(() => {
-            return true;
-        }).catch(() => {
-            return false;
-        });
+        } catch(error) {
+            LOGGER.module().error('ERROR: [/indexer/service module (delete_index)] unable to delete index ' + error.message );
+        }
     };
 };
 
