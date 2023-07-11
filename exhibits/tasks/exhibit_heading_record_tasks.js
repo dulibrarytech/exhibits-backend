@@ -37,46 +37,36 @@ const Exhibit_heading_record_tasks = class {
     /**
      * Creates exhibit heading record
      * @param data
-     * @return {Promise<unknown | boolean>}
      */
-    create_heading_record(data) {
+    async create_heading_record(data) {
 
-        let promise = new Promise((resolve, reject) => {
+        try {
 
-            this.DB.transaction((trx) => {
+            const result = await this.DB.transaction((trx) => {
                 this.DB.insert(data)
                 .into(this.TABLE)
                 .transacting(trx)
                 .then(trx.commit)
                 .catch(trx.rollback);
-            })
-            .then((data) => {
-                LOGGER.module().info('INFO: [/exhibits/exhibit_heading_record_tasks (create_heading_record)] ' + data.length + ' Heading record created.');
-                resolve(true);
-            })
-            .catch((error) => {
-                LOGGER.module().error('ERROR: [/exhibits/exhibit_heading_record_tasks (create_heading_record)] unable to create record ' + error.message);
-                reject(false);
             });
-        });
 
-        return promise.then((result) => {
-            return result;
-        }).catch(() => {
-            return false;
-        });
+            LOGGER.module().info('INFO: [/exhibits/exhibit_heading_record_tasks (create_heading_record)] ' + result.length + ' Heading record created.');
+            return true;
+
+        } catch (error) {
+            LOGGER.module().error('ERROR: [/exhibits/exhibit_heading_record_tasks (create_heading_record)] unable to create record ' + error.message);
+        }
     }
 
     /**
      * Gets all heading records by exhibit
      * @param is_member_of_exhibit
-     * @return {Promise<unknown | boolean>}
      */
-    get_heading_records(is_member_of_exhibit) {
+    async get_heading_records(is_member_of_exhibit) {
 
-        let promise = new Promise((resolve, reject) => {
+        try {
 
-            this.DB(this.TABLE)
+            return await this.DB(this.TABLE)
             .select('is_member_of_exhibit',
                 'uuid',
                 'type',
@@ -89,34 +79,23 @@ const Exhibit_heading_record_tasks = class {
             .where({
                 is_member_of_exhibit: is_member_of_exhibit,
                 is_deleted: 0
-            })
-            .then((data) => {
-                resolve(data);
-            })
-            .catch((error) => {
-                LOGGER.module().error('ERROR: [/exhibits/exhibit_heading_record_tasks (get_heading_records)] unable to get records ' + error.message);
-                reject(false);
             });
-        });
 
-        return promise.then((records) => {
-            return records;
-        }).catch(() => {
-            return false;
-        });
+        } catch (error) {
+            LOGGER.module().error('ERROR: [/exhibits/exhibit_heading_record_tasks (get_heading_records)] unable to get records ' + error.message);
+        }
     }
 
     /**
      * Gets heading record
      * @param is_member_of_exhibit
      * @param uuid
-     * @return {Promise<unknown | boolean>}
      */
-    get_heading_record(is_member_of_exhibit, uuid) {
+    async get_heading_record(is_member_of_exhibit, uuid) {
 
-        let promise = new Promise((resolve, reject) => {
+        try {
 
-            this.DB(this.TABLE)
+            const data = await this.DB(this.TABLE)
             .select('is_member_of_exhibit',
                 'uuid',
                 'type',
@@ -131,103 +110,76 @@ const Exhibit_heading_record_tasks = class {
                 is_member_of_exhibit: is_member_of_exhibit,
                 uuid: uuid,
                 is_deleted: 0
-            })
-            .then(async (data) => {
-
-                if (data.length !== 0 && data[0].is_locked === 0) {
-
-                    try {
-
-                        const HELPER_TASK = new HELPER();
-                        await HELPER_TASK.lock_record(uuid, this.DB, this.TABLE);
-                        resolve(data);
-
-                    } catch (error) {
-                        LOGGER.module().error('ERROR:[/exhibits/exhibit_heading_record_tasks (get_heading_record)] unable to lock record ' + error.message);
-                    }
-
-                } else {
-                    resolve(data);
-                }
-            })
-            .catch((error) => {
-                LOGGER.module().error('ERROR: [/exhibits/exhibit_heading_record_tasks (get_heading_record)] unable to get records ' + error.message);
-                reject(false);
             });
-        });
 
-        return promise.then((record) => {
-            return record;
-        }).catch(() => {
-            return false;
-        });
+            if (data.length !== 0 && data[0].is_locked === 0) {
+
+                try {
+
+                    const HELPER_TASK = new HELPER();
+                    await HELPER_TASK.lock_record(uuid, this.DB, this.TABLE);
+                    return data;
+
+                } catch (error) {
+                    LOGGER.module().error('ERROR:[/exhibits/exhibit_heading_record_tasks (get_heading_record)] unable to lock record ' + error.message);
+                }
+
+            } else {
+                return data;
+            }
+
+        } catch (error) {
+            LOGGER.module().error('ERROR: [/exhibits/exhibit_heading_record_tasks (get_heading_record)] unable to get records ' + error.message);
+        }
     }
 
     /**
      * Updates item record
      * @param data
-     * @return {Promise<unknown | boolean>}
      */
-    update_heading_record(data) {
+    async update_heading_record(data) {
 
-        let promise = new Promise((resolve, reject) => {
+        try {
 
-            this.DB(this.TABLE)
+            await this.DB(this.TABLE)
             .where({
                 is_member_of_exhibit: data.is_member_of_exhibit,
                 uuid: data.uuid
             })
-            .update(data)
-            .then((data) => {
-                LOGGER.module().info('INFO: [/exhibits/exhibit_heading_record_tasks (update_heading_record)] Heading record updated.');
-                resolve(true);
-            })
-            .catch((error) => {
-                LOGGER.module().error('ERROR: [/exhibits/exhibit_heading_record_tasks (update_heading_record)] unable to update record ' + error.message);
-                reject(false);
-            });
-        });
+            .update(data);
 
-        return promise.then((result) => {
-            return result;
-        }).catch(() => {
-            return false;
-        });
+            LOGGER.module().info('INFO: [/exhibits/exhibit_heading_record_tasks (update_heading_record)] Heading record updated.');
+            return true;
+
+        } catch (error) {
+            LOGGER.module().error('ERROR: [/exhibits/exhibit_heading_record_tasks (update_heading_record)] unable to update record ' + error.message);
+        }
     }
 
     /**
      * Deletes heading record
      * @param is_member_of_exhibit
      * @param uuid
-     * @return boolean
      */
-    delete_heading_record(is_member_of_exhibit, uuid) {
+    async delete_heading_record(is_member_of_exhibit, uuid) {
 
-        let promise = new Promise((resolve, reject) => {
+        try {
 
-            this.DB(this.TABLE)
+            await this.DB(this.TABLE)
             .where({
                 is_member_of_exhibit: is_member_of_exhibit,
                 uuid: uuid
             })
             .update({
                 is_deleted: 1
-            })
-            .then(() => {
-                LOGGER.module().info('INFO: [/exhibits/exhibit_heading_record_tasks (delete_heading_record)] Heading record deleted.');
-                resolve(true);
-            })
-            .catch((error) => {
-                LOGGER.module().error('ERROR: [/exhibits/exhibit_heading_record_tasks (delete_heading_record)] unable to delete record ' + error.message);
-                reject(false);
             });
-        });
 
-        return promise.then((result) => {
-            return result;
-        }).catch(() => {
-            return false;
-        });
+            LOGGER.module().info('INFO: [/exhibits/exhibit_heading_record_tasks (delete_heading_record)] Heading record deleted.');
+            return true;
+
+        } catch (error) {
+            LOGGER.module().error('ERROR: [/exhibits/exhibit_heading_record_tasks (delete_heading_record)] unable to delete record ' + error.message);
+        }
     }
 };
 

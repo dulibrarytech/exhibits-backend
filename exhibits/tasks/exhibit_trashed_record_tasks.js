@@ -35,13 +35,12 @@ const Trashed_record_tasks = class {
 
     /**
      * Gets trashed exhibit records
-     * @return {Promise<unknown | boolean>}
      */
-    get_trashed_exhibit_records() {
+    async get_trashed_exhibit_records() {
 
-        let promise = new Promise((resolve, reject) => {
+        try {
 
-            this.DB(this.TABLE.exhibit_records)
+            return await this.DB(this.TABLE.exhibit_records)
             .select('uuid',
                 'type',
                 'title',
@@ -58,32 +57,21 @@ const Trashed_record_tasks = class {
             .where({
                 is_published: 0,
                 is_deleted: 1
-            })
-            .then((data) => {
-                resolve(data);
-            })
-            .catch((error) => {
-                LOGGER.module().error('ERROR: [/exhibits/exhibit_trashed_record_tasks (get_trashed_exhibit_records)] unable to get records ' + error.message);
-                reject(false);
             });
-        });
 
-        return promise.then((records) => {
-            return records;
-        }).catch(() => {
-            return false;
-        });
+        } catch (error) {
+            LOGGER.module().error('ERROR: [/exhibits/exhibit_trashed_record_tasks (get_trashed_exhibit_records)] unable to get records ' + error.message);
+        }
     }
 
     /**
      * Gets trashed heading records
-     * @return {Promise<unknown | boolean>}
      */
-    get_trashed_heading_records() {
+    async get_trashed_heading_records() {
 
-        let promise = new Promise((resolve, reject) => {
+        try {
 
-            this.DB(this.TABLE.heading_records)
+            return await this.DB(this.TABLE.heading_records)
             .select('is_member_of_exhibit',
                 'uuid',
                 'type',
@@ -97,32 +85,21 @@ const Trashed_record_tasks = class {
             .where({
                 is_published: 0,
                 is_deleted: 1
-            })
-            .then((data) => {
-                resolve(data);
-            })
-            .catch((error) => {
-                LOGGER.module().error('ERROR: [/exhibits/exhibit_trashed_record_tasks (get_trashed_heading_records)] unable to get records ' + error.message);
-                reject(false);
             });
-        });
 
-        return promise.then((record) => {
-            return record;
-        }).catch(() => {
-            return false;
-        });
+        } catch (error) {
+            LOGGER.module().error('ERROR: [/exhibits/exhibit_trashed_record_tasks (get_trashed_heading_records)] unable to get records ' + error.message);
+        }
     }
 
     /**
      * Gets trashed item records
-     * @return {Promise<unknown | boolean>}
      */
-    get_trashed_item_records() {
+    async get_trashed_item_records() {
 
-        let promise = new Promise((resolve, reject) => {
+        try {
 
-            this.DB(this.TABLE.item_records)
+            return await this.DB(this.TABLE.item_records)
             .select('is_member_of_exhibit',
                 'uuid',
                 'type',
@@ -144,120 +121,74 @@ const Trashed_record_tasks = class {
             .where({
                 is_published: 0,
                 is_deleted: 1
-            })
-            .then((data) => {
-                resolve(data);
-            })
-            .catch((error) => {
-                LOGGER.module().error('ERROR: [/exhibits/exhibit_trashed_record_tasks (get_trashed_item_records)] unable to get records ' + error.message);
-                reject(false);
             });
-        });
 
-        return promise.then((records) => {
-            return records;
-        }).catch(() => {
-            return false;
-        });
+        } catch (error) {
+            LOGGER.module().error('ERROR: [/exhibits/exhibit_trashed_record_tasks (get_trashed_item_records)] unable to get records ' + error.message);
+        }
     }
 
     /**
      * Permanently deletes trashed record
      * @param is_member_of_exhibit
      * @param uuid
-     * @return {Promise<unknown | boolean>}
      */
-    delete_trashed_record(is_member_of_exhibit, uuid) {
+    async delete_trashed_record(is_member_of_exhibit, uuid) {
 
-        let promise = new Promise((resolve, reject) => {
+        try {
 
-            this.DB(this.TABLE)
+            await this.DB(this.TABLE)
             .where({
                 is_member_of_exhibit: is_member_of_exhibit,
                 uuid: uuid
             })
-            .delete()
-            .then(() => {
-                LOGGER.module().info('INFO: [/exhibits/exhibit_trashed_record_tasks (delete_trashed_record)] Record permanently deleted.');
-                resolve(true);
-            })
-            .catch((error) => {
-                LOGGER.module().error('ERROR: [/exhibits/exhibit_trashed_record_tasks (delete_trashed_record)] unable to delete record ' + error.message);
-                reject(false);
-            });
-        });
+            .delete();
 
-        return promise.then((result) => {
-            return result;
-        }).catch(() => {
-            return false;
-        });
+        } catch (error) {
+            LOGGER.module().error('ERROR: [/exhibits/exhibit_trashed_record_tasks (delete_trashed_record)] unable to delete record ' + error.message);
+        }
     }
 
     /**
      * Permanently deletes all trashed records
-     * @return {Promise<unknown | boolean>}
      */
-    delete_all_trashed_records() {
+    async delete_all_trashed_records() {
 
-        let promise = new Promise((resolve, reject) => {
+        try {
 
-            this.DB(this.TABLE)
+            await this.DB(this.TABLE)
             .where({
                 is_published: 0,
                 is_deleted: 1
             })
-            .delete()
-            .then(() => {
-                LOGGER.module().info('INFO: [/exhibits/exhibit_trashed_record_tasks (delete_all_trashed_records)] Record permanently deleted.');
-                resolve(true);
-            })
-            .catch((error) => {
-                LOGGER.module().error('ERROR: [/exhibits/exhibit_trashed_record_tasks (delete_all_trashed_records)] unable to delete record ' + error.message);
-                reject(false);
-            });
-        });
+            .delete();
 
-        return promise.then((result) => {
-            return result;
-        }).catch(() => {
-            return false;
-        });
+        } catch (error) {
+            LOGGER.module().error('ERROR: [/exhibits/exhibit_trashed_record_tasks (delete_all_trashed_records)] unable to delete record ' + error.message);
+        }
     }
 
     /**
      * Restores trashed records
      * @param is_member_of_exhibit
      * @param uuid
-     * @return {Promise<unknown | boolean>}
      */
-    restore_trashed_record(is_member_of_exhibit, uuid) {
+    async restore_trashed_record(is_member_of_exhibit, uuid) {
 
-        let promise = new Promise((resolve, reject) => {
+        try {
 
-            this.DB(this.TABLE)
+            await this.DB(this.TABLE)
             .where({
                 is_member_of_exhibit: is_member_of_exhibit,
                 uuid: uuid
             })
             .update({
                 is_deleted: 1
-            })
-            .then(() => {
-                LOGGER.module().info('INFO: [/exhibits/exhibit_trashed_record_tasks (restore_trashed_record)] Trashed record restored.');
-                resolve(true);
-            })
-            .catch((error) => {
-                LOGGER.module().error('ERROR: [/exhibits/exhibit_trashed_record_tasks (restore_trashed_record)] unable to restore record ' + error.message);
-                reject(false);
             });
-        });
 
-        return promise.then((result) => {
-            return result;
-        }).catch(() => {
-            return false;
-        });
+        } catch (error) {
+            LOGGER.module().error('ERROR: [/exhibits/exhibit_trashed_record_tasks (restore_trashed_record)] unable to restore record ' + error.message);
+        }
     }
 };
 

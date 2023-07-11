@@ -64,6 +64,7 @@ const exhibitsModule = (function () {
 
             console.log(exhibits[i]);
 
+            let uuid = exhibits[i].uuid;
             let title = helperModule.unescape(exhibits[i].title);
             let description = helperModule.unescape(exhibits[i].description);
 
@@ -71,7 +72,7 @@ const exhibitsModule = (function () {
                 <div class="col-md-4">
                     <div class="card">
                         <div class="card-header">
-                            <strong class="card-title mb-3">${title}</strong>
+                            <strong class="card-title mb-3"><a href="/dashboard/items?uuid=${uuid}">${title}</a></strong>
                         </div>
                         <div class="card-body">
                             <div class="mx-auto d-block">

@@ -53,9 +53,9 @@ exports.get_auth_user_data = async function (id) {
     try {
 
         const TASKS = new AUTH_TASKS(DB, TABLE);
-        const DATA = await TASKS.get_auth_user_data(id);
+        const data = await TASKS.get_auth_user_data(id);
         let auth_data = {
-            user_data: DATA,
+            user_data: data,
             endpoints: {
                 exhibits: EXHIBITS_ENDPOINTS,
                 users: USERS_ENDPOINTS,
@@ -69,7 +69,7 @@ exports.get_auth_user_data = async function (id) {
             data: auth_data
         };
 
-        if (DATA === false) {
+        if (data === false) {
             response = {
                 status: 500,
                 message: 'Unable to retrieve user data.',

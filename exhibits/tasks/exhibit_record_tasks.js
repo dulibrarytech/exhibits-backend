@@ -37,45 +37,34 @@ const Exhibit_record_tasks = class {
     /**
      * Creates exhibit record
      * @param data
-     * @return {Promise<unknown | boolean>}
      */
-    create_exhibit_record(data) {
+    async create_exhibit_record(data) {
 
-        let promise = new Promise((resolve, reject) => {
+        try {
 
-            this.DB.transaction((trx) => {
+            const result = await this.DB.transaction((trx) => {
                 this.DB.insert(data)
                 .into(this.TABLE)
                 .transacting(trx)
                 .then(trx.commit)
                 .catch(trx.rollback);
-            })
-            .then((data) => {
-                LOGGER.module().info('INFO: [/exhibits/exhibit_record_tasks (create_exhibit_record)] ' + data.length + ' Exhibit record created.');
-                resolve(true);
-            })
-            .catch((error) => {
-                LOGGER.module().error('ERROR: [/exhibits/exhibit_record_tasks (create_exhibit_record)] unable to create record ' + error.message);
-                reject(false);
             });
-        });
 
-        return promise.then((result) => {
-            return result;
-        }).catch(() => {
-            return false;
-        });
+            LOGGER.module().info('INFO: [/exhibits/exhibit_record_tasks (create_exhibit_record)] ' + result.length + ' Exhibit record created.');
+
+        } catch (error) {
+            LOGGER.module().error('ERROR: [/exhibits/exhibit_record_tasks (create_exhibit_record)] unable to create record ' + error.message);
+        }
     }
 
     /**
      * Gets all active exhibit records
-     * @return {Promise<unknown | boolean>}
      */
-    get_exhibit_records() {
+    async get_exhibit_records() {
 
-        let promise = new Promise((resolve, reject) => {
+        try {
 
-            this.DB(this.TABLE)
+            return await this.DB(this.TABLE)
             .select('uuid',
                 'type',
                 'title',
@@ -91,33 +80,22 @@ const Exhibit_record_tasks = class {
             )
             .where({
                 is_deleted: 0
-            })
-            .then((data) => {
-                resolve(data);
-            })
-            .catch((error) => {
-                LOGGER.module().error('ERROR: [/exhibits/exhibit_record_tasks (get_exhibit_records)] unable to get records ' + error.message);
-                reject(false);
             });
-        });
 
-        return promise.then((records) => {
-            return records;
-        }).catch(() => {
-            return false;
-        });
+        } catch (error) {
+            LOGGER.module().error('ERROR: [/exhibits/exhibit_record_tasks (get_exhibit_records)] unable to get records ' + error.message);
+        }
     }
 
     /**
      * Gets exhibit record by uuid
      * @param uuid
-     * @return {Promise<unknown | boolean>}
      */
-    get_exhibit_record(uuid) {
+    async get_exhibit_record(uuid) {
 
-        let promise = new Promise((resolve, reject) => {
+        try {
 
-            this.DB(this.TABLE)
+            let data = await this.DB(this.TABLE)
             .select('uuid',
                 'type',
                 'title',
@@ -135,67 +113,49 @@ const Exhibit_record_tasks = class {
             .where({
                 uuid: uuid,
                 is_deleted: 0
-            })
-            .then(async (data) => {
-
-                if (data.length !== 0 && data[0].is_locked === 0) {
-
-                    try {
-
-                        const HELPER_TASK = new HELPER();
-                        await HELPER_TASK.lock_record(uuid, this.DB, this.TABLE);
-                        resolve(data);
-
-                    } catch (error) {
-                        LOGGER.module().error('ERROR: [/exhibits/exhibit_record_tasks (get_exhibit_record)] unable to lock record ' + error.message);
-                    }
-
-                } else {
-                    resolve(data);
-                }
-            })
-            .catch((error) => {
-                LOGGER.module().error('ERROR: [/exhibits/exhibit_record_tasks (get_exhibit_record)] unable to get records ' + error.message);
-                reject(false);
             });
-        });
 
-        return promise.then((record) => {
-            return record;
-        }).catch(() => {
-            return false;
-        });
+            if (data.length !== 0 && data[0].is_locked === 0) {
+
+                try {
+
+                    const HELPER_TASK = new HELPER();
+                    await HELPER_TASK.lock_record(uuid, this.DB, this.TABLE);
+                    return data;
+
+                } catch (error) {
+                    LOGGER.module().error('ERROR: [/exhibits/exhibit_record_tasks (get_exhibit_record)] unable to lock record ' + error.message);
+                }
+
+            } else {
+                return data;
+            }
+
+        } catch (error) {
+            LOGGER.module().error('ERROR: [/exhibits/exhibit_record_tasks (get_exhibit_record)] unable to get records ' + error.message);
+        }
     }
 
     /**
      * Updates record
      * @param data
-     * @return {Promise<unknown | boolean>}
      */
-    update_exhibit_record(data) {
+    async update_exhibit_record(data) {
 
-        let promise = new Promise((resolve, reject) => {
+        try {
 
-            this.DB(this.TABLE)
+            await this.DB(this.TABLE)
             .where({
                 uuid: data.uuid
             })
-            .update(data)
-            .then(() => {
-                LOGGER.module().info('INFO: [/exhibits/exhibit_record_tasks (update_exhibit_record)] Exhibit record updated.');
-                resolve(true);
-            })
-            .catch((error) => {
-                LOGGER.module().error('ERROR: [/exhibits/exhibit_record_tasks (update_exhibit_record)] unable to update record ' + error.message);
-                reject(false);
-            });
-        });
+            .update(data);
 
-        return promise.then((result) => {
-            return result;
-        }).catch(() => {
-            return false;
-        });
+            LOGGER.module().info('INFO: [/exhibits/exhibit_record_tasks (update_exhibit_record)] Exhibit record updated.');
+            return true;
+
+        } catch (error) {
+            LOGGER.module().error('ERROR: [/exhibits/exhibit_record_tasks (update_exhibit_record)] unable to update record ' + error.message);
+        }
     }
 
     /**
@@ -203,66 +163,25 @@ const Exhibit_record_tasks = class {
      * @param uuid
      * @return {Promise<unknown | boolean>}
      */
-    delete_exhibit_record(uuid) {
+    async delete_exhibit_record(uuid) {
 
-        let promise = new Promise((resolve, reject) => {
+        try {
 
-            this.DB(this.TABLE)
+            await this.DB(this.TABLE)
             .where({
                 uuid: uuid
             })
             .update({
                 is_deleted: 1
-            })
-            .then(() => {
-                LOGGER.module().info('INFO: [/exhibits/exhibit_record_tasks (delete_exhibit_record)] Exhibit record deleted.');
-                resolve(true);
-            })
-            .catch((error) => {
-                LOGGER.module().error('ERROR: [/exhibits/exhibit_record_tasks (delete_item_record)] unable to delete record ' + error.message);
-                reject(false);
             });
-        });
 
-        return promise.then((result) => {
-            return result;
-        }).catch(() => {
-            return false;
-        });
+            LOGGER.module().info('INFO: [/exhibits/exhibit_record_tasks (delete_exhibit_record)] Exhibit record deleted.');
+            return true;
+
+        } catch (error) {
+            LOGGER.module().error('ERROR: [/exhibits/exhibit_record_tasks (delete_item_record)] unable to delete record ' + error.message);
+        }
     }
-
-    /**
-     * Permanently deletes record
-     * @param uuid
-     * @return {Promise<unknown | boolean>}
-     * @private
-
-    delete_exhibit_record_(uuid) {
-
-        let promise = new Promise((resolve, reject) => {
-
-            this.DB(this.TABLE)
-            .where({
-                uuid: uuid
-            })
-            .delete()
-            .then(() => {
-                LOGGER.module().info('INFO: [/exhibits/exhibit_record_tasks (delete_exhibit_record)] Exhibit record deleted.');
-                resolve(true);
-            })
-            .catch((error) => {
-                LOGGER.module().error('ERROR: [/exhibits/exhibit_record_tasks (delete_item_record)] unable to delete record ' + error.message);
-                reject(false);
-            });
-        });
-
-        return promise.then((result) => {
-            return result;
-        }).catch(() => {
-            return false;
-        });
-    }
-     */
 };
 
 module.exports = Exhibit_record_tasks;

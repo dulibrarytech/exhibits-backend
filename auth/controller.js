@@ -46,7 +46,7 @@ exports.sso = async function (req, res) {
 
 exports.get_auth_user_data = async function (req, res) {
     const ID = req.query.id;
-    const data = MODEL.get_auth_user_data(ID);
+    const data = await MODEL.get_auth_user_data(ID);
     res.status(data.status).send(data.data);
 };
 

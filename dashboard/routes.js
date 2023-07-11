@@ -25,12 +25,11 @@ module.exports = function (app) {
     app.route('/dashboard/home')
     .get(CONTROLLER.get_dashboard_home);
 
-    app.route('/dashboard/exhibits/add')
-    .get(CONTROLLER.get_dashboard_exhibits_add_form);
-
     app.route('/dashboard/items')
     .get(CONTROLLER.get_dashboard_items);
 
+    app.route('/dashboard/exhibits/add')
+    .get(CONTROLLER.get_dashboard_exhibits_add_form);
 
     app.route('/dashboard/items/delete')
     .get(CONTROLLER.delete_dashboard_item);

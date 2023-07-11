@@ -211,16 +211,16 @@ exports.delete_exhibit_record = async function (uuid) {
 
             return {
                 status: 200,
-                message: 'Cannot delete exhibit',
-                data: await TASK.delete_exhibit_record(uuid)
+                message: 'Cannot delete exhibit'
             };
         }
 
-        return {
-            status: 204,
-            message: 'Record deleted',
-            data: await TASK.delete_exhibit_record(uuid)
-        };
+        if (await TASK.delete_exhibit_record(uuid) === true) {
+            return {
+                status: 204,
+                message: 'Record deleted'
+            };
+        }
 
     } catch (error) {
         LOGGER.module().error('ERROR: [/exhibits/model (delete_exhibit_record)] ' + error.message);
