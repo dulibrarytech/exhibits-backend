@@ -21,6 +21,7 @@
 const CONFIG = require('../config/webservices_config')();
 const TOKEN = require('../libs/tokens');
 const MODEL = require('../auth/model');
+const LOGGER = require('../libs/log4');
 
 exports.sso = async function (req, res) {
 
@@ -29,17 +30,23 @@ exports.sso = async function (req, res) {
 
     if (SSO_HOST === CONFIG.ssoHost && USERNAME !== undefined) {
 
-        let result;
-        let token = TOKEN.create(USERNAME);
-        token = encodeURIComponent(token);
-        result = await MODEL.check_auth_user(USERNAME);
+        try {
 
-        if (result.auth === true) {
-            res.redirect('/dashboard/home?t=' + token + '&id=' + result.data);
-        } else {
-            res.status(401).send({
-                message: 'Authenticate failed.'
-            });
+            let result;
+            let token = TOKEN.create(USERNAME);
+            token = encodeURIComponent(token);
+            result = await MODEL.check_auth_user(USERNAME);
+
+            if (result.auth === true) {
+                res.redirect('/dashboard/home?t=' + token + '&id=' + result.data);
+            } else {
+                res.status(401).send({
+                    message: 'Authenticate failed.'
+                });
+            }
+
+        } catch (error) {
+            LOGGER.module().error('ERROR: [/auth/controller (sso)] unable to complete authentication ' + error.message);
         }
     }
 };

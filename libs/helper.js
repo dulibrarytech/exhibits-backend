@@ -125,7 +125,7 @@ const Helper = class {
                 obj[prop] = encodeURI(config[prop]);
             }
 
-            obj[prop] = VALIDATOR.escape(VALIDATOR.trim(config[prop]));
+            obj[prop] = VALIDATOR.trim(config[prop]);
         });
 
         return obj;
