@@ -20,7 +20,7 @@
 
 const {v4: uuidv4} = require('uuid');
 const LOGGER = require('../libs/log4');
-const VALIDATOR = require("validator");
+const VALIDATOR = require('validator');
 
 /**
  * Object contains helper tasks

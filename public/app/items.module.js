@@ -25,11 +25,6 @@ const itemsModule = (function () {
 
     async function get_items(uuid) {
 
-        console.log(uuid);
-
-        /// let test = EXHIBITS_ENDPOINTS.exhibits.item_records.endpointtest.replace(':exhibit_id', uuid);
-
-        // console.log('test ', test.replace(':exhibit_id', uuid));
         try {
 
             let token = authModule.get_user_token();
@@ -43,7 +38,6 @@ const itemsModule = (function () {
             });
 
             if (response !== undefined && response.status === 200) {
-                console.log(response.data.data);
                 return response.data.data;
             }
 
@@ -56,49 +50,90 @@ const itemsModule = (function () {
 
         const uuid = helperModule.get_parameter_by_name('uuid');
         let items = await get_items(uuid);
-        console.log(items);
-        return false;
+        let cards = '';
 
-        let exhibit_cards = '';
-        exhibit_cards += '<div class="row">';
+        cards += '<tbody>';
+        cards += `<thead>
+        <tr>
+            <th>Order</th>
+            <th>Item</th>
+            <th>Status</th>
+            <th>Actions</th>
+        </tr>
+        </thead>`;
 
-        for (let i=0;i<exhibits.length;i++) {
+        for (let i = 0; i < items.length; i++) {
 
-            console.log(exhibits[i]);
+            console.log(items[i]);
+            let uuid = items[i].uuid;
+            let type = items[i].type;
+            let order = items[i].order;
+            let is_published = items[i].is_published;
+            let status;
 
-            let uuid = exhibits[i].uuid;
-            let title = helperModule.unescape(exhibits[i].title);
-            let description = helperModule.unescape(exhibits[i].description);
-
-            exhibit_cards += `
-                <div class="col-md-4">
-                    <div class="card">
-                        <div class="card-header">
-                            <strong class="card-title mb-3"><a href="/dashboard/items?uuid=${uuid}">${title}</a></strong>
-                        </div>
-                        <div class="card-body">
-                            <div class="mx-auto d-block">
-                                <img class="rounded-circle mx-auto d-block" src="../../images/thumbnail.jpg"
-                                     alt="exhibit thumbnail here?">
-                                <div class="location text-sm-center"><i class=""></i> ${description}</div>
-                            </div>
-                            <hr>
-                            <div class="card-text text-sm-center">
-                                <a href="#" title="Add Items"><i class="fa fa-plus pr-1"></i> </a>&nbsp;
-                                <a href="#" title="Edit Items"><i class="fa fa-edit pr-1"></i> </a>&nbsp;
-                                <a href="#" title="Delete items"><i class="fa fa-minus pr-1"></i> </a>
-                            </div>
-                        </div>
-                    </div>
-                </div>`;
-
-            if (i % 3 === 2) {
-                exhibit_cards += '</div>';
-                exhibit_cards += '<div class="row">';
+            if (is_published === 1) {
+                status = `<span title="published"><i class="fa fa-cloud"></i></span>`;
+            } else if (is_published === 0) {
+                status = `<span title="suppressed"><i class="fa fa-cloud-upload"></i></span>`;
             }
+
+            cards += '<tr>';
+            cards += `<td style="width: 5%">${order}</td>`;
+
+            if (items[i].type === 'item') {
+
+                let url = items[i].url;
+                let title = helperModule.unescape(items[i].title);
+                let description = helperModule.unescape(items[i].description);
+                let date = items[i].date;
+
+                cards += `<td style="width: 35%">
+                    <p><button class="btn btn-primary"><small>${type}</small></button></p>
+                    <p>${url}</p>
+                    <p>${title}</p>
+                    <p><small>${description}</small></p>
+                    <p><small>${date}</small></p>
+                    </td>`;
+
+            } else if (items[i].type === 'heading') {
+
+                let text = helperModule.unescape(items[i].text);
+                let subtext = helperModule.unescape(items[i].subtext);
+
+                cards += `<td style="width: 35%">
+                    <p><button class="btn btn-primary"><small>${type}</small></button></p>
+                    <p>${text}</p>
+                    <p><small>${subtext}</small></p>
+                    </td>`;
+            }
+
+            cards += `<td style="width: 5%">${status}</td>`;
+            cards += `<td style="width: 10%"><a href="#" class="btn btn-default">Edit</a></td>`;
+            cards += '</tr>';
         }
 
-        document.querySelector('#exhibits').innerHTML = exhibit_cards;
+        cards += '</tbody>';
+        document.querySelector('#items').innerHTML = cards;
+        // $('#items').DataTable();
+
+        /*
+        console.log('rows: ', rows);
+        new DataTable('#items', {
+            columns: [
+                { title: 'Type' },
+                { title: 'Item' },
+                { title: 'Description' }
+            ],
+            rows: rows
+        });
+
+         */
+
+        /*
+        setTimeout(() => {
+            new DataTable('#items', '');
+        }, 1000);
+         */
     }
 
     obj.init = async function () {
