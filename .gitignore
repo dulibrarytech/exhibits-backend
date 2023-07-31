@@ -51,7 +51,7 @@ node_modules
 
 # JIRA plugin
 atlassian-ide-plugin.xml
-
+storage
 logs
 logs/*.log
 logs/*.gz
