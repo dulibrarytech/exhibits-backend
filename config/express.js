@@ -55,6 +55,7 @@ module.exports = () => {
     require('../exhibits/routes.js')(APP);
     require('../indexer/routes.js')(APP);
     require('../users/routes.js')(APP);
+    require('../exhibits/uploads')(APP);
 
     SERVER.listen(process.env.APP_PORT);
 

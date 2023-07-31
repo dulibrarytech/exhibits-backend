@@ -25,12 +25,13 @@ const helperModule = (function () {
     /**
      * Renders error message
      * @param message
-     */
+
     obj.render_error = function (message) {
         domModule.html('#message', '<div class="alert alert-danger"><i class="fa fa-exclamation-circle"></i> ' + DOMPurify.sanitize(message) + '</div>');
         window.scrollTo({ top: 0, behavior: 'smooth' });
         return false;
     };
+     */
 
     /**
      * Gets url parameter
@@ -65,16 +66,27 @@ const helperModule = (function () {
      * Unescapes HTML elements
      * @param data
      */
-    obj.unescape = function(data) {
+    obj.unescape = function (data) {
         let elem = document.createElement('textarea');
         elem.innerHTML = data;
         return elem.value;
     };
 
     /**
+     *
+     * @param id
+     * @return {*}
+     */
+    obj.render_rich_text_editor = function(id) {
+        let editor1cfg = {}
+        editor1cfg.toolbar = 'basic';
+        return new RichTextEditor(id, editor1cfg);
+    };
+
+    /**
      * Gets current year
      */
-    obj.get_current_year = () => {
+    obj.get_current_year = function () {
         let cdate = new Date().getFullYear();
         domModule.html('#cdate', DOMPurify.sanitize(cdate));
     };
@@ -85,6 +97,7 @@ const helperModule = (function () {
      * @param total_records
      * @returns {string}
      */
+    /*
     obj.pagination = function (uuid, total_records) {
 
         let path = window.location.pathname,
@@ -219,10 +232,10 @@ const helperModule = (function () {
         return DOMPurify.sanitize(html);
     };
 
+     */
+
     obj.init = function() {};
 
     return obj;
 
 }());
-
-helperModule.init();

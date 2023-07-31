@@ -30,7 +30,12 @@ const homeModule = (function () {
 
         history.replaceState({}, '', '/dashboard/home');
         history.pushState({}, '', '/dashboard/home');
-        exhibitsModule.init();
+
+        let home_timer = setTimeout(() => {
+            exhibitsModule.init();
+            clearTimeout(home_timer);
+        }, 150);
+
     };
 
     return obj;

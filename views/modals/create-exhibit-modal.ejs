@@ -1,0 +1,75 @@
+<div class="modal fade show" id="scrollmodal" tabindex="-1" role="dialog"
+     aria-labelledby="scrollmodalLabel" style="display: none;">
+    <div class="modal-dialog modal-lg" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="scrollmodalLabel">Create Exhibit</h5>
+            </div>
+            <div class="modal-body">
+                <div class="card">
+                    <div class="card-body card-block">
+                        <form class="form-horizontal">
+                            <div class="row form-group">
+                                <div class="col-12 col-md-12"><input type="text" id="exhibit-title" name="title" placeholder="Title" class="form-control"><small class="form-text text-muted">* Required</small></div>
+                            </div>
+                            <div class="row form-group">
+                                <div class="col-12 col-md-12"><input type="text" id="exhibit-sub-title" name="sub-title" placeholder="Sub Title" class="form-control"><small class="form-text text-muted"></small></div>
+                            </div>
+                            <div class="row form-group">
+                                <div class="col-12 col-md-12"><input type="text" id="exhibit-banner" name="sub-title" placeholder="Banner" class="form-control"><small class="form-text text-muted">* Required</small></div>
+                            </div>
+                            <div class="row form-group">
+                                <div id="exhibit-description"></div>
+                            </div>
+                            <div class="row form-group">
+                                <div class="col-12 col-md-12">
+                                    <select name="page_layout" id="exhibit-page-layout" class="form-control-lg form-control">
+                                        <option value="0">Page Layout</option>
+                                        <option value="top_nav">top_nav</option>
+                                        <option value="2">Option #2</option>
+                                        <option value="3">Option #3</option>
+                                    </select>
+                                </div>
+                            </div>
+                            <div class="row form-group">
+                                <div class="col-12 col-md-12">
+                                    <select name="template" id="exhibit-template" class="form-control-lg form-control">
+                                        <option value="0">Template</option>
+                                        <option value="top_nav">vertical_scroll</option>
+                                        <option value="2">Option #2</option>
+                                        <option value="3">Option #3</option>
+                                    </select>
+                                </div>
+                            </div>
+                            <div class="row form-group">
+                                <div class="col-12 col-md-12"><textarea name="styles" id="exhibit-styles" rows="9" placeholder="Styles TODO: Select dropdowns instead" class="form-control"></textarea></div>
+                            </div>
+                            <div class="row form-group">
+
+                            </div>
+                        </form>
+                        <div class="col-12 col-md-12">
+                            <p><span id="hero-image-filename-display"></span>&nbsp;&nbsp;<span><a href="#"><i class="fa fa-trash"></i></a></span></p>
+                            <input type="hidden" id="hero-image" name="hero_image" value="">
+                        </div>
+                        <form class="form-horizontal dropzone" id="hero-dropzone" action="/uploads" method="post"
+                              enctype="multipart/form-data">
+                        </form>
+                        <hr>
+                        <div class="col-12 col-md-12">
+                            <p><span id="thumbnail-filename-display"></span>&nbsp;&nbsp;<span><a href="#"><i class="fa fa-trash"></i></a></span></p>
+                            <input type="hidden" id="thumbnail" name="thumbnail" value="">
+                        </div>
+                        <form class="form-horizontal dropzone" id="thumbnail-dropzone" action="/uploads" method="post"
+                              enctype="multipart/form-data">
+                        </form>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-dismiss="modal">Cancel</button>
+                    <button type="button" class="btn btn-primary">Save</button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
