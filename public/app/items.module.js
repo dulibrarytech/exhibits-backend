@@ -185,12 +185,13 @@ const itemsModule = (function () {
 
             if (response !== undefined && response.status === 201) {
 
-                document.querySelector('#display-item-data').innerHTML = '';
+                document.querySelector('#item-heading-form').style.display = 'none';
                 document.querySelector('#message').innerHTML = `<div class="alert alert-success" role="alert"><i class="fa fa-info"></i> Item heading record created</div>`;
-                // TODO: clear form
+
                 setTimeout(() => {
                     document.querySelector('#message').innerHTML = '';
                     document.querySelector('#item-heading-form').reset();
+                    document.querySelector('#item-heading-form').style.display = 'block';
                 }, 3000);
             }
 
