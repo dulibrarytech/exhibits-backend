@@ -33,6 +33,7 @@ const EXHIBIT_HEADING_RECORD_TASKS = require('../exhibits/tasks/exhibit_heading_
 const EXHIBIT_TRASHED_RECORD_TASKS = require('../exhibits/tasks/exhibit_trashed_record_tasks');
 const HELPER = require('../libs/helper');
 const VALIDATOR = require('../libs/validate');
+const FS = require('fs');
 const LOGGER = require('../libs/log4');
 
 /**
@@ -51,7 +52,7 @@ exports.create_exhibit_record = async function (data) {
 
         if (is_valid !== true) {
 
-            LOGGER.module().error('ERROR: [/exhibits/model (create_exhibit_record)] ' + is_valid[0].message);
+            LOGGER.module().error('ERROR: [/exhibits/model (create_exhibit_record)] ' + is_valid[0].dataPath + ' ' + is_valid[0].message);
 
             return {
                 status: 400,
@@ -59,30 +60,56 @@ exports.create_exhibit_record = async function (data) {
             };
         }
 
-        if (data.styles.length === 0) {
-            data.styles = '{}';
-        } else {
-            data.styles = VALIDATE_TASK.validator_unescape(data.styles);
+        if (data.hero_image.length > 0) {
+
+            FS.rename(`./storage/${data.hero_image}`, `./storage/${data.uuid}_${data.hero_image}`, (error) => {
+                if (error) {
+                    console.log('ERROR: ' + error);
+                }
+            });
         }
+
+        if (data.thumbnail_image.length > 0) {
+
+            FS.rename(`./storage/${data.thumbnail_image}`, `./storage/${data.uuid}_${data.thumbnail_image}`, (error) => {
+                if (error) {
+                    console.log('ERROR: ' + error);
+                }
+            });
+        }
+
+        data.hero_image = `${data.uuid}_${data.hero_image}`;
+        data.thumbnail_image = `${data.uuid}_${data.thumbnail_image}`;
+
+        if (data.styles === undefined || data.styles.length === 0) {
+            data.styles = '{}';
+        }
+
+        data.styles = JSON.stringify(data.styles);
 
         const CREATE_RECORD_TASK = new EXHIBIT_RECORD_TASKS(DB, TABLES.exhibit_records);
         let result = await CREATE_RECORD_TASK.create_exhibit_record(data);
-
+        console.log(result);
         if (result === false) {
+
             return {
                 status: 200,
                 message: 'Unable to create exhibit record'
             };
+
         } else {
+            console.log('UUID: ', data.uuid);
             return {
                 status: 201,
                 message: 'Exhibit record created',
                 data: data.uuid
             };
+
         }
 
     } catch (error) {
-
+        // TODO: log
+        console.log('ERROR: ' + error.message);
         return {
             status: 200,
             message: 'Unable to create record ' + error.message

@@ -58,15 +58,15 @@ const exhibitsModule = (function () {
 
         let exhibits = await get_exhibits();
         let exhibit_cards = '';
-            exhibit_cards += '<div class="row">';
+        exhibit_cards += '<div class="row">';
 
         for (let i=0;i<exhibits.length;i++) {
-
-            console.log(exhibits[i]);
 
             let uuid = exhibits[i].uuid;
             let title = helperModule.unescape(exhibits[i].title);
             let description = helperModule.unescape(exhibits[i].description);
+            // description = description.substring(0, description.length);
+            // <div class="location text-sm-center"><i class=""></i> ${description}</div>
 
             exhibit_cards += `
                 <div class="col-md-4">
@@ -78,7 +78,6 @@ const exhibitsModule = (function () {
                             <div class="mx-auto d-block">
                                 <img class="rounded-circle mx-auto d-block" src="../../images/thumbnail.jpg"
                                      alt="exhibit thumbnail here?">
-                                <div class="location text-sm-center"><i class=""></i> ${description}</div>
                             </div>
                             <hr>
                             <div class="card-text text-sm-center">
@@ -99,67 +98,133 @@ const exhibitsModule = (function () {
         document.querySelector('#exhibits').innerHTML = exhibit_cards;
     }
 
-    /**
-     * Example
-     */
-    function create_exhibit() {
+    obj.get_exhibit_data = function() {
 
-        domModule.hide('#exhibit-form');
-        domModule.html('#message', '<div class="alert alert-info">Saving Exhibit...</div>');
+        let exhibit = {};
 
-        let exhibit = domModule.serialize('#exhibit-form');
-        let arr = exhibit.split('&');
-        let obj = {};
+        // Step 1
+        exhibit.title = EXHIBIT_TITLE.getHTMLCode();
+        exhibit.subtitle = EXHIBIT_SUB_TITLE.getHTMLCode();
+        exhibit.alert_text = EXHIBIT_ALERT_TEXT.getHTMLCode();
+        exhibit.description = EXHIBIT_DESCRIPTION.getHTMLCode();
 
-        for (let i = 0; i < arr.length; i++) {
-            let propsVal = decodeURIComponent(arr[i]).split('=');
-            obj[propsVal[0]] = propsVal[1];
-        }
+        // Step 2
+        exhibit.hero_image = document.querySelector('#hero-image').value;
+        exhibit.thumbnail_image = document.querySelector('#thumbnail-image').value;
 
-        let token = authModule.getUserToken();
-        let url = api + endpoints.exhibits.exhibit_records.endpoint,
-            request = new Request(url, {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'x-access-token': token
+        // Step 3
+        exhibit.banner_template =  helperModule.get_checked_radio_button(document.getElementsByName('banner_template'));
+
+        // Step 4
+        exhibit.page_layout = helperModule.get_checked_radio_button(document.getElementsByName('page_layout'));
+
+        // Step 5
+        exhibit.template = helperModule.get_checked_radio_button(document.getElementsByName('template'));
+
+        // Step 6
+        let exhibit_template_background_color = document.querySelector('#template-background-color').value;
+        let exhibit_template_font_color = document.querySelector('#template-font-color').value;
+        let exhibit_template_font_family = document.querySelector('#template-font-family').value;
+        let exhibit_template_font_size = document.querySelector('#template-font-size').value;
+        let exhibit_template_text_align = document.querySelector('#template-text-align').value;
+
+        // Step 7
+        //
+        let exhibit_nav_menu_background_color = document.querySelector('#nav-menu-background-color').value;
+        let exhibit_nav_menu_font_color = document.querySelector('#nav-menu-font-color').value;
+        let exhibit_nav_menu_font_family = document.querySelector('#nav-menu-font-family').value;
+        let exhibit_nav_menu_font_size = document.querySelector('#nav-menu-font-size').value;
+        let exhibit_nav_menu_text_align = document.querySelector('#nav-menu-text-align').value;
+
+        let exhibit_nav_menu_links_background_color = document.querySelector('#nav-menu-links-background-color').value;
+        let exhibit_nav_menu_links_font_color = document.querySelector('#nav-menu-links-font-color').value;
+        let exhibit_nav_menu_links_font_family = document.querySelector('#nav-menu-links-font-family').value;
+        let exhibit_nav_menu_links_font_size = document.querySelector('#nav-menu-links-font-size').value;
+        let exhibit_nav_menu_links_text_align = document.querySelector('#nav-menu-links-text-align').value;
+
+        exhibit.styles = {
+            exhibit: {
+                navigation: {
+                    menu: {
+                        backgroundColor: exhibit_nav_menu_background_color.length > 1 ? exhibit_nav_menu_background_color : '',
+                        color: exhibit_nav_menu_font_color.length > 1 ? exhibit_nav_menu_font_color : '',
+                        fontFamily: exhibit_nav_menu_font_family.length > 1 ? exhibit_nav_menu_font_family : '',
+                        fontSize: exhibit_nav_menu_font_size.length > 1 ? exhibit_nav_menu_font_size : '',
+                        textAlign: exhibit_nav_menu_text_align.length > 1 ? exhibit_nav_menu_text_align : ''
+                    },
+                    links: {
+                        backgroundColor: exhibit_nav_menu_links_background_color.length > 1 ? exhibit_nav_menu_links_background_color : '',
+                        color: exhibit_nav_menu_links_font_color.length > 1 ? exhibit_nav_menu_links_font_color : '',
+                        fontFamily: exhibit_nav_menu_links_font_family.length > 1 ? exhibit_nav_menu_links_font_family : '',
+                        fontSize: exhibit_nav_menu_links_font_size.length > 1 ? exhibit_nav_menu_links_font_size : '',
+                        textAlign: exhibit_nav_menu_links_text_align.length > 1 ? exhibit_nav_menu_links_text_align : ''
+                    }
                 },
-                body: JSON.stringify(obj),
-                mode: 'cors'
-            });
-
-        const callback = function (response) {
-
-            if (response.status === 201) {
-
-                response.json().then(function (data) {
-                    domModule.html('#message', '<div class="alert alert-success">Exhibit created ( <a href="' + configModule.getApi() + '/dashboard/items/?uuid=' + DOMPurify.sanitize(data.uuid) + '">' + DOMPurify.sanitize(data.uuid) + '</a> )');
-                    domModule.hide('#exhibits-form');
-                });
-
-                return false;
-
-            } else if (response.status === 401) {
-
-                response.json().then(function (response) {
-
-                    helperModule.renderError('Error: (HTTP status ' + response.status + '). Your session has expired.  You will be redirected to the login page momentarily.');
-
-                    setTimeout(function () {
-                        window.location.replace('/login');
-                    }, 4000);
-                });
-
-            } else {
-                helperModule.renderError('Error: (HTTP status ' + response.status + ').  Unable to add exhibit.');
+                template: {
+                    backgroundColor: exhibit_template_background_color.length > 1 ? exhibit_template_background_color : '',
+                    color: exhibit_template_font_color.length > 1 ? exhibit_template_font_color : '',
+                    fontFamily: exhibit_template_font_family.length > 1 ? exhibit_template_font_family : '',
+                    fontSize: exhibit_template_font_size.length > 1 ? exhibit_template_font_size : '',
+                    textAlign: exhibit_template_text_align.length > 1 ? exhibit_template_text_align : ''
+                }
             }
         };
 
-        httpModule.req(request, callback);
+        return exhibit;
     };
 
-    obj.init = async function () {
-        await display_exhibits();
+    obj.display_exhibit_data = function() {
+
+        let data = exhibitsModule.get_exhibit_data();
+        let html = '';
+
+        for (let prop in data) {
+            console.log(prop);
+            if (prop === 'title') {
+                html += `<p><strong>${data[prop]}</strong> Exhibit is ready</p>`;
+            }
+        }
+
+        document.querySelector('#display-exhibit-data').innerHTML = html;
+    };
+
+    obj.create_exhibit_record = async function () {
+
+        document.querySelector('#message').innerHTML = `<div class="alert alert-info" role="alert"><i class="fa fa-info"></i> Creating exhibit record...</div>`;
+        let data = exhibitsModule.get_exhibit_data();
+
+        try {
+
+            let token = authModule.get_user_token();
+            let response = await httpModule.req({
+                method: 'POST',
+                url: EXHIBITS_ENDPOINTS.exhibits.exhibit_records.endpoint,
+                data: data,
+                headers: {
+                    'Content-Type': 'application/json',
+                    'x-access-token': token
+                }
+            });
+
+            if (response !== undefined && response.status === 201) {
+
+                document.querySelector('#display-exhibit-data').innerHTML = '';
+                document.querySelector('#message').innerHTML = `<div class="alert alert-success" role="alert"><i class="fa fa-info"></i> Exhibit record created</div>`;
+
+                setTimeout(() => {
+                    window.location.replace('/dashboard/items?uuid=' + response.data.data);
+                }, 3000);
+            }
+
+        } catch (error) {
+            document.querySelector('#message').innerHTML = `<div class="alert alert-danger" role="alert"><i class="fa fa-exclamation"></i> ${error.message}</div>`;
+        }
+    };
+
+    obj.init = function () {
+        setTimeout(async () => {
+            await display_exhibits();
+        }, 1000);
     };
 
     return obj;

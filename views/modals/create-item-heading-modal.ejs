@@ -1,0 +1,69 @@
+<style>
+
+    #create-heading-form {
+        background-color: #ffffff;
+        margin: 10px auto;
+        padding: 10px;
+        width: 100%;
+    }
+
+    input {
+        padding: 10px;
+        width: 80%;
+        font-size: 17px;
+        border: 1px solid #aaaaaa;
+    }
+
+    input.invalid {
+        background-color: #ffdddd;
+    }
+
+    input[type=number]::-webkit-inner-spin-button {
+        opacity: 1;
+    }
+
+    .input-group {
+        padding: 7px;
+    }
+
+    .is-error {
+        color: red;
+    }
+
+</style>
+<div id="create-heading-form">
+    <div id="heading-text-form">
+        <form id="item-heading-form" class="form-horizontal">
+            <input id="exhibit-uuid" type="hidden" name="exhibit_uuid">
+
+            <div class="row form-group">
+                <div class="col-12 col-md-12">
+                    <input type="text" id="item-heading-text" name="text" placeholder="Heading Text"
+                           class="form-control">
+                    <small class="form-text text-muted">* Required</small>
+                </div>
+            </div>
+            <div class="row form-group">
+                <div class="col-12 col-md-12">
+                    <input type="text" id="item-heading-sub-text" name="sub_text"
+                           placeholder="Heading Sub Text" class="form-control">
+                    <small class="form-text text-muted"></small>
+                </div>
+            </div>
+            <div class="row form-group">
+                <div class="col-12 col-md-12">
+                    <input type="number" id="item-heading-order" name="order"
+                           placeholder="Heading Order" class="form-control"
+                           style="width: 150px">
+                    <small class="form-text text-muted"></small>
+                </div>
+            </div>
+            <button class="btn btn-primary" type="button" id="save-heading-btn">
+                <i class="fa fa-save"></i>&nbsp;&nbsp;Save
+            </button>
+        </form>
+    </div>
+</div>
+<script>
+    document.querySelector('#save-heading-btn').addEventListener('click', itemsModule.create_heading_record);
+</script>

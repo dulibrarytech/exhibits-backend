@@ -50,7 +50,13 @@ const Exhibit_record_tasks = class {
                 .catch(trx.rollback);
             });
 
-            LOGGER.module().info('INFO: [/exhibits/exhibit_record_tasks (create_exhibit_record)] ' + result.length + ' Exhibit record created.');
+            if (result.length !== 1) {
+                LOGGER.module().info('INFO: [/exhibits/exhibit_record_tasks (create_exhibit_record)] Unable to create exhibit record.');
+                return false;
+            } else {
+                LOGGER.module().info('INFO: [/exhibits/exhibit_record_tasks (create_exhibit_record)] ' + result.length + ' Exhibit record created.');
+                return true;
+            }
 
         } catch (error) {
             LOGGER.module().error('ERROR: [/exhibits/exhibit_record_tasks (create_exhibit_record)] unable to create record ' + error.message);
@@ -69,13 +75,16 @@ const Exhibit_record_tasks = class {
                 'type',
                 'title',
                 'subtitle',
-                'banner',
+                'banner_template',
+                'alert_text',
                 'hero_image',
+                'thumbnail_image',
                 'description',
                 'page_layout',
                 'template',
                 'styles',
                 'is_published',
+                'is_featured',
                 'created'
             )
             .where({
@@ -100,13 +109,15 @@ const Exhibit_record_tasks = class {
                 'type',
                 'title',
                 'subtitle',
-                'banner',
+                'banner_template',
                 'hero_image',
+                'thumbnail_image',
                 'description',
                 'page_layout',
                 'template',
                 'styles',
                 'is_published',
+                'is_featured',
                 'is_locked',
                 'created'
             )

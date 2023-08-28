@@ -31,10 +31,13 @@ module.exports = function (app) {
 
     const FILTER = function(req, file, callback) {
 
+        /* TODO: set allowed mime types
         if (!file.originalname.match(/\.(jpg)$/)) {
             LOGGER.module().error('ERROR: Upload Failed. File is not .jpg');
             callback(null, false);
         }
+
+         */
 
         callback(null, true);
     };
@@ -59,7 +62,7 @@ module.exports = function (app) {
         let file_obj = {};
 
         for (let i=0;i<files.length;i++) {
-            file_obj.filename = files[i].filename.replace('.jpg', '');
+            file_obj.filename = files[i].filename; //.replace('.jpg', '');
             file_obj.file_size = files[i].size;
             file_arr.push(file_obj);
             file_obj = {};

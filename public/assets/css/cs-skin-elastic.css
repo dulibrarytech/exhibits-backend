@@ -129,7 +129,7 @@ div.cs-skin-elastic {
 .cs-skin-elastic .cs-options .cs-selected span::after {
 	content: '';
 }
-
+/*
 .cs-skin-elastic .cs-options li.flag-france span {
 	background-image: url(../img/france.svg);
 }
@@ -145,7 +145,7 @@ div.cs-skin-elastic {
 .cs-skin-elastic .cs-options li.flag-argentina span {
 	background-image: url(../img/argentina.svg);
 }
-
+*/
 @-webkit-keyframes expand { 
 	0% { -webkit-transform: scale3d(1,0,1); }
 	25% { -webkit-transform: scale3d(1,1.2,1); }

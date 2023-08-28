@@ -23,17 +23,6 @@ const helperModule = (function () {
     let obj = {};
 
     /**
-     * Renders error message
-     * @param message
-
-    obj.render_error = function (message) {
-        domModule.html('#message', '<div class="alert alert-danger"><i class="fa fa-exclamation-circle"></i> ' + DOMPurify.sanitize(message) + '</div>');
-        window.scrollTo({ top: 0, behavior: 'smooth' });
-        return false;
-    };
-     */
-
-    /**
      * Gets url parameter
      * @param name
      * @param url
@@ -73,14 +62,27 @@ const helperModule = (function () {
     };
 
     /**
-     *
+     * Creates rich text editor object
      * @param id
-     * @return {*}
      */
     obj.render_rich_text_editor = function(id) {
-        let editor1cfg = {}
-        editor1cfg.toolbar = 'basic';
-        return new RichTextEditor(id, editor1cfg);
+        const editor_config = {}
+        editor_config.toolbar = 'custom';
+        editor_config.toolbar_custom = '{code} | {bold, italic, underline, superscript, subscript} | {justifyleft, justifycenter, justifyright, indent} | {preview}';
+        editor_config.enterKeyTag = '';
+        return new RichTextEditor(id, editor_config);
+    };
+
+    /**
+     * Gets checked radio button value
+     * @param radio_buttons
+     */
+    obj.get_checked_radio_button = function(radio_buttons) {
+        for (let i = 0; i < radio_buttons.length; i++) {
+            if (radio_buttons[i].checked) {
+                return radio_buttons[i].value;
+            }
+        }
     };
 
     /**

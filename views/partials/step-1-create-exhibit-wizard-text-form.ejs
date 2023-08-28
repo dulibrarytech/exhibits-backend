@@ -1,0 +1,39 @@
+<div class="row form-group">
+    <div class="col-12 col-md-12">
+        <div class="form-text text-muted" style="font-size: 17px"><span style="color: red">*</span> Title</div>
+        <span id="exhibit-title-error" class="is-error"></span>
+        <div id="exhibit-title" style="height: 100px"></div>
+        <!--
+        <input type="text" id="exhibit-title" name="title"
+               placeholder="Title" class="form-control" required>
+        <span id="exhibit-title-error" class="is-error">
+            <small class="form-text text-muted">* Required</small>
+        </span>
+        -->
+    </div>
+</div>
+<div class="row form-group">
+    <div class="col-12 col-md-12">
+        <div class="form-text text-muted" style="font-size: 17px">Sub Title</div>
+        <div id="exhibit-sub-title" style="height: 100px"></div>
+    </div>
+</div>
+<div class="row form-group">
+    <div class="col-12 col-md-12">
+        <div class="form-text text-muted" style="font-size: 17px">Alert Text</div>
+        <div id="exhibit-alert-text" style="height: 100px"></div>
+    </div>
+</div>
+<div class="row form-group">
+    <div class="col-12 col-md-12">
+        <div class="form-text text-muted" style="font-size: 17px">Description</div>
+        <div id="exhibit-description" class="col-12 col-md-12"></div>
+    </div>
+</div>
+<script>
+    // set text editors
+    const EXHIBIT_TITLE = helperModule.render_rich_text_editor('#exhibit-title');
+    const EXHIBIT_SUB_TITLE = helperModule.render_rich_text_editor('#exhibit-sub-title');
+    const EXHIBIT_ALERT_TEXT = helperModule.render_rich_text_editor('#exhibit-alert-text')
+    const EXHIBIT_DESCRIPTION = helperModule.render_rich_text_editor('#exhibit-description');
+</script>

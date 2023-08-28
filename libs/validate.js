@@ -43,7 +43,7 @@ const Validator = class {
                 type: 'object',
                 properties: this.SCHEMA_CONFIG,
                 required: Object.keys(this.SCHEMA_CONFIG),
-                additionalProperties: false
+                additionalProperties: true
             };
 
             const VALIDATE_SCHEMA = AJV.compile(schema);

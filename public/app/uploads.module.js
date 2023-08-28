@@ -30,31 +30,30 @@ const uploadsModule = (function () {
         const EXHIBIT_HERO = Dropzone;
         EXHIBIT_HERO.options.heroDropzone = {
             paramName: 'files',
-            maxFilesize: 7000, // 7MB
+            maxFilesize: 5000, // 5MB
             url: '/uploads',
             uploadMultiple: false,
             maxFiles: 1,
-            // parallelUploads: 2,
-            acceptedFiles: '.jpg',
+            acceptedFiles: 'image/*',
             ignoreHiddenFiles: true,
             timeout: 20000,
-            dictDefaultMessage: 'Drag and Drop Hero Image file here',
+            dictDefaultMessage: 'Drag and Drop Hero Image file here or Click to Upload',
             autoProcessQueue: true,
             init: function () {},
             renameFile: function (file) {
-                console.log(file.name);
-                // TODO: file.name
-                let filename = 'exhibit_hero.jpg';
-                return filename;
+                return 'exhibit_hero.jpg';
             },
             success: function(file, response) {
 
-                console.log(response);
                 console.log('SUCCESS: ', file.upload);
+                console.log(file.upload.filename);
+                console.log(file.upload.total);
 
-                let filename = 'hero.jpg';
+                let filename = file.upload.filename;
+                document.querySelector('.upload-error').innerHTML = '';
                 document.querySelector('#hero-image').value = filename;
-                document.querySelector('#hero-image-filename-display').innerHTML = filename;
+                document.querySelector('#hero-image-filename-display').innerHTML = `<span class="alert-success" style="width: 30%; padding: 5px; border: solid 1px"><i class="fa fa-check"> ${filename}</i></span>`;
+                document.querySelector('#hero-trash').style.display = 'inline';
 
                 setTimeout(() => {
                     this.removeFile(file);
@@ -62,9 +61,7 @@ const uploadsModule = (function () {
 
             },
             error: function (file, error) {
-                console.log(error);
-                // let message = '<div class="alert alert-danger">' + error + ' - "' + file.name + '" is type: ' + file.type + '</div>';
-                // domModule.html('#message', message);
+                document.querySelector('.upload-error').innerHTML = `<span class="alert alert-danger" style="border: solid 1px"><i class="fa fa-exclamation"></i> ${error}</span>`;
                 this.removeFile(file);
             }
         };
@@ -78,30 +75,31 @@ const uploadsModule = (function () {
         const THUMBNAIL = Dropzone;
         THUMBNAIL.options.thumbnailDropzone = {
             paramName: 'files',
-            maxFilesize: 7000, // 7MB
+            maxFilesize: 5000, // 5MB
             url: '/uploads',
             uploadMultiple: false,
             maxFiles: 1,
-            acceptedFiles: '.jpg',
+            acceptedFiles: 'image/*',
             ignoreHiddenFiles: true,
             timeout: 20000,
-            dictDefaultMessage: 'Drag and Drop Thumbnail Image file here',
+            dictDefaultMessage: 'Drag and Drop Thumbnail Image file here or Click to Upload',
             autoProcessQueue: true,
             init: function () {},
             renameFile: function (file) {
-                console.log(file.name);
-                // TODO: file.name
-                let filename = 'exhibit_thumbnail.jpg';
-                return filename;
+                return 'exhibit_thumbnail.jpg';
             },
             success: function(file, response) {
 
                 console.log(response);
                 console.log('SUCCESS: ', file.upload);
+                console.log(file.upload.filename);
+                console.log(file.upload.total);
 
-                let filename = 'thumbnail.jpg';
-                document.querySelector('#thumbnail').value = filename;
-                document.querySelector('#thumbnail-filename-display').innerHTML = filename;
+                let filename = file.upload.filename;
+                document.querySelector('.upload-error').innerHTML = '';
+                document.querySelector('#thumbnail-image').value = filename;
+                document.querySelector('#thumbnail-filename-display').innerHTML = `<span class="alert-success" style="width: 30%; padding: 5px; border: solid 1px"><i class="fa fa-check"> ${filename}</i></span>`;
+                document.querySelector('#thumbnail-trash').style.display = 'inline';
 
                 setTimeout(() => {
                     this.removeFile(file);
@@ -109,42 +107,105 @@ const uploadsModule = (function () {
 
             },
             error: function (file, error) {
-                console.log(error);
-                // let message = '<div class="alert alert-danger">' + error + ' - "' + file.name + '" is type: ' + file.type + '</div>';
-                // domModule.html('#message', message);
+                document.querySelector('.upload-error').innerHTML = `<span class="alert alert-danger" style="border: solid 1px"><i class="fa fa-exclamation"></i> ${error}</span>`;
                 this.removeFile(file);
             }
         };
     };
 
+    /**
+     * Renders item media upload area
+     */
+    obj.upload_item_media = function() {
+
+        const ITEM_MEDIA = Dropzone;
+        ITEM_MEDIA.options.itemDropzone = {
+            paramName: 'files',
+            maxFilesize: 100000, // 1GB
+            url: '/uploads',
+            uploadMultiple: false,
+            maxFiles: 1,
+            acceptedFiles: 'image/*,video/*,audio/*,application/pdf',
+            ignoreHiddenFiles: true,
+            timeout: 20000,
+            dictDefaultMessage: 'Drag and Drop Item Media file here or Click to Upload',
+            autoProcessQueue: true,
+            init: function () {},
+            renameFile: function (file) {
+                console.log('item media: ', file);
+                return 'item_media';
+            },
+            success: function(file, response) {
+
+                console.log('SUCCESS: ', file.upload);
+                console.log(file.upload.filename);
+                console.log(file.upload.total);
+
+                let filename = file.upload.filename;
+                document.querySelector('.upload-error').innerHTML = '';
+                document.querySelector('#item-media').value = filename;
+                document.querySelector('#item-media-filename-display').innerHTML = `<span class="alert-success" style="width: 30%; padding: 5px; border: solid 1px"><i class="fa fa-check"> ${filename}</i></span>`;
+                document.querySelector('#item-media-trash').style.display = 'inline';
+
+                setTimeout(() => {
+                    this.removeFile(file);
+                }, 2000);
+
+            },
+            error: function (file, error) {
+                document.querySelector('.upload-error').innerHTML = `<span class="alert alert-danger" style="border: solid 1px"><i class="fa fa-exclamation"></i> ${error}</span>`;
+                this.removeFile(file);
+            }
+        };
+    };
 
     /**
-     * Copies pdf url to clipboard
-     * @param id
-     * @returns {Promise<void>}
+     * Renders item thumbnail upload area
      */
-    obj.copyToClipboard = async function(id) {
+    obj.upload_item_thumbnail = function() {
 
-        let copied_url = document.getElementById(id + '-text').href;
-        let message = '<div class="alert alert-info">"' + copied_url + '" copied to clipboard.</div>';
+        const ITEM_THUMBNAIL = Dropzone;
+        ITEM_THUMBNAIL.options.itemThumbnailDropzone = {
+            paramName: 'files',
+            maxFilesize: 5000, // 5MB
+            url: '/uploads',
+            uploadMultiple: false,
+            maxFiles: 1,
+            acceptedFiles: 'image/*',
+            ignoreHiddenFiles: true,
+            timeout: 20000,
+            dictDefaultMessage: 'Drag and Drop Item Thumbnail file here or Click to Upload',
+            autoProcessQueue: true,
+            init: function () {},
+            renameFile: function (file) {
+                console.log('item media: ', file);
+                return 'item_media';
+            },
+            success: function(file, response) {
 
-        try {
-            await navigator.clipboard.writeText(copied_url);
-            domModule.html('#message', message);
-        } catch(error) {
-            message = '<div class="alert alert-danger">' + copied_url + ' not copied to clipboard. ' + error + '</div>';
-            domModule.html('#message', message);
-        }
+                console.log('SUCCESS: ', file.upload);
+                console.log(file.upload.filename);
+                console.log(file.upload.total);
 
-        setTimeout(function() {
-            domModule.html('#message', null);
-        }, 4000);
-    }
+                let filename = file.upload.filename;
+                document.querySelector('.upload-error').innerHTML = '';
+                document.querySelector('#item-thumbnail').value = filename;
+                document.querySelector('#item-thumbnail-filename-display').innerHTML = `<span class="alert-success" style="width: 30%; padding: 5px; border: solid 1px"><i class="fa fa-check"> ${filename}</i></span>`;
+                document.querySelector('#item-thumbnail-trash').style.display = 'inline';
 
-    obj.init = function () {
-        uploadsModule.upload_exhibit_hero_image();
-        uploadsModule.upload_exhibit_thumbnail_image();
+                setTimeout(() => {
+                    this.removeFile(file);
+                }, 2000);
+
+            },
+            error: function (file, error) {
+                document.querySelector('.upload-error').innerHTML = `<span class="alert alert-danger" style="border: solid 1px"><i class="fa fa-exclamation"></i> ${error}</span>`;
+                this.removeFile(file);
+            }
+        };
     };
+
+    obj.init = function () {};
 
     return obj;
 

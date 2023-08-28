@@ -27,8 +27,7 @@ const httpModule = (function() {
         try {
             return await HTTP(request);
         } catch(error) {
-            console.log('HTTP ERROR: ', error.message);
-            return error;
+            document.querySelector('#message').innerHTML = `<div class="alert alert-danger" role="alert"><i class="fa fa-exclamation"></i> ${error.message}</div>`;
         }
     };
 

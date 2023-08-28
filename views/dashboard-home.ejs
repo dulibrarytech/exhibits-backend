@@ -11,19 +11,10 @@
                 <li class="menu-title">Menu</li><!-- /.menu-title -->
                 <li>
                     <a href="#" data-toggle="modal" data-backdrop="static" data-keyboard="false" data-target="#scrollmodal"> <i
-                                class=" menu-icon fa fa-th"></i>Add New Exhibit</a>
+                                class=" menu-icon fa fa-th"></i>Create Exhibit</a>
                 </li>
                 <li>
                     <a href="/dashboard/trash"> <i class=" menu-icon fa fa-trash-o"></i>Trash</a>
-                </li>
-                <li class="menu-item-has-children dropdown">
-                    <a href="#" class="dropdown-toggle" data-toggle="dropdown" aria-haspopup="true"
-                       aria-expanded="true"> <i class="menu-icon fa fa-bars"></i>Tasks/Menu Items?</a>
-                    <ul class="sub-menu children dropdown-menu">
-                        <li><i class="fa fa-bars"></i><a href="#">menu item 1</a></li>
-                        <li><i class="fa fa-bars"></i><a href="#">menu item 2</a></li>
-                        <li><i class="fa fa-bars"></i><a href="u#">menu item 3</a></li>
-                    </ul>
                 </li>
             </ul>
         </div><!-- /.navbar-collapse -->
@@ -71,7 +62,7 @@
     </header>
     <!-- /#header -->
     <!-- Content -->
-    <div class="content">
+    <div class="content" style="min-height: 750px">
         <!-- Animated -->
         <div class="animated fadeIn">
             <!-- Widgets  -->
@@ -139,8 +130,6 @@
             <!-- /Widgets -->
             <div id="exhibits"><!-- exhibits are rendered here --></div>
             <div class="clearfix"></div>
-            <!-- modal -->
-            <%- include('modals/create-exhibit-modal.ejs'); %>
         </div>
         <!-- .animated -->
     </div>
@@ -168,11 +157,11 @@
 <script src="../app/home.module.js"></script>
 <script src="../libs/richtexteditor/rte.js"></script>
 <script src='../libs/richtexteditor/plugins/all_plugins.js'></script>
-<script>uploadsModule.init();</script>
 <script>
-    // TODO:
-    const EXHIBIT_DESCRIPTION = helperModule.render_rich_text_editor('#exhibit-description');
-    console.log(EXHIBIT_DESCRIPTION);
+    uploadsModule.upload_exhibit_hero_image();
+    uploadsModule.upload_exhibit_thumbnail_image();
 </script>
+<!-- modal -->
+<%- include('modals/create-exhibit-wizard-modal.ejs'); %>
 </body>
 </html>

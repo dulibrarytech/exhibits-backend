@@ -24,11 +24,13 @@ module.exports = () => {
         uuid: {type: 'string'},
         title: {type: 'string'},
         subtitle: {type: 'string'},
-        banner: {type: 'string'},
-        hero_image: {type: 'string'},
+        alert_text: {type: 'string'},
         description: {type: 'string'},
+        hero_image: {type: 'string'},
+        thumbnail_image: {type: 'string'},
+        banner_template: {type: 'string'},
         page_layout: {type: 'string'},
         template: {type: 'string'},
-        styles: {type: 'string'}
+        styles: {type: 'object'}
     };
 };

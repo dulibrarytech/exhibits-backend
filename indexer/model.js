@@ -42,13 +42,15 @@ const construct_exhibit_index_record = function (record) {
         type: record.type,
         title: record.title,
         subtitle: record.subtitle,
-        banner: record.banner,
+        banner_template: record.banner_template,
         hero_image: record.hero_image,
+        thumbnail_image: record.thumbnail_image,
         description: record.description,
         page_layout: record.page_layout,
         template: record.template,
         styles: record.styles,
         is_published: record.is_published,
+        is_featured: record.is_featured,
         created: record.created
     };
 };

@@ -1,0 +1,65 @@
+<p>
+    <span class="form-text text-muted" style="font-size: 17px">Apply Custom Styles to Template</span>
+</p>
+<div class="input-group">
+    <div class="input-group-btn">
+        <input title="Color Picker" class="color-picker btn btn-default" type="color"
+               id="template-background-color-picker" value="#ffffff">
+    </div>
+    <input type="text" id="template-background-color" name="template_background_color"
+           placeholder="Template Background Color" class="form-control">
+
+</div>
+<div class="input-group">
+    <div class="input-group-btn">
+        <input title="Color Picker" class="color-picker btn btn-default" type="color" id="template-font-color-picker"
+               value="#ffffff">
+    </div>
+    <input type="text" id="template-font-color" name="template_font_color"
+           placeholder="Template Font Color" class="form-control">
+
+</div>
+<div class="input-group">
+    <select name="template_font_family" id="template-font-family"
+            class="form-control-lg form-control text-muted">
+        <option value="0">Template Font Family</option>
+        <option value="1">Times New Roman</option>
+        <option value="2">Helvetica</option>
+    </select>
+</div>
+<div class="input-group">
+    <select name="template_font_size" id="template-font-size"
+            class="form-control-lg form-control text-muted">
+        <option value="0">Template Font Size</option>
+        <option value="1">8px</option>
+        <option value="2">10px</option>
+        <option value="3">12px</option>
+        <option value="3">14px</option>
+    </select>
+</div>
+<div class="input-group">
+    <select name="template_text_align" id="template-text-align"
+            class="form-control-lg form-control text-muted">
+        <option value="0">Template Text Align</option>
+        <option value="1">Center</option>
+        <option value="2">Right</option>
+        <option value="3">Left</option>
+    </select>
+</div>
+<br>
+<script>
+
+    // bind color pickers to input fields
+    document.querySelector('#template-background-color-picker').addEventListener('input', () => {
+        if (document.querySelector('#template-background-color')) {
+            document.querySelector('#template-background-color').value = document.querySelector('#template-background-color-picker').value;
+        }
+    });
+
+    document.querySelector('#template-font-color-picker').addEventListener('input', () => {
+        if (document.querySelector('#template-font-color')) {
+            document.querySelector('#template-font-color').value = document.querySelector('#template-font-color-picker').value;
+        }
+    });
+
+</script>

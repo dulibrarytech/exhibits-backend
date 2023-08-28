@@ -1,0 +1,255 @@
+<style>
+
+    .modal-header {
+        /*background: #9aa0a4;*/
+    }
+
+    .modal-body {
+        /*background: #99abb4;*/
+    }
+
+    #create-exhibit-form {
+        background-color: #ffffff;
+        margin: 10px auto;
+        padding: 40px;
+        width: 100%;
+    }
+
+    .color-picker {
+        background-color: none;
+        outline: none;
+        border: 1px solid grey;
+        height: 38px;
+        width: 50px;
+        cursor: pointer;
+    }
+
+    input {
+        padding: 10px;
+        width: 80%;
+        font-size: 17px;
+        border: 1px solid #aaaaaa;
+    }
+
+    input.invalid {
+        background-color: #ffdddd;
+    }
+
+    .input-group {
+        padding: 7px;
+    }
+
+    .tab {
+        display: none;
+    }
+
+    .step {
+        height: 15px;
+        width: 15px;
+        margin: 0 2px;
+        background-color: #bbbbbb;
+        border: none;
+        border-radius: 50%;
+        display: inline-block;
+        opacity: 0.5;
+    }
+
+    .step.active {
+        opacity: 1;
+    }
+
+    .step.finish {
+        background-color: #0394fc;
+    }
+
+    .is-error {
+        color: red;
+    }
+
+</style>
+<div class="modal fade show" id="scrollmodal" tabindex="-1" role="dialog"
+     aria-labelledby="scrollmodalLabel" style="display: none;">
+    <div class="modal-dialog modal-lg" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="scrollmodalLabel">Create Exhibit</h5>
+            </div>
+            <div class="modal-body">
+                <div class="card">
+                    <div class="card-body card-block">
+                        <div id="create-exhibit-form">
+                            <!-- Step 1 -->
+                            <div id="exhibit-text-form" class="tab">
+                                <%- include('../partials/step-1-create-exhibit-wizard-text-form.ejs'); %>
+                            </div>
+                            <!-- Step 2 -->
+                            <div id="exhibit-upload-form" class="tab">
+                                <%- include('../partials/step-2-create-exhibit-wizard-upload-form.ejs'); %>
+                            </div>
+                            <!-- Step 3 -->
+                            <div id="exhibit-banner-form" class="tab">
+                                <%- include('../partials/step-3-create-exhibit-wizard-banner-form.ejs'); %>
+                            </div>
+                            <!-- Step 4 -->
+                            <div id="exhibit-page-layout-form" class="tab">
+                                <%- include('../partials/step-4-create-exhibit-wizard-page-layout-form.ejs'); %>
+                            </div>
+                            <!-- Step 5 -->
+                            <div id="exhibit-template-form" class="tab">
+                                <%- include('../partials/step-5-create-exhibit-wizard-template-form.ejs'); %>
+                            </div>
+                            <!-- Step 6 -->
+                            <div id="exhibit-template-styles-form" class="tab">
+                                <%- include('../partials/step-6-create-exhibit-wizard-template-styles-form.ejs'); %>
+                            </div>
+                            <!-- Step 7 -->
+                            <div id="exhibit-nav-styles-form" class="tab">
+                                <%- include('../partials/step-7-create-exhibit-wizard-nav-styles-form.ejs'); %>
+                            </div>
+                            <!-- Step 8 -->
+                            <div id="confirm-exhibit-form" class="tab">
+                                <span class="form-text text-muted" style="font-size: 17px">
+                                    <div id="message"></div>
+                                    <div id="display-exhibit-data"></div>
+                                </span>
+                            </div>
+                            <div style="overflow:auto;">
+                                <div style="float:right;">
+                                    <button class="btn btn-default" type="button" id="prev-btn" onclick="nextPrev(-1)">
+                                        Previous
+                                    </button>
+                                    <button class="btn btn-primary" type="button" id="next-btn" onclick="nextPrev(1)">
+                                        Next
+                                    </button>
+                                    <span id="exhibit-form-buttons"></span>
+                                </div>
+                            </div>
+                            <!-- Circles which indicates the steps of the form: -->
+                            <div style="text-align:center;margin-top:40px;">
+                                <span class="step"></span>
+                                <span class="step"></span>
+                                <span class="step"></span>
+                                <span class="step"></span>
+                                <span class="step"></span>
+                                <span class="step"></span>
+                                <span class="step"></span>
+                                <span class="step"></span>
+                            </div>
+                        </div><!-- end create exhibit form -->
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-dismiss="modal">Cancel</button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+<script>
+
+    // initiate form wizard
+    let current_tab = 0;
+    show_tab(current_tab);
+
+    function show_tab(n) {
+
+        const tab = document.getElementsByClassName('tab');
+        tab[n].style.display = 'block';
+
+        // step 0 form
+        if (n === 0) {
+
+            if (EXHIBIT_TITLE.getHTMLCode().length > 4) {
+                document.querySelector('#exhibit-title-error').innerHTML = '';
+            }
+
+            document.querySelector('#prev-btn').style.display = 'none';
+        } else {
+            document.querySelector('#prev-btn').style.display = 'inline';
+        }
+
+        if (n === (tab.length - 1)) {
+            // final tab
+            exhibitsModule.display_exhibit_data();
+            document.querySelector('#next-btn').style.display = 'none';
+            document.querySelector('#exhibit-form-buttons').innerHTML = `<button class="btn btn-primary" type="button" id="save-exhibit-btn">
+                <i class="fa fa-save"></i>&nbsp;&nbsp;Save
+                </button>`;
+
+            document.querySelector('#save-exhibit-btn').addEventListener('click', exhibitsModule.create_exhibit_record);
+
+        } else {
+
+            if (document.querySelector('#save-exhibit-btn')) {
+                document.querySelector('#save-exhibit-btn').style.display = 'none';
+            }
+
+            document.querySelector('#next-btn').style.display = 'inline';
+            document.querySelector('#next-btn').innerHTML = 'Next';
+        }
+
+        step_indicator(n)
+    }
+
+    function nextPrev(n) {
+
+        const tab = document.getElementsByClassName('tab');
+
+        if (n === 1) {
+            // validating form in step 1.
+            let result = validate_create_exhibit_form(current_tab);
+
+            if (result === false) {
+                return false;
+            }
+        }
+
+        tab[current_tab].style.display = 'none';
+        current_tab = current_tab + n;
+
+        if (current_tab >= tab.length) {
+            return false;
+        }
+
+        show_tab(current_tab);
+    }
+
+    function step_indicator(n) {
+
+        const step = document.getElementsByClassName('step');
+
+        for (let i = 0; i < step.length; i++) {
+            step[i].className = step[i].className.replace(' active', '');
+        }
+
+        step[n].className += ' active';
+    }
+
+    function validate_create_exhibit_form(form) {
+
+        if (form === 0) {
+
+            let exhibit_title = EXHIBIT_TITLE.getHTMLCode();
+
+            if (exhibit_title.length === 0 || exhibit_title.length < 4) {
+                document.querySelector('#exhibit-title-error').innerHTML = '<i class="fa fa-exclamation-circle"></i>&nbsp;&nbsp;Exhibit Title is required';
+                return false;
+            }
+
+            document.getElementsByClassName('step')[current_tab].className += ' finish';
+        }
+
+        if (form === 1) {
+            // TODO: validate
+            console.log('second tab');
+            document.getElementsByClassName('step')[current_tab].className += ' finish';
+        }
+
+        if (form === 2) {
+            // TODO: validate
+            console.log('third tab');
+            document.getElementsByClassName('step')[current_tab].className += ' finish';
+        }
+    }
+
+</script>

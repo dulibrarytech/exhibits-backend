@@ -50,6 +50,13 @@ const itemsModule = (function () {
 
         const uuid = helperModule.get_parameter_by_name('uuid');
         let items = await get_items(uuid);
+        console.log(items);
+
+        if (items.length === 0) {
+            document.querySelector('#items').innerHTML = '<div class="alert alert-info" role="alert">Exhibit is empty</div>';
+            return false;
+        }
+
         let cards = '';
 
         cards += '<tbody>';
@@ -135,6 +142,62 @@ const itemsModule = (function () {
         }, 1000);
          */
     }
+
+    /**
+     * Gets item heading data
+     */
+    function get_heading_data () {
+
+        let item_heading = {};
+        item_heading.text = document.querySelector('#item-heading-text').value;
+        item_heading.subtext = document.querySelector('#item-heading-sub-text').value;
+        item_heading.order = document.querySelector('#item-heading-order').value;
+        return item_heading;
+    }
+
+    /**
+     * Creates item heading
+     */
+    obj.create_heading_record = async function () {
+
+        let uuid = helperModule.get_parameter_by_name('uuid');
+
+        if (uuid === undefined) {
+            document.querySelector('#message').innerHTML = `<div class="alert alert-warning" role="alert"><i class="fa fa-info"></i> Unable to create item heading record.</div>`;
+            return false;
+        }
+
+        document.querySelector('#message').innerHTML = `<div class="alert alert-info" role="alert"><i class="fa fa-info"></i> Creating item heading record...</div>`;
+        let data = get_heading_data();
+
+        try {
+
+            let token = authModule.get_user_token();
+            let response = await httpModule.req({
+                method: 'POST',
+                url: EXHIBITS_ENDPOINTS.exhibits.heading_records.post.endpoint.replace(':exhibit_id', uuid),
+                data: data,
+                headers: {
+                    'Content-Type': 'application/json',
+                    'x-access-token': token
+                }
+            });
+
+            if (response !== undefined && response.status === 201) {
+
+                document.querySelector('#display-item-data').innerHTML = '';
+                document.querySelector('#message').innerHTML = `<div class="alert alert-success" role="alert"><i class="fa fa-info"></i> Item heading record created</div>`;
+                // TODO: clear form
+                setTimeout(() => {
+                    document.querySelector('#message').innerHTML = '';
+                    document.querySelector('#item-heading-form').reset();
+                }, 3000);
+            }
+
+        } catch (error) {
+            document.querySelector('#message').innerHTML = `<div class="alert alert-danger" role="alert"><i class="fa fa-exclamation"></i> ${error.message}</div>`;
+        }
+    };
 
     obj.init = async function () {
         await display_items();
