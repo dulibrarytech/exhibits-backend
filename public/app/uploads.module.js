@@ -137,11 +137,28 @@ const uploadsModule = (function () {
             },
             success: function(file, response) {
 
+                // console.log('FILE: ', file);
+                // console.log('RESPONSE: ', response);
                 console.log('SUCCESS: ', file.upload);
                 console.log(file.upload.filename);
                 console.log(file.upload.total);
 
+                let item_type;
                 let filename = file.upload.filename;
+
+                if (file.type.indexOf('image') !== -1) {
+                    item_type = 'image';
+                } else if (file.type.indexOf('video') !== -1) {
+                    item_type = 'video';
+                } else if (file.type.indexOf('audio') !== -1) {
+                    item_type = 'audio';
+                } else if (file.type.indexOf('pdf') !== -1) {
+                    item_type = 'pdf';
+                } else {
+                    item_type = 'Unable to Determine Type';
+                }
+
+                document.querySelector('#item-type').value = item_type;
                 document.querySelector('.upload-error').innerHTML = '';
                 document.querySelector('#item-media').value = filename;
                 document.querySelector('#item-media-filename-display').innerHTML = `<span class="alert-success" style="width: 30%; padding: 5px; border: solid 1px"><i class="fa fa-check"> ${filename}</i></span>`;

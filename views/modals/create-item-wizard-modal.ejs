@@ -92,12 +92,12 @@
                                             <%- include('../partials/items/step-2-create-item-wizard-media-form.ejs'); %>
                                         </div>
                                         <!-- Step 3 -->
-                                        <div id="exhibit-banner-form" class="tab">
-
+                                        <div id="exhibit-template-form" class="tab">
+                                            <%- include('../partials/items/step-3-create-item-wizard-template-form.ejs'); %>
                                         </div>
                                         <!-- Step 4 -->
                                         <div id="exhibit-page-layout-form" class="tab">
-
+                                            <%- include('../partials/items/step-4-create-item-wizard-layout-form.ejs'); %>
                                         </div>
                                         <!-- Step 5 -->
                                         <div id="exhibit-template-form" class="tab">
@@ -134,6 +134,7 @@
                                             <span class="step"></span>
                                             <span class="step"></span>
                                             <span class="step"></span>
+                                            <span class="step"></span>
                                         </div>
                                     </div><!-- end create exhibit form -->
 
@@ -154,11 +155,13 @@
     // initiate form wizard
     let current_item_wizard_tab = 0;
     show_tab(current_item_wizard_tab);
-    console.log(current_item_wizard_tab);
+
     function show_tab(n) {
 
         const tab = document.getElementsByClassName('tab');
         tab[n].style.display = 'block';
+
+        console.log('tab: ', n);
 
         // step 0 form
         if (n === 0) {

@@ -179,7 +179,6 @@ const exhibitsModule = (function () {
         let html = '';
 
         for (let prop in data) {
-            console.log(prop);
             if (prop === 'title') {
                 html += `<p><strong>${data[prop]}</strong> Exhibit is ready</p>`;
             }
