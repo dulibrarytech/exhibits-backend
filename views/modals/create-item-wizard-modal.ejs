@@ -72,15 +72,19 @@
                         <div class="default-tab">
                             <nav>
                                 <div class="nav nav-tabs" id="nav-tab" role="tablist">
-                                    <a class="nav-item nav-link active" id="nav-home-tab" data-toggle="tab" href="#nav-home" role="tab" aria-controls="nav-home" aria-selected="true">Headings</a>
-                                    <a class="nav-item nav-link" id="nav-profile-tab" data-toggle="tab" href="#nav-profile" role="tab" aria-controls="nav-profile" aria-selected="false">Items</a>
+                                    <a class="nav-item nav-link active" id="nav-home-tab" data-toggle="tab"
+                                       href="#nav-home" role="tab" aria-controls="nav-home" aria-selected="true">Headings</a>
+                                    <a class="nav-item nav-link" id="nav-profile-tab" data-toggle="tab"
+                                       href="#nav-profile" role="tab" aria-controls="nav-profile" aria-selected="false">Items</a>
                                 </div>
                             </nav>
                             <div class="tab-content pl-3 pt-2" id="nav-tabContent">
-                                <div class="tab-pane fade show active" id="nav-home" role="tabpanel" aria-labelledby="nav-home-tab">
+                                <div class="tab-pane fade show active" id="nav-home" role="tabpanel"
+                                     aria-labelledby="nav-home-tab">
                                     <%- include('../modals/create-item-heading-modal.ejs'); %>
                                 </div>
-                                <div class="tab-pane fade" id="nav-profile" role="tabpanel" aria-labelledby="nav-profile-tab">
+                                <div class="tab-pane fade" id="nav-profile" role="tabpanel"
+                                     aria-labelledby="nav-profile-tab">
 
                                     <div id="create-item-form">
                                         <!-- Step 1 -->
@@ -88,42 +92,40 @@
                                             <%- include('../partials/items/step-1-create-item-wizard-text-form.ejs'); %>
                                         </div>
                                         <!-- Step 2 -->
-                                        <div id="exhibit-upload-form" class="tab">
+                                        <div id="item-upload-form" class="tab">
                                             <%- include('../partials/items/step-2-create-item-wizard-media-form.ejs'); %>
                                         </div>
                                         <!-- Step 3 -->
-                                        <div id="exhibit-template-form" class="tab">
+                                        <div id="item-template-form" class="tab">
                                             <%- include('../partials/items/step-3-create-item-wizard-template-form.ejs'); %>
                                         </div>
                                         <!-- Step 4 -->
-                                        <div id="exhibit-page-layout-form" class="tab">
+                                        <div id="item-page-layout-form" class="tab">
                                             <%- include('../partials/items/step-4-create-item-wizard-layout-form.ejs'); %>
                                         </div>
                                         <!-- Step 5 -->
-                                        <div id="exhibit-template-form" class="tab">
-
-                                        </div>
-                                        <!-- Step 6 -->
-                                        <div id="exhibit-template-styles-form" class="tab">
-
+                                        <div id="item-template-styles-form" class="tab">
+                                            <%- include('../partials/items/step-5-create-item-wizard-styles-form.ejs'); %>
                                         </div>
                                         <!-- Step 7 -->
-                                        <div id="exhibit-nav-styles-form" class="tab">
+                                        <div id="item-nav-styles-form" class="tab">
 
                                         </div>
                                         <!-- Step 8 -->
-                                        <div id="confirm-exhibit-form" class="tab">
-                                <span class="form-text text-muted" style="font-size: 17px">
-                                    <div id="message"></div>
-                                    <div id="display-exhibit-data"></div>
-                                </span>
+                                        <div id="confirm-item-form" class="tab">
+                                            <span class="form-text text-muted" style="font-size: 17px">
+                                                <div id="message"></div>
+                                                <div id="display-exhibit-data"></div>
+                                            </span>
                                         </div>
                                         <div style="overflow:auto;">
                                             <div style="float:right;">
-                                                <button class="btn btn-default" type="button" id="prev-btn" onclick="nextPrev(-1)">
+                                                <button class="btn btn-default" type="button" id="prev-btn"
+                                                        onclick="nextPrev(-1)">
                                                     Previous
                                                 </button>
-                                                <button class="btn btn-primary" type="button" id="next-btn" onclick="nextPrev(1)">
+                                                <button class="btn btn-primary" type="button" id="next-btn"
+                                                        onclick="nextPrev(1)">
                                                     Next
                                                 </button>
                                                 <span id="exhibit-form-buttons"></span>
@@ -131,6 +133,7 @@
                                         </div>
                                         <!-- Circles which indicates the steps of the form: -->
                                         <div style="text-align:center;margin-top:40px;">
+                                            <span class="step"></span>
                                             <span class="step"></span>
                                             <span class="step"></span>
                                             <span class="step"></span>
@@ -165,17 +168,18 @@
 
         // step 0 form
         if (n === 0) {
-
-            /*
-            if (EXHIBIT_TITLE.getHTMLCode().length > 4) {
-                document.querySelector('#exhibit-title-error').innerHTML = '';
-            }
-
-             */
-
             document.querySelector('#prev-btn').style.display = 'none';
         } else {
             document.querySelector('#prev-btn').style.display = 'inline';
+        }
+
+        if (n === 4) {
+
+            let item_grid_template = helperModule.get_checked_radio_button(document.getElementsByName('template'));
+
+            if (item_grid_template === 'grid') {
+                document.querySelector('#item-grid-bg-color').style.display = 'block';
+            }
         }
 
         if (n === (tab.length - 1)) {

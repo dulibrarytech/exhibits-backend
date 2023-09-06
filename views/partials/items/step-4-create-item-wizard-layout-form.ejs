@@ -55,7 +55,7 @@
                     <label class="btn btn-default" for="item-layout-right">Text image* pair, image on the right</label>
                 </td>
                 <td style="width: 10%">
-                    <input type="radio" name="layout" id="item-layout-right" value="item_right" />
+                    <input class="item-layout-left-right-radio-btn" type="radio" name="layout" id="item-layout-right" value="item_right" />
                 </td>
             </tr>
             <tr>
@@ -66,7 +66,7 @@
                     <label class="btn btn-default" for="item-layout-left">Text image pair, image on the left</label>
                 </td>
                 <td style="width: 10%">
-                    <input type="radio" name="layout" id="item-layout-left" value="item_left" />
+                    <input class="item-layout-left-right-radio-btn" type="radio" name="layout" id="item-layout-left" value="item_left" />
                 </td>
             </tr>
         </table>
@@ -113,16 +113,14 @@
 </div>
 <script>
 
-    document.querySelector('#item-layout-right').addEventListener('click', () => {
-        document.querySelector('#item-media-width').style.display = 'block';
+    document.querySelectorAll('.item-layout-left-right-radio-btn').forEach((radio_input) => {
+        radio_input.addEventListener('click', () => {
+            document.querySelector('#item-media-width').style.display = 'block';
+        });
     });
 
-    document.querySelector('#item-layout-left').addEventListener('click', () => {
-        document.querySelector('#item-media-width').style.display = 'block';
-    });
-
-    document.querySelectorAll('.item-layout-radio-btn').forEach((item) => {
-        item.addEventListener('click', () => {
+    document.querySelectorAll('.item-layout-radio-btn').forEach((radio_input) => {
+        radio_input.addEventListener('click', () => {
             document.querySelector('#item-media-width').style.display = 'none';
         });
     });

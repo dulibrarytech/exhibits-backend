@@ -35,7 +35,7 @@ const User_tasks = class {
      * Gets all users
      * @returns {boolean}
      */
-    get_users = () => {
+    get_users() {
 
         let promise = new Promise((resolve, reject) => {
 
@@ -62,7 +62,7 @@ const User_tasks = class {
      * Gets single user record
      * @param id
      */
-    get_user = function (id) {
+    get_user(id) {
 
         let promise = new Promise((resolve, reject) => {
 
@@ -98,7 +98,7 @@ const User_tasks = class {
      * @param id
      * @param user
      */
-    update_user = (id, user) => {
+    update_user(id, user) {
 
         let promise = new Promise((resolve, reject) => {
 
@@ -141,7 +141,7 @@ const User_tasks = class {
      * Checks if username already exists
      * @param username
      */
-    check_username = (username) => {
+    check_username(username) {
 
         let promise = new Promise((resolve, reject) => {
 
@@ -178,7 +178,7 @@ const User_tasks = class {
      * Saves user data
      * @param user
      */
-    save_user = (user) => {
+    save_user(user) {
 
         let promise = new Promise((resolve, reject) => {
 
@@ -206,7 +206,7 @@ const User_tasks = class {
      * Deletes user data
      * @param id
      */
-    delete_user = (id) => {
+    delete_user(id) {
 
         let promise = new Promise((resolve, reject) => {
 
