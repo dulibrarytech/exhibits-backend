@@ -30,7 +30,7 @@ exports.sso = async function (req, res) {
 
     if (SSO_HOST === CONFIG.ssoHost && USERNAME !== undefined) {
 
-        try {
+        // try {
 
             let result;
             let token = TOKEN.create(USERNAME);
@@ -45,9 +45,12 @@ exports.sso = async function (req, res) {
                 });
             }
 
+        /*
         } catch (error) {
             LOGGER.module().error('ERROR: [/auth/controller (sso)] unable to complete authentication ' + error.message);
         }
+
+         */
     }
 };
 
