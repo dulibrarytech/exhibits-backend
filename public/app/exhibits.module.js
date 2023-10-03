@@ -31,6 +31,19 @@ const exhibitsModule = (function () {
         try {
 
             let token = authModule.get_user_token();
+
+            if (token === false) {
+                window.location.replace('/dashboard/login');
+                return false;
+            }
+
+            if (EXHIBITS_ENDPOINTS === null) {
+                setTimeout(() => {
+                    location.reload();
+                    return false;
+                }, 0);
+            }
+
             let response = await httpModule.req({
                 method: 'GET',
                 url: EXHIBITS_ENDPOINTS.exhibits.exhibit_records.endpoint,
@@ -39,66 +52,107 @@ const exhibitsModule = (function () {
                     'x-access-token': token
                 }
             });
-
+            console.log(response);
             if (response !== undefined && response.status === 200) {
-                // domModule.html('#message', null);
                 return response.data.data;
             }
 
         } catch (error) {
             console.log('ERROR: ', error.message);
-            // TODO: authModule.session_expired();
         }
     }
 
     /**
-     * Displays exhibits
+     *
+     * @return {Promise<boolean>}
      */
-    async function display_exhibits() {
+    obj.display_exhibits = async function () {
 
-        let exhibits = await get_exhibits();
-        let exhibit_cards = '';
-        exhibit_cards += '<div class="row">';
+        const exhibits = await get_exhibits();
+        console.log('exhibits: ', exhibits);
+        let exhibit_data = '';
 
-        for (let i=0;i<exhibits.length;i++) {
-
-            let uuid = exhibits[i].uuid;
-            let title = helperModule.unescape(exhibits[i].title);
-            let description = helperModule.unescape(exhibits[i].description);
-            // description = description.substring(0, description.length);
-            // <div class="location text-sm-center"><i class=""></i> ${description}</div>
-
-            exhibit_cards += `
-                <div class="col-md-4">
-                    <div class="card">
-                        <div class="card-header">
-                            <strong class="card-title mb-3"><a href="/dashboard/items?uuid=${uuid}">${title}</a></strong>
-                        </div>
-                        <div class="card-body">
-                            <div class="mx-auto d-block">
-                                <img class="rounded-circle mx-auto d-block" src="../../images/thumbnail.jpg"
-                                     alt="exhibit thumbnail here?">
-                            </div>
-                            <hr>
-                            <div class="card-text text-sm-center">
-                                <a href="#" title="Add Items"><i class="fa fa-plus pr-1"></i> </a>&nbsp;
-                                <a href="#" title="Edit Items"><i class="fa fa-edit pr-1"></i> </a>&nbsp;
-                                <a href="#" title="Delete items"><i class="fa fa-minus pr-1"></i> </a>
-                            </div>
-                        </div>
-                    </div>
-                </div>`;
-
-            if (i % 3 === 2) {
-                exhibit_cards += '</div>';
-                exhibit_cards += '<div class="row">';
-            }
+        if (exhibits.length === 0) {
+            document.querySelector('#exhibits').innerHTML = '<div class="alert alert-info" role="alert">No Exhibits found.</div>';
+            return false;
         }
 
-        document.querySelector('#exhibits').innerHTML = exhibit_cards;
-    }
+        for (let i = 0; i < exhibits.length; i++) {
 
-    obj.get_exhibit_data = function() {
+            let uuid = exhibits[i].uuid;
+            let is_published = exhibits[i].is_published;
+            let status;
+
+            if (is_published === 1) {
+                status = `<span title="published"><i class="fa fa-cloud"></i><br>Published</span>`;
+            } else if (is_published === 0) {
+                status = `<span title="suppressed"><i class="fa fa-cloud-upload"></i><br>Suppressed</span>`;
+            }
+
+            exhibit_data += '<tr>';
+
+            let thumbnail = exhibits[i].thumbnail_image;
+            let title = helperModule.unescape(exhibits[i].title);
+            // let description = helperModule.unescape(items[i].description);
+
+            exhibit_data += `<td style="width: 35%">
+                    <p><strong class="card-title mb-3"><a href="/dashboard/items?uuid=${uuid}">${title}</a></strong></p>
+                    <p>${thumbnail}</p>
+                    <p><a class="btn btn-outline-secondary" href="/preview" title="preview"><i class="fa fa-eye"></i>&nbsp;Preview</a></p>
+                    </td>`;
+
+            exhibit_data += `<td style="width: 5%">${status}</td>`;
+            exhibit_data += `<td style="width: 10%">
+                                <div class="card-text text-sm-center">
+                                    <a href="#" title="Edit"><i class="fa fa-edit pr-1"></i> </a>&nbsp;
+                                    <a href="#" title="Delete"><i class="fa fa-minus pr-1"></i> </a>&nbsp;
+                                    <a href="#" title="Add Items"><i class="fa fa-plus pr-1"></i> </a>
+                                </div>
+                            </td>`;
+            exhibit_data += '</tr>';
+        }
+
+        document.querySelector('#exhibits-data').innerHTML = exhibit_data;
+        let table = new DataTable('#exhibits');
+        setTimeout(() => {
+            document.querySelector('#exhibit-card').style.visibility = 'visible';
+            document.querySelector('#message').innerHTML = '';
+        }, 1000);
+    };
+
+    /**
+     * Gets exhibit title
+     * @param uuid
+     * @return {Promise<*>}
+     */
+    obj.get_exhibit_title = async function (uuid) {
+
+        try {
+
+            let token = authModule.get_user_token();
+            let response = await httpModule.req({
+                method: 'GET',
+                url: EXHIBITS_ENDPOINTS.exhibits.exhibit_records.endpoints.get.endpoint.replace(':exhibit_id', uuid),
+                headers: {
+                    'Content-Type': 'application/json',
+                    'x-access-token': token
+                }
+            });
+
+            if (response !== undefined && response.status === 200) {
+                return helperModule.strip_html(helperModule.unescape(response.data.data[0].title));
+            }
+
+        } catch (error) {
+            console.log('ERROR: ', error.message);
+        }
+    };
+
+    /**
+     * TODO: move form functions to different module
+     * @return {{}}
+     */
+    obj.get_exhibit_data = function () {
 
         let exhibit = {};
 
@@ -113,7 +167,7 @@ const exhibitsModule = (function () {
         exhibit.thumbnail_image = document.querySelector('#thumbnail-image').value;
 
         // Step 3
-        exhibit.banner_template =  helperModule.get_checked_radio_button(document.getElementsByName('banner_template'));
+        exhibit.banner_template = helperModule.get_checked_radio_button(document.getElementsByName('banner_template'));
 
         // Step 4
         exhibit.page_layout = helperModule.get_checked_radio_button(document.getElementsByName('page_layout'));
@@ -129,7 +183,6 @@ const exhibitsModule = (function () {
         let exhibit_template_text_align = document.querySelector('#template-text-align').value;
 
         // Step 7
-        //
         let exhibit_nav_menu_background_color = document.querySelector('#nav-menu-background-color').value;
         let exhibit_nav_menu_font_color = document.querySelector('#nav-menu-font-color').value;
         let exhibit_nav_menu_font_family = document.querySelector('#nav-menu-font-family').value;
@@ -138,9 +191,9 @@ const exhibitsModule = (function () {
 
         let exhibit_nav_menu_links_background_color = document.querySelector('#nav-menu-links-background-color').value;
         let exhibit_nav_menu_links_font_color = document.querySelector('#nav-menu-links-font-color').value;
-        let exhibit_nav_menu_links_font_family = document.querySelector('#nav-menu-links-font-family').value;
-        let exhibit_nav_menu_links_font_size = document.querySelector('#nav-menu-links-font-size').value;
-        let exhibit_nav_menu_links_text_align = document.querySelector('#nav-menu-links-text-align').value;
+        // let exhibit_nav_menu_links_font_family = document.querySelector('#nav-menu-links-font-family').value;
+        // let exhibit_nav_menu_links_font_size = document.querySelector('#nav-menu-links-font-size').value;
+        // let exhibit_nav_menu_links_text_align = document.querySelector('#nav-menu-links-text-align').value;
 
         exhibit.styles = {
             exhibit: {
@@ -154,10 +207,10 @@ const exhibitsModule = (function () {
                     },
                     links: {
                         backgroundColor: exhibit_nav_menu_links_background_color.length > 1 ? exhibit_nav_menu_links_background_color : '',
-                        color: exhibit_nav_menu_links_font_color.length > 1 ? exhibit_nav_menu_links_font_color : '',
-                        fontFamily: exhibit_nav_menu_links_font_family.length > 1 ? exhibit_nav_menu_links_font_family : '',
-                        fontSize: exhibit_nav_menu_links_font_size.length > 1 ? exhibit_nav_menu_links_font_size : '',
-                        textAlign: exhibit_nav_menu_links_text_align.length > 1 ? exhibit_nav_menu_links_text_align : ''
+                        color: exhibit_nav_menu_links_font_color.length > 1 ? exhibit_nav_menu_links_font_color : ''
+                        // fontFamily: exhibit_nav_menu_links_font_family.length > 1 ? exhibit_nav_menu_links_font_family : '',
+                        // fontSize: exhibit_nav_menu_links_font_size.length > 1 ? exhibit_nav_menu_links_font_size : '',
+                        // textAlign: exhibit_nav_menu_links_text_align.length > 1 ? exhibit_nav_menu_links_text_align : ''
                     }
                 },
                 template: {
@@ -173,7 +226,8 @@ const exhibitsModule = (function () {
         return exhibit;
     };
 
-    obj.display_exhibit_data = function() {
+    // used in form
+    obj.display_exhibit_data = function () {
 
         let data = exhibitsModule.get_exhibit_data();
         let html = '';
@@ -220,10 +274,22 @@ const exhibitsModule = (function () {
         }
     };
 
-    obj.init = function () {
-        setTimeout(async () => {
-            await display_exhibits();
-        }, 1000);
+    obj.set_preview_link = function() {
+
+        let uuid = helperModule.get_parameter_by_name('uuid');
+        let preview_link = `/preview?uuid=${uuid}`;
+        let preview_menu_fragment = `
+                <li>
+                    <a href="#" onClick="window.open('${preview_link}', '_blank', 'location=yes,scrollbars=yes,status=yes');">
+                        <i class=" menu-icon fa fa-eye"></i>Preview
+                    </a>
+                </li>`;
+
+        document.querySelector('#preview-link').innerHTML = preview_menu_fragment;
+    };
+
+    obj.init = async function () {
+        await exhibitsModule.display_exhibits();
     };
 
     return obj;

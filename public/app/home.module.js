@@ -28,13 +28,14 @@ const homeModule = (function () {
             authModule.get_auth_user_data();
         }
 
-        history.replaceState({}, '', '/dashboard/home');
-        history.pushState({}, '', '/dashboard/home');
+        history.replaceState({}, '', '/dashboard/exhibits');
+        history.pushState({}, '', '/dashboard/exhibits');
 
-        let home_timer = setTimeout(() => {
-            exhibitsModule.init();
+        let home_timer = setTimeout(async () => {
+            document.querySelector('#message').innerHTML = '<div class="alert alert-primary" role="alert">Loading...</div>';
+            await exhibitsModule.init();
             clearTimeout(home_timer);
-        }, 150);
+        }, 0);
 
     };
 

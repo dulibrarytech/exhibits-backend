@@ -22,18 +22,37 @@ const CONTROLLER = require('../dashboard/controller');
 
 module.exports = function (app) {
 
-    app.route('/dashboard/home')
-    .get(CONTROLLER.get_dashboard_home);
+    app.route('/')
+    .get(CONTROLLER.get_dashboard);
+
+    app.route('/dashboard/exhibits')
+    .get(CONTROLLER.get_dashboard_exhibits);
 
     app.route('/dashboard/items')
     .get(CONTROLLER.get_dashboard_items);
 
-    app.route('/dashboard/exhibits/add')
-    .get(CONTROLLER.get_dashboard_exhibits_add_form);
+    app.route('/dashboard/items/heading')
+    .get(CONTROLLER.get_dashboard_item_heading);
 
-    app.route('/dashboard/items/delete')
-    .get(CONTROLLER.delete_dashboard_item);
+    app.route('/dashboard/items/standard')
+    .get(CONTROLLER.get_dashboard_item_standard);
 
+    app.route('/dashboard/items/grid')
+    .get(CONTROLLER.get_dashboard_item_grid);
+
+    app.route('/dashboard/items/vertical-timeline')
+    .get(CONTROLLER.get_dashboard_item_vertical_timeline);
+
+    app.route('/dashboard/trash')
+    .get(CONTROLLER.get_dashboard_trash);
+
+    app.route('/dashboard/login')
+    .get(CONTROLLER.get_dashboard_login);
+
+    app.route('/dashboard/logout')
+    .get(CONTROLLER.get_dashboard_logout);
+
+    /*
     app.route('/dashboard/users')
     .get(CONTROLLER.get_dashboard_users);
 
@@ -45,4 +64,6 @@ module.exports = function (app) {
 
     app.route('/dashboard/users/delete')
     .get(CONTROLLER.get_dashboard_user_delete_form);
+
+     */
 };

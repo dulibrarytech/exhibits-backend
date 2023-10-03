@@ -66,6 +66,9 @@ module.exports = function (app) {
     app.route(ENDPOINTS().exhibits.heading_records.delete.endpoint)
     .delete(CONTROLLER.delete_heading_record);
 
+    app.route(ENDPOINTS().exhibits.grid_records.post.endpoint)
+    .post(CONTROLLER.create_grid_record);  // TOKEN.verify,
+
     app.route(ENDPOINTS().exhibits.trashed_records.get.endpoint)
     .get(CONTROLLER.get_trashed_records);
 

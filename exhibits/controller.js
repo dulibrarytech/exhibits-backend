@@ -207,6 +207,20 @@ exports.delete_heading_record = async function (req, res) {
     res.status(result.status).send(result);
 };
 
+exports.create_grid_record = async function (req, res) {
+
+    const is_member_of_exhibit = req.params.exhibit_id;
+    const data = req.body;
+
+    if (data === undefined || is_member_of_exhibit === undefined) {
+        res.status(400).send('Bad request.');
+        return false;
+    }
+
+    const result = await MODEL.create_grid_record(is_member_of_exhibit, data);
+    res.status(result.status).send(result);
+};
+
 exports.get_trashed_records = async function (req, res) {
     const data = await MODEL.get_trashed_records();
     res.status(data.status).send(data);

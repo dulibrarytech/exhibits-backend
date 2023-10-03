@@ -196,7 +196,7 @@ const uploadsModule = (function () {
             init: function () {},
             renameFile: function (file) {
                 console.log('item media: ', file);
-                return 'item_media';
+                return 'item_thumbnail';
             },
             success: function(file, response) {
 

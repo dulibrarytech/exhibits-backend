@@ -51,6 +51,14 @@ const ENDPOINTS = {
                 }
             }
         },
+        grid_records: {
+            post: {
+                description: 'Creates grid record',
+                endpoint: `${PREFIX}${VERSION}${ENDPOINT}/:exhibit_id/grids`,
+                params: 'token or api_key',
+                body: 'is_member_of_exhibit, record data'
+            },
+        },
         item_records: {
             description: 'Gets all exhibit items',
             endpoint: `${PREFIX}${VERSION}${ENDPOINT}/:exhibit_id/items`,

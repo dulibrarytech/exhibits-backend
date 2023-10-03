@@ -1,239 +1,82 @@
 <%- include('partials/header.ejs'); %>
-<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/5.3.0/css/bootstrap.min.css">
-<link rel="stylesheet" href="https://cdn.datatables.net/1.13.5/css/dataTables.bootstrap5.min.css">
-<style>
-    /*
-    #outer-dropzone {
-        height: 140px;
-    }
-
-    #inner-dropzone {
-        height: 80px;
-    }
-
-    .dropzone {
-        background-color: #bfe4ff;
-        border: dashed 4px transparent;
-        border-radius: 4px;
-        margin: 10px auto 30px;
-        padding: 10px;
-        width: 80%;
-        transition: background-color 0.3s;
-    }
-
-    .drop-active {
-        border-color: #aaa;
-    }
-
-    .drop-target {
-        background-color: #29e;
-        border-color: #fff;
-        border-style: solid;
-    }
-
-    .drag-drop {
-        display: inline-block;
-        min-width: 40px;
-        padding: 2em 0.5em;
-        margin: 1rem 0 0 1rem;
-
-        color: #fff;
-        background-color: #29e;
-        border: solid 2px #fff;
-
-        touch-action: none;
-        transform: translate(0px, 0px);
-
-        transition: background-color 0.3s;
-    }
-
-    .drag-drop.can-drop {
-        color: #000;
-        background-color: #4e4;
-    }
-
-     */
-
-</style>
 <body>
-<!-- Left Panel -->
 <aside id="left-panel" class="left-panel">
     <nav class="navbar navbar-expand-sm navbar-default">
-        <div id="main-menu" class="main-menu collapse navbar-collapse">
+        <div id="main-menu" class="main-menu">
             <ul class="nav navbar-nav">
                 <li class="active">
-                    <a href="/dashboard/home"><i class="menu-icon fa fa-laptop"></i>Exhibits Dashboard </a>
+                    <a href="/dashboard/exhibits">
+                        <i class="menu-icon fa fa-home"></i>Exhibits Dashboard
+                    </a>
                 </li>
-                <li class="menu-title">Menu</li><!-- /.menu-title -->
-                <!--
+                <li class="menu-title">Menu</li>
+            </ul>
+            <ul id="preview-link" class="nav navbar-nav"></ul>
+            <ul id="items-menu" class="nav navbar-nav"></ul>
+            <ul class="nav navbar-nav">
                 <li>
-                    <a href="#" data-toggle="modal" data-backdrop="static" data-keyboard="false" data-target="#create-heading-modal"> <i
-                                class=" menu-icon fa fa-th"></i>Add Heading</a>
-                </li>
-                -->
-                <li>
-                    <a href="#" data-toggle="modal" data-backdrop="static" data-keyboard="false" data-target="#create-item-modal"> <i
-                                class=" menu-icon fa fa-th"></i>Create Items</a>
-                </li>
-                <li>
-                    <a href="/dashboard/trash"> <i class=" menu-icon fa fa-trash-o"></i>Trash</a>
+                    <a href="#" id="logout" data-keyboard="false">
+                        <i class="menu-icon fa fa-sign-out"></i>Logout
+                    </a>
                 </li>
             </ul>
-        </div><!-- /.navbar-collapse -->
+        </div>
     </nav>
 </aside>
-<!-- /#left-panel -->
-<!-- Right Panel -->
 <div id="right-panel" class="right-panel">
-    <!-- Header-->
     <header id="header" class="header">
         <div class="top-left">
             <div class="navbar-header">
-                <a class="navbar-brand" href="./"><img src="../images/du-logo.png" alt="Logo"></a>
-                <a id="menuToggle" class="menutoggle"><i class="fa fa-bars"></i></a>
+                <a class="navbar-brand" href="https://www.du.edu/"><img src="<%=host%>/images/du-logo.png" alt="Logo"></a>
             </div>
         </div>
-        <div class="top-right">
-            <div class="header-menu">
-                <div class="header-left">
-                    <!--
-                    <button class="search-trigger"><i class="fa fa-search"></i></button>
-                    <div class="form-inline">
-                        <form class="search-form">
-                            <input class="form-control mr-sm-2" type="text" placeholder="Search ..."
-                                   aria-label="Search">
-                            <button class="search-close" type="submit"><i class="fa fa-close"></i></button>
-                        </form>
-                    </div>
-                    -->
-                </div>
-                <div class="user-area dropdown float-right">
-                    <a href="#" class="dropdown-toggle active" data-toggle="dropdown" aria-haspopup="true"
-                       aria-expanded="false">
-                        <img class="user-avatar rounded-circle" src="../images/user.png" alt="User Avatar">
-                    </a>
-
-                    <div class="user-menu dropdown-menu">
-                        <a class="nav-link" href="#"><i class="fa fa- user"></i>My Profile</a>
-                        <a class="nav-link" href="#"><i class="fa fa-power -off"></i>Logout</a>
-                    </div>
-                </div>
-
-            </div>
-        </div>
+        <div class="top-right"></div>
     </header>
-    <!-- /#header -->
-    <!-- Content -->
-    <div class="content" style="min-height: 700px">
-        <!-- Animated -->
-        <div class="animated fadeIn">
-
-            <!-- items/headings are rendered here -->
-            <table id="items" class="table table-striped" style="width:100%"></table>
-
-            <!--
-            <div id="no-drop" class="drag-drop"> #no-drop </div>
-
-            <div id="yes-drop" class="drag-drop"> #yes-drop </div>
-
-            <div id="outer-dropzone" class="dropzone">
-                #outer-dropzone
-                <div id="inner-dropzone" class="dropzone">#inner-dropzone</div>
+    <div class="content" style="min-height: 875px;">
+        <div id="message"></div>
+        <div id="item-card" class="card" style="visibility: hidden">
+            <div class="card-header">
+                <strong class="card-title mb-3"><span id="exhibit-title"></span> exhibit items</strong>
             </div>
-            -->
-
+            <div class="card-body">
+                <table id="items" class="display">
+                    <thead>
+                    <tr>
+                        <th>Order</th>
+                        <th>Item</th>
+                        <th>Status</th>
+                        <th>Actions</th>
+                    </tr>
+                    </thead>
+                    <tbody id="item-data"></tbody>
+                </table>
+            </div>
         </div>
-        <!-- .animated -->
     </div>
-    <!-- /.content -->
     <div class="clearfix"></div>
-    <!-- Footer -->
     <%- include('partials/footer.ejs'); %>
-    <!-- /.site-footer -->
 </div>
-<!-- /#right-panel -->
-<!-- Scripts -->
 <script src="https://code.jquery.com/jquery-3.7.0.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/popper.js@1.14.4/dist/umd/popper.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@4.1.3/dist/js/bootstrap.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/jquery-match-height@0.7.2/dist/jquery.matchHeight.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/interactjs/dist/interact.min.js"></script>
-<script src="https://cdn.datatables.net/1.13.5/js/jquery.dataTables.min.js"></script>
-<script src="https://cdn.datatables.net/1.13.5/js/dataTables.bootstrap5.min.js"></script>
+<script src="https://cdn.datatables.net/1.13.6/js/jquery.dataTables.min.js"></script>
 <script src="https://unpkg.com/dropzone@5/dist/min/dropzone.min.js"></script>
-<script src="../libs/axios-2.x/dist/axios.min.js"></script>
-<script src="../libs/dompurify/purify.min.js"></script>
-<script src="../app/http.module.js"></script>
-<script src="../app/helper.module.js"></script>
-<script src="../app/endpoints.module.js"></script>
-<script src="../app/auth.module.js"></script>
-<script src="../app/uploads.module.js"></script>
-<script src="../app/items.module.js"></script>
-<!-- modal -->
-<%- include('modals/create-item-wizard-modal.ejs'); %>
+<script src="<%=host%>/libs/axios-2.x/dist/axios.min.js"></script>
+<script src="<%=host%>/libs/dompurify/purify.min.js"></script>
+<script src="<%=host%>/app/http.module.js"></script>
+<script src="<%=host%>/app/helper.module.js"></script>
+<script src="<%=host%>/app/endpoints.module.js"></script>
+<script src="<%=host%>/app/auth.module.js"></script>
+<script src="<%=host%>/app/uploads.module.js"></script>
+<script src="<%=host%>/app/exhibits.module.js"></script>
+<script src="<%=host%>/app/items.module.js"></script>
 <script>
+    exhibitsModule.set_preview_link();
     itemsModule.init();
     uploadsModule.upload_item_media();
     uploadsModule.upload_item_thumbnail();
 </script>
 </body>
 </html>
-<script>
-    /* The dragging code for '.draggable' from the demo above
- * applies to this demo as well so it doesn't have to be repeated. TEST */
-
-    /*
-    // enable draggables to be dropped into this
-    interact('.dropzone').dropzone({
-        // only accept elements matching this CSS selector
-        accept: '#yes-drop',
-        // Require a 75% element overlap for a drop to be possible
-        overlap: 0.75,
-
-        // listen for drop related events:
-
-        ondropactivate: function (event) {
-            // add active dropzone feedback
-            event.target.classList.add('drop-active')
-        },
-        ondragenter: function (event) {
-            var draggableElement = event.relatedTarget
-            var dropzoneElement = event.target
-
-            // feedback the possibility of a drop
-            dropzoneElement.classList.add('drop-target')
-            draggableElement.classList.add('can-drop')
-            draggableElement.textContent = 'Dragged in'
-        },
-        ondragleave: function (event) {
-            // remove the drop feedback style
-            event.target.classList.remove('drop-target')
-            event.relatedTarget.classList.remove('can-drop')
-            event.relatedTarget.textContent = 'Dragged out'
-        },
-        ondrop: function (event) {
-            event.relatedTarget.textContent = 'Dropped'
-        },
-        ondropdeactivate: function (event) {
-            // remove active dropzone feedback
-            event.target.classList.remove('drop-active')
-            event.target.classList.remove('drop-target')
-        }
-    })
-
-    interact('.drag-drop')
-    .draggable({
-        inertia: true,
-        modifiers: [
-            interact.modifiers.restrictRect({
-                restriction: 'parent',
-                endOnly: true
-            })
-        ],
-        autoScroll: true,
-        // dragMoveListener from the dragging demo above
-        listeners: { move: dragMoveListener }
-    })
-    */
-
-</script>

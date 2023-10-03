@@ -26,10 +26,12 @@ const EXHIBITS_UPDATE_RECORD_SCHEMA = require('../exhibits/schemas/exhibit_updat
 const EXHIBITS_CREATE_ITEM_SCHEMA = require('../exhibits/schemas/exhibit_item_create_record_schema')();
 const EXHIBITS_UPDATE_ITEM_SCHEMA = require('../exhibits/schemas/exhibit_item_update_record_schema')();
 const EXHIBITS_CREATE_HEADING_SCHEMA = require('../exhibits/schemas/exhibit_heading_create_record_schema')();
+const EXHIBITS_CREATE_GRID_SCHEMA = require('../exhibits/schemas/exhibit_create_grid_record_schema')();
 const EXHIBITS_UPDATE_HEADING_SCHEMA = require('../exhibits/schemas/exhibit_heading_update_record_schema')();
 const EXHIBIT_RECORD_TASKS = require('../exhibits/tasks/exhibit_record_tasks');
 const EXHIBIT_ITEM_RECORD_TASKS = require('../exhibits/tasks/exhibit_item_record_tasks');
 const EXHIBIT_HEADING_RECORD_TASKS = require('../exhibits/tasks/exhibit_heading_record_tasks');
+const EXHIBIT_GRID_RECORD_TASKS = require('../exhibits/tasks/exhibit_grid_record_tasks');
 const EXHIBIT_TRASHED_RECORD_TASKS = require('../exhibits/tasks/exhibit_trashed_record_tasks');
 const HELPER = require('../libs/helper');
 const VALIDATOR = require('../libs/validate');
@@ -166,7 +168,7 @@ exports.get_exhibit_record = async function (uuid) {
     }
 };
 
-/** TODO: version record
+/**
  * Updates exhibit record
  * @param data
  */
@@ -270,8 +272,6 @@ exports.create_item_record = async function (is_member_of_exhibit, data) {
         const HELPER_TASK = new HELPER();
         data.uuid = HELPER_TASK.create_uuid();
         data.is_member_of_exhibit = is_member_of_exhibit;
-        data.columns = parseInt(data.columns);
-        data.order = parseInt(data.order);
 
         const VALIDATE_TASK = new VALIDATOR(EXHIBITS_CREATE_ITEM_SCHEMA);
         let is_valid = VALIDATE_TASK.validate(data);
@@ -286,11 +286,26 @@ exports.create_item_record = async function (is_member_of_exhibit, data) {
             };
         }
 
-        if (data.styles.length === 0) {
+        // TODO: handle in client
+        if (data.styles === undefined || data.styles.length === 0) {
             data.styles = '{}';
-        } else {
-            data.styles = VALIDATE_TASK.validator_unescape(data.styles);
         }
+
+        data.styles = JSON.stringify(data.styles);
+
+        if (data.is_member_of_item_grid !== undefined) {
+            data.order = await HELPER_TASK.order_grid_items(data.is_member_of_item_grid, DB, TABLES);
+        } else {
+            data.order = await HELPER_TASK.order_exhibit_items(data.is_member_of_exhibit, DB, TABLES);
+        }
+
+        if (data.media.length === 0) {
+            data.media = data.repo_uuid;
+        } else {
+            // TODO: rename media and thumbnail - see create exhibit
+        }
+
+        delete data.repo_uuid;
 
         const CREATE_RECORD_TASK = new EXHIBIT_ITEM_RECORD_TASKS(DB, TABLES.item_records);
         let result = await CREATE_RECORD_TASK.create_item_record(data);
@@ -310,7 +325,7 @@ exports.create_item_record = async function (is_member_of_exhibit, data) {
         }
 
     } catch (error) {
-        LOGGER.module().error('ERROR: [/exhibits/model (create_item_record)] Unable to create item record' + error.message);
+        LOGGER.module().error('ERROR: [/exhibits/model (create_item_record)] Unable to create item record ' + error.message);
         return {
             status: 200,
             message: 'Unable to create record ' + error.message
@@ -328,9 +343,11 @@ exports.get_item_records = async function (is_member_of_exhibit) {
 
         const ITEM_TASK = new EXHIBIT_ITEM_RECORD_TASKS(DB, TABLES.item_records);
         const HEADING_TASK = new EXHIBIT_HEADING_RECORD_TASKS(DB, TABLES.heading_records);
+        const GRID_TASK = new EXHIBIT_GRID_RECORD_TASKS(DB, TABLES.grid_records);
         let items =  await ITEM_TASK.get_item_records(is_member_of_exhibit);
         let headings = await HEADING_TASK.get_heading_records(is_member_of_exhibit);
-        let records = [...items,  ...headings];
+        let grids = await GRID_TASK.get_grid_records(is_member_of_exhibit);
+        let records = [...items,  ...headings, ...grids];
 
         records.sort((a, b) => {
             return a.order - b.order;
@@ -477,7 +494,6 @@ exports.create_heading_record = async function (is_member_of_exhibit, data) {
         const HELPER_TASK = new HELPER();
         data.uuid = HELPER_TASK.create_uuid();
         data.is_member_of_exhibit = is_member_of_exhibit;
-        data.order = parseInt(data.order);
 
         const VALIDATE_TASK = new VALIDATOR(EXHIBITS_CREATE_HEADING_SCHEMA);
         let is_valid = VALIDATE_TASK.validate(data);
@@ -491,6 +507,8 @@ exports.create_heading_record = async function (is_member_of_exhibit, data) {
                 message: is_valid
             };
         }
+
+        data.order = await HELPER_TASK.order_exhibit_items(data.is_member_of_exhibit, DB, TABLES);
 
         const CREATE_RECORD_TASK = new EXHIBIT_HEADING_RECORD_TASKS(DB, TABLES.heading_records);
         let result = await CREATE_RECORD_TASK.create_heading_record(data);
@@ -510,6 +528,59 @@ exports.create_heading_record = async function (is_member_of_exhibit, data) {
 
     } catch (error) {
         LOGGER.module().error('ERROR: [/exhibits/model (create_heading_record)] ' + error.message);
+        callback({
+            status: 200,
+            message: 'Unable to create record ' + error.message
+        });
+    }
+};
+
+/**
+ * Create grid record
+ * @param is_member_of_exhibit
+ * @param data
+ */
+exports.create_grid_record = async function (is_member_of_exhibit, data) {
+
+    try {
+
+        const HELPER_TASK = new HELPER();
+        data.uuid = HELPER_TASK.create_uuid();
+        data.is_member_of_exhibit = is_member_of_exhibit;
+        const VALIDATE_TASK = new VALIDATOR(EXHIBITS_CREATE_GRID_SCHEMA);
+        data.styles = JSON.stringify(data.styles);
+        let is_valid = VALIDATE_TASK.validate(data);
+
+        if (is_valid !== true) {
+
+            LOGGER.module().error('ERROR: [/exhibits/model (create_grid_record)] ' + is_valid[0].message);
+
+            return {
+                status: 400,
+                message: is_valid
+            };
+        }
+
+        data.order = await HELPER_TASK.order_exhibit_items(data.is_member_of_exhibit, DB, TABLES);
+
+        const CREATE_RECORD_TASK = new EXHIBIT_GRID_RECORD_TASKS(DB, TABLES.grid_records);
+        let result = await CREATE_RECORD_TASK.create_grid_record(data);
+
+        if (result === false) {
+            return {
+                status: 200,
+                message: 'Unable to create grid record'
+            };
+        } else {
+            return {
+                status: 201,
+                message: 'Grid record created',
+                data: data.uuid
+            };
+        }
+
+    } catch (error) {
+        LOGGER.module().error('ERROR: [/exhibits/model (create_grid_record)] ' + error.message);
         callback({
             status: 200,
             message: 'Unable to create record ' + error.message

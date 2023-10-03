@@ -19,9 +19,14 @@
 'use strict';
 
 const CONFIG = require('../config/app_config')();
+const SSO_CONFIG = require('../config/webservices_config')();
 
-exports.get_dashboard_home = function (req, res) {
-    res.render('dashboard-home', {
+exports.get_dashboard = function (req, res) {
+    res.redirect('/dashboard/login');
+};
+
+exports.get_dashboard_exhibits = function (req, res) {
+    res.render('dashboard-exhibits', {
         host: CONFIG.host,
         appname: CONFIG.app_name,
         appversion: CONFIG.app_version,
@@ -29,33 +34,83 @@ exports.get_dashboard_home = function (req, res) {
     });
 };
 
-exports.get_dashboard_exhibits_add_form = function (req, res) {
-    res.renderStatic('dashboard-add-exhibit', {
-        host: CONFIG.host,
-        appname: CONFIG.appName,
-        appversion: CONFIG.appVersion,
-        organization: CONFIG.organization
-    });
-};
-
 exports.get_dashboard_items = function (req, res) {
     res.render('dashboard-items', {
         host: CONFIG.host,
-        appname: CONFIG.appName,
-        appversion: CONFIG.appVersion,
+        appname: CONFIG.app_name,
+        appversion: CONFIG.app_version,
         organization: CONFIG.organization
     });
 };
 
-exports.delete_dashboard_item = function (req, res) {
-    res.render('dashboard-delete-item', {
+exports.get_dashboard_item_heading = function (req, res) {
+    res.render('dashboard-item-heading-form', {
         host: CONFIG.host,
-        appname: CONFIG.appName,
-        appversion: CONFIG.appVersion,
+        appname: CONFIG.app_name,
+        appversion: CONFIG.app_version,
         organization: CONFIG.organization
     });
 };
 
+exports.get_dashboard_item_standard = function (req, res) {
+    res.render('dashboard-item-standard-form', {
+        host: CONFIG.host,
+        appname: CONFIG.app_name,
+        appversion: CONFIG.app_version,
+        organization: CONFIG.organization
+    });
+};
+
+exports.get_dashboard_item_grid = function (req, res) {
+    res.render('dashboard-item-grid-form', {
+        host: CONFIG.host,
+        appname: CONFIG.app_name,
+        appversion: CONFIG.app_version,
+        organization: CONFIG.organization
+    });
+};
+
+exports.get_dashboard_item_vertical_timeline = function (req, res) {
+    res.render('dashboard-item-vertical-timeline-form', {
+        host: CONFIG.host,
+        appname: CONFIG.app_name,
+        appversion: CONFIG.app_version,
+        organization: CONFIG.organization
+    });
+};
+
+exports.get_dashboard_trash = function (req, res) {
+    res.render('dashboard-trash', {
+        host: CONFIG.host,
+        appname: CONFIG.app_name,
+        appversion: CONFIG.app_version,
+        organization: CONFIG.organization
+    });
+};
+
+exports.get_dashboard_login = function (req, res) {
+    res.render('dashboard-login', {
+        host: CONFIG.host,
+        appname: CONFIG.app_name,
+        appversion: CONFIG.app_version,
+        organization: CONFIG.organization,
+        sso_url: SSO_CONFIG.ssoUrl,
+        sso_response_url: SSO_CONFIG.ssoResponseUrl
+    });
+};
+
+exports.get_dashboard_logout = function (req, res) {
+    res.render('dashboard-logout', {
+        host: CONFIG.host,
+        appname: CONFIG.app_name,
+        appversion: CONFIG.app_version,
+        organization: CONFIG.organization,
+        sso_logout: SSO_CONFIG.ssoLogoutUrl
+    });
+};
+
+//
+/*
 exports.get_dashboard_users = function (req, res) {
     res.render('dashboard-users', {
         host: CONFIG.host,
@@ -100,3 +155,5 @@ exports.get_dashboard_user_delete_form = function (req, res) {
         organization: CONFIG.organization
     });
 };
+
+ */

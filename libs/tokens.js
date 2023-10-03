@@ -59,7 +59,7 @@ exports.verify = (req, res, next) => {
 
             if (error) {
                 LOGGER.module().error('ERROR: [/libs/tokens lib (verify)] unable to verify token ' + error);
-                res.redirect(WEBSERVICES_CONFIG.ssoUrl + '?app_url=' + WEBSERVICES_CONFIG.ssoResponseUrl);
+                res.redirect('/');
                 return false;
             }
 
@@ -76,7 +76,7 @@ exports.verify = (req, res, next) => {
         }
 
         if (!VALIDATOR.isAlphanumeric(api_key)) {
-            res.redirect(WEBSERVICES_CONFIG.ssoUrl + '?app_url=' + WEBSERVICES_CONFIG.ssoResponseUrl);
+            // res.redirect(WEBSERVICES_CONFIG.ssoUrl + '?app_url=' + WEBSERVICES_CONFIG.ssoResponseUrl);
             return false;
         }
 
@@ -85,6 +85,6 @@ exports.verify = (req, res, next) => {
 
     } else {
         LOGGER.module().error('ERROR: [/libs/tokens lib (verify)] unable to verify api key');
-        res.redirect(WEBSERVICES_CONFIG.ssoUrl + '?app_url=' + WEBSERVICES_CONFIG.ssoResponseUrl);
+        // res.redirect(WEBSERVICES_CONFIG.ssoUrl + '?app_url=' + WEBSERVICES_CONFIG.ssoResponseUrl);
     }
 };

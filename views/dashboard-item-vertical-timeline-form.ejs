@@ -3,15 +3,7 @@
 <aside id="left-panel" class="left-panel">
     <nav class="navbar navbar-expand-sm navbar-default">
         <div id="main-menu" class="main-menu collapse navbar-collapse">
-            <ul id="items-menu" class="nav navbar-nav">
-                <li class="active">
-                    <a href="/dashboard/exhibits"><i class="menu-icon fa fa-home"></i>Exhibits Dashboard </a>
-                </li>
-                <li class="menu-title">Menu</li>
-                <li>
-                    <a href="/dashboard/logout"> <i class="menu-icon fa fa-sign-out"></i>Logout</a>
-                </li>
-            </ul>
+            <ul id="items-menu" class="nav navbar-nav"></ul>
         </div>
     </nav>
 </aside>
@@ -28,10 +20,10 @@
         <div id="message"></div>
         <div id="item-card" class="card" style="visibility: visible">
             <div class="card-header">
-                <strong class="card-title mb-3"><h2>Trash</h2></strong>
+                <strong class="card-title mb-3"><span id="exhibit-title"></span> vertical timeline</strong>
             </div>
             <div class="card-body">
-                // TODO: trash - datatables
+                // TODO: vertical timeline item form
             </div>
         </div>
     </div>
@@ -43,7 +35,7 @@
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@4.1.3/dist/js/bootstrap.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/jquery-match-height@0.7.2/dist/jquery.matchHeight.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/interactjs/dist/interact.min.js"></script>
-<script src="https://cdn.datatables.net/1.13.6/js/jquery.dataTables.min.js"></script>
+<script src="//cdn.datatables.net/1.13.6/js/jquery.dataTables.min.js"></script>
 <script src="https://unpkg.com/dropzone@5/dist/min/dropzone.min.js"></script>
 <script src="<%=host%>/libs/axios-2.x/dist/axios.min.js"></script>
 <script src="<%=host%>/libs/dompurify/purify.min.js"></script>
@@ -51,15 +43,13 @@
 <script src="<%=host%>/app/helper.module.js"></script>
 <script src="<%=host%>/app/endpoints.module.js"></script>
 <script src="<%=host%>/app/auth.module.js"></script>
-<!--
 <script src="<%=host%>/app/uploads.module.js"></script>
 <script src="<%=host%>/app/exhibits.module.js"></script>
 <script src="<%=host%>/app/items.module.js"></script>
--->
 <script>
-    // itemsModule.set_item_nav_menu_links();
-    // uploadsModule.upload_item_media();
-    // uploadsModule.upload_item_thumbnail();
+    itemsModule.set_item_nav_menu_links();
+    uploadsModule.upload_item_media();
+    uploadsModule.upload_item_thumbnail();
 </script>
 </body>
 </html>
