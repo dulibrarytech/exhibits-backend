@@ -41,7 +41,8 @@ const uploadsModule = (function () {
             autoProcessQueue: true,
             init: function () {},
             renameFile: function (file) {
-                return 'exhibit_hero.jpg';
+                let extension = file.name.split('.').pop();
+                return `${Date.now()}_exhibit_hero.${extension}`;
             },
             success: function(file, response) {
 
@@ -86,7 +87,8 @@ const uploadsModule = (function () {
             autoProcessQueue: true,
             init: function () {},
             renameFile: function (file) {
-                return 'exhibit_thumbnail.jpg';
+                let extension = file.name.split('.').pop();
+                return `${Date.now()}_exhibit_thumbnail.${extension}`;
             },
             success: function(file, response) {
 
@@ -121,7 +123,7 @@ const uploadsModule = (function () {
         const ITEM_MEDIA = Dropzone;
         ITEM_MEDIA.options.itemDropzone = {
             paramName: 'files',
-            maxFilesize: 100000, // 1GB
+            maxFilesize: 100000, // 1GB - TODO: temp
             url: '/uploads',
             uploadMultiple: false,
             maxFiles: 1,
@@ -133,7 +135,11 @@ const uploadsModule = (function () {
             init: function () {},
             renameFile: function (file) {
                 console.log('item media: ', file);
-                return 'item_media';
+                console.log('orig name: ', file.name);
+                console.log('mime type: ', file.type);
+                console.log('date: ', Date.now());
+                let extension = file.name.split('.').pop();
+                return `${Date.now()}_item_media.${extension}`;
             },
             success: function(file, response) {
 
@@ -195,8 +201,9 @@ const uploadsModule = (function () {
             autoProcessQueue: true,
             init: function () {},
             renameFile: function (file) {
-                console.log('item media: ', file);
-                return 'item_thumbnail';
+                // console.log('item media: ', file);
+                let extension = file.name.split('.').pop();
+                return `${Date.now()}_item_thumbnail.${extension}`;
             },
             success: function(file, response) {
 

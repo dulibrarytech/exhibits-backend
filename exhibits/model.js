@@ -272,6 +272,7 @@ exports.create_item_record = async function (is_member_of_exhibit, data) {
         const HELPER_TASK = new HELPER();
         data.uuid = HELPER_TASK.create_uuid();
         data.is_member_of_exhibit = is_member_of_exhibit;
+        data.is_member_of_item_grid = data.is_member_of_item_grid === typeof 'object' ? data.is_member_of_item_grid : 0;
 
         const VALIDATE_TASK = new VALIDATOR(EXHIBITS_CREATE_ITEM_SCHEMA);
         let is_valid = VALIDATE_TASK.validate(data);
@@ -286,6 +287,37 @@ exports.create_item_record = async function (is_member_of_exhibit, data) {
             };
         }
 
+        if (data.item_type.length > 0) {
+
+            if (data.media.length > 0) {
+
+                FS.rename(`./storage/${data.media}`, `./storage/${data.uuid}_${data.media}`, (error) => {
+                    if (error) {
+                        console.log('ERROR: ' + error);
+                    }
+                });
+            }
+
+            if (data.thumbnail.length > 0) {
+
+                FS.rename(`./storage/${data.thumbnail}`, `./storage/${data.uuid}_${data.thumbnail}`, (error) => {
+                    if (error) {
+                        console.log('ERROR: ' + error);
+                    }
+                });
+            }
+
+            data.media = `${data.uuid}_${data.media}`;
+            data.thumbnail = `${data.uuid}_${data.thumbnail}`;
+        }
+
+        if (data.media.length === 0) {
+            data.media = data.repo_uuid;
+        }
+
+        delete data.repo_uuid;
+        console.log(data);
+
         // TODO: handle in client
         if (data.styles === undefined || data.styles.length === 0) {
             data.styles = '{}';
@@ -298,14 +330,6 @@ exports.create_item_record = async function (is_member_of_exhibit, data) {
         } else {
             data.order = await HELPER_TASK.order_exhibit_items(data.is_member_of_exhibit, DB, TABLES);
         }
-
-        if (data.media.length === 0) {
-            data.media = data.repo_uuid;
-        } else {
-            // TODO: rename media and thumbnail - see create exhibit
-        }
-
-        delete data.repo_uuid;
 
         const CREATE_RECORD_TASK = new EXHIBIT_ITEM_RECORD_TASKS(DB, TABLES.item_records);
         let result = await CREATE_RECORD_TASK.create_item_record(data);

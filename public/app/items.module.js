@@ -96,6 +96,7 @@ const itemsModule = (function () {
 
             if (items[i].type === 'item') {
 
+                let thumbnail = items[i].thumbnail;
                 let media = items[i].media;
                 let title = helperModule.unescape(items[i].title);
                 let description = helperModule.unescape(items[i].description);
@@ -103,7 +104,8 @@ const itemsModule = (function () {
                 // <p>${media}</p>
                 item_data += `<td style="width: 35%">
                     <p><button class="btn btn-default"><small>${type}</small></button></p>
-                    <p><img src="${media}" height="100" width="100">&nbsp; ${title}</p>
+                    <p><strong>${title}</strong></p>
+                    <p><img src="${thumbnail}" height="100" width="100"></p>
                     <p><small>${description}</small></p>
                     <p><small>${date}</small></p>
                     </td>`;
@@ -115,7 +117,7 @@ const itemsModule = (function () {
 
                 item_data += `<td style="width: 35%">
                     <p><button class="btn btn-default"><small>${type}</small></button></p>
-                    <p>${text}</p>
+                    <p><strong>${text}</strong></p>
                     <p><small>${subtext}</small></p>
                     </td>`;
             } else if (items[i].type === 'grid') {
@@ -124,12 +126,12 @@ const itemsModule = (function () {
                 let grid_items_fragment = '';
 
                 if (items[i].grid_items.length === 0) {
-                    grid_items_fragment += '<p>No items</p>';
+                    grid_items_fragment += '<p><strong>No items</strong></p>';
                 } else {
 
                     for (let j=0;j<items[i].grid_items.length;j++) {
                         grid_items_fragment += `<p>
-                            <img src="${items[i].grid_items[j].media}" height="50" width="50">&nbsp;${items[i].grid_items[j].title}&nbsp;
+                            <img src="${items[i].grid_items[j].thumbnail}" height="50" width="50">&nbsp;<strong>${items[i].grid_items[j].title}</strong>
            
                         </p>`;
                     }

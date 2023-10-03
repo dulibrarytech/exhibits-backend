@@ -94,10 +94,12 @@ const exhibitsModule = (function () {
             let thumbnail = exhibits[i].thumbnail_image;
             let title = helperModule.unescape(exhibits[i].title);
             // let description = helperModule.unescape(items[i].description);
+            // <p>${thumbnail}</p>
+            // class="card-title mb-3"
 
             exhibit_data += `<td style="width: 35%">
-                    <p><strong class="card-title mb-3"><a href="/dashboard/items?uuid=${uuid}">${title}</a></strong></p>
-                    <p>${thumbnail}</p>
+                    <p><strong><a href="/dashboard/items?uuid=${uuid}">${title}</a></strong></p>
+                    <p><img src="${thumbnail}" height="100" width="100"></p>
                     <p><a class="btn btn-outline-secondary" href="/preview" title="preview"><i class="fa fa-eye"></i>&nbsp;Preview</a></p>
                     </td>`;
 

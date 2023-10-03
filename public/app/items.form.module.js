@@ -27,7 +27,7 @@ const itemsFormModule = (function () {
      *
      * @return {boolean}
 
-    obj.toggle_item_forms = function () {
+     obj.toggle_item_forms = function () {
 
         let radios = document.querySelector('#is-heading-check').elements['heading'];
         for(let  i = 0, max = radios.length; i < max; i++) {
@@ -222,14 +222,20 @@ const itemsFormModule = (function () {
             });
 
             if (response !== undefined && response.status === 201) {
+
                 window.scrollTo(0, 0);
 
                 document.querySelector('#item-card').style.visibility = 'hidden';
                 document.querySelector('#message').innerHTML = `<div class="alert alert-success" role="alert"><i class="fa fa-info"></i> Grid item record created</div>`;
-                // document.querySelector('#item-form').reset();
 
                 setTimeout(() => {
-                    location.replace(`/dashboard/items/standard?uuid=${uuid}&grid=${response.data.data}`);
+
+                    if (itemsFormModule.check_grid() === true) {
+                        location.replace(`/dashboard/items/standard?uuid=${uuid}&grid=${response.data.data}`);
+                    } else {
+                        location.replace(`/dashboard/items/standard?uuid=${uuid}`);
+                    }
+
                 }, 3000);
             }
 
@@ -332,22 +338,22 @@ const itemsFormModule = (function () {
         document.querySelector('#items-menu').innerHTML = form_menu_fragment;
     };
 
-    obj.check_grid = function() {
+    obj.check_grid = function () {
 
         let is_grid = helperModule.get_parameter_by_name('grid');
 
         if (is_grid !== null) {
             console.log('grid mode');
-            // document.querySelector('#message').innerHTML = 'Add items to grid';
-            // document.querySelector('#info-message').innerHTML = 'Add items to grid';
-            // show date field in item metadata section
             document.querySelector('.is-grid-item').style.visibility = 'visible';
             document.querySelector('.is-standard-item').style.display = 'none';
-
+            return true;
         }
+
+        return false;
     }
 
     obj.init = async function () {
+        // TODO: check auth?
         const uuid = helperModule.get_parameter_by_name('uuid');
         exhibitsModule.set_preview_link();
         await itemsModule.set_exhibit_title(uuid);
