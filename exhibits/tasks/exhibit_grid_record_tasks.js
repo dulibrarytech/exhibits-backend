@@ -44,7 +44,7 @@ const Exhibit_grid_record_tasks = class {
 
             const result = await this.DB.transaction((trx) => {
                 this.DB.insert(data)
-                .into(this.TABLE)
+                .into(this.TABLE.grid_records)
                 .transacting(trx)
                 .then(trx.commit)
                 .catch(trx.rollback);
@@ -66,7 +66,14 @@ const Exhibit_grid_record_tasks = class {
 
         try {
 
-            return await this.DB(this.TABLE)
+            /*
+                SELECT *
+                FROM tbl_grids as grids
+                INNER JOIN tbl_items as items ON grids.uuid=items.is_member_of_item_grid
+                WHERE grids.is_member_of_exhibit='c9f5d04b-31bf-49e8-b8b3-f482023990bf';
+             */
+
+            return await this.DB(this.TABLE.grid_records)
             .select('is_member_of_exhibit',
                 'uuid',
                 'type',
@@ -87,6 +94,41 @@ const Exhibit_grid_record_tasks = class {
     }
 
     /**
+     * Gets grid items
+     * @param uuid
+     */
+    async get_grid_item_records(uuid) {
+
+        try {
+
+            return await this.DB(this.TABLE.item_records)
+            .select('is_member_of_exhibit',
+                'uuid',
+                'type',
+                'date',
+                'title',
+                'description',
+                'caption',
+                'item_type',
+                'media',
+                'media_width',
+                'layout',
+                'styles',
+                'order',
+                'is_published',
+                'created'
+            )
+            .where({
+                is_member_of_item_grid: uuid,
+                is_deleted: 0
+            });
+
+        } catch (error) {
+            LOGGER.module().error('ERROR: [/exhibits/exhibit_heading_record_tasks (get_heading_records)] unable to get records ' + error.message);
+        }
+    }
+
+    /**
      * Gets grid record
      * @param is_member_of_exhibit
      * @param uuid
@@ -95,7 +137,7 @@ const Exhibit_grid_record_tasks = class {
 
         try {
 
-            const data = await this.DB(this.TABLE)
+            const data = await this.DB(this.TABLE.grid_records)
             .select('is_member_of_exhibit',
                 'uuid',
                 'type',
@@ -141,7 +183,7 @@ const Exhibit_grid_record_tasks = class {
 
         try {
 
-            await this.DB(this.TABLE)
+            await this.DB(this.TABLE.grid_records)
             .where({
                 is_member_of_exhibit: data.is_member_of_exhibit,
                 uuid: data.uuid
@@ -165,7 +207,7 @@ const Exhibit_grid_record_tasks = class {
 
         try {
 
-            await this.DB(this.TABLE)
+            await this.DB(this.TABLE.grid_records)
             .where({
                 is_member_of_exhibit: is_member_of_exhibit,
                 uuid: uuid

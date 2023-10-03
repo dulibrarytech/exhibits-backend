@@ -343,10 +343,15 @@ exports.get_item_records = async function (is_member_of_exhibit) {
 
         const ITEM_TASK = new EXHIBIT_ITEM_RECORD_TASKS(DB, TABLES.item_records);
         const HEADING_TASK = new EXHIBIT_HEADING_RECORD_TASKS(DB, TABLES.heading_records);
-        const GRID_TASK = new EXHIBIT_GRID_RECORD_TASKS(DB, TABLES.grid_records);
+        const GRID_TASK = new EXHIBIT_GRID_RECORD_TASKS(DB, TABLES);
         let items =  await ITEM_TASK.get_item_records(is_member_of_exhibit);
         let headings = await HEADING_TASK.get_heading_records(is_member_of_exhibit);
         let grids = await GRID_TASK.get_grid_records(is_member_of_exhibit);
+
+        for (let i=0;i<grids.length;i++) {
+            grids[i].grid_items = await GRID_TASK.get_grid_item_records(grids[i].uuid);
+        }
+
         let records = [...items,  ...headings, ...grids];
 
         records.sort((a, b) => {

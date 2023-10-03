@@ -100,11 +100,10 @@ const itemsModule = (function () {
                 let title = helperModule.unescape(items[i].title);
                 let description = helperModule.unescape(items[i].description);
                 let date = items[i].date;
-
+                // <p>${media}</p>
                 item_data += `<td style="width: 35%">
                     <p><button class="btn btn-default"><small>${type}</small></button></p>
-                    <p>${media}</p>
-                    <p>${title}</p>
+                    <p><img src="${media}" height="100" width="100">&nbsp; ${title}</p>
                     <p><small>${description}</small></p>
                     <p><small>${date}</small></p>
                     </td>`;
@@ -120,12 +119,26 @@ const itemsModule = (function () {
                     <p><small>${subtext}</small></p>
                     </td>`;
             } else if (items[i].type === 'grid') {
+
                 // render grid items here
+                let grid_items_fragment = '';
+
+                if (items[i].grid_items.length === 0) {
+                    grid_items_fragment += '<p>No items</p>';
+                } else {
+
+                    for (let j=0;j<items[i].grid_items.length;j++) {
+                        grid_items_fragment += `<p>
+                            <img src="${items[i].grid_items[j].media}" height="50" width="50">&nbsp;${items[i].grid_items[j].title}&nbsp;
+           
+                        </p>`;
+                    }
+                }
+
                 item_data += `<td style="width: 35%">
                     <p><button class="btn btn-default"><small>${type}</small></button></p>
-                    <p>Grid UUID: ${uuid}</p>
                     <p>${items[i].columns} columns </p>
-                    <div id="grid-items">Grid items here</div>
+                    <div id="grid-items-${uuid}">${grid_items_fragment}</div>
                     </td>`;
             }
 
