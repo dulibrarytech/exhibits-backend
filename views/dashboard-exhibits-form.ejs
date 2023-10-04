@@ -38,32 +38,16 @@
             <div class="card-header">
                 <strong class="card-title mb-3"><span id="exhibit-title"></span> exhibit headings</strong>
             </div>
-            <form id="item-heading-form" class="form-horizontal">
+            <form id="exhibit-form" class="form-horizontal">
                 <div class="card-body">
-                    <input id="exhibit-uuid" type="hidden" name="exhibit_uuid">
                     <div class="alert alert-info"><i class="fa fa-info"></i> Provide info to user about this form</div>
-                    <div class="row form-group">
-                        <div class="col-12 col-md-12">
-                            <input type="text" id="item-heading-text" name="text" placeholder="Heading Text"
-                                   class="form-control">
-                            <small class="form-text text-muted">* Required</small>
-                        </div>
-                    </div>
-                    <!--
-                    <div class="row form-group">
-                        <div class="col-12 col-md-12">
-                            <input type="text" id="item-heading-sub-text" name="sub_text"
-                                   placeholder="Heading Sub Text" class="form-control">
-                            <small class="form-text text-muted"></small>
-                        </div>
-                    </div>
-                    -->
-                    <hr>
-                    <button class="btn btn-primary" type="button" id="save-heading-btn">
+
+
+                    <button class="btn btn-primary" type="button" id="save-exhibit-btn">
                         <i class="fa fa-save"></i>&nbsp;&nbsp;Save
                     </button>
                 </div>
-                <div class="card-footer text-muted"><small>Heading</small></div>
+                <div class="card-footer text-muted"><small>Exhibit</small></div>
             </form>
         </div>
     </div>
@@ -85,12 +69,8 @@
 <script src="<%= host %>/app/auth.module.js"></script>
 <script src="<%= host %>/app/uploads.module.js"></script>
 <script src="<%= host %>/app/exhibits.module.js"></script>
-<script src="<%= host %>/app/items.module.js"></script>
-<script src="<%= host %>/app/items.form.module.js"></script>
 <script>
-    document.querySelector('#save-heading-btn').addEventListener('click', itemsFormModule.create_heading_record);
-    itemsFormModule.init();
-    itemsFormModule.set_headings_form_nav_menu_links();
+    // TODO:
 </script>
 </body>
 </html>

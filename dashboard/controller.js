@@ -34,6 +34,15 @@ exports.get_dashboard_exhibits = function (req, res) {
     });
 };
 
+exports.get_dashboard_exhibits_form = function (req, res) {
+    res.render('dashboard-exhibits-form', {
+        host: CONFIG.host,
+        appname: CONFIG.app_name,
+        appversion: CONFIG.app_version,
+        organization: CONFIG.organization
+    });
+};
+
 exports.get_dashboard_items = function (req, res) {
     res.render('dashboard-items', {
         host: CONFIG.host,
@@ -43,7 +52,7 @@ exports.get_dashboard_items = function (req, res) {
     });
 };
 
-exports.get_dashboard_item_heading = function (req, res) {
+exports.get_dashboard_item_heading_form = function (req, res) {
     res.render('dashboard-item-heading-form', {
         host: CONFIG.host,
         appname: CONFIG.app_name,
@@ -52,7 +61,7 @@ exports.get_dashboard_item_heading = function (req, res) {
     });
 };
 
-exports.get_dashboard_item_standard = function (req, res) {
+exports.get_dashboard_item_standard_form = function (req, res) {
     res.render('dashboard-item-standard-form', {
         host: CONFIG.host,
         appname: CONFIG.app_name,
@@ -61,7 +70,7 @@ exports.get_dashboard_item_standard = function (req, res) {
     });
 };
 
-exports.get_dashboard_item_grid = function (req, res) {
+exports.get_dashboard_item_grid_form = function (req, res) {
     res.render('dashboard-item-grid-form', {
         host: CONFIG.host,
         appname: CONFIG.app_name,

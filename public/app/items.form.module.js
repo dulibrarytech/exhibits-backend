@@ -24,37 +24,11 @@ const itemsFormModule = (function () {
     let obj = {};
 
     /**
-     *
-     * @return {boolean}
-
-     obj.toggle_item_forms = function () {
-
-        let radios = document.querySelector('#is-heading-check').elements['heading'];
-        for(let  i = 0, max = radios.length; i < max; i++) {
-            radios[i].onclick = () => {
-                if (radios[i].value === 'yes') {
-                    // show headings form
-                    document.querySelector('#is-heading').style.display = 'block';
-                    document.querySelector('#is-standard-item').style.display = 'none';
-                } else if (radios[i].value === 'no') {
-                    // show standard items form
-                    document.querySelector('#is-heading').style.display = 'none';
-                    document.querySelector('#is-standard-item').style.display = 'block';
-                }
-            }
-        }
-
-        return false;
-    }
-     */
-
-    /**
      * Gets item heading data
      */
     function get_heading_data() {
         let item_heading = {};
         item_heading.text = document.querySelector('#item-heading-text').value;
-        item_heading.subtext = document.querySelector('#item-heading-sub-text').value;
         return item_heading;
     }
 

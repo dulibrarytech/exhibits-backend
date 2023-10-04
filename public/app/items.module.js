@@ -86,9 +86,9 @@ const itemsModule = (function () {
             let status;
 
             if (is_published === 1) {
-                status = `<span title="published"><i class="fa fa-cloud"></i><br>Published</span>`;
+                status = `<span title="published"><i class="fa fa-cloud"></i><br><smal>Published</smal></span>`;
             } else if (is_published === 0) {
-                status = `<span title="suppressed"><i class="fa fa-cloud-upload"></i><br>Suppressed</span>`;
+                status = `<span title="suppressed"><i class="fa fa-cloud-upload"></i><br><small>Suppressed</small></span>`;
             }
 
             item_data += '<tr>';
@@ -113,12 +113,10 @@ const itemsModule = (function () {
             } else if (items[i].type === 'heading') {
 
                 let text = helperModule.unescape(items[i].text);
-                let subtext = helperModule.unescape(items[i].subtext);
 
                 item_data += `<td style="width: 35%">
                     <p><button class="btn btn-default"><small>${type}</small></button></p>
                     <p><strong>${text}</strong></p>
-                    <p><small>${subtext}</small></p>
                     </td>`;
             } else if (items[i].type === 'grid') {
 

@@ -28,17 +28,20 @@ module.exports = function (app) {
     app.route('/dashboard/exhibits')
     .get(CONTROLLER.get_dashboard_exhibits);
 
+    app.route('/dashboard/exhibits/exhibit')
+    .get(CONTROLLER.get_dashboard_exhibits_form);
+
     app.route('/dashboard/items')
     .get(CONTROLLER.get_dashboard_items);
 
     app.route('/dashboard/items/heading')
-    .get(CONTROLLER.get_dashboard_item_heading);
+    .get(CONTROLLER.get_dashboard_item_heading_form);
 
     app.route('/dashboard/items/standard')
-    .get(CONTROLLER.get_dashboard_item_standard);
+    .get(CONTROLLER.get_dashboard_item_standard_form);
 
     app.route('/dashboard/items/grid')
-    .get(CONTROLLER.get_dashboard_item_grid);
+    .get(CONTROLLER.get_dashboard_item_grid_form);
 
     app.route('/dashboard/items/vertical-timeline')
     .get(CONTROLLER.get_dashboard_item_vertical_timeline);

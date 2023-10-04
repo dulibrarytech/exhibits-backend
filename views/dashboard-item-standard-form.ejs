@@ -124,7 +124,7 @@
                             <input type="text" id="item-title" name="title"
                                    placeholder="Item Title" class="form-control" required>
                             <span id="item-title-error" class="is-error">
-                                <small class="form-text text-muted">* Required</small>
+                                <small class="form-text text-muted">* Required | <i class="fa fa-exclamation-circle"></i> <em>The item title becomes a subheading in the navigation</em></small>
                             </span>
 
                         </div>
@@ -234,14 +234,13 @@
                             <div class="col-12 col-md-12">
                                 <form id="item-layout-form">
                                     <table class="table table-striped">
-                                        <!-- style="width: 100%;border: solid 1px grey;" -->
                                         <tr>
                                             <td style="width: 30%;padding: 5px">
                                                 <img src="<%= host %>/images/item_layout_top.png">
                                             </td>
                                             <td style="60%;">
-                                                <label class="btn btn-default" for="item-layout-top">Text image pair,
-                                                    text below image</label>
+                                                <label class="btn btn-default" for="item-layout-top">Text media pair,
+                                                    text below media</label>
                                             </td>
                                             <td style="width: 10%">
                                                 <input class="item-layout-radio-btn" type="radio" name="layout"
@@ -253,8 +252,8 @@
                                                 <img src="<%= host %>/images/item_layout_bottom.png">
                                             </td>
                                             <td style="60%;">
-                                                <label class="btn btn-default" for="item-layout-bottom">Text image
-                                                    (media) pair, text above the image</label>
+                                                <label class="btn btn-default" for="item-layout-bottom">Text media
+                                                    pair, text above the media</label>
                                             </td>
                                             <td style="width: 10%">
                                                 <input class="item-layout-radio-btn" type="radio" name="layout"
@@ -266,7 +265,7 @@
                                                 <img src="<%= host %>/images/item_layout_only.png">
                                             </td>
                                             <td style="60%;">
-                                                <label class="btn btn-default" for="item-layout-only">Image only, no
+                                                <label class="btn btn-default" for="item-layout-only">Media only, no
                                                     text</label>
                                             </td>
                                             <td style="width: 10%">
@@ -280,7 +279,7 @@
                                             </td>
                                             <td style="60%;">
                                                 <label class="btn btn-default" for="item-layout-text-only">Text only, no
-                                                    image</label>
+                                                    media</label>
                                             </td>
                                             <td style="width: 10%">
                                                 <input class="item-layout-radio-btn" type="radio" name="layout"
@@ -292,8 +291,8 @@
                                                 <img src="<%= host %>/images/item_layout_right.png">
                                             </td>
                                             <td style="60%">
-                                                <label class="btn btn-default" for="item-layout-right">Text image* pair,
-                                                    image on the right</label>
+                                                <label class="btn btn-default" for="item-layout-right">Text media pair,
+                                                    media on the right</label>
                                             </td>
                                             <td style="width: 10%">
                                                 <input class="item-layout-left-right-radio-btn" type="radio"
@@ -305,8 +304,8 @@
                                                 <img src="<%= host %>/images/item_layout_left.png">
                                             </td>
                                             <td style="60%;">
-                                                <label class="btn btn-default" for="item-layout-left">Text image pair,
-                                                    image on the left</label>
+                                                <label class="btn btn-default" for="item-layout-left">Text media pair,
+                                                    media on the left</label>
                                             </td>
                                             <td style="width: 10%">
                                                 <input class="item-layout-left-right-radio-btn" type="radio"
@@ -321,7 +320,7 @@
                                             <td style="width: 100%">
                                                 <span class="form-text text-muted"
                                                       style="font-size: 17px">*
-                                                    <small>Please select a Media width</small></span>
+                                                    <small>Please select a media width</small></span>
                                             </td>
                                         </tr>
                                         <tr>
@@ -410,7 +409,7 @@
                             <div class="input-group">
                                 <select name="item_font" id="item-font"
                                         class="form-control-lg form-control text-muted">
-                                    <option value="">Item Font Family</option>
+                                    <option value="">Item Font</option>
                                     <option value="Helvetica">Helvetica</option>
                                     <option value="Arial">Arial</option>
                                     <option value="Times New Roman">Times New Roman</option>

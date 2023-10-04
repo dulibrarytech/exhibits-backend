@@ -71,7 +71,6 @@ const Exhibit_heading_record_tasks = class {
                 'uuid',
                 'type',
                 'text',
-                'subtext',
                 'order',
                 'is_published',
                 'created'
