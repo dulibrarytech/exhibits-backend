@@ -9,10 +9,16 @@
                 </li>
                 <li class="menu-title">Menu</li>
                 <li>
+                    <a href="/dashboard/exhibits/exhibit" data-keyboard="false">
+                        <i class="menu-icon ti-layout"></i>Create Exhibit</a>
+                </li>
+                <!--
+                <li>
                     <a href="#" data-toggle="modal" data-backdrop="static" data-keyboard="false"
                        data-target="#scrollmodal"> <i
                                 class="menu-icon ti-layout"></i>Create Exhibit</a>
                 </li>
+                -->
                 <li>
                     <a href="/dashboard/trash"> <i class="menu-icon fa fa-trash-o"></i>Trash</a>
                 </li>
@@ -70,11 +76,7 @@
 <script src="../app/uploads.module.js"></script>
 <script src="../app/exhibits.module.js"></script>
 <script src="../app/home.module.js"></script>
-<script src="../libs/richtexteditor/rte.js"></script>
-<script src='../libs/richtexteditor/plugins/all_plugins.js'></script>
 <script>
-    uploadsModule.upload_exhibit_hero_image();
-    uploadsModule.upload_exhibit_thumbnail_image();
     document.querySelector('#logout').addEventListener('click', authModule.logout);
 </script>
 <%- include('modals/create-exhibit-wizard-modal.ejs'); %>
