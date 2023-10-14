@@ -69,6 +69,8 @@ exports.create_exhibit_record = async function (data) {
                     console.log('ERROR: ' + error);
                 }
             });
+
+            data.hero_image = `${data.uuid}_${data.hero_image}`;
         }
 
         if (data.thumbnail_image.length > 0) {
@@ -78,10 +80,9 @@ exports.create_exhibit_record = async function (data) {
                     console.log('ERROR: ' + error);
                 }
             });
-        }
 
-        data.hero_image = `${data.uuid}_${data.hero_image}`;
-        data.thumbnail_image = `${data.uuid}_${data.thumbnail_image}`;
+            data.thumbnail_image = `${data.uuid}_${data.thumbnail_image}`;
+        }
 
         if (data.styles === undefined || data.styles.length === 0) {
             data.styles = '{}';

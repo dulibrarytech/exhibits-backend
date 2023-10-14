@@ -51,6 +51,18 @@ const ENDPOINTS = {
                 }
             }
         },
+        exhibit_media: {
+            get: {
+                description: 'Gets exhibit media',
+                endpoint: `${PREFIX}${VERSION}${ENDPOINT}/:exhibit_id/media`
+            }
+        },
+        item_media: {
+           get: {
+               description: 'Gets item media',
+               endpoint: `${PREFIX}${VERSION}${ENDPOINT}/:exhibit_id/media/items/:item_id`,
+           }
+        },
         grid_records: {
             post: {
                 description: 'Creates grid record',

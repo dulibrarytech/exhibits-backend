@@ -19,6 +19,7 @@
 'use strict';
 
 const MODEL = require('../exhibits/model');
+const PATH = require("path");
 
 exports.create_exhibit_record = async function (req, res) {
 
@@ -269,4 +270,23 @@ exports.restore_trashed_record = async function (req, res) {
 
     const result = await MODEL.restore_trashed_record(is_member_of_exhibit, uuid, type);
     res.status(result.status).send(result);
+};
+
+exports.get_exhibit_media = function () {
+
+    const uuid = req.params.uuid;
+    const type = req.params.type;  // type=hero | thumbnail
+
+    // TODO: query record
+    MODEL.get_exhibit_media (function (data) {
+        if (data.error === true) {
+            res.sendFile(PATH.join(__dirname, '../public', data.data));
+        } else {
+            res.status(data.status).end(data.data, 'binary');
+        }
+    });
+};
+
+exports.get_item_media = function () {
+
 };
