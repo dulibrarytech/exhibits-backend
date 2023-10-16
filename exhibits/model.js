@@ -62,9 +62,13 @@ exports.create_exhibit_record = async function (data) {
             };
         }
 
+        if (!FS.existsSync(`./storage/${data.uuid}`)){
+            FS.mkdirSync(`./storage/${data.uuid}`);
+        }
+
         if (data.hero_image.length > 0) {
 
-            FS.rename(`./storage/${data.hero_image}`, `./storage/${data.uuid}_${data.hero_image}`, (error) => {
+            FS.rename(`./storage/${data.hero_image}`, `./storage/${data.uuid}/${data.uuid}_${data.hero_image}`, (error) => {
                 if (error) {
                     console.log('ERROR: ' + error);
                 }
@@ -75,7 +79,7 @@ exports.create_exhibit_record = async function (data) {
 
         if (data.thumbnail_image.length > 0) {
 
-            FS.rename(`./storage/${data.thumbnail_image}`, `./storage/${data.uuid}_${data.thumbnail_image}`, (error) => {
+            FS.rename(`./storage/${data.thumbnail_image}`, `./storage/${data.uuid}/${data.uuid}_${data.thumbnail_image}`, (error) => {
                 if (error) {
                     console.log('ERROR: ' + error);
                 }
@@ -292,24 +296,25 @@ exports.create_item_record = async function (is_member_of_exhibit, data) {
 
             if (data.media.length > 0) {
 
-                FS.rename(`./storage/${data.media}`, `./storage/${data.uuid}_${data.media}`, (error) => {
+                FS.rename(`./storage/${data.media}`, `./storage/${data.is_member_of_exhibit}/${data.uuid}_${data.media}`, (error) => {
                     if (error) {
                         console.log('ERROR: ' + error);
                     }
                 });
+
+                data.media = `${data.uuid}_${data.media}`;
             }
 
             if (data.thumbnail.length > 0) {
 
-                FS.rename(`./storage/${data.thumbnail}`, `./storage/${data.uuid}_${data.thumbnail}`, (error) => {
+                FS.rename(`./storage/${data.thumbnail}`, `./storage/${data.is_member_of_exhibit}/${data.uuid}_${data.thumbnail}`, (error) => {
                     if (error) {
                         console.log('ERROR: ' + error);
                     }
                 });
-            }
 
-            data.media = `${data.uuid}_${data.media}`;
-            data.thumbnail = `${data.uuid}_${data.thumbnail}`;
+                data.thumbnail = `${data.uuid}_${data.thumbnail}`;
+            }
         }
 
         if (data.media.length === 0) {

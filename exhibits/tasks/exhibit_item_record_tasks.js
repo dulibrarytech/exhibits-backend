@@ -73,6 +73,7 @@ const Exhibit_item_record_tasks = class {
                 'title',
                 'description',
                 'caption',
+                'thumbnail',
                 'item_type',
                 'media',
                 'media_width',

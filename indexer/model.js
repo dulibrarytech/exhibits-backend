@@ -51,6 +51,7 @@ const construct_exhibit_index_record = function (record) {
         styles: record.styles,
         is_published: record.is_published,
         is_featured: record.is_featured,
+        is_preview: record.is_preview,
         created: record.created
     };
 };
@@ -67,7 +68,6 @@ const construct_heading_index_record = function (record) {
         uuid: record.uuid,
         type: record.type,
         text: record.text,
-        subtext: record.subtext,
         order: record.order,
         is_published: record.is_published,
         created: record.created
@@ -89,7 +89,9 @@ const construct_item_index_record = function (record) {
         title: record.title,
         description: record.description,
         caption: record.caption,
-        template: record.template,
+        thumbnail: record.thumbnail,
+        media: record.media,
+        media_width: record.media_width,
         item_type: record.item_type,
         url: record.url,
         text: record.text,
@@ -102,6 +104,8 @@ const construct_item_index_record = function (record) {
     };
 };
 
+// TODO: construct item grid index record
+
 /**
  * Indexes all exhibit records
  */
@@ -112,6 +116,8 @@ exports.index_all_records = function () {
     index_heading_records(ES_CONFIG.elasticsearch_index);
     index_item_records(ES_CONFIG.elasticsearch_index);
 
+    // TODO: index grids
+
     return {
         status: 201,
         message: 'Indexing records...'
@@ -119,7 +125,7 @@ exports.index_all_records = function () {
 };
 
 /**
- * Indexes single admin record
+ * Indexes single record
  * @param uuid
  * @param type
  */
@@ -301,6 +307,10 @@ const index_item_records = async function (INDEX) {
                 LOGGER.module().info('INFO: [/indexer/model (index_item_records)] Item records indexing complete.');
                 return false;
             }
+
+            // TODO: check item type - item | grid
+            // TODO: add construct_item_grid_record
+            console.log(record);
 
             response = await ITEMS_INDEX_TASKS.index_record(construct_item_index_record(record));
 

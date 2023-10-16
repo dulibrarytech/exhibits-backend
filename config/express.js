@@ -25,6 +25,7 @@ const BODYPARSER = require('body-parser');
 const METHODOVERRIDE = require('method-override');
 const HELMET = require('helmet');
 const XSS = require('../libs/dom');
+const FS = require('fs');
 
 module.exports = () => {
 
@@ -56,6 +57,14 @@ module.exports = () => {
     require('../indexer/routes.js')(APP);
     require('../users/routes.js')(APP);
     require('../exhibits/uploads')(APP);
+
+    if (!FS.existsSync(`./storage`)){
+        FS.mkdirSync(`./storage`);
+    }
+
+    if (!FS.existsSync(`./logs`)){
+        FS.mkdirSync(`./logs`);
+    }
 
     SERVER.listen(process.env.APP_PORT);
 

@@ -272,21 +272,32 @@ exports.restore_trashed_record = async function (req, res) {
     res.status(result.status).send(result);
 };
 
-exports.get_exhibit_media = function () {
+exports.get_exhibit_media = function (req, res) {
 
-    const uuid = req.params.uuid;
-    const type = req.params.type;  // type=hero | thumbnail
+    const uuid = req.params.exhibit_id;
+    const media = req.params.media;
 
-    // TODO: query record
-    MODEL.get_exhibit_media (function (data) {
-        if (data.error === true) {
-            res.sendFile(PATH.join(__dirname, '../public', data.data));
-        } else {
-            res.status(data.status).end(data.data, 'binary');
-        }
-    });
+    try {
+        res.status(200).sendFile(PATH.join(__dirname, `../storage/${uuid}`, media));
+    } catch(error) {
+        console.log(error.message);
+        res.status(404).send({message: `Exhibit media not found. ${error.message}`});
+    }
+
+    return false;
 };
 
-exports.get_item_media = function () {
+exports.get_item_media = function (req, res) {
 
+    const is_member_of_exhibit = req.params.exhibit_id;
+    const media = req.params.media;
+
+    try {
+        res.status(200).sendFile(PATH.join(__dirname, `../storage/${is_member_of_exhibit}`, media));
+    } catch(error) {
+        console.log(error.message);
+        res.status(404).send({message: `Exhibit media not found. ${error.message}`});
+    }
+
+    return false;
 };

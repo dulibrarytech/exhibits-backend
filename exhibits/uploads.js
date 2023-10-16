@@ -18,13 +18,10 @@
 
 'use strict';
 
-// const DB = require('../config/db')(),
 const MULTER = require('multer');
 const LOGGER = require('../libs/log4');
     // TOKEN = require('../libs/tokens'),
-    // CACHE = require('../libs/cache'),
 const STORAGE = './storage';
-   //  DATA = 'tbl_data';
 const LIMIT = 1000000000; // 1GB
 
 module.exports = function (app) {
@@ -62,45 +59,17 @@ module.exports = function (app) {
         let file_obj = {};
 
         for (let i=0;i<files.length;i++) {
-            file_obj.filename = files[i].filename; //.replace('.jpg', '');
+            file_obj.filename = files[i].filename;
             file_obj.file_size = files[i].size;
             file_arr.push(file_obj);
             file_obj = {};
         }
 
         console.log(file_arr);
+        // TODO: save file data to db
 
         res.status(201).send({
             files: file_arr
         });
-
-
-        /*
-        let record_count = file_arr.length;
-        DB.batchInsert(DATA, file_arr, record_count)
-        .then(function (data) {
-            console.log(data);
-            let message = 'File saved.';
-
-            if (data.length === 0) {
-                LOGGER.module().error('ERROR: [/uploads/index module (batchInsert)] unable to save PDF data');
-                // throw 'FATAL: [/uploads/index module (batchInsert)] unable to save PDF data';
-            }
-
-            // CACHE.clear_cache();
-
-            res.status(201).send({
-                message: message,
-                files: file_arr
-            });
-
-            return null;
-        })
-        .catch(function (error) {
-            LOGGER.module().fatal('ERROR: [/uploads/index module (batchInsert)] unable to save file ' + error.message);
-            throw 'FATAL: [/uploads/index module (batchInsert)] unable to save PDF data';
-        });
-
-        */
     });
 };

@@ -69,11 +69,10 @@ const exhibitsModule = (function () {
     obj.display_exhibits = async function () {
 
         const exhibits = await get_exhibits();
-        console.log('exhibits: ', exhibits);
         let exhibit_data = '';
 
         if (exhibits.length === 0) {
-            document.querySelector('#exhibits').innerHTML = '<div class="alert alert-info" role="alert">No Exhibits found.</div>';
+            document.querySelector('#message').innerHTML = '<div class="alert alert-info" role="alert">No Exhibits found.</div>';
             return false;
         }
 
@@ -81,7 +80,9 @@ const exhibitsModule = (function () {
 
             let uuid = exhibits[i].uuid;
             let is_published = exhibits[i].is_published;
+            let thumbnail = '';
             let status;
+            let title;
 
             if (is_published === 1) {
                 status = `<span title="published"><i class="fa fa-cloud"></i><br>Published</span>`;
@@ -89,26 +90,27 @@ const exhibitsModule = (function () {
                 status = `<span title="suppressed"><i class="fa fa-cloud-upload"></i><br>Suppressed</span>`;
             }
 
-            exhibit_data += '<tr>';
+            if (exhibits[i].thumbnail_image.length > 0) {
+                thumbnail = `/api/v1/exhibits/${uuid}/media/${exhibits[i].thumbnail_image}`;
+                exhibit_data = `<p><img src="${thumbnail}" height="100" width="100"></p>`;
+            }
 
-            let thumbnail = exhibits[i].thumbnail_image;
-            let title = helperModule.unescape(exhibits[i].title);
+            title = helperModule.unescape(exhibits[i].title);
             // let description = helperModule.unescape(items[i].description);
-            // <p>${thumbnail}</p>
-            // class="card-title mb-3"
-
+            exhibit_data += '<tr>';
             exhibit_data += `<td style="width: 35%">
                     <p><strong><a href="/dashboard/items?uuid=${uuid}">${title}</a></strong></p>
-                    <p><img src="${thumbnail}" height="100" width="100"></p>
+                    ${thumbnail}
                     <p><a class="btn btn-outline-secondary" href="/preview" title="preview"><i class="fa fa-eye"></i>&nbsp;Preview</a></p>
                     </td>`;
 
-            exhibit_data += `<td style="width: 5%">${status}</td>`;
+            exhibit_data += `<td style="width: 5%;text-align: center"><small>${status}</small></td>`;
             exhibit_data += `<td style="width: 10%">
                                 <div class="card-text text-sm-center">
                                     <a href="#" title="Edit"><i class="fa fa-edit pr-1"></i> </a>&nbsp;
-                                    <a href="#" title="Delete"><i class="fa fa-minus pr-1"></i> </a>&nbsp;
                                     <a href="#" title="Add Items"><i class="fa fa-plus pr-1"></i> </a>
+                                    &nbsp;
+                                    <a href="#" title="Delete"><i class="fa fa-trash pr-1"></i> </a>&nbsp;
                                 </div>
                             </td>`;
             exhibit_data += '</tr>';

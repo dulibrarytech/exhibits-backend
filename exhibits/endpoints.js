@@ -54,13 +54,13 @@ const ENDPOINTS = {
         exhibit_media: {
             get: {
                 description: 'Gets exhibit media',
-                endpoint: `${PREFIX}${VERSION}${ENDPOINT}/:exhibit_id/media`
+                endpoint: `${PREFIX}${VERSION}${ENDPOINT}/:exhibit_id/media/:media`
             }
         },
         item_media: {
            get: {
                description: 'Gets item media',
-               endpoint: `${PREFIX}${VERSION}${ENDPOINT}/:exhibit_id/media/items/:item_id`,
+               endpoint: `${PREFIX}${VERSION}${ENDPOINT}/:exhibit_id/media/items/:media`,
            }
         },
         grid_records: {

@@ -95,17 +95,23 @@ const itemsModule = (function () {
             item_data += `<td style="width: 5%">${order}</td>`;
 
             if (items[i].type === 'item') {
-
-                let thumbnail = items[i].thumbnail;
+                // TODO:
+                // api/v1/exhibits/9a7b9c72-ee67-4949-842b-7f27cdb0ebb5/media/items/694e3194-0a77-46af-8c59-efe28aa1698d_1697260641755_item_thumbnail.png
+                let thumbnail = ''; // = `/api/v1/exhibits/${items[i].is_member_of_exhibit}/media/items/${items[i].thumbnail}`;
                 let media = items[i].media;
                 let title = helperModule.unescape(items[i].title);
                 let description = helperModule.unescape(items[i].description);
                 let date = items[i].date;
-                // <p>${media}</p>
+
+                if (items[i].thumbnail.length > 0) {
+                    thumbnail = `/api/v1/exhibits/${items[i].is_member_of_exhibit}/media/items/${items[i].thumbnail}`;
+                    item_data = `<p><img src="${thumbnail}" height="100" width="100"></p>`;
+                }
+
                 item_data += `<td style="width: 35%">
                     <p><button class="btn btn-default"><small>${type}</small></button></p>
                     <p><strong>${title}</strong></p>
-                    <p><img src="${thumbnail}" height="100" width="100"></p>
+                    ${thumbnail}
                     <p><small>${description}</small></p>
                     <p><small>${date}</small></p>
                     </td>`;
@@ -142,11 +148,11 @@ const itemsModule = (function () {
                     </td>`;
             }
 
-            item_data += `<td style="width: 5%">${status}</td>`;
+            item_data += `<td style="width: 5%;text-align: center">${status}</td>`;
             item_data += `<td style="width: 10%">
                                 <div class="card-text text-sm-center">
                                     <a href="#" title="Edit"><i class="fa fa-edit pr-1"></i></a>&nbsp;
-                                    <a href="#" title="Delete"><i class="fa fa-minus pr-1"></i></a>
+                                    <a href="#" title="Delete"><i class="fa fa-trash pr-1"></i></a>
                                 </div>
                             </td>`;
             item_data += '</tr>';
