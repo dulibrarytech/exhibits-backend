@@ -169,6 +169,7 @@ const itemsFormModule = (function () {
      */
     obj.create_item_record = async function () {
 
+        window.scrollTo(0, 0);
         let uuid = helperModule.get_parameter_by_name('uuid');
         let grid_id = helperModule.get_parameter_by_name('grid');
 
@@ -179,8 +180,12 @@ const itemsFormModule = (function () {
 
         document.querySelector('#message').innerHTML = `<div class="alert alert-info" role="alert"><i class="fa fa-info"></i> Creating item record...</div>`;
         let data = get_item_data();
-        data.is_member_of_item_grid = grid_id;
-        console.log('data', data);
+
+        if (grid_id === undefined) {
+            data.is_member_of_item_grid = '0';
+        } else {
+            data.is_member_of_item_grid = grid_id;
+        }
 
         try {
 
@@ -197,15 +202,20 @@ const itemsFormModule = (function () {
 
             if (response !== undefined && response.status === 201) {
 
-                window.scrollTo(0, 0);
-
                 document.querySelector('#item-card').style.visibility = 'hidden';
-                document.querySelector('#message').innerHTML = `<div class="alert alert-success" role="alert"><i class="fa fa-info"></i> Grid item record created</div>`;
+
+                let message = 'Item record created';
+
+                if (itemsFormModule.check_grid() === true) {
+                    message = 'Grid item record created';
+                }
+
+                document.querySelector('#message').innerHTML = `<div class="alert alert-success" role="alert"><i class="fa fa-info"></i> ${message}</div>`;
 
                 setTimeout(() => {
 
                     if (itemsFormModule.check_grid() === true) {
-                        location.replace(`/dashboard/items/standard?uuid=${uuid}&grid=${response.data.data}`);
+                        location.replace(`/dashboard/items/standard?uuid=${uuid}&grid=${grid_id}`); // response.data.data
                     } else {
                         location.replace(`/dashboard/items/standard?uuid=${uuid}`);
                     }

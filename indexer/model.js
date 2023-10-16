@@ -30,6 +30,9 @@ const CLIENT = new Client({
     node: ES_CONFIG.elasticsearch_host
 });
 
+// TODO: index by exhibit?
+// TODO: get exhibit uuid
+
 /**
  * Constructs exhibit index record
  * @param record
