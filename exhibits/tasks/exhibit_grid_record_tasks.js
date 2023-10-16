@@ -110,6 +110,7 @@ const Exhibit_grid_record_tasks = class {
                 'description',
                 'caption',
                 'item_type',
+                'thumbnail',
                 'media',
                 'media_width',
                 'layout',

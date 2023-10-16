@@ -128,16 +128,21 @@ const itemsModule = (function () {
 
                 // render grid items here
                 let grid_items_fragment = '';
+                let grid_item_thumbnail;
 
                 if (items[i].grid_items.length === 0) {
                     grid_items_fragment += '<p><strong>No items</strong></p>';
                 } else {
 
                     for (let j=0;j<items[i].grid_items.length;j++) {
-                        grid_items_fragment += `<p>
-                            <img src="${items[i].grid_items[j].thumbnail}" height="50" width="50">&nbsp;<strong>${items[i].grid_items[j].title}</strong>
-           
-                        </p>`;
+
+                        if (items[i].grid_items[j].thumbnail.length > 0) {
+                            grid_items_fragment += `<p>
+                                <img src="${items[i].grid_items[j].thumbnail}" height="50" width="50">&nbsp;<strong>${items[i].grid_items[j].title}</strong>
+                            </p>`;
+                        } else {
+                            grid_items_fragment += `<p><strong>${items[i].grid_items[j].title}</strong></p>`;
+                        }
                     }
                 }
 
