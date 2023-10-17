@@ -90,13 +90,12 @@ const exhibitsModule = (function () {
                 status = `<span title="suppressed"><i class="fa fa-cloud-upload"></i><br>Suppressed</span>`;
             }
 
-            if (exhibits[i].thumbnail_image.length > 0) {
-                thumbnail = `/api/v1/exhibits/${uuid}/media/${exhibits[i].thumbnail_image}`;
+            if (exhibits[i].thumbnail.length > 0) {
+                thumbnail = `/api/v1/exhibits/${uuid}/media/${exhibits[i].thumbnail}`;
                 exhibit_data = `<p><img src="${thumbnail}" height="100" width="100"></p>`;
             }
 
             title = helperModule.unescape(exhibits[i].title);
-            // let description = helperModule.unescape(items[i].description);
             exhibit_data += '<tr>';
             exhibit_data += `<td style="width: 35%">
                     <p><strong><a href="/dashboard/items?uuid=${uuid}">${title}</a></strong></p>

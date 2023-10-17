@@ -32,6 +32,19 @@ exports.create_index = async function (req, res) {
 };
 
 /**
+ * Index exhibit
+ * @param req
+ * @param res
+ * @return {Promise<void>}
+ */
+exports.index_exhibit = async function (req, res) {
+    const uuid = req.params.uuid;
+    const result = await MODEL.index_exhibit(uuid);
+    console.log(result);
+    res.status(result.status).send(result);
+};
+
+/**
  * Indexes all active exhibit, heading, and item records
  * @param req
  * @param res

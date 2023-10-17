@@ -22,6 +22,10 @@ const {Client} = require('@elastic/elasticsearch');
 const INDEX_TIMER = 1000;
 const ES_CONFIG = require('../config/elasticsearch_config')();
 const DB = require('../config/db_config')();
+const EXHIBIT_RECORD_TASKS = require('../exhibits/tasks/exhibit_record_tasks');
+const EXHIBIT_ITEM_RECORD_TASKS = require('../exhibits/tasks/exhibit_item_record_tasks');
+const EXHIBIT_HEADING_RECORD_TASKS = require('../exhibits/tasks/exhibit_heading_record_tasks');
+const EXHIBIT_GRID_RECORD_TASKS = require('../exhibits/tasks/exhibit_grid_record_tasks');
 const INDEXER_INDEX_TASKS = require('../indexer/tasks/indexer_index_tasks');
 const DB_TABLES = require('../config/db_tables_config')();
 const TABLES = DB_TABLES.exhibits;
@@ -30,13 +34,10 @@ const CLIENT = new Client({
     node: ES_CONFIG.elasticsearch_host
 });
 
-// TODO: index by exhibit?
-// TODO: get exhibit uuid
-
 /**
  * Constructs exhibit index record
  * @param record
- * @return {{hero_image: *, template, page_layout: *, is_published: (number|*), created: *, subtitle: *, banner: *, description, styles, type, title, uuid}}
+ * @return Object
  */
 const construct_exhibit_index_record = function (record) {
 
@@ -47,7 +48,7 @@ const construct_exhibit_index_record = function (record) {
         subtitle: record.subtitle,
         banner_template: record.banner_template,
         hero_image: record.hero_image,
-        thumbnail_image: record.thumbnail_image,
+        thumbnail_image: record.thumbnail,
         description: record.description,
         page_layout: record.page_layout,
         template: record.template,
@@ -62,7 +63,7 @@ const construct_exhibit_index_record = function (record) {
 /**
  * Constructs heading index record
  * @param record
- * @return {{subtext: ({type: string}|*), is_published: (number|*), created: *, text, type, uuid, is_member_of_exhibit: *, order}}
+ * @return Object
  */
 const construct_heading_index_record = function (record) {
 
@@ -80,7 +81,7 @@ const construct_heading_index_record = function (record) {
 /**
  * Constructs item index record
  * @param record
- * @return {{date, template, item_type: *, columns, is_published: (number|*), created: *, description, caption, type, title, uuid, url, layout, styles, text, is_member_of_exhibit: *, order}}
+ * @return Object
  */
 const construct_item_index_record = function (record) {
 
@@ -96,20 +97,167 @@ const construct_item_index_record = function (record) {
         media: record.media,
         media_width: record.media_width,
         item_type: record.item_type,
-        url: record.url,
         text: record.text,
         layout: record.layout,
         styles: record.styles,
-        columns: record.columns,
         order: record.order,
         is_published: record.is_published,
         created: record.created
     };
 };
 
-// TODO: construct item grid index record
+/**
+ * Constructs grid index record
+ * @param record
+ * @return Object
+ */
+const construct_grid_index_record = function (record) {
+
+    return {
+        is_member_of_exhibit: record.is_member_of_exhibit,
+        uuid: record.uuid,
+        type: record.type,
+        columns: record.columns,
+        order: record.order,
+        styles: record.styles,
+        is_published: record.is_published,
+        created: record.created,
+        items: record.items
+    };
+};
 
 /**
+ * Indexes exhibit (publish and preview)
+ * @param uuid
+ */
+exports.index_exhibit = async function (uuid) {
+
+    LOGGER.module().info('INFO: [/indexer/model (index_exhibit)] Indexing exhibit...');
+
+    let heading_index_records = [];
+    let item_index_records = [];
+    let grid_index_records = [];
+    let grid_items = [];
+
+    const INDEX_TASKS = new INDEXER_INDEX_TASKS(DB, TABLES, CLIENT, ES_CONFIG.elasticsearch_index);
+    const EXHIBIT_RECORD_TASK = new EXHIBIT_RECORD_TASKS(DB, TABLES.exhibit_records);
+    const HEADING_RECORD_TASK = new EXHIBIT_HEADING_RECORD_TASKS(DB, TABLES.heading_records);
+    const ITEM_RECORD_TASK = new EXHIBIT_ITEM_RECORD_TASKS(DB, TABLES.item_records);
+    const GRID_RECORD_TASK = new EXHIBIT_GRID_RECORD_TASKS(DB, TABLES.grid_records);
+    const GRID_ITEM_RECORD_TASK = new EXHIBIT_GRID_RECORD_TASKS(DB, TABLES.item_records);
+
+    let exhibit_record = await EXHIBIT_RECORD_TASK.get_exhibit_record(uuid);
+    let heading_records = await HEADING_RECORD_TASK.get_heading_records(uuid);
+    let item_records = await ITEM_RECORD_TASK.get_item_records(uuid);
+    let grid_records = await GRID_RECORD_TASK.get_grid_records(uuid);
+
+    const exhibit_index_record = construct_exhibit_index_record(exhibit_record.pop());
+    let response = await INDEX_TASKS.index_record(exhibit_index_record);
+
+    if (response === false) {
+        return {
+            status: 200,
+            message: 'Unable to index exhibit'
+        };
+    }
+
+    LOGGER.module().info('INFO: [/indexer/model (index_exhibit)] Exhibit record ' + exhibit_index_record.uuid + ' indexed.');
+
+    if (heading_records.length > 0) {
+
+        for (let h=0;h<heading_records.length;h++) {
+            heading_index_records.push(construct_heading_index_record(heading_records[h]));
+        }
+
+        let headings_timer = setInterval(async () => {
+
+            if (heading_index_records.length === 0) {
+                clearInterval(headings_timer);
+                LOGGER.module().info('INFO: [/indexer/model (index_exhibit)] Heading records indexed.');
+                return false;
+            }
+
+            let heading_index_record = heading_index_records.pop();
+            let response = await INDEX_TASKS.index_record(heading_index_record);
+
+            if (response === true) {
+                LOGGER.module().info('INFO: [/indexer/model (index_exhibit)] Heading record ' + heading_index_record.uuid + ' indexed.');
+            }
+
+        }, 50);
+    }
+
+    if (item_records.length > 0) {
+
+        for (let i=0;i<item_records.length;i++) {
+            item_index_records.push(construct_item_index_record(item_records[i]));
+        }
+
+        let items_timer = setInterval(async () => {
+
+            if (item_index_records.length === 0) {
+                clearInterval(items_timer);
+                LOGGER.module().info('INFO: [/indexer/model (index_exhibit)] Item records indexed.');
+                return false;
+            }
+
+            let item_index_record = item_index_records.pop();
+            let response = await INDEX_TASKS.index_record(item_index_record);
+
+            if (response === true) {
+                LOGGER.module().info('INFO: [/indexer/model (index_exhibit)] Item record ' + item_index_record.uuid + ' indexed.');
+            }
+
+        }, 100);
+    }
+
+    if (grid_records.length > 0) {
+
+        // get grid items
+        for (let i=0;i<grid_records.length;i++) {
+
+            let items = await GRID_ITEM_RECORD_TASK.get_grid_item_records(grid_records[i].uuid);
+
+            for (let j=0;j<items.length;j++) {
+                grid_items.push(construct_item_index_record(items[j]));
+            }
+
+            grid_records[i].items = grid_items;
+            grid_items = [];
+        }
+
+        for (let g=0;g<grid_records.length;g++) {
+            grid_index_records.push(construct_grid_index_record(grid_records[g]));
+        }
+
+        let grid_items_timer = setInterval(async () => {
+
+            if (grid_index_records.length === 0) {
+                clearInterval(grid_items_timer);
+                LOGGER.module().info('INFO: [/indexer/model (index_exhibit)] Grid item records indexed.');
+                return false;
+            }
+
+            let grid_item_index_record = grid_index_records.pop();
+            let response = await INDEX_TASKS.index_record(grid_item_index_record);
+
+            if (response === true) {
+                LOGGER.module().info('INFO: [/indexer/model (index_exhibit)] Grid item record ' + grid_item_index_record.uuid + ' indexed.');
+            }
+
+        }, 150);
+
+    }
+
+    return {
+        status: 201,
+        message: 'Exhibit indexed'
+    };
+};
+
+// TODO: index all exhibits
+
+/** TODO: remove
  * Indexes all exhibit records
  */
 exports.index_all_records = function () {
@@ -127,7 +275,7 @@ exports.index_all_records = function () {
     };
 };
 
-/**
+/** TODO: remove
  * Indexes single record
  * @param uuid
  * @param type
@@ -187,7 +335,7 @@ exports.index_record = async function (uuid, type) {
     }
 };
 
-/**
+/** TODO: refactor - use index_exhibit function
  * Index exhibit records
  */
 const index_exhibit_records = async function (INDEX) {
@@ -283,7 +431,7 @@ const index_heading_records = async function (INDEX) {
     }, INDEX_TIMER);
 };
 
-/**
+/** TODO: remove
  * Index item records
  * @param INDEX
  */

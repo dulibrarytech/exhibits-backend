@@ -66,14 +66,7 @@ const Exhibit_grid_record_tasks = class {
 
         try {
 
-            /*
-                SELECT *
-                FROM tbl_grids as grids
-                INNER JOIN tbl_items as items ON grids.uuid=items.is_member_of_item_grid
-                WHERE grids.is_member_of_exhibit='c9f5d04b-31bf-49e8-b8b3-f482023990bf';
-             */
-
-            return await this.DB(this.TABLE.grid_records)
+            return await this.DB(this.TABLE)
             .select('is_member_of_exhibit',
                 'uuid',
                 'type',
@@ -89,7 +82,7 @@ const Exhibit_grid_record_tasks = class {
             });
 
         } catch (error) {
-            LOGGER.module().error('ERROR: [/exhibits/exhibit_heading_record_tasks (get_heading_records)] unable to get records ' + error.message);
+            LOGGER.module().error('ERROR: [/exhibits/exhibit_grid_record_tasks (get_grid_records)] unable to get records ' + error.message);
         }
     }
 
@@ -101,7 +94,7 @@ const Exhibit_grid_record_tasks = class {
 
         try {
 
-            return await this.DB(this.TABLE.item_records)
+            return await this.DB(this.TABLE)
             .select('is_member_of_exhibit',
                 'uuid',
                 'type',

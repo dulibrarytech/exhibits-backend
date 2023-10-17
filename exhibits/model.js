@@ -877,3 +877,21 @@ exports.restore_trashed_record = async function (is_member_of_exhibit, uuid, typ
         };
     }
 };
+
+/** TODO
+ * Publishes exhibit
+ * @param uuid
+ */
+exports.publish_exhibit = function (uuid) {
+
+};
+
+/** TODO
+ * Suppresses exhibit
+ * @param uuid
+ */
+exports.suppress_exhibit = function (uuid) {
+
+};
+
+// TODO: publish and suppress single records i.e. items, headings, grids, timelines
