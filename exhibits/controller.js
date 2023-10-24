@@ -18,7 +18,10 @@
 
 'use strict';
 
-const MODEL = require('../exhibits/model');
+const EXHIBITS_MODEL = require('../exhibits/exhibits_model');
+const ITEMS_MODEL = require('../exhibits/items_model');
+const HEADINGS_MODEL = require('../exhibits/headings_model');
+const TRASH_MODEL = require('../exhibits/trash_model');
 const PATH = require("path");
 
 exports.create_exhibit_record = async function (req, res) {
@@ -30,12 +33,12 @@ exports.create_exhibit_record = async function (req, res) {
         return false;
     }
 
-    const result = await MODEL.create_exhibit_record(data);
+    const result = await EXHIBITS_MODEL.create_exhibit_record(data);
     res.status(result.status).send(result);
 };
 
 exports.get_exhibit_records = async function (req, res) {
-    const data = await MODEL.get_exhibit_records();
+    const data = await EXHIBITS_MODEL.get_exhibit_records();
     res.status(data.status).send(data);
 };
 
@@ -48,7 +51,7 @@ exports.get_exhibit_record = async function (req, res) {
         return false;
     }
 
-    const data = await MODEL.get_exhibit_record(uuid);
+    const data = await EXHIBITS_MODEL.get_exhibit_record(uuid);
     res.status(data.status).send(data);
 };
 
@@ -61,7 +64,7 @@ exports.update_exhibit_record = async function (req, res) {
         return false;
     }
 
-    const result = await MODEL.update_exhibit_record(data);
+    const result = await EXHIBITS_MODEL.update_exhibit_record(data);
     res.status(result.status).send(result);
 };
 
@@ -74,7 +77,7 @@ exports.delete_exhibit_record = async function (req, res) {
         return false;
     }
 
-    const result = await MODEL.delete_exhibit_record(uuid);
+    const result = await EXHIBITS_MODEL.delete_exhibit_record(uuid);
     res.status(result.status).send(result);
 };
 
@@ -88,13 +91,13 @@ exports.create_item_record = async function (req, res) {
         return false;
     }
 
-    const result = await MODEL.create_item_record(is_member_of_exhibit, data);
+    const result = await ITEMS_MODEL.create_item_record(is_member_of_exhibit, data);
     res.status(result.status).send(result);
 };
 
 exports.get_item_records = async function (req, res) {
     const is_member_of_exhibit = req.params.exhibit_id;
-    const data = await MODEL.get_item_records(is_member_of_exhibit);
+    const data = await ITEMS_MODEL.get_item_records(is_member_of_exhibit);
     res.status(data.status).send(data);
 };
 
@@ -108,7 +111,7 @@ exports.get_item_record = async function (req, res) {
         return false;
     }
 
-    const data = await MODEL.get_item_record(is_member_of_exhibit, uuid);
+    const data = await ITEMS_MODEL.get_item_record(is_member_of_exhibit, uuid);
     res.status(data.status).send(data);
 };
 
@@ -128,7 +131,7 @@ exports.update_item_record = async function (req, res) {
         return false;
     }
 
-    const result = await MODEL.update_item_record(is_member_of_exhibit, uuid, data);
+    const result = await ITEMS_MODEL.update_item_record(is_member_of_exhibit, uuid, data);
     res.status(result.status).send(result);
 };
 
@@ -142,7 +145,7 @@ exports.delete_item_record = async function (req, res) {
         return false;
     }
 
-    const result = await MODEL.delete_item_record(is_member_of_exhibit, uuid);
+    const result = await ITEMS_MODEL.delete_item_record(is_member_of_exhibit, uuid);
     res.status(result.status).send(result);
 };
 
@@ -156,7 +159,7 @@ exports.create_heading_record = async function (req, res) {
         return false;
     }
 
-    const result = await MODEL.create_heading_record(is_member_of_exhibit, data);
+    const result = await HEADINGS_MODEL.create_heading_record(is_member_of_exhibit, data);
     res.status(result.status).send(result);
 };
 
@@ -170,7 +173,7 @@ exports.get_heading_record = async function (req, res) {
         return false;
     }
 
-    const data = await MODEL.get_heading_record(is_member_of_exhibit, uuid);
+    const data = await HEADINGS_MODEL.get_heading_record(is_member_of_exhibit, uuid);
     res.status(data.status).send(data);
 };
 
@@ -190,7 +193,7 @@ exports.update_heading_record = async function (req, res) {
         return false;
     }
 
-    const result = await MODEL.update_heading_record(is_member_of_exhibit, uuid, data);
+    const result = await HEADINGS_MODEL.update_heading_record(is_member_of_exhibit, uuid, data);
     res.status(result.status).send(result);
 };
 
@@ -204,7 +207,7 @@ exports.delete_heading_record = async function (req, res) {
         return false;
     }
 
-    const result = await MODEL.delete_heading_record(is_member_of_exhibit, uuid);
+    const result = await HEADINGS_MODEL.delete_heading_record(is_member_of_exhibit, uuid);
     res.status(result.status).send(result);
 };
 
@@ -218,12 +221,12 @@ exports.create_grid_record = async function (req, res) {
         return false;
     }
 
-    const result = await MODEL.create_grid_record(is_member_of_exhibit, data);
+    const result = await ITEMS_MODEL.create_grid_record(is_member_of_exhibit, data);
     res.status(result.status).send(result);
 };
 
 exports.get_trashed_records = async function (req, res) {
-    const data = await MODEL.get_trashed_records();
+    const data = await TRASH_MODEL.get_trashed_records();
     res.status(data.status).send(data);
 };
 
@@ -243,12 +246,12 @@ exports.delete_trashed_record = async function (req, res) {
         return false;
     }
 
-    const result = await MODEL.delete_trashed_record(is_member_of_exhibit, uuid, type);
+    const result = await TRASH_MODEL.delete_trashed_record(is_member_of_exhibit, uuid, type);
     res.status(result.status).send(result);
 };
 
 exports.delete_all_trashed_records = function (req, res) {
-    const result = MODEL.delete_all_trashed_records();
+    const result = TRASH_MODEL.delete_all_trashed_records();
     res.status(result.status).send(result);
 };
 
@@ -268,7 +271,7 @@ exports.restore_trashed_record = async function (req, res) {
         return false;
     }
 
-    const result = await MODEL.restore_trashed_record(is_member_of_exhibit, uuid, type);
+    const result = await TRASH_MODEL.restore_trashed_record(is_member_of_exhibit, uuid, type);
     res.status(result.status).send(result);
 };
 
