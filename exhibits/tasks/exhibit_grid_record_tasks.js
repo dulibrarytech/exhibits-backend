@@ -66,7 +66,7 @@ const Exhibit_grid_record_tasks = class {
 
         try {
 
-            return await this.DB(this.TABLE)
+            return await this.DB(this.TABLE.grid_records)
             .select('is_member_of_exhibit',
                 'uuid',
                 'type',
@@ -94,7 +94,7 @@ const Exhibit_grid_record_tasks = class {
 
         try {
 
-            return await this.DB(this.TABLE)
+            return await this.DB(this.TABLE.item_records)
             .select('is_member_of_exhibit',
                 'uuid',
                 'type',
@@ -118,7 +118,7 @@ const Exhibit_grid_record_tasks = class {
             });
 
         } catch (error) {
-            LOGGER.module().error('ERROR: [/exhibits/exhibit_heading_record_tasks (get_heading_records)] unable to get records ' + error.message);
+            LOGGER.module().error('ERROR: [/exhibits/exhibit_grid_record_tasks (get_grid_item_records)] unable to get records ' + error.message);
         }
     }
 

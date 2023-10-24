@@ -94,7 +94,7 @@ exports.create_exhibit_record = async function (data) {
 
         data.styles = JSON.stringify(data.styles);
 
-        const CREATE_RECORD_TASK = new EXHIBIT_RECORD_TASKS(DB, TABLES.exhibit_records);
+        const CREATE_RECORD_TASK = new EXHIBIT_RECORD_TASKS(DB, TABLES);
         let result = await CREATE_RECORD_TASK.create_exhibit_record(data);
         console.log(result);
         if (result === false) {
@@ -131,7 +131,7 @@ exports.get_exhibit_records = async function () {
 
     try {
 
-        const TASK = new EXHIBIT_RECORD_TASKS(DB, TABLES.exhibit_records);
+        const TASK = new EXHIBIT_RECORD_TASKS(DB, TABLES);
 
         return {
             status: 200,
@@ -156,7 +156,7 @@ exports.get_exhibit_record = async function (uuid) {
 
     try {
 
-        const TASK = new EXHIBIT_RECORD_TASKS(DB, TABLES.exhibit_records);
+        const TASK = new EXHIBIT_RECORD_TASKS(DB, TABLES);
 
         return {
             status: 200,
@@ -205,7 +205,7 @@ exports.update_exhibit_record = async function (data) {
             };
         }
 
-        const CREATE_RECORD_TASK = new EXHIBIT_RECORD_TASKS(DB, TABLES.exhibit_records);
+        const CREATE_RECORD_TASK = new EXHIBIT_RECORD_TASKS(DB, TABLES);
         let result = await CREATE_RECORD_TASK.update_exhibit_record(data);
 
         if (result === false) {
@@ -237,8 +237,8 @@ exports.delete_exhibit_record = async function (uuid) {
 
     try {
 
-        const TASK = new EXHIBIT_RECORD_TASKS(DB, TABLES.exhibit_records);
-        const ITEM_TASK = new EXHIBIT_ITEM_RECORD_TASKS(DB, TABLES.item_records);
+        const TASK = new EXHIBIT_RECORD_TASKS(DB, TABLES);
+        const ITEM_TASK = new EXHIBIT_ITEM_RECORD_TASKS(DB, TABLES);
         let results = await ITEM_TASK.get_item_records(uuid);
 
         if (results.length > 0) {
@@ -337,7 +337,7 @@ exports.create_item_record = async function (is_member_of_exhibit, data) {
             data.order = await HELPER_TASK.order_exhibit_items(data.is_member_of_exhibit, DB, TABLES);
         }
 
-        const CREATE_RECORD_TASK = new EXHIBIT_ITEM_RECORD_TASKS(DB, TABLES.item_records);
+        const CREATE_RECORD_TASK = new EXHIBIT_ITEM_RECORD_TASKS(DB, TABLES);
         let result = await CREATE_RECORD_TASK.create_item_record(data);
 
         if (result === false) {
@@ -371,8 +371,8 @@ exports.get_item_records = async function (is_member_of_exhibit) {
 
     try {
 
-        const ITEM_TASK = new EXHIBIT_ITEM_RECORD_TASKS(DB, TABLES.item_records);
-        const HEADING_TASK = new EXHIBIT_HEADING_RECORD_TASKS(DB, TABLES.heading_records);
+        const ITEM_TASK = new EXHIBIT_ITEM_RECORD_TASKS(DB, TABLES);
+        const HEADING_TASK = new EXHIBIT_HEADING_RECORD_TASKS(DB, TABLES);
         const GRID_TASK = new EXHIBIT_GRID_RECORD_TASKS(DB, TABLES);
         let items =  await ITEM_TASK.get_item_records(is_member_of_exhibit);
         let headings = await HEADING_TASK.get_heading_records(is_member_of_exhibit);
@@ -412,7 +412,7 @@ exports.get_item_record = async function (is_member_of_exhibit, uuid) {
 
     try {
 
-        const TASK = new EXHIBIT_ITEM_RECORD_TASKS(DB, TABLES.item_records);
+        const TASK = new EXHIBIT_ITEM_RECORD_TASKS(DB, TABLES);
 
         return {
             status: 200,
@@ -466,7 +466,7 @@ exports.update_item_record = async function (is_member_of_exhibit, uuid, data) {
             };
         }
 
-        const UPDATE_RECORD_TASK = new EXHIBIT_ITEM_RECORD_TASKS(DB, TABLES.item_records);
+        const UPDATE_RECORD_TASK = new EXHIBIT_ITEM_RECORD_TASKS(DB, TABLES);
         let result = await UPDATE_RECORD_TASK.update_item_record(data);
 
         if (result === false) {
@@ -499,7 +499,7 @@ exports.delete_item_record = async function (is_member_of_exhibit, uuid) {
 
     try {
 
-        const TASK = new EXHIBIT_ITEM_RECORD_TASKS(DB, TABLES.item_records);
+        const TASK = new EXHIBIT_ITEM_RECORD_TASKS(DB, TABLES);
 
         return {
             status: 204,
@@ -544,7 +544,7 @@ exports.create_heading_record = async function (is_member_of_exhibit, data) {
 
         data.order = await HELPER_TASK.order_exhibit_items(data.is_member_of_exhibit, DB, TABLES);
 
-        const CREATE_RECORD_TASK = new EXHIBIT_HEADING_RECORD_TASKS(DB, TABLES.heading_records);
+        const CREATE_RECORD_TASK = new EXHIBIT_HEADING_RECORD_TASKS(DB, TABLES);
         let result = await CREATE_RECORD_TASK.create_heading_record(data);
 
         if (result === false) {
@@ -632,7 +632,7 @@ exports.get_heading_record = async function (is_member_of_exhibit, uuid) {
 
     try {
 
-        const TASK = new EXHIBIT_HEADING_RECORD_TASKS(DB, TABLES.heading_records);
+        const TASK = new EXHIBIT_HEADING_RECORD_TASKS(DB, TABLES);
 
         return {
             status: 200,
@@ -686,7 +686,7 @@ exports.update_heading_record = async function (is_member_of_exhibit, uuid, data
             };
         }
 
-        const UPDATE_RECORD_TASK = new EXHIBIT_HEADING_RECORD_TASKS(DB, TABLES.heading_records);
+        const UPDATE_RECORD_TASK = new EXHIBIT_HEADING_RECORD_TASKS(DB, TABLES);
         let result = await UPDATE_RECORD_TASK.update_heading_record(data);
 
         if (result === false) {
@@ -719,7 +719,7 @@ exports.delete_heading_record = async function (is_member_of_exhibit, uuid) {
 
     try {
 
-        const TASK = new EXHIBIT_HEADING_RECORD_TASKS(DB, TABLES.heading_records);
+        const TASK = new EXHIBIT_HEADING_RECORD_TASKS(DB, TABLES);
 
         return {
             status: 204,
@@ -879,11 +879,22 @@ exports.restore_trashed_record = async function (is_member_of_exhibit, uuid, typ
 };
 
 /** TODO
+ * Renders exhibit in preview mode
+ * @param uuid
+ */
+exports.preview_exhibit = function (uuid) {
+    // TODO: update is_preview field in db tables?
+    // TODO: make request to indexer "index_exhibit"
+    // TODO: redirect to frontend preview page
+};
+
+/** TODO
  * Publishes exhibit
  * @param uuid
  */
 exports.publish_exhibit = function (uuid) {
-
+    // TODO: update publish field in db tables by uuid
+    // TODO: make request to indexer "index_exhibit"
 };
 
 /** TODO
@@ -891,7 +902,8 @@ exports.publish_exhibit = function (uuid) {
  * @param uuid
  */
 exports.suppress_exhibit = function (uuid) {
-
+    // TODO: update publish field in db tables
+    // TODO: delete all exhibit records in index by uuid
 };
 
 // TODO: publish and suppress single records i.e. items, headings, grids, timelines

@@ -44,7 +44,7 @@ const Exhibit_item_record_tasks = class {
 
             await this.DB.transaction((trx) => {
                 this.DB.insert(data)
-                .into(this.TABLE)
+                .into(this.TABLE.item_records)
                 .transacting(trx)
                 .then(trx.commit)
                 .catch(trx.rollback);
@@ -65,7 +65,7 @@ const Exhibit_item_record_tasks = class {
 
         try {
 
-            return await this.DB(this.TABLE)
+            return await this.DB(this.TABLE.item_records)
             .select('is_member_of_exhibit',
                 'uuid',
                 'type',
@@ -103,7 +103,7 @@ const Exhibit_item_record_tasks = class {
 
         try {
 
-            const data = await this.DB(this.TABLE)
+            const data = await this.DB(this.TABLE.item_records)
             .select('is_member_of_exhibit',
                 'uuid',
                 'type',
@@ -157,7 +157,7 @@ const Exhibit_item_record_tasks = class {
 
         try {
 
-            await this.DB(this.TABLE)
+            await this.DB(this.TABLE.item_records)
             .where({
                 is_member_of_exhibit: data.is_member_of_exhibit,
                 uuid: data.uuid
@@ -181,7 +181,7 @@ const Exhibit_item_record_tasks = class {
 
         try {
 
-            await this.DB(this.TABLE)
+            await this.DB(this.TABLE.item_records)
             .where({
                 is_member_of_exhibit: is_member_of_exhibit,
                 uuid: uuid

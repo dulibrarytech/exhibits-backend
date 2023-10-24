@@ -44,7 +44,7 @@ const Exhibit_record_tasks = class {
 
             const result = await this.DB.transaction((trx) => {
                 this.DB.insert(data)
-                .into(this.TABLE)
+                .into(this.TABLE.exhibit_records)
                 .transacting(trx)
                 .then(trx.commit)
                 .catch(trx.rollback);
@@ -70,7 +70,7 @@ const Exhibit_record_tasks = class {
 
         try {
 
-            return await this.DB(this.TABLE)
+            return await this.DB(this.TABLE.exhibit_records)
             .select('uuid',
                 'type',
                 'title',
@@ -105,7 +105,7 @@ const Exhibit_record_tasks = class {
 
         try {
 
-            let data = await this.DB(this.TABLE)
+            let data = await this.DB(this.TABLE.exhibit_records)
             .select('uuid',
                 'type',
                 'title',
@@ -157,7 +157,7 @@ const Exhibit_record_tasks = class {
 
         try {
 
-            await this.DB(this.TABLE)
+            await this.DB(this.TABLE.exhibit_records)
             .where({
                 uuid: data.uuid
             })
@@ -180,7 +180,7 @@ const Exhibit_record_tasks = class {
 
         try {
 
-            await this.DB(this.TABLE)
+            await this.DB(this.TABLE.exhibit_records)
             .where({
                 uuid: uuid
             })
