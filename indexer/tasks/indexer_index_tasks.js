@@ -52,12 +52,34 @@ const Indexer_index_tasks = class {
 
             if (response.statusCode === 201 || response.statusCode === 200) {
                 return true;
-            } else {
-                return false;
             }
 
         } catch (error) {
             LOGGER.module().error('ERROR: [/indexer/indexer_index_tasks (index_record)] unable to index record ' + error.message);
+            return false;
+        }
+    }
+
+    /**
+     * Gets record by id from index
+     * @param uuid
+     */
+    async get_indexed_record(uuid) {
+
+        try {
+
+            const response = await this.CLIENT.get({
+                index: this.INDEX,
+                id: uuid,
+            });
+
+            if (response.statusCode === 200) {
+                return response;
+            }
+
+        } catch (error) {
+            LOGGER.module().error('ERROR: [/indexer/indexer_index_tasks (get_indexed_record)] unable to get indexed record ' + error.message);
+            return false;
         }
     }
 
@@ -77,12 +99,11 @@ const Indexer_index_tasks = class {
 
             if (response.statusCode === 200) {
                 return true;
-            } else {
-                return false;
             }
 
         } catch (error) {
             LOGGER.module().error('ERROR: [/indexer/indexer_index_tasks (delete_record)] unable to index record ' + error.message);
+            return false;
         }
     }
 

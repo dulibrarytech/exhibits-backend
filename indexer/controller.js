@@ -32,15 +32,35 @@ exports.create_index = async function (req, res) {
 };
 
 /**
- * Index exhibit
+ * Index/preview exhibit
  * @param req
  * @param res
- * @return {Promise<void>}
  */
 exports.index_exhibit = async function (req, res) {
     const uuid = req.params.uuid;
     const result = await MODEL.index_exhibit(uuid);
-    console.log(result);
+    res.status(result.status).send(result);
+};
+
+/**
+ * Gets indexed record
+ * @param req
+ * @param res
+ */
+exports.get_indexed_record = async function (req, res) {
+    let uuid = req.params.uuid;
+    let response = await MODEL.get_indexed_record(uuid);
+    res.status(response.status).send(response.data);
+};
+
+/**
+ * Deletes record from index
+ * @param req
+ * @param res
+ */
+exports.delete_record = async function (req, res) {
+    let uuid = req.params.uuid;
+    let result = await MODEL.delete_record(uuid);
     res.status(result.status).send(result);
 };
 
@@ -76,16 +96,5 @@ exports.index_record = async function (req, res) {
     }
 
     let result = await MODEL.index_record(uuid, type);
-    res.status(result.status).send(result);
-};
-
-/**
- * Deletes record from index
- * @param req
- * @param res
- */
-exports.delete_record = async function (req, res) {
-    let uuid = req.params.uuid;
-    let result = await MODEL.delete_record(uuid);
     res.status(result.status).send(result);
 };

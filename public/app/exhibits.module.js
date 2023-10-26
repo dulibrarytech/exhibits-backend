@@ -21,6 +21,7 @@ const exhibitsModule = (function () {
     'use strict';
 
     const EXHIBITS_ENDPOINTS = endpointsModule.get_exhibits_endpoints();
+    let link;
     let obj = {};
 
     /**
@@ -80,6 +81,7 @@ const exhibitsModule = (function () {
 
             let uuid = exhibits[i].uuid;
             let is_published = exhibits[i].is_published;
+            let preview_link = `/preview?uuid=${uuid}`;
             let thumbnail = '';
             let status;
             let title;
@@ -100,9 +102,14 @@ const exhibitsModule = (function () {
             exhibit_data += `<td style="width: 35%">
                     <p><strong><a href="/dashboard/items?uuid=${uuid}">${title}</a></strong></p>
                     ${thumbnail}
-                    <p><a class="btn btn-outline-secondary" href="/preview" title="preview"><i class="fa fa-eye"></i>&nbsp;Preview</a></p>
+                    <p id="preview-link">
+                        <a class="btn btn-outline-secondary" href="#" onclick="exhibitsModule.open_preview('${preview_link}');">
+                            <i class=" menu-icon fa fa-eye"></i> Preview
+                        </a>
+                    </p>
                     </td>`;
 
+            // <p><a class="btn btn-outline-secondary" href="/preview" title="preview"><i class="fa fa-eye"></i>&nbsp;Preview</a></p>
             exhibit_data += `<td style="width: 5%;text-align: center"><small>${status}</small></td>`;
             exhibit_data += `<td style="width: 10%">
                                 <div class="card-text text-sm-center">
@@ -116,6 +123,7 @@ const exhibitsModule = (function () {
         }
 
         document.querySelector('#exhibits-data').innerHTML = exhibit_data;
+
         let table = new DataTable('#exhibits');
         setTimeout(() => {
             document.querySelector('#exhibit-card').style.visibility = 'visible';
@@ -126,7 +134,6 @@ const exhibitsModule = (function () {
     /**
      * Gets exhibit title
      * @param uuid
-     * @return {Promise<*>}
      */
     obj.get_exhibit_title = async function (uuid) {
 
@@ -151,18 +158,29 @@ const exhibitsModule = (function () {
         }
     };
 
-    obj.set_preview_link = function() {
+    obj.set_preview_link = function () {
 
         let uuid = helperModule.get_parameter_by_name('uuid');
         let preview_link = `/preview?uuid=${uuid}`;
         let preview_menu_fragment = `
-                <li>
-                    <a href="#" onClick="window.open('${preview_link}', '_blank', 'location=yes,scrollbars=yes,status=yes');">
+                    <a href="#" onclick="exhibitsModule.open_preview('${preview_link}')">
                         <i class=" menu-icon fa fa-eye"></i>Preview
-                    </a>
-                </li>`;
+                    </a>`;
 
         document.querySelector('#preview-link').innerHTML = preview_menu_fragment;
+    };
+
+    obj.open_preview = function (preview_link) {
+
+        if (link !== undefined) {
+            exhibitsModule.close_preview();
+        }
+
+        link = window.open(preview_link, '_blank', 'location=yes,scrollbars=yes,status=yes');
+    };
+
+    obj.close_preview = function () {
+        link.close();
     };
 
     obj.init = async function () {

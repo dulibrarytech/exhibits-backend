@@ -18,18 +18,18 @@
 
 'use strict';
 
+const FS = require('fs');
 const DB = require('../config/db_config')();
 const DB_TABLES = require('../config/db_tables_config')();
 const TABLES = DB_TABLES.exhibits;
 const EXHIBITS_CREATE_RECORD_SCHEMA = require('../exhibits/schemas/exhibit_create_record_schema')();
 const EXHIBITS_UPDATE_RECORD_SCHEMA = require('../exhibits/schemas/exhibit_update_record_schema')();
 const EXHIBIT_RECORD_TASKS = require('../exhibits/tasks/exhibit_record_tasks');
-const EXHIBIT_TRASHED_RECORD_TASKS = require('../exhibits/tasks/exhibit_trashed_record_tasks');
+const EXHIBIT_ITEM_RECORD_TASKS = require('./tasks/exhibit_item_record_tasks');
 const HELPER = require('../libs/helper');
 const VALIDATOR = require('../libs/validate');
-const FS = require('fs');
 const LOGGER = require('../libs/log4');
-const EXHIBIT_ITEM_RECORD_TASKS = require("./tasks/exhibit_item_record_tasks");
+const INDEXER_MODEL = require('../indexer/model');
 
 /**
  * Creates exhibit record
@@ -257,3 +257,59 @@ exports.delete_exhibit_record = async function (uuid) {
         };
     }
 };
+
+/**
+ * Builds exhibit preview
+ * @param uuid
+ */
+exports.build_exhibit_preview = async function (uuid) {
+
+    try {
+
+        const SET_PREVIEW_RECORD_TASK = new EXHIBIT_RECORD_TASKS(DB, TABLES);
+        let result = await SET_PREVIEW_RECORD_TASK.set_preview(uuid);
+
+        if (result === false) {
+
+            return {
+                status: false,
+                message: 'Unable to preview exhibit'
+            };
+
+        } else {
+
+            const is_indexed = await INDEXER_MODEL.index_exhibit(uuid);
+
+            if (is_indexed.status === 201) {
+
+                return {
+                    status: true,
+                    message: 'Exhibit preview built'
+                };
+            }
+        }
+
+    } catch (error) {
+        LOGGER.module().error('ERROR: [/exhibits/model (build_exhibit_preview)] ' + error.message);
+    }
+};
+
+/** TODO
+ * Publishes exhibit
+ * @param uuid
+ */
+exports.publish_exhibit = function (uuid) {
+    // TODO: update publish field in db tables by uuid
+    // TODO: make request to indexer "index_exhibit"
+};
+
+/** TODO
+ * Suppresses exhibit
+ * @param uuid
+ */
+exports.suppress_exhibit = function (uuid) {
+    // TODO: update publish field in db tables
+    // TODO: delete all exhibit records in index by uuid
+};
+
+// TODO: publish and suppress single records i.e. items, headings, grids, timelines

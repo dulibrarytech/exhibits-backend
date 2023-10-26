@@ -140,11 +140,11 @@ exports.index_exhibit = async function (uuid) {
     let grid_items = [];
 
     const INDEX_TASKS = new INDEXER_INDEX_TASKS(DB, TABLES, CLIENT, ES_CONFIG.elasticsearch_index);
-    const EXHIBIT_RECORD_TASK = new EXHIBIT_RECORD_TASKS(DB, TABLES.exhibit_records);
-    const HEADING_RECORD_TASK = new EXHIBIT_HEADING_RECORD_TASKS(DB, TABLES.heading_records);
-    const ITEM_RECORD_TASK = new EXHIBIT_ITEM_RECORD_TASKS(DB, TABLES.item_records);
-    const GRID_RECORD_TASK = new EXHIBIT_GRID_RECORD_TASKS(DB, TABLES.grid_records);
-    const GRID_ITEM_RECORD_TASK = new EXHIBIT_GRID_RECORD_TASKS(DB, TABLES.item_records);
+    const EXHIBIT_RECORD_TASK = new EXHIBIT_RECORD_TASKS(DB, TABLES);
+    const HEADING_RECORD_TASK = new EXHIBIT_HEADING_RECORD_TASKS(DB, TABLES);
+    const ITEM_RECORD_TASK = new EXHIBIT_ITEM_RECORD_TASKS(DB, TABLES);
+    const GRID_RECORD_TASK = new EXHIBIT_GRID_RECORD_TASKS(DB, TABLES);
+    const GRID_ITEM_RECORD_TASK = new EXHIBIT_GRID_RECORD_TASKS(DB, TABLES);
 
     let exhibit_record = await EXHIBIT_RECORD_TASK.get_exhibit_record(uuid);
     let heading_records = await HEADING_RECORD_TASK.get_heading_records(uuid);
@@ -255,8 +255,56 @@ exports.index_exhibit = async function (uuid) {
     };
 };
 
-// TODO: index all exhibits
+/**
+ * Gets indexed record
+ * @param uuid
+ */
+exports.get_indexed_record = async function (uuid) {
 
+    const INDEX_TASKS = new INDEXER_INDEX_TASKS(DB, TABLES, CLIENT, ES_CONFIG.elasticsearch_index);
+    let response = await INDEX_TASKS.get_indexed_record(uuid);
+
+    if (response === false) {
+
+        return {
+            status: 404,
+            message: 'record not found.'
+        };
+
+    } else if (response.body.found === true) {
+
+        return {
+            status: 200,
+            message: 'record found.',
+            data: response
+        };
+    }
+};
+
+/**
+ * Deletes record from index
+ * @param uuid
+ */
+exports.delete_record = async function (uuid) {
+
+    const INDEX_TASKS = new INDEXER_INDEX_TASKS(DB, TABLES, CLIENT, ES_CONFIG.elasticsearch_index);
+    let is_deleted = await INDEX_TASKS.delete_record(uuid);
+
+    if (is_deleted === true) {
+        return {
+            status: 204,
+            message: 'record deleted.'
+        };
+    }
+
+    return {
+        status: 200,
+        message: 'Unable to delete record.'
+    };
+};
+
+// TODO: index all exhibits
+///////////////////////////////////////////////////////////////////////////
 /** TODO: remove
  * Indexes all exhibit records
  */
@@ -481,26 +529,4 @@ const index_item_records = async function (INDEX) {
         }
 
     }, INDEX_TIMER);
-};
-
-/**
- * Deletes record from index
- * @param uuid
- */
-exports.delete_record = async function (uuid) {
-
-    const INDEX_TASKS = new INDEXER_INDEX_TASKS(DB, TABLES, CLIENT, ES_CONFIG.elasticsearch_index);
-    let is_deleted = await INDEX_TASKS.delete_record(uuid);
-
-    if (is_deleted === true) {
-        return {
-            status: 204,
-            message: 'record deleted.'
-        };
-    }
-
-    return {
-        status: 200,
-        message: 'Unable to delete record.'
-    };
 };

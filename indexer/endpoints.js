@@ -30,7 +30,12 @@ const ENDPOINTS = {
                 post: {
                     description: 'indexes exhibit index record',
                     endpoint: `${PREFIX}${VERSION}${ENDPOINT}/:uuid`,
-                    params: 'token or api_key, ?type=exhibit,heading,item'
+                    params: 'token or api_key'
+                },
+                get: {
+                    description: 'gets indexed record',
+                    endpoint: `${PREFIX}${VERSION}${ENDPOINT}/:uuid`,
+                    params: 'token or api_key'
                 },
                 delete: {
                     description: 'Deletes exhibit indexed record',

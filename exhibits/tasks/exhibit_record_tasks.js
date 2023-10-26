@@ -195,6 +195,31 @@ const Exhibit_record_tasks = class {
             LOGGER.module().error('ERROR: [/exhibits/exhibit_record_tasks (delete_item_record)] unable to delete record ' + error.message);
         }
     }
+
+    /**
+     * Sets preview flag
+     * @param uuid
+     */
+    async set_preview(uuid) {
+
+        try {
+
+            await this.DB(this.TABLE.exhibit_records)
+            .where({
+                uuid: uuid
+            })
+            .update({
+                is_preview: 1
+            });
+
+            LOGGER.module().info('INFO: [/exhibits/exhibit_record_tasks (set_preview)] Exhibit preview set.');
+            return true;
+
+        } catch (error) {
+            LOGGER.module().error('ERROR: [/exhibits/exhibit_record_tasks (set_preview)] unable to set exhibit preview ' + error.message);
+            return false;
+        }
+    }
 };
 
 module.exports = Exhibit_record_tasks;

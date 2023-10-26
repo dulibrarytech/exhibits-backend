@@ -63,6 +63,12 @@ const ENDPOINTS = {
                endpoint: `${PREFIX}${VERSION}${ENDPOINT}/:exhibit_id/media/items/:media`,
            }
         },
+        exhibit_preview: {
+          get: {
+              description: 'Previews exhibit',
+              endpoint: '/preview'
+          }
+        },
         grid_records: {
             post: {
                 description: 'Creates grid record',

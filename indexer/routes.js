@@ -30,15 +30,13 @@ module.exports = function (app) {
     app.route(ENDPOINTS().indexer.index_records.endpoints.post.endpoint)
     .post(CONTROLLER.index_exhibit);  // TOKEN.verify,
 
-    app.route(ENDPOINTS().indexer.index_records.endpoint)
-    .post(CONTROLLER.index_all_records);  // TOKEN.verify,
+    app.route(ENDPOINTS().indexer.index_records.endpoints.get.endpoint)
+    .get(CONTROLLER.get_indexed_record);
 
     app.route(ENDPOINTS().indexer.index_records.endpoints.delete.endpoint)
     .delete(CONTROLLER.delete_record);  // TOKEN.verify,
 
-    /*
-    app.route(ENDPOINTS().indexer.index_records.endpoints.post.endpoint)
-    .post(CONTROLLER.index_record);  // TOKEN.verify,
-    */
-
+    // TODO:
+    app.route(ENDPOINTS().indexer.index_records.endpoint)
+    .post(CONTROLLER.index_all_records);  // TOKEN.verify,
 };

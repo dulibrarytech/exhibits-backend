@@ -304,3 +304,29 @@ exports.get_item_media = function (req, res) {
 
     return false;
 };
+
+exports.build_exhibit_preview = async function (req, res) {
+
+    const uuid = req.query.uuid;
+
+    if (uuid === undefined || uuid.length === 0) {
+        res.status(400).send('Bad request.');
+        return false;
+    }
+
+    const result = await EXHIBITS_MODEL.build_exhibit_preview(uuid);
+
+    console.log(result.message);
+
+    if (result.status === true) {
+
+        setTimeout(() => {
+            console.log('Loading preview...');
+            res.redirect('https://library.du.edu/');
+        }, 1000);
+
+    }
+
+    // TODO: get preview service api key
+    // TODO: redirect to frontend preview | uuid and api key
+};

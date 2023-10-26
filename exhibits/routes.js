@@ -80,10 +80,13 @@ module.exports = function (app) {
 
     app.route(ENDPOINTS().exhibits.trashed_records.put.endpoint)
     .put(CONTROLLER.restore_trashed_record);
-    console.log(ENDPOINTS().exhibits.exhibit_media.get.endpoint);
+
     app.route(ENDPOINTS().exhibits.exhibit_media.get.endpoint)
     .get(CONTROLLER.get_exhibit_media);
 
     app.route(ENDPOINTS().exhibits.item_media.get.endpoint)
     .get(CONTROLLER.get_item_media);
+
+    app.route(ENDPOINTS().exhibits.exhibit_preview.get.endpoint)
+    .get(CONTROLLER.build_exhibit_preview);  // TOKEN verify
 };
