@@ -97,19 +97,30 @@ const itemsModule = (function () {
 
         document.querySelector('#item-id').innerHTML = `<p><small>${item_record.uuid}</small></p>`;
 
-        // below media
-        document.querySelector('#item-caption').innerHTML = item_record.caption;
+        let media_type;
 
         if (item_record.item_type === 'image') {
-            document.querySelector('#item-type').innerHTML = `<i class="fa fa-file-image-o" title="${item_record.item_type}"></i>`;
+            // document.querySelector('#item-type').innerHTML = `<i class="fa fa-file-image-o" title="${item_record.item_type}"></i>`;
+            media_type = `<i class="fa fa-file-image-o" title="${item_record.item_type}"></i>`;
         } else if (item_record.item_type === 'video') {
             document.querySelector('#item-type').innerHTML = `<i class="fa fa-file-movie-o" title="${item_record.item_type}"></i>`;
         } else if (item_record.item_type === 'audio') {
             document.querySelector('#item-type').innerHTML = `<i class="fa fa-file-audio-o" title="${item_record.item_type}"></i>`;
         }
 
+        document.querySelector('#item-caption').innerHTML = `${media_type}&nbsp;&nbsp;&nbsp;${item_record.caption}`;
 
-        document.querySelector('#item-layout').innerHTML = item_record.layout;
+        let layout_image;
+
+        if (item_record.layout === 'item_top') {
+            layout_image = `<img src="/images/item_layout_only.png" height="75" title="${item_record.layout}"><p><small>Item layout</small></p>`;
+        }
+
+        document.querySelector('#item-layout').innerHTML = layout_image;
+        // TODO: other layouts
+
+        // document.querySelector('#item-layout').innerHTML = item_record.layout;
+
         document.querySelector('#item-media-width').innerHTML = item_record.media_width;
 
         document.querySelector('#item-created').innerHTML = `<small>${item_record.created}</small>`;
@@ -118,19 +129,6 @@ const itemsModule = (function () {
         console.log(item_record.styles);
         console.log(item_record.is_published);
         console.log(item_record.created);
-
-        /*
-
-
-media
-:
-"b80b62d7-4b36-4814-94d6-30d62b25fbc6_1697424133758_item_media.jpeg"
-
-thumbnail
-:
-""
-  */
-
     };
 
     /**
@@ -237,6 +235,7 @@ thumbnail
             item_data += `<td style="width: 5%;text-align: center">${status}</td>`;
             item_data += `<td style="width: 10%">
                                 <div class="card-text text-sm-center">
+                                    <a href="/dashboard/items/details?uuid=${uuid}&item_id=${item_id}" title="Item details"><i class="fa fa-search pr-1"></i></a>
                                     <a href="#" title="Edit"><i class="fa fa-edit pr-1"></i></a>&nbsp;
                                     <a href="#" title="Delete"><i class="fa fa-trash pr-1"></i></a>
                                 </div>
