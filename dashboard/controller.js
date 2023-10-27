@@ -52,6 +52,15 @@ exports.get_dashboard_items = function (req, res) {
     });
 };
 
+exports.get_dashboard_item_details = function (req, res) {
+    res.render('dashboard-item-details', {
+        host: CONFIG.host,
+        appname: CONFIG.app_name,
+        appversion: CONFIG.app_version,
+        organization: CONFIG.organization
+    });
+};
+
 exports.get_dashboard_item_heading_form = function (req, res) {
     res.render('dashboard-item-heading-form', {
         host: CONFIG.host,

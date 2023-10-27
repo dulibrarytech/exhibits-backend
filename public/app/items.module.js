@@ -24,7 +24,7 @@ const itemsModule = (function () {
     let obj = {};
 
     /**
-     *
+     * Gets items
      * @param uuid
      * @return array
      */
@@ -43,6 +43,8 @@ const itemsModule = (function () {
             });
 
             if (response !== undefined && response.status === 200) {
+                window.localStorage.removeItem('items');
+                window.localStorage.setItem('items', JSON.stringify(response.data.data));
                 return response.data.data;
             }
 
@@ -50,6 +52,86 @@ const itemsModule = (function () {
             console.log('ERROR: ', error.message);
         }
     }
+
+    /**
+     * Gets item details
+     */
+    obj.get_item_details = async function () {
+
+        const uuid = helperModule.get_parameter_by_name('uuid');
+        const item_id = helperModule.get_parameter_by_name('item_id');
+        let items;
+        let item_record;
+        let message = document.querySelector('#message');
+        document.querySelector('#exhibit-title').innerHTML = await exhibitsModule.get_exhibit_title(uuid);
+
+        if (uuid === undefined || item_id === undefined) {
+            message.innerHTML = '<div class="alert alert-info" role="alert">Error: Unable to get item record id.</div>';
+            return false;
+        }
+
+        items = JSON.parse(window.localStorage.getItem('items'));
+
+        if (items === null) {
+            message.innerHTML = '<div class="alert alert-info" role="alert">Error: Unable to get item records from storage.</div>';
+            return false;
+        }
+
+        item_record = items.find(o => o.uuid === item_id);
+
+
+        console.log(item_record);
+
+        let item_media = EXHIBITS_ENDPOINTS.exhibits.exhibit_media.get.endpoint.replace(':exhibit_id', uuid).replace(':media', item_record.media);
+        document.querySelector('#item-media').innerHTML = `<img src="${item_media}" width="100%" height="400" title="${item_record.title}">`;
+        document.querySelector('.item-title').innerHTML = item_record.title;
+        document.querySelector('#item-description').innerHTML = `<p>${item_record.description}</p>`;
+        document.querySelector('#item-date').innerHTML = `<p>${item_record.date}</p>`;
+        document.querySelector('#item-order').innerHTML = `<p><small>Item order ${item_record.order}</small></p>`;
+
+        if (item_record.is_published === 0) {
+            document.querySelector('#item-status').innerHTML = `<p><small>Item is not published</small></p>`;
+        } else if (item_record.is_published === 1) {
+            document.querySelector('#item-status').innerHTML = `<p><small>Item is published</small></p>`;
+        }
+
+        document.querySelector('#item-id').innerHTML = `<p><small>${item_record.uuid}</small></p>`;
+
+        // below media
+        document.querySelector('#item-caption').innerHTML = item_record.caption;
+
+        if (item_record.item_type === 'image') {
+            document.querySelector('#item-type').innerHTML = `<i class="fa fa-file-image-o" title="${item_record.item_type}"></i>`;
+        } else if (item_record.item_type === 'video') {
+            document.querySelector('#item-type').innerHTML = `<i class="fa fa-file-movie-o" title="${item_record.item_type}"></i>`;
+        } else if (item_record.item_type === 'audio') {
+            document.querySelector('#item-type').innerHTML = `<i class="fa fa-file-audio-o" title="${item_record.item_type}"></i>`;
+        }
+
+
+        document.querySelector('#item-layout').innerHTML = item_record.layout;
+        document.querySelector('#item-media-width').innerHTML = item_record.media_width;
+
+        document.querySelector('#item-created').innerHTML = `<small>${item_record.created}</small>`;
+
+
+        console.log(item_record.styles);
+        console.log(item_record.is_published);
+        console.log(item_record.created);
+
+        /*
+
+
+media
+:
+"b80b62d7-4b36-4814-94d6-30d62b25fbc6_1697424133758_item_media.jpeg"
+
+thumbnail
+:
+""
+  */
+
+    };
 
     /**
      * Sets exhibit title
@@ -69,7 +151,6 @@ const itemsModule = (function () {
         const uuid = helperModule.get_parameter_by_name('uuid');
         await itemsModule.set_exhibit_title(uuid);
         const items = await get_items(uuid);
-        console.log('items: ', items);
         let item_data = '';
 
         if (items.length === 0) {
@@ -79,7 +160,7 @@ const itemsModule = (function () {
 
         for (let i = 0; i < items.length; i++) {
 
-            let uuid = items[i].uuid;
+            let item_id = items[i].uuid;
             let type = items[i].type;
             let order = items[i].order;
             let is_published = items[i].is_published;
@@ -95,16 +176,14 @@ const itemsModule = (function () {
             item_data += `<td style="width: 5%">${order}</td>`;
 
             if (items[i].type === 'item') {
-                // TODO:
-                // api/v1/exhibits/9a7b9c72-ee67-4949-842b-7f27cdb0ebb5/media/items/694e3194-0a77-46af-8c59-efe28aa1698d_1697260641755_item_thumbnail.png
-                let thumbnail = ''; // = `/api/v1/exhibits/${items[i].is_member_of_exhibit}/media/items/${items[i].thumbnail}`;
-                let media = items[i].media;
-                let title = helperModule.unescape(items[i].title);
+
+                let thumbnail = '';
+                let title = `<a href="/dashboard/items/details?uuid=${uuid}&item_id=${item_id}">${helperModule.unescape(items[i].title)}</a>`;
                 let description = helperModule.unescape(items[i].description);
                 let date = items[i].date;
 
                 if (items[i].thumbnail.length > 0) {
-                    thumbnail = `/api/v1/exhibits/${items[i].is_member_of_exhibit}/media/items/${items[i].thumbnail}`;
+                    thumbnail = EXHIBITS_ENDPOINTS.exhibits.exhibit_media.get.endpoint.replace(':exhibit_id', uuid).replace(':media', items[i].thumbnail);
                     item_data = `<p><img src="${thumbnail}" height="100" width="100"></p>`;
                 }
 
@@ -128,7 +207,7 @@ const itemsModule = (function () {
 
                 // render grid items here
                 let grid_items_fragment = '';
-                let grid_item_thumbnail;
+                let grid_item_thumbnail = '';
 
                 if (items[i].grid_items.length === 0) {
                     grid_items_fragment += '<p><strong>No items</strong></p>';
@@ -137,8 +216,10 @@ const itemsModule = (function () {
                     for (let j=0;j<items[i].grid_items.length;j++) {
 
                         if (items[i].grid_items[j].thumbnail.length > 0) {
+
+                            grid_item_thumbnail = EXHIBITS_ENDPOINTS.exhibits.exhibit_media.get.endpoint.replace(':exhibit', uuid).replace(':media', items[i].grid_items[j].thumbnail);
                             grid_items_fragment += `<p>
-                                <img src="${items[i].grid_items[j].thumbnail}" height="50" width="50">&nbsp;<strong>${items[i].grid_items[j].title}</strong>
+                                <img src="${grid_item_thumbnail}" height="50" width="50">&nbsp;<strong>${items[i].grid_items[j].title}</strong>
                             </p>`;
                         } else {
                             grid_items_fragment += `<p><strong>${items[i].grid_items[j].title}</strong></p>`;
