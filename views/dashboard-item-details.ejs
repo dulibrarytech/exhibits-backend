@@ -11,7 +11,7 @@
                 </li>
                 <li class="menu-title">Menu</li>
             </ul>
-            <ul id="preview-link" class="nav navbar-nav"></ul>
+            <ul class="nav navbar-nav"><li id="preview-link"></li></ul>
             <ul id="items-menu" class="nav navbar-nav"></ul>
             <ul class="nav navbar-nav">
                 <li>
@@ -97,6 +97,7 @@
 <script src="<%= host %>/app/items.module.js"></script>
 <script src="<%= host %>/app/items.form.module.js"></script>
 <script>
+    exhibitsModule.set_preview_link();
     itemsFormModule.set_headings_form_nav_menu_links();
     itemsModule.get_item_details();
 </script>

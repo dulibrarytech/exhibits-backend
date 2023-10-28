@@ -36,12 +36,27 @@ const itemsFormModule = (function () {
      * Gets grid data
      */
     function get_grid_data() {
+
         let grid = {};
         grid.styles = {};
         grid.columns = document.querySelector('#grid-columns').value;
-        grid.styles.backGroundColor = document.querySelector('#grid-background-color').value;
-        grid.styles.color = document.querySelector('#grid-font-color').value;
-        grid.styles.fontFamily = document.querySelector('#grid-font').value;
+
+        let grid_item_background_color = document.querySelector('#grid-background-color').value;;
+        let grid_item_color = document.querySelector('#grid-font-color').value;
+        let grid_item_font = document.querySelector('#grid-font').value;
+
+        if (grid_item_background_color.length > 0) {
+            grid.styles.backGroundColor = grid_item_background_color;
+        }
+
+        if (grid_item_color.length > 0) {
+            grid.styles.color = grid_item_color;
+        }
+
+        if (grid_item_font.length > 0) {
+            grid.styles.fontFamily = grid_item_font;
+        }
+
         return grid;
     }
 
@@ -52,23 +67,45 @@ const itemsFormModule = (function () {
 
         let item = {};
         item.styles = {};
+
         // item metadata
         item.title = document.querySelector('#item-title').value;
         item.caption = document.querySelector('#item-caption').value;
         item.description = document.querySelector('#item-description').value;
         item.text = document.querySelector('#item-text').value;
-        item.date = document.querySelector('#item-date').value; // grid item only
+
+        // grid item only
+        item.date = document.querySelector('#item-date').value;
+
         // item media
         item.thumbnail = document.querySelector('#item-thumbnail').value;
         item.item_type = document.querySelector('#item-type').value;
         item.media = document.querySelector('#item-media').value;
         item.repo_uuid = document.querySelector('#repo-uuid').value;
-        // item layout
-        item.layout = helperModule.get_checked_radio_button(document.getElementsByName('layout')); // standard item only
-        // item styles - TODO: check if styles are blank - see exhibit styles
-        item.styles.backGroundColor = document.querySelector('#item-background-color').value;
-        item.styles.color = document.querySelector('#item-font-color').value;
-        item.styles.fontFamily = document.querySelector('#item-font').value;
+
+        // item layout - standard item only
+        item.layout = helperModule.get_checked_radio_button(document.getElementsByName('layout'));
+
+        if (item.layout.length === 0) {
+            item.layout = 'grid';
+        }
+
+        // item styles
+        let item_background_color = document.querySelector('#item-background-color').value;
+        let item_color = document.querySelector('#item-font-color').value;
+        let item_font = document.querySelector('#item-font').value;
+
+        if (item_background_color.length > 0) {
+            item.styles.backGroundColor = item_background_color;
+        }
+
+        if (item_color.length > 0) {
+            item.styles.color = document.querySelector('#item-font-color').value;
+        }
+
+        if (item_font.length > 0) {
+            item.styles.fontFamily = item_font;
+        }
 
         console.log(item);
         return item;

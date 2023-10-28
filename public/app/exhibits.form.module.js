@@ -50,6 +50,7 @@ const exhibitsFormModule = (function () {
         // exhibit layout - TODO: only on option set by default
         exhibit.template = helperModule.get_checked_radio_button(document.getElementsByName('template'));
 
+        // TODO:
         // Exhibit styles
         let exhibit_nav_menu_background_color = document.querySelector('#nav-menu-background-color').value;
         let exhibit_nav_menu_font_color = document.querySelector('#nav-menu-font-color').value;

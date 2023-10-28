@@ -62,7 +62,12 @@ const itemsModule = (function () {
         const item_id = helperModule.get_parameter_by_name('item_id');
         let items;
         let item_record;
+        let item_media;
+        let media_type;
+        let layout_image;
+        let layout_image_img;
         let message = document.querySelector('#message');
+
         document.querySelector('#exhibit-title').innerHTML = await exhibitsModule.get_exhibit_title(uuid);
 
         if (uuid === undefined || item_id === undefined) {
@@ -79,10 +84,9 @@ const itemsModule = (function () {
 
         item_record = items.find(o => o.uuid === item_id);
 
-
         console.log(item_record);
 
-        let item_media = EXHIBITS_ENDPOINTS.exhibits.exhibit_media.get.endpoint.replace(':exhibit_id', uuid).replace(':media', item_record.media);
+        item_media = EXHIBITS_ENDPOINTS.exhibits.exhibit_media.get.endpoint.replace(':exhibit_id', uuid).replace(':media', item_record.media);
         document.querySelector('#item-media').innerHTML = `<img src="${item_media}" width="100%" height="400" title="${item_record.title}">`;
         document.querySelector('.item-title').innerHTML = item_record.title;
         document.querySelector('#item-description').innerHTML = `<p>${item_record.description}</p>`;
@@ -97,10 +101,7 @@ const itemsModule = (function () {
 
         document.querySelector('#item-id').innerHTML = `<p><small>${item_record.uuid}</small></p>`;
 
-        let media_type;
-
         if (item_record.item_type === 'image') {
-            // document.querySelector('#item-type').innerHTML = `<i class="fa fa-file-image-o" title="${item_record.item_type}"></i>`;
             media_type = `<i class="fa fa-file-image-o" title="${item_record.item_type}"></i>`;
         } else if (item_record.item_type === 'video') {
             document.querySelector('#item-type').innerHTML = `<i class="fa fa-file-movie-o" title="${item_record.item_type}"></i>`;
@@ -110,25 +111,28 @@ const itemsModule = (function () {
 
         document.querySelector('#item-caption').innerHTML = `${media_type}&nbsp;&nbsp;&nbsp;${item_record.caption}`;
 
-        let layout_image;
-
-        if (item_record.layout === 'item_top') {
-            layout_image = `<img src="/images/item_layout_only.png" height="75" title="${item_record.layout}"><p><small>Item layout</small></p>`;
+        if (item_record.layout === 'media_top') {
+            layout_image = 'item_layout_media_top_text_bottom.png';
+        } else if (item_record.layout === 'media_bottom') {
+            layout_image = 'item_layout_text_top_media_bottom.png';
+        } else if (item_record.layout === 'media_right') {
+            layout_image = 'item_layout_text_left_media_right.png';
+        } else if (item_record.layout === 'media_left') {
+            layout_image = 'item_layout_media_left_text_right.png';
+        } else if (item_record.layout === 'media_only') {
+            layout_image = 'item_layout_media_only.png';
+        } else if (item_record.layout === 'text_only') {
+            layout_image = 'item_layout_text_only.png';
+        } else {
+            layout_image = 'no image';
         }
 
-        document.querySelector('#item-layout').innerHTML = layout_image;
-        // TODO: other layouts
+        layout_image_img = `<img src="/images/${layout_image}" height="75" title="${item_record.layout}"><p><small>Item layout</small></p>`;
 
-        // document.querySelector('#item-layout').innerHTML = item_record.layout;
-
+        document.querySelector('#item-layout').innerHTML = layout_image_img;
         document.querySelector('#item-media-width').innerHTML = item_record.media_width;
-
         document.querySelector('#item-created').innerHTML = `<small>${item_record.created}</small>`;
-
-
         console.log(item_record.styles);
-        console.log(item_record.is_published);
-        console.log(item_record.created);
     };
 
     /**
