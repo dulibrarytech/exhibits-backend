@@ -72,6 +72,8 @@ const Exhibit_heading_record_tasks = class {
                 'type',
                 'text',
                 'order',
+                'is_visible',
+                'is_anchor',
                 'is_published',
                 'created'
             )
@@ -100,6 +102,8 @@ const Exhibit_heading_record_tasks = class {
                 'type',
                 'text',
                 'order',
+                'is_visible',
+                'is_anchor',
                 'is_published',
                 'is_locked',
                 'created'

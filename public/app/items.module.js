@@ -84,8 +84,6 @@ const itemsModule = (function () {
 
         item_record = items.find(o => o.uuid === item_id);
 
-        console.log(item_record);
-
         item_media = EXHIBITS_ENDPOINTS.exhibits.exhibit_media.get.endpoint.replace(':exhibit_id', uuid).replace(':media', item_record.media);
         document.querySelector('#item-media').innerHTML = `<img src="${item_media}" width="100%" height="400" title="${item_record.title}">`;
         document.querySelector('.item-title').innerHTML = item_record.title;
@@ -127,12 +125,17 @@ const itemsModule = (function () {
             layout_image = 'no image';
         }
 
-        layout_image_img = `<img src="/images/${layout_image}" height="75" title="${item_record.layout}"><p><small>Item layout</small></p>`;
+        layout_image_img = `<img src="/images/${layout_image}" height="85" title="${item_record.layout}"><p><small>Item layout</small></p>`;
 
         document.querySelector('#item-layout').innerHTML = layout_image_img;
         document.querySelector('#item-media-width').innerHTML = item_record.media_width;
         document.querySelector('#item-created').innerHTML = `<small>${item_record.created}</small>`;
-        console.log(item_record.styles);
+
+        if (item_record.styles.keys(obj).length > 0) {
+            // TODO:
+        }
+
+        console.log(item_record);
     };
 
     /**

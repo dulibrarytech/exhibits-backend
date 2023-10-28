@@ -73,6 +73,8 @@ const construct_heading_index_record = function (record) {
         type: record.type,
         text: record.text,
         order: record.order,
+        is_visible: record.is_visible,
+        is_anchor: record.is_anchor,
         is_published: record.is_published,
         created: record.created
     };
