@@ -293,6 +293,9 @@ exports.delete_record = async function (uuid) {
     let is_deleted = await INDEX_TASKS.delete_record(uuid);
 
     if (is_deleted === true) {
+
+        LOGGER.module().info('INFO: [/indexer/model (delete_record)] indexed record ' + uuid + ' deleted');
+
         return {
             status: 204,
             message: 'record deleted.'
@@ -305,11 +308,13 @@ exports.delete_record = async function (uuid) {
     };
 };
 
+
+
 // TODO: index all exhibits
 ///////////////////////////////////////////////////////////////////////////
 /** TODO: remove
  * Indexes all exhibit records
- */
+
 exports.index_all_records = function () {
 
     LOGGER.module().info('INFO: [/indexer/model (index_records)] indexing...');
@@ -324,12 +329,13 @@ exports.index_all_records = function () {
         message: 'Indexing records...'
     };
 };
+ */
 
 /** TODO: remove
  * Indexes single record
  * @param uuid
  * @param type
- */
+
 exports.index_record = async function (uuid, type) {
 
     try {
@@ -384,10 +390,11 @@ exports.index_record = async function (uuid, type) {
         };
     }
 };
+ */
 
 /** TODO: refactor - use index_exhibit function
  * Index exhibit records
- */
+
 const index_exhibit_records = async function (INDEX) {
 
     const EXHIBITS_INDEX_TASKS = new INDEXER_INDEX_TASKS(DB, TABLES.exhibit_records, CLIENT, INDEX);
@@ -432,11 +439,12 @@ const index_exhibit_records = async function (INDEX) {
 
     }, INDEX_TIMER);
 };
+ */
 
 /**
  * Index heading records
  * @param INDEX
- */
+
 const index_heading_records = async function (INDEX) {
 
     const HEADINGS_INDEX_TASKS = new INDEXER_INDEX_TASKS(DB, TABLES.heading_records, CLIENT, INDEX);
@@ -480,11 +488,12 @@ const index_heading_records = async function (INDEX) {
 
     }, INDEX_TIMER);
 };
+ */
 
 /** TODO: remove
  * Index item records
  * @param INDEX
- */
+
 const index_item_records = async function (INDEX) {
 
     const ITEMS_INDEX_TASKS = new INDEXER_INDEX_TASKS(DB, TABLES.item_records, CLIENT, INDEX);
@@ -532,3 +541,4 @@ const index_item_records = async function (INDEX) {
 
     }, INDEX_TIMER);
 };
+ */

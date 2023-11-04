@@ -220,6 +220,57 @@ const Exhibit_record_tasks = class {
             return false;
         }
     }
+
+    /**
+     * Sets is_published flog to true
+     * @param uuid
+     */
+    async set_to_publish(uuid) {
+
+        try {
+
+            await this.DB(this.TABLE.exhibit_records)
+            .where({
+                uuid: uuid
+            })
+            .update({
+                is_preview: 0,
+                is_published: 1
+            });
+
+            LOGGER.module().info('INFO: [/exhibits/exhibit_record_tasks (set_to_publish)] Exhibit is_published set.');
+            return true;
+
+        } catch (error) {
+            LOGGER.module().error('ERROR: [/exhibits/exhibit_record_tasks (set_to_publish)] unable to set exhibit is_published ' + error.message);
+            return false;
+        }
+    }
+
+    /**
+     * Sets is_published flog to false
+     * @param uuid
+     */
+    async set_to_suppress(uuid) {
+
+        try {
+
+            await this.DB(this.TABLE.exhibit_records)
+            .where({
+                uuid: uuid
+            })
+            .update({
+                is_published: 0
+            });
+
+            LOGGER.module().info('INFO: [/exhibits/exhibit_record_tasks (set_to_suppress)] Exhibit is_published set.');
+            return true;
+
+        } catch (error) {
+            LOGGER.module().error('ERROR: [/exhibits/exhibit_record_tasks (set_to_suppress)] unable to set exhibit is_published. ' + error.message);
+            return false;
+        }
+    }
 };
 
 module.exports = Exhibit_record_tasks;

@@ -316,8 +316,6 @@ exports.build_exhibit_preview = async function (req, res) {
 
     const result = await EXHIBITS_MODEL.build_exhibit_preview(uuid);
 
-    console.log(result.message);
-
     if (result.status === true) {
 
         setTimeout(() => {
@@ -330,3 +328,47 @@ exports.build_exhibit_preview = async function (req, res) {
     // TODO: get preview service api key
     // TODO: redirect to frontend preview | uuid and api key
 };
+
+exports.publish_exhibit = async function (req, res) {
+    console.log(req.params);
+    const uuid = req.params.exhibit_id;
+
+    if (uuid === undefined || uuid.length === 0) {
+        res.status(400).send('Bad request.');
+        return false;
+    }
+
+    const result = await EXHIBITS_MODEL.publish_exhibit(uuid);
+
+    if (result.status === true) {
+        res.status(200).send({
+            message: 'Exhibit published.'
+        });
+    } else {
+        res.status(400).send({
+            message: 'Unable to publish exhibit'
+        });
+    }
+}
+
+exports.suppress_exhibit = async function (req, res) {
+
+    const uuid = req.params.exhibit_id;
+
+    if (uuid === undefined || uuid.length === 0) {
+        res.status(400).send('Bad request.');
+        return false;
+    }
+
+    const result = await EXHIBITS_MODEL.suppress_exhibit(uuid);
+
+    if (result.status === true) {
+        res.status(200).send({
+            message: 'Exhibit suppressed.'
+        });
+    } else {
+        res.status(400).send({
+            message: 'Unable to suppress exhibit'
+        });
+    }
+}

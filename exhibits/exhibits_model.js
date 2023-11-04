@@ -26,6 +26,8 @@ const EXHIBITS_CREATE_RECORD_SCHEMA = require('../exhibits/schemas/exhibit_creat
 const EXHIBITS_UPDATE_RECORD_SCHEMA = require('../exhibits/schemas/exhibit_update_record_schema')();
 const EXHIBIT_RECORD_TASKS = require('../exhibits/tasks/exhibit_record_tasks');
 const EXHIBIT_ITEM_RECORD_TASKS = require('./tasks/exhibit_item_record_tasks');
+const EXHIBIT_HEADING_RECORD_TASKS = require('./tasks/exhibit_heading_record_tasks');
+const EXHIBIT_GRID_RECORD_TASKS = require('./tasks/exhibit_grid_record_tasks');
 const HELPER = require('../libs/helper');
 const VALIDATOR = require('../libs/validate');
 const LOGGER = require('../libs/log4');
@@ -294,22 +296,99 @@ exports.build_exhibit_preview = async function (uuid) {
     }
 };
 
-/** TODO
+/**
  * Publishes exhibit
  * @param uuid
  */
-exports.publish_exhibit = function (uuid) {
-    // TODO: update publish field in db tables by uuid
-    // TODO: make request to indexer "index_exhibit"
+exports.publish_exhibit = async function (uuid) {
+
+    try {
+
+        const EXHIBIT_TASKS = new EXHIBIT_RECORD_TASKS(DB, TABLES);
+        const ITEM_TASKS = new EXHIBIT_ITEM_RECORD_TASKS(DB, TABLES);
+        const HEADING_TASKS = new EXHIBIT_HEADING_RECORD_TASKS(DB, TABLES);
+        const GRID_TASKS = new EXHIBIT_GRID_RECORD_TASKS(DB, TABLES);
+
+        const is_exhibit_published = await EXHIBIT_TASKS.set_to_publish(uuid);
+        const is_item_published = await ITEM_TASKS.set_to_publish(uuid);
+        const is_heading_published = await HEADING_TASKS.set_to_publish(uuid);
+        const is_grid_published = await GRID_TASKS.set_to_publish(uuid);
+
+        if (is_exhibit_published === false || is_item_published === false || is_heading_published === false || is_grid_published === false) {
+            LOGGER.module().error('ERROR: [/exhibits/model (publish_exhibit)] Unable to publish exhibit');
+            return false;
+        }
+
+        const is_indexed = await INDEXER_MODEL.index_exhibit(uuid);
+
+        if (is_indexed.status === 201) {
+
+            return {
+                status: true,
+                message: 'Exhibit published'
+            };
+
+        } else {
+            return false;
+        }
+
+    } catch (error) {
+        LOGGER.module().error('ERROR: [/exhibits/model (publish_exhibit)] ' + error.message);
+    }
 };
 
-/** TODO
+/**
  * Suppresses exhibit
  * @param uuid
  */
-exports.suppress_exhibit = function (uuid) {
-    // TODO: update publish field in db tables
-    // TODO: delete all exhibit records in index by uuid
+exports.suppress_exhibit = async function (uuid) {
+
+    try {
+
+        const EXHIBIT_TASKS = new EXHIBIT_RECORD_TASKS(DB, TABLES);
+        const ITEM_TASKS = new EXHIBIT_ITEM_RECORD_TASKS(DB, TABLES);
+        const HEADING_TASKS = new EXHIBIT_HEADING_RECORD_TASKS(DB, TABLES);
+        const GRID_TASKS = new EXHIBIT_GRID_RECORD_TASKS(DB, TABLES);
+
+        const is_exhibit_suppressed = await EXHIBIT_TASKS.set_to_suppress(uuid);
+        const is_item_suppressed = await ITEM_TASKS.set_to_suppress(uuid);
+        const is_heading_suppressed = await HEADING_TASKS.set_to_suppress(uuid);
+        const is_grid_suppressed = await GRID_TASKS.set_to_suppress(uuid);
+
+        if (is_exhibit_suppressed === false || is_item_suppressed === false || is_heading_suppressed === false || is_grid_suppressed === false) {
+            LOGGER.module().error('ERROR: [/exhibits/model (publish_exhibit)] Unable to suppress exhibit');
+            return false;
+        }
+
+        const items = await ITEM_TASKS.get_item_records(uuid);
+        const grids = await GRID_TASKS.get_grid_records(uuid);
+
+        for (let i=0;i<items.length;i++) {
+
+            let is_deleted = await INDEXER_MODEL.delete_record(items[i].uuid);
+
+            if (is_deleted.status !== 204) {
+                LOGGER.module().error('ERROR: [/exhibits/model (suppress_exhibit)] Unable to delete item ' + items[i].uuid + ' from index');
+            }
+        }
+
+        for (let g=0;g<grids.length;g++) {
+
+            let is_deleted = await INDEXER_MODEL.delete_record(grids[g].uuid);
+
+            if (is_deleted.status !== 204) {
+                LOGGER.module().error('ERROR: [/exhibits/model (suppress_exhibit)] Unable to delete grid ' + grids[g].uuid + ' from index');
+            }
+        }
+
+        return {
+            status: true,
+            message: 'Exhibit suppressed.'
+        };
+
+    } catch (error) {
+        LOGGER.module().error('ERROR: [/exhibits/model (suppress_exhibit)] ' + error.message);
+    }
 };
 
 // TODO: publish and suppress single records i.e. items, headings, grids, timelines

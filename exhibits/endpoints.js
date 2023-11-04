@@ -66,8 +66,21 @@ const ENDPOINTS = {
         exhibit_preview: {
           get: {
               description: 'Previews exhibit',
-              endpoint: '/preview'
+              endpoint: '/preview',
+              params: ''
           }
+        },
+        exhibit_publish: {
+            post: {
+                description: 'Publishes exhibit',
+                endpoint: `${PREFIX}${VERSION}${ENDPOINT}/:exhibit_id/publish`
+            }
+        },
+        exhibit_suppress: {
+            post: {
+                description: 'Suppresses exhibit',
+                endpoint: `${PREFIX}${VERSION}${ENDPOINT}/:exhibit_id/suppress`
+            }
         },
         grid_records: {
             post: {

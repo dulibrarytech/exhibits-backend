@@ -89,4 +89,10 @@ module.exports = function (app) {
 
     app.route(ENDPOINTS().exhibits.exhibit_preview.get.endpoint)
     .get(CONTROLLER.build_exhibit_preview);  // TOKEN verify
+
+    app.route(ENDPOINTS().exhibits.exhibit_publish.post.endpoint)
+    .post(CONTROLLER.publish_exhibit);
+
+    app.route(ENDPOINTS().exhibits.exhibit_suppress.post.endpoint)
+    .post(CONTROLLER.suppress_exhibit);
 };

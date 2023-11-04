@@ -183,6 +183,56 @@ const Exhibit_heading_record_tasks = class {
             LOGGER.module().error('ERROR: [/exhibits/exhibit_heading_record_tasks (delete_heading_record)] unable to delete record ' + error.message);
         }
     }
+
+    /**
+     * Sets is_published flogs to true
+     * @param uuid
+     */
+    async set_to_publish(uuid) {
+
+        try {
+
+            await this.DB(this.TABLE.heading_records)
+            .where({
+                is_member_of_exhibit: uuid
+            })
+            .update({
+                is_published: 1
+            });
+
+            LOGGER.module().info('INFO: [/exhibits/exhibit_heading_record_tasks (set_to_publish)] Heading is_published set.');
+            return true;
+
+        } catch (error) {
+            LOGGER.module().error('ERROR: [/exhibits/exhibit_heading_record_tasks (set_to_publish)] unable to set heading is_published ' + error.message);
+            return false;
+        }
+    }
+
+    /**
+     * Sets is_published flogs to false
+     * @param uuid
+     */
+    async set_to_suppress(uuid) {
+
+        try {
+
+            await this.DB(this.TABLE.heading_records)
+            .where({
+                is_member_of_exhibit: uuid
+            })
+            .update({
+                is_published: 0
+            });
+
+            LOGGER.module().info('INFO: [/exhibits/exhibit_heading_record_tasks (set_to_suppress)] Heading is_published set.');
+            return true;
+
+        } catch (error) {
+            LOGGER.module().error('ERROR: [/exhibits/exhibit_heading_record_tasks (set_to_suppress)] unable to set heading is_published. ' + error.message);
+            return false;
+        }
+    }
 };
 
 module.exports = Exhibit_heading_record_tasks;
