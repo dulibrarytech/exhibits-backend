@@ -82,14 +82,15 @@ const exhibitsModule = (function () {
             let uuid = exhibits[i].uuid;
             let is_published = exhibits[i].is_published;
             let preview_link = `/preview?uuid=${uuid}`;
+            let exhibit_items = `<a href="/dashboard/items?uuid=${exhibits[i].uuid}" title="Exhibit items"><i class="fa fa-search pr-1"></i></a>&nbsp;`;
             let thumbnail = '';
             let status;
             let title;
 
             if (is_published === 1) {
-                status = `<span title="published"><i class="fa fa-cloud"></i><br>Published</span>`;
+                status = `<a href="#" class="suppress-exhibit"><span title="published"><i class="fa fa-cloud"></i><br>Published</span></a>`;
             } else if (is_published === 0) {
-                status = `<span title="suppressed"><i class="fa fa-cloud-upload"></i><br>Suppressed</span>`;
+                status = `<a href="#" id="${exhibits[i].uuid}" class="publish-exhibit"><span title="suppressed"><i class="fa fa-cloud-upload"></i><br>Suppressed</span></a>`;
             }
 
             if (exhibits[i].thumbnail.length > 0) {
@@ -109,10 +110,10 @@ const exhibitsModule = (function () {
                     </p>
                     </td>`;
 
-            // <p><a class="btn btn-outline-secondary" href="/preview" title="preview"><i class="fa fa-eye"></i>&nbsp;Preview</a></p>
             exhibit_data += `<td style="width: 5%;text-align: center"><small>${status}</small></td>`;
             exhibit_data += `<td style="width: 10%">
                                 <div class="card-text text-sm-center">
+                                    ${exhibit_items}
                                     <a href="#" title="Edit"><i class="fa fa-edit pr-1"></i> </a>&nbsp;
                                     <a href="#" title="Add Items"><i class="fa fa-plus pr-1"></i> </a>
                                     &nbsp;
@@ -123,6 +124,7 @@ const exhibitsModule = (function () {
         }
 
         document.querySelector('#exhibits-data').innerHTML = exhibit_data;
+        bind_publish_exhibit_event();
 
         let table = new DataTable('#exhibits');
         setTimeout(() => {
@@ -182,6 +184,23 @@ const exhibitsModule = (function () {
     obj.close_preview = function () {
         link.close();
     };
+
+    function publish_exhibit(uuid) {
+        console.log('Publishing: ', uuid);
+
+    }
+
+    function bind_publish_exhibit_event() {
+
+        const exhibit_links = Array.from(document.getElementsByClassName('publish-exhibit'));
+
+        exhibit_links.forEach(exhibit_link => {
+            exhibit_link.addEventListener('click', function handleClick(event) {
+                const uuid = exhibit_link.getAttribute('id');
+                publish_exhibit(uuid);
+            });
+        });
+    }
 
     obj.init = async function () {
         await exhibitsModule.display_exhibits();

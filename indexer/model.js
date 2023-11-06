@@ -310,7 +310,7 @@ exports.delete_record = async function (uuid) {
 
 
 
-// TODO: index all exhibits
+// TODO: index all exhibits Remove
 ///////////////////////////////////////////////////////////////////////////
 /** TODO: remove
  * Indexes all exhibit records
