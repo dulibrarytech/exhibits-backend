@@ -20,9 +20,8 @@ const exhibitsModule = (function () {
 
     'use strict';
 
-    const EXHIBITS_ENDPOINTS = endpointsModule.get_exhibits_endpoints();
-    let link;
     let obj = {};
+    let link;
 
     /**
      * Gets all exhibits
@@ -31,25 +30,19 @@ const exhibitsModule = (function () {
 
         try {
 
-            let token = authModule.get_user_token();
+            const EXHIBITS_ENDPOINTS = endpointsModule.get_exhibits_endpoints();
+            const token = authModule.get_user_token();
 
-            if (token === false) {
-                window.location.replace('/dashboard/login');
+            if (token === false || EXHIBITS_ENDPOINTS === null) {
+
+                document.querySelector('#message').innerHTML = 'ERROR: Unable to get API endpoints';
+
+                setTimeout(() => {
+                    window.location.replace('/dashboard/login');
+                }, 3000);
+
                 return false;
             }
-
-            console.log('EXHIBITS_ENDPOINTS ', EXHIBITS_ENDPOINTS);
-
-            /* // TODO: stays null - figure this out
-
-            if (EXHIBITS_ENDPOINTS === null) {
-                setTimeout(() => {
-                    location.reload();
-                    return false;
-                }, 0);
-            }
-
-             */
 
             let response = await httpModule.req({
                 method: 'GET',
@@ -59,7 +52,7 @@ const exhibitsModule = (function () {
                     'x-access-token': token
                 }
             });
-            console.log(response);
+
             if (response !== undefined && response.status === 200) {
                 return response.data.data;
             }
@@ -146,8 +139,9 @@ const exhibitsModule = (function () {
 
         try {
 
-            let token = authModule.get_user_token();
-            let response = await httpModule.req({
+            const EXHIBITS_ENDPOINTS = endpointsModule.get_exhibits_endpoints();
+            const token = authModule.get_user_token();
+            const response = await httpModule.req({
                 method: 'GET',
                 url: EXHIBITS_ENDPOINTS.exhibits.exhibit_records.endpoints.get.endpoint.replace(':exhibit_id', uuid),
                 headers: {
@@ -165,6 +159,9 @@ const exhibitsModule = (function () {
         }
     };
 
+    /**
+     * Sets preview link
+     */
     obj.set_preview_link = function () {
 
         let uuid = helperModule.get_parameter_by_name('uuid');
@@ -177,6 +174,10 @@ const exhibitsModule = (function () {
         document.querySelector('#preview-link').innerHTML = preview_menu_fragment;
     };
 
+    /**
+     * Opens a window for the preview
+     * @param preview_link
+     */
     obj.open_preview = function (preview_link) {
 
         if (link !== undefined) {
@@ -186,13 +187,21 @@ const exhibitsModule = (function () {
         link = window.open(preview_link, '_blank', 'location=yes,scrollbars=yes,status=yes');
     };
 
+    /**
+     * Closes preview window
+     */
     obj.close_preview = function () {
         link.close();
     };
 
+    /**
+     * Publishes exhibit
+     * @param uuid
+     */
     async function publish_exhibit(uuid) {
 
         document.querySelector('#publish').innerHTML = 'Publishing...';
+        const EXHIBITS_ENDPOINTS = endpointsModule.get_exhibits_endpoints();
         const token = authModule.get_user_token();
         const response = await httpModule.req({
             method: 'POST',
@@ -203,7 +212,6 @@ const exhibitsModule = (function () {
             }
         });
 
-        console.log(response);
         if (response.status === 200) {
             console.log('response: ', response.data.message);
             document.querySelector('#publish').innerHTML = 'Published';
@@ -217,6 +225,9 @@ const exhibitsModule = (function () {
         }
     }
 
+    /**
+     * Binds click behavior to exhibit links
+     */
     function bind_publish_exhibit_event() {
 
         const exhibit_links = Array.from(document.getElementsByClassName('publish-exhibit'));
@@ -229,6 +240,9 @@ const exhibitsModule = (function () {
         });
     }
 
+    /**
+     * Runs functions when page loads
+     */
     obj.init = async function () {
         await exhibitsModule.display_exhibits();
     };

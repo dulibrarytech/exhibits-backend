@@ -22,10 +22,10 @@ const homeModule = (function () {
 
     let obj = {};
 
-    obj.init = function() {
+    obj.init = async function() {
 
         if (authModule.check_user_auth_data() === false) {
-            authModule.get_auth_user_data();
+            await authModule.get_auth_user_data();
         }
 
         history.replaceState({}, '', '/dashboard/exhibits');
@@ -43,4 +43,6 @@ const homeModule = (function () {
 
 }());
 
-homeModule.init();
+(async () => {
+    await homeModule.init();
+})();
