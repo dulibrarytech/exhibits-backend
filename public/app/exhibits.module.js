@@ -38,12 +38,18 @@ const exhibitsModule = (function () {
                 return false;
             }
 
+            console.log('EXHIBITS_ENDPOINTS ', EXHIBITS_ENDPOINTS);
+
+            /* // TODO: stays null - figure this out
+
             if (EXHIBITS_ENDPOINTS === null) {
                 setTimeout(() => {
                     location.reload();
                     return false;
                 }, 0);
             }
+
+             */
 
             let response = await httpModule.req({
                 method: 'GET',
@@ -64,8 +70,7 @@ const exhibitsModule = (function () {
     }
 
     /**
-     *
-     * @return {Promise<boolean>}
+     * Display exhibits
      */
     obj.display_exhibits = async function () {
 
@@ -88,9 +93,9 @@ const exhibitsModule = (function () {
             let title;
 
             if (is_published === 1) {
-                status = `<a href="#" class="suppress-exhibit"><span title="published"><i class="fa fa-cloud"></i><br>Published</span></a>`;
+                status = `<a href="#" id="${exhibits[i].uuid}" class="suppress-exhibit"><span id="suppress" title="published"><i class="fa fa-cloud"></i><br>Published</span></a>`;
             } else if (is_published === 0) {
-                status = `<a href="#" id="${exhibits[i].uuid}" class="publish-exhibit"><span title="suppressed"><i class="fa fa-cloud-upload"></i><br>Suppressed</span></a>`;
+                status = `<a href="#" id="${exhibits[i].uuid}" class="publish-exhibit"><span id="publish" title="suppressed"><i class="fa fa-cloud-upload"></i><br>Suppressed</span></a>`;
             }
 
             if (exhibits[i].thumbnail.length > 0) {
@@ -185,9 +190,31 @@ const exhibitsModule = (function () {
         link.close();
     };
 
-    function publish_exhibit(uuid) {
-        console.log('Publishing: ', uuid);
+    async function publish_exhibit(uuid) {
 
+        document.querySelector('#publish').innerHTML = 'Publishing...';
+        const token = authModule.get_user_token();
+        const response = await httpModule.req({
+            method: 'POST',
+            url: EXHIBITS_ENDPOINTS.exhibits.exhibit_publish.post.endpoint.replace(':exhibit_id', uuid),
+            headers: {
+                'Content-Type': 'application/json',
+                'x-access-token': token
+            }
+        });
+
+        console.log(response);
+        if (response.status === 200) {
+            console.log('response: ', response.data.message);
+            document.querySelector('#publish').innerHTML = 'Published';
+
+            setTimeout(() => {
+                const elem = document.querySelector(`#${uuid}`);
+                elem.classList.remove('publish-exhibit');
+                elem.classList.add('suppress-exhibit');
+                document.querySelector('.suppress-exhibit').innerHTML = '<span id="suppress" title="published"><i class="fa fa-cloud"></i><br>Published</span>';
+            }, 300);
+        }
     }
 
     function bind_publish_exhibit_event() {
@@ -195,9 +222,9 @@ const exhibitsModule = (function () {
         const exhibit_links = Array.from(document.getElementsByClassName('publish-exhibit'));
 
         exhibit_links.forEach(exhibit_link => {
-            exhibit_link.addEventListener('click', function handleClick(event) {
+            exhibit_link.addEventListener('click', async function handleClick(event) {
                 const uuid = exhibit_link.getAttribute('id');
-                publish_exhibit(uuid);
+                await publish_exhibit(uuid);
             });
         });
     }
