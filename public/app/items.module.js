@@ -177,10 +177,18 @@ const itemsModule = (function () {
             let item_details = '';
 
             if (is_published === 1) {
+                status = `<a href="#" id="${item_id}" class="suppress-item"><span id="suppress" title="published"><i class="fa fa-cloud" style="color: green"></i><br>Published</span></a>`;
+            } else if (is_published === 0) {
+                status = `<a href="#" id="${item_id}" class="publish-item"><span id="publish" title="suppressed"><i class="fa fa-cloud-upload" style="color: darkred"></i><br>Suppressed</span></a>`;
+            }
+
+            /*
+            if (is_published === 1) {
                 status = `<span title="published"><i class="fa fa-cloud"></i><br><smal>Published</smal></span>`;
             } else if (is_published === 0) {
                 status = `<span title="suppressed"><i class="fa fa-cloud-upload"></i><br><small>Suppressed</small></span>`;
             }
+            */
 
             item_data += '<tr>';
             item_data += `<td style="width: 5%">${order}</td>`;
@@ -250,7 +258,7 @@ const itemsModule = (function () {
                     </td>`;
             }
 
-            item_data += `<td style="width: 5%;text-align: center">${status}</td>`;
+            item_data += `<td style="width: 5%;text-align: center"><small>${status}</small></td>`;
             item_data += `<td style="width: 10%">
                                 <div class="card-text text-sm-center">
                                     ${item_details}&nbsp;
