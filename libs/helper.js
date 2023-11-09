@@ -50,8 +50,9 @@ const Helper = class {
      * @param db
      * @param table
      */
-    lock_record(uuid, db, table){
+    lock_record(uuid, db, table) {
         // TODO: refactor / async/await
+
         let promise = new Promise((resolve, reject) => {
 
             db(table)

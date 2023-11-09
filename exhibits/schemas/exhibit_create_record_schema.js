@@ -27,7 +27,7 @@ module.exports = () => {
         alert_text: {type: 'string'},
         description: {type: 'string'},
         hero_image: {type: 'string'},
-        thumbnail_image: {type: 'string'},
+        thumbnail: {type: 'string'},
         banner_template: {type: 'string'},
         page_layout: {type: 'string'},
         template: {type: 'string'},

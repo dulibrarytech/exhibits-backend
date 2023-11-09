@@ -39,7 +39,7 @@ const exhibitsFormModule = (function () {
 
         // exhibit media
         exhibit.hero_image = document.querySelector('#hero-image').value;
-        exhibit.thumbnail_image = document.querySelector('#thumbnail-image').value;
+        exhibit.thumbnail = document.querySelector('#thumbnail-image').value;
 
         // exhibit banner
         exhibit.banner_template = helperModule.get_checked_radio_button(document.getElementsByName('banner_template'));

@@ -86,9 +86,9 @@ const exhibitsModule = (function () {
             let title;
 
             if (is_published === 1) {
-                status = `<a href="#" id="${exhibits[i].uuid}" class="suppress-exhibit"><span id="suppress" title="published"><i class="fa fa-cloud"></i><br>Published</span></a>`;
+                status = `<a href="#" id="${exhibits[i].uuid}" class="suppress-exhibit"><span id="suppress" title="published"><i class="fa fa-cloud"></i><br>Suppress</span></a>`;
             } else if (is_published === 0) {
-                status = `<a href="#" id="${exhibits[i].uuid}" class="publish-exhibit"><span id="publish" title="suppressed"><i class="fa fa-cloud-upload"></i><br>Suppressed</span></a>`;
+                status = `<a href="#" id="${exhibits[i].uuid}" class="publish-exhibit"><span id="publish" title="suppressed"><i class="fa fa-cloud-upload"></i><br>Publish</span></a>`;
             }
 
             if (exhibits[i].thumbnail.length > 0) {
@@ -101,11 +101,23 @@ const exhibitsModule = (function () {
             exhibit_data += `<td style="width: 35%">
                     <p><strong><a href="/dashboard/items?uuid=${uuid}">${title}</a></strong></p>
                     ${thumbnail}
+                    <!--
                     <p id="preview-link">
                         <a class="btn btn-outline-secondary" href="#" onclick="exhibitsModule.open_preview('${preview_link}');">
                             <i class=" menu-icon fa fa-eye"></i> Preview
                         </a>
                     </p>
+                    -->
+                    <div class="d-flex justify-content-between align-items-center">
+                                <div class="btn-group">
+                                     <span id="preview-link">
+                                    <button type="button" class="btn btn-sm btn-outline-secondary" onclick="exhibitsModule.open_preview('${preview_link}');">
+                                        <i class=" menu-icon fa fa-eye"></i>
+                                        <small>Preview</small>
+                                    </button>
+                                    </span>
+                                </div>
+                            </div>
                     </td>`;
 
             exhibit_data += `<td style="width: 5%;text-align: center"><small>${status}</small></td>`;
@@ -113,7 +125,7 @@ const exhibitsModule = (function () {
                                 <div class="card-text text-sm-center">
                                     ${exhibit_items}
                                     <a href="#" title="Edit"><i class="fa fa-edit pr-1"></i> </a>&nbsp;
-                                    <a href="#" title="Add Items"><i class="fa fa-plus pr-1"></i> </a>
+                                    <a href="/dashboard/items?uuid=${uuid}" title="Add Items"><i class="fa fa-plus pr-1"></i> </a>
                                     &nbsp;
                                     <a href="#" title="Delete"><i class="fa fa-trash pr-1"></i> </a>&nbsp;
                                 </div>
@@ -122,7 +134,8 @@ const exhibitsModule = (function () {
         }
 
         document.querySelector('#exhibits-data').innerHTML = exhibit_data;
-        bind_publish_exhibit_event();
+        bind_publish_exhibit_events();
+        bind_suppress_exhibit_events();
 
         let table = new DataTable('#exhibits');
         setTimeout(() => {
@@ -200,7 +213,6 @@ const exhibitsModule = (function () {
      */
     async function publish_exhibit(uuid) {
 
-        document.querySelector('#publish').innerHTML = 'Publishing...';
         const EXHIBITS_ENDPOINTS = endpointsModule.get_exhibits_endpoints();
         const token = authModule.get_user_token();
         const response = await httpModule.req({
@@ -213,29 +225,80 @@ const exhibitsModule = (function () {
         });
 
         if (response.status === 200) {
-            console.log('response: ', response.data.message);
-            document.querySelector('#publish').innerHTML = 'Published';
 
             setTimeout(() => {
-                const elem = document.querySelector(`#${uuid}`);
-                elem.classList.remove('publish-exhibit');
-                elem.classList.add('suppress-exhibit');
-                document.querySelector('.suppress-exhibit').innerHTML = '<span id="suppress" title="published"><i class="fa fa-cloud"></i><br>Published</span>';
-            }, 300);
+                let elem = document.getElementById(uuid);
+                document.getElementById(uuid).classList.remove('publish-exhibit');
+                document.getElementById(uuid).classList.add('suppress-exhibit');
+                document.getElementById(uuid).replaceWith(elem.cloneNode(true));
+                document.getElementById(uuid).innerHTML = '<span id="suppress" title="published"><i class="fa fa-cloud"></i><br>Suppress</span>';
+                document.getElementById(uuid).addEventListener('click', async () => {
+                    const uuid = elem.getAttribute('id');
+                    await suppress_exhibit(uuid);
+                }, false);
+            }, 0);
         }
     }
 
     /**
-     * Binds click behavior to exhibit links
+     * Suppresses exhibit
+     * @param uuid
      */
-    function bind_publish_exhibit_event() {
+    async function suppress_exhibit(uuid) {
+
+        const EXHIBITS_ENDPOINTS = endpointsModule.get_exhibits_endpoints();
+        const token = authModule.get_user_token();
+        const response = await httpModule.req({
+            method: 'POST',
+            url: EXHIBITS_ENDPOINTS.exhibits.exhibit_suppress.post.endpoint.replace(':exhibit_id', uuid),
+            headers: {
+                'Content-Type': 'application/json',
+                'x-access-token': token
+            }
+        });
+
+        if (response.status === 200) {
+
+            setTimeout(() => {
+                let elem = document.getElementById(uuid);
+                document.getElementById(uuid).classList.remove('suppress-exhibit');
+                document.getElementById(uuid).classList.add('publish-exhibit');
+                document.getElementById(uuid).replaceWith(elem.cloneNode(true));
+                document.getElementById(uuid).innerHTML = '<span id="publish" title="suppressed"><i class="fa fa-cloud-upload"></i><br>Publish</span>';
+                document.getElementById(uuid).addEventListener('click', async (event) => {
+                    const uuid = elem.getAttribute('id');
+                    await publish_exhibit(uuid);
+                }, false);
+            }, 0);
+        }
+    }
+
+    /**
+     * Binds publish click behavior to exhibit links
+     */
+    function bind_publish_exhibit_events() {
 
         const exhibit_links = Array.from(document.getElementsByClassName('publish-exhibit'));
 
         exhibit_links.forEach(exhibit_link => {
-            exhibit_link.addEventListener('click', async function handleClick(event) {
+            exhibit_link.addEventListener('click', async (event) => {
                 const uuid = exhibit_link.getAttribute('id');
                 await publish_exhibit(uuid);
+            });
+        });
+    }
+
+    /**
+     * Binds suppress click behavior to exhibit links
+     */
+    function bind_suppress_exhibit_events() {
+
+        const exhibit_links = Array.from(document.getElementsByClassName('suppress-exhibit'));
+
+        exhibit_links.forEach(exhibit_link => {
+            exhibit_link.addEventListener('click', async () => {
+                const uuid = exhibit_link.getAttribute('id');
+                await suppress_exhibit(uuid);
             });
         });
     }

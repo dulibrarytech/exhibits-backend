@@ -133,7 +133,7 @@ const Exhibit_record_tasks = class {
                 try {
 
                     const HELPER_TASK = new HELPER();
-                    await HELPER_TASK.lock_record(uuid, this.DB, this.TABLE);
+                    await HELPER_TASK.lock_record(uuid, this.DB, this.TABLE.exhibit_records);
                     return data;
 
                 } catch (error) {

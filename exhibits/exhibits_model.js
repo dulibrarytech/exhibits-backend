@@ -72,15 +72,15 @@ exports.create_exhibit_record = async function (data) {
             data.hero_image = `${data.uuid}_${data.hero_image}`;
         }
 
-        if (data.thumbnail_image.length > 0) {
+        if (data.thumbnail.length > 0) {
 
-            FS.rename(`./storage/${data.thumbnail_image}`, `./storage/${data.uuid}/${data.uuid}_${data.thumbnail_image}`, (error) => {
+            FS.rename(`./storage/${data.thumbnail}`, `./storage/${data.uuid}/${data.uuid}_${data.thumbnail}`, (error) => {
                 if (error) {
                     console.log('ERROR: ' + error);
                 }
             });
 
-            data.thumbnail_image = `${data.uuid}_${data.thumbnail_image}`;
+            data.thumbnail = `${data.uuid}_${data.thumbnail}`;
         }
 
         if (data.styles === undefined || data.styles.length === 0) {
@@ -362,6 +362,9 @@ exports.suppress_exhibit = async function (uuid) {
 
         const items = await ITEM_TASKS.get_item_records(uuid);
         const grids = await GRID_TASKS.get_grid_records(uuid);
+
+        let is_exhibit_deleted = await INDEXER_MODEL.delete_record(uuid);
+        // TODO: handle is exhibit deleted == false
 
         for (let i=0;i<items.length;i++) {
 
