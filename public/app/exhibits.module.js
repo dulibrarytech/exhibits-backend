@@ -86,9 +86,9 @@ const exhibitsModule = (function () {
             let title;
 
             if (is_published === 1) {
-                status = `<a href="#" id="${exhibits[i].uuid}" class="suppress-exhibit"><span id="suppress" title="published"><i class="fa fa-cloud"></i><br>Suppress</span></a>`;
+                status = `<a href="#" id="${exhibits[i].uuid}" class="suppress-exhibit"><span id="suppress" title="published"><i class="fa fa-cloud" style="color: green"></i><br>Published</span></a>`;
             } else if (is_published === 0) {
-                status = `<a href="#" id="${exhibits[i].uuid}" class="publish-exhibit"><span id="publish" title="suppressed"><i class="fa fa-cloud-upload"></i><br>Publish</span></a>`;
+                status = `<a href="#" id="${exhibits[i].uuid}" class="publish-exhibit"><span id="publish" title="suppressed"><i class="fa fa-cloud-upload" style="color: darkred"></i><br>Suppressed</span></a>`;
             }
 
             if (exhibits[i].thumbnail.length > 0) {
@@ -231,7 +231,7 @@ const exhibitsModule = (function () {
                 document.getElementById(uuid).classList.remove('publish-exhibit');
                 document.getElementById(uuid).classList.add('suppress-exhibit');
                 document.getElementById(uuid).replaceWith(elem.cloneNode(true));
-                document.getElementById(uuid).innerHTML = '<span id="suppress" title="published"><i class="fa fa-cloud"></i><br>Suppress</span>';
+                document.getElementById(uuid).innerHTML = '<span id="suppress" title="published"><i class="fa fa-cloud" style="color: green"></i><br>Published</span>';
                 document.getElementById(uuid).addEventListener('click', async () => {
                     const uuid = elem.getAttribute('id');
                     await suppress_exhibit(uuid);
@@ -264,7 +264,7 @@ const exhibitsModule = (function () {
                 document.getElementById(uuid).classList.remove('suppress-exhibit');
                 document.getElementById(uuid).classList.add('publish-exhibit');
                 document.getElementById(uuid).replaceWith(elem.cloneNode(true));
-                document.getElementById(uuid).innerHTML = '<span id="publish" title="suppressed"><i class="fa fa-cloud-upload"></i><br>Publish</span>';
+                document.getElementById(uuid).innerHTML = '<span id="publish" title="suppressed"><i class="fa fa-cloud-upload" style="color: darkred"></i><br>Suppressed</span>';
                 document.getElementById(uuid).addEventListener('click', async (event) => {
                     const uuid = elem.getAttribute('id');
                     await publish_exhibit(uuid);
