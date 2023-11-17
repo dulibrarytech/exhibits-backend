@@ -28,7 +28,10 @@ const itemsFormModule = (function () {
      */
     function get_heading_data() {
         let item_heading = {};
+        let styles = {};
         item_heading.text = document.querySelector('#item-heading-text').value;
+        // TODO:
+        item_heading.styles;
         return item_heading;
     }
 

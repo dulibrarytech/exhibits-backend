@@ -1,4 +1,14 @@
 <%- include('partials/header.ejs'); %>
+<style>
+    .color-picker {
+        background-color: none;
+        outline: none;
+        border: 1px solid grey;
+        height: 38px;
+        width: 50px;
+        cursor: pointer;
+    }
+</style>
 <body>
 <aside id="left-panel" class="left-panel">
     <nav class="navbar navbar-expand-sm navbar-default">
@@ -49,6 +59,53 @@
                             <small class="form-text text-muted">* Required</small>
                         </div>
                     </div>
+
+                    <hr>
+
+                    <p>
+                            <span class="form-text text-muted"
+                                  style="font-size: 17px">Apply Custom Styles to Heading</span>
+                    </p>
+                    <div class="row form-group">
+                        <div class="col-12 col-md-12">
+                            <div class="input-group">
+                                <div class="input-group-btn">
+                                    <input title="Color Picker" class="color-picker btn btn-default" type="color"
+                                           id="heading-background-color-picker" value="#ffffff">
+                                </div>
+                                <input type="text" id="heading-background-color" name="heading_background_color"
+                                       placeholder="Heading Background Color" class="form-control">
+
+                            </div>
+                        </div>
+                    </div>
+                    <div class="row form-group">
+                        <div class="col-12 col-md-12">
+                            <div class="input-group">
+                                <div class="input-group-btn">
+                                    <input title="Color Picker" class="color-picker btn btn-default" type="color"
+                                           id="heading-font-color-picker"
+                                           value="#ffffff">
+                                </div>
+                                <input type="text" id="heading-font-color" name="item_font_color"
+                                       placeholder="Heading Font Color" class="form-control">
+                            </div>
+                        </div>
+                    </div>
+                    <div class="row form-group">
+                        <div class="col-12 col-md-12">
+                            <div class="input-group">
+                                <select name="heading_font" id="heading-font"
+                                        class="form-control-lg form-control text-muted">
+                                    <option value="">Heading Font</option>
+                                    <option value="Helvetica">Helvetica</option>
+                                    <option value="Arial">Arial</option>
+                                    <option value="Times New Roman">Times New Roman</option>
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+
                     <hr>
                     <button class="btn btn-primary" type="button" id="save-heading-btn">
                         <i class="fa fa-save"></i>&nbsp;&nbsp;Save
@@ -82,6 +139,18 @@
     document.querySelector('#save-heading-btn').addEventListener('click', itemsFormModule.create_heading_record);
     itemsFormModule.init();
     itemsFormModule.set_headings_form_nav_menu_links();
+    document.querySelector('#heading-background-color-picker').addEventListener('input', () => {
+        if (document.querySelector('#heading-background-color')) {
+            document.querySelector('#heading-background-color').value = document.querySelector('#heading-background-color-picker').value;
+        }
+    });
+
+    document.querySelector('#heading-font-color-picker').addEventListener('input', () => {
+        if (document.querySelector('#heading-font-color')) {
+            document.querySelector('#heading-font-color').value = document.querySelector('#heading-font-color-picker').value;
+        }
+    });
+
 </script>
 </body>
 </html>
