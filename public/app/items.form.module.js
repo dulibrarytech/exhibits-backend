@@ -27,11 +27,26 @@ const itemsFormModule = (function () {
      * Gets item heading data
      */
     function get_heading_data() {
+
         let item_heading = {};
-        let styles = {};
+        item_heading.styles = {};
         item_heading.text = document.querySelector('#item-heading-text').value;
-        // TODO:
-        item_heading.styles;
+        let heading_background_color =  document.querySelector('#heading-background-color').value;
+        let heading_color = document.querySelector('#heading-font-color').value;
+        let font = document.querySelector('#heading-font').value;
+
+        if (heading_background_color.length > 0) {
+            item_heading.styles.backGroundColor = heading_background_color;
+        }
+
+        if (heading_color.length > 0) {
+            item_heading.styles.color = heading_color;
+        }
+
+        if (font.length > 0) {
+            item_heading.styles.fontFamily = font;
+        }
+
         return item_heading;
     }
 
@@ -44,7 +59,7 @@ const itemsFormModule = (function () {
         grid.styles = {};
         grid.columns = document.querySelector('#grid-columns').value;
 
-        let grid_item_background_color = document.querySelector('#grid-background-color').value;;
+        let grid_item_background_color = document.querySelector('#grid-background-color').value;
         let grid_item_color = document.querySelector('#grid-font-color').value;
         let grid_item_font = document.querySelector('#grid-font').value;
 

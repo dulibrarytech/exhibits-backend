@@ -44,7 +44,6 @@ exports.create_item_record = async function (is_member_of_exhibit, data) {
         const HELPER_TASK = new HELPER();
         data.uuid = HELPER_TASK.create_uuid();
         data.is_member_of_exhibit = is_member_of_exhibit;
-        // data.is_member_of_item_grid = data.is_member_of_item_grid === typeof 'object' ? data.is_member_of_item_grid : 0;
 
         const VALIDATE_TASK = new VALIDATOR(EXHIBITS_CREATE_ITEM_SCHEMA);
         let is_valid = VALIDATE_TASK.validate(data);

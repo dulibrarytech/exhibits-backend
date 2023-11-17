@@ -56,6 +56,12 @@ exports.create_heading_record = async function (is_member_of_exhibit, data) {
 
         data.order = await HELPER_TASK.order_exhibit_items(data.is_member_of_exhibit, DB, TABLES);
 
+        if (data.styles === undefined || data.styles.length === 0) {
+            data.styles = '{}';
+        }
+
+        data.styles = JSON.stringify(data.styles);
+
         const CREATE_RECORD_TASK = new EXHIBIT_HEADING_RECORD_TASKS(DB, TABLES);
         let result = await CREATE_RECORD_TASK.create_heading_record(data);
 
