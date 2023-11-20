@@ -44,11 +44,12 @@ const exhibitsFormModule = (function () {
         // exhibit banner
         exhibit.banner_template = helperModule.get_checked_radio_button(document.getElementsByName('banner_template'));
 
-        // exhibit layout
+        // exhibit page layout
         exhibit.page_layout = helperModule.get_checked_radio_button(document.getElementsByName('page_layout'));
 
-        // exhibit layout - TODO: only on option set by default
-        exhibit.template = helperModule.get_checked_radio_button(document.getElementsByName('template'));
+        // exhibit template layout - TODO: only on option set by default
+        exhibit.template = document.querySelector('#exhibit-template').value;
+        // exhibit.template = helperModule.get_checked_radio_button(document.getElementsByName('template'));
 
         // TODO:
         // Exhibit styles

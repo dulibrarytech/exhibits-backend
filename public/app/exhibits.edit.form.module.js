@@ -27,27 +27,81 @@ const exhibitsEditFormModule = (function () {
     /**
      * Gets exhibit record
      */
-    obj.get_exhibit_record = function () {
+    async function get_exhibit_record () {
 
-        let uuid = helperModule.get_parameter_by_name('uuid');
+        try {
 
-        console.log(uuid);
+            const uuid = helperModule.get_parameter_by_name('uuid');
+            const EXHIBITS_ENDPOINTS = endpointsModule.get_exhibits_endpoints();
+            const token = authModule.get_user_token();
 
-        /*
+            if (token === false || EXHIBITS_ENDPOINTS === null) {
+
+                document.querySelector('#message').innerHTML = 'ERROR: Unable to get API endpoints';
+
+                setTimeout(() => {
+                    window.location.replace('/dashboard/login');
+                }, 3000);
+
+                return false;
+            }
+
+            let response = await httpModule.req({
+                method: 'GET',
+                url: EXHIBITS_ENDPOINTS.exhibits.exhibit_records.endpoints.get.endpoint.replace(':exhibit_id', uuid),
+                headers: {
+                    'Content-Type': 'application/json',
+                    'x-access-token': token
+                }
+            });
+
+            if (response !== undefined && response.status === 200) {
+                return response.data.data[0];
+            }
+
+        } catch (error) {
+            console.log('ERROR: ', error.message);
+        }
+    }
+
+    /**
+     *
+     * @return {Promise<void>}
+     */
+    async function display_edit () {
+
+        let record = await get_exhibit_record();
+        console.log('display: ', record);
+
+        // TODO: populate form
         let exhibit = {};
 
         // exhibit data
-        exhibit.title = rich_text_data.exhibit_title.getHTMLCode();
-        exhibit.subtitle = rich_text_data.exhibit_sub_title.getHTMLCode();
-        exhibit.alert_text = rich_text_data.exhibit_alert_text.getHTMLCode();
-        exhibit.description = rich_text_data.exhibit_description.getHTMLCode();
+        rich_text_data.exhibit_title.setHTMLCode(helperModule.unescape(record.title));
+        rich_text_data.exhibit_sub_title.setHTMLCode(helperModule.unescape(record.subtitle));
+        rich_text_data.exhibit_alert_text.setHTMLCode(helperModule.unescape(record.alert_text));
+        rich_text_data.exhibit_description.setHTMLCode(helperModule.unescape(record.description));
 
         // exhibit media
-        exhibit.hero_image = document.querySelector('#hero-image').value;
-        exhibit.thumbnail = document.querySelector('#thumbnail-image').value;
+        console.log(record.hero_image);
+        if (record.hero_image.length !== 0) {
+            // TODO: get image and render
+        }
+
+        console.log(record.thumbnail);
+        if (record.thumbnail.length !== 0) {
+            // TODO: get image and render
+        }
+
+        // exhibit.hero_image = document.querySelector('#hero-image').value;
+        // exhibit.thumbnail = document.querySelector('#thumbnail-image').value;
+
 
         // exhibit banner
-        exhibit.banner_template = helperModule.get_checked_radio_button(document.getElementsByName('banner_template'));
+        // exhibit.banner_template = helperModule.get_checked_radio_button(document.getElementsByName('banner_template'));
+        console.log('banner ', record.banner_template);
+        // TODO: set field and get image
+        return false;
 
         // exhibit layout
         exhibit.page_layout = helperModule.get_checked_radio_button(document.getElementsByName('page_layout'));
@@ -73,12 +127,9 @@ const exhibitsEditFormModule = (function () {
             }
         };
 
-        return exhibit;
+    }
 
-         */
-    };
-
-    /**
+    /** TODO
      * Updates exhibit record
      */
     obj.update_exhibit_record = async function () {
@@ -139,8 +190,9 @@ const exhibitsEditFormModule = (function () {
         return rich_text_data;
     }
 
-    obj.init = function () {
+    obj.init = async function () {
         // document.querySelector('#save-exhibit-btn').addEventListener('click', exhibitsFormModule.update_exhibit_record);
+        await display_edit();
     };
 
     return obj;

@@ -81,7 +81,8 @@ const exhibitsModule = (function () {
             let is_published = exhibits[i].is_published;
             let preview_link = `/preview?uuid=${uuid}`;
             let exhibit_items = `<a href="/dashboard/items?uuid=${exhibits[i].uuid}" title="Exhibit items"><i class="fa fa-search pr-1"></i></a>&nbsp;`;
-            let thumbnail = '';
+            let thumbnail_url = '';
+            let thumbnail_fragment = '';
             let status;
             let title;
 
@@ -92,15 +93,15 @@ const exhibitsModule = (function () {
             }
 
             if (exhibits[i].thumbnail.length > 0) {
-                thumbnail = `/api/v1/exhibits/${uuid}/media/${exhibits[i].thumbnail}`;
-                exhibit_data = `<p><img src="${thumbnail}" height="100" width="100"></p>`;
+                thumbnail_url = `/api/v1/exhibits/${uuid}/media/${exhibits[i].thumbnail}`;
+                thumbnail_fragment = `<p><img src="${thumbnail_url}" height="100" width="100"></p>`;
             }
 
             title = helperModule.unescape(exhibits[i].title);
             exhibit_data += '<tr>';
             exhibit_data += `<td style="width: 35%">
                     <p><strong><a href="/dashboard/items?uuid=${uuid}">${title}</a></strong></p>
-                    ${thumbnail}
+                    ${thumbnail_fragment}
                     <!--
                     <p id="preview-link">
                         <a class="btn btn-outline-secondary" href="#" onclick="exhibitsModule.open_preview('${preview_link}');">

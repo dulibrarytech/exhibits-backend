@@ -111,6 +111,7 @@ const Exhibit_record_tasks = class {
                 'title',
                 'subtitle',
                 'banner_template',
+                'alert_text',
                 'hero_image',
                 'thumbnail',
                 'description',
