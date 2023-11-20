@@ -124,7 +124,7 @@ const exhibitsModule = (function () {
             exhibit_data += `<td style="width: 10%">
                                 <div class="card-text text-sm-center">
                                     ${exhibit_items}
-                                    <a href="#" title="Edit"><i class="fa fa-edit pr-1"></i> </a>&nbsp;
+                                    <a href="/dashboard/exhibits/exhibit/edit?uuid=${uuid}" title="Edit"><i class="fa fa-edit pr-1"></i> </a>&nbsp;
                                     <a href="/dashboard/items/standard?uuid=${uuid}" title="Add Items"><i class="fa fa-plus pr-1"></i> </a>
                                     &nbsp;
                                     <a href="#" title="Delete"><i class="fa fa-trash pr-1"></i> </a>&nbsp;

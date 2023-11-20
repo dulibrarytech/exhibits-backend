@@ -31,6 +31,9 @@ module.exports = function (app) {
     app.route('/dashboard/exhibits/exhibit')
     .get(CONTROLLER.get_dashboard_exhibits_form);
 
+    app.route('/dashboard/exhibits/exhibit/edit')
+    .get(CONTROLLER.get_dashboard_exhibits_edit_form);
+
     app.route('/dashboard/items')
     .get(CONTROLLER.get_dashboard_items);
 

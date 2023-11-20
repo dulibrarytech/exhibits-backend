@@ -16,7 +16,7 @@
 
  */
 
-const exhibitsFormModule = (function () {
+const exhibitsEditFormModule = (function () {
 
     'use strict';
 
@@ -25,10 +25,15 @@ const exhibitsFormModule = (function () {
     let rich_text_data = set_rich_text_editor();
 
     /**
-     * Gets data from exhibit form
+     * Gets exhibit record
      */
-    obj.get_exhibit_data = function () {
+    obj.get_exhibit_record = function () {
 
+        let uuid = helperModule.get_parameter_by_name('uuid');
+
+        console.log(uuid);
+
+        /*
         let exhibit = {};
 
         // exhibit data
@@ -69,18 +74,20 @@ const exhibitsFormModule = (function () {
         };
 
         return exhibit;
+
+         */
     };
 
     /**
-     * Creates exhibit record
+     * Updates exhibit record
      */
-    obj.create_exhibit_record = async function () {
+    obj.update_exhibit_record = async function () {
 
         try {
 
             scrollTo(0, 0);
             document.querySelector('#message').innerHTML = `<div class="alert alert-info" role="alert"><i class="fa fa-info"></i> Creating exhibit record...</div>`;
-            let data = exhibitsFormModule.get_exhibit_data();
+            let data = exhibitsFormModule.get_exhibit_record();
             let token = authModule.get_user_token();
             let response;
 
@@ -95,8 +102,8 @@ const exhibitsFormModule = (function () {
             }
 
             response = await httpModule.req({
-                method: 'POST',
-                url: EXHIBITS_ENDPOINTS.exhibits.exhibit_records.endpoint,
+                method: 'PUT',
+                url: EXHIBITS_ENDPOINTS.exhibits.exhibit_records.endpoint, // TODO
                 data: data,
                 headers: {
                     'Content-Type': 'application/json',
@@ -107,10 +114,11 @@ const exhibitsFormModule = (function () {
             if (response !== undefined && response.status === 201) {
 
                 document.querySelector('#exhibit-card').innerHTML = '';
-                document.querySelector('#message').innerHTML = `<div class="alert alert-success" role="alert"><i class="fa fa-info"></i> Exhibit record created</div>`;
+                document.querySelector('#message').innerHTML = `<div class="alert alert-success" role="alert"><i class="fa fa-info"></i> Exhibit record updated</div>`;
 
                 setTimeout(() => {
-                    window.location.replace('/dashboard/items?uuid=' + response.data.data);
+                    // TODO:
+                    // window.location.replace('/dashboard/items?uuid=' + response.data.data);
                 }, 3000);
             }
 
@@ -132,7 +140,7 @@ const exhibitsFormModule = (function () {
     }
 
     obj.init = function () {
-        document.querySelector('#save-exhibit-btn').addEventListener('click', exhibitsFormModule.create_exhibit_record);
+        // document.querySelector('#save-exhibit-btn').addEventListener('click', exhibitsFormModule.update_exhibit_record);
     };
 
     return obj;
