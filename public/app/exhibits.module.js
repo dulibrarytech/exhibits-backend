@@ -85,11 +85,17 @@ const exhibitsModule = (function () {
             let thumbnail_fragment = '';
             let status;
             let title;
+            let exhibit_edit = '';
+            let trash = '';
 
             if (is_published === 1) {
                 status = `<a href="#" id="${exhibits[i].uuid}" class="suppress-exhibit"><span id="suppress" title="published"><i class="fa fa-cloud" style="color: green"></i><br>Published</span></a>`;
+                // TODO: hide edit and delete
             } else if (is_published === 0) {
                 status = `<a href="#" id="${exhibits[i].uuid}" class="publish-exhibit"><span id="publish" title="suppressed"><i class="fa fa-cloud-upload" style="color: darkred"></i><br>Suppressed</span></a>`;
+                // TODO: show edit and delete
+                exhibit_edit = `<a href="/dashboard/exhibits/exhibit/edit?uuid=${uuid}" title="Edit"><i class="fa fa-edit pr-1"></i> </a>`;
+                trash = `<a href="#" title="Delete"><i class="fa fa-trash pr-1"></i> </a>`;
             }
 
             if (exhibits[i].thumbnail.length > 0) {
@@ -102,13 +108,6 @@ const exhibitsModule = (function () {
             exhibit_data += `<td style="width: 35%">
                     <p><strong><a href="/dashboard/items?uuid=${uuid}">${title}</a></strong></p>
                     ${thumbnail_fragment}
-                    <!--
-                    <p id="preview-link">
-                        <a class="btn btn-outline-secondary" href="#" onclick="exhibitsModule.open_preview('${preview_link}');">
-                            <i class=" menu-icon fa fa-eye"></i> Preview
-                        </a>
-                    </p>
-                    -->
                     <div class="d-flex justify-content-between align-items-center">
                                 <div class="btn-group">
                                      <span id="preview-link">
@@ -125,10 +124,11 @@ const exhibitsModule = (function () {
             exhibit_data += `<td style="width: 10%">
                                 <div class="card-text text-sm-center">
                                     ${exhibit_items}
-                                    <a href="/dashboard/exhibits/exhibit/edit?uuid=${uuid}" title="Edit"><i class="fa fa-edit pr-1"></i> </a>&nbsp;
+                                    ${exhibit_edit}
+                                    &nbsp;
                                     <a href="/dashboard/items/standard?uuid=${uuid}" title="Add Items"><i class="fa fa-plus pr-1"></i> </a>
                                     &nbsp;
-                                    <a href="#" title="Delete"><i class="fa fa-trash pr-1"></i> </a>&nbsp;
+                                    ${trash}
                                 </div>
                             </td>`;
             exhibit_data += '</tr>';

@@ -46,6 +46,8 @@ const exhibitsEditFormModule = (function () {
                 return false;
             }
 
+            document.querySelector('#exhibit-title').innerHTML = await exhibitsModule.get_exhibit_title(uuid);
+
             let response = await httpModule.req({
                 method: 'GET',
                 url: EXHIBITS_ENDPOINTS.exhibits.exhibit_records.endpoints.get.endpoint.replace(':exhibit_id', uuid),
@@ -65,16 +67,17 @@ const exhibitsEditFormModule = (function () {
     }
 
     /**
-     *
-     * @return {Promise<void>}
+     * Populates edit form with exhibit record data
      */
-    async function display_edit () {
+    async function display_edit_record () {
 
         let record = await get_exhibit_record();
         console.log('display: ', record);
 
-        // TODO: populate form
-        let exhibit = {};
+        let hero_image_url = '';
+        let hero_image_fragment = '';
+        let thumbnail_url = '';
+        let thumbnail_fragment = '';
 
         // exhibit data
         rich_text_data.exhibit_title.setHTMLCode(helperModule.unescape(record.title));
@@ -83,37 +86,47 @@ const exhibitsEditFormModule = (function () {
         rich_text_data.exhibit_description.setHTMLCode(helperModule.unescape(record.description));
 
         // exhibit media
-        console.log(record.hero_image);
-        if (record.hero_image.length !== 0) {
-            // TODO: get image and render
+        if (record.hero_image.length > 0) {
+            hero_image_url = `/api/v1/exhibits/${record.uuid}/media/${record.hero_image}`;
+            hero_image_fragment = `<p><img src="${hero_image_url}" height="200"></p>`;
+            document.querySelector('#hero-image-filename-display').innerHTML = hero_image_fragment;
         }
 
-        console.log(record.thumbnail);
-        if (record.thumbnail.length !== 0) {
-            // TODO: get image and render
+        if (record.thumbnail.length > 0) {
+            thumbnail_url = `/api/v1/exhibits/${record.uuid}/media/${record.thumbnail}`;
+            thumbnail_fragment = `<p><img src="${thumbnail_url}" height="200" ></p>`;
+            document.querySelector('#thumbnail-filename-display').innerHTML = thumbnail_fragment;
         }
-
-        // exhibit.hero_image = document.querySelector('#hero-image').value;
-        // exhibit.thumbnail = document.querySelector('#thumbnail-image').value;
-
 
         // exhibit banner
-        // exhibit.banner_template = helperModule.get_checked_radio_button(document.getElementsByName('banner_template'));
-        console.log('banner ', record.banner_template);
-        // TODO: set field and get image
-        return false;
+        let banner_templates = document.getElementsByName('banner_template');
+
+        for (let i = 0; i < banner_templates.length; i++) {
+            if (banner_templates[i].value === record.banner_template) {
+                document.querySelector('#' + banner_templates[i].id).checked = true;
+            }
+        }
 
         // exhibit layout
-        exhibit.page_layout = helperModule.get_checked_radio_button(document.getElementsByName('page_layout'));
+        let page_layouts = document.getElementsByName('page_layout');
 
-        // exhibit layout - TODO: only on option set by default
-        exhibit.template = helperModule.get_checked_radio_button(document.getElementsByName('template'));
+        for (let j = 0; j < page_layouts.length; j++) {
+            if (page_layouts[j].value === record.page_layout) {
+                document.querySelector('#' + page_layouts[j].id).checked = true;
+            }
+        }
 
-        // TODO:
         // Exhibit styles
-        let exhibit_nav_menu_background_color = document.querySelector('#nav-menu-background-color').value;
-        let exhibit_nav_menu_font_color = document.querySelector('#nav-menu-font-color').value;
-        let exhibit_nav_menu_font = document.querySelector('#nav-menu-font').value;
+        let styles = JSON.parse(record.styles);
+        console.log(styles.exhibit.navigation.menu);
+        document.querySelector('#nav-menu-background-color').value = styles.exhibit.navigation.menu.backgroundColor;
+        document.querySelector('#nav-menu-font-color').value = styles.exhibit.navigation.menu.color;
+        // TODO:
+        document.querySelector('#nav-menu-font').value = '';
+        return false;
+
+        // let exhibit_nav_menu_font = document.querySelector('#nav-menu-font').value;
+
 
         exhibit.styles = {
             exhibit: {
@@ -122,6 +135,9 @@ const exhibitsEditFormModule = (function () {
                         backgroundColor: exhibit_nav_menu_background_color.length > 1 ? exhibit_nav_menu_background_color : '',
                         color: exhibit_nav_menu_font_color.length > 1 ? exhibit_nav_menu_font_color : '',
                         fontFamily: exhibit_nav_menu_font.length > 1 ? exhibit_nav_menu_font : ''
+                    },
+                    menuLinks: {
+                        color: exhibit_nav_menu_font_color.length > 1 ? exhibit_nav_menu_font_color : '',
                     }
                 }
             }
@@ -192,7 +208,7 @@ const exhibitsEditFormModule = (function () {
 
     obj.init = async function () {
         // document.querySelector('#save-exhibit-btn').addEventListener('click', exhibitsFormModule.update_exhibit_record);
-        await display_edit();
+        await display_edit_record();
     };
 
     return obj;
