@@ -21,6 +21,7 @@ const itemsFormModule = (function () {
     'use strict';
 
     const EXHIBITS_ENDPOINTS = endpointsModule.get_exhibits_endpoints();
+    let rich_text_data = set_rich_text_editor();
     let obj = {};
 
     /**
@@ -87,10 +88,17 @@ const itemsFormModule = (function () {
         item.styles = {};
 
         // item metadata
+        item.title = rich_text_data.item_title.getHTMLCode();
+        item.caption = rich_text_data.item_caption.getHTMLCode();
+        item.description = rich_text_data.item_description.getHTMLCode();
+        item.text = rich_text_data.item_text.getHTMLCode();
+
+        /*
         item.title = document.querySelector('#item-title').value;
         item.caption = document.querySelector('#item-caption').value;
         item.description = document.querySelector('#item-description').value;
         item.text = document.querySelector('#item-text').value;
+        */
 
         // grid item only
         item.date = document.querySelector('#item-date').value;
@@ -283,6 +291,9 @@ const itemsFormModule = (function () {
         }
     };
 
+    /**
+     *
+     */
     obj.set_headings_form_nav_menu_links = function () {
 
         let uuid = helperModule.get_parameter_by_name('uuid');
@@ -314,6 +325,9 @@ const itemsFormModule = (function () {
         document.querySelector('#items-menu').innerHTML = form_menu_fragment;
     };
 
+    /**
+     *
+     */
     obj.set_items_form_nav_menu_links = function () {
 
         let uuid = helperModule.get_parameter_by_name('uuid');
@@ -345,6 +359,9 @@ const itemsFormModule = (function () {
         document.querySelector('#items-menu').innerHTML = form_menu_fragment;
     };
 
+    /**
+     *
+     */
     obj.set_grid_items_form_nav_menu_links = function () {
 
         let uuid = helperModule.get_parameter_by_name('uuid');
@@ -377,6 +394,10 @@ const itemsFormModule = (function () {
         document.querySelector('#items-menu').innerHTML = form_menu_fragment;
     };
 
+    /**
+     *
+     * @return {boolean}
+     */
     obj.check_grid = function () {
 
         let is_grid = helperModule.get_parameter_by_name('grid');
@@ -391,6 +412,22 @@ const itemsFormModule = (function () {
         return false;
     }
 
+    /**
+     * Sets rich text editor on defined input fields
+     */
+    function set_rich_text_editor () {
+        let rich_text_data = {};
+        rich_text_data.item_title = helperModule.render_rich_text_editor('#item-title-input');
+        rich_text_data.item_caption = helperModule.render_rich_text_editor('#item-caption-input');
+        rich_text_data.item_description = helperModule.render_rich_text_editor('#item-description-input')
+        rich_text_data.item_text = helperModule.render_rich_text_editor('#item-text-input');
+        return rich_text_data;
+    }
+
+    /**
+     *
+     * @return {Promise<void>}
+     */
     obj.init = async function () {
         // TODO: check auth?
         const uuid = helperModule.get_parameter_by_name('uuid');

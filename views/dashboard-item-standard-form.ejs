@@ -60,6 +60,18 @@
                     </div>
                     <div class="row form-group">
                         <div class="col-12 col-md-12">
+                            <div class="form-text text-muted" style="font-size: 17px"><span style="color: red">*</span>
+                                Item Title
+                            </div>
+                            <div id="item-title-input" style="height: 100px"></div>
+                            <span id="item-title-error" class="is-error">
+                                <small class="form-text text-muted">* Required | <i class="fa fa-exclamation-circle"></i> <em>The item title becomes a subheading in the navigation</em></small>
+                            </span>
+                        </div>
+                    </div>
+                    <!--
+                    <div class="row form-group">
+                        <div class="col-12 col-md-12">
                             <input type="text" id="item-title" name="title"
                                    placeholder="Item Title" class="form-control" required>
                             <span id="item-title-error" class="is-error">
@@ -67,24 +79,58 @@
                             </span>
                         </div>
                     </div>
+                    -->
+                    <div class="row form-group">
+                        <div class="col-12 col-md-12">
+                            <div class="form-text text-muted" style="font-size: 17px">
+                                Item Caption
+                            </div>
+                            <div id="item-caption-input" style="height: 100px"></div>
+                            <span id="item-caption-error" class="is-error"></span>
+                        </div>
+                    </div>
+                    <!--
                     <div class="row form-group">
                         <div class="col-12 col-md-12">
                             <textarea id="item-caption" class="form-control" name="caption"
                                       placeholder="Item Caption"></textarea>
                         </div>
                     </div>
+                    -->
+                    <div class="row form-group">
+                        <div class="col-12 col-md-12">
+                            <div class="form-text text-muted" style="font-size: 17px">
+                                Item Description
+                            </div>
+                            <div id="item-description-input" style="height: 100px"></div>
+                            <span id="item-description-error" class="is-error"></span>
+                        </div>
+                    </div>
+                    <!--
                     <div class="row form-group">
                         <div class="col-12 col-md-12">
                             <textarea id="item-description" class="form-control" name="description"
                                       placeholder="Item Description"></textarea>
                         </div>
                     </div>
+                    -->
+                    <div class="row form-group">
+                        <div class="col-12 col-md-12">
+                            <div class="form-text text-muted" style="font-size: 17px">
+                                Item Text
+                            </div>
+                            <div id="item-text-input" style="height: 100px"></div>
+                            <span id="item-text-error" class="is-error"></span>
+                        </div>
+                    </div>
+                    <!--
                     <div class="row form-group">
                         <div class="col-12 col-md-12">
                             <textarea id="item-text" class="form-control" name="text"
                                       placeholder="Item Text"></textarea>
                         </div>
                     </div>
+                    -->
                     <div class="row form-group is-grid-item" style="visibility: hidden">
                         <div class="col-12 col-md-12">
                             <input type="text" id="item-date" name="date"
@@ -391,6 +437,8 @@
 <script src="https://cdn.jsdelivr.net/npm/interactjs/dist/interact.min.js"></script>
 <script src="https://cdn.datatables.net/1.13.6/js/jquery.dataTables.min.js"></script>
 <script src="https://unpkg.com/dropzone@5/dist/min/dropzone.min.js"></script>
+<script src="<%= host %>/libs/richtexteditor/rte.js"></script>
+<script src='<%= host %>/libs/richtexteditor/plugins/all_plugins.js'></script>
 <script src="<%= host %>/libs/axios-2.x/dist/axios.min.js"></script>
 <script src="<%= host %>/libs/dompurify/purify.min.js"></script>
 <script src="<%= host %>/app/http.module.js"></script>
