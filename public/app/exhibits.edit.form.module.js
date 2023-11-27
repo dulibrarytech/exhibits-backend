@@ -118,31 +118,19 @@ const exhibitsEditFormModule = (function () {
 
         // Exhibit styles
         let styles = JSON.parse(record.styles);
-        console.log(styles.exhibit.navigation.menu);
         document.querySelector('#nav-menu-background-color').value = styles.exhibit.navigation.menu.backgroundColor;
         document.querySelector('#nav-menu-font-color').value = styles.exhibit.navigation.menu.color;
-        // TODO:
-        document.querySelector('#nav-menu-font').value = '';
-        return false;
 
-        // let exhibit_nav_menu_font = document.querySelector('#nav-menu-font').value;
+        let font_values = document.querySelector('#nav-menu-font');
 
+        for (let i = 0;i<font_values.length;i++) {
 
-        exhibit.styles = {
-            exhibit: {
-                navigation: {
-                    menu: {
-                        backgroundColor: exhibit_nav_menu_background_color.length > 1 ? exhibit_nav_menu_background_color : '',
-                        color: exhibit_nav_menu_font_color.length > 1 ? exhibit_nav_menu_font_color : '',
-                        fontFamily: exhibit_nav_menu_font.length > 1 ? exhibit_nav_menu_font : ''
-                    },
-                    menuLinks: {
-                        color: exhibit_nav_menu_font_color.length > 1 ? exhibit_nav_menu_font_color : '',
-                    }
-                }
+            if (font_values[i].value === styles.exhibit.navigation.menu.fontFamily) {
+                document.querySelector('#nav-menu-font').value = styles.exhibit.navigation.menu.fontFamily;
             }
-        };
+        }
 
+        return false;
     }
 
     /** TODO

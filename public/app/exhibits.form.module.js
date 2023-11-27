@@ -51,7 +51,7 @@ const exhibitsFormModule = (function () {
         exhibit.template = document.querySelector('#exhibit-template').value;
         // exhibit.template = helperModule.get_checked_radio_button(document.getElementsByName('template'));
 
-        // TODO: menu links styles
+        // TODO: menu links styles?
         // Exhibit styles
         let exhibit_nav_menu_background_color = document.querySelector('#nav-menu-background-color').value;
         let exhibit_nav_menu_font_color = document.querySelector('#nav-menu-font-color').value;

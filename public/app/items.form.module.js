@@ -133,6 +133,7 @@ const itemsFormModule = (function () {
             item.styles.fontFamily = item_font;
         }
 
+
         console.log(item);
         return item;
     }
