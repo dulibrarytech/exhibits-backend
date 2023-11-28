@@ -306,31 +306,6 @@
 <script src="<%= host %>/app/exhibits.form.module.js"></script>
 <script>
     exhibitsFormModule.init();
-    uploadsModule.upload_exhibit_hero_image();
-    uploadsModule.upload_exhibit_thumbnail_image();
-    document.querySelector('#logout').addEventListener('click', authModule.logout);
-    document.querySelector('#hero-trash').style.display = 'none';
-    document.querySelector('#thumbnail-trash').style.display = 'none';
-
-    // bind color pickers to input fields
-    document.querySelector('#nav-menu-background-color-picker').addEventListener('input', () => {
-        if (document.querySelector('#nav-menu-background-color')) {
-            document.querySelector('#nav-menu-background-color').value = document.querySelector('#nav-menu-background-color-picker').value;
-        }
-    });
-
-    document.querySelector('#nav-menu-font-color-picker').addEventListener('input', () => {
-        if (document.querySelector('#nav-menu-font-color')) {
-            document.querySelector('#nav-menu-font-color').value = document.querySelector('#nav-menu-font-color-picker').value;
-        }
-    });
-
-    document.querySelector('#nav-menu-links-font-color-picker').addEventListener('input', () => {
-        if (document.querySelector('#nav-menu-links-font-color')) {
-            document.querySelector('#nav-menu-links-font-color').value = document.querySelector('#nav-menu-links-font-color-picker').value;
-        }
-    });
-
 </script>
 </body>
 </html>

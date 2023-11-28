@@ -22,7 +22,7 @@ const exhibitsEditFormModule = (function () {
 
     const EXHIBITS_ENDPOINTS = endpointsModule.get_exhibits_endpoints();
     let obj = {};
-    let rich_text_data = set_rich_text_editor();
+    let rich_text_data = {};
 
     /**
      * Gets exhibit record
@@ -67,6 +67,53 @@ const exhibitsEditFormModule = (function () {
     }
 
     /**
+     * Gets data from exhibit edit form
+     */
+     function get_exhibit_data () {
+
+        let exhibit = {};
+
+        // exhibit data
+        exhibit.title = rich_text_data['exhibit-title-input'].getHTMLCode();
+        exhibit.subtitle = rich_text_data['exhibit-sub-title-input'].getHTMLCode();
+        exhibit.alert_text = rich_text_data['exhibit-alert-text-input'].getHTMLCode();
+        exhibit.description = rich_text_data['exhibit-description-input'].getHTMLCode();
+
+        // exhibit media
+        exhibit.hero_image = document.querySelector('#hero-image').value;
+        exhibit.thumbnail = document.querySelector('#thumbnail-image').value;
+
+        // exhibit banner
+        exhibit.banner_template = helperModule.get_checked_radio_button(document.getElementsByName('banner_template'));
+
+        // exhibit page layout
+        exhibit.page_layout = helperModule.get_checked_radio_button(document.getElementsByName('page_layout'));
+
+        // exhibit template layout - TODO: only on option set by default
+        exhibit.template = document.querySelector('#exhibit-template').value;
+        // exhibit.template = helperModule.get_checked_radio_button(document.getElementsByName('template'));
+
+        // Exhibit styles
+        let exhibit_nav_menu_background_color = document.querySelector('#nav-menu-background-color').value;
+        let exhibit_nav_menu_font_color = document.querySelector('#nav-menu-font-color').value;
+        let exhibit_nav_menu_font = document.querySelector('#nav-menu-font').value;
+
+        exhibit.styles = {
+            exhibit: {
+                navigation: {
+                    menu: {
+                        backgroundColor: exhibit_nav_menu_background_color.length > 1 ? exhibit_nav_menu_background_color : '',
+                        color: exhibit_nav_menu_font_color.length > 1 ? exhibit_nav_menu_font_color : '',
+                        fontFamily: exhibit_nav_menu_font.length > 1 ? exhibit_nav_menu_font : ''
+                    }
+                }
+            }
+        };
+
+        return exhibit;
+    };
+
+    /**
      * Populates edit form with exhibit record data
      */
     async function display_edit_record () {
@@ -80,10 +127,17 @@ const exhibitsEditFormModule = (function () {
         let thumbnail_fragment = '';
 
         // exhibit data
-        rich_text_data.exhibit_title.setHTMLCode(helperModule.unescape(record.title));
-        rich_text_data.exhibit_sub_title.setHTMLCode(helperModule.unescape(record.subtitle));
-        rich_text_data.exhibit_alert_text.setHTMLCode(helperModule.unescape(record.alert_text));
-        rich_text_data.exhibit_description.setHTMLCode(helperModule.unescape(record.description));
+        rich_text_data['exhibit-title-input'] = helperModule.set_rich_text_editor('exhibit-title-input');
+        rich_text_data['exhibit-title-input'].setHTMLCode(helperModule.unescape(record.title));
+
+        rich_text_data['exhibit-sub-title-input'] = helperModule.set_rich_text_editor('exhibit-sub-title-input');
+        rich_text_data['exhibit-sub-title-input'].setHTMLCode(helperModule.unescape(record.subtitle));
+
+        rich_text_data['exhibit-alert-text-input'] = helperModule.set_rich_text_editor('exhibit-alert-text-input');
+        rich_text_data['exhibit-alert-text-input'].setHTMLCode(helperModule.unescape(record.alert_text));
+
+        rich_text_data['exhibit-description-input'] = helperModule.set_rich_text_editor('exhibit-description-input');
+        rich_text_data['exhibit-description-input'].setHTMLCode(helperModule.unescape(record.description));
 
         // exhibit media
         if (record.hero_image.length > 0) {
@@ -133,7 +187,7 @@ const exhibitsEditFormModule = (function () {
         return false;
     }
 
-    /** TODO
+    /** TODO: hero and thumb values
      * Updates exhibit record
      */
     obj.update_exhibit_record = async function () {
@@ -141,15 +195,21 @@ const exhibitsEditFormModule = (function () {
         try {
 
             scrollTo(0, 0);
-            document.querySelector('#message').innerHTML = `<div class="alert alert-info" role="alert"><i class="fa fa-info"></i> Creating exhibit record...</div>`;
-            let data = exhibitsFormModule.get_exhibit_record();
+            document.querySelector('#message').innerHTML = `<div class="alert alert-info" role="alert"><i class="fa fa-info"></i> Updating exhibit record...</div>`;
+            let uuid = helperModule.get_parameter_by_name('uuid');
+            let data = get_exhibit_data();
             let token = authModule.get_user_token();
             let response;
+
+            if (uuid === undefined) {
+                document.querySelector('#message').innerHTML = `<div class="alert alert-danger" role="alert"><i class="fa fa-exclamation"></i> Unable to get record UUID</div>`;
+                return false;
+            }
 
             if (token === false) {
 
                 setTimeout(() => {
-                    document.querySelector('#message').innerHTML = `<div class="alert alert-info" role="alert"><i class="fa fa-info"></i> Loading...</div>`;
+                    document.querySelector('#message').innerHTML = `<div class="alert alert-danger" role="alert"><i class="fa fa-exclamation"></i> Unable to get session token</div>`;
                     authModule.logout();
                 }, 3000);
 
@@ -183,20 +243,36 @@ const exhibitsEditFormModule = (function () {
     };
 
     /**
-     * Sets rich text editor on defined input fields
+     *
      */
-    function set_rich_text_editor () {
-        let rich_text_data = {};
-        rich_text_data.exhibit_title = helperModule.render_rich_text_editor('#exhibit-title-input');
-        rich_text_data.exhibit_sub_title = helperModule.render_rich_text_editor('#exhibit-sub-title-input');
-        rich_text_data.exhibit_alert_text = helperModule.render_rich_text_editor('#exhibit-alert-text-input')
-        rich_text_data.exhibit_description = helperModule.render_rich_text_editor('#exhibit-description-input');
-        return rich_text_data;
-    }
-
     obj.init = async function () {
-        // document.querySelector('#save-exhibit-btn').addEventListener('click', exhibitsFormModule.update_exhibit_record);
+        document.querySelector('#save-exhibit-btn').addEventListener('click', exhibitsEditFormModule.update_exhibit_record);
         await display_edit_record();
+        uploadsModule.upload_exhibit_hero_image();
+        uploadsModule.upload_exhibit_thumbnail_image();
+        document.querySelector('#logout').addEventListener('click', authModule.logout);
+        document.querySelector('#hero-trash').style.display = 'none';
+        document.querySelector('#thumbnail-trash').style.display = 'none';
+
+        // bind color pickers to input fields
+        document.querySelector('#nav-menu-background-color-picker').addEventListener('input', () => {
+            if (document.querySelector('#nav-menu-background-color')) {
+                document.querySelector('#nav-menu-background-color').value = document.querySelector('#nav-menu-background-color-picker').value;
+            }
+        });
+
+        document.querySelector('#nav-menu-font-color-picker').addEventListener('input', () => {
+            if (document.querySelector('#nav-menu-font-color')) {
+                document.querySelector('#nav-menu-font-color').value = document.querySelector('#nav-menu-font-color-picker').value;
+            }
+        });
+        /*
+        document.querySelector('#nav-menu-links-font-color-picker').addEventListener('input', () => {
+            if (document.querySelector('#nav-menu-links-font-color')) {
+                document.querySelector('#nav-menu-links-font-color').value = document.querySelector('#nav-menu-links-font-color-picker').value;
+            }
+        });
+         */
     };
 
     return obj;

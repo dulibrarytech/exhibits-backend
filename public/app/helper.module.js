@@ -71,6 +71,15 @@ const helperModule = (function () {
     };
 
     /**
+     *
+     * @param id
+     * @return {*}
+     */
+    obj.set_rich_text_editor = function (id) {
+        return helperModule.render_rich_text_editor('#' + id);
+    };
+
+    /**
      * Creates rich text editor object
      * @param id
      */
