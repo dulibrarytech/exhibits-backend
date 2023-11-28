@@ -46,7 +46,7 @@
     </header>
     <div class="content" style="min-height: 875px;">
         <div id="message"></div>
-        <div id="item-card" class="card" style="visibility: hidden">
+        <div id="item-card" class="card" style="visibility: visible">
             <div class="card-header">
                 <strong class="card-title mb-3">Add Item to '<span id="exhibit-title"></span>' exhibit</strong>
             </div>
@@ -451,6 +451,8 @@
 <script src="<%= host %>/app/items.form.module.js"></script>
 <script>
     itemsFormModule.init();
+    itemsFormModule.items_init();
+    /*
     itemsFormModule.set_items_form_nav_menu_links();
     uploadsModule.upload_item_media();
     uploadsModule.upload_item_thumbnail();
@@ -481,6 +483,8 @@
             document.querySelector('#item-font-color').value = document.querySelector('#item-font-color-picker').value;
         }
     });
+
+     */
 
 </script>
 </body>

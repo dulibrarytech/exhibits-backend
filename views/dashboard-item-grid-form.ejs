@@ -61,7 +61,7 @@
     </header>
     <div class="content" style="min-height: 875px;">
         <div id="message"></div>
-        <div id="item-grid-card" class="card" style="visibility: hidden">
+        <div id="item-grid-card" class="card" style="visibility: visible">
             <div class="card-header">
                 <strong class="card-title mb-3">Add item grid to '<span id="exhibit-title"></span>' exhibit</strong>
             </div>
@@ -150,22 +150,7 @@
 <script src="<%= host %>/app/items.form.module.js"></script>
 <script>
     itemsFormModule.init();
-    itemsFormModule.set_grid_items_form_nav_menu_links();
-    document.querySelector('#save-grid-btn').addEventListener('click', itemsFormModule.create_grid_record);
-    uploadsModule.upload_item_media();
-    uploadsModule.upload_item_thumbnail();
-
-    document.querySelector('#grid-background-color-picker').addEventListener('input', () => {
-        if (document.querySelector('#grid-background-color')) {
-            document.querySelector('#grid-background-color').value = document.querySelector('#grid-background-color-picker').value;
-        }
-    });
-
-    document.querySelector('#grid-font-color-picker').addEventListener('input', () => {
-        if (document.querySelector('#grid-font-color')) {
-            document.querySelector('#grid-font-color').value = document.querySelector('#grid-font-color-picker').value;
-        }
-    });
+    itemsFormModule.grid_init();
 </script>
 </body>
 </html>

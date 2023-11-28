@@ -21,7 +21,7 @@ const itemsFormModule = (function () {
     'use strict';
 
     const EXHIBITS_ENDPOINTS = endpointsModule.get_exhibits_endpoints();
-    let rich_text_data = set_rich_text_editor();
+    // let rich_text_data = set_rich_text_editor();
     let obj = {};
 
     /**
@@ -143,6 +143,7 @@ const itemsFormModule = (function () {
      */
     obj.create_heading_record = async function () {
 
+        window.scrollTo(0, 0);
         let uuid = helperModule.get_parameter_by_name('uuid');
 
         if (uuid === undefined) {
@@ -188,6 +189,7 @@ const itemsFormModule = (function () {
      */
     obj.create_grid_record = async function () {
 
+        window.scrollTo(0, 0);
         let uuid = helperModule.get_parameter_by_name('uuid');
 
         if (uuid === undefined) {
@@ -279,7 +281,7 @@ const itemsFormModule = (function () {
                 setTimeout(() => {
 
                     if (itemsFormModule.check_grid() === true) {
-                        location.replace(`/dashboard/items/standard?uuid=${uuid}&grid=${grid_id}`); // response.data.data
+                        location.replace(`/dashboard/items/standard?uuid=${uuid}&grid=${grid_id}`);
                     } else {
                         location.replace(`/dashboard/items/standard?uuid=${uuid}`);
                     }
@@ -426,17 +428,99 @@ const itemsFormModule = (function () {
     }
 
     /**
+     * Init function for headings form
+     */
+    obj.headings_init = function () {
+        itemsFormModule.set_headings_form_nav_menu_links();
+        document.querySelector('#save-heading-btn').addEventListener('click', itemsFormModule.create_heading_record);
+        document.querySelector('#heading-background-color-picker').addEventListener('input', () => {
+            if (document.querySelector('#heading-background-color')) {
+                document.querySelector('#heading-background-color').value = document.querySelector('#heading-background-color-picker').value;
+            }
+        });
+
+        document.querySelector('#heading-font-color-picker').addEventListener('input', () => {
+            if (document.querySelector('#heading-font-color')) {
+                document.querySelector('#heading-font-color').value = document.querySelector('#heading-font-color-picker').value;
+            }
+        });
+
+    };
+
+    /**
+     * init function for standard items form
+     */
+    obj.items_init = function () {
+        set_rich_text_editor();
+        itemsFormModule.set_items_form_nav_menu_links();
+        uploadsModule.upload_item_media();
+        uploadsModule.upload_item_thumbnail();
+        itemsFormModule.check_grid();
+        document.querySelector('#save-item-btn').addEventListener('click', itemsFormModule.create_item_record);
+        document.querySelector('#item-media-trash').style.display = 'none';
+        document.querySelector('#item-thumbnail-trash').style.display = 'none';
+        document.querySelectorAll('.item-layout-left-right-radio-btn').forEach((radio_input) => {
+            radio_input.addEventListener('click', () => {
+                document.querySelector('#item-media-width').style.display = 'block';
+            });
+        });
+
+        document.querySelectorAll('.item-layout-radio-btn').forEach((radio_input) => {
+            radio_input.addEventListener('click', () => {
+                document.querySelector('#item-media-width').style.display = 'none';
+            });
+        });
+
+        document.querySelector('#item-background-color-picker').addEventListener('input', () => {
+            if (document.querySelector('#item-background-color')) {
+                document.querySelector('#item-background-color').value = document.querySelector('#item-background-color-picker').value;
+            }
+        });
+
+        document.querySelector('#item-font-color-picker').addEventListener('input', () => {
+            if (document.querySelector('#item-font-color')) {
+                document.querySelector('#item-font-color').value = document.querySelector('#item-font-color-picker').value;
+            }
+        });
+    };
+
+    /**
+     * Init function for grid form
+     */
+    obj.grid_init = function () {
+
+        itemsFormModule.set_grid_items_form_nav_menu_links();
+        document.querySelector('#save-grid-btn').addEventListener('click', itemsFormModule.create_grid_record);
+        uploadsModule.upload_item_media();
+        uploadsModule.upload_item_thumbnail();
+
+        document.querySelector('#grid-background-color-picker').addEventListener('input', () => {
+            if (document.querySelector('#grid-background-color')) {
+                document.querySelector('#grid-background-color').value = document.querySelector('#grid-background-color-picker').value;
+            }
+        });
+
+        document.querySelector('#grid-font-color-picker').addEventListener('input', () => {
+            if (document.querySelector('#grid-font-color')) {
+                document.querySelector('#grid-font-color').value = document.querySelector('#grid-font-color-picker').value;
+            }
+        });
+    };
+
+    /**
      *
-     * @return {Promise<void>}
      */
     obj.init = async function () {
         // TODO: check auth?
         const uuid = helperModule.get_parameter_by_name('uuid');
         exhibitsModule.set_preview_link();
         await itemsModule.set_exhibit_title(uuid);
+
+        /*
         setTimeout(() => {
             document.querySelector('.card').style.visibility = 'visible';
         }, 100);
+         */
     };
 
     return obj;
