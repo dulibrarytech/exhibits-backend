@@ -40,7 +40,7 @@ const ENDPOINTS = {
                 },
                 put: {
                     description: 'Updates exhibit record',
-                    endpoint: `${PREFIX}${VERSION}${ENDPOINT}`,
+                    endpoint: `${PREFIX}${VERSION}${ENDPOINT}/:exhibit_id`,
                     params: 'token or api_key, uuid',
                     body: 'record data'
                 },

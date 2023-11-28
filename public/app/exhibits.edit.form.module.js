@@ -218,7 +218,7 @@ const exhibitsEditFormModule = (function () {
 
             response = await httpModule.req({
                 method: 'PUT',
-                url: EXHIBITS_ENDPOINTS.exhibits.exhibit_records.endpoint, // TODO
+                url: EXHIBITS_ENDPOINTS.exhibits.exhibit_records.endpoints.put.endpoint.replace(':exhibit_id', uuid),
                 data: data,
                 headers: {
                     'Content-Type': 'application/json',
