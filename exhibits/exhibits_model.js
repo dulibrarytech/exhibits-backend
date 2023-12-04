@@ -178,13 +178,10 @@ exports.update_exhibit_record = async function (uuid, data) {
 
         if (data.hero_image.length > 0 && data.hero_image !== data.hero_image_prev) {
             data.hero_image = HELPER_TASK.process_uploaded_image(uuid, data.hero_image);
-            // TODO: delete old files
         }
-        console.log('out ', data.thumbnail);
+
         if (data.thumbnail.length > 0 && data.thumbnail !== data.thumbnail_prev) {
-            console.log('in ', data.thumbnail);
             data.thumbnail = HELPER_TASK.process_uploaded_image(uuid, data.thumbnail);
-            // TODO: delete old files
         }
 
         delete data.hero_image_prev;
