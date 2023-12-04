@@ -57,14 +57,15 @@ exports.get_exhibit_record = async function (req, res) {
 
 exports.update_exhibit_record = async function (req, res) {
 
+    const uuid = req.params.exhibit_id;
     const data = req.body;
 
-    if (data === undefined) {
+    if (uuid === undefined || data === undefined) {
         res.status(400).send('Bad request.');
         return false;
     }
 
-    const result = await EXHIBITS_MODEL.update_exhibit_record(data);
+    const result = await EXHIBITS_MODEL.update_exhibit_record(uuid, data);
     res.status(result.status).send(result);
 };
 

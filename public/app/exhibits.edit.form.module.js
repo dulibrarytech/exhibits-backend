@@ -32,7 +32,7 @@ const exhibitsEditFormModule = (function () {
         try {
 
             const uuid = helperModule.get_parameter_by_name('uuid');
-            const EXHIBITS_ENDPOINTS = endpointsModule.get_exhibits_endpoints();
+            // const EXHIBITS_ENDPOINTS = endpointsModule.get_exhibits_endpoints();
             const token = authModule.get_user_token();
 
             if (token === false || EXHIBITS_ENDPOINTS === null) {
@@ -81,7 +81,9 @@ const exhibitsEditFormModule = (function () {
 
         // exhibit media
         exhibit.hero_image = document.querySelector('#hero-image').value;
+        exhibit.hero_image_prev = document.querySelector('#hero-image-prev').value;
         exhibit.thumbnail = document.querySelector('#thumbnail-image').value;
+        exhibit.thumbnail_prev = document.querySelector('#thumbnail-image-prev').value;
 
         // exhibit banner
         exhibit.banner_template = helperModule.get_checked_radio_button(document.getElementsByName('banner_template'));
@@ -144,12 +146,16 @@ const exhibitsEditFormModule = (function () {
             hero_image_url = `/api/v1/exhibits/${record.uuid}/media/${record.hero_image}`;
             hero_image_fragment = `<p><img src="${hero_image_url}" height="200"></p>`;
             document.querySelector('#hero-image-filename-display').innerHTML = hero_image_fragment;
+            document.querySelector('#hero-image').value = record.hero_image;
+            document.querySelector('#hero-image-prev').value = record.hero_image;
         }
 
         if (record.thumbnail.length > 0) {
             thumbnail_url = `/api/v1/exhibits/${record.uuid}/media/${record.thumbnail}`;
             thumbnail_fragment = `<p><img src="${thumbnail_url}" height="200" ></p>`;
             document.querySelector('#thumbnail-filename-display').innerHTML = thumbnail_fragment;
+            document.querySelector('#thumbnail-image').value = record.thumbnail;
+            document.querySelector('#thumbnail-image-prev').value = record.thumbnail;
         }
 
         // exhibit banner
@@ -194,6 +200,7 @@ const exhibitsEditFormModule = (function () {
 
         try {
 
+            document.querySelector('.card').style.visibility = 'hidden';
             scrollTo(0, 0);
             document.querySelector('#message').innerHTML = `<div class="alert alert-info" role="alert"><i class="fa fa-info"></i> Updating exhibit record...</div>`;
             let uuid = helperModule.get_parameter_by_name('uuid');
@@ -232,9 +239,8 @@ const exhibitsEditFormModule = (function () {
                 document.querySelector('#message').innerHTML = `<div class="alert alert-success" role="alert"><i class="fa fa-info"></i> Exhibit record updated</div>`;
 
                 setTimeout(() => {
-                    // TODO:
-                    // window.location.replace('/dashboard/items?uuid=' + response.data.data);
-                }, 3000);
+                    window.location.replace('/dashboard/exhibits/exhibit/edit?uuid=' + uuid);
+                }, 2000);
             }
 
         } catch (error) {
@@ -248,8 +254,6 @@ const exhibitsEditFormModule = (function () {
     obj.init = async function () {
         document.querySelector('#save-exhibit-btn').addEventListener('click', exhibitsEditFormModule.update_exhibit_record);
         await display_edit_record();
-        uploadsModule.upload_exhibit_hero_image();
-        uploadsModule.upload_exhibit_thumbnail_image();
         document.querySelector('#logout').addEventListener('click', authModule.logout);
         document.querySelector('#hero-trash').style.display = 'none';
         document.querySelector('#thumbnail-trash').style.display = 'none';

@@ -18,9 +18,10 @@
 
 'use strict';
 
+const FS = require('fs');
 const {v4: uuidv4} = require('uuid');
-const LOGGER = require('../libs/log4');
 const VALIDATOR = require('validator');
+const LOGGER = require('../libs/log4');
 
 /**
  * Object contains helper tasks
@@ -224,6 +225,40 @@ const Helper = class {
             LOGGER.module().error('ERROR: [/libs/helper (order_grid_items)] unable to order items ' + error.message);
             return false;
         }
+    }
+
+    /**
+     * Checks if storage path for exhibit exists
+     * @param uuid
+     */
+    check_storage_path(uuid) {
+
+        try {
+
+            if (!FS.existsSync(`./storage/${uuid}`)){
+                FS.mkdirSync(`./storage/${uuid}`);
+                LOGGER.module().error('ERROR: [/libs/helper (check_storage_path)] Storage path for exhibit ' + uuid + ' created.');
+            }
+
+        } catch (error) {
+            LOGGER.module().error('ERROR: [/libs/helper (check_storage_path)] Error occurred while checking storage path ' + error.message);
+        }
+    }
+
+    /**
+     * Renames and moves uploaded image
+     * @param uuid
+     * @param hero_image
+     */
+    process_uploaded_image(uuid, hero_image) {
+
+        FS.rename(`./storage/${hero_image}`, `./storage/${uuid}/${uuid}_${hero_image}`, (error) => {
+            if (error) {
+                LOGGER.module().error('ERROR: [/libs/helper (process_hero_image)] Error occurred while processing image ' + error);
+            }
+        });
+
+        return `${uuid}_${hero_image}`;
     }
 
     /**

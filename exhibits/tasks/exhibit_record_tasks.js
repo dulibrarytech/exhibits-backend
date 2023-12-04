@@ -152,15 +152,16 @@ const Exhibit_record_tasks = class {
 
     /**
      * Updates record
+     * @param uuid
      * @param data
      */
-    async update_exhibit_record(data) {
+    async update_exhibit_record(uuid, data) {
 
         try {
 
             await this.DB(this.TABLE.exhibit_records)
             .where({
-                uuid: data.uuid
+                uuid: uuid
             })
             .update(data);
 
@@ -169,6 +170,7 @@ const Exhibit_record_tasks = class {
 
         } catch (error) {
             LOGGER.module().error('ERROR: [/exhibits/exhibit_record_tasks (update_exhibit_record)] unable to update record ' + error.message);
+            return false;
         }
     }
 

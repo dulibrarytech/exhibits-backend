@@ -101,7 +101,7 @@ const exhibitsFormModule = (function () {
             if (token === false) {
 
                 setTimeout(() => {
-                    document.querySelector('#message').innerHTML = `<div class="alert alert-info" role="alert"><i class="fa fa-info"></i> Loading...</div>`;
+                    document.querySelector('#message').innerHTML = `<div class="alert alert-info" role="alert"><i class="fa fa-info"></i> Unable to get session token</div>`;
                     authModule.logout();
                 }, 3000);
 

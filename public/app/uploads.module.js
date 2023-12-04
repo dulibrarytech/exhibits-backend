@@ -41,6 +41,7 @@ const uploadsModule = (function () {
             autoProcessQueue: true,
             init: function () {},
             renameFile: function (file) {
+                console.log('renameFile ', file);
                 let extension = file.name.split('.').pop();
                 return `${Date.now()}_exhibit_hero.${extension}`;
             },

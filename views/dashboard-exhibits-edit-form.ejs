@@ -95,6 +95,7 @@
                         <span><a id="hero-trash" title="Trash" href="#"><i class="fa fa-trash"></i></a></span>
                     </p>
                     <input type="hidden" id="hero-image" name="hero_image">
+                    <input type="hidden" id="hero-image-prev" name="hero_image-prev">
                 </div>
                 <form class="form-horizontal dropzone" id="hero-dropzone" action="/uploads"
                       method="post"
@@ -108,6 +109,7 @@
                         <span><a id="thumbnail-trash" title="Trash" href="#"><i class="fa fa-trash"></i></a></span>
                     </p>
                     <input type="hidden" id="thumbnail-image" name="thumbnail">
+                    <input type="hidden" id="thumbnail-image-prev" name="thumbnail-prev">
                 </div>
                 <form class="form-horizontal dropzone" id="thumbnail-dropzone" action="/uploads"
                       method="post"
@@ -304,9 +306,11 @@
 <script src="<%= host %>/app/auth.module.js"></script>
 <script src="<%= host %>/app/uploads.module.js"></script>
 <script src="<%= host %>/app/exhibits.module.js"></script>
-<script src="<%= host %>/app/exhibits.form.module.js"></script>
+<!--<script src="<%= host %>/app/exhibits.form.module.js"></script>-->
 <script src="<%= host %>/app/exhibits.edit.form.module.js"></script>
 <script>
+    uploadsModule.upload_exhibit_hero_image();
+    uploadsModule.upload_exhibit_thumbnail_image();
     exhibitsEditFormModule.init();
 </script>
 </body>

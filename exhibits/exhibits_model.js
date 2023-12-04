@@ -18,7 +18,6 @@
 
 'use strict';
 
-const FS = require('fs');
 const DB = require('../config/db_config')();
 const DB_TABLES = require('../config/db_tables_config')();
 const TABLES = DB_TABLES.exhibits;
@@ -57,41 +56,25 @@ exports.create_exhibit_record = async function (data) {
             };
         }
 
-        if (!FS.existsSync(`./storage/${data.uuid}`)){
-            FS.mkdirSync(`./storage/${data.uuid}`);
-        }
+        HELPER_TASK.check_storage_path(data.uuid);
 
         if (data.hero_image.length > 0) {
-
-            FS.rename(`./storage/${data.hero_image}`, `./storage/${data.uuid}/${data.uuid}_${data.hero_image}`, (error) => {
-                if (error) {
-                    console.log('ERROR: ' + error);
-                }
-            });
-
-            data.hero_image = `${data.uuid}_${data.hero_image}`;
+            data.hero_image = HELPER_TASK.process_uploaded_image(data.uuid, data.hero_image);
         }
 
         if (data.thumbnail.length > 0) {
-
-            FS.rename(`./storage/${data.thumbnail}`, `./storage/${data.uuid}/${data.uuid}_${data.thumbnail}`, (error) => {
-                if (error) {
-                    console.log('ERROR: ' + error);
-                }
-            });
-
-            data.thumbnail = `${data.uuid}_${data.thumbnail}`;
+            data.thumbnail = HELPER_TASK.process_uploaded_image(data.uuid, data.thumbnail);
         }
 
         if (data.styles === undefined || data.styles.length === 0) {
-            data.styles = '{}';
+            data.styles = {};
         }
 
         data.styles = JSON.stringify(data.styles);
 
         const CREATE_RECORD_TASK = new EXHIBIT_RECORD_TASKS(DB, TABLES);
         let result = await CREATE_RECORD_TASK.create_exhibit_record(data);
-        console.log(result);
+
         if (result === false) {
 
             return {
@@ -170,23 +153,14 @@ exports.get_exhibit_record = async function (uuid) {
 
 /**
  * Updates exhibit record
+ * @param uuid
  * @param data
  */
-exports.update_exhibit_record = async function (data) {
+exports.update_exhibit_record = async function (uuid, data) {
 
     try {
 
-        if (data.is_published !== undefined && data.is_locked !== undefined) {
-            data.is_published = parseInt(data.is_published);
-            data.is_locked = parseInt(data.is_locked);
-        } else {
-
-            return {
-                status: 400,
-                message: 'Missing data'
-            };
-        }
-
+        const HELPER_TASK = new HELPER();
         const VALIDATE_TASK = new VALIDATOR(EXHIBITS_UPDATE_RECORD_SCHEMA);
         let is_valid = VALIDATE_TASK.validate(data);
 
@@ -200,27 +174,49 @@ exports.update_exhibit_record = async function (data) {
             };
         }
 
-        const CREATE_RECORD_TASK = new EXHIBIT_RECORD_TASKS(DB, TABLES);
-        let result = await CREATE_RECORD_TASK.update_exhibit_record(data);
+        HELPER_TASK.check_storage_path(uuid);
 
-        if (result === false) {
+        if (data.hero_image.length > 0 && data.hero_image !== data.hero_image_prev) {
+            data.hero_image = HELPER_TASK.process_uploaded_image(uuid, data.hero_image);
+            // TODO: delete old files
+        }
+        console.log('out ', data.thumbnail);
+        if (data.thumbnail.length > 0 && data.thumbnail !== data.thumbnail_prev) {
+            console.log('in ', data.thumbnail);
+            data.thumbnail = HELPER_TASK.process_uploaded_image(uuid, data.thumbnail);
+            // TODO: delete old files
+        }
+
+        delete data.hero_image_prev;
+        delete data.thumbnail_prev;
+
+        if (data.styles === undefined || data.styles.length === 0) {
+            data.styles = {};
+        }
+
+        data.styles = JSON.stringify(data.styles);
+
+        const UPDATE_RECORD_TASK = new EXHIBIT_RECORD_TASKS(DB, TABLES);
+        let result = await UPDATE_RECORD_TASK.update_exhibit_record(uuid, data);
+
+        if (result !== true) {
             return {
                 status: 400,
                 message: 'Unable to update exhibit record'
             };
         } else {
             return {
-                status: 204,
+                status: 201,
                 message: 'Exhibit record updated'
             };
         }
 
     } catch (error) {
         LOGGER.module().error('ERROR: [/exhibits/model (update_exhibit_record)] ' + error.message);
-        callback({
+        return {
             status: 400,
             message: 'Unable to update record ' + error.message
-        });
+        };
     }
 };
 
@@ -240,7 +236,7 @@ exports.delete_exhibit_record = async function (uuid) {
 
             return {
                 status: 200,
-                message: 'Cannot delete exhibit'
+                message: 'Cannot delete exhibit because it contains items'
             };
         }
 
