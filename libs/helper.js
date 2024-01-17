@@ -29,7 +29,8 @@ const LOGGER = require('../libs/log4');
  */
 const Helper = class {
 
-    constructor() {}
+    constructor() {
+    }
 
     /**
      * Generates uuid
@@ -51,34 +52,25 @@ const Helper = class {
      * @param db
      * @param table
      */
-    lock_record(uuid, db, table) {
-        // TODO: refactor / async/await
+    async lock_record(uuid, db, table) {
 
-        let promise = new Promise((resolve, reject) => {
+        try {
 
-            db(table)
+            await db(table)
             .where({
                 uuid: uuid
             })
             .update({
                 is_locked: 1
-            })
-            .then((data) => {
-                LOGGER.module().info('INFO: [/exhibits/helper (lock_record)] record locked.');
-                this.lock_timer(uuid, db, table);
-                resolve(true);
-            })
-            .catch((error) => {
-                LOGGER.module().error('ERROR: [/exhibits/helper (lock_record)] unable to lock record ' + error.message);
-                reject(false);
             });
-        });
 
-        return promise.then((result) => {
-            return result;
-        }).catch(() => {
-            return false;
-        });
+            LOGGER.module().info('INFO: [/exhibits/helper (lock_record)] record locked.');
+            this.lock_timer(uuid, db, table);
+            return true;
+
+        } catch (error) {
+            LOGGER.module().error('ERROR: [/libs/helper (lock_record)] unable to lock record ' + error.message);
+        }
     }
 
     /**
@@ -89,25 +81,21 @@ const Helper = class {
      */
     lock_timer(uuid, db, table) {
 
-        setTimeout(() => {
+        setTimeout(async () => {
 
             try {
 
-                db(table)
+                await db(table)
                 .where({
                     uuid: uuid
                 })
                 .update({
                     is_locked: 0
-                })
-                .then(() => {
-                    LOGGER.module().info('INFO: [/exhibits/helper (lock_record)] record unlocked.');
-                })
-                .catch((error) => {
-                    LOGGER.module().error('ERROR: [/exhibits/helper (lock_record)] unable to unlock record ' + error.message);
                 });
 
-            } catch(error) {
+                LOGGER.module().info('INFO: [/exhibits/helper (lock_record)] record unlocked.');
+
+            } catch (error) {
                 LOGGER.module().error('ERROR: [/libs/helper (lock_timer)] unable to unlock record ' + error.message);
                 return false;
             }
@@ -142,7 +130,7 @@ const Helper = class {
 
             return obj;
 
-        } catch(error) {
+        } catch (error) {
             LOGGER.module().error('ERROR: [/libs/helper (check_config)] unable to check config ' + error.message);
             return false;
         }
@@ -174,7 +162,7 @@ const Helper = class {
                 return 1;
             }
 
-            for (let i=0;i<merged.length;i++) {
+            for (let i = 0; i < merged.length; i++) {
                 order.push(merged[i].order);
             }
 
@@ -185,7 +173,7 @@ const Helper = class {
             const order_number = ordered.pop();
             return order_number + 1;
 
-        } catch(error) {
+        } catch (error) {
             LOGGER.module().error('ERROR: [/libs/helper (order_exhibit_items)] unable to order items ' + error.message);
             return false;
         }
@@ -210,7 +198,7 @@ const Helper = class {
                 return 1;
             }
 
-            for (let i=0;i<item_order.length;i++) {
+            for (let i = 0; i < item_order.length; i++) {
                 order.push(item_order[i].order);
             }
 
@@ -221,7 +209,7 @@ const Helper = class {
             const order_number = ordered.pop();
             return order_number + 1;
 
-        } catch(error) {
+        } catch (error) {
             LOGGER.module().error('ERROR: [/libs/helper (order_grid_items)] unable to order items ' + error.message);
             return false;
         }
@@ -235,7 +223,7 @@ const Helper = class {
 
         try {
 
-            if (!FS.existsSync(`./storage/${uuid}`)){
+            if (!FS.existsSync(`./storage/${uuid}`)) {
                 FS.mkdirSync(`./storage/${uuid}`);
                 LOGGER.module().error('ERROR: [/libs/helper (check_storage_path)] Storage path for exhibit ' + uuid + ' created.');
             }
@@ -276,7 +264,7 @@ const Helper = class {
         const i = Math.floor(Math.log(bytes) / Math.log(k));
 
         return {
-            size_type:sizes[i],
+            size_type: sizes[i],
             batch_size: parseFloat((bytes / Math.pow(k, i)).toFixed(dm))
         };
     };

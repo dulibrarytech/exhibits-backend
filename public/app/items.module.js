@@ -157,9 +157,9 @@ const itemsModule = (function () {
      */
     obj.display_items = async function () {
 
-        const uuid = helperModule.get_parameter_by_name('uuid');
-        await itemsModule.set_exhibit_title(uuid);
-        const items = await get_items(uuid);
+        const exhibit_id = helperModule.get_parameter_by_name('uuid');
+        await itemsModule.set_exhibit_title(exhibit_id);
+        const items = await get_items(exhibit_id);
         let item_data = '';
 
         if (items.length === 0) {
@@ -196,7 +196,7 @@ const itemsModule = (function () {
             if (items[i].type === 'item') {
 
                 let thumbnail = '';
-                let title = `<a href="/dashboard/items/details?uuid=${uuid}&item_id=${item_id}">${helperModule.unescape(items[i].title)}</a>`;
+                let title = `<a href="/dashboard/items/details?uuid=${exhibit_id}&item_id=${item_id}">${helperModule.unescape(items[i].title)}</a>`;
                 let description = helperModule.unescape(items[i].description);
                 let date = items[i].date;
 
@@ -213,7 +213,7 @@ const itemsModule = (function () {
                     <p><small>${date}</small></p>
                     </td>`;
 
-                item_details = `<a href="/dashboard/items/details?uuid=${uuid}&item_id=${item_id}" title="Item details"><i class="fa fa-search pr-1"></i></a>`;
+                item_details = `<a href="/dashboard/items/details?uuid=${exhibit_id}&item_id=${item_id}" title="Item details"><i class="fa fa-search pr-1"></i></a>`;
 
             } else if (items[i].type === 'heading') {
 
@@ -235,7 +235,7 @@ const itemsModule = (function () {
                 } else {
 
                     // TODO: add link to grid item details - grid_id
-                    item_details = `<a href="/dashboard/items/details?uuid=${uuid}&item_id=${item_id}" title="Item details"><i class="fa fa-search pr-1"></i></a>`;
+                    item_details = `<a href="/dashboard/items/details?uuid=${exhibit_id}&item_id=${item_id}" title="Item details"><i class="fa fa-search pr-1"></i></a>`;
 
                     for (let j=0;j<items[i].grid_items.length;j++) {
 
@@ -254,7 +254,7 @@ const itemsModule = (function () {
                 item_data += `<td style="width: 35%">
                     <p><button class="btn btn-default"><small>${type}</small></button></p>
                     <p>${items[i].columns} columns </p>
-                    <div id="grid-items-${uuid}">${grid_items_fragment}</div>
+                    <div id="grid-items-${exhibit_id}">${grid_items_fragment}</div>
                     </td>`;
             }
 
@@ -262,7 +262,7 @@ const itemsModule = (function () {
             item_data += `<td style="width: 10%">
                                 <div class="card-text text-sm-center">
                                     ${item_details}&nbsp;
-                                    <a href="#" title="Edit"><i class="fa fa-edit pr-1"></i></a>&nbsp;
+                                    <a href="/dashboard/items/standard/edit?exhbit_id=${exhibit_id}&item_id=${item_id}" title="Edit"><i class="fa fa-edit pr-1"></i></a>&nbsp;
                                     <a href="#" title="Delete"><i class="fa fa-trash pr-1"></i></a>
                                 </div>
                             </td>`;

@@ -21,7 +21,6 @@ const itemsFormModule = (function () {
     'use strict';
 
     const EXHIBITS_ENDPOINTS = endpointsModule.get_exhibits_endpoints();
-    // let rich_text_data = set_rich_text_editor();
     let obj = {};
 
     /**
