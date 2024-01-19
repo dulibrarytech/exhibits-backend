@@ -122,8 +122,8 @@ const ItemsEditFormModule = (function () {
     async function display_edit_record () {
 
         let record = await get_item_record();
-        let hero_image_url = '';
-        let hero_image_fragment = '';
+        let media_url = '';
+        let media_fragment = '';
         let thumbnail_url = '';
         let thumbnail_fragment = '';
         console.log('display: ', record);
@@ -141,15 +141,15 @@ const ItemsEditFormModule = (function () {
         rich_text_data['item-text-input'] = helperModule.set_rich_text_editor('item-text-input');
         rich_text_data['item-text-input'].setHTMLCode(helperModule.unescape(record.text));
 
-        // TODO: item media
-        if (record.hero_image.length > 0) {
-            hero_image_url = `/api/v1/exhibits/${record.uuid}/media/${record.hero_image}`;
-            hero_image_fragment = `<p><img src="${hero_image_url}" height="200"></p>`;
-            document.querySelector('#hero-image-filename-display').innerHTML = hero_image_fragment;
-            document.querySelector('#hero-image').value = record.hero_image;
-            document.querySelector('#hero-image-prev').value = record.hero_image;
+        if (record.media.length > 0) {
+            media_url = `/api/v1/exhibits/${record.is_member_of_exhibit}/media/items/${record.media}`;
+            media_fragment = `<p><img src="${media_url}" height="200"></p>`;
+            document.querySelector('#item-media-filename-display').innerHTML = media_fragment;
+            document.querySelector('#item-media').value = record.media;
+            // document.querySelector('#item-media-prev').value = record.media;
         }
 
+        // TODO:
         if (record.thumbnail.length > 0) {
             thumbnail_url = `/api/v1/exhibits/${record.uuid}/media/${record.thumbnail}`;
             thumbnail_fragment = `<p><img src="${thumbnail_url}" height="200" ></p>`;
@@ -158,25 +158,9 @@ const ItemsEditFormModule = (function () {
             document.querySelector('#thumbnail-image-prev').value = record.thumbnail;
         }
 
-        // exhibit banner
-        let banner_templates = document.getElementsByName('banner_template');
 
-        for (let i = 0; i < banner_templates.length; i++) {
-            if (banner_templates[i].value === record.banner_template) {
-                document.querySelector('#' + banner_templates[i].id).checked = true;
-            }
-        }
-
-        // exhibit layout
-        let page_layouts = document.getElementsByName('page_layout');
-
-        for (let j = 0; j < page_layouts.length; j++) {
-            if (page_layouts[j].value === record.page_layout) {
-                document.querySelector('#' + page_layouts[j].id).checked = true;
-            }
-        }
-
-        // Exhibit styles
+        // Item styles
+        // TODO: check if empty
         let styles = JSON.parse(record.styles);
         document.querySelector('#nav-menu-background-color').value = styles.exhibit.navigation.menu.backgroundColor;
         document.querySelector('#nav-menu-font-color').value = styles.exhibit.navigation.menu.color;
@@ -193,8 +177,8 @@ const ItemsEditFormModule = (function () {
         return false;
     }
 
-    /** TODO: hero and thumb values
-     * Updates exhibit record
+    /**
+     * Updates item record
      */
     obj.update_item_record = async function () {
 
