@@ -19,7 +19,7 @@
 const ItemsEditFormModule = (function () {
 
     'use strict';
-    console.log('edit item');
+
     const EXHIBITS_ENDPOINTS = endpointsModule.get_exhibits_endpoints();
     let obj = {};
     let rich_text_data = {};
@@ -49,7 +49,6 @@ const ItemsEditFormModule = (function () {
             }
 
             // document.querySelector('#exhibit-title').innerHTML = await exhibitsModule.get_exhibit_title(uuid);
-            console.log(endpoint);
             let response = await httpModule.req({
                 method: 'GET',
                 url: endpoint,
@@ -60,8 +59,7 @@ const ItemsEditFormModule = (function () {
             });
 
             if (response !== undefined && response.status === 200) {
-                console.log(response.data.data);
-                // return response.data.data[0];
+                return response.data.data[0];
             }
 
         } catch (error) {
@@ -124,27 +122,26 @@ const ItemsEditFormModule = (function () {
     async function display_edit_record () {
 
         let record = await get_item_record();
-        console.log('display: ', record);
-
         let hero_image_url = '';
         let hero_image_fragment = '';
         let thumbnail_url = '';
         let thumbnail_fragment = '';
+        console.log('display: ', record);
 
-        // exhibit data
-        rich_text_data['exhibit-title-input'] = helperModule.set_rich_text_editor('exhibit-title-input');
-        rich_text_data['exhibit-title-input'].setHTMLCode(helperModule.unescape(record.title));
+        // item data
+        rich_text_data['item-title-input'] = helperModule.set_rich_text_editor('item-title-input');
+        rich_text_data['item-title-input'].setHTMLCode(helperModule.unescape(record.title));
 
-        rich_text_data['exhibit-sub-title-input'] = helperModule.set_rich_text_editor('exhibit-sub-title-input');
-        rich_text_data['exhibit-sub-title-input'].setHTMLCode(helperModule.unescape(record.subtitle));
+        rich_text_data['item-caption-input'] = helperModule.set_rich_text_editor('item-caption-input');
+        rich_text_data['item-caption-input'].setHTMLCode(helperModule.unescape(record.caption));
 
-        rich_text_data['exhibit-alert-text-input'] = helperModule.set_rich_text_editor('exhibit-alert-text-input');
-        rich_text_data['exhibit-alert-text-input'].setHTMLCode(helperModule.unescape(record.alert_text));
+        rich_text_data['item-description-input'] = helperModule.set_rich_text_editor('item-description-input');
+        rich_text_data['item-description-input'].setHTMLCode(helperModule.unescape(record.description));
 
-        rich_text_data['exhibit-description-input'] = helperModule.set_rich_text_editor('exhibit-description-input');
-        rich_text_data['exhibit-description-input'].setHTMLCode(helperModule.unescape(record.description));
+        rich_text_data['item-text-input'] = helperModule.set_rich_text_editor('item-text-input');
+        rich_text_data['item-text-input'].setHTMLCode(helperModule.unescape(record.text));
 
-        // TODO item media
+        // TODO: item media
         if (record.hero_image.length > 0) {
             hero_image_url = `/api/v1/exhibits/${record.uuid}/media/${record.hero_image}`;
             hero_image_fragment = `<p><img src="${hero_image_url}" height="200"></p>`;
@@ -255,8 +252,8 @@ const ItemsEditFormModule = (function () {
      *
      */
     obj.init = async function () {
-
-        await get_item_record();
+        await display_edit_record();
+        // await get_item_record();
 
         /*
         document.querySelector('#save-exhibit-btn').addEventListener('click', exhibitsEditFormModule.update_exhibit_record);

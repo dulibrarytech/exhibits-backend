@@ -202,7 +202,7 @@ const itemsModule = (function () {
 
                 if (items[i].thumbnail.length > 0) {
                     thumbnail = EXHIBITS_ENDPOINTS.exhibits.exhibit_media.get.endpoint.replace(':exhibit_id', uuid).replace(':media', items[i].thumbnail);
-                    item_data = `<p><img src="${thumbnail}" height="100" width="100"></p>`;
+                    item_data = `<p><img alt="${thumbnail}" src="${thumbnail}" height="100" width="100"></p>`;
                 }
 
                 item_data += `<td style="width: 35%">
@@ -262,7 +262,7 @@ const itemsModule = (function () {
             item_data += `<td style="width: 10%">
                                 <div class="card-text text-sm-center">
                                     ${item_details}&nbsp;
-                                    <a href="/dashboard/items/standard/edit?exhbit_id=${exhibit_id}&item_id=${item_id}" title="Edit"><i class="fa fa-edit pr-1"></i></a>&nbsp;
+                                    <a href="/dashboard/items/standard/edit?exhibit_id=${exhibit_id}&item_id=${item_id}" title="Edit"><i class="fa fa-edit pr-1"></i></a>&nbsp;
                                     <a href="#" title="Delete"><i class="fa fa-trash pr-1"></i></a>
                                 </div>
                             </td>`;
