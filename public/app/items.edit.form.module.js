@@ -124,8 +124,6 @@ const ItemsEditFormModule = (function () {
         let record = await get_item_record();
         let media_url = '';
         let media_fragment = '';
-        let thumbnail_url = '';
-        let thumbnail_fragment = '';
         console.log('display: ', record);
 
         // item data
@@ -146,33 +144,33 @@ const ItemsEditFormModule = (function () {
             media_fragment = `<p><img src="${media_url}" height="200"></p>`;
             document.querySelector('#item-media-filename-display').innerHTML = media_fragment;
             document.querySelector('#item-media').value = record.media;
+            // TODO
             // document.querySelector('#item-media-prev').value = record.media;
         }
 
-        // TODO:
-        if (record.thumbnail.length > 0) {
-            thumbnail_url = `/api/v1/exhibits/${record.uuid}/media/${record.thumbnail}`;
-            thumbnail_fragment = `<p><img src="${thumbnail_url}" height="200" ></p>`;
-            document.querySelector('#thumbnail-filename-display').innerHTML = thumbnail_fragment;
-            document.querySelector('#thumbnail-image').value = record.thumbnail;
-            document.querySelector('#thumbnail-image-prev').value = record.thumbnail;
-        }
-
-
         // Item styles
-        // TODO: check if empty
-        let styles = JSON.parse(record.styles);
-        document.querySelector('#nav-menu-background-color').value = styles.exhibit.navigation.menu.backgroundColor;
-        document.querySelector('#nav-menu-font-color').value = styles.exhibit.navigation.menu.color;
+        if (record.styles !== '{}') {
 
-        let font_values = document.querySelector('#nav-menu-font');
+            let styles = JSON.parse(record.styles);
+            console.log(record.styles);
+            document.querySelector('#nav-menu-background-color').value = styles.exhibit.navigation.menu.backgroundColor;
+            document.querySelector('#nav-menu-font-color').value = styles.exhibit.navigation.menu.color;
 
-        for (let i = 0;i<font_values.length;i++) {
+            let font_values = document.querySelector('#nav-menu-font');
 
-            if (font_values[i].value === styles.exhibit.navigation.menu.fontFamily) {
-                document.querySelector('#nav-menu-font').value = styles.exhibit.navigation.menu.fontFamily;
+            for (let i = 0;i<font_values.length;i++) {
+                if (font_values[i].value === styles.exhibit.navigation.menu.fontFamily) {
+                    document.querySelector('#nav-menu-font').value = styles.exhibit.navigation.menu.fontFamily;
+                }
             }
         }
+
+        // TODO: layout
+        console.log('layout ', record.layout);
+        // TODO: media width
+        console.log('media width ', record.media_width);
+        // TODO: item type
+        console.log('item type ', record.item_type);
 
         return false;
     }
@@ -184,8 +182,8 @@ const ItemsEditFormModule = (function () {
 
         try {
 
-            document.querySelector('.card').style.visibility = 'hidden';
             scrollTo(0, 0);
+            document.querySelector('.card').style.visibility = 'hidden';
             document.querySelector('#message').innerHTML = `<div class="alert alert-info" role="alert"><i class="fa fa-info"></i> Updating item record...</div>`;
             let uuid = helperModule.get_parameter_by_name('uuid');
             let data = get_item_data();

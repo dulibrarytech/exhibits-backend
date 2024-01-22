@@ -113,6 +113,7 @@ const Exhibit_item_record_tasks = class {
                 'caption',
                 'item_type',
                 'media',
+                'media_width',
                 'text',
                 'layout',
                 'styles',
