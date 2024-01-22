@@ -165,8 +165,14 @@ const ItemsEditFormModule = (function () {
             }
         }
 
-        // TODO: layout
-        console.log('layout ', record.layout);
+        let layouts = document.getElementsByName('layout');
+
+        for (let j = 0; j < layouts.length; j++) {
+            if (layouts[j].value === record.layout) {
+                document.querySelector('#' + layouts[j].id).checked = true;
+            }
+        }
+
         // TODO: media width
         console.log('media width ', record.media_width);
         // TODO: item type
