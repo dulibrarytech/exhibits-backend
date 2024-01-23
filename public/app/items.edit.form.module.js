@@ -72,49 +72,40 @@ const ItemsEditFormModule = (function () {
      */
     function get_item_data () {
 
-        let exhibit = {};
+        let item = {};
 
-        // exhibit data
-        exhibit.title = rich_text_data['exhibit-title-input'].getHTMLCode();
-        exhibit.subtitle = rich_text_data['exhibit-sub-title-input'].getHTMLCode();
-        exhibit.alert_text = rich_text_data['exhibit-alert-text-input'].getHTMLCode();
-        exhibit.description = rich_text_data['exhibit-description-input'].getHTMLCode();
+        // item data
+        item.title = rich_text_data['item-title-input'].getHTMLCode();
+        item.caption = rich_text_data['item-caption-input'].getHTMLCode();
+        item.description = rich_text_data['item-description-input'].getHTMLCode();
+        item.text = rich_text_data['item-text-input'].getHTMLCode();
 
-        // exhibit media
-        exhibit.hero_image = document.querySelector('#hero-image').value;
-        exhibit.hero_image_prev = document.querySelector('#hero-image-prev').value;
-        exhibit.thumbnail = document.querySelector('#thumbnail-image').value;
-        exhibit.thumbnail_prev = document.querySelector('#thumbnail-image-prev').value;
+        // item media
+        item.item_media = document.querySelector('#item-media').value;
+        item.item_media_prev = document.querySelector('#item-media-prev').value;
 
-        // exhibit banner
-        exhibit.banner_template = helperModule.get_checked_radio_button(document.getElementsByName('banner_template'));
+        // item layout
+        item.layout = helperModule.get_checked_radio_button(document.getElementsByName('layout'));
 
-        // exhibit page layout
-        exhibit.page_layout = helperModule.get_checked_radio_button(document.getElementsByName('page_layout'));
+        // item styles
+        let item_background_color = document.querySelector('#item-background-color').value;
+        let item_color = document.querySelector('#item-font-color').value;
+        let item_font = document.querySelector('#item-font').value;
 
-        // exhibit template layout - TODO: only on option set by default
-        exhibit.template = document.querySelector('#exhibit-template').value;
-        // exhibit.template = helperModule.get_checked_radio_button(document.getElementsByName('template'));
+        if (item_background_color.length > 0) {
+            item.styles.backGroundColor = item_background_color;
+        }
 
-        // Exhibit styles
-        let exhibit_nav_menu_background_color = document.querySelector('#nav-menu-background-color').value;
-        let exhibit_nav_menu_font_color = document.querySelector('#nav-menu-font-color').value;
-        let exhibit_nav_menu_font = document.querySelector('#nav-menu-font').value;
+        if (item_color.length > 0) {
+            item.styles.color = document.querySelector('#item-font-color').value;
+        }
 
-        exhibit.styles = {
-            exhibit: {
-                navigation: {
-                    menu: {
-                        backgroundColor: exhibit_nav_menu_background_color.length > 1 ? exhibit_nav_menu_background_color : '',
-                        color: exhibit_nav_menu_font_color.length > 1 ? exhibit_nav_menu_font_color : '',
-                        fontFamily: exhibit_nav_menu_font.length > 1 ? exhibit_nav_menu_font : ''
-                    }
-                }
-            }
-        };
+        if (item_font.length > 0) {
+            item.styles.fontFamily = item_font;
+        }
 
-        return exhibit;
-    };
+        return item;
+    }
 
     /**
      * Populates edit form with exhibit record data
@@ -144,11 +135,19 @@ const ItemsEditFormModule = (function () {
             media_fragment = `<p><img src="${media_url}" height="200"></p>`;
             document.querySelector('#item-media-filename-display').innerHTML = media_fragment;
             document.querySelector('#item-media').value = record.media;
-            // TODO
-            // document.querySelector('#item-media-prev').value = record.media;
+            document.querySelector('#item-media-prev').value = record.media;
         }
 
-        // Item styles
+        // item layouts
+        let layouts = document.getElementsByName('layout');
+
+        for (let j = 0; j < layouts.length; j++) {
+            if (layouts[j].value === record.layout) {
+                document.querySelector('#' + layouts[j].id).checked = true;
+            }
+        }
+
+        // item styles
         if (record.styles !== '{}') {
 
             let styles = JSON.parse(record.styles);
@@ -165,18 +164,10 @@ const ItemsEditFormModule = (function () {
             }
         }
 
-        let layouts = document.getElementsByName('layout');
-
-        for (let j = 0; j < layouts.length; j++) {
-            if (layouts[j].value === record.layout) {
-                document.querySelector('#' + layouts[j].id).checked = true;
-            }
-        }
-
-        // TODO: media width
-        console.log('media width ', record.media_width);
+        // TODO: media width?
+        // console.log('media width ', record.media_width);
         // TODO: item type
-        console.log('item type ', record.item_type);
+        // console.log('item type ', record.item_type);
 
         return false;
     }

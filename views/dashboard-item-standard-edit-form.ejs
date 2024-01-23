@@ -23,7 +23,9 @@
                 </li>
                 <li class="menu-title">Menu</li>
             </ul>
-            <ul class="nav navbar-nav"><li id="preview-link"></li></ul>
+            <ul class="nav navbar-nav">
+                <li id="preview-link"></li>
+            </ul>
             <ul id="items-menu" class="nav navbar-nav"></ul>
             <ul class="nav navbar-nav">
                 <li>
@@ -65,7 +67,8 @@
                             </div>
                             <div id="item-title-input" style="height: 100px"></div>
                             <span id="item-title-error" class="is-error">
-                                <small class="form-text text-muted">* Required | <i class="fa fa-exclamation-circle"></i> <em>The item title becomes a subheading in the navigation</em></small>
+                                <small class="form-text text-muted">* Required | <i
+                                            class="fa fa-exclamation-circle"></i> <em>The item title becomes a subheading in the navigation</em></small>
                             </span>
                         </div>
                     </div>
@@ -157,20 +160,20 @@
                             <div class="tab-pane fade show active" id="nav-home" role="tabpanel"
                                  aria-labelledby="nav-home-tab">
                                 <div class="alert alert-info">
-                                    <i class="fa fa-info"></i> <span id="info-message">Provide info to user about uploading media</span>
+                                    <i class="fa fa-info"></i> <span
+                                            id="info-message">Item media can be replaced here</span>
                                 </div>
                                 <span class="upload-error"></span>
-                                <p>
-                                    <br>
-                                    <span id="item-media-filename-display"></span>&nbsp;&nbsp;
-                                    <span>
+                                <div class="col-12 col-md-12">
+                                    <p>
+                                        <span id="item-media-filename-display"></span>&nbsp;&nbsp;
+                                        <span>
                                         <a id="item-media-trash" title="Trash" href="#"><i class="fa fa-trash"></i></a>
                                     </span>
-                                </p>
-
-                                <input type="hidden" id="item-media" name="item_media">
-                                <input type="hidden" id="item-type" name="item_type">
-
+                                    </p>
+                                    <input type="hidden" id="item-media" name="item_media">
+                                    <input type="hidden" id="item-media-prev" name="item-media-prev">
+                                </div>
                                 <form class="form-horizontal dropzone" id="item-dropzone" action="/uploads"
                                       method="post"
                                       enctype="multipart/form-data">
@@ -196,150 +199,105 @@
                         </div>
                     </div>
                     <hr>
-                    <div class="is-standard-item">
-                        <p>
-                            <button class="btn btn-default">Item layout</button>
-                        </p>
-                        <div class="alert alert-info"><i class="fa fa-info"></i>
-                            <span id="info-message">Provide info to user about item layouts</span>
-                        </div>
-                        <div class="row form-group">
-                            <div class="col-12 col-md-12">
-                                <form id="item-layout-form">
-                                    <table class="table table-striped">
-                                        <tr>
-                                            <td style="width: 30%;padding: 5px">
-                                                <img src="<%= host %>/images/item_layout_media_top_text_bottom.png" width="150" height="150">
-                                            </td>
-                                            <td style="60%;">
-                                                <label class="btn btn-default" for="item-layout-top">Text media pair,
-                                                    text below media</label>
-                                            </td>
-                                            <td style="width: 10%">
-                                                <input class="item-layout-radio-btn" type="radio" name="layout"
-                                                       id="item-layout-top" value="media_top"/>
-                                            </td>
-                                        </tr>
-                                        <tr>
-                                            <td style="width: 30%;padding: 5px">
-                                                <img src="<%= host %>/images/item_layout_text_top_media_bottom.png" width="150" height="150">
-                                            </td>
-                                            <td style="60%;">
-                                                <label class="btn btn-default" for="item-layout-bottom">Text media
-                                                    pair, text above the media</label>
-                                            </td>
-                                            <td style="width: 10%">
-                                                <input class="item-layout-radio-btn" type="radio" name="layout"
-                                                       id="item-layout-bottom" value="media_bottom"/>
-                                            </td>
-                                        </tr>
-                                        <tr>
-                                            <td style="width: 30%;padding: 5px">
-                                                <img src="<%= host %>/images/item_layout_media_only.png" height="75">
-                                            </td>
-                                            <td style="60%;">
-                                                <label class="btn btn-default" for="item-layout-only">Media only, no
-                                                    text</label>
-                                            </td>
-                                            <td style="width: 10%">
-                                                <input class="item-layout-radio-btn" type="radio" name="layout"
-                                                       id="item-layout-only" value="media_only"/>
-                                            </td>
-                                        </tr>
-                                        <tr>
-                                            <td style="width: 30%;padding: 5px">
-                                                <img src="<%= host %>/images/item_layout_text_only.png" height="75">
-                                            </td>
-                                            <td style="60%;">
-                                                <label class="btn btn-default" for="item-layout-text-only">Text only, no
-                                                    media</label>
-                                            </td>
-                                            <td style="width: 10%">
-                                                <input class="item-layout-radio-btn" type="radio" name="layout"
-                                                       id="item-layout-text-only" value="text_only"/>
-                                            </td>
-                                        </tr>
-                                        <tr>
-                                            <td style="width: 30%;padding: 5px">
-                                                <img src="<%= host %>/images/item_layout_text_left_media_right.png" height="75">
-                                            </td>
-                                            <td style="60%">
-                                                <label class="btn btn-default" for="item-layout-right">Text media pair,
-                                                    media on the right</label>
-                                            </td>
-                                            <td style="width: 10%">
-                                                <input class="item-layout-left-right-radio-btn" type="radio"
-                                                       name="layout" id="item-layout-right" value="media_right"/>
-                                            </td>
-                                        </tr>
-                                        <tr>
-                                            <td style="width: 30%;padding: 5px">
-                                                <img src="<%= host %>/images/item_layout_media_left_text_right.png" height="75">
-                                            </td>
-                                            <td style="60%;">
-                                                <label class="btn btn-default" for="item-layout-left">Text media pair,
-                                                    media on the left</label>
-                                            </td>
-                                            <td style="width: 10%">
-                                                <input class="item-layout-left-right-radio-btn" type="radio"
-                                                       name="layout" id="item-layout-half" value="media_left"/>
-                                            </td>
-                                        </tr>
-                                    </table>
-                                </form>
-                                <form>
-                                    <table id="item-media-width" class="table table-striped" style="display: none">
-                                        <tr>
-                                            <td style="width: 100%">
-                                                <span class="form-text text-muted"
-                                                      style="font-size: 17px">*
-                                                    <small>Please select a media width</small></span>
-                                            </td>
-                                        </tr>
-                                        <tr>
-                                            <td style="width: 30%;padding: 5px;">
-                                                <img src="<%= host %>/images/item_layout_half.png">
-                                            </td>
-                                            <td style="60%">
-                                                <label class="btn btn-default" for="item-layout-half">Image width is one
-                                                    half of the exhibit item </label>
-                                            </td>
-                                            <td style="width: 10%">
-                                                <input type="radio" name="layout" id="item-layout-half" value="half"/>
-                                            </td>
-                                        </tr>
-                                        <tr>
-                                            <td style="width: 30%;padding: 5px;">
-                                                <img src="<%= host %>/images/item_layout_third.png">
-                                            </td>
-                                            <td style="60%">
-                                                <label class="btn btn-default" for="item-layout-third">Image width is
-                                                    one third of the exhibit item </label>
-                                            </td>
-                                            <td style="width: 10%">
-                                                <input type="radio" name="layout" id="item-layout-third" value="third"/>
-                                            </td>
-                                        </tr>
-                                        <tr>
-                                            <td style="width: 30%;padding: 5px;">
-                                                <img src="<%= host %>/images/item_layout_quarter.png">
-                                            </td>
-                                            <td style="60%">
-                                                <label class="btn btn-default" for="item-layout-quarter">Image width is
-                                                    one quarter of the exhibit item </label>
-                                            </td>
-                                            <td style="width: 10%">
-                                                <input type="radio" name="layout" id="item-layout-quarter"
-                                                       value="quarter"/>
-                                            </td>
-                                        </tr>
-                                    </table>
-                                </form>
-                            </div>
-                        </div>
-                        <br>
-                        <hr>
+                    <p>
+                        <button class="btn btn-default">Item layout</button>
+                    </p>
+                    <div class="alert alert-info"><i class="fa fa-info"></i>
+                        <span id="info-message">Provide info to user about item layouts</span>
                     </div>
+
+                    <div class="row form-group">
+                        <div class="col-12 col-md-12">
+                            <form id="item-layout-form">
+                                <table class="table table-striped">
+                                    <tr>
+                                        <td style="width: 30%;padding: 5px">
+                                            <img src="<%= host %>/images/item_layout_media_top_text_bottom.png"
+                                                 width="150" height="150">
+                                        </td>
+                                        <td style="60%;">
+                                            <label class="btn btn-default" for="item-layout-top">Text media pair,
+                                                text below media</label>
+                                        </td>
+                                        <td style="width: 10%">
+                                            <input class="item-layout-radio-btn" type="radio" name="layout"
+                                                   id="item-layout-top" value="media_top"/>
+                                        </td>
+                                    </tr>
+                                    <tr>
+                                        <td style="width: 30%;padding: 5px">
+                                            <img src="<%= host %>/images/item_layout_text_top_media_bottom.png"
+                                                 width="150" height="150">
+                                        </td>
+                                        <td style="60%;">
+                                            <label class="btn btn-default" for="item-layout-bottom">Text media
+                                                pair, text above the media</label>
+                                        </td>
+                                        <td style="width: 10%">
+                                            <input class="item-layout-radio-btn" type="radio" name="layout"
+                                                   id="item-layout-bottom" value="media_bottom"/>
+                                        </td>
+                                    </tr>
+                                    <tr>
+                                        <td style="width: 30%;padding: 5px">
+                                            <img src="<%= host %>/images/item_layout_media_only.png" height="75">
+                                        </td>
+                                        <td style="60%;">
+                                            <label class="btn btn-default" for="item-layout-only">Media only, no
+                                                text</label>
+                                        </td>
+                                        <td style="width: 10%">
+                                            <input class="item-layout-radio-btn" type="radio" name="layout"
+                                                   id="item-layout-only" value="media_only"/>
+                                        </td>
+                                    </tr>
+                                    <tr>
+                                        <td style="width: 30%;padding: 5px">
+                                            <img src="<%= host %>/images/item_layout_text_only.png" height="75">
+                                        </td>
+                                        <td style="60%;">
+                                            <label class="btn btn-default" for="item-layout-text-only">Text only, no
+                                                media</label>
+                                        </td>
+                                        <td style="width: 10%">
+                                            <input class="item-layout-radio-btn" type="radio" name="layout"
+                                                   id="item-layout-text-only" value="text_only"/>
+                                        </td>
+                                    </tr>
+                                    <tr>
+                                        <td style="width: 30%;padding: 5px">
+                                            <img src="<%= host %>/images/item_layout_text_left_media_right.png"
+                                                 height="75">
+                                        </td>
+                                        <td style="60%">
+                                            <label class="btn btn-default" for="item-layout-right">Text media pair,
+                                                media on the right</label>
+                                        </td>
+                                        <td style="width: 10%">
+                                            <input class="item-layout-left-right-radio-btn" type="radio"
+                                                   name="layout" id="item-layout-right" value="media_right"/>
+                                        </td>
+                                    </tr>
+                                    <tr>
+                                        <td style="width: 30%;padding: 5px">
+                                            <img src="<%= host %>/images/item_layout_media_left_text_right.png"
+                                                 height="75">
+                                        </td>
+                                        <td style="60%;">
+                                            <label class="btn btn-default" for="item-layout-left">Text media pair,
+                                                media on the left</label>
+                                        </td>
+                                        <td style="width: 10%">
+                                            <input class="item-layout-left-right-radio-btn" type="radio"
+                                                   name="layout" id="item-layout-half" value="media_left"/>
+                                        </td>
+                                    </tr>
+                                </table>
+                            </form>
+                        </div>
+                    </div>
+                    <br>
+                    <hr>
                     <p>
                         <button class="btn btn-default">Item styles</button>
                     </p>
@@ -395,19 +353,6 @@
                     <button class="btn btn-primary" type="button" id="save-item-btn">
                         <i class="fa fa-save"></i>&nbsp;&nbsp;Save
                     </button>
-                    <!-- TODO: is this the same as "media_width"?
-                    <div class="row form-group">
-                        <div class="col-4 col-md-4">
-                            <div class="input-group">
-                                <input type="number" id="item-width" name="width"
-                                       placeholder="Item Width" class="form-control">&nbsp;&nbsp;
-                                <div class="input-group-btn">
-                                    <i class="fa fa-percent"></i>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                    -->
                 </div><!-- end create item form -->
             </div>
             <div class="card-footer text-muted"><small>Item</small></div>
@@ -437,8 +382,6 @@
 <script src="<%= host %>/app/items.edit.form.module.js"></script>
 <script>
     ItemsEditFormModule.init();
-    // itemsFormModule.init();
-    // itemsFormModule.items_init();
 </script>
 </body>
 </html>
