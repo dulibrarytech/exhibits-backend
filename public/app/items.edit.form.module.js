@@ -16,7 +16,7 @@
 
  */
 
-const ItemsEditFormModule = (function () {
+const itemsEditFormModule = (function () {
 
     'use strict';
 
@@ -103,7 +103,7 @@ const ItemsEditFormModule = (function () {
         if (item_font.length > 0) {
             item.styles.fontFamily = item_font;
         }
-
+        console.log('edit item data ', item);
         return item;
     }
 
@@ -184,6 +184,8 @@ const ItemsEditFormModule = (function () {
             document.querySelector('#message').innerHTML = `<div class="alert alert-info" role="alert"><i class="fa fa-info"></i> Updating item record...</div>`;
             let uuid = helperModule.get_parameter_by_name('uuid');
             let data = get_item_data();
+            console.log('edit form data ', data);
+            return false;
             let token = authModule.get_user_token();
             let response;
 
@@ -231,8 +233,8 @@ const ItemsEditFormModule = (function () {
      *
      */
     obj.init = async function () {
+        document.querySelector('#save-item-btn').addEventListener('click', itemsEditFormModule.update_item_record);
         await display_edit_record();
-        // await get_item_record();
 
         /*
         document.querySelector('#save-exhibit-btn').addEventListener('click', exhibitsEditFormModule.update_exhibit_record);
