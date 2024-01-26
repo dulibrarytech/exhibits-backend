@@ -235,18 +235,30 @@ const Helper = class {
 
     /**
      * Renames and moves uploaded image
-     * @param uuid
-     * @param hero_image
+     * @param exhibit_id
+     * @param item_id
+     * @param media
      */
-    process_uploaded_image(uuid, hero_image) {
+    process_uploaded_media(exhibit_id, item_id, media) {
 
-        FS.rename(`./storage/${hero_image}`, `./storage/${uuid}/${uuid}_${hero_image}`, (error) => {
+        let storage_path;
+        let media_file;
+
+        if (item_id !== null) {
+            storage_path = `${exhibit_id}/${item_id}_${media}`;
+            media_file = `${item_id}_${media}`;
+        } else {
+            storage_path = `${exhibit_id}/${exhibit_id}_${media}`;
+            media_file = `${exhibit_id}_${media}`;
+        }
+
+        FS.rename(`./storage/${media}`, `./storage/${storage_path}`, (error) => {
             if (error) {
                 LOGGER.module().error('ERROR: [/libs/helper (process_hero_image)] Error occurred while processing image ' + error);
             }
         });
 
-        return `${uuid}_${hero_image}`;
+        return `${media_file}`;
     }
 
     /**

@@ -73,6 +73,7 @@ const itemsEditFormModule = (function () {
     function get_item_data () {
 
         let item = {};
+        item.styles = {};
 
         // item data
         item.title = rich_text_data['item-title-input'].getHTMLCode();
@@ -80,12 +81,38 @@ const itemsEditFormModule = (function () {
         item.description = rich_text_data['item-description-input'].getHTMLCode();
         item.text = rich_text_data['item-text-input'].getHTMLCode();
 
-        // item media
-        item.item_media = document.querySelector('#item-media').value;
-        item.item_media_prev = document.querySelector('#item-media-prev').value;
+        // grid item only
+        if (document.querySelector('#item-date')) {
+            item.date = document.querySelector('#item-date').value;
+        }
 
-        // item layout
-        item.layout = helperModule.get_checked_radio_button(document.getElementsByName('layout'));
+        // item media
+        if (document.querySelector('#item-thumbnail')) {
+            item.thumbnail = document.querySelector('#item-thumbnail').value;
+        }
+
+        // TODO: get item type from upload module?
+        if (document.querySelector('#item-type')) {
+            item.item_type = document.querySelector('#item-type').value;
+        }
+
+        if (document.querySelector('#repo-uuid').value.length > 0) {
+            item.media = document.querySelector('#repo-uuid').value;
+        } else {
+            item.media = document.querySelector('#item-media').value;
+        }
+
+        // item.media = document.querySelector('#item-media').value;
+        console.log('MEDIA ', item.media);
+
+        // item layout - standard item only
+        if (document.getElementsByName('layout')) {
+            item.layout = helperModule.get_checked_radio_button(document.getElementsByName('layout'));
+        }
+
+        if (item.layout.length === 0) {
+            item.layout = 'grid';
+        }
 
         // item styles
         let item_background_color = document.querySelector('#item-background-color').value;
@@ -103,6 +130,7 @@ const itemsEditFormModule = (function () {
         if (item_font.length > 0) {
             item.styles.fontFamily = item_font;
         }
+
         console.log('edit item data ', item);
         return item;
     }
@@ -151,7 +179,6 @@ const itemsEditFormModule = (function () {
         if (record.styles !== '{}') {
 
             let styles = JSON.parse(record.styles);
-            console.log(record.styles);
             document.querySelector('#nav-menu-background-color').value = styles.exhibit.navigation.menu.backgroundColor;
             document.querySelector('#nav-menu-font-color').value = styles.exhibit.navigation.menu.color;
 
@@ -182,20 +209,18 @@ const itemsEditFormModule = (function () {
             scrollTo(0, 0);
             document.querySelector('.card').style.visibility = 'hidden';
             document.querySelector('#message').innerHTML = `<div class="alert alert-info" role="alert"><i class="fa fa-info"></i> Updating item record...</div>`;
-            let uuid = helperModule.get_parameter_by_name('uuid');
+            let exhibit_id = helperModule.get_parameter_by_name('exhibit_id');
+            let item_id = helperModule.get_parameter_by_name('item_id');
             let data = get_item_data();
-            console.log('edit form data ', data);
-            return false;
             let token = authModule.get_user_token();
             let response;
 
-            if (uuid === undefined) {
-                document.querySelector('#message').innerHTML = `<div class="alert alert-danger" role="alert"><i class="fa fa-exclamation"></i> Unable to get record UUID</div>`;
+            if (exhibit_id === undefined || item_id === undefined) {
+                document.querySelector('#message').innerHTML = `<div class="alert alert-danger" role="alert"><i class="fa fa-exclamation"></i> Unable to get record ID</div>`;
                 return false;
             }
 
             if (token === false) {
-
                 setTimeout(() => {
                     document.querySelector('#message').innerHTML = `<div class="alert alert-danger" role="alert"><i class="fa fa-exclamation"></i> Unable to get session token</div>`;
                     authModule.logout();
@@ -204,9 +229,12 @@ const itemsEditFormModule = (function () {
                 return false;
             }
 
+            let tmp = EXHIBITS_ENDPOINTS.exhibits.item_records.put.endpoint.replace(':exhibit_id', exhibit_id);
+            let endpoint = tmp.replace(':item_id', item_id);
+
             response = await httpModule.req({
                 method: 'PUT',
-                url: EXHIBITS_ENDPOINTS.exhibits.exhibit_records.endpoints.put.endpoint.replace(':exhibit_id', uuid),
+                url: endpoint,
                 data: data,
                 headers: {
                     'Content-Type': 'application/json',
@@ -216,11 +244,10 @@ const itemsEditFormModule = (function () {
 
             if (response !== undefined && response.status === 201) {
 
-                document.querySelector('#exhibit-card').innerHTML = '';
-                document.querySelector('#message').innerHTML = `<div class="alert alert-success" role="alert"><i class="fa fa-info"></i> Exhibit record updated</div>`;
+                document.querySelector('#message').innerHTML = `<div class="alert alert-success" role="alert"><i class="fa fa-info"></i> Item record updated</div>`;
 
                 setTimeout(() => {
-                    window.location.replace('/dashboard/exhibits/exhibit/edit?uuid=' + uuid);
+                    window.location.replace('edit?exhibit_id=' + exhibit_id + '&item_id=' + item_id);
                 }, 2000);
             }
 
@@ -234,14 +261,14 @@ const itemsEditFormModule = (function () {
      */
     obj.init = async function () {
         document.querySelector('#save-item-btn').addEventListener('click', itemsEditFormModule.update_item_record);
+        document.querySelector('#logout').addEventListener('click', authModule.logout);
+        document.querySelector('#item-media-trash').style.display = 'none';
+        // document.querySelector('#thumbnail-trash').style.display = 'none';
+        uploadsModule.upload_item_media();
         await display_edit_record();
 
         /*
         document.querySelector('#save-exhibit-btn').addEventListener('click', exhibitsEditFormModule.update_exhibit_record);
-        await display_edit_record();
-        document.querySelector('#logout').addEventListener('click', authModule.logout);
-        document.querySelector('#hero-trash').style.display = 'none';
-        document.querySelector('#thumbnail-trash').style.display = 'none';
 
         // bind color pickers to input fields
         document.querySelector('#nav-menu-background-color-picker').addEventListener('input', () => {

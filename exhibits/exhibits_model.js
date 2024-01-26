@@ -59,11 +59,11 @@ exports.create_exhibit_record = async function (data) {
         HELPER_TASK.check_storage_path(data.uuid);
 
         if (data.hero_image.length > 0) {
-            data.hero_image = HELPER_TASK.process_uploaded_image(data.uuid, data.hero_image);
+            data.hero_image = HELPER_TASK.process_uploaded_media(data.uuid, null, data.hero_image);
         }
 
         if (data.thumbnail.length > 0) {
-            data.thumbnail = HELPER_TASK.process_uploaded_image(data.uuid, data.thumbnail);
+            data.thumbnail = HELPER_TASK.process_uploaded_media(data.uuid, null, data.thumbnail);
         }
 
         if (data.styles === undefined || data.styles.length === 0) {
@@ -177,11 +177,11 @@ exports.update_exhibit_record = async function (uuid, data) {
         HELPER_TASK.check_storage_path(uuid);
 
         if (data.hero_image.length > 0 && data.hero_image !== data.hero_image_prev) {
-            data.hero_image = HELPER_TASK.process_uploaded_image(uuid, data.hero_image);
+            data.hero_image = HELPER_TASK.process_uploaded_media(uuid, null, data.hero_image);
         }
 
         if (data.thumbnail.length > 0 && data.thumbnail !== data.thumbnail_prev) {
-            data.thumbnail = HELPER_TASK.process_uploaded_image(uuid, data.thumbnail);
+            data.thumbnail = HELPER_TASK.process_uploaded_media(uuid, null, data.thumbnail);
         }
 
         delete data.hero_image_prev;

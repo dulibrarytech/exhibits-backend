@@ -28,31 +28,31 @@ module.exports = function (app) {
     .post(CONTROLLER.create_exhibit_record);  // TOKEN.verify,
 
     app.route(ENDPOINTS().exhibits.exhibit_records.endpoint)
-    .get(CONTROLLER.get_exhibit_records); // TOKEN.verify,
+    .get(TOKEN.verify, CONTROLLER.get_exhibit_records);
 
     app.route(ENDPOINTS().exhibits.exhibit_records.endpoints.get.endpoint)
-    .get(CONTROLLER.get_exhibit_record); // TOKEN.verify,
+    .get(TOKEN.verify, CONTROLLER.get_exhibit_record);
 
     app.route(ENDPOINTS().exhibits.exhibit_records.endpoints.put.endpoint)
-    .put(CONTROLLER.update_exhibit_record); // TOKEN.verify,
+    .put(TOKEN.verify, CONTROLLER.update_exhibit_record);
 
     app.route(ENDPOINTS().exhibits.exhibit_records.endpoints.delete.endpoint)
-    .delete(CONTROLLER.delete_exhibit_record);  // TOKEN.verify,
+    .delete(TOKEN.verify, CONTROLLER.delete_exhibit_record);
 
     app.route(ENDPOINTS().exhibits.item_records.post.endpoint)
-    .post(CONTROLLER.create_item_record);  // TOKEN.verify,
+    .post(TOKEN.verify, CONTROLLER.create_item_record);
 
     app.route(ENDPOINTS().exhibits.item_records.endpoint)
     .get(CONTROLLER.get_item_records);  // TOKEN.verify,
 
     app.route(ENDPOINTS().exhibits.item_records.get.endpoint)
-    .get(CONTROLLER.get_item_record);  // TOKEN.verify,
+    .get(TOKEN.verify, CONTROLLER.get_item_record);
 
     app.route(ENDPOINTS().exhibits.item_records.put.endpoint)
-    .put(CONTROLLER.update_item_record);  // TOKEN.verify,
+    .put(TOKEN.verify, CONTROLLER.update_item_record);
 
     app.route(ENDPOINTS().exhibits.item_records.delete.endpoint)
-    .delete(CONTROLLER.delete_item_record);  // TOKEN.verify,
+    .delete(TOKEN.verify, CONTROLLER.delete_item_record);
 
     app.route(ENDPOINTS().exhibits.heading_records.post.endpoint)
     .post(CONTROLLER.create_heading_record);  // TOKEN.verify,

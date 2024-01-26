@@ -154,7 +154,7 @@ const Exhibit_item_record_tasks = class {
      * @param data
      */
     async update_item_record(data) {
-
+        console.log(data);
         try {
 
             await this.DB(this.TABLE.item_records)

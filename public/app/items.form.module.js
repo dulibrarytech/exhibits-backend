@@ -79,7 +79,7 @@ const itemsFormModule = (function () {
     }
 
     /**
-     * Gets item data
+     * Gets item data from form
      */
     function get_item_data() {
 
@@ -131,7 +131,6 @@ const itemsFormModule = (function () {
         if (item_font.length > 0) {
             item.styles.fontFamily = item_font;
         }
-
 
         console.log(item);
         return item;

@@ -58,10 +58,16 @@ exports.create_item_record = async function (is_member_of_exhibit, data) {
             };
         }
 
+        HELPER_TASK.check_storage_path(data.is_member_of_exhibit);
+
+        // TODO: refactor to use helper function
         if (data.item_type.length > 0) {
 
             if (data.media.length > 0) {
 
+                data.media = HELPER_TASK.process_uploaded_media(data.is_member_of_exhibit, data.uuid, data.media);
+
+                /*
                 FS.rename(`./storage/${data.media}`, `./storage/${data.is_member_of_exhibit}/${data.uuid}_${data.media}`, (error) => {
                     if (error) {
                         console.log('ERROR: ' + error);
@@ -69,8 +75,11 @@ exports.create_item_record = async function (is_member_of_exhibit, data) {
                 });
 
                 data.media = `${data.uuid}_${data.media}`;
+
+                 */
             }
 
+            // TODO
             if (data.thumbnail.length > 0) {
 
                 FS.rename(`./storage/${data.thumbnail}`, `./storage/${data.is_member_of_exhibit}/${data.uuid}_${data.thumbnail}`, (error) => {
@@ -90,7 +99,6 @@ exports.create_item_record = async function (is_member_of_exhibit, data) {
         delete data.repo_uuid;
         console.log(data);
 
-        // TODO: handle in client
         if (data.styles === undefined || data.styles.length === 0) {
             data.styles = '{}';
         }
@@ -252,26 +260,25 @@ exports.get_item_record = async function (is_member_of_exhibit, uuid) {
 /** TODO: version record
  * Updates item record
  * @param is_member_of_exhibit
- * @param uuid
+ * @param item_id
  * @param data
  */
-exports.update_item_record = async function (is_member_of_exhibit, uuid, data) {
+exports.update_item_record = async function (is_member_of_exhibit, item_id, data) {
 
     try {
 
-        if (data.is_published !== undefined && data.is_locked !== undefined) {
-            data.is_published = parseInt(data.is_published);
-            data.is_locked = parseInt(data.is_locked);
-            data.order = parseInt(data.order);
-        } else {
-            return {
-                status: 400,
-                message: 'Bad Request.'
-            };
+        const HELPER_TASK = new HELPER();
+        data.is_member_of_exhibit = is_member_of_exhibit;
+        data.uuid = item_id;
+
+        HELPER_TASK.check_storage_path(data.is_member_of_exhibit);
+
+        if (data.media.length > 0 && data.media !== data.media_prev) {
+            data.media = HELPER_TASK.process_uploaded_media(data.is_member_of_exhibit, data.uuid, data.media);
         }
 
-        data.is_member_of_exhibit = is_member_of_exhibit;
-        data.uuid = uuid;
+        delete data.media_prev;
+        data.styles = JSON.stringify(data.styles);
 
         const VALIDATE_TASK = new VALIDATOR(EXHIBITS_UPDATE_ITEM_SCHEMA);
         let is_valid = VALIDATE_TASK.validate(data);
@@ -296,7 +303,7 @@ exports.update_item_record = async function (is_member_of_exhibit, uuid, data) {
             };
         } else {
             return {
-                status: 204,
+                status: 201,
                 message: 'Item record updated'
             };
         }
