@@ -102,6 +102,9 @@ const itemsEditFormModule = (function () {
             item.media = document.querySelector('#item-media').value;
         }
 
+        // TODO: item-media-prev
+        item.media_prev = document.querySelector('#item-media-prev').value;
+
         // item.media = document.querySelector('#item-media').value;
         console.log('MEDIA ', item.media);
 
@@ -214,7 +217,7 @@ const itemsEditFormModule = (function () {
             let data = get_item_data();
             let token = authModule.get_user_token();
             let response;
-
+            console.log(data);
             if (exhibit_id === undefined || item_id === undefined) {
                 document.querySelector('#message').innerHTML = `<div class="alert alert-danger" role="alert"><i class="fa fa-exclamation"></i> Unable to get record ID</div>`;
                 return false;

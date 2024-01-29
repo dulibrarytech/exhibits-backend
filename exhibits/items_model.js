@@ -272,10 +272,12 @@ exports.update_item_record = async function (is_member_of_exhibit, item_id, data
         data.uuid = item_id;
 
         HELPER_TASK.check_storage_path(data.is_member_of_exhibit);
-
+        console.log('media ', data.media);
+        console.log('media prev ', data.media_prev);
         if (data.media.length > 0 && data.media !== data.media_prev) {
             data.media = HELPER_TASK.process_uploaded_media(data.is_member_of_exhibit, data.uuid, data.media);
         }
+        console.log(data.media);
 
         delete data.media_prev;
         data.styles = JSON.stringify(data.styles);

@@ -233,7 +233,7 @@ const Helper = class {
         }
     }
 
-    /**
+    /** TODO: refactor - it's not taking updates into account...
      * Renames and moves uploaded image
      * @param exhibit_id
      * @param item_id
