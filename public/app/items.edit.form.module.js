@@ -102,11 +102,7 @@ const itemsEditFormModule = (function () {
             item.media = document.querySelector('#item-media').value;
         }
 
-        // TODO: item-media-prev
         item.media_prev = document.querySelector('#item-media-prev').value;
-
-        // item.media = document.querySelector('#item-media').value;
-        console.log('MEDIA ', item.media);
 
         // item layout - standard item only
         if (document.getElementsByName('layout')) {
@@ -122,19 +118,24 @@ const itemsEditFormModule = (function () {
         let item_color = document.querySelector('#item-font-color').value;
         let item_font = document.querySelector('#item-font').value;
 
+        console.log(item_background_color);
+        console.log(item_color);
+        console.log(item_font);
+
         if (item_background_color.length > 0) {
             item.styles.backGroundColor = item_background_color;
         }
 
         if (item_color.length > 0) {
-            item.styles.color = document.querySelector('#item-font-color').value;
+            item.styles.color = item_color;
         }
 
         if (item_font.length > 0) {
             item.styles.fontFamily = item_font;
         }
 
-        console.log('edit item data ', item);
+        console.log('edit item data ', item.styles);
+
         return item;
     }
 
@@ -179,6 +180,8 @@ const itemsEditFormModule = (function () {
         }
 
         // item styles
+        console.log(record.styles);
+
         if (record.styles !== '{}') {
 
             let styles = JSON.parse(record.styles);
@@ -270,23 +273,18 @@ const itemsEditFormModule = (function () {
         uploadsModule.upload_item_media();
         await display_edit_record();
 
-        /*
-        document.querySelector('#save-exhibit-btn').addEventListener('click', exhibitsEditFormModule.update_exhibit_record);
-
         // bind color pickers to input fields
-        document.querySelector('#nav-menu-background-color-picker').addEventListener('input', () => {
-            if (document.querySelector('#nav-menu-background-color')) {
-                document.querySelector('#nav-menu-background-color').value = document.querySelector('#nav-menu-background-color-picker').value;
+        document.querySelector('#item-background-color-picker').addEventListener('input', () => {
+            if (document.querySelector('#item-background-color')) {
+                document.querySelector('#item-background-color').value = document.querySelector('#item-background-color-picker').value;
             }
         });
 
-        document.querySelector('#nav-menu-font-color-picker').addEventListener('input', () => {
-            if (document.querySelector('#nav-menu-font-color')) {
-                document.querySelector('#nav-menu-font-color').value = document.querySelector('#nav-menu-font-color-picker').value;
+        document.querySelector('#item-font-color-picker').addEventListener('input', () => {
+            if (document.querySelector('#item-font-color')) {
+                document.querySelector('#item-font-color').value = document.querySelector('#item-font-color-picker').value;
             }
         });
-
-         */
     };
 
     return obj;
