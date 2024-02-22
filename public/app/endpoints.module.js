@@ -20,6 +20,7 @@ const endpointsModule = (function () {
 
     'use strict';
 
+    const APP_PATH = '/exhibits-backend';
     let obj = {};
 
     obj.save_exhibits_endpoints = function(data) {
@@ -42,7 +43,7 @@ const endpointsModule = (function () {
 
     obj.init = function() {
         return {
-            authenticate: '/api/v1/authenticate'
+            authenticate: APP_PATH + '/api/v1/authenticate'
         }
     };
 

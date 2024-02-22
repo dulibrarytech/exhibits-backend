@@ -20,6 +20,7 @@ const authModule = (function () {
 
     'use strict';
 
+    const APP_PATH = '/exhibits-backend';
     const init_endpoints = endpointsModule.init();
     let obj = {};
 
@@ -32,7 +33,7 @@ const authModule = (function () {
         let data = JSON.parse(window.sessionStorage.getItem('exhibits_token'));
 
         if (data !== null && data.token === null) {
-            window.location.replace('/');
+            window.location.replace(APP_PATH + '/');
         } else if (data === null) {
             return false;
         } else {
@@ -66,7 +67,7 @@ const authModule = (function () {
                 console.log('User auth data saved');
                 return true;
             } else {
-                window.location.replace('/dashboard/login');
+                window.location.replace(APP_PATH + '/dashboard/login');
             }
         }
     };
@@ -124,7 +125,7 @@ const authModule = (function () {
     };
 
     obj.logout = function () {
-        window.location.replace('/dashboard/logout');
+        window.location.replace(APP_PATH + '/dashboard/logout');
     };
 
     obj.init = function () {

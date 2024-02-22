@@ -33,7 +33,7 @@ const ENDPOINTS = {
             }
         },
         authentication: {
-            endpoint: `${PREFIX}${VERSION}${ENDPOINT}`,
+            endpoint: `${APP_PATH}${PREFIX}${VERSION}${ENDPOINT}`,
             description: 'Authenticates application admin users',
             get: {
                 description: 'Authenticates admin user',

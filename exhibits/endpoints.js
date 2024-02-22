@@ -18,6 +18,7 @@
 
 'use strict';
 
+const APP_PATH = '/exhibits-backend';
 const PREFIX = '/api/';
 const VERSION = 'v1';
 const ENDPOINT = '/exhibits';
@@ -25,28 +26,28 @@ const ENDPOINTS = {
     exhibits: {
         exhibit_records: {
             description: 'Gets all exhibit records',
-            endpoint: `${PREFIX}${VERSION}${ENDPOINT}`,
+            endpoint: `${APP_PATH}${PREFIX}${VERSION}${ENDPOINT}`,
             endpoints: {
                 get: {
                     description: 'Retrieves exhibit record by id',
-                    endpoint: `${PREFIX}${VERSION}${ENDPOINT}/:exhibit_id`,
+                    endpoint: `${APP_PATH}${PREFIX}${VERSION}${ENDPOINT}/:exhibit_id`,
                     params: 'token or api_key, gets all records by exhibit via uuid param'
                 },
                 post: {
                     description: 'Creates exhibit record',
-                    endpoint: `${PREFIX}${VERSION}${ENDPOINT}`,
+                    endpoint: `${APP_PATH}${PREFIX}${VERSION}${ENDPOINT}`,
                     params: 'token or api_key',
                     body: 'is_member_of_exhibit, record data'
                 },
                 put: {
                     description: 'Updates exhibit record',
-                    endpoint: `${PREFIX}${VERSION}${ENDPOINT}/:exhibit_id`,
+                    endpoint: `${APP_PATH}${PREFIX}${VERSION}${ENDPOINT}/:exhibit_id`,
                     params: 'token or api_key, uuid',
                     body: 'record data'
                 },
                 delete: {
                     description: 'Deletes exhibit record',
-                    endpoint: `${PREFIX}${VERSION}${ENDPOINT}/:exhibit_id`,
+                    endpoint: `${APP_PATH}${PREFIX}${VERSION}${ENDPOINT}/:exhibit_id`,
                     params: 'token or api_key, uuid, delete_reason'
                 }
             }
@@ -54,13 +55,13 @@ const ENDPOINTS = {
         exhibit_media: {
             get: {
                 description: 'Gets exhibit media',
-                endpoint: `${PREFIX}${VERSION}${ENDPOINT}/:exhibit_id/media/:media`
+                endpoint: `${APP_PATH}${PREFIX}${VERSION}${ENDPOINT}/:exhibit_id/media/:media`
             }
         },
         item_media: {
            get: {
                description: 'Gets item media',
-               endpoint: `${PREFIX}${VERSION}${ENDPOINT}/:exhibit_id/media/items/:media`,
+               endpoint: `${APP_PATH}${PREFIX}${VERSION}${ENDPOINT}/:exhibit_id/media/items/:media`,
            }
         },
         exhibit_preview: {
@@ -73,98 +74,98 @@ const ENDPOINTS = {
         exhibit_publish: {
             post: {
                 description: 'Publishes exhibit',
-                endpoint: `${PREFIX}${VERSION}${ENDPOINT}/:exhibit_id/publish`
+                endpoint: `${APP_PATH}${PREFIX}${VERSION}${ENDPOINT}/:exhibit_id/publish`
             }
         },
         exhibit_suppress: {
             post: {
                 description: 'Suppresses exhibit',
-                endpoint: `${PREFIX}${VERSION}${ENDPOINT}/:exhibit_id/suppress`
+                endpoint: `${APP_PATH}${PREFIX}${VERSION}${ENDPOINT}/:exhibit_id/suppress`
             }
         },
         grid_records: {
             post: {
                 description: 'Creates grid record',
-                endpoint: `${PREFIX}${VERSION}${ENDPOINT}/:exhibit_id/grids`,
+                endpoint: `${APP_PATH}${PREFIX}${VERSION}${ENDPOINT}/:exhibit_id/grids`,
                 params: 'token or api_key',
                 body: 'is_member_of_exhibit, record data'
             },
         },
         item_records: {
             description: 'Gets all exhibit items',
-            endpoint: `${PREFIX}${VERSION}${ENDPOINT}/:exhibit_id/items`,
+            endpoint: `${APP_PATH}${PREFIX}${VERSION}${ENDPOINT}/:exhibit_id/items`,
             get: {
                 description: 'Retrieves all item records by exhibit',
-                endpoint: `${PREFIX}${VERSION}${ENDPOINT}/:exhibit_id/items/:item_id`,
+                endpoint: `${APP_PATH}${PREFIX}${VERSION}${ENDPOINT}/:exhibit_id/items/:item_id`,
                 params: 'token or api_key, gets all records by exhibit via uuid param'
             },
             post: {
                 description: 'Creates item record',
-                endpoint: `${PREFIX}${VERSION}${ENDPOINT}/:exhibit_id/items`,
+                endpoint: `${APP_PATH}${PREFIX}${VERSION}${ENDPOINT}/:exhibit_id/items`,
                 params: 'token or api_key',
                 body: 'is_member_of_exhibit, record data'
             },
             put: {
                 description: 'Updates item record',
-                endpoint: `${PREFIX}${VERSION}${ENDPOINT}/:exhibit_id/items/:item_id`,
+                endpoint: `${APP_PATH}${PREFIX}${VERSION}${ENDPOINT}/:exhibit_id/items/:item_id`,
                 params: 'token or api_key',
                 body: 'record data'
             },
             delete: {
                 description: 'Deletes item record',
-                endpoint: `${PREFIX}${VERSION}${ENDPOINT}/:exhibit_id/items/:item_id`,
+                endpoint: `${APP_PATH}${PREFIX}${VERSION}${ENDPOINT}/:exhibit_id/items/:item_id`,
                 params: 'token or api_key, uuid'
             }
         },
         heading_records: {
             get: {
                 description: 'Retrieves all heading record by exhibit',
-                endpoint: `${PREFIX}${VERSION}${ENDPOINT}/:exhibit_id/headings/:heading_id`,
+                endpoint: `${APP_PATH}${PREFIX}${VERSION}${ENDPOINT}/:exhibit_id/headings/:heading_id`,
                 params: 'token or api_key, gets all records by exhibit'
             },
             post: {
                 description: 'Creates heading record',
-                endpoint: `${PREFIX}${VERSION}${ENDPOINT}/:exhibit_id/headings`,
+                endpoint: `${APP_PATH}${PREFIX}${VERSION}${ENDPOINT}/:exhibit_id/headings`,
                 params: 'token or api_key',
                 body: 'record data'
             },
             put: {
                 description: 'Updates heading record',
-                endpoint: `${PREFIX}${VERSION}${ENDPOINT}/:exhibit_id/headings/:heading_id`,
+                endpoint: `${APP_PATH}${PREFIX}${VERSION}${ENDPOINT}/:exhibit_id/headings/:heading_id`,
                 params: 'token or api_key',
                 body: 'record data'
             },
             delete: {
                 description: 'Deletes heading record',
-                endpoint: `${PREFIX}${VERSION}${ENDPOINT}/:exhibit_id/headings/:heading_id`,
+                endpoint: `${APP_PATH}${PREFIX}${VERSION}${ENDPOINT}/:exhibit_id/headings/:heading_id`,
                 params: 'token or api_key'
             }
         },
         trashed_records: {
             get: {
                 description: 'Retrieves all records flagged as deleted',
-                endpoint: `${PREFIX}${VERSION}/trash`,
+                endpoint: `${APP_PATH}${PREFIX}${VERSION}/trash`,
                 params: 'token or api_key'
             },
             delete: {
                 description: 'Permanently deletes a record',
-                endpoint: `${PREFIX}${VERSION}/trash/:exhibit_id/:uuid/:type`,
+                endpoint: `${APP_PATH}${PREFIX}${VERSION}/trash/:exhibit_id/:uuid/:type`,
                 params: 'token or api_key'
             },
             post: {
                 description: 'Permanently deletes all trash records',
-                endpoint: `${PREFIX}${VERSION}/trash/:exhibit_id/:uuid/:type`,
+                endpoint: `${APP_PATH}${PREFIX}${VERSION}/trash/:exhibit_id/:uuid/:type`,
                 params: 'token or api_key'
             },
             put: {
                 description: 'Restores trashed record',
-                endpoint: `${PREFIX}${VERSION}/trash/:exhibit_id/:uuid/:type`,
+                endpoint: `${APP_PATH}${PREFIX}${VERSION}/trash/:exhibit_id/:uuid/:type`,
                 params: 'token or api_key'
             }
         }
     }
 };
 
-module.exports = () => {
+module.exports = function() {
     return ENDPOINTS;
 };
