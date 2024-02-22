@@ -22,7 +22,7 @@ const CONFIG = require('../config/webservices_config')();
 const TOKEN = require('../libs/tokens');
 const MODEL = require('../auth/model');
 const LOGGER = require('../libs/log4');
-
+const APP_PATH = '/exhibits-backend';
 exports.sso = async function (req, res) {
 
     const SSO_HOST = req.body.HTTP_HOST;
@@ -38,7 +38,7 @@ exports.sso = async function (req, res) {
             result = await MODEL.check_auth_user(USERNAME);
 
             if (result.auth === true) {
-                res.redirect('/dashboard/exhibits?t=' + token + '&id=' + result.data);
+                res.redirect(APP_PATH + '/dashboard/exhibits?t=' + token + '&id=' + result.data);
             } else {
                 res.status(401).send({
                     message: 'Authenticate failed.'

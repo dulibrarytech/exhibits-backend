@@ -34,7 +34,7 @@ module.exports = function (app) {
     app.route(APP_PATH + '/dashboard/login')
     .get(CONTROLLER.get_dashboard_login);
 
-    app.route('/dashboard/exhibits')
+    app.route(APP_PATH + '/dashboard/exhibits')
     .get(CONTROLLER.get_dashboard_exhibits);
 
     app.route('/dashboard/exhibits/exhibit')

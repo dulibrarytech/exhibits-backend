@@ -18,13 +18,14 @@
 
 'use strict';
 
+const APP_PATH = '/exhibits-backend';
 const PREFIX = '/api/';
 const VERSION = 'v1';
 const ENDPOINT = '/authenticate/';
 const ENDPOINTS = {
     auth: {
         sso: {
-            endpoint: '/sso',
+            endpoint: APP_PATH + '/sso',
             description: 'Accepts DU authproxy payload after SSO authentication has occurred',
             post: {
                 description: 'Authenticates admin user',
@@ -43,6 +44,6 @@ const ENDPOINTS = {
     }
 };
 
-module.exports = () => {
+module.exports = function() {
     return ENDPOINTS;
 };
