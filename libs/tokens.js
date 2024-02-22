@@ -59,7 +59,7 @@ exports.verify = (req, res, next) => {
 
             if (error) {
                 LOGGER.module().error('ERROR: [/libs/tokens lib (verify)] unable to verify token ' + error);
-                res.redirect('/');
+                res.redirect('/exhibits-backend');
                 return false;
             }
 

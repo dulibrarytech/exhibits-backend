@@ -19,11 +19,20 @@
 'use strict';
 
 const CONTROLLER = require('../dashboard/controller');
+const APP_PATH = '/exhibits-backend';
 
 module.exports = function (app) {
 
+    /*
     app.route('/')
+    .get(CONTROLLER.default);
+    */
+
+    app.route(APP_PATH)
     .get(CONTROLLER.get_dashboard);
+
+    app.route(APP_PATH + '/dashboard/login')
+    .get(CONTROLLER.get_dashboard_login);
 
     app.route('/dashboard/exhibits')
     .get(CONTROLLER.get_dashboard_exhibits);
@@ -57,9 +66,6 @@ module.exports = function (app) {
 
     app.route('/dashboard/trash')
     .get(CONTROLLER.get_dashboard_trash);
-
-    app.route('/dashboard/login')
-    .get(CONTROLLER.get_dashboard_login);
 
     app.route('/dashboard/logout')
     .get(CONTROLLER.get_dashboard_logout);

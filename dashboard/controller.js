@@ -20,9 +20,15 @@
 
 const CONFIG = require('../config/app_config')();
 const SSO_CONFIG = require('../config/webservices_config')();
+const APP_PATH = '/exhibits-backend';
 
+exports.default = function (req, res) {
+    res.status(403).send({
+        info: 'University of Denver Libraries - Exhibits'
+    });
+};
 exports.get_dashboard = function (req, res) {
-    res.redirect('/dashboard/login');
+    res.redirect(APP_PATH + '/dashboard/login');
 };
 
 exports.get_dashboard_exhibits = function (req, res) {

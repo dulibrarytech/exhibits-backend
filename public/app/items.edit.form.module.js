@@ -73,7 +73,10 @@ const itemsEditFormModule = (function () {
     function get_item_data () {
 
         let item = {};
-        item.styles = {};
+        item.styles = {
+            item: {}
+        };
+
 
         // item data
         item.title = rich_text_data['item-title-input'].getHTMLCode();
@@ -118,20 +121,16 @@ const itemsEditFormModule = (function () {
         let item_color = document.querySelector('#item-font-color').value;
         let item_font = document.querySelector('#item-font').value;
 
-        console.log(item_background_color);
-        console.log(item_color);
-        console.log(item_font);
-
         if (item_background_color.length > 0) {
-            item.styles.backGroundColor = item_background_color;
+            item.styles.item.backGroundColor = item_background_color;
         }
 
         if (item_color.length > 0) {
-            item.styles.color = item_color;
+            item.styles.item.color = item_color;
         }
 
         if (item_font.length > 0) {
-            item.styles.fontFamily = item_font;
+            item.styles.item.fontFamily = item_font;
         }
 
         console.log('edit item data ', item.styles);
@@ -179,10 +178,10 @@ const itemsEditFormModule = (function () {
             }
         }
 
+        // TODO
         // item styles
         console.log(record.styles);
-
-        if (record.styles !== '{}') {
+        if (record.styles.item !== '{}') {
 
             let styles = JSON.parse(record.styles);
             document.querySelector('#nav-menu-background-color').value = styles.exhibit.navigation.menu.backgroundColor;
@@ -237,7 +236,7 @@ const itemsEditFormModule = (function () {
 
             let tmp = EXHIBITS_ENDPOINTS.exhibits.item_records.put.endpoint.replace(':exhibit_id', exhibit_id);
             let endpoint = tmp.replace(':item_id', item_id);
-
+            return false;
             response = await httpModule.req({
                 method: 'PUT',
                 url: endpoint,
