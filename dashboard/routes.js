@@ -37,37 +37,37 @@ module.exports = function (app) {
     app.route(APP_PATH + '/dashboard/exhibits')
     .get(CONTROLLER.get_dashboard_exhibits);
 
-    app.route('/dashboard/exhibits/exhibit')
+    app.route(APP_PATH + '/dashboard/exhibits/exhibit')
     .get(CONTROLLER.get_dashboard_exhibits_form);
 
-    app.route('/dashboard/exhibits/exhibit/edit')
+    app.route(APP_PATH + '/dashboard/exhibits/exhibit/edit')
     .get(CONTROLLER.get_dashboard_exhibits_edit_form);
 
-    app.route('/dashboard/items')
+    app.route(APP_PATH + '/dashboard/items')
     .get(CONTROLLER.get_dashboard_items);
 
-    app.route('/dashboard/items/details')
+    app.route(APP_PATH + '/dashboard/items/details')
     .get(CONTROLLER.get_dashboard_item_details);
 
-    app.route('/dashboard/items/standard/edit')
+    app.route(APP_PATH + '/dashboard/items/standard/edit')
     .get(CONTROLLER.get_dashboard_items_standard_edit_form);
 
-    app.route('/dashboard/items/heading')
+    app.route(APP_PATH + '/dashboard/items/heading')
     .get(CONTROLLER.get_dashboard_item_heading_form);
 
-    app.route('/dashboard/items/standard')
+    app.route(APP_PATH + '/dashboard/items/standard')
     .get(CONTROLLER.get_dashboard_item_standard_form);
 
-    app.route('/dashboard/items/grid')
+    app.route(APP_PATH + '/dashboard/items/grid')
     .get(CONTROLLER.get_dashboard_item_grid_form);
 
-    app.route('/dashboard/items/vertical-timeline')
+    app.route(APP_PATH + '/dashboard/items/vertical-timeline')
     .get(CONTROLLER.get_dashboard_item_vertical_timeline);
 
-    app.route('/dashboard/trash')
+    app.route(APP_PATH + '/dashboard/trash')
     .get(CONTROLLER.get_dashboard_trash);
 
-    app.route('/dashboard/logout')
+    app.route(APP_PATH + '/dashboard/logout')
     .get(CONTROLLER.get_dashboard_logout);
 
     /*

@@ -20,6 +20,7 @@ const homeModule = (function () {
 
     'use strict';
 
+    const APP_PATH = '/exhibits-backend';
     let obj = {};
 
     obj.init = async function() {
@@ -28,8 +29,8 @@ const homeModule = (function () {
             await authModule.get_auth_user_data();
         }
 
-        history.replaceState({}, '', '/dashboard/exhibits');
-        history.pushState({}, '', '/dashboard/exhibits');
+        history.replaceState({}, '', APP_PATH + '/dashboard/exhibits');
+        history.pushState({}, '', APP_PATH + '/dashboard/exhibits');
 
         let home_timer = setTimeout(async () => {
             document.querySelector('#message').innerHTML = '<div class="alert alert-primary" role="alert">Loading...</div>';
