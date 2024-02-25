@@ -20,6 +20,7 @@ const itemsModule = (function () {
 
     'use strict';
 
+    const APP_PATH = '/exhibits-backend';
     const EXHIBITS_ENDPOINTS = endpointsModule.get_exhibits_endpoints();
     let obj = {};
 
@@ -125,7 +126,7 @@ const itemsModule = (function () {
             layout_image = 'no image';
         }
 
-        layout_image_img = `<img src="/images/${layout_image}" height="85" title="${item_record.layout}"><p><small>Item layout</small></p>`;
+        layout_image_img = `<img src="${APP_PATH}/images/${layout_image}" height="85" title="${item_record.layout}"><p><small>Item layout</small></p>`;
 
         document.querySelector('#item-layout').innerHTML = layout_image_img;
         document.querySelector('#item-media-width').innerHTML = item_record.media_width;
@@ -196,7 +197,7 @@ const itemsModule = (function () {
             if (items[i].type === 'item') {
 
                 let thumbnail = '';
-                let title = `<a href="/dashboard/items/details?uuid=${exhibit_id}&item_id=${item_id}">${helperModule.unescape(items[i].title)}</a>`;
+                let title = `<a href="${APP_PATH}/dashboard/items/details?uuid=${exhibit_id}&item_id=${item_id}">${helperModule.unescape(items[i].title)}</a>`;
                 let description = helperModule.unescape(items[i].description);
                 let date = items[i].date;
 
@@ -213,7 +214,7 @@ const itemsModule = (function () {
                     <p><small>${date}</small></p>
                     </td>`;
 
-                item_details = `<a href="/dashboard/items/details?uuid=${exhibit_id}&item_id=${item_id}" title="Item details"><i class="fa fa-search pr-1"></i></a>`;
+                item_details = `<a href="${APP_PATH}/dashboard/items/details?uuid=${exhibit_id}&item_id=${item_id}" title="Item details"><i class="fa fa-search pr-1"></i></a>`;
 
             } else if (items[i].type === 'heading') {
 
@@ -235,7 +236,7 @@ const itemsModule = (function () {
                 } else {
 
                     // TODO: add link to grid item details - grid_id
-                    item_details = `<a href="/dashboard/items/details?uuid=${exhibit_id}&item_id=${item_id}" title="Item details"><i class="fa fa-search pr-1"></i></a>`;
+                    item_details = `<a href="${APP_PATH}/dashboard/items/details?uuid=${exhibit_id}&item_id=${item_id}" title="Item details"><i class="fa fa-search pr-1"></i></a>`;
 
                     for (let j=0;j<items[i].grid_items.length;j++) {
 
@@ -262,7 +263,7 @@ const itemsModule = (function () {
             item_data += `<td style="width: 10%">
                                 <div class="card-text text-sm-center">
                                     ${item_details}&nbsp;
-                                    <a href="/dashboard/items/standard/edit?exhibit_id=${exhibit_id}&item_id=${item_id}" title="Edit"><i class="fa fa-edit pr-1"></i></a>&nbsp;
+                                    <a href="${APP_PATH}/dashboard/items/standard/edit?exhibit_id=${exhibit_id}&item_id=${item_id}" title="Edit"><i class="fa fa-edit pr-1"></i></a>&nbsp;
                                     <a href="#" title="Delete"><i class="fa fa-trash pr-1"></i></a>
                                 </div>
                             </td>`;
@@ -282,10 +283,10 @@ const itemsModule = (function () {
     obj.set_item_nav_menu_links = function () {
 
         let uuid = helperModule.get_parameter_by_name('uuid');
-        let heading_link = `/dashboard/items/heading?uuid=${uuid}`;
-        let standard_item_link = `/dashboard/items/standard?uuid=${uuid}`;
-        let item_grid_link = `/dashboard/items/grid?uuid=${uuid}`;
-        let item_vertical_timeline_link = `/dashboard/items/vertical-timeline?uuid=${uuid}`;
+        let heading_link = `${APP_PATH}/dashboard/items/heading?uuid=${uuid}`;
+        let standard_item_link = `${APP_PATH}/dashboard/items/standard?uuid=${uuid}`;
+        let item_grid_link = `${APP_PATH}/dashboard/items/grid?uuid=${uuid}`;
+        let item_vertical_timeline_link = `${APP_PATH}/dashboard/items/vertical-timeline?uuid=${uuid}`;
         let items_menu_fragment = `
                 <li>
                     <a href="${heading_link}" data-keyboard="false"> 
@@ -307,7 +308,7 @@ const itemsModule = (function () {
                     </a>
                 </li>
                 <li>
-                    <a href="/dashboard/trash" data-keyboard="false">
+                    <a href="${APP_PATH}/dashboard/trash" data-keyboard="false">
                         <i class=" menu-icon fa fa-trash-o"></i>Trash
                     </a>
                 </li>`;

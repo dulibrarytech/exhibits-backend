@@ -119,11 +119,26 @@ const authModule = (function () {
         }
     };
 
+    /**
+     * Redirect to authentication page when 401 status is received
+     */
+    obj.redirect_to_auth = function () {
+        setTimeout(() => {
+            window.location.replace(APP_PATH + '/dashboard/login');
+        }, 3000);
+    };
+
+    /**
+     * Clears out browser storage
+     */
     obj.clear = function () {
         window.sessionStorage.clear();
         window.localStorage.clear();
     };
 
+    /**
+     * Logs out user
+     */
     obj.logout = function () {
         window.location.replace(APP_PATH + '/dashboard/logout');
     };

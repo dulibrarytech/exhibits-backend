@@ -15,15 +15,15 @@
         <div id="main-menu" class="main-menu collapse navbar-collapse">
             <ul class="nav navbar-nav">
                 <li class="active">
-                    <a href="/dashboard/exhibits"><i class="menu-icon fa fa-home"></i>Exhibits Home </a>
+                    <a href="exhibits-backend/dashboard/exhibits"><i class="menu-icon fa fa-home"></i>Exhibits Home </a>
                 </li>
                 <li class="menu-title">Menu</li>
                 <li>
-                    <a href="/dashboard/exhibits" data-keyboard="false">
+                    <a href="exhibits-backend/dashboard/exhibits" data-keyboard="false">
                         <i class=" menu-icon fa fa-arrow-left"></i>Back to Exhibits</a>
                 </li>
                 <li>
-                    <a href="/dashboard/trash"> <i class="menu-icon fa fa-trash-o"></i>Trash</a>
+                    <a href="/exhibits-backend/dashboard/trash"> <i class="menu-icon fa fa-trash-o"></i>Trash</a>
                 </li>
                 <li>
                     <a href="#" id="logout"> <i class="menu-icon fa fa-sign-out"></i>Logout</a>
@@ -36,7 +36,7 @@
     <header id="header" class="header">
         <div class="top-left">
             <div class="navbar-header">
-                <a class="navbar-brand" href="./"><img src="<%= host %>/images/du-logo.png" alt="Logo"></a>
+                <a class="navbar-brand" href="./"><img src="/exhibits-backend/static/images/du-logo.png" alt="Logo"></a>
             </div>
         </div>
         <div class="top-right"></div>
@@ -128,7 +128,7 @@
                         <table class="table table-striped">
                             <tr>
                                 <td style="width: 30%;padding: 5px">
-                                    <img src="<%= host %>/images/banner_1.png">
+                                    <img src="/exhibits-backend/static/images/banner_1.png">
                                 </td>
                                 <td style="60%">
                                     <label class="btn btn-default" for="exhibit-banner-1">Hero image above
@@ -141,7 +141,7 @@
                             </tr>
                             <tr>
                                 <td style="width: 30%;padding: 5px">
-                                    <img src="<%= host %>/images/banner_2.png">
+                                    <img src="/exhibits-backend/static/images/banner_2.png">
                                 </td>
                                 <td style="60%;">
                                     <label class="btn btn-default" for="exhibit-banner-2">Hero image above title and
@@ -154,7 +154,7 @@
                             </tr>
                             <tr>
                                 <td style="width: 30%;padding: 5px" ;>
-                                    <img src="<%= host %>/images/banner_3.png">
+                                    <img src="/exhibits-backend/static/images/banner_3.png">
                                 </td>
                                 <td style="60%;">
                                     <label class="btn btn-default" for="exhibit-banner-3">Hero image above
@@ -182,7 +182,7 @@
                         <table class="table table-striped">
                             <tr>
                                 <td style="width: 30%;padding: 5px">
-                                    <img src="<%= host %>/images/page_layout_1.png">
+                                    <img src="/exhibits-backend/static/images/page_layout_1.png">
                                 </td>
                                 <td style="60%">
                                     <label class="btn btn-default" for="exhibit-banner-1">Exhibit navigation bar at
@@ -195,7 +195,7 @@
                             </tr>
                             <tr>
                                 <td style="width: 30%;padding: 5px">
-                                    <img src="<%= host %>/images/page_layout_2.png">
+                                    <img src="/exhibits-backend/static/images/page_layout_2.png">
                                 </td>
                                 <td style="60%;">
                                     <label class="btn btn-default" for="exhibit-banner-2">Exhibit navigation
@@ -296,18 +296,18 @@
 <script src="https://cdn.jsdelivr.net/npm/interactjs/dist/interact.min.js"></script>
 <script src="https://cdn.datatables.net/1.13.6/js/jquery.dataTables.min.js"></script>
 <script src="https://unpkg.com/dropzone@5/dist/min/dropzone.min.js"></script>
-<script src="<%= host %>/libs/richtexteditor/rte.js"></script>
-<script src='<%= host %>/libs/richtexteditor/plugins/all_plugins.js'></script>
-<script src="<%= host %>/libs/axios-2.x/dist/axios.min.js"></script>
-<script src="<%= host %>/libs/dompurify/purify.min.js"></script>
-<script src="<%= host %>/app/http.module.js"></script>
-<script src="<%= host %>/app/helper.module.js"></script>
-<script src="<%= host %>/app/endpoints.module.js"></script>
-<script src="<%= host %>/app/auth.module.js"></script>
-<script src="<%= host %>/app/uploads.module.js"></script>
-<script src="<%= host %>/app/exhibits.module.js"></script>
-<!--<script src="<%= host %>/app/exhibits.form.module.js"></script>-->
-<script src="<%= host %>/app/exhibits.edit.form.module.js"></script>
+<script src="/exhibits-backend/static/libs/richtexteditor/rte.js"></script>
+<script src='/exhibits-backend/static/libs/richtexteditor/plugins/all_plugins.js'></script>
+<script src="/exhibits-backend/static/libs/axios-2.x/dist/axios.min.js"></script>
+<script src="/exhibits-backend/static/libs/dompurify/purify.min.js"></script>
+<script src="/exhibits-backend/static/app/http.module.js"></script>
+<script src="/exhibits-backend/static/app/helper.module.js"></script>
+<script src="/exhibits-backend/static/app/endpoints.module.js"></script>
+<script src="/exhibits-backend/static/app/auth.module.js"></script>
+<script src="/exhibits-backend/static/app/uploads.module.js"></script>
+<script src="/exhibits-backend/static/app/exhibits.module.js"></script>
+<!--<script src="/exhibits-backend/static/app/exhibits.form.module.js"></script>-->
+<script src="/exhibits-backend/static/app/exhibits.edit.form.module.js"></script>
 <script>
     uploadsModule.upload_exhibit_hero_image();
     uploadsModule.upload_exhibit_thumbnail_image();
