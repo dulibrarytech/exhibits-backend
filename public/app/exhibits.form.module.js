@@ -20,6 +20,7 @@ const exhibitsFormModule = (function () {
 
     'use strict';
 
+    const APP_PATH = '/exhibits-backend';
     const EXHIBITS_ENDPOINTS = endpointsModule.get_exhibits_endpoints();
     let obj = {};
     let rich_text_data = {};
@@ -124,7 +125,7 @@ const exhibitsFormModule = (function () {
                 document.querySelector('#message').innerHTML = `<div class="alert alert-success" role="alert"><i class="fa fa-info"></i> Exhibit record created</div>`;
 
                 setTimeout(() => {
-                    window.location.replace('/dashboard/items?uuid=' + response.data.data);
+                    window.location.replace(APP_PATH + '/dashboard/items?uuid=' + response.data.data);
                 }, 3000);
             }
 

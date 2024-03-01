@@ -20,6 +20,7 @@ const itemsEditFormModule = (function () {
 
     'use strict';
 
+    const APP_PATH = '/exhibits-backend';
     const EXHIBITS_ENDPOINTS = endpointsModule.get_exhibits_endpoints();
     let obj = {};
     let rich_text_data = {};
@@ -42,7 +43,7 @@ const itemsEditFormModule = (function () {
                 document.querySelector('#message').innerHTML = 'ERROR: Unable to get API endpoints';
 
                 setTimeout(() => {
-                    window.location.replace('/dashboard/login');
+                    window.location.replace(APP_PATH + '/dashboard/login');
                 }, 3000);
 
                 return false;
@@ -236,7 +237,7 @@ const itemsEditFormModule = (function () {
 
             let tmp = EXHIBITS_ENDPOINTS.exhibits.item_records.put.endpoint.replace(':exhibit_id', exhibit_id);
             let endpoint = tmp.replace(':item_id', item_id);
-            return false;
+            
             response = await httpModule.req({
                 method: 'PUT',
                 url: endpoint,

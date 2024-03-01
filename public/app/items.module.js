@@ -126,7 +126,7 @@ const itemsModule = (function () {
             layout_image = 'no image';
         }
 
-        layout_image_img = `<img src="${APP_PATH}/images/${layout_image}" height="85" title="${item_record.layout}"><p><small>Item layout</small></p>`;
+        layout_image_img = `<img src="${APP_PATH}/static/images/${layout_image}" height="85" title="${item_record.layout}"><p><small>Item layout</small></p>`;
 
         document.querySelector('#item-layout').innerHTML = layout_image_img;
         document.querySelector('#item-media-width').innerHTML = item_record.media_width;

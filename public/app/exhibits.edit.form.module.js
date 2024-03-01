@@ -20,6 +20,7 @@ const exhibitsEditFormModule = (function () {
 
     'use strict';
 
+    const APP_PATH = '/exhibits-backend';
     const EXHIBITS_ENDPOINTS = endpointsModule.get_exhibits_endpoints();
     let obj = {};
     let rich_text_data = {};
@@ -40,7 +41,7 @@ const exhibitsEditFormModule = (function () {
                 document.querySelector('#message').innerHTML = 'ERROR: Unable to get API endpoints';
 
                 setTimeout(() => {
-                    window.location.replace('/dashboard/login');
+                    window.location.replace(APP_PATH + '/dashboard/login');
                 }, 3000);
 
                 return false;
@@ -112,8 +113,10 @@ const exhibitsEditFormModule = (function () {
             }
         };
 
+        console.log('edit styles: ', exhibit.styles);
+
         return exhibit;
-    };
+    }
 
     /**
      * Populates edit form with exhibit record data
@@ -143,7 +146,7 @@ const exhibitsEditFormModule = (function () {
 
         // exhibit media
         if (record.hero_image.length > 0) {
-            hero_image_url = `/api/v1/exhibits/${record.uuid}/media/${record.hero_image}`;
+            hero_image_url = `${APP_PATH}/api/v1/exhibits/${record.uuid}/media/${record.hero_image}`;
             hero_image_fragment = `<p><img src="${hero_image_url}" height="200"></p>`;
             document.querySelector('#hero-image-filename-display').innerHTML = hero_image_fragment;
             document.querySelector('#hero-image').value = record.hero_image;
@@ -151,7 +154,7 @@ const exhibitsEditFormModule = (function () {
         }
 
         if (record.thumbnail.length > 0) {
-            thumbnail_url = `/api/v1/exhibits/${record.uuid}/media/${record.thumbnail}`;
+            thumbnail_url = `${APP_PATH}/api/v1/exhibits/${record.uuid}/media/${record.thumbnail}`;
             thumbnail_fragment = `<p><img src="${thumbnail_url}" height="200" ></p>`;
             document.querySelector('#thumbnail-filename-display').innerHTML = thumbnail_fragment;
             document.querySelector('#thumbnail-image').value = record.thumbnail;
@@ -239,7 +242,7 @@ const exhibitsEditFormModule = (function () {
                 document.querySelector('#message').innerHTML = `<div class="alert alert-success" role="alert"><i class="fa fa-info"></i> Exhibit record updated</div>`;
 
                 setTimeout(() => {
-                    window.location.replace('/dashboard/exhibits/exhibit/edit?uuid=' + uuid);
+                    window.location.replace(APP_PATH + '/dashboard/exhibits/exhibit/edit?uuid=' + uuid);
                 }, 2000);
             }
 

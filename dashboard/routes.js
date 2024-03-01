@@ -23,11 +23,6 @@ const APP_PATH = '/exhibits-backend';
 
 module.exports = function (app) {
 
-    /*
-    app.route('/')
-    .get(CONTROLLER.default);
-    */
-
     app.route(APP_PATH)
     .get(CONTROLLER.get_dashboard);
 

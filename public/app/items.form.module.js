@@ -20,6 +20,7 @@ const itemsFormModule = (function () {
 
     'use strict';
 
+    const APP_PATH = '/exhibits-backend';
     const EXHIBITS_ENDPOINTS = endpointsModule.get_exhibits_endpoints();
     let obj = {};
 
@@ -219,7 +220,7 @@ const itemsFormModule = (function () {
                 document.querySelector('#item-grid-form').reset();
 
                 setTimeout(() => {
-                    location.replace(`/dashboard/items/standard?uuid=${uuid}&grid=${response.data.data}`)
+                    location.replace(`${APP_PATH}/dashboard/items/standard?uuid=${uuid}&grid=${response.data.data}`)
                 }, 3000);
             }
 
@@ -279,9 +280,9 @@ const itemsFormModule = (function () {
                 setTimeout(() => {
 
                     if (itemsFormModule.check_grid() === true) {
-                        location.replace(`/dashboard/items/standard?uuid=${uuid}&grid=${grid_id}`);
+                        location.replace(`${APP_PATH}/dashboard/items/standard?uuid=${uuid}&grid=${grid_id}`);
                     } else {
-                        location.replace(`/dashboard/items/standard?uuid=${uuid}`);
+                        location.replace(`${APP_PATH}/dashboard/items/standard?uuid=${uuid}`);
                     }
 
                 }, 3000);
@@ -293,15 +294,15 @@ const itemsFormModule = (function () {
     };
 
     /**
-     *
+     * Sets menu links for headings form
      */
     obj.set_headings_form_nav_menu_links = function () {
 
         let uuid = helperModule.get_parameter_by_name('uuid');
-        let back_link = `/dashboard/items?uuid=${uuid}`;
-        let standard_item_link = `/dashboard/items/standard?uuid=${uuid}`;
-        let item_grid_link = `/dashboard/items/grid?uuid=${uuid}`;
-        let item_vertical_timeline_link = `/dashboard/items/vertical-timeline?uuid=${uuid}`;
+        let back_link = `${APP_PATH}/dashboard/items?uuid=${uuid}`;
+        let standard_item_link = `${APP_PATH}/dashboard/items/standard?uuid=${uuid}`;
+        let item_grid_link = `${APP_PATH}/dashboard/items/grid?uuid=${uuid}`;
+        let item_vertical_timeline_link = `${APP_PATH}/dashboard/items/vertical-timeline?uuid=${uuid}`;
         let form_menu_fragment = `
                 <li>
                     <a href="${back_link}" data-backdrop="static" data-keyboard="false">
@@ -327,15 +328,15 @@ const itemsFormModule = (function () {
     };
 
     /**
-     *
+     * Sets menu links for items form
      */
     obj.set_items_form_nav_menu_links = function () {
 
         let uuid = helperModule.get_parameter_by_name('uuid');
-        let back_link = `/dashboard/items?uuid=${uuid}`;
-        let headings_item_link = `/dashboard/items/heading?uuid=${uuid}`;
-        let item_grid_link = `/dashboard/items/grid?uuid=${uuid}`;
-        let item_vertical_timeline_link = `/dashboard/items/vertical-timeline?uuid=${uuid}`;
+        let back_link = `${APP_PATH}/dashboard/items?uuid=${uuid}`;
+        let headings_item_link = `${APP_PATH}/dashboard/items/heading?uuid=${uuid}`;
+        let item_grid_link = `${APP_PATH}/dashboard/items/grid?uuid=${uuid}`;
+        let item_vertical_timeline_link = `${APP_PATH}/dashboard/items/vertical-timeline?uuid=${uuid}`;
         let form_menu_fragment = `
                 <li>
                     <a href="${back_link}" data-backdrop="static" data-keyboard="false">
@@ -361,15 +362,15 @@ const itemsFormModule = (function () {
     };
 
     /**
-     *
+     * Sets menu links for grid items form
      */
     obj.set_grid_items_form_nav_menu_links = function () {
 
         let uuid = helperModule.get_parameter_by_name('uuid');
-        let back_link = `/dashboard/items?uuid=${uuid}`;
-        let headings_item_link = `/dashboard/items/heading?uuid=${uuid}`;
-        let standard_item_link = `/dashboard/items/standard?uuid=${uuid}`;
-        let item_vertical_timeline_link = `/dashboard/items/vertical-timeline?uuid=${uuid}`;
+        let back_link = `${APP_PATH}/dashboard/items?uuid=${uuid}`;
+        let headings_item_link = `${APP_PATH}/dashboard/items/heading?uuid=${uuid}`;
+        let standard_item_link = `${APP_PATH}/dashboard/items/standard?uuid=${uuid}`;
+        let item_vertical_timeline_link = `${APP_PATH}/dashboard/items/vertical-timeline?uuid=${uuid}`;
         let form_menu_fragment = `
                 <li>
                     <a href="${back_link}" data-backdrop="static" data-keyboard="false">
