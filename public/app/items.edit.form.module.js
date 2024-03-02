@@ -163,7 +163,7 @@ const itemsEditFormModule = (function () {
         rich_text_data['item-text-input'].setHTMLCode(helperModule.unescape(record.text));
 
         if (record.media.length > 0) {
-            media_url = `/api/v1/exhibits/${record.is_member_of_exhibit}/media/items/${record.media}`;
+            media_url = `${APP_PATH}/api/v1/exhibits/${record.is_member_of_exhibit}/media/items/${record.media}`;
             media_fragment = `<p><img src="${media_url}" height="200"></p>`;
             document.querySelector('#item-media-filename-display').innerHTML = media_fragment;
             document.querySelector('#item-media').value = record.media;
@@ -179,12 +179,15 @@ const itemsEditFormModule = (function () {
             }
         }
 
-        // TODO
         // item styles
-        console.log(record.styles);
-        if (record.styles.item !== '{}') {
+        let styles;
 
-            let styles = JSON.parse(record.styles);
+        if (typeof record.styles === 'string') {
+            styles = JSON.parse(record.styles);
+        }
+
+        if (Object.keys(styles).length !== 0) {
+
             document.querySelector('#nav-menu-background-color').value = styles.exhibit.navigation.menu.backgroundColor;
             document.querySelector('#nav-menu-font-color').value = styles.exhibit.navigation.menu.color;
 
@@ -237,7 +240,7 @@ const itemsEditFormModule = (function () {
 
             let tmp = EXHIBITS_ENDPOINTS.exhibits.item_records.put.endpoint.replace(':exhibit_id', exhibit_id);
             let endpoint = tmp.replace(':item_id', item_id);
-            
+
             response = await httpModule.req({
                 method: 'PUT',
                 url: endpoint,
@@ -253,6 +256,7 @@ const itemsEditFormModule = (function () {
                 document.querySelector('#message').innerHTML = `<div class="alert alert-success" role="alert"><i class="fa fa-info"></i> Item record updated</div>`;
 
                 setTimeout(() => {
+                    // TODO
                     window.location.replace('edit?exhibit_id=' + exhibit_id + '&item_id=' + item_id);
                 }, 2000);
             }

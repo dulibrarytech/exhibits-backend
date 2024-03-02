@@ -17,7 +17,7 @@
         <div id="main-menu" class="main-menu">
             <ul class="nav navbar-nav">
                 <li class="active">
-                    <a href="/dashboard/exhibits">
+                    <a href="/exhibits-backend/dashboard/exhibits">
                         <i class="menu-icon fa fa-home"></i>Exhibits Home
                     </a>
                 </li>
@@ -41,7 +41,7 @@
     <header id="header" class="header">
         <div class="top-left">
             <div class="navbar-header">
-                <a class="navbar-brand" href="./"><img src="<%= host %>/images/du-logo.png" alt="Logo"></a>
+                <a class="navbar-brand" href="./"><img src="/exhibits-backend/static/images/du-logo.png" alt="Logo"></a>
             </div>
         </div>
         <div class="top-right"></div>
@@ -213,7 +213,7 @@
                                 <table class="table table-striped">
                                     <tr>
                                         <td style="width: 30%;padding: 5px">
-                                            <img src="<%= host %>/images/item_layout_media_top_text_bottom.png"
+                                            <img src="/exhibits-backend/static/images/item_layout_media_top_text_bottom.png"
                                                  width="150" height="150">
                                         </td>
                                         <td style="60%;">
@@ -227,7 +227,7 @@
                                     </tr>
                                     <tr>
                                         <td style="width: 30%;padding: 5px">
-                                            <img src="<%= host %>/images/item_layout_text_top_media_bottom.png"
+                                            <img src="/exhibits-backend/static/images/item_layout_text_top_media_bottom.png"
                                                  width="150" height="150">
                                         </td>
                                         <td style="60%;">
@@ -241,7 +241,7 @@
                                     </tr>
                                     <tr>
                                         <td style="width: 30%;padding: 5px">
-                                            <img src="<%= host %>/images/item_layout_media_only.png" height="75">
+                                            <img src="/exhibits-backend/static/images/item_layout_media_only.png" height="75">
                                         </td>
                                         <td style="60%;">
                                             <label class="btn btn-default" for="item-layout-only">Media only, no
@@ -254,7 +254,7 @@
                                     </tr>
                                     <tr>
                                         <td style="width: 30%;padding: 5px">
-                                            <img src="<%= host %>/images/item_layout_text_only.png" height="75">
+                                            <img src="/exhibits-backend/static/images/item_layout_text_only.png" height="75">
                                         </td>
                                         <td style="60%;">
                                             <label class="btn btn-default" for="item-layout-text-only">Text only, no
@@ -267,7 +267,7 @@
                                     </tr>
                                     <tr>
                                         <td style="width: 30%;padding: 5px">
-                                            <img src="<%= host %>/images/item_layout_text_left_media_right.png"
+                                            <img src="/exhibits-backend/static/images/item_layout_text_left_media_right.png"
                                                  height="75">
                                         </td>
                                         <td style="60%">
@@ -281,7 +281,7 @@
                                     </tr>
                                     <tr>
                                         <td style="width: 30%;padding: 5px">
-                                            <img src="<%= host %>/images/item_layout_media_left_text_right.png"
+                                            <img src="/exhibits-backend/static/images/item_layout_media_left_text_right.png"
                                                  height="75">
                                         </td>
                                         <td style="60%;">
@@ -369,18 +369,18 @@
 <script src="https://cdn.jsdelivr.net/npm/interactjs/dist/interact.min.js"></script>
 <script src="https://cdn.datatables.net/1.13.6/js/jquery.dataTables.min.js"></script>
 <script src="https://unpkg.com/dropzone@5/dist/min/dropzone.min.js"></script>
-<script src="<%= host %>/libs/richtexteditor/rte.js"></script>
-<script src='<%= host %>/libs/richtexteditor/plugins/all_plugins.js'></script>
-<script src="<%= host %>/libs/axios-2.x/dist/axios.min.js"></script>
-<script src="<%= host %>/libs/dompurify/purify.min.js"></script>
-<script src="<%= host %>/app/http.module.js"></script>
-<script src="<%= host %>/app/helper.module.js"></script>
-<script src="<%= host %>/app/endpoints.module.js"></script>
-<script src="<%= host %>/app/auth.module.js"></script>
-<script src="<%= host %>/app/uploads.module.js"></script>
-<script src="<%= host %>/app/exhibits.module.js"></script>
-<script src="<%= host %>/app/items.module.js"></script>
-<script src="<%= host %>/app/items.edit.form.module.js"></script>
+<script src="/exhibits-backend/static/libs/richtexteditor/rte.js"></script>
+<script src="/exhibits-backend/static/libs/richtexteditor/plugins/all_plugins.js"></script>
+<script src="/exhibits-backend/static/libs/axios-2.x/dist/axios.min.js"></script>
+<script src="/exhibits-backend/static/libs/dompurify/purify.min.js"></script>
+<script src="/exhibits-backend/static/app/http.module.js"></script>
+<script src="/exhibits-backend/static/app/helper.module.js"></script>
+<script src="/exhibits-backend/static/app/endpoints.module.js"></script>
+<script src="/exhibits-backend/static/app/auth.module.js"></script>
+<script src="/exhibits-backend/static/app/uploads.module.js"></script>
+<script src="/exhibits-backend/static/app/exhibits.module.js"></script>
+<script src="/exhibits-backend/static/app/items.module.js"></script>
+<script src="/exhibits-backend/static/app/items.edit.form.module.js"></script>
 <script>
     itemsEditFormModule.init();
 </script>
