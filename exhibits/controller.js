@@ -18,11 +18,12 @@
 
 'use strict';
 
+const WEBSERVICES_CONFIG = require('../config/webservices_config')();
 const EXHIBITS_MODEL = require('../exhibits/exhibits_model');
 const ITEMS_MODEL = require('../exhibits/items_model');
 const HEADINGS_MODEL = require('../exhibits/headings_model');
 const TRASH_MODEL = require('../exhibits/trash_model');
-const PATH = require("path");
+const PATH = require('path');
 
 exports.create_exhibit_record = async function (req, res) {
 
@@ -320,14 +321,9 @@ exports.build_exhibit_preview = async function (req, res) {
     if (result.status === true) {
 
         setTimeout(() => {
-            console.log('Loading preview...');
-            res.redirect('https://library.du.edu/');
+            res.redirect(WEBSERVICES_CONFIG.exhibitPreviewURL + uuid + '?key=' + WEBSERVICES_CONFIG.exhibitPreviewApiKey);
         }, 1000);
-
     }
-
-    // TODO: get preview service api key
-    // TODO: redirect to frontend preview | uuid and api key
 };
 
 exports.publish_exhibit = async function (req, res) {

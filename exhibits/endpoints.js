@@ -67,7 +67,7 @@ const ENDPOINTS = {
         exhibit_preview: {
           get: {
               description: 'Previews exhibit',
-              endpoint: '/preview',
+              endpoint: APP_PATH + '/preview',
               params: ''
           }
         },

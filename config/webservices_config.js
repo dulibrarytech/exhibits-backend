@@ -23,7 +23,9 @@ const WEBSERVICES_CONFIG = {
     ssoHost: process.env.SSO_HOST,
     ssoUrl: process.env.SSO_URL,
     ssoResponseUrl: process.env.SSO_RESPONSE_URL,
-    ssoLogoutUrl: process.env.SSO_LOGOUT_URL
+    ssoLogoutUrl: process.env.SSO_LOGOUT_URL,
+    exhibitPreviewURL: process.env.EXHIBIT_URL,
+    exhibitPreviewApiKey: process.env.EXHIBIT_PREVIEW_API_KEY
 };
 
 module.exports = () => {
