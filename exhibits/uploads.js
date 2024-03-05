@@ -18,6 +18,7 @@
 
 'use strict';
 
+const APP_PATH = '/exhibits-backend';
 const MULTER = require('multer');
 const LOGGER = require('../libs/log4');
     // TOKEN = require('../libs/tokens'),
@@ -52,7 +53,7 @@ module.exports = function (app) {
 
     let upload = MULTER({ storage: storage, fileFilter: FILTER, limits: { fileSize: LIMIT} });
 
-    app.post('/uploads', upload.any(), function (req, res) {
+    app.post(APP_PATH + '/uploads', upload.any(), function (req, res) {
 
         let files = res.req.files;
         let file_arr = [];

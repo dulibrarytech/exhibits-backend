@@ -20,6 +20,7 @@ const uploadsModule = (function () {
 
     'use strict';
 
+    const APP_PATH = '/exhibits-backend';
     let obj = {};
 
     /**
@@ -31,7 +32,7 @@ const uploadsModule = (function () {
         EXHIBIT_HERO.options.heroDropzone = {
             paramName: 'files',
             maxFilesize: 5000, // 5MB
-            url: '/uploads',
+            url: APP_PATH + '/uploads',
             uploadMultiple: false,
             maxFiles: 1,
             acceptedFiles: 'image/*',
@@ -78,7 +79,7 @@ const uploadsModule = (function () {
         THUMBNAIL.options.thumbnailDropzone = {
             paramName: 'files',
             maxFilesize: 5000, // 5MB
-            url: '/uploads',
+            url: APP_PATH + '/uploads',
             uploadMultiple: false,
             maxFiles: 1,
             acceptedFiles: 'image/*',
@@ -125,7 +126,7 @@ const uploadsModule = (function () {
         ITEM_MEDIA.options.itemDropzone = {
             paramName: 'files',
             maxFilesize: 100000, // 1GB - TODO: temp
-            url: '/uploads',
+            url: APP_PATH + '/uploads',
             uploadMultiple: false,
             maxFiles: 1,
             acceptedFiles: 'image/*,video/*,audio/*,application/pdf',
@@ -192,7 +193,7 @@ const uploadsModule = (function () {
         ITEM_THUMBNAIL.options.itemThumbnailDropzone = {
             paramName: 'files',
             maxFilesize: 5000, // 5MB
-            url: '/uploads',
+            url: APP_PATH + '/uploads',
             uploadMultiple: false,
             maxFiles: 1,
             acceptedFiles: 'image/*',
