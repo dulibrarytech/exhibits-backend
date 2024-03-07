@@ -321,7 +321,7 @@ exports.build_exhibit_preview = async function (req, res) {
     if (result.status === true) {
 
         setTimeout(() => {
-            res.redirect(WEBSERVICES_CONFIG.exhibitPreviewURL + uuid + '?key=' + WEBSERVICES_CONFIG.exhibitPreviewApiKey);
+            res.redirect(WEBSERVICES_CONFIG.exhibit_preview_url + uuid + '?key=' + WEBSERVICES_CONFIG.exhibit_preview_api_key);
         }, 1000);
     }
 };

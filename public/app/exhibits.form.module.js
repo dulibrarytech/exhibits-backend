@@ -25,7 +25,7 @@ const exhibitsFormModule = (function () {
     let obj = {};
     let rich_text_data = {};
 
-    /**
+    /** TODO: make it reusable
      * Sets rich text editor on defined input fields
      */
     function set_rich_text_editors () {

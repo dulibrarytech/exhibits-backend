@@ -20,12 +20,12 @@
 
 const HELPER = require("../libs/helper");
 const WEBSERVICES_CONFIG = {
-    ssoHost: process.env.SSO_HOST,
-    ssoUrl: process.env.SSO_URL,
-    ssoResponseUrl: process.env.SSO_RESPONSE_URL,
-    ssoLogoutUrl: process.env.SSO_LOGOUT_URL,
-    exhibitPreviewURL: process.env.EXHIBIT_URL,
-    exhibitPreviewApiKey: process.env.EXHIBIT_PREVIEW_API_KEY
+    sso_host: process.env.SSO_HOST,
+    sso_url: process.env.SSO_URL,
+    sso_response_url: process.env.SSO_RESPONSE_URL,
+    sso_logout_url: process.env.SSO_LOGOUT_URL,
+    exhibit_preview_url: process.env.EXHIBIT_URL,
+    exhibit_preview_api_key: process.env.EXHIBIT_PREVIEW_API_KEY
 };
 
 module.exports = () => {

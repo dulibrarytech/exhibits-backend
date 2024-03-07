@@ -24,6 +24,32 @@ const itemsFormModule = (function () {
     const EXHIBITS_ENDPOINTS = endpointsModule.get_exhibits_endpoints();
     let obj = {};
 
+    /*
+    item.title = rich_text_data.item_title.getHTMLCode();
+        item.caption = rich_text_data.item_caption.getHTMLCode();
+        item.description = rich_text_data.item_description.getHTMLCode();
+        item.text = rich_text_data.item_text.getHTMLCode();
+     */
+
+    /*
+    let standard_item_field_ids = ['item_title', 'item_caption', 'item_description', 'item_text'];
+    rich_text_data = helperModule.set_rich_text_editor(standard_item_field_ids);
+    console.log('rich_text_data ', rich_text_data);
+
+     */
+
+    /** TODO: refactor
+     * Sets rich text editor on defined input fields
+     */
+    function set_rich_text_editor () {
+        let rich_text_data = {};
+        rich_text_data.item_title = helperModule.render_rich_text_editor('#item-title-input');
+        rich_text_data.item_caption = helperModule.render_rich_text_editor('#item-caption-input');
+        rich_text_data.item_description = helperModule.render_rich_text_editor('#item-description-input')
+        rich_text_data.item_text = helperModule.render_rich_text_editor('#item-text-input');
+        return rich_text_data;
+    }
+
     /**
      * Gets item heading data
      */
@@ -412,18 +438,6 @@ const itemsFormModule = (function () {
         }
 
         return false;
-    }
-
-    /**
-     * Sets rich text editor on defined input fields
-     */
-    function set_rich_text_editor () {
-        let rich_text_data = {};
-        rich_text_data.item_title = helperModule.render_rich_text_editor('#item-title-input');
-        rich_text_data.item_caption = helperModule.render_rich_text_editor('#item-caption-input');
-        rich_text_data.item_description = helperModule.render_rich_text_editor('#item-description-input')
-        rich_text_data.item_text = helperModule.render_rich_text_editor('#item-text-input');
-        return rich_text_data;
     }
 
     /**

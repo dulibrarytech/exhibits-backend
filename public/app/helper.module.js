@@ -92,6 +92,21 @@ const helperModule = (function () {
     };
 
     /**
+     * Sets rich text editor on defined input fields
+     */
+    obj.set_rich_text_editors = function(ids) {
+
+        let rich_text_data = {};
+
+        for (let i=0;i<ids.length;i++) {
+            rich_text_data[i] = helperModule.set_rich_text_editor(i);
+        }
+
+        console.log(rich_text_data);
+        return rich_text_data;
+    };
+
+    /**
      * Gets checked radio button value
      * @param radio_buttons
      */
