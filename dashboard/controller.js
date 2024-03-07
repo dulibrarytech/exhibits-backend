@@ -136,8 +136,9 @@ exports.get_dashboard_login = function (req, res) {
         appname: CONFIG.app_name,
         appversion: CONFIG.app_version,
         organization: CONFIG.organization,
-        sso_url: SSO_CONFIG.ssoUrl,
-        sso_response_url: SSO_CONFIG.ssoResponseUrl
+        sso_url: SSO_CONFIG.sso_url,
+        sso_response_url: SSO_CONFIG.sso_response_url
+
     });
 };
 
@@ -147,7 +148,7 @@ exports.get_dashboard_logout = function (req, res) {
         appname: CONFIG.app_name,
         appversion: CONFIG.app_version,
         organization: CONFIG.organization,
-        sso_logout: SSO_CONFIG.ssoLogoutUrl
+        sso_logout_url: SSO_CONFIG.sso_logout_url
     });
 };
 
