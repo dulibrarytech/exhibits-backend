@@ -28,7 +28,7 @@ exports.sso = async function (req, res) {
     const SSO_HOST = req.body.HTTP_HOST;
     const USERNAME = req.body.employeeID;
 
-    if (SSO_HOST === CONFIG.ssoHost && USERNAME !== undefined) {
+    if (SSO_HOST === CONFIG.sso_host && USERNAME !== undefined) {
 
         try {
 
