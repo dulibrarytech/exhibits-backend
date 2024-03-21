@@ -50,6 +50,9 @@ module.exports = function (app) {
     app.route(APP_PATH + '/dashboard/items/heading')
     .get(CONTROLLER.get_dashboard_item_heading_form);
 
+    app.route(APP_PATH + '/dashboard/items/heading/edit')
+    .get(CONTROLLER.get_dashboard_items_heading_edit_form);
+
     app.route(APP_PATH + '/dashboard/items/standard')
     .get(CONTROLLER.get_dashboard_item_standard_form);
 

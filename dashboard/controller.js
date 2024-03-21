@@ -94,6 +94,15 @@ exports.get_dashboard_item_heading_form = function (req, res) {
     });
 };
 
+exports.get_dashboard_items_heading_edit_form = function (req, res) {
+    res.render('dashboard-item-heading-edit-form', {
+        host: CONFIG.host,
+        appname: CONFIG.app_name,
+        appversion: CONFIG.app_version,
+        organization: CONFIG.organization
+    });
+}
+
 exports.get_dashboard_item_standard_form = function (req, res) {
     res.render('dashboard-item-standard-form', {
         host: CONFIG.host,

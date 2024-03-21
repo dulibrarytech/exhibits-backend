@@ -176,6 +176,7 @@ const itemsModule = (function () {
             let is_published = items[i].is_published;
             let status;
             let item_details = '';
+            let edit_type = 'standard';
 
             if (is_published === 1) {
                 status = `<a href="#" id="${item_id}" class="suppress-item"><span id="suppress" title="published"><i class="fa fa-cloud" style="color: green"></i><br>Published</span></a>`;
@@ -194,12 +195,13 @@ const itemsModule = (function () {
             item_data += '<tr>';
             item_data += `<td style="width: 5%">${order}</td>`;
 
-            if (items[i].type === 'item') {
+            if (items[i].type === 'item') { // standard
 
                 let thumbnail = '';
                 let title = `<a href="${APP_PATH}/dashboard/items/details?uuid=${exhibit_id}&item_id=${item_id}">${helperModule.unescape(items[i].title)}</a>`;
                 let description = helperModule.unescape(items[i].description);
                 let date = items[i].date;
+
 
                 if (items[i].thumbnail.length > 0) {
                     thumbnail = EXHIBITS_ENDPOINTS.exhibits.exhibit_media.get.endpoint.replace(':exhibit_id', uuid).replace(':media', items[i].thumbnail);
@@ -219,6 +221,7 @@ const itemsModule = (function () {
             } else if (items[i].type === 'heading') {
 
                 let text = helperModule.unescape(items[i].text);
+                edit_type = 'heading';
 
                 item_data += `<td style="width: 35%">
                     <p><button class="btn btn-default"><small>${type}</small></button></p>
@@ -230,6 +233,7 @@ const itemsModule = (function () {
                 // render grid items here
                 let grid_items_fragment = '';
                 let grid_item_thumbnail = '';
+                edit_type = 'grid';
 
                 if (items[i].grid_items.length === 0) {
                     grid_items_fragment += '<p><strong>No items</strong></p>';
@@ -263,7 +267,7 @@ const itemsModule = (function () {
             item_data += `<td style="width: 10%">
                                 <div class="card-text text-sm-center">
                                     ${item_details}&nbsp;
-                                    <a href="${APP_PATH}/dashboard/items/standard/edit?exhibit_id=${exhibit_id}&item_id=${item_id}" title="Edit"><i class="fa fa-edit pr-1"></i></a>&nbsp;
+                                    <a href="${APP_PATH}/dashboard/items/${edit_type}/edit?exhibit_id=${exhibit_id}&item_id=${item_id}" title="Edit"><i class="fa fa-edit pr-1"></i></a>&nbsp;
                                     <a href="#" title="Delete"><i class="fa fa-trash pr-1"></i></a>
                                 </div>
                             </td>`;
