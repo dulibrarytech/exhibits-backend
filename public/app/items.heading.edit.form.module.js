@@ -138,12 +138,11 @@ const itemsHeadingEditFormModule = (function () {
     }
 
     /**
-     * Populates edit form with exhibit record data
+     * Populates edit form with item heading record data
      */
     async function display_edit_record () {
 
         let record = await get_item_heading_record();
-        console.log('display: ', record);
 
         // item data
         document.querySelector('#item-heading-text').value = record.text;
@@ -156,8 +155,6 @@ const itemsHeadingEditFormModule = (function () {
         }
 
         if (Object.keys(styles).length !== 0) {
-
-            console.log(styles);
 
             document.querySelector('#heading-background-color').value = styles.backGroundColor;
             document.querySelector('#heading-font-color').value = styles.color;

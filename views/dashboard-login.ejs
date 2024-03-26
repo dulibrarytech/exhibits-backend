@@ -38,9 +38,12 @@
     authModule.clear();
     function authenticate() {
         document.querySelector('#message').innerHTML = 'Loading...';
+        console.log('test ', '<%=sso_url%>?app_url=<%=sso_response_url%>');
+        /*
         setTimeout(() => {
             window.location.replace('<%=sso_url%>?app_url=<%=sso_response_url%>');
         }, 500);
+        */
     }
 
     document.querySelector('#authenticate').addEventListener('click', () => {
