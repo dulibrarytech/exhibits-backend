@@ -27,9 +27,13 @@ exports.default = function (req, res) {
         info: 'University of Denver Libraries - Exhibits'
     });
 };
+
+/*
 exports.get_dashboard = function (req, res) {
     res.redirect(APP_PATH + '/dashboard/login');
 };
+
+ */
 
 exports.get_dashboard_exhibits = function (req, res) {
     res.render('dashboard-exhibits', {

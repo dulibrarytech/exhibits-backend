@@ -27,7 +27,7 @@ const HELMET = require('helmet');
 const XSS = require('../libs/dom');
 const FS = require('fs');
 
-module.exports = () => {
+module.exports = function() {
 
     const APP = EXPRESS(),
         SERVER = HTTP.createServer(APP);
@@ -44,7 +44,7 @@ module.exports = () => {
     APP.use(BODYPARSER.json());
     APP.use(METHODOVERRIDE());
     APP.use(HELMET());
-    APP.use('/exhibits-backend/static', EXPRESS.static('./public'));
+    APP.use('/exhibits-dashboard/static', EXPRESS.static('./public'));
     APP.use(XSS.sanitize_req_query);
     APP.use(XSS.sanitize_req_body);
     APP.use(XSS.sanitize_req_params);

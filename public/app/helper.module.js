@@ -70,6 +70,16 @@ const helperModule = (function () {
         return data.replace(/(<([^>]+)>)/gi, '');
     };
 
+    obj.set_rich_text_editor_config = function () {
+
+        const BASE_URL = '/exhibits-dashboard/static/libs';
+        window.RTE_DefaultConfig.url_base = BASE_URL + "/richtexteditor";
+        window.RTE_DefaultConfig.contentCssUrl = window.RTE_DefaultConfig.url_base + "/runtime/richtexteditor_content.css"; // Specifies the location of the style sheet that will be used by the editable area.
+        window.RTE_DefaultConfig.previewCssUrl = window.RTE_DefaultConfig.url_base + "/runtime/richtexteditor_preview.css"; // Specifies the location of the style sheet that will be used by the preview window.
+        window.RTE_DefaultConfig.previewScriptUrl = window.RTE_DefaultConfig.url_base + "/runtime/richtexteditor_preview.js"; // Specifies the location of javascript file that will be used by the preview window.
+        window.RTE_DefaultConfig.helpUrl = window.RTE_DefaultConfig.url_base + "/runtime/help.htm";
+    };
+
     /**
      *
      * @param id

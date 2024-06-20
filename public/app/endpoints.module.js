@@ -20,7 +20,7 @@ const endpointsModule = (function () {
 
     'use strict';
 
-    const APP_PATH = '/exhibits-backend';
+    const APP_PATH = '/exhibits-dashboard';
     let obj = {};
 
     obj.save_exhibits_endpoints = function(data) {

@@ -20,7 +20,7 @@ const itemsHeadingEditFormModule = (function () {
 
     'use strict';
 
-    const APP_PATH = '/exhibits-backend';
+    const APP_PATH = '/exhibits-dashboard';
     const EXHIBITS_ENDPOINTS = endpointsModule.get_exhibits_endpoints();
     let obj = {};
     let rich_text_data = {};
@@ -43,7 +43,7 @@ const itemsHeadingEditFormModule = (function () {
                 document.querySelector('#message').innerHTML = 'ERROR: Unable to get API endpoints';
 
                 setTimeout(() => {
-                    window.location.replace(APP_PATH + '/dashboard/login');
+                    window.location.replace(APP_PATH + '/login');
                 }, 3000);
 
                 return false;

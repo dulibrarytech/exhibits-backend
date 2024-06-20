@@ -20,7 +20,7 @@ const exhibitsModule = (function () {
 
     'use strict';
 
-    const APP_PATH = '/exhibits-backend'
+    const APP_PATH = '/exhibits-dashboard';
     let obj = {};
     let link;
 
@@ -39,7 +39,7 @@ const exhibitsModule = (function () {
                 document.querySelector('#message').innerHTML = 'ERROR: Unable to get API endpoints';
 
                 setTimeout(() => {
-                    window.location.replace(APP_PATH + '/dashboard/login');
+                    window.location.replace(APP_PATH + '/login');
                 }, 3000);
 
                 return false;
@@ -81,7 +81,7 @@ const exhibitsModule = (function () {
             let uuid = exhibits[i].uuid;
             let is_published = exhibits[i].is_published;
             let preview_link = `${APP_PATH}/preview?uuid=${uuid}`;
-            let exhibit_items = `<a href="${APP_PATH}/dashboard/items?uuid=${exhibits[i].uuid}" title="Exhibit items"><i class="fa fa-search pr-1"></i></a>&nbsp;`;
+            let exhibit_items = `<a href="${APP_PATH}/items?uuid=${exhibits[i].uuid}" title="Exhibit items"><i class="fa fa-search pr-1"></i></a>&nbsp;`;
             let thumbnail_url = '';
             let thumbnail_fragment = '';
             let status;
@@ -93,7 +93,7 @@ const exhibitsModule = (function () {
                 status = `<a href="#" id="${exhibits[i].uuid}" class="suppress-exhibit"><span id="suppress" title="published"><i class="fa fa-cloud" style="color: green"></i><br>Published</span></a>`;
             } else if (is_published === 0) {
                 status = `<a href="#" id="${exhibits[i].uuid}" class="publish-exhibit"><span id="publish" title="suppressed"><i class="fa fa-cloud-upload" style="color: darkred"></i><br>Suppressed</span></a>`;
-                exhibit_edit = `<a href="${APP_PATH}/dashboard/exhibits/exhibit/edit?uuid=${uuid}" title="Edit"><i class="fa fa-edit pr-1"></i> </a>`;
+                exhibit_edit = `<a href="${APP_PATH}/exhibits/exhibit/edit?uuid=${uuid}" title="Edit"><i class="fa fa-edit pr-1"></i> </a>`;
                 trash = `<a href="#" title="Delete"><i class="fa fa-trash pr-1"></i> </a>`;
             }
 
@@ -105,7 +105,7 @@ const exhibitsModule = (function () {
             title = helperModule.unescape(exhibits[i].title);
             exhibit_data += '<tr>';
             exhibit_data += `<td style="width: 35%">
-                    <p><strong><a href="${APP_PATH}/dashboard/items?uuid=${uuid}">${title}</a></strong></p>
+                    <p><strong><a href="${APP_PATH}/items?uuid=${uuid}">${title}</a></strong></p>
                     ${thumbnail_fragment}
                     <div class="d-flex justify-content-between align-items-center">
                                 <div class="btn-group">
@@ -125,7 +125,7 @@ const exhibitsModule = (function () {
                                     ${exhibit_items}
                                     ${exhibit_edit}
                                     &nbsp;
-                                    <a href="${APP_PATH}/dashboard/items/standard?uuid=${uuid}" title="Add Items"><i class="fa fa-plus pr-1"></i> </a>
+                                    <a href="${APP_PATH}/items/standard?uuid=${uuid}" title="Add Items"><i class="fa fa-plus pr-1"></i> </a>
                                     &nbsp;
                                     ${trash}
                                 </div>

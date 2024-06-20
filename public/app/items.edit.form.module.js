@@ -20,7 +20,7 @@ const itemsEditFormModule = (function () {
 
     'use strict';
 
-    const APP_PATH = '/exhibits-backend';
+    const APP_PATH = '/exhibits-dashboard';
     const EXHIBITS_ENDPOINTS = endpointsModule.get_exhibits_endpoints();
     let obj = {};
     let rich_text_data = {};
@@ -43,7 +43,7 @@ const itemsEditFormModule = (function () {
                 document.querySelector('#message').innerHTML = 'ERROR: Unable to get API endpoints';
 
                 setTimeout(() => {
-                    window.location.replace(APP_PATH + '/dashboard/login');
+                    window.location.replace(APP_PATH + '/exhibits-dashboard/login');
                 }, 3000);
 
                 return false;
@@ -77,7 +77,6 @@ const itemsEditFormModule = (function () {
         item.styles = {
             item: {}
         };
-
 
         // item data
         item.title = rich_text_data['item-title-input'].getHTMLCode();
@@ -270,6 +269,8 @@ const itemsEditFormModule = (function () {
      *
      */
     obj.init = async function () {
+
+        helperModule.set_rich_text_editor_config();
         document.querySelector('#save-item-btn').addEventListener('click', itemsEditFormModule.update_item_record);
         document.querySelector('#logout').addEventListener('click', authModule.logout);
         document.querySelector('#item-media-trash').style.display = 'none';

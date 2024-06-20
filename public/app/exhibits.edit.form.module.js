@@ -20,7 +20,7 @@ const exhibitsEditFormModule = (function () {
 
     'use strict';
 
-    const APP_PATH = '/exhibits-backend';
+    const APP_PATH = '/exhibits-dashboard';
     const EXHIBITS_ENDPOINTS = endpointsModule.get_exhibits_endpoints();
     let obj = {};
     let rich_text_data = {};

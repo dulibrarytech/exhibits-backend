@@ -63,7 +63,7 @@ const userModule = (function () {
 
             users += '<td>';
             users += '&nbsp;';
-            users += '<a class="btn btn-xs btn-default" href="/dashboard/edit-user?id=' + DOMPurify.sanitize(user.id) + '" title="Edit User"><i class="fa fa-edit"></i></a>&nbsp;&nbsp;&nbsp;&nbsp;';
+            users += '<a class="btn btn-xs btn-default" href="/exhibits-dashboard/edit-user?id=' + DOMPurify.sanitize(user.id) + '" title="Edit User"><i class="fa fa-edit"></i></a>&nbsp;&nbsp;&nbsp;&nbsp;';
             users += '</td>';
             users += '</tr>';
         }
@@ -127,9 +127,9 @@ const userModule = (function () {
             if (response.status === 200) {
                 render_users(response.data);
             } else if (response.status === 401) {
-                window.location.replace('/login');
+                window.location.replace('/exhibits-dashboard/login');
             } else {
-                window.location.replace('/dashboard/error?e=' + DOMPurify.sanitize(response.status));
+                window.location.replace('/exhibits-dashboard/error?e=' + DOMPurify.sanitize(response.status));
             }
 
         })();
@@ -155,9 +155,9 @@ const userModule = (function () {
             if (response.status === 200) {
                 renderUserDetails(response.data);
             } else if (response.status === 401) {
-                window.location.replace('/login');
+                window.location.replace('/exhbits-dashboard/login');
             } else {
-                window.location.replace('/dashboard/error?e=' + DOMPurify.sanitize(response.status));
+                window.location.replace('/exhbits-dashboard/error?e=' + DOMPurify.sanitize(response.status));
             }
 
         })();
@@ -169,7 +169,7 @@ const userModule = (function () {
      */
     obj.check_user_data = function() {
 
-        let data = window.sessionStorage.getItem('oclc_reclamation_user');
+        let data = window.sessionStorage.getItem('exhibits_user');
 
         if (data !== null) {
             return true;
@@ -241,15 +241,15 @@ const userModule = (function () {
                 domModule.html('#message', '<div class="alert alert-success">User added.</div>');
 
                 setTimeout(() => {
-                    window.location.replace('/dashboard/users');
+                    window.location.replace('/exhibits-dashboard/users');
                 }, 3000);
 
             } else if (response.status === 401) {
-                window.location.replace('/login');
+                window.location.replace('/exhibits-dashboard/login');
             } else if (response.status === 400) {
                 console.log(response);
             } else {
-                window.location.replace('/dashboard/error?e=' + DOMPurify.sanitize(response.status));
+                window.location.replace('/exhibits-dashboard/error?e=' + DOMPurify.sanitize(response.status));
             }
 
         })();
@@ -299,13 +299,13 @@ const userModule = (function () {
                 domModule.html('#message', '<div class="alert alert-success">User updated.</div>');
 
                 setTimeout(() => {
-                    window.location.replace('/dashboard/users');
+                    window.location.replace('/exhibits-dashboard/users');
                 }, 3000);
 
             } else if (response.status === 401) {
-                window.location.replace('/login');
+                window.location.replace('/exhibits-dashboard/login');
             } else {
-                window.location.replace('/dashboard/error?e=' + DOMPurify.sanitize(response.status));
+                window.location.replace('/exhibits-dashboard/error?e=' + DOMPurify.sanitize(response.status));
             }
 
         })();
@@ -339,7 +339,7 @@ const userModule = (function () {
                 domModule.html('#message', '<div class="alert alert-success">User deleted</div>');
                 setTimeout(function () {
                     domModule.html('#message', null);
-                    window.location.replace('/dashboard/users');
+                    window.location.replace('/exhibits-dashboard/users');
                 }, 3000);
 
                 return false;

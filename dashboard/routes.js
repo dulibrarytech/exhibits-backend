@@ -19,53 +19,57 @@
 'use strict';
 
 const CONTROLLER = require('../dashboard/controller');
-const APP_PATH = '/exhibits-backend';
+const APP_PATH = '/exhibits-dashboard';
 
 module.exports = function (app) {
 
+    /*
     app.route(APP_PATH)
     .get(CONTROLLER.get_dashboard);
+    */
 
+    /*
     app.route(APP_PATH + '/dashboard/login')
     .get(CONTROLLER.get_dashboard_login);
+    */
 
-    app.route(APP_PATH + '/dashboard/exhibits')
+    app.route(APP_PATH + '/exhibits')
     .get(CONTROLLER.get_dashboard_exhibits);
 
-    app.route(APP_PATH + '/dashboard/exhibits/exhibit')
+    app.route(APP_PATH + '/exhibits/exhibit')
     .get(CONTROLLER.get_dashboard_exhibits_form);
 
-    app.route(APP_PATH + '/dashboard/exhibits/exhibit/edit')
+    app.route(APP_PATH + '/exhibits/exhibit/edit')
     .get(CONTROLLER.get_dashboard_exhibits_edit_form);
 
-    app.route(APP_PATH + '/dashboard/items')
+    app.route(APP_PATH + '/items')
     .get(CONTROLLER.get_dashboard_items);
 
-    app.route(APP_PATH + '/dashboard/items/details')
+    app.route(APP_PATH + '/items/details')
     .get(CONTROLLER.get_dashboard_item_details);
 
-    app.route(APP_PATH + '/dashboard/items/standard/edit')
+    app.route(APP_PATH + '/items/standard/edit')
     .get(CONTROLLER.get_dashboard_items_standard_edit_form);
 
-    app.route(APP_PATH + '/dashboard/items/heading')
+    app.route(APP_PATH + '/items/heading')
     .get(CONTROLLER.get_dashboard_item_heading_form);
 
-    app.route(APP_PATH + '/dashboard/items/heading/edit')
+    app.route(APP_PATH + '/items/heading/edit')
     .get(CONTROLLER.get_dashboard_items_heading_edit_form);
 
-    app.route(APP_PATH + '/dashboard/items/standard')
+    app.route(APP_PATH + '/items/standard')
     .get(CONTROLLER.get_dashboard_item_standard_form);
 
-    app.route(APP_PATH + '/dashboard/items/grid')
+    app.route(APP_PATH + '/items/grid')
     .get(CONTROLLER.get_dashboard_item_grid_form);
 
-    app.route(APP_PATH + '/dashboard/items/vertical-timeline')
+    app.route(APP_PATH + '/items/vertical-timeline')
     .get(CONTROLLER.get_dashboard_item_vertical_timeline);
 
-    app.route(APP_PATH + '/dashboard/trash')
+    app.route(APP_PATH + '/trash')
     .get(CONTROLLER.get_dashboard_trash);
 
-    app.route(APP_PATH + '/dashboard/logout')
+    app.route(APP_PATH + '/logout')
     .get(CONTROLLER.get_dashboard_logout);
 
     /*

@@ -20,7 +20,7 @@ const homeModule = (function () {
 
     'use strict';
 
-    const APP_PATH = '/exhibits-backend';
+    const APP_PATH = '/exhibits-dashboard';
     let obj = {};
 
     obj.init = async function() {

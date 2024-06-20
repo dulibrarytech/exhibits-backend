@@ -24,7 +24,13 @@ const TOKENS = require('../libs/tokens');
 
 module.exports = function (app) {
 
-    app.route(ENDPOINTS().auth.sso.endpoint)
+    app.route('/exhibits-dashboard/auth')
+    .get(CONTROLLER.get_auth_landing);
+
+    app.route('/exhibits-dashboard/auth/login')
+    .get(TOKENS.verify);
+
+    app.route('/exhibits-dashboard/auth/sso') // ENDPOINTS().auth.sso.endpoint
     .post(CONTROLLER.sso);
 
     app.route(ENDPOINTS().auth.authentication.endpoint)

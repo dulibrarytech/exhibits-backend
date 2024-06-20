@@ -1,6 +1,6 @@
 /**
 
- Copyright 2023 University of Denver
+ Copyright 2019 University of Denver
 
  Licensed under the Apache License, Version 2.0 (the "License");
  you may not use this file except in compliance with the License.
@@ -27,19 +27,24 @@ const LOGGER = require('../libs/log4');
 /**
  * Creates session token
  * @param username
- * @returns {*}
  */
 exports.create = function (username) {
 
-    let tokenData = {
-        sub: username,
-        iss: TOKEN_CONFIG.token_issuer
-    };
+    try {
 
-    return JWT.sign(tokenData, TOKEN_CONFIG.token_secret, {
-        algorithm: TOKEN_CONFIG.token_algo,
-        expiresIn: TOKEN_CONFIG.token_expires
-    });
+        let token_data = {
+            sub: username,
+            iss: TOKEN_CONFIG.token_issuer
+        };
+
+        return JWT.sign(token_data, TOKEN_CONFIG.token_secret, {
+            algorithm: TOKEN_CONFIG.token_algo,
+            expiresIn: TOKEN_CONFIG.token_expires
+        });
+
+    } catch (error) {
+        LOGGER.module().error('ERROR: [/libs/tokens lib (create)] unable to create token ' + error.message);
+    }
 };
 
 /**
@@ -48,18 +53,22 @@ exports.create = function (username) {
  * @param res
  * @param next
  */
-exports.verify = (req, res, next) => {
+exports.verify = function (req, res, next) {
 
-    const TOKEN = req.headers['x-access-token'] || req.query.t;
-    const key = req.query.api_key;
+    let token = req.headers['x-access-token'] || req.query.t;
+    let key = req.query.api_key;
 
-    if (TOKEN !== undefined && VALIDATOR.isJWT(TOKEN)) {
+    if (token !== undefined && VALIDATOR.isJWT(token)) {
 
-        JWT.verify(TOKEN, TOKEN_CONFIG.token_secret, function (error, decoded) {
+        JWT.verify(token, TOKEN_CONFIG.token_secret, function (error, decoded) {
 
             if (error) {
-                LOGGER.module().error('ERROR: [/libs/tokens lib (verify)] unable to verify token ' + error);
-                res.status(401).send('Unable to verify token');
+
+                LOGGER.module().error('ERROR: [/libs/tokens lib (verify)] unable to verify token ' + error.message);
+                res.status(403).send({
+                    message: 'Unauthorized request'
+                });
+
                 return false;
             }
 
@@ -67,7 +76,7 @@ exports.verify = (req, res, next) => {
             next();
         });
 
-    } else if (key !== undefined && key === TOKEN_CONFIG.api_key) {
+    } else if (key !== undefined && key === TOKEN_CONFIG.api_key)  {
 
         let api_key = key;
 
@@ -76,15 +85,41 @@ exports.verify = (req, res, next) => {
         }
 
         if (!VALIDATOR.isAlphanumeric(api_key)) {
-            res.redirect(WEBSERVICES_CONFIG.ssoUrl + '?app_url=' + WEBSERVICES_CONFIG.ssoResponseUrl);
+            res.status(401).send({
+                message: 'Unauthorized request'
+            });
+
             return false;
         }
 
         req.query.api_key = api_key;
+
         next();
 
     } else {
+
         LOGGER.module().error('ERROR: [/libs/tokens lib (verify)] unable to verify api key');
-        res.redirect(WEBSERVICES_CONFIG.ssoUrl + '?app_url=' + WEBSERVICES_CONFIG.ssoResponseUrl);
+        res.redirect(WEBSERVICES_CONFIG.sso_url + '?app_url=' + WEBSERVICES_CONFIG.sso_response_url);
+    }
+};
+
+/**
+ * Creates refresh token
+ */
+exports.refresh_token = function (username) {
+
+    try {
+
+        let token_data = {
+            sub: username,
+            iss: TOKEN_CONFIG.token_issuer
+        };
+
+        return JWT.sign(token_data, TOKEN_CONFIG.refresh_token_secret, {
+            algorithm: TOKEN_CONFIG.token_algo
+        });
+
+    } catch (error) {
+        LOGGER.module().error('ERROR: [/libs/tokens lib (refresh_token)] unable to create refresh token ' + error.message);
     }
 };

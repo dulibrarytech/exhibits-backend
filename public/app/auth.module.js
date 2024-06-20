@@ -20,7 +20,7 @@ const authModule = (function () {
 
     'use strict';
 
-    const APP_PATH = '/exhibits-backend';
+    const APP_PATH = '/exhibits-dashboard';
     const init_endpoints = endpointsModule.init();
     let obj = {};
 
@@ -67,7 +67,7 @@ const authModule = (function () {
                 console.log('User auth data saved');
                 return true;
             } else {
-                window.location.replace(APP_PATH + '/dashboard/login');
+                window.location.replace(APP_PATH + '/login');
             }
         }
     };
@@ -124,7 +124,7 @@ const authModule = (function () {
      */
     obj.redirect_to_auth = function () {
         setTimeout(() => {
-            window.location.replace(APP_PATH + '/dashboard/login');
+            window.location.replace(APP_PATH + '/login');
         }, 3000);
     };
 
@@ -140,7 +140,7 @@ const authModule = (function () {
      * Logs out user
      */
     obj.logout = function () {
-        window.location.replace(APP_PATH + '/dashboard/logout');
+        window.location.replace(APP_PATH + '/logout');
     };
 
     obj.init = function () {
