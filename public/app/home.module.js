@@ -29,8 +29,8 @@ const homeModule = (function () {
             await authModule.get_auth_user_data();
         }
 
-        history.replaceState({}, '', APP_PATH + '/dashboard/exhibits');
-        history.pushState({}, '', APP_PATH + '/dashboard/exhibits');
+        history.replaceState({}, '', APP_PATH + '/exhibits');
+        history.pushState({}, '', APP_PATH + '/exhibits');
 
         let home_timer = setTimeout(async () => {
             document.querySelector('#message').innerHTML = '<div class="alert alert-primary" role="alert">Loading...</div>';
