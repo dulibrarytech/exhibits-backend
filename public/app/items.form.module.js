@@ -525,6 +525,7 @@ const itemsFormModule = (function () {
      */
     obj.init = async function () {
         // TODO: check auth?
+        helperModule.set_rich_text_editor_config();
         const uuid = helperModule.get_parameter_by_name('uuid');
         exhibitsModule.set_preview_link();
         await itemsModule.set_exhibit_title(uuid);

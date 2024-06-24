@@ -138,7 +138,9 @@ const exhibitsFormModule = (function () {
      * Init function for exhibits form
      */
     obj.init = function () {
-        set_rich_text_editors();
+
+        helperModule.set_rich_text_editor_config();
+        set_rich_text_editors ();
         document.querySelector('#save-exhibit-btn').addEventListener('click', exhibitsFormModule.create_exhibit_record);
         uploadsModule.upload_exhibit_hero_image();
         uploadsModule.upload_exhibit_thumbnail_image();
@@ -158,6 +160,7 @@ const exhibitsFormModule = (function () {
                 document.querySelector('#nav-menu-font-color').value = document.querySelector('#nav-menu-font-color-picker').value;
             }
         });
+
         /*
         document.querySelector('#nav-menu-links-font-color-picker').addEventListener('input', () => {
             if (document.querySelector('#nav-menu-links-font-color')) {

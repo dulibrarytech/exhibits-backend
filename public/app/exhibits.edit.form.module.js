@@ -255,6 +255,7 @@ const exhibitsEditFormModule = (function () {
      *
      */
     obj.init = async function () {
+        helperModule.set_rich_text_editor_config();
         document.querySelector('#save-exhibit-btn').addEventListener('click', exhibitsEditFormModule.update_exhibit_record);
         await display_edit_record();
         document.querySelector('#logout').addEventListener('click', authModule.logout);
