@@ -67,17 +67,7 @@ const Exhibit_heading_record_tasks = class {
         try {
 
             return await this.DB(this.TABLE.heading_records)
-            .select('is_member_of_exhibit',
-                'uuid',
-                'type',
-                'text',
-                'order',
-                'styles',
-                'is_visible',
-                'is_anchor',
-                'is_published',
-                'created'
-            )
+            .select('*')
             .where({
                 is_member_of_exhibit: is_member_of_exhibit,
                 is_deleted: 0
@@ -98,18 +88,7 @@ const Exhibit_heading_record_tasks = class {
         try {
 
             const data = await this.DB(this.TABLE.heading_records)
-            .select('is_member_of_exhibit',
-                'uuid',
-                'type',
-                'text',
-                'order',
-                'styles',
-                'is_visible',
-                'is_anchor',
-                'is_published',
-                'is_locked',
-                'created'
-            )
+            .select('*')
             .where({
                 is_member_of_exhibit: is_member_of_exhibit,
                 uuid: uuid,

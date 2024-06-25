@@ -125,7 +125,7 @@ const exhibitsFormModule = (function () {
                 document.querySelector('#message').innerHTML = `<div class="alert alert-success" role="alert"><i class="fa fa-info"></i> Exhibit record created</div>`;
 
                 setTimeout(() => {
-                    window.location.replace(APP_PATH + '/dashboard/items?uuid=' + response.data.data);
+                    window.location.replace(APP_PATH + '/items?uuid=' + response.data.data);
                 }, 3000);
             }
 

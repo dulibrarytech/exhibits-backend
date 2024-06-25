@@ -67,15 +67,7 @@ const Exhibit_grid_record_tasks = class {
         try {
 
             return await this.DB(this.TABLE.grid_records)
-            .select('is_member_of_exhibit',
-                'uuid',
-                'type',
-                'columns',
-                'order',
-                'styles',
-                'is_published',
-                'created'
-            )
+            .select('*')
             .where({
                 is_member_of_exhibit: is_member_of_exhibit,
                 is_deleted: 0
@@ -95,23 +87,7 @@ const Exhibit_grid_record_tasks = class {
         try {
 
             return await this.DB(this.TABLE.item_records)
-            .select('is_member_of_exhibit',
-                'uuid',
-                'type',
-                'date',
-                'title',
-                'description',
-                'caption',
-                'item_type',
-                'thumbnail',
-                'media',
-                'media_width',
-                'layout',
-                'styles',
-                'order',
-                'is_published',
-                'created'
-            )
+            .select('*')
             .where({
                 is_member_of_item_grid: uuid,
                 is_deleted: 0
@@ -132,16 +108,7 @@ const Exhibit_grid_record_tasks = class {
         try {
 
             const data = await this.DB(this.TABLE.grid_records)
-            .select('is_member_of_exhibit',
-                'uuid',
-                'type',
-                'columns',
-                'styles',
-                'order',
-                'is_published',
-                'is_locked',
-                'created'
-            )
+            .select('*')
             .where({
                 is_member_of_exhibit: is_member_of_exhibit,
                 uuid: uuid,

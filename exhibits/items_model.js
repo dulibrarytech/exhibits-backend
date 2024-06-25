@@ -40,7 +40,7 @@ const LOGGER = require('../libs/log4');
 exports.create_item_record = async function (is_member_of_exhibit, data) {
 
     try {
-        console.log(data.is_member_of_item_grid);
+
         const HELPER_TASK = new HELPER();
         data.uuid = HELPER_TASK.create_uuid();
         data.is_member_of_exhibit = is_member_of_exhibit;
@@ -218,7 +218,7 @@ exports.get_item_records = async function (is_member_of_exhibit) {
 
         return {
             status: 200,
-            message: 'Exhibit item and heading records',
+            message: 'Exhibit item records',
             data: records
         };
 

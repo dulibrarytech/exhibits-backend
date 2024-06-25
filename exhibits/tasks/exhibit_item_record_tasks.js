@@ -57,7 +57,7 @@ const Exhibit_item_record_tasks = class {
         }
     }
 
-    /**
+    /** TODO: refactor based on updated schema
      * Gets item records by exhibit
      * @param is_member_of_exhibit
      */
@@ -66,26 +66,9 @@ const Exhibit_item_record_tasks = class {
         try {
 
             return await this.DB(this.TABLE.item_records)
-            .select('is_member_of_exhibit',
-                'uuid',
-                'type',
-                'date',
-                'title',
-                'description',
-                'caption',
-                'thumbnail',
-                'item_type',
-                'media',
-                'media_width',
-                'layout',
-                'styles',
-                'order',
-                'is_published',
-                'created'
-            )
+            .select('*')
             .where({
                 is_member_of_exhibit: is_member_of_exhibit,
-                is_member_of_item_grid: 0,
                 is_deleted: 0
             });
 
@@ -104,24 +87,7 @@ const Exhibit_item_record_tasks = class {
         try {
 
             const data = await this.DB(this.TABLE.item_records)
-            .select('is_member_of_exhibit',
-                'uuid',
-                'type',
-                'date',
-                'title',
-                'description',
-                'caption',
-                'item_type',
-                'media',
-                'media_width',
-                'text',
-                'layout',
-                'styles',
-                'order',
-                'is_published',
-                'is_locked',
-                'created'
-            )
+            .select('*')
             .where({
                 is_member_of_exhibit: is_member_of_exhibit,
                 uuid: uuid,
@@ -154,7 +120,7 @@ const Exhibit_item_record_tasks = class {
      * @param data
      */
     async update_item_record(data) {
-        console.log(data);
+
         try {
 
             await this.DB(this.TABLE.item_records)

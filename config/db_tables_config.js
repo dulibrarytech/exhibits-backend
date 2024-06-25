@@ -25,6 +25,7 @@ const TABLES = {
     item_records: process.env.ITEM_RECORDS,
     heading_records: process.env.HEADING_RECORDS,
     grid_records: process.env.GRID_RECORDS,
+    grids: process.env.GRIDS,
     user_records: process.env.USER_RECORDS
 };
 const DB_TABLES_CONFIG = {
