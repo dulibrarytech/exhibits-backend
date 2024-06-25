@@ -46,7 +46,7 @@ node_modules
 # IntelliJ
 /out/
 
-test-data
+test-data/
 
 # mpeltonen/sbt-idea plugin
 .idea_modules/

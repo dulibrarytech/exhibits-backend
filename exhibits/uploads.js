@@ -18,7 +18,7 @@
 
 'use strict';
 
-const APP_PATH = '/exhibits-backend';
+const APP_PATH = '/exhibits-dashboard';
 const MULTER = require('multer');
 const LOGGER = require('../libs/log4');
     // TOKEN = require('../libs/tokens'),
