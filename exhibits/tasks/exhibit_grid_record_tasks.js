@@ -86,15 +86,39 @@ const Exhibit_grid_record_tasks = class {
 
         try {
 
-            return await this.DB(this.TABLE.item_records)
+            return await this.DB(this.TABLE.grid_item_records)
             .select('*')
             .where({
-                is_member_of_item_grid: uuid,
+                is_member_of_grid: uuid,
                 is_deleted: 0
             });
 
         } catch (error) {
             LOGGER.module().error('ERROR: [/exhibits/exhibit_grid_record_tasks (get_grid_item_records)] unable to get records ' + error.message);
+        }
+    }
+
+    /**
+     * Create grid item records
+     * @param data
+     */
+    async create_grid_item_record(data) {
+
+        try {
+
+            const result = await this.DB.transaction((trx) => {
+                this.DB.insert(data)
+                .into(this.TABLE.grid_item_records)
+                .transacting(trx)
+                .then(trx.commit)
+                .catch(trx.rollback);
+            });
+
+            LOGGER.module().info('INFO: [/exhibits/exhibit_grid_record_tasks (create_grid_record)] ' + result.length + ' Grid item record created.');
+            return true;
+
+        } catch (error) {
+            LOGGER.module().error('ERROR: [/exhibits/exhibit_grid_record_tasks (create_grid_record)] unable to create record ' + error.message);
         }
     }
 

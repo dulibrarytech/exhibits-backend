@@ -69,6 +69,9 @@ module.exports = function (app) {
     app.route(ENDPOINTS().exhibits.grid_records.post.endpoint)
     .post(CONTROLLER.create_grid_record);  // TOKEN.verify,
 
+    app.route(ENDPOINTS().exhibits.grid_item_records.post.endpoint)
+    .post(CONTROLLER.create_grid_item_record);  // TOKEN.verify,
+
     app.route(ENDPOINTS().exhibits.trashed_records.get.endpoint)
     .get(CONTROLLER.get_trashed_records);
 

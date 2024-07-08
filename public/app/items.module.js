@@ -176,6 +176,7 @@ const itemsModule = (function () {
             let is_published = items[i].is_published;
             let status;
             let item_details = '';
+            let add_grid_items = '';
             let edit_type = 'standard';
 
             if (is_published === 1) {
@@ -233,6 +234,8 @@ const itemsModule = (function () {
                 // render grid items here
                 let grid_items_fragment = '';
                 let grid_item_thumbnail = '';
+
+                add_grid_items = `<a href="${APP_PATH}/items/grid/item?exhibit_id=${exhibit_id}&grid_id=${item_id}" title="Add Grid Item"><i class="fa fa-plus pr-1"></i></a>&nbsp;`;
                 edit_type = 'grid';
 
                 if (items[i].grid_items.length === 0) {
@@ -266,6 +269,7 @@ const itemsModule = (function () {
             item_data += `<td style="width: 5%;text-align: center"><small>${status}</small></td>`;
             item_data += `<td style="width: 10%">
                                 <div class="card-text text-sm-center">
+                                    ${add_grid_items}
                                     ${item_details}&nbsp;
                                     <a href="${APP_PATH}/items/${edit_type}/edit?exhibit_id=${exhibit_id}&item_id=${item_id}" title="Edit"><i class="fa fa-edit pr-1"></i></a>&nbsp;
                                     <a href="#" title="Delete"><i class="fa fa-trash pr-1"></i></a>
@@ -304,11 +308,11 @@ const itemsModule = (function () {
                 </li>
                 <li>
                     <a href="${item_grid_link}" data-keyboard="false"> <i
-                                class=" menu-icon fa fa-th"></i>Create Item Grid</a>
+                                class=" menu-icon fa fa-th"></i>Add Item Grid</a>
                 </li>
                 <li>
                     <a href="${item_vertical_timeline_link}" data-keyboard="false">
-                        <i class=" menu-icon ti-calendar"></i>Create Vertical Timeline
+                        <i class=" menu-icon ti-calendar"></i>Add Vertical Timeline
                     </a>
                 </li>
                 <li>
