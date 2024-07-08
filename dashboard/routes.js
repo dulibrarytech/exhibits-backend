@@ -57,6 +57,9 @@ module.exports = function (app) {
     app.route(APP_PATH + '/items/grid/item')
     .get(CONTROLLER.get_dashboard_item_griditem_form);
 
+    app.route(APP_PATH + '/items/grid')
+    .get(CONTROLLER.get_dashboard_item_griditem_form);
+
     app.route(APP_PATH + '/items/heading')
     .get(CONTROLLER.get_dashboard_item_heading_form);
 
@@ -64,7 +67,7 @@ module.exports = function (app) {
     .get(CONTROLLER.get_dashboard_items_heading_edit_form);
 
     app.route(APP_PATH + '/items/grid')
-    .get(CONTROLLER.get_dashboard_item_grid_form);
+    .get(CONTROLLER.get_dashboard_item_grid_list);
 
     app.route(APP_PATH + '/items/vertical-timeline')
     .get(CONTROLLER.get_dashboard_item_vertical_timeline);

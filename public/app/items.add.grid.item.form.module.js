@@ -107,7 +107,6 @@ const itemsAddGridItemFormModule = (function () {
             document.querySelector('#message').innerHTML = `<div class="alert alert-info" role="alert"><i class="fa fa-info"></i> Creating item record...</div>`;
 
             let data = get_grid_item_data();
-            // data.is_member_of_item_grid = grid_id;
             let tmp = EXHIBITS_ENDPOINTS.exhibits.grid_item_records.post.endpoint.replace(':exhibit_id', exhibit_id);
             let endpoint = tmp.replace(':grid_id', grid_id);
             let token = authModule.get_user_token();
@@ -125,21 +124,19 @@ const itemsAddGridItemFormModule = (function () {
 
                 document.querySelector('#item-card').style.visibility = 'hidden';
 
-                let message = 'Item record created';
-
-                if (itemsFormModule.check_grid() === true) {
-                    message = 'Grid item record created';
-                }
-
+                let message = 'Grid item record created';
                 document.querySelector('#message').innerHTML = `<div class="alert alert-success" role="alert"><i class="fa fa-info"></i> ${message}</div>`;
 
                 setTimeout(() => {
 
+                    /* TODO: load template showing grid items and provide ability to add more items
                     if (itemsFormModule.check_grid() === true) {
                         location.replace(`${APP_PATH}/items/standard?uuid=${uuid}&grid=${grid_id}`);
                     } else {
                         location.replace(`${APP_PATH}/items/standard?uuid=${uuid}`);
                     }
+
+                     */
 
                 }, 3000);
             }
