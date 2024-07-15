@@ -97,6 +97,11 @@ const ENDPOINTS = {
                 endpoint: `${APP_PATH}${PREFIX}${VERSION}${ENDPOINT}/:exhibit_id/grids/:grid_id/items`,
                 params: 'token or api_key',
                 body: 'is_member_of_exhibit, grid_id, record data'
+            },
+            get: {
+                description: 'Retrieves all grid item records by exhibit id and grid id',
+                endpoint: `${APP_PATH}${PREFIX}${VERSION}${ENDPOINT}/:exhibit_id/grids/:grid_id/items`,
+                params: 'token or api_key, gets all records by exhibit via uuid param'
             }
         },
         item_records: {

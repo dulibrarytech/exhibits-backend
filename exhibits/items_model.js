@@ -250,6 +250,29 @@ exports.create_grid_item_record = async function (is_member_of_exhibit, is_membe
 };
 
 /**
+ * Gets grid items
+ * @param is_member_of_exhibit
+ * @param is_member_of_grid
+ */
+exports.get_grid_item_records = async function (is_member_of_exhibit, is_member_of_grid) {
+
+    try {
+
+        const GRID_TASK = new EXHIBIT_GRID_RECORD_TASKS(DB, TABLES);
+        const grid_items = await GRID_TASK.get_grid_item_records(is_member_of_exhibit, is_member_of_grid);
+
+        return {
+            status: 200,
+            message: 'Exhibit grid item records',
+            data: grid_items
+        };
+
+    } catch (error) {
+        console.log(error);
+    }
+};
+
+/**
  * Gets item records by exhibit
  * @param is_member_of_exhibit
  */
@@ -260,15 +283,15 @@ exports.get_item_records = async function (is_member_of_exhibit) {
         const ITEM_TASK = new EXHIBIT_ITEM_RECORD_TASKS(DB, TABLES);
         const HEADING_TASK = new EXHIBIT_HEADING_RECORD_TASKS(DB, TABLES);
         const GRID_TASK = new EXHIBIT_GRID_RECORD_TASKS(DB, TABLES);
-        let items =  await ITEM_TASK.get_item_records(is_member_of_exhibit);
+        let items = await ITEM_TASK.get_item_records(is_member_of_exhibit);
         let headings = await HEADING_TASK.get_heading_records(is_member_of_exhibit);
         let grids = await GRID_TASK.get_grid_records(is_member_of_exhibit);
 
-        for (let i=0;i<grids.length;i++) {
-            grids[i].grid_items = await GRID_TASK.get_grid_item_records(grids[i].uuid);
+        for (let i = 0; i < grids.length; i++) {
+            grids[i].grid_items = await GRID_TASK.get_grid_item_records(is_member_of_exhibit, grids[i].uuid);
         }
 
-        let records = [...items,  ...headings, ...grids];
+        let records = [...items, ...headings, ...grids];
 
         records.sort((a, b) => {
             return a.order - b.order;

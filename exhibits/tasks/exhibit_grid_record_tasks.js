@@ -80,16 +80,18 @@ const Exhibit_grid_record_tasks = class {
 
     /**
      * Gets grid items
-     * @param uuid
+     * @param is_member_of_exhibit
+     * @param grid_id
      */
-    async get_grid_item_records(uuid) {
+    async get_grid_item_records(is_member_of_exhibit, grid_id) {
 
         try {
 
             return await this.DB(this.TABLE.grid_item_records)
             .select('*')
             .where({
-                is_member_of_grid: uuid,
+                is_member_of_exhibit: is_member_of_exhibit,
+                is_member_of_grid: grid_id,
                 is_deleted: 0
             });
 

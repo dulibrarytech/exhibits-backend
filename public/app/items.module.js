@@ -178,20 +178,13 @@ const itemsModule = (function () {
             let item_details = '';
             let add_grid_items = '';
             let edit_type = 'standard';
+            let delete_item = `<a href="#" title="Delete"><i class="fa fa-trash pr-1"></i></a>`;
 
             if (is_published === 1) {
                 status = `<a href="#" id="${item_id}" class="suppress-item"><span id="suppress" title="published"><i class="fa fa-cloud" style="color: green"></i><br>Published</span></a>`;
             } else if (is_published === 0) {
                 status = `<a href="#" id="${item_id}" class="publish-item"><span id="publish" title="suppressed"><i class="fa fa-cloud-upload" style="color: darkred"></i><br>Suppressed</span></a>`;
             }
-
-            /*
-            if (is_published === 1) {
-                status = `<span title="published"><i class="fa fa-cloud"></i><br><smal>Published</smal></span>`;
-            } else if (is_published === 0) {
-                status = `<span title="suppressed"><i class="fa fa-cloud-upload"></i><br><small>Suppressed</small></span>`;
-            }
-            */
 
             item_data += '<tr>';
             item_data += `<td style="width: 5%">${order}</td>`;
@@ -234,34 +227,32 @@ const itemsModule = (function () {
                 // render grid items here
                 let grid_items_fragment = '';
                 let grid_item_thumbnail = '';
+                let grid_item_count = '';
 
                 add_grid_items = `<a href="${APP_PATH}/items/grid/item?exhibit_id=${exhibit_id}&grid_id=${item_id}" title="Add Grid Item"><i class="fa fa-plus pr-1"></i></a>&nbsp;`;
                 edit_type = 'grid';
 
                 if (items[i].grid_items.length === 0) {
                     grid_items_fragment += '<p><strong>No items</strong></p>';
+
                 } else {
 
-                    // TODO: add link to grid item details - grid_id
-                    item_details = `<a href="${APP_PATH}/items/details?uuid=${exhibit_id}&item_id=${item_id}" title="Item details"><i class="fa fa-search pr-1"></i></a>`;
+                    item_details = `<a href="${APP_PATH}/items/grid/list?exhibit_id=${exhibit_id}&grid_id=${item_id}" title="View grid Items"><i class="fa fa-search pr-1"></i></a>`;
+                    grid_item_count += `Contains ${items[i].grid_items.length} items`;
+                    delete_item = ''; // Can't delete grid if it contain items
 
+                    /* Display grid item titles?
                     for (let j=0;j<items[i].grid_items.length;j++) {
-
-                        if (items[i].grid_items[j].thumbnail.length > 0) {
-
-                            grid_item_thumbnail = EXHIBITS_ENDPOINTS.exhibits.exhibit_media.get.endpoint.replace(':exhibit', uuid).replace(':media', items[i].grid_items[j].thumbnail);
-                            grid_items_fragment += `<p>
-                                <img src="${grid_item_thumbnail}" height="50" width="50">&nbsp;<strong>${items[i].grid_items[j].title}</strong>
-                            </p>`;
-                        } else {
-                            grid_items_fragment += `<p><strong>${items[i].grid_items[j].title}</strong></p>`;
-                        }
+                        grid_items_fragment += `<p><strong><small>${helperModule.unescape(items[i].grid_items[j].title)}</small></strong></p>`;
                     }
+
+                     */
                 }
 
                 item_data += `<td style="width: 35%">
                     <p><button class="btn btn-default"><small>${type}</small></button></p>
                     <p>${items[i].columns} columns </p>
+                    <p>${grid_item_count}</p>
                     <div id="grid-items-${exhibit_id}">${grid_items_fragment}</div>
                     </td>`;
             }
@@ -272,7 +263,7 @@ const itemsModule = (function () {
                                     ${add_grid_items}
                                     ${item_details}&nbsp;
                                     <a href="${APP_PATH}/items/${edit_type}/edit?exhibit_id=${exhibit_id}&item_id=${item_id}" title="Edit"><i class="fa fa-edit pr-1"></i></a>&nbsp;
-                                    <a href="#" title="Delete"><i class="fa fa-trash pr-1"></i></a>
+                                    ${delete_item}
                                 </div>
                             </td>`;
             item_data += '</tr>';

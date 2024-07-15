@@ -129,7 +129,10 @@ const itemsAddGridItemFormModule = (function () {
 
                 setTimeout(() => {
 
+                    location.replace(`${APP_PATH}/items/grid/list?exhibit_id=${exhibit_id}&grid_id=${grid_id}`);
+
                     /* TODO: load template showing grid items and provide ability to add more items
+
                     if (itemsFormModule.check_grid() === true) {
                         location.replace(`${APP_PATH}/items/standard?uuid=${uuid}&grid=${grid_id}`);
                     } else {
@@ -138,7 +141,7 @@ const itemsAddGridItemFormModule = (function () {
 
                      */
 
-                }, 3000);
+                }, 2000);
             }
 
         } catch (error) {
