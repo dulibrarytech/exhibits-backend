@@ -44,71 +44,75 @@ const exhibitsAddFormModule = (function () {
      */
     function get_exhibit_data () {
 
-        let exhibit = {};
+        try {
 
-        // exhibit data
-        exhibit.title = rich_text_data['exhibit-title-input'].getHTMLCode();
-        exhibit.subtitle = rich_text_data['exhibit-sub-title-input'].getHTMLCode();
-        exhibit.alert_text = rich_text_data['exhibit-alert-text-input'].getHTMLCode();
-        exhibit.description = rich_text_data['exhibit-description-input'].getHTMLCode();
+            let exhibit = {};
 
-        // validate
-        if (exhibit.title.length === 0) {
-            document.querySelector('#exhibit-title-error').innerHTML = '<div class="alert alert-danger" role="alert"><i class="fa fa-exclamation"></i> Please enter an exhibit title</div>';
-            return false;
-        }
+            // exhibit data
+            exhibit.title = rich_text_data['exhibit-title-input'].getHTMLCode();
+            exhibit.subtitle = rich_text_data['exhibit-sub-title-input'].getHTMLCode();
+            exhibit.alert_text = rich_text_data['exhibit-alert-text-input'].getHTMLCode();
+            exhibit.description = rich_text_data['exhibit-description-input'].getHTMLCode();
 
-        // exhibit media
-        exhibit.hero_image = document.querySelector('#hero-image').value;
-        exhibit.thumbnail = document.querySelector('#thumbnail-image').value;
+            // validate
+            if (exhibit.title.length === 0) {
+                document.querySelector('#exhibit-title-error').innerHTML = '<div class="alert alert-danger" role="alert"><i class="fa fa-exclamation"></i> Please enter an exhibit title</div>';
+                return false;
+            }
 
-        // exhibit banner
-        exhibit.banner_template = helperModule.get_checked_radio_button(document.getElementsByName('banner_template'));
+            // exhibit media
+            exhibit.hero_image = document.querySelector('#hero-image').value;
+            exhibit.thumbnail = document.querySelector('#thumbnail-image').value;
 
-        // exhibit page layout
-        exhibit.page_layout = helperModule.get_checked_radio_button(document.getElementsByName('page_layout'));
+            // exhibit banner
+            exhibit.banner_template = helperModule.get_checked_radio_button(document.getElementsByName('banner_template'));
 
-        // exhibit template layout - TODO: only on option set by default
-        exhibit.template = document.querySelector('#exhibit-template').value;
-        // exhibit.template = helperModule.get_checked_radio_button(document.getElementsByName('template'));
+            // exhibit page layout
+            exhibit.page_layout = helperModule.get_checked_radio_button(document.getElementsByName('page_layout'));
 
-        // Exhibit styles
-        let exhibit_nav_menu_background_color = document.querySelector('#nav-menu-background-color').value;
-        let exhibit_nav_menu_font_color = document.querySelector('#nav-menu-font-color').value;
-        let exhibit_nav_menu_font = document.querySelector('#nav-menu-font').value;
+            // exhibit template layout - TODO: only one option set by default
+            exhibit.template = document.querySelector('#exhibit-template').value;
 
-        let exhibit_template_background_color = document.querySelector('#nav-menu-background-color').value;
-        let exhibit_template_font_color = document.querySelector('#nav-menu-font-color').value;
-        let exhibit_template_font = document.querySelector('#nav-menu-font').value;
+            // Exhibit styles
+            let exhibit_nav_menu_background_color = document.querySelector('#nav-menu-background-color').value;
+            let exhibit_nav_menu_font_color = document.querySelector('#nav-menu-font-color').value;
+            let exhibit_nav_menu_font = document.querySelector('#nav-menu-font').value;
+            let exhibit_nav_text_align = document.querySelector('#nav-menu-text_align').value;
 
-        /*
+            let exhibit_template_background_color = document.querySelector('#template-background-color').value;
+            let exhibit_template_font_color = document.querySelector('#template-font-color').value;
+            let exhibit_template_font = document.querySelector('#template-font').value;
 
-        "styles": '
-                {"exhibit":{
-                "navigation":{"menu":{"backgroundColor":"#DCC9AB","color":"#303030","textAlign":"center"}},
-                "template":{"backgroundColor":"rgb(125,135,145)","color":"#303030","fontSize":"19px","line-height":"29px"},
-                "heading":{"backgroundColor":"#DCC9AB","color":"rgb(155,136,110)","fontSize":"47px","fontFamily":"Nocturne Serif"}}
-                }',
-         */
+            /*
+            "styles": '
+                    {"exhibit":{
+                    "navigation":{"menu":{"backgroundColor":"#DCC9AB","color":"#303030","textAlign":"center"}},
+                    "template":{"backgroundColor":"rgb(125,135,145)","color":"#303030","fontSize":"19px","line-height":"29px"},
+                    "heading":{"backgroundColor":"#DCC9AB","color":"rgb(155,136,110)","fontSize":"47px","fontFamily":"Nocturne Serif"}}
+                    }',
+             */
 
-        exhibit.styles = {
-            exhibit: {
-                navigation: {
-                    menu: {
+            exhibit.styles = {
+                exhibit: {
+                    navigation: {
                         backgroundColor: exhibit_nav_menu_background_color.length > 1 ? exhibit_nav_menu_background_color : '',
                         color: exhibit_nav_menu_font_color.length > 1 ? exhibit_nav_menu_font_color : '',
-                        fontFamily: exhibit_nav_menu_font.length > 1 ? exhibit_nav_menu_font : ''
+                        fontFamily: exhibit_nav_menu_font.length > 1 ? exhibit_nav_menu_font : '',
+                        textAlign: exhibit_nav_text_align.length > 1 ? exhibit_nav_text_align: ''
+                    },
+                    template: {
+                        backgroundColor: exhibit_template_background_color.length > 1 ? exhibit_template_background_color : '',
+                        color: exhibit_template_font_color.length > 1 ? exhibit_template_font_color : '',
+                        fontFamily: exhibit_template_font.length > 1 ? exhibit_template_font : ''
                     }
-                },
-                template: {
-                    backgroundColor: exhibit_template_background_color.length > 1 ? exhibit_template_background_color : '',
-                    color: exhibit_template_font_color.length > 1 ? exhibit_template_font_color : '',
-                    fontFamily: exhibit_template_font.length > 1 ? exhibit_template_font : ''
                 }
-            }
-        };
+            };
 
-        return exhibit;
+            return exhibit;
+
+        } catch (error) {
+            document.querySelector('#message').innerHTML = `<div class="alert alert-danger" role="alert"><i class="fa fa-exclamation"></i> ${error.message}</div>`;
+        }
     }
 
     /**
@@ -151,7 +155,6 @@ const exhibitsAddFormModule = (function () {
 
             if (response !== undefined && response.status === 201) {
 
-                document.querySelector('#exhibit-card').innerHTML = '';
                 document.querySelector('#message').innerHTML = `<div class="alert alert-success" role="alert"><i class="fa fa-info"></i> Exhibit record created</div>`;
 
                 setTimeout(() => {
