@@ -64,12 +64,14 @@ const helperModule = (function () {
     /**
      * Strips HTML elements
      * @param data
-     * @return {*}
      */
     obj.strip_html = function (data) {
         return data.replace(/(<([^>]+)>)/gi, '');
     };
 
+    /**
+     * Set text editor config
+     */
     obj.set_rich_text_editor_config = function () {
 
         const BASE_URL = '/exhibits-dashboard/static/libs';

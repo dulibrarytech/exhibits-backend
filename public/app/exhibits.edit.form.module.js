@@ -186,9 +186,23 @@ const exhibitsEditFormModule = (function () {
 
         let font_values = document.querySelector('#nav-menu-font');
 
-        for (let i = 0;i<font_values.length;i++) {
-
+        for (let i=0;i<font_values.length;i++) {
+            console.log(styles.exhibit.navigation.menu.fontFamily);
             if (font_values[i].value === styles.exhibit.navigation.menu.fontFamily) {
+                document.querySelector('#nav-menu-font').value = styles.exhibit.navigation.menu.fontFamily;
+            }
+        }
+
+        // TODO:
+        console.log('styles ', styles.exhibit.template);
+        document.querySelector('#template-background-color').value = styles.exhibit.template.backgroundColor;
+        document.querySelector('#template-font-color').value = styles.exhibit.template.color;
+
+        let template_font_values = document.querySelector('#template-font');
+
+        for (let i=0;i<template_font_values.length;i++) {
+
+            if (template_font_values[i].value === styles.exhibit.template.fontFamily) {
                 document.querySelector('#nav-menu-font').value = styles.exhibit.navigation.menu.fontFamily;
             }
         }
@@ -262,7 +276,6 @@ const exhibitsEditFormModule = (function () {
         document.querySelector('#hero-trash').style.display = 'none';
         document.querySelector('#thumbnail-trash').style.display = 'none';
 
-        // bind color pickers to input fields
         document.querySelector('#nav-menu-background-color-picker').addEventListener('input', () => {
             if (document.querySelector('#nav-menu-background-color')) {
                 document.querySelector('#nav-menu-background-color').value = document.querySelector('#nav-menu-background-color-picker').value;
@@ -274,13 +287,18 @@ const exhibitsEditFormModule = (function () {
                 document.querySelector('#nav-menu-font-color').value = document.querySelector('#nav-menu-font-color-picker').value;
             }
         });
-        /*
-        document.querySelector('#nav-menu-links-font-color-picker').addEventListener('input', () => {
-            if (document.querySelector('#nav-menu-links-font-color')) {
-                document.querySelector('#nav-menu-links-font-color').value = document.querySelector('#nav-menu-links-font-color-picker').value;
+
+        document.querySelector('#template-background-color-picker').addEventListener('input', () => {
+            if (document.querySelector('#template-background-color')) {
+                document.querySelector('#template-background-color').value = document.querySelector('#template-background-color-picker').value;
             }
         });
-         */
+
+        document.querySelector('#template-font-color-picker').addEventListener('input', () => {
+            if (document.querySelector('#template-font-color')) {
+                document.querySelector('#template-font-color').value = document.querySelector('#template-font-color-picker').value;
+            }
+        });
     };
 
     return obj;

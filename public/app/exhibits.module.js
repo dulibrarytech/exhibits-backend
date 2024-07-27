@@ -173,21 +173,6 @@ const exhibitsModule = (function () {
     };
 
     /**
-     * Sets preview link
-     */
-    obj.set_preview_link = function () {
-
-        let uuid = helperModule.get_parameter_by_name('uuid');
-        let preview_link = `${APP_PATH}/preview?uuid=${uuid}`;
-        let preview_menu_fragment = `
-                    <a href="#" onclick="exhibitsModule.open_preview('${preview_link}')">
-                        <i class=" menu-icon fa fa-eye"></i>Preview
-                    </a>`;
-
-        document.querySelector('#preview-link').innerHTML = preview_menu_fragment;
-    };
-
-    /**
      * Opens a window for the preview
      * @param preview_link
      */

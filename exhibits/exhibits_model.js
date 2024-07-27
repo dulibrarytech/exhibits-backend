@@ -83,18 +83,18 @@ exports.create_exhibit_record = async function (data) {
             };
 
         } else {
-            console.log('UUID: ', data.uuid);
+
             return {
                 status: 201,
                 message: 'Exhibit record created',
                 data: data.uuid
             };
-
         }
 
     } catch (error) {
-        // TODO: log
-        console.log('ERROR: ' + error.message);
+
+        LOGGER.module().error('ERROR: [/exhibits/model (create_exhibit_record)] Unable to create exhibit record ' + error.message);
+
         return {
             status: 200,
             message: 'Unable to create record ' + error.message
@@ -386,5 +386,3 @@ exports.suppress_exhibit = async function (uuid) {
         LOGGER.module().error('ERROR: [/exhibits/model (suppress_exhibit)] ' + error.message);
     }
 };
-
-// TODO: publish and suppress single records i.e. items, headings, grids, timelines

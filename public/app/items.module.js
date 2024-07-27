@@ -279,45 +279,9 @@ const itemsModule = (function () {
         }, 1000);
     };
 
-    obj.set_item_nav_menu_links = function () {
-
-        let uuid = helperModule.get_parameter_by_name('uuid');
-        let heading_link = `${APP_PATH}/items/heading?uuid=${uuid}`;
-        let standard_item_link = `${APP_PATH}/items/standard?uuid=${uuid}`;
-        let item_grid_link = `${APP_PATH}/items/grid?uuid=${uuid}`;
-        let item_vertical_timeline_link = `${APP_PATH}/items/vertical-timeline?uuid=${uuid}`;
-        let items_menu_fragment = `
-                <li>
-                    <a href="${heading_link}" data-keyboard="false"> 
-                        <i class=" menu-icon ti-menu-alt"></i>Add Headings
-                    </a>
-                </li>
-                <li>
-                    <a href="${standard_item_link}" data-keyboard="false"> 
-                        <i class=" menu-icon ti-menu-alt"></i>Add Items
-                    </a>
-                </li>
-                <li>
-                    <a href="${item_grid_link}" data-keyboard="false"> <i
-                                class=" menu-icon fa fa-th"></i>Add Item Grid</a>
-                </li>
-                <li>
-                    <a href="${item_vertical_timeline_link}" data-keyboard="false">
-                        <i class=" menu-icon ti-calendar"></i>Add Vertical Timeline
-                    </a>
-                </li>
-                <li>
-                    <a href="${APP_PATH}/dashboard/trash" data-keyboard="false">
-                        <i class=" menu-icon fa fa-trash-o"></i>Trash
-                    </a>
-                </li>`;
-
-        document.querySelector('#items-menu').innerHTML = items_menu_fragment;
-    };
-
     obj.init = function () {
         document.querySelector('#message').innerHTML = '<div class="alert alert-primary" role="alert">Loading...</div>';
-        itemsModule.set_item_nav_menu_links();
+        // itemsModule.set_item_nav_menu_links();
         document.querySelector('#logout').addEventListener('click', authModule.logout);
         itemsModule.display_items();
         setTimeout(() => {

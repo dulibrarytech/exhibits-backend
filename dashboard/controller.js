@@ -44,8 +44,8 @@ exports.get_dashboard_exhibits = function (req, res) {
     });
 };
 
-exports.get_dashboard_exhibits_form = function (req, res) {
-    res.render('dashboard-exhibits-form', {
+exports.get_dashboard_exhibits_add_form = function (req, res) {
+    res.render('dashboard-exhibits-add-form', {
         host: CONFIG.host,
         appname: CONFIG.app_name,
         appversion: CONFIG.app_version,

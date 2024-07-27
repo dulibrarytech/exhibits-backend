@@ -37,7 +37,7 @@ module.exports = function (app) {
     .get(CONTROLLER.get_dashboard_exhibits);
 
     app.route(APP_PATH + '/exhibits/exhibit')
-    .get(CONTROLLER.get_dashboard_exhibits_form);
+    .get(CONTROLLER.get_dashboard_exhibits_add_form);
 
     app.route(APP_PATH + '/exhibits/exhibit/edit')
     .get(CONTROLLER.get_dashboard_exhibits_edit_form);

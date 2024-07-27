@@ -16,7 +16,7 @@
 
  */
 
-const exhibitsFormModule = (function () {
+const exhibitsAddFormModule = (function () {
 
     'use strict';
 
@@ -25,7 +25,7 @@ const exhibitsFormModule = (function () {
     let obj = {};
     let rich_text_data = {};
 
-    /** TODO: make it reusable
+    /**
      * Sets rich text editor on defined input fields
      */
     function set_rich_text_editors () {
@@ -52,6 +52,12 @@ const exhibitsFormModule = (function () {
         exhibit.alert_text = rich_text_data['exhibit-alert-text-input'].getHTMLCode();
         exhibit.description = rich_text_data['exhibit-description-input'].getHTMLCode();
 
+        // validate
+        if (exhibit.title.length === 0) {
+            document.querySelector('#exhibit-title-error').innerHTML = '<div class="alert alert-danger" role="alert"><i class="fa fa-exclamation"></i> Please enter an exhibit title</div>';
+            return false;
+        }
+
         // exhibit media
         exhibit.hero_image = document.querySelector('#hero-image').value;
         exhibit.thumbnail = document.querySelector('#thumbnail-image').value;
@@ -71,6 +77,20 @@ const exhibitsFormModule = (function () {
         let exhibit_nav_menu_font_color = document.querySelector('#nav-menu-font-color').value;
         let exhibit_nav_menu_font = document.querySelector('#nav-menu-font').value;
 
+        let exhibit_template_background_color = document.querySelector('#nav-menu-background-color').value;
+        let exhibit_template_font_color = document.querySelector('#nav-menu-font-color').value;
+        let exhibit_template_font = document.querySelector('#nav-menu-font').value;
+
+        /*
+
+        "styles": '
+                {"exhibit":{
+                "navigation":{"menu":{"backgroundColor":"#DCC9AB","color":"#303030","textAlign":"center"}},
+                "template":{"backgroundColor":"rgb(125,135,145)","color":"#303030","fontSize":"19px","line-height":"29px"},
+                "heading":{"backgroundColor":"#DCC9AB","color":"rgb(155,136,110)","fontSize":"47px","fontFamily":"Nocturne Serif"}}
+                }',
+         */
+
         exhibit.styles = {
             exhibit: {
                 navigation: {
@@ -79,12 +99,17 @@ const exhibitsFormModule = (function () {
                         color: exhibit_nav_menu_font_color.length > 1 ? exhibit_nav_menu_font_color : '',
                         fontFamily: exhibit_nav_menu_font.length > 1 ? exhibit_nav_menu_font : ''
                     }
+                },
+                template: {
+                    backgroundColor: exhibit_template_background_color.length > 1 ? exhibit_template_background_color : '',
+                    color: exhibit_template_font_color.length > 1 ? exhibit_template_font_color : '',
+                    fontFamily: exhibit_template_font.length > 1 ? exhibit_template_font : ''
                 }
             }
         };
 
         return exhibit;
-    };
+    }
 
     /**
      * Creates exhibit record
@@ -94,10 +119,15 @@ const exhibitsFormModule = (function () {
         try {
 
             scrollTo(0, 0);
-            document.querySelector('#message').innerHTML = `<div class="alert alert-info" role="alert"><i class="fa fa-info"></i> Creating exhibit record...</div>`;
-            let data = get_exhibit_data();
             let token = authModule.get_user_token();
             let response;
+            let data = get_exhibit_data();
+
+            if (data === false) {
+                return false;
+            }
+
+            document.querySelector('#message').innerHTML = `<div class="alert alert-info" role="alert"><i class="fa fa-info"></i> Creating exhibit record...</div>`;
 
             if (token === false) {
 
@@ -140,10 +170,10 @@ const exhibitsFormModule = (function () {
     obj.init = function () {
 
         helperModule.set_rich_text_editor_config();
-        set_rich_text_editors ();
-        document.querySelector('#save-exhibit-btn').addEventListener('click', exhibitsFormModule.create_exhibit_record);
+        set_rich_text_editors();
         uploadsModule.upload_exhibit_hero_image();
         uploadsModule.upload_exhibit_thumbnail_image();
+        document.querySelector('#save-exhibit-btn').addEventListener('click', exhibitsAddFormModule.create_exhibit_record);
         document.querySelector('#logout').addEventListener('click', authModule.logout);
         document.querySelector('#hero-trash').style.display = 'none';
         document.querySelector('#thumbnail-trash').style.display = 'none';
@@ -158,6 +188,18 @@ const exhibitsFormModule = (function () {
         document.querySelector('#nav-menu-font-color-picker').addEventListener('input', () => {
             if (document.querySelector('#nav-menu-font-color')) {
                 document.querySelector('#nav-menu-font-color').value = document.querySelector('#nav-menu-font-color-picker').value;
+            }
+        });
+
+        document.querySelector('#template-background-color-picker').addEventListener('input', () => {
+            if (document.querySelector('#template-background-color')) {
+                document.querySelector('#template-background-color').value = document.querySelector('#template-background-color-picker').value;
+            }
+        });
+
+        document.querySelector('#template-font-color-picker').addEventListener('input', () => {
+            if (document.querySelector('#template-font-color')) {
+                document.querySelector('#template-font-color').value = document.querySelector('#template-font-color-picker').value;
             }
         });
 

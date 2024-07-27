@@ -225,7 +225,7 @@ const Helper = class {
 
             if (!FS.existsSync(`./storage/${uuid}`)) {
                 FS.mkdirSync(`./storage/${uuid}`);
-                LOGGER.module().error('ERROR: [/libs/helper (check_storage_path)] Storage path for exhibit ' + uuid + ' created.');
+                LOGGER.module().info('INFO: [/libs/helper (check_storage_path)] Storage path for exhibit ' + uuid + ' created.');
             }
 
         } catch (error) {
