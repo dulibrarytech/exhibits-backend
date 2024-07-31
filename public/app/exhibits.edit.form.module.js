@@ -33,7 +33,6 @@ const exhibitsEditFormModule = (function () {
         try {
 
             const uuid = helperModule.get_parameter_by_name('uuid');
-            // const EXHIBITS_ENDPOINTS = endpointsModule.get_exhibits_endpoints();
             const token = authModule.get_user_token();
 
             if (token === false || EXHIBITS_ENDPOINTS === null) {
@@ -96,6 +95,7 @@ const exhibitsEditFormModule = (function () {
         exhibit.template = document.querySelector('#exhibit-template').value;
         // exhibit.template = helperModule.get_checked_radio_button(document.getElementsByName('template'));
 
+        // TODO
         // Exhibit styles
         let exhibit_nav_menu_background_color = document.querySelector('#nav-menu-background-color').value;
         let exhibit_nav_menu_font_color = document.querySelector('#nav-menu-font-color').value;

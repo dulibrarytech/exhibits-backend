@@ -1,6 +1,6 @@
 /**
 
- Copyright 2023 University of Denver
+ Copyright 2024 University of Denver
 
  Licensed under the Apache License, Version 2.0 (the "License");
  you may not use this file except in compliance with the License.
@@ -77,20 +77,11 @@ const exhibitsAddFormModule = (function () {
             let exhibit_nav_menu_background_color = document.querySelector('#nav-menu-background-color').value;
             let exhibit_nav_menu_font_color = document.querySelector('#nav-menu-font-color').value;
             let exhibit_nav_menu_font = document.querySelector('#nav-menu-font').value;
-            let exhibit_nav_text_align = document.querySelector('#nav-menu-text_align').value;
+            // let exhibit_nav_text_align = document.querySelector('#nav-menu-text_align').value;
 
             let exhibit_template_background_color = document.querySelector('#template-background-color').value;
             let exhibit_template_font_color = document.querySelector('#template-font-color').value;
             let exhibit_template_font = document.querySelector('#template-font').value;
-
-            /*
-            "styles": '
-                    {"exhibit":{
-                    "navigation":{"menu":{"backgroundColor":"#DCC9AB","color":"#303030","textAlign":"center"}},
-                    "template":{"backgroundColor":"rgb(125,135,145)","color":"#303030","fontSize":"19px","line-height":"29px"},
-                    "heading":{"backgroundColor":"#DCC9AB","color":"rgb(155,136,110)","fontSize":"47px","fontFamily":"Nocturne Serif"}}
-                    }',
-             */
 
             exhibit.styles = {
                 exhibit: {
@@ -181,7 +172,6 @@ const exhibitsAddFormModule = (function () {
         document.querySelector('#hero-trash').style.display = 'none';
         document.querySelector('#thumbnail-trash').style.display = 'none';
 
-        // bind color pickers to input fields
         document.querySelector('#nav-menu-background-color-picker').addEventListener('input', () => {
             if (document.querySelector('#nav-menu-background-color')) {
                 document.querySelector('#nav-menu-background-color').value = document.querySelector('#nav-menu-background-color-picker').value;
@@ -205,15 +195,6 @@ const exhibitsAddFormModule = (function () {
                 document.querySelector('#template-font-color').value = document.querySelector('#template-font-color-picker').value;
             }
         });
-
-        /*
-        document.querySelector('#nav-menu-links-font-color-picker').addEventListener('input', () => {
-            if (document.querySelector('#nav-menu-links-font-color')) {
-                document.querySelector('#nav-menu-links-font-color').value = document.querySelector('#nav-menu-links-font-color-picker').value;
-            }
-        });
-
-         */
     };
 
     return obj;
