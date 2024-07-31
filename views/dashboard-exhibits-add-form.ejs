@@ -201,11 +201,10 @@
                                 <div class="input-group">
                                     <div class="input-group-btn">
                                         <input title="Color Picker" class="color-picker btn btn-default" type="color"
-                                               id="nav-menu-background-color-picker" value="#ffffff">
+                                               id="nav-background-color-picker" value="#ffffff">
                                     </div>
-                                    <input type="text" id="nav-menu-background-color" name="nav_menu_background_color"
-                                           placeholder="Navigation Menu Background Color" class="form-control">
-
+                                    <input type="text" id="nav-background-color" name="nav_background_color"
+                                           placeholder="Navigation Background Color" class="form-control">
                                 </div>
                             </div>
                         </div>
@@ -214,11 +213,22 @@
                                 <div class="input-group">
                                     <div class="input-group-btn">
                                         <input title="Color Picker" class="color-picker btn btn-default" type="color"
-                                               id="nav-menu-font-color-picker"
+                                               id="nav-font-color-picker"
                                                value="#ffffff">
                                     </div>
-                                    <input type="text" id="nav-menu-font-color" name="nav_menu_font_color"
-                                           placeholder="Navigation Menu Font Color" class="form-control">
+                                    <input type="text" id="nav-font-color" name="nav_font_color"
+                                           placeholder="Navigation Font Color" class="form-control">
+                                </div>
+                            </div>
+                        </div>
+                        <div class="row form-group">
+                            <div class="col-12 col-md-12">
+                                <div class="input-group">
+                                    <input type="number" id="nav-font-size" name="nav_font_size"
+                                           placeholder="Navigation Font Size" class="form-control">
+                                    <div class="input-group-append">
+                                        <span class="input-group-text" id="basic-addon2">px</span>
+                                    </div>
                                 </div>
                             </div>
                         </div>
@@ -227,7 +237,7 @@
                                 <div class="input-group">
                                     <select name="nav_menu_font" id="nav-menu-font"
                                             class="form-control-lg form-control text-muted">
-                                        <option value="">Navigation Menu Font</option>
+                                        <option value="">Navigation Font</option>
                                         <option value="Helvetica">Helvetica</option>
                                         <option value="Arial">Arial</option>
                                         <option value="Times New Roman">Times New Roman</option>
@@ -235,23 +245,6 @@
                                 </div>
                             </div>
                         </div>
-                        <!-- TODO: remove -->
-                        <!--
-                        <div class="row form-group">
-                            <div class="col-12 col-md-12">
-                                <div class="input-group">
-                                    <select name="nav_menu_text_align" id="nav-menu-text_align"
-                                            class="form-control-lg form-control text-muted">
-                                        <option value="">Navigation Menu Text Align</option>
-                                        <option value="left">Left</option>
-                                        <option value="center">Center</option>
-                                        <option value="right">Right</option>
-                                        <option value="justify">Justify</option>
-                                    </select>
-                                </div>
-                            </div>
-                        </div>
-                        -->
                     </div>
                     <div class="col-6 col-md-6">
                         <p>
@@ -279,6 +272,17 @@
                                     </div>
                                     <input type="text" id="template-font-color" name="template_font_color"
                                            placeholder="Template Font Color" class="form-control">
+                                </div>
+                            </div>
+                        </div>
+                        <div class="row form-group">
+                            <div class="col-12 col-md-12">
+                                <div class="input-group">
+                                    <input type="number" id="template-font-size" name="template_font_size"
+                                           placeholder="Template Font Size" class="form-control">
+                                    <div class="input-group-append">
+                                        <span class="input-group-text" id="basic-addon2">px</span>
+                                    </div>
                                 </div>
                             </div>
                         </div>

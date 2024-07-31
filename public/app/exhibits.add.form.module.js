@@ -74,27 +74,29 @@ const exhibitsAddFormModule = (function () {
             exhibit.template = document.querySelector('#exhibit-template').value;
 
             // Exhibit styles
-            let exhibit_nav_menu_background_color = document.querySelector('#nav-menu-background-color').value;
-            let exhibit_nav_menu_font_color = document.querySelector('#nav-menu-font-color').value;
-            let exhibit_nav_menu_font = document.querySelector('#nav-menu-font').value;
-            // let exhibit_nav_text_align = document.querySelector('#nav-menu-text_align').value;
+            let exhibit_nav_background_color = document.querySelector('#nav-menu-background-color').value;
+            let exhibit_nav_font_color = document.querySelector('#nav-font-color').value;
+            let exhibit_nav_font = document.querySelector('#nav-font').value;
+            let exhibit_nav_font_size = document.querySelector('#nav-font-size').value;
 
             let exhibit_template_background_color = document.querySelector('#template-background-color').value;
             let exhibit_template_font_color = document.querySelector('#template-font-color').value;
             let exhibit_template_font = document.querySelector('#template-font').value;
+            let exhibit_template_font_size = document.querySelector('#template-font-size').value;
 
             exhibit.styles = {
                 exhibit: {
                     navigation: {
-                        backgroundColor: exhibit_nav_menu_background_color.length > 1 ? exhibit_nav_menu_background_color : '',
-                        color: exhibit_nav_menu_font_color.length > 1 ? exhibit_nav_menu_font_color : '',
-                        fontFamily: exhibit_nav_menu_font.length > 1 ? exhibit_nav_menu_font : '',
-                        textAlign: exhibit_nav_text_align.length > 1 ? exhibit_nav_text_align: ''
+                        backgroundColor: exhibit_nav_background_color.length > 1 ? exhibit_nav_background_color : '',
+                        color: exhibit_nav_font_color.length > 1 ? exhibit_nav_font_color : '',
+                        fontFamily: exhibit_nav_font.length > 1 ? exhibit_nav_font : '',
+                        fontSize: exhibit_nav_font_size.length > 1 ? exhibit_nav_font_size : ''
                     },
                     template: {
                         backgroundColor: exhibit_template_background_color.length > 1 ? exhibit_template_background_color : '',
                         color: exhibit_template_font_color.length > 1 ? exhibit_template_font_color : '',
-                        fontFamily: exhibit_template_font.length > 1 ? exhibit_template_font : ''
+                        fontFamily: exhibit_template_font.length > 1 ? exhibit_template_font : '',
+                        fontSize: exhibit_template_font_size.length > 1 ? exhibit_template_font_size : ''
                     }
                 }
             };
@@ -172,15 +174,15 @@ const exhibitsAddFormModule = (function () {
         document.querySelector('#hero-trash').style.display = 'none';
         document.querySelector('#thumbnail-trash').style.display = 'none';
 
-        document.querySelector('#nav-menu-background-color-picker').addEventListener('input', () => {
-            if (document.querySelector('#nav-menu-background-color')) {
-                document.querySelector('#nav-menu-background-color').value = document.querySelector('#nav-menu-background-color-picker').value;
+        document.querySelector('#nav-background-color-picker').addEventListener('input', () => {
+            if (document.querySelector('#nav-background-color')) {
+                document.querySelector('#nav-background-color').value = document.querySelector('#nav-background-color-picker').value;
             }
         });
 
-        document.querySelector('#nav-menu-font-color-picker').addEventListener('input', () => {
-            if (document.querySelector('#nav-menu-font-color')) {
-                document.querySelector('#nav-menu-font-color').value = document.querySelector('#nav-menu-font-color-picker').value;
+        document.querySelector('#nav-font-color-picker').addEventListener('input', () => {
+            if (document.querySelector('#nav-font-color')) {
+                document.querySelector('#nav-font-color').value = document.querySelector('#nav-font-color-picker').value;
             }
         });
 

@@ -124,7 +124,7 @@ const exhibitsEditFormModule = (function () {
     async function display_edit_record () {
 
         let record = await get_exhibit_record();
-        console.log('display: ', record);
+        // console.log('display: ', record);
 
         let hero_image_url = '';
         let hero_image_fragment = '';
@@ -143,6 +143,8 @@ const exhibitsEditFormModule = (function () {
 
         rich_text_data['exhibit-description-input'] = helperModule.set_rich_text_editor('exhibit-description-input');
         rich_text_data['exhibit-description-input'].setHTMLCode(helperModule.unescape(record.description));
+
+        console.log(record);
 
         // exhibit media
         if (record.hero_image.length > 0) {
@@ -181,15 +183,15 @@ const exhibitsEditFormModule = (function () {
 
         // Exhibit styles
         let styles = JSON.parse(record.styles);
-        document.querySelector('#nav-menu-background-color').value = styles.exhibit.navigation.menu.backgroundColor;
-        document.querySelector('#nav-menu-font-color').value = styles.exhibit.navigation.menu.color;
+        document.querySelector('#nav-menu-background-color').value = styles.exhibit.navigation.backgroundColor;
+        document.querySelector('#nav-menu-font-color').value = styles.exhibit.navigation.color;
 
-        let font_values = document.querySelector('#nav-menu-font');
+        let font_values = document.querySelector('#template-font');
 
         for (let i=0;i<font_values.length;i++) {
-            console.log(styles.exhibit.navigation.menu.fontFamily);
-            if (font_values[i].value === styles.exhibit.navigation.menu.fontFamily) {
-                document.querySelector('#nav-menu-font').value = styles.exhibit.navigation.menu.fontFamily;
+            console.log(styles.exhibit.template.fontFamily);
+            if (font_values[i].value === styles.exhibit.navigation.fontFamily) {
+                document.querySelector('#template-font').value = styles.exhibit.template.fontFamily;
             }
         }
 
@@ -203,7 +205,7 @@ const exhibitsEditFormModule = (function () {
         for (let i=0;i<template_font_values.length;i++) {
 
             if (template_font_values[i].value === styles.exhibit.template.fontFamily) {
-                document.querySelector('#nav-menu-font').value = styles.exhibit.navigation.menu.fontFamily;
+                document.querySelector('#nav-menu-font').value = styles.exhibit.navigation.fontFamily;
             }
         }
 
