@@ -46,61 +46,8 @@ const exhibitsAddFormModule = (function () {
 
         try {
 
-            let exhibit = {};
-
-            // exhibit data
-            exhibit.title = rich_text_data['exhibit-title-input'].getHTMLCode();
-            exhibit.subtitle = rich_text_data['exhibit-sub-title-input'].getHTMLCode();
-            exhibit.alert_text = rich_text_data['exhibit-alert-text-input'].getHTMLCode();
-            exhibit.description = rich_text_data['exhibit-description-input'].getHTMLCode();
-
-            // validate
-            if (exhibit.title.length === 0) {
-                document.querySelector('#exhibit-title-error').innerHTML = '<div class="alert alert-danger" role="alert"><i class="fa fa-exclamation"></i> Please enter an exhibit title</div>';
-                return false;
-            }
-
-            // exhibit media
-            exhibit.hero_image = document.querySelector('#hero-image').value;
-            exhibit.thumbnail = document.querySelector('#thumbnail-image').value;
-
-            // exhibit banner
-            exhibit.banner_template = helperModule.get_checked_radio_button(document.getElementsByName('banner_template'));
-
-            // exhibit page layout
-            exhibit.page_layout = helperModule.get_checked_radio_button(document.getElementsByName('page_layout'));
-
-            // exhibit template layout - TODO: only one option set by default
-            exhibit.template = document.querySelector('#exhibit-template').value;
-
-            // Exhibit styles
-            let exhibit_nav_background_color = document.querySelector('#nav-menu-background-color').value;
-            let exhibit_nav_font_color = document.querySelector('#nav-font-color').value;
-            let exhibit_nav_font = document.querySelector('#nav-font').value;
-            let exhibit_nav_font_size = document.querySelector('#nav-font-size').value;
-
-            let exhibit_template_background_color = document.querySelector('#template-background-color').value;
-            let exhibit_template_font_color = document.querySelector('#template-font-color').value;
-            let exhibit_template_font = document.querySelector('#template-font').value;
-            let exhibit_template_font_size = document.querySelector('#template-font-size').value;
-
-            exhibit.styles = {
-                exhibit: {
-                    navigation: {
-                        backgroundColor: exhibit_nav_background_color.length > 1 ? exhibit_nav_background_color : '',
-                        color: exhibit_nav_font_color.length > 1 ? exhibit_nav_font_color : '',
-                        fontFamily: exhibit_nav_font.length > 1 ? exhibit_nav_font : '',
-                        fontSize: exhibit_nav_font_size.length > 1 ? exhibit_nav_font_size : ''
-                    },
-                    template: {
-                        backgroundColor: exhibit_template_background_color.length > 1 ? exhibit_template_background_color : '',
-                        color: exhibit_template_font_color.length > 1 ? exhibit_template_font_color : '',
-                        fontFamily: exhibit_template_font.length > 1 ? exhibit_template_font : '',
-                        fontSize: exhibit_template_font_size.length > 1 ? exhibit_template_font_size : ''
-                    }
-                }
-            };
-
+            let exhibit = exhibitsCommonFormModule.get_common_form_fields(rich_text_data);
+            exhibit.styles = exhibitsCommonFormModule.get_exhibit_styles();
             return exhibit;
 
         } catch (error) {
@@ -161,42 +108,19 @@ const exhibitsAddFormModule = (function () {
     };
 
     /**
-     * Init function for exhibits form
+     * Init function for exhibits add form
      */
     obj.init = function () {
 
-        helperModule.set_rich_text_editor_config();
-        set_rich_text_editors();
-        uploadsModule.upload_exhibit_hero_image();
-        uploadsModule.upload_exhibit_thumbnail_image();
-        document.querySelector('#save-exhibit-btn').addEventListener('click', exhibitsAddFormModule.create_exhibit_record);
-        document.querySelector('#logout').addEventListener('click', authModule.logout);
-        document.querySelector('#hero-trash').style.display = 'none';
-        document.querySelector('#thumbnail-trash').style.display = 'none';
+        try {
 
-        document.querySelector('#nav-background-color-picker').addEventListener('input', () => {
-            if (document.querySelector('#nav-background-color')) {
-                document.querySelector('#nav-background-color').value = document.querySelector('#nav-background-color-picker').value;
-            }
-        });
+            helperModule.set_rich_text_editor_config();
+            set_rich_text_editors();
+            document.querySelector('#save-exhibit-btn').addEventListener('click', exhibitsAddFormModule.create_exhibit_record);
 
-        document.querySelector('#nav-font-color-picker').addEventListener('input', () => {
-            if (document.querySelector('#nav-font-color')) {
-                document.querySelector('#nav-font-color').value = document.querySelector('#nav-font-color-picker').value;
-            }
-        });
-
-        document.querySelector('#template-background-color-picker').addEventListener('input', () => {
-            if (document.querySelector('#template-background-color')) {
-                document.querySelector('#template-background-color').value = document.querySelector('#template-background-color-picker').value;
-            }
-        });
-
-        document.querySelector('#template-font-color-picker').addEventListener('input', () => {
-            if (document.querySelector('#template-font-color')) {
-                document.querySelector('#template-font-color').value = document.querySelector('#template-font-color-picker').value;
-            }
-        });
+        } catch (error) {
+            document.querySelector('#message').innerHTML = `<div class="alert alert-danger" role="alert"><i class="fa fa-exclamation"></i> ${error.message}</div>`;
+        }
     };
 
     return obj;

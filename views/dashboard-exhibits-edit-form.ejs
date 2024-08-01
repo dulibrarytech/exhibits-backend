@@ -217,10 +217,10 @@
                                 <div class="input-group">
                                     <div class="input-group-btn">
                                         <input title="Color Picker" class="color-picker btn btn-default" type="color"
-                                               id="nav-menu-font-color-picker"
+                                               id="nav-font-color-picker"
                                                value="#ffffff">
                                     </div>
-                                    <input type="text" id="nav-font-color" name="nav_menu_font_color"
+                                    <input type="text" id="nav-font-color" name="nav_font_color"
                                            placeholder="Navigation Font Color" class="form-control">
                                 </div>
                             </div>
@@ -339,11 +339,11 @@
 <script src="/exhibits-dashboard/static/app/auth.module.js"></script>
 <script src="/exhibits-dashboard/static/app/uploads.module.js"></script>
 <script src="/exhibits-dashboard/static/app/exhibits.module.js"></script>
+<script src="/exhibits-dashboard/static/app/exhibits.common.form.module.js"></script>
 <script src="/exhibits-dashboard/static/app/exhibits.edit.form.module.js"></script>
 <script>
-    uploadsModule.upload_exhibit_hero_image();
-    uploadsModule.upload_exhibit_thumbnail_image();
     exhibitsEditFormModule.init();
+    exhibitsCommonFormModule.init();
 </script>
 </body>
 </html>

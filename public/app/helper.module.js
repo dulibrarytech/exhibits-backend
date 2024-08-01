@@ -84,9 +84,8 @@ const helperModule = (function () {
     };
 
     /**
-     *
+     * Sets rte to designated fields
      * @param id
-     * @return {*}
      */
     obj.set_rich_text_editor = function (id) {
         return helperModule.render_rich_text_editor('#' + id);
@@ -106,6 +105,7 @@ const helperModule = (function () {
 
     /**
      * Sets rich text editor on defined input fields
+     * @param ids
      */
     obj.set_rich_text_editors = function(ids) {
 
@@ -115,7 +115,6 @@ const helperModule = (function () {
             rich_text_data[i] = helperModule.set_rich_text_editor(i);
         }
 
-        console.log(rich_text_data);
         return rich_text_data;
     };
 

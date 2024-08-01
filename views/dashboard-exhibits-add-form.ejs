@@ -162,7 +162,7 @@
                     <div class="col-6 col-md-6">
                         <p><img src="/exhibits-dashboard/static/images/page_layout_1.png"></p>
                         <p>
-                            <label class="btn btn-default" for="exhibit-banner-1">
+                            <label class="btn btn-default" for="exhibit-page-layout-1">
                                 <input type="radio" class="btn-check" name="page_layout"
                                        id="exhibit-page-layout-1" value="top_nav" autocomplete="off" checked/>
                                 <span style="font-size: 12px">Exhibit navigation bar at the top of the page</span>
@@ -172,7 +172,7 @@
                     <div class="col-6 col-md-6">
                         <p><img src="/exhibits-dashboard/static/images/page_layout_2.png"></p>
                         <p>
-                            <label class="btn btn-default" for="exhibit-banner-2">
+                            <label class="btn btn-default" for="exhibit-page-layout-2">
                                 <input type="radio" class="btn-check" name="page_layout"
                                        id="exhibit-page-layout-2" value="side_nav" autocomplete="off"/>
                                 <span style="font-size: 12px">Exhibit navigation sidebar</span>
@@ -235,7 +235,7 @@
                         <div class="row form-group">
                             <div class="col-12 col-md-12">
                                 <div class="input-group">
-                                    <select name="nav_menu_font" id="nav-menu-font"
+                                    <select name="nav_font" id="nav-font"
                                             class="form-control-lg form-control text-muted">
                                         <option value="">Navigation Font</option>
                                         <option value="Helvetica">Helvetica</option>
@@ -335,9 +335,11 @@
 <script src="/exhibits-dashboard/static/app/auth.module.js"></script>
 <script src="/exhibits-dashboard/static/app/uploads.module.js"></script>
 <script src="/exhibits-dashboard/static/app/exhibits.module.js"></script>
+<script src="/exhibits-dashboard/static/app/exhibits.common.form.module.js"></script>
 <script src="/exhibits-dashboard/static/app/exhibits.add.form.module.js"></script>
 <script>
     exhibitsAddFormModule.init();
+    exhibitsCommonFormModule.init();
 </script>
 </body>
 </html>
