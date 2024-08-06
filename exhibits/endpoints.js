@@ -56,6 +56,10 @@ const ENDPOINTS = {
             get: {
                 description: 'Gets exhibit media',
                 endpoint: `${APP_PATH}${PREFIX}${VERSION}${ENDPOINT}/:exhibit_id/media/:media`
+            },
+            delete: {
+                description: 'Deletes exhibit media',
+                endpoint: `${APP_PATH}${PREFIX}${VERSION}${ENDPOINT}/:exhibit_id/media/:media`
             }
         },
         item_media: {
@@ -64,10 +68,16 @@ const ENDPOINTS = {
                endpoint: `${APP_PATH}${PREFIX}${VERSION}${ENDPOINT}/:exhibit_id/media/items/:media`,
            }
         },
+        media: {
+            delete: {
+                description: 'Deletes media - hero and thumbnail images before they are part of an exhibit',
+                endpoint: `${APP_PATH}/media`
+            }
+        },
         exhibit_preview: {
           get: {
               description: 'Previews exhibit',
-              endpoint: APP_PATH + '/preview',
+              endpoint: `${APP_PATH}/preview`,
               params: ''
           }
         },

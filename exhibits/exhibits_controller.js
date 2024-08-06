@@ -22,6 +22,7 @@ const WEBSERVICES_CONFIG = require('../config/webservices_config')();
 const EXHIBITS_MODEL = require('../exhibits/exhibits_model');
 const TRASH_MODEL = require('../exhibits/trash_model');
 const PATH = require('path');
+const FS = require('fs');
 
 exports.create_exhibit_record = async function (req, res) {
 
@@ -139,8 +140,51 @@ exports.get_exhibit_media = function (req, res) {
     try {
         res.status(200).sendFile(PATH.join(__dirname, `../storage/${uuid}`, media));
     } catch(error) {
-        console.log(error.message);
         res.status(404).send({message: `Exhibit media not found. ${error.message}`});
+    }
+
+    return false;
+};
+
+exports.delete_media = function (req, res) {
+
+    const media = req.query.media;
+    console.log(media);
+
+    try {
+
+        if (media !== undefined && media.length !== 0) {
+            FS.unlinkSync(`./storage/${media}`);
+            res.status(204).send('Media deleted');
+        } else {
+            res.status(200).send('Unable to delete media file');
+        }
+
+    } catch(error) {
+        res.status(200).send({message: `Unable to delete media file. ${error.message}`});
+    }
+
+    return false;
+};
+
+// TODO
+exports.delete_exhibit_media = function (req, res) {
+
+    const uuid = req.params.exhibit_id;
+    const media = req.params.exhibit_media;
+
+    try {
+
+        if (uuid === '000-000') {
+            FS.unlinkSync(`../storage/${media}`);
+        } else {
+            FS.unlinkSync(`../storage/${uuid}/${media}`);
+        }
+
+        res.status(204).send('Media deleted');
+
+    } catch(error) {
+        res.status(200).send({message: `Unable to delete exhibit media file. ${error.message}`});
     }
 
     return false;

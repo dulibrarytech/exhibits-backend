@@ -54,6 +54,12 @@ module.exports = function (app) {
     app.route(ENDPOINTS().exhibits.exhibit_media.get.endpoint)
     .get(CONTROLLER.get_exhibit_media);
 
+    app.route(ENDPOINTS().exhibits.exhibit_media.delete.endpoint)
+    .delete(CONTROLLER.delete_exhibit_media);
+    console.log(ENDPOINTS().exhibits.media.delete.endpoint);
+    app.route(ENDPOINTS().exhibits.media.delete.endpoint)
+    .delete(CONTROLLER.delete_media);
+
     app.route(ENDPOINTS().exhibits.exhibit_preview.get.endpoint)
     .get(CONTROLLER.build_exhibit_preview);  // TOKEN verify
 
