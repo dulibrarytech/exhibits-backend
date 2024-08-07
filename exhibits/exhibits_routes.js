@@ -56,7 +56,12 @@ module.exports = function (app) {
 
     app.route(ENDPOINTS().exhibits.exhibit_media.delete.endpoint)
     .delete(CONTROLLER.delete_exhibit_media);
-    console.log(ENDPOINTS().exhibits.media.delete.endpoint);
+
+    console.log(ENDPOINTS().exhibits.media.get.endpoint);
+
+    app.route(ENDPOINTS().exhibits.media.get.endpoint)
+    .get(CONTROLLER.get_media);
+
     app.route(ENDPOINTS().exhibits.media.delete.endpoint)
     .delete(CONTROLLER.delete_media);
 

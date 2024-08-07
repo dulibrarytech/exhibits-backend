@@ -129,10 +129,11 @@ const exhibitsAddFormModule = (function () {
 
                 if (response !== undefined && response.status === 204) {
 
-                    document.querySelector('#message').innerHTML = `<div class="alert alert-success" role="alert"><i class="fa fa-info"></i> Hero image deleted</div>`;
                     document.querySelector('#hero-image').value = '';
                     document.querySelector('#hero-image-filename-display').innerHTML = '';
                     document.querySelector('#hero-trash').style.display = 'none';
+                    document.querySelector('#hero-image-display').innerHTML = '';
+                    document.querySelector('#message').innerHTML = `<div class="alert alert-success" role="alert"><i class="fa fa-info"></i> Hero image deleted</div>`;
 
                     setTimeout(() => {
                         document.querySelector('#message').innerHTML = '';
@@ -170,6 +171,10 @@ const exhibitsAddFormModule = (function () {
 
                 if (response !== undefined && response.status === 204) {
 
+                    document.querySelector('#thumbnail-image').value = '';
+                    document.querySelector('#thumbnail-filename-display').innerHTML = '';
+                    document.querySelector('#thumbnail-trash').style.display = 'none';
+                    document.querySelector('#thumbnail-image-display').innerHTML = '';
                     document.querySelector('#message').innerHTML = `<div class="alert alert-success" role="alert"><i class="fa fa-info"></i> Thumbnail image deleted</div>`;
 
                     setTimeout(() => {

@@ -69,6 +69,10 @@ const ENDPOINTS = {
            }
         },
         media: {
+            get: {
+                description: 'Gets media - hero and thumbnail images before they are part of an exhibit',
+                endpoint: `${APP_PATH}/media`
+            },
             delete: {
                 description: 'Deletes media - hero and thumbnail images before they are part of an exhibit',
                 endpoint: `${APP_PATH}/media`

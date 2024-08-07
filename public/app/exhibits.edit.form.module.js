@@ -195,7 +195,6 @@ const exhibitsEditFormModule = (function () {
 
         try {
 
-            // document.querySelector('.card').style.visibility = 'hidden';
             scrollTo(0, 0);
             document.querySelector('#message').innerHTML = `<div class="alert alert-info" role="alert"><i class="fa fa-info"></i> Updating exhibit record...</div>`;
             let uuid = helperModule.get_parameter_by_name('uuid');

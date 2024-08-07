@@ -146,10 +146,28 @@ exports.get_exhibit_media = function (req, res) {
     return false;
 };
 
+exports.get_media = function (req, res) {
+
+    const media = req.query.media;
+
+    try {
+
+        if (media !== undefined && media.length !== 0) {
+            res.status(200).sendFile(PATH.join(__dirname, `../storage/`, media));
+        } else {
+            res.status(404).send('Unable to get media file');
+        }
+
+    } catch(error) {
+        res.status(200).send({message: `Unable to get media file. ${error.message}`});
+    }
+
+    return false;
+};
+
 exports.delete_media = function (req, res) {
 
     const media = req.query.media;
-    console.log(media);
 
     try {
 

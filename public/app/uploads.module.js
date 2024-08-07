@@ -42,17 +42,16 @@ const uploadsModule = (function () {
             autoProcessQueue: true,
             init: function () {},
             renameFile: function (file) {
-                console.log('renameFile ', file);
-                let extension = file.name.split('.').pop();
+                const extension = file.name.split('.').pop();
                 return `${Date.now()}_exhibit_hero.${extension}`;
             },
             success: function(file, response) {
 
-                console.log('SUCCESS: ', file.upload);
-                console.log(file.upload.filename);
-                console.log(file.upload.total);
+                // console.log('SUCCESS: ', file.upload);
+                // console.log(file.upload.filename);
+                // console.log(file.upload.total);
 
-                let filename = file.upload.filename;
+                const filename = file.upload.filename;
                 document.querySelector('.upload-error').innerHTML = '';
                 document.querySelector('#hero-image').value = filename;
                 document.querySelector('#hero-image-filename-display').innerHTML = `<span class="alert-success" style="width: 30%; padding: 5px; border: solid 1px"><i class="fa fa-check"> ${filename}</i></span>`;
@@ -60,6 +59,8 @@ const uploadsModule = (function () {
 
                 setTimeout(() => {
                     this.removeFile(file);
+                    const hero_url = `${APP_PATH}/media?media=${filename}`;
+                    document.querySelector('#hero-image-display').innerHTML = `<p><img src="${hero_url}" height="200"></p>`;
                 }, 2000);
 
             },
@@ -94,10 +95,10 @@ const uploadsModule = (function () {
             },
             success: function(file, response) {
 
-                console.log(response);
-                console.log('SUCCESS: ', file.upload);
-                console.log(file.upload.filename);
-                console.log(file.upload.total);
+                // console.log(response);
+                // console.log('SUCCESS: ', file.upload);
+                // console.log(file.upload.filename);
+                // console.log(file.upload.total);
 
                 let filename = file.upload.filename;
                 document.querySelector('.upload-error').innerHTML = '';
@@ -106,6 +107,8 @@ const uploadsModule = (function () {
                 document.querySelector('#thumbnail-trash').style.display = 'inline';
 
                 setTimeout(() => {
+                    const thumbnail_url = `${APP_PATH}/media?media=${filename}`;
+                    document.querySelector('#thumbnail-image-display').innerHTML = `<p><img src="${thumbnail_url}" height="200"></p>`;
                     this.removeFile(file);
                 }, 2000);
 
