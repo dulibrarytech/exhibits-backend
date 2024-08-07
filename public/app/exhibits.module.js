@@ -59,7 +59,7 @@ const exhibitsModule = (function () {
             }
 
         } catch (error) {
-            console.log('ERROR: ', error.message);
+            document.querySelector('#message').innerHTML = `<div class="alert alert-danger" role="alert"><i class="fa fa-exclamation"></i> ${error.message}</div>`;
         }
     }
 
@@ -94,7 +94,8 @@ const exhibitsModule = (function () {
             } else if (is_published === 0) {
                 status = `<a href="#" id="${exhibits[i].uuid}" class="publish-exhibit"><span id="publish" title="suppressed"><i class="fa fa-cloud-upload" style="color: darkred"></i><br>Suppressed</span></a>`;
                 exhibit_edit = `<a href="${APP_PATH}/exhibits/exhibit/edit?uuid=${uuid}" title="Edit"><i class="fa fa-edit pr-1"></i> </a>`;
-                trash = `<a href="#" title="Delete"><i class="fa fa-trash pr-1"></i> </a>`;
+                trash = `<a href="${APP_PATH}/exhibits/exhibit/delete?uuid=${exhibits[i].uuid}" title="Delete exhibit"><i class="fa fa-trash pr-1"></i></a>`;
+                // trash = `<a href="#" title="Delete"><i class="fa fa-trash pr-1"></i> </a>`;
             }
 
             if (exhibits[i].thumbnail.length > 0) {
@@ -102,10 +103,11 @@ const exhibitsModule = (function () {
                 thumbnail_fragment = `<p><img src="${thumbnail_url}" height="100" width="100"></p>`;
             }
 
+            // <p><h4><a href="${APP_PATH}/items?uuid=${uuid}">${title}</a></h4></p>
             title = helperModule.unescape(exhibits[i].title);
             exhibit_data += '<tr>';
             exhibit_data += `<td style="width: 35%">
-                    <p><strong><a href="${APP_PATH}/items?uuid=${uuid}">${title}</a></strong></p>
+                    <p><strong>${title}</strong></p>
                     ${thumbnail_fragment}
                     <div class="d-flex justify-content-between align-items-center">
                                 <div class="btn-group">
@@ -122,7 +124,7 @@ const exhibitsModule = (function () {
             exhibit_data += `<td style="width: 5%;text-align: center"><small>${status}</small></td>`;
             exhibit_data += `<td style="width: 10%">
                                 <div class="card-text text-sm-center">
-                                    ${exhibit_items}
+                                    ${exhibit_items}&nbsp;
                                     ${exhibit_edit}
                                     &nbsp;
                                     <a href="${APP_PATH}/items/standard?uuid=${uuid}" title="Add Items"><i class="fa fa-plus pr-1"></i> </a>
@@ -168,7 +170,7 @@ const exhibitsModule = (function () {
             }
 
         } catch (error) {
-            console.log('ERROR: ', error.message);
+            document.querySelector('#message').innerHTML = `<div class="alert alert-danger" role="alert"><i class="fa fa-exclamation"></i> ${error.message}</div>`;
         }
     };
 
@@ -190,6 +192,44 @@ const exhibitsModule = (function () {
      */
     obj.close_preview = function () {
         link.close();
+    };
+
+    /**
+     * Deletes exhibit
+     */
+    obj.delete_exhibit = function () {
+
+        try {
+
+            (async function() {
+
+                document.querySelector('#delete-message').innerHTML = 'Deleting exhibit...';
+                const EXHIBITS_ENDPOINTS = endpointsModule.get_exhibits_endpoints();
+                const uuid = helperModule.get_parameter_by_name('uuid');
+                const token = authModule.get_user_token();
+                const response = await httpModule.req({
+                    method: 'DELETE',
+                    url: EXHIBITS_ENDPOINTS.exhibits.exhibit_records.endpoints.delete.endpoint.replace(':exhibit_id', uuid),
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'x-access-token': token
+                    }
+                });
+
+                if (response !== undefined && response.status === 204) {
+
+                    setTimeout(() => {
+                        window.location.replace(APP_PATH + '/exhibits');
+                    }, 3000);
+                }
+
+            })();
+
+        } catch (error) {
+            document.querySelector('#message').innerHTML = `<div class="alert alert-danger" role="alert"><i class="fa fa-exclamation"></i> ${error.message}</div>`;
+        }
+
+        return false;
     };
 
     /**
