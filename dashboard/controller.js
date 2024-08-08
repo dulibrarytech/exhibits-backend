@@ -89,6 +89,15 @@ exports.get_dashboard_item_grid_list = function (req, res) {
     });
 };
 
+exports.get_dashboard_items_standard_add_form = function (req, res) {
+    res.render('dashboard-item-standard-add-form', {
+        host: CONFIG.host,
+        appname: CONFIG.app_name,
+        appversion: CONFIG.app_version,
+        organization: CONFIG.organization
+    });
+};
+
 exports.get_dashboard_items_standard_edit_form = function (req, res) {
     res.render('dashboard-item-standard-edit-form', {
         host: CONFIG.host,

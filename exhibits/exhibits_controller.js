@@ -146,6 +146,23 @@ exports.get_exhibit_media = function (req, res) {
     return false;
 };
 
+/*
+exports.delete_exhibit_media = function (req, res) {
+
+    const uuid = req.params.exhibit_id;
+    const media = req.params.media;
+
+    try {
+        res.status(200).sendFile(PATH.join(__dirname, `../storage/${uuid}`, media));
+    } catch(error) {
+        res.status(404).send({message: `Exhibit media not found. ${error.message}`});
+    }
+
+    return false;
+};
+
+ */
+
 exports.get_media = function (req, res) {
 
     const media = req.query.media;
@@ -185,24 +202,22 @@ exports.delete_media = function (req, res) {
     return false;
 };
 
-// TODO
 exports.delete_exhibit_media = function (req, res) {
 
     const uuid = req.params.exhibit_id;
-    const media = req.params.exhibit_media;
+    const media = req.params.media;
 
     try {
 
-        if (uuid === '000-000') {
-            FS.unlinkSync(`../storage/${media}`);
+        if (media !== undefined && media.length !== 0) {
+            FS.unlinkSync(`./storage/${uuid}/${media}`);
+            res.status(204).send('Media deleted');
         } else {
-            FS.unlinkSync(`../storage/${uuid}/${media}`);
+            res.status(200).send('Unable to delete media file');
         }
 
-        res.status(204).send('Media deleted');
-
     } catch(error) {
-        res.status(200).send({message: `Unable to delete exhibit media file. ${error.message}`});
+        res.status(404).send({message: `Unable to delete exhibit media file. ${error.message}`});
     }
 
     return false;

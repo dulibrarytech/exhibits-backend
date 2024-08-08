@@ -52,7 +52,7 @@ module.exports = function (app) {
     .get(CONTROLLER.get_dashboard_item_details);
 
     app.route(APP_PATH + '/items/standard')
-    .get(CONTROLLER.get_dashboard_item_standard_form);
+    .get(CONTROLLER.get_dashboard_items_standard_add_form);
 
     app.route(APP_PATH + '/items/standard/edit')
     .get(CONTROLLER.get_dashboard_items_standard_edit_form);

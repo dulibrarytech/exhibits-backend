@@ -83,8 +83,9 @@
                     <span class="upload-error"></span>
                     <div class="col-6 col-md-6">
                         <div class="col-12">
+                            <div id="hero-image-display"></div>
                             <p><span id="hero-image-filename-display"></span>&nbsp;&nbsp;
-                                <span><a id="hero-trash" title="Trash" href="#"><i class="fa fa-trash"></i></a></span>
+                                <span><a id="hero-trash" title="Delete hero image" href="#"><i class="fa fa-trash"></i></a></span>
                             </p>
                             <input type="hidden" id="hero-image" name="hero_image">
                             <input type="hidden" id="hero-image-prev" name="hero_image-prev">
@@ -96,9 +97,10 @@
                     </div>
                     <div class="col-6 col-md-6">
                         <div class="col-12">
+                            <div id="thumbnail-image-display"></div>
                             <p>
                                 <span id="thumbnail-filename-display"></span>&nbsp;&nbsp;
-                                <span><a id="thumbnail-trash" title="Trash" href="#"><i class="fa fa-trash"></i></a></span>
+                                <span><a id="thumbnail-trash" title="Delete thumbnail" href="#"><i class="fa fa-trash"></i></a></span>
                             </p>
                             <input type="hidden" id="thumbnail-image" name="thumbnail">
                             <input type="hidden" id="thumbnail-image-prev" name="thumbnail-prev">
@@ -166,7 +168,7 @@
                     <div class="col-6 col-md-6">
                         <p><img src="/exhibits-dashboard/static/images/page_layout_1.png"></p>
                         <p>
-                            <label class="btn btn-default" for="exhibit-banner-1">
+                            <label class="btn btn-default" for="exhibit-page-layout-1">
                                 <input type="radio" class="btn-check" name="page_layout"
                                        id="exhibit-page-layout-1" value="top_nav" autocomplete="off" checked/>
                                 <span style="font-size: 12px">Exhibit navigation bar at the top of the page</span>
@@ -176,7 +178,7 @@
                     <div class="col-6 col-md-6">
                         <p><img src="/exhibits-dashboard/static/images/page_layout_2.png"></p>
                         <p>
-                            <label class="btn btn-default" for="exhibit-banner-2">
+                            <label class="btn btn-default" for="exhibit-page-layout-2">
                                 <input type="radio" class="btn-check" name="page_layout"
                                        id="exhibit-page-layout-2" value="side_nav" autocomplete="off"/>
                                 <span style="font-size: 12px">Exhibit navigation sidebar</span>
