@@ -280,6 +280,7 @@ const exhibitsEditFormModule = (function () {
 
                     setTimeout(() => {
                         document.querySelector('#message').innerHTML = '';
+                        window.location.reload();
                     }, 3000);
                 }
 
@@ -292,8 +293,51 @@ const exhibitsEditFormModule = (function () {
         return false;
     }
 
-    // TODO: delete_thumbnail_image
+    /**
+     * Deletes thumbnail image
+     */
+    function delete_thumbnail_image() {
 
+        try {
+
+            (async function() {
+
+                const uuid = helperModule.get_parameter_by_name('uuid');
+                let hero_image = document.querySelector('#thumbnail-image').value;
+                let tmp = EXHIBITS_ENDPOINTS.exhibits.exhibit_media.get.endpoint.replace(':exhibit_id', uuid)
+                let endpoint = tmp.replace(':media', hero_image);
+                let token = authModule.get_user_token();
+                let response = await httpModule.req({
+                    method: 'DELETE',
+                    url: endpoint,
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'x-access-token': token
+                    }
+                });
+
+                if (response !== undefined && response.status === 204) {
+
+                    document.querySelector('#thumbnail-image').value = '';
+                    document.querySelector('#thumbnail-filename-display').innerHTML = '';
+                    document.querySelector('#thumbnail-trash').style.display = 'none';
+                    document.querySelector('#thumbnail-image-display').innerHTML = '';
+                    document.querySelector('#message').innerHTML = `<div class="alert alert-success" role="alert"><i class="fa fa-info"></i> Thumbnail deleted</div>`;
+
+                    setTimeout(() => {
+                        document.querySelector('#message').innerHTML = '';
+                        window.location.reload();
+                    }, 3000);
+                }
+
+            })();
+
+        } catch (error) {
+            document.querySelector('#message').innerHTML = `<div class="alert alert-danger" role="alert"><i class="fa fa-exclamation"></i> ${error.message}</div>`;
+        }
+
+        return false;
+    }
 
     /**
      * Init function for exhibits edit form
@@ -304,9 +348,27 @@ const exhibitsEditFormModule = (function () {
 
             helperModule.set_rich_text_editor_config();
             document.querySelector('#save-exhibit-btn').addEventListener('click', exhibitsEditFormModule.update_exhibit_record);
-            document.querySelector('#hero-trash').addEventListener('click', delete_hero_image);
-            // document.querySelector('#thumbnail-trash').addEventListener('click', delete_thumbnail_image);
             await display_edit_record();
+
+            setTimeout(() => {
+
+                if (document.querySelector('#hero-image').value.length === 0) {
+                    document.querySelector('#hero-trash').removeEventListener('click', delete_hero_image);
+                    document.querySelector('#hero-trash').addEventListener('click', exhibitsCommonFormModule.delete_hero_image);
+                } else if (document.querySelector('#hero-image').value !== 0) {
+                    document.querySelector('#hero-trash').removeEventListener('click', exhibitsCommonFormModule.delete_hero_image);
+                    document.querySelector('#hero-trash').addEventListener('click', delete_hero_image);
+                }
+
+                if (document.querySelector('#thumbnail-image').value.length === 0) {
+                    document.querySelector('#thumbnail-trash').removeEventListener('click', delete_thumbnail_image);
+                    document.querySelector('#thumbnail-trash').addEventListener('click', exhibitsCommonFormModule.delete_thumbnail_image);
+                } else if (document.querySelector('#thumbnail-image').value.length !== 0) {
+                    document.querySelector('#thumbnail-trash').removeEventListener('click', exhibitsCommonFormModule.delete_thumbnail_image);
+                    document.querySelector('#thumbnail-trash').addEventListener('click', delete_thumbnail_image);
+                }
+
+            }, 1000);
 
         } catch (error) {
             document.querySelector('#message').innerHTML = `<div class="alert alert-danger" role="alert"><i class="fa fa-exclamation"></i> ${error.message}</div>`;

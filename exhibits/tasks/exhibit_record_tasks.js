@@ -200,6 +200,40 @@ const Exhibit_record_tasks = class {
     }
 
     /**
+     * Deletes media value
+     * @param uuid
+     * @param media
+     */
+    async delete_media_value(uuid, media) {
+
+        try {
+
+            let update = {};
+            let tmp = media.split('_');
+            let image = tmp.pop();
+
+            if (image.indexOf('hero') !== -1) {
+                update.hero_image = '';
+            } else if (image.indexOf('thumbnail') !== -1) {
+                update.thumbnail = '';
+            }
+
+            await this.DB(this.TABLE.exhibit_records)
+            .where({
+                uuid: uuid
+            })
+            .update(update);
+
+            LOGGER.module().info('INFO: [/exhibits/exhibit_record_tasks (set_preview)] Exhibit preview set.');
+            return true;
+
+        } catch (error) {
+            LOGGER.module().error('ERROR: [/exhibits/exhibit_record_tasks (set_preview)] unable to set exhibit preview ' + error.message);
+            return false;
+        }
+    }
+
+    /**
      * Sets preview flag
      * @param uuid
      */

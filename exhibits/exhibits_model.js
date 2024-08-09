@@ -254,6 +254,28 @@ exports.delete_exhibit_record = async function (uuid) {
 };
 
 /**
+ * Clears out media value
+ * @param uuid
+ * @param media
+ */
+exports.delete_media_value = async function (uuid, media) {
+
+    try {
+
+        const TASK = new EXHIBIT_RECORD_TASKS(DB, TABLES);
+
+        if (await TASK.delete_media_value(uuid, media) === true) {
+            console.log('Media value deleted');
+        } else {
+            console.log('Unable to delete media value');
+        }
+
+    } catch (error) {
+        LOGGER.module().error('ERROR: [/exhibits/model (delete_media_value)] ' + error.message);
+    }
+};
+
+/**
  * Builds exhibit preview
  * @param uuid
  */

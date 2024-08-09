@@ -108,90 +108,6 @@ const exhibitsAddFormModule = (function () {
     };
 
     /**
-     * Deletes hero image
-     */
-    function delete_hero_image() {
-
-        try {
-
-            (async function() {
-
-                let hero_image = document.querySelector('#hero-image').value;
-                let token = authModule.get_user_token();
-                let response = await httpModule.req({
-                    method: 'DELETE',
-                    url: EXHIBITS_ENDPOINTS.exhibits.media.delete.endpoint + '?media=' + hero_image,
-                    headers: {
-                        'Content-Type': 'application/json',
-                        'x-access-token': token
-                    }
-                });
-
-                if (response !== undefined && response.status === 204) {
-
-                    document.querySelector('#hero-image').value = '';
-                    document.querySelector('#hero-image-filename-display').innerHTML = '';
-                    document.querySelector('#hero-trash').style.display = 'none';
-                    document.querySelector('#hero-image-display').innerHTML = '';
-                    document.querySelector('#message').innerHTML = `<div class="alert alert-success" role="alert"><i class="fa fa-info"></i> Hero image deleted</div>`;
-
-                    setTimeout(() => {
-                        document.querySelector('#message').innerHTML = '';
-                    }, 3000);
-                }
-
-            })();
-
-        } catch (error) {
-            document.querySelector('#message').innerHTML = `<div class="alert alert-danger" role="alert"><i class="fa fa-exclamation"></i> ${error.message}</div>`;
-        }
-
-        return false;
-    }
-
-    /**
-     * Deletes thumbnail image
-     */
-    function delete_thumbnail_image() {
-
-        try {
-
-            (async function() {
-
-                let thumbnail_image = document.querySelector('#thumbnail-image').value;
-                let token = authModule.get_user_token();
-                let response = await httpModule.req({
-                    method: 'DELETE',
-                    url: EXHIBITS_ENDPOINTS.exhibits.media.delete.endpoint + '?media=' + thumbnail_image,
-                    headers: {
-                        'Content-Type': 'application/json',
-                        'x-access-token': token
-                    }
-                });
-
-                if (response !== undefined && response.status === 204) {
-
-                    document.querySelector('#thumbnail-image').value = '';
-                    document.querySelector('#thumbnail-filename-display').innerHTML = '';
-                    document.querySelector('#thumbnail-trash').style.display = 'none';
-                    document.querySelector('#thumbnail-image-display').innerHTML = '';
-                    document.querySelector('#message').innerHTML = `<div class="alert alert-success" role="alert"><i class="fa fa-info"></i> Thumbnail image deleted</div>`;
-
-                    setTimeout(() => {
-                        document.querySelector('#message').innerHTML = '';
-                    }, 3000);
-                }
-
-            })();
-
-        } catch (error) {
-            document.querySelector('#message').innerHTML = `<div class="alert alert-danger" role="alert"><i class="fa fa-exclamation"></i> ${error.message}</div>`;
-        }
-
-        return false;
-    }
-
-    /**
      * Init function for exhibits add form
      */
     obj.init = function () {
@@ -201,8 +117,8 @@ const exhibitsAddFormModule = (function () {
             helperModule.set_rich_text_editor_config();
             set_rich_text_editors();
             document.querySelector('#save-exhibit-btn').addEventListener('click', exhibitsAddFormModule.create_exhibit_record);
-            document.querySelector('#hero-trash').addEventListener('click', delete_hero_image);
-            document.querySelector('#thumbnail-trash').addEventListener('click', delete_thumbnail_image);
+            document.querySelector('#hero-trash').addEventListener('click', exhibitsCommonFormModule.delete_hero_image);
+            document.querySelector('#thumbnail-trash').addEventListener('click', exhibitsCommonFormModule.delete_thumbnail_image);
 
         } catch (error) {
             document.querySelector('#message').innerHTML = `<div class="alert alert-danger" role="alert"><i class="fa fa-exclamation"></i> ${error.message}</div>`;

@@ -146,23 +146,6 @@ exports.get_exhibit_media = function (req, res) {
     return false;
 };
 
-/*
-exports.delete_exhibit_media = function (req, res) {
-
-    const uuid = req.params.exhibit_id;
-    const media = req.params.media;
-
-    try {
-        res.status(200).sendFile(PATH.join(__dirname, `../storage/${uuid}`, media));
-    } catch(error) {
-        res.status(404).send({message: `Exhibit media not found. ${error.message}`});
-    }
-
-    return false;
-};
-
- */
-
 exports.get_media = function (req, res) {
 
     const media = req.query.media;
@@ -210,8 +193,14 @@ exports.delete_exhibit_media = function (req, res) {
     try {
 
         if (media !== undefined && media.length !== 0) {
+
+            (async function () {
+                await EXHIBITS_MODEL.delete_media_value(uuid, media);
+            })();
+
             FS.unlinkSync(`./storage/${uuid}/${media}`);
             res.status(204).send('Media deleted');
+
         } else {
             res.status(200).send('Unable to delete media file');
         }
