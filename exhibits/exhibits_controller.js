@@ -134,11 +134,13 @@ exports.restore_trashed_record = async function (req, res) {
 
 exports.get_exhibit_media = function (req, res) {
 
-    const uuid = req.params.exhibit_id;
-    const media = req.params.media;
-
     try {
+
+        const uuid = req.params.exhibit_id;
+        const media = req.params.media;
+
         res.status(200).sendFile(PATH.join(__dirname, `../storage/${uuid}`, media));
+
     } catch(error) {
         res.status(404).send({message: `Exhibit media not found. ${error.message}`});
     }
@@ -148,9 +150,9 @@ exports.get_exhibit_media = function (req, res) {
 
 exports.get_media = function (req, res) {
 
-    const media = req.query.media;
-
     try {
+
+        const media = req.query.media;
 
         if (media !== undefined && media.length !== 0) {
             res.status(200).sendFile(PATH.join(__dirname, `../storage/`, media));
@@ -167,9 +169,9 @@ exports.get_media = function (req, res) {
 
 exports.delete_media = function (req, res) {
 
-    const media = req.query.media;
-
     try {
+
+        const media = req.query.media;
 
         if (media !== undefined && media.length !== 0) {
             FS.unlinkSync(`./storage/${media}`);
@@ -187,10 +189,10 @@ exports.delete_media = function (req, res) {
 
 exports.delete_exhibit_media = function (req, res) {
 
-    const uuid = req.params.exhibit_id;
-    const media = req.params.media;
-
     try {
+
+        const uuid = req.params.exhibit_id;
+        const media = req.params.media;
 
         if (media !== undefined && media.length !== 0) {
 

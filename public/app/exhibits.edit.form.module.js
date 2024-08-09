@@ -84,7 +84,7 @@ const exhibitsEditFormModule = (function () {
          }
     }
 
-    /**
+    /** TODO: load ENDPOINTS
      * Populates edit form with exhibit record data
      */
     async function display_edit_record () {
@@ -204,7 +204,6 @@ const exhibitsEditFormModule = (function () {
             document.querySelector('#message').innerHTML = `<div class="alert alert-info" role="alert"><i class="fa fa-info"></i> Updating exhibit record...</div>`;
             let uuid = helperModule.get_parameter_by_name('uuid');
             let data = get_exhibit_data();
-
             let token = authModule.get_user_token();
             let response;
 

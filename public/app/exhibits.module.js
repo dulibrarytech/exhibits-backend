@@ -176,6 +176,16 @@ const exhibitsModule = (function () {
     };
 
     /**
+     * Sets exhibit title
+     * @param uuid
+     */
+    obj.set_exhibit_title = async function (uuid) {
+        let title = await exhibitsModule.get_exhibit_title(uuid);
+        document.querySelector('#exhibit-title').innerHTML = `${title}`;
+        return false;
+    };
+
+    /**
      * Opens a window for the preview
      * @param preview_link
      */

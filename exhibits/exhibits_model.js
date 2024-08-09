@@ -265,9 +265,9 @@ exports.delete_media_value = async function (uuid, media) {
         const TASK = new EXHIBIT_RECORD_TASKS(DB, TABLES);
 
         if (await TASK.delete_media_value(uuid, media) === true) {
-            console.log('Media value deleted');
+            LOGGER.module().info('INFO: [/exhibits/model (delete_media_value)] Media value deleted');
         } else {
-            console.log('Unable to delete media value');
+            LOGGER.module().error('ERROR: [/exhibits/model (delete_media_value)] Unable to delete media value');
         }
 
     } catch (error) {
