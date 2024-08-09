@@ -324,6 +324,19 @@ exports.publish_exhibit = async function (uuid) {
         const HEADING_TASKS = new EXHIBIT_HEADING_RECORD_TASKS(DB, TABLES);
         const GRID_TASKS = new EXHIBIT_GRID_RECORD_TASKS(DB, TABLES);
 
+        const heading_count = await HEADING_TASKS.get_record_count(uuid);
+        const item_count = await ITEM_TASKS.get_record_count(uuid);
+        const grid_count = await GRID_TASKS.get_record_count(uuid);
+        const total_count = heading_count + item_count + grid_count;
+
+        if (total_count === 0) {
+            LOGGER.module().info('INFO: [/exhibits/model (publish_exhibit)] Exhibit does not have any items');
+            return {
+                status: 'no_items',
+                message: 'Exhibit does not have any items'
+            };
+        }
+
         const is_exhibit_published = await EXHIBIT_TASKS.set_to_publish(uuid);
         const is_item_published = await ITEM_TASKS.set_to_publish(uuid);
         const is_heading_published = await HEADING_TASKS.set_to_publish(uuid);
@@ -331,7 +344,10 @@ exports.publish_exhibit = async function (uuid) {
 
         if (is_exhibit_published === false || is_item_published === false || is_heading_published === false || is_grid_published === false) {
             LOGGER.module().error('ERROR: [/exhibits/model (publish_exhibit)] Unable to publish exhibit');
-            return false;
+            return {
+                status: false,
+                message: 'Unable to publish Exhibit'
+            };
         }
 
         const is_indexed = await INDEXER_MODEL.index_exhibit(uuid);
@@ -344,7 +360,11 @@ exports.publish_exhibit = async function (uuid) {
             };
 
         } else {
-            return false;
+
+            return {
+                status: false,
+                message: 'Unable to publish (index) exhibit'
+            };
         }
 
     } catch (error) {

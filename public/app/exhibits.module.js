@@ -274,6 +274,15 @@ const exhibitsModule = (function () {
                 }, false);
             }, 0);
         }
+
+        if (response.status === 204) {
+            scrollTo(0, 0);
+            document.querySelector('#message').innerHTML = `<div class="alert alert-warning" role="alert"><i class="fa fa-warning"></i> Exhibit must contain at least one item to publish</div>`;
+
+            setTimeout(() => {
+                document.querySelector('#message').innerHTML = '';
+            }, 5000);
+        }
     }
 
     /**

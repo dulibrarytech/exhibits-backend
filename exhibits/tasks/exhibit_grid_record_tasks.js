@@ -212,6 +212,26 @@ const Exhibit_grid_record_tasks = class {
     }
 
     /**
+     * Gets grid record count
+     * @param uuid
+     */
+    async get_record_count(uuid) {
+
+        try {
+
+            const count = await this.DB(this.TABLE.grid_records).count('id as count')
+            .where({
+                is_member_of_exhibit: uuid
+            });
+
+            return count[0].count;
+
+        } catch (error) {
+            LOGGER.module().error('ERROR: [/exhibits/exhibit_grid_record_tasks (get_record_count)] unable to get grid record count ' + error.message);
+        }
+    }
+
+    /**
      * Sets is_published flogs to true
      * @param uuid
      */

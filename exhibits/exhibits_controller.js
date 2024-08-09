@@ -234,7 +234,7 @@ exports.build_exhibit_preview = async function (req, res) {
 };
 
 exports.publish_exhibit = async function (req, res) {
-    console.log(req.params);
+
     const uuid = req.params.exhibit_id;
 
     if (uuid === undefined || uuid.length === 0) {
@@ -244,11 +244,17 @@ exports.publish_exhibit = async function (req, res) {
 
     const result = await EXHIBITS_MODEL.publish_exhibit(uuid);
 
+    if (result.status === 'no_items') {
+        res.status(204).send({
+            message: 'Exhibit must have at least one item to published.'
+        });
+    }
+
     if (result.status === true) {
         res.status(200).send({
             message: 'Exhibit published.'
         });
-    } else {
+    } else if (result.status === false) {
         res.status(400).send({
             message: 'Unable to publish exhibit'
         });

@@ -87,13 +87,13 @@ const navModule = (function () {
                     <a href="${item_vertical_timeline_link}" data-keyboard="false">
                         <i class=" menu-icon ti-calendar"></i>Add Vertical Timeline
                     </a>
-                </li>
-                <li>
-                    <a href="${APP_PATH}/dashboard/trash" data-keyboard="false">
-                        <i class=" menu-icon fa fa-trash-o"></i>Trash
-                    </a>
                 </li>`;
 
+        // <li>
+        //                     <a href="${APP_PATH}/dashboard/trash" data-keyboard="false">
+        //                         <i class=" menu-icon fa fa-trash-o"></i>Trash
+        //                     </a>
+        //                 </li>
         document.querySelector('#items-menu').innerHTML = items_menu_fragment;
     };
 
