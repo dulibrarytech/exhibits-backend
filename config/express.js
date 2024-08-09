@@ -54,6 +54,7 @@ module.exports = function() {
     require('../auth/routes.js')(APP);
     require('../dashboard/routes.js')(APP);
     require('../exhibits/exhibits_routes.js')(APP);
+    require('../exhibits/items_routes.js')(APP);
     require('../indexer/routes.js')(APP);
     require('../users/routes.js')(APP);
     require('../exhibits/uploads')(APP);

@@ -159,12 +159,13 @@ const itemsModule = (function () {
     obj.display_items = async function () {
 
         const exhibit_id = helperModule.get_parameter_by_name('uuid');
-        await itemsModule.set_exhibit_title(exhibit_id);
         const items = await get_items(exhibit_id);
+
         let item_data = '';
 
         if (items.length === 0) {
-            document.querySelector('#message').innerHTML = '<div class="alert alert-info" role="alert">Exhibit is empty.</div>';
+            document.querySelector('#message').innerHTML = '<div class="alert alert-info" role="alert"><span id="exhibit-title"></span> exhibit is empty.</div>';
+            await exhibitsModule.set_exhibit_title(exhibit_id);
             return false;
         }
 
@@ -281,7 +282,7 @@ const itemsModule = (function () {
 
     obj.init = function () {
         document.querySelector('#message').innerHTML = '<div class="alert alert-primary" role="alert">Loading...</div>';
-        // itemsModule.set_item_nav_menu_links();
+        navModule.set_item_nav_menu_links();
         document.querySelector('#logout').addEventListener('click', authModule.logout);
         itemsModule.display_items();
         setTimeout(() => {
