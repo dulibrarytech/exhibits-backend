@@ -142,13 +142,12 @@ const itemsEditHeadingFormModule = (function () {
                     'x-access-token': token
                 }
             });
-            console.log(response.status);
+
             if (response !== undefined && response.status === 201) {
 
                 document.querySelector('#message').innerHTML = `<div class="alert alert-success" role="alert"><i class="fa fa-info"></i> Item record updated</div>`;
 
                 setTimeout(() => {
-                    // TODO
                     window.location.replace('edit?exhibit_id=' + exhibit_id + '&item_id=' + item_id);
                 }, 2000);
             }

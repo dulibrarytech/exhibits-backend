@@ -80,8 +80,8 @@ const exhibitsModule = (function () {
 
             let uuid = exhibits[i].uuid;
             let is_published = exhibits[i].is_published;
-            let preview_link = `${APP_PATH}/preview?uuid=${uuid}`;
-            let exhibit_items = `<a href="${APP_PATH}/items?uuid=${exhibits[i].uuid}" title="Exhibit items"><i class="fa fa-search pr-1"></i></a>&nbsp;`;
+            let preview_link = `${APP_PATH}/preview?exhibit_id=${uuid}`;
+            let exhibit_items = `<a href="${APP_PATH}/items?exhibit_id=${exhibits[i].uuid}" title="Exhibit items"><i class="fa fa-search pr-1"></i></a>&nbsp;`;
             let thumbnail_url = '';
             let thumbnail_fragment = '';
             let status;
@@ -93,8 +93,8 @@ const exhibitsModule = (function () {
                 status = `<a href="#" id="${exhibits[i].uuid}" class="suppress-exhibit"><span id="suppress" title="published"><i class="fa fa-cloud" style="color: green"></i><br>Published</span></a>`;
             } else if (is_published === 0) {
                 status = `<a href="#" id="${exhibits[i].uuid}" class="publish-exhibit"><span id="publish" title="suppressed"><i class="fa fa-cloud-upload" style="color: darkred"></i><br>Suppressed</span></a>`;
-                exhibit_edit = `<a href="${APP_PATH}/exhibits/exhibit/edit?uuid=${uuid}" title="Edit"><i class="fa fa-edit pr-1"></i> </a>`;
-                trash = `<a href="${APP_PATH}/exhibits/exhibit/delete?uuid=${exhibits[i].uuid}" title="Delete exhibit"><i class="fa fa-trash pr-1"></i></a>`;
+                exhibit_edit = `<a href="${APP_PATH}/exhibits/exhibit/edit?exhibit_id=${uuid}" title="Edit"><i class="fa fa-edit pr-1"></i> </a>`;
+                trash = `<a href="${APP_PATH}/exhibits/exhibit/delete?exhibit_id=${exhibits[i].uuid}" title="Delete exhibit"><i class="fa fa-trash pr-1"></i></a>`;
                 // trash = `<a href="#" title="Delete"><i class="fa fa-trash pr-1"></i> </a>`;
             }
 
@@ -128,7 +128,7 @@ const exhibitsModule = (function () {
                                     ${exhibit_items}&nbsp;
                                     ${exhibit_edit}
                                     &nbsp;
-                                    <a href="${APP_PATH}/items/standard?uuid=${uuid}" title="Add Items"><i class="fa fa-plus pr-1"></i> </a>
+                                    <a href="${APP_PATH}/items/standard?exhibit_id=${uuid}" title="Add Items"><i class="fa fa-plus pr-1"></i> </a>
                                     &nbsp;
                                     ${trash}
                                 </div>
@@ -144,7 +144,7 @@ const exhibitsModule = (function () {
         setTimeout(() => {
             document.querySelector('#exhibit-card').style.visibility = 'visible';
             document.querySelector('#message').innerHTML = '';
-        }, 1000);
+        }, 100);
     };
 
     /**
@@ -216,7 +216,7 @@ const exhibitsModule = (function () {
 
                 document.querySelector('#delete-message').innerHTML = 'Deleting exhibit...';
                 const EXHIBITS_ENDPOINTS = endpointsModule.get_exhibits_endpoints();
-                const uuid = helperModule.get_parameter_by_name('uuid');
+                const uuid = helperModule.get_parameter_by_name('exhibit_id');
                 const token = authModule.get_user_token();
                 const response = await httpModule.req({
                     method: 'DELETE',

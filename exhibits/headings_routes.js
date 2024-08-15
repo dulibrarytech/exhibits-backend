@@ -30,7 +30,6 @@ module.exports = function (app) {
     app.route(ENDPOINTS().exhibits.heading_records.get.endpoint)
     .get(TOKEN.verify, CONTROLLER.get_heading_record);
 
-    console.log(ENDPOINTS().exhibits.heading_records.put.endpoint);
     app.route(ENDPOINTS().exhibits.heading_records.put.endpoint)
     .put(TOKEN.verify, CONTROLLER.update_heading_record);
 

@@ -32,7 +32,7 @@ const exhibitsEditFormModule = (function () {
 
         try {
 
-            const uuid = helperModule.get_parameter_by_name('uuid');
+            const uuid = helperModule.get_parameter_by_name('exhibit_id');
             const token = authModule.get_user_token();
 
             if (token === false || EXHIBITS_ENDPOINTS === null) {
@@ -202,7 +202,7 @@ const exhibitsEditFormModule = (function () {
 
             scrollTo(0, 0);
             document.querySelector('#message').innerHTML = `<div class="alert alert-info" role="alert"><i class="fa fa-info"></i> Updating exhibit record...</div>`;
-            let uuid = helperModule.get_parameter_by_name('uuid');
+            let uuid = helperModule.get_parameter_by_name('exhibit_id');
             let data = get_exhibit_data();
             let token = authModule.get_user_token();
             let response;
@@ -255,7 +255,7 @@ const exhibitsEditFormModule = (function () {
 
             (async function() {
 
-                const uuid = helperModule.get_parameter_by_name('uuid');
+                const uuid = helperModule.get_parameter_by_name('exhibit_id');
                 let hero_image = document.querySelector('#hero-image').value;
                 let tmp = EXHIBITS_ENDPOINTS.exhibits.exhibit_media.get.endpoint.replace(':exhibit_id', uuid)
                 let endpoint = tmp.replace(':media', hero_image);
@@ -301,7 +301,7 @@ const exhibitsEditFormModule = (function () {
 
             (async function() {
 
-                const uuid = helperModule.get_parameter_by_name('uuid');
+                const uuid = helperModule.get_parameter_by_name('exhibit_id');
                 let hero_image = document.querySelector('#thumbnail-image').value;
                 let tmp = EXHIBITS_ENDPOINTS.exhibits.exhibit_media.get.endpoint.replace(':exhibit_id', uuid)
                 let endpoint = tmp.replace(':media', hero_image);

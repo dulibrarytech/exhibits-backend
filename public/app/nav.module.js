@@ -29,11 +29,11 @@ const navModule = (function () {
      */
     obj.set_headings_form_nav_menu_links = function () {
 
-        let uuid = helperModule.get_parameter_by_name('uuid');
-        let back_link = `${APP_PATH}/items?uuid=${uuid}`;
-        let standard_item_link = `${APP_PATH}/items/standard?uuid=${uuid}`;
-        let item_grid_link = `${APP_PATH}/items/grid?uuid=${uuid}`;
-        let item_vertical_timeline_link = `${APP_PATH}/items/vertical-timeline?uuid=${uuid}`;
+        let uuid = helperModule.get_parameter_by_name('exhibit_id');
+        let back_link = `${APP_PATH}/items?exhibit_id=${uuid}`;
+        let standard_item_link = `${APP_PATH}/items/standard?exhibit_id=${uuid}`;
+        let item_grid_link = `${APP_PATH}/items/grid?exhibit_id=${uuid}`;
+        let item_vertical_timeline_link = `${APP_PATH}/items/vertical-timeline?exhibit_id=${uuid}`;
         let form_menu_fragment = `
                 <li>
                     <a href="${back_link}" data-backdrop="static" data-keyboard="false">
@@ -63,11 +63,11 @@ const navModule = (function () {
      */
     obj.set_item_nav_menu_links = function () {
 
-        let uuid = helperModule.get_parameter_by_name('uuid');
-        let heading_link = `${APP_PATH}/items/heading?uuid=${uuid}`;
-        let standard_item_link = `${APP_PATH}/items/standard?uuid=${uuid}`;
-        let item_grid_link = `${APP_PATH}/items/grid?uuid=${uuid}`;
-        let item_vertical_timeline_link = `${APP_PATH}/items/vertical-timeline?uuid=${uuid}`;
+        let uuid = helperModule.get_parameter_by_name('exhibit_id');
+        let heading_link = `${APP_PATH}/items/heading?exhibit_id=${uuid}`;
+        let standard_item_link = `${APP_PATH}/items/standard?exhibit_id=${uuid}`;
+        let item_grid_link = `${APP_PATH}/items/grid?exhibit_id=${uuid}`;
+        let item_vertical_timeline_link = `${APP_PATH}/items/vertical-timeline?exhibit_id=${uuid}`;
         let items_menu_fragment = `
                 <li>
                     <a href="${heading_link}" data-keyboard="false"> 
@@ -98,11 +98,19 @@ const navModule = (function () {
     };
 
     /**
+     * Creates back to menu items link in item forms
+     */
+    obj.back_to_items = function () {
+        const uuid = helperModule.get_parameter_by_name('exhibit_id');
+        document.querySelector('#back-to-items').setAttribute('href', `${APP_PATH}/items?exhibit_id=${uuid}`);
+    };
+
+    /**
      * Sets preview link
      */
     obj.set_preview_link = function () {
 
-        let uuid = helperModule.get_parameter_by_name('uuid');
+        let uuid = helperModule.get_parameter_by_name('exhibit_id');
         let preview_link = `${APP_PATH}/preview?uuid=${uuid}`;
         let preview_menu_fragment = `
                     <a href="#" onclick="exhibitsModule.open_preview('${preview_link}')">
@@ -123,7 +131,7 @@ const navModule = (function () {
      * Init function for headings form
      */
     obj.init = function () {
-        // navModule.set_headings_form_nav_menu_links();
+        navModule.set_logout_link();
     };
 
     return obj;

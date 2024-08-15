@@ -225,7 +225,7 @@ const itemsAddGridFormModule = (function () {
      */
     obj.set_headings_form_nav_menu_links = function () {
 
-        let uuid = helperModule.get_parameter_by_name('uuid');
+        let uuid = helperModule.get_parameter_by_name('exhibit_id');
         let back_link = `${APP_PATH}/items?uuid=${uuid}`;
         let standard_item_link = `${APP_PATH}/items/standard?uuid=${uuid}`;
         let item_grid_link = `${APP_PATH}/items/grid?uuid=${uuid}`;
@@ -259,7 +259,7 @@ const itemsAddGridFormModule = (function () {
      */
     obj.set_items_form_nav_menu_links = function () {
 
-        let uuid = helperModule.get_parameter_by_name('uuid');
+        let uuid = helperModule.get_parameter_by_name('exhibit_id');
         let back_link = `${APP_PATH}/items?uuid=${uuid}`;
         let headings_item_link = `${APP_PATH}/items/heading?uuid=${uuid}`;
         let item_grid_link = `${APP_PATH}/items/grid?uuid=${uuid}`;

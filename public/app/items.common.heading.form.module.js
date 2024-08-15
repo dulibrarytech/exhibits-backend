@@ -69,6 +69,9 @@ const itemsCommonHeadingFormModule = (function () {
 
         try {
 
+            navModule.back_to_items();
+            navModule.set_item_nav_menu_links();
+
             document.querySelector('#heading-background-color-picker').addEventListener('input', () => {
                 if (document.querySelector('#heading-background-color')) {
                     document.querySelector('#heading-background-color').value = document.querySelector('#heading-background-color-picker').value;
@@ -80,6 +83,10 @@ const itemsCommonHeadingFormModule = (function () {
                     document.querySelector('#heading-font-color').value = document.querySelector('#heading-font-color-picker').value;
                 }
             });
+
+            setTimeout(() => {
+                document.querySelector('#item-heading-card').style.visibility = 'visible';
+            }, 150);
 
         } catch (error) {
             document.querySelector('#message').innerHTML = `<div class="alert alert-danger" role="alert"><i class="fa fa-exclamation"></i> ${error.message}</div>`;

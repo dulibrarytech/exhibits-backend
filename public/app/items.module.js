@@ -59,7 +59,7 @@ const itemsModule = (function () {
      */
     obj.display_items = async function () {
 
-        const exhibit_id = helperModule.get_parameter_by_name('uuid');
+        const exhibit_id = helperModule.get_parameter_by_name('exhibit_id');
         const items = await get_items(exhibit_id);
         let item_data = '';
 
@@ -93,7 +93,7 @@ const itemsModule = (function () {
             if (items[i].type === 'item') { // standard
 
                 let thumbnail = '';
-                let title = `<a href="${APP_PATH}/items/details?uuid=${exhibit_id}&item_id=${item_id}">${helperModule.unescape(items[i].title)}</a>`;
+                let title = `<a href="${APP_PATH}/items/details?exhibit_id=${exhibit_id}&item_id=${item_id}">${helperModule.unescape(items[i].title)}</a>`;
                 let description = helperModule.unescape(items[i].description);
                 let date = items[i].date;
 
@@ -110,7 +110,7 @@ const itemsModule = (function () {
                     <p><small>${date}</small></p>
                     </td>`;
 
-                item_details = `<a href="${APP_PATH}/items/details?uuid=${exhibit_id}&item_id=${item_id}" title="Item details"><i class="fa fa-search pr-1"></i></a>`;
+                item_details = `<a href="${APP_PATH}/items/details?exhibit_id=${exhibit_id}&item_id=${item_id}" title="Item details"><i class="fa fa-search pr-1"></i></a>`;
 
             } else if (items[i].type === 'heading') {
 
@@ -176,7 +176,7 @@ const itemsModule = (function () {
         setTimeout(() => {
             document.querySelector('#item-card').style.visibility = 'visible';
             document.querySelector('#message').innerHTML = '';
-        }, 1000);
+        }, 100);
     };
 
     /**
@@ -281,7 +281,6 @@ const itemsModule = (function () {
     obj.init = function () {
         document.querySelector('#message').innerHTML = '<div class="alert alert-primary" role="alert">Loading...</div>';
         navModule.set_item_nav_menu_links();
-        navModule.set_logout_link();
         itemsModule.display_items();
         setTimeout(() => {
             document.querySelector('#items-menu').style.visibility = 'visible';

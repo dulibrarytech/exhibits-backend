@@ -77,7 +77,7 @@ const itemsAddHeadingFormModule = (function () {
      */
     obj.init = function () {
 
-        const exhibit_id = helperModule.get_parameter_by_name('uuid');
+        const exhibit_id = helperModule.get_parameter_by_name('exhibit_id');
         exhibitsModule.set_exhibit_title(exhibit_id);
 
         document.querySelector('#save-heading-btn').addEventListener('click', itemsAddHeadingFormModule.create_heading_record);
