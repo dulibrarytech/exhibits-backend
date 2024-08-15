@@ -18,7 +18,7 @@
 
 'use strict';
 
-const CONTROLLER = require('../exhibits/controller');
+const CONTROLLER = require('../exhibits/items_controller');
 const ENDPOINTS = require('../exhibits/endpoints');
 const TOKEN = require('../libs/tokens');
 
@@ -28,14 +28,15 @@ module.exports = function (app) {
     .post(TOKEN.verify, CONTROLLER.create_item_record);
 
     app.route(ENDPOINTS().exhibits.item_records.endpoint)
-    .get(CONTROLLER.get_item_records);  // TOKEN.verify,
+    .get(TOKEN.verify, CONTROLLER.get_item_records);
 
     app.route(ENDPOINTS().exhibits.item_records.get.endpoint)
     .get(TOKEN.verify, CONTROLLER.get_item_record);
 
+    /*
     app.route(ENDPOINTS().exhibits.item_media.get.endpoint)
     .get(CONTROLLER.get_item_media);
-
+    */
     app.route(ENDPOINTS().exhibits.item_records.put.endpoint)
     .put(TOKEN.verify, CONTROLLER.update_item_record);
 

@@ -23,10 +23,6 @@ module.exports = () => {
     return {
         is_member_of_exhibit: {type: 'string'},
         uuid: {type: 'string'},
-        type: {type: 'string'},
-        text: {type: 'string'},
-        order: {type: 'number'},
-        is_published: {type: 'number'},
-        is_locked: {type: 'number'}
+        text: {type: 'string'}
     };
 };

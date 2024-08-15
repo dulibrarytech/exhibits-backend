@@ -113,6 +113,13 @@ const navModule = (function () {
     };
 
     /**
+     * Sets logout link
+     */
+    obj.set_logout_link = function () {
+        document.querySelector('#logout').addEventListener('click', authModule.logout);
+    };
+
+    /**
      * Init function for headings form
      */
     obj.init = function () {

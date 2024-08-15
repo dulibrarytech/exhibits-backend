@@ -51,12 +51,13 @@ module.exports = function() {
     APP.set('views', './views');
     APP.set('view engine', 'ejs');
 
-    require('../auth/routes.js')(APP);
-    require('../dashboard/routes.js')(APP);
-    require('../exhibits/exhibits_routes.js')(APP);
-    require('../exhibits/items_routes.js')(APP);
-    require('../indexer/routes.js')(APP);
-    require('../users/routes.js')(APP);
+    require('../auth/routes')(APP);
+    require('../dashboard/routes')(APP);
+    require('../exhibits/exhibits_routes')(APP);
+    require('../exhibits/headings_routes')(APP);
+    require('../exhibits/items_routes')(APP);
+    require('../indexer/routes')(APP);
+    require('../users/routes')(APP);
     require('../exhibits/uploads')(APP);
 
     if (!FS.existsSync(`./storage`)){

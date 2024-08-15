@@ -18,13 +18,20 @@
 
 'use strict';
 
-const WEBSERVICES_CONFIG = require('../config/webservices_config')();
-const EXHIBITS_MODEL = require('../exhibits/exhibits_model');
+// const WEBSERVICES_CONFIG = require('../config/webservices_config')();
+// const EXHIBITS_MODEL = require('../exhibits/exhibits_model');
 const ITEMS_MODEL = require('../exhibits/items_model');
-const HEADINGS_MODEL = require('../exhibits/headings_model');
-const TRASH_MODEL = require('../exhibits/trash_model');
-const PATH = require('path');
+// const HEADINGS_MODEL = require('../exhibits/headings_model');
+// const TRASH_MODEL = require('../exhibits/trash_model');
+// const PATH = require('path');
 
+exports.get_item_records = async function (req, res) {
+    const is_member_of_exhibit = req.params.exhibit_id;
+    const data = await ITEMS_MODEL.get_item_records(is_member_of_exhibit);
+    res.status(data.status).send(data);
+};
+
+/*
 exports.create_exhibit_record = async function (req, res) {
 
     const data = req.body;
@@ -37,12 +44,16 @@ exports.create_exhibit_record = async function (req, res) {
     const result = await EXHIBITS_MODEL.create_exhibit_record(data);
     res.status(result.status).send(result);
 };
+*/
 
+/*
 exports.get_exhibit_records = async function (req, res) {
     const data = await EXHIBITS_MODEL.get_exhibit_records();
     res.status(data.status).send(data);
 };
+*/
 
+/*
 exports.get_exhibit_record = async function (req, res) {
 
     const uuid = req.params.exhibit_id;
@@ -55,7 +66,9 @@ exports.get_exhibit_record = async function (req, res) {
     const data = await EXHIBITS_MODEL.get_exhibit_record(uuid);
     res.status(data.status).send(data);
 };
+*/
 
+/*
 exports.update_exhibit_record = async function (req, res) {
 
     const uuid = req.params.exhibit_id;
@@ -125,13 +138,9 @@ exports.get_grid_item_records = async function (req, res) {
     const result = await ITEMS_MODEL.get_grid_item_records(is_member_of_exhibit, is_member_of_grid);
     res.status(result.status).send(result);
 };
+*/
 
-exports.get_item_records = async function (req, res) {
-    const is_member_of_exhibit = req.params.exhibit_id;
-    const data = await ITEMS_MODEL.get_item_records(is_member_of_exhibit);
-    res.status(data.status).send(data);
-};
-
+/*
 exports.get_item_record = async function (req, res) {
 
     const is_member_of_exhibit = req.params.exhibit_id;
@@ -354,7 +363,9 @@ exports.build_exhibit_preview = async function (req, res) {
         }, 1000);
     }
 };
+*/
 
+/*
 exports.publish_exhibit = async function (req, res) {
     console.log(req.params);
     const uuid = req.params.exhibit_id;
@@ -398,3 +409,5 @@ exports.suppress_exhibit = async function (req, res) {
         });
     }
 }
+
+ */

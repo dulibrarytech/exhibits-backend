@@ -32,6 +32,45 @@ const VALIDATOR = require('../libs/validate');
 const FS = require('fs');
 const LOGGER = require('../libs/log4');
 
+/**
+ * Gets item records by exhibit
+ * @param is_member_of_exhibit
+ */
+exports.get_item_records = async function (is_member_of_exhibit) {
+
+    try {
+
+        const ITEM_TASK = new EXHIBIT_ITEM_RECORD_TASKS(DB, TABLES);
+        const HEADING_TASK = new EXHIBIT_HEADING_RECORD_TASKS(DB, TABLES);
+        const GRID_TASK = new EXHIBIT_GRID_RECORD_TASKS(DB, TABLES);
+        let items = await ITEM_TASK.get_item_records(is_member_of_exhibit);
+        let headings = await HEADING_TASK.get_heading_records(is_member_of_exhibit);
+        let grids = await GRID_TASK.get_grid_records(is_member_of_exhibit);
+
+        for (let i = 0; i < grids.length; i++) {
+            grids[i].grid_items = await GRID_TASK.get_grid_item_records(is_member_of_exhibit, grids[i].uuid);
+        }
+
+        let records = [...items, ...headings, ...grids];
+
+        records.sort((a, b) => {
+            return a.order - b.order;
+        });
+
+        return {
+            status: 200,
+            message: 'Exhibit item records',
+            data: records
+        };
+
+    } catch (error) {
+        LOGGER.module().error('ERROR: [/exhibits/model (get_item_records)] Unable to get item records ' + error.message);
+        return {
+            status: 400,
+            message: error.message
+        };
+    }
+};
 
 /**
  * Creates item record
@@ -269,46 +308,6 @@ exports.get_grid_item_records = async function (is_member_of_exhibit, is_member_
 
     } catch (error) {
         console.log(error);
-    }
-};
-
-/**
- * Gets item records by exhibit
- * @param is_member_of_exhibit
- */
-exports.get_item_records = async function (is_member_of_exhibit) {
-
-    try {
-
-        const ITEM_TASK = new EXHIBIT_ITEM_RECORD_TASKS(DB, TABLES);
-        const HEADING_TASK = new EXHIBIT_HEADING_RECORD_TASKS(DB, TABLES);
-        const GRID_TASK = new EXHIBIT_GRID_RECORD_TASKS(DB, TABLES);
-        let items = await ITEM_TASK.get_item_records(is_member_of_exhibit);
-        let headings = await HEADING_TASK.get_heading_records(is_member_of_exhibit);
-        let grids = await GRID_TASK.get_grid_records(is_member_of_exhibit);
-
-        for (let i = 0; i < grids.length; i++) {
-            grids[i].grid_items = await GRID_TASK.get_grid_item_records(is_member_of_exhibit, grids[i].uuid);
-        }
-
-        let records = [...items, ...headings, ...grids];
-
-        records.sort((a, b) => {
-            return a.order - b.order;
-        });
-
-        return {
-            status: 200,
-            message: 'Exhibit item records',
-            data: records
-        };
-
-    } catch (error) {
-        LOGGER.module().error('ERROR: [/exhibits/model (get_item_records)] Unable to get item records ' + error.message);
-        return {
-            status: 400,
-            message: error.message
-        };
     }
 };
 

@@ -56,7 +56,7 @@
                         <div class="col-12 col-md-12">
                             <input type="text" id="item-heading-text" name="text" placeholder="Heading Text"
                                    class="form-control">
-                            <small class="form-text text-muted">* Required</small>
+                            <small class="form-text text-muted"><span style="color: red">*</span> Required</small>
                         </div>
                     </div>
 
@@ -101,6 +101,7 @@
                                     <option value="Helvetica">Helvetica</option>
                                     <option value="Arial">Arial</option>
                                     <option value="Times New Roman">Times New Roman</option>
+                                    <option value="Nocturne Serif">Nocturne Serif</option>
                                 </select>
                             </div>
                         </div>
@@ -133,11 +134,11 @@
 <script src="/exhibits-dashboard/static/app/auth.module.js"></script>
 <script src="/exhibits-dashboard/static/app/uploads.module.js"></script>
 <script src="/exhibits-dashboard/static/app/exhibits.module.js"></script>
-<script src="/exhibits-dashboard/static/app/items.module.js"></script>
-<script src="/exhibits-dashboard/static/app/items.form.module.js"></script>
+<script src="/exhibits-dashboard/static/app/items.common.heading.form.module.js"></script>
+<script src="/exhibits-dashboard/static/app/items.add.heading.form.module.js"></script>
 <script>
-    itemsFormModule.init();
-    itemsFormModule.headings_init();
+    itemsAddHeadingFormModule.init();
+    itemsCommonHeadingFormModule.init();
 </script>
 </body>
 </html>

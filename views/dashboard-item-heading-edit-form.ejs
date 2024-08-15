@@ -46,7 +46,7 @@
         <div id="message"></div>
         <div id="item-heading-card" class="card" style="visibility: visible">
             <div class="card-header">
-                <strong class="card-title mb-3">Add heading to '<span id="exhibit-title"></span>' exhibit</strong>
+                <strong class="card-title mb-3">Edit '<span id="exhibit-title"></span>' exhibit heading</strong>
             </div>
             <form id="item-heading-form" class="form-horizontal">
                 <div class="card-body">
@@ -101,6 +101,7 @@
                                     <option value="Helvetica">Helvetica</option>
                                     <option value="Arial">Arial</option>
                                     <option value="Times New Roman">Times New Roman</option>
+                                    <option value="Nocturne Serif">Nocturne Serif</option>
                                 </select>
                             </div>
                         </div>
@@ -134,9 +135,11 @@
 <script src="/exhibits-dashboard/static/app/uploads.module.js"></script>
 <script src="/exhibits-dashboard/static/app/exhibits.module.js"></script>
 <script src="/exhibits-dashboard/static/app/items.module.js"></script>
-<script src="/exhibits-dashboard/static/app/items.heading.edit.form.module.js"></script>
+<script src="/exhibits-dashboard/static/app/items.common.heading.form.module.js"></script>
+<script src="/exhibits-dashboard/static/app/items.edit.heading.form.module.js"></script>
 <script>
-    itemsHeadingEditFormModule.init();
+    itemsEditHeadingFormModule.init();
+    itemsCommonHeadingFormModule.init();
 </script>
 </body>
 </html>

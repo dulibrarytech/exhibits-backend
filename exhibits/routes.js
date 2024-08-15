@@ -18,12 +18,16 @@
 
 'use strict';
 
-const CONTROLLER = require('../exhibits/controller');
+const CONTROLLER = require('../exhibits/items_controller');
 const ENDPOINTS = require('../exhibits/endpoints');
 const TOKEN = require('../libs/tokens');
 
-module.exports = function (app) {
+module.exports = async function (app) {
 
+    app.route(ENDPOINTS().exhibits.item_records.endpoint)
+    .get(TOKEN.verify, await CONTROLLER.get_item_records);
+
+    /*
     app.route(ENDPOINTS().exhibits.exhibit_records.endpoints.post.endpoint)
     .post(CONTROLLER.create_exhibit_record);  // TOKEN.verify,
 
@@ -44,10 +48,9 @@ module.exports = function (app) {
 
     app.route(ENDPOINTS().exhibits.item_records.post.endpoint)
     .post(TOKEN.verify, CONTROLLER.create_item_record);
+    */
 
-    app.route(ENDPOINTS().exhibits.item_records.endpoint)
-    .get(CONTROLLER.get_item_records);  // TOKEN.verify,
-
+    /*
     app.route(ENDPOINTS().exhibits.item_records.get.endpoint)
     .get(TOKEN.verify, CONTROLLER.get_item_record);
 
@@ -102,4 +105,6 @@ module.exports = function (app) {
 
     app.route(ENDPOINTS().exhibits.exhibit_suppress.post.endpoint)
     .post(CONTROLLER.suppress_exhibit);
+
+     */
 };

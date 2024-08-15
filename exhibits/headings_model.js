@@ -113,7 +113,7 @@ exports.get_heading_record = async function (is_member_of_exhibit, uuid) {
     }
 };
 
-/** TODO: version record
+/**
  * Updates heading record
  * @param is_member_of_exhibit
  * @param uuid
@@ -123,6 +123,7 @@ exports.update_heading_record = async function (is_member_of_exhibit, uuid, data
 
     try {
 
+        /*
         if (data.is_published !== undefined && data.is_locked !== undefined) {
             data.is_published = parseInt(data.is_published);
             data.is_locked = parseInt(data.is_locked);
@@ -133,6 +134,7 @@ exports.update_heading_record = async function (is_member_of_exhibit, uuid, data
                 message: 'Bad Request.'
             };
         }
+        */
 
         data.is_member_of_exhibit = is_member_of_exhibit;
         data.uuid = uuid;
@@ -150,6 +152,8 @@ exports.update_heading_record = async function (is_member_of_exhibit, uuid, data
             };
         }
 
+        data.styles = JSON.stringify(data.styles);
+
         const UPDATE_RECORD_TASK = new EXHIBIT_HEADING_RECORD_TASKS(DB, TABLES);
         let result = await UPDATE_RECORD_TASK.update_heading_record(data);
 
@@ -160,7 +164,7 @@ exports.update_heading_record = async function (is_member_of_exhibit, uuid, data
             };
         } else {
             return {
-                status: 204,
+                status: 201,
                 message: 'Heading record updated'
             };
         }

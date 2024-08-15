@@ -57,17 +57,17 @@ module.exports = function (app) {
     app.route(APP_PATH + '/items/standard/edit')
     .get(CONTROLLER.get_dashboard_items_standard_edit_form);
 
+    app.route(APP_PATH + '/items/heading')
+    .get(CONTROLLER.get_dashboard_item_heading_add_form);
+
+    app.route(APP_PATH + '/items/heading/edit')
+    .get(CONTROLLER.get_dashboard_items_heading_edit_form);
+
     app.route(APP_PATH + '/items/grid/item')
     .get(CONTROLLER.get_dashboard_item_griditem_form);
 
     app.route(APP_PATH + '/items/grid')
     .get(CONTROLLER.get_dashboard_item_griditem_form);
-
-    app.route(APP_PATH + '/items/heading')
-    .get(CONTROLLER.get_dashboard_item_heading_form);
-
-    app.route(APP_PATH + '/items/heading/edit')
-    .get(CONTROLLER.get_dashboard_items_heading_edit_form);
 
     app.route(APP_PATH + '/items/grid/list')
     .get(CONTROLLER.get_dashboard_item_grid_list);

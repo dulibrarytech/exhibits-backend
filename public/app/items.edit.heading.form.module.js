@@ -16,7 +16,7 @@
 
  */
 
-const itemsHeadingEditFormModule = (function () {
+const itemsEditHeadingFormModule = (function () {
 
     'use strict';
 
@@ -38,7 +38,7 @@ const itemsHeadingEditFormModule = (function () {
             let tmp = EXHIBITS_ENDPOINTS.exhibits.heading_records.get.endpoint.replace(':exhibit_id', exhibit_id)
             let endpoint = tmp.replace(':heading_id', item_id);
 
-            if (token === false) {  //  || EXHIBITS_ENDPOINTS === null
+            if (token === false) {
 
                 document.querySelector('#message').innerHTML = 'ERROR: Unable to get API endpoints';
 
@@ -65,76 +65,6 @@ const itemsHeadingEditFormModule = (function () {
         } catch (error) {
             console.log('ERROR: ', error.message);
         }
-    }
-
-    /**
-     * Gets data from item edit form
-     */
-    function get_item_heading_data () {
-
-        let item = {};
-        item.styles = {
-            item: {}
-        };
-
-        // item data
-        item.title = rich_text_data['item-title-input'].getHTMLCode();
-        item.caption = rich_text_data['item-caption-input'].getHTMLCode();
-        item.description = rich_text_data['item-description-input'].getHTMLCode();
-        item.text = rich_text_data['item-text-input'].getHTMLCode();
-
-        // grid item only
-        if (document.querySelector('#item-date')) {
-            item.date = document.querySelector('#item-date').value;
-        }
-
-        // item media
-        if (document.querySelector('#item-thumbnail')) {
-            item.thumbnail = document.querySelector('#item-thumbnail').value;
-        }
-
-        // TODO: get item type from upload module?
-        if (document.querySelector('#item-type')) {
-            item.item_type = document.querySelector('#item-type').value;
-        }
-
-        if (document.querySelector('#repo-uuid').value.length > 0) {
-            item.media = document.querySelector('#repo-uuid').value;
-        } else {
-            item.media = document.querySelector('#item-media').value;
-        }
-
-        item.media_prev = document.querySelector('#item-media-prev').value;
-
-        // item layout - standard item only
-        if (document.getElementsByName('layout')) {
-            item.layout = helperModule.get_checked_radio_button(document.getElementsByName('layout'));
-        }
-
-        if (item.layout.length === 0) {
-            item.layout = 'grid';
-        }
-
-        // item styles
-        let item_background_color = document.querySelector('#item-background-color').value;
-        let item_color = document.querySelector('#item-font-color').value;
-        let item_font = document.querySelector('#item-font').value;
-
-        if (item_background_color.length > 0) {
-            item.styles.item.backGroundColor = item_background_color;
-        }
-
-        if (item_color.length > 0) {
-            item.styles.item.color = item_color;
-        }
-
-        if (item_font.length > 0) {
-            item.styles.item.fontFamily = item_font;
-        }
-
-        console.log('edit item data ', item.styles);
-
-        return item;
     }
 
     /**
@@ -179,14 +109,13 @@ const itemsHeadingEditFormModule = (function () {
         try {
 
             scrollTo(0, 0);
-            document.querySelector('.card').style.visibility = 'hidden';
-            document.querySelector('#message').innerHTML = `<div class="alert alert-info" role="alert"><i class="fa fa-info"></i> Updating item record...</div>`;
+            document.querySelector('#message').innerHTML = `<div class="alert alert-info" role="alert"><i class="fa fa-info"></i> Updating heading record...</div>`;
             let exhibit_id = helperModule.get_parameter_by_name('exhibit_id');
             let item_id = helperModule.get_parameter_by_name('item_id');
-            let data = get_item_data();
             let token = authModule.get_user_token();
+            let data = itemsCommonHeadingFormModule.get_common_heading_form_fields();
             let response;
-            console.log(data);
+
             if (exhibit_id === undefined || item_id === undefined) {
                 document.querySelector('#message').innerHTML = `<div class="alert alert-danger" role="alert"><i class="fa fa-exclamation"></i> Unable to get record ID</div>`;
                 return false;
@@ -201,8 +130,8 @@ const itemsHeadingEditFormModule = (function () {
                 return false;
             }
 
-            let tmp = EXHIBITS_ENDPOINTS.exhibits.item_records.put.endpoint.replace(':exhibit_id', exhibit_id);
-            let endpoint = tmp.replace(':item_id', item_id);
+            let tmp = EXHIBITS_ENDPOINTS.exhibits.heading_records.put.endpoint.replace(':exhibit_id', exhibit_id);
+            let endpoint = tmp.replace(':heading_id', item_id);
 
             response = await httpModule.req({
                 method: 'PUT',
@@ -213,7 +142,7 @@ const itemsHeadingEditFormModule = (function () {
                     'x-access-token': token
                 }
             });
-
+            console.log(response.status);
             if (response !== undefined && response.status === 201) {
 
                 document.querySelector('#message').innerHTML = `<div class="alert alert-success" role="alert"><i class="fa fa-info"></i> Item record updated</div>`;
@@ -234,27 +163,10 @@ const itemsHeadingEditFormModule = (function () {
      */
     obj.init = async function () {
 
-        /*
-        document.querySelector('#save-item-btn').addEventListener('click', itemsHeadingEditFormModule.update_item_heading_record);
-        document.querySelector('#logout').addEventListener('click', authModule.logout);
-        */
+        const exhibit_id = helperModule.get_parameter_by_name('exhibit_id');
+        await exhibitsModule.set_exhibit_title(exhibit_id);
 
-        /*
-        // bind color pickers to input fields
-        document.querySelector('#item-background-color-picker').addEventListener('input', () => {
-            if (document.querySelector('#item-background-color')) {
-                document.querySelector('#item-background-color').value = document.querySelector('#item-background-color-picker').value;
-            }
-        });
-
-        document.querySelector('#item-font-color-picker').addEventListener('input', () => {
-            if (document.querySelector('#item-font-color')) {
-                document.querySelector('#item-font-color').value = document.querySelector('#item-font-color-picker').value;
-            }
-        });
-
-         */
-
+        document.querySelector('#save-heading-btn').addEventListener('click', await itemsEditHeadingFormModule.update_item_heading_record);
         await display_edit_record();
     };
 
