@@ -535,6 +535,9 @@ const itemsAddStandardItemFormModule = (function () {
      */
     obj.init = async function () {
 
+        navModule.back_to_items();
+        navModule.set_item_nav_menu_links();
+
         const exhibit_id = helperModule.get_parameter_by_name('exhibit_id');
         exhibitsModule.set_exhibit_title(exhibit_id);
 
