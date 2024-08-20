@@ -30,7 +30,7 @@ const httpModule = (function() {
 
             document.querySelector('#message').innerHTML = `<div class="alert alert-danger" role="alert"><i class="fa fa-exclamation"></i> ${error.message}</div>`;
 
-            if (error.response.status === 401) {
+            if (error.response.status === 401 || error.response.status === 403) {
                 authModule.redirect_to_auth();
             }
         }

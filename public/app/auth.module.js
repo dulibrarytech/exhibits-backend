@@ -124,8 +124,8 @@ const authModule = (function () {
      */
     obj.redirect_to_auth = function () {
         setTimeout(() => {
-            window.location.replace(APP_PATH + '/login');
-        }, 3000);
+            window.location.replace(APP_PATH + '/auth');
+        }, 2000);
     };
 
     /**
