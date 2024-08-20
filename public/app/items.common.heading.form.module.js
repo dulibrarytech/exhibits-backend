@@ -40,20 +40,16 @@ const itemsCommonHeadingFormModule = (function () {
             }
 
             let heading_background_color =  document.querySelector('#heading-background-color').value;
-            let heading_color = document.querySelector('#heading-font-color').value;
-            let font = document.querySelector('#heading-font').value;
+            let heading_font_color = document.querySelector('#heading-font-color').value;
+            let heading_font_size = document.querySelector('#heading-font-size').value;
+            let heading_font = document.querySelector('#heading-font').value;
 
-            if (heading_background_color.length > 0) {
-                item_heading.styles.backGroundColor = heading_background_color;
-            }
-
-            if (heading_color.length > 0) {
-                item_heading.styles.color = heading_color;
-            }
-
-            if (font.length > 0) {
-                item_heading.styles.fontFamily = font;
-            }
+            item_heading.styles = {
+                backgroundColor: heading_background_color.length > 1 ? heading_background_color : '',
+                color: heading_font_color.length > 1 ? heading_font_color : '',
+                fontSize: heading_font_size.length > 1 ? heading_font_size : '',
+                fontFamily: heading_font.length > 1 ? heading_font : ''
+            };
 
             return item_heading;
 

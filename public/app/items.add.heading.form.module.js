@@ -32,7 +32,7 @@ const itemsAddHeadingFormModule = (function () {
         try {
 
             window.scrollTo(0, 0);
-            let exhibit_id = helperModule.get_parameter_by_name('uuid');
+            let exhibit_id = helperModule.get_parameter_by_name('exhibit_id');
 
             if (exhibit_id === undefined) {
                 document.querySelector('#message').innerHTML = `<div class="alert alert-warning" role="alert"><i class="fa fa-info"></i> Unable to create item heading record.</div>`;
@@ -63,7 +63,7 @@ const itemsAddHeadingFormModule = (function () {
                 document.querySelector('#message').innerHTML = `<div class="alert alert-success" role="alert"><i class="fa fa-info"></i> Heading record created</div>`;
 
                 setTimeout(() => {
-                    window.location.replace(APP_PATH + '/items?uuid=' + exhibit_id);
+                    window.location.replace(APP_PATH + '/items?exhibit_id=' + exhibit_id);
                 }, 3000);
             }
 

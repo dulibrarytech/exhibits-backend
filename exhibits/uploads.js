@@ -23,7 +23,7 @@ const MULTER = require('multer');
 const LOGGER = require('../libs/log4');
     // TOKEN = require('../libs/tokens'),
 const STORAGE = './storage';
-const LIMIT = 1000000000; // 1GB
+const LIMIT = 100000000;  // TODO:
 
 module.exports = function (app) {
 
@@ -65,9 +65,6 @@ module.exports = function (app) {
             file_arr.push(file_obj);
             file_obj = {};
         }
-
-        console.log(file_arr);
-        // TODO: save file data to db
 
         res.status(201).send({
             files: file_arr

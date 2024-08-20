@@ -73,6 +73,54 @@
                                   style="font-size: 17px">Apply Custom Styles to Heading</span>
                     </p>
                     <div class="row form-group">
+                        <div class="col-6 col-md-6">
+                            <div class="input-group">
+                                <div class="input-group-btn">
+                                    <input title="Color Picker" class="color-picker btn btn-default" type="color"
+                                           id="heading-background-color-picker" value="#ffffff">
+                                </div>
+                                <input type="text" id="heading-background-color" name="heading_background_color"
+                                       placeholder="Heading Background Color" class="form-control">
+
+                            </div>
+                        </div>
+                        <div class="col-6 col-md-6">
+                            <div class="input-group">
+                                <div class="input-group-btn">
+                                    <input title="Color Picker" class="color-picker btn btn-default" type="color"
+                                           id="heading-font-color-picker"
+                                           value="#ffffff">
+                                </div>
+                                <input type="text" id="heading-font-color" name="item_font_color"
+                                       placeholder="Heading Font Color" class="form-control">
+                            </div>
+                        </div>
+                    </div>
+                    <div class="row form-group">
+                        <div class="col-6 col-md-6">
+                            <div class="input-group">
+                                <input type="number" id="heading-font-size" name="template_font_size"
+                                       placeholder="Heading Font Size" class="form-control" min="1" max="50">
+                                <div class="input-group-append">
+                                    <span class="input-group-text" id="basic-addon2">px</span>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-6 col-md-6">
+                            <div class="input-group">
+                                <select name="heading_font" id="heading-font"
+                                        class="form-control-lg form-control text-muted">
+                                    <option value="">Heading Font</option>
+                                    <option value="Helvetica">Helvetica</option>
+                                    <option value="Arial">Arial</option>
+                                    <option value="Times New Roman">Times New Roman</option>
+                                    <option value="Nocturne Serif">Nocturne Serif</option>
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+                    <!--
+                    <div class="row form-group">
                         <div class="col-12 col-md-12">
                             <div class="input-group">
                                 <div class="input-group-btn">
@@ -112,7 +160,7 @@
                             </div>
                         </div>
                     </div>
-
+                    -->
                     <hr>
                     <button class="btn btn-primary" type="button" id="save-heading-btn">
                         <i class="fa fa-save"></i>&nbsp;&nbsp;Save

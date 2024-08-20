@@ -73,21 +73,18 @@ const itemsEditHeadingFormModule = (function () {
     async function display_edit_record () {
 
         let record = await get_item_heading_record();
-
-        // item data
-        document.querySelector('#item-heading-text').value = record.text;
-
-        // item styles
         let styles;
+
+        document.querySelector('#item-heading-text').value = record.text;
 
         if (typeof record.styles === 'string') {
             styles = JSON.parse(record.styles);
         }
 
         if (Object.keys(styles).length !== 0) {
-
-            document.querySelector('#heading-background-color').value = styles.backGroundColor;
+            document.querySelector('#heading-background-color').value = styles.backgroundColor;
             document.querySelector('#heading-font-color').value = styles.color;
+            document.querySelector('#heading-font-size').value = styles.fontSize;
 
             let font_values = document.querySelector('#heading-font');
 
