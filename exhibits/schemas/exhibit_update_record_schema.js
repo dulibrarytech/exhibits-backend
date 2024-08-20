@@ -27,7 +27,7 @@ module.exports = () => {
         hero_image: {type: 'string'},
         description: {type: 'string'},
         page_layout: {type: 'string'},
-        template: {type: 'string'},
+        exhibit_template: {type: 'string'},
         styles: {type: 'object'}
     };
 };

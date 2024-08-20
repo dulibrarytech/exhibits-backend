@@ -54,8 +54,8 @@ const exhibitsCommonFormModule = (function () {
             // exhibit page layout
             exhibit.page_layout = helperModule.get_checked_radio_button(document.getElementsByName('page_layout'));
 
-            // exhibit template layout - only one option set by default
-            exhibit.template = document.querySelector('#exhibit-template').value;
+            // exhibit template layout - only one option set by default - hidden field in add/edit forms
+            exhibit.exhibit_template = document.querySelector('#exhibit-template').value;
 
             return exhibit;
 

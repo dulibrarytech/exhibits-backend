@@ -237,7 +237,7 @@ const exhibitsEditFormModule = (function () {
                 document.querySelector('#message').innerHTML = `<div class="alert alert-success" role="alert"><i class="fa fa-info"></i> Exhibit record updated</div>`;
 
                 setTimeout(() => {
-                    window.location.replace(APP_PATH + '/exhibits/exhibit/edit?uuid=' + uuid);
+                    window.location.replace(APP_PATH + '/exhibits/exhibit/edit?exhibit_id=' + uuid);
                 }, 2000);
             }
 

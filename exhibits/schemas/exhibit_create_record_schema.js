@@ -30,7 +30,7 @@ module.exports = () => {
         thumbnail: {type: 'string'},
         banner_template: {type: 'string'},
         page_layout: {type: 'string'},
-        template: {type: 'string'},
+        exhibit_template: {type: 'string'},
         styles: {type: 'object'}
     };
 };
