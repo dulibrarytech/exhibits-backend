@@ -20,9 +20,8 @@
 
 const HELPER = require("../libs/helper");
 const UPLOAD_CONFIG = {
-    exhibits_upload_path: process.env.EXHIBITS_UPLOAD_PATH,
-    headings_upload_path: process.env.HEADINGS_UPLOAD_PATH,
-    items_upload_path: process.env.ITEMS_UPLOAD_PATH
+    upload_path: process.env.UPLOAD_PATH,
+    upload_max: process.env.UPLOAD_MAX
 };
 
 module.exports = function () {

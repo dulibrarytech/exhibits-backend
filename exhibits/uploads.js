@@ -21,9 +21,10 @@
 const APP_PATH = '/exhibits-dashboard';
 const MULTER = require('multer');
 const LOGGER = require('../libs/log4');
-    // TOKEN = require('../libs/tokens'),
-const STORAGE = './storage';
-const LIMIT = 100000000;  // TODO:
+const UPLOAD_CONFIG = require('../config/upload_config')();
+const STORAGE = UPLOAD_CONFIG.upload_path;
+const LIMIT = UPLOAD_CONFIG.upload_max;
+// TOKEN = require('../libs/tokens'),
 
 module.exports = function (app) {
 
