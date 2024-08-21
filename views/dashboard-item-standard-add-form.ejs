@@ -210,6 +210,15 @@
                 </div>
                 <div class="row">
                     <div class="col-4 col-md-4">
+                        <p style="height: 135px"><img src="/exhibits-dashboard/static/images/item_layout_text_left_media_right.png" height="100"></p>
+                        <p>
+                            <label class="btn btn-default" for="item-layout-right" style="font-size: 15px">Text media pair, media on the right
+                                <input class="item-layout-left-right-radio-btn" type="radio"
+                                       name="layout" id="item-layout-right" value="media_right" checked/>
+                            </label>
+                        </p>
+                    </div>
+                    <div class="col-4 col-md-4">
                         <p><img src="/exhibits-dashboard/static/images/item_layout_media_top_text_bottom.png" width="145" height="135"></p>
                         <p>
                             <label class="btn btn-default" for="item-layout-top" style="font-size: 15px">Text media pair,
@@ -229,6 +238,8 @@
                             </label>
                         </p>
                     </div>
+                </div>
+                <div class="row">
                     <div class="col-4 col-md-4">
                         <p style="height: 135px"><img src="/exhibits-dashboard/static/images/item_layout_media_only.png" height="100"></p>
                         <p>
@@ -238,23 +249,12 @@
                             </label>
                         </p>
                     </div>
-                </div>
-                <div class="row">
                     <div class="col-4 col-md-4">
                         <p style="height: 135px"><img src="/exhibits-dashboard/static/images/item_layout_text_only.png" height="100"></p>
                         <p>
                             <label class="btn btn-default" for="item-layout-text-only" style="font-size: 15px">Text only, no media
                                 <input class="item-layout-radio-btn" type="radio" name="layout"
                                        id="item-layout-text-only" value="text_only"/>
-                            </label>
-                        </p>
-                    </div>
-                    <div class="col-4 col-md-4">
-                        <p style="height: 135px"><img src="/exhibits-dashboard/static/images/item_layout_text_left_media_right.png" height="100"></p>
-                        <p>
-                            <label class="btn btn-default" for="item-layout-right" style="font-size: 15px">Text media pair, media on the right
-                                <input class="item-layout-left-right-radio-btn" type="radio"
-                                       name="layout" id="item-layout-right" value="media_right"/>
                             </label>
                         </p>
                     </div>
@@ -274,6 +274,7 @@
             <div class="card-header">
                 <strong class="card-title mb-3">Item Media Widths</strong>
             </div>
+            // TODO:
             <div class="card-body">
                 <div class="alert alert-info">
                     <i class="fa fa-info"></i> <span
@@ -284,15 +285,15 @@
                         <p style="height: 50px"><img src="/exhibits-dashboard/static/images/item_layout_half.png"></p>
                         <p>
                             <label class="btn btn-default" for="item-layout-half" style="font-size: 14px">Image width is one half of the exhibit item
-                                <input type="radio" name="layout" id="item-layout-half" value="half"/>
+                                <input type="radio" name="layout" id="item-layout-half" value="50" checked/>
                             </label>
                         </p>
                     </div>
                     <div class="col-4 col-md-4">
                         <p style="height: 50px"><img src="/exhibits-dashboard/static/images/item_layout_third.png"></p>
                         <p>
-                            <label class="btn btn-default" for="item-layout-half" style="font-size: 14px">Image width is one half of the exhibit item
-                                <input type="radio" name="layout" id="item-layout-half" value="half"/>
+                            <label class="btn btn-default" for="item-layout-half" style="font-size: 14px">Image width is one third of the exhibit item
+                                <input type="radio" name="layout" id="item-layout-half" value="33"/>
                             </label>
                         </p>
                     </div>
@@ -300,7 +301,7 @@
                         <p style="height: 50px"><img src="/exhibits-dashboard/static/images/item_layout_quarter.png"></p>
                         <p>
                             <label class="btn btn-default" for="item-layout-quarter" style="font-size: 14px">Image width is one quarter of the exhibit item
-                                <input type="radio" name="layout" id="item-layout-quarter" value="quarter"/>
+                                <input type="radio" name="layout" id="item-layout-quarter" value="25"/>
                             </label>
                         </p>
                     </div>
@@ -326,7 +327,7 @@
                                                id="item-background-color-picker" value="#ffffff">
                                     </div>
                                     <input type="text" id="item-background-color" name="item_background_color"
-                                           placeholder="Item Background Color" class="form-control">
+                                           placeholder="Item Background Color" class="form-control" style="height: 40px">
 
                                 </div>
                             </div>
@@ -335,7 +336,7 @@
                             <div class="col-12 col-md-12">
                                 <div class="input-group">
                                     <input type="number" id="nav-font-size" name="nav_font_size"
-                                           placeholder="Navigation Font Size" class="form-control" min="1" max="50">
+                                           placeholder="Navigation Font Size" class="form-control" min="1" max="50" style="height: 40px">
                                     <div class="input-group-append">
                                         <span class="input-group-text" id="basic-addon2">px</span>
                                     </div>
@@ -353,7 +354,7 @@
                                                value="#ffffff">
                                     </div>
                                     <input type="text" id="item-font-color" name="item_font_color"
-                                           placeholder="Item Font Color" class="form-control">
+                                           placeholder="Item Font Color" class="form-control" style="height: 40px">
                                 </div>
                             </div>
                         </div>
@@ -361,7 +362,7 @@
                             <div class="col-12 col-md-12">
                                 <div class="input-group">
                                     <select name="item_font" id="item-font"
-                                            class="form-control-lg form-control text-muted">
+                                            class="form-control-lg form-control text-muted" style="height: 40px">
                                         <option value="">Item Font</option>
                                         <option value="Helvetica">Helvetica</option>
                                         <option value="Arial">Arial</option>
