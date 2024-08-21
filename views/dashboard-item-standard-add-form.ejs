@@ -64,6 +64,7 @@
                                 <div class="form-text text-muted" style="font-size: 17px"><span style="color: red">*</span>
                                     Title <small><em>(Required)</em></small>
                                 </div>
+                                <small class="form-text text-muted"><i class="fa fa-exclamation-circle"></i> <em>The item title becomes a subheading in the navigation</em></small>
                                 <span id="item-title-error" class="is-error"></span>
                                 <div id="item-title-input" style="height: 100px"></div>
                             </div>
@@ -165,40 +166,20 @@
                                     </div>
                                 </div>
                             </div>
-
-                            <!--
-                            <p>
-                                <br>
-                                <span id="item-media-filename-display"></span>&nbsp;&nbsp;
-                                <span>
-                                        <a id="item-media-trash" title="Trash" href="#"><i class="fa fa-trash"></i></a>
-                                    </span>
-                            </p>
-
-                            <input type="hidden" id="item-media" name="item_media">
-                            <input type="hidden" id="item-type" name="item_type">
-
-                            <form class="form-horizontal dropzone" id="item-dropzone" action="/uploads"
-                                  method="post"
-                                  enctype="multipart/form-data">
-                            </form>
-                            -->
-                            <!--
-                            <p>
-                                <br>
-                                <span id="item-thumbnail-filename-display"></span>&nbsp;&nbsp;
-                                <span>
-                                        <a id="item-thumbnail-trash" title="Trash" href="#"><i class="fa fa-trash"></i></a>
-                                    </span>
-                            </p>
-                            <input type="hidden" id="item-thumbnail" name="item_thumbnail">
-
-                            <form class="form-horizontal dropzone" id="item-thumbnail-dropzone" action="/uploads"
-                                  method="post"
-                                  enctype="multipart/form-data">
-                            </form>
-                            <br>
-                            -->
+                            <div id="toggle-open-to-page" style="visibility: hidden">
+                                <p>
+                                <div class="col-sm-3 my-1">
+                                    <label class="sr-only" for="pdf-open-to-page">Open PDF to page</label>
+                                    <div class="input-group">
+                                        <div class="input-group-prepend">
+                                            <div class="input-group-text">Open PDF to page</div>
+                                        </div>
+                                        <input type="number" class="form-control" id="pdf-open-to-page" min="1" value="1">
+                                    </div>
+                                </div>
+                                <small class="form-text text-muted"><i class="fa fa-exclamation-circle"></i> <em>The viewer will automatically open to the page entered</em></small>
+                                </p>
+                            </div>
                         </div>
                         <div class="tab-pane fade" id="nav-profile" role="tabpanel"
                              aria-labelledby="nav-profile-tab">
@@ -395,8 +376,6 @@
         </div>
         <div id="exhibit-submit-card" class="card" style="visibility: visible">
             <div class="card-body">
-                <input type="hidden" name="template" id="exhibit-template"
-                       value="vertical_scroll"/>
                 <button class="btn btn-primary" type="button" id="save-item-btn">
                     <i class="fa fa-save"></i>&nbsp;&nbsp;Save
                 </button>

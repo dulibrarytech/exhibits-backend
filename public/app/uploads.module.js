@@ -128,7 +128,7 @@ const uploadsModule = (function () {
         const ITEM_MEDIA = Dropzone;
         ITEM_MEDIA.options.itemDropzone = {
             paramName: 'files',
-            maxFilesize: 100000, // 1GB - TODO: temp
+            maxFilesize: 10000, // - TODO: temp
             url: APP_PATH + '/uploads',
             uploadMultiple: false,
             maxFiles: 1,
@@ -142,6 +142,12 @@ const uploadsModule = (function () {
                 console.log('item media: ', file);
                 console.log('orig name: ', file.name);
                 console.log('mime type: ', file.type);
+
+                // TODO?
+                if (file.type === 'application/pdf') {
+                    console.log('This is a PDF');
+                }
+
                 console.log('date: ', Date.now());
                 let extension = file.name.split('.').pop();
                 return `${Date.now()}_item_media.${extension}`;
@@ -165,6 +171,7 @@ const uploadsModule = (function () {
                     item_type = 'audio';
                 } else if (file.type.indexOf('pdf') !== -1) {
                     item_type = 'pdf';
+                    document.querySelector('#toggle-open-to-page').style.visibility = 'visible';
                 } else {
                     item_type = 'Unable to Determine Type';
                 }
