@@ -30,11 +30,54 @@ const itemsCommonHeadingFormModule = (function () {
 
         try {
 
+            // TODO
 
         } catch (error) {
             document.querySelector('#message').innerHTML = `<div class="alert alert-danger" role="alert"><i class="fa fa-exclamation"></i> ${error.message}</div>`;
         }
     };
+
+    /**
+     * Deletes thumbnail image
+     */
+    obj.delete_thumbnail_image = function () {
+
+        try {
+
+            (async function() {
+
+                let thumbnail_image = document.querySelector('#thumbnail-image').value;
+                let token = authModule.get_user_token();
+                let response = await httpModule.req({
+                    method: 'DELETE',
+                    url: EXHIBITS_ENDPOINTS.exhibits.media.delete.endpoint + '?media=' + thumbnail_image,
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'x-access-token': token
+                    }
+                });
+
+                if (response !== undefined && response.status === 204) {
+
+                    document.querySelector('#thumbnail-image').value = '';
+                    document.querySelector('#thumbnail-filename-display').innerHTML = '';
+                    document.querySelector('#thumbnail-trash').style.display = 'none';
+                    document.querySelector('#thumbnail-image-display').innerHTML = '';
+                    document.querySelector('#message').innerHTML = `<div class="alert alert-success" role="alert"><i class="fa fa-info"></i> Thumbnail image deleted</div>`;
+
+                    setTimeout(() => {
+                        document.querySelector('#message').innerHTML = '';
+                    }, 3000);
+                }
+
+            })();
+
+        } catch (error) {
+            document.querySelector('#message').innerHTML = `<div class="alert alert-danger" role="alert"><i class="fa fa-exclamation"></i> ${error.message}</div>`;
+        }
+
+        return false;
+    }
 
     /**
      * Init function for exhibits common add/edit forms
@@ -46,12 +89,38 @@ const itemsCommonHeadingFormModule = (function () {
             navModule.back_to_items();
             navModule.set_item_nav_menu_links();
 
+            document.querySelector('#item-media-trash').style.display = 'none';
+            document.querySelector('#item-thumbnail-trash').style.display = 'none';
+            document.querySelectorAll('.item-layout-left-right-radio-btn').forEach((radio_input) => {
+                radio_input.addEventListener('click', () => {
+                    // document.querySelector('#item-media-width').style.display = 'block';
+                });
+            });
 
+            /*
+            document.querySelectorAll('.item-layout-radio-btn').forEach((radio_input) => {
+                radio_input.addEventListener('click', () => {
+                    //document.querySelector('#item-media-width').style.display = 'none';
+                });
+            });
 
+            document.querySelector('#item-background-color-picker').addEventListener('input', () => {
+                if (document.querySelector('#item-background-color')) {
+                    document.querySelector('#item-background-color').value = document.querySelector('#item-background-color-picker').value;
+                }
+            });
+
+            document.querySelector('#item-font-color-picker').addEventListener('input', () => {
+                if (document.querySelector('#item-font-color')) {
+                    document.querySelector('#item-font-color').value = document.querySelector('#item-font-color-picker').value;
+                }
+            });
+
+             */
 
             setTimeout(() => {
-                document.querySelector('#item-heading-card').style.visibility = 'visible';
-            }, 150);
+                document.querySelector('#item-data-card').style.visibility = 'visible';
+            }, 250);
 
         } catch (error) {
             document.querySelector('#message').innerHTML = `<div class="alert alert-danger" role="alert"><i class="fa fa-exclamation"></i> ${error.message}</div>`;

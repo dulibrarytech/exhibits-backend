@@ -51,7 +51,7 @@
     </header>
     <div class="content" style="min-height: 875px;">
         <div id="message"></div>
-        <div id="exhibit-data-card" class="card" style="visibility: visible">
+        <div id="item-data-card" class="card" style="visibility: hidden">
             <div class="card-header">
                 <strong class="card-title mb-3">Add standard Item to '<span id="exhibit-title"></span>' exhibit</strong>
             </div>
@@ -183,11 +183,6 @@
                         </div>
                         <div class="tab-pane fade" id="nav-profile" role="tabpanel"
                              aria-labelledby="nav-profile-tab">
-                            <!--
-                            <div class="alert alert-info">
-                                <i class="fa fa-info"></i> <span id="info-message">Provide info to user about importing from repo</span>
-                            </div>
-                            -->
                             <div class="col-12 col-md-12">
                                 <div class="row form-group">
                                     <input type="text" id="repo-uuid" name="repo_uuid"
@@ -212,29 +207,35 @@
                     <div class="col-4 col-md-4">
                         <p style="height: 135px"><img src="/exhibits-dashboard/static/images/item_layout_text_left_media_right.png" height="100"></p>
                         <p>
-                            <label class="btn btn-default" for="item-layout-right" style="font-size: 15px">Text media pair, media on the right
-                                <input class="item-layout-left-right-radio-btn" type="radio"
-                                       name="layout" id="item-layout-right" value="media_right" checked/>
+                            <label class="btn btn-default" for="item-layout-media-right" style="font-size: 15px">Text media pair, media on the right
+                                <input type="radio"
+                                       name="layout[]"
+                                       id="item-layout-media-right"
+                                       value="media_right" checked/>
                             </label>
                         </p>
                     </div>
                     <div class="col-4 col-md-4">
                         <p><img src="/exhibits-dashboard/static/images/item_layout_media_top_text_bottom.png" width="145" height="135"></p>
                         <p>
-                            <label class="btn btn-default" for="item-layout-top" style="font-size: 15px">Text media pair,
+                            <label class="btn btn-default" for="item-layout-media-top" style="font-size: 15px">Text media pair,
                                 text below media
-                                <input class="item-layout-radio-btn" type="radio" name="layout"
-                                       id="item-layout-top" value="media_top"/>
+                                <input type="radio"
+                                       name="layout[]"
+                                       id="item-layout-media-top"
+                                       value="media_top"/>
                             </label>
                         </p>
                     </div>
                     <div class="col-4 col-md-4">
                         <p><img src="/exhibits-dashboard/static/images/item_layout_text_top_media_bottom.png" width="135" height="135"></p>
                         <p>
-                            <label class="btn btn-default" for="item-layout-bottom" style="font-size: 15px">Text media
+                            <label class="btn btn-default" for="item-layout-media-bottom" style="font-size: 15px">Text media
                                 pair, text above the media
-                                <input class="item-layout-radio-btn" type="radio" name="layout"
-                                       id="item-layout-bottom" value="media_bottom"/>
+                                <input type="radio"
+                                       name="layout[]"
+                                       id="item-layout-media-bottom"
+                                       value="media_bottom"/>
                             </label>
                         </p>
                     </div>
@@ -243,9 +244,11 @@
                     <div class="col-4 col-md-4">
                         <p style="height: 135px"><img src="/exhibits-dashboard/static/images/item_layout_media_only.png" height="100"></p>
                         <p>
-                            <label class="btn btn-default" for="item-layout-only" style="font-size: 15px">Media only, no text
-                                <input class="item-layout-radio-btn" type="radio" name="layout"
-                                       id="item-layout-only" value="media_only"/>
+                            <label class="btn btn-default" for="item-layout-media-only" style="font-size: 15px">Media only, no text
+                                <input type="radio"
+                                       name="layout[]"
+                                       id="item-layout-media-only"
+                                       value="media_only"/>
                             </label>
                         </p>
                     </div>
@@ -253,17 +256,21 @@
                         <p style="height: 135px"><img src="/exhibits-dashboard/static/images/item_layout_text_only.png" height="100"></p>
                         <p>
                             <label class="btn btn-default" for="item-layout-text-only" style="font-size: 15px">Text only, no media
-                                <input class="item-layout-radio-btn" type="radio" name="layout"
-                                       id="item-layout-text-only" value="text_only"/>
+                                <input type="radio"
+                                       name="layout[]"
+                                       id="item-layout-text-only"
+                                       value="text_only"/>
                             </label>
                         </p>
                     </div>
                     <div class="col-4 col-md-4">
                         <p style="height: 135px"><img src="/exhibits-dashboard/static/images/item_layout_media_left_text_right.png" height="100"></p>
                         <p>
-                            <label class="btn btn-default" for="item-layout-left" style="font-size: 15px">Text media pair, media on the left
-                                <input class="item-layout-left-right-radio-btn" type="radio"
-                                       name="layout" id="item-layout-half" value="media_left"/>
+                            <label class="btn btn-default" for="item-layout-media-left" style="font-size: 15px">Text media pair, media on the left
+                                <input type="radio"
+                                       name="layout[]"
+                                       id="item-layout-media-left"
+                                       value="media_left"/>
                             </label>
                         </p>
                     </div>
@@ -274,7 +281,6 @@
             <div class="card-header">
                 <strong class="card-title mb-3">Item Media Widths</strong>
             </div>
-            // TODO:
             <div class="card-body">
                 <div class="alert alert-info">
                     <i class="fa fa-info"></i> <span
@@ -406,8 +412,10 @@
 <script src="/exhibits-dashboard/static/app/uploads.module.js"></script>
 <script src="/exhibits-dashboard/static/app/exhibits.module.js"></script>
 <script src="/exhibits-dashboard/static/app/items.module.js"></script>
+<script src="/exhibits-dashboard/static/app/items.common.standard.item.form.module.js"></script>
 <script src="/exhibits-dashboard/static/app/items.add.standard.item.form.module.js"></script>
 <script>
+    itemsCommonHeadingFormModule.init();
     itemsAddStandardItemFormModule.init();
 </script>
 </body>

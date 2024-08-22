@@ -66,7 +66,11 @@ const ENDPOINTS = {
            get: {
                description: 'Gets item media',
                endpoint: `${APP_PATH}${PREFIX}${VERSION}${ENDPOINT}/:exhibit_id/media/items/:media`,
-           }
+           },
+            delete: {
+                description: 'Deletes item media',
+                endpoint: `${APP_PATH}${PREFIX}${VERSION}${ENDPOINT}/:exhibit_id/media/items/:media`
+            }
         },
         media: {
             get: {

@@ -102,26 +102,18 @@ const itemsAddStandardItemFormModule = (function () {
      */
     obj.create_item_record = async function () {
 
-        window.scrollTo(0, 0);
-        let uuid = helperModule.get_parameter_by_name('uuid');
-        let grid_id = helperModule.get_parameter_by_name('grid');
-
-        if (uuid === undefined) {
-            document.querySelector('#message').innerHTML = `<div class="alert alert-warning" role="alert"><i class="fa fa-info"></i> Unable to create item record.</div>`;
-            return false;
-        }
-
-        document.querySelector('#message').innerHTML = `<div class="alert alert-info" role="alert"><i class="fa fa-info"></i> Creating item record...</div>`;
-        let data = get_item_data();
-
-        if (grid_id === undefined) {
-            data.is_member_of_item_grid = '0';
-        } else {
-            data.is_member_of_item_grid = grid_id;
-        }
-
         try {
 
+            window.scrollTo(0, 0);
+            let uuid = helperModule.get_parameter_by_name('exhibit_id');
+
+            if (uuid === undefined) {
+                document.querySelector('#message').innerHTML = `<div class="alert alert-warning" role="alert"><i class="fa fa-info"></i> Unable to create item record.</div>`;
+                return false;
+            }
+
+            document.querySelector('#message').innerHTML = `<div class="alert alert-info" role="alert"><i class="fa fa-info"></i> Creating item record...</div>`;
+            let data = get_item_data();
             let token = authModule.get_user_token();
             let response = await httpModule.req({
                 method: 'POST',
@@ -139,20 +131,10 @@ const itemsAddStandardItemFormModule = (function () {
 
                 let message = 'Item record created';
 
-                if (itemsFormModule.check_grid() === true) {
-                    message = 'Grid item record created';
-                }
-
                 document.querySelector('#message').innerHTML = `<div class="alert alert-success" role="alert"><i class="fa fa-info"></i> ${message}</div>`;
 
                 setTimeout(() => {
-
-                    if (itemsFormModule.check_grid() === true) {
-                        location.replace(`${APP_PATH}/items/standard?uuid=${uuid}&grid=${grid_id}`);
-                    } else {
-                        location.replace(`${APP_PATH}/items/standard?uuid=${uuid}`);
-                    }
-
+                    location.replace(`${APP_PATH}/items/standard?uuid=${uuid}`);
                 }, 3000);
             }
 
@@ -166,9 +148,6 @@ const itemsAddStandardItemFormModule = (function () {
      */
     obj.init = async function () {
 
-        // navModule.back_to_items();
-        // navModule.set_item_nav_menu_links();
-
         const exhibit_id = helperModule.get_parameter_by_name('exhibit_id');
         exhibitsModule.set_exhibit_title(exhibit_id);
 
@@ -179,42 +158,6 @@ const itemsAddStandardItemFormModule = (function () {
         uploadsModule.upload_item_thumbnail();
 
         document.querySelector('#save-item-btn').addEventListener('click', itemsAddStandardItemFormModule.create_item_record);
-        document.querySelector('#item-media-trash').style.display = 'none';
-        document.querySelector('#item-thumbnail-trash').style.display = 'none';
-        document.querySelectorAll('.item-layout-left-right-radio-btn').forEach((radio_input) => {
-            radio_input.addEventListener('click', () => {
-                document.querySelector('#item-media-width').style.display = 'block';
-            });
-        });
-
-        document.querySelectorAll('.item-layout-radio-btn').forEach((radio_input) => {
-            radio_input.addEventListener('click', () => {
-                document.querySelector('#item-media-width').style.display = 'none';
-            });
-        });
-
-        document.querySelector('#item-background-color-picker').addEventListener('input', () => {
-            if (document.querySelector('#item-background-color')) {
-                document.querySelector('#item-background-color').value = document.querySelector('#item-background-color-picker').value;
-            }
-        });
-
-        document.querySelector('#item-font-color-picker').addEventListener('input', () => {
-            if (document.querySelector('#item-font-color')) {
-                document.querySelector('#item-font-color').value = document.querySelector('#item-font-color-picker').value;
-            }
-        });
-
-        // helperModule.set_rich_text_editor_config();
-        // const uuid = helperModule.get_parameter_by_name('uuid');
-        // exhibitsModule.set_preview_link();
-        // await itemsModule.set_exhibit_title(uuid);
-
-        /*
-        setTimeout(() => {
-            document.querySelector('.card').style.visibility = 'visible';
-        }, 100);
-         */
     };
 
     return obj;
