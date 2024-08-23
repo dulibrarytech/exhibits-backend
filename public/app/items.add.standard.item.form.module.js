@@ -39,64 +39,6 @@ const itemsAddStandardItemFormModule = (function () {
         });
     }
 
-    /** TODO move to common module
-     * Gets item data from form
-     */
-    function get_item_data() {
-
-        let item = {};
-        item.styles = {};
-
-        // item metadata
-        item.title = rich_text_data.item_title.getHTMLCode();
-        item.caption = rich_text_data.item_caption.getHTMLCode();
-        item.description = rich_text_data.item_description.getHTMLCode();
-        item.text = rich_text_data.item_text.getHTMLCode();
-
-        /*
-        item.title = document.querySelector('#item-title').value;
-        item.caption = document.querySelector('#item-caption').value;
-        item.description = document.querySelector('#item-description').value;
-        item.text = document.querySelector('#item-text').value;
-        */
-
-        // grid item only
-        item.date = document.querySelector('#item-date').value;
-
-        // item media
-        item.thumbnail = document.querySelector('#item-thumbnail').value;
-        item.item_type = document.querySelector('#item-type').value;
-        item.media = document.querySelector('#item-media').value;
-        item.repo_uuid = document.querySelector('#repo-uuid').value;
-
-        // item layout - standard item only
-        item.layout = helperModule.get_checked_radio_button(document.getElementsByName('layout'));
-
-        if (item.layout.length === 0) {
-            item.layout = 'grid';
-        }
-
-        // item styles
-        let item_background_color = document.querySelector('#item-background-color').value;
-        let item_color = document.querySelector('#item-font-color').value;
-        let item_font = document.querySelector('#item-font').value;
-
-        if (item_background_color.length > 0) {
-            item.styles.backGroundColor = item_background_color;
-        }
-
-        if (item_color.length > 0) {
-            item.styles.color = document.querySelector('#item-font-color').value;
-        }
-
-        if (item_font.length > 0) {
-            item.styles.fontFamily = item_font;
-        }
-
-        console.log(item);
-        return item;
-    }
-
     /**
      * Creates item
      */
@@ -113,7 +55,7 @@ const itemsAddStandardItemFormModule = (function () {
             }
 
             document.querySelector('#message').innerHTML = `<div class="alert alert-info" role="alert"><i class="fa fa-info"></i> Creating item record...</div>`;
-            let data = get_item_data();
+            let data = itemsCommonHeadingFormModule.get_common_standard_item_form_fields(rich_text_data);
             let token = authModule.get_user_token();
             let response = await httpModule.req({
                 method: 'POST',
@@ -144,7 +86,7 @@ const itemsAddStandardItemFormModule = (function () {
     };
 
     /**
-     *
+     * Init function for standard item add form
      */
     obj.init = async function () {
 

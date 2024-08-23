@@ -26,11 +26,49 @@ const itemsCommonHeadingFormModule = (function () {
     /**
      * Gets common heading form fields
      */
-    obj.get_common_standard_item_form_fields = function () {
+    obj.get_common_standard_item_form_fields = function (rich_text_data) {
 
         try {
 
-            // TODO
+            let item = {};
+            item.styles = {};
+
+            // item metadata
+            item.title = rich_text_data['item-title-input'].getHTMLCode();
+            item.caption = rich_text_data['item-caption-input'].getHTMLCode();
+            item.description = rich_text_data['item-description-input'].getHTMLCode();
+            item.text = rich_text_data['item-text-input'].getHTMLCode();
+
+            // item media
+            item.thumbnail = document.querySelector('#item-thumbnail').value;
+            item.item_type = document.querySelector('#item-type').value;
+            item.media = document.querySelector('#item-media').value;
+            item.repo_uuid = document.querySelector('#repo-uuid').value;
+
+            // item layout - standard item only
+            item.layout = helperModule.get_checked_radio_button(document.getElementsByName('layout'));
+
+            console.log('layout ', item.layout);
+
+            // item styles
+            let item_background_color = document.querySelector('#item-background-color').value;
+            let item_color = document.querySelector('#item-font-color').value;
+            let item_font = document.querySelector('#item-font').value;
+
+            if (item_background_color.length > 0) {
+                item.styles.backGroundColor = item_background_color;
+            }
+
+            if (item_color.length > 0) {
+                item.styles.color = document.querySelector('#item-font-color').value;
+            }
+
+            if (item_font.length > 0) {
+                item.styles.fontFamily = item_font;
+            }
+
+            console.log(item);
+            return item;
 
         } catch (error) {
             document.querySelector('#message').innerHTML = `<div class="alert alert-danger" role="alert"><i class="fa fa-exclamation"></i> ${error.message}</div>`;
