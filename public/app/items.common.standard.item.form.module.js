@@ -129,18 +129,6 @@ const itemsCommonHeadingFormModule = (function () {
 
             document.querySelector('#item-media-trash').style.display = 'none';
             document.querySelector('#item-thumbnail-trash').style.display = 'none';
-            document.querySelectorAll('.item-layout-left-right-radio-btn').forEach((radio_input) => {
-                radio_input.addEventListener('click', () => {
-                    // document.querySelector('#item-media-width').style.display = 'block';
-                });
-            });
-
-            /*
-            document.querySelectorAll('.item-layout-radio-btn').forEach((radio_input) => {
-                radio_input.addEventListener('click', () => {
-                    //document.querySelector('#item-media-width').style.display = 'none';
-                });
-            });
 
             document.querySelector('#item-background-color-picker').addEventListener('input', () => {
                 if (document.querySelector('#item-background-color')) {
@@ -152,6 +140,22 @@ const itemsCommonHeadingFormModule = (function () {
                 if (document.querySelector('#item-font-color')) {
                     document.querySelector('#item-font-color').value = document.querySelector('#item-font-color-picker').value;
                 }
+            });
+
+            /*
+            document.querySelectorAll('.item-layout-left-right-radio-btn').forEach((radio_input) => {
+                radio_input.addEventListener('click', () => {
+                    // document.querySelector('#item-media-width').style.display = 'block';
+                });
+            });
+
+             */
+
+            /*
+            document.querySelectorAll('.item-layout-radio-btn').forEach((radio_input) => {
+                radio_input.addEventListener('click', () => {
+                    //document.querySelector('#item-media-width').style.display = 'none';
+                });
             });
 
              */

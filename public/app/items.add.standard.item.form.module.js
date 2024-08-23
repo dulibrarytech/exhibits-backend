@@ -69,14 +69,11 @@ const itemsAddStandardItemFormModule = (function () {
 
             if (response !== undefined && response.status === 201) {
 
-                document.querySelector('#item-card').style.visibility = 'hidden';
-
-                let message = 'Item record created';
-
-                document.querySelector('#message').innerHTML = `<div class="alert alert-success" role="alert"><i class="fa fa-info"></i> ${message}</div>`;
+                document.querySelector('#message').innerHTML = `<div class="alert alert-success" role="alert"><i class="fa fa-info"></i> Item record created</div>`;
 
                 setTimeout(() => {
-                    location.replace(`${APP_PATH}/items/standard?uuid=${uuid}`);
+                    // location.replace(`${APP_PATH}/items/standard?uuid=${uuid}`);
+                    document.querySelector('#message').innerHTML = '';
                 }, 3000);
             }
 
