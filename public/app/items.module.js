@@ -91,26 +91,28 @@ const itemsModule = (function () {
             item_data += `<td style="width: 5%">${order}</td>`;
 
             if (items[i].type === 'item') { // standard
-
-                let thumbnail = '';
+                console.log(items[i]);
                 let title = `<a href="${APP_PATH}/items/details?exhibit_id=${exhibit_id}&item_id=${item_id}">${helperModule.unescape(items[i].title)}</a>`;
                 let description = helperModule.unescape(items[i].description);
-                let date = items[i].date;
+                let thumbnail = '';
+                let img
 
                 if (items[i].thumbnail.length > 0) {
-                    thumbnail = EXHIBITS_ENDPOINTS.exhibits.exhibit_media.get.endpoint.replace(':exhibit_id', uuid).replace(':media', items[i].thumbnail);
-                    item_data = `<p><img alt="${thumbnail}" src="${thumbnail}" height="100" width="100"></p>`;
+                    thumbnail = EXHIBITS_ENDPOINTS.exhibits.exhibit_media.get.endpoint.replace(':exhibit_id', exhibit_id).replace(':media', items[i].thumbnail);
+                    img = `<p><img alt="${thumbnail}" src="${thumbnail}" height="100" width="100"></p>`;
+                    console.log('thumbnail', item_data);
                 }
 
                 item_data += `<td style="width: 35%">
                     <p><button class="btn btn-default"><small>${type}</small></button></p>
                     <p><strong>${title}</strong></p>
-                    ${thumbnail}
-                    <p><small>${description}</small></p>
-                    <p><small>${date}</small></p>
+                    ${img}
+                    <p><strong>${description}</strong></p>
                     </td>`;
 
+                /*
                 item_details = `<a href="${APP_PATH}/items/details?exhibit_id=${exhibit_id}&item_id=${item_id}" title="Item details"><i class="fa fa-search pr-1"></i></a>`;
+                */
 
             } else if (items[i].type === 'heading') {
 
@@ -170,9 +172,10 @@ const itemsModule = (function () {
         }
 
         item_data += '</tr>';
-
+        // console.log('TEST ', item_data);
         document.querySelector('#item-data').innerHTML = item_data;
         let items_table = new DataTable('#items');
+
         setTimeout(() => {
             document.querySelector('#item-card').style.visibility = 'visible';
             document.querySelector('#message').innerHTML = '';
