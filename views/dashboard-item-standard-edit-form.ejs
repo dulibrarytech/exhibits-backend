@@ -1,6 +1,5 @@
 <%- include('partials/header.ejs'); %>
 <style>
-
     .color-picker {
         background-color: none;
         outline: none;
@@ -9,7 +8,6 @@
         width: 50px;
         cursor: pointer;
     }
-
 </style>
 <body>
 <aside id="left-panel" class="left-panel">
@@ -23,8 +21,12 @@
                 </li>
                 <li class="menu-title">Menu</li>
             </ul>
+            <ul class="nav navbar-nav"><li id="preview-link"></li></ul>
             <ul class="nav navbar-nav">
-                <li id="preview-link"></li>
+                <li>
+                    <a id="back-to-items" href="#" data-keyboard="false">
+                        <i class=" menu-icon fa fa-arrow-left"></i>Back to Items</a>
+                </li>
             </ul>
             <ul id="items-menu" class="nav navbar-nav"></ul>
             <ul class="nav navbar-nav">
@@ -37,6 +39,7 @@
         </div>
     </nav>
 </aside>
+
 <div id="right-panel" class="right-panel">
     <header id="header" class="header">
         <div class="top-left">
@@ -48,313 +51,347 @@
     </header>
     <div class="content" style="min-height: 875px;">
         <div id="message"></div>
-        <div id="item-card" class="card" style="visibility: visible">
+        <div id="item-data-card" class="card" style="visibility: hidden">
             <div class="card-header">
-                <strong class="card-title mb-3">Edit Standard Item
+                <strong class="card-title mb-3">Add standard Item to '<span id="exhibit-title"></span>' exhibit</strong>
             </div>
             <div class="card-body">
-                <div id="create-item-form">
-                    <p>
-                        <button class="btn btn-default">Item data</button>
-                    </p>
-                    <div class="alert alert-info"><i class="fa fa-info"></i>
-                        <span id="info-message">Provide info to user about item data form</span>
-                    </div>
-                    <div class="row form-group">
-                        <div class="col-12 col-md-12">
-                            <div class="form-text text-muted" style="font-size: 17px"><span style="color: red">*</span>
-                                Item Title
-                            </div>
-                            <div id="item-title-input" style="height: 100px"></div>
-                            <span id="item-title-error" class="is-error">
-                                <small class="form-text text-muted">* Required | <i
-                                            class="fa fa-exclamation-circle"></i> <em>The item title becomes a subheading in the navigation</em></small>
-                            </span>
-                        </div>
-                    </div>
-                    <!--
-                    <div class="row form-group">
-                        <div class="col-12 col-md-12">
-                            <input type="text" id="item-title" name="title"
-                                   placeholder="Item Title" class="form-control" required>
-                            <span id="item-title-error" class="is-error">
-                                <small class="form-text text-muted">* Required | <i class="fa fa-exclamation-circle"></i> <em>The item title becomes a subheading in the navigation</em></small>
-                            </span>
-                        </div>
-                    </div>
-                    -->
-                    <div class="row form-group">
-                        <div class="col-12 col-md-12">
-                            <div class="form-text text-muted" style="font-size: 17px">
-                                Item Caption
-                            </div>
-                            <div id="item-caption-input" style="height: 100px"></div>
-                            <span id="item-caption-error" class="is-error"></span>
-                        </div>
-                    </div>
-                    <!--
-                    <div class="row form-group">
-                        <div class="col-12 col-md-12">
-                            <textarea id="item-caption" class="form-control" name="caption"
-                                      placeholder="Item Caption"></textarea>
-                        </div>
-                    </div>
-                    -->
-                    <div class="row form-group">
-                        <div class="col-12 col-md-12">
-                            <div class="form-text text-muted" style="font-size: 17px">
-                                Item Description
-                            </div>
-                            <div id="item-description-input" style="height: 100px"></div>
-                            <span id="item-description-error" class="is-error"></span>
-                        </div>
-                    </div>
-                    <!--
-                    <div class="row form-group">
-                        <div class="col-12 col-md-12">
-                            <textarea id="item-description" class="form-control" name="description"
-                                      placeholder="Item Description"></textarea>
-                        </div>
-                    </div>
-                    -->
-                    <div class="row form-group">
-                        <div class="col-12 col-md-12">
-                            <div class="form-text text-muted" style="font-size: 17px">
-                                Item Text
-                            </div>
-                            <div id="item-text-input" style="height: 100px"></div>
-                            <span id="item-text-error" class="is-error"></span>
-                        </div>
-                    </div>
-                    <!--
-                    <div class="row form-group">
-                        <div class="col-12 col-md-12">
-                            <textarea id="item-text" class="form-control" name="text"
-                                      placeholder="Item Text"></textarea>
-                        </div>
-                    </div>
-                    -->
-                    <div class="row form-group is-grid-item" style="visibility: hidden">
-                        <div class="col-12 col-md-12">
-                            <input type="text" id="item-date" name="date"
-                                   placeholder="Item Date" class="form-control">
-                        </div>
-                    </div>
-                    <br>
-                    <hr>
-                    <p>
-                        <button class="btn btn-default">Item media</button>
-                    </p>
-                    <div class="default-tab">
-                        <nav>
-                            <div class="nav nav-tabs" id="nav-tab" role="tablist">
-                                <a class="nav-item nav-link active" id="nav-home-tab" data-toggle="tab"
-                                   href="#nav-home" role="tab" aria-controls="nav-home" aria-selected="true">Upload
-                                    Media</a>
-                                <a class="nav-item nav-link" id="nav-profile-tab" data-toggle="tab"
-                                   href="#nav-profile" role="tab" aria-controls="nav-profile" aria-selected="false">Import
-                                    Media from Repository</a>
-                            </div>
-                        </nav>
-                        <div class="tab-content pl-3 pt-2" id="nav-tabContent">
-                            <div class="tab-pane fade show active" id="nav-home" role="tabpanel"
-                                 aria-labelledby="nav-home-tab">
-                                <div class="alert alert-info">
-                                    <i class="fa fa-info"></i> <span
-                                            id="info-message">Item media can be replaced here</span>
+                <div class="alert alert-info"><i class="fa fa-info"></i> Provide info to user about this form</div>
+                <div class="row">
+                    <div class="col-12 col-md-12">
+                        <div class="row form-group">
+                            <div class="col-12">
+                                <div class="form-text text-muted" style="font-size: 17px"><span style="color: red">*</span>
+                                    Title <small><em>(Required)</em></small>
                                 </div>
+                                <small class="form-text text-muted"><i class="fa fa-exclamation-circle"></i> <em>The item title becomes a subheading in the navigation</em></small>
+                                <span id="item-title-error" class="is-error"></span>
+                                <div id="item-title-input" style="height: 100px"></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="row">
+                    <div class="col-6 col-md-6">
+                        <div class="row form-group">
+                            <div class="col-12">
+                                <div class="form-text text-muted" style="font-size: 17px">Caption <small><em>(Optional)</em></small></div>
+                                <div id="item-caption-input" style="height: 100px"></div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-6 col-md-6">
+                        <div class="row form-group">
+                            <div class="col-12">
+                                <div class="form-text text-muted" style="font-size: 17px">Text <small><em>(Optional)</em></small></div>
+                                <div id="item-text-input" style="height: 100px"></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="row">
+                    <div class="col-12 col-md-12">
+                        <div class="row form-group">
+                            <div class="col-12">
+                                <div class="form-text text-muted" style="font-size: 17px">Description <small><em>(Optional)</em></small></div>
+                                <div id="item-description-input" style="height: 100px"></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div id="item-media-card" class="card">
+            <div class="card-header">
+                <strong class="card-title mb-3">Item Media</strong>
+            </div>
+            <div class="card-body">
+
+                <div class="alert alert-info">
+                    <i class="fa fa-info"></i> <span id="info-message">Provide info to user about uploading exhibit media</span>
+                </div>
+
+                <div class="default-tab">
+                    <nav>
+                        <div class="nav nav-tabs" id="nav-tab" role="tablist">
+                            <a class="nav-item nav-link active" id="nav-home-tab" data-toggle="tab"
+                               href="#nav-home" role="tab" aria-controls="nav-home" aria-selected="true">Upload
+                                Media</a>
+                            <a class="nav-item nav-link" id="nav-profile-tab" data-toggle="tab"
+                               href="#nav-profile" role="tab" aria-controls="nav-profile" aria-selected="false">Import
+                                Media from Repository</a>
+                        </div>
+                    </nav>
+                    <div class="tab-content pl-3 pt-2" id="nav-tabContent">
+                        <div class="tab-pane fade show active" id="nav-home" role="tabpanel"
+                             aria-labelledby="nav-home-tab">
+
+                            <div class="row">
                                 <span class="upload-error"></span>
-                                <div class="col-12 col-md-12">
-                                    <p>
-                                        <span id="item-media-filename-display"></span>&nbsp;&nbsp;
-                                        <span>
-                                            <a id="item-media-trash" title="Trash" href="#"><i class="fa fa-trash"></i></a>
-                                        </span>
-                                    </p>
-                                    <input type="hidden" id="item-media" name="item_media">
-                                    <input type="hidden" id="item-media-prev" name="item-media-prev">
-                                    <input type="hidden" id="item-type" name="item_type">
-                                </div>
-                                <form class="form-horizontal dropzone" id="item-dropzone" action="/uploads"
-                                      method="post"
-                                      enctype="multipart/form-data">
-                                </form>
-                                <br>
-                            </div>
-                            <div class="tab-pane fade" id="nav-profile" role="tabpanel"
-                                 aria-labelledby="nav-profile-tab">
-                                <div class="alert alert-info">
-                                    <i class="fa fa-info"></i> <span id="info-message">Provide info to user about importing from repo</span>
-                                </div>
-                                <div class="col-12 col-md-12">
-                                    <div class="row form-group">
-                                        <input type="text" id="repo-uuid" name="repo_uuid"
-                                               placeholder="DigitalDU record UUID" class="form-control">
-                                        <!--
-                                        <br><br><button class="btn btn-outline-secondary" type="button"><i class="fa fa-download"></i> Import</button></br>
-                                        -->
+                                <div class="col-6 col-md-6">
+                                    <div class="col-12">
+                                        <p>
+                                            <br>
+                                            <span id="item-media-filename-display"></span>&nbsp;&nbsp;
+                                            <span>
+                                        <a id="item-media-trash" title="Trash" href="#"><i class="fa fa-trash"></i></a>
+                                    </span>
+                                        </p>
+
+                                        <input type="hidden" id="item-media" name="item_media">
+                                        <input type="hidden" id="item-media-prev" name="item-media-prev">
+                                        <input type="hidden" id="item-type" name="item_type">
+
+                                        <form class="form-horizontal dropzone" id="item-dropzone" action="/uploads"
+                                              method="post"
+                                              enctype="multipart/form-data">
+                                        </form>
+
                                     </div>
                                 </div>
-                                <br>
-                            </div>
-                        </div>
-                    </div>
-                    <hr>
-                    <p>
-                        <button class="btn btn-default">Item layout</button>
-                    </p>
-                    <div class="alert alert-info"><i class="fa fa-info"></i>
-                        <span id="info-message">Provide info to user about item layouts</span>
-                    </div>
+                                <div class="col-6 col-md-6">
+                                    <div class="col-12">
+                                        <p>
+                                            <br>
+                                            <span id="item-thumbnail-image-display"></span>
+                                            <span id="item-thumbnail-filename-display"></span>&nbsp;&nbsp;
+                                            <span>
+                                        <a id="item-thumbnail-trash" title="Trash" href="#"><i class="fa fa-trash"></i></a>
+                                    </span>
+                                        </p>
+                                        <!--
+                                        <input type="hidden" id="item-thumbnail-image-display" name="thumbnail">
+                                        -->
+                                        <input type="hidden" id="item-thumbnail-image-prev" name="thumbnail-prev">
+                                        <input type="hidden" id="item-thumbnail" name="item_thumbnail">
 
-                    <div class="row form-group">
-                        <div class="col-12 col-md-12">
-                            <form id="item-layout-form">
-                                <table class="table table-striped">
-                                    <tr>
-                                        <td style="width: 30%;padding: 5px">
-                                            <img src="/exhibits-dashboard/static/images/item_layout_media_top_text_bottom.png"
-                                                 width="150" height="150">
-                                        </td>
-                                        <td style="60%;">
-                                            <label class="btn btn-default" for="item-layout-top">Text media pair,
-                                                text below media</label>
-                                        </td>
-                                        <td style="width: 10%">
-                                            <input class="item-layout-radio-btn" type="radio" name="layout"
-                                                   id="item-layout-top" value="media_top"/>
-                                        </td>
-                                    </tr>
-                                    <tr>
-                                        <td style="width: 30%;padding: 5px">
-                                            <img src="/exhibits-dashboard/static/images/item_layout_text_top_media_bottom.png"
-                                                 width="150" height="150">
-                                        </td>
-                                        <td style="60%;">
-                                            <label class="btn btn-default" for="item-layout-bottom">Text media
-                                                pair, text above the media</label>
-                                        </td>
-                                        <td style="width: 10%">
-                                            <input class="item-layout-radio-btn" type="radio" name="layout"
-                                                   id="item-layout-bottom" value="media_bottom"/>
-                                        </td>
-                                    </tr>
-                                    <tr>
-                                        <td style="width: 30%;padding: 5px">
-                                            <img src="/exhibits-dashboard/static/images/item_layout_media_only.png" height="75">
-                                        </td>
-                                        <td style="60%;">
-                                            <label class="btn btn-default" for="item-layout-only">Media only, no
-                                                text</label>
-                                        </td>
-                                        <td style="width: 10%">
-                                            <input class="item-layout-radio-btn" type="radio" name="layout"
-                                                   id="item-layout-only" value="media_only"/>
-                                        </td>
-                                    </tr>
-                                    <tr>
-                                        <td style="width: 30%;padding: 5px">
-                                            <img src="/exhibits-dashboard/static/images/item_layout_text_only.png" height="75">
-                                        </td>
-                                        <td style="60%;">
-                                            <label class="btn btn-default" for="item-layout-text-only">Text only, no
-                                                media</label>
-                                        </td>
-                                        <td style="width: 10%">
-                                            <input class="item-layout-radio-btn" type="radio" name="layout"
-                                                   id="item-layout-text-only" value="text_only"/>
-                                        </td>
-                                    </tr>
-                                    <tr>
-                                        <td style="width: 30%;padding: 5px">
-                                            <img src="/exhibits-dashboard/static/images/item_layout_text_left_media_right.png"
-                                                 height="75">
-                                        </td>
-                                        <td style="60%">
-                                            <label class="btn btn-default" for="item-layout-right">Text media pair,
-                                                media on the right</label>
-                                        </td>
-                                        <td style="width: 10%">
-                                            <input class="item-layout-left-right-radio-btn" type="radio"
-                                                   name="layout" id="item-layout-right" value="media_right"/>
-                                        </td>
-                                    </tr>
-                                    <tr>
-                                        <td style="width: 30%;padding: 5px">
-                                            <img src="/exhibits-dashboard/static/images/item_layout_media_left_text_right.png"
-                                                 height="75">
-                                        </td>
-                                        <td style="60%;">
-                                            <label class="btn btn-default" for="item-layout-left">Text media pair,
-                                                media on the left</label>
-                                        </td>
-                                        <td style="width: 10%">
-                                            <input class="item-layout-left-right-radio-btn" type="radio"
-                                                   name="layout" id="item-layout-half" value="media_left"/>
-                                        </td>
-                                    </tr>
-                                </table>
-                            </form>
+                                        <form class="form-horizontal dropzone" id="item-thumbnail-dropzone" action="/uploads"
+                                              method="post"
+                                              enctype="multipart/form-data">
+                                        </form>
+                                    </div>
+                                </div>
+                            </div>
+                            <div id="toggle-open-to-page" style="visibility: hidden">
+                                <p>
+                                <div class="col-sm-3 my-1">
+                                    <label class="sr-only" for="pdf-open-to-page">Open PDF to page</label>
+                                    <div class="input-group">
+                                        <div class="input-group-prepend">
+                                            <div class="input-group-text">Open PDF to page</div>
+                                        </div>
+                                        <input type="number" class="form-control" id="pdf-open-to-page" min="1" value="1">
+                                    </div>
+                                </div>
+                                <small class="form-text text-muted"><i class="fa fa-exclamation-circle"></i> <em>The viewer will automatically open to the page entered</em></small>
+                                </p>
+                            </div>
+                        </div>
+                        <div class="tab-pane fade" id="nav-profile" role="tabpanel"
+                             aria-labelledby="nav-profile-tab">
+                            <div class="col-12 col-md-12">
+                                <div class="row form-group">
+                                    <input type="text" id="repo-uuid" name="repo_uuid"
+                                           placeholder="DigitalDU record UUID" class="form-control">
+                                </div>
+                            </div>
+                            <br>
                         </div>
                     </div>
-                    <br>
-                    <hr>
-                    <p>
-                        <button class="btn btn-default">Item styles</button>
-                    </p>
-                    <div class="alert alert-info">
-                        <i class="fa fa-info"></i> <span
-                                id="info-message">Provide info to user about applying styles</span>
+                </div>
+            </div>
+        </div>
+        <div id="item-layout-card" class="card" style="visibility: visible">
+            <div class="card-header">
+                <strong class="card-title mb-3">Item Layout</strong>
+            </div>
+            <div class="card-body">
+                <div class="alert alert-info">
+                    <i class="fa fa-info"></i> <span id="info-message">Provide info to user about item layouts</span>
+                </div>
+                <div class="row">
+                    <div class="col-4 col-md-4">
+                        <p style="height: 135px"><img src="/exhibits-dashboard/static/images/item_layout_text_left_media_right.png" height="100"></p>
+                        <p>
+                            <label class="btn btn-default" for="item-layout-media-right" style="font-size: 15px">Text media pair, media on the right
+                                <input type="radio"
+                                       name="layout"
+                                       id="item-layout-media-right"
+                                       value="media_right" checked/>
+                            </label>
+                        </p>
                     </div>
-                    <p>
-                            <span class="form-text text-muted"
-                                  style="font-size: 17px">Apply Custom Styles to Item</span>
-                    </p>
-                    <div class="row form-group">
-                        <div class="col-12 col-md-12">
-                            <div class="input-group">
-                                <div class="input-group-btn">
-                                    <input title="Color Picker" class="color-picker btn btn-default" type="color"
-                                           id="item-background-color-picker" value="#ffffff">
-                                </div>
-                                <input type="text" id="item-background-color" name="item_background_color"
-                                       placeholder="Item Background Color" class="form-control">
+                    <div class="col-4 col-md-4">
+                        <p><img src="/exhibits-dashboard/static/images/item_layout_media_top_text_bottom.png" width="145" height="135"></p>
+                        <p>
+                            <label class="btn btn-default" for="item-layout-media-top" style="font-size: 15px">Text media pair,
+                                text below media
+                                <input type="radio"
+                                       name="layout"
+                                       id="item-layout-media-top"
+                                       value="media_top"/>
+                            </label>
+                        </p>
+                    </div>
+                    <div class="col-4 col-md-4">
+                        <p><img src="/exhibits-dashboard/static/images/item_layout_text_top_media_bottom.png" width="135" height="135"></p>
+                        <p>
+                            <label class="btn btn-default" for="item-layout-media-bottom" style="font-size: 15px">Text media
+                                pair, text above the media
+                                <input type="radio"
+                                       name="layout"
+                                       id="item-layout-media-bottom"
+                                       value="media_bottom"/>
+                            </label>
+                        </p>
+                    </div>
+                </div>
+                <div class="row">
+                    <div class="col-4 col-md-4">
+                        <p style="height: 135px"><img src="/exhibits-dashboard/static/images/item_layout_media_only.png" height="100"></p>
+                        <p>
+                            <label class="btn btn-default" for="item-layout-media-only" style="font-size: 15px">Media only, no text
+                                <input type="radio"
+                                       name="layout"
+                                       id="item-layout-media-only"
+                                       value="media_only"/>
+                            </label>
+                        </p>
+                    </div>
+                    <div class="col-4 col-md-4">
+                        <p style="height: 135px"><img src="/exhibits-dashboard/static/images/item_layout_text_only.png" height="100"></p>
+                        <p>
+                            <label class="btn btn-default" for="item-layout-text-only" style="font-size: 15px">Text only, no media
+                                <input type="radio"
+                                       name="layout"
+                                       id="item-layout-text-only"
+                                       value="text_only"/>
+                            </label>
+                        </p>
+                    </div>
+                    <div class="col-4 col-md-4">
+                        <p style="height: 135px"><img src="/exhibits-dashboard/static/images/item_layout_media_left_text_right.png" height="100"></p>
+                        <p>
+                            <label class="btn btn-default" for="item-layout-media-left" style="font-size: 15px">Text media pair, media on the left
+                                <input type="radio"
+                                       name="layout"
+                                       id="item-layout-media-left"
+                                       value="media_left"/>
+                            </label>
+                        </p>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div id="item-media-widths-card" class="card" style="visibility: visible">
+            <div class="card-header">
+                <strong class="card-title mb-3">Item Media Widths</strong>
+            </div>
+            <div class="card-body">
+                <div class="alert alert-info">
+                    <i class="fa fa-info"></i> <span
+                            id="info-message">Provide info to user about media widths</span>
+                </div>
+                <div class="row">
+                    <div class="col-4 col-md-4">
+                        <p style="height: 50px"><img src="/exhibits-dashboard/static/images/item_layout_half.png"></p>
+                        <p>
+                            <label class="btn btn-default" for="item-layout-half" style="font-size: 14px">Image width is one half of the exhibit item
+                                <input type="radio" name="media_width" id="item-layout-half" value="50" checked/>
+                            </label>
+                        </p>
+                    </div>
+                    <div class="col-4 col-md-4">
+                        <p style="height: 50px"><img src="/exhibits-dashboard/static/images/item_layout_third.png"></p>
+                        <p>
+                            <label class="btn btn-default" for="item-layout-half" style="font-size: 14px">Image width is one third of the exhibit item
+                                <input type="radio" name="media_width" id="item-layout-half" value="33"/>
+                            </label>
+                        </p>
+                    </div>
+                    <div class="col-4 col-md-4">
+                        <p style="height: 50px"><img src="/exhibits-dashboard/static/images/item_layout_quarter.png"></p>
+                        <p>
+                            <label class="btn btn-default" for="item-layout-quarter" style="font-size: 14px">Image width is one quarter of the exhibit item
+                                <input type="radio" name="media_width" id="item-layout-quarter" value="25"/>
+                            </label>
+                        </p>
+                    </div>
+                </div>
+            </div>
+        </div>
 
-                            </div>
-                        </div>
-                    </div>
-                    <div class="row form-group">
-                        <div class="col-12 col-md-12">
-                            <div class="input-group">
-                                <div class="input-group-btn">
-                                    <input title="Color Picker" class="color-picker btn btn-default" type="color"
-                                           id="item-font-color-picker"
-                                           value="#ffffff">
+        <div id="item-styles-card" class="card" style="visibility: visible">
+            <div class="card-header">
+                <strong class="card-title mb-3">Item Styles</strong>
+            </div>
+            <div class="card-body">
+                <div class="alert alert-info">
+                    <i class="fa fa-info"></i> <span id="info-message">Provide info to user about item styles</span>
+                </div>
+                <div class="row">
+                    <div class="col-6 col-md-6">
+                        <div class="row form-group">
+                            <div class="col-12 col-md-12">
+                                <div class="input-group">
+                                    <div class="input-group-btn">
+                                        <input title="Color Picker" class="color-picker btn btn-default" type="color"
+                                               id="item-background-color-picker" value="#ffffff">
+                                    </div>
+                                    <input type="text" id="item-background-color" name="item_background_color"
+                                           placeholder="Item Background Color" class="form-control" style="height: 40px">
+
                                 </div>
-                                <input type="text" id="item-font-color" name="item_font_color"
-                                       placeholder="Item Font Color" class="form-control">
+                            </div>
+                        </div>
+                        <div class="row form-group">
+                            <div class="col-12 col-md-12">
+                                <div class="input-group">
+                                    <input type="number" id="item-font-size" name="item_font_size"
+                                           placeholder="Item Font Size" class="form-control" min="1" max="50" style="height: 40px">
+                                    <div class="input-group-append">
+                                        <span class="input-group-text" id="basic-addon2">px</span>
+                                    </div>
+                                </div>
                             </div>
                         </div>
                     </div>
-                    <div class="row form-group">
-                        <div class="col-12 col-md-12">
-                            <div class="input-group">
-                                <select name="item_font" id="item-font"
-                                        class="form-control-lg form-control text-muted">
-                                    <option value="">Item Font</option>
-                                    <option value="Helvetica">Helvetica</option>
-                                    <option value="Arial">Arial</option>
-                                    <option value="Times New Roman">Times New Roman</option>
-                                </select>
+                    <div class="col-6 col-md-6">
+                        <div class="row form-group">
+                            <div class="col-12 col-md-12">
+                                <div class="input-group">
+                                    <div class="input-group-btn">
+                                        <input title="Color Picker" class="color-picker btn btn-default" type="color"
+                                               id="item-font-color-picker"
+                                               value="#ffffff">
+                                    </div>
+                                    <input type="text" id="item-font-color" name="item_font_color"
+                                           placeholder="Item Font Color" class="form-control" style="height: 40px">
+                                </div>
+                            </div>
+                        </div>
+                        <div class="row form-group">
+                            <div class="col-12 col-md-12">
+                                <div class="input-group">
+                                    <select name="item_font" id="item-font"
+                                            class="form-control-lg form-control text-muted" style="height: 40px">
+                                        <option value="">Item Font</option>
+                                        <option value="Helvetica">Helvetica</option>
+                                        <option value="Arial">Arial</option>
+                                        <option value="Times New Roman">Times New Roman</option>
+                                    </select>
+                                </div>
                             </div>
                         </div>
                     </div>
-                    <br>
-                    <hr>
-                    <button class="btn btn-primary" type="button" id="save-item-btn">
-                        <i class="fa fa-save"></i>&nbsp;&nbsp;Save
-                    </button>
-                </div><!-- end create item form -->
+                </div>
+            </div>
+        </div>
+        <div id="exhibit-submit-card" class="card" style="visibility: visible">
+            <div class="card-body">
+                <button class="btn btn-primary" type="button" id="save-item-btn">
+                    <i class="fa fa-save"></i>&nbsp;&nbsp;Save
+                </button>
             </div>
             <div class="card-footer text-muted"><small>Item</small></div>
         </div>
@@ -370,19 +407,22 @@
 <script src="https://cdn.datatables.net/1.13.6/js/jquery.dataTables.min.js"></script>
 <script src="https://unpkg.com/dropzone@5/dist/min/dropzone.min.js"></script>
 <script src="/exhibits-dashboard/static/libs/richtexteditor/rte.js"></script>
-<script src="/exhibits-dashboard/static/libs/richtexteditor/plugins/all_plugins.js"></script>
+<script src='/exhibits-dashboard/static/libs/richtexteditor/plugins/all_plugins.js'></script>
 <script src="/exhibits-dashboard/static/libs/axios-2.x/dist/axios.min.js"></script>
 <script src="/exhibits-dashboard/static/libs/dompurify/purify.min.js"></script>
 <script src="/exhibits-dashboard/static/app/http.module.js"></script>
 <script src="/exhibits-dashboard/static/app/helper.module.js"></script>
 <script src="/exhibits-dashboard/static/app/endpoints.module.js"></script>
 <script src="/exhibits-dashboard/static/app/auth.module.js"></script>
+<script src="/exhibits-dashboard/static/app/nav.module.js"></script>
 <script src="/exhibits-dashboard/static/app/uploads.module.js"></script>
 <script src="/exhibits-dashboard/static/app/exhibits.module.js"></script>
 <script src="/exhibits-dashboard/static/app/items.module.js"></script>
-<script src="/exhibits-dashboard/static/app/items.edit.form.module.js"></script>
+<script src="/exhibits-dashboard/static/app/items.common.standard.item.form.module.js"></script>
+<script src="/exhibits-dashboard/static/app/items.edit.standard.item.form.module.js"></script>
 <script>
-    itemsEditFormModule.init();
+    itemsCommonStandardItemFormModule.init();
+    itemsEditStandardItemFormModule.init();
 </script>
 </body>
 </html>

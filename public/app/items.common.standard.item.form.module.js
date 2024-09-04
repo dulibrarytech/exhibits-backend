@@ -16,7 +16,7 @@
 
  */
 
-const itemsCommonHeadingFormModule = (function () {
+const itemsCommonStandardItemFormModule = (function () {
 
     'use strict';
 
@@ -24,7 +24,7 @@ const itemsCommonHeadingFormModule = (function () {
     let obj = {};
 
     /**
-     * Gets common heading form fields
+     * Gets common standard item form fields
      */
     obj.get_common_standard_item_form_fields = function (rich_text_data) {
 
@@ -130,6 +130,9 @@ const itemsCommonHeadingFormModule = (function () {
             document.querySelector('#item-media-trash').style.display = 'none';
             document.querySelector('#item-thumbnail-trash').style.display = 'none';
 
+            uploadsModule.upload_item_media();
+            uploadsModule.upload_item_thumbnail();
+
             document.querySelector('#item-background-color-picker').addEventListener('input', () => {
                 if (document.querySelector('#item-background-color')) {
                     document.querySelector('#item-background-color').value = document.querySelector('#item-background-color-picker').value;
@@ -141,24 +144,6 @@ const itemsCommonHeadingFormModule = (function () {
                     document.querySelector('#item-font-color').value = document.querySelector('#item-font-color-picker').value;
                 }
             });
-
-            /*
-            document.querySelectorAll('.item-layout-left-right-radio-btn').forEach((radio_input) => {
-                radio_input.addEventListener('click', () => {
-                    // document.querySelector('#item-media-width').style.display = 'block';
-                });
-            });
-
-             */
-
-            /*
-            document.querySelectorAll('.item-layout-radio-btn').forEach((radio_input) => {
-                radio_input.addEventListener('click', () => {
-                    //document.querySelector('#item-media-width').style.display = 'none';
-                });
-            });
-
-             */
 
             setTimeout(() => {
                 document.querySelector('#item-data-card').style.visibility = 'visible';

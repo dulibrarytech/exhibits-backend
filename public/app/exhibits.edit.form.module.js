@@ -119,7 +119,6 @@ const exhibitsEditFormModule = (function () {
                 document.querySelector('#hero-image').value = record.hero_image;
                 document.querySelector('#hero-image-prev').value = record.hero_image;
                 document.querySelector('#hero-trash').style.display = 'inline';
-                //
             }
 
             if (record.thumbnail.length > 0) {

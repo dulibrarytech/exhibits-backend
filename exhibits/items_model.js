@@ -82,10 +82,11 @@ exports.create_item_record = async function (is_member_of_exhibit, data) {
     try {
 
         const HELPER_TASK = new HELPER();
+        const VALIDATE_TASK = new VALIDATOR(EXHIBITS_CREATE_ITEM_SCHEMA);
+
         data.uuid = HELPER_TASK.create_uuid();
         data.is_member_of_exhibit = is_member_of_exhibit;
 
-        const VALIDATE_TASK = new VALIDATOR(EXHIBITS_CREATE_ITEM_SCHEMA);
         let is_valid = VALIDATE_TASK.validate(data);
 
         if (is_valid !== true) {
@@ -100,62 +101,33 @@ exports.create_item_record = async function (is_member_of_exhibit, data) {
 
         HELPER_TASK.check_storage_path(data.is_member_of_exhibit);
 
-        // TODO: refactor to use helper function
-        if (data.item_type.length > 0) {
-
-            if (data.media.length > 0) {
-
-                data.media = HELPER_TASK.process_uploaded_media(data.is_member_of_exhibit, data.uuid, data.media);
-
-                /*
-                FS.rename(`./storage/${data.media}`, `./storage/${data.is_member_of_exhibit}/${data.uuid}_${data.media}`, (error) => {
-                    if (error) {
-                        console.log('ERROR: ' + error);
-                    }
-                });
-
-                data.media = `${data.uuid}_${data.media}`;
-
-                 */
-            }
-
-            // TODO
-            if (data.thumbnail.length > 0) {
-
-                FS.rename(`./storage/${data.thumbnail}`, `./storage/${data.is_member_of_exhibit}/${data.uuid}_${data.thumbnail}`, (error) => {
-                    if (error) {
-                        console.log('ERROR: ' + error);
-                    }
-                });
-
-                data.thumbnail = `${data.uuid}_${data.thumbnail}`;
-            }
+        if (data.media.length > 0) {
+            data.media = HELPER_TASK.process_uploaded_media(data.is_member_of_exhibit, data.uuid, data.media);
         }
+
+        if (data.thumbnail.length > 0) {
+            data.thumbnail = HELPER_TASK.process_uploaded_media(data.is_member_of_exhibit, data.uuid, data.thumbnail);
+        }
+
+        if (data.styles === undefined || data.styles.length === 0) {
+            data.styles = {};
+        }
+
+        data.styles = JSON.stringify(data.styles);
 
         if (data.media.length === 0) {
             data.media = data.repo_uuid;
         }
 
         delete data.repo_uuid;
-        console.log(data);
 
-        if (data.styles === undefined || data.styles.length === 0) {
-            data.styles = '{}';
-        }
-
-        data.styles = JSON.stringify(data.styles);
-
-        if (data.is_member_of_item_grid !== undefined) {
-            data.order = await HELPER_TASK.order_grid_items(data.is_member_of_item_grid, DB, TABLES);
-        } else {
-            data.order = await HELPER_TASK.order_exhibit_items(data.is_member_of_exhibit, DB, TABLES);
-        }
+        data.order = await HELPER_TASK.order_exhibit_items(data.is_member_of_exhibit, DB, TABLES);
 
         const CREATE_RECORD_TASK = new EXHIBIT_ITEM_RECORD_TASKS(DB, TABLES);
         let result = await CREATE_RECORD_TASK.create_item_record(data);
 
         if (result === false) {
-            LOGGER.module().error('ERROR: [/exhibits/model (create_item_record)] Unable to create item record');
+            LOGGER.module().error('ERROR: [/exhibits/item_model (create_item_record)] Unable to create item record');
             return {
                 status: 200,
                 message: 'Unable to create item record'
@@ -169,7 +141,7 @@ exports.create_item_record = async function (is_member_of_exhibit, data) {
         }
 
     } catch (error) {
-        LOGGER.module().error('ERROR: [/exhibits/model (create_item_record)] Unable to create item record ' + error.message);
+        LOGGER.module().error('ERROR: [/exhibits/item_model (create_item_record)] Unable to create item record ' + error.message);
         return {
             status: 200,
             message: 'Unable to create record ' + error.message

@@ -95,12 +95,11 @@ const itemsModule = (function () {
                 let title = `<a href="${APP_PATH}/items/details?exhibit_id=${exhibit_id}&item_id=${item_id}">${helperModule.unescape(items[i].title)}</a>`;
                 let description = helperModule.unescape(items[i].description);
                 let thumbnail = '';
-                let img
+                let img ='';
 
                 if (items[i].thumbnail.length > 0) {
                     thumbnail = EXHIBITS_ENDPOINTS.exhibits.exhibit_media.get.endpoint.replace(':exhibit_id', exhibit_id).replace(':media', items[i].thumbnail);
                     img = `<p><img alt="${thumbnail}" src="${thumbnail}" height="100" width="100"></p>`;
-                    console.log('thumbnail', item_data);
                 }
 
                 item_data += `<td style="width: 35%">
@@ -172,7 +171,7 @@ const itemsModule = (function () {
         }
 
         item_data += '</tr>';
-        // console.log('TEST ', item_data);
+
         document.querySelector('#item-data').innerHTML = item_data;
         let items_table = new DataTable('#items');
 

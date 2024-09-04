@@ -341,8 +341,8 @@
                         <div class="row form-group">
                             <div class="col-12 col-md-12">
                                 <div class="input-group">
-                                    <input type="number" id="nav-font-size" name="nav_font_size"
-                                           placeholder="Navigation Font Size" class="form-control" min="1" max="50" style="height: 40px">
+                                    <input type="number" id="item-font-size" name="item_font_size"
+                                           placeholder="Item Font Size" class="form-control" min="1" max="50" style="height: 40px">
                                     <div class="input-group-append">
                                         <span class="input-group-text" id="basic-addon2">px</span>
                                     </div>
@@ -381,7 +381,7 @@
                 </div>
             </div>
         </div>
-        <div id="exhibit-submit-card" class="card" style="visibility: visible">
+        <div id="item-submit-card" class="card" style="visibility: visible">
             <div class="card-body">
                 <button class="btn btn-primary" type="button" id="save-item-btn">
                     <i class="fa fa-save"></i>&nbsp;&nbsp;Save
@@ -415,7 +415,7 @@
 <script src="/exhibits-dashboard/static/app/items.common.standard.item.form.module.js"></script>
 <script src="/exhibits-dashboard/static/app/items.add.standard.item.form.module.js"></script>
 <script>
-    itemsCommonHeadingFormModule.init();
+    itemsCommonStandardItemFormModule.init();
     itemsAddStandardItemFormModule.init();
 </script>
 </body>

@@ -55,7 +55,7 @@ const itemsAddStandardItemFormModule = (function () {
             }
 
             document.querySelector('#message').innerHTML = `<div class="alert alert-info" role="alert"><i class="fa fa-info"></i> Creating item record...</div>`;
-            let data = itemsCommonHeadingFormModule.get_common_standard_item_form_fields(rich_text_data);
+            let data = itemsCommonStandardItemFormModule.get_common_standard_item_form_fields(rich_text_data);
             let token = authModule.get_user_token();
             let response = await httpModule.req({
                 method: 'POST',
@@ -93,8 +93,8 @@ const itemsAddStandardItemFormModule = (function () {
         helperModule.set_rich_text_editor_config();
         set_rich_text_editors();
 
-        uploadsModule.upload_item_media();
-        uploadsModule.upload_item_thumbnail();
+        // uploadsModule.upload_item_media();
+        // uploadsModule.upload_item_thumbnail();
 
         document.querySelector('#save-item-btn').addEventListener('click', itemsAddStandardItemFormModule.create_item_record);
     };
