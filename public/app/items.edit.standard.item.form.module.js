@@ -141,13 +141,12 @@ const itemsEditStandardItemFormModule = (function () {
         let media_width = document.getElementsByName('media_width');
 
         for (let j = 0; j < media_width.length; j++) {
-            if (media_width[j].value === record.media_width) {
+            if (parseInt(media_width[j].value) === parseInt(record.media_width)) {
                 document.querySelector('#' + media_width[j].id).checked = true;
             }
         }
 
         let styles = JSON.parse(record.styles);
-        console.log(styles);
 
         if (styles !== undefined) {
 

@@ -47,6 +47,7 @@ const itemsCommonStandardItemFormModule = (function () {
 
             // item layout - standard item only
             item.layout = helperModule.get_checked_radio_button(document.getElementsByName('layout'));
+            item.media_width = helperModule.get_checked_radio_button(document.getElementsByName('media_width'));
 
             // item styles
             let item_background_color = document.querySelector('#item-background-color').value;
