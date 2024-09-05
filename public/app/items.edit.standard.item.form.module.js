@@ -77,7 +77,7 @@ const itemsEditStandardItemFormModule = (function () {
             }
 
         } catch (error) {
-            console.log('ERROR: ', error.message);
+            document.querySelector('#message').innerHTML = `<div class="alert alert-danger" role="alert"><i class="fa fa-exclamation"></i> ${error.message}</div>`;
         }
     }
 
@@ -178,13 +178,10 @@ const itemsEditStandardItemFormModule = (function () {
             document.querySelector('#message').innerHTML = `<div class="alert alert-info" role="alert"><i class="fa fa-info"></i> Updating item record...</div>`;
             let exhibit_id = helperModule.get_parameter_by_name('exhibit_id');
             let item_id = helperModule.get_parameter_by_name('item_id');
-
-            // TODO
-            // let data = get_item_data();
-
+            let data = itemsCommonStandardItemFormModule.get_common_standard_item_form_fields(rich_text_data);
             let token = authModule.get_user_token();
             let response;
-            console.log(data);
+
             if (exhibit_id === undefined || item_id === undefined) {
                 document.querySelector('#message').innerHTML = `<div class="alert alert-danger" role="alert"><i class="fa fa-exclamation"></i> Unable to get record ID</div>`;
                 return false;
@@ -234,15 +231,10 @@ const itemsEditStandardItemFormModule = (function () {
 
         const exhibit_id = helperModule.get_parameter_by_name('exhibit_id');
         exhibitsModule.set_exhibit_title(exhibit_id);
-
         helperModule.set_rich_text_editor_config();
         set_rich_text_editors();
         await display_edit_record();
-
-        // uploadsModule.upload_item_media();
-        // uploadsModule.upload_item_thumbnail();
-
-        // document.querySelector('#save-item-btn').addEventListener('click', itemsStandardItemFormModule.create_item_record);
+        document.querySelector('#update-item-btn').addEventListener('click', itemsEditStandardItemFormModule.update_item_record);
 
         /*
         helperModule.set_rich_text_editor_config();

@@ -149,6 +149,68 @@ exports.create_item_record = async function (is_member_of_exhibit, data) {
     }
 };
 
+/** TODO:
+ * Updates item record
+ * @param is_member_of_exhibit
+ * @param item_id
+ * @param data
+ */
+exports.update_item_record = async function (is_member_of_exhibit, item_id, data) {
+
+    try {
+
+        const HELPER_TASK = new HELPER();
+        data.is_member_of_exhibit = is_member_of_exhibit;
+        data.uuid = item_id;
+
+        HELPER_TASK.check_storage_path(data.is_member_of_exhibit);
+        console.log('media ', data.media);
+        console.log('media prev ', data.media_prev);
+        if (data.media.length > 0 && data.media !== data.media_prev) {
+            data.media = HELPER_TASK.process_uploaded_media(data.is_member_of_exhibit, data.uuid, data.media);
+        }
+        console.log(data.media);
+
+        delete data.media_prev;
+        data.styles = JSON.stringify(data.styles);
+
+        const VALIDATE_TASK = new VALIDATOR(EXHIBITS_UPDATE_ITEM_SCHEMA);
+        let is_valid = VALIDATE_TASK.validate(data);
+
+        if (is_valid !== true) {
+
+            LOGGER.module().error('ERROR: [/exhibits/model (update_item_record)] ' + is_valid[0].message);
+
+            return {
+                status: 400,
+                message: is_valid
+            };
+        }
+
+        const UPDATE_RECORD_TASK = new EXHIBIT_ITEM_RECORD_TASKS(DB, TABLES);
+        let result = await UPDATE_RECORD_TASK.update_item_record(data);
+
+        if (result === false) {
+            return {
+                status: 400,
+                message: 'Unable to update item record'
+            };
+        } else {
+            return {
+                status: 201,
+                message: 'Item record updated'
+            };
+        }
+
+    } catch (error) {
+        LOGGER.module().error('ERROR: [/exhibits/model (update_item_record)] ' + error.message);
+        return {
+            status: 400,
+            message: 'Unable to update record ' + error.message
+        };
+    }
+};
+
 /**
  * Create grid record
  * @param is_member_of_exhibit
@@ -305,68 +367,6 @@ exports.get_item_record = async function (is_member_of_exhibit, uuid) {
         return {
             status: 400,
             message: error.message
-        };
-    }
-};
-
-/** TODO: version record
- * Updates item record
- * @param is_member_of_exhibit
- * @param item_id
- * @param data
- */
-exports.update_item_record = async function (is_member_of_exhibit, item_id, data) {
-
-    try {
-
-        const HELPER_TASK = new HELPER();
-        data.is_member_of_exhibit = is_member_of_exhibit;
-        data.uuid = item_id;
-
-        HELPER_TASK.check_storage_path(data.is_member_of_exhibit);
-        console.log('media ', data.media);
-        console.log('media prev ', data.media_prev);
-        if (data.media.length > 0 && data.media !== data.media_prev) {
-            data.media = HELPER_TASK.process_uploaded_media(data.is_member_of_exhibit, data.uuid, data.media);
-        }
-        console.log(data.media);
-
-        delete data.media_prev;
-        data.styles = JSON.stringify(data.styles);
-
-        const VALIDATE_TASK = new VALIDATOR(EXHIBITS_UPDATE_ITEM_SCHEMA);
-        let is_valid = VALIDATE_TASK.validate(data);
-
-        if (is_valid !== true) {
-
-            LOGGER.module().error('ERROR: [/exhibits/model (update_item_record)] ' + is_valid[0].message);
-
-            return {
-                status: 400,
-                message: is_valid
-            };
-        }
-
-        const UPDATE_RECORD_TASK = new EXHIBIT_ITEM_RECORD_TASKS(DB, TABLES);
-        let result = await UPDATE_RECORD_TASK.update_item_record(data);
-
-        if (result === false) {
-            return {
-                status: 400,
-                message: 'Unable to update item record'
-            };
-        } else {
-            return {
-                status: 201,
-                message: 'Item record updated'
-            };
-        }
-
-    } catch (error) {
-        LOGGER.module().error('ERROR: [/exhibits/model (update_item_record)] ' + error.message);
-        return {
-            status: 400,
-            message: 'Unable to update record ' + error.message
         };
     }
 };
