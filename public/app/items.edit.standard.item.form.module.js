@@ -91,7 +91,6 @@ const itemsEditStandardItemFormModule = (function () {
         let media_fragment = '';
         let thumbnail_fragment = '';
         let thumbnail_url = '';
-        console.log('display: ', record);
 
         // item data
         rich_text_data['item-title-input'] = helperModule.set_rich_text_editor('item-title-input');
@@ -163,50 +162,6 @@ const itemsEditStandardItemFormModule = (function () {
 
             document.querySelector('#item-font-size').value = styles.fontSize;
         }
-
-        /*
-        if (styles.exhibit.template !== undefined) {
-
-            document.querySelector('#template-background-color').value = styles.exhibit.template.backgroundColor;
-            document.querySelector('#template-font-color').value = styles.exhibit.template.color;
-
-            let template_font_values = document.querySelector('#template-font');
-
-            for (let i=0;i<template_font_values.length;i++) {
-
-                if (template_font_values[i].value === styles.exhibit.template.fontFamily) {
-                    document.querySelector('#template-font').value = styles.exhibit.template.fontFamily;
-                }
-            }
-
-            document.querySelector('#template-font-size').value = styles.exhibit.template.fontSize;
-        }
-
-         */
-
-        /*
-        // item styles
-        let styles;
-
-        if (typeof record.styles === 'string') {
-            styles = JSON.parse(record.styles);
-        }
-
-        if (Object.keys(styles).length !== 0) {
-
-            document.querySelector('#nav-menu-background-color').value = styles.exhibit.navigation.menu.backgroundColor;
-            document.querySelector('#nav-menu-font-color').value = styles.exhibit.navigation.menu.color;
-
-            let font_values = document.querySelector('#nav-menu-font');
-
-            for (let i = 0;i<font_values.length;i++) {
-                if (font_values[i].value === styles.exhibit.navigation.menu.fontFamily) {
-                    document.querySelector('#nav-menu-font').value = styles.exhibit.navigation.menu.fontFamily;
-                }
-            }
-        }
-
-        */
 
         return false;
     }

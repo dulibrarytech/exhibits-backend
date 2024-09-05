@@ -72,7 +72,7 @@ const itemsAddStandardItemFormModule = (function () {
                 document.querySelector('#message').innerHTML = `<div class="alert alert-success" role="alert"><i class="fa fa-info"></i> Item record created</div>`;
 
                 setTimeout(() => {
-                    // location.replace(`${APP_PATH}/items/standard?uuid=${uuid}`);
+                    location.replace(`${APP_PATH}/items?exhibit_id=${uuid}`);
                     document.querySelector('#message').innerHTML = '';
                 }, 3000);
             }
@@ -92,9 +92,6 @@ const itemsAddStandardItemFormModule = (function () {
 
         helperModule.set_rich_text_editor_config();
         set_rich_text_editors();
-
-        // uploadsModule.upload_item_media();
-        // uploadsModule.upload_item_thumbnail();
 
         document.querySelector('#save-item-btn').addEventListener('click', itemsAddStandardItemFormModule.create_item_record);
     };
