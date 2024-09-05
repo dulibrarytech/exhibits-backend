@@ -101,11 +101,11 @@ exports.create_item_record = async function (is_member_of_exhibit, data) {
 
         HELPER_TASK.check_storage_path(data.is_member_of_exhibit);
 
-        if (data.media.length > 0) {
+        if (data.media.length > 0 && data.media !== data.media_prev) {
             data.media = HELPER_TASK.process_uploaded_media(data.is_member_of_exhibit, data.uuid, data.media);
         }
 
-        if (data.thumbnail.length > 0) {
+        if (data.thumbnail.length > 0 && data.thumbnail !== data.thumbnail_prev) {
             data.thumbnail = HELPER_TASK.process_uploaded_media(data.is_member_of_exhibit, data.uuid, data.thumbnail);
         }
 
@@ -164,6 +164,7 @@ exports.update_item_record = async function (is_member_of_exhibit, item_id, data
         data.uuid = item_id;
 
         HELPER_TASK.check_storage_path(data.is_member_of_exhibit);
+
         console.log('media ', data.media);
         console.log('media prev ', data.media_prev);
         if (data.media.length > 0 && data.media !== data.media_prev) {

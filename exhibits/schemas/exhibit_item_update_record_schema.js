@@ -21,7 +21,6 @@
 module.exports = () => {
 
     return {
-        date: {type: 'string'},
         title: {type: 'string'},
         caption: {type: 'string'},
         description: {type: 'string'},
