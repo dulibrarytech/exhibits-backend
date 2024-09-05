@@ -48,15 +48,14 @@ const itemsCommonStandardItemFormModule = (function () {
             // item layout - standard item only
             item.layout = helperModule.get_checked_radio_button(document.getElementsByName('layout'));
 
-            console.log('layout ', item.layout);
-
             // item styles
             let item_background_color = document.querySelector('#item-background-color').value;
             let item_color = document.querySelector('#item-font-color').value;
             let item_font = document.querySelector('#item-font').value;
+            let item_font_size = document.querySelector('#item-font-size').value;
 
             if (item_background_color.length > 0) {
-                item.styles.backGroundColor = item_background_color;
+                item.styles.backgroundColor = item_background_color;
             }
 
             if (item_color.length > 0) {
@@ -67,7 +66,10 @@ const itemsCommonStandardItemFormModule = (function () {
                 item.styles.fontFamily = item_font;
             }
 
-            console.log(item);
+            if (item_font_size.length > 0) {
+                item.styles.fontSize = item_font_size;
+            }
+
             return item;
 
         } catch (error) {

@@ -132,6 +132,7 @@
                                     <div class="col-12">
                                         <p>
                                             <br>
+                                            <span id="item-media-thumbnail-image-display"></span>
                                             <span id="item-media-filename-display"></span>&nbsp;&nbsp;
                                             <span>
                                         <a id="item-media-trash" title="Trash" href="#"><i class="fa fa-trash"></i></a>
@@ -159,9 +160,7 @@
                                         <a id="item-thumbnail-trash" title="Trash" href="#"><i class="fa fa-trash"></i></a>
                                     </span>
                                         </p>
-                                        <!--
-                                        <input type="hidden" id="item-thumbnail-image-display" name="thumbnail">
-                                        -->
+
                                         <input type="hidden" id="item-thumbnail-image-prev" name="thumbnail-prev">
                                         <input type="hidden" id="item-thumbnail" name="item_thumbnail">
 
@@ -297,7 +296,7 @@
                         <p style="height: 50px"><img src="/exhibits-dashboard/static/images/item_layout_half.png"></p>
                         <p>
                             <label class="btn btn-default" for="item-layout-half" style="font-size: 14px">Image width is one half of the exhibit item
-                                <input type="radio" name="media_width" id="item-layout-half" value="50" checked/>
+                                <input type="radio" name="media_width" id="item-width-half" value="50" checked/>
                             </label>
                         </p>
                     </div>
@@ -305,7 +304,7 @@
                         <p style="height: 50px"><img src="/exhibits-dashboard/static/images/item_layout_third.png"></p>
                         <p>
                             <label class="btn btn-default" for="item-layout-half" style="font-size: 14px">Image width is one third of the exhibit item
-                                <input type="radio" name="media_width" id="item-layout-half" value="33"/>
+                                <input type="radio" name="media_width" id="item-width-half" value="33"/>
                             </label>
                         </p>
                     </div>
@@ -313,7 +312,7 @@
                         <p style="height: 50px"><img src="/exhibits-dashboard/static/images/item_layout_quarter.png"></p>
                         <p>
                             <label class="btn btn-default" for="item-layout-quarter" style="font-size: 14px">Image width is one quarter of the exhibit item
-                                <input type="radio" name="media_width" id="item-layout-quarter" value="25"/>
+                                <input type="radio" name="media_width" id="item-width-quarter" value="25"/>
                             </label>
                         </p>
                     </div>

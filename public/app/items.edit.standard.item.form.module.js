@@ -89,6 +89,7 @@ const itemsEditStandardItemFormModule = (function () {
         let record = await get_item_record();
         let media_url = '';
         let media_fragment = '';
+        let thumbnail_fragment = '';
         let thumbnail_url = '';
         console.log('display: ', record);
 
@@ -108,33 +109,27 @@ const itemsEditStandardItemFormModule = (function () {
         if (record.media.length > 0) {
 
             // TODO: check if not image
-            /*
-            media_url = `${APP_PATH}/api/v1/exhibits/${record.is_member_of_exhibit}/media/items/${record.media}`;
-            media_fragment = `<p><img src="${media_url}" height="200"></p>`;
-            document.querySelector('#item-media-filename-display').innerHTML = media_fragment;
-            */
+
+            // TODO: allow to open media in separate window (pdf, video, audio)
+            thumbnail_url = EXHIBITS_ENDPOINTS.exhibits.exhibit_media.get.endpoint.replace(':exhibit_id', record.is_member_of_exhibit).replace(':media', record.thumbnail);
+            thumbnail_fragment = `<p><img src="${thumbnail_url}" height="200" ></p>`;
+            document.querySelector('#item-media-thumbnail-image-display').innerHTML = thumbnail_fragment;
+            document.querySelector('#item-media-filename-display').innerHTML = `<span style="font-size: 11px">${record.media}</span>`;
             document.querySelector('#item-media').value = record.media;
             document.querySelector('#item-media-prev').value = record.media;
-
+            document.querySelector('#item-media-trash').style.display = 'inline';
         }
 
         if (record.thumbnail.length > 0) {
 
-            // thumbnail_url = `${APP_PATH}/api/v1/exhibits/${record.uuid}/media/${record.thumbnail}`;
             thumbnail_url = EXHIBITS_ENDPOINTS.exhibits.exhibit_media.get.endpoint.replace(':exhibit_id', record.is_member_of_exhibit).replace(':media', record.thumbnail);
-            // console.log(thumbnail_url);
-            // http://localhost/exhibits-dashboard/api/v1/exhibits/e1f70ae6-61a1-46d2-b1d9-ecb03abe8ec2/media/c12fe93c-5890-4fd0-9a44-e0f0e748af71_1725476465531_item_thumbnail.jpg
-            let thumbnail_fragment = `<p><img src="${thumbnail_url}" height="200" ></p>`;
-            console.log(thumbnail_fragment);
+            thumbnail_fragment = `<p><img src="${thumbnail_url}" height="200" ></p>`;
             document.querySelector('#item-thumbnail-image-display').innerHTML = thumbnail_fragment;
             document.querySelector('#item-thumbnail-filename-display').innerHTML = `<span style="font-size: 11px">${record.thumbnail}</span>`;
             document.querySelector('#item-thumbnail-image-prev').value = record.thumbnail;
             document.querySelector('#item-thumbnail-trash').style.display = 'inline';
         }
 
-
-        /*
-        // item layouts
         let layouts = document.getElementsByName('layout');
 
         for (let j = 0; j < layouts.length; j++) {
@@ -143,6 +138,54 @@ const itemsEditStandardItemFormModule = (function () {
             }
         }
 
+        let media_width = document.getElementsByName('media_width');
+
+        for (let j = 0; j < media_width.length; j++) {
+            if (media_width[j].value === record.media_width) {
+                document.querySelector('#' + media_width[j].id).checked = true;
+            }
+        }
+
+        let styles = JSON.parse(record.styles);
+        console.log(styles);
+
+        if (styles !== undefined) {
+
+            document.querySelector('#item-background-color').value = styles.backgroundColor;
+            document.querySelector('#item-font-color').value = styles.color;
+
+            let font_values = document.querySelector('#item-font');
+
+            for (let i=0;i<font_values.length;i++) {
+                if (font_values[i].value === styles.fontFamily) {
+                    document.querySelector('#item-font').value = styles.fontFamily;
+                }
+            }
+
+            document.querySelector('#item-font-size').value = styles.fontSize;
+        }
+
+        /*
+        if (styles.exhibit.template !== undefined) {
+
+            document.querySelector('#template-background-color').value = styles.exhibit.template.backgroundColor;
+            document.querySelector('#template-font-color').value = styles.exhibit.template.color;
+
+            let template_font_values = document.querySelector('#template-font');
+
+            for (let i=0;i<template_font_values.length;i++) {
+
+                if (template_font_values[i].value === styles.exhibit.template.fontFamily) {
+                    document.querySelector('#template-font').value = styles.exhibit.template.fontFamily;
+                }
+            }
+
+            document.querySelector('#template-font-size').value = styles.exhibit.template.fontSize;
+        }
+
+         */
+
+        /*
         // item styles
         let styles;
 
@@ -164,10 +207,6 @@ const itemsEditStandardItemFormModule = (function () {
             }
         }
 
-        // TODO: media width?
-        // console.log('media width ', record.media_width);
-        // TODO: item type
-        // console.log('item type ', record.item_type);
         */
 
         return false;
