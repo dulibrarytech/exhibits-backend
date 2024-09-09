@@ -112,7 +112,7 @@ const itemsEditStandardItemFormModule = (function () {
             // TODO: allow to open media in separate window (pdf, video, audio)
             thumbnail_url = EXHIBITS_ENDPOINTS.exhibits.exhibit_media.get.endpoint.replace(':exhibit_id', record.is_member_of_exhibit).replace(':media', record.thumbnail);
             thumbnail_fragment = `<p><img src="${thumbnail_url}" height="200" ></p>`;
-            document.querySelector('#item-media-thumbnail-image-display').innerHTML = thumbnail_fragment;
+            document.querySelector('#item-media-thumbnail-image').innerHTML = thumbnail_fragment;
             document.querySelector('#item-media-filename-display').innerHTML = `<span style="font-size: 11px">${record.media}</span>`;
             document.querySelector('#item-media').value = record.media;
             document.querySelector('#item-media-prev').value = record.media;
@@ -125,6 +125,7 @@ const itemsEditStandardItemFormModule = (function () {
             thumbnail_fragment = `<p><img src="${thumbnail_url}" height="200" ></p>`;
             document.querySelector('#item-thumbnail-image-display').innerHTML = thumbnail_fragment;
             document.querySelector('#item-thumbnail-filename-display').innerHTML = `<span style="font-size: 11px">${record.thumbnail}</span>`;
+            document.querySelector('#item-thumbnail').value = record.thumbnail;
             document.querySelector('#item-thumbnail-image-prev').value = record.thumbnail;
             document.querySelector('#item-thumbnail-trash').style.display = 'inline';
         }
@@ -224,8 +225,62 @@ const itemsEditStandardItemFormModule = (function () {
         }
     };
 
+    /** TODO
+     * Deletes thumbnail image
+     */
+    function delete_thumbnail_image() {
+        alert('delete thumbnail image');
+        return false;
+        try {
+
+            (async function() {
+
+                const uuid = helperModule.get_parameter_by_name('exhibit_id');
+                let hero_image = document.querySelector('#thumbnail-image').value;
+                let tmp = EXHIBITS_ENDPOINTS.exhibits.exhibit_media.get.endpoint.replace(':exhibit_id', uuid)
+                let endpoint = tmp.replace(':media', hero_image);
+                let token = authModule.get_user_token();
+                let response = await httpModule.req({
+                    method: 'DELETE',
+                    url: endpoint,
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'x-access-token': token
+                    }
+                });
+
+                if (response !== undefined && response.status === 204) {
+
+                    document.querySelector('#thumbnail-image').value = '';
+                    document.querySelector('#thumbnail-filename-display').innerHTML = '';
+                    document.querySelector('#thumbnail-trash').style.display = 'none';
+                    document.querySelector('#thumbnail-image-display').innerHTML = '';
+                    document.querySelector('#message').innerHTML = `<div class="alert alert-success" role="alert"><i class="fa fa-info"></i> Thumbnail deleted</div>`;
+
+                    setTimeout(() => {
+                        document.querySelector('#message').innerHTML = '';
+                        window.location.reload();
+                    }, 3000);
+                }
+
+            })();
+
+        } catch (error) {
+            document.querySelector('#message').innerHTML = `<div class="alert alert-danger" role="alert"><i class="fa fa-exclamation"></i> ${error.message}</div>`;
+        }
+
+        return false;
+    }
+
     /**
      *
+     */
+    function delete_media () {
+        alert('delete media');
+    }
+
+    /**
+     * Init function for items edit form
      */
     obj.init = async function () {
 
@@ -236,37 +291,30 @@ const itemsEditStandardItemFormModule = (function () {
         await display_edit_record();
         document.querySelector('#update-item-btn').addEventListener('click', itemsEditStandardItemFormModule.update_item_record);
 
-        /*
-        helperModule.set_rich_text_editor_config();
-        document.querySelector('#save-item-btn').addEventListener('click', itemsEditFormModule.update_item_record);
-        document.querySelector('#logout').addEventListener('click', authModule.logout);
-        document.querySelector('#item-media-trash').style.display = 'none';
-        // document.querySelector('#thumbnail-trash').style.display = 'none';
-        uploadsModule.upload_item_media();
-        await display_edit_record();
+        setTimeout(() => {
 
-        // bind color pickers to input fields
-        document.querySelector('#item-background-color-picker').addEventListener('input', () => {
-            if (document.querySelector('#item-background-color')) {
-                document.querySelector('#item-background-color').value = document.querySelector('#item-background-color-picker').value;
+            if (document.querySelector('#item-media').value.length === 0) {
+                document.querySelector('#item-media-trash').removeEventListener('click', delete_media);
+                document.querySelector('#item-media-trash').addEventListener('click', itemsCommonStandardItemFormModule.delete_media);
+            } else if (document.querySelector('#item-media').value !== 0) {
+                document.querySelector('#item-media-trash').removeEventListener('click', itemsCommonStandardItemFormModule.delete_media);
+                document.querySelector('#item-media-trash').addEventListener('click', delete_media);
             }
-        });
-
-        document.querySelector('#item-font-color-picker').addEventListener('input', () => {
-            if (document.querySelector('#item-font-color')) {
-                document.querySelector('#item-font-color').value = document.querySelector('#item-font-color-picker').value;
+            console.log('item-thumbnail ', document.querySelector('#item-thumbnail').value);
+            if (document.querySelector('#item-thumbnail').value.length === 0) {
+                document.querySelector('#item-thumbnail-trash').removeEventListener('click', delete_thumbnail_image);
+                document.querySelector('#item-thumbnail-trash').addEventListener('click', itemsCommonStandardItemFormModule.delete_thumbnail_image);
+            } else if (document.querySelector('#item-thumbnail').value.length !== 0) {
+                document.querySelector('#item-thumbnail-trash').removeEventListener('click', itemsCommonStandardItemFormModule.delete_thumbnail_image);
+                document.querySelector('#item-thumbnail-trash').addEventListener('click', delete_thumbnail_image);
             }
-        });
 
-         */
+        }, 1000);
     };
 
     return obj;
 
 }());
-
-
-
 
 /**
  * Gets data from item edit form
