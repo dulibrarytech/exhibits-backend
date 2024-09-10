@@ -107,12 +107,26 @@ const itemsEditStandardItemFormModule = (function () {
 
         if (record.media.length > 0) {
 
-            // TODO: check if not image
-            console.log(record.item_type);
+            console.log('mime type ', record.mime_type);
+
+            if (record.mime_type.indexOf('image') !== -1) {
+                thumbnail_url = EXHIBITS_ENDPOINTS.exhibits.exhibit_media.get.endpoint.replace(':exhibit_id', record.is_member_of_exhibit).replace(':media', record.thumbnail);
+                thumbnail_fragment = `<p><img src="${thumbnail_url}" height="200" ></p>`;
+            } else if (record.mime_type.indexOf('video') !== -1) {
+                // item_type = 'video';
+            } else if (record.mime_type.indexOf('audio') !== -1) {
+                // item_type = 'audio';
+            } else if (record.mime_type.indexOf('pdf') !== -1) {
+                console.log('PDF');
+                thumbnail_url = '/exhibits-dashboard/static/images/pdf-tn.png';
+                thumbnail_fragment = `<p><img src="${thumbnail_url}" height="200" ></p>`;
+                // item_type = 'pdf';
+                //document.querySelector('#toggle-open-to-page').style.visibility = 'visible';
+            } else {
+                console.log('Unable to Determine Type');
+            }
 
             // TODO: allow to open media in separate window (pdf, video, audio)
-            thumbnail_url = EXHIBITS_ENDPOINTS.exhibits.exhibit_media.get.endpoint.replace(':exhibit_id', record.is_member_of_exhibit).replace(':media', record.thumbnail);
-            thumbnail_fragment = `<p><img src="${thumbnail_url}" height="200" ></p>`;
             document.querySelector('#item-media-thumbnail-image').innerHTML = thumbnail_fragment;
             document.querySelector('#item-media-filename-display').innerHTML = `<span style="font-size: 11px">${record.media}</span>`;
             document.querySelector('#item-media').value = record.media;
