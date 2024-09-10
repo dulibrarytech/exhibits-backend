@@ -139,28 +139,26 @@ const uploadsModule = (function () {
             autoProcessQueue: true,
             init: function () {},
             renameFile: function (file) {
+
                 console.log('item media: ', file);
                 console.log('orig name: ', file.name);
                 console.log('mime type: ', file.type);
 
-                // TODO?
                 if (file.type === 'application/pdf') {
                     console.log('This is a PDF');
                 }
 
-                console.log('date: ', Date.now());
                 let extension = file.name.split('.').pop();
                 return `${Date.now()}_item_media.${extension}`;
             },
             success: function(file, response) {
 
-                // console.log('FILE: ', file);
-                // console.log('RESPONSE: ', response);
                 console.log('SUCCESS: ', file.upload);
                 console.log(file.upload.filename);
                 console.log(file.upload.total);
 
                 let item_type;
+                let mime_type = file.type;
                 let filename = file.upload.filename;
 
                 if (file.type.indexOf('image') !== -1) {
@@ -177,6 +175,7 @@ const uploadsModule = (function () {
                 }
 
                 document.querySelector('#item-type').value = item_type;
+                document.querySelector('#item-mime-type').value = mime_type;
                 document.querySelector('.upload-error').innerHTML = '';
                 document.querySelector('#item-media').value = filename;
                 document.querySelector('#item-media-filename-display').innerHTML = `<span class="alert-success" style="width: 30%; padding: 5px; border: solid 1px"><i class="fa fa-check"> ${filename}</i></span>`;

@@ -31,6 +31,7 @@ const HELPER = require('../libs/helper');
 const VALIDATOR = require('../libs/validate');
 const FS = require('fs');
 const LOGGER = require('../libs/log4');
+const EXHIBIT_RECORD_TASKS = require("./tasks/exhibit_record_tasks");
 
 /**
  * Gets item records by exhibit
@@ -180,7 +181,7 @@ exports.update_item_record = async function (is_member_of_exhibit, item_id, data
 
         if (is_valid !== true) {
 
-            LOGGER.module().error('ERROR: [/exhibits/model (update_item_record)] ' + is_valid[0].message);
+            LOGGER.module().error('ERROR: [/exhibits/items/model (update_item_record)] ' + is_valid[0].message);
 
             return {
                 status: 400,
@@ -204,11 +205,33 @@ exports.update_item_record = async function (is_member_of_exhibit, item_id, data
         }
 
     } catch (error) {
-        LOGGER.module().error('ERROR: [/exhibits/model (update_item_record)] ' + error.message);
+        LOGGER.module().error('ERROR: [/exhibits/items/model (update_item_record)] ' + error.message);
         return {
             status: 400,
             message: 'Unable to update record ' + error.message
         };
+    }
+};
+
+/**
+ * Clears out media value
+ * @param uuid
+ * @param media
+ */
+exports.delete_media_value = async function (uuid, media) {
+
+    try {
+
+        const TASK = new EXHIBIT_ITEM_RECORD_TASKS(DB, TABLES);
+
+        if (await TASK.delete_media_value(uuid, media) === true) {
+            LOGGER.module().info('INFO: [/exhibits/items/model (delete_media_value)] Media value deleted');
+        } else {
+            LOGGER.module().error('ERROR: [/exhibits/items/model (delete_media_value)] Unable to delete media value');
+        }
+
+    } catch (error) {
+        LOGGER.module().error('ERROR: [/exhibits/items/model (delete_media_value)] ' + error.message);
     }
 };
 

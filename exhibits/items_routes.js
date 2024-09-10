@@ -33,16 +33,19 @@ module.exports = function (app) {
     app.route(ENDPOINTS().exhibits.item_records.get.endpoint)
     .get(TOKEN.verify, CONTROLLER.get_item_record);
 
-    /*
-    app.route(ENDPOINTS().exhibits.item_media.get.endpoint)
-    .get(CONTROLLER.get_item_media);
-    */
     app.route(ENDPOINTS().exhibits.item_records.put.endpoint)
     .put(TOKEN.verify, CONTROLLER.update_item_record);
+
+    app.route(ENDPOINTS().exhibits.item_media.delete.endpoint)
+    .delete(TOKEN.verify, CONTROLLER.delete_item_media);
 
     app.route(ENDPOINTS().exhibits.item_records.delete.endpoint)
     .delete(TOKEN.verify, CONTROLLER.delete_item_record);
 
+    /*
+    app.route(ENDPOINTS().exhibits.item_media.get.endpoint)
+    .get(CONTROLLER.get_item_media);
+    */
 
     /*
     app.route(ENDPOINTS().exhibits.heading_records.post.endpoint)

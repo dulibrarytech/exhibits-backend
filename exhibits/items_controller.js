@@ -18,12 +18,9 @@
 
 'use strict';
 
-// const WEBSERVICES_CONFIG = require('../config/webservices_config')();
-// const EXHIBITS_MODEL = require('../exhibits/exhibits_model');
 const ITEMS_MODEL = require('../exhibits/items_model');
-// const HEADINGS_MODEL = require('../exhibits/headings_model');
-// const TRASH_MODEL = require('../exhibits/trash_model');
-// const PATH = require('path');
+const EXHIBITS_MODEL = require("./exhibits_model");
+const FS = require("fs");
 
 exports.create_item_record = async function (req, res) {
 
@@ -92,6 +89,35 @@ exports.delete_item_record = async function (req, res) {
     const result = await ITEMS_MODEL.delete_item_record(is_member_of_exhibit, uuid);
     res.status(result.status).send(result);
 };
+
+exports.delete_item_media = function (req, res) {
+
+    try {
+
+        const exhibit_id = req.params.exhibit_id;
+        const item_id = req.params.item_id;
+        const media = req.params.media;
+
+        if (media !== undefined && media.length !== 0) {
+
+            (async function () {
+                await ITEMS_MODEL.delete_media_value(item_id, media);
+            })();
+
+            FS.unlinkSync(`./storage/${exhibit_id}/${media}`);
+            res.status(204).send('Media deleted');
+
+        } else {
+            res.status(200).send('Unable to delete media file');
+        }
+
+    } catch(error) {
+        res.status(404).send({message: `Unable to delete exhibit media file. ${error.message}`});
+    }
+
+    return false;
+};
+
 
 /*
 exports.create_heading_record = async function (req, res) {

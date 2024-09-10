@@ -69,7 +69,7 @@ const ENDPOINTS = {
            },
             delete: {
                 description: 'Deletes item media',
-                endpoint: `${APP_PATH}${PREFIX}${VERSION}${ENDPOINT}/:exhibit_id/media/items/:media`
+                endpoint: `${APP_PATH}${PREFIX}${VERSION}${ENDPOINT}/:exhibit_id/media/items/:item_id/:media`
             }
         },
         media: {

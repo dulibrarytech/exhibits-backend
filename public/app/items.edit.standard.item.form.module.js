@@ -108,6 +108,7 @@ const itemsEditStandardItemFormModule = (function () {
         if (record.media.length > 0) {
 
             // TODO: check if not image
+            console.log(record.item_type);
 
             // TODO: allow to open media in separate window (pdf, video, audio)
             thumbnail_url = EXHIBITS_ENDPOINTS.exhibits.exhibit_media.get.endpoint.replace(':exhibit_id', record.is_member_of_exhibit).replace(':media', record.thumbnail);
@@ -225,20 +226,21 @@ const itemsEditStandardItemFormModule = (function () {
         }
     };
 
-    /** TODO
+    /**
      * Deletes thumbnail image
      */
     function delete_thumbnail_image() {
-        alert('delete thumbnail image');
-        return false;
+
         try {
 
             (async function() {
 
-                const uuid = helperModule.get_parameter_by_name('exhibit_id');
-                let hero_image = document.querySelector('#thumbnail-image').value;
-                let tmp = EXHIBITS_ENDPOINTS.exhibits.exhibit_media.get.endpoint.replace(':exhibit_id', uuid)
-                let endpoint = tmp.replace(':media', hero_image);
+                const exhibit_id = helperModule.get_parameter_by_name('exhibit_id');
+                const item_id = helperModule.get_parameter_by_name('item_id');
+                let thumbnail = document.querySelector('#item-thumbnail').value;
+                let etmp = EXHIBITS_ENDPOINTS.exhibits.item_media.delete.endpoint.replace(':exhibit_id', exhibit_id);
+                let itmp = etmp.replace(':item_id', item_id);
+                let endpoint = itmp.replace(':media', thumbnail);
                 let token = authModule.get_user_token();
                 let response = await httpModule.req({
                     method: 'DELETE',
@@ -251,10 +253,10 @@ const itemsEditStandardItemFormModule = (function () {
 
                 if (response !== undefined && response.status === 204) {
 
-                    document.querySelector('#thumbnail-image').value = '';
-                    document.querySelector('#thumbnail-filename-display').innerHTML = '';
-                    document.querySelector('#thumbnail-trash').style.display = 'none';
-                    document.querySelector('#thumbnail-image-display').innerHTML = '';
+                    document.querySelector('#item-thumbnail').value = '';
+                    document.querySelector('#item-thumbnail-filename-display').innerHTML = '';
+                    document.querySelector('#item-thumbnail-trash').style.display = 'none';
+                    document.querySelector('#item-thumbnail-image-display').innerHTML = '';
                     document.querySelector('#message').innerHTML = `<div class="alert alert-success" role="alert"><i class="fa fa-info"></i> Thumbnail deleted</div>`;
 
                     setTimeout(() => {
@@ -300,7 +302,7 @@ const itemsEditStandardItemFormModule = (function () {
                 document.querySelector('#item-media-trash').removeEventListener('click', itemsCommonStandardItemFormModule.delete_media);
                 document.querySelector('#item-media-trash').addEventListener('click', delete_media);
             }
-            console.log('item-thumbnail ', document.querySelector('#item-thumbnail').value);
+
             if (document.querySelector('#item-thumbnail').value.length === 0) {
                 document.querySelector('#item-thumbnail-trash').removeEventListener('click', delete_thumbnail_image);
                 document.querySelector('#item-thumbnail-trash').addEventListener('click', itemsCommonStandardItemFormModule.delete_thumbnail_image);
