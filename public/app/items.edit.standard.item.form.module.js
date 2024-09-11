@@ -126,7 +126,7 @@ const itemsEditStandardItemFormModule = (function () {
             }
 
             // TODO: allow to open media in separate window (pdf, video, audio)
-            document.querySelector('#item-media-thumbnail-image').innerHTML = thumbnail_fragment;
+            document.querySelector('#item-media-thumbnail-image-display').innerHTML = thumbnail_fragment;
             document.querySelector('#item-media-filename-display').innerHTML = `<span style="font-size: 11px">${record.media}</span>`;
             document.querySelector('#item-media').value = record.media;
             document.querySelector('#item-media-prev').value = record.media;
