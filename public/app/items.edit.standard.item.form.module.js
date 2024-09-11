@@ -107,20 +107,19 @@ const itemsEditStandardItemFormModule = (function () {
 
         if (record.media.length > 0) {
 
-            console.log('mime type ', record.mime_type);
-
             if (record.mime_type.indexOf('image') !== -1) {
                 thumbnail_url = EXHIBITS_ENDPOINTS.exhibits.exhibit_media.get.endpoint.replace(':exhibit_id', record.is_member_of_exhibit).replace(':media', record.thumbnail);
                 thumbnail_fragment = `<p><img src="${thumbnail_url}" height="200" ></p>`;
             } else if (record.mime_type.indexOf('video') !== -1) {
-                // item_type = 'video';
+                thumbnail_url = '/exhibits-dashboard/static/images/video-tn.png';
+                thumbnail_fragment = `<p><img src="${thumbnail_url}" height="200" ></p>`;
             } else if (record.mime_type.indexOf('audio') !== -1) {
-                // item_type = 'audio';
+                thumbnail_url = '/exhibits-dashboard/static/images/audio-tn.png';
+                thumbnail_fragment = `<p><img src="${thumbnail_url}" height="200" ></p>`;
             } else if (record.mime_type.indexOf('pdf') !== -1) {
-                console.log('PDF');
                 thumbnail_url = '/exhibits-dashboard/static/images/pdf-tn.png';
                 thumbnail_fragment = `<p><img src="${thumbnail_url}" height="200" ></p>`;
-                // item_type = 'pdf';
+                // TODO: show open to page field
                 //document.querySelector('#toggle-open-to-page').style.visibility = 'visible';
             } else {
                 console.log('Unable to Determine Type');
@@ -135,7 +134,7 @@ const itemsEditStandardItemFormModule = (function () {
         }
 
         if (record.thumbnail.length > 0) {
-
+            // TODO: handle new uploads / replacements
             thumbnail_url = EXHIBITS_ENDPOINTS.exhibits.exhibit_media.get.endpoint.replace(':exhibit_id', record.is_member_of_exhibit).replace(':media', record.thumbnail);
             thumbnail_fragment = `<p><img src="${thumbnail_url}" height="200" ></p>`;
             document.querySelector('#item-thumbnail-image-display').innerHTML = thumbnail_fragment;

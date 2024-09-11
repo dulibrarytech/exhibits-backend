@@ -160,6 +160,8 @@ const uploadsModule = (function () {
                 let item_type;
                 let mime_type = file.type;
                 let filename = file.upload.filename;
+                let thumbnail_url = '';
+                let thumbnail_fragment = '';
 
                 if (file.type.indexOf('image') !== -1) {
                     item_type = 'image';
@@ -168,6 +170,8 @@ const uploadsModule = (function () {
                 } else if (file.type.indexOf('audio') !== -1) {
                     item_type = 'audio';
                 } else if (file.type.indexOf('pdf') !== -1) {
+                    thumbnail_url = '/exhibits-dashboard/static/images/pdf-tn.png';
+                    thumbnail_fragment = `<p><img src="${thumbnail_url}" height="200" ></p>`;
                     item_type = 'pdf';
                     document.querySelector('#toggle-open-to-page').style.visibility = 'visible';
                 } else {
@@ -178,13 +182,13 @@ const uploadsModule = (function () {
                 document.querySelector('#item-mime-type').value = mime_type;
                 document.querySelector('.upload-error').innerHTML = '';
                 document.querySelector('#item-media').value = filename;
-                document.querySelector('#item-media-filename-display').innerHTML = `<span class="alert-success" style="width: 30%; padding: 5px; border: solid 1px"><i class="fa fa-check"> ${filename}</i></span>`;
+                document.querySelector('#item-media-filename-display').innerHTML = `<span style="font-size: 11px">${filename}</span>`;// `<span class="alert-success" style="width: 30%; padding: 5px; border: solid 1px"><i class="fa fa-check"> ${filename}</i></span>`;
                 document.querySelector('#item-media-trash').style.display = 'inline';
 
                 setTimeout(() => {
+                    document.querySelector('#item-media-thumbnail-image-display').innerHTML = `<p><img src="${thumbnail_url}" height="200"></p>`;
                     this.removeFile(file);
                 }, 2000);
-
             },
             error: function (file, error) {
                 document.querySelector('.upload-error').innerHTML = `<span class="alert alert-danger" style="border: solid 1px"><i class="fa fa-exclamation"></i> ${error}</span>`;
@@ -225,13 +229,14 @@ const uploadsModule = (function () {
                 let filename = file.upload.filename;
                 document.querySelector('.upload-error').innerHTML = '';
                 document.querySelector('#item-thumbnail').value = filename;
-                document.querySelector('#item-thumbnail-filename-display').innerHTML = `<span class="alert-success" style="width: 30%; padding: 5px; border: solid 1px"><i class="fa fa-check"> ${filename}</i></span>`;
+                document.querySelector('#item-thumbnail-filename-display').innerHTML = `<span style="font-size: 11px">${filename}</span>`;
                 document.querySelector('#item-thumbnail-trash').style.display = 'inline';
 
                 setTimeout(() => {
+                    const thumbnail_url = `${APP_PATH}/media?media=${filename}`;
+                    document.querySelector('#item-thumbnail-image-display').innerHTML = `<p><img src="${thumbnail_url}" height="200"></p>`;
                     this.removeFile(file);
                 }, 2000);
-
             },
             error: function (file, error) {
                 document.querySelector('.upload-error').innerHTML = `<span class="alert alert-danger" style="border: solid 1px"><i class="fa fa-exclamation"></i> ${error}</span>`;
