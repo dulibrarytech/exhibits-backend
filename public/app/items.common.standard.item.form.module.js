@@ -127,13 +127,12 @@ const itemsCommonStandardItemFormModule = (function () {
      * Deletes thumbnail image
      */
     obj.delete_thumbnail_image = function () {
-        alert('common delete thumbnail image');
-        return false;
+
         try {
 
             (async function() {
 
-                let thumbnail_image = document.querySelector('#thumbnail-image').value;
+                let thumbnail_image = document.querySelector('#item-thumbnail').value;
                 let token = authModule.get_user_token();
                 let response = await httpModule.req({
                     method: 'DELETE',
@@ -146,10 +145,11 @@ const itemsCommonStandardItemFormModule = (function () {
 
                 if (response !== undefined && response.status === 204) {
 
-                    document.querySelector('#thumbnail-image').value = '';
-                    document.querySelector('#thumbnail-filename-display').innerHTML = '';
-                    document.querySelector('#thumbnail-trash').style.display = 'none';
-                    document.querySelector('#thumbnail-image-display').innerHTML = '';
+                    document.querySelector('#item-thumbnail').value = '';
+                    document.querySelector('#item-thumbnail-image-display').innerHTML = '';
+                    document.querySelector('#item-thumbnail-filename-display').innerHTML = '';
+                    document.querySelector('#item-thumbnail-trash').style.display = 'none';
+                    document.querySelector('#item-media-thumbnail-image-display').innerHTML = '';
                     document.querySelector('#message').innerHTML = `<div class="alert alert-success" role="alert"><i class="fa fa-info"></i> Thumbnail image deleted</div>`;
 
                     setTimeout(() => {
