@@ -162,7 +162,7 @@ const itemsEditStandardItemFormModule = (function () {
 
         let styles = JSON.parse(record.styles);
 
-        if (styles !== undefined) {
+        if (Object.keys(styles).length !== 0) {
 
             document.querySelector('#item-background-color').value = styles.backgroundColor;
             document.querySelector('#item-font-color').value = styles.color;
