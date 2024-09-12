@@ -240,6 +240,52 @@ const itemsEditStandardItemFormModule = (function () {
     };
 
     /**
+     * Deletes item media
+     */
+    function delete_media () {
+
+        try {
+
+            (async function() {
+
+                const exhibit_id = helperModule.get_parameter_by_name('exhibit_id');
+                const item_id = helperModule.get_parameter_by_name('item_id');
+                let media = document.querySelector('#item-media').value;
+                let etmp = EXHIBITS_ENDPOINTS.exhibits.item_media.delete.endpoint.replace(':exhibit_id', exhibit_id);
+                let itmp = etmp.replace(':item_id', item_id);
+                let endpoint = itmp.replace(':media', media);
+                let token = authModule.get_user_token();
+                let response = await httpModule.req({
+                    method: 'DELETE',
+                    url: endpoint,
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'x-access-token': token
+                    }
+                });
+
+                if (response !== undefined && response.status === 204) {
+
+                    document.querySelector('#item-media').value = '';
+                    document.querySelector('#item-media-filename-display').innerHTML = '';
+                    document.querySelector('#item-media-trash').style.display = 'none';
+                    document.querySelector('#item-media-thumbnail-image-display').innerHTML = '';
+                    document.querySelector('#message').innerHTML = `<div class="alert alert-success" role="alert"><i class="fa fa-info"></i> Media deleted</div>`;
+
+                    setTimeout(() => {
+                        document.querySelector('#message').innerHTML = '';
+                        window.location.reload();
+                    }, 3000);
+                }
+
+            })();
+
+        } catch (error) {
+            document.querySelector('#message').innerHTML = `<div class="alert alert-danger" role="alert"><i class="fa fa-exclamation"></i> ${error.message}</div>`;
+        }
+    }
+
+    /**
      * Deletes thumbnail image
      */
     function delete_thumbnail_image() {
@@ -285,13 +331,6 @@ const itemsEditStandardItemFormModule = (function () {
         }
 
         return false;
-    }
-
-    /**
-     *
-     */
-    function delete_media () {
-        alert('delete media');
     }
 
     /**
