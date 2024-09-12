@@ -80,6 +80,13 @@ const itemsCommonStandardItemFormModule = (function () {
     };
 
     /**
+     * Deletes media
+     */
+    obj.delete_media = function () {
+        alert('common delete media');
+    };
+
+    /**
      * Deletes thumbnail image
      */
     obj.delete_thumbnail_image = function () {
@@ -121,13 +128,6 @@ const itemsCommonStandardItemFormModule = (function () {
 
         return false;
     }
-
-    /**
-     *
-     */
-    obj.delete_media = function () {
-        alert('common delete media');
-    };
 
     /**
      * Init function for exhibits common add/edit forms
