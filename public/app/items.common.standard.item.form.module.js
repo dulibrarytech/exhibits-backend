@@ -83,7 +83,44 @@ const itemsCommonStandardItemFormModule = (function () {
      * Deletes media
      */
     obj.delete_media = function () {
-        alert('common delete media');
+
+        try {
+
+            (async function() {
+
+                let media = document.querySelector('#item-media').value;
+                let token = authModule.get_user_token();
+                let response = await httpModule.req({
+                    method: 'DELETE',
+                    url: EXHIBITS_ENDPOINTS.exhibits.media.delete.endpoint + '?media=' + media,
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'x-access-token': token
+                    }
+                });
+
+                if (response !== undefined && response.status === 204) {
+
+                    document.querySelector('#item-media').value = '';
+                    document.querySelector('#item-media-thumbnail-image-display').innerHTML = '';
+                    document.querySelector('#item-media-filename-display').innerHTML = '';
+                    document.querySelector('#item-media-trash').style.display = 'none';
+                    document.querySelector('#message').innerHTML = `<div class="alert alert-success" role="alert"><i class="fa fa-info"></i> Media deleted</div>`;
+                    // only for PDF
+                    document.querySelector('#toggle-open-to-page').style.visibility = 'hidden';
+
+                    setTimeout(() => {
+                        document.querySelector('#message').innerHTML = '';
+                    }, 3000);
+                }
+
+            })();
+
+        } catch (error) {
+            document.querySelector('#message').innerHTML = `<div class="alert alert-danger" role="alert"><i class="fa fa-exclamation"></i> ${error.message}</div>`;
+        }
+
+        return false;
     };
 
     /**
