@@ -22,11 +22,11 @@ module.exports = () => {
 
     return {
         title: {type: 'string'},
-        caption: {type: 'string'},
-        description: {type: 'string'},
+        // caption: {type: 'string'},
+        // description: {type: 'string'},
         media: {type: 'string'},
-        text: {type: 'string'},
-        layout: {type: 'string'},
-        styles: {type: 'string'}
+        // text: {type: 'string'},
+        // layout: {type: 'string'},
+        // styles: {type: 'string'}
     };
 };

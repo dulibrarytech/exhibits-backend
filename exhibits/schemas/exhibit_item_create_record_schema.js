@@ -22,12 +22,12 @@ module.exports = () => {
 
     return {
         is_member_of_exhibit: {type: 'string'},
-        uuid: {type: 'string'},
+        // uuid: {type: 'string'},
         title: {type: 'string'},
-        caption: {type: 'string'},
-        description: {type: 'string'},
-        thumbnail: {type: 'string'},
+        // caption: {type: 'string'},
+        // description: {type: 'string'},
+        // thumbnail: {type: 'string'},
         media: {type: 'string'},
-        text: {type: 'string'}
+        // text: {type: 'string'}
     };
 };

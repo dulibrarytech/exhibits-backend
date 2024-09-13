@@ -44,6 +44,7 @@ const itemsCommonStandardItemFormModule = (function () {
             item.item_type = document.querySelector('#item-type').value;
             item.mime_type = document.querySelector('#item-mime-type').value;
             item.media = document.querySelector('#item-media').value;
+            item.media_prev = document.querySelector('#item-media-prev').value;
             item.repo_uuid = document.querySelector('#repo-uuid').value;
 
             // item layout - standard item only

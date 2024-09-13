@@ -55,7 +55,14 @@ const itemsAddStandardItemFormModule = (function () {
             }
 
             document.querySelector('#message').innerHTML = `<div class="alert alert-info" role="alert"><i class="fa fa-info"></i> Creating item record...</div>`;
+            // let data = itemsCommonStandardItemFormModule.get_common_standard_item_form_fields(rich_text_data);
             let data = itemsCommonStandardItemFormModule.get_common_standard_item_form_fields(rich_text_data);
+            console.log('create ', data);
+            if (data === undefined) {
+                console.log('Unable to get form field values');
+                return false;
+            }
+
             let token = authModule.get_user_token();
             let response = await httpModule.req({
                 method: 'POST',

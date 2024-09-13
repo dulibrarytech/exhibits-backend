@@ -144,10 +144,6 @@ const uploadsModule = (function () {
                 console.log('orig name: ', file.name);
                 console.log('mime type: ', file.type);
 
-                if (file.type === 'application/pdf') {
-                    console.log('This is a PDF');
-                }
-
                 let extension = file.name.split('.').pop();
                 return `${Date.now()}_item_media.${extension}`;
             },
@@ -161,7 +157,6 @@ const uploadsModule = (function () {
                 let mime_type = file.type;
                 let filename = file.upload.filename;
                 let thumbnail_url = '';
-                let thumbnail_fragment = '';
 
                 if (file.type.indexOf('image') !== -1) {
                     item_type = 'image';
