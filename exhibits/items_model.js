@@ -23,15 +23,15 @@ const DB_TABLES = require('../config/db_tables_config')();
 const TABLES = DB_TABLES.exhibits;
 const EXHIBITS_CREATE_ITEM_SCHEMA = require('../exhibits/schemas/exhibit_item_create_record_schema')();
 const EXHIBITS_UPDATE_ITEM_SCHEMA = require('../exhibits/schemas/exhibit_item_update_record_schema')();
-const EXHIBITS_CREATE_GRID_SCHEMA = require('../exhibits/schemas/exhibit_create_grid_record_schema')();
 const EXHIBIT_ITEM_RECORD_TASKS = require('../exhibits/tasks/exhibit_item_record_tasks');
 const EXHIBIT_HEADING_RECORD_TASKS = require('./tasks/exhibit_heading_record_tasks');
 const EXHIBIT_GRID_RECORD_TASKS = require('./tasks/exhibit_grid_record_tasks');
 const HELPER = require('../libs/helper');
 const VALIDATOR = require('../libs/validate');
-const FS = require('fs');
 const LOGGER = require('../libs/log4');
-const EXHIBIT_RECORD_TASKS = require("./tasks/exhibit_record_tasks");
+// const EXHIBITS_CREATE_GRID_SCHEMA = require('../exhibits/schemas/exhibit_create_grid_record_schema')();
+// const FS = require('fs');
+// const EXHIBIT_RECORD_TASKS = require("./tasks/exhibit_record_tasks");
 
 /**
  * Gets item records by exhibit
@@ -151,7 +151,7 @@ exports.create_item_record = async function (is_member_of_exhibit, data) {
     }
 };
 
-/** TODO:
+/**
  * Updates item record
  * @param is_member_of_exhibit
  * @param item_id
@@ -179,9 +179,7 @@ exports.update_item_record = async function (is_member_of_exhibit, item_id, data
         }
 
         HELPER_TASK.check_storage_path(data.is_member_of_exhibit);
-        console.log('media ', data.media);
-        console.log('prev media ', data.media_prev);
-        console.log('item id ', data.uuid);
+
         if (data.media.length > 0 && data.media !== data.media_prev) {
             data.media = HELPER_TASK.process_uploaded_media(data.is_member_of_exhibit, data.uuid, data.media);
         }
@@ -250,140 +248,6 @@ exports.delete_media_value = async function (uuid, media) {
 };
 
 /**
- * Create grid record
- * @param is_member_of_exhibit
- * @param data
- */
-exports.create_grid_record = async function (is_member_of_exhibit, data) {
-
-    try {
-
-        const HELPER_TASK = new HELPER();
-        data.uuid = HELPER_TASK.create_uuid();
-        data.is_member_of_exhibit = is_member_of_exhibit;
-        const VALIDATE_TASK = new VALIDATOR(EXHIBITS_CREATE_GRID_SCHEMA);
-        data.styles = JSON.stringify(data.styles);
-        let is_valid = VALIDATE_TASK.validate(data);
-
-        if (is_valid !== true) {
-
-            LOGGER.module().error('ERROR: [/exhibits/model (create_grid_record)] ' + is_valid[0].message);
-
-            return {
-                status: 400,
-                message: is_valid
-            };
-        }
-
-        data.columns = parseInt(data.columns);
-        data.order = await HELPER_TASK.order_exhibit_items(data.is_member_of_exhibit, DB, TABLES);
-
-        const CREATE_RECORD_TASK = new EXHIBIT_GRID_RECORD_TASKS(DB, TABLES);
-        let result = await CREATE_RECORD_TASK.create_grid_record(data);
-
-        if (result === false) {
-            return {
-                status: 200,
-                message: 'Unable to create grid record'
-            };
-        } else {
-            return {
-                status: 201,
-                message: 'Grid record created',
-                data: data.uuid
-            };
-        }
-
-    } catch (error) {
-        LOGGER.module().error('ERROR: [/exhibits/model (create_grid_record)] ' + error.message);
-        callback({
-            status: 200,
-            message: 'Unable to create record ' + error.message
-        });
-    }
-};
-
-/**
- * Creates grid item record
- * @param is_member_of_exhibit
- * @param is_member_of_grid
- * @param data
- */
-exports.create_grid_item_record = async function (is_member_of_exhibit, is_member_of_grid, data) {
-
-    try {
-
-        const HELPER_TASK = new HELPER();
-        data.uuid = HELPER_TASK.create_uuid();
-        data.is_member_of_exhibit = is_member_of_exhibit;
-        data.is_member_of_grid = is_member_of_grid;
-
-        const VALIDATE_TASK = new VALIDATOR(EXHIBITS_CREATE_ITEM_SCHEMA);
-        data.styles = JSON.stringify(data.styles);
-        let is_valid = VALIDATE_TASK.validate(data);
-
-        if (is_valid !== true) {
-
-            LOGGER.module().error('ERROR: [/exhibits/model (create_grid_record)] ' + is_valid[0].message);
-
-            return {
-                status: 400,
-                message: is_valid
-            };
-        }
-
-        // TODO
-        // data.order = await HELPER_TASK.order_exhibit_items(data.is_member_of_exhibit, DB, TABLES);
-
-        const CREATE_RECORD_TASK = new EXHIBIT_GRID_RECORD_TASKS(DB, TABLES);
-        let result = await CREATE_RECORD_TASK.create_grid_item_record(data);
-
-        if (result === false) {
-            return {
-                status: 200,
-                message: 'Unable to create grid item record'
-            };
-        } else {
-            return {
-                status: 201,
-                message: 'Grid item record created',
-                data: data.uuid
-            };
-        }
-
-    } catch (error) {
-        LOGGER.module().error('ERROR: [/exhibits/model (create_grid_item_record)] ' + error.message);
-        callback({
-            status: 200,
-            message: 'Unable to create item record ' + error.message
-        });
-    }
-};
-
-/**
- * Gets grid items
- * @param is_member_of_exhibit
- * @param is_member_of_grid
- */
-exports.get_grid_item_records = async function (is_member_of_exhibit, is_member_of_grid) {
-
-    try {
-
-        const GRID_TASK = new EXHIBIT_GRID_RECORD_TASKS(DB, TABLES);
-        const grid_items = await GRID_TASK.get_grid_item_records(is_member_of_exhibit, is_member_of_grid);
-
-        return {
-            status: 200,
-            message: 'Exhibit grid item records',
-            data: grid_items
-        };
-
-    } catch (error) {
-        console.log(error);
-    }
-};
-
-/**
  * Gets item record by uuid and is_member_of_exhibit
  * @param is_member_of_exhibit
  * @param uuid
@@ -434,3 +298,142 @@ exports.delete_item_record = async function (is_member_of_exhibit, uuid) {
         };
     }
 };
+
+/**
+ * Gets grid items
+ * @param is_member_of_exhibit
+ * @param is_member_of_grid
+ */
+/*
+exports.get_grid_item_records = async function (is_member_of_exhibit, is_member_of_grid) {
+
+    try {
+
+        const GRID_TASK = new EXHIBIT_GRID_RECORD_TASKS(DB, TABLES);
+        const grid_items = await GRID_TASK.get_grid_item_records(is_member_of_exhibit, is_member_of_grid);
+
+        return {
+            status: 200,
+            message: 'Exhibit grid item records',
+            data: grid_items
+        };
+
+    } catch (error) {
+        console.log(error);
+    }
+};
+*/
+
+/**
+ * Creates grid item record
+ * @param is_member_of_exhibit
+ * @param is_member_of_grid
+ * @param data
+ */
+/*
+exports.create_grid_item_record = async function (is_member_of_exhibit, is_member_of_grid, data) {
+
+    try {
+
+        const HELPER_TASK = new HELPER();
+        data.uuid = HELPER_TASK.create_uuid();
+        data.is_member_of_exhibit = is_member_of_exhibit;
+        data.is_member_of_grid = is_member_of_grid;
+
+        const VALIDATE_TASK = new VALIDATOR(EXHIBITS_CREATE_ITEM_SCHEMA);
+        data.styles = JSON.stringify(data.styles);
+        let is_valid = VALIDATE_TASK.validate(data);
+
+        if (is_valid !== true) {
+
+            LOGGER.module().error('ERROR: [/exhibits/model (create_grid_record)] ' + is_valid[0].message);
+
+            return {
+                status: 400,
+                message: is_valid
+            };
+        }
+
+        // TODO
+        // data.order = await HELPER_TASK.order_exhibit_items(data.is_member_of_exhibit, DB, TABLES);
+
+        const CREATE_RECORD_TASK = new EXHIBIT_GRID_RECORD_TASKS(DB, TABLES);
+        let result = await CREATE_RECORD_TASK.create_grid_item_record(data);
+
+        if (result === false) {
+            return {
+                status: 200,
+                message: 'Unable to create grid item record'
+            };
+        } else {
+            return {
+                status: 201,
+                message: 'Grid item record created',
+                data: data.uuid
+            };
+        }
+
+    } catch (error) {
+        LOGGER.module().error('ERROR: [/exhibits/model (create_grid_item_record)] ' + error.message);
+        callback({
+            status: 200,
+            message: 'Unable to create item record ' + error.message
+        });
+    }
+};
+*/
+/**
+ * Create grid record
+ * @param is_member_of_exhibit
+ * @param data
+ */
+/*
+exports.create_grid_record = async function (is_member_of_exhibit, data) {
+
+    try {
+
+        const HELPER_TASK = new HELPER();
+        data.uuid = HELPER_TASK.create_uuid();
+        data.is_member_of_exhibit = is_member_of_exhibit;
+        const VALIDATE_TASK = new VALIDATOR(EXHIBITS_CREATE_GRID_SCHEMA);
+        data.styles = JSON.stringify(data.styles);
+        let is_valid = VALIDATE_TASK.validate(data);
+
+        if (is_valid !== true) {
+
+            LOGGER.module().error('ERROR: [/exhibits/model (create_grid_record)] ' + is_valid[0].message);
+
+            return {
+                status: 400,
+                message: is_valid
+            };
+        }
+
+        data.columns = parseInt(data.columns);
+        data.order = await HELPER_TASK.order_exhibit_items(data.is_member_of_exhibit, DB, TABLES);
+
+        const CREATE_RECORD_TASK = new EXHIBIT_GRID_RECORD_TASKS(DB, TABLES);
+        let result = await CREATE_RECORD_TASK.create_grid_record(data);
+
+        if (result === false) {
+            return {
+                status: 200,
+                message: 'Unable to create grid record'
+            };
+        } else {
+            return {
+                status: 201,
+                message: 'Grid record created',
+                data: data.uuid
+            };
+        }
+
+    } catch (error) {
+        LOGGER.module().error('ERROR: [/exhibits/model (create_grid_record)] ' + error.message);
+        callback({
+            status: 200,
+            message: 'Unable to create record ' + error.message
+        });
+    }
+};
+*/

@@ -115,7 +115,7 @@ const Exhibit_item_record_tasks = class {
         }
     }
 
-    /** TODO: version record
+    /**
      * Updates item record
      * @param data
      */

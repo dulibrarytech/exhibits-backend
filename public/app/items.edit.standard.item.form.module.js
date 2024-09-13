@@ -87,8 +87,6 @@ const itemsEditStandardItemFormModule = (function () {
     async function display_edit_record () {
 
         let record = await get_item_record();
-        let media_url = '';
-        let media_fragment = '';
         let thumbnail_fragment = '';
         let thumbnail_url = '';
 
@@ -106,7 +104,7 @@ const itemsEditStandardItemFormModule = (function () {
         rich_text_data['item-text-input'].setHTMLCode(helperModule.unescape(record.text));
 
         if (record.media.length > 0) {
-            console.log('mime type edit ', record.mime_type);
+
             if (record.mime_type.indexOf('image') !== -1) {
                 thumbnail_url = EXHIBITS_ENDPOINTS.exhibits.exhibit_media.get.endpoint.replace(':exhibit_id', record.is_member_of_exhibit).replace(':media', record.thumbnail);
                 thumbnail_fragment = `<p><img src="${thumbnail_url}" height="200" ></p>`;
@@ -120,12 +118,14 @@ const itemsEditStandardItemFormModule = (function () {
                 thumbnail_url = '/exhibits-dashboard/static/images/pdf-tn.png';
                 thumbnail_fragment = `<p><img src="${thumbnail_url}" height="200" ></p>`;
                 // TODO: show open to page field
-                //document.querySelector('#toggle-open-to-page').style.visibility = 'visible';
+                document.querySelector('#toggle-open-to-page').style.visibility = 'visible';
             } else {
                 console.log('Unable to Determine Type');
             }
 
             // TODO: allow to open media in separate window (pdf, video, audio)
+            document.querySelector('#item-type').value = record.item_type;
+            document.querySelector('#item-mime-type').value = helperModule.unescape(record.mime_type); // TODO: unescape
             document.querySelector('#item-media-thumbnail-image-display').innerHTML = thumbnail_fragment;
             document.querySelector('#item-media-filename-display').innerHTML = `<span style="font-size: 11px">${record.media}</span>`;
             document.querySelector('#item-media').value = record.media;
