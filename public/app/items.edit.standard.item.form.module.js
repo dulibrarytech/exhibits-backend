@@ -133,7 +133,7 @@ const itemsEditStandardItemFormModule = (function () {
         }
 
         if (record.thumbnail.length > 0) {
-            console.log(record.thumbnail);
+
             thumbnail_url = EXHIBITS_ENDPOINTS.exhibits.exhibit_media.get.endpoint.replace(':exhibit_id', record.is_member_of_exhibit).replace(':media', record.thumbnail);
             thumbnail_fragment = `<p><img src="${thumbnail_url}" height="200" ></p>`;
             document.querySelector('#item-thumbnail-image-display').innerHTML = thumbnail_fragment;
@@ -163,8 +163,17 @@ const itemsEditStandardItemFormModule = (function () {
 
         if (Object.keys(styles).length !== 0) {
 
-            document.querySelector('#item-background-color').value = styles.backgroundColor;
-            document.querySelector('#item-font-color').value = styles.color;
+            if (styles.backgroundColor !== undefined) {
+                document.querySelector('#item-background-color').value = styles.backgroundColor;
+            } else {
+                document.querySelector('#item-background-color').value = '';
+            }
+
+            if (styles.color !== undefined) {
+                document.querySelector('#item-font-color').value = styles.color;
+            } else {
+                document.querySelector('#item-font-color').value = '';
+            }
 
             let font_values = document.querySelector('#item-font');
 
@@ -174,7 +183,11 @@ const itemsEditStandardItemFormModule = (function () {
                 }
             }
 
-            document.querySelector('#item-font-size').value = styles.fontSize;
+            if (styles.fontSize !== undefined) {
+                document.querySelector('#item-font-size').value = styles.fontSize;
+            } else {
+                document.querySelector('#item-font-size').value = '';
+            }
         }
 
         return false;
