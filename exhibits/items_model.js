@@ -200,6 +200,7 @@ exports.update_item_record = async function (is_member_of_exhibit, item_id, data
 
         delete data.repo_uuid;
         delete data.media_prev;
+        delete data.thumbnail_prev;
 
         const UPDATE_RECORD_TASK = new EXHIBIT_ITEM_RECORD_TASKS(DB, TABLES);
         let result = await UPDATE_RECORD_TASK.update_item_record(data);

@@ -123,9 +123,8 @@ const itemsEditStandardItemFormModule = (function () {
                 console.log('Unable to Determine Type');
             }
 
-            // TODO: allow to open media in separate window (pdf, video, audio)
             document.querySelector('#item-type').value = record.item_type;
-            document.querySelector('#item-mime-type').value = helperModule.unescape(record.mime_type); // TODO: unescape
+            document.querySelector('#item-mime-type').value = helperModule.unescape(record.mime_type);
             document.querySelector('#item-media-thumbnail-image-display').innerHTML = thumbnail_fragment;
             document.querySelector('#item-media-filename-display').innerHTML = `<span style="font-size: 11px">${record.media}</span>`;
             document.querySelector('#item-media').value = record.media;
@@ -134,7 +133,7 @@ const itemsEditStandardItemFormModule = (function () {
         }
 
         if (record.thumbnail.length > 0) {
-            // TODO: handle new uploads / replacements
+            console.log(record.thumbnail);
             thumbnail_url = EXHIBITS_ENDPOINTS.exhibits.exhibit_media.get.endpoint.replace(':exhibit_id', record.is_member_of_exhibit).replace(':media', record.thumbnail);
             thumbnail_fragment = `<p><img src="${thumbnail_url}" height="200" ></p>`;
             document.querySelector('#item-thumbnail-image-display').innerHTML = thumbnail_fragment;

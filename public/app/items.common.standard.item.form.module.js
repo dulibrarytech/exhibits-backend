@@ -41,6 +41,7 @@ const itemsCommonStandardItemFormModule = (function () {
 
             // item media
             item.thumbnail = document.querySelector('#item-thumbnail').value;
+            item.thumbnail_prev = document.querySelector('#item-thumbnail-image-prev').value;
             item.item_type = document.querySelector('#item-type').value;
             item.mime_type = document.querySelector('#item-mime-type').value;
             item.media = document.querySelector('#item-media').value;
