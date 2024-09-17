@@ -23,7 +23,7 @@ const itemsEditHeadingFormModule = (function () {
     const APP_PATH = '/exhibits-dashboard';
     const EXHIBITS_ENDPOINTS = endpointsModule.get_exhibits_endpoints();
     let obj = {};
-    let rich_text_data = {};
+    // let rich_text_data = {};
 
     /**
      * Gets item heading record
@@ -82,6 +82,7 @@ const itemsEditHeadingFormModule = (function () {
         }
 
         if (Object.keys(styles).length !== 0) {
+            // TODO: check for undefined values
             document.querySelector('#heading-background-color').value = styles.backgroundColor;
             document.querySelector('#heading-font-color').value = styles.color;
             document.querySelector('#heading-font-size').value = styles.fontSize;

@@ -24,21 +24,26 @@ const itemsAddGridFormModule = (function () {
     const EXHIBITS_ENDPOINTS = endpointsModule.get_exhibits_endpoints();
     let obj = {};
 
-    /**
+    /** TODO:
      * Creates grid
      */
     obj.create_grid_record = async function () {
 
         window.scrollTo(0, 0);
-        let uuid = helperModule.get_parameter_by_name('uuid');
+        let exhibit_id = helperModule.get_parameter_by_name('exhibit_id');
+        console.log(exhibit_id);
 
-        if (uuid === undefined) {
+        if (exhibit_id === undefined) {
             document.querySelector('#message').innerHTML = `<div class="alert alert-warning" role="alert"><i class="fa fa-info"></i> Unable to create grid record.</div>`;
             return false;
         }
 
         document.querySelector('#message').innerHTML = `<div class="alert alert-info" role="alert"><i class="fa fa-info"></i> Creating grid record...</div>`;
-        let data = get_grid_data();
+        let data = itemsCommonStandardGridFormModule.get_common_grid_form_fields();
+        console.log(data);
+        return false;
+
+        // let data = get_grid_data();
 
         try {
 
@@ -69,6 +74,20 @@ const itemsAddGridFormModule = (function () {
             document.querySelector('#message').innerHTML = `<div class="alert alert-danger" role="alert"><i class="fa fa-exclamation"></i> ${error.message}</div>`;
         }
     };
+
+    /**
+     * Init function for standard item add form
+     */
+    obj.init = async function () {
+        console.log('init');
+        const exhibit_id = helperModule.get_parameter_by_name('exhibit_id');
+        exhibitsModule.set_exhibit_title(exhibit_id);
+
+        // helperModule.set_rich_text_editor_config();
+
+        document.querySelector('#save-item-btn').addEventListener('click', itemsAddGridFormModule.create_grid_record);
+    };
+
 
     /**
      * Gets grid data
@@ -159,10 +178,11 @@ const itemsAddGridFormModule = (function () {
     /**
      * Creates item
      */
+    /*
     obj.create_item_record = async function () {
 
         window.scrollTo(0, 0);
-        let uuid = helperModule.get_parameter_by_name('uuid');
+        let exhibit_id = helperModule.get_parameter_by_name('exhibit_id');
         let grid_id = helperModule.get_parameter_by_name('grid');
 
         if (uuid === undefined) {
@@ -219,44 +239,12 @@ const itemsAddGridFormModule = (function () {
             document.querySelector('#message').innerHTML = `<div class="alert alert-danger" role="alert"><i class="fa fa-exclamation"></i> ${error.message}</div>`;
         }
     };
-
-    /**
-     * Sets menu links for headings form
-     */
-    obj.set_headings_form_nav_menu_links = function () {
-
-        let uuid = helperModule.get_parameter_by_name('exhibit_id');
-        let back_link = `${APP_PATH}/items?uuid=${uuid}`;
-        let standard_item_link = `${APP_PATH}/items/standard?uuid=${uuid}`;
-        let item_grid_link = `${APP_PATH}/items/grid?uuid=${uuid}`;
-        let item_vertical_timeline_link = `${APP_PATH}/items/vertical-timeline?uuid=${uuid}`;
-        let form_menu_fragment = `
-                <li>
-                    <a href="${back_link}" data-backdrop="static" data-keyboard="false">
-                        <i class=" menu-icon fa fa-arrow-left"></i>Back to items
-                    </a>
-                </li>
-                <li>
-                    <a href="${standard_item_link}" data-keyboard="false"> 
-                        <i class=" menu-icon ti-menu-alt"></i>Add Items
-                    </a>
-                </li>
-                <li>
-                    <a href="${item_grid_link}" data-keyboard="false"> <i
-                                class=" menu-icon fa fa-th"></i>Create Item Grid</a>
-                </li>
-                <li>
-                    <a href="${item_vertical_timeline_link}" data-keyboard="false">
-                        <i class=" menu-icon ti-calendar"></i>Create Vertical Timeline
-                    </a>
-                </li>`;
-
-        document.querySelector('#items-menu').innerHTML = form_menu_fragment;
-    };
+    */
 
     /**
      * Sets menu links for items form
      */
+    /*
     obj.set_items_form_nav_menu_links = function () {
 
         let uuid = helperModule.get_parameter_by_name('exhibit_id');
@@ -288,9 +276,12 @@ const itemsAddGridFormModule = (function () {
         document.querySelector('#items-menu').innerHTML = form_menu_fragment;
     };
 
+     */
+
     /**
      * Sets menu links for grid items form
      */
+    /*
     obj.set_grid_items_form_nav_menu_links = function () {
 
         let uuid = helperModule.get_parameter_by_name('uuid');
@@ -323,10 +314,13 @@ const itemsAddGridFormModule = (function () {
         document.querySelector('#items-menu').innerHTML = form_menu_fragment;
     };
 
+     */
+
     /**
      *
      * @return {boolean}
      */
+    /*
     obj.check_grid = function () {
 
         let is_grid = helperModule.get_parameter_by_name('grid');
@@ -341,29 +335,12 @@ const itemsAddGridFormModule = (function () {
         return false;
     }
 
-    /**
-     * Init function for headings form
      */
-    obj.headings_init = function () {
-        itemsFormModule.set_headings_form_nav_menu_links();
-        document.querySelector('#save-heading-btn').addEventListener('click', itemsFormModule.create_heading_record);
-        document.querySelector('#heading-background-color-picker').addEventListener('input', () => {
-            if (document.querySelector('#heading-background-color')) {
-                document.querySelector('#heading-background-color').value = document.querySelector('#heading-background-color-picker').value;
-            }
-        });
-
-        document.querySelector('#heading-font-color-picker').addEventListener('input', () => {
-            if (document.querySelector('#heading-font-color')) {
-                document.querySelector('#heading-font-color').value = document.querySelector('#heading-font-color-picker').value;
-            }
-        });
-
-    };
 
     /**
      * init function for standard items form
      */
+    /*
     obj.items_init = function () {
         set_rich_text_editor();
         itemsFormModule.set_items_form_nav_menu_links();
@@ -397,12 +374,14 @@ const itemsAddGridFormModule = (function () {
             }
         });
     };
+    */
 
     /**
      * Init function for grid form
      */
-    obj.init = function () {
+    // obj.init = function () {
 
+        /*
         itemsAddGridFormModule.set_grid_items_form_nav_menu_links();
         document.querySelector('#save-grid-btn').addEventListener('click', itemsAddGridFormModule.create_grid_record);
         uploadsModule.upload_item_media();
@@ -419,18 +398,9 @@ const itemsAddGridFormModule = (function () {
                 document.querySelector('#grid-font-color').value = document.querySelector('#grid-font-color-picker').value;
             }
         });
-    };
 
-    /**
-     *
-
-    obj.init = async function () {
-
-        const uuid = helperModule.get_parameter_by_name('uuid');
-        exhibitsModule.set_preview_link();
-        await itemsModule.set_exhibit_title(uuid);
-    };
-     */
+         */
+   // };
 
     return obj;
 

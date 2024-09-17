@@ -91,7 +91,7 @@ const itemsModule = (function () {
             item_data += `<td style="width: 5%">${order}</td>`;
 
             if (items[i].type === 'item') { // standard
-                console.log(items[i]);
+
                 let title = `<a href="${APP_PATH}/items/details?exhibit_id=${exhibit_id}&item_id=${item_id}">${helperModule.unescape(items[i].title)}</a>`;
                 let description = helperModule.unescape(items[i].description);
                 let thumbnail = '';

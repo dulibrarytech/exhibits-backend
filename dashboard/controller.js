@@ -28,13 +28,6 @@ exports.default = function (req, res) {
     });
 };
 
-/*
-exports.get_dashboard = function (req, res) {
-    res.redirect(APP_PATH + '/dashboard/login');
-};
-
- */
-
 exports.get_dashboard_exhibits = function (req, res) {
     res.render('dashboard-exhibits', {
         host: CONFIG.host,
@@ -89,24 +82,6 @@ exports.get_dashboard_items_heading_edit_form = function (req, res) {
     });
 }
 
-exports.get_dashboard_item_griditem_form = function (req, res) {
-    res.render('dashboard-item-griditem-form', {
-        host: CONFIG.host,
-        appname: CONFIG.app_name,
-        appversion: CONFIG.app_version,
-        organization: CONFIG.organization
-    });
-};
-
-exports.get_dashboard_item_grid_list = function (req, res) {
-    res.render('dashboard-item-griditem-list', {
-        host: CONFIG.host,
-        appname: CONFIG.app_name,
-        appversion: CONFIG.app_version,
-        organization: CONFIG.organization
-    });
-};
-
 exports.get_dashboard_items_standard_add_form = function (req, res) {
     res.render('dashboard-item-standard-add-form', {
         host: CONFIG.host,
@@ -118,6 +93,15 @@ exports.get_dashboard_items_standard_add_form = function (req, res) {
 
 exports.get_dashboard_items_standard_edit_form = function (req, res) {
     res.render('dashboard-item-standard-edit-form', {
+        host: CONFIG.host,
+        appname: CONFIG.app_name,
+        appversion: CONFIG.app_version,
+        organization: CONFIG.organization
+    });
+};
+
+exports.get_dashboard_item_grid_add_form = function (req, res) {
+    res.render('dashboard-grid-add-form', {
         host: CONFIG.host,
         appname: CONFIG.app_name,
         appversion: CONFIG.app_version,
@@ -143,6 +127,7 @@ exports.get_dashboard_item_details = function (req, res) {
     });
 };
 
+/* TODO: remove */
 exports.get_dashboard_item_standard_form = function (req, res) {
     res.render('dashboard-item-standard-form', {
         host: CONFIG.host,
@@ -152,6 +137,7 @@ exports.get_dashboard_item_standard_form = function (req, res) {
     });
 };
 
+/* TODO */
 exports.get_dashboard_item_grid_form = function (req, res) {
     res.render('dashboard-item-grid-form', {
         host: CONFIG.host,
@@ -161,8 +147,19 @@ exports.get_dashboard_item_grid_form = function (req, res) {
     });
 };
 
+/* TODO */
 exports.get_dashboard_item_vertical_timeline = function (req, res) {
     res.render('dashboard-item-vertical-timeline-form', {
+        host: CONFIG.host,
+        appname: CONFIG.app_name,
+        appversion: CONFIG.app_version,
+        organization: CONFIG.organization
+    });
+};
+
+/* TODO */
+exports.get_dashboard_item_grid_list = function (req, res) {
+    res.render('dashboard-item-griditem-list', {
         host: CONFIG.host,
         appname: CONFIG.app_name,
         appversion: CONFIG.app_version,
