@@ -117,7 +117,6 @@ const itemsEditStandardItemFormModule = (function () {
             } else if (record.mime_type.indexOf('pdf') !== -1) {
                 thumbnail_url = '/exhibits-dashboard/static/images/pdf-tn.png';
                 thumbnail_fragment = `<p><img src="${thumbnail_url}" height="200" ></p>`;
-                // TODO: show open to page field
                 document.querySelector('#toggle-open-to-page').style.visibility = 'visible';
             } else {
                 console.log('Unable to Determine Type');
@@ -380,75 +379,3 @@ const itemsEditStandardItemFormModule = (function () {
     return obj;
 
 }());
-
-/**
- * Gets data from item edit form
- */
-/*
-function get_item_data () {
-
-    let item = {};
-    item.styles = {
-        item: {}
-    };
-
-    // item data
-    item.title = rich_text_data['item-title-input'].getHTMLCode();
-    item.caption = rich_text_data['item-caption-input'].getHTMLCode();
-    item.description = rich_text_data['item-description-input'].getHTMLCode();
-    item.text = rich_text_data['item-text-input'].getHTMLCode();
-
-    // grid item only
-    if (document.querySelector('#item-date')) {
-        item.date = document.querySelector('#item-date').value;
-    }
-
-    // item media
-    if (document.querySelector('#item-thumbnail')) {
-        item.thumbnail = document.querySelector('#item-thumbnail').value;
-    }
-
-    // TODO: get item type from upload module?
-    if (document.querySelector('#item-type')) {
-        item.item_type = document.querySelector('#item-type').value;
-    }
-
-    if (document.querySelector('#repo-uuid').value.length > 0) {
-        item.media = document.querySelector('#repo-uuid').value;
-    } else {
-        item.media = document.querySelector('#item-media').value;
-    }
-
-    item.media_prev = document.querySelector('#item-media-prev').value;
-
-    // item layout - standard item only
-    if (document.getElementsByName('layout')) {
-        item.layout = helperModule.get_checked_radio_button(document.getElementsByName('layout'));
-    }
-
-    if (item.layout.length === 0) {
-        item.layout = 'grid';
-    }
-
-    // item styles
-    let item_background_color = document.querySelector('#item-background-color').value;
-    let item_color = document.querySelector('#item-font-color').value;
-    let item_font = document.querySelector('#item-font').value;
-
-    if (item_background_color.length > 0) {
-        item.styles.item.backGroundColor = item_background_color;
-    }
-
-    if (item_color.length > 0) {
-        item.styles.item.color = item_color;
-    }
-
-    if (item_font.length > 0) {
-        item.styles.item.fontFamily = item_font;
-    }
-
-    console.log('edit item data ', item.styles);
-
-    return item;
-}
-*/

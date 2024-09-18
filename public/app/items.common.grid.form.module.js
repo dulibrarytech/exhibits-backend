@@ -37,17 +37,17 @@ const itemsCommonStandardGridFormModule = (function () {
             grid.columns = document.querySelector('#grid-columns').value;
 
             // grid styles
-            let item_background_color = document.querySelector('#item-background-color').value;
-            let item_color = document.querySelector('#item-font-color').value;
-            let item_font = document.querySelector('#item-font').value;
-            let item_font_size = document.querySelector('#item-font-size').value;
+            let item_background_color = document.querySelector('#grid-background-color').value;
+            let item_color = document.querySelector('#grid-font-color').value;
+            let item_font = document.querySelector('#grid-font').value;
+            let item_font_size = document.querySelector('#grid-font-size').value;
 
             if (item_background_color.length > 0) {
                 grid.styles.backgroundColor = item_background_color;
             }
 
             if (item_color.length > 0) {
-                grid.styles.color = document.querySelector('#item-font-color').value;
+                grid.styles.color = document.querySelector('#grid-font-color').value;
             }
 
             if (item_font.length > 0) {
@@ -71,28 +71,26 @@ const itemsCommonStandardGridFormModule = (function () {
     obj.init = async function () {
 
         try {
-            console.log('common init');
+
             navModule.back_to_items();
             navModule.set_item_nav_menu_links();
 
-            /*
-            document.querySelector('#item-background-color-picker').addEventListener('input', () => {
-                if (document.querySelector('#item-background-color')) {
-                    document.querySelector('#item-background-color').value = document.querySelector('#item-background-color-picker').value;
+
+            document.querySelector('#grid-background-color-picker').addEventListener('input', () => {
+                if (document.querySelector('#grid-background-color')) {
+                    document.querySelector('#grid-background-color').value = document.querySelector('#grid-background-color-picker').value;
                 }
             });
 
-            document.querySelector('#item-font-color-picker').addEventListener('input', () => {
-                if (document.querySelector('#item-font-color')) {
-                    document.querySelector('#item-font-color').value = document.querySelector('#item-font-color-picker').value;
+            document.querySelector('#grid-font-color-picker').addEventListener('input', () => {
+                if (document.querySelector('#grid-font-color')) {
+                    document.querySelector('#grid-font-color').value = document.querySelector('#grid-font-color-picker').value;
                 }
             });
 
             setTimeout(() => {
-                document.querySelector('#item-data-card').style.visibility = 'visible';
+                document.querySelector('#grid-data-card').style.visibility = 'visible';
             }, 250);
-
-             */
 
         } catch (error) {
             document.querySelector('#message').innerHTML = `<div class="alert alert-danger" role="alert"><i class="fa fa-exclamation"></i> ${error.message}</div>`;

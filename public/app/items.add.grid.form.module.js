@@ -24,33 +24,28 @@ const itemsAddGridFormModule = (function () {
     const EXHIBITS_ENDPOINTS = endpointsModule.get_exhibits_endpoints();
     let obj = {};
 
-    /** TODO:
-     * Creates grid
+    /**
+     * Creates grid record
      */
     obj.create_grid_record = async function () {
 
-        window.scrollTo(0, 0);
-        let exhibit_id = helperModule.get_parameter_by_name('exhibit_id');
-        console.log(exhibit_id);
-
-        if (exhibit_id === undefined) {
-            document.querySelector('#message').innerHTML = `<div class="alert alert-warning" role="alert"><i class="fa fa-info"></i> Unable to create grid record.</div>`;
-            return false;
-        }
-
-        document.querySelector('#message').innerHTML = `<div class="alert alert-info" role="alert"><i class="fa fa-info"></i> Creating grid record...</div>`;
-        let data = itemsCommonStandardGridFormModule.get_common_grid_form_fields();
-        console.log(data);
-        return false;
-
-        // let data = get_grid_data();
-
         try {
 
+            window.scrollTo(0, 0);
+            let exhibit_id = helperModule.get_parameter_by_name('exhibit_id');
+
+            if (exhibit_id === undefined) {
+                document.querySelector('#message').innerHTML = `<div class="alert alert-warning" role="alert"><i class="fa fa-info"></i> Unable to create grid record.</div>`;
+                return false;
+            }
+
+            document.querySelector('#message').innerHTML = `<div class="alert alert-info" role="alert"><i class="fa fa-info"></i> Creating grid record...</div>`;
+
+            let data = itemsCommonStandardGridFormModule.get_common_grid_form_fields();
             let token = authModule.get_user_token();
             let response = await httpModule.req({
                 method: 'POST',
-                url: EXHIBITS_ENDPOINTS.exhibits.grid_records.post.endpoint.replace(':exhibit_id', uuid),
+                url: EXHIBITS_ENDPOINTS.exhibits.grid_records.post.endpoint.replace(':exhibit_id', exhibit_id),
                 data: data,
                 headers: {
                     'Content-Type': 'application/json',
@@ -61,12 +56,14 @@ const itemsAddGridFormModule = (function () {
             if (response !== undefined && response.status === 201) {
 
                 window.scrollTo(0, 0);
-                document.querySelector('#item-grid-card').style.visibility = 'hidden';
+                document.querySelector('.card').style.visibility = 'hidden';
                 document.querySelector('#message').innerHTML = `<div class="alert alert-success" role="alert"><i class="fa fa-info"></i> Grid record created</div>`;
-                document.querySelector('#item-grid-form').reset();
-
+                // document.querySelector('#item-grid-form').reset();
+                const grid_id = response.data.data;
+                console.log(grid_id);
                 setTimeout(() => {
-                    location.replace(`${APP_PATH}/items/standard?uuid=${uuid}&grid=${response.data.data}`)
+                    // TODO: redirect to grid item form
+                    // location.replace(`${APP_PATH}/items/grid-item?uuid=${exhibit_id}&grid=${response.data.data}`)
                 }, 3000);
             }
 
@@ -76,331 +73,13 @@ const itemsAddGridFormModule = (function () {
     };
 
     /**
-     * Init function for standard item add form
+     * Init function for grid add form
      */
     obj.init = async function () {
-        console.log('init');
         const exhibit_id = helperModule.get_parameter_by_name('exhibit_id');
         exhibitsModule.set_exhibit_title(exhibit_id);
-
-        // helperModule.set_rich_text_editor_config();
-
         document.querySelector('#save-item-btn').addEventListener('click', itemsAddGridFormModule.create_grid_record);
     };
-
-
-    /**
-     * Gets grid data
-     */
-    function get_grid_data() {
-
-        let grid = {};
-        grid.styles = {};
-        grid.columns = document.querySelector('#grid-columns').value;
-
-        let grid_item_background_color = document.querySelector('#grid-background-color').value;
-        let grid_item_color = document.querySelector('#grid-font-color').value;
-        let grid_item_font = document.querySelector('#grid-font').value;
-
-        if (grid_item_background_color.length > 0) {
-            grid.styles.backGroundColor = grid_item_background_color;
-        }
-
-        if (grid_item_color.length > 0) {
-            grid.styles.color = grid_item_color;
-        }
-
-        if (grid_item_font.length > 0) {
-            grid.styles.fontFamily = grid_item_font;
-        }
-
-        return grid;
-    }
-
-    /** TODO
-     * Gets grid item data from form
-     */
-    function get_item_data() {
-
-        let item = {};
-        item.styles = {};
-
-        // item metadata
-        item.title = rich_text_data.item_title.getHTMLCode();
-        item.caption = rich_text_data.item_caption.getHTMLCode();
-        item.description = rich_text_data.item_description.getHTMLCode();
-        item.text = rich_text_data.item_text.getHTMLCode();
-
-        /*
-        item.title = document.querySelector('#item-title').value;
-        item.caption = document.querySelector('#item-caption').value;
-        item.description = document.querySelector('#item-description').value;
-        item.text = document.querySelector('#item-text').value;
-        */
-
-        // grid item only
-        item.date = document.querySelector('#item-date').value;
-
-        // item media
-        item.thumbnail = document.querySelector('#item-thumbnail').value;
-        item.item_type = document.querySelector('#item-type').value;
-        item.media = document.querySelector('#item-media').value;
-        item.repo_uuid = document.querySelector('#repo-uuid').value;
-
-        // item layout - standard item only
-        item.layout = helperModule.get_checked_radio_button(document.getElementsByName('layout'));
-
-        if (item.layout.length === 0) {
-            item.layout = 'grid';
-        }
-
-        // item styles
-        let item_background_color = document.querySelector('#item-background-color').value;
-        let item_color = document.querySelector('#item-font-color').value;
-        let item_font = document.querySelector('#item-font').value;
-
-        if (item_background_color.length > 0) {
-            item.styles.backGroundColor = item_background_color;
-        }
-
-        if (item_color.length > 0) {
-            item.styles.color = document.querySelector('#item-font-color').value;
-        }
-
-        if (item_font.length > 0) {
-            item.styles.fontFamily = item_font;
-        }
-
-        console.log(item);
-        return item;
-    }
-
-    /**
-     * Creates item
-     */
-    /*
-    obj.create_item_record = async function () {
-
-        window.scrollTo(0, 0);
-        let exhibit_id = helperModule.get_parameter_by_name('exhibit_id');
-        let grid_id = helperModule.get_parameter_by_name('grid');
-
-        if (uuid === undefined) {
-            document.querySelector('#message').innerHTML = `<div class="alert alert-warning" role="alert"><i class="fa fa-info"></i> Unable to create item record.</div>`;
-            return false;
-        }
-
-        document.querySelector('#message').innerHTML = `<div class="alert alert-info" role="alert"><i class="fa fa-info"></i> Creating item record...</div>`;
-        let data = get_item_data();
-
-        if (grid_id === undefined) {
-            data.is_member_of_item_grid = '0';
-        } else {
-            data.is_member_of_item_grid = grid_id;
-        }
-
-        try {
-
-            let token = authModule.get_user_token();
-            let response = await httpModule.req({
-                method: 'POST',
-                url: EXHIBITS_ENDPOINTS.exhibits.item_records.post.endpoint.replace(':exhibit_id', uuid),
-                data: data,
-                headers: {
-                    'Content-Type': 'application/json',
-                    'x-access-token': token
-                }
-            });
-
-            if (response !== undefined && response.status === 201) {
-
-                document.querySelector('#item-card').style.visibility = 'hidden';
-
-                let message = 'Item record created';
-
-                if (itemsFormModule.check_grid() === true) {
-                    message = 'Grid item record created';
-                }
-
-                document.querySelector('#message').innerHTML = `<div class="alert alert-success" role="alert"><i class="fa fa-info"></i> ${message}</div>`;
-
-                setTimeout(() => {
-
-                    if (itemsFormModule.check_grid() === true) {
-                        location.replace(`${APP_PATH}/items/standard?uuid=${uuid}&grid=${grid_id}`);
-                    } else {
-                        location.replace(`${APP_PATH}/items/standard?uuid=${uuid}`);
-                    }
-
-                }, 3000);
-            }
-
-        } catch (error) {
-            document.querySelector('#message').innerHTML = `<div class="alert alert-danger" role="alert"><i class="fa fa-exclamation"></i> ${error.message}</div>`;
-        }
-    };
-    */
-
-    /**
-     * Sets menu links for items form
-     */
-    /*
-    obj.set_items_form_nav_menu_links = function () {
-
-        let uuid = helperModule.get_parameter_by_name('exhibit_id');
-        let back_link = `${APP_PATH}/items?uuid=${uuid}`;
-        let headings_item_link = `${APP_PATH}/items/heading?uuid=${uuid}`;
-        let item_grid_link = `${APP_PATH}/items/grid?uuid=${uuid}`;
-        let item_vertical_timeline_link = `${APP_PATH}/items/vertical-timeline?uuid=${uuid}`;
-        let form_menu_fragment = `
-                <li>
-                    <a href="${back_link}" data-backdrop="static" data-keyboard="false">
-                        <i class=" menu-icon fa fa-arrow-left"></i>Back to items
-                    </a>
-                </li>
-                <li>
-                    <a href="${headings_item_link}" data-keyboard="false"> 
-                        <i class=" menu-icon ti-menu-alt"></i>Add Headings
-                    </a>
-                </li>
-                <li>
-                    <a href="${item_grid_link}" data-keyboard="false"> <i
-                                class=" menu-icon fa fa-th"></i>Create Item Grid</a>
-                </li>
-                <li>
-                    <a href="${item_vertical_timeline_link}" data-keyboard="false">
-                        <i class=" menu-icon ti-calendar"></i>Create Vertical Timeline
-                    </a>
-                </li>`;
-
-        document.querySelector('#items-menu').innerHTML = form_menu_fragment;
-    };
-
-     */
-
-    /**
-     * Sets menu links for grid items form
-     */
-    /*
-    obj.set_grid_items_form_nav_menu_links = function () {
-
-        let uuid = helperModule.get_parameter_by_name('uuid');
-        let back_link = `${APP_PATH}/items?uuid=${uuid}`;
-        let headings_item_link = `${APP_PATH}/items/heading?uuid=${uuid}`;
-        let standard_item_link = `${APP_PATH}/items/standard?uuid=${uuid}`;
-        let item_vertical_timeline_link = `${APP_PATH}/items/vertical-timeline?uuid=${uuid}`;
-        let form_menu_fragment = `
-                <li>
-                    <a href="${back_link}" data-backdrop="static" data-keyboard="false">
-                        <i class=" menu-icon fa fa-arrow-left"></i>Back to items
-                    </a>
-                </li>
-                <li>
-                    <a href="${headings_item_link}" data-keyboard="false"> 
-                        <i class=" menu-icon ti-menu-alt"></i>Add Headings
-                    </a>
-                </li>
-                <li>
-                    <a href="${standard_item_link}" data-keyboard="false"> 
-                        <i class=" menu-icon ti-menu-alt"></i>Add Items
-                    </a>
-                </li>
-                <li>
-                    <a href="${item_vertical_timeline_link}" data-keyboard="false">
-                        <i class=" menu-icon ti-calendar"></i>Create Vertical Timeline
-                    </a>
-                </li>`;
-
-        document.querySelector('#items-menu').innerHTML = form_menu_fragment;
-    };
-
-     */
-
-    /**
-     *
-     * @return {boolean}
-     */
-    /*
-    obj.check_grid = function () {
-
-        let is_grid = helperModule.get_parameter_by_name('grid');
-
-        if (is_grid !== null) {
-            console.log('grid mode');
-            document.querySelector('.is-grid-item').style.visibility = 'visible';
-            document.querySelector('.is-standard-item').style.display = 'none';
-            return true;
-        }
-
-        return false;
-    }
-
-     */
-
-    /**
-     * init function for standard items form
-     */
-    /*
-    obj.items_init = function () {
-        set_rich_text_editor();
-        itemsFormModule.set_items_form_nav_menu_links();
-        uploadsModule.upload_item_media();
-        uploadsModule.upload_item_thumbnail();
-        itemsFormModule.check_grid();
-        document.querySelector('#save-item-btn').addEventListener('click', itemsFormModule.create_item_record);
-        document.querySelector('#item-media-trash').style.display = 'none';
-        document.querySelector('#item-thumbnail-trash').style.display = 'none';
-        document.querySelectorAll('.item-layout-left-right-radio-btn').forEach((radio_input) => {
-            radio_input.addEventListener('click', () => {
-                document.querySelector('#item-media-width').style.display = 'block';
-            });
-        });
-
-        document.querySelectorAll('.item-layout-radio-btn').forEach((radio_input) => {
-            radio_input.addEventListener('click', () => {
-                document.querySelector('#item-media-width').style.display = 'none';
-            });
-        });
-
-        document.querySelector('#item-background-color-picker').addEventListener('input', () => {
-            if (document.querySelector('#item-background-color')) {
-                document.querySelector('#item-background-color').value = document.querySelector('#item-background-color-picker').value;
-            }
-        });
-
-        document.querySelector('#item-font-color-picker').addEventListener('input', () => {
-            if (document.querySelector('#item-font-color')) {
-                document.querySelector('#item-font-color').value = document.querySelector('#item-font-color-picker').value;
-            }
-        });
-    };
-    */
-
-    /**
-     * Init function for grid form
-     */
-    // obj.init = function () {
-
-        /*
-        itemsAddGridFormModule.set_grid_items_form_nav_menu_links();
-        document.querySelector('#save-grid-btn').addEventListener('click', itemsAddGridFormModule.create_grid_record);
-        uploadsModule.upload_item_media();
-        uploadsModule.upload_item_thumbnail();
-
-        document.querySelector('#grid-background-color-picker').addEventListener('input', () => {
-            if (document.querySelector('#grid-background-color')) {
-                document.querySelector('#grid-background-color').value = document.querySelector('#grid-background-color-picker').value;
-            }
-        });
-
-        document.querySelector('#grid-font-color-picker').addEventListener('input', () => {
-            if (document.querySelector('#grid-font-color')) {
-                document.querySelector('#grid-font-color').value = document.querySelector('#grid-font-color-picker').value;
-            }
-        });
-
-         */
-   // };
 
     return obj;
 

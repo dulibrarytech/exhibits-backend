@@ -79,6 +79,28 @@ const Exhibit_grid_record_tasks = class {
     }
 
     /**
+     * Gets grid record by id
+     * @param is_member_of_exhibit
+     * @param grid_id
+     */
+    async get_grid_record(is_member_of_exhibit, grid_id) {
+
+        try {
+
+            return await this.DB(this.TABLE.grid_records)
+            .select('*')
+            .where({
+                is_member_of_exhibit: is_member_of_exhibit,
+                uuid: grid_id,
+                is_deleted: 0
+            });
+
+        } catch (error) {
+            LOGGER.module().error('ERROR: [/exhibits/exhibit_grid_record_tasks (get_grid_record)] unable to get grid record ' + error.message);
+        }
+    }
+
+    /**
      * Gets grid items
      * @param is_member_of_exhibit
      * @param grid_id
