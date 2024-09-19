@@ -101,7 +101,7 @@ exports.get_dashboard_items_standard_edit_form = function (req, res) {
 };
 
 exports.get_dashboard_item_grid_add_form = function (req, res) {
-    res.render('dashboard-grid-add-form', {
+    res.render('dashboard-item-grid-add-form', {
         host: CONFIG.host,
         appname: CONFIG.app_name,
         appversion: CONFIG.app_version,

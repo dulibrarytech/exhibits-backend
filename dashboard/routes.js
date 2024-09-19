@@ -69,10 +69,8 @@ module.exports = function (app) {
     app.route(APP_PATH + '/items/grid/edit')
     .get(CONTROLLER.get_dashboard_item_grid_edit_form);
 
-    /*
     app.route(APP_PATH + '/items/grid/item')
-    .get(CONTROLLER.get_dashboard_item_griditem_form);
-    */
+    .get(CONTROLLER.get_dashboard_item_grid_add_form);
 
     app.route(APP_PATH + '/items/grid/list')
     .get(CONTROLLER.get_dashboard_item_grid_list);
