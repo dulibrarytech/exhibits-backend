@@ -120,10 +120,6 @@ const itemsEditGridFormModule = (function () {
 
         let record = await get_grid_record();
 
-        console.log(record);
-        console.log(record.title);
-        console.log(record.styles);
-
         document.querySelector('#grid-title').value = record.title;
         document.querySelector('#grid-columns').value = record.columns;
 
