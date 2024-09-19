@@ -24,11 +24,14 @@ const TOKEN = require('../libs/tokens');
 
 module.exports = function (app) {
 
+    app.route(ENDPOINTS().exhibits.grid_records.get.endpoint)
+    .get(TOKEN.verify, CONTROLLER.get_grid_record);
+
     app.route(ENDPOINTS().exhibits.grid_records.post.endpoint)
     .post(TOKEN.verify, CONTROLLER.create_grid_record);
 
-    app.route(ENDPOINTS().exhibits.grid_records.get.endpoint)
-    .get(TOKEN.verify, CONTROLLER.get_grid_record);
+    app.route(ENDPOINTS().exhibits.grid_records.put.endpoint)
+    .put(TOKEN.verify, CONTROLLER.update_grid_record);
 
     /*
 

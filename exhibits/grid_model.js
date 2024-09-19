@@ -21,10 +21,8 @@
 const DB = require('../config/db_config')();
 const DB_TABLES = require('../config/db_tables_config')();
 const TABLES = DB_TABLES.exhibits;
-// const EXHIBITS_CREATE_ITEM_SCHEMA = require('../exhibits/schemas/exhibit_item_create_record_schema')();
-// const EXHIBITS_UPDATE_ITEM_SCHEMA = require('../exhibits/schemas/exhibit_item_update_record_schema')();
 const EXHIBITS_CREATE_GRID_SCHEMA = require('../exhibits/schemas/exhibit_create_grid_record_schema')();
-// const EXHIBIT_ITEM_RECORD_TASKS = require('../exhibits/tasks/exhibit_item_record_tasks');
+const EXHIBITS_UPDATE_GRID_SCHEMA = require('../exhibits/schemas/exhibit_grid_update_record_schema')();
 const EXHIBIT_GRID_RECORD_TASKS = require('./tasks/exhibit_grid_record_tasks');
 const HELPER = require('../libs/helper');
 const VALIDATOR = require('../libs/validate');
@@ -77,6 +75,59 @@ exports.create_grid_record = async function (is_member_of_exhibit, data) {
 
     } catch (error) {
         LOGGER.module().error('ERROR: [/exhibits/model (create_grid_record)] ' + error.message);
+    }
+};
+
+/**
+ * Updates grid record
+ * @param is_member_of_exhibit
+ * @param grid_id
+ * @param data
+ */
+exports.update_grid_record = async function (is_member_of_exhibit, grid_id, data) {
+
+    try {
+
+        const HELPER_TASK = new HELPER();
+        const VALIDATE_TASK = new VALIDATOR(EXHIBITS_UPDATE_GRID_SCHEMA);
+
+        data.is_member_of_exhibit = is_member_of_exhibit;
+        data.uuid = grid_id;
+        data.styles = JSON.stringify(data.styles);
+        data.columns = parseInt(data.columns);
+
+        let is_valid = VALIDATE_TASK.validate(data);
+
+        if (is_valid !== true) {
+
+            LOGGER.module().error('ERROR: [/exhibits/grid_model (update_grid_record)] ' + is_valid[0].message);
+
+            return {
+                status: 400,
+                message: is_valid
+            };
+        }
+
+        data.order = await HELPER_TASK.order_exhibit_items(data.is_member_of_exhibit, DB, TABLES);
+
+        const CREATE_RECORD_TASK = new EXHIBIT_GRID_RECORD_TASKS(DB, TABLES);
+        let result = await CREATE_RECORD_TASK.update_grid_record(data);
+
+        if (result === false) {
+            return {
+                status: 200,
+                message: 'Unable to update grid record'
+            };
+        } else {
+            return {
+                status: 201,
+                message: 'Grid record updated',
+                data: data.uuid
+            };
+        }
+
+    } catch (error) {
+        LOGGER.module().error('ERROR: [/exhibits/model (update_grid_record)] ' + error.message);
     }
 };
 

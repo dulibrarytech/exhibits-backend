@@ -79,6 +79,29 @@ const Exhibit_grid_record_tasks = class {
     }
 
     /**
+     * Updates grid record
+     * @param data
+     */
+    async update_grid_record(data) {
+
+        try {
+
+            await this.DB(this.TABLE.grid_records)
+            .where({
+                is_member_of_exhibit: data.is_member_of_exhibit,
+                uuid: data.uuid
+            })
+            .update(data);
+
+            LOGGER.module().info('INFO: [/exhibits/exhibit_grid_record_tasks (update_heading_record)] Grid record updated.');
+            return true;
+
+        } catch (error) {
+            LOGGER.module().error('ERROR: [/exhibits/exhibit_grid_record_tasks (update_grid_record)] unable to update record ' + error.message);
+        }
+    }
+
+    /**
      * Gets grid record by id
      * @param is_member_of_exhibit
      * @param grid_id
@@ -181,29 +204,6 @@ const Exhibit_grid_record_tasks = class {
 
         } catch (error) {
             LOGGER.module().error('ERROR: [/exhibits/exhibit_grid_record_tasks (get_grid_record)] unable to get records ' + error.message);
-        }
-    }
-
-    /**
-     * Updates grid record
-     * @param data
-     */
-    async update_grid_record(data) {
-
-        try {
-
-            await this.DB(this.TABLE.grid_records)
-            .where({
-                is_member_of_exhibit: data.is_member_of_exhibit,
-                uuid: data.uuid
-            })
-            .update(data);
-
-            LOGGER.module().info('INFO: [/exhibits/exhibit_grid_record_tasks (update_heading_record)] Grid record updated.');
-            return true;
-
-        } catch (error) {
-            LOGGER.module().error('ERROR: [/exhibits/exhibit_grid_record_tasks (update_grid_record)] unable to update record ' + error.message);
         }
     }
 

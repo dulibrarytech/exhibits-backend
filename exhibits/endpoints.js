@@ -102,16 +102,22 @@ const ENDPOINTS = {
             }
         },
         grid_records: {
+            get: {
+                description: 'Retrieves all grid records by exhibit id and grid id',
+                endpoint: `${APP_PATH}${PREFIX}${VERSION}${ENDPOINT}/:exhibit_id/grids/:grid_id`,
+                params: 'token or api_key, exhibit_id, grid_id'
+            },
             post: {
                 description: 'Creates grid record',
                 endpoint: `${APP_PATH}${PREFIX}${VERSION}${ENDPOINT}/:exhibit_id/grids`,
                 params: 'token or api_key',
                 body: 'is_member_of_exhibit, record data'
             },
-            get: {
-                description: 'Retrieves all grid records by exhibit id and grid id',
+            put: {
+                description: 'Updates grid record',
                 endpoint: `${APP_PATH}${PREFIX}${VERSION}${ENDPOINT}/:exhibit_id/grids/:grid_id`,
-                params: 'token or api_key, exhibit_id, grid_id'
+                params: 'token or api_key',
+                body: 'is_member_of_exhibit, grid_id, record data'
             }
         },
         grid_item_records: {

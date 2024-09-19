@@ -38,7 +38,7 @@ const itemsEditFormModule = (function () {
             let tmp = EXHIBITS_ENDPOINTS.exhibits.item_records.get.endpoint.replace(':exhibit_id', exhibit_id);
             let endpoint = tmp.replace(':item_id', item_id);
 
-            if (token === false) {  //  || EXHIBITS_ENDPOINTS === null
+            if (token === false) {
 
                 document.querySelector('#message').innerHTML = 'ERROR: Unable to get API endpoints';
 

@@ -23,9 +23,9 @@ const itemsCommonStandardGridFormModule = (function () {
     let obj = {};
 
     /**
-     * Gets common standard item form fields
+     * Gets common standard grid form fields
      */
-    obj.get_common_grid_form_fields = function (rich_text_data) {
+    obj.get_common_grid_form_fields = function () {
 
         try {
 
@@ -37,25 +37,25 @@ const itemsCommonStandardGridFormModule = (function () {
             grid.columns = document.querySelector('#grid-columns').value;
 
             // grid styles
-            let item_background_color = document.querySelector('#grid-background-color').value;
-            let item_color = document.querySelector('#grid-font-color').value;
-            let item_font = document.querySelector('#grid-font').value;
-            let item_font_size = document.querySelector('#grid-font-size').value;
+            let grid_background_color = document.querySelector('#grid-background-color').value;
+            let grid_color = document.querySelector('#grid-font-color').value;
+            let grid_font = document.querySelector('#grid-font').value;
+            let grid_font_size = document.querySelector('#grid-font-size').value;
 
-            if (item_background_color.length > 0) {
-                grid.styles.backgroundColor = item_background_color;
+            if (grid_background_color.length > 0) {
+                grid.styles.backgroundColor = grid_background_color;
             }
 
-            if (item_color.length > 0) {
+            if (grid_color.length > 0) {
                 grid.styles.color = document.querySelector('#grid-font-color').value;
             }
 
-            if (item_font.length > 0) {
-                grid.styles.fontFamily = item_font;
+            if (grid_font.length > 0) {
+                grid.styles.fontFamily = grid_font;
             }
 
-            if (item_font_size.length > 0) {
-                grid.styles.fontSize = item_font_size;
+            if (grid_font_size.length > 0) {
+                grid.styles.fontSize = grid_font_size;
             }
 
             return grid;

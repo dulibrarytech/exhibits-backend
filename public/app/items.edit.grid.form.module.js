@@ -75,19 +75,22 @@ const itemsEditGridFormModule = (function () {
 
             window.scrollTo(0, 0);
             let exhibit_id = helperModule.get_parameter_by_name('exhibit_id');
+            let grid_id = helperModule.get_parameter_by_name('item_id');
 
-            if (exhibit_id === undefined) {
-                document.querySelector('#message').innerHTML = `<div class="alert alert-warning" role="alert"><i class="fa fa-info"></i> Unable to create grid record.</div>`;
+            if (exhibit_id === undefined || grid_id === undefined) {
+                document.querySelector('#message').innerHTML = `<div class="alert alert-warning" role="alert"><i class="fa fa-info"></i> Unable to update grid record.</div>`;
                 return false;
             }
 
-            document.querySelector('#message').innerHTML = `<div class="alert alert-info" role="alert"><i class="fa fa-info"></i> Creating grid record...</div>`;
+            document.querySelector('#message').innerHTML = `<div class="alert alert-info" role="alert"><i class="fa fa-info"></i> Updating grid record...</div>`;
 
             let data = itemsCommonStandardGridFormModule.get_common_grid_form_fields();
+            let tmp = EXHIBITS_ENDPOINTS.exhibits.grid_records.put.endpoint.replace(':exhibit_id', exhibit_id);
+            let endpoint = tmp.replace(':grid_id', grid_id);
             let token = authModule.get_user_token();
             let response = await httpModule.req({
-                method: 'POST',
-                url: EXHIBITS_ENDPOINTS.exhibits.grid_records.post.endpoint.replace(':exhibit_id', exhibit_id),
+                method: 'PUT',
+                url: endpoint,
                 data: data,
                 headers: {
                     'Content-Type': 'application/json',
@@ -103,7 +106,7 @@ const itemsEditGridFormModule = (function () {
                 const grid_id = response.data.data;
                 console.log(grid_id);
                 setTimeout(() => {
-                    // TODO: redirect to grid item form
+                    // TODO: reload form
                     // location.replace(`${APP_PATH}/items/grid-item?uuid=${exhibit_id}&grid=${response.data.data}`)
                 }, 3000);
             }

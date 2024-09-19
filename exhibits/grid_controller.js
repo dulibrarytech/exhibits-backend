@@ -34,6 +34,21 @@ exports.create_grid_record = async function (req, res) {
     res.status(result.status).send(result);
 };
 
+exports.update_grid_record = async function (req, res) {
+
+    const is_member_of_exhibit = req.params.exhibit_id;
+    const grid_id = req.params.grid_id;
+    const data = req.body;
+
+    if (data === undefined || is_member_of_exhibit === undefined || grid_id === undefined) {
+        res.status(400).send('Bad request.');
+        return false;
+    }
+
+    const result = await GRIDS_MODEL.update_grid_record(is_member_of_exhibit, grid_id, data);
+    res.status(result.status).send(result);
+};
+
 exports.get_grid_record = async function (req, res) {
 
     const is_member_of_exhibit = req.params.exhibit_id;
