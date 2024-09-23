@@ -64,14 +64,18 @@ module.exports = function (app) {
     .get(CONTROLLER.get_dashboard_items_heading_edit_form);
 
     app.route(APP_PATH + '/items/grid')
-    .get(CONTROLLER.get_dashboard_item_grid_add_form);
+    .get(CONTROLLER.get_dashboard_grid_add_form);
 
     app.route(APP_PATH + '/items/grid/edit')
-    .get(CONTROLLER.get_dashboard_item_grid_edit_form);
+    .get(CONTROLLER.get_dashboard_grid_edit_form);
 
     app.route(APP_PATH + '/items/grid/item')
-    .get(CONTROLLER.get_dashboard_item_grid_add_form);
+    .get(CONTROLLER.get_dashboard_grid_add_item_form);
 
+    app.route(APP_PATH + '/items/grid/item/edit')
+    .get(CONTROLLER.get_dashboard_grid_edit_item_form);
+
+    // TODO
     app.route(APP_PATH + '/items/grid/items')
     .get(CONTROLLER.get_dashboard_item_grid_items);
 

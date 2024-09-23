@@ -89,11 +89,6 @@ const navModule = (function () {
                     </a>
                 </li>`;
 
-        // <li>
-        //                     <a href="${APP_PATH}/dashboard/trash" data-keyboard="false">
-        //                         <i class=" menu-icon fa fa-trash-o"></i>Trash
-        //                     </a>
-        //                 </li>
         document.querySelector('#items-menu').innerHTML = items_menu_fragment;
     };
 
