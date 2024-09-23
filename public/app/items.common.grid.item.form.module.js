@@ -174,7 +174,8 @@ const itemsCommonGridItemFormModule = (function () {
     obj.init = async function () {
 
         try {
-            console.log('common init');
+
+            navModule.init();
             navModule.back_to_items();
             navModule.set_item_nav_menu_links();
 

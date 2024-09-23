@@ -195,7 +195,8 @@ const exhibitsCommonFormModule = (function () {
 
         try {
 
-            document.querySelector('#logout').addEventListener('click', authModule.logout);
+            navModule.init();
+            // document.querySelector('#logout').addEventListener('click', authModule.logout);
             document.querySelector('#hero-trash').style.display = 'none';
             document.querySelector('#thumbnail-trash').style.display = 'none';
 

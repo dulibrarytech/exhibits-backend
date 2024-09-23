@@ -12,6 +12,12 @@
                 <li class="menu-title">Menu</li>
             </ul>
             <ul class="nav navbar-nav"><li id="preview-link"></li></ul>
+            <ul class="nav navbar-nav">
+                <li>
+                    <a id="back-to-items" href="#" data-keyboard="false">
+                        <i class=" menu-icon fa fa-arrow-left"></i>Back to Items</a>
+                </li>
+            </ul>
             <ul id="items-menu" class="nav navbar-nav"></ul>
             <ul class="nav navbar-nav">
                 <li>
@@ -23,6 +29,31 @@
         </div>
     </nav>
 </aside>
+<!--
+<aside id="left-panel" class="left-panel">
+    <nav class="navbar navbar-expand-sm navbar-default">
+        <div id="main-menu" class="main-menu">
+            <ul class="nav navbar-nav">
+                <li class="active">
+                    <a href="/exhibits-dashboard/exhibits">
+                        <i class="menu-icon fa fa-home"></i>Exhibits Home
+                    </a>
+                </li>
+                <li class="menu-title">Menu</li>
+            </ul>
+            <ul class="nav navbar-nav"><li id="preview-link"></li></ul>
+            <ul id="items-menu" class="nav navbar-nav"></ul>
+            <ul class="nav navbar-nav">
+                <li>
+                    <a href="#" id="logout" data-keyboard="false">
+                        <i class="menu-icon fa fa-sign-out"></i>Logout
+                    </a>
+                </li>
+            </ul>
+        </div>
+    </nav>
+</aside>
+-->
 <div id="right-panel" class="right-panel">
     <header id="header" class="header">
         <div class="top-left">
@@ -69,12 +100,14 @@
 <script src="/exhibits-dashboard/static/app/helper.module.js"></script>
 <script src="/exhibits-dashboard/static/app/endpoints.module.js"></script>
 <script src="/exhibits-dashboard/static/app/auth.module.js"></script>
+<script src="/exhibits-dashboard/static/app/nav.module.js"></script>
 <script src="/exhibits-dashboard/static/app/uploads.module.js"></script>
 <script src="/exhibits-dashboard/static/app/exhibits.module.js"></script>
 <script src="/exhibits-dashboard/static/app/items.module.js"></script>
 <script src="/exhibits-dashboard/static/app/items.grid.module.js"></script>
 <script>
-    window.scrollTo(0, 0);
+    // window.scrollTo(0, 0);
+    itemsGridModule.init();
     itemsGridModule.display_grid_items();
 </script>
 </body>

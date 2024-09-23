@@ -73,7 +73,7 @@ const itemsGridModule = (function () {
 
         for (let i = 0; i < items.length; i++) {
 
-            console.log(items[i]);
+            // console.log(items[i]);
 
             let status;
             let item_id = items[i].uuid;
@@ -127,11 +127,14 @@ const itemsGridModule = (function () {
      * Sets exhibit title
      * @param uuid
      */
+    /*
     obj.set_exhibit_title = async function (uuid) {
         let title = await exhibitsModule.get_exhibit_title(uuid);
         document.querySelector('#exhibit-title').innerHTML = `${title}`;
         return false;
     };
+
+     */
 
     /*
     obj.set_item_nav_menu_links = function () {
@@ -172,6 +175,16 @@ const itemsGridModule = (function () {
     */
 
     obj.init = async function () {
+
+        try {
+            console.log('grid item init');
+            navModule.init();
+            navModule.back_to_items();
+            navModule.set_item_nav_menu_links();
+
+        } catch (error) {
+            console.log(error);
+        }
         /*
         document.querySelector('#message').innerHTML = '<div class="alert alert-primary" role="alert">Loading...</div>';
         document.querySelector('#logout').addEventListener('click', authModule.logout);
