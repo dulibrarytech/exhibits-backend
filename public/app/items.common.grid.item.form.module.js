@@ -16,7 +16,7 @@
 
  */
 
-const itemsCommonStandardItemFormModule = (function () {
+const itemsCommonGridItemFormModule = (function () {
 
     'use strict';
 
@@ -24,9 +24,9 @@ const itemsCommonStandardItemFormModule = (function () {
     let obj = {};
 
     /**
-     * Gets common standard item form fields
+     * Gets common grid item form fields
      */
-    obj.get_common_standard_item_form_fields = function (rich_text_data) {
+    obj.get_common_grid_item_form_fields = function (rich_text_data) {
 
         try {
 
@@ -169,12 +169,12 @@ const itemsCommonStandardItemFormModule = (function () {
     }
 
     /**
-     * Init function for standard item common add/edit forms
+     * Init function for grid item common add/edit forms
      */
     obj.init = async function () {
 
         try {
-
+            console.log('common init');
             navModule.back_to_items();
             navModule.set_item_nav_menu_links();
 

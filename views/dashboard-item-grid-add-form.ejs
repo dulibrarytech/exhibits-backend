@@ -64,7 +64,9 @@
                                 <div class="form-text text-muted" style="font-size: 17px"><span style="color: red">*</span>
                                     Title <small><em>(Required)</em></small>
                                 </div>
+                                <!--
                                 <small class="form-text text-muted"><i class="fa fa-exclamation-circle"></i> <em>The item title becomes a subheading in the navigation</em></small>
+                                -->
                                 <span id="item-title-error" class="is-error"></span>
                                 <div id="item-title-input" style="height: 100px"></div>
                             </div>
@@ -155,6 +157,7 @@
                                     <div class="col-12">
                                         <p>
                                             <br>
+                                            <span id="item-thumbnail-image-prev"></span>
                                             <span id="item-thumbnail-image-display"></span>
                                             <span id="item-thumbnail-filename-display"></span>&nbsp;&nbsp;
                                             <span>
@@ -416,13 +419,11 @@
 <script src="/exhibits-dashboard/static/app/uploads.module.js"></script>
 <script src="/exhibits-dashboard/static/app/exhibits.module.js"></script>
 <script src="/exhibits-dashboard/static/app/items.module.js"></script>
-<!--
-<script src="/exhibits-dashboard/static/app/items.common.standard.item.form.module.js"></script>
-<script src="/exhibits-dashboard/static/app/items.add.standard.item.form.module.js"></script>
--->
+<script src="/exhibits-dashboard/static/app/items.common.grid.item.form.module.js"></script>
+<script src="/exhibits-dashboard/static/app/items.add.grid.item.form.module.js"></script>
 <script>
-    // itemsCommonStandardItemFormModule.init();
-    // itemsAddStandardItemFormModule.init();
+    itemsCommonGridItemFormModule.init();
+    itemsAddGridItemFormModule.init();
 </script>
 </body>
 </html>

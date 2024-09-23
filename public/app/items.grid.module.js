@@ -172,6 +172,7 @@ const itemsGridModule = (function () {
     */
 
     obj.init = async function () {
+        /*
         document.querySelector('#message').innerHTML = '<div class="alert alert-primary" role="alert">Loading...</div>';
         document.querySelector('#logout').addEventListener('click', authModule.logout);
         // itemsModule.set_item_nav_menu_links();
@@ -181,6 +182,8 @@ const itemsGridModule = (function () {
         setTimeout(() => {
             document.querySelector('#items-menu').style.visibility = 'visible';
         }, 100);
+
+         */
     };
 
     return obj;

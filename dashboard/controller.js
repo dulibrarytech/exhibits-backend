@@ -166,9 +166,8 @@ exports.get_dashboard_item_vertical_timeline = function (req, res) {
     });
 };
 
-/* TODO */
-exports.get_dashboard_item_grid_list = function (req, res) {
-    res.render('dashboard-item-griditem-list', {
+exports.get_dashboard_item_grid_items = function (req, res) {
+    res.render('dashboard-grid-items', {
         host: CONFIG.host,
         appname: CONFIG.app_name,
         appversion: CONFIG.app_version,

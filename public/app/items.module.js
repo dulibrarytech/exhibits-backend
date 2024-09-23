@@ -138,7 +138,7 @@ const itemsModule = (function () {
 
                 } else {
 
-                    item_details = `<a href="${APP_PATH}/items/grid/list?exhibit_id=${exhibit_id}&grid_id=${item_id}" title="View grid Items"><i class="fa fa-search pr-1"></i></a>`;
+                    item_details = `<a href="${APP_PATH}/items/grid/items?exhibit_id=${exhibit_id}&grid_id=${item_id}" title="View grid Items"><i class="fa fa-search pr-1"></i></a>`;
                     grid_item_count += `Contains ${items[i].grid_items.length} items`;
                     delete_item = ''; // Can't delete grid if it contain items
 
@@ -161,8 +161,8 @@ const itemsModule = (function () {
             item_data += `<td style="width: 5%;text-align: center"><small>${status}</small></td>`;
             item_data += `<td style="width: 10%">
                                 <div class="card-text text-sm-center">
-                                    ${add_grid_items}
-                                    ${item_details}&nbsp;
+                                    ${item_details}                                    
+                                    ${add_grid_items}&nbsp;
                                     <a href="${APP_PATH}/items/${edit_type}/edit?exhibit_id=${exhibit_id}&item_id=${item_id}" title="Edit"><i class="fa fa-edit pr-1"></i></a>&nbsp;
                                     ${delete_item}
                                 </div>
@@ -181,7 +181,7 @@ const itemsModule = (function () {
         }, 100);
     };
 
-    /**
+    /** TODO
      * Gets item details
      */
     obj.get_item_details = async function () {
