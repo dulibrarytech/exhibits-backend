@@ -194,6 +194,30 @@ const Exhibit_grid_record_tasks = class {
     }
 
     /**
+     * Update grid item record
+     * @param data
+     */
+    async update_grid_item_record(data) {
+
+        try {
+
+            await this.DB(this.TABLE.grid_item_records)
+            .where({
+                is_member_of_exhibit: data.is_member_of_exhibit,
+                is_member_of_grid: data.is_member_of_grid,
+                uuid: data.uuid
+            })
+            .update(data);
+
+            LOGGER.module().info('INFO: [/exhibits/exhibit_grid_record_tasks (update_grid_item_record)] Grid record updated.');
+            return true;
+
+        } catch (error) {
+            LOGGER.module().error('ERROR: [/exhibits/exhibit_grid_record_tasks (update_grid_item_record)] unable to update record ' + error.message);
+        }
+    }
+
+    /**
      * Gets grid record
      * @param is_member_of_exhibit
      * @param uuid
