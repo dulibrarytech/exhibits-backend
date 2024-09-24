@@ -121,16 +121,29 @@ const ENDPOINTS = {
             }
         },
         grid_item_records: {
+            get: {
+                description: 'Retrieves all grid item records by exhibit id and grid id',
+                endpoint: `${APP_PATH}${PREFIX}${VERSION}${ENDPOINT}/:exhibit_id/grids/:grid_id/items`,
+                params: 'token or api_key, gets all records by exhibit via uuid param'
+            },
             post: {
                 description: 'Creates grid item record',
                 endpoint: `${APP_PATH}${PREFIX}${VERSION}${ENDPOINT}/:exhibit_id/grids/:grid_id/items`,
                 params: 'token or api_key',
                 body: 'is_member_of_exhibit, grid_id, record data'
             },
+            put: {
+                description: 'Creates grid item record',
+                endpoint: `${APP_PATH}${PREFIX}${VERSION}${ENDPOINT}/:exhibit_id/grids/:grid_id/items/:item_id`,
+                params: 'token or api_key',
+                body: 'is_member_of_exhibit, grid_id, item_id, record data'
+            }
+        },
+        grid_item_record: {
             get: {
-                description: 'Retrieves all grid item records by exhibit id and grid id',
-                endpoint: `${APP_PATH}${PREFIX}${VERSION}${ENDPOINT}/:exhibit_id/grids/:grid_id/items`,
-                params: 'token or api_key, gets all records by exhibit via uuid param'
+                description: 'Retrieves all grid item record by exhibit id and grid id',
+                endpoint: `${APP_PATH}${PREFIX}${VERSION}${ENDPOINT}/:exhibit_id/grids/:grid_id/items/:item_id`,
+                params: 'token or api_key, is_member_of_exhibit, grid_id, item_id'
             }
         },
         item_records: {

@@ -170,10 +170,35 @@ const Exhibit_grid_record_tasks = class {
     }
 
     /**
+     * Gets grid item record
+     * @param is_member_of_exhibit
+     * @param grid_id
+     * @param item_id
+     */
+    async get_grid_item_record(is_member_of_exhibit, grid_id, item_id) {
+
+        try {
+
+            return await this.DB(this.TABLE.grid_item_records)
+            .select('*')
+            .where({
+                is_member_of_exhibit: is_member_of_exhibit,
+                is_member_of_grid: grid_id,
+                uuid: item_id,
+                is_deleted: 0
+            });
+
+        } catch (error) {
+            LOGGER.module().error('ERROR: [/exhibits/exhibit_grid_record_tasks (get_grid_item_record)] unable to get record ' + error.message);
+        }
+    }
+
+    /**
      * Gets grid record
      * @param is_member_of_exhibit
      * @param uuid
      */
+    /*
     async get_grid_record(is_member_of_exhibit, uuid) {
 
         try {
@@ -206,6 +231,8 @@ const Exhibit_grid_record_tasks = class {
             LOGGER.module().error('ERROR: [/exhibits/exhibit_grid_record_tasks (get_grid_record)] unable to get records ' + error.message);
         }
     }
+
+     */
 
     /**
      * Deletes grid record

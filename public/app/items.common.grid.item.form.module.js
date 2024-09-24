@@ -174,9 +174,12 @@ const itemsCommonGridItemFormModule = (function () {
     obj.init = async function () {
 
         try {
-
+            console.log('grid item edit');
             navModule.init();
-            navModule.back_to_items();
+            // TODO: move to add form
+            // navModule.back_to_items();
+            // TODO: move to edit form
+            // navModule.back_to_grid_items();
             navModule.set_item_nav_menu_links();
 
             document.querySelector('#item-media-trash').style.display = 'none';

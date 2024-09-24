@@ -107,7 +107,7 @@ const itemsGridModule = (function () {
             item_data += `<td style="width: 5%;text-align: center"><small>${status}</small></td>`;
             item_data += `<td style="width: 10%">
                                 <div class="card-text text-sm-center">
-                                    <a href="${APP_PATH}/items/grid/item/edit?grid_id=${grid_id}&item_id=${item_id}" title="Edit"><i class="fa fa-edit pr-1"></i></a>&nbsp;
+                                    <a href="${APP_PATH}/items/grid/item/edit?exhibit_id=${exhibit_id}&grid_id=${grid_id}&item_id=${item_id}" title="Edit"><i class="fa fa-edit pr-1"></i></a>&nbsp;
                                     <a href="#" title="Delete"><i class="fa fa-trash pr-1"></i></a>
                                 </div>
                             </td>`;

@@ -75,7 +75,6 @@ module.exports = function (app) {
     app.route(APP_PATH + '/items/grid/item/edit')
     .get(CONTROLLER.get_dashboard_grid_edit_item_form);
 
-    // TODO
     app.route(APP_PATH + '/items/grid/items')
     .get(CONTROLLER.get_dashboard_item_grid_items);
 

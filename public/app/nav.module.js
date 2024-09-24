@@ -96,8 +96,17 @@ const navModule = (function () {
      * Creates back to menu items link in item forms
      */
     obj.back_to_items = function () {
-        const uuid = helperModule.get_parameter_by_name('exhibit_id');
-        document.querySelector('#back-to-items').setAttribute('href', `${APP_PATH}/items?exhibit_id=${uuid}`);
+        const exhibit_id = helperModule.get_parameter_by_name('exhibit_id');
+        document.querySelector('#back-to-items').setAttribute('href', `${APP_PATH}/items?exhibit_id=${exhibit_id}`);
+    };
+
+    /**
+     * Creates back to menu grid items link in grid item edit form
+     */
+    obj.back_to_grid_items = function () {
+        const exhibit_id = helperModule.get_parameter_by_name('exhibit_id');
+        const grid_id = helperModule.get_parameter_by_name('grid_id');
+        document.querySelector('#back-to-items').setAttribute('href', `${APP_PATH}/items/grid/items?exhibit_id=${exhibit_id}&grid_id=${grid_id}`);
     };
 
     /**

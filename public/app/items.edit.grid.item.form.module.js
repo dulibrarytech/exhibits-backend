@@ -40,29 +40,133 @@ const itemsEditGridItemFormModule = (function () {
     }
 
     /**
-     * Creates grid item
+     * Gets grid item record
      */
-    obj.create_grid_item_record = async function () {
+    async function get_grid_item_record () {
+
+        try {
+
+            const exhibit_id = helperModule.get_parameter_by_name('exhibit_id');
+            const grid_id = helperModule.get_parameter_by_name('grid_id');
+            const item_id = helperModule.get_parameter_by_name('item_id');
+            const token = authModule.get_user_token();
+            let etmp = EXHIBITS_ENDPOINTS.exhibits.grid_item_record.get.endpoint.replace(':exhibit_id', exhibit_id);
+            let itmp = etmp.replace(':grid_id', grid_id);
+            let endpoint = itmp.replace(':item_id', item_id);
+
+            if (token === false) {
+
+                document.querySelector('#message').innerHTML = 'ERROR: Unable to get API endpoints';
+
+                setTimeout(() => {
+                    window.location.replace(APP_PATH + '/exhibits-dashboard/auth');
+                }, 3000);
+
+                return false;
+            }
+
+            let response = await httpModule.req({
+                method: 'GET',
+                url: endpoint,
+                headers: {
+                    'Content-Type': 'application/json',
+                    'x-access-token': token
+                }
+            });
+            console.log(response);
+            if (response !== undefined && response.status === 200) {
+                return response.data.data[0];
+            }
+
+        } catch (error) {
+            document.querySelector('#message').innerHTML = `<div class="alert alert-danger" role="alert"><i class="fa fa-exclamation"></i> ${error.message}</div>`;
+        }
+    }
+
+    /**
+     * Populates edit form with grid record data
+     */
+    async function display_edit_record () {
+
+        let record = await get_grid_item_record();
+        console.log(record);
+
+        let thumbnail_fragment = '';
+        let thumbnail_url = '';
+
+        // item data
+        rich_text_data['item-title-input'] = helperModule.set_rich_text_editor('item-title-input');
+        rich_text_data['item-title-input'].setHTMLCode(helperModule.unescape(record.title));
+
+        rich_text_data['item-caption-input'] = helperModule.set_rich_text_editor('item-caption-input');
+        rich_text_data['item-caption-input'].setHTMLCode(helperModule.unescape(record.caption));
+
+        rich_text_data['item-description-input'] = helperModule.set_rich_text_editor('item-description-input');
+        rich_text_data['item-description-input'].setHTMLCode(helperModule.unescape(record.description));
+
+        rich_text_data['item-text-input'] = helperModule.set_rich_text_editor('item-text-input');
+        rich_text_data['item-text-input'].setHTMLCode(helperModule.unescape(record.text));
+
+        let styles = JSON.parse(record.styles);
+        console.log(styles);
+        if (Object.keys(styles).length !== 0) {
+
+            if (styles.backgroundColor !== undefined) {
+                document.querySelector('#grid-background-color').value = styles.backgroundColor;
+            } else {
+                document.querySelector('#grid-background-color').value = '';
+            }
+
+            if (styles.color !== undefined) {
+                document.querySelector('#grid-font-color').value = styles.color;
+            } else {
+                document.querySelector('#grid-font-color').value = '';
+            }
+
+            let font_values = document.querySelector('#grid-font');
+
+            for (let i=0;i<font_values.length;i++) {
+                if (font_values[i].value === styles.fontFamily) {
+                    document.querySelector('#grid-font').value = styles.fontFamily;
+                }
+            }
+
+            if (styles.fontSize !== undefined) {
+                document.querySelector('#grid-font-size').value = styles.fontSize;
+            } else {
+                document.querySelector('#grid-font-size').value = '';
+            }
+        }
+
+        return false;
+    }
+
+    /**
+     * Update grid item
+     */
+    obj.update_grid_item_record = async function () {
 
         try {
 
             window.scrollTo(0, 0);
             const exhibit_id = helperModule.get_parameter_by_name('exhibit_id');
             const grid_id = helperModule.get_parameter_by_name('grid_id');
+            const item_id = helperModule.get_parameter_by_name('item_id');
 
-            if (grid_id === undefined) {
-                document.querySelector('#message').innerHTML = `<div class="alert alert-warning" role="alert"><i class="fa fa-info"></i> Unable to create grid item record.</div>`;
+            if (exhibit_id === undefined || grid_id === undefined || item_id === undefined) {
+                document.querySelector('#message').innerHTML = `<div class="alert alert-warning" role="alert"><i class="fa fa-info"></i> Unable to update grid item record.</div>`;
                 return false;
             }
 
-            document.querySelector('#message').innerHTML = `<div class="alert alert-info" role="alert"><i class="fa fa-info"></i> Creating grid item record...</div>`;
+            document.querySelector('#message').innerHTML = `<div class="alert alert-info" role="alert"><i class="fa fa-info"></i> Updating grid item record...</div>`;
 
             let data = itemsCommonGridItemFormModule.get_common_grid_item_form_fields(rich_text_data);
-            let tmp = EXHIBITS_ENDPOINTS.exhibits.grid_item_records.post.endpoint.replace(':exhibit_id', exhibit_id);
-            let endpoint = tmp.replace(':grid_id', grid_id);
+            let etmp = EXHIBITS_ENDPOINTS.exhibits.grid_item_records.put.endpoint.replace(':exhibit_id', exhibit_id);
+            let itmp = etmp.replace(':grid_id', grid_id);
+            let endpoint = itmp.replace(':item_id', item_id);
             let token = authModule.get_user_token();
             let response = await httpModule.req({
-                method: 'POST',
+                method: 'PUT',
                 url: endpoint,
                 data: data,
                 headers: {
@@ -73,11 +177,12 @@ const itemsEditGridItemFormModule = (function () {
 
             if (response !== undefined && response.status === 201) {
 
-                let message = 'Grid item record created';
+                let message = 'Grid item record updated';
                 document.querySelector('#message').innerHTML = `<div class="alert alert-success" role="alert"><i class="fa fa-info"></i> ${message}</div>`;
 
                 setTimeout(() => {
-                    window.location.replace(APP_PATH + '/items/grid/item?exhibit_id=' + exhibit_id + '&grid_id=' + grid_id);
+                    location.reload();
+                    // window.location.replace(APP_PATH + '/items/grid/item?exhibit_id=' + exhibit_id + '&grid_id=' + grid_id);
                 }, 2000);
             }
 
@@ -89,18 +194,21 @@ const itemsEditGridItemFormModule = (function () {
     /**
      * init function for grid items edit form
      */
-    obj.init = function () {
+    obj.init = async function () {
 
-        const exhibit_id = helperModule.get_parameter_by_name('exhibit_id');
-        exhibitsModule.set_exhibit_title(exhibit_id);
+        try {
 
-        helperModule.set_rich_text_editor_config();
-        set_rich_text_editors();
+            const exhibit_id = helperModule.get_parameter_by_name('exhibit_id');
+            exhibitsModule.set_exhibit_title(exhibit_id);
+            navModule.back_to_grid_items();
+            helperModule.set_rich_text_editor_config();
+            set_rich_text_editors();
+            await display_edit_record();
+            document.querySelector('#save-item-btn').addEventListener('click', itemsEditGridItemFormModule.update_grid_item_record);
 
-        // itemsFormModule.set_items_form_nav_menu_links();
-        uploadsModule.upload_item_media();
-        uploadsModule.upload_item_thumbnail();
-        // itemsFormModule.check_grid();
+        } catch (error) {
+            console.log(error);
+        }
 
         /*
         document.querySelector('#save-item-btn').addEventListener('click', itemsAddGridItemFormModule.create_grid_item_record);
@@ -114,32 +222,6 @@ const itemsEditGridItemFormModule = (function () {
 
          */
 
-    };
-
-    /**
-     * Init function for grid form
-     */
-    obj.init__ = function () {
-
-        // itemsAddGridFormModule.set_grid_items_form_nav_menu_links();
-        // document.querySelector('#save-grid-btn').addEventListener('click', itemsAddGridFormModule.create_grid_record);
-        // uploadsModule.upload_item_media();
-        // uploadsModule.upload_item_thumbnail();
-
-        /*
-        document.querySelector('#grid-background-color-picker').addEventListener('input', () => {
-            if (document.querySelector('#grid-background-color')) {
-                document.querySelector('#grid-background-color').value = document.querySelector('#grid-background-color-picker').value;
-            }
-        });
-
-        document.querySelector('#grid-font-color-picker').addEventListener('input', () => {
-            if (document.querySelector('#grid-font-color')) {
-                document.querySelector('#grid-font-color').value = document.querySelector('#grid-font-color-picker').value;
-            }
-        });
-
-         */
     };
 
     return obj;
