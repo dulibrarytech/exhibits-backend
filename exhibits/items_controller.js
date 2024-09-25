@@ -120,81 +120,6 @@ exports.delete_item_media = function (req, res) {
 
 
 /*
-exports.create_heading_record = async function (req, res) {
-
-    const is_member_of_exhibit = req.params.exhibit_id;
-    const data = req.body;
-
-    if (data === undefined || is_member_of_exhibit === undefined) {
-        res.status(400).send('Bad request.');
-        return false;
-    }
-
-    const result = await HEADINGS_MODEL.create_heading_record(is_member_of_exhibit, data);
-    res.status(result.status).send(result);
-};
-
-exports.get_heading_record = async function (req, res) {
-
-    const is_member_of_exhibit = req.params.exhibit_id;
-    const uuid = req.params.heading_id;
-
-    if (uuid === undefined || uuid.length === 0 && is_member_of_exhibit === undefined || is_member_of_exhibit.length === 0) {
-        res.status(400).send('Bad request.');
-        return false;
-    }
-
-    const data = await HEADINGS_MODEL.get_heading_record(is_member_of_exhibit, uuid);
-    res.status(data.status).send(data);
-};
-
-exports.update_heading_record = async function (req, res) {
-
-    const is_member_of_exhibit = req.params.exhibit_id;
-    const uuid = req.params.heading_id;
-    const data = req.body;
-
-    if (uuid === undefined || uuid.length === 0 && is_member_of_exhibit === undefined || is_member_of_exhibit.length === 0) {
-        res.status(400).send('Bad request.');
-        return false;
-    }
-
-    if (data === undefined) {
-        res.status(400).send('Bad request.');
-        return false;
-    }
-
-    const result = await HEADINGS_MODEL.update_heading_record(is_member_of_exhibit, uuid, data);
-    res.status(result.status).send(result);
-};
-
-exports.delete_heading_record = async function (req, res) {
-
-    const is_member_of_exhibit = req.params.exhibit_id;
-    const uuid = req.params.heading_id;
-
-    if (uuid === undefined || uuid.length === 0 && is_member_of_exhibit === undefined || is_member_of_exhibit.length === 0) {
-        res.status(400).send('Bad request.');
-        return false;
-    }
-
-    const result = await HEADINGS_MODEL.delete_heading_record(is_member_of_exhibit, uuid);
-    res.status(result.status).send(result);
-};
-
-exports.create_grid_record = async function (req, res) {
-
-    const is_member_of_exhibit = req.params.exhibit_id;
-    const data = req.body;
-
-    if (data === undefined || is_member_of_exhibit === undefined) {
-        res.status(400).send('Bad request.');
-        return false;
-    }
-
-    const result = await ITEMS_MODEL.create_grid_record(is_member_of_exhibit, data);
-    res.status(result.status).send(result);
-};
 
 exports.get_trashed_records = async function (req, res) {
     const data = await TRASH_MODEL.get_trashed_records();
@@ -246,35 +171,6 @@ exports.restore_trashed_record = async function (req, res) {
     res.status(result.status).send(result);
 };
 
-exports.get_exhibit_media = function (req, res) {
-
-    const uuid = req.params.exhibit_id;
-    const media = req.params.media;
-
-    try {
-        res.status(200).sendFile(PATH.join(__dirname, `../storage/${uuid}`, media));
-    } catch(error) {
-        console.log(error.message);
-        res.status(404).send({message: `Exhibit media not found. ${error.message}`});
-    }
-
-    return false;
-};
-
-exports.get_item_media = function (req, res) {
-
-    const is_member_of_exhibit = req.params.exhibit_id;
-    const media = req.params.media;
-
-    try {
-        res.status(200).sendFile(PATH.join(__dirname, `../storage/${is_member_of_exhibit}`, media));
-    } catch(error) {
-        console.log(error.message);
-        res.status(404).send({message: `Exhibit media not found. ${error.message}`});
-    }
-
-    return false;
-};
 */
 
 /*

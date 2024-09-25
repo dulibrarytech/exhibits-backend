@@ -29,6 +29,7 @@ const EXHIBIT_GRID_RECORD_TASKS = require('./tasks/exhibit_grid_record_tasks');
 const HELPER = require('../libs/helper');
 const VALIDATOR = require('../libs/validate');
 const LOGGER = require('../libs/log4');
+const EXHIBIT_ITEM_RECORD_TASKS = require("./tasks/exhibit_item_record_tasks");
 
 /**
  * Create grid record
@@ -298,7 +299,6 @@ exports.update_grid_item_record = async function (is_member_of_exhibit, is_membe
             };
         }
 
-        // TODO: don't send in payload
         delete data.thumbnail_prev;
         delete data.media_prev;
         data.order = await HELPER_TASK.order_exhibit_items(data.is_member_of_grid, DB, TABLES);
@@ -320,5 +320,27 @@ exports.update_grid_item_record = async function (is_member_of_exhibit, is_membe
 
     } catch (error) {
         LOGGER.module().error('ERROR: [/exhibits/model (update_grid_item_record)] ' + error.message);
+    }
+};
+
+/**
+ * Clears out media value
+ * @param uuid
+ * @param media
+ */
+exports.delete_media_value = async function (uuid, media) {
+
+    try {
+
+        const TASK = new EXHIBIT_GRID_RECORD_TASKS(DB, TABLES);
+
+        if (await TASK.delete_media_value(uuid, media) === true) {
+            LOGGER.module().info('INFO: [/exhibits/grids/model (delete_media_value)] Media value deleted');
+        } else {
+            LOGGER.module().error('ERROR: [/exhibits/grids/model (delete_media_value)] Unable to delete media value');
+        }
+
+    } catch (error) {
+        LOGGER.module().error('ERROR: [/exhibits/items/model (delete_media_value)] ' + error.message);
     }
 };

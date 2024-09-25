@@ -19,6 +19,8 @@
 'use strict';
 
 const GRIDS_MODEL = require('../exhibits/grid_model');
+const ITEMS_MODEL = require("./items_model");
+const FS = require("fs");
 
 exports.create_grid_record = async function (req, res) {
 
@@ -121,6 +123,34 @@ exports.update_grid_item_record = async function (req, res) {
 
     const result = await GRIDS_MODEL.update_grid_item_record(is_member_of_exhibit, grid_id, item_id, data);
     res.status(result.status).send(result);
+};
+
+exports.delete_grid_item_media = function (req, res) {
+
+    try {
+
+        const exhibit_id = req.params.exhibit_id;
+        const item_id = req.params.item_id;
+        const media = req.params.media;
+
+        if (media !== undefined && media.length !== 0) {
+
+            (async function () {
+                await GRIDS_MODEL.delete_media_value(item_id, media);
+            })();
+
+            FS.unlinkSync(`./storage/${exhibit_id}/${media}`);
+            res.status(204).send('Media deleted');
+
+        } else {
+            res.status(200).send('Unable to delete media file');
+        }
+
+    } catch(error) {
+        res.status(404).send({message: `Unable to delete exhibit media file. ${error.message}`});
+    }
+
+    return false;
 };
 
 /*

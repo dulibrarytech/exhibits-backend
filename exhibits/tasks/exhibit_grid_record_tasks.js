@@ -218,6 +218,40 @@ const Exhibit_grid_record_tasks = class {
     }
 
     /**
+     * Clears out media value
+     * @param uuid
+     * @param media
+     */
+    async delete_media_value(uuid, media) {
+
+        try {
+
+            let update = {};
+            let tmp = media.split('_');
+            let image = tmp.pop();
+
+            if (image.indexOf('media') !== -1) {
+                update.media = '';
+            } else if (image.indexOf('thumbnail') !== -1) {
+                update.thumbnail = '';
+            }
+
+            await this.DB(this.TABLE.grid_item_records)
+            .where({
+                uuid: uuid
+            })
+            .update(update);
+
+            LOGGER.module().info('INFO: [/exhibits/item_record_tasks (delete_media_value)] Media value deleted.');
+            return true;
+
+        } catch (error) {
+            LOGGER.module().error('ERROR: [/exhibits/item_record_tasks (delete_media_value)] unable to delete media value ' + error.message);
+            return false;
+        }
+    }
+
+    /**
      * Gets grid record
      * @param is_member_of_exhibit
      * @param uuid

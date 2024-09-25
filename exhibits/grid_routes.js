@@ -45,6 +45,9 @@ module.exports = function (app) {
     app.route(ENDPOINTS().exhibits.grid_item_records.put.endpoint)
     .put(TOKEN.verify, CONTROLLER.update_grid_item_record);
 
+    app.route(ENDPOINTS().exhibits.grid_item_media.delete.endpoint)
+    .delete(TOKEN.verify, CONTROLLER.delete_grid_item_media);
+
     /*
 
     app.route(ENDPOINTS().exhibits.grid_item_records.post.endpoint)
