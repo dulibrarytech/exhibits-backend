@@ -249,14 +249,16 @@ const itemsEditGridItemFormModule = (function () {
     function delete_media () {
 
         try {
-            // // /:exhibit_id/grids/:grid_id/items/:item_id/media/:media
+
             (async function() {
 
                 const exhibit_id = helperModule.get_parameter_by_name('exhibit_id');
+                const grid_id = helperModule.get_parameter_by_name('grid_id');
                 const item_id = helperModule.get_parameter_by_name('item_id');
                 let media = document.querySelector('#item-media').value;
-                let etmp = EXHIBITS_ENDPOINTS.exhibits.item_media.delete.endpoint.replace(':exhibit_id', exhibit_id);
-                let itmp = etmp.replace(':item_id', item_id);
+                let etmp = EXHIBITS_ENDPOINTS.exhibits.grid_item_media.delete.endpoint.replace(':exhibit_id', exhibit_id);
+                let gtmp = etmp.replace(':grid_id', grid_id);
+                let itmp = gtmp.replace(':item_id', item_id);
                 let endpoint = itmp.replace(':media', media);
                 let token = authModule.get_user_token();
                 let response = await httpModule.req({
