@@ -84,13 +84,11 @@ const itemsEditGridItemFormModule = (function () {
     }
 
     /**
-     * Populates edit form with grid record data
+     * Populates edit form with exhibit record data
      */
     async function display_edit_record () {
 
         let record = await get_grid_item_record();
-        console.log(record);
-
         let thumbnail_fragment = '';
         let thumbnail_url = '';
 
@@ -107,34 +105,89 @@ const itemsEditGridItemFormModule = (function () {
         rich_text_data['item-text-input'] = helperModule.set_rich_text_editor('item-text-input');
         rich_text_data['item-text-input'].setHTMLCode(helperModule.unescape(record.text));
 
+        if (record.media.length > 0) {
+
+            if (record.mime_type.indexOf('image') !== -1) {
+                thumbnail_url = EXHIBITS_ENDPOINTS.exhibits.exhibit_media.get.endpoint.replace(':exhibit_id', record.is_member_of_exhibit).replace(':media', record.thumbnail);
+                thumbnail_fragment = `<p><img src="${thumbnail_url}" height="200" ></p>`;
+            } else if (record.mime_type.indexOf('video') !== -1) {
+                thumbnail_url = '/exhibits-dashboard/static/images/video-tn.png';
+                thumbnail_fragment = `<p><img src="${thumbnail_url}" height="200" ></p>`;
+            } else if (record.mime_type.indexOf('audio') !== -1) {
+                thumbnail_url = '/exhibits-dashboard/static/images/audio-tn.png';
+                thumbnail_fragment = `<p><img src="${thumbnail_url}" height="200" ></p>`;
+            } else if (record.mime_type.indexOf('pdf') !== -1) {
+                thumbnail_url = '/exhibits-dashboard/static/images/pdf-tn.png';
+                thumbnail_fragment = `<p><img src="${thumbnail_url}" height="200" ></p>`;
+                document.querySelector('#toggle-open-to-page').style.visibility = 'visible';
+            } else {
+                console.log('Unable to Determine Type');
+            }
+
+            document.querySelector('#item-type').value = record.item_type;
+            document.querySelector('#item-mime-type').value = helperModule.unescape(record.mime_type);
+            document.querySelector('#item-media-thumbnail-image-display').innerHTML = thumbnail_fragment;
+            document.querySelector('#item-media-filename-display').innerHTML = `<span style="font-size: 11px">${record.media}</span>`;
+            document.querySelector('#item-media').value = record.media;
+            document.querySelector('#item-media-prev').value = record.media;
+            document.querySelector('#item-media-trash').style.display = 'inline';
+        }
+
+        if (record.thumbnail.length > 0) {
+
+            thumbnail_url = EXHIBITS_ENDPOINTS.exhibits.exhibit_media.get.endpoint.replace(':exhibit_id', record.is_member_of_exhibit).replace(':media', record.thumbnail);
+            thumbnail_fragment = `<p><img src="${thumbnail_url}" height="200" ></p>`;
+            document.querySelector('#item-thumbnail-image-display').innerHTML = thumbnail_fragment;
+            document.querySelector('#item-thumbnail-filename-display').innerHTML = `<span style="font-size: 11px">${record.thumbnail}</span>`;
+            document.querySelector('#item-thumbnail').value = record.thumbnail;
+            document.querySelector('#item-thumbnail-image-prev').value = record.thumbnail;
+            document.querySelector('#item-thumbnail-trash').style.display = 'inline';
+        }
+
+        let layouts = document.getElementsByName('layout');
+
+        for (let j = 0; j < layouts.length; j++) {
+            if (layouts[j].value === record.layout) {
+                document.querySelector('#' + layouts[j].id).checked = true;
+            }
+        }
+
+        let media_width = document.getElementsByName('media_width');
+
+        for (let j = 0; j < media_width.length; j++) {
+            if (parseInt(media_width[j].value) === parseInt(record.media_width)) {
+                document.querySelector('#' + media_width[j].id).checked = true;
+            }
+        }
+
         let styles = JSON.parse(record.styles);
-        console.log(styles);
+
         if (Object.keys(styles).length !== 0) {
 
             if (styles.backgroundColor !== undefined) {
-                document.querySelector('#grid-background-color').value = styles.backgroundColor;
+                document.querySelector('#item-background-color').value = styles.backgroundColor;
             } else {
-                document.querySelector('#grid-background-color').value = '';
+                document.querySelector('#item-background-color').value = '';
             }
 
             if (styles.color !== undefined) {
-                document.querySelector('#grid-font-color').value = styles.color;
+                document.querySelector('#item-font-color').value = styles.color;
             } else {
-                document.querySelector('#grid-font-color').value = '';
+                document.querySelector('#item-font-color').value = '';
             }
 
-            let font_values = document.querySelector('#grid-font');
+            let font_values = document.querySelector('#item-font');
 
             for (let i=0;i<font_values.length;i++) {
                 if (font_values[i].value === styles.fontFamily) {
-                    document.querySelector('#grid-font').value = styles.fontFamily;
+                    document.querySelector('#item-font').value = styles.fontFamily;
                 }
             }
 
             if (styles.fontSize !== undefined) {
-                document.querySelector('#grid-font-size').value = styles.fontSize;
+                document.querySelector('#item-font-size').value = styles.fontSize;
             } else {
-                document.querySelector('#grid-font-size').value = '';
+                document.querySelector('#item-font-size').value = '';
             }
         }
 
@@ -182,7 +235,6 @@ const itemsEditGridItemFormModule = (function () {
 
                 setTimeout(() => {
                     location.reload();
-                    // window.location.replace(APP_PATH + '/items/grid/item?exhibit_id=' + exhibit_id + '&grid_id=' + grid_id);
                 }, 2000);
             }
 

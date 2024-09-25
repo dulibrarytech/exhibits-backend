@@ -146,7 +146,6 @@ const itemsEditFormModule = (function () {
         let record = await get_item_record();
         let media_url = '';
         let media_fragment = '';
-        console.log('display: ', record);
 
         // item data
         rich_text_data['item-title-input'] = helperModule.set_rich_text_editor('item-title-input');
