@@ -299,8 +299,22 @@ exports.update_grid_item_record = async function (is_member_of_exhibit, is_membe
             };
         }
 
+        if (data.media.length > 0 && data.media !== data.media_prev) {
+            data.media = HELPER_TASK.process_uploaded_media(data.is_member_of_exhibit, data.uuid, data.media);
+        }
+
+        if (data.thumbnail.length > 0 && data.thumbnail !== data.thumbnail_prev) {
+            data.thumbnail = HELPER_TASK.process_uploaded_media(data.is_member_of_exhibit, data.uuid, data.thumbnail);
+        }
+
+        if (data.styles === undefined || data.styles.length === 0) {
+            data.styles = {};
+        }
+
+        delete data.repo_uuid;
         delete data.thumbnail_prev;
         delete data.media_prev;
+
         data.order = await HELPER_TASK.order_exhibit_items(data.is_member_of_grid, DB, TABLES);
         const UPDATE_RECORD_TASK = new EXHIBIT_GRID_RECORD_TASKS(DB, TABLES);
         let result = await UPDATE_RECORD_TASK.update_grid_item_record(data);
