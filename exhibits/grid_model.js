@@ -299,6 +299,7 @@ exports.update_grid_item_record = async function (is_member_of_exhibit, is_membe
         }
 
         // TODO: don't send in payload
+        delete data.thumbnail_prev;
         delete data.media_prev;
         data.order = await HELPER_TASK.order_exhibit_items(data.is_member_of_grid, DB, TABLES);
         const UPDATE_RECORD_TASK = new EXHIBIT_GRID_RECORD_TASKS(DB, TABLES);

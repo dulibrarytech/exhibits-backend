@@ -244,6 +244,100 @@ const itemsEditGridItemFormModule = (function () {
     };
 
     /**
+     * Deletes item media
+     */
+    function delete_media () {
+
+        try {
+
+            (async function() {
+
+                const exhibit_id = helperModule.get_parameter_by_name('exhibit_id');
+                const item_id = helperModule.get_parameter_by_name('item_id');
+                let media = document.querySelector('#item-media').value;
+                let etmp = EXHIBITS_ENDPOINTS.exhibits.item_media.delete.endpoint.replace(':exhibit_id', exhibit_id);
+                let itmp = etmp.replace(':item_id', item_id);
+                let endpoint = itmp.replace(':media', media);
+                let token = authModule.get_user_token();
+                let response = await httpModule.req({
+                    method: 'DELETE',
+                    url: endpoint,
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'x-access-token': token
+                    }
+                });
+
+                if (response !== undefined && response.status === 204) {
+
+                    document.querySelector('#item-media').value = '';
+                    document.querySelector('#item-media-filename-display').innerHTML = '';
+                    document.querySelector('#item-media-trash').style.display = 'none';
+                    document.querySelector('#item-media-thumbnail-image-display').innerHTML = '';
+                    document.querySelector('#message').innerHTML = `<div class="alert alert-success" role="alert"><i class="fa fa-info"></i> Media deleted</div>`;
+
+                    setTimeout(() => {
+                        document.querySelector('#message').innerHTML = '';
+                        window.location.reload();
+                    }, 3000);
+                }
+
+            })();
+
+        } catch (error) {
+            document.querySelector('#message').innerHTML = `<div class="alert alert-danger" role="alert"><i class="fa fa-exclamation"></i> ${error.message}</div>`;
+        }
+    }
+
+    /**
+     * Deletes thumbnail image
+     */
+    function delete_thumbnail_image() {
+
+        try {
+
+            (async function() {
+
+                const exhibit_id = helperModule.get_parameter_by_name('exhibit_id');
+                const item_id = helperModule.get_parameter_by_name('item_id');
+                let thumbnail = document.querySelector('#item-thumbnail').value;
+                let etmp = EXHIBITS_ENDPOINTS.exhibits.item_media.delete.endpoint.replace(':exhibit_id', exhibit_id);
+                let itmp = etmp.replace(':item_id', item_id);
+                let endpoint = itmp.replace(':media', thumbnail);
+                let token = authModule.get_user_token();
+                let response = await httpModule.req({
+                    method: 'DELETE',
+                    url: endpoint,
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'x-access-token': token
+                    }
+                });
+
+                if (response !== undefined && response.status === 204) {
+
+                    document.querySelector('#item-thumbnail').value = '';
+                    document.querySelector('#item-thumbnail-filename-display').innerHTML = '';
+                    document.querySelector('#item-thumbnail-trash').style.display = 'none';
+                    document.querySelector('#item-thumbnail-image-display').innerHTML = '';
+                    document.querySelector('#message').innerHTML = `<div class="alert alert-success" role="alert"><i class="fa fa-info"></i> Thumbnail deleted</div>`;
+
+                    setTimeout(() => {
+                        document.querySelector('#message').innerHTML = '';
+                        window.location.reload();
+                    }, 3000);
+                }
+
+            })();
+
+        } catch (error) {
+            document.querySelector('#message').innerHTML = `<div class="alert alert-danger" role="alert"><i class="fa fa-exclamation"></i> ${error.message}</div>`;
+        }
+
+        return false;
+    }
+
+    /**
      * init function for grid items edit form
      */
     obj.init = async function () {
@@ -257,6 +351,27 @@ const itemsEditGridItemFormModule = (function () {
             set_rich_text_editors();
             await display_edit_record();
             document.querySelector('#save-item-btn').addEventListener('click', itemsEditGridItemFormModule.update_grid_item_record);
+
+            setTimeout(() => {
+
+                if (document.querySelector('#item-media').value.length === 0) {
+                    document.querySelector('#item-media-trash').removeEventListener('click', delete_media);
+                    document.querySelector('#item-media-trash').addEventListener('click', itemsCommonGridItemFormModule.delete_media);
+                } else if (document.querySelector('#item-media').value !== 0) {
+                    document.querySelector('#item-media-trash').removeEventListener('click', itemsCommonGridItemFormModule.delete_media);
+                    document.querySelector('#item-media-trash').addEventListener('click', delete_media);
+                }
+
+                // TODO
+                if (document.querySelector('#item-thumbnail').value.length === 0) {
+                    document.querySelector('#item-thumbnail-trash').removeEventListener('click', delete_thumbnail_image);
+                    document.querySelector('#item-thumbnail-trash').addEventListener('click', itemsCommonGridItemFormModule.delete_thumbnail_image);
+                } else if (document.querySelector('#item-thumbnail').value.length !== 0) {
+                    document.querySelector('#item-thumbnail-trash').removeEventListener('click', itemsCommonGridItemFormModule.delete_thumbnail_image);
+                    document.querySelector('#item-thumbnail-trash').addEventListener('click', delete_thumbnail_image);
+                }
+
+            }, 1000);
 
         } catch (error) {
             console.log(error);
