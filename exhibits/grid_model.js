@@ -172,6 +172,7 @@ exports.create_grid_item_record = async function (is_member_of_exhibit, grid_id,
         data.is_member_of_grid = grid_id;
 
         const VALIDATE_TASK = new VALIDATOR(EXHIBITS_CREATE_GRID_ITEM_SCHEMA);
+
         data.styles = JSON.stringify(data.styles);
         let is_valid = VALIDATE_TASK.validate(data);
 
@@ -185,7 +186,19 @@ exports.create_grid_item_record = async function (is_member_of_exhibit, grid_id,
             };
         }
 
-        // TODO: don't send in payload
+        if (data.media.length > 0 && data.media !== data.media_prev) {
+            data.media = HELPER_TASK.process_uploaded_media(data.is_member_of_exhibit, data.uuid, data.media);
+        }
+
+        if (data.thumbnail.length > 0 && data.thumbnail !== data.thumbnail_prev) {
+            data.thumbnail = HELPER_TASK.process_uploaded_media(data.is_member_of_exhibit, data.uuid, data.thumbnail);
+        }
+
+        if (data.styles === undefined || data.styles.length === 0) {
+            data.styles = {};
+        }
+
+        delete data.repo_uuid;
         delete data.media_prev;
         data.order = await HELPER_TASK.order_exhibit_items(data.is_member_of_grid, DB, TABLES);
         const CREATE_RECORD_TASK = new EXHIBIT_GRID_RECORD_TASKS(DB, TABLES);

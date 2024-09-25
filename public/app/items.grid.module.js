@@ -73,11 +73,10 @@ const itemsGridModule = (function () {
 
         for (let i = 0; i < items.length; i++) {
 
-            // console.log(items[i]);
-
             let status;
             let item_id = items[i].uuid;
             let thumbnail;
+            let url;
             let title = helperModule.unescape(items[i].title);
             let description = items[i].description;
             let caption = items[i].caption;
@@ -86,9 +85,9 @@ const itemsGridModule = (function () {
             let order = items[i].order;
             let is_published = items[i].is_published;
 
-
             if (items[i].thumbnail.length > 0) {
-                thumbnail = `<img src="${items[i].thumbnail}" height="50" width="50">`;
+                url = EXHIBITS_ENDPOINTS.exhibits.exhibit_media.get.endpoint.replace(':exhibit_id', exhibit_id).replace(':media', items[i].thumbnail);
+                thumbnail = `<p><img alt="${url}" src="${url}" height="100" width="100"></p>`;
             } else {
                 thumbnail = '';
             }
