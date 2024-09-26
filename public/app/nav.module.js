@@ -21,42 +21,7 @@ const navModule = (function () {
     'use strict';
 
     const APP_PATH = '/exhibits-dashboard';
-    const EXHIBITS_ENDPOINTS = endpointsModule.get_exhibits_endpoints();
     let obj = {};
-
-    /**
-     * Sets menu links for headings form
-     */
-    obj.set_headings_form_nav_menu_links = function () {
-
-        let uuid = helperModule.get_parameter_by_name('exhibit_id');
-        let back_link = `${APP_PATH}/items?exhibit_id=${uuid}`;
-        let standard_item_link = `${APP_PATH}/items/standard?exhibit_id=${uuid}`;
-        let item_grid_link = `${APP_PATH}/items/grid?exhibit_id=${uuid}`;
-        let item_vertical_timeline_link = `${APP_PATH}/items/vertical-timeline?exhibit_id=${uuid}`;
-        let form_menu_fragment = `
-                <li>
-                    <a href="${back_link}" data-backdrop="static" data-keyboard="false">
-                        <i class=" menu-icon fa fa-arrow-left"></i>Back to items
-                    </a>
-                </li>
-                <li>
-                    <a href="${standard_item_link}" data-keyboard="false"> 
-                        <i class=" menu-icon ti-menu-alt"></i>Add Items
-                    </a>
-                </li>
-                <li>
-                    <a href="${item_grid_link}" data-keyboard="false"> <i
-                                class=" menu-icon fa fa-th"></i>Create Item Grid</a>
-                </li>
-                <li>
-                    <a href="${item_vertical_timeline_link}" data-keyboard="false">
-                        <i class=" menu-icon ti-calendar"></i>Create Vertical Timeline
-                    </a>
-                </li>`;
-
-        document.querySelector('#items-menu').innerHTML = form_menu_fragment;
-    };
 
     /**
      * sets item navigation
@@ -81,7 +46,7 @@ const navModule = (function () {
                 </li>
                 <li>
                     <a href="${item_grid_link}" data-keyboard="false"> <i
-                                class=" menu-icon fa fa-th"></i>Add Item Grid</a>
+                                class=" menu-icon fa fa-th"></i>Add Grid</a>
                 </li>
                 <li>
                     <a href="${item_vertical_timeline_link}" data-keyboard="false">
@@ -98,31 +63,12 @@ const navModule = (function () {
     obj.set_grid_item_nav_menu_links = function () {
 
         let uuid = helperModule.get_parameter_by_name('exhibit_id');
-        let heading_link = `${APP_PATH}/items/heading?exhibit_id=${uuid}`;
-        let standard_item_link = `${APP_PATH}/items/standard?exhibit_id=${uuid}`;
-        let grid_item_link = `${APP_PATH}/items/grid?exhibit_id=${uuid}`;
-        let item_vertical_timeline_link = `${APP_PATH}/items/vertical-timeline?exhibit_id=${uuid}`;
+        let grid_item_link = `${APP_PATH}/items/grid/item?exhibit_id=${uuid}`;
         let items_menu_fragment = `
                 <li>
                     <a href="${grid_item_link}" data-keyboard="false"> <i
                                 class=" menu-icon fa fa-th"></i>Add Grid Item</a>
-                </li>
-                <!--
-                <li>
-                    <a href="${heading_link}" data-keyboard="false"> 
-                        <i class=" menu-icon ti-menu-alt"></i>Add Headings
-                    </a>
-                </li>
-                <li>
-                    <a href="${standard_item_link}" data-keyboard="false"> 
-                        <i class=" menu-icon ti-menu-alt"></i>Add Items
-                    </a>
-                </li>
-                <li>
-                    <a href="${item_vertical_timeline_link}" data-keyboard="false">
-                        <i class=" menu-icon ti-calendar"></i>Add Vertical Timeline
-                    </a>
-                </li>-->`;
+                </li>`;
 
         document.querySelector('#items-menu').innerHTML = items_menu_fragment;
     };
@@ -167,7 +113,7 @@ const navModule = (function () {
     };
 
     /**
-     * Init function for headings form
+     * Init function for navigation menu
      */
     obj.init = function () {
         navModule.set_logout_link();

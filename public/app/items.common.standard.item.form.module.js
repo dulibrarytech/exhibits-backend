@@ -176,15 +176,13 @@ const itemsCommonStandardItemFormModule = (function () {
         try {
 
             navModule.init();
-            navModule.back_to_items();
-            navModule.set_item_nav_menu_links();
-
-            document.querySelector('#item-media-trash').style.display = 'none';
-            document.querySelector('#item-thumbnail-trash').style.display = 'none';
+            navModule.back_to_items();;
 
             uploadsModule.upload_item_media();
             uploadsModule.upload_item_thumbnail();
 
+            document.querySelector('#item-media-trash').style.display = 'none';
+            document.querySelector('#item-thumbnail-trash').style.display = 'none';
             document.querySelector('#item-background-color-picker').addEventListener('input', () => {
                 if (document.querySelector('#item-background-color')) {
                     document.querySelector('#item-background-color').value = document.querySelector('#item-background-color-picker').value;

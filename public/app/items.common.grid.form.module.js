@@ -74,7 +74,7 @@ const itemsCommonStandardGridFormModule = (function () {
 
             navModule.init();
             navModule.back_to_items();
-            navModule.set_item_nav_menu_links();
+            // navModule.set_item_nav_menu_links();
 
             document.querySelector('#grid-background-color-picker').addEventListener('input', () => {
                 if (document.querySelector('#grid-background-color')) {

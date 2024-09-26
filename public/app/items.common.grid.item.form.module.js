@@ -174,20 +174,16 @@ const itemsCommonGridItemFormModule = (function () {
     obj.init = async function () {
 
         try {
-            console.log('grid item edit');
+
             navModule.init();
-            // TODO: move to add form
-            // navModule.back_to_items();
-            // TODO: move to edit form
-            // navModule.back_to_grid_items();
-            // navModule.set_item_nav_menu_links();
-            navModule.set_grid_item_nav_menu_links();
-            document.querySelector('#item-media-trash').style.display = 'none';
-            document.querySelector('#item-thumbnail-trash').style.display = 'none';
+            navModule.back_to_items();
 
             uploadsModule.upload_item_media();
             uploadsModule.upload_item_thumbnail();
 
+            // navModule.set_grid_item_nav_menu_links();
+            document.querySelector('#item-media-trash').style.display = 'none';
+            document.querySelector('#item-thumbnail-trash').style.display = 'none';
             document.querySelector('#item-background-color-picker').addEventListener('input', () => {
                 if (document.querySelector('#item-background-color')) {
                     document.querySelector('#item-background-color').value = document.querySelector('#item-background-color-picker').value;
