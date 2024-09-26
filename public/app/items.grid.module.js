@@ -179,7 +179,8 @@ const itemsGridModule = (function () {
 
             navModule.init();
             navModule.back_to_items();
-            navModule.set_item_nav_menu_links();
+            navModule.set_grid_item_nav_menu_links();
+            // navModule.set_item_nav_menu_links();
 
         } catch (error) {
             console.log(error);

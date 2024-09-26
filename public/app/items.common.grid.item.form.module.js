@@ -180,8 +180,8 @@ const itemsCommonGridItemFormModule = (function () {
             // navModule.back_to_items();
             // TODO: move to edit form
             // navModule.back_to_grid_items();
-            navModule.set_item_nav_menu_links();
-
+            // navModule.set_item_nav_menu_links();
+            navModule.set_grid_item_nav_menu_links();
             document.querySelector('#item-media-trash').style.display = 'none';
             document.querySelector('#item-thumbnail-trash').style.display = 'none';
 

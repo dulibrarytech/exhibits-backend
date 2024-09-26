@@ -93,6 +93,41 @@ const navModule = (function () {
     };
 
     /**
+     * sets grid item navigation
+     */
+    obj.set_grid_item_nav_menu_links = function () {
+
+        let uuid = helperModule.get_parameter_by_name('exhibit_id');
+        let heading_link = `${APP_PATH}/items/heading?exhibit_id=${uuid}`;
+        let standard_item_link = `${APP_PATH}/items/standard?exhibit_id=${uuid}`;
+        let grid_item_link = `${APP_PATH}/items/grid?exhibit_id=${uuid}`;
+        let item_vertical_timeline_link = `${APP_PATH}/items/vertical-timeline?exhibit_id=${uuid}`;
+        let items_menu_fragment = `
+                <li>
+                    <a href="${grid_item_link}" data-keyboard="false"> <i
+                                class=" menu-icon fa fa-th"></i>Add Grid Item</a>
+                </li>
+                <!--
+                <li>
+                    <a href="${heading_link}" data-keyboard="false"> 
+                        <i class=" menu-icon ti-menu-alt"></i>Add Headings
+                    </a>
+                </li>
+                <li>
+                    <a href="${standard_item_link}" data-keyboard="false"> 
+                        <i class=" menu-icon ti-menu-alt"></i>Add Items
+                    </a>
+                </li>
+                <li>
+                    <a href="${item_vertical_timeline_link}" data-keyboard="false">
+                        <i class=" menu-icon ti-calendar"></i>Add Vertical Timeline
+                    </a>
+                </li>-->`;
+
+        document.querySelector('#items-menu').innerHTML = items_menu_fragment;
+    };
+
+    /**
      * Creates back to menu items link in item forms
      */
     obj.back_to_items = function () {

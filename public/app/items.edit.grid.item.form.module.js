@@ -366,7 +366,6 @@ const itemsEditGridItemFormModule = (function () {
                     document.querySelector('#item-media-trash').addEventListener('click', delete_media);
                 }
 
-                // TODO
                 if (document.querySelector('#item-thumbnail').value.length === 0) {
                     document.querySelector('#item-thumbnail-trash').removeEventListener('click', delete_thumbnail_image);
                     document.querySelector('#item-thumbnail-trash').addEventListener('click', itemsCommonGridItemFormModule.delete_thumbnail_image);
@@ -380,19 +379,6 @@ const itemsEditGridItemFormModule = (function () {
         } catch (error) {
             console.log(error);
         }
-
-        /*
-        document.querySelector('#save-item-btn').addEventListener('click', itemsAddGridItemFormModule.create_grid_item_record);
-        document.querySelector('#item-media-trash').style.display = 'none';
-        document.querySelector('#item-thumbnail-trash').style.display = 'none';
-        document.querySelectorAll('.item-layout-left-right-radio-btn').forEach((radio_input) => {
-            radio_input.addEventListener('click', () => {
-                document.querySelector('#item-media-width').style.display = 'block';
-            });
-        });
-
-         */
-
     };
 
     return obj;
