@@ -47,6 +47,7 @@ const itemsCommonStandardItemFormModule = (function () {
             item.media = document.querySelector('#item-media').value;
             item.media_prev = document.querySelector('#item-media-prev').value;
             item.repo_uuid = document.querySelector('#repo-uuid').value;
+            item.media_padding = document.querySelector('#media-padding').value;
 
             // item layout - standard item only
             item.layout = helperModule.get_checked_radio_button(document.getElementsByName('layout'));

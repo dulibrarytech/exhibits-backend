@@ -53,7 +53,7 @@
         <div id="message"></div>
         <div id="item-data-card" class="card" style="visibility: hidden">
             <div class="card-header">
-                <strong class="card-title mb-3">Edit standard Item in '<span id="exhibit-title"></span>' exhibit</strong>
+                <strong class="card-title mb-3">Edit Item in '<span id="exhibit-title"></span>' exhibit</strong>
             </div>
             <div class="card-body">
                 <div class="alert alert-info"><i class="fa fa-info"></i> Provide info to user about this form</div>
@@ -111,6 +111,34 @@
                     <i class="fa fa-info"></i> <span id="info-message">Provide info to user about uploading exhibit media</span>
                 </div>
 
+                <!---->
+
+                <div class="container">
+                    <ul class="nav nav-tabs" id="mediaTab" role="tablist">
+                        <li class="nav-item">
+                            <a class="nav-link active" id="upload-media-tab" data-toggle="tab" href="#upload-media" role="tab" aria-controls="upload-media" aria-selected="true">Upload Media</a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" id="import-audio-video-tab" data-toggle="tab" href="#import-audio-video" role="tab" aria-controls="import-audio-video" aria-selected="false">Import Audio/Video</a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" id="import-repo-media-tab" data-toggle="tab" href="#import-repo-media" role="tab" aria-controls="import-repo-media" aria-selected="false">Import Repository Media</a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" id="media-padding-tab" data-toggle="tab" href="#media-padding" role="tab" aria-controls="media-padding" aria-selected="false">Media Padding</a>
+                        </li>
+                    </ul>
+                    <div class="tab-content" id="mediaTabContent">
+                        <div class="tab-pane fade show active" id="upload-media" role="tabpanel" aria-labelledby="upload-media-tab"><%- include('partials/tab-upload-media.ejs'); %></div>
+                        <div class="tab-pane fade" id="import-audio-video" role="tabpanel" aria-labelledby="import-audio-video-tab"><%- include('partials/tab-import-audio-video.ejs'); %></div>
+                        <div class="tab-pane fade" id="import-repo-media" role="tabpanel" aria-labelledby="import-repo-media-tab"><%- include('partials/tab-import-repo-media.ejs'); %></div>
+                        <div class="tab-pane fade" id="media-padding" role="tabpanel" aria-labelledby="media-padding-tab"><%- include('partials/tab-media-padding.ejs'); %></div>
+                    </div>
+                </div>
+
+                <!-- -->
+
+                <!--
                 <div class="default-tab">
                     <nav>
                         <div class="nav nav-tabs" id="nav-tab" role="tablist">
@@ -133,7 +161,7 @@
                                         <p>
                                             <br>
 
-                                            <!--<span id="item-media-thumbnail-image"></span>-->
+                                            <!--<span id="item-media-thumbnail-image"></span>--
                                             <span id="item-media-thumbnail-image-display"></span>
                                             <span id="item-media-filename-display"></span>&nbsp;&nbsp;
                                             <span>
@@ -201,6 +229,7 @@
                         </div>
                     </div>
                 </div>
+                -->
             </div>
         </div>
         <div id="item-layout-card" class="card" style="visibility: visible">

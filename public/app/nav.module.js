@@ -36,12 +36,12 @@ const navModule = (function () {
         let items_menu_fragment = `
                 <li>
                     <a href="${heading_link}" data-keyboard="false"> 
-                        <i class=" menu-icon ti-menu-alt"></i>Add Headings
+                        <i class=" menu-icon ti-menu-alt"></i>Add Heading
                     </a>
                 </li>
                 <li>
                     <a href="${standard_item_link}" data-keyboard="false"> 
-                        <i class=" menu-icon ti-menu-alt"></i>Add Items
+                        <i class=" menu-icon ti-menu-alt"></i>Add Item
                     </a>
                 </li>
                 <li>
@@ -58,12 +58,13 @@ const navModule = (function () {
     };
 
     /**
-     * sets grid item navigation
+     * sets grid item menu link
      */
     obj.set_grid_item_nav_menu_links = function () {
 
-        let uuid = helperModule.get_parameter_by_name('exhibit_id');
-        let grid_item_link = `${APP_PATH}/items/grid/item?exhibit_id=${uuid}`;
+        let exhibit_id = helperModule.get_parameter_by_name('exhibit_id');
+        let grid_id = helperModule.get_parameter_by_name('grid_id');
+        let grid_item_link = `${APP_PATH}/items/grid/item?exhibit_id=${exhibit_id}&grid_id=${grid_id}`;
         let items_menu_fragment = `
                 <li>
                     <a href="${grid_item_link}" data-keyboard="false"> <i

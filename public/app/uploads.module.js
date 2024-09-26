@@ -159,6 +159,7 @@ const uploadsModule = (function () {
                 let thumbnail_url = '';
 
                 if (file.type.indexOf('image') !== -1) {
+                    thumbnail_url = `${APP_PATH}/media?media=${filename}`;
                     item_type = 'image';
                 } else if (file.type.indexOf('video') !== -1) {
                     thumbnail_url = '/exhibits-dashboard/static/images/video-tn.png';

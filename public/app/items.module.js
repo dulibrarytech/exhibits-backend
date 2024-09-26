@@ -125,9 +125,7 @@ const itemsModule = (function () {
 
             } else if (items[i].type === 'grid') {
 
-                // render grid items here
                 let grid_items_fragment = '';
-                let grid_item_thumbnail = '';
                 let grid_item_count = '';
 
                 add_grid_items = `<a href="${APP_PATH}/items/grid/item?exhibit_id=${exhibit_id}&grid_id=${item_id}" title="Add Grid Item"><i class="fa fa-plus pr-1"></i></a>&nbsp;`;
@@ -141,13 +139,6 @@ const itemsModule = (function () {
                     item_details = `<a href="${APP_PATH}/items/grid/items?exhibit_id=${exhibit_id}&grid_id=${item_id}" title="View grid Items"><i class="fa fa-search pr-1"></i></a>`;
                     grid_item_count += `Contains ${items[i].grid_items.length} items`;
                     delete_item = ''; // Can't delete grid if it contain items
-
-                    /* Display grid item titles?
-                    for (let j=0;j<items[i].grid_items.length;j++) {
-                        grid_items_fragment += `<p><strong><small>${helperModule.unescape(items[i].grid_items[j].title)}</small></strong></p>`;
-                    }
-
-                     */
                 }
 
                 item_data += `<td style="width: 35%">
@@ -270,18 +261,14 @@ const itemsModule = (function () {
         console.log(item_record);
     };
 
-    /** TODO: use the one in exhibit module
-     * Sets exhibit title
-     * @param uuid
+    /**
+     *
      */
-    obj.set_exhibit_title = async function (uuid) {
-        let title = await exhibitsModule.get_exhibit_title(uuid);
-        document.querySelector('#exhibit-title').innerHTML = `${title}`;
-        return false;
-    };
-
     obj.init = function () {
         document.querySelector('#message').innerHTML = '<div class="alert alert-primary" role="alert">Loading...</div>';
+        const exhibit_id = helperModule.get_parameter_by_name('exhibit_id');
+        exhibitsModule.set_exhibit_title(exhibit_id);
+        navModule.set_preview_link();
         navModule.set_item_nav_menu_links();
         itemsModule.display_items();
         setTimeout(() => {

@@ -56,14 +56,11 @@ const itemsAddGridFormModule = (function () {
             if (response !== undefined && response.status === 201) {
 
                 window.scrollTo(0, 0);
-                document.querySelector('.card').style.visibility = 'hidden';
                 document.querySelector('#message').innerHTML = `<div class="alert alert-success" role="alert"><i class="fa fa-info"></i> Grid record created</div>`;
-                // document.querySelector('#item-grid-form').reset();
                 const grid_id = response.data.data;
                 console.log(grid_id);
                 setTimeout(() => {
-                    // TODO: redirect to grid item form
-                    // location.replace(`${APP_PATH}/items/grid-item?uuid=${exhibit_id}&grid=${response.data.data}`)
+                    location.replace(`${APP_PATH}/items?exhibit_id=${exhibit_id}`);
                 }, 3000);
             }
 

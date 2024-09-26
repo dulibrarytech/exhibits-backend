@@ -101,13 +101,11 @@ const itemsEditGridFormModule = (function () {
             if (response !== undefined && response.status === 201) {
 
                 window.scrollTo(0, 0);
-                document.querySelector('.card').style.visibility = 'hidden';
                 document.querySelector('#message').innerHTML = `<div class="alert alert-success" role="alert"><i class="fa fa-info"></i> Grid record created</div>`;
                 const grid_id = response.data.data;
                 console.log(grid_id);
                 setTimeout(() => {
-                    // TODO: reload form
-                    // location.replace(`${APP_PATH}/items/grid-item?uuid=${exhibit_id}&grid=${response.data.data}`)
+                    location.replace(`${APP_PATH}/items?exhibit_id=${exhibit_id}`);
                 }, 3000);
             }
 

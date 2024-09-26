@@ -62,7 +62,7 @@ const itemsGridModule = (function () {
 
         const exhibit_id = helperModule.get_parameter_by_name('exhibit_id');
         const grid_id = helperModule.get_parameter_by_name('grid_id');
-        await itemsModule.set_exhibit_title(exhibit_id);
+        await exhibitsModule.set_exhibit_title(exhibit_id);
         const items = await get_grid_items(exhibit_id, grid_id);
         let item_data = '';
 
@@ -122,57 +122,6 @@ const itemsGridModule = (function () {
         }, 1000);
     };
 
-    /**
-     * Sets exhibit title
-     * @param uuid
-     */
-    /*
-    obj.set_exhibit_title = async function (uuid) {
-        let title = await exhibitsModule.get_exhibit_title(uuid);
-        document.querySelector('#exhibit-title').innerHTML = `${title}`;
-        return false;
-    };
-
-     */
-
-    /*
-    obj.set_item_nav_menu_links = function () {
-
-        let uuid = helperModule.get_parameter_by_name('uuid');
-        let heading_link = `${APP_PATH}/items/heading?uuid=${uuid}`;
-        let standard_item_link = `${APP_PATH}/items/standard?uuid=${uuid}`;
-        let item_grid_link = `${APP_PATH}/items/grid?uuid=${uuid}`;
-        let item_vertical_timeline_link = `${APP_PATH}/items/vertical-timeline?uuid=${uuid}`;
-        let items_menu_fragment = `
-                <li>
-                    <a href="${heading_link}" data-keyboard="false"> 
-                        <i class=" menu-icon ti-menu-alt"></i>Add Headings
-                    </a>
-                </li>
-                <li>
-                    <a href="${standard_item_link}" data-keyboard="false"> 
-                        <i class=" menu-icon ti-menu-alt"></i>Add Items
-                    </a>
-                </li>
-                <li>
-                    <a href="${item_grid_link}" data-keyboard="false"> <i
-                                class=" menu-icon fa fa-th"></i>Add Item Grid</a>
-                </li>
-                <li>
-                    <a href="${item_vertical_timeline_link}" data-keyboard="false">
-                        <i class=" menu-icon ti-calendar"></i>Add Vertical Timeline
-                    </a>
-                </li>
-                <li>
-                    <a href="${APP_PATH}/dashboard/trash" data-keyboard="false">
-                        <i class=" menu-icon fa fa-trash-o"></i>Trash
-                    </a>
-                </li>`;
-
-        document.querySelector('#items-menu').innerHTML = items_menu_fragment;
-    };
-    */
-
     obj.init = async function () {
 
         try {
@@ -180,7 +129,6 @@ const itemsGridModule = (function () {
             navModule.init();
             navModule.back_to_items();
             navModule.set_grid_item_nav_menu_links();
-            // navModule.set_item_nav_menu_links();
 
         } catch (error) {
             console.log(error);

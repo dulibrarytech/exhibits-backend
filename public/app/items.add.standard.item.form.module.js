@@ -79,7 +79,7 @@ const itemsAddStandardItemFormModule = (function () {
 
                 setTimeout(() => {
                     location.replace(`${APP_PATH}/items?exhibit_id=${uuid}`);
-                    document.querySelector('#message').innerHTML = '';
+                    // document.querySelector('#message').innerHTML = '';
                 }, 3000);
             }
 
