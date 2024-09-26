@@ -96,6 +96,19 @@ const itemsModule = (function () {
                 let description = helperModule.unescape(items[i].description);
                 let thumbnail = '';
                 let img ='';
+                let item_type;
+
+                if (items[i].mime_type.indexOf('image') !== -1) {
+                    item_type = '<i class="fa fa-image"></i>';
+                } else if (items[i].mime_type.indexOf('video') !== -1) {
+                    item_type = '<i class="fa fa-file-video-o"><i>';
+                } else if (items[i].mime_type.indexOf('audio') !== -1) {
+                    item_type = '<i class="fa fa-file-audio-o"></i>';
+                } else if (items[i].mime_type.indexOf('pdf') !== -1) {
+                    item_type = '<i class="fa fa-file-pdf-o"></i>';
+                } else {
+                    item_type = '<i class="fa fa-file-o"></i>';
+                }
 
                 if (items[i].thumbnail.length > 0) {
                     thumbnail = EXHIBITS_ENDPOINTS.exhibits.exhibit_media.get.endpoint.replace(':exhibit_id', exhibit_id).replace(':media', items[i].thumbnail);
@@ -106,7 +119,8 @@ const itemsModule = (function () {
                     <p><button class="btn btn-default"><small>${type}</small></button></p>
                     <p><strong>${title}</strong></p>
                     ${img}
-                    <p><strong>${description}</strong></p>
+                    ${item_type}
+                    <!--<p><strong>${description}</strong></p>-->
                     </td>`;
 
                 /*
@@ -145,7 +159,8 @@ const itemsModule = (function () {
                     <p><button class="btn btn-default"><small>${type}</small></button></p>
                     <p>${items[i].columns} columns </p>
                     <p>${grid_item_count}</p>
-                    <div id="grid-items-${exhibit_id}">${grid_items_fragment}</div>
+                    <!--<div id="grid-items-${exhibit_id}">${grid_items_fragment}</div>-->
+                    <i class="fa fa-th"></i>
                     </td>`;
             }
 
