@@ -159,7 +159,7 @@ const itemsModule = (function () {
                     <p><button class="btn btn-default"><small>${type}</small></button></p>
                     <p>${items[i].columns} columns </p>
                     <p>${grid_item_count}</p>
-                    <!--<div id="grid-items-${exhibit_id}">${grid_items_fragment}</div>-->
+                    <div id="grid-items-${exhibit_id}"><em>${grid_items_fragment}</em></div>
                     <i class="fa fa-th"></i>
                     </td>`;
             }

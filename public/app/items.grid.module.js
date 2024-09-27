@@ -78,12 +78,25 @@ const itemsGridModule = (function () {
             let thumbnail;
             let url;
             let title = helperModule.unescape(items[i].title);
-            let description = items[i].description;
-            let caption = items[i].caption;
-            let date = items[i].date;
-            let type = items[i].type;
+            // let description = items[i].description;
+            // let caption = items[i].caption;
+            // let date = items[i].date;
+            // let type = items[i].type;
             let order = items[i].order;
             let is_published = items[i].is_published;
+            let item_type;
+
+            if (items[i].mime_type.indexOf('image') !== -1) {
+                item_type = '<i class="fa fa-image"></i>';
+            } else if (items[i].mime_type.indexOf('video') !== -1) {
+                item_type = '<i class="fa fa-file-video-o"><i>';
+            } else if (items[i].mime_type.indexOf('audio') !== -1) {
+                item_type = '<i class="fa fa-file-audio-o"></i>';
+            } else if (items[i].mime_type.indexOf('pdf') !== -1) {
+                item_type = '<i class="fa fa-file-pdf-o"></i>';
+            } else {
+                item_type = '<i class="fa fa-file-o"></i>';
+            }
 
             if (items[i].thumbnail.length > 0) {
                 url = EXHIBITS_ENDPOINTS.exhibits.exhibit_media.get.endpoint.replace(':exhibit_id', exhibit_id).replace(':media', items[i].thumbnail);
@@ -101,7 +114,9 @@ const itemsGridModule = (function () {
             item_data += '<tr>';
             item_data += `<td style="width: 5%">${order}</td>`;
             item_data += `<td style="width: 35%">
-                             ${thumbnail}&nbsp;<strong>${title}</strong>
+                            <p><strong>${title}</strong></p>
+                             ${thumbnail}
+                             ${item_type}
                           </td>`;
             item_data += `<td style="width: 5%;text-align: center"><small>${status}</small></td>`;
             item_data += `<td style="width: 10%">

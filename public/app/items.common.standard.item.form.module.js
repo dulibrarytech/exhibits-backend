@@ -56,10 +56,6 @@ const itemsCommonStandardItemFormModule = (function () {
             item.repo_uuid = document.querySelector('#repo-uuid').value;
             item.media_padding = document.querySelector('#media-padding').value;
 
-            console.log('item media ', item.media);
-            console.log('item kaltura ', item.kaltura);
-            console.log('item repo uuid ', item.repo_uuid);
-
             if (item.media.length === 0 && item.kaltura.length === 0 && item.repo_uuid.length === 0) {
                 document.querySelector('#message').innerHTML = `<div class="alert alert-danger" role="alert"><i class="fa fa-exclamation"></i> Please upload or import a media item</div>`;
                 return false;
