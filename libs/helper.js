@@ -192,7 +192,7 @@ const Helper = class {
             let item_order;
             let order = [];
 
-            item_order = await db(tables.item_records).select('order').where('is_member_of_item_grid', uuid);
+            item_order = await db(tables.grid_item_records).select('order').where('is_member_of_grid', uuid);
 
             if (item_order.length === 0) {
                 return 1;
