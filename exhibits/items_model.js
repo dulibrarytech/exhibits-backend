@@ -116,6 +116,7 @@ exports.create_item_record = async function (is_member_of_exhibit, data) {
 
         data.styles = JSON.stringify(data.styles);
 
+        // TODO: check media repo and kaltura fields
         if (data.media.length === 0) {
             data.media = data.repo_uuid;
         }

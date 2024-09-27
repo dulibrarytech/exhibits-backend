@@ -200,8 +200,6 @@ const itemsEditStandardItemFormModule = (function () {
         try {
 
             scrollTo(0, 0);
-            document.querySelector('.card').style.visibility = 'hidden';
-            document.querySelector('#message').innerHTML = `<div class="alert alert-info" role="alert"><i class="fa fa-info"></i> Updating item record...</div>`;
             let exhibit_id = helperModule.get_parameter_by_name('exhibit_id');
             let item_id = helperModule.get_parameter_by_name('item_id');
             let data = itemsCommonStandardItemFormModule.get_common_standard_item_form_fields(rich_text_data);
@@ -221,6 +219,15 @@ const itemsEditStandardItemFormModule = (function () {
 
                 return false;
             }
+
+            if (data === undefined) {
+                document.querySelector('#message').innerHTML = `<div class="alert alert-danger" role="alert"><i class="fa fa-exclamation"></i> Unable to get form field values</div>`;
+                return false;
+            } else if (data === false) {
+                return false;
+            }
+
+            document.querySelector('#message').innerHTML = `<div class="alert alert-info" role="alert"><i class="fa fa-info"></i> Updating item record...</div>`;
 
             let tmp = EXHIBITS_ENDPOINTS.exhibits.item_records.put.endpoint.replace(':exhibit_id', exhibit_id);
             let endpoint = tmp.replace(':item_id', item_id);

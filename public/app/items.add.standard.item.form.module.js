@@ -54,13 +54,16 @@ const itemsAddStandardItemFormModule = (function () {
                 return false;
             }
 
-            document.querySelector('#message').innerHTML = `<div class="alert alert-info" role="alert"><i class="fa fa-info"></i> Creating item record...</div>`;
             let data = itemsCommonStandardItemFormModule.get_common_standard_item_form_fields(rich_text_data);
 
             if (data === undefined) {
-                console.log('Unable to get form field values');
+                document.querySelector('#message').innerHTML = `<div class="alert alert-danger" role="alert"><i class="fa fa-exclamation"></i> Unable to get form field values</div>`;
+                return false;
+            } else if (data === false) {
                 return false;
             }
+
+            document.querySelector('#message').innerHTML = `<div class="alert alert-info" role="alert"><i class="fa fa-info"></i> Creating item record...</div>`;
 
             let token = authModule.get_user_token();
             let response = await httpModule.req({
@@ -79,7 +82,6 @@ const itemsAddStandardItemFormModule = (function () {
 
                 setTimeout(() => {
                     location.replace(`${APP_PATH}/items?exhibit_id=${uuid}`);
-                    // document.querySelector('#message').innerHTML = '';
                 }, 3000);
             }
 

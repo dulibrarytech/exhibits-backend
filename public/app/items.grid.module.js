@@ -133,18 +133,6 @@ const itemsGridModule = (function () {
         } catch (error) {
             console.log(error);
         }
-        /*
-        document.querySelector('#message').innerHTML = '<div class="alert alert-primary" role="alert">Loading...</div>';
-        document.querySelector('#logout').addEventListener('click', authModule.logout);
-        // itemsModule.set_item_nav_menu_links();
-
-        await itemsGridModule.display_grid_items();
-
-        setTimeout(() => {
-            document.querySelector('#items-menu').style.visibility = 'visible';
-        }, 100);
-
-         */
     };
 
     return obj;
