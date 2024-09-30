@@ -201,7 +201,7 @@ exports.create_grid_item_record = async function (is_member_of_exhibit, grid_id,
 
         delete data.repo_uuid;
         delete data.media_prev;
-        // data.order = await HELPER_TASK.order_exhibit_items(data.is_member_of_grid, DB, TABLES);
+
         data.order = await HELPER_TASK.order_grid_items(data.is_member_of_grid, DB, TABLES);
 
         const CREATE_RECORD_TASK = new EXHIBIT_GRID_RECORD_TASKS(DB, TABLES);

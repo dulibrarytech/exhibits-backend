@@ -30,6 +30,7 @@ const itemsCommonGridItemFormModule = (function () {
 
         try {
 
+            let media = [];
             let item = {};
             item.styles = {};
 
@@ -46,7 +47,23 @@ const itemsCommonGridItemFormModule = (function () {
             item.mime_type = document.querySelector('#item-mime-type').value;
             item.media = document.querySelector('#item-media').value;
             item.media_prev = document.querySelector('#item-media-prev').value;
+            item.kaltura = document.querySelector('#audio-video').value;
             item.repo_uuid = document.querySelector('#repo-uuid').value;
+            item.media_padding = document.querySelector('#media-padding').value;
+
+            if (item.media.length === 0 && item.kaltura.length === 0 && item.repo_uuid.length === 0) {
+                document.querySelector('#message').innerHTML = `<div class="alert alert-danger" role="alert"><i class="fa fa-exclamation"></i> Please upload or import a media item</div>`;
+                return false;
+            }
+
+            media.push(item.media);
+            media.push(item.kaltura);
+            media.push(item.repo_uuid);
+
+            if (media.length > 1) {
+                document.querySelector('#message').innerHTML = `<div class="alert alert-danger" role="alert"><i class="fa fa-exclamation"></i> Please upload or import only one media item</div>`;
+                return false;
+            }
 
             // item layout - standard item only
             item.layout = helperModule.get_checked_radio_button(document.getElementsByName('layout'));
