@@ -183,7 +183,7 @@ const itemsCommonGridItemFormModule = (function () {
         }
 
         return false;
-    }
+    };
 
     /**
      * Init function for grid item common add/edit forms
@@ -198,7 +198,6 @@ const itemsCommonGridItemFormModule = (function () {
             uploadsModule.upload_item_media();
             uploadsModule.upload_item_thumbnail();
 
-            // navModule.set_grid_item_nav_menu_links();
             document.querySelector('#item-media-trash').style.display = 'none';
             document.querySelector('#item-thumbnail-trash').style.display = 'none';
             document.querySelector('#item-background-color-picker').addEventListener('input', () => {

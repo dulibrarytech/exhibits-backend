@@ -188,7 +188,7 @@ const itemsCommonStandardItemFormModule = (function () {
         }
 
         return false;
-    }
+    };
 
     /**
      * Init function for standard item common add/edit forms
@@ -216,6 +216,11 @@ const itemsCommonStandardItemFormModule = (function () {
                     document.querySelector('#item-font-color').value = document.querySelector('#item-font-color-picker').value;
                 }
             });
+
+            setTimeout(() => {
+                document.querySelector('#item-thumbnail-trash').addEventListener('click', itemsCommonStandardItemFormModule.delete_thumbnail_image);
+                document.querySelector('#item-media-trash').addEventListener('click', itemsCommonStandardItemFormModule.delete_media);
+            }, 1000);
 
             setTimeout(() => {
                 document.querySelector('#item-data-card').style.visibility = 'visible';
