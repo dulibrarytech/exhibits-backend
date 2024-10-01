@@ -213,6 +213,11 @@ const itemsCommonGridItemFormModule = (function () {
             });
 
             setTimeout(() => {
+                document.querySelector('#item-media-trash').addEventListener('click', itemsCommonGridItemFormModule.delete_media);
+                document.querySelector('#item-thumbnail-trash').addEventListener('click', itemsCommonGridItemFormModule.delete_thumbnail_image);
+            }, 1000);
+
+            setTimeout(() => {
                 document.querySelector('#item-data-card').style.visibility = 'visible';
             }, 250);
 
