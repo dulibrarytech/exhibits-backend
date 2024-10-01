@@ -54,7 +54,7 @@ const uploadsModule = (function () {
                 const filename = file.upload.filename;
                 document.querySelector('.upload-error').innerHTML = '';
                 document.querySelector('#hero-image').value = filename;
-                document.querySelector('#hero-image-filename-display').innerHTML = `<span class="alert-success" style="width: 30%; padding: 5px; border: solid 1px"><i class="fa fa-check"> ${filename}</i></span>`;
+                document.querySelector('#hero-image-filename-display').innerHTML = `<span style="font-size: 11px">${filename}</span>`;
                 document.querySelector('#hero-trash').style.display = 'inline';
 
                 setTimeout(() => {
@@ -103,7 +103,7 @@ const uploadsModule = (function () {
                 let filename = file.upload.filename;
                 document.querySelector('.upload-error').innerHTML = '';
                 document.querySelector('#thumbnail-image').value = filename;
-                document.querySelector('#thumbnail-filename-display').innerHTML = `<span class="alert-success" style="width: 30%; padding: 5px; border: solid 1px"><i class="fa fa-check"> ${filename}</i></span>`;
+                document.querySelector('#thumbnail-filename-display').innerHTML = `<span style="font-size: 11px">${filename}</span>`;
                 document.querySelector('#thumbnail-trash').style.display = 'inline';
 
                 setTimeout(() => {
