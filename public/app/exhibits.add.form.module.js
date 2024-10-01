@@ -32,7 +32,8 @@ const exhibitsAddFormModule = (function () {
         const ids = ['exhibit-title-input',
             'exhibit-sub-title-input',
             'exhibit-alert-text-input',
-            'exhibit-description-input'];
+            'exhibit-description-input',
+            'exhibit-about-the-curators-input'];
 
         ids.forEach((id) => {
             rich_text_data[id] = helperModule.set_rich_text_editor(id);

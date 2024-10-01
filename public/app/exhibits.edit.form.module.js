@@ -110,6 +110,12 @@ const exhibitsEditFormModule = (function () {
             rich_text_data['exhibit-description-input'] = helperModule.set_rich_text_editor('exhibit-description-input');
             rich_text_data['exhibit-description-input'].setHTMLCode(helperModule.unescape(record.description));
 
+            rich_text_data['exhibit-about-the-curators-input'] = helperModule.set_rich_text_editor('exhibit-about-the-curators-input');
+            rich_text_data['exhibit-about-the-curators-input'].setHTMLCode(helperModule.unescape(record.about_the_curators));
+
+            // TODO: check bool
+            document.querySelector('#is-featured').value = record.is_featured;
+
             // exhibit media
             if (record.hero_image.length > 0) {
                 hero_image_url = `${APP_PATH}/api/v1/exhibits/${record.uuid}/media/${record.hero_image}`;
