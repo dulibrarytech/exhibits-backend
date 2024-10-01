@@ -58,6 +58,14 @@ const itemsAddGridItemFormModule = (function () {
             document.querySelector('#message').innerHTML = `<div class="alert alert-info" role="alert"><i class="fa fa-info"></i> Creating grid item record...</div>`;
 
             let data = itemsCommonGridItemFormModule.get_common_grid_item_form_fields(rich_text_data);
+
+            if (data === undefined) {
+                document.querySelector('#message').innerHTML = `<div class="alert alert-danger" role="alert"><i class="fa fa-exclamation"></i> Unable to get form field values</div>`;
+                return false;
+            } else if (data === false) {
+                return false;
+            }
+
             let tmp = EXHIBITS_ENDPOINTS.exhibits.grid_item_records.post.endpoint.replace(':exhibit_id', exhibit_id);
             let endpoint = tmp.replace(':grid_id', grid_id);
             let token = authModule.get_user_token();
@@ -97,10 +105,8 @@ const itemsAddGridItemFormModule = (function () {
         helperModule.set_rich_text_editor_config();
         set_rich_text_editors();
 
-        // itemsFormModule.set_items_form_nav_menu_links();
         uploadsModule.upload_item_media();
         uploadsModule.upload_item_thumbnail();
-        // itemsFormModule.check_grid();
 
         document.querySelector('#save-item-btn').addEventListener('click', itemsAddGridItemFormModule.create_grid_item_record);
         document.querySelector('#item-media-trash').style.display = 'none';
@@ -129,32 +135,6 @@ const itemsAddGridItemFormModule = (function () {
         document.querySelector('#item-font-color-picker').addEventListener('input', () => {
             if (document.querySelector('#item-font-color')) {
                 document.querySelector('#item-font-color').value = document.querySelector('#item-font-color-picker').value;
-            }
-        });
-
-         */
-    };
-
-    /**
-     * Init function for grid form
-     */
-    obj.init__ = function () {
-
-        // itemsAddGridFormModule.set_grid_items_form_nav_menu_links();
-        // document.querySelector('#save-grid-btn').addEventListener('click', itemsAddGridFormModule.create_grid_record);
-        // uploadsModule.upload_item_media();
-        // uploadsModule.upload_item_thumbnail();
-
-        /*
-        document.querySelector('#grid-background-color-picker').addEventListener('input', () => {
-            if (document.querySelector('#grid-background-color')) {
-                document.querySelector('#grid-background-color').value = document.querySelector('#grid-background-color-picker').value;
-            }
-        });
-
-        document.querySelector('#grid-font-color-picker').addEventListener('input', () => {
-            if (document.querySelector('#grid-font-color')) {
-                document.querySelector('#grid-font-color').value = document.querySelector('#grid-font-color-picker').value;
             }
         });
 

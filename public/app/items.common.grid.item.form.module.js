@@ -40,6 +40,11 @@ const itemsCommonGridItemFormModule = (function () {
             item.description = rich_text_data['item-description-input'].getHTMLCode();
             item.text = rich_text_data['item-text-input'].getHTMLCode();
 
+            if (item.title.length === 0 || item.title === '<div></div>') {
+                document.querySelector('#message').innerHTML = `<div class="alert alert-danger" role="alert"><i class="fa fa-exclamation"></i> Please enter a title</div>`;
+                return false;
+            }
+
             // item media
             item.thumbnail = document.querySelector('#item-thumbnail').value;
             item.thumbnail_prev = document.querySelector('#item-thumbnail-image-prev').value;
