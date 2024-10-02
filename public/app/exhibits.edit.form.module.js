@@ -114,6 +114,7 @@ const exhibitsEditFormModule = (function () {
             rich_text_data['exhibit-about-the-curators-input'].setHTMLCode(helperModule.unescape(record.about_the_curators));
 
             // TODO: check bool
+            console.log(record.is_featured); // if is_featured = 1
             document.querySelector('#is-featured').value = record.is_featured;
 
             // exhibit media

@@ -254,7 +254,7 @@ const Helper = class {
 
         FS.rename(`./storage/${media}`, `./storage/${storage_path}`, (error) => {
             if (error) {
-                LOGGER.module().error('ERROR: [/libs/helper (process_hero_image)] Error occurred while processing image ' + error);
+                LOGGER.module().error('ERROR: [/libs/helper (process_media)] Error occurred while processing media ' + error);
             }
         });
 
