@@ -49,7 +49,7 @@ const Indexer_index_tasks = class {
                 body: record,
                 refresh: true
             });
-
+            console.log(response);
             if (response.statusCode === 201 || response.statusCode === 200) {
                 return true;
             }
@@ -97,7 +97,7 @@ const Indexer_index_tasks = class {
                 refresh: true
             });
 
-            if (response.statusCode === 200) {
+            if (response.result === 'deleted') {
                 return true;
             }
 

@@ -39,7 +39,7 @@ const exhibitsModule = (function () {
                 document.querySelector('#message').innerHTML = 'ERROR: Unable to get API endpoints';
 
                 setTimeout(() => {
-                    window.location.replace(APP_PATH + '/login');
+                    // window.location.replace(APP_PATH + '/auth');
                 }, 3000);
 
                 return false;
@@ -99,7 +99,6 @@ const exhibitsModule = (function () {
             }
 
             if (exhibits[i].thumbnail.length > 0) {
-                // TODO: use endpoints lib
                 thumbnail_url = `${APP_PATH}/api/v1/exhibits/${uuid}/media/${exhibits[i].thumbnail}`;
                 thumbnail_fragment = `<p><img src="${thumbnail_url}" height="100" width="100"></p>`;
             }

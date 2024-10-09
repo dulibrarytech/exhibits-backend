@@ -157,13 +157,13 @@ exports.index_exhibit = async function (uuid) {
     const GRID_RECORD_TASK = new EXHIBIT_GRID_RECORD_TASKS(DB, TABLES);
     const GRID_ITEM_RECORD_TASK = new EXHIBIT_GRID_RECORD_TASKS(DB, TABLES);
 
-    let exhibit_record = await EXHIBIT_RECORD_TASK.get_exhibit_record(uuid);
-    let heading_records = await HEADING_RECORD_TASK.get_heading_records(uuid);
-    let item_records = await ITEM_RECORD_TASK.get_item_records(uuid);
-    let grid_records = await GRID_RECORD_TASK.get_grid_records(uuid);
+    const exhibit_record = await EXHIBIT_RECORD_TASK.get_exhibit_record(uuid);
+    const heading_records = await HEADING_RECORD_TASK.get_heading_records(uuid);
+    const item_records = await ITEM_RECORD_TASK.get_item_records(uuid);
+    const grid_records = await GRID_RECORD_TASK.get_grid_records(uuid);
 
     const exhibit_index_record = construct_exhibit_index_record(exhibit_record.pop());
-    let response = await INDEX_TASKS.index_record(exhibit_index_record);
+    const response = await INDEX_TASKS.index_record(exhibit_index_record);
 
     if (response === false) {
         return {
@@ -189,7 +189,7 @@ exports.index_exhibit = async function (uuid) {
             }
 
             let heading_index_record = heading_index_records.pop();
-            let response = await INDEX_TASKS.index_record(heading_index_record);
+            const response = await INDEX_TASKS.index_record(heading_index_record);
 
             if (response === true) {
                 LOGGER.module().info('INFO: [/indexer/model (index_exhibit)] Heading record ' + heading_index_record.uuid + ' indexed.');
@@ -213,7 +213,7 @@ exports.index_exhibit = async function (uuid) {
             }
 
             let item_index_record = item_index_records.pop();
-            let response = await INDEX_TASKS.index_record(item_index_record);
+            const response = await INDEX_TASKS.index_record(item_index_record);
 
             if (response === true) {
                 LOGGER.module().info('INFO: [/indexer/model (index_exhibit)] Item record ' + item_index_record.uuid + ' indexed.');
@@ -227,7 +227,7 @@ exports.index_exhibit = async function (uuid) {
         // get grid items
         for (let i=0;i<grid_records.length;i++) {
 
-            let items = await GRID_ITEM_RECORD_TASK.get_grid_item_records(grid_records[i].uuid);
+            let items = await GRID_ITEM_RECORD_TASK.get_grid_item_records(grid_records[i].is_member_of_exhibit, grid_records[i].uuid);
 
             for (let j=0;j<items.length;j++) {
                 grid_items.push(construct_item_index_record(items[j]));
@@ -250,14 +250,13 @@ exports.index_exhibit = async function (uuid) {
             }
 
             let grid_item_index_record = grid_index_records.pop();
-            let response = await INDEX_TASKS.index_record(grid_item_index_record);
+            const response = await INDEX_TASKS.index_record(grid_item_index_record);
 
             if (response === true) {
                 LOGGER.module().info('INFO: [/indexer/model (index_exhibit)] Grid item record ' + grid_item_index_record.uuid + ' indexed.');
             }
 
         }, 150);
-
     }
 
     return {

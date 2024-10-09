@@ -126,9 +126,9 @@ const Exhibit_grid_record_tasks = class {
     /**
      * Gets grid items
      * @param is_member_of_exhibit
-     * @param grid_id
+     * @param is_memeber_of_grid
      */
-    async get_grid_item_records(is_member_of_exhibit, grid_id) {
+    async get_grid_item_records(is_member_of_exhibit, is_memeber_of_grid) {
 
         try {
 
@@ -136,7 +136,7 @@ const Exhibit_grid_record_tasks = class {
             .select('*')
             .where({
                 is_member_of_exhibit: is_member_of_exhibit,
-                is_member_of_grid: grid_id,
+                is_member_of_grid: is_memeber_of_grid,
                 is_deleted: 0
             });
 
