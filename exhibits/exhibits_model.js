@@ -397,34 +397,61 @@ exports.suppress_exhibit = async function (uuid) {
 
         const items = await ITEM_TASKS.get_item_records(uuid);
         const grids = await GRID_TASKS.get_grid_records(uuid);
+        const headings = await HEADING_TASKS.get_heading_records(uuid);
 
         let is_exhibit_deleted = await INDEXER_MODEL.delete_record(uuid);
 
         if (is_exhibit_deleted.status === 204) {
 
-            for (let i=0;i<items.length;i++) {
+            if (items.length > 0) {
 
-                let is_deleted = await INDEXER_MODEL.delete_record(items[i].uuid);
+                for (let i=0;i<items.length;i++) {
 
-                if (is_deleted.status !== 204) {
-                    LOGGER.module().error('ERROR: [/exhibits/model (suppress_exhibit)] Unable to delete item ' + items[i].uuid + ' from index');
+                    let is_deleted = await INDEXER_MODEL.delete_record(items[i].uuid);
+
+                    if (is_deleted.status !== 204) {
+                        LOGGER.module().error('ERROR: [/exhibits/model (suppress_exhibit)] Unable to delete item ' + items[i].uuid + ' from index');
+                    }
                 }
             }
 
-            for (let g=0;g<grids.length;g++) {
+            if (grids.length > 0) {
 
-                let is_deleted = await INDEXER_MODEL.delete_record(grids[g].uuid);
+                for (let g=0;g<grids.length;g++) {
 
-                if (is_deleted.status !== 204) {
-                    LOGGER.module().error('ERROR: [/exhibits/model (suppress_exhibit)] Unable to delete grid ' + grids[g].uuid + ' from index');
+                    let is_deleted = await INDEXER_MODEL.delete_record(grids[g].uuid);
+
+                    if (is_deleted.status !== 204) {
+                        LOGGER.module().error('ERROR: [/exhibits/model (suppress_exhibit)] Unable to delete grid ' + grids[g].uuid + ' from index');
+                    }
                 }
             }
+
+            if (headings.length > 0) {
+
+                for (let h=0;h<headings.length;h++) {
+
+                    let is_deleted = await INDEXER_MODEL.delete_record(headings[h].uuid);
+
+                    if (is_deleted.status !== 204) {
+                        LOGGER.module().error('ERROR: [/exhibits/model (suppress_exhibit)] Unable to delete heading ' + headings[h].uuid + ' from index');
+                    }
+                }
+            }
+
+            return {
+                status: true,
+                message: 'Exhibit suppressed.'
+            };
+
+        } else {
+
+            return {
+                status: false,
+                message: 'Unable to suppress exhibit.'
+            };
         }
 
-        return {
-            status: true,
-            message: 'Exhibit suppressed.'
-        };
 
     } catch (error) {
         LOGGER.module().error('ERROR: [/exhibits/model (suppress_exhibit)] ' + error.message);
