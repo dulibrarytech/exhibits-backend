@@ -83,8 +83,10 @@ const itemsModule = (function () {
 
             if (is_published === 1) {
                 status = `<a href="#" id="${item_id}" class="suppress-item"><span id="suppress" title="published"><i class="fa fa-cloud" style="color: green"></i><br>Published</span></a>`;
+                delete_item = '';
             } else if (is_published === 0) {
                 status = `<a href="#" id="${item_id}" class="publish-item"><span id="publish" title="suppressed"><i class="fa fa-cloud-upload" style="color: darkred"></i><br>Suppressed</span></a>`;
+                delete_item = `<a href="${APP_PATH}/items/delete?exhibit_id=${exhibit_id}&item_id=${item_id}" title="Delete"><i class="fa fa-trash pr-1"></i></a>`;
             }
 
             item_data += '<tr>';
@@ -98,7 +100,6 @@ const itemsModule = (function () {
                 let thumbnail = '';
                 let img ='';
                 let item_type;
-                delete_item = `<a href="${APP_PATH}/items/delete?exhibit_id=${exhibit_id}&item_id=${item_id}" title="Delete"><i class="fa fa-trash pr-1"></i></a>`;
 
                 if (items[i].mime_type.indexOf('image') !== -1) {
                     item_type = '<i class="fa fa-image"></i>';
