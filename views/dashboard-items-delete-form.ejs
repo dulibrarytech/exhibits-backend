@@ -13,8 +13,8 @@
     <div class="content" style="min-height: 875px;">
         <div id="message"></div>
         <div class="alert alert-danger" role="alert">
-            <i class="fa fa-exclamation"></i> Are you sure you want to delete the <strong><span id="exhibit-title"></span></strong> exhibit?&nbsp;&nbsp;
-            <button class="btn btn-danger" type="button" id="delete-exhibit-btn">
+            <i class="fa fa-exclamation"></i> Are you sure you want to delete this item from the <strong><span id="exhibit-title"></span></strong> exhibit?&nbsp;&nbsp;
+            <button class="btn btn-danger" type="button" id="delete-item-btn">
                 <i class="fa fa-trash"></i>&nbsp;&nbsp;<span id="delete-message">Delete</span>
             </button>
         </div>
@@ -40,6 +40,7 @@
 <script src="/exhibits-dashboard/static/app/nav.module.js"></script>
 <script src="/exhibits-dashboard/static/app/uploads.module.js"></script>
 <script src="/exhibits-dashboard/static/app/exhibits.module.js"></script>
+<script src="/exhibits-dashboard/static/app/items.module.js"></script>
 <script>
 
     (async function() {
@@ -47,7 +48,7 @@
         await exhibitsModule.set_exhibit_title(uuid);
     })();
 
-    document.querySelector('#delete-exhibit-btn').addEventListener('click', exhibitsModule.delete_exhibit);
+    document.querySelector('#delete-item-btn').addEventListener('click', itemsModule.delete_item);
 
 </script>
 </body>

@@ -141,16 +141,30 @@ const Exhibit_item_record_tasks = class {
     /**
      * "Deletes" item record (sets to inactive)
      * @param is_member_of_exhibit
-     * @param uuid
+     * @param item_id
+     * @param type
      */
-    async delete_item_record(is_member_of_exhibit, uuid) {
+    async delete_item_record(is_member_of_exhibit, item_id, type) {
 
         try {
 
-            await this.DB(this.TABLE.item_records)
+            let table;
+
+            if (type === 'item') {
+                table = this.TABLE.item_records;
+            } else if (type === 'grid') {
+                table = this.TABLE.grid_records;
+            } else if (type === 'heading') {
+                table = this.TABLE.heading_records;
+            } else {
+                LOGGER.module().error('ERROR: [/exhibits/exhibit_item_record_tasks (delete_item_record)] unable to determine item type');
+                return false;
+            }
+
+            await this.DB(table)
             .where({
                 is_member_of_exhibit: is_member_of_exhibit,
-                uuid: uuid
+                uuid: item_id
             })
             .update({
                 is_deleted: 1

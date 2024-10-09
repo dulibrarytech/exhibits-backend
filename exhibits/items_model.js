@@ -282,9 +282,10 @@ exports.get_item_record = async function (is_member_of_exhibit, uuid) {
 /**
  * Deletes item record
  * @param is_member_of_exhibit
- * @param uuid
+ * @param item_id
+ * @param type
  */
-exports.delete_item_record = async function (is_member_of_exhibit, uuid) {
+exports.delete_item_record = async function (is_member_of_exhibit, item_id, type) {
 
     try {
 
@@ -293,7 +294,7 @@ exports.delete_item_record = async function (is_member_of_exhibit, uuid) {
         return {
             status: 204,
             message: 'Record deleted',
-            data: await TASK.delete_item_record(is_member_of_exhibit, uuid)
+            data: await TASK.delete_item_record(is_member_of_exhibit, item_id, type)
         };
 
     } catch (error) {

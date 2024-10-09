@@ -79,14 +79,17 @@ const itemsModule = (function () {
             let item_details = '';
             let add_grid_items = '';
             let edit_type = 'standard';
+            let edit;
             let delete_item = `<a href="#" title="Delete"><i class="fa fa-trash pr-1"></i></a>`;
 
             if (is_published === 1) {
                 status = `<a href="#" id="${item_id}" class="suppress-item"><span id="suppress" title="published"><i class="fa fa-cloud" style="color: green"></i><br>Published</span></a>`;
+                edit = '';
                 delete_item = '';
             } else if (is_published === 0) {
                 status = `<a href="#" id="${item_id}" class="publish-item"><span id="publish" title="suppressed"><i class="fa fa-cloud-upload" style="color: darkred"></i><br>Suppressed</span></a>`;
-                delete_item = `<a href="${APP_PATH}/items/delete?exhibit_id=${exhibit_id}&item_id=${item_id}" title="Delete"><i class="fa fa-trash pr-1"></i></a>`;
+                edit = `<a href="${APP_PATH}/items/${edit_type}/edit?exhibit_id=${exhibit_id}&item_id=${item_id}" title="Edit"><i class="fa fa-edit pr-1"></i></a>`;
+                delete_item = `<a href="${APP_PATH}/items/delete?exhibit_id=${exhibit_id}&item_id=${item_id}&type=${type}" title="Delete"><i class="fa fa-trash pr-1"></i></a>`;
             }
 
             item_data += '<tr>';
@@ -98,7 +101,7 @@ const itemsModule = (function () {
                 // let title = `${helperModule.unescape(items[i].title)}`;
                 let description = helperModule.unescape(items[i].description);
                 let thumbnail = '';
-                let img ='';
+                let img = '';
                 let item_type;
 
                 if (items[i].mime_type.indexOf('image') !== -1) {
@@ -172,7 +175,10 @@ const itemsModule = (function () {
                                 <div class="card-text text-sm-center">
                                     ${item_details}                                    
                                     ${add_grid_items}&nbsp;
+                                    ${edit}&nbsp;
+                                    <!--
                                     <a href="${APP_PATH}/items/${edit_type}/edit?exhibit_id=${exhibit_id}&item_id=${item_id}" title="Edit"><i class="fa fa-edit pr-1"></i></a>&nbsp;
+                                    -->
                                     ${delete_item}
                                 </div>
                             </td>`;
@@ -190,12 +196,41 @@ const itemsModule = (function () {
         }, 100);
     };
 
-    /** TODO
+    /**
      * Deletes item
      */
     obj.delete_item = async function () {
-        console.log('delete item');
-        return false;
+
+        try {
+
+            document.querySelector('#delete-message').innerHTML = 'Deleting item...';
+            const EXHIBITS_ENDPOINTS = endpointsModule.get_exhibits_endpoints();
+            const exhibit_id = helperModule.get_parameter_by_name('exhibit_id');
+            const item_id = helperModule.get_parameter_by_name('item_id');
+            const type = helperModule.get_parameter_by_name('type');
+            const token = authModule.get_user_token();
+            let tmp = EXHIBITS_ENDPOINTS.exhibits.item_records.delete.endpoint.replace(':exhibit_id', exhibit_id);
+            let endpoint = tmp.replace(':item_id', item_id);
+            const response = await httpModule.req({
+                method: 'DELETE',
+                url: endpoint + '?type=' + type,
+                headers: {
+                    'Content-Type': 'application/json',
+                    'x-access-token': token
+                }
+            });
+
+            if (response !== undefined && response.status === 204) {
+
+                setTimeout(() => {
+                    window.location.replace(APP_PATH + '/items?exhibit_id=' + exhibit_id);
+                }, 3000);
+            }
+
+
+        } catch (error) {
+            document.querySelector('#message').innerHTML = `<div class="alert alert-danger" role="alert"><i class="fa fa-exclamation"></i> ${error.message}</div>`;
+        }
     };
 
     /**
