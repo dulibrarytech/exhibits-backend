@@ -81,6 +81,8 @@ const itemsGridModule = (function () {
             let order = items[i].order;
             let is_published = items[i].is_published;
             let item_type;
+            let edit;
+            let delete_item;
 
             if (items[i].mime_type.indexOf('image') !== -1) {
                 item_type = '<i class="fa fa-image"></i>';
@@ -103,8 +105,12 @@ const itemsGridModule = (function () {
 
             if (is_published === 1) {
                 status = `<a href="#" id="${item_id}" class="suppress-item"><span id="suppress" title="published"><i class="fa fa-cloud" style="color: green"></i><br>Published</span></a>`;
+                edit = '';
+                delete_item = '';
             } else if (is_published === 0) {
                 status = `<a href="#" id="${item_id}" class="publish-item"><span id="publish" title="suppressed"><i class="fa fa-cloud-upload" style="color: darkred"></i><br>Suppressed</span></a>`;
+                edit = `<a href="${APP_PATH}/items/grid/item/edit?exhibit_id=${exhibit_id}&grid_id=${grid_id}&item_id=${item_id}" title="Edit"><i class="fa fa-edit pr-1"></i></a>`;
+                delete_item = `<a href="#" title="Delete"><i class="fa fa-trash pr-1"></i></a>`;
             }
 
             item_data += '<tr>';
@@ -117,8 +123,8 @@ const itemsGridModule = (function () {
             item_data += `<td style="width: 5%;text-align: center"><small>${status}</small></td>`;
             item_data += `<td style="width: 10%">
                                 <div class="card-text text-sm-center">
-                                    <a href="${APP_PATH}/items/grid/item/edit?exhibit_id=${exhibit_id}&grid_id=${grid_id}&item_id=${item_id}" title="Edit"><i class="fa fa-edit pr-1"></i></a>&nbsp;
-                                    <a href="#" title="Delete"><i class="fa fa-trash pr-1"></i></a>
+                                    ${edit}&nbsp;
+                                    ${delete_item}
                                 </div>
                             </td>`;
             item_data += '</tr>';
