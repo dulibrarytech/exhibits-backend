@@ -176,9 +176,6 @@ const itemsModule = (function () {
                                     ${item_details}                                    
                                     ${add_grid_items}&nbsp;
                                     ${edit}&nbsp;
-                                    <!--
-                                    <a href="${APP_PATH}/items/${edit_type}/edit?exhibit_id=${exhibit_id}&item_id=${item_id}" title="Edit"><i class="fa fa-edit pr-1"></i></a>&nbsp;
-                                    -->
                                     ${delete_item}
                                 </div>
                             </td>`;

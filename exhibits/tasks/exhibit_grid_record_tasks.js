@@ -364,6 +364,31 @@ const Exhibit_grid_record_tasks = class {
     }
 
     /**
+     * Sets is_published flogs to true
+     * @param uuid
+     */
+    async set_to_publish_grid_items(uuid) {
+
+        try {
+
+            await this.DB(this.TABLE.grid_item_records)
+            .where({
+                is_member_of_exhibit: uuid
+            })
+            .update({
+                is_published: 1
+            });
+
+            LOGGER.module().info('INFO: [/exhibits/exhibit_heading_record_tasks (set_to_publish)] Heading is_published set.');
+            return true;
+
+        } catch (error) {
+            LOGGER.module().error('ERROR: [/exhibits/exhibit_heading_record_tasks (set_to_publish)] unable to set heading is_published ' + error.message);
+            return false;
+        }
+    }
+
+    /**
      * Sets is_published flogs to false
      * @param uuid
      */
@@ -384,6 +409,31 @@ const Exhibit_grid_record_tasks = class {
 
         } catch (error) {
             LOGGER.module().error('ERROR: [/exhibits/exhibit_grid_record_tasks (set_to_suppress)] unable to set grid is_published. ' + error.message);
+            return false;
+        }
+    }
+
+    /**
+     * Sets is_published flogs to false
+     * @param uuid
+     */
+    async set_to_suppressed_grid_items(uuid) {
+
+        try {
+
+            await this.DB(this.TABLE.grid_item_records)
+            .where({
+                is_member_of_exhibit: uuid
+            })
+            .update({
+                is_published: 0
+            });
+
+            LOGGER.module().info('INFO: [/exhibits/exhibit_grid_record_tasks (set_to_suppressed_grid_items)] Grid items is_published set.');
+            return true;
+
+        } catch (error) {
+            LOGGER.module().error('ERROR: [/exhibits/exhibit_grid_record_tasks (set_to_suppressed_grid_items)] unable to set grid items is_published. ' + error.message);
             return false;
         }
     }

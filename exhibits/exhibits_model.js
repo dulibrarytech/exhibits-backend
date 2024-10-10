@@ -341,6 +341,10 @@ exports.publish_exhibit = async function (uuid) {
         const is_item_published = await ITEM_TASKS.set_to_publish(uuid);
         const is_heading_published = await HEADING_TASKS.set_to_publish(uuid);
         const is_grid_published = await GRID_TASKS.set_to_publish(uuid);
+        const is_grid_item_published = await GRID_TASKS.set_to_publish_grid_items(uuid);
+
+        // TODO
+        console.log(is_grid_item_published);
 
         if (is_exhibit_published === false || is_item_published === false || is_heading_published === false || is_grid_published === false) {
             LOGGER.module().error('ERROR: [/exhibits/model (publish_exhibit)] Unable to publish exhibit');
@@ -389,6 +393,10 @@ exports.suppress_exhibit = async function (uuid) {
         const is_item_suppressed = await ITEM_TASKS.set_to_suppress(uuid);
         const is_heading_suppressed = await HEADING_TASKS.set_to_suppress(uuid);
         const is_grid_suppressed = await GRID_TASKS.set_to_suppress(uuid);
+        const is_grid_item_suppressed = await GRID_TASKS.set_to_suppressed_grid_items(uuid);
+
+        // TODO
+        console.log(is_grid_item_suppressed);
 
         if (is_exhibit_suppressed === false || is_item_suppressed === false || is_heading_suppressed === false || is_grid_suppressed === false) {
             LOGGER.module().error('ERROR: [/exhibits/model (publish_exhibit)] Unable to suppress exhibit');

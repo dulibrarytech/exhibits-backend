@@ -78,10 +78,6 @@ const itemsGridModule = (function () {
             let thumbnail;
             let url;
             let title = helperModule.unescape(items[i].title);
-            // let description = items[i].description;
-            // let caption = items[i].caption;
-            // let date = items[i].date;
-            // let type = items[i].type;
             let order = items[i].order;
             let is_published = items[i].is_published;
             let item_type;
@@ -131,6 +127,7 @@ const itemsGridModule = (function () {
         }
 
         let grid_items_table = new DataTable('#grid-items');
+
         setTimeout(() => {
             // document.querySelector('#item-card').style.visibility = 'visible';
             // document.querySelector('#message').innerHTML = '';
