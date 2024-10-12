@@ -136,7 +136,7 @@ exports.publish_item_record = async function (req, res) {
             message: 'Item published.'
         });
     } else if (result.status === false) {
-        res.status(400).send({
+        res.status(204).send({
             message: 'Unable to publish item'
         });
     }
