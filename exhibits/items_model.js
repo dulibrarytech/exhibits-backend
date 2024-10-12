@@ -29,6 +29,8 @@ const EXHIBIT_GRID_RECORD_TASKS = require('./tasks/exhibit_grid_record_tasks');
 const HELPER = require('../libs/helper');
 const VALIDATOR = require('../libs/validate');
 const LOGGER = require('../libs/log4');
+const EXHIBIT_RECORD_TASKS = require("./tasks/exhibit_record_tasks");
+const INDEXER_MODEL = require("../indexer/model");
 // const EXHIBITS_CREATE_GRID_SCHEMA = require('../exhibits/schemas/exhibit_create_grid_record_schema')();
 // const FS = require('fs');
 // const EXHIBIT_RECORD_TASKS = require("./tasks/exhibit_record_tasks");
@@ -314,5 +316,64 @@ exports.delete_item_record = async function (is_member_of_exhibit, item_id, type
             status: 400,
             message: error.message
         };
+    }
+};
+
+/**
+ * Publishes item
+ * @param exhibit_id
+ * @param item_id
+ */
+exports.publish_item_record = async function (exhibit_id, item_id) {
+
+    try {
+
+        const EXHIBIT_TASKS = new EXHIBIT_RECORD_TASKS(DB, TABLES);
+        const ITEM_TASKS = new EXHIBIT_ITEM_RECORD_TASKS(DB, TABLES);
+        const exhibit_record = await EXHIBIT_TASKS.get_exhibit_record(exhibit_id);
+
+        if (exhibit_record.is_published === 0) {
+
+            LOGGER.module().error('ERROR: [/exhibits/items_model (publish_item_record)] Unable to publish item');
+
+            return {
+                status: false,
+                message: 'Unable to publish item. Exhibit must be published first'
+            };
+        }
+
+        const is_indexed = await INDEXER_MODEL.index_item_record(exhibit_id, item_id);
+
+        if (is_indexed === false) {
+
+            LOGGER.module().error('ERROR: [/exhibits/model (publish_item_record)] Unable to publish item');
+
+            return {
+                status: false,
+                message: 'Unable to publish item'
+            };
+        }
+
+        const is_item_published = await ITEM_TASKS.set_item_to_publish(item_id);
+
+        if (is_item_published === false) {
+
+            LOGGER.module().error('ERROR: [/exhibits/model (publish_item_record)] Unable to publish item');
+
+            return {
+                status: false,
+                message: 'Unable to publish item'
+            };
+
+        } else {
+
+            return {
+                status: true,
+                message: 'Item published'
+            };
+        }
+
+    } catch (error) {
+        LOGGER.module().error('ERROR: [/exhibits/model (publish_item_record)] ' + error.message);
     }
 };

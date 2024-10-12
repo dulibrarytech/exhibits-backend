@@ -176,7 +176,19 @@ const ENDPOINTS = {
                 description: 'Deletes item record',
                 endpoint: `${APP_PATH}${PREFIX}${VERSION}${ENDPOINT}/:exhibit_id/items/:item_id`,
                 params: 'token or api_key, uuid'
-            }
+            },
+            item_publish: {
+                post: {
+                    description: 'Publishes item',
+                    endpoint: `${APP_PATH}${PREFIX}${VERSION}${ENDPOINT}/:exhibit_id/publish/:item_id/item`
+                }
+            },
+            item_suppress: {
+                post: {
+                    description: 'Suppresses item',
+                    endpoint: `${APP_PATH}${PREFIX}${VERSION}${ENDPOINT}/:exhibit_id/suppress/:item/item`
+                }
+            },
         },
         heading_records: {
             get: {

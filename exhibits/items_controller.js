@@ -119,6 +119,28 @@ exports.delete_item_media = function (req, res) {
     return false;
 };
 
+exports.publish_item_record = async function (req, res) {
+
+    const exhibit_id = req.params.exhibit_id;
+    const item_id = req.params.item_id;
+
+    if (exhibit_id === undefined || exhibit_id.length === 0 && item_id === undefined || item_id.length === 0) {
+        res.status(400).send('Bad request.');
+        return false;
+    }
+
+    const result = await ITEMS_MODEL.publish_item_record(exhibit_id, item_id);
+
+    if (result.status === true) {
+        res.status(200).send({
+            message: 'Item published.'
+        });
+    } else if (result.status === false) {
+        res.status(400).send({
+            message: 'Unable to publish item'
+        });
+    }
+};
 
 /*
 
@@ -194,50 +216,3 @@ exports.build_exhibit_preview = async function (req, res) {
     }
 };
 */
-
-/*
-exports.publish_exhibit = async function (req, res) {
-    console.log(req.params);
-    const uuid = req.params.exhibit_id;
-
-    if (uuid === undefined || uuid.length === 0) {
-        res.status(400).send('Bad request.');
-        return false;
-    }
-
-    const result = await EXHIBITS_MODEL.publish_exhibit(uuid);
-
-    if (result.status === true) {
-        res.status(200).send({
-            message: 'Exhibit published.'
-        });
-    } else {
-        res.status(400).send({
-            message: 'Unable to publish exhibit'
-        });
-    }
-}
-
-exports.suppress_exhibit = async function (req, res) {
-
-    const uuid = req.params.exhibit_id;
-
-    if (uuid === undefined || uuid.length === 0) {
-        res.status(400).send('Bad request.');
-        return false;
-    }
-
-    const result = await EXHIBITS_MODEL.suppress_exhibit(uuid);
-
-    if (result.status === true) {
-        res.status(200).send({
-            message: 'Exhibit suppressed.'
-        });
-    } else {
-        res.status(400).send({
-            message: 'Unable to suppress exhibit'
-        });
-    }
-}
-
- */

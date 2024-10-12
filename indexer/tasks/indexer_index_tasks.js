@@ -50,7 +50,7 @@ const Indexer_index_tasks = class {
                 refresh: true
             });
 
-            if (response.statusCode === 201 || response.statusCode === 200) {
+            if (response.result === 'created' || response.result === 'updated') {
                 return true;
             }
 

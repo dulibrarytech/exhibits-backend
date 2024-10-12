@@ -224,6 +224,31 @@ const Exhibit_item_record_tasks = class {
     }
 
     /**
+     * Sets is_published flog to true
+     * @param item_id
+     */
+    async set_item_to_publish(item_id) {
+
+        try {
+
+            await this.DB(this.TABLE.item_records)
+            .where({
+                uuid: item_id
+            })
+            .update({
+                is_published: 1
+            });
+
+            LOGGER.module().info('INFO: [/exhibits/exhibit_item_record_tasks (set_item_to_publish)] Item is_published set.');
+            return true;
+
+        } catch (error) {
+            LOGGER.module().error('ERROR: [/exhibits/exhibit_item_record_tasks (set_item_to_publish)] unable to set item is_published ' + error.message);
+            return false;
+        }
+    }
+
+    /**
      * Sets is_published flogs to false
      * @param uuid
      */

@@ -92,10 +92,10 @@ const itemsModule = (function () {
                 delete_item = `<a href="${APP_PATH}/items/delete?exhibit_id=${exhibit_id}&item_id=${item_id}&type=${type}" title="Delete"><i class="fa fa-trash pr-1"></i></a>`;
             }
 
-            item_data += '<tr>';
+            item_data += `<tr id="${item_id}-${type}">`;
             item_data += `<td style="width: 5%">${order}</td>`;
 
-            if (items[i].type === 'item') { // standard
+            if (type === 'item') { // standard
 
                 let title = `<a href="${APP_PATH}/items/details?exhibit_id=${exhibit_id}&item_id=${item_id}">${helperModule.unescape(items[i].title)}</a>`;
                 // let title = `${helperModule.unescape(items[i].title)}`;
@@ -129,7 +129,7 @@ const itemsModule = (function () {
                     <!--<p><strong>${description}</strong></p>-->
                     </td>`;
 
-                /*
+                /* TODO: remove
                 item_details = `<a href="${APP_PATH}/items/details?exhibit_id=${exhibit_id}&item_id=${item_id}" title="Item details"><i class="fa fa-search pr-1"></i></a>`;
                 */
 
@@ -187,6 +187,9 @@ const itemsModule = (function () {
         document.querySelector('#item-data').innerHTML = item_data;
         let items_table = new DataTable('#items');
 
+        bind_publish_item_events();
+        bind_suppress_item_events();
+
         setTimeout(() => {
             document.querySelector('#item-card').style.visibility = 'visible';
             document.querySelector('#message').innerHTML = '';
@@ -229,6 +232,133 @@ const itemsModule = (function () {
             document.querySelector('#message').innerHTML = `<div class="alert alert-danger" role="alert"><i class="fa fa-exclamation"></i> ${error.message}</div>`;
         }
     };
+
+    /**
+     * Publishes item
+     * @param uuid
+     */
+    async function publish_item(uuid) {
+
+        const exhibit_id = helperModule.get_parameter_by_name('exhibit_id');
+        const item_id = uuid;
+        const elems = document.getElementsByTagName('tr');
+        let type;
+
+        for (let i = 0; i < elems.length; i++) {
+            if (elems[i].id.length !== 0 && elems[i].id.indexOf(uuid) !== -1) {
+                let tmp = elems[i].id.split('-');
+                type = tmp.pop();
+                break;
+            }
+        }
+
+        const EXHIBITS_ENDPOINTS = endpointsModule.get_exhibits_endpoints();
+        const etmp = EXHIBITS_ENDPOINTS.exhibits.item_records.item_publish.post.endpoint.replace(':exhibit_id', exhibit_id);
+        const endpoint = etmp.replace(':item_id', item_id);
+        const token = authModule.get_user_token();
+        const response = await httpModule.req({
+            method: 'POST',
+            url: endpoint,
+            headers: {
+                'Content-Type': 'application/json',
+                'x-access-token': token
+            }
+        });
+
+        if (response.status === 200) {
+
+            setTimeout(() => {
+                let elem = document.getElementById(uuid);
+                document.getElementById(uuid).classList.remove('publish');
+                document.getElementById(uuid).classList.add('suppress');
+                document.getElementById(uuid).replaceWith(elem.cloneNode(true));
+                document.getElementById(uuid).innerHTML = '<span id="suppress" title="published"><i class="fa fa-cloud" style="color: green"></i><br>Published</span>';
+                document.getElementById(uuid).addEventListener('click', async () => {
+                    const uuid = elem.getAttribute('id');
+                    await suppress_item(uuid);
+                }, false);
+            }, 0);
+        }
+
+        if (response.status === 204) {
+            scrollTo(0, 0);
+            document.querySelector('#message').innerHTML = `<div class="alert alert-warning" role="alert"><i class="fa fa-warning"></i> Exhibit must be published in order to publish this item</div>`;
+
+            setTimeout(() => {
+                document.querySelector('#message').innerHTML = '';
+            }, 5000);
+        }
+    }
+
+    /** TODO
+     * Suppresses item
+     * @param uuid
+     */
+    async function suppress_item(uuid) {
+
+        const exhibit_id = helperModule.get_parameter_by_name('exhibit_id');
+        console.log('exhibit id ', exhibit_id);
+        console.log('item id ', uuid);
+        const EXHIBITS_ENDPOINTS = endpointsModule.get_exhibits_endpoints();
+        console.log(EXHIBITS_ENDPOINTS);
+        return false;
+
+        // const EXHIBITS_ENDPOINTS = endpointsModule.get_exhibits_endpoints();
+        const token = authModule.get_user_token();
+        const response = await httpModule.req({
+            method: 'POST',
+            url: EXHIBITS_ENDPOINTS.exhibits.exhibit_suppress.post.endpoint.replace(':exhibit_id', uuid),
+            headers: {
+                'Content-Type': 'application/json',
+                'x-access-token': token
+            }
+        });
+
+        if (response.status === 200) {
+
+            setTimeout(() => {
+                let elem = document.getElementById(uuid);
+                document.getElementById(uuid).classList.remove('suppress-item');
+                document.getElementById(uuid).classList.add('publish-item');
+                document.getElementById(uuid).replaceWith(elem.cloneNode(true));
+                document.getElementById(uuid).innerHTML = '<span id="publish" title="suppressed"><i class="fa fa-cloud-upload" style="color: darkred"></i><br>Suppressed</span>';
+                document.getElementById(uuid).addEventListener('click', async (event) => {
+                    const uuid = elem.getAttribute('id');
+                    await publish_item(uuid);
+                }, false);
+            }, 0);
+        }
+    }
+
+    /**
+     * Binds publish click behavior to exhibit links
+     */
+    function bind_publish_item_events() {
+
+        const exhibit_links = Array.from(document.getElementsByClassName('publish-item'));
+
+        exhibit_links.forEach(exhibit_link => {
+            exhibit_link.addEventListener('click', async (event) => {
+                const uuid = exhibit_link.getAttribute('id');
+                await publish_item(uuid);
+            });
+        });
+    }
+
+    /**
+     * Binds suppress click behavior to exhibit links
+     */
+    function bind_suppress_item_events() {
+
+        const exhibit_links = Array.from(document.getElementsByClassName('suppress-item'));
+
+        exhibit_links.forEach(exhibit_link => {
+            exhibit_link.addEventListener('click', async () => {
+                const uuid = exhibit_link.getAttribute('id');
+                await suppress_item(uuid);
+            });
+        });
+    }
 
     /**
      *

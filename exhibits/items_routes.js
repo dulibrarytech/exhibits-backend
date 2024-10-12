@@ -42,6 +42,9 @@ module.exports = function (app) {
     app.route(ENDPOINTS().exhibits.item_records.delete.endpoint)
     .delete(TOKEN.verify, CONTROLLER.delete_item_record);
 
+    app.route(ENDPOINTS().exhibits.item_records.item_publish.post.endpoint)
+    .post(CONTROLLER.publish_item_record);
+
     /*
     app.route(ENDPOINTS().exhibits.item_media.get.endpoint)
     .get(CONTROLLER.get_item_media);
