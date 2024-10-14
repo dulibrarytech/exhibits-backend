@@ -19,7 +19,8 @@
 'use strict';
 
 const ITEMS_MODEL = require('../exhibits/items_model');
-const EXHIBITS_MODEL = require("./exhibits_model");
+const HEADINGS_MODEL = require('../exhibits/headings_model');
+const GRIDS_MODEL = require('../exhibits/grid_model');
 const FS = require("fs");
 
 exports.create_item_record = async function (req, res) {
@@ -123,13 +124,30 @@ exports.publish_item_record = async function (req, res) {
 
     const exhibit_id = req.params.exhibit_id;
     const item_id = req.params.item_id;
+    const type = req.query.type;
+    let result;
 
     if (exhibit_id === undefined || exhibit_id.length === 0 && item_id === undefined || item_id.length === 0) {
         res.status(400).send('Bad request.');
         return false;
     }
 
-    const result = await ITEMS_MODEL.publish_item_record(exhibit_id, item_id);
+    // const result = await ITEMS_MODEL.publish_item_record(exhibit_id, item_id);
+
+    if (type === 'item') {
+        result = await ITEMS_MODEL.publish_item_record(exhibit_id, item_id);
+    } else if (type === 'heading') {
+        result = await HEADINGS_MODEL.publish_heading_record(exhibit_id, item_id);
+    } else if (type === 'grid') {
+        result = await GRIDS_MODEL.publish_grid_record(exhibit_id, grid_id);
+    } else {
+
+        res.status(204).send({
+            message: 'Unable to publish item'
+        });
+
+        return false;
+    }
 
     if (result.status === true) {
         res.status(200).send({

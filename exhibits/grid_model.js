@@ -30,6 +30,8 @@ const HELPER = require('../libs/helper');
 const VALIDATOR = require('../libs/validate');
 const LOGGER = require('../libs/log4');
 const EXHIBIT_ITEM_RECORD_TASKS = require("./tasks/exhibit_item_record_tasks");
+const EXHIBIT_RECORD_TASKS = require("./tasks/exhibit_record_tasks");
+const INDEXER_MODEL = require("../indexer/model");
 
 /**
  * Create grid record
@@ -358,5 +360,64 @@ exports.delete_media_value = async function (uuid, media) {
 
     } catch (error) {
         LOGGER.module().error('ERROR: [/exhibits/items/model (delete_media_value)] ' + error.message);
+    }
+};
+
+/**
+ * Publishes grid
+ * @param exhibit_id
+ * @param grid_id
+ */
+exports.publish_grid_record = async function (exhibit_id, grid_id) {
+
+    try {
+
+        const EXHIBIT_TASKS = new EXHIBIT_RECORD_TASKS(DB, TABLES);
+        const ITEM_TASKS = new EXHIBIT_ITEM_RECORD_TASKS(DB, TABLES);
+        const exhibit_record = await EXHIBIT_TASKS.get_exhibit_record(exhibit_id);
+
+        if (exhibit_record[0].is_published === 0) {
+
+            LOGGER.module().error('ERROR: [/exhibits/items_model (publish_grid_record)] Unable to publish grid');
+
+            return {
+                status: false,
+                message: 'Unable to publish grid. Exhibit must be published first'
+            };
+        }
+
+        const is_indexed = await INDEXER_MODEL.index_heading_record(exhibit_id, grid_id);
+
+        if (is_indexed === false) {
+
+            LOGGER.module().error('ERROR: [/exhibits/model (publish_heading_record)] Unable to publish heading');
+
+            return {
+                status: false,
+                message: 'Unable to publish heading'
+            };
+        }
+
+        const is_item_published = await ITEM_TASKS.set_heading_to_suppress(heading_id);
+
+        if (is_item_published === false) {
+
+            LOGGER.module().error('ERROR: [/exhibits/model (publish_heading_record)] Unable to publish heading');
+
+            return {
+                status: false,
+                message: 'Unable to publish heading'
+            };
+
+        } else {
+
+            return {
+                status: true,
+                message: 'Heading published'
+            };
+        }
+
+    } catch (error) {
+        LOGGER.module().error('ERROR: [/exhibits/model (publish_heading_record)] ' + error.message);
     }
 };

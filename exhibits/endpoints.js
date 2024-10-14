@@ -188,7 +188,7 @@ const ENDPOINTS = {
                     description: 'Suppresses item',
                     endpoint: `${APP_PATH}${PREFIX}${VERSION}${ENDPOINT}/:exhibit_id/suppress/:item_id/item`
                 }
-            },
+            }
         },
         heading_records: {
             get: {

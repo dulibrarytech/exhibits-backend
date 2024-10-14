@@ -328,12 +328,34 @@ exports.index_item_record = async function (exhibit_id, item_id) {
     const item_record = await ITEM_RECORD_TASK.get_item_record(exhibit_id, item_id);
     const item_index_record = construct_item_index_record(item_record.pop());
     const response = await INDEX_TASKS.index_record(item_index_record);
-    console.log(response);
+
     if (response === true) {
         LOGGER.module().info('INFO: [/indexer/model (index_item_record)] Item record ' + item_index_record.uuid + ' indexed.');
         return true;
     } else {
         LOGGER.module().error('ERROR: [/indexer/model (index_item_record)] Unable to index item record ' + item_index_record.uuid + '.');
+        return false;
+    }
+};
+
+/**
+ * Index heading record
+ * @param exhibit_id
+ * @param item_id
+ */
+exports.index_heading_record = async function (exhibit_id, item_id) {
+
+    const INDEX_TASKS = new INDEXER_INDEX_TASKS(DB, TABLES, CLIENT, ES_CONFIG.elasticsearch_index);
+    const ITEM_RECORD_TASK = new EXHIBIT_ITEM_RECORD_TASKS(DB, TABLES);
+    const item_record = await ITEM_RECORD_TASK.get_heading_record(exhibit_id, item_id);
+    const item_index_record = construct_heading_index_record(item_record.pop());
+    const response = await INDEX_TASKS.index_record(item_index_record);
+
+    if (response === true) {
+        LOGGER.module().info('INFO: [/indexer/model (index_heading_record)] Heading record ' + item_index_record.uuid + ' indexed.');
+        return true;
+    } else {
+        LOGGER.module().error('ERROR: [/indexer/model (index_heading_record)] Unable to index heading record ' + item_index_record.uuid + '.');
         return false;
     }
 };

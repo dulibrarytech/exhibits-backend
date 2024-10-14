@@ -297,6 +297,70 @@ const Exhibit_item_record_tasks = class {
             return false;
         }
     }
+
+    /**
+     * Sets is_published flog to false
+     * @param uuid
+     */
+    async set_heading_to_suppress(uuid) {
+
+        try {
+
+            await this.DB(this.TABLE.heading_records)
+            .where({
+                uuid: uuid
+            })
+            .update({
+                is_published: 0
+            });
+
+            LOGGER.module().info('INFO: [/exhibits/exhibit_item_record_tasks (set_heading_to_suppress)] Heading is_published set.');
+            return true;
+
+        } catch (error) {
+            LOGGER.module().error('ERROR: [/exhibits/exhibit_item_record_tasks (set_heading_to_suppress)] unable to set heading is_published. ' + error.message);
+            return false;
+        }
+    }
+
+    /**
+     * Gets heading record
+     * @param is_member_of_exhibit
+     * @param uuid
+     */
+    async get_heading_record(is_member_of_exhibit, uuid) {
+
+        try {
+
+            const data = await this.DB(this.TABLE.heading_records)
+            .select('*')
+            .where({
+                is_member_of_exhibit: is_member_of_exhibit,
+                uuid: uuid,
+                is_deleted: 0
+            });
+
+            if (data.length !== 0 && data[0].is_locked === 0) {
+
+                try {
+
+                    const HELPER_TASK = new HELPER();
+                    await HELPER_TASK.lock_record(uuid, this.DB, this.TABLE.heading_records);
+                    return data;
+
+                } catch (error) {
+                    LOGGER.module().error('ERROR: [/exhibits/exhibit_item_record_tasks (get_heading_record)] unable to lock record ' + error.message);
+                }
+
+            } else {
+                return data;
+            }
+
+        } catch (error) {
+            LOGGER.module().error('ERROR: [/exhibits/exhibit_item_record_tasks (get_heading_record)] unable to get records ' + error.message);
+        }
+    }
+
     /**
      * Deletes item media value
      * @param uuid

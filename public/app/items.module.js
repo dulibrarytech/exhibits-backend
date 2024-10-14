@@ -260,7 +260,7 @@ const itemsModule = (function () {
             const token = authModule.get_user_token();
             const response = await httpModule.req({
                 method: 'POST',
-                url: endpoint,
+                url: endpoint + '?type=' + type,
                 headers: {
                     'Content-Type': 'application/json',
                     'x-access-token': token
@@ -323,7 +323,7 @@ const itemsModule = (function () {
             const token = authModule.get_user_token();
             const response = await httpModule.req({
                 method: 'POST',
-                url: endpoint,
+                url: endpoint + '?type=' + type,
                 headers: {
                     'Content-Type': 'application/json',
                     'x-access-token': token
