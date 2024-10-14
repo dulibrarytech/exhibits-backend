@@ -274,6 +274,30 @@ const Exhibit_item_record_tasks = class {
     }
 
     /**
+     * Sets is_published flog to false
+     * @param uuid
+     */
+    async set_item_to_suppress(uuid) {
+
+        try {
+
+            await this.DB(this.TABLE.item_records)
+            .where({
+                uuid: uuid
+            })
+            .update({
+                is_published: 0
+            });
+
+            LOGGER.module().info('INFO: [/exhibits/exhibit_item_record_tasks (set_item_to_suppress)] Item is_published set.');
+            return true;
+
+        } catch (error) {
+            LOGGER.module().error('ERROR: [/exhibits/exhibit_item_record_tasks (set_item_to_suppress)] unable to set item is_published. ' + error.message);
+            return false;
+        }
+    }
+    /**
      * Deletes item media value
      * @param uuid
      * @param media

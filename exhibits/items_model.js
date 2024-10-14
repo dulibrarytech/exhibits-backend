@@ -377,3 +377,49 @@ exports.publish_item_record = async function (exhibit_id, item_id) {
         LOGGER.module().error('ERROR: [/exhibits/model (publish_item_record)] ' + error.message);
     }
 };
+
+/**
+ * Suppress item
+ * @param exhibit_id
+ * @param item_id
+ */
+exports.suppress_item_record = async function (exhibit_id, item_id) {
+
+    try {
+
+        const ITEM_TASKS = new EXHIBIT_ITEM_RECORD_TASKS(DB, TABLES);
+        const is_deleted = await INDEXER_MODEL.delete_record(item_id);
+
+        if (is_deleted === false) {
+
+            LOGGER.module().error('ERROR: [/exhibits/model (suppress_item_record)] Unable to suppress item');
+
+            return {
+                status: false,
+                message: 'Unable to publish item'
+            };
+        }
+
+        const is_item_suppressed = await ITEM_TASKS.set_item_to_suppress(item_id);
+
+        if (is_item_suppressed === false) {
+
+            LOGGER.module().error('ERROR: [/exhibits/model (suppress_item_record)] Unable to suppress item');
+
+            return {
+                status: false,
+                message: 'Unable to suppress item'
+            };
+
+        } else {
+
+            return {
+                status: true,
+                message: 'Item suppressed'
+            };
+        }
+
+    } catch (error) {
+        LOGGER.module().error('ERROR: [/exhibits/model (suppress_item_record)] ' + error.message);
+    }
+};

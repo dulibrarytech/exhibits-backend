@@ -239,94 +239,114 @@ const itemsModule = (function () {
      */
     async function publish_item(uuid) {
 
-        const exhibit_id = helperModule.get_parameter_by_name('exhibit_id');
-        const item_id = uuid;
-        const elems = document.getElementsByTagName('tr');
-        let type;
+        try {
 
-        for (let i = 0; i < elems.length; i++) {
-            if (elems[i].id.length !== 0 && elems[i].id.indexOf(uuid) !== -1) {
-                let tmp = elems[i].id.split('-');
-                type = tmp.pop();
-                break;
+            const exhibit_id = helperModule.get_parameter_by_name('exhibit_id');
+            const item_id = uuid;
+            const elems = document.getElementsByTagName('tr');
+            let type;
+
+            for (let i = 0; i < elems.length; i++) {
+                if (elems[i].id.length !== 0 && elems[i].id.indexOf(uuid) !== -1) {
+                    let tmp = elems[i].id.split('-');
+                    type = tmp.pop();
+                    break;
+                }
             }
-        }
 
-        const EXHIBITS_ENDPOINTS = endpointsModule.get_exhibits_endpoints();
-        const etmp = EXHIBITS_ENDPOINTS.exhibits.item_records.item_publish.post.endpoint.replace(':exhibit_id', exhibit_id);
-        const endpoint = etmp.replace(':item_id', item_id);
-        const token = authModule.get_user_token();
-        const response = await httpModule.req({
-            method: 'POST',
-            url: endpoint,
-            headers: {
-                'Content-Type': 'application/json',
-                'x-access-token': token
+            const EXHIBITS_ENDPOINTS = endpointsModule.get_exhibits_endpoints();
+            const etmp = EXHIBITS_ENDPOINTS.exhibits.item_records.item_publish.post.endpoint.replace(':exhibit_id', exhibit_id);
+            const endpoint = etmp.replace(':item_id', item_id);
+            const token = authModule.get_user_token();
+            const response = await httpModule.req({
+                method: 'POST',
+                url: endpoint,
+                headers: {
+                    'Content-Type': 'application/json',
+                    'x-access-token': token
+                }
+            });
+
+            if (response.status === 200) {
+
+                setTimeout(() => {
+                    let elem = document.getElementById(uuid);
+                    document.getElementById(uuid).classList.remove('publish');
+                    document.getElementById(uuid).classList.add('suppress');
+                    document.getElementById(uuid).replaceWith(elem.cloneNode(true));
+                    document.getElementById(uuid).innerHTML = '<span id="suppress" title="published"><i class="fa fa-cloud" style="color: green"></i><br>Published</span>';
+                    document.getElementById(uuid).addEventListener('click', async () => {
+                        const uuid = elem.getAttribute('id');
+                        await suppress_item(uuid);
+                    }, false);
+                }, 0);
             }
-        });
 
-        if (response.status === 200) {
+            if (response.status === 204) {
+                scrollTo(0, 0);
+                document.querySelector('#message').innerHTML = `<div class="alert alert-warning" role="alert"><i class="fa fa-warning"></i> Exhibit must be published in order to publish this item</div>`;
 
-            setTimeout(() => {
-                let elem = document.getElementById(uuid);
-                document.getElementById(uuid).classList.remove('publish');
-                document.getElementById(uuid).classList.add('suppress');
-                document.getElementById(uuid).replaceWith(elem.cloneNode(true));
-                document.getElementById(uuid).innerHTML = '<span id="suppress" title="published"><i class="fa fa-cloud" style="color: green"></i><br>Published</span>';
-                document.getElementById(uuid).addEventListener('click', async () => {
-                    const uuid = elem.getAttribute('id');
-                    await suppress_item(uuid);
-                }, false);
-            }, 0);
-        }
+                setTimeout(() => {
+                    document.querySelector('#message').innerHTML = '';
+                }, 5000);
+            }
 
-        if (response.status === 204) {
-            scrollTo(0, 0);
-            document.querySelector('#message').innerHTML = `<div class="alert alert-warning" role="alert"><i class="fa fa-warning"></i> Exhibit must be published in order to publish this item</div>`;
-
-            setTimeout(() => {
-                document.querySelector('#message').innerHTML = '';
-            }, 5000);
+        } catch (error) {
+            console.log(error);
         }
     }
 
-    /** TODO
+    /**
      * Suppresses item
      * @param uuid
      */
     async function suppress_item(uuid) {
 
-        const exhibit_id = helperModule.get_parameter_by_name('exhibit_id');
-        console.log('exhibit id ', exhibit_id);
-        console.log('item id ', uuid);
-        const EXHIBITS_ENDPOINTS = endpointsModule.get_exhibits_endpoints();
-        console.log(EXHIBITS_ENDPOINTS);
-        return false;
+        try {
 
-        // const EXHIBITS_ENDPOINTS = endpointsModule.get_exhibits_endpoints();
-        const token = authModule.get_user_token();
-        const response = await httpModule.req({
-            method: 'POST',
-            url: EXHIBITS_ENDPOINTS.exhibits.exhibit_suppress.post.endpoint.replace(':exhibit_id', uuid),
-            headers: {
-                'Content-Type': 'application/json',
-                'x-access-token': token
+            const exhibit_id = helperModule.get_parameter_by_name('exhibit_id');
+            const item_id = uuid;
+            const elems = document.getElementsByTagName('tr');
+            let type;
+
+            for (let i = 0; i < elems.length; i++) {
+                if (elems[i].id.length !== 0 && elems[i].id.indexOf(uuid) !== -1) {
+                    let tmp = elems[i].id.split('-');
+                    type = tmp.pop();
+                    break;
+                }
             }
-        });
 
-        if (response.status === 200) {
+            const EXHIBITS_ENDPOINTS = endpointsModule.get_exhibits_endpoints();
+            const etmp = EXHIBITS_ENDPOINTS.exhibits.item_records.item_suppress.post.endpoint.replace(':exhibit_id', exhibit_id);
+            const endpoint = etmp.replace(':item_id', item_id);
+            const token = authModule.get_user_token();
+            const response = await httpModule.req({
+                method: 'POST',
+                url: endpoint,
+                headers: {
+                    'Content-Type': 'application/json',
+                    'x-access-token': token
+                }
+            });
 
-            setTimeout(() => {
-                let elem = document.getElementById(uuid);
-                document.getElementById(uuid).classList.remove('suppress-item');
-                document.getElementById(uuid).classList.add('publish-item');
-                document.getElementById(uuid).replaceWith(elem.cloneNode(true));
-                document.getElementById(uuid).innerHTML = '<span id="publish" title="suppressed"><i class="fa fa-cloud-upload" style="color: darkred"></i><br>Suppressed</span>';
-                document.getElementById(uuid).addEventListener('click', async (event) => {
-                    const uuid = elem.getAttribute('id');
-                    await publish_item(uuid);
-                }, false);
-            }, 0);
+            if (response.status === 200) {
+
+                setTimeout(() => {
+                    let elem = document.getElementById(uuid);
+                    document.getElementById(uuid).classList.remove('suppress');
+                    document.getElementById(uuid).classList.add('publish');
+                    document.getElementById(uuid).replaceWith(elem.cloneNode(true));
+                    document.getElementById(uuid).innerHTML = '<span id="publish" title="suppressed"><i class="fa fa-cloud-upload" style="color: darkred"></i><br>Suppressed</span>';
+                    document.getElementById(uuid).addEventListener('click', async (event) => {
+                        const uuid = elem.getAttribute('id');
+                        await publish_item(uuid);
+                    }, false);
+                }, 0);
+            }
+
+        } catch (error) {
+            console.log(error);
         }
     }
 

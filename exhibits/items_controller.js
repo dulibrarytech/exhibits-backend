@@ -142,6 +142,30 @@ exports.publish_item_record = async function (req, res) {
     }
 };
 
+exports.suppress_item_record = async function (req, res) {
+
+    const exhibit_id = req.params.exhibit_id;
+    const item_id = req.params.item_id;
+
+    if (exhibit_id === undefined || exhibit_id.length === 0 && item_id === undefined || item_id.length === 0) {
+        res.status(400).send('Bad request.');
+        return false;
+    }
+
+    const result = await ITEMS_MODEL.suppress_item_record(exhibit_id, item_id);
+
+    if (result.status === true) {
+        res.status(200).send({
+            message: 'Item suppressed.'
+        });
+    } else if (result.status === false) {
+        res.status(204).send({
+            message: 'Unable to suppress item'
+        });
+    }
+
+};
+
 /*
 
 exports.get_trashed_records = async function (req, res) {
@@ -194,25 +218,4 @@ exports.restore_trashed_record = async function (req, res) {
     res.status(result.status).send(result);
 };
 
-*/
-
-/*
-exports.build_exhibit_preview = async function (req, res) {
-
-    const uuid = req.query.uuid;
-
-    if (uuid === undefined || uuid.length === 0) {
-        res.status(400).send('Bad request.');
-        return false;
-    }
-
-    const result = await EXHIBITS_MODEL.build_exhibit_preview(uuid);
-
-    if (result.status === true) {
-        console.log(WEBSERVICES_CONFIG.exhibit_preview_url + uuid + '?key=' + WEBSERVICES_CONFIG.exhibit_preview_api_key);
-        setTimeout(() => {
-            res.redirect(WEBSERVICES_CONFIG.exhibit_preview_url + uuid + '?key=' + WEBSERVICES_CONFIG.exhibit_preview_api_key);
-        }, 1000);
-    }
-};
 */
