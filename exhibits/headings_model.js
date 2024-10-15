@@ -230,6 +230,7 @@ exports.publish_heading_record = async function (exhibit_id, heading_id) {
             };
         }
 
+        const is_item_published = await ITEM_TASKS.set_heading_to_publish(heading_id);
         const is_indexed = await INDEXER_MODEL.index_heading_record(exhibit_id, heading_id);
 
         if (is_indexed === false) {
@@ -241,8 +242,6 @@ exports.publish_heading_record = async function (exhibit_id, heading_id) {
                 message: 'Unable to publish heading'
             };
         }
-
-        const is_item_published = await ITEM_TASKS.set_heading_to_suppress(heading_id);
 
         if (is_item_published === false) {
 

@@ -410,6 +410,7 @@ exports.publish_grid_record = async function (exhibit_id, grid_id) {
             };
         }
 
+        const is_item_published = await ITEM_TASKS.set_grid_to_publish(grid_id);
         const is_indexed = await INDEXER_MODEL.index_grid_record(exhibit_id, grid_id);
 
         if (is_indexed === false) {
@@ -421,8 +422,6 @@ exports.publish_grid_record = async function (exhibit_id, grid_id) {
                 message: 'Unable to publish heading'
             };
         }
-
-        const is_item_published = await ITEM_TASKS.set_grid_to_suppress(grid_id);
 
         if (is_item_published === false) {
 

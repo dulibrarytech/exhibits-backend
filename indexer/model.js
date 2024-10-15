@@ -366,6 +366,7 @@ exports.index_grid_record = async function (exhibit_id, item_id) {
 
     const INDEX_TASKS = new INDEXER_INDEX_TASKS(DB, TABLES, CLIENT, ES_CONFIG.elasticsearch_index);
     const GRID_RECORD_TASK = new EXHIBIT_GRID_RECORD_TASKS(DB, TABLES);
+    const ITEM_TASKS = new EXHIBIT_ITEM_RECORD_TASKS(DB, TABLES);
     const grid_records = await GRID_RECORD_TASK.get_grid_records(exhibit_id, item_id);
     let grid_index_records = [];
     let grid_items = [];
@@ -396,6 +397,7 @@ exports.index_grid_record = async function (exhibit_id, item_id) {
         }
 
         let grid_item_index_record = grid_index_records.pop();
+        await ITEM_TASKS.set_grid_item_to_publish(grid_item_index_record.uuid);
         const response = await INDEX_TASKS.index_record(grid_item_index_record);
 
         if (response === true) {
@@ -403,17 +405,4 @@ exports.index_grid_record = async function (exhibit_id, item_id) {
         }
 
     }, 150);
-
-    /*
-    const response = await INDEX_TASKS.index_record(item_index_record);
-
-    if (response === true) {
-        LOGGER.module().info('INFO: [/indexer/model (index_heading_record)] Heading record ' + item_index_record.uuid + ' indexed.');
-        return true;
-    } else {
-        LOGGER.module().error('ERROR: [/indexer/model (index_heading_record)] Unable to index heading record ' + item_index_record.uuid + '.');
-        return false;
-    }
-
-     */
 };
