@@ -132,14 +132,12 @@ exports.publish_item_record = async function (req, res) {
         return false;
     }
 
-    // const result = await ITEMS_MODEL.publish_item_record(exhibit_id, item_id);
-
     if (type === 'item') {
         result = await ITEMS_MODEL.publish_item_record(exhibit_id, item_id);
     } else if (type === 'heading') {
         result = await HEADINGS_MODEL.publish_heading_record(exhibit_id, item_id);
     } else if (type === 'grid') {
-        result = await GRIDS_MODEL.publish_grid_record(exhibit_id, grid_id);
+        result = await GRIDS_MODEL.publish_grid_record(exhibit_id, item_id);
     } else {
 
         res.status(204).send({
@@ -164,13 +162,30 @@ exports.suppress_item_record = async function (req, res) {
 
     const exhibit_id = req.params.exhibit_id;
     const item_id = req.params.item_id;
+    const type = req.query.type;
+    let result;
 
     if (exhibit_id === undefined || exhibit_id.length === 0 && item_id === undefined || item_id.length === 0) {
         res.status(400).send('Bad request.');
         return false;
     }
 
-    const result = await ITEMS_MODEL.suppress_item_record(exhibit_id, item_id);
+    // const result = await ITEMS_MODEL.suppress_item_record(exhibit_id, item_id);
+
+    if (type === 'item') {
+        result = await ITEMS_MODEL.suppress_item_record(exhibit_id, item_id);
+    } else if (type === 'heading') {
+        result = await HEADINGS_MODEL.suppress_heading_record(exhibit_id, item_id);
+    } else if (type === 'grid') {
+        result = await GRIDS_MODEL.suppress_grid_record(exhibit_id, item_id);
+    } else {
+
+        res.status(204).send({
+            message: 'Unable to publish item'
+        });
+
+        return false;
+    }
 
     if (result.status === true) {
         res.status(200).send({

@@ -396,7 +396,7 @@ exports.suppress_item_record = async function (exhibit_id, item_id) {
 
             return {
                 status: false,
-                message: 'Unable to publish item'
+                message: 'Unable to suppress item'
             };
         }
 
