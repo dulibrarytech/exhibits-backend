@@ -155,13 +155,10 @@ exports.index_exhibit = async function (uuid) {
     const HEADING_RECORD_TASK = new EXHIBIT_HEADING_RECORD_TASKS(DB, TABLES);
     const ITEM_RECORD_TASK = new EXHIBIT_ITEM_RECORD_TASKS(DB, TABLES);
     const GRID_RECORD_TASK = new EXHIBIT_GRID_RECORD_TASKS(DB, TABLES);
-    const GRID_ITEM_RECORD_TASK = new EXHIBIT_GRID_RECORD_TASKS(DB, TABLES);
-
     const exhibit_record = await EXHIBIT_RECORD_TASK.get_exhibit_record(uuid);
     const heading_records = await HEADING_RECORD_TASK.get_heading_records(uuid);
     const item_records = await ITEM_RECORD_TASK.get_item_records(uuid);
     const grid_records = await GRID_RECORD_TASK.get_grid_records(uuid);
-
     const exhibit_index_record = construct_exhibit_index_record(exhibit_record.pop());
     const response = await INDEX_TASKS.index_record(exhibit_index_record);
 
@@ -227,7 +224,7 @@ exports.index_exhibit = async function (uuid) {
         // get grid items
         for (let i=0;i<grid_records.length;i++) {
 
-            let items = await GRID_ITEM_RECORD_TASK.get_grid_item_records(grid_records[i].is_member_of_exhibit, grid_records[i].uuid);
+            let items = await GRID_RECORD_TASK.get_grid_item_records(grid_records[i].is_member_of_exhibit, grid_records[i].uuid);
 
             for (let j=0;j<items.length;j++) {
                 grid_items.push(construct_item_index_record(items[j]));
@@ -358,4 +355,65 @@ exports.index_heading_record = async function (exhibit_id, item_id) {
         LOGGER.module().error('ERROR: [/indexer/model (index_heading_record)] Unable to index heading record ' + item_index_record.uuid + '.');
         return false;
     }
+};
+
+/**
+ * Index grid record
+ * @param exhibit_id
+ * @param item_id
+ */
+exports.index_grid_record = async function (exhibit_id, item_id) {
+
+    const INDEX_TASKS = new INDEXER_INDEX_TASKS(DB, TABLES, CLIENT, ES_CONFIG.elasticsearch_index);
+    const GRID_RECORD_TASK = new EXHIBIT_GRID_RECORD_TASKS(DB, TABLES);
+    const grid_records = await GRID_RECORD_TASK.get_grid_records(exhibit_id, item_id);
+    let grid_index_records = [];
+    let grid_items = [];
+
+    // get grid items
+    for (let i=0;i<grid_records.length;i++) {
+
+        let items = await GRID_RECORD_TASK.get_grid_item_records(grid_records[i].is_member_of_exhibit, grid_records[i].uuid);
+
+        for (let j=0;j<items.length;j++) {
+            grid_items.push(construct_item_index_record(items[j]));
+        }
+
+        grid_records[i].items = grid_items;
+        grid_items = [];
+    }
+
+    for (let g=0;g<grid_records.length;g++) {
+        grid_index_records.push(construct_grid_index_record(grid_records[g]));
+    }
+
+    let grid_items_timer = setInterval(async () => {
+
+        if (grid_index_records.length === 0) {
+            clearInterval(grid_items_timer);
+            LOGGER.module().info('INFO: [/indexer/model (index_grid_record)] Grid item records indexed.');
+            return false;
+        }
+
+        let grid_item_index_record = grid_index_records.pop();
+        const response = await INDEX_TASKS.index_record(grid_item_index_record);
+
+        if (response === true) {
+            LOGGER.module().info('INFO: [/indexer/model (index_grid_record)] Grid item record ' + grid_item_index_record.uuid + ' indexed.');
+        }
+
+    }, 150);
+
+    /*
+    const response = await INDEX_TASKS.index_record(item_index_record);
+
+    if (response === true) {
+        LOGGER.module().info('INFO: [/indexer/model (index_heading_record)] Heading record ' + item_index_record.uuid + ' indexed.');
+        return true;
+    } else {
+        LOGGER.module().error('ERROR: [/indexer/model (index_heading_record)] Unable to index heading record ' + item_index_record.uuid + '.');
+        return false;
+    }
+
+     */
 };

@@ -197,12 +197,23 @@ exports.create_grid_item_record = async function (is_member_of_exhibit, grid_id,
             data.thumbnail = HELPER_TASK.process_uploaded_media(data.is_member_of_exhibit, data.uuid, data.thumbnail);
         }
 
+        if (data.kaltura.length > 0) {
+            data.media = data.kaltura;
+            data.item_type = 'kaltura';
+            data.is_kaltura_item = 1;
+        } else if (data.repo_uuid.length > 0) {
+            data.media = data.repo_uuid;
+            data.item_type = 'repo';
+            data.is_repo_item = 1;
+        }
+
         if (data.styles === undefined || data.styles.length === 0) {
             data.styles = {};
         }
 
-        delete data.repo_uuid;
         delete data.media_prev;
+        delete data.kaltura;
+        delete data.repo_uuid;
 
         data.order = await HELPER_TASK.order_grid_items(data.is_member_of_grid, DB, TABLES);
 
@@ -311,13 +322,26 @@ exports.update_grid_item_record = async function (is_member_of_exhibit, is_membe
             data.thumbnail = HELPER_TASK.process_uploaded_media(data.is_member_of_exhibit, data.uuid, data.thumbnail);
         }
 
+        if (data.kaltura.length > 0) {
+            data.media = data.kaltura;
+            data.item_type = 'kaltura';
+            data.is_kaltura_item = 1;
+        } else if (data.repo_uuid.length > 0) {
+            data.media = data.repo_uuid;
+            data.item_type = 'repo';
+            data.is_repo_item = 1;
+        }
+
         if (data.styles === undefined || data.styles.length === 0) {
             data.styles = {};
         }
 
+        data.styles = JSON.stringify(data.styles);
+
+        delete data.kaltura;
         delete data.repo_uuid;
-        delete data.thumbnail_prev;
         delete data.media_prev;
+        delete data.thumbnail_prev;
 
         data.order = await HELPER_TASK.order_exhibit_items(data.is_member_of_grid, DB, TABLES);
         const UPDATE_RECORD_TASK = new EXHIBIT_GRID_RECORD_TASKS(DB, TABLES);
@@ -386,11 +410,11 @@ exports.publish_grid_record = async function (exhibit_id, grid_id) {
             };
         }
 
-        const is_indexed = await INDEXER_MODEL.index_heading_record(exhibit_id, grid_id);
+        const is_indexed = await INDEXER_MODEL.index_grid_record(exhibit_id, grid_id);
 
         if (is_indexed === false) {
 
-            LOGGER.module().error('ERROR: [/exhibits/model (publish_heading_record)] Unable to publish heading');
+            LOGGER.module().error('ERROR: [/exhibits/model (publish_grid_record)] Unable to publish grid');
 
             return {
                 status: false,
@@ -398,26 +422,26 @@ exports.publish_grid_record = async function (exhibit_id, grid_id) {
             };
         }
 
-        const is_item_published = await ITEM_TASKS.set_heading_to_suppress(heading_id);
+        const is_item_published = await ITEM_TASKS.set_grid_to_suppress(grid_id);
 
         if (is_item_published === false) {
 
-            LOGGER.module().error('ERROR: [/exhibits/model (publish_heading_record)] Unable to publish heading');
+            LOGGER.module().error('ERROR: [/exhibits/model (publish_grid_record)] Unable to publish grid');
 
             return {
                 status: false,
-                message: 'Unable to publish heading'
+                message: 'Unable to publish grid'
             };
 
         } else {
 
             return {
                 status: true,
-                message: 'Heading published'
+                message: 'Grid published'
             };
         }
 
     } catch (error) {
-        LOGGER.module().error('ERROR: [/exhibits/model (publish_heading_record)] ' + error.message);
+        LOGGER.module().error('ERROR: [/exhibits/model (publish_grid_record)] ' + error.message);
     }
 };

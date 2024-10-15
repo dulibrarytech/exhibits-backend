@@ -61,9 +61,17 @@ const itemsCommonGridItemFormModule = (function () {
                 return false;
             }
 
-            media.push(item.media);
-            media.push(item.kaltura);
-            media.push(item.repo_uuid);
+            if (item.media.length > 0) {
+                media.push(item.media);
+            }
+
+            if (item.kaltura.length > 0) {
+                media.push(item.kaltura);
+            }
+
+            if (item.repo_uuid.length > 0) {
+                media.push(item.repo_uuid);
+            }
 
             if (media.length > 1) {
                 document.querySelector('#message').innerHTML = `<div class="alert alert-danger" role="alert"><i class="fa fa-exclamation"></i> Please upload or import only one media item</div>`;

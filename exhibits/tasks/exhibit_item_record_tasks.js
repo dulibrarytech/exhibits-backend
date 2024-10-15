@@ -324,6 +324,31 @@ const Exhibit_item_record_tasks = class {
     }
 
     /**
+     * Sets is_published flog to false
+     * @param uuid
+     */
+    async set_grid_to_suppress(uuid) {
+
+        try {
+
+            await this.DB(this.TABLE.grid_records)
+            .where({
+                uuid: uuid
+            })
+            .update({
+                is_published: 0
+            });
+
+            LOGGER.module().info('INFO: [/exhibits/exhibit_item_record_tasks (set_grid_to_suppress)] Grid is_published set.');
+            return true;
+
+        } catch (error) {
+            LOGGER.module().error('ERROR: [/exhibits/exhibit_item_record_tasks (set_grid_to_suppress)] unable to set grid is_published. ' + error.message);
+            return false;
+        }
+    }
+
+    /**
      * Gets heading record
      * @param is_member_of_exhibit
      * @param uuid

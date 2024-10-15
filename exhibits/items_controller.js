@@ -170,8 +170,6 @@ exports.suppress_item_record = async function (req, res) {
         return false;
     }
 
-    // const result = await ITEMS_MODEL.suppress_item_record(exhibit_id, item_id);
-
     if (type === 'item') {
         result = await ITEMS_MODEL.suppress_item_record(exhibit_id, item_id);
     } else if (type === 'heading') {

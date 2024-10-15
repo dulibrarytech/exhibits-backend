@@ -211,10 +211,6 @@ exports.update_item_record = async function (is_member_of_exhibit, item_id, data
 
         data.styles = JSON.stringify(data.styles);
 
-        if (data.media.length === 0) {
-            data.media = data.repo_uuid;
-        }
-
         delete data.kaltura;
         delete data.repo_uuid;
         delete data.media_prev;
