@@ -179,7 +179,7 @@ exports.suppress_item_record = async function (req, res) {
     } else {
 
         res.status(204).send({
-            message: 'Unable to publish item'
+            message: 'Unable to suppress item'
         });
 
         return false;

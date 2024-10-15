@@ -444,3 +444,49 @@ exports.publish_grid_record = async function (exhibit_id, grid_id) {
         LOGGER.module().error('ERROR: [/exhibits/model (publish_grid_record)] ' + error.message);
     }
 };
+
+/**
+ * Suppress grid
+ * @param exhibit_id
+ * @param item_id
+ */
+exports.suppress_grid_record = async function (exhibit_id, item_id) {
+
+    try {
+
+        const ITEM_TASKS = new EXHIBIT_ITEM_RECORD_TASKS(DB, TABLES);
+        const is_deleted = await INDEXER_MODEL.delete_record(item_id);
+
+        if (is_deleted === false) {
+
+            LOGGER.module().error('ERROR: [/exhibits/model (suppress_grid_record)] Unable to suppress grid');
+
+            return {
+                status: false,
+                message: 'Unable to suppress grid'
+            };
+        }
+
+        const is_item_suppressed = await ITEM_TASKS.set_grid_to_suppress(item_id);
+
+        if (is_item_suppressed === false) {
+
+            LOGGER.module().error('ERROR: [/exhibits/model (suppress_grid_record)] Unable to suppress grid');
+
+            return {
+                status: false,
+                message: 'Unable to suppress grid'
+            };
+
+        } else {
+
+            return {
+                status: true,
+                message: 'Grid suppressed'
+            };
+        }
+
+    } catch (error) {
+        LOGGER.module().error('ERROR: [/exhibits/model (suppress_grid_record)] ' + error.message);
+    }
+};
