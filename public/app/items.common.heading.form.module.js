@@ -20,7 +20,6 @@ const itemsCommonHeadingFormModule = (function () {
 
     'use strict';
 
-    // const EXHIBITS_ENDPOINTS = endpointsModule.get_exhibits_endpoints();
     let obj = {};
 
     /**
@@ -32,7 +31,6 @@ const itemsCommonHeadingFormModule = (function () {
 
             let item_heading = {};
             item_heading.styles = {};
-            // item_heading.text = document.querySelector('#item-heading-text').value;
             item_heading.text = rich_text_data['item-heading-text-input'].getHTMLCode();
 
             if (item_heading.text.length === 0) {

@@ -96,10 +96,10 @@ const itemsEditStandardItemFormModule = (function () {
 
         rich_text_data['item-caption-input'] = helperModule.set_rich_text_editor('item-caption-input');
         rich_text_data['item-caption-input'].setHTMLCode(helperModule.unescape(record.caption));
-
+        /*
         rich_text_data['item-description-input'] = helperModule.set_rich_text_editor('item-description-input');
         rich_text_data['item-description-input'].setHTMLCode(helperModule.unescape(record.description));
-
+        */
         rich_text_data['item-text-input'] = helperModule.set_rich_text_editor('item-text-input');
         rich_text_data['item-text-input'].setHTMLCode(helperModule.unescape(record.text));
 
