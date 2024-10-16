@@ -23,6 +23,18 @@ const itemsEditGridFormModule = (function () {
     const APP_PATH = '/exhibits-dashboard';
     const EXHIBITS_ENDPOINTS = endpointsModule.get_exhibits_endpoints();
     let obj = {};
+    let rich_text_data = {};
+
+    /**
+     * Sets rich text editor on defined input fields
+     */
+    function set_rich_text_editors () {
+        const ids = ['grid-title-input'];
+
+        ids.forEach((id) => {
+            rich_text_data[id] = helperModule.set_rich_text_editor(id);
+        });
+    }
 
     /**
      * Gets grid record
@@ -74,8 +86,8 @@ const itemsEditGridFormModule = (function () {
         try {
 
             window.scrollTo(0, 0);
-            let exhibit_id = helperModule.get_parameter_by_name('exhibit_id');
-            let grid_id = helperModule.get_parameter_by_name('item_id');
+            const exhibit_id = helperModule.get_parameter_by_name('exhibit_id');
+            const grid_id = helperModule.get_parameter_by_name('item_id');
 
             if (exhibit_id === undefined || grid_id === undefined) {
                 document.querySelector('#message').innerHTML = `<div class="alert alert-warning" role="alert"><i class="fa fa-info"></i> Unable to update grid record.</div>`;
@@ -84,11 +96,11 @@ const itemsEditGridFormModule = (function () {
 
             document.querySelector('#message').innerHTML = `<div class="alert alert-info" role="alert"><i class="fa fa-info"></i> Updating grid record...</div>`;
 
-            let data = itemsCommonStandardGridFormModule.get_common_grid_form_fields();
+            const data = itemsCommonStandardGridFormModule.get_common_grid_form_fields(rich_text_data);
             let tmp = EXHIBITS_ENDPOINTS.exhibits.grid_records.put.endpoint.replace(':exhibit_id', exhibit_id);
             let endpoint = tmp.replace(':grid_id', grid_id);
-            let token = authModule.get_user_token();
-            let response = await httpModule.req({
+            const token = authModule.get_user_token();
+            const response = await httpModule.req({
                 method: 'PUT',
                 url: endpoint,
                 data: data,
@@ -121,7 +133,10 @@ const itemsEditGridFormModule = (function () {
 
         let record = await get_grid_record();
 
-        document.querySelector('#grid-title').value = record.title;
+        // document.querySelector('#grid-title').value = record.title;
+        rich_text_data['grid-title-input'] = helperModule.set_rich_text_editor('grid-title-input');
+        rich_text_data['grid-title-input'].setHTMLCode(helperModule.unescape(record.title));
+
         document.querySelector('#grid-columns').value = record.columns;
 
         let styles = JSON.parse(record.styles);
@@ -164,6 +179,8 @@ const itemsEditGridFormModule = (function () {
     obj.init = async function () {
         const exhibit_id = helperModule.get_parameter_by_name('exhibit_id');
         exhibitsModule.set_exhibit_title(exhibit_id);
+        helperModule.set_rich_text_editor_config();
+        set_rich_text_editors();
         document.querySelector('#save-item-btn').addEventListener('click', itemsEditGridFormModule.update_grid_record);
         await display_edit_record();
     };

@@ -23,6 +23,18 @@ const itemsAddGridFormModule = (function () {
     const APP_PATH = '/exhibits-dashboard';
     const EXHIBITS_ENDPOINTS = endpointsModule.get_exhibits_endpoints();
     let obj = {};
+    let rich_text_data = {};
+
+    /**
+     * Sets rich text editor on defined input fields
+     */
+    function set_rich_text_editors () {
+        const ids = ['grid-title-input'];
+
+        ids.forEach((id) => {
+            rich_text_data[id] = helperModule.set_rich_text_editor(id);
+        });
+    }
 
     /**
      * Creates grid record
@@ -75,7 +87,10 @@ const itemsAddGridFormModule = (function () {
     obj.init = async function () {
         const exhibit_id = helperModule.get_parameter_by_name('exhibit_id');
         exhibitsModule.set_exhibit_title(exhibit_id);
+        helperModule.set_rich_text_editor_config();
+        set_rich_text_editors();
         document.querySelector('#save-item-btn').addEventListener('click', itemsAddGridFormModule.create_grid_record);
+
     };
 
     return obj;

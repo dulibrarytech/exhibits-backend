@@ -25,7 +25,7 @@ const itemsCommonStandardGridFormModule = (function () {
     /**
      * Gets common standard grid form fields
      */
-    obj.get_common_grid_form_fields = function () {
+    obj.get_common_grid_form_fields = function (rich_text_data) {
 
         try {
 
@@ -33,7 +33,8 @@ const itemsCommonStandardGridFormModule = (function () {
             grid.styles = {};
 
             // grid metadata
-            grid.title = document.querySelector('#grid-title').value;
+            // grid.title = document.querySelector('#grid-title').value;
+            grid.title = rich_text_data['grid-title-input'].getHTMLCode();
             grid.columns = document.querySelector('#grid-columns').value;
 
             // grid styles
