@@ -26,13 +26,14 @@ const itemsCommonHeadingFormModule = (function () {
     /**
      * Gets common heading form fields
      */
-    obj.get_common_heading_form_fields = function () {
+    obj.get_common_heading_form_fields = function (rich_text_data) {
 
         try {
 
             let item_heading = {};
             item_heading.styles = {};
-            item_heading.text = document.querySelector('#item-heading-text').value;
+            // item_heading.text = document.querySelector('#item-heading-text').value;
+            item_heading.text = rich_text_data['item-heading-text-input'].getHTMLCode();
 
             if (item_heading.text.length === 0) {
                 document.querySelector('#message').innerHTML = '<div class="alert alert-danger" role="alert"><i class="fa fa-exclamation"></i> Please enter heading text</div>';

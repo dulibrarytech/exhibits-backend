@@ -78,9 +78,19 @@ const itemsModule = (function () {
             let status;
             let item_details = '';
             let add_grid_items = '';
-            let edit_type = 'standard';
+            let edit_type;
             let edit;
             let delete_item = `<a href="#" title="Delete"><i class="fa fa-trash pr-1"></i></a>`;
+
+            if (type === 'item') {
+                edit_type = type;
+            } else if (type === 'heading') {
+                edit_type = type;
+            } else if (type === 'grid') {
+                edit_type = type;
+            } else {
+                document.querySelector('#message').innerHTML = `<div class="alert alert-danger" role="alert"><i class="fa fa-exclamation"></i> Unable to determine edit type.</div>`;
+            }
 
             if (is_published === 1) {
                 status = `<a href="#" id="${item_id}" class="suppress-item"><span id="suppress" title="published"><i class="fa fa-cloud" style="color: green"></i><br>Published</span></a>`;
