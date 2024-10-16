@@ -124,7 +124,7 @@ const itemsEditHeadingFormModule = (function () {
             let exhibit_id = helperModule.get_parameter_by_name('exhibit_id');
             let item_id = helperModule.get_parameter_by_name('item_id');
             let token = authModule.get_user_token();
-            let data = itemsCommonHeadingFormModule.get_common_heading_form_fields();
+            let data = itemsCommonHeadingFormModule.get_common_heading_form_fields(rich_text_data);
             let response;
 
             if (exhibit_id === undefined || item_id === undefined) {

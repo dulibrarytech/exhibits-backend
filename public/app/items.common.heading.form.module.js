@@ -20,7 +20,7 @@ const itemsCommonHeadingFormModule = (function () {
 
     'use strict';
 
-    const EXHIBITS_ENDPOINTS = endpointsModule.get_exhibits_endpoints();
+    // const EXHIBITS_ENDPOINTS = endpointsModule.get_exhibits_endpoints();
     let obj = {};
 
     /**
