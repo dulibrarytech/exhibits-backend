@@ -58,6 +58,22 @@
                 <div class="card-body">
                     <input id="exhibit-uuid" type="hidden" name="exhibit_uuid">
                     <div class="alert alert-info"><i class="fa fa-info"></i> Provide info to user about this form</div>
+
+                    <div class="row">
+                        <div class="col-12 col-md-12">
+                            <div class="row form-group">
+                                <div class="col-12">
+                                    <div class="form-text text-muted" style="font-size: 17px"><span style="color: red">*</span>
+                                        Heading Text <small><em>(Required)</em></small>
+                                    </div>
+                                    <span id="item-heading-text-error" class="is-error"></span>
+                                    <div id="item-heading-text-input" style="height: 100px"></div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!--
                     <div class="row form-group">
                         <div class="col-12 col-md-12">
                             <input type="text" id="item-heading-text" name="text" placeholder="Heading Text"
@@ -65,7 +81,7 @@
                             <small class="form-text text-muted"><span style="color: red">*</span> Required</small>
                         </div>
                     </div>
-
+                    -->
                     <hr>
 
                     <p>
@@ -138,6 +154,8 @@
 <script src="https://cdn.jsdelivr.net/npm/interactjs/dist/interact.min.js"></script>
 <script src="https://cdn.datatables.net/1.13.6/js/jquery.dataTables.min.js"></script>
 <script src="https://unpkg.com/dropzone@5/dist/min/dropzone.min.js"></script>
+<script src="/exhibits-dashboard/static/libs/richtexteditor/rte.js"></script>
+<script src='/exhibits-dashboard/static/libs/richtexteditor/plugins/all_plugins.js'></script>
 <script src="/exhibits-dashboard/static/libs/axios-2.x/dist/axios.min.js"></script>
 <script src="/exhibits-dashboard/static/libs/dompurify/purify.min.js"></script>
 <script src="/exhibits-dashboard/static/app/http.module.js"></script>

@@ -23,7 +23,18 @@ const itemsEditHeadingFormModule = (function () {
     const APP_PATH = '/exhibits-dashboard';
     const EXHIBITS_ENDPOINTS = endpointsModule.get_exhibits_endpoints();
     let obj = {};
-    // let rich_text_data = {};
+    let rich_text_data = {};
+
+    /**
+     * Sets rich text editor on defined input fields
+     */
+    function set_rich_text_editors () {
+        const ids = ['item-heading-text-input'];
+
+        ids.forEach((id) => {
+            rich_text_data[id] = helperModule.set_rich_text_editor(id);
+        });
+    }
 
     /**
      * Gets item heading record
@@ -75,7 +86,9 @@ const itemsEditHeadingFormModule = (function () {
         let record = await get_item_heading_record();
         let styles;
 
-        document.querySelector('#item-heading-text').value = record.text;
+        // document.querySelector('#item-heading-text').value = record.text;
+        rich_text_data['item-heading-text-input'] = helperModule.set_rich_text_editor('item-heading-text-input');
+        rich_text_data['item-heading-text-input'].setHTMLCode(helperModule.unescape(record.text));
 
         if (typeof record.styles === 'string') {
             styles = JSON.parse(record.styles);
@@ -162,6 +175,9 @@ const itemsEditHeadingFormModule = (function () {
 
         const exhibit_id = helperModule.get_parameter_by_name('exhibit_id');
         await exhibitsModule.set_exhibit_title(exhibit_id);
+
+        helperModule.set_rich_text_editor_config();
+        set_rich_text_editors();
 
         document.querySelector('#save-heading-btn').addEventListener('click', await itemsEditHeadingFormModule.update_item_heading_record);
         await display_edit_record();

@@ -90,6 +90,7 @@ const itemsModule = (function () {
                 edit_type = type;
             } else {
                 document.querySelector('#message').innerHTML = `<div class="alert alert-danger" role="alert"><i class="fa fa-exclamation"></i> Unable to determine edit type.</div>`;
+                return false;
             }
 
             if (is_published === 1) {
