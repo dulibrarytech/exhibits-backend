@@ -83,7 +83,7 @@ const itemsModule = (function () {
             let delete_item = `<a href="#" title="Delete"><i class="fa fa-trash pr-1"></i></a>`;
 
             if (type === 'item') {
-                edit_type = type;
+                edit_type = 'standard';
             } else if (type === 'heading') {
                 edit_type = type;
             } else if (type === 'grid') {
