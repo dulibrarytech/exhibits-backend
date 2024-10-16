@@ -252,47 +252,6 @@ const Exhibit_grid_record_tasks = class {
     }
 
     /**
-     * Gets grid record
-     * @param is_member_of_exhibit
-     * @param uuid
-     */
-    /*
-    async get_grid_record(is_member_of_exhibit, uuid) {
-
-        try {
-
-            const data = await this.DB(this.TABLE.grid_records)
-            .select('*')
-            .where({
-                is_member_of_exhibit: is_member_of_exhibit,
-                uuid: uuid,
-                is_deleted: 0
-            });
-
-            if (data.length !== 0 && data[0].is_locked === 0) {
-
-                try {
-
-                    const HELPER_TASK = new HELPER();
-                    await HELPER_TASK.lock_record(uuid, this.DB, this.TABLE);
-                    return data;
-
-                } catch (error) {
-                    LOGGER.module().error('ERROR:[/exhibits/exhibit_grid_record_tasks (get_grid_record)] unable to lock record ' + error.message);
-                }
-
-            } else {
-                return data;
-            }
-
-        } catch (error) {
-            LOGGER.module().error('ERROR: [/exhibits/exhibit_grid_record_tasks (get_grid_record)] unable to get records ' + error.message);
-        }
-    }
-
-     */
-
-    /**
      * Deletes grid record
      * @param is_member_of_exhibit
      * @param uuid
@@ -354,17 +313,17 @@ const Exhibit_grid_record_tasks = class {
                 is_published: 1
             });
 
-            LOGGER.module().info('INFO: [/exhibits/exhibit_heading_record_tasks (set_to_publish)] Heading is_published set.');
+            LOGGER.module().info('INFO: [/exhibits/exhibit_grid_record_tasks (set_to_publish)] Grid is_published set.');
             return true;
 
         } catch (error) {
-            LOGGER.module().error('ERROR: [/exhibits/exhibit_heading_record_tasks (set_to_publish)] unable to set heading is_published ' + error.message);
+            LOGGER.module().error('ERROR: [/exhibits/exhibit_grid_record_tasks (set_to_publish)] unable to set grid is_published ' + error.message);
             return false;
         }
     }
 
     /**
-     * Sets is_published flog to true
+     * Sets is_published flog to true for each grid item record
      * @param uuid
      */
     async set_grid_item_to_publish(uuid) {
@@ -379,17 +338,17 @@ const Exhibit_grid_record_tasks = class {
                 is_published: 1
             });
 
-            LOGGER.module().info('INFO: [/exhibits/exhibit_item_record_tasks (set_grid_to_publish)] Grid item is_published set.');
+            LOGGER.module().info('INFO: [/exhibits/exhibit_grid_record_tasks (set_grid_item_to_publish)] Grid item is_published set.');
             return true;
 
         } catch (error) {
-            LOGGER.module().error('ERROR: [/exhibits/exhibit_item_record_tasks (set_grid_to_publish)] unable to set grid item is_published ' + error.message);
+            LOGGER.module().error('ERROR: [/exhibits/exhibit_grid_record_tasks (set_grid_item_to_publish)] unable to set grid item is_published ' + error.message);
             return false;
         }
     }
 
     /**
-     * Sets is_published flogs to true
+     * Sets is_published flogs to true for all grid items by exhibit id
      * @param uuid
      */
     async set_to_publish_grid_items(uuid) {
@@ -414,7 +373,32 @@ const Exhibit_grid_record_tasks = class {
     }
 
     /**
-     * Sets is_published flogs to false
+     * Sets is_published flog to true for grid record
+     * @param uuid
+     */
+    async set_grid_to_publish(uuid) {
+
+        try {
+
+            await this.DB(this.TABLE.grid_records)
+            .where({
+                uuid: uuid
+            })
+            .update({
+                is_published: 1
+            });
+
+            LOGGER.module().info('INFO: [/exhibits/exhibit_item_record_tasks (set_grid_to_publish)] Grid is_published set.');
+            return true;
+
+        } catch (error) {
+            LOGGER.module().error('ERROR: [/exhibits/exhibit_item_record_tasks (set_grid_to_publish)] unable to set grid is_published ' + error.message);
+            return false;
+        }
+    }
+
+    /**
+     * Sets is_published flogs to false for all grid records by exhibit id
      * @param uuid
      */
     async set_to_suppress(uuid) {
@@ -439,7 +423,7 @@ const Exhibit_grid_record_tasks = class {
     }
 
     /**
-     * Sets is_published flog to false
+     * Sets is_published flog to false for grid record
      * @param uuid
      */
     async set_grid_to_suppress(uuid) {
@@ -464,7 +448,7 @@ const Exhibit_grid_record_tasks = class {
     }
 
     /**
-     * Sets is_published flogs to false
+     * Sets is_published flogs to false for grid item records by grid id
      * @param uuid
      */
     async set_to_suppressed_grid_items(uuid) {
@@ -473,7 +457,7 @@ const Exhibit_grid_record_tasks = class {
 
             await this.DB(this.TABLE.grid_item_records)
             .where({
-                is_member_of_exhibit: uuid
+                is_member_of_grid: uuid
             })
             .update({
                 is_published: 0
@@ -490,3 +474,44 @@ const Exhibit_grid_record_tasks = class {
 };
 
 module.exports = Exhibit_grid_record_tasks;
+
+/**
+ * Gets grid record
+ * @param is_member_of_exhibit
+ * @param uuid
+ */
+/*
+async get_grid_record(is_member_of_exhibit, uuid) {
+
+    try {
+
+        const data = await this.DB(this.TABLE.grid_records)
+        .select('*')
+        .where({
+            is_member_of_exhibit: is_member_of_exhibit,
+            uuid: uuid,
+            is_deleted: 0
+        });
+
+        if (data.length !== 0 && data[0].is_locked === 0) {
+
+            try {
+
+                const HELPER_TASK = new HELPER();
+                await HELPER_TASK.lock_record(uuid, this.DB, this.TABLE);
+                return data;
+
+            } catch (error) {
+                LOGGER.module().error('ERROR:[/exhibits/exhibit_grid_record_tasks (get_grid_record)] unable to lock record ' + error.message);
+            }
+
+        } else {
+            return data;
+        }
+
+    } catch (error) {
+        LOGGER.module().error('ERROR: [/exhibits/exhibit_grid_record_tasks (get_grid_record)] unable to get records ' + error.message);
+    }
+}
+
+ */

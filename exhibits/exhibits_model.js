@@ -343,9 +343,6 @@ exports.publish_exhibit = async function (uuid) {
         const is_grid_published = await GRID_TASKS.set_to_publish(uuid);
         const is_grid_item_published = await GRID_TASKS.set_to_publish_grid_items(uuid);
 
-        // TODO
-        console.log(is_grid_item_published);
-
         if (is_exhibit_published === false || is_item_published === false || is_heading_published === false || is_grid_published === false) {
             LOGGER.module().error('ERROR: [/exhibits/model (publish_exhibit)] Unable to publish exhibit');
             return {
@@ -388,15 +385,10 @@ exports.suppress_exhibit = async function (uuid) {
         const ITEM_TASKS = new EXHIBIT_ITEM_RECORD_TASKS(DB, TABLES);
         const HEADING_TASKS = new EXHIBIT_HEADING_RECORD_TASKS(DB, TABLES);
         const GRID_TASKS = new EXHIBIT_GRID_RECORD_TASKS(DB, TABLES);
-
         const is_exhibit_suppressed = await EXHIBIT_TASKS.set_to_suppress(uuid);
         const is_item_suppressed = await ITEM_TASKS.set_to_suppress(uuid);
         const is_heading_suppressed = await HEADING_TASKS.set_to_suppress(uuid);
         const is_grid_suppressed = await GRID_TASKS.set_to_suppress(uuid);
-        const is_grid_item_suppressed = await GRID_TASKS.set_to_suppressed_grid_items(uuid);
-
-        // TODO
-        console.log(is_grid_item_suppressed);
 
         if (is_exhibit_suppressed === false || is_item_suppressed === false || is_heading_suppressed === false || is_grid_suppressed === false) {
             LOGGER.module().error('ERROR: [/exhibits/model (publish_exhibit)] Unable to suppress exhibit');
@@ -427,6 +419,9 @@ exports.suppress_exhibit = async function (uuid) {
 
                 for (let g=0;g<grids.length;g++) {
 
+                    // const is_grid_item_suppressed = await GRID_TASKS.set_to_suppressed_grid_items(uuid);
+                    // console.log(is_grid_item_suppressed);
+                    await GRID_TASKS.set_to_suppressed_grid_items(grids[g].uuid);
                     let is_deleted = await INDEXER_MODEL.delete_record(grids[g].uuid);
 
                     if (is_deleted.status !== 204) {

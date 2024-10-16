@@ -397,7 +397,7 @@ exports.publish_grid_record = async function (exhibit_id, grid_id) {
     try {
 
         const EXHIBIT_TASKS = new EXHIBIT_RECORD_TASKS(DB, TABLES);
-        const ITEM_TASKS = new EXHIBIT_ITEM_RECORD_TASKS(DB, TABLES);
+        const GRID_TASKS = new EXHIBIT_GRID_RECORD_TASKS(DB, TABLES);
         const exhibit_record = await EXHIBIT_TASKS.get_exhibit_record(exhibit_id);
 
         if (exhibit_record[0].is_published === 0) {
@@ -410,7 +410,7 @@ exports.publish_grid_record = async function (exhibit_id, grid_id) {
             };
         }
 
-        const is_item_published = await ITEM_TASKS.set_grid_to_publish(grid_id);
+        const is_item_published = await GRID_TASKS.set_grid_to_publish(grid_id);
         const is_indexed = await INDEXER_MODEL.index_grid_record(exhibit_id, grid_id);
 
         if (is_indexed === false) {
@@ -454,7 +454,7 @@ exports.suppress_grid_record = async function (exhibit_id, item_id) {
 
     try {
 
-        const ITEM_TASKS = new EXHIBIT_ITEM_RECORD_TASKS(DB, TABLES);
+        const GRID_TASKS = new EXHIBIT_GRID_RECORD_TASKS(DB, TABLES);
         const is_deleted = await INDEXER_MODEL.delete_record(item_id);
 
         if (is_deleted === false) {
@@ -467,7 +467,18 @@ exports.suppress_grid_record = async function (exhibit_id, item_id) {
             };
         }
 
-        const is_item_suppressed = await ITEM_TASKS.set_grid_to_suppress(item_id);
+        const is_item_suppressed = await GRID_TASKS.set_grid_to_suppress(item_id);
+        const grid_records = await GRID_TASKS.get_grid_records(exhibit_id, item_id);
+
+        for (let i=0;i<grid_records.length;i++) {
+
+            await GRID_TASKS.set_to_suppressed_grid_items(grid_records[i].is_member_of_exhibit);
+            let items = await GRID_TASKS.get_grid_item_records(grid_records[i].is_member_of_exhibit, grid_records[i].uuid);
+
+            for (let j=0;j<items.length;j++) {
+                await GRID_TASKS.set_to_suppressed_grid_items(items[j].is_member_of_grid);
+            }
+        }
 
         if (is_item_suppressed === false) {
 
