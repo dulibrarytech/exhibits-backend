@@ -134,11 +134,169 @@ const itemsGridModule = (function () {
 
         let grid_items_table = new DataTable('#grid-items');
 
+        bind_publish_grid_item_events();
+        bind_suppress_grid_item_events();
+
         setTimeout(() => {
             // document.querySelector('#item-card').style.visibility = 'visible';
             // document.querySelector('#message').innerHTML = '';
         }, 1000);
     };
+
+    /**
+     * Publishes grid item
+     * @param uuid
+     */
+    async function publish_grid_item(uuid) {
+
+        try {
+
+            const exhibit_id = helperModule.get_parameter_by_name('exhibit_id');
+            const item_id = uuid;
+            const elems = document.getElementsByTagName('tr');
+            let type;
+
+            for (let i = 0; i < elems.length; i++) {
+                if (elems[i].id.length !== 0 && elems[i].id.indexOf(uuid) !== -1) {
+                    let tmp = elems[i].id.split('-');
+                    type = tmp.pop();
+                    break;
+                }
+            }
+
+            const EXHIBITS_ENDPOINTS = endpointsModule.get_exhibits_endpoints();
+            const etmp = EXHIBITS_ENDPOINTS.exhibits.item_records.item_publish.post.endpoint.replace(':exhibit_id', exhibit_id);
+            const endpoint = etmp.replace(':item_id', item_id);
+            const token = authModule.get_user_token();
+            const response = await httpModule.req({
+                method: 'POST',
+                url: endpoint + '?type=' + type,
+                headers: {
+                    'Content-Type': 'application/json',
+                    'x-access-token': token
+                }
+            });
+
+            if (response.status === 200) {
+
+                setTimeout(() => {
+                    let elem = document.getElementById(uuid);
+                    document.getElementById(uuid).classList.remove('publish');
+                    document.getElementById(uuid).classList.add('suppress');
+                    document.getElementById(uuid).replaceWith(elem.cloneNode(true));
+                    document.getElementById(uuid).innerHTML = '<span id="suppress" title="published"><i class="fa fa-cloud" style="color: green"></i><br>Published</span>';
+                    document.getElementById(uuid).addEventListener('click', async () => {
+                        const uuid = elem.getAttribute('id');
+                        await suppress_grid_item(uuid);
+                    }, false);
+                }, 0);
+            }
+
+            if (response.status === 204) {
+                scrollTo(0, 0);
+                document.querySelector('#message').innerHTML = `<div class="alert alert-warning" role="alert"><i class="fa fa-warning"></i> Exhibit must be published in order to publish this item</div>`;
+
+                setTimeout(() => {
+                    document.querySelector('#message').innerHTML = '';
+                }, 5000);
+            }
+
+        } catch (error) {
+            console.log(error);
+        }
+    }
+
+    /**
+     * Suppresses grid item
+     * @param uuid
+     */
+    async function suppress_grid_item(uuid) {
+
+        try {
+
+            // http://localhost/exhibits-dashboard/items/grid/items?
+            // exhibit_id=b4d7221a-8f25-440b-b784-fbbae877f27d&grid_id=bf10a929-2e94-4796-89ae-dad18e7e5a1c#
+            const exhibit_id = helperModule.get_parameter_by_name('exhibit_id');
+            const grid_id = helperModule.get_parameter_by_name('grid_id');
+            const grid_item_id = uuid;
+            // const elems = document.getElementsByTagName('tr');
+            let type = 'grid_item';
+
+            /*
+            for (let i = 0; i < elems.length; i++) {
+                if (elems[i].id.length !== 0 && elems[i].id.indexOf(uuid) !== -1) {
+                    let tmp = elems[i].id.split('-');
+                    type = tmp.pop();
+                    break;
+                }
+            }
+             */
+
+            const EXHIBITS_ENDPOINTS = endpointsModule.get_exhibits_endpoints();
+            const etmp = EXHIBITS_ENDPOINTS.exhibits.grid_item_records.grid_item_suppress.post.endpoint.replace(':exhibit_id', exhibit_id);
+            const gtmp = etmp.replace(':grid_id', grid_id);
+            const endpoint = gtmp.replace(':grid_item_id', grid_item_id);
+            const token = authModule.get_user_token();
+            console.log(endpoint);
+
+            const response = await httpModule.req({
+                method: 'POST',
+                url: endpoint + '?type=' + type,
+                headers: {
+                    'Content-Type': 'application/json',
+                    'x-access-token': token
+                }
+            });
+
+            if (response.status === 200) {
+
+                setTimeout(() => {
+                    let elem = document.getElementById(uuid);
+                    document.getElementById(uuid).classList.remove('suppress');
+                    document.getElementById(uuid).classList.add('publish');
+                    document.getElementById(uuid).replaceWith(elem.cloneNode(true));
+                    document.getElementById(uuid).innerHTML = '<span id="publish" title="suppressed"><i class="fa fa-cloud-upload" style="color: darkred"></i><br>Suppressed</span>';
+                    document.getElementById(uuid).addEventListener('click', async (event) => {
+                        const uuid = elem.getAttribute('id');
+                        await publish_grid_item(uuid);
+                    }, false);
+                }, 0);
+            }
+
+        } catch (error) {
+            console.log(error);
+        }
+    }
+
+    /**
+     * Binds publish click behavior to exhibit links
+     */
+    function bind_publish_grid_item_events() {
+
+        const exhibit_links = Array.from(document.getElementsByClassName('publish-item'));
+
+        exhibit_links.forEach(exhibit_link => {
+            exhibit_link.addEventListener('click', async (event) => {
+                const uuid = exhibit_link.getAttribute('id');
+                await publish_grid_item(uuid);
+            });
+        });
+    }
+
+    /**
+     * Binds suppress click behavior to exhibit links
+     */
+    function bind_suppress_grid_item_events() {
+
+        const exhibit_links = Array.from(document.getElementsByClassName('suppress-item'));
+
+        exhibit_links.forEach(exhibit_link => {
+            exhibit_link.addEventListener('click', async () => {
+                const uuid = exhibit_link.getAttribute('id');
+                await suppress_grid_item(uuid);
+            });
+        });
+    }
 
     obj.init = async function () {
 

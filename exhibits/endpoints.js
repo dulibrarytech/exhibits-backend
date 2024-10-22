@@ -137,7 +137,19 @@ const ENDPOINTS = {
                 endpoint: `${APP_PATH}${PREFIX}${VERSION}${ENDPOINT}/:exhibit_id/grids/:grid_id/items/:item_id`,
                 params: 'token or api_key',
                 body: 'is_member_of_exhibit, grid_id, item_id, record data'
-            }
+            },
+            grid_item_publish: {
+                post: {
+                    description: 'Publishes grid item',
+                    endpoint: `${APP_PATH}${PREFIX}${VERSION}${ENDPOINT}/:exhibit_id/publish/:grid_id/item/:grid_item_id`
+                }
+            },
+            grid_item_suppress: {
+                post: {
+                    description: 'Suppresses grid item',
+                    endpoint: `${APP_PATH}${PREFIX}${VERSION}${ENDPOINT}/:exhibit_id/suppress/:grid_id/item/:grid_item_id`
+                }
+            },
         },
         grid_item_record: {
             get: {

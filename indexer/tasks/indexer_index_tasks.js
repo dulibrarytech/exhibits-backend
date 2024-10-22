@@ -73,7 +73,7 @@ const Indexer_index_tasks = class {
                 id: uuid,
             });
 
-            if (response.statusCode === 200) {
+            if (response.found === true) {
                 return response;
             }
 

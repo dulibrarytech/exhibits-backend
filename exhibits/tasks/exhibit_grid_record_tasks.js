@@ -124,7 +124,7 @@ const Exhibit_grid_record_tasks = class {
     }
 
     /**
-     * Gets grid items
+     * Gets grid items - used for full exhibit indexing
      * @param is_member_of_exhibit
      * @param is_member_of_grid
      */

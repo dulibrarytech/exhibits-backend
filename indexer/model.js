@@ -271,14 +271,14 @@ exports.get_indexed_record = async function (uuid) {
     const INDEX_TASKS = new INDEXER_INDEX_TASKS(DB, TABLES, CLIENT, ES_CONFIG.elasticsearch_index);
     let response = await INDEX_TASKS.get_indexed_record(uuid);
 
-    if (response === false) {
+    if (response.found === false) {
 
         return {
             status: 404,
             message: 'record not found.'
         };
 
-    } else if (response.body.found === true) {
+    } else if (response.found === true) {
 
         return {
             status: 200,
@@ -404,4 +404,22 @@ exports.index_grid_record = async function (exhibit_id, item_id) {
         }
 
     }, 150);
+};
+
+/**
+ * indexes record
+ * @param record
+ */
+exports.index_record = async function (record) {
+
+    const INDEX_TASKS = new INDEXER_INDEX_TASKS(DB, TABLES, CLIENT, ES_CONFIG.elasticsearch_index);
+    const response = await INDEX_TASKS.index_record(record);
+
+    if (response === true) {
+        LOGGER.module().info('INFO: [/indexer/model (index_record)] Record ' + record.uuid + ' indexed.');
+        return true;
+    } else {
+        LOGGER.module().error('ERROR: [/indexer/model (index_record)] Unable to index record ' + record.uuid + '.');
+        return false;
+    }
 };

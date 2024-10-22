@@ -48,37 +48,9 @@ module.exports = function (app) {
     app.route(ENDPOINTS().exhibits.grid_item_media.delete.endpoint)
     .delete(TOKEN.verify, CONTROLLER.delete_grid_item_media);
 
-    /*
+    app.route(ENDPOINTS().exhibits.grid_item_records.grid_item_publish.post.endpoint)
+    .post(CONTROLLER.publish_grid_item_record);
 
-    app.route(ENDPOINTS().exhibits.grid_item_records.post.endpoint)
-    .post(CONTROLLER.create_grid_item_record)
-    .get(CONTROLLER.get_grid_item_records);  // TOKEN.verify,
-
-    app.route(ENDPOINTS().exhibits.trashed_records.get.endpoint)
-    .get(CONTROLLER.get_trashed_records);
-
-    app.route(ENDPOINTS().exhibits.trashed_records.delete.endpoint)
-    .delete(CONTROLLER.delete_trashed_record);
-
-    app.route(ENDPOINTS().exhibits.trashed_records.post.endpoint)
-    .post(CONTROLLER.delete_all_trashed_records);
-
-    app.route(ENDPOINTS().exhibits.trashed_records.put.endpoint)
-    .put(CONTROLLER.restore_trashed_record);
-
-    app.route(ENDPOINTS().exhibits.exhibit_media.get.endpoint)
-    .get(CONTROLLER.get_exhibit_media);
-    */
-
-    /*
-    app.route(ENDPOINTS().exhibits.exhibit_preview.get.endpoint)
-    .get(CONTROLLER.build_exhibit_preview);  // TOKEN verify
-
-    app.route(ENDPOINTS().exhibits.exhibit_publish.post.endpoint)
-    .post(CONTROLLER.publish_exhibit);
-
-    app.route(ENDPOINTS().exhibits.exhibit_suppress.post.endpoint)
-    .post(CONTROLLER.suppress_exhibit);
-
-     */
+    app.route(ENDPOINTS().exhibits.grid_item_records.grid_item_suppress.post.endpoint)
+    .post(CONTROLLER.suppress_grid_item_record);
 };

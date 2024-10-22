@@ -21,6 +21,7 @@
 const GRIDS_MODEL = require('../exhibits/grid_model');
 const ITEMS_MODEL = require("./items_model");
 const FS = require("fs");
+const HEADINGS_MODEL = require("./headings_model");
 
 exports.create_grid_record = async function (req, res) {
 
@@ -153,6 +154,71 @@ exports.delete_grid_item_media = function (req, res) {
     return false;
 };
 
+// TODO
+exports.publish_grid_item_record = async function (req, res) {
+
+    const exhibit_id = req.params.exhibit_id;
+    const grid_id = req.params.grid_id;
+    // const type = req.query.type;
+    let result;
+
+    if (exhibit_id === undefined || exhibit_id.length === 0 && grid_id === undefined || grid_id.length === 0) {
+        res.status(400).send('Bad request.');
+        return false;
+    }
+
+    if (type === 'item') {
+        result = await ITEMS_MODEL.publish_item_record(exhibit_id, item_id);
+    } else if (type === 'heading') {
+        result = await HEADINGS_MODEL.publish_heading_record(exhibit_id, item_id);
+    } else if (type === 'grid') {
+        result = await GRIDS_MODEL.publish_grid_record(exhibit_id, item_id);
+    } else {
+
+        res.status(204).send({
+            message: 'Unable to publish item'
+        });
+
+        return false;
+    }
+
+    if (result.status === true) {
+        res.status(200).send({
+            message: 'Item published.'
+        });
+    } else if (result.status === false) {
+        res.status(204).send({
+            message: 'Unable to publish item'
+        });
+    }
+};
+
+exports.suppress_grid_item_record = async function (req, res) {
+
+    const exhibit_id = req.params.exhibit_id;
+    const grid_id = req.params.grid_id;
+    const grid_item_id = req.params.grid_item_id;
+    const type = req.query.type;
+    let result;
+
+    if (exhibit_id === undefined || exhibit_id.length === 0 && grid_id === undefined || grid_id.length === 0) {
+        res.status(400).send('Bad request.');
+        return false;
+    }
+
+    result = await GRIDS_MODEL.suppress_grid_item_record(exhibit_id, grid_id, grid_item_id);
+
+    if (result === true) {
+        res.status(200).send({
+            message: 'Item grid suppressed.'
+        });
+    } else if (result === false) {
+        res.status(204).send({
+            message: 'Unable to suppress grid item'
+        });
+    }
+};
+
 /*
 
 exports.get_trashed_records = async function (req, res) {
@@ -256,50 +322,3 @@ exports.build_exhibit_preview = async function (req, res) {
     }
 };
 */
-
-/*
-exports.publish_exhibit = async function (req, res) {
-    console.log(req.params);
-    const uuid = req.params.exhibit_id;
-
-    if (uuid === undefined || uuid.length === 0) {
-        res.status(400).send('Bad request.');
-        return false;
-    }
-
-    const result = await EXHIBITS_MODEL.publish_exhibit(uuid);
-
-    if (result.status === true) {
-        res.status(200).send({
-            message: 'Exhibit published.'
-        });
-    } else {
-        res.status(400).send({
-            message: 'Unable to publish exhibit'
-        });
-    }
-}
-
-exports.suppress_exhibit = async function (req, res) {
-
-    const uuid = req.params.exhibit_id;
-
-    if (uuid === undefined || uuid.length === 0) {
-        res.status(400).send('Bad request.');
-        return false;
-    }
-
-    const result = await EXHIBITS_MODEL.suppress_exhibit(uuid);
-
-    if (result.status === true) {
-        res.status(200).send({
-            message: 'Exhibit suppressed.'
-        });
-    } else {
-        res.status(400).send({
-            message: 'Unable to suppress exhibit'
-        });
-    }
-}
-
- */

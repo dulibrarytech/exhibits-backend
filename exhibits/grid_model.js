@@ -505,3 +505,127 @@ exports.suppress_grid_record = async function (exhibit_id, item_id) {
         LOGGER.module().error('ERROR: [/exhibits/model (suppress_grid_record)] ' + error.message);
     }
 };
+
+/** TODO
+ * Publishes grid item
+ * @param exhibit_id
+ * @param grid_id
+ * @param grid_item_id
+ */
+exports.publish_grid_item_record = async function (exhibit_id, grid_id, grid_item_id) {
+
+    try {
+
+        const data = {
+            is_member_of_exhibit: exhibit_id,
+            is_member_of_grid: grid_id,
+            uuid: grid_item_id,
+            is_published: 1
+        };
+
+        const EXHIBIT_TASKS = new EXHIBIT_RECORD_TASKS(DB, TABLES);
+        const ITEM_TASKS = new EXHIBIT_ITEM_RECORD_TASKS(DB, TABLES);
+        const exhibit_record = await EXHIBIT_TASKS.get_exhibit_record(exhibit_id);
+
+        if (exhibit_record[0].is_published === 0) {
+
+            LOGGER.module().error('ERROR: [/exhibits/items_model (publish_item_record)] Unable to publish item');
+
+            return {
+                status: false,
+                message: 'Unable to publish item. Exhibit must be published first'
+            };
+        }
+
+        const is_indexed = await INDEXER_MODEL.index_item_record(exhibit_id, item_id);
+
+        if (is_indexed === false) {
+
+            LOGGER.module().error('ERROR: [/exhibits/model (publish_item_record)] Unable to publish item');
+
+            return {
+                status: false,
+                message: 'Unable to publish item'
+            };
+        }
+
+        const is_item_published = await ITEM_TASKS.set_item_to_publish(item_id);
+
+        if (is_item_published === false) {
+
+            LOGGER.module().error('ERROR: [/exhibits/model (publish_item_record)] Unable to publish item');
+
+            return {
+                status: false,
+                message: 'Unable to publish item'
+            };
+
+        } else {
+
+            return {
+                status: true,
+                message: 'Item published'
+            };
+        }
+
+    } catch (error) {
+        LOGGER.module().error('ERROR: [/exhibits/model (publish_item_record)] ' + error.message);
+    }
+};
+
+/**
+ * Suppress grid item
+ * @param exhibit_id
+ * @param grid_id
+ * @param grid_item_id
+ */
+exports.suppress_grid_item_record = async function (exhibit_id, grid_id, grid_item_id) {
+
+    try {
+
+        const data = {
+            is_member_of_exhibit: exhibit_id,
+            is_member_of_grid: grid_id,
+            uuid: grid_item_id,
+            is_published: 0
+        };
+
+        const GRID_TASKS = new EXHIBIT_GRID_RECORD_TASKS(DB, TABLES);
+        let indexed_record = await INDEXER_MODEL.get_indexed_record(grid_id);
+        let items = indexed_record.data._source.items;
+        let updated_items = [];
+
+        for (let i=0;i<items.length;i++) {
+            if (items[i].uuid !== grid_item_id) {
+                updated_items.push(items[i]);
+            }
+        }
+
+        indexed_record.data._source.items = updated_items;
+
+        // remove original grid record
+        const is_deleted = await INDEXER_MODEL.delete_record(grid_id);
+
+        if (is_deleted === false) {
+
+            LOGGER.module().error('ERROR: [/exhibits/model (suppress_grid_item_record)] Unable to suppress grid item');
+
+            return {
+                status: false,
+                message: 'Unable to suppress grid item'
+            };
+        }
+
+        await GRID_TASKS.update_grid_item_record(data);
+        const is_indexed = await INDEXER_MODEL.index_record(indexed_record.data._source);
+
+        if (is_indexed === true) {
+            return true;
+        } else {
+            return false;
+        }
+
+    } catch (error) {
+        LOGGER.module().error('ERROR: [/exhibits/model (suppress_grid_item_record)] ' + error.message);
+    }
+};
