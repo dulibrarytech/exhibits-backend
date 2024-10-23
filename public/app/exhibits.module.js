@@ -350,14 +350,20 @@ const exhibitsModule = (function () {
      */
     function bind_publish_exhibit_events() {
 
-        const exhibit_links = Array.from(document.getElementsByClassName('publish-exhibit'));
+        try {
 
-        exhibit_links.forEach(exhibit_link => {
-            exhibit_link.addEventListener('click', async (event) => {
-                const uuid = exhibit_link.getAttribute('id');
-                await publish_exhibit(uuid);
+            const exhibit_links = Array.from(document.getElementsByClassName('publish-exhibit'));
+
+            exhibit_links.forEach(exhibit_link => {
+                exhibit_link.addEventListener('click', async (event) => {
+                    const uuid = exhibit_link.getAttribute('id');
+                    await publish_exhibit(uuid);
+                });
             });
-        });
+
+        } catch (error) {
+            document.querySelector('#message').innerHTML = `<div class="alert alert-danger" role="alert"><i class="fa fa-exclamation"></i> ${error.message}</div>`;
+        }
     }
 
     /**
@@ -365,14 +371,20 @@ const exhibitsModule = (function () {
      */
     function bind_suppress_exhibit_events() {
 
-        const exhibit_links = Array.from(document.getElementsByClassName('suppress-exhibit'));
+        try {
 
-        exhibit_links.forEach(exhibit_link => {
-            exhibit_link.addEventListener('click', async () => {
-                const uuid = exhibit_link.getAttribute('id');
-                await suppress_exhibit(uuid);
+            const exhibit_links = Array.from(document.getElementsByClassName('suppress-exhibit'));
+
+            exhibit_links.forEach(exhibit_link => {
+                exhibit_link.addEventListener('click', async () => {
+                    const uuid = exhibit_link.getAttribute('id');
+                    await suppress_exhibit(uuid);
+                });
             });
-        });
+
+        } catch (error) {
+            document.querySelector('#message').innerHTML = `<div class="alert alert-danger" role="alert"><i class="fa fa-exclamation"></i> ${error.message}</div>`;
+        }
     }
 
     /**
