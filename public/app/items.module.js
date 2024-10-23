@@ -381,14 +381,20 @@ const itemsModule = (function () {
      */
     function bind_publish_item_events() {
 
-        const exhibit_links = Array.from(document.getElementsByClassName('publish-item'));
+        try {
 
-        exhibit_links.forEach(exhibit_link => {
-            exhibit_link.addEventListener('click', async (event) => {
-                const uuid = exhibit_link.getAttribute('id');
-                await publish_item(uuid);
+            const exhibit_links = Array.from(document.getElementsByClassName('publish-item'));
+
+            exhibit_links.forEach(exhibit_link => {
+                exhibit_link.addEventListener('click', async (event) => {
+                    const uuid = exhibit_link.getAttribute('id');
+                    await publish_item(uuid);
+                });
             });
-        });
+
+        } catch (error) {
+            document.querySelector('#message').innerHTML = `<div class="alert alert-danger" role="alert"><i class="fa fa-exclamation"></i> ${error.message}</div>`;
+        }
     }
 
     /**
@@ -396,14 +402,20 @@ const itemsModule = (function () {
      */
     function bind_suppress_item_events() {
 
-        const exhibit_links = Array.from(document.getElementsByClassName('suppress-item'));
+        try {
 
-        exhibit_links.forEach(exhibit_link => {
-            exhibit_link.addEventListener('click', async () => {
-                const uuid = exhibit_link.getAttribute('id');
-                await suppress_item(uuid);
+            const exhibit_links = Array.from(document.getElementsByClassName('suppress-item'));
+
+            exhibit_links.forEach(exhibit_link => {
+                exhibit_link.addEventListener('click', async () => {
+                    const uuid = exhibit_link.getAttribute('id');
+                    await suppress_item(uuid);
+                });
             });
-        });
+
+        } catch (error) {
+            document.querySelector('#message').innerHTML = `<div class="alert alert-danger" role="alert"><i class="fa fa-exclamation"></i> ${error.message}</div>`;
+        }
     }
 
     /**
