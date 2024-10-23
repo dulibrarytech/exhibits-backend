@@ -150,7 +150,7 @@ const itemsGridModule = (function () {
     async function publish_grid_item(uuid) {
 
         try {
-            console.log('publish grid item ', uuid);
+
             const exhibit_id = helperModule.get_parameter_by_name('exhibit_id');
             const grid_id = helperModule.get_parameter_by_name('grid_id');
             const grid_item_id = uuid;
@@ -168,9 +168,17 @@ const itemsGridModule = (function () {
                     'x-access-token': token
                 }
             });
-            console.log('publish response ', response);
+
             if (response.status === 200) {
-                console.log('publishing ', uuid);
+
+                scrollTo(0, 0);
+                document.querySelector('#message').innerHTML = `<div class="alert alert-success" role="alert"><i class="fa fa-check"></i> Grid item published</div>`;
+
+                setTimeout(() => {
+                    location.reload();
+                }, 2000);
+
+                /*
                 setTimeout(() => {
                     let elem = document.getElementById(uuid);
                     document.getElementById(uuid).classList.remove('publish');
@@ -182,11 +190,13 @@ const itemsGridModule = (function () {
                         await suppress_grid_item(uuid);
                     }, false);
                 }, 0);
+
+                 */
             }
 
             if (response.status === 204) {
                 scrollTo(0, 0);
-                document.querySelector('#message').innerHTML = `<div class="alert alert-warning" role="alert"><i class="fa fa-warning"></i> Unable to publish grid item</div>`;
+                document.querySelector('#message').innerHTML = `<div class="alert alert-danger" role="alert"><i class="fa fa-exclamation"></i> Unable to publish grid item</div>`;
 
                 setTimeout(() => {
                     document.querySelector('#message').innerHTML = '';
@@ -226,8 +236,17 @@ const itemsGridModule = (function () {
 
             if (response.status === 200) {
 
+                scrollTo(0, 0);
+                document.querySelector('#message').innerHTML = `<div class="alert alert-success" role="alert"><i class="fa fa-check"></i> Grid item suppressed</div>`;
+
                 setTimeout(() => {
-                    console.log('suppressing ', uuid);
+                    location.reload();
+                    // document.querySelector('#message').innerHTML = '';
+                }, 2000);
+
+                /*
+                setTimeout(() => {
+
                     let elem = document.getElementById(uuid);
                     document.getElementById(uuid).classList.remove('suppress');
                     document.getElementById(uuid).classList.add('publish');
@@ -238,6 +257,8 @@ const itemsGridModule = (function () {
                         await publish_grid_item(uuid);
                     }, false);
                 }, 0);
+
+                 */
             }
 
             if (response.status === 204) {
