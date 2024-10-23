@@ -50,7 +50,7 @@ const itemsModule = (function () {
             }
 
         } catch (error) {
-            console.log('ERROR: ', error.message);
+            document.querySelector('#message').innerHTML = `<div class="alert alert-danger" role="alert"><i class="fa fa-exclamation"></i> ${error.message}</div>`;
         }
     }
 
@@ -108,8 +108,7 @@ const itemsModule = (function () {
 
             if (type === 'item') { // standard
 
-                let title = `<a href="${APP_PATH}/items/details?exhibit_id=${exhibit_id}&item_id=${item_id}">${helperModule.unescape(items[i].title)}</a>`;
-                // let title = `${helperModule.unescape(items[i].title)}`;
+                let title = `<a href="#">${helperModule.unescape(items[i].title)}</a>`;
                 let description = helperModule.unescape(items[i].description);
                 let thumbnail = '';
                 let img = '';
@@ -163,7 +162,7 @@ const itemsModule = (function () {
 
                 } else {
 
-                    item_details = `<a href="${APP_PATH}/items/grid/items?exhibit_id=${exhibit_id}&grid_id=${item_id}" title="View grid Items"><i class="fa fa-search pr-1"></i></a>`;
+                    item_details = `<a href="#" title="View grid Items"><i class="fa fa-search pr-1"></i></a>`;
                     grid_item_count += `Contains ${items[i].grid_items.length} items`;
                     delete_item = ''; // Can't delete grid if it contain items
                 }
@@ -276,6 +275,14 @@ const itemsModule = (function () {
 
             if (response.status === 200) {
 
+                scrollTo(0, 0);
+                document.querySelector('#message').innerHTML = `<div class="alert alert-success" role="alert"><i class="fa fa-check"></i> Item published</div>`;
+
+                setTimeout(() => {
+                    location.reload();
+                }, 2000);
+
+                /*
                 setTimeout(() => {
                     let elem = document.getElementById(uuid);
                     document.getElementById(uuid).classList.remove('publish');
@@ -287,6 +294,8 @@ const itemsModule = (function () {
                         await suppress_item(uuid);
                     }, false);
                 }, 0);
+
+                 */
             }
 
             if (response.status === 204) {
@@ -299,7 +308,7 @@ const itemsModule = (function () {
             }
 
         } catch (error) {
-            console.log(error);
+            document.querySelector('#message').innerHTML = `<div class="alert alert-danger" role="alert"><i class="fa fa-exclamation"></i> ${error.message}</div>`;
         }
     }
 
@@ -339,6 +348,14 @@ const itemsModule = (function () {
 
             if (response.status === 200) {
 
+                scrollTo(0, 0);
+                document.querySelector('#message').innerHTML = `<div class="alert alert-success" role="alert"><i class="fa fa-check"></i> Item suppressed</div>`;
+
+                setTimeout(() => {
+                    location.reload();
+                }, 2000);
+
+                /*
                 setTimeout(() => {
                     let elem = document.getElementById(uuid);
                     document.getElementById(uuid).classList.remove('suppress');
@@ -350,10 +367,12 @@ const itemsModule = (function () {
                         await publish_item(uuid);
                     }, false);
                 }, 0);
+
+                 */
             }
 
         } catch (error) {
-            console.log(error);
+            document.querySelector('#message').innerHTML = `<div class="alert alert-danger" role="alert"><i class="fa fa-exclamation"></i> ${error.message}</div>`;
         }
     }
 
@@ -391,15 +410,21 @@ const itemsModule = (function () {
      *
      */
     obj.init = function () {
-        document.querySelector('#message').innerHTML = '<div class="alert alert-primary" role="alert">Loading...</div>';
-        const exhibit_id = helperModule.get_parameter_by_name('exhibit_id');
-        exhibitsModule.set_exhibit_title(exhibit_id);
-        navModule.set_preview_link();
-        navModule.set_item_nav_menu_links();
-        itemsModule.display_items();
-        setTimeout(() => {
-            document.querySelector('#items-menu').style.visibility = 'visible';
-        }, 100);
+
+        try {
+            // document.querySelector('#message').innerHTML = '<div class="alert alert-primary" role="alert">Loading...</div>';
+            const exhibit_id = helperModule.get_parameter_by_name('exhibit_id');
+            exhibitsModule.set_exhibit_title(exhibit_id);
+            navModule.set_preview_link();
+            navModule.set_item_nav_menu_links();
+            itemsModule.display_items();
+            setTimeout(() => {
+                document.querySelector('#items-menu').style.visibility = 'visible';
+            }, 100);
+
+        } catch (error) {
+            document.querySelector('#message').innerHTML = `<div class="alert alert-danger" role="alert"><i class="fa fa-exclamation"></i> ${error.message}</div>`;
+        }
     };
 
     return obj;

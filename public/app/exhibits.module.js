@@ -260,6 +260,14 @@ const exhibitsModule = (function () {
 
         if (response.status === 200) {
 
+            scrollTo(0, 0);
+            document.querySelector('#message').innerHTML = `<div class="alert alert-success" role="alert"><i class="fa fa-check"></i> Exhibit published</div>`;
+
+            setTimeout(() => {
+                location.reload();
+            }, 2000);
+
+            /*
             setTimeout(() => {
                 let elem = document.getElementById(uuid);
                 document.getElementById(uuid).classList.remove('publish-exhibit');
@@ -271,6 +279,8 @@ const exhibitsModule = (function () {
                     await suppress_exhibit(uuid);
                 }, false);
             }, 0);
+
+             */
         }
 
         if (response.status === 204) {
@@ -302,6 +312,14 @@ const exhibitsModule = (function () {
 
         if (response.status === 200) {
 
+            scrollTo(0, 0);
+            document.querySelector('#message').innerHTML = `<div class="alert alert-success" role="alert"><i class="fa fa-check"></i> Exhibit suppressed</div>`;
+
+            setTimeout(() => {
+                location.reload();
+            }, 2000);
+
+            /*
             setTimeout(() => {
                 let elem = document.getElementById(uuid);
                 document.getElementById(uuid).classList.remove('suppress-exhibit');
@@ -313,6 +331,17 @@ const exhibitsModule = (function () {
                     await publish_exhibit(uuid);
                 }, false);
             }, 0);
+
+             */
+        }
+
+        if (response.status === 204) {
+            scrollTo(0, 0);
+            document.querySelector('#message').innerHTML = `<div class="alert alert-danger" role="alert"><i class="fa fa-exclamation"></i> Unable to suppress exhibit</div>`;
+
+            setTimeout(() => {
+                document.querySelector('#message').innerHTML = '';
+            }, 5000);
         }
     }
 
