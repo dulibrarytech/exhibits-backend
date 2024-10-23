@@ -104,11 +104,11 @@ const itemsGridModule = (function () {
             }
 
             if (is_published === 1) {
-                status = `<a href="#" id="${item_id}" class="suppress-item"><span id="suppress" title="published"><i class="fa fa-cloud" style="color: green"></i><br>Published</span></a>`;
+                status = `<a href="#" id="${item_id}" class="suppress"><span id="suppress" title="published"><i class="fa fa-cloud" style="color: green"></i><br>Published</span></a>`;
                 edit = '';
                 delete_item = '';
             } else if (is_published === 0) {
-                status = `<a href="#" id="${item_id}" class="publish-item"><span id="publish" title="suppressed"><i class="fa fa-cloud-upload" style="color: darkred"></i><br>Suppressed</span></a>`;
+                status = `<a href="#" id="${item_id}" class="publish"><span id="publish" title="suppressed"><i class="fa fa-cloud-upload" style="color: darkred"></i><br>Suppressed</span></a>`;
                 edit = `<a href="${APP_PATH}/items/grid/item/edit?exhibit_id=${exhibit_id}&grid_id=${grid_id}&item_id=${item_id}" title="Edit"><i class="fa fa-edit pr-1"></i></a>`;
                 delete_item = `<a href="#" title="Delete"><i class="fa fa-trash pr-1"></i></a>`;
             }
@@ -150,23 +150,15 @@ const itemsGridModule = (function () {
     async function publish_grid_item(uuid) {
 
         try {
-
+            console.log('publish grid item ', uuid);
             const exhibit_id = helperModule.get_parameter_by_name('exhibit_id');
-            const item_id = uuid;
-            const elems = document.getElementsByTagName('tr');
-            let type;
-
-            for (let i = 0; i < elems.length; i++) {
-                if (elems[i].id.length !== 0 && elems[i].id.indexOf(uuid) !== -1) {
-                    let tmp = elems[i].id.split('-');
-                    type = tmp.pop();
-                    break;
-                }
-            }
-
+            const grid_id = helperModule.get_parameter_by_name('grid_id');
+            const grid_item_id = uuid;
+            const type = 'grid_item';
             const EXHIBITS_ENDPOINTS = endpointsModule.get_exhibits_endpoints();
-            const etmp = EXHIBITS_ENDPOINTS.exhibits.item_records.item_publish.post.endpoint.replace(':exhibit_id', exhibit_id);
-            const endpoint = etmp.replace(':item_id', item_id);
+            const etmp = EXHIBITS_ENDPOINTS.exhibits.grid_item_records.grid_item_publish.post.endpoint.replace(':exhibit_id', exhibit_id);
+            const gtmp = etmp.replace(':grid_id', grid_id);
+            const endpoint = gtmp.replace(':grid_item_id', grid_item_id);
             const token = authModule.get_user_token();
             const response = await httpModule.req({
                 method: 'POST',
@@ -176,9 +168,9 @@ const itemsGridModule = (function () {
                     'x-access-token': token
                 }
             });
-
+            console.log('publish response ', response);
             if (response.status === 200) {
-
+                console.log('publishing ', uuid);
                 setTimeout(() => {
                     let elem = document.getElementById(uuid);
                     document.getElementById(uuid).classList.remove('publish');
@@ -194,7 +186,7 @@ const itemsGridModule = (function () {
 
             if (response.status === 204) {
                 scrollTo(0, 0);
-                document.querySelector('#message').innerHTML = `<div class="alert alert-warning" role="alert"><i class="fa fa-warning"></i> Exhibit must be published in order to publish this item</div>`;
+                document.querySelector('#message').innerHTML = `<div class="alert alert-warning" role="alert"><i class="fa fa-warning"></i> Unable to publish grid item</div>`;
 
                 setTimeout(() => {
                     document.querySelector('#message').innerHTML = '';
@@ -214,31 +206,15 @@ const itemsGridModule = (function () {
 
         try {
 
-            // http://localhost/exhibits-dashboard/items/grid/items?
-            // exhibit_id=b4d7221a-8f25-440b-b784-fbbae877f27d&grid_id=bf10a929-2e94-4796-89ae-dad18e7e5a1c#
             const exhibit_id = helperModule.get_parameter_by_name('exhibit_id');
             const grid_id = helperModule.get_parameter_by_name('grid_id');
             const grid_item_id = uuid;
-            // const elems = document.getElementsByTagName('tr');
-            let type = 'grid_item';
-
-            /*
-            for (let i = 0; i < elems.length; i++) {
-                if (elems[i].id.length !== 0 && elems[i].id.indexOf(uuid) !== -1) {
-                    let tmp = elems[i].id.split('-');
-                    type = tmp.pop();
-                    break;
-                }
-            }
-             */
-
+            const type = 'grid_item';
             const EXHIBITS_ENDPOINTS = endpointsModule.get_exhibits_endpoints();
             const etmp = EXHIBITS_ENDPOINTS.exhibits.grid_item_records.grid_item_suppress.post.endpoint.replace(':exhibit_id', exhibit_id);
             const gtmp = etmp.replace(':grid_id', grid_id);
             const endpoint = gtmp.replace(':grid_item_id', grid_item_id);
             const token = authModule.get_user_token();
-            console.log(endpoint);
-
             const response = await httpModule.req({
                 method: 'POST',
                 url: endpoint + '?type=' + type,
@@ -251,6 +227,7 @@ const itemsGridModule = (function () {
             if (response.status === 200) {
 
                 setTimeout(() => {
+                    console.log('suppressing ', uuid);
                     let elem = document.getElementById(uuid);
                     document.getElementById(uuid).classList.remove('suppress');
                     document.getElementById(uuid).classList.add('publish');
@@ -263,6 +240,15 @@ const itemsGridModule = (function () {
                 }, 0);
             }
 
+            if (response.status === 204) {
+                scrollTo(0, 0);
+                document.querySelector('#message').innerHTML = `<div class="alert alert-warning" role="alert"><i class="fa fa-warning"></i> Unable to suppress grid item</div>`;
+
+                setTimeout(() => {
+                    document.querySelector('#message').innerHTML = '';
+                }, 5000);
+            }
+
         } catch (error) {
             console.log(error);
         }
@@ -273,7 +259,7 @@ const itemsGridModule = (function () {
      */
     function bind_publish_grid_item_events() {
 
-        const exhibit_links = Array.from(document.getElementsByClassName('publish-item'));
+        const exhibit_links = Array.from(document.getElementsByClassName('publish'));
 
         exhibit_links.forEach(exhibit_link => {
             exhibit_link.addEventListener('click', async (event) => {
@@ -288,7 +274,7 @@ const itemsGridModule = (function () {
      */
     function bind_suppress_grid_item_events() {
 
-        const exhibit_links = Array.from(document.getElementsByClassName('suppress-item'));
+        const exhibit_links = Array.from(document.getElementsByClassName('suppress'));
 
         exhibit_links.forEach(exhibit_link => {
             exhibit_link.addEventListener('click', async () => {

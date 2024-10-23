@@ -154,12 +154,12 @@ exports.delete_grid_item_media = function (req, res) {
     return false;
 };
 
-// TODO
 exports.publish_grid_item_record = async function (req, res) {
 
     const exhibit_id = req.params.exhibit_id;
     const grid_id = req.params.grid_id;
-    // const type = req.query.type;
+    const grid_item_id = req.params.grid_item_id;
+    const type = req.query.type;
     let result;
 
     if (exhibit_id === undefined || exhibit_id.length === 0 && grid_id === undefined || grid_id.length === 0) {
@@ -167,28 +167,16 @@ exports.publish_grid_item_record = async function (req, res) {
         return false;
     }
 
-    if (type === 'item') {
-        result = await ITEMS_MODEL.publish_item_record(exhibit_id, item_id);
-    } else if (type === 'heading') {
-        result = await HEADINGS_MODEL.publish_heading_record(exhibit_id, item_id);
-    } else if (type === 'grid') {
-        result = await GRIDS_MODEL.publish_grid_record(exhibit_id, item_id);
-    } else {
-
-        res.status(204).send({
-            message: 'Unable to publish item'
-        });
-
-        return false;
-    }
+    result = await GRIDS_MODEL.publish_grid_item_record(exhibit_id, grid_id, grid_item_id);
 
     if (result.status === true) {
+
         res.status(200).send({
-            message: 'Item published.'
+            message: 'Grid item published.'
         });
     } else if (result.status === false) {
         res.status(204).send({
-            message: 'Unable to publish item'
+            message: 'Unable to publish grid item'
         });
     }
 };

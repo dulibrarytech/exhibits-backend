@@ -407,6 +407,39 @@ exports.index_grid_record = async function (exhibit_id, item_id) {
 };
 
 /**
+ * Indexes grid item
+ * @param grid_id
+ * @param grid_item_id
+ * @param grid_item_record
+ */
+exports.index_grid_item_record = async function (grid_id, grid_item_id, grid_item_record) {
+
+    let grid_item_index_record = construct_item_index_record(grid_item_record);
+    let indexed_record = await this.get_indexed_record(grid_id);
+    let items = indexed_record.data._source.items;
+    let updated_items = [];
+
+    for (let i=0;i<items.length;i++) {
+        updated_items.push(items[i]);
+    }
+
+    grid_item_index_record.is_published = 1;
+    updated_items.push(grid_item_index_record);
+
+    indexed_record.data._source.items = updated_items.sort((a, b) => {
+        return a.order - b.order;
+    });
+
+    const is_indexed = await this.index_record(indexed_record.data._source);
+
+    if (is_indexed === true) {
+        return true;
+    } else {
+        return false;
+    }
+};
+
+/**
  * indexes record
  * @param record
  */

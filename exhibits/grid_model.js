@@ -506,7 +506,7 @@ exports.suppress_grid_record = async function (exhibit_id, item_id) {
     }
 };
 
-/** TODO
+/**
  * Publishes grid item
  * @param exhibit_id
  * @param grid_id
@@ -523,48 +523,26 @@ exports.publish_grid_item_record = async function (exhibit_id, grid_id, grid_ite
             is_published: 1
         };
 
-        const EXHIBIT_TASKS = new EXHIBIT_RECORD_TASKS(DB, TABLES);
-        const ITEM_TASKS = new EXHIBIT_ITEM_RECORD_TASKS(DB, TABLES);
-        const exhibit_record = await EXHIBIT_TASKS.get_exhibit_record(exhibit_id);
-
-        if (exhibit_record[0].is_published === 0) {
-
-            LOGGER.module().error('ERROR: [/exhibits/items_model (publish_item_record)] Unable to publish item');
-
-            return {
-                status: false,
-                message: 'Unable to publish item. Exhibit must be published first'
-            };
-        }
-
-        const is_indexed = await INDEXER_MODEL.index_item_record(exhibit_id, item_id);
+        const GRID_TASKS = new EXHIBIT_GRID_RECORD_TASKS(DB, TABLES);
+        let grid_item_record = await GRID_TASKS.get_grid_item_record(exhibit_id, grid_id, grid_item_id);
+        const is_indexed = await INDEXER_MODEL.index_grid_item_record(grid_id, grid_item_id, grid_item_record.pop());
 
         if (is_indexed === false) {
 
-            LOGGER.module().error('ERROR: [/exhibits/model (publish_item_record)] Unable to publish item');
+            LOGGER.module().error('ERROR: [/exhibits/model (publish_item_record)] Unable to publish grid item');
 
             return {
                 status: false,
-                message: 'Unable to publish item'
-            };
-        }
-
-        const is_item_published = await ITEM_TASKS.set_item_to_publish(item_id);
-
-        if (is_item_published === false) {
-
-            LOGGER.module().error('ERROR: [/exhibits/model (publish_item_record)] Unable to publish item');
-
-            return {
-                status: false,
-                message: 'Unable to publish item'
+                message: 'Unable to publish grid item'
             };
 
         } else {
 
+            await GRID_TASKS.update_grid_item_record(data);
+
             return {
                 status: true,
-                message: 'Item published'
+                message: 'Grid item published'
             };
         }
 
