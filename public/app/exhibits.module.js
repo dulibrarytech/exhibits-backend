@@ -387,9 +387,6 @@ const exhibitsModule = (function () {
         }
     }
 
-    /**
-     * Runs functions when page loads
-     */
     obj.init = async function () {
         await exhibitsModule.display_exhibits();
     };

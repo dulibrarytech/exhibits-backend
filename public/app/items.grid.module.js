@@ -241,7 +241,6 @@ const itemsGridModule = (function () {
 
                 setTimeout(() => {
                     location.reload();
-                    // document.querySelector('#message').innerHTML = '';
                 }, 2000);
 
                 /*
@@ -280,14 +279,20 @@ const itemsGridModule = (function () {
      */
     function bind_publish_grid_item_events() {
 
-        const exhibit_links = Array.from(document.getElementsByClassName('publish'));
+        try {
 
-        exhibit_links.forEach(exhibit_link => {
-            exhibit_link.addEventListener('click', async (event) => {
-                const uuid = exhibit_link.getAttribute('id');
-                await publish_grid_item(uuid);
+            const exhibit_links = Array.from(document.getElementsByClassName('publish'));
+
+            exhibit_links.forEach(exhibit_link => {
+                exhibit_link.addEventListener('click', async (event) => {
+                    const uuid = exhibit_link.getAttribute('id');
+                    await publish_grid_item(uuid);
+                });
             });
-        });
+
+        } catch (error) {
+            document.querySelector('#message').innerHTML = `<div class="alert alert-danger" role="alert"><i class="fa fa-exclamation"></i> ${error.message}</div>`;
+        }
     }
 
     /**
@@ -295,14 +300,20 @@ const itemsGridModule = (function () {
      */
     function bind_suppress_grid_item_events() {
 
-        const exhibit_links = Array.from(document.getElementsByClassName('suppress'));
+        try {
 
-        exhibit_links.forEach(exhibit_link => {
-            exhibit_link.addEventListener('click', async () => {
-                const uuid = exhibit_link.getAttribute('id');
-                await suppress_grid_item(uuid);
+            const exhibit_links = Array.from(document.getElementsByClassName('suppress'));
+
+            exhibit_links.forEach(exhibit_link => {
+                exhibit_link.addEventListener('click', async () => {
+                    const uuid = exhibit_link.getAttribute('id');
+                    await suppress_grid_item(uuid);
+                });
             });
-        });
+
+        } catch (error) {
+            document.querySelector('#message').innerHTML = `<div class="alert alert-danger" role="alert"><i class="fa fa-exclamation"></i> ${error.message}</div>`;
+        }
     }
 
     obj.init = async function () {
@@ -314,7 +325,7 @@ const itemsGridModule = (function () {
             navModule.set_grid_item_nav_menu_links();
 
         } catch (error) {
-            console.log(error);
+            document.querySelector('#message').innerHTML = `<div class="alert alert-danger" role="alert"><i class="fa fa-exclamation"></i> ${error.message}</div>`;
         }
     };
 

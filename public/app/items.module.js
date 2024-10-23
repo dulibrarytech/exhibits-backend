@@ -418,13 +418,10 @@ const itemsModule = (function () {
         }
     }
 
-    /**
-     *
-     */
     obj.init = function () {
 
         try {
-            // document.querySelector('#message').innerHTML = '<div class="alert alert-primary" role="alert">Loading...</div>';
+
             const exhibit_id = helperModule.get_parameter_by_name('exhibit_id');
             exhibitsModule.set_exhibit_title(exhibit_id);
             navModule.set_preview_link();
