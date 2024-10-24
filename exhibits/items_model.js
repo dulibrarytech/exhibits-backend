@@ -28,12 +28,9 @@ const EXHIBIT_HEADING_RECORD_TASKS = require('./tasks/exhibit_heading_record_tas
 const EXHIBIT_GRID_RECORD_TASKS = require('./tasks/exhibit_grid_record_tasks');
 const HELPER = require('../libs/helper');
 const VALIDATOR = require('../libs/validate');
+const EXHIBIT_RECORD_TASKS = require('./tasks/exhibit_record_tasks');
+const INDEXER_MODEL = require('../indexer/model');
 const LOGGER = require('../libs/log4');
-const EXHIBIT_RECORD_TASKS = require("./tasks/exhibit_record_tasks");
-const INDEXER_MODEL = require("../indexer/model");
-// const EXHIBITS_CREATE_GRID_SCHEMA = require('../exhibits/schemas/exhibit_create_grid_record_schema')();
-// const FS = require('fs');
-// const EXHIBIT_RECORD_TASKS = require("./tasks/exhibit_record_tasks");
 
 /**
  * Gets item records by exhibit

@@ -28,10 +28,9 @@ const EXHIBITS_UPDATE_GRID_ITEM_SCHEMA = require('../exhibits/schemas/exhibit_gr
 const EXHIBIT_GRID_RECORD_TASKS = require('./tasks/exhibit_grid_record_tasks');
 const HELPER = require('../libs/helper');
 const VALIDATOR = require('../libs/validate');
+const EXHIBIT_RECORD_TASKS = require('./tasks/exhibit_record_tasks');
+const INDEXER_MODEL = require('../indexer/model');
 const LOGGER = require('../libs/log4');
-const EXHIBIT_ITEM_RECORD_TASKS = require("./tasks/exhibit_item_record_tasks");
-const EXHIBIT_RECORD_TASKS = require("./tasks/exhibit_record_tasks");
-const INDEXER_MODEL = require("../indexer/model");
 
 /**
  * Create grid record

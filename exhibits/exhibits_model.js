@@ -29,8 +29,8 @@ const EXHIBIT_HEADING_RECORD_TASKS = require('./tasks/exhibit_heading_record_tas
 const EXHIBIT_GRID_RECORD_TASKS = require('./tasks/exhibit_grid_record_tasks');
 const HELPER = require('../libs/helper');
 const VALIDATOR = require('../libs/validate');
-const LOGGER = require('../libs/log4');
 const INDEXER_MODEL = require('../indexer/model');
+const LOGGER = require('../libs/log4');
 
 /**
  * Creates exhibit record
