@@ -524,6 +524,18 @@ exports.publish_grid_item_record = async function (exhibit_id, grid_id, grid_ite
         };
 
         const GRID_TASKS = new EXHIBIT_GRID_RECORD_TASKS(DB, TABLES);
+        let grid_record = await GRID_TASKS.get_grid_record(exhibit_id, grid_id);
+
+        if (grid_record[0].is_published === 0) {
+
+            LOGGER.module().error('ERROR: [/exhibits/items_model (publish_grid_item_record)] Unable to publish grid item');
+
+            return {
+                status: false,
+                message: 'Unable to publish item. Grid must be published first'
+            };
+        }
+
         let grid_item_record = await GRID_TASKS.get_grid_item_record(exhibit_id, grid_id, grid_item_id);
         const is_indexed = await INDEXER_MODEL.index_grid_item_record(grid_id, grid_item_id, grid_item_record.pop());
 
