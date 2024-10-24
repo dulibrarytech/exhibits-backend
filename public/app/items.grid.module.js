@@ -51,7 +51,7 @@ const itemsGridModule = (function () {
             }
 
         } catch (error) {
-            console.log('ERROR: ', error.message);
+            document.querySelector('#message').innerHTML = `<div class="alert alert-danger" role="alert"><i class="fa fa-exclamation"></i> ${error.message}</div>`;
         }
     }
 
@@ -138,8 +138,7 @@ const itemsGridModule = (function () {
         bind_suppress_grid_item_events();
 
         setTimeout(() => {
-            // document.querySelector('#item-card').style.visibility = 'visible';
-            // document.querySelector('#message').innerHTML = '';
+            document.querySelector('#item-card').style.visibility = 'visible';
         }, 1000);
     };
 
@@ -171,27 +170,11 @@ const itemsGridModule = (function () {
 
             if (response.status === 200) {
 
-                scrollTo(0, 0);
                 document.querySelector('#message').innerHTML = `<div class="alert alert-success" role="alert"><i class="fa fa-check"></i> Grid item published</div>`;
 
                 setTimeout(() => {
                     location.reload();
                 }, 2000);
-
-                /*
-                setTimeout(() => {
-                    let elem = document.getElementById(uuid);
-                    document.getElementById(uuid).classList.remove('publish');
-                    document.getElementById(uuid).classList.add('suppress');
-                    document.getElementById(uuid).replaceWith(elem.cloneNode(true));
-                    document.getElementById(uuid).innerHTML = '<span id="suppress" title="published"><i class="fa fa-cloud" style="color: green"></i><br>Published</span>';
-                    document.getElementById(uuid).addEventListener('click', async () => {
-                        const uuid = elem.getAttribute('id');
-                        await suppress_grid_item(uuid);
-                    }, false);
-                }, 0);
-
-                 */
             }
 
             if (response.status === 204) {
@@ -204,7 +187,7 @@ const itemsGridModule = (function () {
             }
 
         } catch (error) {
-            console.log(error);
+            document.querySelector('#message').innerHTML = `<div class="alert alert-danger" role="alert"><i class="fa fa-exclamation"></i> ${error.message}</div>`;
         }
     }
 
@@ -242,22 +225,6 @@ const itemsGridModule = (function () {
                 setTimeout(() => {
                     location.reload();
                 }, 2000);
-
-                /*
-                setTimeout(() => {
-
-                    let elem = document.getElementById(uuid);
-                    document.getElementById(uuid).classList.remove('suppress');
-                    document.getElementById(uuid).classList.add('publish');
-                    document.getElementById(uuid).replaceWith(elem.cloneNode(true));
-                    document.getElementById(uuid).innerHTML = '<span id="publish" title="suppressed"><i class="fa fa-cloud-upload" style="color: darkred"></i><br>Suppressed</span>';
-                    document.getElementById(uuid).addEventListener('click', async (event) => {
-                        const uuid = elem.getAttribute('id');
-                        await publish_grid_item(uuid);
-                    }, false);
-                }, 0);
-
-                 */
             }
 
             if (response.status === 204) {
@@ -270,7 +237,7 @@ const itemsGridModule = (function () {
             }
 
         } catch (error) {
-            console.log(error);
+            document.querySelector('#message').innerHTML = `<div class="alert alert-danger" role="alert"><i class="fa fa-exclamation"></i> ${error.message}</div>`;
         }
     }
 
