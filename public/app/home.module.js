@@ -33,7 +33,6 @@ const homeModule = (function () {
         history.pushState({}, '', APP_PATH + '/exhibits');
 
         let home_timer = setTimeout(async () => {
-            document.querySelector('#message').innerHTML = '<div class="alert alert-primary" role="alert">Loading...</div>';
             await exhibitsModule.init();
             clearTimeout(home_timer);
         }, 0);

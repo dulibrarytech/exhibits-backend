@@ -279,7 +279,7 @@ const itemsModule = (function () {
 
                 setTimeout(() => {
                     location.reload();
-                }, 2000);
+                }, 1000);
             }
 
             if (response.status === 204) {
@@ -336,7 +336,7 @@ const itemsModule = (function () {
 
                 setTimeout(() => {
                     location.reload();
-                }, 2000);
+                }, 1000);
             }
 
         } catch (error) {

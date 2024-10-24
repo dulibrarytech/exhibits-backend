@@ -174,7 +174,7 @@ const itemsGridModule = (function () {
 
                 setTimeout(() => {
                     location.reload();
-                }, 2000);
+                }, 1000);
             }
 
             if (response.status === 204) {
@@ -219,12 +219,11 @@ const itemsGridModule = (function () {
 
             if (response.status === 200) {
 
-                scrollTo(0, 0);
                 document.querySelector('#message').innerHTML = `<div class="alert alert-success" role="alert"><i class="fa fa-check"></i> Grid item suppressed</div>`;
 
                 setTimeout(() => {
                     location.reload();
-                }, 2000);
+                }, 1000);
             }
 
             if (response.status === 204) {

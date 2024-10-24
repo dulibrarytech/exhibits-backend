@@ -141,7 +141,6 @@ const exhibitsModule = (function () {
         let table = new DataTable('#exhibits');
         setTimeout(() => {
             document.querySelector('#exhibit-card').style.visibility = 'visible';
-            document.querySelector('#message').innerHTML = '';
         }, 100);
     };
 
@@ -265,7 +264,7 @@ const exhibitsModule = (function () {
 
             setTimeout(() => {
                 location.reload();
-            }, 2000);
+            }, 1000);
 
             /*
             setTimeout(() => {
@@ -317,7 +316,7 @@ const exhibitsModule = (function () {
 
             setTimeout(() => {
                 location.reload();
-            }, 2000);
+            }, 1000);
 
             /*
             setTimeout(() => {
