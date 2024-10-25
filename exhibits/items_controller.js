@@ -197,6 +197,31 @@ exports.suppress_item_record = async function (req, res) {
 
 };
 
+// TODO
+exports.get_repo_item_record = async function (req, res) {
+
+    const uuid = req.params.uuid;
+
+    if (uuid.length === 0) {
+        res.status(400).send('Bad request.');
+        return false;
+    }
+
+    let response = await ITEMS_MODEL.get_repo_item_record(uuid);
+
+    if (response.status === 200) {
+
+        res.status(200).send({
+            message: 'Repo item retrieved.',
+            data: response.data
+        });
+
+    } else {
+        // TODO:
+    }
+
+};
+
 /*
 
 exports.get_trashed_records = async function (req, res) {

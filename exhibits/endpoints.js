@@ -226,6 +226,11 @@ const ENDPOINTS = {
                 params: 'token or api_key'
             }
         },
+        repo_items: {
+            description: 'Retrieves repository item metadata',
+            endpoint: `${APP_PATH}/repo/:uuid`,
+            params: 'token or api_key, gets repository item metadata'
+        },
         trashed_records: {
             get: {
                 description: 'Retrieves all records flagged as deleted',

@@ -198,6 +198,39 @@ const itemsCommonStandardItemFormModule = (function () {
         return false;
     };
 
+    /** TODO
+     * Gets repo item metadata
+     */
+    obj.get_repo_item_data = async function () {
+
+        try {
+
+            const uuid = document.querySelector('#repo-uuid').value;
+
+            if (uuid.length === 0) {
+                console.log('Enter repo uuid');
+            }
+
+            let token = authModule.get_user_token();
+            let response = await httpModule.req({
+                method: 'GET',
+                url: EXHIBITS_ENDPOINTS.exhibits.repo_items.endpoint.replace(':uuid', uuid),
+                headers: {
+                    'Content-Type': 'application/json',
+                    'x-access-token': token
+                }
+            });
+
+            if (response !== undefined && response.status === 200) {
+                document.querySelector('#item-mime-type').value = response.data.data.mime_type;
+                document.querySelector('#repo-item-metadata').innerHTML = `<p><strong>${response.data.data.title}</strong><br><em>${response.data.data.mime_type}</em></p>`;
+            }
+
+        } catch (error) {
+            document.querySelector('#message').innerHTML = `<div class="alert alert-danger" role="alert"><i class="fa fa-exclamation"></i> ${error.message}</div>`;
+        }
+    };
+
     /**
      * Init function for standard item common add/edit forms
      */
@@ -206,7 +239,7 @@ const itemsCommonStandardItemFormModule = (function () {
         try {
 
             navModule.init();
-            navModule.back_to_items();;
+            navModule.back_to_items();
 
             uploadsModule.upload_item_media();
             uploadsModule.upload_item_thumbnail();
@@ -224,6 +257,8 @@ const itemsCommonStandardItemFormModule = (function () {
                     document.querySelector('#item-font-color').value = document.querySelector('#item-font-color-picker').value;
                 }
             });
+
+            document.querySelector('#repo-uuid-btn').addEventListener('click', await itemsCommonStandardItemFormModule.get_repo_item_data);
 
             setTimeout(() => {
                 document.querySelector('#item-thumbnail-trash').addEventListener('click', itemsCommonStandardItemFormModule.delete_thumbnail_image);

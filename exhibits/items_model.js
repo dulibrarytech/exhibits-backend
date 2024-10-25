@@ -18,6 +18,8 @@
 
 'use strict';
 
+const HTTP = require('axios');
+const CONFIG = require('../config/webservices_config')();
 const DB = require('../config/db_config')();
 const DB_TABLES = require('../config/db_tables_config')();
 const TABLES = DB_TABLES.exhibits;
@@ -418,5 +420,27 @@ exports.suppress_item_record = async function (exhibit_id, item_id) {
 
     } catch (error) {
         LOGGER.module().error('ERROR: [/exhibits/model (suppress_item_record)] ' + error.message);
+    }
+};
+
+/**
+ * Gets repository item metadata
+ * @param uuid
+ */
+exports.get_repo_item_record = async function (uuid) {
+
+    try {
+
+        console.log(uuid);
+        return await HTTP({
+            method: 'GET',
+            url: `${CONFIG.repo_item_api_url}${uuid}?key=${CONFIG.repo_item_api_key}`,
+            headers: {
+                'Content-Type': 'application/json'
+            }
+        });
+
+    } catch (error) {
+        LOGGER.module().error('ERROR: [/exhibits/model (get_repo_item_record)] ' + error.message);
     }
 };

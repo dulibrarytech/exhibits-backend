@@ -48,30 +48,10 @@ module.exports = function (app) {
     app.route(ENDPOINTS().exhibits.item_records.item_suppress.post.endpoint)
     .post(CONTROLLER.suppress_item_record);
 
-    /*
-    app.route(ENDPOINTS().exhibits.item_media.get.endpoint)
-    .get(CONTROLLER.get_item_media);
-    */
+    app.route(ENDPOINTS().exhibits.repo_items.endpoint)
+    .get(TOKEN.verify, CONTROLLER.get_repo_item_record);
 
     /*
-    app.route(ENDPOINTS().exhibits.heading_records.post.endpoint)
-    .post(CONTROLLER.create_heading_record);  // TOKEN.verify,
-
-    app.route(ENDPOINTS().exhibits.heading_records.get.endpoint)
-    .get(CONTROLLER.get_heading_record);
-
-    app.route(ENDPOINTS().exhibits.heading_records.put.endpoint)
-    .put(CONTROLLER.update_heading_record); // TOKEN.verify,
-
-    app.route(ENDPOINTS().exhibits.heading_records.delete.endpoint)
-    .delete(CONTROLLER.delete_heading_record);
-
-    app.route(ENDPOINTS().exhibits.grid_records.post.endpoint)
-    .post(CONTROLLER.create_grid_record);  // TOKEN.verify,
-
-    app.route(ENDPOINTS().exhibits.grid_item_records.post.endpoint)
-    .post(CONTROLLER.create_grid_item_record)
-    .get(CONTROLLER.get_grid_item_records);  // TOKEN.verify,
 
     app.route(ENDPOINTS().exhibits.trashed_records.get.endpoint)
     .get(CONTROLLER.get_trashed_records);
@@ -85,19 +65,5 @@ module.exports = function (app) {
     app.route(ENDPOINTS().exhibits.trashed_records.put.endpoint)
     .put(CONTROLLER.restore_trashed_record);
 
-    app.route(ENDPOINTS().exhibits.exhibit_media.get.endpoint)
-    .get(CONTROLLER.get_exhibit_media);
     */
-
-    /*
-    app.route(ENDPOINTS().exhibits.exhibit_preview.get.endpoint)
-    .get(CONTROLLER.build_exhibit_preview);  // TOKEN verify
-
-    app.route(ENDPOINTS().exhibits.exhibit_publish.post.endpoint)
-    .post(CONTROLLER.publish_exhibit);
-
-    app.route(ENDPOINTS().exhibits.exhibit_suppress.post.endpoint)
-    .post(CONTROLLER.suppress_exhibit);
-
-     */
 };
