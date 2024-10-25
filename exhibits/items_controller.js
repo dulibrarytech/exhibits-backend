@@ -197,7 +197,6 @@ exports.suppress_item_record = async function (req, res) {
 
 };
 
-// TODO
 exports.get_repo_item_record = async function (req, res) {
 
     const uuid = req.params.uuid;
@@ -212,12 +211,15 @@ exports.get_repo_item_record = async function (req, res) {
     if (response.status === 200) {
 
         res.status(200).send({
-            message: 'Repo item retrieved.',
+            message: 'Repo item metadata retrieved.',
             data: response.data
         });
 
     } else {
-        // TODO:
+        res.status(204).send({
+            message: 'Unable to get repo item metadata retrieved.',
+            data: response.data
+        });
     }
 
 };

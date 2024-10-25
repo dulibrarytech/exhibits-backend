@@ -122,6 +122,24 @@ const itemsEditStandardItemFormModule = (function () {
                 console.log('Unable to Determine Type');
             }
 
+            // TODO: check if repo item or kaltura item
+
+            if (record.is_repo_item === 1) {
+                console.log(record);
+                // class="nav-link active"
+                // aria-selected="true"
+                /*
+                const element = document.getElementById("myDIV");  // Get the DIV element
+                element.classList.remove("mystyle"); // Remove mystyle class from DIV
+                element.classList.add("newone"); // Add newone class to DIV
+                 */
+
+            }
+
+            if (record.is_kaltura_item === 1) {
+                console.log(record);
+            }
+
             document.querySelector('#item-type').value = record.item_type;
             document.querySelector('#item-mime-type').value = helperModule.unescape(record.mime_type);
             document.querySelector('#item-media-thumbnail-image-display').innerHTML = thumbnail_fragment;

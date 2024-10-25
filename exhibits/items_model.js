@@ -431,7 +431,6 @@ exports.get_repo_item_record = async function (uuid) {
 
     try {
 
-        console.log(uuid);
         return await HTTP({
             method: 'GET',
             url: `${CONFIG.repo_item_api_url}${uuid}?key=${CONFIG.repo_item_api_key}`,
