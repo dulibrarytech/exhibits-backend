@@ -208,7 +208,7 @@ const itemsCommonStandardItemFormModule = (function () {
             const uuid = document.querySelector('#repo-uuid').value;
 
             if (uuid.length === 0) {
-                console.log('Enter repo uuid');
+                document.querySelector('#message').innerHTML = `<div class="alert alert-danger" role="alert"><i class="fa fa-exclamation"></i> Please enter a Repository UUID</div>`;
             }
 
             let token = authModule.get_user_token();
