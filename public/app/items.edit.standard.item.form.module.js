@@ -96,44 +96,44 @@ const itemsEditStandardItemFormModule = (function () {
 
         rich_text_data['item-caption-input'] = helperModule.set_rich_text_editor('item-caption-input');
         rich_text_data['item-caption-input'].setHTMLCode(helperModule.unescape(record.caption));
-        /*
-        rich_text_data['item-description-input'] = helperModule.set_rich_text_editor('item-description-input');
-        rich_text_data['item-description-input'].setHTMLCode(helperModule.unescape(record.description));
-        */
+
         rich_text_data['item-text-input'] = helperModule.set_rich_text_editor('item-text-input');
         rich_text_data['item-text-input'].setHTMLCode(helperModule.unescape(record.text));
 
         if (record.media.length > 0) {
 
-            if (record.mime_type.indexOf('image') !== -1) {
-                thumbnail_url = EXHIBITS_ENDPOINTS.exhibits.exhibit_media.get.endpoint.replace(':exhibit_id', record.is_member_of_exhibit).replace(':media', record.thumbnail);
-                thumbnail_fragment = `<p><img src="${thumbnail_url}" height="200" ></p>`;
-            } else if (record.mime_type.indexOf('video') !== -1) {
-                thumbnail_url = '/exhibits-dashboard/static/images/video-tn.png';
-                thumbnail_fragment = `<p><img src="${thumbnail_url}" height="200" ></p>`;
-            } else if (record.mime_type.indexOf('audio') !== -1) {
-                thumbnail_url = '/exhibits-dashboard/static/images/audio-tn.png';
-                thumbnail_fragment = `<p><img src="${thumbnail_url}" height="200" ></p>`;
-            } else if (record.mime_type.indexOf('pdf') !== -1) {
-                thumbnail_url = '/exhibits-dashboard/static/images/pdf-tn.png';
-                thumbnail_fragment = `<p><img src="${thumbnail_url}" height="200" ></p>`;
-                document.querySelector('#toggle-open-to-page').style.visibility = 'visible';
-            } else {
-                console.log('Unable to Determine Type');
+            if (record.is_repo_item === 0 && record.is_kaltura_item === 0) {
+
+                if (record.mime_type.indexOf('image') !== -1) {
+                    thumbnail_url = EXHIBITS_ENDPOINTS.exhibits.exhibit_media.get.endpoint.replace(':exhibit_id', record.is_member_of_exhibit).replace(':media', record.thumbnail);
+                    thumbnail_fragment = `<p><img src="${thumbnail_url}" height="200" ></p>`;
+                } else if (record.mime_type.indexOf('video') !== -1) {
+                    thumbnail_url = '/exhibits-dashboard/static/images/video-tn.png';
+                    thumbnail_fragment = `<p><img src="${thumbnail_url}" height="200" ></p>`;
+                } else if (record.mime_type.indexOf('audio') !== -1) {
+                    thumbnail_url = '/exhibits-dashboard/static/images/audio-tn.png';
+                    thumbnail_fragment = `<p><img src="${thumbnail_url}" height="200" ></p>`;
+                } else if (record.mime_type.indexOf('pdf') !== -1) {
+                    thumbnail_url = '/exhibits-dashboard/static/images/pdf-tn.png';
+                    thumbnail_fragment = `<p><img src="${thumbnail_url}" height="200" ></p>`;
+                    document.querySelector('#toggle-open-to-page').style.visibility = 'visible';
+                } else {
+                    console.log('Unable to Determine Type');
+                }
             }
 
-            // TODO: check if repo item or kaltura item
-
             if (record.is_repo_item === 1) {
-                console.log(record);
-                // class="nav-link active"
-                // aria-selected="true"
-                /*
-                const element = document.getElementById("myDIV");  // Get the DIV element
-                element.classList.remove("mystyle"); // Remove mystyle class from DIV
-                element.classList.add("newone"); // Add newone class to DIV
-                 */
 
+                document.getElementById('upload-media-tab').classList.remove('active');
+                document.getElementById('import-repo-media-tab').classList.add('active');
+                document.getElementById('upload-media').classList.remove('active');
+                document.getElementById('upload-media').classList.remove('show');
+                document.getElementById('import-repo-media').classList.add('show');
+                document.getElementById('import-repo-media').classList.add('active');
+                document.getElementById('upload-media-tab').setAttribute('aria-selected', 'false');
+                document.getElementById('import-repo-media-tab').setAttribute('aria-selected', 'true');
+                document.querySelector('#repo-uuid').value = record.media;
+                await itemsCommonStandardItemFormModule.get_repo_item_data();
             }
 
             if (record.is_kaltura_item === 1) {

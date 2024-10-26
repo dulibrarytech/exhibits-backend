@@ -198,7 +198,7 @@ const itemsCommonStandardItemFormModule = (function () {
         return false;
     };
 
-    /** TODO
+    /**
      * Gets repo item metadata
      */
     obj.get_repo_item_data = async function () {
