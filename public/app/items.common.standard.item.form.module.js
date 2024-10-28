@@ -199,39 +199,6 @@ const itemsCommonStandardItemFormModule = (function () {
     };
 
     /**
-     * Gets repo item metadata
-     */
-    obj.get_repo_item_data = async function () {
-
-        try {
-
-            const uuid = document.querySelector('#repo-uuid').value;
-
-            if (uuid.length === 0) {
-                document.querySelector('#message').innerHTML = `<div class="alert alert-danger" role="alert"><i class="fa fa-exclamation"></i> Please enter a Repository UUID</div>`;
-            }
-
-            let token = authModule.get_user_token();
-            let response = await httpModule.req({
-                method: 'GET',
-                url: EXHIBITS_ENDPOINTS.exhibits.repo_items.endpoint.replace(':uuid', uuid),
-                headers: {
-                    'Content-Type': 'application/json',
-                    'x-access-token': token
-                }
-            });
-
-            if (response !== undefined && response.status === 200) {
-                document.querySelector('#item-mime-type').value = response.data.data.mime_type;
-                document.querySelector('#repo-item-metadata').innerHTML = `<p><strong>${response.data.data.title}</strong><br><em>${response.data.data.mime_type}</em></p>`;
-            }
-
-        } catch (error) {
-            document.querySelector('#message').innerHTML = `<div class="alert alert-danger" role="alert"><i class="fa fa-exclamation"></i> ${error.message}</div>`;
-        }
-    };
-
-    /**
      * Init function for standard item common add/edit forms
      */
     obj.init = async function () {
@@ -258,13 +225,12 @@ const itemsCommonStandardItemFormModule = (function () {
                 }
             });
 
-            document.querySelector('#repo-uuid-btn').addEventListener('click', await itemsCommonStandardItemFormModule.get_repo_item_data);
-
             setTimeout(() => {
                 document.querySelector('#item-thumbnail-trash').addEventListener('click', itemsCommonStandardItemFormModule.delete_thumbnail_image);
                 document.querySelector('#item-media-trash').addEventListener('click', itemsCommonStandardItemFormModule.delete_media);
             }, 1000);
 
+            document.querySelector('#repo-uuid-btn').addEventListener('click', await helperModule.get_repo_item_data);
             helperModule.show_form();
 
         } catch (error) {

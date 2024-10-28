@@ -230,6 +230,7 @@ const itemsCommonGridItemFormModule = (function () {
                 document.querySelector('#item-thumbnail-trash').addEventListener('click', itemsCommonGridItemFormModule.delete_thumbnail_image);
             }, 1000);
 
+            document.querySelector('#repo-uuid-btn').addEventListener('click', await helperModule.get_repo_item_data);
             helperModule.show_form();
 
         } catch (error) {
