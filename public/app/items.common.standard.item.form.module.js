@@ -265,15 +265,7 @@ const itemsCommonStandardItemFormModule = (function () {
                 document.querySelector('#item-media-trash').addEventListener('click', itemsCommonStandardItemFormModule.delete_media);
             }, 1000);
 
-            const form_cards = Array.from(document.getElementsByClassName('card'));
-
-            setTimeout(() => {
-
-                form_cards.forEach(card => {
-                    card.style.visibility = 'visible';
-                });
-
-            }, 250);
+            helperModule.show_form();
 
         } catch (error) {
             document.querySelector('#message').innerHTML = `<div class="alert alert-danger" role="alert"><i class="fa fa-exclamation"></i> ${error.message}</div>`;
