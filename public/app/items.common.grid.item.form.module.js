@@ -230,9 +230,7 @@ const itemsCommonGridItemFormModule = (function () {
                 document.querySelector('#item-thumbnail-trash').addEventListener('click', itemsCommonGridItemFormModule.delete_thumbnail_image);
             }, 1000);
 
-            setTimeout(() => {
-                document.querySelector('#item-data-card').style.visibility = 'visible';
-            }, 250);
+            helperModule.show_form();
 
         } catch (error) {
             document.querySelector('#message').innerHTML = `<div class="alert alert-danger" role="alert"><i class="fa fa-exclamation"></i> ${error.message}</div>`;
