@@ -79,9 +79,7 @@ const itemsCommonHeadingFormModule = (function () {
                 }
             });
 
-            setTimeout(() => {
-                document.querySelector('#item-heading-card').style.visibility = 'visible';
-            }, 150);
+            helperModule.show_form();
 
         } catch (error) {
             document.querySelector('#message').innerHTML = `<div class="alert alert-danger" role="alert"><i class="fa fa-exclamation"></i> ${error.message}</div>`;
