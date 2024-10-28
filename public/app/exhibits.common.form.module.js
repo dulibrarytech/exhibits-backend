@@ -198,7 +198,6 @@ const exhibitsCommonFormModule = (function () {
         try {
 
             navModule.init();
-            // document.querySelector('#logout').addEventListener('click', authModule.logout);
             document.querySelector('#hero-trash').style.display = 'none';
             document.querySelector('#thumbnail-trash').style.display = 'none';
 
@@ -228,6 +227,17 @@ const exhibitsCommonFormModule = (function () {
                     document.querySelector('#template-font-color').value = document.querySelector('#template-font-color-picker').value;
                 }
             });
+
+            const form_cards = Array.from(document.getElementsByClassName('card'));
+
+            setTimeout(() => {
+
+                form_cards.forEach(card => {
+                    card.style.visibility = 'visible';
+                });
+
+                // document.querySelector('.card').style.visibility = 'visible';
+            }, 250);
 
         } catch (error) {
             document.querySelector('#message').innerHTML = `<div class="alert alert-danger" role="alert"><i class="fa fa-exclamation"></i> ${error.message}</div>`;

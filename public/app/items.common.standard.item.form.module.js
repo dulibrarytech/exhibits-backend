@@ -265,8 +265,14 @@ const itemsCommonStandardItemFormModule = (function () {
                 document.querySelector('#item-media-trash').addEventListener('click', itemsCommonStandardItemFormModule.delete_media);
             }, 1000);
 
+            const form_cards = Array.from(document.getElementsByClassName('card'));
+
             setTimeout(() => {
-                document.querySelector('#item-data-card').style.visibility = 'visible';
+
+                form_cards.forEach(card => {
+                    card.style.visibility = 'visible';
+                });
+
             }, 250);
 
         } catch (error) {

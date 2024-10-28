@@ -120,6 +120,9 @@ const itemsEditStandardItemFormModule = (function () {
                 } else {
                     console.log('Unable to Determine Type');
                 }
+
+                document.querySelector('#item-media-trash').style.display = 'inline';
+                document.querySelector('#item-media-filename-display').innerHTML = `<span style="font-size: 11px">${record.media}</span>`;
             }
 
             if (record.is_repo_item === 1) {
@@ -143,10 +146,9 @@ const itemsEditStandardItemFormModule = (function () {
             document.querySelector('#item-type').value = record.item_type;
             document.querySelector('#item-mime-type').value = helperModule.unescape(record.mime_type);
             document.querySelector('#item-media-thumbnail-image-display').innerHTML = thumbnail_fragment;
-            document.querySelector('#item-media-filename-display').innerHTML = `<span style="font-size: 11px">${record.media}</span>`;
             document.querySelector('#item-media').value = record.media;
             document.querySelector('#item-media-prev').value = record.media;
-            document.querySelector('#item-media-trash').style.display = 'inline';
+
         }
 
         if (record.thumbnail.length > 0) {
