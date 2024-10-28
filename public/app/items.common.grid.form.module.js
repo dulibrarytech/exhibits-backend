@@ -33,7 +33,6 @@ const itemsCommonStandardGridFormModule = (function () {
             grid.styles = {};
 
             // grid metadata
-            // grid.title = document.querySelector('#grid-title').value;
             grid.title = rich_text_data['grid-title-input'].getHTMLCode();
             grid.columns = document.querySelector('#grid-columns').value;
 
@@ -89,9 +88,7 @@ const itemsCommonStandardGridFormModule = (function () {
                 }
             });
 
-            setTimeout(() => {
-                document.querySelector('#grid-data-card').style.visibility = 'visible';
-            }, 250);
+            helperModule.show_form();
 
         } catch (error) {
             document.querySelector('#message').innerHTML = `<div class="alert alert-danger" role="alert"><i class="fa fa-exclamation"></i> ${error.message}</div>`;
