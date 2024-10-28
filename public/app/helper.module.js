@@ -138,6 +138,22 @@ const helperModule = (function () {
         domModule.html('#cdate', DOMPurify.sanitize(cdate));
     };
 
+    /**
+     * Shows form - changes .card class to visible
+     */
+    obj.show_form = function () {
+
+        const form_cards = Array.from(document.getElementsByClassName('card'));
+
+        setTimeout(() => {
+
+            form_cards.forEach(card => {
+                card.style.visibility = 'visible';
+            });
+
+        }, 250);
+    };
+
     obj.init = function() {};
 
     return obj;

@@ -228,16 +228,7 @@ const exhibitsCommonFormModule = (function () {
                 }
             });
 
-            const form_cards = Array.from(document.getElementsByClassName('card'));
-
-            setTimeout(() => {
-
-                form_cards.forEach(card => {
-                    card.style.visibility = 'visible';
-                });
-
-                // document.querySelector('.card').style.visibility = 'visible';
-            }, 250);
+            helperModule.show_form();
 
         } catch (error) {
             document.querySelector('#message').innerHTML = `<div class="alert alert-danger" role="alert"><i class="fa fa-exclamation"></i> ${error.message}</div>`;
