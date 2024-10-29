@@ -145,7 +145,16 @@ const itemsEditGridItemFormModule = (function () {
             }
 
             if (record.is_kaltura_item === 1) {
-                console.log(record);
+
+                document.getElementById('upload-media-tab').classList.remove('active');
+                document.getElementById('import-audio-video-tab').classList.add('active');
+                document.getElementById('upload-media').classList.remove('active');
+                document.getElementById('upload-media').classList.remove('show');
+                document.getElementById('import-audio-video').classList.add('show');
+                document.getElementById('import-audio-video').classList.add('active');
+                document.getElementById('upload-media-tab').setAttribute('aria-selected', 'false');
+                document.getElementById('import-audio-video-tab').setAttribute('aria-selected', 'true');
+                document.querySelector('#audio-video').value = record.media;
             }
 
             document.querySelector('#item-type').value = record.item_type;
