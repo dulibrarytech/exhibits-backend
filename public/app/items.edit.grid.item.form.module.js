@@ -73,7 +73,7 @@ const itemsEditGridItemFormModule = (function () {
                     'x-access-token': token
                 }
             });
-            console.log(response);
+
             if (response !== undefined && response.status === 200) {
                 return response.data.data[0];
             }
