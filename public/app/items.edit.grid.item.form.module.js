@@ -107,6 +107,69 @@ const itemsEditGridItemFormModule = (function () {
 
         if (record.media.length > 0) {
 
+            if (record.is_repo_item === 0 && record.is_kaltura_item === 0) {
+
+                if (record.mime_type.indexOf('image') !== -1) {
+                    thumbnail_url = EXHIBITS_ENDPOINTS.exhibits.exhibit_media.get.endpoint.replace(':exhibit_id', record.is_member_of_exhibit).replace(':media', record.thumbnail);
+                    thumbnail_fragment = `<p><img src="${thumbnail_url}" height="200" ></p>`;
+                } else if (record.mime_type.indexOf('video') !== -1) {
+                    thumbnail_url = '/exhibits-dashboard/static/images/video-tn.png';
+                    thumbnail_fragment = `<p><img src="${thumbnail_url}" height="200" ></p>`;
+                } else if (record.mime_type.indexOf('audio') !== -1) {
+                    thumbnail_url = '/exhibits-dashboard/static/images/audio-tn.png';
+                    thumbnail_fragment = `<p><img src="${thumbnail_url}" height="200" ></p>`;
+                } else if (record.mime_type.indexOf('pdf') !== -1) {
+                    thumbnail_url = '/exhibits-dashboard/static/images/pdf-tn.png';
+                    thumbnail_fragment = `<p><img src="${thumbnail_url}" height="200" ></p>`;
+                    document.querySelector('#toggle-open-to-page').style.visibility = 'visible';
+                } else {
+                    console.log('Unable to Determine Type');
+                }
+
+                document.querySelector('#item-media-trash').style.display = 'inline';
+                document.querySelector('#item-media-filename-display').innerHTML = `<span style="font-size: 11px">${record.media}</span>`;
+            }
+
+            if (record.is_repo_item === 1) {
+
+                document.getElementById('upload-media-tab').classList.remove('active');
+                document.getElementById('import-repo-media-tab').classList.add('active');
+                document.getElementById('upload-media').classList.remove('active');
+                document.getElementById('upload-media').classList.remove('show');
+                document.getElementById('import-repo-media').classList.add('show');
+                document.getElementById('import-repo-media').classList.add('active');
+                document.getElementById('upload-media-tab').setAttribute('aria-selected', 'false');
+                document.getElementById('import-repo-media-tab').setAttribute('aria-selected', 'true');
+                document.querySelector('#repo-uuid').value = record.media;
+                await helperModule.get_repo_item_data();
+            }
+
+            if (record.is_kaltura_item === 1) {
+                console.log(record);
+            }
+
+            document.querySelector('#item-type').value = record.item_type;
+            document.querySelector('#item-mime-type').value = helperModule.unescape(record.mime_type);
+            document.querySelector('#item-media-thumbnail-image-display').innerHTML = thumbnail_fragment;
+            document.querySelector('#item-media').value = record.media;
+            document.querySelector('#item-media-prev').value = record.media;
+
+        }
+
+        if (record.thumbnail.length > 0) {
+
+            thumbnail_url = EXHIBITS_ENDPOINTS.exhibits.exhibit_media.get.endpoint.replace(':exhibit_id', record.is_member_of_exhibit).replace(':media', record.thumbnail);
+            thumbnail_fragment = `<p><img src="${thumbnail_url}" height="200" ></p>`;
+            document.querySelector('#item-thumbnail-image-display').innerHTML = thumbnail_fragment;
+            document.querySelector('#item-thumbnail-filename-display').innerHTML = `<span style="font-size: 11px">${record.thumbnail}</span>`;
+            document.querySelector('#item-thumbnail').value = record.thumbnail;
+            document.querySelector('#item-thumbnail-image-prev').value = record.thumbnail;
+            document.querySelector('#item-thumbnail-trash').style.display = 'inline';
+        }
+
+        /*
+        if (record.media.length > 0) {
+
             if (record.mime_type.indexOf('image') !== -1) {
                 thumbnail_url = EXHIBITS_ENDPOINTS.exhibits.exhibit_media.get.endpoint.replace(':exhibit_id', record.is_member_of_exhibit).replace(':media', record.thumbnail);
                 thumbnail_fragment = `<p><img src="${thumbnail_url}" height="200" ></p>`;
@@ -143,6 +206,8 @@ const itemsEditGridItemFormModule = (function () {
             document.querySelector('#item-thumbnail-image-prev').value = record.thumbnail;
             document.querySelector('#item-thumbnail-trash').style.display = 'inline';
         }
+
+         */
 
         let layouts = document.getElementsByName('layout');
 

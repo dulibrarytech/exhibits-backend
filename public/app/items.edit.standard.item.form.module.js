@@ -136,7 +136,7 @@ const itemsEditStandardItemFormModule = (function () {
                 document.getElementById('upload-media-tab').setAttribute('aria-selected', 'false');
                 document.getElementById('import-repo-media-tab').setAttribute('aria-selected', 'true');
                 document.querySelector('#repo-uuid').value = record.media;
-                await itemsCommonStandardItemFormModule.get_repo_item_data();
+                await helperModule.get_repo_item_data();
             }
 
             if (record.is_kaltura_item === 1) {
