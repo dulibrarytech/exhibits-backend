@@ -174,8 +174,6 @@ exports.create_grid_item_record = async function (is_member_of_exhibit, grid_id,
         data.is_member_of_grid = grid_id;
 
         const VALIDATE_TASK = new VALIDATOR(EXHIBITS_CREATE_GRID_ITEM_SCHEMA);
-
-        data.styles = JSON.stringify(data.styles);
         let is_valid = VALIDATE_TASK.validate(data);
 
         if (is_valid !== true) {
@@ -201,20 +199,20 @@ exports.create_grid_item_record = async function (is_member_of_exhibit, grid_id,
             data.item_type = 'kaltura';
             data.is_kaltura_item = 1;
         } else if (data.repo_uuid.length > 0) {
-            // TODO: get record mime type
-            // https://specialcollections.du.edu/repository/data/{pid}?key=<>
             data.media = data.repo_uuid;
             data.item_type = 'repo';
             data.is_repo_item = 1;
         }
-
+        console.log(data.styles);
         if (data.styles === undefined || data.styles.length === 0) {
             data.styles = {};
         }
 
-        delete data.media_prev;
+        data.styles = JSON.stringify(data.styles);
         delete data.kaltura;
         delete data.repo_uuid;
+        delete data.media_prev;
+        delete data.thumbnail_prev;
 
         data.order = await HELPER_TASK.order_grid_items(data.is_member_of_grid, DB, TABLES);
 

@@ -116,13 +116,11 @@ exports.create_item_record = async function (is_member_of_exhibit, data) {
             data.item_type = 'kaltura';
             data.is_kaltura_item = 1;
         } else if (data.repo_uuid.length > 0) {
-            // TODO: get record mime type
-            // https://specialcollections.du.edu/repository/data/{pid}?key=<>
             data.media = data.repo_uuid;
             data.item_type = 'repo'; // <-- determine mime type and add here
             data.is_repo_item = 1;
         }
-
+        console.log(data.styles);
         if (data.styles === undefined || data.styles.length === 0) {
             data.styles = {};
         }
@@ -201,8 +199,6 @@ exports.update_item_record = async function (is_member_of_exhibit, item_id, data
             data.item_type = 'kaltura';
             data.is_kaltura_item = 1;
         } else if (data.repo_uuid.length > 0) {
-            // TODO: get record mime type
-            // https://specialcollections.du.edu/repository/data/{pid}?key=<>
             data.media = data.repo_uuid;
             data.item_type = 'repo';
             data.is_repo_item = 1;
