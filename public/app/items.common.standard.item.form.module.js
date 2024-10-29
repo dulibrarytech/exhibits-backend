@@ -60,6 +60,14 @@ const itemsCommonStandardItemFormModule = (function () {
                 return false;
             }
 
+            if (item.media.length > 0 && item.repo_uuid.length > 0 && item.media === item.repo_uuid) {
+                item.repo_uuid = '';
+            }
+
+            if (item.media.length > 0 && item.kaltura.length > 0 && item.media === item.kaltura) {
+                item.kaltura = '';
+            }
+
             if (item.media.length > 0) {
                 media.push(item.media);
             }
