@@ -20,7 +20,6 @@
 
 const GRIDS_MODEL = require('../exhibits/grid_model');
 const FS = require('fs');
-const ITEMS_MODEL = require("./items_model");
 
 exports.create_grid_record = async function (req, res) {
 

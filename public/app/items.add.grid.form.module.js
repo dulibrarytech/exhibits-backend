@@ -53,7 +53,7 @@ const itemsAddGridFormModule = (function () {
 
             document.querySelector('#message').innerHTML = `<div class="alert alert-info" role="alert"><i class="fa fa-info"></i> Creating grid record...</div>`;
 
-            let data = itemsCommonStandardGridFormModule.get_common_grid_form_fields();
+            let data = itemsCommonStandardGridFormModule.get_common_grid_form_fields(rich_text_data);
             let token = authModule.get_user_token();
             let response = await httpModule.req({
                 method: 'POST',
