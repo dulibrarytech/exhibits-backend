@@ -389,6 +389,33 @@ exports.delete_media_value = async function (uuid, media) {
 };
 
 /**
+ *
+ * @param is_member_of_exhibit
+ * @param grid_id
+ * @param grid_item_id
+ */
+exports.delete_grid_item_record = async function (is_member_of_exhibit, grid_id, grid_item_id) {
+
+    try {
+
+        const TASK = new EXHIBIT_GRID_RECORD_TASKS(DB, TABLES);
+
+        return {
+            status: 204,
+            message: 'Record deleted',
+            data: await TASK.delete_grid_item_record(is_member_of_exhibit, grid_id, grid_item_id)
+        };
+
+    } catch (error) {
+        LOGGER.module().error('ERROR: [/exhibits/model (delete_grid_item_record)] ' + error.message);
+        return {
+            status: 400,
+            message: error.message
+        };
+    }
+};
+
+/**
  * Publishes grid
  * @param exhibit_id
  * @param grid_id

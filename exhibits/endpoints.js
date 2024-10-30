@@ -138,6 +138,11 @@ const ENDPOINTS = {
                 params: 'token or api_key',
                 body: 'is_member_of_exhibit, grid_id, item_id, record data'
             },
+            delete: {
+                description: 'Deletes grid item record',
+                endpoint: `${APP_PATH}${PREFIX}${VERSION}${ENDPOINT}/:exhibit_id/grids/:grid_id/items/:item_id`,
+                params: 'token or api_key, uuid'
+            },
             grid_item_publish: {
                 post: {
                     description: 'Publishes grid item',

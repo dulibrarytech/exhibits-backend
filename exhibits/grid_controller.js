@@ -19,109 +19,174 @@
 'use strict';
 
 const GRIDS_MODEL = require('../exhibits/grid_model');
-const FS = require("fs");
+const FS = require('fs');
+const ITEMS_MODEL = require("./items_model");
 
 exports.create_grid_record = async function (req, res) {
 
-    const is_member_of_exhibit = req.params.exhibit_id;
-    const data = req.body;
+    try {
 
-    if (data === undefined || is_member_of_exhibit === undefined) {
-        res.status(400).send('Bad request.');
-        return false;
+        const is_member_of_exhibit = req.params.exhibit_id;
+        const data = req.body;
+
+        if (data === undefined || is_member_of_exhibit === undefined) {
+            res.status(400).send('Bad request.');
+            return false;
+        }
+
+        const result = await GRIDS_MODEL.create_grid_record(is_member_of_exhibit, data);
+        res.status(result.status).send(result);
+
+    } catch (error) {
+        res.status(500).send({message: `Unable to create grid item record. ${error.message}`});
     }
-
-    const result = await GRIDS_MODEL.create_grid_record(is_member_of_exhibit, data);
-    res.status(result.status).send(result);
 };
 
 exports.update_grid_record = async function (req, res) {
 
-    const is_member_of_exhibit = req.params.exhibit_id;
-    const grid_id = req.params.grid_id;
-    const data = req.body;
+    try {
 
-    if (data === undefined || is_member_of_exhibit === undefined || grid_id === undefined) {
-        res.status(400).send('Bad request.');
-        return false;
+        const is_member_of_exhibit = req.params.exhibit_id;
+        const grid_id = req.params.grid_id;
+        const data = req.body;
+
+        if (data === undefined || is_member_of_exhibit === undefined || grid_id === undefined) {
+            res.status(400).send('Bad request.');
+            return false;
+        }
+
+        const result = await GRIDS_MODEL.update_grid_record(is_member_of_exhibit, grid_id, data);
+        res.status(result.status).send(result);
+
+    } catch (error) {
+        res.status(500).send({message: `Unable to update grid item record. ${error.message}`});
     }
-
-    const result = await GRIDS_MODEL.update_grid_record(is_member_of_exhibit, grid_id, data);
-    res.status(result.status).send(result);
 };
 
 exports.get_grid_record = async function (req, res) {
 
-    const is_member_of_exhibit = req.params.exhibit_id;
-    const grid_id = req.params.grid_id;
+    try {
 
-    if (is_member_of_exhibit === undefined || grid_id === undefined) {
-        res.status(400).send('Bad request.');
-        return false;
+        const is_member_of_exhibit = req.params.exhibit_id;
+        const grid_id = req.params.grid_id;
+
+        if (is_member_of_exhibit === undefined || grid_id === undefined) {
+            res.status(400).send('Bad request.');
+            return false;
+        }
+
+        const result = await GRIDS_MODEL.get_grid_record(is_member_of_exhibit, grid_id);
+        res.status(result.status).send(result);
+
+    } catch (error) {
+        res.status(500).send({message: `Unable to get grid item record. ${error.message}`});
     }
-
-    const result = await GRIDS_MODEL.get_grid_record(is_member_of_exhibit, grid_id);
-    res.status(result.status).send(result);
 };
 
 exports.create_grid_item_record = async function (req, res) {
 
-    const is_member_of_exhibit = req.params.exhibit_id;
-    const grid_id = req.params.grid_id;
-    const data = req.body;
+    try {
 
-    if (is_member_of_exhibit === undefined || grid_id === undefined || data === undefined) {
-        res.status(400).send('Bad request.');
-        return false;
+        const is_member_of_exhibit = req.params.exhibit_id;
+        const grid_id = req.params.grid_id;
+        const data = req.body;
+
+        if (is_member_of_exhibit === undefined || grid_id === undefined || data === undefined) {
+            res.status(400).send('Bad request.');
+            return false;
+        }
+
+        const result = await GRIDS_MODEL.create_grid_item_record(is_member_of_exhibit, grid_id, data);
+        res.status(result.status).send(result);
+
+    } catch (error) {
+        res.status(500).send({message: `Unable to create grid item record. ${error.message}`});
     }
-
-    const result = await GRIDS_MODEL.create_grid_item_record(is_member_of_exhibit, grid_id, data);
-    res.status(result.status).send(result);
 };
 
 exports.get_grid_item_records = async function (req, res) {
 
-    const is_member_of_exhibit = req.params.exhibit_id;
-    const is_member_of_grid = req.params.grid_id;
+    try {
 
-    if (is_member_of_exhibit === undefined || is_member_of_grid === undefined) {
-        res.status(400).send('Bad request.');
-        return false;
+        const is_member_of_exhibit = req.params.exhibit_id;
+        const is_member_of_grid = req.params.grid_id;
+
+        if (is_member_of_exhibit === undefined || is_member_of_grid === undefined) {
+            res.status(400).send('Bad request.');
+            return false;
+        }
+
+        const result = await GRIDS_MODEL.get_grid_item_records(is_member_of_exhibit, is_member_of_grid);
+        res.status(result.status).send(result);
+
+    } catch (error) {
+        res.status(500).send({message: `Unable to get grid item records. ${error.message}`});
     }
-
-    const result = await GRIDS_MODEL.get_grid_item_records(is_member_of_exhibit, is_member_of_grid);
-    res.status(result.status).send(result);
 };
 
 exports.get_grid_item_record = async function (req, res) {
 
-    const is_member_of_exhibit = req.params.exhibit_id;
-    const is_member_of_grid = req.params.grid_id;
-    const item_id = req.params.item_id;
+    try {
 
-    if (is_member_of_exhibit === undefined || is_member_of_grid === undefined || item_id === undefined) {
-        res.status(400).send('Bad request.');
-        return false;
+        const is_member_of_exhibit = req.params.exhibit_id;
+        const is_member_of_grid = req.params.grid_id;
+        const item_id = req.params.item_id;
+
+        if (is_member_of_exhibit === undefined || is_member_of_grid === undefined || item_id === undefined) {
+            res.status(400).send('Bad request.');
+            return false;
+        }
+
+        const result = await GRIDS_MODEL.get_grid_item_record(is_member_of_exhibit, is_member_of_grid, item_id);
+        res.status(result.status).send(result);
+
+    } catch (error) {
+        res.status(500).send({message: `Unable to get grid item. ${error.message}`});
     }
-
-    const result = await GRIDS_MODEL.get_grid_item_record(is_member_of_exhibit, is_member_of_grid, item_id);
-    res.status(result.status).send(result);
 };
 
 exports.update_grid_item_record = async function (req, res) {
 
-    const is_member_of_exhibit = req.params.exhibit_id;
-    const grid_id = req.params.grid_id;
-    const item_id = req.params.item_id;
-    const data = req.body;
+    try {
 
-    if (data === undefined || is_member_of_exhibit === undefined || grid_id === undefined || item_id === undefined) {
-        res.status(400).send('Bad request.');
-        return false;
+        const is_member_of_exhibit = req.params.exhibit_id;
+        const grid_id = req.params.grid_id;
+        const item_id = req.params.item_id;
+        const data = req.body;
+
+        if (data === undefined || is_member_of_exhibit === undefined || grid_id === undefined || item_id === undefined) {
+            res.status(400).send('Bad request.');
+            return false;
+        }
+
+        const result = await GRIDS_MODEL.update_grid_item_record(is_member_of_exhibit, grid_id, item_id, data);
+        res.status(result.status).send(result);
+
+    } catch (error) {
+        res.status(500).send({message: `Unable to update grid item. ${error.message}`});
     }
+};
 
-    const result = await GRIDS_MODEL.update_grid_item_record(is_member_of_exhibit, grid_id, item_id, data);
-    res.status(result.status).send(result);
+exports.delete_grid_item_record = async function (req, res) {
+
+    try {
+
+        const is_member_of_exhibit = req.params.exhibit_id;
+        const grid_id = req.params.grid_id;
+        const grid_item_id = req.params.item_id;
+        const type = req.query.type;
+
+        if (grid_item_id === undefined || grid_item_id.length === 0 && grid_id === undefined || grid_id.length === 0) {
+            res.status(400).send('Bad request.');
+            return false;
+        }
+
+        const result = await GRIDS_MODEL.delete_grid_item_record(is_member_of_exhibit, grid_id, grid_item_id, type);
+        res.status(result.status).send(result);
+
+    } catch (error) {
+        res.status(500).send({message: `Unable to delete grid item. ${error.message}`});
+    }
 };
 
 exports.delete_grid_item_media = function (req, res) {
@@ -148,59 +213,69 @@ exports.delete_grid_item_media = function (req, res) {
     } catch(error) {
         res.status(404).send({message: `Unable to delete exhibit media file. ${error.message}`});
     }
-
-    return false;
 };
 
 exports.publish_grid_item_record = async function (req, res) {
 
-    const exhibit_id = req.params.exhibit_id;
-    const grid_id = req.params.grid_id;
-    const grid_item_id = req.params.grid_item_id;
-    const type = req.query.type;
-    let result;
+    try {
 
-    if (exhibit_id === undefined || exhibit_id.length === 0 && grid_id === undefined || grid_id.length === 0) {
-        res.status(400).send('Bad request.');
-        return false;
-    }
+        const exhibit_id = req.params.exhibit_id;
+        const grid_id = req.params.grid_id;
+        const grid_item_id = req.params.grid_item_id;
+        const type = req.query.type;
+        let result;
 
-    result = await GRIDS_MODEL.publish_grid_item_record(exhibit_id, grid_id, grid_item_id);
+        if (exhibit_id === undefined || exhibit_id.length === 0 && grid_id === undefined || grid_id.length === 0) {
+            res.status(400).send('Bad request.');
+            return false;
+        }
 
-    if (result.status === true) {
+        result = await GRIDS_MODEL.publish_grid_item_record(exhibit_id, grid_id, grid_item_id);
 
-        res.status(200).send({
-            message: 'Grid item published.'
-        });
-    } else if (result.status === false) {
-        res.status(204).send({
-            message: 'Unable to publish grid item'
-        });
+        if (result.status === true) {
+
+            res.status(200).send({
+                message: 'Grid item published.'
+            });
+        } else if (result.status === false) {
+            res.status(204).send({
+                message: 'Unable to publish grid item'
+            });
+        }
+
+    } catch (error) {
+        res.status(500).send({message: `Unable to publish grid item record. ${error.message}`});
     }
 };
 
 exports.suppress_grid_item_record = async function (req, res) {
 
-    const exhibit_id = req.params.exhibit_id;
-    const grid_id = req.params.grid_id;
-    const grid_item_id = req.params.grid_item_id;
-    const type = req.query.type;
-    let result;
+    try {
 
-    if (exhibit_id === undefined || exhibit_id.length === 0 && grid_id === undefined || grid_id.length === 0) {
-        res.status(400).send('Bad request.');
-        return false;
-    }
+        const exhibit_id = req.params.exhibit_id;
+        const grid_id = req.params.grid_id;
+        const grid_item_id = req.params.grid_item_id;
+        const type = req.query.type;
+        let result;
 
-    result = await GRIDS_MODEL.suppress_grid_item_record(exhibit_id, grid_id, grid_item_id);
+        if (exhibit_id === undefined || exhibit_id.length === 0 && grid_id === undefined || grid_id.length === 0) {
+            res.status(400).send('Bad request.');
+            return false;
+        }
 
-    if (result === true) {
-        res.status(200).send({
-            message: 'Item grid suppressed.'
-        });
-    } else if (result === false) {
-        res.status(204).send({
-            message: 'Unable to suppress grid item'
-        });
+        result = await GRIDS_MODEL.suppress_grid_item_record(exhibit_id, grid_id, grid_item_id);
+
+        if (result === true) {
+            res.status(200).send({
+                message: 'Item grid suppressed.'
+            });
+        } else if (result === false) {
+            res.status(204).send({
+                message: 'Unable to suppress grid item'
+            });
+        }
+
+    } catch (error) {
+        res.status(500).send({message: `Unable to suppress grid item record. ${error.message}`});
     }
 };

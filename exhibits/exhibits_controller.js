@@ -26,110 +26,168 @@ const FS = require('fs');
 
 exports.create_exhibit_record = async function (req, res) {
 
-    const data = req.body;
+    try {
 
-    if (data === undefined) {
-        res.status(400).send('Bad request.');
-        return false;
+        const data = req.body;
+
+        if (data === undefined) {
+            res.status(400).send('Bad request.');
+            return false;
+        }
+
+        const result = await EXHIBITS_MODEL.create_exhibit_record(data);
+        res.status(result.status).send(result);
+
+    } catch (error) {
+        res.status(500).send({message: `Unable to create exhibit record. ${error.message}`});
     }
-
-    const result = await EXHIBITS_MODEL.create_exhibit_record(data);
-    res.status(result.status).send(result);
 };
 
 exports.get_exhibit_records = async function (req, res) {
-    const data = await EXHIBITS_MODEL.get_exhibit_records();
-    res.status(data.status).send(data);
+
+    try {
+
+        const data = await EXHIBITS_MODEL.get_exhibit_records();
+        res.status(data.status).send(data);
+
+    } catch (error) {
+        res.status(500).send({message: `Unable to get exhibit records. ${error.message}`});
+    }
 };
 
 exports.get_exhibit_record = async function (req, res) {
 
-    const uuid = req.params.exhibit_id;
+    try {
 
-    if (uuid === undefined || uuid.length === 0) {
-        res.status(400).send('Bad request.');
-        return false;
+        const uuid = req.params.exhibit_id;
+
+        if (uuid === undefined || uuid.length === 0) {
+            res.status(400).send('Bad request.');
+            return false;
+        }
+
+        const data = await EXHIBITS_MODEL.get_exhibit_record(uuid);
+        res.status(data.status).send(data);
+
+    } catch (error) {
+        res.status(500).send({message: `Unable to get exhibit record. ${error.message}`});
     }
-
-    const data = await EXHIBITS_MODEL.get_exhibit_record(uuid);
-    res.status(data.status).send(data);
 };
 
 exports.update_exhibit_record = async function (req, res) {
 
-    const uuid = req.params.exhibit_id;
-    const data = req.body;
+    try {
 
-    if (uuid === undefined || data === undefined) {
-        res.status(400).send('Bad request.');
-        return false;
+        const uuid = req.params.exhibit_id;
+        const data = req.body;
+
+        if (uuid === undefined || data === undefined) {
+            res.status(400).send('Bad request.');
+            return false;
+        }
+
+        const result = await EXHIBITS_MODEL.update_exhibit_record(uuid, data);
+        res.status(result.status).send(result);
+
+    } catch (error) {
+        res.status(500).send({message: `Unable to update exhibit record. ${error.message}`});
     }
-
-    const result = await EXHIBITS_MODEL.update_exhibit_record(uuid, data);
-    res.status(result.status).send(result);
 };
 
 exports.delete_exhibit_record = async function (req, res) {
 
-    let uuid = req.params.exhibit_id;
+    try {
 
-    if (uuid === undefined) {
-        res.status(400).send('Bad request.');
-        return false;
+        let uuid = req.params.exhibit_id;
+
+        if (uuid === undefined) {
+            res.status(400).send('Bad request.');
+            return false;
+        }
+
+        const result = await EXHIBITS_MODEL.delete_exhibit_record(uuid);
+        res.status(result.status).send(result);
+
+    } catch (error) {
+        res.status(500).send({message: `Unable to delete exhibit record. ${error.message}`});
     }
-
-    const result = await EXHIBITS_MODEL.delete_exhibit_record(uuid);
-    res.status(result.status).send(result);
 };
 
 exports.get_trashed_records = async function (req, res) {
-    const data = await TRASH_MODEL.get_trashed_records();
-    res.status(data.status).send(data);
+
+    try {
+
+        const data = await TRASH_MODEL.get_trashed_records();
+        res.status(data.status).send(data);
+
+    } catch (error) {
+        res.status(500).send({message: `Unable to get trashed records. ${error.message}`});
+    }
+
 };
 
 exports.delete_trashed_record = async function (req, res) {
 
-    const is_member_of_exhibit = req.params.exhibit_id;
-    const uuid = req.params.uuid;
-    const type = req.params.type;
+    try {
 
-    if (uuid === undefined || uuid.length === 0 && is_member_of_exhibit === undefined || is_member_of_exhibit.length === 0) {
-        res.status(400).send('Bad request.');
-        return false;
+        const is_member_of_exhibit = req.params.exhibit_id;
+        const uuid = req.params.uuid;
+        const type = req.params.type;
+
+        if (uuid === undefined || uuid.length === 0 && is_member_of_exhibit === undefined || is_member_of_exhibit.length === 0) {
+            res.status(400).send('Bad request.');
+            return false;
+        }
+
+        if (type === undefined) {
+            res.status(400).send('Bad request.');
+            return false;
+        }
+
+        const result = await TRASH_MODEL.delete_trashed_record(is_member_of_exhibit, uuid, type);
+        res.status(result.status).send(result);
+
+    } catch (error) {
+        res.status(500).send({message: `Unable to delete trashed records. ${error.message}`});
     }
-
-    if (type === undefined) {
-        res.status(400).send('Bad request.');
-        return false;
-    }
-
-    const result = await TRASH_MODEL.delete_trashed_record(is_member_of_exhibit, uuid, type);
-    res.status(result.status).send(result);
 };
 
 exports.delete_all_trashed_records = function (req, res) {
-    const result = TRASH_MODEL.delete_all_trashed_records();
-    res.status(result.status).send(result);
+
+    try {
+
+        const result = TRASH_MODEL.delete_all_trashed_records();
+        res.status(result.status).send(result);
+
+    } catch (error) {
+        res.status(500).send({message: `Unable to delete all trashed records. ${error.message}`});
+    }
 };
 
 exports.restore_trashed_record = async function (req, res) {
 
-    const is_member_of_exhibit = req.params.exhibit_id;
-    const uuid = req.params.uuid;
-    const type = req.params.type;
+    try {
 
-    if (uuid === undefined || uuid.length === 0 && is_member_of_exhibit === undefined || is_member_of_exhibit.length === 0) {
-        res.status(400).send('Bad request.');
-        return false;
+        const is_member_of_exhibit = req.params.exhibit_id;
+        const uuid = req.params.uuid;
+        const type = req.params.type;
+
+        if (uuid === undefined || uuid.length === 0 && is_member_of_exhibit === undefined || is_member_of_exhibit.length === 0) {
+            res.status(400).send('Bad request.');
+            return false;
+        }
+
+        if (type === undefined) {
+            res.status(400).send('Bad request.');
+            return false;
+        }
+
+        const result = await TRASH_MODEL.restore_trashed_record(is_member_of_exhibit, uuid, type);
+        res.status(result.status).send(result);
+
+    } catch (error) {
+        res.status(500).send({message: `Unable to restore trashed records. ${error.message}`});
     }
-
-    if (type === undefined) {
-        res.status(400).send('Bad request.');
-        return false;
-    }
-
-    const result = await TRASH_MODEL.restore_trashed_record(is_member_of_exhibit, uuid, type);
-    res.status(result.status).send(result);
 };
 
 exports.get_exhibit_media = function (req, res) {
@@ -210,75 +268,91 @@ exports.delete_exhibit_media = function (req, res) {
     } catch(error) {
         res.status(404).send({message: `Unable to delete exhibit media file. ${error.message}`});
     }
-
-    return false;
 };
 
 exports.build_exhibit_preview = async function (req, res) {
 
-    const uuid = req.query.uuid;
+    try {
 
-    if (uuid === undefined || uuid.length === 0) {
-        res.status(400).send('Bad request.');
-        return false;
-    }
+        const uuid = req.query.uuid;
 
-    const result = await EXHIBITS_MODEL.build_exhibit_preview(uuid);
+        if (uuid === undefined || uuid.length === 0) {
+            res.status(400).send('Bad request.');
+            return false;
+        }
 
-    if (result.status === true) {
-        console.log(WEBSERVICES_CONFIG.exhibit_preview_url + uuid + '?key=' + WEBSERVICES_CONFIG.exhibit_preview_api_key);
-        setTimeout(() => {
-            res.redirect(WEBSERVICES_CONFIG.exhibit_preview_url + uuid + '?key=' + WEBSERVICES_CONFIG.exhibit_preview_api_key);
-        }, 1000);
+        const result = await EXHIBITS_MODEL.build_exhibit_preview(uuid);
+
+        if (result.status === true) {
+            console.log(WEBSERVICES_CONFIG.exhibit_preview_url + uuid + '?key=' + WEBSERVICES_CONFIG.exhibit_preview_api_key);
+            setTimeout(() => {
+                res.redirect(WEBSERVICES_CONFIG.exhibit_preview_url + uuid + '?key=' + WEBSERVICES_CONFIG.exhibit_preview_api_key);
+            }, 1000);
+        }
+
+    } catch (error) {
+        res.status(500).send({message: `Unable to build exhibit preview. ${error.message}`});
     }
 };
 
 exports.publish_exhibit = async function (req, res) {
 
-    const uuid = req.params.exhibit_id;
+    try {
 
-    if (uuid === undefined || uuid.length === 0) {
-        res.status(400).send('Bad request.');
-        return false;
-    }
+        const uuid = req.params.exhibit_id;
 
-    const result = await EXHIBITS_MODEL.publish_exhibit(uuid);
+        if (uuid === undefined || uuid.length === 0) {
+            res.status(400).send('Bad request.');
+            return false;
+        }
 
-    if (result.status === 'no_items') {
-        res.status(204).send({
-            message: 'Exhibit must have at least one item to published.'
-        });
-    }
+        const result = await EXHIBITS_MODEL.publish_exhibit(uuid);
 
-    if (result.status === true) {
-        res.status(200).send({
-            message: 'Exhibit published.'
-        });
-    } else if (result.status === false) {
-        res.status(400).send({
-            message: 'Unable to publish exhibit'
-        });
+        if (result.status === 'no_items') {
+            res.status(204).send({
+                message: 'Exhibit must have at least one item to published.'
+            });
+        }
+
+        if (result.status === true) {
+            res.status(200).send({
+                message: 'Exhibit published.'
+            });
+        } else if (result.status === false) {
+            res.status(400).send({
+                message: 'Unable to publish exhibit'
+            });
+        }
+
+    } catch (error) {
+        res.status(500).send({message: `Unable to publish exhibit. ${error.message}`});
     }
 }
 
 exports.suppress_exhibit = async function (req, res) {
 
-    const uuid = req.params.exhibit_id;
+    try {
 
-    if (uuid === undefined || uuid.length === 0) {
-        res.status(400).send('Bad request.');
-        return false;
-    }
+        const uuid = req.params.exhibit_id;
 
-    const result = await EXHIBITS_MODEL.suppress_exhibit(uuid);
+        if (uuid === undefined || uuid.length === 0) {
+            res.status(400).send('Bad request.');
+            return false;
+        }
 
-    if (result.status === true) {
-        res.status(200).send({
-            message: 'Exhibit suppressed.'
-        });
-    } else {
-        res.status(400).send({
-            message: 'Unable to suppress exhibit'
-        });
+        const result = await EXHIBITS_MODEL.suppress_exhibit(uuid);
+
+        if (result.status === true) {
+            res.status(200).send({
+                message: 'Exhibit suppressed.'
+            });
+        } else {
+            res.status(400).send({
+                message: 'Unable to suppress exhibit'
+            });
+        }
+
+    } catch (error) {
+        res.status(500).send({message: `Unable to suppress exhibit. ${error.message}`});
     }
 }

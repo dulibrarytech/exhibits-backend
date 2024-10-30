@@ -19,7 +19,6 @@
 'use strict';
 
 const LOGGER = require('../../libs/log4');
-// const HELPER = require("../../libs/helper");
 
 /**
  * Object contains tasks used to manage exhibit item records
@@ -278,6 +277,34 @@ const Exhibit_grid_record_tasks = class {
     }
 
     /**
+     * Deletes grid item
+     * @param is_member_of_exhibit
+     * @param grid_id
+     * @param grid_item_id
+     */
+    async delete_grid_item_record(is_member_of_exhibit, grid_id, grid_item_id) {
+
+        try {
+
+            await this.DB(this.TABLE.grid_item_records)
+            .where({
+                is_member_of_exhibit: is_member_of_exhibit,
+                is_member_of_grid: grid_id,
+                uuid: grid_item_id
+            })
+            .update({
+                is_deleted: 1
+            });
+
+            LOGGER.module().info('INFO: [/exhibits/exhibit_grid_record_tasks (delete_grid_item_record)] Grid item record deleted.');
+            return true;
+
+        } catch (error) {
+            LOGGER.module().error('ERROR: [/exhibits/exhibit_heading_record_tasks (delete_grid_item_record)] unable to delete record ' + error.message);
+        }
+    }
+
+    /**
      * Gets grid record count
      * @param uuid
      */
@@ -474,44 +501,3 @@ const Exhibit_grid_record_tasks = class {
 };
 
 module.exports = Exhibit_grid_record_tasks;
-
-/**
- * Gets grid record
- * @param is_member_of_exhibit
- * @param uuid
- */
-/*
-async get_grid_record(is_member_of_exhibit, uuid) {
-
-    try {
-
-        const data = await this.DB(this.TABLE.grid_records)
-        .select('*')
-        .where({
-            is_member_of_exhibit: is_member_of_exhibit,
-            uuid: uuid,
-            is_deleted: 0
-        });
-
-        if (data.length !== 0 && data[0].is_locked === 0) {
-
-            try {
-
-                const HELPER_TASK = new HELPER();
-                await HELPER_TASK.lock_record(uuid, this.DB, this.TABLE);
-                return data;
-
-            } catch (error) {
-                LOGGER.module().error('ERROR:[/exhibits/exhibit_grid_record_tasks (get_grid_record)] unable to lock record ' + error.message);
-            }
-
-        } else {
-            return data;
-        }
-
-    } catch (error) {
-        LOGGER.module().error('ERROR: [/exhibits/exhibit_grid_record_tasks (get_grid_record)] unable to get records ' + error.message);
-    }
-}
-
- */

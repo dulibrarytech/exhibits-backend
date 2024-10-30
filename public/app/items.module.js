@@ -230,7 +230,7 @@ const itemsModule = (function () {
 
                 setTimeout(() => {
                     window.location.replace(APP_PATH + '/items?exhibit_id=' + exhibit_id);
-                }, 3000);
+                }, 2000);
             }
 
 

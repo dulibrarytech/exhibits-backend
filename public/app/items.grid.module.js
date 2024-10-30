@@ -282,21 +282,22 @@ const itemsGridModule = (function () {
         }
     }
 
-    /** TODO
+    /**
      * Deletes grid item
      */
     obj.delete_grid_item = async function () {
 
         try {
 
-            document.querySelector('#delete-message').innerHTML = 'Deleting item...';
-            const EXHIBITS_ENDPOINTS = endpointsModule.get_exhibits_endpoints();
+            document.querySelector('#delete-message').innerHTML = 'Deleting grid item...';
             const exhibit_id = helperModule.get_parameter_by_name('exhibit_id');
-            const item_id = helperModule.get_parameter_by_name('item_id');
-            const type = helperModule.get_parameter_by_name('type');
+            const grid_id = helperModule.get_parameter_by_name('grid_id');
+            const grid_item_id = helperModule.get_parameter_by_name('item_id');
+            const type = 'grid_item';
+            const etmp = EXHIBITS_ENDPOINTS.exhibits.grid_item_records.delete.endpoint.replace(':exhibit_id', exhibit_id);
+            const gtmp = etmp.replace(':grid_id', grid_id);
+            const endpoint = gtmp.replace(':item_id', grid_item_id);
             const token = authModule.get_user_token();
-            let tmp = EXHIBITS_ENDPOINTS.exhibits.item_records.delete.endpoint.replace(':exhibit_id', exhibit_id);
-            let endpoint = tmp.replace(':item_id', item_id);
             const response = await httpModule.req({
                 method: 'DELETE',
                 url: endpoint + '?type=' + type,
@@ -309,10 +310,9 @@ const itemsGridModule = (function () {
             if (response !== undefined && response.status === 204) {
 
                 setTimeout(() => {
-                    window.location.replace(APP_PATH + '/items?exhibit_id=' + exhibit_id);
-                }, 3000);
+                    window.location.replace(`${APP_PATH}/items/grid/items?exhibit_id=${exhibit_id}&grid_id=${grid_id}`);
+                }, 2000);
             }
-
 
         } catch (error) {
             document.querySelector('#message').innerHTML = `<div class="alert alert-danger" role="alert"><i class="fa fa-exclamation"></i> ${error.message}</div>`;

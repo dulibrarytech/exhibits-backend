@@ -22,62 +22,86 @@ const HEADINGS_MODEL = require('../exhibits/headings_model');
 
 exports.create_heading_record = async function (req, res) {
 
-    const is_member_of_exhibit = req.params.exhibit_id;
-    const data = req.body;
+    try {
 
-    if (data === undefined || is_member_of_exhibit === undefined) {
-        res.status(400).send('Bad request.');
-        return false;
+        const is_member_of_exhibit = req.params.exhibit_id;
+        const data = req.body;
+
+        if (data === undefined || is_member_of_exhibit === undefined) {
+            res.status(400).send('Bad request.');
+            return false;
+        }
+
+        const result = await HEADINGS_MODEL.create_heading_record(is_member_of_exhibit, data);
+        res.status(result.status).send(result);
+
+    } catch (error) {
+        res.status(408).send({message: `Unable to create heading record. ${error.message}`});
     }
-
-    const result = await HEADINGS_MODEL.create_heading_record(is_member_of_exhibit, data);
-    res.status(result.status).send(result);
 };
 
 exports.get_heading_record = async function (req, res) {
 
-    const is_member_of_exhibit = req.params.exhibit_id;
-    const uuid = req.params.heading_id;
+    try {
 
-    if (uuid === undefined || uuid.length === 0 && is_member_of_exhibit === undefined || is_member_of_exhibit.length === 0) {
-        res.status(400).send('Bad request.');
-        return false;
+        const is_member_of_exhibit = req.params.exhibit_id;
+        const uuid = req.params.heading_id;
+
+        if (uuid === undefined || uuid.length === 0 && is_member_of_exhibit === undefined || is_member_of_exhibit.length === 0) {
+            res.status(400).send('Bad request.');
+            return false;
+        }
+
+        const data = await HEADINGS_MODEL.get_heading_record(is_member_of_exhibit, uuid);
+        res.status(data.status).send(data);
+
+    } catch (error) {
+        res.status(408).send({message: `Unable to get heading record. ${error.message}`});
     }
-
-    const data = await HEADINGS_MODEL.get_heading_record(is_member_of_exhibit, uuid);
-    res.status(data.status).send(data);
 };
 
 exports.update_heading_record = async function (req, res) {
 
-    const is_member_of_exhibit = req.params.exhibit_id;
-    const heading_id = req.params.heading_id;
-    const data = req.body;
+    try {
 
-    if (heading_id === undefined || heading_id.length === 0 && is_member_of_exhibit === undefined || is_member_of_exhibit.length === 0) {
-        res.status(400).send('Bad request.');
-        return false;
+        const is_member_of_exhibit = req.params.exhibit_id;
+        const heading_id = req.params.heading_id;
+        const data = req.body;
+
+        if (heading_id === undefined || heading_id.length === 0 && is_member_of_exhibit === undefined || is_member_of_exhibit.length === 0) {
+            res.status(400).send('Bad request.');
+            return false;
+        }
+
+        if (data === undefined) {
+            res.status(400).send('Bad request.');
+            return false;
+        }
+
+        const result = await HEADINGS_MODEL.update_heading_record(is_member_of_exhibit, heading_id, data);
+        res.status(result.status).send(result);
+
+    } catch (error) {
+        res.status(408).send({message: `Unable to update heading record. ${error.message}`});
     }
-
-    if (data === undefined) {
-        res.status(400).send('Bad request.');
-        return false;
-    }
-
-    const result = await HEADINGS_MODEL.update_heading_record(is_member_of_exhibit, heading_id, data);
-    res.status(result.status).send(result);
 };
 
 exports.delete_heading_record = async function (req, res) {
 
-    const is_member_of_exhibit = req.params.exhibit_id;
-    const uuid = req.params.heading_id;
+    try {
 
-    if (uuid === undefined || uuid.length === 0 && is_member_of_exhibit === undefined || is_member_of_exhibit.length === 0) {
-        res.status(400).send('Bad request.');
-        return false;
+        const is_member_of_exhibit = req.params.exhibit_id;
+        const uuid = req.params.heading_id;
+
+        if (uuid === undefined || uuid.length === 0 && is_member_of_exhibit === undefined || is_member_of_exhibit.length === 0) {
+            res.status(400).send('Bad request.');
+            return false;
+        }
+
+        const result = await HEADINGS_MODEL.delete_heading_record(is_member_of_exhibit, uuid);
+        res.status(result.status).send(result);
+
+    } catch (error) {
+        res.status(408).send({message: `Unable to delete heading record. ${error.message}`});
     }
-
-    const result = await HEADINGS_MODEL.delete_heading_record(is_member_of_exhibit, uuid);
-    res.status(result.status).send(result);
 };
