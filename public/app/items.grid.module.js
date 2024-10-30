@@ -110,7 +110,7 @@ const itemsGridModule = (function () {
             } else if (is_published === 0) {
                 status = `<a href="#" id="${item_id}" class="publish"><span id="publish" title="suppressed"><i class="fa fa-cloud-upload" style="color: darkred"></i><br>Suppressed</span></a>`;
                 edit = `<a href="${APP_PATH}/items/grid/item/edit?exhibit_id=${exhibit_id}&grid_id=${grid_id}&item_id=${item_id}" title="Edit"><i class="fa fa-edit pr-1"></i></a>`;
-                delete_item = `<a href="#" title="Delete"><i class="fa fa-trash pr-1"></i></a>`;
+                delete_item = `<a href="${APP_PATH}/items/grid/item/delete?exhibit_id=${exhibit_id}&grid_id=${grid_id}&item_id=${item_id}" title="Delete"><i class="fa fa-trash pr-1"></i></a>`;
             }
 
             item_data += '<tr>';
@@ -281,6 +281,43 @@ const itemsGridModule = (function () {
             document.querySelector('#message').innerHTML = `<div class="alert alert-danger" role="alert"><i class="fa fa-exclamation"></i> ${error.message}</div>`;
         }
     }
+
+    /** TODO
+     * Deletes grid item
+     */
+    obj.delete_grid_item = async function () {
+
+        try {
+
+            document.querySelector('#delete-message').innerHTML = 'Deleting item...';
+            const EXHIBITS_ENDPOINTS = endpointsModule.get_exhibits_endpoints();
+            const exhibit_id = helperModule.get_parameter_by_name('exhibit_id');
+            const item_id = helperModule.get_parameter_by_name('item_id');
+            const type = helperModule.get_parameter_by_name('type');
+            const token = authModule.get_user_token();
+            let tmp = EXHIBITS_ENDPOINTS.exhibits.item_records.delete.endpoint.replace(':exhibit_id', exhibit_id);
+            let endpoint = tmp.replace(':item_id', item_id);
+            const response = await httpModule.req({
+                method: 'DELETE',
+                url: endpoint + '?type=' + type,
+                headers: {
+                    'Content-Type': 'application/json',
+                    'x-access-token': token
+                }
+            });
+
+            if (response !== undefined && response.status === 204) {
+
+                setTimeout(() => {
+                    window.location.replace(APP_PATH + '/items?exhibit_id=' + exhibit_id);
+                }, 3000);
+            }
+
+
+        } catch (error) {
+            document.querySelector('#message').innerHTML = `<div class="alert alert-danger" role="alert"><i class="fa fa-exclamation"></i> ${error.message}</div>`;
+        }
+    };
 
     obj.init = async function () {
 

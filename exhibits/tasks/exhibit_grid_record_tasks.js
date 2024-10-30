@@ -19,7 +19,7 @@
 'use strict';
 
 const LOGGER = require('../../libs/log4');
-const HELPER = require("../../libs/helper");
+// const HELPER = require("../../libs/helper");
 
 /**
  * Object contains tasks used to manage exhibit item records

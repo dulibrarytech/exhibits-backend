@@ -18,7 +18,7 @@
             </div>
             <div class="card-body">
                 <div class="alert alert-danger" role="alert">
-                    <i class="fa fa-exclamation"></i> Are you sure you want to delete this item from the <strong><span id="exhibit-title"></span></strong> exhibit?&nbsp;&nbsp;
+                    <i class="fa fa-exclamation"></i> Are you sure you want to delete this grid item from the <strong><span id="exhibit-title"></span></strong> exhibit grid?&nbsp;&nbsp;
                     <button class="btn btn-danger" type="button" id="delete-item-btn">
                         <i class="fa fa-trash"></i>&nbsp;&nbsp;<span id="delete-message">Delete</span>
                     </button>
@@ -47,12 +47,12 @@
 <script src="/exhibits-dashboard/static/app/nav.module.js"></script>
 <script src="/exhibits-dashboard/static/app/uploads.module.js"></script>
 <script src="/exhibits-dashboard/static/app/exhibits.module.js"></script>
-<script src="/exhibits-dashboard/static/app/items.module.js"></script>
+<script src="/exhibits-dashboard/static/app/items.grid.module.js"></script>
 <script>
     (async function() {
         const uuid = helperModule.get_parameter_by_name('exhibit_id');
         await exhibitsModule.set_exhibit_title(uuid);
-        document.querySelector('#delete-item-btn').addEventListener('click', itemsModule.delete_item);
+        document.querySelector('#delete-item-btn').addEventListener('click', itemsGridModule.delete_grid_item);
         helperModule.show_form();
     })();
 </script>

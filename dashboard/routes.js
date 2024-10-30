@@ -23,16 +23,6 @@ const APP_PATH = '/exhibits-dashboard';
 
 module.exports = function (app) {
 
-    /*
-    app.route(APP_PATH)
-    .get(CONTROLLER.get_dashboard);
-    */
-
-    /*
-    app.route(APP_PATH + '/dashboard/login')
-    .get(CONTROLLER.get_dashboard_login);
-    */
-
     app.route(APP_PATH + '/exhibits')
     .get(CONTROLLER.get_dashboard_exhibits);
 
@@ -83,6 +73,9 @@ module.exports = function (app) {
 
     app.route(APP_PATH + '/items/delete')
     .get(CONTROLLER.get_dashboard_items_delete_form);
+
+    app.route(APP_PATH + '/items/grid/item/delete')
+    .get(CONTROLLER.get_dashboard_grid_items_delete_form);
 
     app.route(APP_PATH + '/trash')
     .get(CONTROLLER.get_dashboard_trash);
