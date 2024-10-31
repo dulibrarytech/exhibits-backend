@@ -508,7 +508,7 @@ const Exhibit_grid_record_tasks = class {
 
         try {
 
-            await this.DB(this.TABLE.item_records)
+            await this.DB(this.TABLE.grid_records)
             .where({
                 is_member_of_exhibit: is_member_of_exhibit,
                 uuid: grids.uuid

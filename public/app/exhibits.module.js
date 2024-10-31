@@ -138,7 +138,13 @@ const exhibitsModule = (function () {
         bind_publish_exhibit_events();
         bind_suppress_exhibit_events();
 
-        let table = new DataTable('#exhibits');
+        let table = new DataTable('#exhibits', {
+            order: [
+                [0, 'asc'],
+                [1, 'asc']
+            ]
+        });
+
         setTimeout(() => {
             document.querySelector('#exhibit-card').style.visibility = 'visible';
         }, 100);

@@ -191,7 +191,13 @@ const itemsModule = (function () {
         // item_data += '</tr>';
 
         document.querySelector('#item-data').innerHTML = item_data;
-        let items_table = new DataTable('#items');
+        let items_table = new DataTable('#items', {
+            paging: false,
+            order: [
+                [0, 'asc'],
+                [1, 'asc'],
+            ]
+        });
 
         bind_publish_item_events();
         bind_suppress_item_events();
@@ -252,15 +258,11 @@ const itemsModule = (function () {
 
                 if (response !== undefined && response.status === 201) {
 
-                    document.querySelector('#message').innerHTML = `<div class="alert alert-success" role="alert"><i class="fa fa-info"></i> Items reordered</div>`;
-                    await itemsModule.display_items(event);
-
-                    /*
+                    // document.querySelector('#message').innerHTML = `<div class="alert alert-success" role="alert"><i class="fa fa-info"></i> Items reordered</div>`;
+                    // await itemsModule.display_items(event);
                     setTimeout(() => {
-                        location.replace(`${APP_PATH}/items?exhibit_id=${uuid}`);
-                    }, 3000);
-
-                     */
+                        location.reload();
+                    }, 0);
                 }
             });
         });

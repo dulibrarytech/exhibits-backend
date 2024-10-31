@@ -38,7 +38,7 @@ const exhibitsCommonFormModule = (function () {
             exhibit.alert_text = rich_text_data['exhibit-alert-text-input'].getHTMLCode();
             exhibit.description = rich_text_data['exhibit-description-input'].getHTMLCode();
             exhibit.about_the_curators = rich_text_data['exhibit-about-the-curators-input'].getHTMLCode();
-            exhibit.is_featured = document.querySelector('#is-featured').value;
+            exhibit.is_featured = parseInt(document.querySelector('#is-featured').value);
 
             // validate
             if (exhibit.title.length === 0) {
