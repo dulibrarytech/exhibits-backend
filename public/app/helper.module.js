@@ -188,6 +188,40 @@ const helperModule = (function () {
         }, 250);
     };
 
+    obj.drag_and_drop_items_start = function () {
+
+    };
+
+    /**
+     * Applies drag and drop to item list
+     * @param event
+     */
+    /*
+    obj.drag_and_drop_items = function (event) {
+
+        let row;
+
+        function start(){
+            console.log('start');
+            row = event.target;
+        }
+
+        function dragover(){
+            console.log('dragover');
+            let e = event;
+            e.preventDefault();
+
+            let children= Array.from(e.target.parentNode.parentNode.children);
+
+            if(children.indexOf(e.target.parentNode)>children.indexOf(row))
+                e.target.parentNode.after(row);
+            else
+                e.target.parentNode.before(row);
+        }
+    };
+
+     */
+
     obj.init = function() {};
 
     return obj;

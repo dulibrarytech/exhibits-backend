@@ -57,7 +57,7 @@ const itemsModule = (function () {
     /**
      * Gets exhibit items
      */
-    obj.display_items = async function () {
+    obj.display_items = async function (event) {
 
         const exhibit_id = helperModule.get_parameter_by_name('exhibit_id');
         const items = await get_items(exhibit_id);
@@ -80,7 +80,7 @@ const itemsModule = (function () {
             let add_grid_items = '';
             let edit_type;
             let edit;
-            let delete_item = `<a href="#" title="Delete"><i class="fa fa-trash pr-1"></i></a>`;
+            let delete_item;
 
             if (type === 'item') {
                 edit_type = 'standard';
@@ -103,7 +103,7 @@ const itemsModule = (function () {
                 delete_item = `<a href="${APP_PATH}/items/delete?exhibit_id=${exhibit_id}&item_id=${item_id}&type=${type}" title="Delete"><i class="fa fa-trash pr-1"></i></a>`;
             }
 
-            item_data += `<tr id="${item_id}-${type}">`;
+            item_data += `<tr id="${item_id}-${type}" draggable='true'>`;
             item_data += `<td style="width: 5%">${order}</td>`;
 
             if (type === 'item') { // standard
@@ -188,13 +188,82 @@ const itemsModule = (function () {
             item_data += '</tr>';
         }
 
-        item_data += '</tr>';
+        // item_data += '</tr>';
 
         document.querySelector('#item-data').innerHTML = item_data;
         let items_table = new DataTable('#items');
 
         bind_publish_item_events();
         bind_suppress_item_events();
+
+        // TODO: drag and drop to re-order - move to helper
+        const tr_elem = Array.from(document.getElementsByTagName('tr'));
+        let row;
+        let children;
+        let updated_order = [];
+        let reorder_obj = {};
+
+        tr_elem.forEach(tr => {
+
+            tr.addEventListener('dragstart', (event) => {
+                row = event.target;
+            });
+
+            tr.addEventListener('dragover', (event) => {
+
+                let e = event;
+                e.preventDefault();
+
+                children = Array.from(e.target.parentNode.parentNode.children);
+
+                if (children.indexOf(e.target.parentNode) > children.indexOf(row)) {
+                    // move down
+                    e.target.parentNode.after(row);
+                } else {
+                    // move up
+                    e.target.parentNode.before(row);
+                }
+            });
+
+            tr.addEventListener('drop', async (event) => {
+
+                for (let i=0;i<children.length;i++ ) {
+
+                    let child = children[i];
+                    let id = child.getAttribute('id');
+                    let id_arr = id.split('-');
+                    reorder_obj.type = id_arr.pop();
+                    reorder_obj.uuid = id_arr.join('-');
+                    reorder_obj.order = i + 1;
+                    updated_order.push(reorder_obj);
+                    reorder_obj = {};
+                }
+
+                const token = authModule.get_user_token();
+                const response = await httpModule.req({
+                    method: 'POST',
+                    url: EXHIBITS_ENDPOINTS.exhibits.reorder_records.post.endpoint.replace(':exhibit_id', exhibit_id),
+                    data: updated_order,
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'x-access-token': token
+                    }
+                });
+
+                if (response !== undefined && response.status === 201) {
+
+                    document.querySelector('#message').innerHTML = `<div class="alert alert-success" role="alert"><i class="fa fa-info"></i> Items reordered</div>`;
+                    await itemsModule.display_items(event);
+
+                    /*
+                    setTimeout(() => {
+                        location.replace(`${APP_PATH}/items?exhibit_id=${uuid}`);
+                    }, 3000);
+
+                     */
+                }
+            });
+        });
 
         setTimeout(() => {
             document.querySelector('#item-card').style.visibility = 'visible';
@@ -386,7 +455,7 @@ const itemsModule = (function () {
         }
     }
 
-    obj.init = function () {
+    obj.init = function (event) {
 
         try {
 
@@ -395,6 +464,35 @@ const itemsModule = (function () {
             navModule.set_preview_link();
             navModule.set_item_nav_menu_links();
             itemsModule.display_items();
+
+
+            /*
+            setTimeout(() => {
+
+                let row;
+
+                function start(){
+                    console.log('start');
+                    row = event.target;
+                }
+
+                function dragover(){
+                    console.log('dragover');
+                    let e = event;
+                    e.preventDefault();
+
+                    let children= Array.from(e.target.parentNode.parentNode.children);
+
+                    if(children.indexOf(e.target.parentNode)>children.indexOf(row))
+                        e.target.parentNode.after(row);
+                    else
+                        e.target.parentNode.before(row);
+                }
+
+            }, 500);
+
+             */
+
             setTimeout(() => {
                 document.querySelector('#items-menu').style.visibility = 'visible';
             }, 100);

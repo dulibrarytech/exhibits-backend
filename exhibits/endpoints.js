@@ -236,6 +236,14 @@ const ENDPOINTS = {
             endpoint: `${APP_PATH}/repo/:uuid`,
             params: 'token or api_key, gets repository item metadata'
         },
+        reorder_records: {
+            post: {
+                description: 'reorders items in exhibit',
+                endpoint: `${APP_PATH}${PREFIX}${VERSION}${ENDPOINT}/:exhibit_id/items/reorder`,
+                params: 'token or api_key',
+                body: 'item array of objects'
+            }
+        },
         trashed_records: {
             get: {
                 description: 'Retrieves all records flagged as deleted',

@@ -643,3 +643,18 @@ exports.suppress_grid_item_record = async function (exhibit_id, grid_id, grid_it
         LOGGER.module().error('ERROR: [/exhibits/model (suppress_grid_item_record)] ' + error.message);
     }
 };
+
+/**
+ * Updates item order in exhibit
+ * @param exhibit_id
+ * @param grid
+ */
+exports.reorder_grids = async function (exhibit_id, grid) {
+
+    try {
+        const TASKS = new EXHIBIT_GRID_RECORD_TASKS(DB, TABLES);
+        return await TASKS.reorder_grids(exhibit_id, grid);
+    } catch (error) {
+        LOGGER.module().error('ERROR: [/exhibits/model (reorder_grids)] ' + error.message);
+    }
+};

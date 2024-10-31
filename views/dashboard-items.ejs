@@ -11,7 +11,9 @@
                 </li>
                 <li class="menu-title">Menu</li>
             </ul>
-            <ul class="nav navbar-nav"><li id="preview-link"></li></ul>
+            <ul class="nav navbar-nav">
+                <li id="preview-link"></li>
+            </ul>
             <ul id="items-menu" class="nav navbar-nav"></ul>
             <ul class="nav navbar-nav">
                 <li>
@@ -27,7 +29,8 @@
     <header id="header" class="header">
         <div class="top-left">
             <div class="navbar-header">
-                <a class="navbar-brand" href="https://www.du.edu/"><img src="/exhibits-dashboard/static/images/du-logo.png" alt="Logo"></a>
+                <a class="navbar-brand" href="https://www.du.edu/"><img
+                            src="/exhibits-dashboard/static/images/du-logo.png" alt="Logo"></a>
             </div>
         </div>
         <div class="top-right"></div>
@@ -39,7 +42,7 @@
                 <strong class="card-title mb-3"><span id="exhibit-title"></span> exhibit items</strong>
             </div>
             <div class="card-body">
-                <table id="items" class="display">
+                <table id="items" class="display draggable-table">
                     <thead>
                     <tr>
                         <th>Order</th>
@@ -75,7 +78,6 @@
 <script src="/exhibits-dashboard/static/app/items.module.js"></script>
 <script>
     window.scrollTo(0, 0);
-    // exhibitsModule.set_preview_link();
     itemsModule.init();
 </script>
 </body>

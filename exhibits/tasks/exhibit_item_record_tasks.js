@@ -420,6 +420,32 @@ const Exhibit_item_record_tasks = class {
         }
     }
 
+    /**
+     * Reorders items
+     * @param is_member_of_exhibit
+     * @param item
+     */
+    async reorder_items(is_member_of_exhibit, item) {
+
+        try {
+
+            await this.DB(this.TABLE.item_records)
+            .where({
+                is_member_of_exhibit: is_member_of_exhibit,
+                uuid: item.uuid
+            })
+            .update({
+                order: item.order
+            });
+
+            LOGGER.module().info('INFO: [/exhibits/item_record_tasks (reorder_items)] Item reordered.');
+            return true;
+
+        } catch (error) {
+            LOGGER.module().error('ERROR: [/exhibits/item_record_tasks (reorder_items)] unable to reorder item ' + error.message);
+            return false;
+        }
+    }
 };
 
 module.exports = Exhibit_item_record_tasks;

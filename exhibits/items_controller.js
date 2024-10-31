@@ -269,3 +269,61 @@ exports.get_repo_item_record = async function (req, res) {
         res.status(500).send({message: `Unable to get repo item record. ${error.message}`});
     }
 };
+
+exports.reorder_items = async function (req, res) {
+
+    try {
+
+        const exhibit_id = req.params.exhibit_id;
+        const updated_order = req.body;
+
+        if (exhibit_id.length === 0 || updated_order.length === 0) {
+            res.status(400).send('Bad request.');
+            return false;
+        }
+
+        let ordered_errors = [];
+
+        for (let i=0;i<updated_order.length;i++) {
+
+            if (updated_order[i].type === 'item') {
+                let is_reordered = await ITEMS_MODEL.reorder_items(exhibit_id, updated_order[i]);
+
+                if (is_reordered === false) {
+                    ordered_errors.push('-1');
+                }
+            }
+
+            if (updated_order[i].type === 'grid') {
+                let is_reordered = await GRIDS_MODEL.reorder_grids(exhibit_id, updated_order[i]);
+
+                if (is_reordered === false) {
+                    ordered_errors.push('-1');
+                }
+            }
+
+            if (updated_order[i].type === 'heading') {
+                let is_reordered = await HEADINGS_MODEL.reorder_headings(exhibit_id, updated_order[i]);
+
+                if (is_reordered === false) {
+                    ordered_errors.push('-1');
+                }
+            }
+        }
+
+        if (ordered_errors.length === 0) {
+
+            res.status(201).send({
+                message: 'Exhibit items reordered.'
+            });
+
+        } else {
+            res.status(204).send({
+                message: 'Unable to reorder exhibit items.'
+            });
+        }
+
+    } catch (error) {
+        res.status(500).send({message: `Unable to reorder items. ${error.message}`});
+    }
+};

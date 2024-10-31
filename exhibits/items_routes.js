@@ -51,6 +51,9 @@ module.exports = function (app) {
     app.route(ENDPOINTS().exhibits.repo_items.endpoint)
     .get(TOKEN.verify, CONTROLLER.get_repo_item_record);
 
+    app.route(ENDPOINTS().exhibits.reorder_records.post.endpoint)
+    .post(CONTROLLER.reorder_items);
+
     /*
 
     app.route(ENDPOINTS().exhibits.trashed_records.get.endpoint)

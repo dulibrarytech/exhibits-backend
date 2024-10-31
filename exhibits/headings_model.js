@@ -310,3 +310,18 @@ exports.suppress_heading_record = async function (exhibit_id, item_id) {
         LOGGER.module().error('ERROR: [/exhibits/model (suppress_item_record)] ' + error.message);
     }
 };
+
+/**
+ * Updates item order in exhibit
+ * @param exhibit_id
+ * @param heading
+ */
+exports.reorder_headings = async function (exhibit_id, heading) {
+
+    try {
+        const TASK = new EXHIBIT_HEADING_RECORD_TASKS(DB, TABLES);
+        return await TASK.reorder_headings(exhibit_id, heading);
+    } catch (error) {
+        LOGGER.module().error('ERROR: [/exhibits/model (reorder_headings)] ' + error.message);
+    }
+};

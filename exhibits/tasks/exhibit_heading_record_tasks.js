@@ -234,6 +234,33 @@ const Exhibit_heading_record_tasks = class {
             return false;
         }
     }
+
+    /**
+     * Reorders headings
+     * @param is_member_of_exhibit
+     * @param heading
+     */
+    async reorder_headings(is_member_of_exhibit, heading) {
+
+        try {
+
+            await this.DB(this.TABLE.heading_records)
+            .where({
+                is_member_of_exhibit: is_member_of_exhibit,
+                uuid: heading.uuid
+            })
+            .update({
+                order: heading.order
+            });
+
+            LOGGER.module().info('INFO: [/exhibits/exhibit_heading_record_tasks (reorder_headings)] Heading reordered.');
+            return true;
+
+        } catch (error) {
+            LOGGER.module().error('ERROR: [/exhibits/exhibit_heading_record_tasks (reorder_headings)] unable to reorder heading ' + error.message);
+            return false;
+        }
+    }
 };
 
 module.exports = Exhibit_heading_record_tasks;

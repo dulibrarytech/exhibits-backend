@@ -439,3 +439,18 @@ exports.get_repo_item_record = async function (uuid) {
         LOGGER.module().error('ERROR: [/exhibits/model (get_repo_item_record)] ' + error.message);
     }
 };
+
+/**
+ * Updates item order in exhibit
+ * @param exhibit_id
+ * @param item
+ */
+exports.reorder_items = async function (exhibit_id, item) {
+
+    try {
+        const TASK = new EXHIBIT_ITEM_RECORD_TASKS(DB, TABLES);
+        return await TASK.reorder_items(exhibit_id, item);
+    } catch (error) {
+        LOGGER.module().error('ERROR: [/exhibits/model (reorder_items)] ' + error.message);
+    }
+};

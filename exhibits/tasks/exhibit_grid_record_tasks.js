@@ -498,6 +498,34 @@ const Exhibit_grid_record_tasks = class {
             return false;
         }
     }
+
+    /**
+     * Reorders grids
+     * @param is_member_of_exhibit
+     * @param grids
+     */
+    async reorder_grids(is_member_of_exhibit, grids) {
+
+        try {
+
+            await this.DB(this.TABLE.item_records)
+            .where({
+                is_member_of_exhibit: is_member_of_exhibit,
+                uuid: grids.uuid
+            })
+            .update({
+                order: grids.order
+            });
+
+            LOGGER.module().info('INFO: [/exhibits/exhibit_grid_record_tasks (reorder_grids)] Grid reordered.');
+            return true;
+
+
+        } catch (error) {
+            LOGGER.module().error('ERROR: [/exhibits/exhibit_grid_record_tasks (reorder_grids)] unable to reorder grid ' + error.message);
+            return false;
+        }
+    }
 };
 
 module.exports = Exhibit_grid_record_tasks;
