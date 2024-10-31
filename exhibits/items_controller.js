@@ -266,7 +266,7 @@ exports.get_repo_item_record = async function (req, res) {
         }
 
     } catch (error) {
-        res.status(500).send({message: `Unable to get repo item record. ${error.message}`});
+        res.status(404).send({message: `Unable to get repo item record. ${error.message}`});
     }
 };
 

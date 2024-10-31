@@ -165,6 +165,8 @@ const helperModule = (function () {
             if (response !== undefined && response.status === 200) {
                 document.querySelector('#item-mime-type').value = response.data.data.mime_type;
                 document.querySelector('#repo-item-metadata').innerHTML = `<p><strong>${response.data.data.title}</strong><br><em>${response.data.data.mime_type}</em></p>`;
+            } else {
+                document.querySelector('#repo-item-metadata').innerHTML = `<p style="color:red">Metadata record not found in repository.</p>`;
             }
 
         } catch (error) {
@@ -188,39 +190,76 @@ const helperModule = (function () {
         }, 250);
     };
 
-    obj.drag_and_drop_items_start = function () {
-
-    };
-
     /**
      * Applies drag and drop to item list
      * @param event
+     * @param exhibit_id
      */
-    /*
-    obj.drag_and_drop_items = function (event) {
+    obj.reorder_items = function (event, exhibit_id) {
 
+        const EXHIBITS_ENDPOINTS = endpointsModule.get_exhibits_endpoints();
+        const tr_elem = Array.from(document.getElementsByTagName('tr'));
         let row;
+        let children;
+        let updated_order = [];
+        let reorder_obj = {};
 
-        function start(){
-            console.log('start');
-            row = event.target;
-        }
+        tr_elem.forEach(tr => {
 
-        function dragover(){
-            console.log('dragover');
-            let e = event;
-            e.preventDefault();
+            tr.addEventListener('dragstart', (event) => {
+                row = event.target;
+            });
 
-            let children= Array.from(e.target.parentNode.parentNode.children);
+            tr.addEventListener('dragover', (event) => {
 
-            if(children.indexOf(e.target.parentNode)>children.indexOf(row))
-                e.target.parentNode.after(row);
-            else
-                e.target.parentNode.before(row);
-        }
+                let e = event;
+                e.preventDefault();
+
+                children = Array.from(e.target.parentNode.parentNode.children);
+
+                if (children.indexOf(e.target.parentNode) > children.indexOf(row)) {
+                    // move down
+                    e.target.parentNode.after(row);
+                } else {
+                    // move up
+                    e.target.parentNode.before(row);
+                }
+            });
+
+            tr.addEventListener('drop', async (event) => {
+
+                for (let i=0;i<children.length;i++ ) {
+
+                    let child = children[i];
+                    let id = child.getAttribute('id');
+                    let id_arr = id.split('-');
+                    reorder_obj.type = id_arr.pop();
+                    reorder_obj.uuid = id_arr.join('-');
+                    reorder_obj.order = i + 1;
+                    updated_order.push(reorder_obj);
+                    reorder_obj = {};
+                }
+
+                const token = authModule.get_user_token();
+                const response = await httpModule.req({
+                    method: 'POST',
+                    url: EXHIBITS_ENDPOINTS.exhibits.reorder_records.post.endpoint.replace(':exhibit_id', exhibit_id),
+                    data: updated_order,
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'x-access-token': token
+                    }
+                });
+
+                if (response !== undefined && response.status === 201) {
+
+                    setTimeout(() => {
+                        location.reload();
+                    }, 0);
+                }
+            });
+        });
     };
-
-     */
 
     obj.init = function() {};
 

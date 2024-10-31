@@ -145,9 +145,12 @@ const exhibitsModule = (function () {
             ]
         });
 
+        /*
         setTimeout(() => {
             document.querySelector('#exhibit-card').style.visibility = 'visible';
         }, 100);
+
+         */
     };
 
     /**
@@ -394,6 +397,7 @@ const exhibitsModule = (function () {
 
     obj.init = async function () {
         await exhibitsModule.display_exhibits();
+        helperModule.show_form();
     };
 
     return obj;
