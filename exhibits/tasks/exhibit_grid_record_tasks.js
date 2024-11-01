@@ -526,6 +526,34 @@ const Exhibit_grid_record_tasks = class {
             return false;
         }
     }
+
+    /**
+     * Reorders grid items
+     * @param is_member_of_grid
+     * @param grids
+     */
+    async reorder_grid_items(is_member_of_grid, grids) {
+
+        try {
+
+            await this.DB(this.TABLE.grid_item_records)
+            .where({
+                is_member_of_grid: is_member_of_grid,
+                uuid: grids.uuid
+            })
+            .update({
+                order: grids.order
+            });
+
+            LOGGER.module().info('INFO: [/exhibits/exhibit_grid_record_tasks (reorder_grid_items)] Grid item reordered.');
+            return true;
+
+
+        } catch (error) {
+            LOGGER.module().error('ERROR: [/exhibits/exhibit_grid_record_tasks (reorder_grid_items)] unable to reorder grid item ' + error.message);
+            return false;
+        }
+    }
 };
 
 module.exports = Exhibit_grid_record_tasks;

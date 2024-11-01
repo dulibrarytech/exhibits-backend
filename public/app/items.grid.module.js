@@ -58,7 +58,11 @@ const itemsGridModule = (function () {
     /**
      * Gets grid items
      */
-    obj.display_grid_items = async function () {
+    obj.display_grid_items = async function (event) {
+
+        if ($.fn.dataTable.isDataTable('#grid-items')) {
+            $('#grid-items').DataTable().clear().destroy();
+        }
 
         const exhibit_id = helperModule.get_parameter_by_name('exhibit_id');
         const grid_id = helperModule.get_parameter_by_name('grid_id');
@@ -113,9 +117,10 @@ const itemsGridModule = (function () {
                 delete_item = `<a href="${APP_PATH}/items/grid/item/delete?exhibit_id=${exhibit_id}&grid_id=${grid_id}&item_id=${item_id}" title="Delete"><i class="fa fa-trash pr-1"></i></a>`;
             }
 
-            item_data += '<tr>';
-            item_data += `<td style="width: 5%">${order}</td>`;
-            item_data += `<td style="width: 35%">
+            item_data += `<tr id="${item_id}_grid_item" draggable='true'>`;
+            item_data += `<td class="grabbable"><i class="fa fa-reorder"></i>   <span style="padding-left: 4px;font-size: small">${order}</span></td>`;
+
+            item_data += `<td>
                             <p><strong>${title}</strong></p>
                              ${thumbnail}
                              ${item_type}
@@ -128,18 +133,25 @@ const itemsGridModule = (function () {
                                 </div>
                             </td>`;
             item_data += '</tr>';
-
-            document.querySelector('#grid-item-list').innerHTML = item_data;
         }
 
-        let grid_items_table = new DataTable('#grid-items');
+        document.querySelector('#grid-item-list').innerHTML = item_data;
+
+        let grid_items_table = new DataTable('#grid-items', {
+            paging: false,
+            order: [
+                [0, 'asc'],
+                [1, 'asc'],
+            ]
+        });
 
         bind_publish_grid_item_events();
         bind_suppress_grid_item_events();
+        helperModule.reorder_items(event, grid_id, 'grid_items');
 
         setTimeout(() => {
             document.querySelector('#item-card').style.visibility = 'visible';
-        }, 1000);
+        }, 250);
     };
 
     /**

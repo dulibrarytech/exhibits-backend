@@ -179,89 +179,126 @@ const helperModule = (function () {
      */
     obj.show_form = function () {
 
-        const form_cards = Array.from(document.getElementsByClassName('card'));
+        try {
 
-        setTimeout(() => {
+            const form_cards = Array.from(document.getElementsByClassName('card'));
 
-            form_cards.forEach(card => {
-                card.style.visibility = 'visible';
-            });
+            setTimeout(() => {
 
-        }, 250);
+                form_cards.forEach(card => {
+                    card.style.visibility = 'visible';
+                });
+
+            }, 250);
+
+        } catch (error) {
+            document.querySelector('#message').innerHTML = `<div class="alert alert-danger" role="alert"><i class="fa fa-exclamation"></i> ${error.message}</div>`;
+        }
     };
 
     /**
-     * Applies drag and drop to item list
+     * Reorders item list via drag and drop
      * @param event
-     * @param exhibit_id
+     * @param id (exhibit or grid)
+     * @param type
      */
-    obj.reorder_items = function (event, exhibit_id) {
+    obj.reorder_items = function (event, id, type) {
 
-        const EXHIBITS_ENDPOINTS = endpointsModule.get_exhibits_endpoints();
-        const tr_elem = Array.from(document.getElementsByTagName('tr'));
-        let row;
-        let children;
-        let updated_order = [];
-        let reorder_obj = {};
+        try {
 
-        tr_elem.forEach(tr => {
+            const EXHIBITS_ENDPOINTS = endpointsModule.get_exhibits_endpoints();
+            const tr_elem = Array.from(document.getElementsByTagName('tr'));
+            let row;
+            let children;
+            let updated_order = [];
+            let reorder_obj = {};
 
-            tr.addEventListener('dragstart', (event) => {
-                row = event.target;
-            });
+            tr_elem.forEach(tr => {
 
-            tr.addEventListener('dragover', (event) => {
+                tr.addEventListener('dragstart', (event) => {
+                    row = event.target;
+                });
 
-                let e = event;
-                e.preventDefault();
+                tr.addEventListener('dragover', (event) => {
 
-                children = Array.from(e.target.parentNode.parentNode.children);
+                    try {
 
-                if (children.indexOf(e.target.parentNode) > children.indexOf(row)) {
-                    // move down
-                    e.target.parentNode.after(row);
-                } else {
-                    // move up
-                    e.target.parentNode.before(row);
-                }
-            });
+                        let e = event;
+                        e.preventDefault();
 
-            tr.addEventListener('drop', async (event) => {
+                        children = Array.from(e.target.parentNode.parentNode.children);
 
-                for (let i=0;i<children.length;i++ ) {
+                        if (children.indexOf(e.target.parentNode) > children.indexOf(row)) {
+                            // move down
+                            e.target.parentNode.after(row);
+                        } else {
+                            // move up
+                            e.target.parentNode.before(row);
+                        }
 
-                    let child = children[i];
-                    let id = child.getAttribute('id');
-                    let id_arr = id.split('-');
-                    reorder_obj.type = id_arr.pop();
-                    reorder_obj.uuid = id_arr.join('-');
-                    reorder_obj.order = i + 1;
-                    updated_order.push(reorder_obj);
-                    reorder_obj = {};
-                }
-
-                const token = authModule.get_user_token();
-                const response = await httpModule.req({
-                    method: 'POST',
-                    url: EXHIBITS_ENDPOINTS.exhibits.reorder_records.post.endpoint.replace(':exhibit_id', exhibit_id),
-                    data: updated_order,
-                    headers: {
-                        'Content-Type': 'application/json',
-                        'x-access-token': token
+                    } catch (error) {
+                        console.log('ERROR: ', error);
                     }
                 });
 
-                if (response !== undefined && response.status === 201) {
+                tr.addEventListener('drop', async (event) => {
 
-                    setTimeout(() => {
-                        location.reload();
-                    }, 0);
-                }
+                    try {
+
+                        if (event.target.className === 'dropzone') {
+                            row.parentNode.removeChild(row);
+                            event.target.appendChild(row);
+                        }
+
+                        for (let i=0;i<children.length;i++ ) {
+
+                            let child = children[i];
+                            let id = child.getAttribute('id');
+                            let id_arr = id.split('_');
+                            reorder_obj.type = id_arr.pop();
+                            reorder_obj.uuid = id_arr.pop();
+                            reorder_obj.order = i + 1;
+                            updated_order.push(reorder_obj);
+                            reorder_obj = {};
+                        }
+
+                        const token = authModule.get_user_token();
+                        const response = await httpModule.req({
+                            method: 'POST',
+                            url: EXHIBITS_ENDPOINTS.exhibits.reorder_records.post.endpoint.replace(':exhibit_id', id),
+                            data: updated_order,
+                            headers: {
+                                'Content-Type': 'application/json',
+                                'x-access-token': token
+                            }
+                        });
+
+                        if (response !== undefined && response.status === 201) {
+
+                            if (type === 'items') {
+                                await itemsModule.display_items(event);
+                            }
+
+                            if (type === 'grid_items') {
+                                await itemsGridModule.display_grid_items(event);
+                            }
+
+                        } else {
+                            document.querySelector('#message').innerHTML = `<div class="alert alert-danger" role="alert"><i class="fa fa-exclamation"></i> An error occurred while reordering items.</div>`;
+                        }
+
+                    } catch (error) {
+                        console.log('ERROR: ', error);
+                    }
+                });
             });
-        });
+
+        } catch (error) {
+            document.querySelector('#message').innerHTML = `<div class="alert alert-danger" role="alert"><i class="fa fa-exclamation"></i> ${error.message}</div>`;
+        }
     };
 
-    obj.init = function() {};
+    obj.init = function () {};
 
     return obj;
 

@@ -59,6 +59,10 @@ const itemsModule = (function () {
      */
     obj.display_items = async function (event) {
 
+        if ($.fn.dataTable.isDataTable('#items')) {
+            $('#items').DataTable().clear().destroy();
+        }
+
         const exhibit_id = helperModule.get_parameter_by_name('exhibit_id');
         const items = await get_items(exhibit_id);
         let item_data = '';
@@ -103,8 +107,9 @@ const itemsModule = (function () {
                 delete_item = `<a href="${APP_PATH}/items/delete?exhibit_id=${exhibit_id}&item_id=${item_id}&type=${type}" title="Delete"><i class="fa fa-trash pr-1"></i></a>`;
             }
 
-            item_data += `<tr class="grabbable" id="${item_id}-${type}" draggable='true'>`;
-            item_data += `<td style="width: 5%;text-align: center"><i class="fa fa-reorder"></i>   <span style="padding-left: 4px;font-size: small">${order}</span></td>`;
+            // start rows
+            item_data += `<tr class="dropzone" id="${item_id}_${type}" draggable='true'>`;
+            item_data += `<td class="grabbable item-order"><i class="fa fa-reorder"></i><span style="padding-left: 4px;">${order}</span></td>`;
 
             if (type === 'item') { // standard
 
@@ -128,29 +133,29 @@ const itemsModule = (function () {
 
                 if (items[i].thumbnail.length > 0) {
                     thumbnail = EXHIBITS_ENDPOINTS.exhibits.exhibit_media.get.endpoint.replace(':exhibit_id', exhibit_id).replace(':media', items[i].thumbnail);
-                    img = `<p><img alt="${thumbnail}" src="${thumbnail}" height="100" width="100"></p>`;
+                    img = `<p><img alt="${thumbnail}" src="${thumbnail}" height="75" width="75"></p>`;
                 }
 
-                item_data += `<td style="width: 35%">
-                    <p><button class="btn btn-default"><small>${type}</small></button></p>
+                item_data += `<td class="item-metadata">
+                    <p><button class="btn btn-default">${item_type} <small>${type}</small></button></p>
                     <p><strong>${title}</strong></p>
                     ${img}
-                    ${item_type}
-                    <!--<p><strong>${description}</strong></p>-->
+                   
                     </td>`;
 
             } else if (items[i].type === 'heading') {
 
                 let text = helperModule.unescape(items[i].text);
                 edit_type = 'heading';
-
-                item_data += `<td style="width: 35%">
+                item_data += `<td class="item-metadata">
                     <p><button class="btn btn-default"><small>${type}</small></button></p>
                     <p><strong>${text}</strong></p>
                     </td>`;
 
             } else if (items[i].type === 'grid') {
 
+                // let title = `<a href="#">${helperModule.unescape(items[i].title)}</a>`;
+                let title = helperModule.unescape(items[i].title);
                 let grid_items_fragment = '';
                 let grid_item_count = '';
 
@@ -161,23 +166,22 @@ const itemsModule = (function () {
                     grid_items_fragment += '<p><strong>No items</strong></p>';
 
                 } else {
-
                     item_details = `<a href="${APP_PATH}/items/grid/items?exhibit_id=${exhibit_id}&grid_id=${item_id}" title="View grid Items"><i class="fa fa-search pr-1"></i></a>`;
                     grid_item_count += `Contains ${items[i].grid_items.length} items`;
                     delete_item = ''; // Can't delete grid if it contain items
                 }
 
-                item_data += `<td style="width: 35%">
-                    <p><button class="btn btn-default"><small>${type}</small></button></p>
-                    <p>${items[i].columns} columns </p>
+                item_data += `<td class="item-metadata">
+                    <p><button class="btn btn-default"><i class="fa fa-th"></i> <small>${type}</small></button></p>
+                    <p><strong>${title}</strong></p>
+                    <p>${items[i].columns} columns</p>
                     <p>${grid_item_count}</p>
                     <div id="grid-items-${exhibit_id}"><em>${grid_items_fragment}</em></div>
-                    <i class="fa fa-th"></i>
                     </td>`;
             }
 
-            item_data += `<td style="width: 5%;text-align: center"><small>${status}</small></td>`;
-            item_data += `<td style="width: 10%">
+            item_data += `<td class="item-status"><small>${status}</small></td>`;
+            item_data += `<td class="item-actions">
                                 <div class="card-text text-sm-center">
                                     ${item_details}                                    
                                     ${add_grid_items}&nbsp;
@@ -188,25 +192,25 @@ const itemsModule = (function () {
             item_data += '</tr>';
         }
 
-        // item_data += '</tr>';
-
         document.querySelector('#item-data').innerHTML = item_data;
+
         let items_table = new DataTable('#items', {
-            paging: false,
+            paging: false
+        });
+        /*
+        ,
             order: [
                 [0, 'asc'],
                 [1, 'asc'],
             ]
-        });
-
+         */
         bind_publish_item_events();
         bind_suppress_item_events();
-        helperModule.reorder_items(event, exhibit_id);
+        helperModule.reorder_items(event, exhibit_id, 'items');
 
         setTimeout(() => {
             document.querySelector('#item-card').style.visibility = 'visible';
-            document.querySelector('#message').innerHTML = '';
-        }, 100);
+        }, 250);
     };
 
     /**
@@ -402,34 +406,6 @@ const itemsModule = (function () {
             navModule.set_preview_link();
             navModule.set_item_nav_menu_links();
             itemsModule.display_items();
-
-
-            /*
-            setTimeout(() => {
-
-                let row;
-
-                function start(){
-                    console.log('start');
-                    row = event.target;
-                }
-
-                function dragover(){
-                    console.log('dragover');
-                    let e = event;
-                    e.preventDefault();
-
-                    let children= Array.from(e.target.parentNode.parentNode.children);
-
-                    if(children.indexOf(e.target.parentNode)>children.indexOf(row))
-                        e.target.parentNode.after(row);
-                    else
-                        e.target.parentNode.before(row);
-                }
-
-            }, 500);
-
-             */
 
             setTimeout(() => {
                 document.querySelector('#items-menu').style.visibility = 'visible';

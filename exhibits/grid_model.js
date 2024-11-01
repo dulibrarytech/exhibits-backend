@@ -658,3 +658,18 @@ exports.reorder_grids = async function (exhibit_id, grid) {
         LOGGER.module().error('ERROR: [/exhibits/model (reorder_grids)] ' + error.message);
     }
 };
+
+/**
+ * Updates grid item order in grid
+ * @param grid_id
+ * @param grid
+ */
+exports.reorder_grid_items = async function (grid_id, grid) {
+
+    try {
+        const TASKS = new EXHIBIT_GRID_RECORD_TASKS(DB, TABLES);
+        return await TASKS.reorder_grid_items(grid_id, grid);
+    } catch (error) {
+        LOGGER.module().error('ERROR: [/exhibits/model (reorder_grids)] ' + error.message);
+    }
+};

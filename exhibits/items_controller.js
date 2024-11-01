@@ -274,10 +274,10 @@ exports.reorder_items = async function (req, res) {
 
     try {
 
-        const exhibit_id = req.params.exhibit_id;
+        const id = req.params.exhibit_id;
         const updated_order = req.body;
 
-        if (exhibit_id.length === 0 || updated_order.length === 0) {
+        if (id.length === 0 || updated_order.length === 0) {
             res.status(400).send('Bad request.');
             return false;
         }
@@ -287,7 +287,7 @@ exports.reorder_items = async function (req, res) {
         for (let i=0;i<updated_order.length;i++) {
 
             if (updated_order[i].type === 'item') {
-                let is_reordered = await ITEMS_MODEL.reorder_items(exhibit_id, updated_order[i]);
+                let is_reordered = await ITEMS_MODEL.reorder_items(id, updated_order[i]);
 
                 if (is_reordered === false) {
                     ordered_errors.push('-1');
@@ -295,7 +295,15 @@ exports.reorder_items = async function (req, res) {
             }
 
             if (updated_order[i].type === 'grid') {
-                let is_reordered = await GRIDS_MODEL.reorder_grids(exhibit_id, updated_order[i]);
+                let is_reordered = await GRIDS_MODEL.reorder_grids(id, updated_order[i]);
+
+                if (is_reordered === false) {
+                    ordered_errors.push('-1');
+                }
+            }
+
+            if (updated_order[i].type === 'grid_item') {
+                let is_reordered = await GRIDS_MODEL.reorder_grid_items(id, updated_order[i]);
 
                 if (is_reordered === false) {
                     ordered_errors.push('-1');
@@ -303,7 +311,7 @@ exports.reorder_items = async function (req, res) {
             }
 
             if (updated_order[i].type === 'heading') {
-                let is_reordered = await HEADINGS_MODEL.reorder_headings(exhibit_id, updated_order[i]);
+                let is_reordered = await HEADINGS_MODEL.reorder_headings(id, updated_order[i]);
 
                 if (is_reordered === false) {
                     ordered_errors.push('-1');
