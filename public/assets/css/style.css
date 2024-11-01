@@ -1331,29 +1331,9 @@ footer.site-footer {
   visibility: hidden;
 }
 
-/*
-[draggable="true"] {
-
-To prevent user selecting inside the drag source
-
-user-select: none;
--moz-user-select: none;
--webkit-user-select: none;
--ms-user-select: none;
-
-}
-*/
-
-/*
-.item-order {
-  width: 5%;
-  text-align: center
-}
-
- */
 /* item lists */
 td {
-  height: 175px;
+  height: 165px;
 }
 
 td.item-order {
@@ -1390,7 +1370,5 @@ td.item-actions {
   cursor: -moz-grabbing;
   cursor: -webkit-grabbing;
 }
-
-
 
 /*# sourceMappingURL=style.css.map */

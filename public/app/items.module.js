@@ -85,6 +85,8 @@ const itemsModule = (function () {
             let edit_type;
             let edit;
             let delete_item;
+            let item_order;
+            let draggable;
 
             if (type === 'item') {
                 edit_type = 'standard';
@@ -98,23 +100,28 @@ const itemsModule = (function () {
             }
 
             if (is_published === 1) {
+                draggable = `<tr id="${item_id}_${type}">`;
+                item_order = `<td class="item-order"><span style="padding-left: 4px;">${order}</span></td>`;
                 status = `<a href="#" id="${item_id}" class="suppress-item"><span id="suppress" title="published"><i class="fa fa-cloud" style="color: green"></i><br>Published</span></a>`;
                 edit = '';
                 delete_item = '';
             } else if (is_published === 0) {
+                draggable = `<tr class="dropzone" id="${item_id}_${type}" draggable='true'>`;
+                item_order = `<td class="grabbable item-order"><i class="fa fa-reorder"></i><span style="padding-left: 4px;">${order}</span></td>`;
                 status = `<a href="#" id="${item_id}" class="publish-item"><span id="publish" title="suppressed"><i class="fa fa-cloud-upload" style="color: darkred"></i><br>Suppressed</span></a>`;
                 edit = `<a href="${APP_PATH}/items/${edit_type}/edit?exhibit_id=${exhibit_id}&item_id=${item_id}" title="Edit"><i class="fa fa-edit pr-1"></i></a>`;
                 delete_item = `<a href="${APP_PATH}/items/delete?exhibit_id=${exhibit_id}&item_id=${item_id}&type=${type}" title="Delete"><i class="fa fa-trash pr-1"></i></a>`;
             }
 
             // start rows
-            item_data += `<tr class="dropzone" id="${item_id}_${type}" draggable='true'>`;
-            item_data += `<td class="grabbable item-order"><i class="fa fa-reorder"></i><span style="padding-left: 4px;">${order}</span></td>`;
+            item_data += draggable;
+            // item_data += `<tr class="dropzone" id="${item_id}_${type}" draggable='true'>`;
+            item_data += item_order;
+            // item_data += `<td class="grabbable item-order"><i class="fa fa-reorder"></i><span style="padding-left: 4px;">${order}</span></td>`;
 
             if (type === 'item') { // standard
 
                 let title = `<a href="#">${helperModule.unescape(items[i].title)}</a>`;
-                let description = helperModule.unescape(items[i].description);
                 let thumbnail = '';
                 let img = '';
                 let item_type;
@@ -154,7 +161,6 @@ const itemsModule = (function () {
 
             } else if (items[i].type === 'grid') {
 
-                // let title = `<a href="#">${helperModule.unescape(items[i].title)}</a>`;
                 let title = helperModule.unescape(items[i].title);
                 let grid_items_fragment = '';
                 let grid_item_count = '';
@@ -265,7 +271,7 @@ const itemsModule = (function () {
 
             for (let i = 0; i < elems.length; i++) {
                 if (elems[i].id.length !== 0 && elems[i].id.indexOf(uuid) !== -1) {
-                    let tmp = elems[i].id.split('-');
+                    let tmp = elems[i].id.split('_');
                     type = tmp.pop();
                     break;
                 }
@@ -322,7 +328,7 @@ const itemsModule = (function () {
 
             for (let i = 0; i < elems.length; i++) {
                 if (elems[i].id.length !== 0 && elems[i].id.indexOf(uuid) !== -1) {
-                    let tmp = elems[i].id.split('-');
+                    let tmp = elems[i].id.split('_');
                     type = tmp.pop();
                     break;
                 }
@@ -363,7 +369,7 @@ const itemsModule = (function () {
         try {
 
             const exhibit_links = Array.from(document.getElementsByClassName('publish-item'));
-
+            console.log(exhibit_links);
             exhibit_links.forEach(exhibit_link => {
                 exhibit_link.addEventListener('click', async (event) => {
                     const uuid = exhibit_link.getAttribute('id');

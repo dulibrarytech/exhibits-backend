@@ -197,7 +197,8 @@ exports.publish_item_record = async function (req, res) {
 exports.suppress_item_record = async function (req, res) {
 
     try {
-
+        console.log(req.params);
+        console.log(req.query.type);
         const exhibit_id = req.params.exhibit_id;
         const item_id = req.params.item_id;
         const type = req.query.type;
