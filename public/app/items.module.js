@@ -103,8 +103,8 @@ const itemsModule = (function () {
                 delete_item = `<a href="${APP_PATH}/items/delete?exhibit_id=${exhibit_id}&item_id=${item_id}&type=${type}" title="Delete"><i class="fa fa-trash pr-1"></i></a>`;
             }
 
-            item_data += `<tr id="${item_id}-${type}" draggable='true'>`;
-            item_data += `<td style="width: 5%">${order}</td>`;
+            item_data += `<tr class="grabbable" id="${item_id}-${type}" draggable='true'>`;
+            item_data += `<td style="width: 5%;text-align: center"><i class="fa fa-reorder"></i>   <span style="padding-left: 4px;font-size: small">${order}</span></td>`;
 
             if (type === 'item') { // standard
 
