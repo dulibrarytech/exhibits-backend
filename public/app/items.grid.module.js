@@ -87,6 +87,7 @@ const itemsGridModule = (function () {
             let item_type;
             let edit;
             let delete_item;
+            let draggable;
 
             if (items[i].mime_type.indexOf('image') !== -1) {
                 item_type = '<i class="fa fa-image"></i>';
@@ -107,7 +108,9 @@ const itemsGridModule = (function () {
                 thumbnail = '';
             }
 
+            // TODO:
             if (is_published === 1) {
+                draggable = `<tr id="${item_id}_grid_item">`;
                 status = `<a href="#" id="${item_id}" class="suppress"><span id="suppress" title="published"><i class="fa fa-cloud" style="color: green"></i><br>Published</span></a>`;
                 edit = '';
                 delete_item = '';

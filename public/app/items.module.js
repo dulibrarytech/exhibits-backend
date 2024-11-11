@@ -115,9 +115,7 @@ const itemsModule = (function () {
 
             // start rows
             item_data += draggable;
-            // item_data += `<tr class="dropzone" id="${item_id}_${type}" draggable='true'>`;
             item_data += item_order;
-            // item_data += `<td class="grabbable item-order"><i class="fa fa-reorder"></i><span style="padding-left: 4px;">${order}</span></td>`;
 
             if (type === 'item') { // standard
 
