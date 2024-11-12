@@ -19,12 +19,12 @@
 'use strict';
 
 const HELPER = require("../libs/helper");
-const UPLOAD_CONFIG = {
-    upload_path: process.env.UPLOAD_PATH,
+const STORAGE_CONFIG = {
+    storage_path: process.env.STORAGE_PATH,
     upload_max: process.env.UPLOAD_MAX
 };
 
 module.exports = function () {
     const HELPER_TASK = new HELPER();
-    return HELPER_TASK.check_config(UPLOAD_CONFIG);
+    return HELPER_TASK.check_config(STORAGE_CONFIG);
 };

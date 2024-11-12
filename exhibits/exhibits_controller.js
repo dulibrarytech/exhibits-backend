@@ -19,6 +19,7 @@
 'use strict';
 
 const WEBSERVICES_CONFIG = require('../config/webservices_config')();
+const STORAGE_CONFIG = require('../config/storage_config')();
 const EXHIBITS_MODEL = require('../exhibits/exhibits_model');
 const TRASH_MODEL = require('../exhibits/trash_model');
 const PATH = require('path');
@@ -113,91 +114,13 @@ exports.delete_exhibit_record = async function (req, res) {
     }
 };
 
-exports.get_trashed_records = async function (req, res) {
-
-    try {
-
-        const data = await TRASH_MODEL.get_trashed_records();
-        res.status(data.status).send(data);
-
-    } catch (error) {
-        res.status(500).send({message: `Unable to get trashed records. ${error.message}`});
-    }
-
-};
-
-exports.delete_trashed_record = async function (req, res) {
-
-    try {
-
-        const is_member_of_exhibit = req.params.exhibit_id;
-        const uuid = req.params.uuid;
-        const type = req.params.type;
-
-        if (uuid === undefined || uuid.length === 0 && is_member_of_exhibit === undefined || is_member_of_exhibit.length === 0) {
-            res.status(400).send('Bad request.');
-            return false;
-        }
-
-        if (type === undefined) {
-            res.status(400).send('Bad request.');
-            return false;
-        }
-
-        const result = await TRASH_MODEL.delete_trashed_record(is_member_of_exhibit, uuid, type);
-        res.status(result.status).send(result);
-
-    } catch (error) {
-        res.status(500).send({message: `Unable to delete trashed records. ${error.message}`});
-    }
-};
-
-exports.delete_all_trashed_records = function (req, res) {
-
-    try {
-
-        const result = TRASH_MODEL.delete_all_trashed_records();
-        res.status(result.status).send(result);
-
-    } catch (error) {
-        res.status(500).send({message: `Unable to delete all trashed records. ${error.message}`});
-    }
-};
-
-exports.restore_trashed_record = async function (req, res) {
-
-    try {
-
-        const is_member_of_exhibit = req.params.exhibit_id;
-        const uuid = req.params.uuid;
-        const type = req.params.type;
-
-        if (uuid === undefined || uuid.length === 0 && is_member_of_exhibit === undefined || is_member_of_exhibit.length === 0) {
-            res.status(400).send('Bad request.');
-            return false;
-        }
-
-        if (type === undefined) {
-            res.status(400).send('Bad request.');
-            return false;
-        }
-
-        const result = await TRASH_MODEL.restore_trashed_record(is_member_of_exhibit, uuid, type);
-        res.status(result.status).send(result);
-
-    } catch (error) {
-        res.status(500).send({message: `Unable to restore trashed records. ${error.message}`});
-    }
-};
-
 exports.get_exhibit_media = function (req, res) {
 
     try {
 
         const uuid = req.params.exhibit_id;
         const media = req.params.media;
-
-        res.status(200).sendFile(PATH.join(__dirname, `../storage/${uuid}`, media));
+        res.status(200).sendFile(`${STORAGE_CONFIG.storage_path}/${uuid}/${media}`);
 
     } catch(error) {
         res.status(404).send({message: `Exhibit media not found. ${error.message}`});
@@ -213,7 +136,7 @@ exports.get_media = function (req, res) {
         const media = req.query.media;
 
         if (media !== undefined && media.length !== 0) {
-            res.status(200).sendFile(PATH.join(__dirname, `../storage/`, media));
+            res.status(200).sendFile(`${STORAGE_CONFIG.storage_path}/${media}`);
         } else {
             res.status(404).send('Unable to get media file');
         }
@@ -232,7 +155,7 @@ exports.delete_media = function (req, res) {
         const media = req.query.media;
 
         if (media !== undefined && media.length !== 0) {
-            FS.unlinkSync(`./storage/${media}`);
+            FS.unlinkSync(`${STORAGE_CONFIG.storage_path}/${media}`);
             res.status(204).send('Media deleted');
         } else {
             res.status(200).send('Unable to delete media file');
@@ -258,7 +181,7 @@ exports.delete_exhibit_media = function (req, res) {
                 await EXHIBITS_MODEL.delete_media_value(uuid, media);
             })();
 
-            FS.unlinkSync(`./storage/${uuid}/${media}`);
+            FS.unlinkSync(`${STORAGE_CONFIG.storage_path}/${uuid}/${media}`);
             res.status(204).send('Media deleted');
 
         } else {
@@ -356,3 +279,80 @@ exports.suppress_exhibit = async function (req, res) {
         res.status(500).send({message: `Unable to suppress exhibit. ${error.message}`});
     }
 }
+
+exports.get_trashed_records = async function (req, res) {
+
+    try {
+
+        const data = await TRASH_MODEL.get_trashed_records();
+        res.status(data.status).send(data);
+
+    } catch (error) {
+        res.status(500).send({message: `Unable to get trashed records. ${error.message}`});
+    }
+
+};
+
+exports.delete_trashed_record = async function (req, res) {
+
+    try {
+
+        const is_member_of_exhibit = req.params.exhibit_id;
+        const uuid = req.params.uuid;
+        const type = req.params.type;
+
+        if (uuid === undefined || uuid.length === 0 && is_member_of_exhibit === undefined || is_member_of_exhibit.length === 0) {
+            res.status(400).send('Bad request.');
+            return false;
+        }
+
+        if (type === undefined) {
+            res.status(400).send('Bad request.');
+            return false;
+        }
+
+        const result = await TRASH_MODEL.delete_trashed_record(is_member_of_exhibit, uuid, type);
+        res.status(result.status).send(result);
+
+    } catch (error) {
+        res.status(500).send({message: `Unable to delete trashed records. ${error.message}`});
+    }
+};
+
+exports.delete_all_trashed_records = function (req, res) {
+
+    try {
+
+        const result = TRASH_MODEL.delete_all_trashed_records();
+        res.status(result.status).send(result);
+
+    } catch (error) {
+        res.status(500).send({message: `Unable to delete all trashed records. ${error.message}`});
+    }
+};
+
+exports.restore_trashed_record = async function (req, res) {
+
+    try {
+
+        const is_member_of_exhibit = req.params.exhibit_id;
+        const uuid = req.params.uuid;
+        const type = req.params.type;
+
+        if (uuid === undefined || uuid.length === 0 && is_member_of_exhibit === undefined || is_member_of_exhibit.length === 0) {
+            res.status(400).send('Bad request.');
+            return false;
+        }
+
+        if (type === undefined) {
+            res.status(400).send('Bad request.');
+            return false;
+        }
+
+        const result = await TRASH_MODEL.restore_trashed_record(is_member_of_exhibit, uuid, type);
+        res.status(result.status).send(result);
+
+    } catch (error) {
+        res.status(500).send({message: `Unable to restore trashed records. ${error.message}`});
+    }
+};
