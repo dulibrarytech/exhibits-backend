@@ -18,6 +18,7 @@
 
 'use strict';
 
+const STORAGE_CONFIG = require('../config/storage_config')();
 const ITEMS_MODEL = require('../exhibits/items_model');
 const HEADINGS_MODEL = require('../exhibits/headings_model');
 const GRIDS_MODEL = require('../exhibits/grid_model');
@@ -138,7 +139,7 @@ exports.delete_item_media = function (req, res) {
                 await ITEMS_MODEL.delete_media_value(item_id, media);
             })();
 
-            FS.unlinkSync(`./storage/${exhibit_id}/${media}`);
+            FS.unlinkSync(`${STORAGE_CONFIG.storage_path}/${exhibit_id}/${media}`);
             res.status(204).send('Media deleted');
 
         } else {

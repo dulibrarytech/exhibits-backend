@@ -22,7 +22,6 @@ const WEBSERVICES_CONFIG = require('../config/webservices_config')();
 const STORAGE_CONFIG = require('../config/storage_config')();
 const EXHIBITS_MODEL = require('../exhibits/exhibits_model');
 const TRASH_MODEL = require('../exhibits/trash_model');
-const PATH = require('path');
 const FS = require('fs');
 
 exports.create_exhibit_record = async function (req, res) {
