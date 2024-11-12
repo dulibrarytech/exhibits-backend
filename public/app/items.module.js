@@ -201,20 +201,10 @@ const itemsModule = (function () {
         let items_table = new DataTable('#items', {
             paging: false
         });
-        /*
-        ,
-            order: [
-                [0, 'asc'],
-                [1, 'asc'],
-            ]
-         */
+
         bind_publish_item_events();
         bind_suppress_item_events();
         helperModule.reorder_items(event, exhibit_id, 'items');
-
-        setTimeout(() => {
-            document.querySelector('#item-card').style.visibility = 'visible';
-        }, 250);
     };
 
     /**
@@ -367,7 +357,7 @@ const itemsModule = (function () {
         try {
 
             const exhibit_links = Array.from(document.getElementsByClassName('publish-item'));
-            console.log(exhibit_links);
+
             exhibit_links.forEach(exhibit_link => {
                 exhibit_link.addEventListener('click', async (event) => {
                     const uuid = exhibit_link.getAttribute('id');
@@ -410,10 +400,7 @@ const itemsModule = (function () {
             navModule.set_preview_link();
             navModule.set_item_nav_menu_links();
             itemsModule.display_items();
-
-            setTimeout(() => {
-                document.querySelector('#items-menu').style.visibility = 'visible';
-            }, 100);
+            helperModule.show_form();
 
         } catch (error) {
             document.querySelector('#message').innerHTML = `<div class="alert alert-danger" role="alert"><i class="fa fa-exclamation"></i> ${error.message}</div>`;

@@ -144,13 +144,6 @@ const exhibitsModule = (function () {
                 [1, 'asc']
             ]
         });
-
-        /*
-        setTimeout(() => {
-            document.querySelector('#exhibit-card').style.visibility = 'visible';
-        }, 100);
-
-         */
     };
 
     /**
@@ -237,7 +230,7 @@ const exhibitsModule = (function () {
 
                     setTimeout(() => {
                         window.location.replace(APP_PATH + '/exhibits');
-                    }, 3000);
+                    }, 2000);
                 }
 
             })();

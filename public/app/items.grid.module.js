@@ -151,10 +151,6 @@ const itemsGridModule = (function () {
         bind_publish_grid_item_events();
         bind_suppress_grid_item_events();
         helperModule.reorder_items(event, grid_id, 'grid_items');
-
-        setTimeout(() => {
-            document.querySelector('#item-card').style.visibility = 'visible';
-        }, 250);
     };
 
     /**
@@ -341,6 +337,7 @@ const itemsGridModule = (function () {
             navModule.init();
             navModule.back_to_items();
             navModule.set_grid_item_nav_menu_links();
+            helperModule.show_form();
 
         } catch (error) {
             document.querySelector('#message').innerHTML = `<div class="alert alert-danger" role="alert"><i class="fa fa-exclamation"></i> ${error.message}</div>`;

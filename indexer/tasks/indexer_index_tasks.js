@@ -102,7 +102,7 @@ const Indexer_index_tasks = class {
             }
 
         } catch (error) {
-            LOGGER.module().error('ERROR: [/indexer/indexer_index_tasks (delete_record)] unable to index record ' + error.message);
+            LOGGER.module().error('ERROR: [/indexer/indexer_index_tasks (delete_record)] unable to delete index record ' + error.message);
             return false;
         }
     }
