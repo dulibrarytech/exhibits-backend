@@ -218,13 +218,14 @@ const Helper = class {
     /**
      * Checks if storage path for exhibit exists
      * @param uuid
+     * @param path
      */
-    check_storage_path(uuid) {
+    check_storage_path(uuid, path) {
 
         try {
 
-            if (!FS.existsSync(`./storage/${uuid}`)) {
-                FS.mkdirSync(`./storage/${uuid}`);
+            if (!FS.existsSync(`${path}/${uuid}`)) {
+                FS.mkdirSync(`${path}/${uuid}`);
                 LOGGER.module().info('INFO: [/libs/helper (check_storage_path)] Storage path for exhibit ' + uuid + ' created.');
             }
 
@@ -238,8 +239,9 @@ const Helper = class {
      * @param exhibit_id
      * @param item_id
      * @param media
+     * @param path
      */
-    process_uploaded_media(exhibit_id, item_id, media) {
+    process_uploaded_media(exhibit_id, item_id, media, path) {
 
         let storage_path;
         let media_file;
@@ -252,7 +254,7 @@ const Helper = class {
             media_file = `${exhibit_id}_${media}`;
         }
 
-        FS.rename(`./storage/${media}`, `./storage/${storage_path}`, (error) => {
+        FS.rename(`${path}/${media}`, `${path}/${storage_path}`, (error) => {
             if (error) {
                 LOGGER.module().error('ERROR: [/libs/helper (process_media)] Error occurred while processing media ' + error);
             }
