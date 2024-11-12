@@ -18,6 +18,7 @@
 
 'use strict';
 
+const STORAGE_CONFIG = require('../config/storage_config')();
 const DB = require('../config/db_config')();
 const DB_TABLES = require('../config/db_tables_config')();
 const TABLES = DB_TABLES.exhibits;
@@ -187,11 +188,11 @@ exports.create_grid_item_record = async function (is_member_of_exhibit, grid_id,
         }
 
         if (data.media.length > 0 && data.media !== data.media_prev) {
-            data.media = HELPER_TASK.process_uploaded_media(data.is_member_of_exhibit, data.uuid, data.media);
+            data.media = HELPER_TASK.process_uploaded_media(data.is_member_of_exhibit, data.uuid, data.media, STORAGE_CONFIG.storage_path);
         }
 
         if (data.thumbnail.length > 0 && data.thumbnail !== data.thumbnail_prev) {
-            data.thumbnail = HELPER_TASK.process_uploaded_media(data.is_member_of_exhibit, data.uuid, data.thumbnail);
+            data.thumbnail = HELPER_TASK.process_uploaded_media(data.is_member_of_exhibit, data.uuid, data.thumbnail, STORAGE_CONFIG.storage_path);
         }
 
         if (data.kaltura.length > 0) {
@@ -203,7 +204,7 @@ exports.create_grid_item_record = async function (is_member_of_exhibit, grid_id,
             data.item_type = 'repo';
             data.is_repo_item = 1;
         }
-        console.log(data.styles);
+
         if (data.styles === undefined || data.styles.length === 0) {
             data.styles = {};
         }
@@ -314,11 +315,11 @@ exports.update_grid_item_record = async function (is_member_of_exhibit, is_membe
         }
 
         if (data.media.length > 0 && data.media !== data.media_prev) {
-            data.media = HELPER_TASK.process_uploaded_media(data.is_member_of_exhibit, data.uuid, data.media);
+            data.media = HELPER_TASK.process_uploaded_media(data.is_member_of_exhibit, data.uuid, data.media, STORAGE_CONFIG.storage_path);
         }
 
         if (data.thumbnail.length > 0 && data.thumbnail !== data.thumbnail_prev) {
-            data.thumbnail = HELPER_TASK.process_uploaded_media(data.is_member_of_exhibit, data.uuid, data.thumbnail);
+            data.thumbnail = HELPER_TASK.process_uploaded_media(data.is_member_of_exhibit, data.uuid, data.thumbnail, STORAGE_CONFIG.storage_path);
         }
 
         if (data.kaltura.length > 0) {
@@ -326,8 +327,6 @@ exports.update_grid_item_record = async function (is_member_of_exhibit, is_membe
             data.item_type = 'kaltura';
             data.is_kaltura_item = 1;
         } else if (data.repo_uuid.length > 0) {
-            // TODO: get record mime type
-            // https://specialcollections.du.edu/repository/data/{pid}?key=<>
             data.media = data.repo_uuid;
             data.item_type = 'repo';
             data.is_repo_item = 1;
