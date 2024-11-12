@@ -1,8 +1,32 @@
 <div class="col-12 col-md-12">
     <p>
-    <div class="row form-group">
+    <form class="row form-group">
         <input type="text" id="audio-video" name="audio_video"
                placeholder="Kaltura ID" class="form-control">
-    </div>
+
+        <br><br>
+        <div class="form-text text-muted" style="font-size: 17px">
+            <p>
+                <span style="color: red">*</span>
+                <small><em>Please choose an item type</em></small>
+            </p>
+        </div>
+        <p>
+            <label class="btn btn-default" for="item-type-audio" style="font-size: 15px">Audio
+                <input type="radio"
+                       name="item_type"
+                       id="item-type-audio"
+                       value="audio" />
+            </label>
+        </p>
+        <p>
+            <label class="btn btn-default" for="item-type-video" style="font-size: 15px">Video
+                <input type="radio"
+                       name="item_type"
+                       id="item-type-video"
+                       value="video" />
+            </label>
+        </p>
+    </form>
     </p>
 </div>

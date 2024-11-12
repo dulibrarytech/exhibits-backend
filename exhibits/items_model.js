@@ -18,6 +18,7 @@
 
 'use strict';
 
+const STORAGE_CONFIG = require('../config/storage_config')();
 const HTTP = require('axios');
 const CONFIG = require('../config/webservices_config')();
 const DB = require('../config/db_config')();
@@ -101,14 +102,14 @@ exports.create_item_record = async function (is_member_of_exhibit, data) {
             };
         }
 
-        HELPER_TASK.check_storage_path(data.is_member_of_exhibit);
+        HELPER_TASK.check_storage_path(data.is_member_of_exhibit, STORAGE_CONFIG.storage_path);
 
         if (data.media.length > 0 && data.media !== data.media_prev) {
-            data.media = HELPER_TASK.process_uploaded_media(data.is_member_of_exhibit, data.uuid, data.media);
+            data.media = HELPER_TASK.process_uploaded_media(data.is_member_of_exhibit, data.uuid, data.media, STORAGE_CONFIG.storage_path);
         }
 
         if (data.thumbnail.length > 0 && data.thumbnail !== data.thumbnail_prev) {
-            data.thumbnail = HELPER_TASK.process_uploaded_media(data.is_member_of_exhibit, data.uuid, data.thumbnail);
+            data.thumbnail = HELPER_TASK.process_uploaded_media(data.is_member_of_exhibit, data.uuid, data.thumbnail, STORAGE_CONFIG.storage_path);
         }
 
         if (data.kaltura.length > 0) {
@@ -120,7 +121,7 @@ exports.create_item_record = async function (is_member_of_exhibit, data) {
             data.item_type = 'repo'; // <-- determine mime type and add here
             data.is_repo_item = 1;
         }
-        console.log(data.styles);
+
         if (data.styles === undefined || data.styles.length === 0) {
             data.styles = {};
         }
@@ -184,14 +185,14 @@ exports.update_item_record = async function (is_member_of_exhibit, item_id, data
             };
         }
 
-        HELPER_TASK.check_storage_path(data.is_member_of_exhibit);
+        HELPER_TASK.check_storage_path(data.is_member_of_exhibit, STORAGE_CONFIG.storage_path);
 
         if (data.media.length > 0 && data.media !== data.media_prev) {
-            data.media = HELPER_TASK.process_uploaded_media(data.is_member_of_exhibit, data.uuid, data.media);
+            data.media = HELPER_TASK.process_uploaded_media(data.is_member_of_exhibit, data.uuid, data.media, STORAGE_CONFIG.storage_path);
         }
 
         if (data.thumbnail.length > 0 && data.thumbnail !== data.thumbnail_prev) {
-            data.thumbnail = HELPER_TASK.process_uploaded_media(data.is_member_of_exhibit, data.uuid, data.thumbnail);
+            data.thumbnail = HELPER_TASK.process_uploaded_media(data.is_member_of_exhibit, data.uuid, data.thumbnail, STORAGE_CONFIG.storage_path);
         }
 
         if (data.kaltura.length > 0) {
