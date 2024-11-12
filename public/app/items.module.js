@@ -68,6 +68,7 @@ const itemsModule = (function () {
         let item_data = '';
 
         if (items.length === 0) {
+            document.querySelector('.card').innerHTML = '';
             document.querySelector('#message').innerHTML = '<div class="alert alert-info" role="alert"><span id="exhibit-title"></span> exhibit is empty.</div>';
             await exhibitsModule.set_exhibit_title(exhibit_id);
             return false;

@@ -71,6 +71,7 @@ const itemsGridModule = (function () {
         let item_data = '';
 
         if (items.length === 0) {
+            document.querySelector('.card').innerHTML = '';
             document.querySelector('#message').innerHTML = '<div class="alert alert-info" role="alert">Grid is empty.</div>';
             return false;
         }

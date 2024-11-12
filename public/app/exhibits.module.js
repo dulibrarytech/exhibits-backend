@@ -36,11 +36,12 @@ const exhibitsModule = (function () {
 
             if (token === false || EXHIBITS_ENDPOINTS === null) {
 
-                document.querySelector('#message').innerHTML = 'ERROR: Unable to get API endpoints';
+                document.querySelector('#message').innerHTML = `<div class="alert alert-danger" role="alert"><i class="fa fa-exclamation"></i> 'ERROR: Unable to get API endpoints'</div>`;
 
                 setTimeout(() => {
+                    // TODO
                     // window.location.replace(APP_PATH + '/auth');
-                }, 3000);
+                }, 2000);
 
                 return false;
             }
@@ -72,6 +73,7 @@ const exhibitsModule = (function () {
         let exhibit_data = '';
 
         if (exhibits.length === 0) {
+            document.querySelector('.card').innerHTML = '';
             document.querySelector('#message').innerHTML = '<div class="alert alert-info" role="alert">No Exhibits found.</div>';
             return false;
         }
