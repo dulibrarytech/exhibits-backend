@@ -8,15 +8,7 @@
     </nav>
 </aside>
 <div id="right-panel" class="right-panel">
-    <header>
-        <nav class="navbar navbar-expand-md fixed-top" style="background-color: white">
-            <div class="container-fluid">
-                <a class="navbar-brand" href="/">
-                    <img src="/exhibits-dashboard/static/images/du-logo.png" alt="University of Denver University Libraries">&nbsp;&nbsp;Online Exhibits
-                </a>
-            </div>
-        </nav>
-    </header>
+    <%- include('partials/main-header.ejs'); %>
     <div class="content" style="min-height: 875px;">
         <div class="alert alert-primary" role="alert"><span id="message">Online exhibits authentication</span></div>
         <p><button id="authenticate" type="button" class="btn btn-primary">Authenticate</button></p>

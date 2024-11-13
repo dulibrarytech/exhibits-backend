@@ -40,14 +40,7 @@
     </nav>
 </aside>
 <div id="right-panel" class="right-panel">
-    <header id="header" class="header">
-        <div class="top-left">
-            <div class="navbar-header">
-                <a class="navbar-brand" href="./"><img src="/exhibits-dashboard/static/images/du-logo.png" alt="Logo"></a>
-            </div>
-        </div>
-        <div class="top-right"></div>
-    </header>
+    <%- include('partials/main-header.ejs'); %>
     <div class="content" style="min-height: 875px;">
         <div id="message"></div>
         <div id="item-heading-card" class="card">
@@ -58,7 +51,6 @@
                 <div class="card-body">
                     <input id="exhibit-uuid" type="hidden" name="exhibit_uuid">
                     <div class="alert alert-info"><i class="fa fa-info"></i> Provide info to user about this form</div>
-
                     <div class="row">
                         <div class="col-12 col-md-12">
                             <div class="row form-group">
