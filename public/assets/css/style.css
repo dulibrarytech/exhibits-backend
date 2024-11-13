@@ -88,7 +88,7 @@ p {
   font-family: "Open Sans", sans-serif;
   font-weight: 400;
   line-height: 24px;
-  color: #878787; }
+  color: #5A5A5A; } /* #878787 */
 
 p:focus {
   border: none;
