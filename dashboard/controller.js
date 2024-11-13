@@ -20,7 +20,6 @@
 
 const CONFIG = require('../config/app_config')();
 const SSO_CONFIG = require('../config/webservices_config')();
-// const APP_PATH = '/exhibits-backend';
 
 exports.default = function (req, res) {
     res.status(403).send({
@@ -138,15 +137,6 @@ exports.get_dashboard_grid_edit_item_form = function (req, res) {
 
 exports.get_dashboard_items = function (req, res) {
     res.render('dashboard-items', {
-        host: CONFIG.host,
-        appname: CONFIG.app_name,
-        appversion: CONFIG.app_version,
-        organization: CONFIG.organization
-    });
-};
-
-exports.get_dashboard_item_details = function (req, res) {
-    res.render('dashboard-item-details', {
         host: CONFIG.host,
         appname: CONFIG.app_name,
         appversion: CONFIG.app_version,
