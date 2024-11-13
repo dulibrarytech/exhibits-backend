@@ -88,7 +88,7 @@ p {
   font-family: "Open Sans", sans-serif;
   font-weight: 400;
   line-height: 24px;
-  color: #5A5A5A; } /* #878787 */
+  color: #5A5A5A; }
 
 p:focus {
   border: none;
@@ -97,7 +97,7 @@ p:focus {
 a, button {
   text-decoration: none;
   outline: none !important;
-  color: #878787;
+  color: #5A5A5A; /* #878787 */
   -webkit-transition: all 0.25s ease;
   transition: all 0.25s ease; }
 
