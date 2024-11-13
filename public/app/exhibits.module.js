@@ -39,8 +39,7 @@ const exhibitsModule = (function () {
                 document.querySelector('#message').innerHTML = `<div class="alert alert-danger" role="alert"><i class="fa fa-exclamation"></i> 'ERROR: Unable to get API endpoints'</div>`;
 
                 setTimeout(() => {
-                    // TODO
-                    // window.location.replace(APP_PATH + '/auth');
+                    authModule.redirect_to_auth();
                 }, 2000);
 
                 return false;
@@ -102,7 +101,7 @@ const exhibitsModule = (function () {
 
             if (exhibits[i].thumbnail.length > 0) {
                 thumbnail_url = `${APP_PATH}/api/v1/exhibits/${uuid}/media/${exhibits[i].thumbnail}`;
-                thumbnail_fragment = `<p><img src="${thumbnail_url}" height="100" width="100"></p>`;
+                thumbnail_fragment = `<p><img src="${thumbnail_url}" alt="thumbnail" height="100" width="100"></p>`;
             }
 
             title = helperModule.unescape(exhibits[i].title);
@@ -393,6 +392,7 @@ const exhibitsModule = (function () {
     obj.init = async function () {
         await exhibitsModule.display_exhibits();
         helperModule.show_form();
+        navModule.set_logout_link();
     };
 
     return obj;

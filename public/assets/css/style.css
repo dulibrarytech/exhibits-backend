@@ -228,12 +228,13 @@ aside.left-panel {
       width: 100%; }
       .navbar .navbar-nav li.active .menu-icon, .navbar .navbar-nav li:hover .toggle_nav_button:before,
       .navbar .navbar-nav li .toggle_nav_button.nav-open:before {
-        color: #607d8b; }
+        color: #5A5A5A;
+        /*color: #607d8b;*/ }
       .navbar .navbar-nav li .dropdown-toggle:after {
         display: none; }
       .navbar .navbar-nav li > a {
         background: none !important;
-        color: #607d8b;
+        color: #5A5A5A;
         display: inline-block;
         font-size: 14px;
         line-height: 26px;
@@ -241,9 +242,10 @@ aside.left-panel {
         position: relative;
         width: 100%; }
         .navbar .navbar-nav li > a:hover, .navbar .navbar-nav li > a:hover .menu-icon {
-          color: #607d8b; }
+          color: #5A5A5A;
+        }
         .navbar .navbar-nav li > a .menu-icon {
-          color: #607d8b;
+          color: #5A5A5A;
           float: left;
           margin-top: 8px;
           width: 55px;
@@ -270,13 +272,13 @@ aside.left-panel {
             height: 8px;
             border-style: solid;
             border-width: 1px;
-            border-color: #607d8b #607d8b transparent transparent;
+            border-color: #5A5A5A #5A5A5A transparent transparent;
             -webkit-transform: rotate(45deg);
                     transform: rotate(45deg);
             -webkit-transition: all .25s ease;
             transition: all .25s ease; }
           .navbar .navbar-nav li.menu-item-has-children a:hover:before {
-            border-color: #607d8b #607d8b transparent transparent; }
+            border-color: #5A5A5A #5A5A5A transparent transparent; }
         .navbar .navbar-nav li.menu-item-has-children .sub-menu {
           background: #fff;
           border: none;
@@ -304,11 +306,11 @@ aside.left-panel {
               text-align: left;
               width: 25px; }
         .navbar .navbar-nav li.menu-item-has-children.show a:before {
-          border-color: transparent #607d8b #607d8b transparent;
+          border-color: transparent #5A5A5A #5A5A5A transparent;
           top: 20px;
           right: -5px; }
         .navbar .navbar-nav li.menu-item-has-children.show a:hover:before {
-          border-color: transparent #607d8b #607d8b transparent; }
+          border-color: transparent #5A5A5A #5A5A5A transparent; }
         .navbar .navbar-nav li.menu-item-has-children.show .sub-menu {
           max-height: 1000px;
           opacity: 1;
@@ -317,7 +319,7 @@ aside.left-panel {
 .navbar .navbar-nav > .active > a,
 .navbar .navbar-nav > .active > a:focus,
 .navbar .navbar-nav > .active > a:hover {
-  color: #607d8b; }
+  color: #5A5A5A; }
 
 .open .navbar .navbar-brand.hidden {
   display: block; }
@@ -325,7 +327,7 @@ aside.left-panel {
   display: block;
   font-size: 15px;
   line-height: 35px;
-  color: #607d8b;
+  color: #5A5A5A;
   border-bottom: 1px solid rgba(96, 125, 139, 0.15); }
 .open .sub-menu i {
   left: 15px !important; }
@@ -872,33 +874,6 @@ header .form-inline {
     .card .card-footer.p-0 .card-title {
       padding: 1.125em; }
 
-/*
-    .card .card-top.bg-flat-color-1,
-    .card .card-footer.bg-flat-color-1 {
-      background: #5c6bc0;
-      border: none; }
-    .card .card-top.bg-flat-color-2,
-    .card .card-footer.bg-flat-color-2 {
-      background: #42a5f5;
-      border: none; }
-    .card .card-top.bg-flat-color-3,
-    .card .card-footer.bg-flat-color-3 {
-      background: #ffa726;
-      border: none; }
-    .card .card-top.bg-flat-color-4,
-    .card .card-footer.bg-flat-color-4 {
-      background: #ef5350;
-      border: none; }
-    .card .card-top.bg-flat-color-5,
-    .card .card-footer.bg-flat-color-5 {
-      background: #4dbd74;
-      border: none; }
-    .card .card-top.bg-flat-color-6,
-    .card .card-footer.bg-flat-color-6 {
-      background: #66bb6a;
-      border: none; }
-*/
-
   .card .card-left {
     width: 60%; }
   .card .card-right {
@@ -1058,7 +1033,8 @@ header .form-inline {
 footer.site-footer {
   padding: 0 1.875em; }
   footer.site-footer .footer-inner {
-    color: #78909c;
+    /*color: #78909c;*/
+    color: #5A5A5A;
     font-family: 'Open Sans';
     font-size: 14px;
     line-height: 1.5;
@@ -1363,12 +1339,26 @@ td.item-actions {
   cursor: -webkit-grab;
 }
 
-
 /* (Optional) Apply a "closed-hand" cursor during drag operation. */
 .grabbable:active {
   cursor: grabbing;
   cursor: -moz-grabbing;
   cursor: -webkit-grabbing;
 }
+/* TODO: refactor */
+.publish-exhibit {
+  color: #5A5A5A;
+}
 
+.suppress-exhibit {
+  color: #5A5A5A;
+}
+
+.publish-item {
+  color: #5A5A5A;
+}
+
+.suppress-item {
+  color: #5A5A5A;
+}
 /*# sourceMappingURL=style.css.map */

@@ -120,7 +120,7 @@ const itemsModule = (function () {
 
             if (type === 'item') { // standard
 
-                let title = `<a href="#">${helperModule.unescape(items[i].title)}</a>`;
+                let title = helperModule.unescape(items[i].title);
                 let thumbnail = '';
                 let img = '';
                 let item_type;
@@ -139,7 +139,7 @@ const itemsModule = (function () {
 
                 if (items[i].thumbnail.length > 0) {
                     thumbnail = EXHIBITS_ENDPOINTS.exhibits.exhibit_media.get.endpoint.replace(':exhibit_id', exhibit_id).replace(':media', items[i].thumbnail);
-                    img = `<p><img alt="${thumbnail}" src="${thumbnail}" height="75" width="75"></p>`;
+                    img = `<p><img alt="thumbnail" src="${thumbnail}" height="75" width="75"></p>`;
                 }
 
                 item_data += `<td class="item-metadata">
@@ -398,10 +398,11 @@ const itemsModule = (function () {
 
             const exhibit_id = helperModule.get_parameter_by_name('exhibit_id');
             exhibitsModule.set_exhibit_title(exhibit_id);
-            navModule.set_preview_link();
-            navModule.set_item_nav_menu_links();
             itemsModule.display_items();
             helperModule.show_form();
+            navModule.set_preview_link();
+            navModule.set_item_nav_menu_links();
+            navModule.set_logout_link();
 
         } catch (error) {
             document.querySelector('#message').innerHTML = `<div class="alert alert-danger" role="alert"><i class="fa fa-exclamation"></i> ${error.message}</div>`;
