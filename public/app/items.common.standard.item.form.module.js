@@ -91,6 +91,8 @@ const itemsCommonStandardItemFormModule = (function () {
             if (media.length > 1) {
                 document.querySelector('#message').innerHTML = `<div class="alert alert-danger" role="alert"><i class="fa fa-exclamation"></i> Please upload or import only one media item</div>`;
                 return false;
+            } else {
+                item.item_type = 'text';
             }
 
             // item layout - standard item only
