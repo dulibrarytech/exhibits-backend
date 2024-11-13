@@ -64,6 +64,7 @@
                         </div>
                     </div>
                 </div>
+                <!--
                 <div class="row">
                     <div class="col-6 col-md-6">
                         <div class="row form-group">
@@ -82,12 +83,29 @@
                         </div>
                     </div>
                 </div>
+                -->
                 <div class="row">
                     <div class="col-12 col-md-12">
                         <div class="row form-group">
                             <div class="col-12">
+                                <div class="form-text text-muted" style="font-size: 17px">Text</div>
+                                <div id="item-text-input" style="height: 100px"></div>
+                            </div>
+                        </div>
+                        <!--
+                        <div class="row form-group">
+                            <div class="col-12">
                                 <div class="form-text text-muted" style="font-size: 17px">Description <small><em>(Optional)</em></small></div>
                                 <div id="item-description-input" style="height: 100px"></div>
+                            </div>
+                        </div>
+                        -->
+                    </div>
+                    <div class="col-12 col-md-12">
+                        <div class="row form-group">
+                            <div class="col-12">
+                                <div class="form-text text-muted" style="font-size: 17px">Caption <small><em>(Optional)</em></small></div>
+                                <div id="item-caption-input" style="height: 100px"></div>
                             </div>
                         </div>
                     </div>
@@ -102,12 +120,14 @@
                 <div class="alert alert-info">
                     <i class="fa fa-info"></i> <span id="info-message">Provide info to user about uploading exhibit media</span>
                 </div>
+                <!--
                 <div class="form-text text-muted" style="font-size: 17px">
                     <p>
                         <span style="color: darkred">*</span>
                         <small><em>(Required)</em></small>
                     </p>
                 </div>
+                -->
                 <div class="container">
                     <ul class="nav nav-tabs" id="mediaTab" role="tablist">
                         <li class="nav-item">
@@ -119,6 +139,11 @@
                         <li class="nav-item">
                             <a class="nav-link" id="import-repo-media-tab" data-toggle="tab" href="#import-repo-media" role="tab" aria-controls="import-repo-media" aria-selected="false">Import Repository Media</a>
                         </li>
+                        <!--
+                        <li class="nav-item">
+                            <a class="nav-link" id="text-only-tab" data-toggle="tab" href="#text-only" role="tab" aria-controls="text-only" aria-selected="false">Text only</a>
+                        </li>
+                        -->
                         <li class="nav-item">
                             <a class="nav-link" id="media-padding-tab" data-toggle="tab" href="#media-padding" role="tab" aria-controls="media-padding" aria-selected="false">Media Padding</a>
                         </li>
@@ -127,6 +152,9 @@
                         <div class="tab-pane fade show active" id="upload-media" role="tabpanel" aria-labelledby="upload-media-tab"><%- include('partials/tab-upload-media.ejs'); %></div>
                         <div class="tab-pane fade" id="import-audio-video" role="tabpanel" aria-labelledby="import-audio-video-tab"><%- include('partials/tab-import-audio-video.ejs'); %></div>
                         <div class="tab-pane fade" id="import-repo-media" role="tabpanel" aria-labelledby="import-repo-media-tab"><%- include('partials/tab-import-repo-media.ejs'); %></div>
+                        <!--
+                        <div class="tab-pane fade" id="text-only" role="tabpanel" aria-labelledby="text-only-tab"><%- include('partials/tab-text-only.ejs'); %></div>
+                        -->
                         <div class="tab-pane fade" id="media-padding" role="tabpanel" aria-labelledby="media-padding-tab"><%- include('partials/tab-media-padding.ejs'); %></div>
                     </div>
                 </div>
