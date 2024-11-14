@@ -82,6 +82,7 @@ const itemsCommonStandardItemFormModule = (function () {
             if (item.kaltura.length > 0) {
                 media.push(item.kaltura);
                 // TODO: check if audio/video selection has been made
+                item.item_type = document.querySelector('input[name="item_type"]:checked').value;
             }
 
             if (item.repo_uuid.length > 0) {

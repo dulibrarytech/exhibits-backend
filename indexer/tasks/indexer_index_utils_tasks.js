@@ -77,7 +77,7 @@ const Indexer_index_utils_tasks = class {
                }
            });
 
-           if (response.statusCode === 200) {
+           if (response.acknowledged === true && response.shards_acknowledged === true) {
                LOGGER.module().info('INFO: [/indexer/tasks (create_index)] new index created');
                return true;
            } else {
@@ -107,7 +107,7 @@ const Indexer_index_utils_tasks = class {
                 body: body
             });
 
-            if (response.statusCode === 200) {
+            if (response.acknowledged === true) {
                 LOGGER.module().info('INFO: [/indexer/tasks (create_mappings)] mappings created');
                 return true;
             } else {
