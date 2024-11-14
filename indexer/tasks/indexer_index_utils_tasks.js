@@ -45,7 +45,7 @@ const Indexer_index_utils_tasks = class {
                 index: this.INDEX_NAME
             });
 
-            if (response.statusCode === 200) {
+            if (response.acknowledged === true) {
                 LOGGER.module().info('INFO: [/indexer/tasks (check_index)] index exists');
                 return true;
             } else {
