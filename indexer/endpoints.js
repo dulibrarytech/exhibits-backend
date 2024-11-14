@@ -18,6 +18,7 @@
 
 'use strict';
 
+const APP_PATH = '/exhibits-dashboard';
 const PREFIX = '/api/';
 const VERSION = 'v1';
 const ENDPOINT = '/indexer';
@@ -47,12 +48,12 @@ const ENDPOINTS = {
         index_utils: {
             post: {
                 description: 'Creates search index',
-                endpoint: `${PREFIX}${VERSION}${ENDPOINT}/manage`,
+                endpoint: `${APP_PATH}${PREFIX}${VERSION}${ENDPOINT}/manage`,
                 params: 'token or api_key'
             },
             get: {
                 description: 'Retrieves search index information',
-                endpoint: `${PREFIX}${VERSION}${ENDPOINT}/manage`,
+                endpoint: `${APP_PATH}${PREFIX}${VERSION}${ENDPOINT}/manage`,
                 params: 'token or api_key'
             }
         }
