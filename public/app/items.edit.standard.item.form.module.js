@@ -150,6 +150,13 @@ const itemsEditStandardItemFormModule = (function () {
                 document.getElementById('import-audio-video-tab').setAttribute('aria-selected', 'true');
                 document.querySelector('#audio-video').value = record.media;
 
+                let item_types = document.getElementsByName('item_type');
+
+                for (let j = 0; j < item_types.length; j++) {
+                    if (item_types[j].value === record.item_type) {
+                        document.querySelector('#' + item_types[j].id).checked = true;
+                    }
+                }
             }
 
             document.querySelector('#item-type').value = record.item_type;
