@@ -81,8 +81,7 @@ const itemsCommonStandardItemFormModule = (function () {
 
             if (item.kaltura.length > 0) {
                 media.push(item.kaltura);
-                // TODO: check if audio/video selection has been made
-                item.item_type = document.querySelector('input[name="item_type"]:checked').value;
+                item.item_type = 'kaltura';
             }
 
             if (item.repo_uuid.length > 0) {
@@ -92,6 +91,8 @@ const itemsCommonStandardItemFormModule = (function () {
             if (media.length > 1) {
                 document.querySelector('#message').innerHTML = `<div class="alert alert-danger" role="alert"><i class="fa fa-exclamation"></i> Please upload or import only one media item</div>`;
                 return false;
+            } else if (item.item_type === 'kaltura') {
+                item.item_type = document.querySelector('input[name="item_type"]:checked').value;
             } else {
                 item.item_type = 'text';
             }

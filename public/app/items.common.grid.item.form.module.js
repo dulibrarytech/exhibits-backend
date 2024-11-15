@@ -29,7 +29,7 @@ const itemsCommonGridItemFormModule = (function () {
     obj.get_common_grid_item_form_fields = function (rich_text_data) {
 
         try {
-            console.log('grid item');
+
             let media = [];
             let item = {};
             item.styles = {};
