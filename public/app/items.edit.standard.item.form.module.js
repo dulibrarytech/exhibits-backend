@@ -159,7 +159,7 @@ const itemsEditStandardItemFormModule = (function () {
                 }
             }
 
-            document.querySelector('#item-type').value = record.item_type;
+            document.querySelector('#item-type').value = 'kaltura';
             document.querySelector('#item-mime-type').value = helperModule.unescape(record.mime_type);
             document.querySelector('#item-media-thumbnail-image-display').innerHTML = thumbnail_fragment;
             document.querySelector('#item-media').value = record.media;
@@ -283,7 +283,7 @@ const itemsEditStandardItemFormModule = (function () {
                 document.querySelector('#message').innerHTML = `<div class="alert alert-success" role="alert"><i class="fa fa-info"></i> Item record updated</div>`;
 
                 setTimeout(() => {
-                    window.location.replace('edit?exhibit_id=' + exhibit_id + '&item_id=' + item_id);
+                    // window.location.replace('edit?exhibit_id=' + exhibit_id + '&item_id=' + item_id);
                 }, 2000);
             }
 

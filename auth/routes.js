@@ -30,7 +30,7 @@ module.exports = function (app) {
     app.route('/exhibits-dashboard/auth/login')
     .get(TOKENS.verify);
 
-    app.route('/exhibits-dashboard/auth/sso') // ENDPOINTS().auth.sso.endpoint
+    app.route('/exhibits-dashboard/auth/sso')
     .post(CONTROLLER.sso);
 
     app.route(ENDPOINTS().auth.authentication.endpoint)
