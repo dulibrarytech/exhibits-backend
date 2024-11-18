@@ -58,7 +58,7 @@ const itemsCommonStandardItemFormModule = (function () {
             item.kaltura = document.querySelector('#audio-video').value;
             item.repo_uuid = document.querySelector('#repo-uuid').value;
             item.media_padding = document.querySelector('#media-padding').value;
-            console.log('item ', item);
+
             if (item.media.length === 0 && item.kaltura.length === 0 && item.repo_uuid.length === 0) {
                 if (item.text === 0) {
                     item.text = '';
@@ -78,8 +78,7 @@ const itemsCommonStandardItemFormModule = (function () {
             if (item.media.length > 0) {
                 media.push(item.media);
             }
-            // TODO: not working with updates - defaults to text
-            console.log(item.kaltura);
+
             if (item.kaltura.length > 0) {
                 media.push(item.kaltura);
                 item.item_type = 'kaltura';

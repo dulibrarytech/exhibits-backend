@@ -45,6 +45,10 @@ const itemsCommonGridItemFormModule = (function () {
                 return false;
             }
 
+            if (item.text.length === 0 || item.text === '<div></div>') {
+                item.text = '';
+            }
+
             // item media
             item.thumbnail = document.querySelector('#item-thumbnail').value;
             item.thumbnail_prev = document.querySelector('#item-thumbnail-image-prev').value;
@@ -56,8 +60,10 @@ const itemsCommonGridItemFormModule = (function () {
             item.repo_uuid = document.querySelector('#repo-uuid').value;
 
             if (item.media.length === 0 && item.kaltura.length === 0 && item.repo_uuid.length === 0) {
-                document.querySelector('#message').innerHTML = `<div class="alert alert-danger" role="alert"><i class="fa fa-exclamation"></i> Please upload or import a media item</div>`;
-                return false;
+                if (item.text.length === 0) {
+                    document.querySelector('#message').innerHTML = `<div class="alert alert-danger" role="alert"><i class="fa fa-exclamation"></i> Please add item content to the 'Text' field OR upload or import a media item</div>`;
+                    return false;
+                }
             }
 
             if (item.media.length > 0 && item.repo_uuid.length > 0 && item.media === item.repo_uuid) {
@@ -74,6 +80,7 @@ const itemsCommonGridItemFormModule = (function () {
 
             if (item.kaltura.length > 0) {
                 media.push(item.kaltura);
+                item.item_type = 'kaltura';
             }
 
             if (item.repo_uuid.length > 0) {
@@ -83,6 +90,10 @@ const itemsCommonGridItemFormModule = (function () {
             if (media.length > 1) {
                 document.querySelector('#message').innerHTML = `<div class="alert alert-danger" role="alert"><i class="fa fa-exclamation"></i> Please upload or import only one media item</div>`;
                 return false;
+            } else if (item.item_type === 'kaltura') {
+                item.item_type = document.querySelector('input[name="item_type"]:checked').value;
+            } else {
+                item.item_type = 'text';
             }
 
             // item layout - standard item only

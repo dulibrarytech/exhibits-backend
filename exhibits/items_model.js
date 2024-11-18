@@ -126,9 +126,11 @@ exports.create_item_record = async function (is_member_of_exhibit, data) {
         }
 
         data.styles = JSON.stringify(data.styles);
-        delete data.media_prev;
         delete data.kaltura;
         delete data.repo_uuid;
+        delete data.media_prev;
+        delete data.thumbnail_prev;
+
         data.order = await HELPER_TASK.order_exhibit_items(data.is_member_of_exhibit, DB, TABLES);
 
         const CREATE_RECORD_TASK = new EXHIBIT_ITEM_RECORD_TASKS(DB, TABLES);
