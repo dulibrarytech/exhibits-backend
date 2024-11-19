@@ -130,6 +130,8 @@ const itemsEditGridItemFormModule = (function () {
                 document.querySelector('#item-media-filename-display').innerHTML = `<span style="font-size: 11px">${record.media}</span>`;
             }
 
+            document.querySelector('#item-type').value = record.item_type;
+
             if (record.is_repo_item === 1) {
 
                 document.getElementById('upload-media-tab').classList.remove('active');
@@ -142,6 +144,19 @@ const itemsEditGridItemFormModule = (function () {
                 document.getElementById('import-repo-media-tab').setAttribute('aria-selected', 'true');
                 document.querySelector('#repo-uuid').value = record.media;
                 await helperModule.get_repo_item_data();
+                /*
+                document.getElementById('upload-media-tab').classList.remove('active');
+                document.getElementById('import-repo-media-tab').classList.add('active');
+                document.getElementById('upload-media').classList.remove('active');
+                document.getElementById('upload-media').classList.remove('show');
+                document.getElementById('import-repo-media').classList.add('show');
+                document.getElementById('import-repo-media').classList.add('active');
+                document.getElementById('upload-media-tab').setAttribute('aria-selected', 'false');
+                document.getElementById('import-repo-media-tab').setAttribute('aria-selected', 'true');
+                document.querySelector('#repo-uuid').value = record.media;
+                await helperModule.get_repo_item_data();
+
+                 */
             }
 
             if (record.is_kaltura_item === 1) {
@@ -155,9 +170,32 @@ const itemsEditGridItemFormModule = (function () {
                 document.getElementById('upload-media-tab').setAttribute('aria-selected', 'false');
                 document.getElementById('import-audio-video-tab').setAttribute('aria-selected', 'true');
                 document.querySelector('#audio-video').value = record.media;
+
+                let item_types = document.getElementsByName('item_type');
+
+                for (let j = 0; j < item_types.length; j++) {
+                    if (item_types[j].value === record.item_type) {
+                        document.querySelector('#' + item_types[j].id).checked = true;
+                    }
+                }
+
+                /*
+                document.getElementById('upload-media-tab').classList.remove('active');
+                document.getElementById('import-audio-video-tab').classList.add('active');
+                document.getElementById('upload-media').classList.remove('active');
+                document.getElementById('upload-media').classList.remove('show');
+                document.getElementById('import-audio-video').classList.add('show');
+                document.getElementById('import-audio-video').classList.add('active');
+                document.getElementById('upload-media-tab').setAttribute('aria-selected', 'false');
+                document.getElementById('import-audio-video-tab').setAttribute('aria-selected', 'true');
+                document.querySelector('#audio-video').value = record.media;
+
+                 */
+
+                document.querySelector('#item-type').value = 'kaltura';
             }
 
-            document.querySelector('#item-type').value = record.item_type;
+            // document.querySelector('#item-type').value = record.item_type;
             document.querySelector('#item-mime-type').value = helperModule.unescape(record.mime_type);
             document.querySelector('#item-media-thumbnail-image-display').innerHTML = thumbnail_fragment;
             document.querySelector('#item-media').value = record.media;

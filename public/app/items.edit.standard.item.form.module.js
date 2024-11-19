@@ -124,6 +124,8 @@ const itemsEditStandardItemFormModule = (function () {
                 document.querySelector('#item-media-filename-display').innerHTML = `<span style="font-size: 11px">${record.media}</span>`;
             }
 
+            document.querySelector('#item-type').value = record.item_type;
+
             if (record.is_repo_item === 1) {
 
                 document.getElementById('upload-media-tab').classList.remove('active');
@@ -157,14 +159,15 @@ const itemsEditStandardItemFormModule = (function () {
                         document.querySelector('#' + item_types[j].id).checked = true;
                     }
                 }
+
+                document.querySelector('#item-type').value = 'kaltura';
             }
 
-            document.querySelector('#item-type').value = 'kaltura';
+            // document.querySelector('#item-type').value = 'kaltura';
             document.querySelector('#item-mime-type').value = helperModule.unescape(record.mime_type);
             document.querySelector('#item-media-thumbnail-image-display').innerHTML = thumbnail_fragment;
             document.querySelector('#item-media').value = record.media;
             document.querySelector('#item-media-prev').value = record.media;
-
         }
 
         if (record.thumbnail.length > 0) {
