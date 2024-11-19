@@ -117,7 +117,6 @@ exports.create_item_record = async function (is_member_of_exhibit, data) {
             data.is_kaltura_item = 1;
         } else if (data.repo_uuid.length > 0) {
             data.media = data.repo_uuid;
-            // data.item_type = 'repo'; // <-- determine mime type and add here
             data.is_repo_item = 1;
         }
 
@@ -201,7 +200,6 @@ exports.update_item_record = async function (is_member_of_exhibit, item_id, data
             data.is_kaltura_item = 1;
         } else if (data.repo_uuid.length > 0) {
             data.media = data.repo_uuid;
-            // data.item_type = 'repo';
             data.is_repo_item = 1;
         }
 
