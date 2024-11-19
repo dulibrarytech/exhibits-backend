@@ -26,7 +26,6 @@ const helperModule = (function () {
      * Gets url parameter
      * @param name
      * @param url
-     * @returns {*}
      */
     obj.get_parameter_by_name = function (name, url) {
 
@@ -162,8 +161,26 @@ const helperModule = (function () {
             });
 
             if (response !== undefined && response.status === 200) {
+
                 document.querySelector('#item-mime-type').value = response.data.data.mime_type;
+                let mime_type = response.data.data.mime_type;
+                let item_type;
+
+                if (mime_type.indexOf('image') !== -1) {
+                    item_type = 'image';
+                } else if (mime_type.indexOf('video') !== -1) {
+                    item_type = 'video';
+                } else if (mime_type.indexOf('audio') !== -1) {
+                    item_type = 'audio';
+                } else if (mime_type.indexOf('pdf') !== -1) {
+                    item_type = 'pdf';
+                } else {
+                    item_type = 'Unable to Determine Type';
+                }
+
+                document.querySelector('#item-type').value = item_type;
                 document.querySelector('#repo-item-metadata').innerHTML = `<p><strong>${response.data.data.title}</strong><br><em>${response.data.data.mime_type}</em></p>`;
+
             } else {
                 document.querySelector('#repo-item-metadata').innerHTML = `<p style="color:red">Metadata record not found in repository.</p>`;
             }

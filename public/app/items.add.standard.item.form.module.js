@@ -31,7 +31,7 @@ const itemsAddStandardItemFormModule = (function () {
     function set_rich_text_editors () {
         const ids = ['item-title-input',
             'item-caption-input',
-            'item-text-input']; // 'item-description-input'
+            'item-text-input'];
 
         ids.forEach((id) => {
             rich_text_data[id] = helperModule.set_rich_text_editor(id);
