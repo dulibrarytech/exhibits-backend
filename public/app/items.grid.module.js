@@ -78,13 +78,13 @@ const itemsGridModule = (function () {
 
         for (let i = 0; i < items.length; i++) {
 
+            let title = helperModule.unescape(items[i].title);
+            let order = items[i].order;
+            let is_published = items[i].is_published;
             let status;
             let item_id = items[i].uuid;
             let thumbnail;
             let url;
-            let title = helperModule.unescape(items[i].title);
-            let order = items[i].order;
-            let is_published = items[i].is_published;
             let item_type;
             let item_order;
             let img = '';
@@ -112,13 +112,13 @@ const itemsGridModule = (function () {
             }
 
             if (is_published === 1) {
-                draggable = `<tr id="${item_id}_grid_item">`;
+                draggable = `<tr id="${item_id}_griditem">`;
                 item_order = `<td class="item-order"><span style="padding-left: 4px;">${order}</span></td>`;
                 status = `<a href="#" id="${item_id}" class="suppress"><span id="suppress" title="published"><i class="fa fa-cloud" style="color: green"></i><br>Published</span></a>`;
                 edit = '';
                 delete_item = '';
             } else if (is_published === 0) {
-                draggable = `<tr class="dropzone" id="${item_id}_grid_item" draggable='true'>`;
+                draggable = `<tr class="dropzone" id="${item_id}_griditem" draggable='true'>`;
                 item_order = `<td class="grabbable item-order"><i class="fa fa-reorder"></i><span style="padding-left: 4px;">${order}</span></td>`;
                 status = `<a href="#" id="${item_id}" class="publish"><span id="publish" title="suppressed"><i class="fa fa-cloud-upload" style="color: darkred"></i><br>Suppressed</span></a>`;
                 edit = `<a href="${APP_PATH}/items/grid/item/edit?exhibit_id=${exhibit_id}&grid_id=${grid_id}&item_id=${item_id}" title="Edit"><i class="fa fa-edit pr-1"></i></a>`;
@@ -154,16 +154,12 @@ const itemsGridModule = (function () {
         document.querySelector('#grid-item-list').innerHTML = item_data;
 
         let grid_items_table = new DataTable('#grid-items', {
-            paging: false,
-            order: [
-                [0, 'asc'],
-                [1, 'asc'],
-            ]
+            paging: false
         });
 
         bind_publish_grid_item_events();
         bind_suppress_grid_item_events();
-        helperModule.reorder_items(event, grid_id, 'grid_items');
+        helperModule.reorder_grid_items(event, grid_id, 'grid_items');
     };
 
     /**

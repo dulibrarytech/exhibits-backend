@@ -304,7 +304,100 @@ const helperModule = (function () {
                         }
 
                     } catch (error) {
+                        document.querySelector('#message').innerHTML = `<div class="alert alert-danger" role="alert"><i class="fa fa-exclamation"></i> ${error.message}</div>`;
+                    }
+                });
+            });
+
+        } catch (error) {
+            document.querySelector('#message').innerHTML = `<div class="alert alert-danger" role="alert"><i class="fa fa-exclamation"></i> ${error.message}</div>`;
+        }
+    };
+
+    /**
+     * TODO
+     * @param event
+     * @param id
+     */
+    obj.reorder_grid_items = function (event, id) {
+
+        try {
+
+            const EXHIBITS_ENDPOINTS = endpointsModule.get_exhibits_endpoints();
+            const tr_elem = Array.from(document.getElementsByTagName('tr'));
+            let row;
+            let children;
+            let updated_order = [];
+            let reorder_obj = {};
+
+            tr_elem.forEach(tr => {
+
+                tr.addEventListener('dragstart', (event) => {
+                    row = event.target;
+                });
+
+                tr.addEventListener('dragover', (event) => {
+
+                    try {
+
+                        let e = event;
+                        e.preventDefault();
+
+                        children = Array.from(e.target.parentNode.parentNode.children);
+
+                        if (children.indexOf(e.target.parentNode) > children.indexOf(row)) {
+                            // move down
+                            e.target.parentNode.after(row);
+                        } else {
+                            // move up
+                            e.target.parentNode.before(row);
+                        }
+
+                    } catch (error) {
                         console.log('ERROR: ', error);
+                    }
+                });
+
+                tr.addEventListener('drop', async (event) => {
+
+                    try {
+
+                        if (event.target.className === 'dropzone') {
+                            row.parentNode.removeChild(row);
+                            event.target.appendChild(row);
+                        }
+
+                        for (let i=0;i<children.length;i++ ) {
+
+                            let child = children[i];
+                            let id = child.getAttribute('id');
+                            let id_arr = id.split('_');
+                            reorder_obj.type = id_arr.pop();
+                            reorder_obj.uuid = id_arr.pop();
+                            reorder_obj.order = i + 1;
+                            updated_order.push(reorder_obj);
+                            reorder_obj = {};
+                        }
+                        console.log(updated_order);
+                        const token = authModule.get_user_token();
+                        const response = await httpModule.req({
+                            method: 'POST',
+                            url: EXHIBITS_ENDPOINTS.exhibits.reorder_records.post.endpoint.replace(':exhibit_id', id),
+                            data: updated_order,
+                            headers: {
+                                'Content-Type': 'application/json',
+                                'x-access-token': token
+                            }
+                        });
+
+                        if (response !== undefined && response.status === 201) {
+                            await itemsGridModule.display_grid_items(event);
+                        } else {
+                            document.querySelector('#message').innerHTML = `<div class="alert alert-danger" role="alert"><i class="fa fa-exclamation"></i> An error occurred while reordering items.</div>`;
+                        }
+
+                    } catch (error) {
+                        document.querySelector('#message').innerHTML = `<div class="alert alert-danger" role="alert"><i class="fa fa-exclamation"></i> ${error.message}</div>`;
                     }
                 });
             });

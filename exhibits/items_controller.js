@@ -303,7 +303,7 @@ exports.reorder_items = async function (req, res) {
                 }
             }
 
-            if (updated_order[i].type === 'grid_item') {
+            if (updated_order[i].type === 'griditem') {
                 let is_reordered = await GRIDS_MODEL.reorder_grid_items(id, updated_order[i]);
 
                 if (is_reordered === false) {

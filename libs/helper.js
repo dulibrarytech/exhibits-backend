@@ -207,6 +207,7 @@ const Helper = class {
             });
 
             const order_number = ordered.pop();
+
             return order_number + 1;
 
         } catch (error) {
