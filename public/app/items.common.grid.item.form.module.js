@@ -90,9 +90,13 @@ const itemsCommonGridItemFormModule = (function () {
             if (media.length > 1) {
                 document.querySelector('#message').innerHTML = `<div class="alert alert-danger" role="alert"><i class="fa fa-exclamation"></i> Please upload or import only one media item</div>`;
                 return false;
-            } else if (item.item_type === 'kaltura') {
+            }
+
+            if (item.item_type === 'kaltura') {
                 item.item_type = document.querySelector('input[name="item_type"]:checked').value;
-            } else {
+            }
+
+            if (media.length === 0 && item.text.length !== 0) {
                 item.item_type = 'text';
             }
 
