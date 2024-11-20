@@ -86,6 +86,8 @@ const itemsGridModule = (function () {
             let order = items[i].order;
             let is_published = items[i].is_published;
             let item_type;
+            let item_order;
+            let img = '';
             let edit;
             let delete_item;
             let draggable;
@@ -109,26 +111,36 @@ const itemsGridModule = (function () {
                 thumbnail = '';
             }
 
-            // TODO:
             if (is_published === 1) {
                 draggable = `<tr id="${item_id}_grid_item">`;
+                item_order = `<td class="item-order"><span style="padding-left: 4px;">${order}</span></td>`;
                 status = `<a href="#" id="${item_id}" class="suppress"><span id="suppress" title="published"><i class="fa fa-cloud" style="color: green"></i><br>Published</span></a>`;
                 edit = '';
                 delete_item = '';
             } else if (is_published === 0) {
+                draggable = `<tr class="dropzone" id="${item_id}_grid_item" draggable='true'>`;
+                item_order = `<td class="grabbable item-order"><i class="fa fa-reorder"></i><span style="padding-left: 4px;">${order}</span></td>`;
                 status = `<a href="#" id="${item_id}" class="publish"><span id="publish" title="suppressed"><i class="fa fa-cloud-upload" style="color: darkred"></i><br>Suppressed</span></a>`;
                 edit = `<a href="${APP_PATH}/items/grid/item/edit?exhibit_id=${exhibit_id}&grid_id=${grid_id}&item_id=${item_id}" title="Edit"><i class="fa fa-edit pr-1"></i></a>`;
                 delete_item = `<a href="${APP_PATH}/items/grid/item/delete?exhibit_id=${exhibit_id}&grid_id=${grid_id}&item_id=${item_id}" title="Delete"><i class="fa fa-trash pr-1"></i></a>`;
             }
 
-            item_data += `<tr id="${item_id}_grid_item" draggable='true'>`;
-            item_data += `<td class="grabbable"><i class="fa fa-reorder"></i>   <span style="padding-left: 4px;font-size: small">${order}</span></td>`;
+            // start rows
+            item_data += draggable;
+            item_data += item_order;
 
-            item_data += `<td>
-                            <p><strong>${title}</strong></p>
-                             ${thumbnail}
-                             ${item_type}
-                          </td>`;
+            if (items[i].thumbnail.length > 0) {
+                thumbnail = EXHIBITS_ENDPOINTS.exhibits.exhibit_media.get.endpoint.replace(':exhibit_id', exhibit_id).replace(':media', items[i].thumbnail);
+                img = `<p><img alt="thumbnail" src="${thumbnail}" height="75" width="75"></p>`;
+            }
+
+            item_data += `<td class="item-metadata">
+                    <p><button class="btn btn-default">${item_type} <small>grid item</small></button></p>
+                    <p><strong>${title}</strong></p>
+                    ${img}
+                   
+                    </td>`;
+
             item_data += `<td style="width: 5%;text-align: center"><small>${status}</small></td>`;
             item_data += `<td style="width: 10%">
                                 <div class="card-text text-sm-center">
