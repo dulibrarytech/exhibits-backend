@@ -29,9 +29,9 @@ cd into exhibits-backend
 npm install
 Add .env file in root folder (see .env-example)
 Create "logs" folder in web root
-Import mysql schemas "exhibit" to db, schemas found in db folder.  Change extensions from .txt to .sql
-run "node exhibits.js"
-http://localhost:8004/login
+Import mysql schemas "exhibits" to db, schemas found in db folder.  Change extensions from .txt to .sql
+run "node exhibits-backend.js"
+http://localhost:8004/exhibits-dashboard/auth
 ```
 
 ### Maintainers

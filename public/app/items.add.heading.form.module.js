@@ -52,7 +52,7 @@ const itemsAddHeadingFormModule = (function () {
             }
 
             document.querySelector('#message').innerHTML = `<div class="alert alert-info" role="alert"><i class="fa fa-info"></i> Creating item heading record...</div>`;
-            let data = itemsCommonHeadingFormModule.get_common_heading_form_fields();
+            let data = itemsCommonHeadingFormModule.get_common_heading_form_fields(rich_text_data);
 
             if (data === false) {
                 return false;
@@ -76,7 +76,7 @@ const itemsAddHeadingFormModule = (function () {
 
                 setTimeout(() => {
                     window.location.replace(APP_PATH + '/items?exhibit_id=' + exhibit_id);
-                }, 3000);
+                }, 1000);
             }
 
         } catch (error) {

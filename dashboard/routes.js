@@ -66,7 +66,7 @@ module.exports = function (app) {
     .get(CONTROLLER.get_dashboard_item_grid_items);
 
     app.route(APP_PATH + '/items/vertical-timeline')
-    .get(CONTROLLER.get_dashboard_item_vertical_timeline);
+    .get(CONTROLLER.get_dashboard_vertical_timeline_add_form);
 
     app.route(APP_PATH + '/items/delete')
     .get(CONTROLLER.get_dashboard_items_delete_form);

@@ -33,10 +33,17 @@ const itemsCommonHeadingFormModule = (function () {
             item_heading.styles = {};
             item_heading.text = rich_text_data['item-heading-text-input'].getHTMLCode();
 
+            if (item_heading.text.length === 0 || item_heading.text.title === '<div></div>') {
+                document.querySelector('#message').innerHTML = `<div class="alert alert-danger" role="alert"><i class="fa fa-exclamation"></i> Please enter heading text</div>`;
+                return false;
+            }
+            /*
             if (item_heading.text.length === 0) {
                 document.querySelector('#message').innerHTML = '<div class="alert alert-danger" role="alert"><i class="fa fa-exclamation"></i> Please enter heading text</div>';
                 return false;
             }
+
+             */
 
             let heading_background_color =  document.querySelector('#heading-background-color').value;
             let heading_font_color = document.querySelector('#heading-font-color').value;

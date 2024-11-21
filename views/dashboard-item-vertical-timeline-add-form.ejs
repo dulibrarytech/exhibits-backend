@@ -46,7 +46,7 @@
         <div id="message"></div>
         <div id="item-data-card" class="card">
             <div class="card-header">
-                <strong class="card-title mb-3">Add Item to '<span id="exhibit-title"></span>' exhibit grid</strong>
+                <strong class="card-title mb-3">Add Item to '<span id="exhibit-title"></span>' exhibit vertical timeline</strong>
             </div>
             <div class="card-body">
                 <div class="alert alert-info"><i class="fa fa-info"></i> Provide info to user about this form</div>
@@ -57,8 +57,8 @@
                                 <div class="form-text text-muted" style="font-size: 17px"><span style="color: darkred">*</span>
                                     Title <small><em>(Required)</em></small>
                                 </div>
-                                <span id="item-title-error" class="is-error"></span>
-                                <div id="item-title-input" style="height: 100px"></div>
+                                <span id="timeline-item-title-error" class="is-error"></span>
+                                <div id="timeline-item-title-input" style="height: 100px"></div>
                             </div>
                         </div>
                     </div>
@@ -68,7 +68,7 @@
                         <div class="row form-group">
                             <div class="col-12">
                                 <div class="form-text text-muted" style="font-size: 17px">Caption <small><em>(Optional)</em></small></div>
-                                <div id="item-caption-input" style="height: 100px"></div>
+                                <div id="timeline-item-caption-input" style="height: 100px"></div>
                             </div>
                         </div>
                     </div>
@@ -76,7 +76,7 @@
                         <div class="row form-group">
                             <div class="col-12">
                                 <div class="form-text text-muted" style="font-size: 17px">Description <small><em>(Optional)</em></small></div>
-                                <div id="item-description-input" style="height: 100px"></div>
+                                <div id="timeline-item-description-input" style="height: 100px"></div>
                             </div>
                         </div>
                     </div>
@@ -86,7 +86,7 @@
                         <div class="row form-group">
                             <div class="col-12">
                                 <div class="form-text text-muted" style="font-size: 17px">Text</div>
-                                <div id="item-text-input" style="height: 100px"></div>
+                                <div id="timeline-item-text-input" style="height: 100px"></div>
                             </div>
                         </div>
                     </div>
@@ -122,6 +122,7 @@
                 </div>
             </div>
         </div>
+        <!--
         <div id="item-layout-card" class="card">
             <div class="card-header">
                 <strong class="card-title mb-3">Item Layout</strong>
@@ -204,6 +205,7 @@
                 </div>
             </div>
         </div>
+        -->
         <div id="item-media-widths-card" class="card">
             <div class="card-header">
                 <strong class="card-title mb-3">Item Media Widths</strong>
@@ -312,11 +314,12 @@
 <script src="/exhibits-dashboard/static/app/uploads.module.js"></script>
 <script src="/exhibits-dashboard/static/app/exhibits.module.js"></script>
 <script src="/exhibits-dashboard/static/app/items.module.js"></script>
-<script src="/exhibits-dashboard/static/app/items.common.grid.item.form.module.js"></script>
-<script src="/exhibits-dashboard/static/app/items.add.grid.item.form.module.js"></script>
+<script src="/exhibits-dashboard/static/app/items.common.vertical.timeline.form.module.js"></script>
+<script src="/exhibits-dashboard/static/app/items.add.vertical.timeline.form.module.js"></script>
 <script>
-    itemsCommonGridItemFormModule.init();
-    itemsAddGridItemFormModule.init();
+    itemsCommonVerticalTimelineItemFormModule.init();
+    itemsAddVerticalTimelineItemFormModule.init();
+    helperModule.show_form();
 </script>
 </body>
 </html>

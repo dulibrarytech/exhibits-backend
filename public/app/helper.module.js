@@ -212,7 +212,7 @@ const helperModule = (function () {
         }
     };
 
-    /**
+    /** TODO: DOMException: Element.after: The new child is an ancestor of the parent
      * Reorders item list via drag and drop
      * @param event
      * @param id (exhibit or grid)
@@ -253,7 +253,8 @@ const helperModule = (function () {
                         }
 
                     } catch (error) {
-                        console.log('ERROR: ', error);
+                        console.log(error);
+                        // document.querySelector('#message').innerHTML = `<div class="alert alert-danger" role="alert"><i class="fa fa-exclamation"></i> ${error.message}</div>`;
                     }
                 });
 
@@ -304,7 +305,8 @@ const helperModule = (function () {
                         }
 
                     } catch (error) {
-                        document.querySelector('#message').innerHTML = `<div class="alert alert-danger" role="alert"><i class="fa fa-exclamation"></i> ${error.message}</div>`;
+                        console.log(error);
+                        // document.querySelector('#message').innerHTML = `<div class="alert alert-danger" role="alert"><i class="fa fa-exclamation"></i> ${error.message}</div>`;
                     }
                 });
             });
@@ -316,10 +318,11 @@ const helperModule = (function () {
 
     /**
      * TODO
+     * Reorders grid item list via drag and drop
      * @param event
      * @param id
      */
-    obj.reorder_grid_items = function (event, id) {
+    obj.reorder_grid_items = function (event, id, type) {
 
         try {
 
@@ -354,7 +357,7 @@ const helperModule = (function () {
                         }
 
                     } catch (error) {
-                        console.log('ERROR: ', error);
+                        document.querySelector('#message').innerHTML = `<div class="alert alert-danger" role="alert"><i class="fa fa-exclamation"></i> ${error.message}</div>`;
                     }
                 });
 
@@ -378,7 +381,7 @@ const helperModule = (function () {
                             updated_order.push(reorder_obj);
                             reorder_obj = {};
                         }
-                        console.log(updated_order);
+
                         const token = authModule.get_user_token();
                         const response = await httpModule.req({
                             method: 'POST',
@@ -397,7 +400,8 @@ const helperModule = (function () {
                         }
 
                     } catch (error) {
-                        document.querySelector('#message').innerHTML = `<div class="alert alert-danger" role="alert"><i class="fa fa-exclamation"></i> ${error.message}</div>`;
+                        console.log(error);
+                        // document.querySelector('#message').innerHTML = `<div class="alert alert-danger" role="alert"><i class="fa fa-exclamation"></i> ${error.message}</div>`;
                     }
                 });
             });
