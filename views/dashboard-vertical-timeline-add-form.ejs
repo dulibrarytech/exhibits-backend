@@ -50,6 +50,19 @@
             </div>
             <div class="card-body">
                 <div class="alert alert-info"><i class="fa fa-info"></i> Provide info to user about this form</div>
+                <div class="row">
+                    <div class="col-12 col-md-12">
+                        <div class="row form-group">
+                            <div class="col-12">
+                                <div class="form-text text-muted" style="font-size: 17px"><span style="color: darkred">*</span>
+                                    Title <small><em>(Required)</em></small>
+                                </div>
+                                <span id="timeline-title-error" class="is-error"></span>
+                                <div id="timeline-title-input" style="height: 100px"></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
             </div>
         </div>
         <div id="grid-styles-card" class="card">
@@ -58,7 +71,7 @@
             </div>
             <div class="card-body">
                 <div class="alert alert-info">
-                    <i class="fa fa-info"></i> <span id="info-message">Provide info to user about timeline styles</span>
+                    <i class="fa fa-info"></i> <span id="info-message">Provide info to user about grid styles</span>
                 </div>
                 <div class="row">
                     <div class="col-6 col-md-6">
@@ -93,10 +106,10 @@
                                 <div class="input-group">
                                     <div class="input-group-btn">
                                         <input title="Color Picker" class="color-picker btn btn-default" type="color"
-                                               id="timeline-font-color-picker"
+                                               id="grid-font-color-picker"
                                                value="#ffffff">
                                     </div>
-                                    <input type="text" id="timeline-font-color" name="timeline_font_color"
+                                    <input type="text" id="grid-font-color" name="grid_font_color"
                                            placeholder="Timeline Font Color" class="form-control" style="height: 40px">
                                 </div>
                             </div>
@@ -104,7 +117,7 @@
                         <div class="row form-group">
                             <div class="col-12 col-md-12">
                                 <div class="input-group">
-                                    <select name="timeline_font" id="timeline-font"
+                                    <select name="grid_font" id="grid-font"
                                             class="form-control-lg form-control text-muted" style="height: 40px">
                                         <option value="">Timeline Font</option>
                                         <%- include('partials/exhibit-fonts-options-list.ejs'); %>
@@ -118,7 +131,7 @@
         </div>
         <div id="item-submit-card" class="card">
             <div class="card-body">
-                <button class="btn btn-primary" type="button" id="save-timeline-btn">
+                <button class="btn btn-primary" type="button" id="save-item-btn">
                     <i class="fa fa-save"></i>&nbsp;&nbsp;Save
                 </button>
             </div>
@@ -149,10 +162,9 @@
 <script src="/exhibits-dashboard/static/app/items.module.js"></script>
 <script src="/exhibits-dashboard/static/app/items.common.vertical.timeline.form.module.js"></script>
 <script src="/exhibits-dashboard/static/app/items.add.vertical.timeline.form.module.js"></script>
-
 <script>
-    // itemsCommonVerticalTimelineItemFormModule.init();
-    // itemsAddVerticalTimelineItemFormModule.init();
+    itemsCommonVerticalTimelineItemFormModule.init();
+    itemsAddVerticalTimelineFormModule.init();
     helperModule.show_form();
 </script>
 </body>
