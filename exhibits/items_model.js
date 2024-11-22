@@ -336,6 +336,19 @@ exports.publish_item_record = async function (exhibit_id, item_id) {
             };
         }
 
+        const is_item_published = await ITEM_TASKS.set_item_to_publish(item_id);
+
+        if (is_item_published === false) {
+
+            LOGGER.module().error('ERROR: [/exhibits/model (publish_item_record)] Unable to publish item');
+
+            return {
+                status: false,
+                message: 'Unable to publish item'
+            };
+
+        }
+
         const is_indexed = await INDEXER_MODEL.index_item_record(exhibit_id, item_id);
 
         if (is_indexed === false) {
@@ -348,24 +361,10 @@ exports.publish_item_record = async function (exhibit_id, item_id) {
             };
         }
 
-        const is_item_published = await ITEM_TASKS.set_item_to_publish(item_id);
-
-        if (is_item_published === false) {
-
-            LOGGER.module().error('ERROR: [/exhibits/model (publish_item_record)] Unable to publish item');
-
-            return {
-                status: false,
-                message: 'Unable to publish item'
-            };
-
-        } else {
-
-            return {
-                status: true,
-                message: 'Item published'
-            };
-        }
+        return {
+            status: true,
+            message: 'Item published'
+        };
 
     } catch (error) {
         LOGGER.module().error('ERROR: [/exhibits/model (publish_item_record)] ' + error.message);

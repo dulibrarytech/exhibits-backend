@@ -25,9 +25,6 @@ const itemsAddHeadingFormModule = (function () {
     let obj = {};
     let rich_text_data = {};
 
-    /**
-     * Sets rich text editor on defined input fields
-     */
     function set_rich_text_editors () {
         const ids = ['item-heading-text-input'];
 
@@ -36,9 +33,6 @@ const itemsAddHeadingFormModule = (function () {
         });
     }
 
-    /**
-     * Creates item heading
-     */
     obj.create_heading_record = async function () {
 
         try {
@@ -83,9 +77,6 @@ const itemsAddHeadingFormModule = (function () {
         }
     };
 
-    /**
-     * Init function for headings form
-     */
     obj.init = function () {
 
         const exhibit_id = helperModule.get_parameter_by_name('exhibit_id');
