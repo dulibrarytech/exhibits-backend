@@ -124,23 +124,6 @@ const exhibitsCommonFormModule = (function () {
                 template: template
             };
 
-            /*
-            exhibit.exhibit = {
-                    navigation: {
-                        backgroundColor: exhibit_nav_background_color.length > 1 ? exhibit_nav_background_color : '',
-                        color: exhibit_nav_font_color.length > 1 ? exhibit_nav_font_color : '',
-                        fontFamily: exhibit_nav_font.length > 1 ? exhibit_nav_font : '',
-                        fontSize: exhibit_nav_font_size.length > 1 ? exhibit_nav_font_size : ''
-                    },
-                    template: {
-                        backgroundColor: exhibit_template_background_color.length > 1 ? exhibit_template_background_color : '',
-                        color: exhibit_template_font_color.length > 1 ? exhibit_template_font_color : '',
-                        fontFamily: exhibit_template_font.length > 1 ? exhibit_template_font : '',
-                        fontSize: exhibit_template_font_size.length > 1 ? exhibit_template_font_size : ''
-                    }
-            };
-             */
-
             return exhibit;
 
         } catch (error) {
