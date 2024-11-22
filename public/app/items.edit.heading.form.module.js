@@ -74,7 +74,7 @@ const itemsEditHeadingFormModule = (function () {
             }
 
         } catch (error) {
-            console.log('ERROR: ', error.message);
+            document.querySelector('#message').innerHTML = `<div class="alert alert-danger" role="alert"><i class="fa fa-exclamation"></i> ${error.message}</div>`;
         }
     }
 
@@ -156,11 +156,11 @@ const itemsEditHeadingFormModule = (function () {
 
             if (response !== undefined && response.status === 201) {
 
-                document.querySelector('#message').innerHTML = `<div class="alert alert-success" role="alert"><i class="fa fa-info"></i> Item record updated</div>`;
+                document.querySelector('#message').innerHTML = `<div class="alert alert-success" role="alert"><i class="fa fa-info"></i> Heading record updated</div>`;
 
                 setTimeout(() => {
                     window.location.replace('edit?exhibit_id=' + exhibit_id + '&item_id=' + item_id);
-                }, 2000);
+                }, 1000);
             }
 
         } catch (error) {
@@ -173,14 +173,20 @@ const itemsEditHeadingFormModule = (function () {
      */
     obj.init = async function () {
 
-        const exhibit_id = helperModule.get_parameter_by_name('exhibit_id');
-        await exhibitsModule.set_exhibit_title(exhibit_id);
+        try {
 
-        helperModule.set_rich_text_editor_config();
-        set_rich_text_editors();
+            const exhibit_id = helperModule.get_parameter_by_name('exhibit_id');
+            await exhibitsModule.set_exhibit_title(exhibit_id);
 
-        document.querySelector('#save-heading-btn').addEventListener('click', await itemsEditHeadingFormModule.update_item_heading_record);
-        await display_edit_record();
+            helperModule.set_rich_text_editor_config();
+            set_rich_text_editors();
+
+            document.querySelector('#save-heading-btn').addEventListener('click', await itemsEditHeadingFormModule.update_item_heading_record);
+            await display_edit_record();
+
+        } catch (error) {
+            document.querySelector('#message').innerHTML = `<div class="alert alert-danger" role="alert"><i class="fa fa-exclamation"></i> ${error.message}</div>`;
+        }
     };
 
     return obj;

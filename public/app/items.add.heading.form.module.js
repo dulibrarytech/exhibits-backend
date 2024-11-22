@@ -71,7 +71,6 @@ const itemsAddHeadingFormModule = (function () {
 
             if (response !== undefined && response.status === 201) {
 
-                document.querySelector('#item-heading-card').style.visibility = 'hidden';
                 document.querySelector('#message').innerHTML = `<div class="alert alert-success" role="alert"><i class="fa fa-info"></i> Heading record created</div>`;
 
                 setTimeout(() => {
