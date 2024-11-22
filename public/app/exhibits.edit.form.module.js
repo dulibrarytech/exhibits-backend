@@ -41,7 +41,7 @@ const exhibitsEditFormModule = (function () {
 
                 setTimeout(() => {
                     window.location.replace(APP_PATH + '/dashboard/login');
-                }, 3000);
+                }, 1000);
 
                 return false;
             }
@@ -84,7 +84,7 @@ const exhibitsEditFormModule = (function () {
          }
     }
 
-    /** TODO: load ENDPOINTS
+    /**
      * Populates edit form with exhibit record data
      */
     async function display_edit_record () {
@@ -223,7 +223,7 @@ const exhibitsEditFormModule = (function () {
                 setTimeout(() => {
                     document.querySelector('#message').innerHTML = `<div class="alert alert-danger" role="alert"><i class="fa fa-exclamation"></i> Unable to get session token</div>`;
                     authModule.logout();
-                }, 3000);
+                }, 1000);
 
                 return false;
             }
@@ -244,7 +244,7 @@ const exhibitsEditFormModule = (function () {
 
                 setTimeout(() => {
                     window.location.replace(APP_PATH + '/exhibits/exhibit/edit?exhibit_id=' + uuid);
-                }, 2000);
+                }, 1000);
             }
 
         } catch (error) {
@@ -286,7 +286,7 @@ const exhibitsEditFormModule = (function () {
                     setTimeout(() => {
                         document.querySelector('#message').innerHTML = '';
                         window.location.reload();
-                    }, 3000);
+                    }, 1000);
                 }
 
             })();
@@ -332,7 +332,7 @@ const exhibitsEditFormModule = (function () {
                     setTimeout(() => {
                         document.querySelector('#message').innerHTML = '';
                         window.location.reload();
-                    }, 3000);
+                    }, 1000);
                 }
 
             })();

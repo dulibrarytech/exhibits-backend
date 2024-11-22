@@ -51,7 +51,6 @@
                 <div class="card-body">
                     <input id="exhibit-uuid" type="hidden" name="exhibit_uuid">
                     <div class="alert alert-info"><i class="fa fa-info"></i> Provide info to user about this form</div>
-
                     <div class="row">
                         <div class="col-12 col-md-12">
                             <div class="row form-group">
@@ -65,62 +64,90 @@
                             </div>
                         </div>
                     </div>
-                    <hr>
-                    <p>
-                            <span class="form-text text-muted"
-                                  style="font-size: 17px">Apply Custom Styles to Heading</span>
-                    </p>
-                    <div class="row form-group">
-                        <div class="col-6 col-md-6">
-                            <div class="input-group">
-                                <div class="input-group-btn">
-                                    <input title="Color Picker" class="color-picker btn btn-default" type="color"
-                                           id="heading-background-color-picker" value="#ffffff">
-                                </div>
-                                <input type="text" id="heading-background-color" name="heading_background_color"
-                                       placeholder="Heading Background Color" class="form-control" style="height: 40px">
-
-                            </div>
-                        </div>
-                        <div class="col-6 col-md-6">
-                            <div class="input-group">
-                                <div class="input-group-btn">
-                                    <input title="Color Picker" class="color-picker btn btn-default" type="color"
-                                           id="heading-font-color-picker"
-                                           value="#ffffff">
-                                </div>
-                                <input type="text" id="heading-font-color" name="item_font_color"
-                                       placeholder="Heading Font Color" class="form-control" style="height: 40px">
-                            </div>
-                        </div>
-                    </div>
-                    <div class="row form-group">
-                        <div class="col-6 col-md-6">
-                            <div class="input-group">
-                                <input type="number" id="heading-font-size" name="template_font_size"
-                                       placeholder="Heading Font Size" class="form-control" min="1" max="50" style="height: 40px">
-                                <div class="input-group-append">
-                                    <span class="input-group-text" id="basic-addon2">px</span>
-                                </div>
-                            </div>
-                        </div>
-                        <div class="col-6 col-md-6">
-                            <div class="input-group">
-                                <select name="heading_font" id="heading-font"
-                                        class="form-control-lg form-control text-muted" style="height: 40px">
-                                    <option value="">Heading Font</option>
-                                    <%- include('partials/exhibit-fonts-options-list.ejs'); %>
-                                </select>
-                            </div>
-                        </div>
-                    </div>
-                    <hr>
-                    <button class="btn btn-primary" type="button" id="save-heading-btn">
-                        <i class="fa fa-save"></i>&nbsp;&nbsp;Save
-                    </button>
                 </div>
-                <div class="card-footer text-muted"><small>Heading</small></div>
             </form>
+        </div>
+        <div id="heading-styles-card" class="card">
+            <div class="card-header">
+                <strong class="card-title mb-3">Heading Styles</strong>
+            </div>
+            <div class="card-body">
+                <div class="alert alert-info">
+                    <i class="fa fa-info"></i> <span id="info-message">Provide info to user about heading styles</span>
+                </div>
+                <div class="row">
+                    <div class="col-6 col-md-6">
+                        <p>
+                        <div class="form-text text-muted" style="font-size: 17px">
+                            <label for="heading-background-color">Heading Background Color</label>
+                        </div>
+                        </p>
+                        <div class="input-group">
+                            <div class="input-group-btn">
+                                <input title="Color Picker" class="color-picker btn btn-default" type="color"
+                                       id="heading-background-color-picker" value="#ffffff">
+                            </div>
+                            <input type="text" id="heading-background-color" name="heading_background_color"
+                                   placeholder="i.e. #FFFFFF" class="form-control" style="height: 40px">
+
+                        </div>
+                    </div>
+                    <div class="col-6 col-md-6">
+                        <p>
+                        <div class="form-text text-muted" style="font-size: 17px">
+                            <label for="heading-font-color">Heading Font Color</label>
+                        </div>
+                        </p>
+                        <div class="input-group">
+                            <div class="input-group-btn">
+                                <input title="Color Picker" class="color-picker btn btn-default" type="color"
+                                       id="heading-font-color-picker"
+                                       value="#ffffff">
+                            </div>
+                            <input type="text" id="heading-font-color" name="item_font_color"
+                                   placeholder="i.e. #FFFFFF" class="form-control" style="height: 40px">
+                        </div>
+                    </div>
+                </div>
+                <div class="row">
+                    <div class="col-6 col-md-6">
+                        <p>
+                        <div class="form-text text-muted" style="font-size: 17px">
+                            <label for="heading-font-size">Heading Font Size</label>
+                        </div>
+                        </p>
+                        <div class="input-group">
+                            <input type="number" id="heading-font-size" name="heading_font_size"
+                                   placeholder="" class="form-control" min="1" max="50" style="height: 40px">
+                            <div class="input-group-append">
+                                <span class="input-group-text" id="basic-addon2">px</span>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-6 col-md-6">
+                        <p>
+                        <div class="form-text text-muted" style="font-size: 17px">
+                            <label for="heading-font">Heading Font</label>
+                        </div>
+                        </p>
+                        <div class="input-group">
+                            <select name="heading_font" id="heading-font"
+                                    class="form-control-lg form-control text-muted" style="height: 40px">
+                                <option value="">----------</option>
+                                <%- include('partials/exhibit-fonts-options-list.ejs'); %>
+                            </select>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div id="item-submit-card" class="card">
+            <div class="card-body">
+                <button class="btn btn-primary" type="button" id="save-heading-btn">
+                    <i class="fa fa-save"></i>&nbsp;&nbsp;Save
+                </button>
+            </div>
+            <div class="card-footer text-muted"><small>Heading</small></div>
         </div>
     </div>
     <div class="clearfix"></div>

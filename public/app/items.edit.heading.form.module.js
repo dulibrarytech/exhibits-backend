@@ -55,7 +55,7 @@ const itemsEditHeadingFormModule = (function () {
 
                 setTimeout(() => {
                     window.location.replace(APP_PATH + '/login');
-                }, 3000);
+                }, 1000);
 
                 return false;
             }
@@ -86,7 +86,6 @@ const itemsEditHeadingFormModule = (function () {
         let record = await get_item_heading_record();
         let styles;
 
-        // document.querySelector('#item-heading-text').value = record.text;
         rich_text_data['item-heading-text-input'] = helperModule.set_rich_text_editor('item-heading-text-input');
         rich_text_data['item-heading-text-input'].setHTMLCode(helperModule.unescape(record.text));
 
@@ -96,9 +95,10 @@ const itemsEditHeadingFormModule = (function () {
 
         if (Object.keys(styles).length !== 0) {
             // TODO: check for undefined values
+
             document.querySelector('#heading-background-color').value = styles.backgroundColor;
             document.querySelector('#heading-font-color').value = styles.color;
-            document.querySelector('#heading-font-size').value = styles.fontSize;
+            document.querySelector('#heading-font-size').value = styles.fontSize.replace('px', '');
 
             let font_values = document.querySelector('#heading-font');
 
@@ -136,7 +136,7 @@ const itemsEditHeadingFormModule = (function () {
                 setTimeout(() => {
                     document.querySelector('#message').innerHTML = `<div class="alert alert-danger" role="alert"><i class="fa fa-exclamation"></i> Unable to get session token</div>`;
                     authModule.logout();
-                }, 3000);
+                }, 1000);
 
                 return false;
             }

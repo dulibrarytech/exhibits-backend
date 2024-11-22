@@ -25,9 +25,6 @@ const itemsAddStandardItemFormModule = (function () {
     let obj = {};
     let rich_text_data = {};
 
-    /**
-     * Sets rich text editor on defined input fields
-     */
     function set_rich_text_editors () {
         const ids = ['item-title-input',
             'item-caption-input',
@@ -38,9 +35,6 @@ const itemsAddStandardItemFormModule = (function () {
         });
     }
 
-    /**
-     * Creates item
-     */
     obj.create_item_record = async function () {
 
         try {
@@ -81,7 +75,7 @@ const itemsAddStandardItemFormModule = (function () {
 
                 setTimeout(() => {
                     location.replace(`${APP_PATH}/items?exhibit_id=${uuid}`);
-                }, 3000);
+                }, 1000);
             }
 
         } catch (error) {
@@ -89,9 +83,6 @@ const itemsAddStandardItemFormModule = (function () {
         }
     };
 
-    /**
-     * Init function for standard item add form
-     */
     obj.init = async function () {
 
         const exhibit_id = helperModule.get_parameter_by_name('exhibit_id');

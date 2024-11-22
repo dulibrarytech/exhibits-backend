@@ -79,7 +79,7 @@ const exhibitsAddFormModule = (function () {
                 setTimeout(() => {
                     document.querySelector('#message').innerHTML = `<div class="alert alert-info" role="alert"><i class="fa fa-info"></i> Unable to get session token</div>`;
                     authModule.logout();
-                }, 3000);
+                }, 1000);
 
                 return false;
             }
@@ -100,7 +100,7 @@ const exhibitsAddFormModule = (function () {
 
                 setTimeout(() => {
                     window.location.replace(APP_PATH + '/items?exhibit_id=' + response.data.data);
-                }, 2000);
+                }, 1000);
             }
 
         } catch (error) {

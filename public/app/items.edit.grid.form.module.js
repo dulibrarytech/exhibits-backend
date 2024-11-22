@@ -118,7 +118,7 @@ const itemsEditGridFormModule = (function () {
                 console.log(grid_id);
                 setTimeout(() => {
                     location.replace(`${APP_PATH}/items?exhibit_id=${exhibit_id}`);
-                }, 3000);
+                }, 1000);
             }
 
         } catch (error) {
@@ -133,7 +133,6 @@ const itemsEditGridFormModule = (function () {
 
         let record = await get_grid_record();
 
-        // document.querySelector('#grid-title').value = record.title;
         rich_text_data['grid-title-input'] = helperModule.set_rich_text_editor('grid-title-input');
         rich_text_data['grid-title-input'].setHTMLCode(helperModule.unescape(record.title));
 
@@ -164,7 +163,7 @@ const itemsEditGridFormModule = (function () {
             }
 
             if (styles.fontSize !== undefined) {
-                document.querySelector('#grid-font-size').value = styles.fontSize;
+                document.querySelector('#grid-font-size').value = styles.fontSize.replace('px', '');
             } else {
                 document.querySelector('#grid-font-size').value = '';
             }

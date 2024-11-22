@@ -25,22 +25,16 @@ const itemsEditStandardItemFormModule = (function () {
     let obj = {};
     let rich_text_data = {};
 
-    /**
-     * Sets rich text editor on defined input fields
-     */
     function set_rich_text_editors () {
         const ids = ['item-title-input',
             'item-caption-input',
-            'item-text-input']; // 'item-description-input
+            'item-text-input'];
 
         ids.forEach((id) => {
             rich_text_data[id] = helperModule.set_rich_text_editor(id);
         });
     }
 
-    /**
-     * Gets item record
-     */
     async function get_item_record () {
 
         try {
@@ -57,7 +51,7 @@ const itemsEditStandardItemFormModule = (function () {
 
                 setTimeout(() => {
                     window.location.replace(APP_PATH + '/exhibits-dashboard/auth');
-                }, 3000);
+                }, 1000);
 
                 return false;
             }
@@ -80,9 +74,6 @@ const itemsEditStandardItemFormModule = (function () {
         }
     }
 
-    /**
-     * Populates edit form with exhibit record data
-     */
     async function display_edit_record () {
 
         let record = await get_item_record();
@@ -163,7 +154,6 @@ const itemsEditStandardItemFormModule = (function () {
                 document.querySelector('#item-type').value = 'kaltura';
             }
 
-            // document.querySelector('#item-type').value = 'kaltura';
             document.querySelector('#item-mime-type').value = helperModule.unescape(record.mime_type);
             document.querySelector('#item-media-thumbnail-image-display').innerHTML = thumbnail_fragment;
             document.querySelector('#item-media').value = record.media;
@@ -222,7 +212,7 @@ const itemsEditStandardItemFormModule = (function () {
             }
 
             if (styles.fontSize !== undefined) {
-                document.querySelector('#item-font-size').value = styles.fontSize;
+                document.querySelector('#item-font-size').value = styles.fontSize.replace('px', '');
             } else {
                 document.querySelector('#item-font-size').value = '';
             }
@@ -231,9 +221,6 @@ const itemsEditStandardItemFormModule = (function () {
         return false;
     }
 
-    /**
-     * Updates item record
-     */
     obj.update_item_record = async function () {
 
         try {
@@ -254,7 +241,7 @@ const itemsEditStandardItemFormModule = (function () {
                 setTimeout(() => {
                     document.querySelector('#message').innerHTML = `<div class="alert alert-danger" role="alert"><i class="fa fa-exclamation"></i> Unable to get session token</div>`;
                     authModule.logout();
-                }, 3000);
+                }, 1000);
 
                 return false;
             }
@@ -287,7 +274,7 @@ const itemsEditStandardItemFormModule = (function () {
 
                 setTimeout(() => {
                     window.location.replace('edit?exhibit_id=' + exhibit_id + '&item_id=' + item_id);
-                }, 2000);
+                }, 1000);
             }
 
         } catch (error) {
@@ -295,9 +282,6 @@ const itemsEditStandardItemFormModule = (function () {
         }
     };
 
-    /**
-     * Deletes item media
-     */
     function delete_media () {
 
         try {
@@ -331,7 +315,7 @@ const itemsEditStandardItemFormModule = (function () {
                     setTimeout(() => {
                         document.querySelector('#message').innerHTML = '';
                         window.location.reload();
-                    }, 3000);
+                    }, 1000);
                 }
 
             })();
@@ -341,9 +325,6 @@ const itemsEditStandardItemFormModule = (function () {
         }
     }
 
-    /**
-     * Deletes thumbnail image
-     */
     function delete_thumbnail_image() {
 
         try {
@@ -377,7 +358,7 @@ const itemsEditStandardItemFormModule = (function () {
                     setTimeout(() => {
                         document.querySelector('#message').innerHTML = '';
                         window.location.reload();
-                    }, 3000);
+                    }, 1000);
                 }
 
             })();
@@ -389,9 +370,6 @@ const itemsEditStandardItemFormModule = (function () {
         return false;
     }
 
-    /**
-     * Init function for items edit form
-     */
     obj.init = async function () {
 
         try {

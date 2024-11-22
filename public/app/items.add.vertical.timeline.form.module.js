@@ -25,9 +25,6 @@ const itemsAddVerticalTimelineFormModule = (function () {
     let obj = {};
     let rich_text_data = {};
 
-    /**
-     * Sets rich text editor on defined input fields
-     */
     function set_rich_text_editors () {
         const ids = ['timeline-title-input'];
 
@@ -36,9 +33,6 @@ const itemsAddVerticalTimelineFormModule = (function () {
         });
     }
 
-    /**
-     * Creates timeline record
-     */
     obj.create_timeline_record = async function () {
 
         try {
@@ -81,16 +75,19 @@ const itemsAddVerticalTimelineFormModule = (function () {
         }
     };
 
-    /**
-     * Init function for timeline add form
-     */
     obj.init = async function () {
-        const exhibit_id = helperModule.get_parameter_by_name('exhibit_id');
-        exhibitsModule.set_exhibit_title(exhibit_id);
-        helperModule.set_rich_text_editor_config();
-        set_rich_text_editors();
-        document.querySelector('#save-item-btn').addEventListener('click', itemsAddVerticalTimelineFormModule.create_timeline_record);
 
+        try {
+
+            const exhibit_id = helperModule.get_parameter_by_name('exhibit_id');
+            exhibitsModule.set_exhibit_title(exhibit_id);
+            helperModule.set_rich_text_editor_config();
+            set_rich_text_editors();
+            document.querySelector('#save-item-btn').addEventListener('click', itemsAddVerticalTimelineFormModule.create_timeline_record);
+
+        } catch (error) {
+            document.querySelector('#message').innerHTML = `<div class="alert alert-danger" role="alert"><i class="fa fa-exclamation"></i> ${error.message}</div>`;
+        }
     };
 
     return obj;

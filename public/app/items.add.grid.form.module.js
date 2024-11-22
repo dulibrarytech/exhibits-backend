@@ -73,7 +73,7 @@ const itemsAddGridFormModule = (function () {
                 console.log(grid_id);
                 setTimeout(() => {
                     location.replace(`${APP_PATH}/items?exhibit_id=${exhibit_id}`);
-                }, 3000);
+                }, 1000);
             }
 
         } catch (error) {

@@ -161,7 +161,7 @@ const exhibitsCommonFormModule = (function () {
 
                     setTimeout(() => {
                         document.querySelector('#message').innerHTML = '';
-                    }, 3000);
+                    }, 1000);
                 }
 
             })();

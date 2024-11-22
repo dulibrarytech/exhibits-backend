@@ -60,7 +60,7 @@ const itemsEditGridItemFormModule = (function () {
 
                 setTimeout(() => {
                     window.location.replace(APP_PATH + '/exhibits-dashboard/auth');
-                }, 3000);
+                }, 1000);
 
                 return false;
             }
@@ -255,7 +255,7 @@ const itemsEditGridItemFormModule = (function () {
             }
 
             if (styles.fontSize !== undefined) {
-                document.querySelector('#item-font-size').value = styles.fontSize;
+                document.querySelector('#item-font-size').value = styles.fontSize.replace('px', '');
             } else {
                 document.querySelector('#item-font-size').value = '';
             }

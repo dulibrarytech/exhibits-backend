@@ -25,9 +25,6 @@ const itemsAddGridItemFormModule = (function () {
     let obj = {};
     let rich_text_data = {};
 
-    /**
-     * Sets rich text editor on defined input fields
-     */
     function set_rich_text_editors() {
         const ids = ['item-title-input',
             'item-caption-input',
@@ -39,9 +36,6 @@ const itemsAddGridItemFormModule = (function () {
         });
     }
 
-    /**
-     * Creates grid item
-     */
     obj.create_grid_item_record = async function () {
 
         try {
@@ -86,7 +80,7 @@ const itemsAddGridItemFormModule = (function () {
 
                 setTimeout(() => {
                     window.location.replace(APP_PATH + '/items/grid/item?exhibit_id=' + exhibit_id + '&grid_id=' + grid_id);
-                }, 2000);
+                }, 1000);
             }
 
         } catch (error) {
@@ -94,51 +88,31 @@ const itemsAddGridItemFormModule = (function () {
         }
     };
 
-    /**
-     * init function for grid items add form
-     */
     obj.init = function () {
 
-        const exhibit_id = helperModule.get_parameter_by_name('exhibit_id');
-        exhibitsModule.set_exhibit_title(exhibit_id);
+        try {
 
-        helperModule.set_rich_text_editor_config();
-        set_rich_text_editors();
+            const exhibit_id = helperModule.get_parameter_by_name('exhibit_id');
+            exhibitsModule.set_exhibit_title(exhibit_id);
 
-        uploadsModule.upload_item_media();
-        uploadsModule.upload_item_thumbnail();
+            helperModule.set_rich_text_editor_config();
+            set_rich_text_editors();
 
-        document.querySelector('#save-item-btn').addEventListener('click', itemsAddGridItemFormModule.create_grid_item_record);
-        document.querySelector('#item-media-trash').style.display = 'none';
-        document.querySelector('#item-thumbnail-trash').style.display = 'none';
-        document.querySelectorAll('.item-layout-left-right-radio-btn').forEach((radio_input) => {
-            radio_input.addEventListener('click', () => {
-                document.querySelector('#item-media-width').style.display = 'block';
+            uploadsModule.upload_item_media();
+            uploadsModule.upload_item_thumbnail();
+
+            document.querySelector('#save-item-btn').addEventListener('click', itemsAddGridItemFormModule.create_grid_item_record);
+            document.querySelector('#item-media-trash').style.display = 'none';
+            document.querySelector('#item-thumbnail-trash').style.display = 'none';
+            document.querySelectorAll('.item-layout-left-right-radio-btn').forEach((radio_input) => {
+                radio_input.addEventListener('click', () => {
+                    document.querySelector('#item-media-width').style.display = 'block';
+                });
             });
-        });
 
-        /*
-        document.querySelectorAll('.item-layout-radio-btn').forEach((radio_input) => {
-            radio_input.addEventListener('click', () => {
-                document.querySelector('#item-media-width').style.display = 'none';
-            });
-        });
-
-        document.querySelector('#item-background-color-picker').addEventListener('input', () => {
-            if (document.querySelector('#item-background-color')) {
-                document.querySelector('#item-background-color').value = document.querySelector('#item-background-color-picker').value;
-            }
-        });
-        */
-
-        /*
-        document.querySelector('#item-font-color-picker').addEventListener('input', () => {
-            if (document.querySelector('#item-font-color')) {
-                document.querySelector('#item-font-color').value = document.querySelector('#item-font-color-picker').value;
-            }
-        });
-
-         */
+        } catch (error) {
+            document.querySelector('#message').innerHTML = `<div class="alert alert-danger" role="alert"><i class="fa fa-exclamation"></i> ${error.message}</div>`;
+        }
     };
 
     return obj;
