@@ -55,7 +55,7 @@ const itemsCommonStandardGridFormModule = (function () {
             }
 
             if (grid_font_size.length > 0) {
-                grid.styles.fontSize = grid_font_size;
+                grid.styles.fontSize = `${grid_font_size}px`;
             }
 
             return grid;

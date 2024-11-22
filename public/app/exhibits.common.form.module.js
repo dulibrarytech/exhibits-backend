@@ -74,6 +74,9 @@ const exhibitsCommonFormModule = (function () {
         try {
 
             let exhibit = {};
+            let navigation = {};
+            let template = {};
+
             let exhibit_nav_background_color = document.querySelector('#nav-background-color').value;
             let exhibit_nav_font_color = document.querySelector('#nav-font-color').value;
             let exhibit_nav_font = document.querySelector('#nav-font').value;
@@ -84,6 +87,44 @@ const exhibitsCommonFormModule = (function () {
             let exhibit_template_font = document.querySelector('#template-font').value;
             let exhibit_template_font_size = document.querySelector('#template-font-size').value;
 
+            if (exhibit_nav_background_color.length > 0) {
+                navigation.backgroundColor = exhibit_nav_background_color;
+            }
+
+            if (exhibit_nav_font_color.length > 0) {
+                navigation.color = exhibit_nav_font_color;
+            }
+
+            if (exhibit_nav_font.length > 0) {
+                navigation.fontFamily = exhibit_nav_font;
+            }
+
+            if (exhibit_nav_font_size.length > 0) {
+                navigation.fontSize = `${exhibit_nav_font_size}px`;
+            }
+
+            if (exhibit_template_background_color.length > 0) {
+                template.backgroundColor = exhibit_template_background_color;
+            }
+
+            if (exhibit_template_font_color.length > 0) {
+                template.color = exhibit_template_font_color;
+            }
+
+            if (exhibit_template_font.length > 0) {
+                template.fontFamily = exhibit_template_font;
+            }
+
+            if (exhibit_template_font_size.length > 0) {
+                template.fontSize = `${exhibit_template_font_size}px`;
+            }
+
+            exhibit.exhibit = {
+                navigation: navigation,
+                template: template
+            };
+
+            /*
             exhibit.exhibit = {
                     navigation: {
                         backgroundColor: exhibit_nav_background_color.length > 1 ? exhibit_nav_background_color : '',
@@ -98,6 +139,8 @@ const exhibitsCommonFormModule = (function () {
                         fontSize: exhibit_template_font_size.length > 1 ? exhibit_template_font_size : ''
                     }
             };
+
+             */
 
             return exhibit;
 

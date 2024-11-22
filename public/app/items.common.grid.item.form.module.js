@@ -123,7 +123,7 @@ const itemsCommonGridItemFormModule = (function () {
             }
 
             if (item_font_size.length > 0) {
-                item.styles.fontSize = item_font_size;
+                item.styles.fontSize = `${item_font_size}px`;
             }
 
             return item;

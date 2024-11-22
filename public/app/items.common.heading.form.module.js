@@ -37,25 +37,36 @@ const itemsCommonHeadingFormModule = (function () {
                 document.querySelector('#message').innerHTML = `<div class="alert alert-danger" role="alert"><i class="fa fa-exclamation"></i> Please enter heading text</div>`;
                 return false;
             }
-            /*
-            if (item_heading.text.length === 0) {
-                document.querySelector('#message').innerHTML = '<div class="alert alert-danger" role="alert"><i class="fa fa-exclamation"></i> Please enter heading text</div>';
-                return false;
-            }
-
-             */
 
             let heading_background_color =  document.querySelector('#heading-background-color').value;
             let heading_font_color = document.querySelector('#heading-font-color').value;
             let heading_font_size = document.querySelector('#heading-font-size').value;
             let heading_font = document.querySelector('#heading-font').value;
 
+            /*
             item_heading.styles = {
                 backgroundColor: heading_background_color.length > 1 ? heading_background_color : '',
                 color: heading_font_color.length > 1 ? heading_font_color : '',
                 fontSize: heading_font_size.length > 1 ? heading_font_size : '',
                 fontFamily: heading_font.length > 1 ? heading_font : ''
             };
+             */
+
+            if (heading_background_color.length > 0) {
+                item_heading.styles.backgroundColor = heading_background_color;
+            }
+
+            if (heading_font_color.length > 0) {
+                item_heading.styles.color = heading_font_color;
+            }
+
+            if (heading_font.length > 0) {
+                item_heading.styles.fontFamily = heading_font;
+            }
+
+            if (heading_font_size.length > 0) {
+                item_heading.styles.fontSize = `${heading_font_size}px`;
+            }
 
             return item_heading;
 
