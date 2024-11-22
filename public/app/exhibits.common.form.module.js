@@ -139,7 +139,6 @@ const exhibitsCommonFormModule = (function () {
                         fontSize: exhibit_template_font_size.length > 1 ? exhibit_template_font_size : ''
                     }
             };
-
              */
 
             return exhibit;
