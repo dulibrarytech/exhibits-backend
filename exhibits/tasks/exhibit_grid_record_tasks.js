@@ -378,13 +378,14 @@ const Exhibit_grid_record_tasks = class {
      * Sets is_published flogs to true for all grid items by exhibit id
      * @param uuid
      */
+    /*
     async set_to_publish_grid_items(uuid) {
 
         try {
-
+            console.log('grid item publish ', uuid);
             await this.DB(this.TABLE.grid_item_records)
             .where({
-                is_member_of_exhibit: uuid
+                is_member_of_grid: uuid
             })
             .update({
                 is_published: 1
@@ -398,6 +399,8 @@ const Exhibit_grid_record_tasks = class {
             return false;
         }
     }
+
+     */
 
     /**
      * Sets is_published flog to true for grid record

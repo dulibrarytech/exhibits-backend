@@ -430,6 +430,18 @@ exports.publish_grid_record = async function (exhibit_id, grid_id) {
         }
 
         const is_item_published = await GRID_TASKS.set_grid_to_publish(grid_id);
+
+        if (is_item_published === false) {
+
+            LOGGER.module().error('ERROR: [/exhibits/model (publish_grid_record)] Unable to publish grid');
+
+            return {
+                status: false,
+                message: 'Unable to publish grid'
+            };
+
+        }
+
         const is_indexed = await INDEXER_MODEL.index_grid_record(exhibit_id, grid_id);
 
         if (is_indexed === false) {
@@ -442,22 +454,10 @@ exports.publish_grid_record = async function (exhibit_id, grid_id) {
             };
         }
 
-        if (is_item_published === false) {
-
-            LOGGER.module().error('ERROR: [/exhibits/model (publish_grid_record)] Unable to publish grid');
-
-            return {
-                status: false,
-                message: 'Unable to publish grid'
-            };
-
-        } else {
-
-            return {
-                status: true,
-                message: 'Grid published'
-            };
-        }
+        return {
+            status: true,
+            message: 'Grid published'
+        };
 
     } catch (error) {
         LOGGER.module().error('ERROR: [/exhibits/model (publish_grid_record)] ' + error.message);
