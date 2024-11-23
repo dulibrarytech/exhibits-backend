@@ -36,7 +36,7 @@ const itemsCommonStandardItemFormModule = (function () {
 
             // item metadata
             item.title = rich_text_data['item-title-input'].getHTMLCode();
-            item.caption = rich_text_data['item-caption-input'].getHTMLCode();
+            item.caption = document.querySelector('#item-caption-input').value;
             item.text = rich_text_data['item-text-input'].getHTMLCode();
 
             if (item.title.length === 0 || item.title === '<div></div>') {

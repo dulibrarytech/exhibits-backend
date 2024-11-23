@@ -27,7 +27,6 @@ const itemsEditStandardItemFormModule = (function () {
 
     function set_rich_text_editors () {
         const ids = ['item-title-input',
-            'item-caption-input',
             'item-text-input'];
 
         ids.forEach((id) => {
