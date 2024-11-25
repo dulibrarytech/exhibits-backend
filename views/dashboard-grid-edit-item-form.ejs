@@ -107,14 +107,7 @@
                 <div class="alert alert-info">
                     <i class="fa fa-info"></i> <span id="info-message">Provide info to user about uploading exhibit media</span>
                 </div>
-                <div class="form-text text-muted" style="font-size: 17px">
-                    <!--
-                    <p>
-                        <span style="color: darkred">*</span>
-                        <small><em>(Required)</em></small>
-                    </p>
-                    -->
-                </div>
+                <div class="form-text text-muted" style="font-size: 17px"></div>
                 <div class="container">
                     <ul class="nav nav-tabs" id="mediaTab" role="tablist">
                         <li class="nav-item">
@@ -248,7 +241,7 @@
                                                id="item-background-color-picker" value="#ffffff">
                                     </div>
                                     <input type="text" id="item-background-color" name="item_background_color"
-                                           placeholder="Item Background Color" class="form-control" style="height: 40px">
+                                           placeholder="i.e. #FFFFFF" class="form-control" style="height: 40px">
 
                                 </div>
                             </div>
@@ -275,7 +268,7 @@
                                                value="#ffffff">
                                     </div>
                                     <input type="text" id="item-font-color" name="item_font_color"
-                                           placeholder="Item Font Color" class="form-control" style="height: 40px">
+                                           placeholder="i.e. #FFFFFF" class="form-control" style="height: 40px">
                                 </div>
                             </div>
                         </div>
@@ -284,7 +277,7 @@
                                 <div class="input-group">
                                     <select name="item_font" id="item-font"
                                             class="form-control-lg form-control text-muted" style="height: 40px">
-                                        <option value="">Item Font</option>
+                                        <option value="">----------</option>
                                         <%- include('partials/exhibit-fonts-options-list.ejs'); %>
                                     </select>
                                 </div>
