@@ -27,7 +27,6 @@ const itemsAddGridItemFormModule = (function () {
 
     function set_rich_text_editors() {
         const ids = ['item-title-input',
-            'item-caption-input',
             'item-description-input',
             'item-text-input'];
 
