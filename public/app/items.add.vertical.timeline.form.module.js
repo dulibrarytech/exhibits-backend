@@ -41,17 +41,18 @@ const itemsAddVerticalTimelineFormModule = (function () {
             let exhibit_id = helperModule.get_parameter_by_name('exhibit_id');
 
             if (exhibit_id === undefined) {
-                document.querySelector('#message').innerHTML = `<div class="alert alert-warning" role="alert"><i class="fa fa-info"></i> Unable to create grid record.</div>`;
+                document.querySelector('#message').innerHTML = `<div class="alert alert-warning" role="alert"><i class="fa fa-info"></i> Unable to create timeline record.</div>`;
                 return false;
             }
 
-            document.querySelector('#message').innerHTML = `<div class="alert alert-info" role="alert"><i class="fa fa-info"></i> Creating grid record...</div>`;
+            document.querySelector('#message').innerHTML = `<div class="alert alert-info" role="alert"><i class="fa fa-info"></i> Creating timeline record...</div>`;
 
-            let data = itemsCommonVerticalTimelineItemFormModule.get_common_timeline_item_form_fields(rich_text_data);
+            let data = itemsCommonVerticalTimelineFormModule.get_common_timeline_form_fields(rich_text_data);
+
             let token = authModule.get_user_token();
             let response = await httpModule.req({
                 method: 'POST',
-                url: EXHIBITS_ENDPOINTS.exhibits.grid_records.post.endpoint.replace(':exhibit_id', exhibit_id),
+                url: EXHIBITS_ENDPOINTS.exhibits.timeline_records.post.endpoint.replace(':exhibit_id', exhibit_id),
                 data: data,
                 headers: {
                     'Content-Type': 'application/json',
@@ -62,7 +63,7 @@ const itemsAddVerticalTimelineFormModule = (function () {
             if (response !== undefined && response.status === 201) {
 
                 window.scrollTo(0, 0);
-                document.querySelector('#message').innerHTML = `<div class="alert alert-success" role="alert"><i class="fa fa-info"></i> Grid record created</div>`;
+                document.querySelector('#message').innerHTML = `<div class="alert alert-success" role="alert"><i class="fa fa-info"></i> Timeline record created</div>`;
                 const timeline_id = response.data.data;
                 console.log(timeline_id);
                 setTimeout(() => {
@@ -83,7 +84,7 @@ const itemsAddVerticalTimelineFormModule = (function () {
             exhibitsModule.set_exhibit_title(exhibit_id);
             helperModule.set_rich_text_editor_config();
             set_rich_text_editors();
-            document.querySelector('#save-item-btn').addEventListener('click', itemsAddVerticalTimelineFormModule.create_timeline_record);
+            document.querySelector('#save-timeline-btn').addEventListener('click', itemsAddVerticalTimelineFormModule.create_timeline_record);
 
         } catch (error) {
             document.querySelector('#message').innerHTML = `<div class="alert alert-danger" role="alert"><i class="fa fa-exclamation"></i> ${error.message}</div>`;

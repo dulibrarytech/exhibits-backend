@@ -57,6 +57,7 @@ module.exports = function() {
     require('../exhibits/headings_routes')(APP);
     require('../exhibits/items_routes')(APP);
     require('../exhibits/grid_routes')(APP);
+    require('../exhibits/timelines_routes')(APP);
     require('../indexer/routes')(APP);
     require('../users/routes')(APP);
     require('../exhibits/uploads')(APP);

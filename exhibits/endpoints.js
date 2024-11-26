@@ -231,6 +231,30 @@ const ENDPOINTS = {
                 params: 'token or api_key'
             }
         },
+        timeline_records: {
+            get: {
+                description: 'Retrieves all timelines records by exhibit id and timeline id',
+                endpoint: `${APP_PATH}${PREFIX}${VERSION}${ENDPOINT}/:exhibit_id/timelines/:timeline_id`,
+                params: 'token or api_key, exhibit_id, timeline_id'
+            },
+            post: {
+                description: 'Creates timeline record',
+                endpoint: `${APP_PATH}${PREFIX}${VERSION}${ENDPOINT}/:exhibit_id/timelines`,
+                params: 'token or api_key',
+                body: 'is_member_of_exhibit, record data'
+            },
+            put: {
+                description: 'Updates timeline record',
+                endpoint: `${APP_PATH}${PREFIX}${VERSION}${ENDPOINT}/:exhibit_id/timelines/:timeline_id`,
+                params: 'token or api_key',
+                body: 'is_member_of_exhibit, timeline_id, record data'
+            },
+            delete: {
+                description: 'Deletes timeline record',
+                endpoint: `${APP_PATH}${PREFIX}${VERSION}${ENDPOINT}/:exhibit_id/timelines/:timeline_id`,
+                params: 'token or api_key'
+            }
+        },
         repo_items: {
             description: 'Retrieves repository item metadata',
             endpoint: `${APP_PATH}/repo/:uuid`,

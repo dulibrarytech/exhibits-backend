@@ -77,22 +77,32 @@
                     <div class="col-6 col-md-6">
                         <div class="row form-group">
                             <div class="col-12 col-md-12">
+                                <p>
+                                <div class="form-text text-muted" style="font-size: 17px">
+                                    <label for="timeline-background-color">Timeline Background Color</label>
+                                </div>
+                                </p>
                                 <div class="input-group">
                                     <div class="input-group-btn">
                                         <input title="Color Picker" class="color-picker btn btn-default" type="color"
                                                id="timeline-background-color-picker" value="#ffffff">
                                     </div>
                                     <input type="text" id="timeline-background-color" name="timeline_background_color"
-                                           placeholder="Timeline Background Color" class="form-control" style="height: 40px">
+                                           placeholder="i.e. #FFFFFF" class="form-control" style="height: 40px">
 
                                 </div>
                             </div>
                         </div>
                         <div class="row form-group">
                             <div class="col-12 col-md-12">
+                                <p>
+                                <div class="form-text text-muted" style="font-size: 17px">
+                                    <label for="timeline-font-size">Timeline Font Size</label>
+                                </div>
+                                </p>
                                 <div class="input-group">
                                     <input type="number" id="timeline-font-size" name="timeline_font_size"
-                                           placeholder="Timeline Font Size" class="form-control" min="1" max="50" style="height: 40px">
+                                           placeholder="" class="form-control" min="1" max="50" style="height: 40px">
                                     <div class="input-group-append">
                                         <span class="input-group-text" id="basic-addon2">px</span>
                                     </div>
@@ -103,23 +113,33 @@
                     <div class="col-6 col-md-6">
                         <div class="row form-group">
                             <div class="col-12 col-md-12">
+                                <p>
+                                <div class="form-text text-muted" style="font-size: 17px">
+                                    <label for="timeline-font-color">Timeline Font Color</label>
+                                </div>
+                                </p>
                                 <div class="input-group">
                                     <div class="input-group-btn">
                                         <input title="Color Picker" class="color-picker btn btn-default" type="color"
-                                               id="grid-font-color-picker"
+                                               id="timeline-font-color-picker"
                                                value="#ffffff">
                                     </div>
-                                    <input type="text" id="grid-font-color" name="grid_font_color"
-                                           placeholder="Timeline Font Color" class="form-control" style="height: 40px">
+                                    <input type="text" id="timeline-font-color" name="timeline_font_color"
+                                           placeholder="i.e. #FFFFFF" class="form-control" style="height: 40px">
                                 </div>
                             </div>
                         </div>
                         <div class="row form-group">
                             <div class="col-12 col-md-12">
+                                <p>
+                                <div class="form-text text-muted" style="font-size: 17px">
+                                    <label for="timeline-font">Timeline Font</label>
+                                </div>
+                                </p>
                                 <div class="input-group">
-                                    <select name="grid_font" id="grid-font"
+                                    <select name="timeline_font" id="timeline-font"
                                             class="form-control-lg form-control text-muted" style="height: 40px">
-                                        <option value="">Timeline Font</option>
+                                        <option value="">----------</option>
                                         <%- include('partials/exhibit-fonts-options-list.ejs'); %>
                                     </select>
                                 </div>
@@ -131,7 +151,7 @@
         </div>
         <div id="item-submit-card" class="card">
             <div class="card-body">
-                <button class="btn btn-primary" type="button" id="save-item-btn">
+                <button class="btn btn-primary" type="button" id="save-timeline-btn">
                     <i class="fa fa-save"></i>&nbsp;&nbsp;Save
                 </button>
             </div>
@@ -163,9 +183,8 @@
 <script src="/exhibits-dashboard/static/app/items.common.vertical.timeline.form.module.js"></script>
 <script src="/exhibits-dashboard/static/app/items.add.vertical.timeline.form.module.js"></script>
 <script>
-    itemsCommonVerticalTimelineItemFormModule.init();
+    itemsCommonVerticalTimelineFormModule.init();
     itemsAddVerticalTimelineFormModule.init();
-    helperModule.show_form();
 </script>
 </body>
 </html>
