@@ -7,7 +7,7 @@
 #
 # Host: 127.0.0.1 (MySQL 5.7.26)
 # Database: exhibits
-# Generation Time: 2024-10-15 05:13:50 +0000
+# Generation Time: 2024-11-27 05:08:52 +0000
 # ************************************************************
 
 
@@ -86,7 +86,7 @@ CREATE TABLE `tbl_grid_items` (
   `date` varchar(255) DEFAULT NULL COMMENT 'vertical timeline (year-month-day)',
   `is_repo_item` tinyint(1) NOT NULL DEFAULT '0',
   `is_kaltura_item` tinyint(1) NOT NULL DEFAULT '0',
-  `is_embedded` tinyint(4) NOT NULL DEFAULT '1',
+  `is_embedded` tinyint(1) NOT NULL DEFAULT '0',
   `is_published` tinyint(1) NOT NULL DEFAULT '0',
   `is_deleted` tinyint(1) NOT NULL DEFAULT '0',
   `created` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
@@ -172,6 +172,39 @@ CREATE TABLE `tbl_standard_items` (
   `is_embedded` tinyint(1) NOT NULL DEFAULT '0' COMMENT 'for audio and video',
   `is_published` tinyint(1) NOT NULL DEFAULT '0',
   `is_deleted` tinyint(1) NOT NULL DEFAULT '0',
+  `created` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  PRIMARY KEY (`id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8;
+
+
+
+# Dump of table tbl_timeline_items
+# ------------------------------------------------------------
+
+DROP TABLE IF EXISTS `tbl_timeline_items`;
+
+CREATE TABLE `tbl_timeline_items` (
+  `id` int(11) unsigned NOT NULL AUTO_INCREMENT,
+  PRIMARY KEY (`id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8;
+
+
+
+# Dump of table tbl_timelines
+# ------------------------------------------------------------
+
+DROP TABLE IF EXISTS `tbl_timelines`;
+
+CREATE TABLE `tbl_timelines` (
+  `id` int(11) unsigned NOT NULL AUTO_INCREMENT,
+  `uuid` varchar(255) NOT NULL DEFAULT '',
+  `is_member_of_exhibit` varchar(255) NOT NULL DEFAULT '',
+  `type` varchar(100) NOT NULL DEFAULT 'vertical_timeline',
+  `title` varchar(255) NOT NULL,
+  `styles` longtext,
+  `order` int(11) NOT NULL DEFAULT '0',
+  `is_deleted` tinyint(1) NOT NULL DEFAULT '0',
+  `is_published` tinyint(1) NOT NULL DEFAULT '0',
   `created` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
   PRIMARY KEY (`id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
