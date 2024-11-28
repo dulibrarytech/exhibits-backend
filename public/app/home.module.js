@@ -20,7 +20,7 @@ const homeModule = (function () {
 
     'use strict';
 
-    const APP_PATH = '/exhibits-dashboard';
+    const APP_PATH = window.localStorage.getItem('exhibits_app_path');
     let obj = {};
 
     obj.init = async function() {

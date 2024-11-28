@@ -20,13 +20,10 @@ const exhibitsModule = (function () {
 
     'use strict';
 
-    const APP_PATH = '/exhibits-dashboard';
+    const APP_PATH = window.localStorage.getItem('exhibits_app_path');
     let obj = {};
     let link;
 
-    /**
-     * Gets all exhibits
-     */
     async function get_exhibits() {
 
         try {
@@ -63,9 +60,6 @@ const exhibitsModule = (function () {
         }
     }
 
-    /**
-     * Display exhibits
-     */
     obj.display_exhibits = async function () {
 
         const exhibits = await get_exhibits();
@@ -147,10 +141,6 @@ const exhibitsModule = (function () {
         });
     };
 
-    /**
-     * Gets exhibit title
-     * @param uuid
-     */
     obj.get_exhibit_title = async function (uuid) {
 
         try {
@@ -175,20 +165,12 @@ const exhibitsModule = (function () {
         }
     };
 
-    /**
-     * Sets exhibit title
-     * @param uuid
-     */
     obj.set_exhibit_title = async function (uuid) {
         let title = await exhibitsModule.get_exhibit_title(uuid);
         document.querySelector('#exhibit-title').innerHTML = `${title}`;
         return false;
     };
 
-    /**
-     * Opens a window for the preview
-     * @param preview_link
-     */
     obj.open_preview = function (preview_link) {
 
         if (link !== undefined) {
@@ -198,16 +180,10 @@ const exhibitsModule = (function () {
         link = window.open(preview_link, '_blank', 'location=yes,scrollbars=yes,status=yes');
     };
 
-    /**
-     * Closes preview window
-     */
     obj.close_preview = function () {
         link.close();
     };
 
-    /**
-     * Deletes exhibit
-     */
     obj.delete_exhibit = function () {
 
         try {
@@ -243,10 +219,6 @@ const exhibitsModule = (function () {
         return false;
     };
 
-    /**
-     * Publishes exhibit
-     * @param uuid
-     */
     async function publish_exhibit(uuid) {
 
         const EXHIBITS_ENDPOINTS = endpointsModule.get_exhibits_endpoints();
@@ -295,10 +267,6 @@ const exhibitsModule = (function () {
         }
     }
 
-    /**
-     * Suppresses exhibit
-     * @param uuid
-     */
     async function suppress_exhibit(uuid) {
 
         const EXHIBITS_ENDPOINTS = endpointsModule.get_exhibits_endpoints();
@@ -347,9 +315,6 @@ const exhibitsModule = (function () {
         }
     }
 
-    /**
-     * Binds publish click behavior to exhibit links
-     */
     function bind_publish_exhibit_events() {
 
         try {
@@ -368,9 +333,6 @@ const exhibitsModule = (function () {
         }
     }
 
-    /**
-     * Binds suppress click behavior to exhibit links
-     */
     function bind_suppress_exhibit_events() {
 
         try {
@@ -390,9 +352,17 @@ const exhibitsModule = (function () {
     }
 
     obj.init = async function () {
-        await exhibitsModule.display_exhibits();
-        helperModule.show_form();
-        navModule.set_logout_link();
+
+        try {
+
+            await exhibitsModule.display_exhibits();
+            helperModule.show_form();
+            navModule.set_logout_link();
+
+        } catch (error) {
+            document.querySelector('#message').innerHTML = `<div class="alert alert-danger" role="alert"><i class="fa fa-exclamation"></i> ${error.message}</div>`;
+        }
+
     };
 
     return obj;

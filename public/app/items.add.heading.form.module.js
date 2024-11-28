@@ -20,7 +20,7 @@ const itemsAddHeadingFormModule = (function () {
 
     'use strict';
 
-    const APP_PATH = '/exhibits-dashboard';
+    const APP_PATH = window.localStorage.getItem('exhibits_app_path');
     const EXHIBITS_ENDPOINTS = endpointsModule.get_exhibits_endpoints();
     let obj = {};
     let rich_text_data = {};

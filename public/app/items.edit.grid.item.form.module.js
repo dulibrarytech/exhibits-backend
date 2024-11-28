@@ -20,14 +20,11 @@ const itemsEditGridItemFormModule = (function () {
 
     'use strict';
 
-    const APP_PATH = '/exhibits-dashboard';
+    const APP_PATH = window.localStorage.getItem('exhibits_app_path');
     const EXHIBITS_ENDPOINTS = endpointsModule.get_exhibits_endpoints();
     let obj = {};
     let rich_text_data = {};
 
-    /**
-     * Sets rich text editor on defined input fields
-     */
     function set_rich_text_editors() {
         const ids = ['item-title-input',
             'item-description-input',
@@ -38,9 +35,6 @@ const itemsEditGridItemFormModule = (function () {
         });
     }
 
-    /**
-     * Gets grid item record
-     */
     async function get_grid_item_record () {
 
         try {
@@ -82,9 +76,6 @@ const itemsEditGridItemFormModule = (function () {
         }
     }
 
-    /**
-     * Populates edit form with exhibit record data
-     */
     async function display_edit_record () {
 
         let record = await get_grid_item_record();
@@ -94,14 +85,9 @@ const itemsEditGridItemFormModule = (function () {
         // item data
         rich_text_data['item-title-input'] = helperModule.set_rich_text_editor('item-title-input');
         rich_text_data['item-title-input'].setHTMLCode(helperModule.unescape(record.title));
-
-        // rich_text_data['item-caption-input'] = helperModule.set_rich_text_editor('item-caption-input');
-        // rich_text_data['item-caption-input'].setHTMLCode(helperModule.unescape(record.caption));
         document.querySelector('#item-caption-input').value = record.caption;
-
         rich_text_data['item-description-input'] = helperModule.set_rich_text_editor('item-description-input');
         rich_text_data['item-description-input'].setHTMLCode(helperModule.unescape(record.description));
-
         rich_text_data['item-text-input'] = helperModule.set_rich_text_editor('item-text-input');
         rich_text_data['item-text-input'].setHTMLCode(helperModule.unescape(record.text));
 
@@ -144,19 +130,6 @@ const itemsEditGridItemFormModule = (function () {
                 document.getElementById('import-repo-media-tab').setAttribute('aria-selected', 'true');
                 document.querySelector('#repo-uuid').value = record.media;
                 await helperModule.get_repo_item_data();
-                /*
-                document.getElementById('upload-media-tab').classList.remove('active');
-                document.getElementById('import-repo-media-tab').classList.add('active');
-                document.getElementById('upload-media').classList.remove('active');
-                document.getElementById('upload-media').classList.remove('show');
-                document.getElementById('import-repo-media').classList.add('show');
-                document.getElementById('import-repo-media').classList.add('active');
-                document.getElementById('upload-media-tab').setAttribute('aria-selected', 'false');
-                document.getElementById('import-repo-media-tab').setAttribute('aria-selected', 'true');
-                document.querySelector('#repo-uuid').value = record.media;
-                await helperModule.get_repo_item_data();
-
-                 */
             }
 
             if (record.is_kaltura_item === 1) {
@@ -179,23 +152,9 @@ const itemsEditGridItemFormModule = (function () {
                     }
                 }
 
-                /*
-                document.getElementById('upload-media-tab').classList.remove('active');
-                document.getElementById('import-audio-video-tab').classList.add('active');
-                document.getElementById('upload-media').classList.remove('active');
-                document.getElementById('upload-media').classList.remove('show');
-                document.getElementById('import-audio-video').classList.add('show');
-                document.getElementById('import-audio-video').classList.add('active');
-                document.getElementById('upload-media-tab').setAttribute('aria-selected', 'false');
-                document.getElementById('import-audio-video-tab').setAttribute('aria-selected', 'true');
-                document.querySelector('#audio-video').value = record.media;
-
-                 */
-
                 document.querySelector('#item-type').value = 'kaltura';
             }
 
-            // document.querySelector('#item-type').value = record.item_type;
             document.querySelector('#item-mime-type').value = helperModule.unescape(record.mime_type);
             document.querySelector('#item-media-thumbnail-image-display').innerHTML = thumbnail_fragment;
             document.querySelector('#item-media').value = record.media;
@@ -264,9 +223,6 @@ const itemsEditGridItemFormModule = (function () {
         return false;
     }
 
-    /**
-     * Update grid item
-     */
     obj.update_grid_item_record = async function () {
 
         try {
@@ -313,9 +269,6 @@ const itemsEditGridItemFormModule = (function () {
         }
     };
 
-    /**
-     * Deletes item media
-     */
     function delete_media () {
 
         try {
@@ -361,9 +314,6 @@ const itemsEditGridItemFormModule = (function () {
         }
     }
 
-    /**
-     * Deletes thumbnail image
-     */
     function delete_thumbnail_image() {
 
         try {
@@ -411,9 +361,6 @@ const itemsEditGridItemFormModule = (function () {
         return false;
     }
 
-    /**
-     * init function for grid items edit form
-     */
     obj.init = async function () {
 
         try {

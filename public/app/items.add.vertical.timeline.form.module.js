@@ -48,7 +48,6 @@ const itemsAddVerticalTimelineFormModule = (function () {
             document.querySelector('#message').innerHTML = `<div class="alert alert-info" role="alert"><i class="fa fa-info"></i> Creating timeline record...</div>`;
 
             let data = itemsCommonVerticalTimelineFormModule.get_common_timeline_form_fields(rich_text_data);
-
             let token = authModule.get_user_token();
             let response = await httpModule.req({
                 method: 'POST',

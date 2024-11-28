@@ -20,14 +20,10 @@ const authModule = (function () {
 
     'use strict';
 
-    const APP_PATH = '/exhibits-dashboard';
+    const APP_PATH = window.localStorage.getItem('exhibits_app_path');
     const init_endpoints = endpointsModule.init();
     let obj = {};
 
-    /**
-     * Gets token from session storage
-     * @returns token
-     */
     obj.get_user_token = function () {
 
         let data = JSON.parse(window.sessionStorage.getItem('exhibits_token'));
@@ -41,9 +37,6 @@ const authModule = (function () {
         }
     };
 
-    /**
-     * Gets user profile data after authentication
-     */
     obj.get_auth_user_data = async function () {
 
         let id = helperModule.get_parameter_by_name('id');
@@ -72,10 +65,6 @@ const authModule = (function () {
         }
     };
 
-    /**
-     * Checks if user data is in session storage
-     * @returns {boolean}
-     */
     obj.check_user_auth_data = function () {
 
         let data = window.sessionStorage.getItem('exhibits_user');
@@ -87,10 +76,6 @@ const authModule = (function () {
         return false;
     };
 
-    /**
-     * Saves user profile data to session storage
-     * @param data
-     */
     obj.save_user_auth_data = function (data) {
 
         let user = {
@@ -102,9 +87,6 @@ const authModule = (function () {
         window.sessionStorage.setItem('exhibits_user', JSON.stringify(user));
     };
 
-    /**
-     * Gets session token from URL params
-     */
     obj.save_token = function () {
 
         let token = helperModule.get_parameter_by_name('t');
@@ -119,32 +101,22 @@ const authModule = (function () {
         }
     };
 
-    /**
-     * Redirect to authentication page when 401 status is received
-     */
     obj.redirect_to_auth = function () {
         setTimeout(() => {
             window.location.replace(APP_PATH + '/auth');
         }, 2000);
     };
 
-    /**
-     * Clears out browser storage
-     */
     obj.clear = function () {
         window.sessionStorage.clear();
         window.localStorage.clear();
     };
 
-    /**
-     * Logs out user
-     */
     obj.logout = function () {
         window.location.replace(APP_PATH + '/logout');
     };
 
-    obj.init = function () {
-    };
+    obj.init = function () {};
 
     return obj;
 

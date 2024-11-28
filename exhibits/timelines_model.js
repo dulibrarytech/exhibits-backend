@@ -59,7 +59,6 @@ exports.create_timeline_record = async function (is_member_of_exhibit, data) {
             };
         }
 
-        data.columns = parseInt(data.columns);
         data.order = await HELPER_TASK.order_exhibit_items(data.is_member_of_exhibit, DB, TABLES);
 
         const CREATE_RECORD_TASK = new EXHIBIT_TIMELINE_RECORD_TASKS(DB, TABLES);

@@ -20,7 +20,7 @@ const itemsEditStandardItemFormModule = (function () {
 
     'use strict';
 
-    const APP_PATH = '/exhibits-dashboard';
+    const APP_PATH = window.localStorage.getItem('exhibits_app_path');
     const EXHIBITS_ENDPOINTS = endpointsModule.get_exhibits_endpoints();
     let obj = {};
     let rich_text_data = {};
@@ -82,11 +82,7 @@ const itemsEditStandardItemFormModule = (function () {
         // item data
         rich_text_data['item-title-input'] = helperModule.set_rich_text_editor('item-title-input');
         rich_text_data['item-title-input'].setHTMLCode(helperModule.unescape(record.title));
-
         document.querySelector('#item-caption-input').value = record.caption;
-        // rich_text_data['item-caption-input'] = helperModule.set_rich_text_editor('item-caption-input');
-        // rich_text_data['item-caption-input'].setHTMLCode(helperModule.unescape(record.caption));
-
         rich_text_data['item-text-input'] = helperModule.set_rich_text_editor('item-text-input');
         rich_text_data['item-text-input'].setHTMLCode(helperModule.unescape(record.text));
 

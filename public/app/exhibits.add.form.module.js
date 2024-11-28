@@ -20,14 +20,11 @@ const exhibitsAddFormModule = (function () {
 
     'use strict';
 
-    const APP_PATH = '/exhibits-dashboard';
+    const APP_PATH = window.localStorage.getItem('exhibits_app_path');
     const EXHIBITS_ENDPOINTS = endpointsModule.get_exhibits_endpoints();
     let obj = {};
     let rich_text_data = {};
 
-    /**
-     * Sets rich text editor on defined input fields
-     */
     function set_rich_text_editors () {
         const ids = ['exhibit-title-input',
             'exhibit-sub-title-input',
@@ -40,9 +37,6 @@ const exhibitsAddFormModule = (function () {
         });
     }
 
-    /**
-     * Gets data from exhibit form
-     */
     function get_exhibit_data () {
 
         try {
@@ -56,9 +50,6 @@ const exhibitsAddFormModule = (function () {
         }
     }
 
-    /**
-     * Creates exhibit record
-     */
     obj.create_exhibit_record = async function () {
 
         try {
@@ -108,9 +99,6 @@ const exhibitsAddFormModule = (function () {
         }
     };
 
-    /**
-     * Init function for exhibits add form
-     */
     obj.init = function () {
 
         try {

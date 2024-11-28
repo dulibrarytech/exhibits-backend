@@ -20,12 +20,9 @@ const navModule = (function () {
 
     'use strict';
 
-    const APP_PATH = '/exhibits-dashboard';
+    const APP_PATH = window.localStorage.getItem('exhibits_app_path');
     let obj = {};
 
-    /**
-     * sets item navigation
-     */
     obj.set_item_nav_menu_links = function () {
 
         let uuid = helperModule.get_parameter_by_name('exhibit_id');
@@ -57,9 +54,6 @@ const navModule = (function () {
         document.querySelector('#items-menu').innerHTML = items_menu_fragment;
     };
 
-    /**
-     * sets grid item menu link
-     */
     obj.set_grid_item_nav_menu_links = function () {
 
         let exhibit_id = helperModule.get_parameter_by_name('exhibit_id');
@@ -74,26 +68,17 @@ const navModule = (function () {
         document.querySelector('#items-menu').innerHTML = items_menu_fragment;
     };
 
-    /**
-     * Creates back to menu items link in item forms
-     */
     obj.back_to_items = function () {
         const exhibit_id = helperModule.get_parameter_by_name('exhibit_id');
         document.querySelector('#back-to-items').setAttribute('href', `${APP_PATH}/items?exhibit_id=${exhibit_id}`);
     };
 
-    /**
-     * Creates back to menu grid items link in grid item edit form
-     */
     obj.back_to_grid_items = function () {
         const exhibit_id = helperModule.get_parameter_by_name('exhibit_id');
         const grid_id = helperModule.get_parameter_by_name('grid_id');
         document.querySelector('#back-to-items').setAttribute('href', `${APP_PATH}/items/grid/items?exhibit_id=${exhibit_id}&grid_id=${grid_id}`);
     };
 
-    /**
-     * Sets preview link
-     */
     obj.set_preview_link = function () {
 
         let uuid = helperModule.get_parameter_by_name('exhibit_id');
@@ -106,16 +91,10 @@ const navModule = (function () {
         document.querySelector('#preview-link').innerHTML = preview_menu_fragment;
     };
 
-    /**
-     * Sets logout link
-     */
     obj.set_logout_link = function () {
         document.querySelector('#logout').addEventListener('click', authModule.logout);
     };
 
-    /**
-     * Init function for navigation menu
-     */
     obj.init = function () {
         navModule.set_logout_link();
     };

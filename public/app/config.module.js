@@ -22,10 +22,6 @@ const configModule = (function () {
 
     let obj = {};
 
-    /**
-     * Resolves repo api url
-     * @returns {string}
-     */
     obj.getApi = function () {
 
         let api = 'http://localhost:8004';

@@ -20,16 +20,10 @@ const itemsGridModule = (function () {
 
     'use strict';
 
-    const APP_PATH = '/exhibits-dashboard';
+    const APP_PATH = window.localStorage.getItem('exhibits_app_path');
     const EXHIBITS_ENDPOINTS = endpointsModule.get_exhibits_endpoints();
     let obj = {};
 
-    /**
-     * Gets grid items
-     * @param exhibit_id
-     * @param grid_id
-     * @return array
-     */
     async function get_grid_items(exhibit_id, grid_id) {
 
         try {
@@ -55,9 +49,6 @@ const itemsGridModule = (function () {
         }
     }
 
-    /**
-     * Gets grid items
-     */
     obj.display_grid_items = async function (event) {
 
         if ($.fn.dataTable.isDataTable('#grid-items')) {
@@ -162,10 +153,6 @@ const itemsGridModule = (function () {
         helperModule.reorder_grid_items(event, grid_id, 'grid_items');
     };
 
-    /**
-     * Publishes grid item
-     * @param uuid
-     */
     async function publish_grid_item(uuid) {
 
         try {
@@ -211,10 +198,6 @@ const itemsGridModule = (function () {
         }
     }
 
-    /**
-     * Suppresses grid item
-     * @param uuid
-     */
     async function suppress_grid_item(uuid) {
 
         try {
@@ -260,9 +243,6 @@ const itemsGridModule = (function () {
         }
     }
 
-    /**
-     * Binds publish click behavior to exhibit links
-     */
     function bind_publish_grid_item_events() {
 
         try {
@@ -281,9 +261,6 @@ const itemsGridModule = (function () {
         }
     }
 
-    /**
-     * Binds suppress click behavior to exhibit links
-     */
     function bind_suppress_grid_item_events() {
 
         try {
@@ -302,9 +279,6 @@ const itemsGridModule = (function () {
         }
     }
 
-    /**
-     * Deletes grid item
-     */
     obj.delete_grid_item = async function () {
 
         try {

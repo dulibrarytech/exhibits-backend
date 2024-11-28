@@ -26,6 +26,8 @@ const TABLES = {
     heading_records: process.env.HEADING_RECORDS,
     grid_item_records: process.env.GRID_ITEM_RECORDS,
     grid_records: process.env.GRID_RECORDS,
+    timeline_records: process.env.TIMELINE_RECORDS,
+    timeline_item_records: process.env.TIMELINE_ITEM_RECORDS,
     user_records: process.env.USER_RECORDS
 };
 const DB_TABLES_CONFIG = {

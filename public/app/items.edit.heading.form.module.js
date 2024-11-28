@@ -20,14 +20,11 @@ const itemsEditHeadingFormModule = (function () {
 
     'use strict';
 
-    const APP_PATH = '/exhibits-dashboard';
+    const APP_PATH = window.localStorage.getItem('exhibits_app_path');
     const EXHIBITS_ENDPOINTS = endpointsModule.get_exhibits_endpoints();
     let obj = {};
     let rich_text_data = {};
 
-    /**
-     * Sets rich text editor on defined input fields
-     */
     function set_rich_text_editors () {
         const ids = ['item-heading-text-input'];
 
@@ -36,9 +33,6 @@ const itemsEditHeadingFormModule = (function () {
         });
     }
 
-    /**
-     * Gets item heading record
-     */
     async function get_item_heading_record () {
 
         try {
@@ -78,9 +72,6 @@ const itemsEditHeadingFormModule = (function () {
         }
     }
 
-    /**
-     * Populates edit form with item heading record data
-     */
     async function display_edit_record () {
 
         let record = await get_item_heading_record();
@@ -112,9 +103,6 @@ const itemsEditHeadingFormModule = (function () {
         return false;
     }
 
-    /**
-     * Updates item record
-     */
     obj.update_item_heading_record = async function () {
 
         try {
@@ -168,9 +156,6 @@ const itemsEditHeadingFormModule = (function () {
         }
     };
 
-    /**
-     *
-     */
     obj.init = async function () {
 
         try {

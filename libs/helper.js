@@ -150,13 +150,15 @@ const Helper = class {
             let heading_order;
             let item_order;
             let grid_order;
+            let timeline_order;
             let order = [];
 
             heading_order = await db(tables.heading_records).select('order').where('is_member_of_exhibit', uuid);
             item_order = await db(tables.item_records).select('order').where('is_member_of_exhibit', uuid);
             grid_order = await db(tables.grid_records).select('order').where('is_member_of_exhibit', uuid);
+            timeline_order = await db(tables.timeline_records).select('order').where('is_member_of_exhibit', uuid);
 
-            const merged = [...heading_order, ...item_order, ...grid_order];
+            const merged = [...heading_order, ...item_order, ...grid_order, ...timeline_order];
 
             if (merged.length === 0) {
                 return 1;

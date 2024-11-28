@@ -20,14 +20,11 @@ const itemsEditGridFormModule = (function () {
 
     'use strict';
 
-    const APP_PATH = '/exhibits-dashboard';
+    const APP_PATH = window.localStorage.getItem('exhibits_app_path');
     const EXHIBITS_ENDPOINTS = endpointsModule.get_exhibits_endpoints();
     let obj = {};
     let rich_text_data = {};
 
-    /**
-     * Sets rich text editor on defined input fields
-     */
     function set_rich_text_editors () {
         const ids = ['grid-title-input'];
 
@@ -36,9 +33,6 @@ const itemsEditGridFormModule = (function () {
         });
     }
 
-    /**
-     * Gets grid record
-     */
     async function get_grid_record () {
 
         try {
@@ -78,9 +72,6 @@ const itemsEditGridFormModule = (function () {
         }
     }
 
-    /**
-     * Updates grid record
-     */
     obj.update_grid_record = async function () {
 
         try {
@@ -126,9 +117,6 @@ const itemsEditGridFormModule = (function () {
         }
     };
 
-    /**
-     * Populates edit form with grid record data
-     */
     async function display_edit_record () {
 
         let record = await get_grid_record();
@@ -172,9 +160,6 @@ const itemsEditGridFormModule = (function () {
         return false;
     }
 
-    /**
-     * Init function for grid edit form
-     */
     obj.init = async function () {
         const exhibit_id = helperModule.get_parameter_by_name('exhibit_id');
         exhibitsModule.set_exhibit_title(exhibit_id);

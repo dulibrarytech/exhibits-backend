@@ -20,12 +20,9 @@ const uploadsModule = (function () {
 
     'use strict';
 
-    const APP_PATH = '/exhibits-dashboard';
+    const APP_PATH = window.localStorage.getItem('exhibits_app_path');
     let obj = {};
 
-    /**
-     * Renders exhibit hero image upload area
-     */
     obj.upload_exhibit_hero_image = function() {
 
         const EXHIBIT_HERO = Dropzone;
@@ -71,9 +68,6 @@ const uploadsModule = (function () {
         };
     };
 
-    /**
-     * Renders exhibit hero image upload area
-     */
     obj.upload_exhibit_thumbnail_image = function() {
 
         const THUMBNAIL = Dropzone;
@@ -120,9 +114,6 @@ const uploadsModule = (function () {
         };
     };
 
-    /**
-     * Renders item media upload area
-     */
     obj.upload_item_media = function() {
 
         const ITEM_MEDIA = Dropzone;
@@ -194,9 +185,6 @@ const uploadsModule = (function () {
         };
     };
 
-    /**
-     * Renders item thumbnail upload area
-     */
     obj.upload_item_thumbnail = function() {
 
         const ITEM_THUMBNAIL = Dropzone;

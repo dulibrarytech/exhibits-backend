@@ -42,6 +42,7 @@ const endpointsModule = (function () {
     };
 
     obj.init = function() {
+        window.localStorage.setItem('exhibits_app_path', APP_PATH);
         return {
             authenticate: APP_PATH + '/api/v1/authenticate'
         }

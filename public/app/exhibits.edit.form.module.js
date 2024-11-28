@@ -20,15 +20,12 @@ const exhibitsEditFormModule = (function () {
 
     'use strict';
 
-    const APP_PATH = '/exhibits-dashboard';
+    const APP_PATH = window.localStorage.getItem('exhibits_app_path');
     const EXHIBITS_ENDPOINTS = endpointsModule.get_exhibits_endpoints();
     let obj = {};
     let rich_text_data = {};
 
-    /**
-     * Gets exhibit record
-     */
-    async function get_exhibit_record () {
+    async function get_exhibit_record() {
 
         try {
 
@@ -66,28 +63,22 @@ const exhibitsEditFormModule = (function () {
         }
     }
 
-    /**
-     * Gets data from exhibit edit form
-     */
-     function get_exhibit_data () {
+    function get_exhibit_data() {
 
-         try {
+        try {
 
-             let exhibit = exhibitsCommonFormModule.get_common_form_fields(rich_text_data);
-             exhibit.styles = exhibitsCommonFormModule.get_exhibit_styles();
-             exhibit.hero_image_prev = document.querySelector('#hero-image-prev').value;
-             exhibit.thumbnail_prev = document.querySelector('#thumbnail-image-prev').value;
-             return exhibit;
+            let exhibit = exhibitsCommonFormModule.get_common_form_fields(rich_text_data);
+            exhibit.styles = exhibitsCommonFormModule.get_exhibit_styles();
+            exhibit.hero_image_prev = document.querySelector('#hero-image-prev').value;
+            exhibit.thumbnail_prev = document.querySelector('#thumbnail-image-prev').value;
+            return exhibit;
 
-         } catch (error) {
-             document.querySelector('#message').innerHTML = `<div class="alert alert-danger" role="alert"><i class="fa fa-exclamation"></i> ${error.message}</div>`;
-         }
+        } catch (error) {
+            document.querySelector('#message').innerHTML = `<div class="alert alert-danger" role="alert"><i class="fa fa-exclamation"></i> ${error.message}</div>`;
+        }
     }
 
-    /**
-     * Populates edit form with exhibit record data
-     */
-    async function display_edit_record () {
+    async function display_edit_record() {
 
         try {
 
@@ -166,13 +157,13 @@ const exhibitsEditFormModule = (function () {
 
                 let font_values = document.querySelector('#nav-font');
 
-                for (let i=0;i<font_values.length;i++) {
+                for (let i = 0; i < font_values.length; i++) {
                     if (font_values[i].value === styles.exhibit.navigation.fontFamily) {
                         document.querySelector('#nav-font').value = styles.exhibit.navigation.fontFamily;
                     }
                 }
 
-                document.querySelector('#nav-font-size').value = styles.exhibit.navigation.fontSize;
+                document.querySelector('#nav-font-size').value = styles.exhibit.navigation.fontSize.replace('px', '');
             }
 
             if (styles.exhibit.template !== undefined) {
@@ -182,14 +173,14 @@ const exhibitsEditFormModule = (function () {
 
                 let template_font_values = document.querySelector('#template-font');
 
-                for (let i=0;i<template_font_values.length;i++) {
+                for (let i = 0; i < template_font_values.length; i++) {
 
                     if (template_font_values[i].value === styles.exhibit.template.fontFamily) {
                         document.querySelector('#template-font').value = styles.exhibit.template.fontFamily;
                     }
                 }
 
-                document.querySelector('#template-font-size').value = styles.exhibit.template.fontSize;
+                document.querySelector('#template-font-size').value = styles.exhibit.template.fontSize.replace('px', '');
             }
 
             return false;
@@ -199,9 +190,6 @@ const exhibitsEditFormModule = (function () {
         }
     }
 
-    /**
-     * Updates exhibit record
-     */
     obj.update_exhibit_record = async function () {
 
         try {
@@ -252,14 +240,11 @@ const exhibitsEditFormModule = (function () {
         }
     };
 
-    /**
-     * Deletes hero image
-     */
     function delete_hero_image() {
 
         try {
 
-            (async function() {
+            (async function () {
 
                 const uuid = helperModule.get_parameter_by_name('exhibit_id');
                 let hero_image = document.querySelector('#hero-image').value;
@@ -298,14 +283,11 @@ const exhibitsEditFormModule = (function () {
         return false;
     }
 
-    /**
-     * Deletes thumbnail image
-     */
     function delete_thumbnail_image() {
 
         try {
 
-            (async function() {
+            (async function () {
 
                 const uuid = helperModule.get_parameter_by_name('exhibit_id');
                 let hero_image = document.querySelector('#thumbnail-image').value;
@@ -344,9 +326,6 @@ const exhibitsEditFormModule = (function () {
         return false;
     }
 
-    /**
-     * Init function for exhibits edit form
-     */
     obj.init = async function () {
 
         try {

@@ -16,43 +16,32 @@
 
  */
 
-const itemsEditVerticalTimelineItemFormModule = (function () {
+const itemsEditVerticalTimelineFormModule = (function () {
 
     'use strict';
 
-    const APP_PATH = '/exhibits-dashboard';
+    const APP_PATH = window.localStorage.getItem('exhibits_app_path');
     const EXHIBITS_ENDPOINTS = endpointsModule.get_exhibits_endpoints();
     let obj = {};
     let rich_text_data = {};
 
-    /**
-     * Sets rich text editor on defined input fields
-     */
-    function set_rich_text_editors() {
-        const ids = ['timeline-item-title-input',
-            'timeline-item-caption-input',
-            'timeline-item-description-input',
-            'timeline-item-text-input'];
+    function set_rich_text_editors () {
+        const ids = ['timeline-title-input'];
 
         ids.forEach((id) => {
             rich_text_data[id] = helperModule.set_rich_text_editor(id);
         });
     }
 
-    /**
-     * Gets timeline item record
-     */
-    async function get_timeline_item_record () {
+    async function get_timeline_record () {
 
         try {
 
             const exhibit_id = helperModule.get_parameter_by_name('exhibit_id');
-            const grid_id = helperModule.get_parameter_by_name('grid_id');
-            const item_id = helperModule.get_parameter_by_name('item_id');
+            const timeline_id = helperModule.get_parameter_by_name('item_id');
             const token = authModule.get_user_token();
-            let etmp = EXHIBITS_ENDPOINTS.exhibits.grid_item_record.get.endpoint.replace(':exhibit_id', exhibit_id);
-            let itmp = etmp.replace(':grid_id', grid_id);
-            let endpoint = itmp.replace(':item_id', item_id);
+            let tmp = EXHIBITS_ENDPOINTS.exhibits.timeline_records.get.endpoint.replace(':exhibit_id', exhibit_id);
+            let endpoint = tmp.replace(':timeline_id', timeline_id);
 
             if (token === false) {
 
@@ -83,185 +72,26 @@ const itemsEditVerticalTimelineItemFormModule = (function () {
         }
     }
 
-    /**
-     * Populates edit form with timeline edit record data
-     */
-    async function display_edit_record () {
-
-        let record = await get_timeline_item_record();
-        let thumbnail_fragment = '';
-        let thumbnail_url = '';
-
-        // item data
-        rich_text_data['timeline-item-title-input'] = helperModule.set_rich_text_editor('item-title-input');
-        rich_text_data['timeline-item-title-input'].setHTMLCode(helperModule.unescape(record.title));
-
-        rich_text_data['timeline-item-caption-input'] = helperModule.set_rich_text_editor('item-caption-input');
-        rich_text_data['timeline-item-caption-input'].setHTMLCode(helperModule.unescape(record.caption));
-
-        rich_text_data['timeline-item-description-input'] = helperModule.set_rich_text_editor('item-description-input');
-        rich_text_data['timeline-item-description-input'].setHTMLCode(helperModule.unescape(record.description));
-
-        rich_text_data['timeline-item-text-input'] = helperModule.set_rich_text_editor('item-text-input');
-        rich_text_data['timeline-item-text-input'].setHTMLCode(helperModule.unescape(record.text));
-
-        if (record.media.length > 0) {
-
-            if (record.is_repo_item === 0 && record.is_kaltura_item === 0) {
-
-                if (record.mime_type.indexOf('image') !== -1) {
-                    thumbnail_url = EXHIBITS_ENDPOINTS.exhibits.exhibit_media.get.endpoint.replace(':exhibit_id', record.is_member_of_exhibit).replace(':media', record.thumbnail);
-                    thumbnail_fragment = `<p><img src="${thumbnail_url}" height="200" ></p>`;
-                } else if (record.mime_type.indexOf('video') !== -1) {
-                    thumbnail_url = '/exhibits-dashboard/static/images/video-tn.png';
-                    thumbnail_fragment = `<p><img src="${thumbnail_url}" height="200" ></p>`;
-                } else if (record.mime_type.indexOf('audio') !== -1) {
-                    thumbnail_url = '/exhibits-dashboard/static/images/audio-tn.png';
-                    thumbnail_fragment = `<p><img src="${thumbnail_url}" height="200" ></p>`;
-                } else if (record.mime_type.indexOf('pdf') !== -1) {
-                    thumbnail_url = '/exhibits-dashboard/static/images/pdf-tn.png';
-                    thumbnail_fragment = `<p><img src="${thumbnail_url}" height="200" ></p>`;
-                    document.querySelector('#toggle-open-to-page').style.visibility = 'visible';
-                } else {
-                    console.log('Unable to Determine Type');
-                }
-
-                document.querySelector('#item-media-trash').style.display = 'inline';
-                document.querySelector('#item-media-filename-display').innerHTML = `<span style="font-size: 11px">${record.media}</span>`;
-            }
-
-            document.querySelector('#item-type').value = record.item_type;
-
-            if (record.is_repo_item === 1) {
-
-                document.getElementById('upload-media-tab').classList.remove('active');
-                document.getElementById('import-repo-media-tab').classList.add('active');
-                document.getElementById('upload-media').classList.remove('active');
-                document.getElementById('upload-media').classList.remove('show');
-                document.getElementById('import-repo-media').classList.add('show');
-                document.getElementById('import-repo-media').classList.add('active');
-                document.getElementById('upload-media-tab').setAttribute('aria-selected', 'false');
-                document.getElementById('import-repo-media-tab').setAttribute('aria-selected', 'true');
-                document.querySelector('#repo-uuid').value = record.media;
-                await helperModule.get_repo_item_data();
-            }
-
-            if (record.is_kaltura_item === 1) {
-
-                document.getElementById('upload-media-tab').classList.remove('active');
-                document.getElementById('import-audio-video-tab').classList.add('active');
-                document.getElementById('upload-media').classList.remove('active');
-                document.getElementById('upload-media').classList.remove('show');
-                document.getElementById('import-audio-video').classList.add('show');
-                document.getElementById('import-audio-video').classList.add('active');
-                document.getElementById('upload-media-tab').setAttribute('aria-selected', 'false');
-                document.getElementById('import-audio-video-tab').setAttribute('aria-selected', 'true');
-                document.querySelector('#audio-video').value = record.media;
-
-                let item_types = document.getElementsByName('item_type');
-
-                for (let j = 0; j < item_types.length; j++) {
-                    if (item_types[j].value === record.item_type) {
-                        document.querySelector('#' + item_types[j].id).checked = true;
-                    }
-                }
-
-                document.querySelector('#item-type').value = 'kaltura';
-            }
-
-            document.querySelector('#item-mime-type').value = helperModule.unescape(record.mime_type);
-            document.querySelector('#item-media-thumbnail-image-display').innerHTML = thumbnail_fragment;
-            document.querySelector('#item-media').value = record.media;
-            document.querySelector('#item-media-prev').value = record.media;
-
-        }
-
-        if (record.thumbnail.length > 0) {
-
-            thumbnail_url = EXHIBITS_ENDPOINTS.exhibits.exhibit_media.get.endpoint.replace(':exhibit_id', record.is_member_of_exhibit).replace(':media', record.thumbnail);
-            thumbnail_fragment = `<p><img src="${thumbnail_url}" height="200" ></p>`;
-            document.querySelector('#item-thumbnail-image-display').innerHTML = thumbnail_fragment;
-            document.querySelector('#item-thumbnail-filename-display').innerHTML = `<span style="font-size: 11px">${record.thumbnail}</span>`;
-            document.querySelector('#item-thumbnail').value = record.thumbnail;
-            document.querySelector('#item-thumbnail-image-prev').value = record.thumbnail;
-            document.querySelector('#item-thumbnail-trash').style.display = 'inline';
-        }
-
-        let layouts = document.getElementsByName('layout');
-
-        for (let j = 0; j < layouts.length; j++) {
-            if (layouts[j].value === record.layout) {
-                document.querySelector('#' + layouts[j].id).checked = true;
-            }
-        }
-
-        let media_width = document.getElementsByName('media_width');
-
-        for (let j = 0; j < media_width.length; j++) {
-            if (parseInt(media_width[j].value) === parseInt(record.media_width)) {
-                document.querySelector('#' + media_width[j].id).checked = true;
-            }
-        }
-
-        let styles = JSON.parse(record.styles);
-
-        if (Object.keys(styles).length !== 0) {
-
-            if (styles.backgroundColor !== undefined) {
-                document.querySelector('#item-background-color').value = styles.backgroundColor;
-            } else {
-                document.querySelector('#item-background-color').value = '';
-            }
-
-            if (styles.color !== undefined) {
-                document.querySelector('#item-font-color').value = styles.color;
-            } else {
-                document.querySelector('#item-font-color').value = '';
-            }
-
-            let font_values = document.querySelector('#item-font');
-
-            for (let i=0;i<font_values.length;i++) {
-                if (font_values[i].value === styles.fontFamily) {
-                    document.querySelector('#item-font').value = styles.fontFamily;
-                }
-            }
-
-            if (styles.fontSize !== undefined) {
-                document.querySelector('#item-font-size').value = styles.fontSize;
-            } else {
-                document.querySelector('#item-font-size').value = '';
-            }
-        }
-
-        return false;
-    }
-
-    /**
-     * Update timeline item
-     */
-    obj.update_timeline_item_record = async function () {
+    obj.update_timeline_record = async function () {
 
         try {
 
             window.scrollTo(0, 0);
             const exhibit_id = helperModule.get_parameter_by_name('exhibit_id');
-            const grid_id = helperModule.get_parameter_by_name('grid_id');
-            const item_id = helperModule.get_parameter_by_name('item_id');
+            const timeline_id = helperModule.get_parameter_by_name('item_id');
 
-            if (exhibit_id === undefined || grid_id === undefined || item_id === undefined) {
-                document.querySelector('#message').innerHTML = `<div class="alert alert-warning" role="alert"><i class="fa fa-info"></i> Unable to update grid item record.</div>`;
+            if (exhibit_id === undefined || grid_id === undefined) {
+                document.querySelector('#message').innerHTML = `<div class="alert alert-warning" role="alert"><i class="fa fa-info"></i> Unable to update timeline record.</div>`;
                 return false;
             }
 
-            document.querySelector('#message').innerHTML = `<div class="alert alert-info" role="alert"><i class="fa fa-info"></i> Updating grid item record...</div>`;
+            document.querySelector('#message').innerHTML = `<div class="alert alert-info" role="alert"><i class="fa fa-info"></i> Updating timeline record...</div>`;
 
-            let data = itemsCommonVerticalTimelineItemFormModule.get_common_timeline_item_form_fields(rich_text_data);
-            let etmp = EXHIBITS_ENDPOINTS.exhibits.grid_item_records.put.endpoint.replace(':exhibit_id', exhibit_id);
-            let itmp = etmp.replace(':grid_id', grid_id);
-            let endpoint = itmp.replace(':item_id', item_id);
-            let token = authModule.get_user_token();
-            let response = await httpModule.req({
+            const data = itemsCommonVerticalTimelineFormModule.get_common_timeline_form_fields(rich_text_data);
+            let tmp = EXHIBITS_ENDPOINTS.exhibits.timeline_records.put.endpoint.replace(':exhibit_id', exhibit_id);
+            let endpoint = tmp.replace(':timeline_id', timeline_id);
+            const token = authModule.get_user_token();
+            const response = await httpModule.req({
                 method: 'PUT',
                 url: endpoint,
                 data: data,
@@ -273,12 +103,13 @@ const itemsEditVerticalTimelineItemFormModule = (function () {
 
             if (response !== undefined && response.status === 201) {
 
-                let message = 'Timeline item record updated';
-                document.querySelector('#message').innerHTML = `<div class="alert alert-success" role="alert"><i class="fa fa-info"></i> ${message}</div>`;
-
+                window.scrollTo(0, 0);
+                document.querySelector('#message').innerHTML = `<div class="alert alert-success" role="alert"><i class="fa fa-info"></i> Timeline record created</div>`;
+                const timeline_id = response.data.data;
+                console.log(timeline_id);
                 setTimeout(() => {
-                    location.reload();
-                }, 2000);
+                    location.replace(`${APP_PATH}/items?exhibit_id=${exhibit_id}`);
+                }, 1000);
             }
 
         } catch (error) {
@@ -286,142 +117,54 @@ const itemsEditVerticalTimelineItemFormModule = (function () {
         }
     };
 
-    /**
-     * Deletes item media
-     */
-    function delete_media () {
+    async function display_edit_record () {
 
-        try {
+        let record = await get_timeline_record();
 
-            (async function() {
+        rich_text_data['timeline-title-input'] = helperModule.set_rich_text_editor('timeline-title-input');
+        rich_text_data['timeline-title-input'].setHTMLCode(helperModule.unescape(record.title));
 
-                const exhibit_id = helperModule.get_parameter_by_name('exhibit_id');
-                const grid_id = helperModule.get_parameter_by_name('grid_id');
-                const item_id = helperModule.get_parameter_by_name('item_id');
-                let media = document.querySelector('#item-media').value;
-                let etmp = EXHIBITS_ENDPOINTS.exhibits.grid_item_media.delete.endpoint.replace(':exhibit_id', exhibit_id);
-                let gtmp = etmp.replace(':grid_id', grid_id);
-                let itmp = gtmp.replace(':item_id', item_id);
-                let endpoint = itmp.replace(':media', media);
-                let token = authModule.get_user_token();
-                let response = await httpModule.req({
-                    method: 'DELETE',
-                    url: endpoint,
-                    headers: {
-                        'Content-Type': 'application/json',
-                        'x-access-token': token
-                    }
-                });
+        let styles = JSON.parse(record.styles);
 
-                if (response !== undefined && response.status === 204) {
+        if (Object.keys(styles).length !== 0) {
 
-                    document.querySelector('#item-media').value = '';
-                    document.querySelector('#item-media-filename-display').innerHTML = '';
-                    document.querySelector('#item-media-trash').style.display = 'none';
-                    document.querySelector('#item-media-thumbnail-image-display').innerHTML = '';
-                    document.querySelector('#message').innerHTML = `<div class="alert alert-success" role="alert"><i class="fa fa-info"></i> Media deleted</div>`;
+            if (styles.backgroundColor !== undefined) {
+                document.querySelector('#timeline-background-color').value = styles.backgroundColor;
+            } else {
+                document.querySelector('#timeline-background-color').value = '';
+            }
 
-                    setTimeout(() => {
-                        document.querySelector('#message').innerHTML = '';
-                        window.location.reload();
-                    }, 3000);
+            if (styles.color !== undefined) {
+                document.querySelector('#timeline-font-color').value = styles.color;
+            } else {
+                document.querySelector('#timeline-font-color').value = '';
+            }
+
+            let font_values = document.querySelector('#timeline-font');
+
+            for (let i=0;i<font_values.length;i++) {
+                if (font_values[i].value === styles.fontFamily) {
+                    document.querySelector('#timeline-font').value = styles.fontFamily;
                 }
+            }
 
-            })();
-
-        } catch (error) {
-            document.querySelector('#message').innerHTML = `<div class="alert alert-danger" role="alert"><i class="fa fa-exclamation"></i> ${error.message}</div>`;
-        }
-    }
-
-    /**
-     * Deletes thumbnail image
-     */
-    function delete_thumbnail_image() {
-
-        try {
-
-            (async function() {
-
-                const exhibit_id = helperModule.get_parameter_by_name('exhibit_id');
-                const grid_id = helperModule.get_parameter_by_name('grid_id');
-                const item_id = helperModule.get_parameter_by_name('item_id');
-                let thumbnail = document.querySelector('#item-thumbnail').value;
-                let etmp = EXHIBITS_ENDPOINTS.exhibits.grid_item_media.delete.endpoint.replace(':exhibit_id', exhibit_id);
-                let gtmp = etmp.replace(':grid_id', grid_id);
-                let itmp = gtmp.replace(':item_id', item_id);
-                let endpoint = itmp.replace(':media', thumbnail);
-                let token = authModule.get_user_token();
-                let response = await httpModule.req({
-                    method: 'DELETE',
-                    url: endpoint,
-                    headers: {
-                        'Content-Type': 'application/json',
-                        'x-access-token': token
-                    }
-                });
-
-                if (response !== undefined && response.status === 204) {
-
-                    document.querySelector('#item-thumbnail').value = '';
-                    document.querySelector('#item-thumbnail-filename-display').innerHTML = '';
-                    document.querySelector('#item-thumbnail-trash').style.display = 'none';
-                    document.querySelector('#item-thumbnail-image-display').innerHTML = '';
-                    document.querySelector('#message').innerHTML = `<div class="alert alert-success" role="alert"><i class="fa fa-info"></i> Thumbnail deleted</div>`;
-
-                    setTimeout(() => {
-                        document.querySelector('#message').innerHTML = '';
-                        window.location.reload();
-                    }, 3000);
-                }
-
-            })();
-
-        } catch (error) {
-            document.querySelector('#message').innerHTML = `<div class="alert alert-danger" role="alert"><i class="fa fa-exclamation"></i> ${error.message}</div>`;
+            if (styles.fontSize !== undefined) {
+                document.querySelector('#timeline-font-size').value = styles.fontSize.replace('px', '');
+            } else {
+                document.querySelector('#timeline-font-size').value = '';
+            }
         }
 
         return false;
     }
 
-    /**
-     * init function for grid items edit form
-     */
     obj.init = async function () {
-
-        try {
-
-            const exhibit_id = helperModule.get_parameter_by_name('exhibit_id');
-            exhibitsModule.set_exhibit_title(exhibit_id);
-            navModule.back_to_grid_items();
-            helperModule.set_rich_text_editor_config();
-            set_rich_text_editors();
-            await display_edit_record();
-            document.querySelector('#save-item-btn').addEventListener('click', itemsEditGridItemFormModule.update_grid_item_record);
-
-            setTimeout(() => {
-
-                if (document.querySelector('#item-media').value.length === 0) {
-                    document.querySelector('#item-media-trash').removeEventListener('click', delete_media);
-                    document.querySelector('#item-media-trash').addEventListener('click', itemsCommonGridItemFormModule.delete_media);
-                } else if (document.querySelector('#item-media').value !== 0) {
-                    document.querySelector('#item-media-trash').removeEventListener('click', itemsCommonGridItemFormModule.delete_media);
-                    document.querySelector('#item-media-trash').addEventListener('click', delete_media);
-                }
-
-                if (document.querySelector('#item-thumbnail').value.length === 0) {
-                    document.querySelector('#item-thumbnail-trash').removeEventListener('click', delete_thumbnail_image);
-                    document.querySelector('#item-thumbnail-trash').addEventListener('click', itemsCommonGridItemFormModule.delete_thumbnail_image);
-                } else if (document.querySelector('#item-thumbnail').value.length !== 0) {
-                    document.querySelector('#item-thumbnail-trash').removeEventListener('click', itemsCommonGridItemFormModule.delete_thumbnail_image);
-                    document.querySelector('#item-thumbnail-trash').addEventListener('click', delete_thumbnail_image);
-                }
-
-            }, 1000);
-
-        } catch (error) {
-            document.querySelector('#message').innerHTML = `<div class="alert alert-danger" role="alert"><i class="fa fa-exclamation"></i> ${error.message}</div>`;
-        }
+        const exhibit_id = helperModule.get_parameter_by_name('exhibit_id');
+        exhibitsModule.set_exhibit_title(exhibit_id);
+        helperModule.set_rich_text_editor_config();
+        set_rich_text_editors();
+        document.querySelector('#save-timeline-btn').addEventListener('click', itemsEditVerticalTimelineFormModule.update_timeline_record);
+        await display_edit_record();
     };
 
     return obj;

@@ -29,6 +29,7 @@ const EXHIBITS_UPDATE_ITEM_SCHEMA = require('../exhibits/schemas/exhibit_item_up
 const EXHIBIT_ITEM_RECORD_TASKS = require('../exhibits/tasks/exhibit_item_record_tasks');
 const EXHIBIT_HEADING_RECORD_TASKS = require('./tasks/exhibit_heading_record_tasks');
 const EXHIBIT_GRID_RECORD_TASKS = require('./tasks/exhibit_grid_record_tasks');
+const EXHIBIT_TIMELINE_RECORD_TASKS = require('./tasks/exhibit_timeline_record_tasks');
 const HELPER = require('../libs/helper');
 const VALIDATOR = require('../libs/validate');
 const EXHIBIT_RECORD_TASKS = require('./tasks/exhibit_record_tasks');
@@ -46,15 +47,21 @@ exports.get_item_records = async function (is_member_of_exhibit) {
         const ITEM_TASK = new EXHIBIT_ITEM_RECORD_TASKS(DB, TABLES);
         const HEADING_TASK = new EXHIBIT_HEADING_RECORD_TASKS(DB, TABLES);
         const GRID_TASK = new EXHIBIT_GRID_RECORD_TASKS(DB, TABLES);
+        const TIMELINE_TASK = new EXHIBIT_TIMELINE_RECORD_TASKS(DB, TABLES);
         let items = await ITEM_TASK.get_item_records(is_member_of_exhibit);
         let headings = await HEADING_TASK.get_heading_records(is_member_of_exhibit);
         let grids = await GRID_TASK.get_grid_records(is_member_of_exhibit);
+        let timelines = await TIMELINE_TASK.get_timeline_records(is_member_of_exhibit);
 
         for (let i = 0; i < grids.length; i++) {
             grids[i].grid_items = await GRID_TASK.get_grid_item_records(is_member_of_exhibit, grids[i].uuid);
         }
 
-        let records = [...items, ...headings, ...grids];
+        for (let i = 0; i < timelines.length; i++) {
+            timelines[i].timeline_items = await TIMELINE_TASK.get_timeline_item_records(is_member_of_exhibit, timelines[i].uuid);
+        }
+
+        let records = [...items, ...headings, ...grids, ...timelines];
 
         records.sort((a, b) => {
             return a.order - b.order;

@@ -156,6 +156,8 @@ const Exhibit_item_record_tasks = class {
                 table = this.TABLE.grid_records;
             } else if (type === 'heading') {
                 table = this.TABLE.heading_records;
+            } else if (type === 'vertical_timeline') {
+                table = this.TABLE.timeline_records;
             } else {
                 LOGGER.module().error('ERROR: [/exhibits/exhibit_item_record_tasks (delete_item_record)] unable to determine item type');
                 return false;
