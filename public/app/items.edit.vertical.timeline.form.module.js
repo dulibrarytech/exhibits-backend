@@ -80,7 +80,7 @@ const itemsEditVerticalTimelineFormModule = (function () {
             const exhibit_id = helperModule.get_parameter_by_name('exhibit_id');
             const timeline_id = helperModule.get_parameter_by_name('item_id');
 
-            if (exhibit_id === undefined || grid_id === undefined) {
+            if (exhibit_id === undefined || timeline_id === undefined) {
                 document.querySelector('#message').innerHTML = `<div class="alert alert-warning" role="alert"><i class="fa fa-info"></i> Unable to update timeline record.</div>`;
                 return false;
             }

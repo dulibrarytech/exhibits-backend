@@ -54,10 +54,11 @@ exports.update_timeline_record = async function (req, res) {
             return false;
         }
 
-        const result = await TIMELINES_MODEL.update_grid_record(is_member_of_exhibit, timeline_id, data);
+        const result = await TIMELINES_MODEL.update_timeline_record(is_member_of_exhibit, timeline_id, data);
         res.status(result.status).send(result);
 
     } catch (error) {
+        console.log(error);
         res.status(500).send({message: `Unable to update timeline record. ${error.message}`});
     }
 };

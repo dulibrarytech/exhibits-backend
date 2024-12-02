@@ -98,7 +98,6 @@ exports.update_timeline_record = async function (is_member_of_exhibit, timeline_
         data.is_member_of_exhibit = is_member_of_exhibit;
         data.uuid = timeline_id;
         data.styles = JSON.stringify(data.styles);
-        data.columns = parseInt(data.columns);
 
         let is_valid = VALIDATE_TASK.validate(data);
 
