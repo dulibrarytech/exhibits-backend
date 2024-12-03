@@ -203,7 +203,7 @@ const itemsListDisplayModule = (function () {
             if (item.timeline_items.length === 0) {
                 timeline_items_fragment += '<p><strong>No items</strong></p>';
             } else {
-                view_timeline_items = `<a href="${APP_PATH}/items/timelines/items?exhibit_id=${item.is_member_of_exhibit}&timeline_id=${item.uuid}" title="View Timeline Items"><i class="fa fa-search pr-1"></i></a>`;
+                view_timeline_items = `<a href="${APP_PATH}/items/timeline/items?exhibit_id=${item.is_member_of_exhibit}&timeline_id=${item.uuid}" title="View Timeline Items"><i class="fa fa-search pr-1"></i></a>`;
                 timeline_item_count += `Contains ${item.timeline_items.length} items`;
             }
 

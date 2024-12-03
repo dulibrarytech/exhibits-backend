@@ -65,6 +65,9 @@ module.exports = function (app) {
     app.route(APP_PATH + '/items/grid/items')
     .get(CONTROLLER.get_dashboard_item_grid_items);
 
+    app.route(APP_PATH + '/items/grid/item/delete')
+    .get(CONTROLLER.get_dashboard_grid_items_delete_form);
+
     app.route(APP_PATH + '/items/vertical-timeline')
     .get(CONTROLLER.get_dashboard_vertical_timeline_add_form);
 
@@ -74,11 +77,11 @@ module.exports = function (app) {
     app.route(APP_PATH + '/items/vertical-timeline/item')
     .get(CONTROLLER.get_dashboard_vertical_timeline_item_add_form);
 
+    app.route(APP_PATH + '/items/timeline/items')
+    .get(CONTROLLER.get_dashboard_item_timeline_items);
+
     app.route(APP_PATH + '/items/delete')
     .get(CONTROLLER.get_dashboard_items_delete_form);
-
-    app.route(APP_PATH + '/items/grid/item/delete')
-    .get(CONTROLLER.get_dashboard_grid_items_delete_form);
 
     app.route(APP_PATH + '/trash')
     .get(CONTROLLER.get_dashboard_trash);
