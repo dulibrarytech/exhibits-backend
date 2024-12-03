@@ -78,7 +78,7 @@ const itemsAddVerticalTimelineItemFormModule = (function () {
                 document.querySelector('#message').innerHTML = `<div class="alert alert-success" role="alert"><i class="fa fa-info"></i> ${message}</div>`;
 
                 setTimeout(() => {
-                    window.location.replace(APP_PATH + '/items/timelines/item?exhibit_id=' + exhibit_id + '&timeline_id=' + timeline_id);
+                    window.location.replace(APP_PATH + '/items/timeline/items?exhibit_id=' + exhibit_id + '&timeline_id=' + timeline_id);
                 }, 1000);
             }
 

@@ -104,27 +104,27 @@ exports.create_timeline_item_record = async function (req, res) {
     }
 };
 
-/*
-
-exports.get_grid_item_records = async function (req, res) {
+exports.get_timeline_item_records = async function (req, res) {
 
     try {
 
         const is_member_of_exhibit = req.params.exhibit_id;
-        const is_member_of_grid = req.params.grid_id;
+        const is_member_of_timeline = req.params.timeline_id;
 
-        if (is_member_of_exhibit === undefined || is_member_of_grid === undefined) {
+        if (is_member_of_exhibit === undefined || is_member_of_timeline === undefined) {
             res.status(400).send('Bad request.');
             return false;
         }
 
-        const result = await GRIDS_MODEL.get_grid_item_records(is_member_of_exhibit, is_member_of_grid);
+        const result = await TIMELINES_MODEL.get_timeline_item_records(is_member_of_exhibit, is_member_of_timeline);
         res.status(result.status).send(result);
 
     } catch (error) {
-        res.status(500).send({message: `Unable to get grid item records. ${error.message}`});
+        res.status(500).send({message: `Unable to get timeline item records. ${error.message}`});
     }
 };
+
+/*
 
 exports.get_grid_item_record = async function (req, res) {
 

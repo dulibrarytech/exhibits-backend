@@ -123,7 +123,7 @@ const Exhibit_timeline_record_tasks = class {
     }
 
     /**
-     * Gets timeline items - used for full exhibit indexing
+     * Gets timeline items
      * @param is_member_of_exhibit
      * @param is_member_of_timeline
      */

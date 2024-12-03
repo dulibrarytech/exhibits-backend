@@ -28,7 +28,7 @@ const itemsTimelineModule = (function () {
 
         try {
 
-            let tmp = EXHIBITS_ENDPOINTS.exhibits.grid_item_records.get.endpoint.replace(':exhibit_id', exhibit_id);
+            let tmp = EXHIBITS_ENDPOINTS.exhibits.timeline_item_records.get.endpoint.replace(':exhibit_id', exhibit_id);
             const endpoint = tmp.replace(':timeline_id', timeline_id);
             const token = authModule.get_user_token();
             const response = await httpModule.req({
@@ -148,8 +148,8 @@ const itemsTimelineModule = (function () {
             paging: false
         });
 
-        bind_publish_grid_item_events();
-        bind_suppress_grid_item_events();
+        bind_publish_timeline_item_events();
+        bind_suppress_timeline_item_events();
         helperModule.reorder_timeline_items(event, timeline_id, 'timeline_items');
     };
 
@@ -319,7 +319,7 @@ const itemsTimelineModule = (function () {
 
             navModule.init();
             navModule.back_to_items();
-            navModule.set_grid_item_nav_menu_links();
+            navModule.set_timeline_item_nav_menu_links();
             navModule.set_logout_link();
             helperModule.show_form();
 
