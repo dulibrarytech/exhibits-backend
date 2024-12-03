@@ -194,8 +194,8 @@ exports.get_dashboard_vertical_timeline_edit_form = function (req, res) {
     });
 };
 
-exports.get_dashboard_item_vertical_timeline = function (req, res) {
-    res.render('dashboard-item-vertical-timeline-add-form', {
+exports.get_dashboard_vertical_timeline_item_add_form = function (req, res) {
+    res.render('dashboard-vertical-timeline-item-add-form', {
         host: CONFIG.host,
         appname: CONFIG.app_name,
         appversion: CONFIG.app_version,

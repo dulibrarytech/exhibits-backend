@@ -151,7 +151,7 @@ const Helper = class {
             let item_order;
             let grid_order;
             let timeline_order;
-            let order = [];
+            // let order = [];
 
             heading_order = await db(tables.heading_records).select('order').where('is_member_of_exhibit', uuid);
             item_order = await db(tables.item_records).select('order').where('is_member_of_exhibit', uuid);
@@ -160,6 +160,9 @@ const Helper = class {
 
             const merged = [...heading_order, ...item_order, ...grid_order, ...timeline_order];
 
+            return this.order_items(merged);
+
+            /*
             if (merged.length === 0) {
                 return 1;
             }
@@ -174,6 +177,8 @@ const Helper = class {
 
             const order_number = ordered.pop();
             return order_number + 1;
+
+             */
 
         } catch (error) {
             LOGGER.module().error('ERROR: [/libs/helper (order_exhibit_items)] unable to order items ' + error.message);
@@ -192,10 +197,63 @@ const Helper = class {
         try {
 
             let item_order;
-            let order = [];
+            // let order = [];
 
             item_order = await db(tables.grid_item_records).select('order').where('is_member_of_grid', uuid);
+            return this.order_items(item_order);
 
+            /*
+            if (item_order.length === 0) {
+                return 1;
+            }
+
+            for (let i = 0; i < item_order.length; i++) {
+                order.push(item_order[i].order);
+            }
+
+            const ordered = order.sort((a, b) => {
+                return a - b;
+            });
+
+            const order_number = ordered.pop();
+
+            return order_number + 1;
+
+             */
+
+        } catch (error) {
+            LOGGER.module().error('ERROR: [/libs/helper (order_grid_items)] unable to order items ' + error.message);
+            return false;
+        }
+    }
+
+    /**
+     * Orders timeline items
+     * @param uuid
+     * @param db
+     * @param tables
+     */
+    async order_timeline_items(uuid, db, tables) {
+
+        try {
+
+            const item_order = await db(tables.timeline_item_records).select('order').where('is_member_of_timeline', uuid);
+            return this.order_items(item_order);
+
+        } catch (error) {
+            LOGGER.module().error('ERROR: [/libs/helper (order_timeline_items)] unable to order items ' + error.message);
+            return false;
+        }
+    }
+
+    /**
+     * order items
+     * @param item_order
+     */
+    order_items(item_order) {
+
+        try {
+            console.log(item_order);
             if (item_order.length === 0) {
                 return 1;
             }
@@ -213,7 +271,7 @@ const Helper = class {
             return order_number + 1;
 
         } catch (error) {
-            LOGGER.module().error('ERROR: [/libs/helper (order_grid_items)] unable to order items ' + error.message);
+            LOGGER.module().error('ERROR: [/libs/helper (order)] unable to order items ' + error.message);
             return false;
         }
     }
@@ -237,7 +295,7 @@ const Helper = class {
         }
     }
 
-    /** TODO: refactor - it's not taking updates into account...
+    /**
      * Renames and moves uploaded image
      * @param exhibit_id
      * @param item_id

@@ -16,14 +16,14 @@
 
  */
 
-const itemsCommonGridItemFormModule = (function () {
+const itemsCommonVerticalTimelineItemFormModule = (function () {
 
     'use strict';
 
     const EXHIBITS_ENDPOINTS = endpointsModule.get_exhibits_endpoints();
     let obj = {};
 
-    obj.get_common_grid_item_form_fields = function (rich_text_data) {
+    obj.get_common_timeline_item_form_fields = function (rich_text_data) {
 
         try {
 
@@ -33,7 +33,9 @@ const itemsCommonGridItemFormModule = (function () {
 
             // item metadata
             item.title = rich_text_data['item-title-input'].getHTMLCode();
-            // item.caption = rich_text_data['item-caption-input'].getHTMLCode();
+
+            let date_input = document.querySelector('input[type="date"]');
+            item.date = date_input.value;
             item.caption = document.querySelector('#item-caption-input').value;
             item.description = rich_text_data['item-description-input'].getHTMLCode();
             item.text = rich_text_data['item-text-input'].getHTMLCode();
@@ -45,6 +47,11 @@ const itemsCommonGridItemFormModule = (function () {
 
             if (item.text.length === 0 || item.text === '<div></div>') {
                 item.text = '';
+            }
+
+            if (item.date.length === 0) {
+                document.querySelector('#message').innerHTML = `<div class="alert alert-danger" role="alert"><i class="fa fa-exclamation"></i> Please enter a timeline date</div>`;
+                return false;
             }
 
             // item media
@@ -237,8 +244,8 @@ const itemsCommonGridItemFormModule = (function () {
             });
 
             setTimeout(() => {
-                document.querySelector('#item-media-trash').addEventListener('click', itemsCommonGridItemFormModule.delete_media);
-                document.querySelector('#item-thumbnail-trash').addEventListener('click', itemsCommonGridItemFormModule.delete_thumbnail_image);
+                document.querySelector('#item-media-trash').addEventListener('click', itemsCommonVerticalTimelineItemFormModule.delete_media);
+                document.querySelector('#item-thumbnail-trash').addEventListener('click', itemsCommonVerticalTimelineItemFormModule.delete_thumbnail_image);
             }, 1000);
 
             document.querySelector('#repo-uuid-btn').addEventListener('click', await helperModule.get_repo_item_data);

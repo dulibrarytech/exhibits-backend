@@ -33,10 +33,11 @@ module.exports = function (app) {
     app.route(ENDPOINTS().exhibits.timeline_records.put.endpoint)
     .put(TOKEN.verify, CONTROLLER.update_timeline_record);
 
-    /*
-    app.route(ENDPOINTS().exhibits.grid_item_records.post.endpoint)
-    .post(TOKEN.verify, CONTROLLER.create_grid_item_record);
 
+    app.route(ENDPOINTS().exhibits.timeline_item_records.post.endpoint)
+    .post(TOKEN.verify, CONTROLLER.create_timeline_item_record);
+
+    /*
     app.route(ENDPOINTS().exhibits.grid_item_records.get.endpoint)
     .get(TOKEN.verify, CONTROLLER.get_grid_item_records);
 

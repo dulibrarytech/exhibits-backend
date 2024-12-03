@@ -190,8 +190,10 @@ const itemsListDisplayModule = (function () {
         try {
 
             const type = item.type;
+            item.type = '';
+            item.type = 'timeline';
             const title = helperModule.unescape(item.title);
-            const item_obj = check_published_status(item, 'vertical-timeline');
+            const item_obj = check_published_status(item, 'timeline');
             let add_timeline_items = `<a href="${APP_PATH}/items/vertical-timeline/item?exhibit_id=${item.is_member_of_exhibit}&timeline_id=${item.uuid}" title="Add Timeline Item"><i class="fa fa-plus pr-1"></i></a>&nbsp;`;
             let item_data = '';
             let view_timeline_items = '';

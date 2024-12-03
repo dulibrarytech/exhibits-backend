@@ -207,7 +207,7 @@ exports.create_timeline_item_record = async function (is_member_of_exhibit, time
         delete data.media_prev;
         delete data.thumbnail_prev;
 
-        data.order = await HELPER_TASK.order_grid_items(data.is_member_of_grid, DB, TABLES);
+        data.order = await HELPER_TASK.order_timeline_items(data.is_member_of_timeline, DB, TABLES);
 
         const CREATE_RECORD_TASK = new EXHIBIT_TIMELINE_RECORD_TASKS(DB, TABLES);
         let result = await CREATE_RECORD_TASK.create_timeline_item_record(data);

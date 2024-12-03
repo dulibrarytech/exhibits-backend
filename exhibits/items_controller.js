@@ -23,6 +23,7 @@ const EXHIBITS_MODEL = require('../exhibits/exhibits_model');
 const ITEMS_MODEL = require('../exhibits/items_model');
 const HEADINGS_MODEL = require('../exhibits/headings_model');
 const GRIDS_MODEL = require('../exhibits/grid_model');
+const TIMELINES_MODEL = require('../exhibits/timelines_model');
 const FS = require('fs');
 
 exports.create_item_record = async function (req, res) {
@@ -314,6 +315,15 @@ exports.reorder_items = async function (req, res) {
 
             if (updated_order[i].type === 'heading') {
                 let is_reordered = await HEADINGS_MODEL.reorder_headings(id, updated_order[i]);
+
+                if (is_reordered === false) {
+                    ordered_errors.push('-1');
+                }
+            }
+
+            if (updated_order[i].type === 'timeline') {
+
+                let is_reordered = await TIMELINES_MODEL.reorder_timelines(id, updated_order[i]);
 
                 if (is_reordered === false) {
                     ordered_errors.push('-1');

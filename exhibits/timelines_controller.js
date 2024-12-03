@@ -83,27 +83,28 @@ exports.get_timeline_record = async function (req, res) {
     }
 };
 
-/*
-exports.create_grid_item_record = async function (req, res) {
+exports.create_timeline_item_record = async function (req, res) {
 
     try {
 
         const is_member_of_exhibit = req.params.exhibit_id;
-        const grid_id = req.params.grid_id;
+        const timeline_id = req.params.timeline_id;
         const data = req.body;
 
-        if (is_member_of_exhibit === undefined || grid_id === undefined || data === undefined) {
+        if (is_member_of_exhibit === undefined || timeline_id === undefined || data === undefined) {
             res.status(400).send('Bad request.');
             return false;
         }
 
-        const result = await GRIDS_MODEL.create_grid_item_record(is_member_of_exhibit, grid_id, data);
+        const result = await TIMELINES_MODEL.create_timeline_item_record(is_member_of_exhibit, timeline_id, data);
         res.status(result.status).send(result);
 
     } catch (error) {
-        res.status(500).send({message: `Unable to create grid item record. ${error.message}`});
+        res.status(500).send({message: `Unable to create timeline item record. ${error.message}`});
     }
 };
+
+/*
 
 exports.get_grid_item_records = async function (req, res) {
 

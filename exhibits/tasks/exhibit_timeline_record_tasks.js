@@ -483,7 +483,7 @@ const Exhibit_timeline_record_tasks = class {
 
         try {
 
-            await this.DB(this.TABLE.timelinerecords)
+            await this.DB(this.TABLE.timeline_records)
             .where({
                 is_member_of_exhibit: is_member_of_exhibit,
                 uuid: timelines.uuid
@@ -494,7 +494,6 @@ const Exhibit_timeline_record_tasks = class {
 
             LOGGER.module().info('INFO: [/exhibits/exhibit_timeline_record_tasks (reorder_timelines)] Timeline reordered.');
             return true;
-
 
         } catch (error) {
             LOGGER.module().error('ERROR: [/exhibits/exhibit_timeline_record_tasks (reorder_timelines)] unable to reorder timeline ' + error.message);
