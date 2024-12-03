@@ -253,7 +253,9 @@ const Helper = class {
     order_items(item_order) {
 
         try {
-            console.log(item_order);
+
+            let order = [];
+
             if (item_order.length === 0) {
                 return 1;
             }
@@ -271,7 +273,7 @@ const Helper = class {
             return order_number + 1;
 
         } catch (error) {
-            LOGGER.module().error('ERROR: [/libs/helper (order)] unable to order items ' + error.message);
+            LOGGER.module().error('ERROR: [/libs/helper (order_items)] unable to order items ' + error.message);
             return false;
         }
     }
