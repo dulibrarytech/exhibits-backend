@@ -234,7 +234,7 @@ exports.delete_exhibit_record = async function (uuid) {
 
             return {
                 status: 200,
-                message: 'Cannot delete exhibit because it contains items'
+                message: 'Cannot delete an exhibit that contains items.'
             };
         }
 
