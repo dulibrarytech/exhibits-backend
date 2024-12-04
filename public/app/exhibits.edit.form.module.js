@@ -163,7 +163,9 @@ const exhibitsEditFormModule = (function () {
                     }
                 }
 
-                document.querySelector('#nav-font-size').value = styles.exhibit.navigation.fontSize.replace('px', '');
+                if (styles.exhibit.navigation.fontSize !== undefined) {
+                    document.querySelector('#nav-font-size').value = styles.exhibit.navigation.fontSize.replace('px', '');
+                }
             }
 
             if (styles.exhibit.template !== undefined) {
@@ -180,7 +182,9 @@ const exhibitsEditFormModule = (function () {
                     }
                 }
 
-                document.querySelector('#template-font-size').value = styles.exhibit.template.fontSize.replace('px', '');
+                if (styles.exhibit.template.fontSize !== undefined) {
+                    document.querySelector('#template-font-size').value = styles.exhibit.template.fontSize.replace('px', '');
+                }
             }
 
             return false;
