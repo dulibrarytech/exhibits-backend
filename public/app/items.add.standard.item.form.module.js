@@ -74,7 +74,7 @@ const itemsAddStandardItemFormModule = (function () {
 
                 setTimeout(() => {
                     location.replace(`${APP_PATH}/items?exhibit_id=${uuid}`);
-                }, 1000);
+                }, 900);
             }
 
         } catch (error) {

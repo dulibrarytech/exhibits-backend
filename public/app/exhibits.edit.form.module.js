@@ -236,7 +236,7 @@ const exhibitsEditFormModule = (function () {
 
                 setTimeout(() => {
                     window.location.replace(APP_PATH + '/exhibits/exhibit/edit?exhibit_id=' + uuid);
-                }, 1000);
+                }, 900);
             }
 
         } catch (error) {
@@ -275,7 +275,7 @@ const exhibitsEditFormModule = (function () {
                     setTimeout(() => {
                         document.querySelector('#message').innerHTML = '';
                         window.location.reload();
-                    }, 1000);
+                    }, 900);
                 }
 
             })();
@@ -318,7 +318,7 @@ const exhibitsEditFormModule = (function () {
                     setTimeout(() => {
                         document.querySelector('#message').innerHTML = '';
                         window.location.reload();
-                    }, 1000);
+                    }, 900);
                 }
 
             })();

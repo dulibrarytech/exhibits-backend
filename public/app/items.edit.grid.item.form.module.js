@@ -261,7 +261,7 @@ const itemsEditGridItemFormModule = (function () {
 
                 setTimeout(() => {
                     location.reload();
-                }, 2000);
+                }, 900);
             }
 
         } catch (error) {
@@ -304,7 +304,7 @@ const itemsEditGridItemFormModule = (function () {
                     setTimeout(() => {
                         document.querySelector('#message').innerHTML = '';
                         window.location.reload();
-                    }, 3000);
+                    }, 900);
                 }
 
             })();
@@ -349,7 +349,7 @@ const itemsEditGridItemFormModule = (function () {
                     setTimeout(() => {
                         document.querySelector('#message').innerHTML = '';
                         window.location.reload();
-                    }, 3000);
+                    }, 900);
                 }
 
             })();

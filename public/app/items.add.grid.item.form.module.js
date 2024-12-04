@@ -79,7 +79,7 @@ const itemsAddGridItemFormModule = (function () {
 
                 setTimeout(() => {
                     window.location.replace(APP_PATH + '/items/grid/item?exhibit_id=' + exhibit_id + '&grid_id=' + grid_id);
-                }, 1000);
+                }, 900);
             }
 
         } catch (error) {

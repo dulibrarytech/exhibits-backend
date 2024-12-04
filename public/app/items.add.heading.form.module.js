@@ -69,7 +69,7 @@ const itemsAddHeadingFormModule = (function () {
 
                 setTimeout(() => {
                     window.location.replace(APP_PATH + '/items?exhibit_id=' + exhibit_id);
-                }, 1000);
+                }, 900);
             }
 
         } catch (error) {

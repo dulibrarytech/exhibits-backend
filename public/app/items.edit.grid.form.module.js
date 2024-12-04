@@ -49,7 +49,7 @@ const itemsEditGridFormModule = (function () {
 
                 setTimeout(() => {
                     window.location.replace(APP_PATH + '/exhibits-dashboard/auth');
-                }, 3000);
+                }, 1000);
 
                 return false;
             }
@@ -106,10 +106,10 @@ const itemsEditGridFormModule = (function () {
                 window.scrollTo(0, 0);
                 document.querySelector('#message').innerHTML = `<div class="alert alert-success" role="alert"><i class="fa fa-info"></i> Grid record created</div>`;
                 const grid_id = response.data.data;
-                console.log(grid_id);
+
                 setTimeout(() => {
                     location.replace(`${APP_PATH}/items?exhibit_id=${exhibit_id}`);
-                }, 1000);
+                }, 900);
             }
 
         } catch (error) {

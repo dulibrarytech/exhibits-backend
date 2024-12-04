@@ -36,17 +36,29 @@ const itemsCommonStandardItemFormModule = (function () {
 
             // item metadata
             item.title = rich_text_data['item-title-input'].getHTMLCode();
-            item.caption = document.querySelector('#item-caption-input').value;
             item.text = rich_text_data['item-text-input'].getHTMLCode();
+            item.caption = document.querySelector('#item-caption-input').value;
 
+            if (item.title === '<div></div>') {
+                item.title = '';
+            }
+
+            if (item.text === '<div></div>') {
+                item.text = '';
+            }
+
+            /*
             if (item.title.length === 0 || item.title === '<div></div>') {
                 document.querySelector('#message').innerHTML = `<div class="alert alert-danger" role="alert"><i class="fa fa-exclamation"></i> Please enter a title</div>`;
                 return false;
             }
+             */
 
+            /*
             if (item.text.length === 0 || item.text === '<div></div>') {
                 item.text = '';
             }
+             */
 
             // item media
             item.thumbnail = document.querySelector('#item-thumbnail').value;

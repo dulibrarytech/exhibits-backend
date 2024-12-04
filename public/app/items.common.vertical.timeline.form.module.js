@@ -33,10 +33,16 @@ const itemsCommonVerticalTimelineFormModule = (function () {
             // grid metadata
             timeline.title = rich_text_data['timeline-title-input'].getHTMLCode();
 
+            if (timeline.title === '<div></div>') {
+                timeline.title = '';
+            }
+
+            /*
             if (timeline.title.length === 0 || timeline.title === '<div></div>') {
                 document.querySelector('#message').innerHTML = `<div class="alert alert-danger" role="alert"><i class="fa fa-exclamation"></i> Please enter a title</div>`;
                 return false;
             }
+             */
 
             // timeline styles
             let timeline_background_color = document.querySelector('#timeline-background-color').value;

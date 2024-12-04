@@ -148,7 +148,7 @@ const itemsEditHeadingFormModule = (function () {
 
                 setTimeout(() => {
                     window.location.replace('edit?exhibit_id=' + exhibit_id + '&item_id=' + item_id);
-                }, 1000);
+                }, 900);
             }
 
         } catch (error) {

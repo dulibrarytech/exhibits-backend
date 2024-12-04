@@ -91,7 +91,7 @@ const exhibitsAddFormModule = (function () {
 
                 setTimeout(() => {
                     window.location.replace(APP_PATH + '/items?exhibit_id=' + response.data.data);
-                }, 1000);
+                }, 900);
             }
 
         } catch (error) {

@@ -106,10 +106,10 @@ const itemsEditVerticalTimelineFormModule = (function () {
                 window.scrollTo(0, 0);
                 document.querySelector('#message').innerHTML = `<div class="alert alert-success" role="alert"><i class="fa fa-info"></i> Timeline record created</div>`;
                 const timeline_id = response.data.data;
-                console.log(timeline_id);
+
                 setTimeout(() => {
                     location.replace(`${APP_PATH}/items?exhibit_id=${exhibit_id}`);
-                }, 1000);
+                }, 900);
             }
 
         } catch (error) {

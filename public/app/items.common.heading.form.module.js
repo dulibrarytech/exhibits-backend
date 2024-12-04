@@ -38,6 +38,7 @@ const itemsCommonHeadingFormModule = (function () {
                 return false;
             }
 
+            // TODO: check for empty values
             let heading_background_color =  document.querySelector('#heading-background-color').value;
             let heading_font_color = document.querySelector('#heading-font-color').value;
             let heading_font_size = document.querySelector('#heading-font-size').value;

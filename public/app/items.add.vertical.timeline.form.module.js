@@ -67,7 +67,7 @@ const itemsAddVerticalTimelineFormModule = (function () {
                 console.log(timeline_id);
                 setTimeout(() => {
                     location.replace(`${APP_PATH}/items?exhibit_id=${exhibit_id}`);
-                }, 1000);
+                }, 900);
             }
 
         } catch (error) {

@@ -79,7 +79,7 @@ const itemsAddVerticalTimelineItemFormModule = (function () {
 
                 setTimeout(() => {
                     window.location.replace(APP_PATH + '/items/timeline/items?exhibit_id=' + exhibit_id + '&timeline_id=' + timeline_id);
-                }, 1000);
+                }, 900);
             }
 
         } catch (error) {

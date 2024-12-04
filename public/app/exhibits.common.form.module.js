@@ -41,9 +41,25 @@ const exhibitsCommonFormModule = (function () {
             exhibit.is_featured = parseInt(document.querySelector('#is-featured').value);
 
             // validate
-            if (exhibit.title.length === 0) {
+            if (exhibit.title.length === 0 || exhibit.title === '<div></div>') {
                 document.querySelector('#exhibit-title-error').innerHTML = '<div class="alert alert-danger" role="alert"><i class="fa fa-exclamation"></i> Please enter an exhibit title</div>';
                 return false;
+            }
+
+            if (exhibit.subtitle === '<div></div>') {
+                exhibit.subtitle = '';
+            }
+
+            if (exhibit.alert_text === '<div></div>') {
+                exhibit.alert_text = '';
+            }
+
+            if (exhibit.description === '<div></div>') {
+                exhibit.description = '';
+            }
+
+            if (exhibit.about_the_curators === '<div></div>') {
+                exhibit.about_the_curators = '';
             }
 
             // exhibit media

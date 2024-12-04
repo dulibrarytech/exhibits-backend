@@ -270,7 +270,7 @@ const itemsEditStandardItemFormModule = (function () {
 
                 setTimeout(() => {
                     window.location.replace('edit?exhibit_id=' + exhibit_id + '&item_id=' + item_id);
-                }, 1000);
+                }, 900);
             }
 
         } catch (error) {
@@ -311,7 +311,7 @@ const itemsEditStandardItemFormModule = (function () {
                     setTimeout(() => {
                         document.querySelector('#message').innerHTML = '';
                         window.location.reload();
-                    }, 1000);
+                    }, 900);
                 }
 
             })();
@@ -354,7 +354,7 @@ const itemsEditStandardItemFormModule = (function () {
                     setTimeout(() => {
                         document.querySelector('#message').innerHTML = '';
                         window.location.reload();
-                    }, 1000);
+                    }, 900);
                 }
 
             })();
