@@ -152,8 +152,13 @@ const exhibitsEditFormModule = (function () {
 
             if (styles.exhibit.navigation !== undefined) {
 
-                document.querySelector('#nav-background-color').value = styles.exhibit.navigation.backgroundColor;
-                document.querySelector('#nav-font-color').value = styles.exhibit.navigation.color;
+                if (styles.exhibit.navigation.backgroundColor !== undefined) {
+                    document.querySelector('#nav-background-color').value = styles.exhibit.navigation.backgroundColor;
+                }
+
+                if (styles.exhibit.navigation.color !== undefined) {
+                    document.querySelector('#nav-font-color').value = styles.exhibit.navigation.color;
+                }
 
                 let font_values = document.querySelector('#nav-font');
 
