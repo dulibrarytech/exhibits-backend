@@ -44,7 +44,7 @@ http://localhost:8004/exhibits-dashboard/auth
 
 
 ## Releases
-* v0.1.0-beta [release]() [notes]()
+* v0.7.0-beta [release]() [notes]()
 
 
 ## Contact

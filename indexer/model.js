@@ -227,6 +227,8 @@ exports.index_exhibit = async function (uuid) {
             let items = await GRID_RECORD_TASK.get_grid_item_records(grid_records[i].is_member_of_exhibit, grid_records[i].uuid);
 
             for (let j=0;j<items.length;j++) {
+                items[j].is_published = 1;
+                await GRID_RECORD_TASK.set_grid_item_to_publish(items[j].uuid);
                 grid_items.push(construct_item_index_record(items[j]));
             }
 
@@ -376,7 +378,6 @@ exports.index_grid_record = async function (exhibit_id, item_id) {
         let items = await GRID_RECORD_TASK.get_grid_item_records(grid_records[i].is_member_of_exhibit, grid_records[i].uuid);
 
         for (let j=0;j<items.length;j++) {
-            // console.log(items[j].is_published);
             items[j].is_published = 1;
             await GRID_RECORD_TASK.set_grid_item_to_publish(items[j].uuid);
             grid_items.push(construct_item_index_record(items[j]));
