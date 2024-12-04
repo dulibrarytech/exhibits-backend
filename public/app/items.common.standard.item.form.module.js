@@ -73,7 +73,7 @@ const itemsCommonStandardItemFormModule = (function () {
 
             if (item.media.length === 0 && item.kaltura.length === 0 && item.repo_uuid.length === 0) {
                 if (item.text.length === 0) {
-                    document.querySelector('#message').innerHTML = `<div class="alert alert-danger" role="alert"><i class="fa fa-exclamation"></i> Please add item content to the 'Text' field OR upload or import a media item</div>`;
+                    document.querySelector('#message').innerHTML = `<div class="alert alert-danger" role="alert"><i class="fa fa-exclamation"></i> Please upload or import a media item</div>`;
                     return false;
                 }
             }
