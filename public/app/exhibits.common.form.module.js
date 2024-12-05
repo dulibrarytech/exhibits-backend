@@ -45,6 +45,7 @@ const exhibitsCommonFormModule = (function () {
             } else if (exhibit.is_featured === false) {
                 exhibit.is_featured = 0;
             }
+
             // validate
             if (exhibit.title.length === 0 || exhibit.title === '<div></div>') {
                 document.querySelector('#exhibit-title-error').innerHTML = '<div class="alert alert-danger" role="alert"><i class="fa fa-exclamation"></i> Please enter an exhibit title</div>';

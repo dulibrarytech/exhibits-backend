@@ -19,7 +19,6 @@
 'use strict';
 
 const {Client} = require('@elastic/elasticsearch');
-const INDEX_TIMER = 1000;
 const ES_CONFIG = require('../config/elasticsearch_config')();
 const DB = require('../config/db_config')();
 const EXHIBIT_RECORD_TASKS = require('../exhibits/tasks/exhibit_record_tasks');

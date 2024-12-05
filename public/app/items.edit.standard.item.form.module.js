@@ -82,9 +82,15 @@ const itemsEditStandardItemFormModule = (function () {
         // item data
         rich_text_data['item-title-input'] = helperModule.set_rich_text_editor('item-title-input');
         rich_text_data['item-title-input'].setHTMLCode(helperModule.unescape(record.title));
-        document.querySelector('#item-caption-input').value = record.caption;
         rich_text_data['item-text-input'] = helperModule.set_rich_text_editor('item-text-input');
         rich_text_data['item-text-input'].setHTMLCode(helperModule.unescape(record.text));
+        document.querySelector('#item-caption-input').value = record.caption;
+
+        if (record.wrap_text === 1) {
+            document.querySelector('#wrap-text').checked = true;
+        } else {
+            document.querySelector('#wrap-text').checked = false;
+        }
 
         if (record.media.length > 0) {
 
