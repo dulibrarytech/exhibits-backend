@@ -38,8 +38,13 @@ const exhibitsCommonFormModule = (function () {
             exhibit.alert_text = rich_text_data['exhibit-alert-text-input'].getHTMLCode();
             exhibit.description = rich_text_data['exhibit-description-input'].getHTMLCode();
             exhibit.about_the_curators = rich_text_data['exhibit-about-the-curators-input'].getHTMLCode();
-            exhibit.is_featured = parseInt(document.querySelector('#is-featured').value);
+            exhibit.is_featured = document.querySelector('#is-featured').checked;
 
+            if (exhibit.is_featured === true) {
+                exhibit.is_featured = 1;
+            } else if (exhibit.is_featured === false) {
+                exhibit.is_featured = 0;
+            }
             // validate
             if (exhibit.title.length === 0 || exhibit.title === '<div></div>') {
                 document.querySelector('#exhibit-title-error').innerHTML = '<div class="alert alert-danger" role="alert"><i class="fa fa-exclamation"></i> Please enter an exhibit title</div>';
