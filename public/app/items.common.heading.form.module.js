@@ -37,7 +37,7 @@ const itemsCommonHeadingFormModule = (function () {
                 document.querySelector('#message').innerHTML = `<div class="alert alert-danger" role="alert"><i class="fa fa-exclamation"></i> Please enter heading text</div>`;
                 return false;
             }
-            console.log(item_heading);
+
             let heading_background_color =  document.querySelector('#heading-background-color').value;
             let heading_font_color = document.querySelector('#heading-font-color').value;
             let heading_font_size = document.querySelector('#heading-font-size').value;

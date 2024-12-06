@@ -85,11 +85,11 @@ const itemsEditGridItemFormModule = (function () {
         // item data
         rich_text_data['item-title-input'] = helperModule.set_rich_text_editor('item-title-input');
         rich_text_data['item-title-input'].setHTMLCode(helperModule.unescape(record.title));
-        document.querySelector('#item-caption-input').value = record.caption;
         rich_text_data['item-description-input'] = helperModule.set_rich_text_editor('item-description-input');
         rich_text_data['item-description-input'].setHTMLCode(helperModule.unescape(record.description));
         rich_text_data['item-text-input'] = helperModule.set_rich_text_editor('item-text-input');
         rich_text_data['item-text-input'].setHTMLCode(helperModule.unescape(record.text));
+        document.querySelector('#item-caption-input').value = record.caption;
 
         if (record.media.length > 0) {
 
@@ -240,6 +240,14 @@ const itemsEditGridItemFormModule = (function () {
             document.querySelector('#message').innerHTML = `<div class="alert alert-info" role="alert"><i class="fa fa-info"></i> Updating grid item record...</div>`;
 
             let data = itemsCommonGridItemFormModule.get_common_grid_item_form_fields(rich_text_data);
+
+            if (data === undefined) {
+                document.querySelector('#message').innerHTML = `<div class="alert alert-danger" role="alert"><i class="fa fa-exclamation"></i> Unable to get form field values</div>`;
+                return false;
+            } else if (data === false) {
+                return false;
+            }
+
             let etmp = EXHIBITS_ENDPOINTS.exhibits.grid_item_records.put.endpoint.replace(':exhibit_id', exhibit_id);
             let itmp = etmp.replace(':grid_id', grid_id);
             let endpoint = itmp.replace(':item_id', item_id);

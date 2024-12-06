@@ -49,18 +49,6 @@ const itemsCommonGridItemFormModule = (function () {
                 item.text = '';
             }
 
-            /*
-            if (item.title.length === 0 || item.title === '<div></div>') {
-                document.querySelector('#message').innerHTML = `<div class="alert alert-danger" role="alert"><i class="fa fa-exclamation"></i> Please enter a title</div>`;
-                return false;
-            }
-
-            if (item.text.length === 0 || item.text === '<div></div>') {
-                item.text = '';
-            }
-
-             */
-
             // item media
             item.thumbnail = document.querySelector('#item-thumbnail').value;
             item.thumbnail_prev = document.querySelector('#item-thumbnail-image-prev').value;
@@ -73,7 +61,7 @@ const itemsCommonGridItemFormModule = (function () {
 
             if (item.media.length === 0 && item.kaltura.length === 0 && item.repo_uuid.length === 0) {
                 if (item.text.length === 0) {
-                    document.querySelector('#message').innerHTML = `<div class="alert alert-danger" role="alert"><i class="fa fa-exclamation"></i> Please add item content to the 'Text' field OR upload or import a media item</div>`;
+                    document.querySelector('#message').innerHTML = `<div class="alert alert-danger" role="alert"><i class="fa fa-exclamation"></i> Please upload or import a media item</div>`;
                     return false;
                 }
             }
