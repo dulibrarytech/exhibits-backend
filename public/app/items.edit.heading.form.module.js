@@ -115,6 +115,10 @@ const itemsEditHeadingFormModule = (function () {
             let data = itemsCommonHeadingFormModule.get_common_heading_form_fields(rich_text_data);
             let response;
 
+            if (data === false) {
+                return false;
+            }
+
             if (exhibit_id === undefined || item_id === undefined) {
                 document.querySelector('#message').innerHTML = `<div class="alert alert-danger" role="alert"><i class="fa fa-exclamation"></i> Unable to get record ID</div>`;
                 return false;
