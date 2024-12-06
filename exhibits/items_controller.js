@@ -279,7 +279,8 @@ exports.reorder_items = async function (req, res) {
 
         const id = req.params.exhibit_id;
         const updated_order = req.body;
-
+        console.log(id);
+        console.log(updated_order);
         if (id.length === 0 || updated_order.length === 0) {
             res.status(400).send('Bad request.');
             return false;
@@ -290,6 +291,7 @@ exports.reorder_items = async function (req, res) {
         for (let i=0;i<updated_order.length;i++) {
 
             if (updated_order[i].type === 'item') {
+
                 let is_reordered = await ITEMS_MODEL.reorder_items(id, updated_order[i]);
 
                 if (is_reordered === false) {
@@ -298,6 +300,7 @@ exports.reorder_items = async function (req, res) {
             }
 
             if (updated_order[i].type === 'grid') {
+
                 let is_reordered = await GRIDS_MODEL.reorder_grids(id, updated_order[i]);
 
                 if (is_reordered === false) {
@@ -305,15 +308,8 @@ exports.reorder_items = async function (req, res) {
                 }
             }
 
-            if (updated_order[i].type === 'griditem') {
-                let is_reordered = await GRIDS_MODEL.reorder_grid_items(id, updated_order[i]);
-
-                if (is_reordered === false) {
-                    ordered_errors.push('-1');
-                }
-            }
-
             if (updated_order[i].type === 'heading') {
+
                 let is_reordered = await HEADINGS_MODEL.reorder_headings(id, updated_order[i]);
 
                 if (is_reordered === false) {
@@ -324,6 +320,17 @@ exports.reorder_items = async function (req, res) {
             if (updated_order[i].type === 'timeline') {
 
                 let is_reordered = await TIMELINES_MODEL.reorder_timelines(id, updated_order[i]);
+
+                if (is_reordered === false) {
+                    ordered_errors.push('-1');
+                }
+            }
+
+            if (updated_order[i].type === 'griditem') {
+
+                let grid_id = updated_order[i].grid_id;
+                delete updated_order[i].grid_id;
+                let is_reordered = await GRIDS_MODEL.reorder_grid_items(grid_id, updated_order[i]);
 
                 if (is_reordered === false) {
                     ordered_errors.push('-1');

@@ -324,7 +324,8 @@ const helperModule = (function () {
     obj.reorder_grid_items = function (event, id, type) {
 
         try {
-
+            const exhibit_id = helperModule.get_parameter_by_name('exhibit_id');
+            const grid_id = helperModule.get_parameter_by_name('grid_id');
             const EXHIBITS_ENDPOINTS = endpointsModule.get_exhibits_endpoints();
             const tr_elem = Array.from(document.getElementsByTagName('tr'));
             let row;
@@ -370,12 +371,12 @@ const helperModule = (function () {
                         }
 
                         for (let i=0;i<children.length;i++ ) {
-
                             let child = children[i];
                             let id = child.getAttribute('id');
                             let id_arr = id.split('_');
                             reorder_obj.type = id_arr.pop();
                             reorder_obj.uuid = id_arr.pop();
+                            reorder_obj.grid_id = grid_id;
                             reorder_obj.order = i + 1;
                             updated_order.push(reorder_obj);
                             reorder_obj = {};
@@ -384,14 +385,14 @@ const helperModule = (function () {
                         const token = authModule.get_user_token();
                         const response = await httpModule.req({
                             method: 'POST',
-                            url: EXHIBITS_ENDPOINTS.exhibits.reorder_records.post.endpoint.replace(':exhibit_id', id),
+                            url: EXHIBITS_ENDPOINTS.exhibits.reorder_records.post.endpoint.replace(':exhibit_id', exhibit_id),
                             data: updated_order,
                             headers: {
                                 'Content-Type': 'application/json',
                                 'x-access-token': token
                             }
                         });
-
+                        console.log(response);
                         if (response !== undefined && response.status === 201) {
                             await itemsGridModule.display_grid_items(event);
                         } else {
