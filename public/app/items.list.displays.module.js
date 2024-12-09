@@ -282,7 +282,7 @@ const itemsListDisplayModule = (function () {
             item_data += item_obj.item_order;
 
             if (item.thumbnail.length > 0) {
-                thumbnail = EXHIBITS_ENDPOINTS.exhibits.exhibit_media.get.endpoint.replace(':exhibit_id', exhibit_id).replace(':media', item.thumbnail);
+                thumbnail = EXHIBITS_ENDPOINTS.exhibits.exhibit_media.get.endpoint.replace(':exhibit_id', item.is_member_of_exhibit).replace(':media', item.thumbnail);
                 img = `<p><img alt="thumbnail" src="${thumbnail}" height="75" width="75"></p>`;
             }
 
