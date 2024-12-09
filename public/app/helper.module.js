@@ -316,14 +316,15 @@ const helperModule = (function () {
     };
 
     /**
-     * TODO
+     * TODO: issue #20
      * Reorders grid item list via drag and drop
      * @param event
      * @param id
      */
-    obj.reorder_grid_items = function (event, id, type) {
+    obj.reorder_grid_items = function (event, id) {
 
         try {
+
             const exhibit_id = helperModule.get_parameter_by_name('exhibit_id');
             const grid_id = helperModule.get_parameter_by_name('grid_id');
             const EXHIBITS_ENDPOINTS = endpointsModule.get_exhibits_endpoints();
@@ -357,7 +358,8 @@ const helperModule = (function () {
                         }
 
                     } catch (error) {
-                        document.querySelector('#message').innerHTML = `<div class="alert alert-danger" role="alert"><i class="fa fa-exclamation"></i> ${error.message}</div>`;
+                        console.log(error);
+                        // document.querySelector('#message').innerHTML = `<div class="alert alert-danger" role="alert"><i class="fa fa-exclamation"></i> ${error.message}</div>`;
                     }
                 });
 
@@ -392,7 +394,7 @@ const helperModule = (function () {
                                 'x-access-token': token
                             }
                         });
-                        console.log(response);
+
                         if (response !== undefined && response.status === 201) {
                             await itemsGridModule.display_grid_items(event);
                         } else {
@@ -406,7 +408,8 @@ const helperModule = (function () {
             });
 
         } catch (error) {
-            document.querySelector('#message').innerHTML = `<div class="alert alert-danger" role="alert"><i class="fa fa-exclamation"></i> ${error.message}</div>`;
+            console.log(error);
+            // document.querySelector('#message').innerHTML = `<div class="alert alert-danger" role="alert"><i class="fa fa-exclamation"></i> ${error.message}</div>`;
         }
     };
 

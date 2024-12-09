@@ -81,10 +81,10 @@ const itemsModule = (function () {
                         item_data += await itemsListDisplayModule.display_standard_items(record);
                         break;
                     case 'grid':
-                        item_data += await itemsListDisplayModule.display_grid_items(record);
+                        item_data += await itemsListDisplayModule.display_grids(record);
                         break;
                     case 'vertical_timeline':
-                        item_data += await itemsListDisplayModule.display_timeline_items(record);
+                        item_data += await itemsListDisplayModule.display_timelines(record);
                         break;
                     default:
                         console.log('Item type not available');

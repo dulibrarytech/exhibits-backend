@@ -279,8 +279,7 @@ exports.reorder_items = async function (req, res) {
 
         const id = req.params.exhibit_id;
         const updated_order = req.body;
-        console.log(id);
-        console.log(updated_order);
+
         if (id.length === 0 || updated_order.length === 0) {
             res.status(400).send('Bad request.');
             return false;
