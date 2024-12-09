@@ -104,7 +104,7 @@ const itemsEditVerticalTimelineFormModule = (function () {
             if (response !== undefined && response.status === 201) {
 
                 window.scrollTo(0, 0);
-                document.querySelector('#message').innerHTML = `<div class="alert alert-success" role="alert"><i class="fa fa-info"></i> Timeline record created</div>`;
+                document.querySelector('#message').innerHTML = `<div class="alert alert-success" role="alert"><i class="fa fa-info"></i> Timeline record updated</div>`;
                 const timeline_id = response.data.data;
 
                 setTimeout(() => {

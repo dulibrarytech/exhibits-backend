@@ -275,7 +275,7 @@ const itemsEditStandardItemFormModule = (function () {
                 document.querySelector('#message').innerHTML = `<div class="alert alert-success" role="alert"><i class="fa fa-info"></i> Item record updated</div>`;
 
                 setTimeout(() => {
-                    window.location.replace('edit?exhibit_id=' + exhibit_id + '&item_id=' + item_id);
+                    location.replace(`${APP_PATH}/items?exhibit_id=${exhibit_id}`);
                 }, 900);
             }
 
