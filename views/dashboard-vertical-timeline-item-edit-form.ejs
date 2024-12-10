@@ -45,7 +45,7 @@
         <div id="message"></div>
         <div id="item-data-card" class="card">
             <div class="card-header">
-                <strong class="card-title mb-3">Edit Item in '<span id="exhibit-title"></span>' exhibit grid</strong>
+                <strong class="card-title mb-3">Edit Item in '<span id="exhibit-title"></span>' exhibit vertical timeline</strong>
             </div>
             <div class="card-body">
                 <div class="alert alert-info"><i class="fa fa-info"></i> Provide info to user about this form</div>
@@ -53,8 +53,8 @@
                     <div class="col-12 col-md-12">
                         <div class="row form-group">
                             <div class="col-12">
-                                <div class="form-text text-muted" style="font-size: 17px"><span style="color: darkred">*</span>
-                                    Title <small><em>(Required)</em></small>
+                                <div class="form-text text-muted" style="font-size: 17px">
+                                    Title <small><em>(Optional)</em></small>
                                 </div>
                                 <span id="item-title-error" class="is-error"></span>
                                 <div id="item-title-input" style="height: 100px"></div>
@@ -66,7 +66,17 @@
                     <div class="col-12 col-md-12">
                         <div class="row form-group">
                             <div class="col-12">
-                                <div class="form-text text-muted" style="font-size: 17px">Text </div>
+                                <div class="form-text text-muted" style="font-size: 17px"><span style="color: darkred">*</span>Date</div>
+                                <input class="form-control" id="item-date-input" type="date" />
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="row">
+                    <div class="col-12 col-md-12">
+                        <div class="row form-group">
+                            <div class="col-12">
+                                <div class="form-text text-muted" style="font-size: 17px">Text <small><em>(Optional)</em></small></div>
                                 <div id="item-text-input" style="height: 100px"></div>
                             </div>
                         </div>
@@ -313,11 +323,11 @@
 <script src="/exhibits-dashboard/static/app/uploads.module.js"></script>
 <script src="/exhibits-dashboard/static/app/exhibits.module.js"></script>
 <script src="/exhibits-dashboard/static/app/items.module.js"></script>
-<script src="/exhibits-dashboard/static/app/items.common.grid.item.form.module.js"></script>
-<script src="/exhibits-dashboard/static/app/items.edit.grid.item.form.module.js"></script>
+<script src="/exhibits-dashboard/static/app/items.common.vertical.timeline.item.form.module.js"></script>
+<script src="/exhibits-dashboard/static/app/items.edit.vertical.timeline.item.form.module.js"></script>
 <script>
-    // itemsCommonGridItemFormModule.init();
-    // itemsEditGridItemFormModule.init();
+    itemsCommonVerticalTimelineItemFormModule.init();
+    itemsEditTimelineItemFormModule.init();
 </script>
 </body>
 </html>

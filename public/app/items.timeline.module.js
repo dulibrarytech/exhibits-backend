@@ -68,6 +68,11 @@ const itemsTimelineModule = (function () {
         }
 
         for (let i = 0; i < items.length; i++) {
+            item_data += itemsListDisplayModule.display_timeline_items(items[i]);
+        }
+
+        /*
+        for (let i = 0; i < items.length; i++) {
 
             let title = helperModule.unescape(items[i].title);
             let order = items[i].order;
@@ -141,6 +146,8 @@ const itemsTimelineModule = (function () {
                             </td>`;
             item_data += '</tr>';
         }
+
+         */
 
         document.querySelector('#timeline-item-list').innerHTML = item_data;
 

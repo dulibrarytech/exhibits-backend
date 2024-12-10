@@ -124,50 +124,52 @@ exports.get_timeline_item_records = async function (req, res) {
     }
 };
 
-/*
-
-exports.get_grid_item_record = async function (req, res) {
+exports.get_timeline_item_record = async function (req, res) {
 
     try {
 
         const is_member_of_exhibit = req.params.exhibit_id;
-        const is_member_of_grid = req.params.grid_id;
+        const is_member_of_timeline = req.params.timeline_id;
         const item_id = req.params.item_id;
 
-        if (is_member_of_exhibit === undefined || is_member_of_grid === undefined || item_id === undefined) {
+        if (is_member_of_exhibit === undefined || is_member_of_timeline === undefined || item_id === undefined) {
             res.status(400).send('Bad request.');
             return false;
         }
 
-        const result = await GRIDS_MODEL.get_grid_item_record(is_member_of_exhibit, is_member_of_grid, item_id);
+        const result = await TIMELINES_MODEL.get_timeline_item_record(is_member_of_exhibit, is_member_of_timeline, item_id);
         res.status(result.status).send(result);
 
     } catch (error) {
-        res.status(500).send({message: `Unable to get grid item. ${error.message}`});
+        res.status(500).send({message: `Unable to get timeline item. ${error.message}`});
     }
 };
 
-exports.update_grid_item_record = async function (req, res) {
+exports.update_timeline_item_record = async function (req, res) {
 
     try {
 
         const is_member_of_exhibit = req.params.exhibit_id;
-        const grid_id = req.params.grid_id;
+        const timeline_id = req.params.timeline_id;
         const item_id = req.params.item_id;
         const data = req.body;
 
-        if (data === undefined || is_member_of_exhibit === undefined || grid_id === undefined || item_id === undefined) {
+        if (data === undefined || is_member_of_exhibit === undefined || timeline_id === undefined || item_id === undefined) {
             res.status(400).send('Bad request.');
             return false;
         }
 
-        const result = await GRIDS_MODEL.update_grid_item_record(is_member_of_exhibit, grid_id, item_id, data);
+        const result = await TIMELINES_MODEL.update_timeline_item_record(is_member_of_exhibit, timeline_id, item_id, data);
         res.status(result.status).send(result);
 
     } catch (error) {
-        res.status(500).send({message: `Unable to update grid item. ${error.message}`});
+        res.status(500).send({message: `Unable to update timeline item. ${error.message}`});
     }
 };
+
+/*
+
+
 
 exports.delete_grid_item_record = async function (req, res) {
 

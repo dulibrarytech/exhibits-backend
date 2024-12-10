@@ -148,7 +148,7 @@ exports.get_timeline_record = async function (is_member_of_exhibit, timeline_id)
 
         return {
             status: 200,
-            message: 'Timeline record created',
+            message: 'Timeline record',
             data: record
         };
 

@@ -40,13 +40,13 @@ module.exports = function (app) {
     app.route(ENDPOINTS().exhibits.timeline_item_records.get.endpoint)
     .get(TOKEN.verify, CONTROLLER.get_timeline_item_records);
 
+    app.route(ENDPOINTS().exhibits.timeline_item_record.get.endpoint)
+    .get(TOKEN.verify, CONTROLLER.get_timeline_item_record);
+
+    app.route(ENDPOINTS().exhibits.timeline_item_records.put.endpoint)
+    .put(TOKEN.verify, CONTROLLER.update_timeline_item_record);
+
     /*
-
-    app.route(ENDPOINTS().exhibits.grid_item_record.get.endpoint)
-    .get(TOKEN.verify, CONTROLLER.get_grid_item_record);
-
-    app.route(ENDPOINTS().exhibits.grid_item_records.put.endpoint)
-    .put(TOKEN.verify, CONTROLLER.update_grid_item_record);
 
     app.route(ENDPOINTS().exhibits.grid_item_media.delete.endpoint)
     .delete(TOKEN.verify, CONTROLLER.delete_grid_item_media);

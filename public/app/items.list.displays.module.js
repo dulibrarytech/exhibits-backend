@@ -309,6 +309,77 @@ const itemsListDisplayModule = (function () {
         }
     }
 
+    obj.display_timeline_items = function (item) {
+
+        try {
+
+            let title = helperModule.unescape(item.title);
+            const item_obj = check_published_status(item, 'vertical-timeline/item');
+            let item_data = '';
+            let thumbnail;
+            let url;
+            let item_type;
+            let img = '';
+
+            if (item.mime_type.indexOf('image') !== -1) {
+                item_type = '<i class="fa fa-image"></i>';
+            } else if (item.mime_type.indexOf('video') !== -1) {
+                item_type = '<i class="fa fa-file-video-o"><i>';
+            } else if (item.mime_type.indexOf('audio') !== -1) {
+                item_type = '<i class="fa fa-file-audio-o"></i>';
+            } else if (item.mime_type.indexOf('pdf') !== -1) {
+                item_type = '<i class="fa fa-file-pdf-o"></i>';
+            } else {
+                item_type = '<i class="fa fa-file-o"></i>';
+            }
+
+            if (item.thumbnail.length > 0) {
+                url = EXHIBITS_ENDPOINTS.exhibits.exhibit_media.get.endpoint.replace(':exhibit_id', item.is_member_of_exhibit).replace(':media', item.thumbnail);
+                thumbnail = `<p><img alt="${url}" src="${url}" height="100" width="100"></p>`;
+            } else {
+                thumbnail = '';
+            }
+
+            if (item_obj.edit.length !== 0) {
+                item_obj.edit = `<a href="${APP_PATH}/items/vertical-timeline/item/edit?exhibit_id=${item.is_member_of_exhibit}&timeline_id=${item.is_member_of_timeline}&item_id=${item.uuid}" title="Edit"><i class="fa fa-edit pr-1"></i></a>`;
+            }
+
+            if (item_obj.delete_item.length !== 0) {
+                item_obj.delete_item = `<a href="${APP_PATH}/items/vertical-timeline/item/delete?exhibit_id=${item.is_member_of_exhibit}&timeline_id=${item.is_member_of_timeline}&item_id=${item.uuid}" title="Delete"><i class="fa fa-trash pr-1"></i></a>`;
+            }
+
+            // start rows
+            item_data += item_obj.draggable;
+            item_data += item_obj.item_order;
+
+            if (item.thumbnail.length > 0) {
+                thumbnail = EXHIBITS_ENDPOINTS.exhibits.exhibit_media.get.endpoint.replace(':exhibit_id', item.is_member_of_exhibit).replace(':media', item.thumbnail);
+                img = `<p><img alt="thumbnail" src="${thumbnail}" height="75" width="75"></p>`;
+            }
+
+            item_data += `<td class="item-metadata">
+                    <p><button class="btn btn-default">${item_type} <small>timeline item</small></button></p>
+                    <p><strong>${title}</strong></p>
+                    ${img}
+                   
+                    </td>`;
+
+            item_data += `<td style="width: 5%;text-align: center"><small>${item_obj.status}</small></td>`;
+            item_data += `<td style="width: 10%">
+                                <div class="card-text text-sm-center">
+                                    ${item_obj.edit}&nbsp;
+                                    ${item_obj.delete_item}
+                                </div>
+                            </td>`;
+            item_data += '</tr>';
+
+            return item_data;
+
+        } catch (error) {
+            document.querySelector('#message').innerHTML = `<div class="alert alert-danger" role="alert"><i class="fa fa-exclamation"></i> ${error.message}</div>`;
+        }
+    };
+
     obj.init = function () {};
 
     return obj;

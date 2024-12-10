@@ -26,7 +26,7 @@ const itemsCommonVerticalTimelineItemFormModule = (function () {
     obj.get_common_timeline_item_form_fields = function (rich_text_data) {
 
         try {
-
+            console.log('rt ', rich_text_data);
             let media = [];
             let item = {};
             item.styles = {};
@@ -38,7 +38,10 @@ const itemsCommonVerticalTimelineItemFormModule = (function () {
             item.date = date_input.value;
             item.description = rich_text_data['item-description-input'].getHTMLCode();
             item.text = rich_text_data['item-text-input'].getHTMLCode();
+
+
             item.caption = document.querySelector('#item-caption-input').value;
+
 
             if (item.title === '<div></div>') {
                 item.title = '';

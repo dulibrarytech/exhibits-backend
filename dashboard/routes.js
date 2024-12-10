@@ -77,6 +77,9 @@ module.exports = function (app) {
     app.route(APP_PATH + '/items/vertical-timeline/item')
     .get(CONTROLLER.get_dashboard_vertical_timeline_item_add_form);
 
+    app.route(APP_PATH + '/items/vertical-timeline/item/edit')
+    .get(CONTROLLER.get_dashboard_vertical_timeline_item_edit_form);
+
     app.route(APP_PATH + '/items/timeline/items')
     .get(CONTROLLER.get_dashboard_item_timeline_items);
 
