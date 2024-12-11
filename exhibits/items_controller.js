@@ -335,6 +335,17 @@ exports.reorder_items = async function (req, res) {
                     ordered_errors.push('-1');
                 }
             }
+
+            if (updated_order[i].type === 'timelineitem') {
+
+                let timeline_id = updated_order[i].timeline_id;
+                delete updated_order[i].timeline_id;
+                let is_reordered = await TIMELINES_MODEL.reorder_timeline_items(timeline_id, updated_order[i]);
+
+                if (is_reordered === false) {
+                    ordered_errors.push('-1');
+                }
+            }
         }
 
         if (ordered_errors.length === 0) {

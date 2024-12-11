@@ -313,6 +313,8 @@ const itemsListDisplayModule = (function () {
 
         try {
 
+            item.type = '';
+            item.type = 'timelineitem';
             let title = helperModule.unescape(item.title);
             const item_obj = check_published_status(item, 'vertical-timeline/item');
             let item_data = '';

@@ -29,7 +29,6 @@ const itemsCommonVerticalTimelineItemFormModule = (function () {
 
             let media = [];
             let item = {};
-            let date_input;
             item.styles = {};
 
             // item metadata

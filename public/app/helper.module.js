@@ -316,7 +316,6 @@ const helperModule = (function () {
     };
 
     /**
-     * TODO: issue #20
      * Reorders grid item list via drag and drop
      * @param event
      * @param id
@@ -419,10 +418,12 @@ const helperModule = (function () {
      * @param event
      * @param id
      */
-    obj.reorder_timeline_items = function (event, id, type) {
+    obj.reorder_timeline_items = function (event, id) {
 
         try {
 
+            const exhibit_id = helperModule.get_parameter_by_name('exhibit_id');
+            const timeline_id = helperModule.get_parameter_by_name('timeline_id');
             const EXHIBITS_ENDPOINTS = endpointsModule.get_exhibits_endpoints();
             const tr_elem = Array.from(document.getElementsByTagName('tr'));
             let row;
@@ -454,7 +455,8 @@ const helperModule = (function () {
                         }
 
                     } catch (error) {
-                        document.querySelector('#message').innerHTML = `<div class="alert alert-danger" role="alert"><i class="fa fa-exclamation"></i> ${error.message}</div>`;
+                        console.log(error);
+                        // document.querySelector('#message').innerHTML = `<div class="alert alert-danger" role="alert"><i class="fa fa-exclamation"></i> ${error.message}</div>`;
                     }
                 });
 
@@ -468,12 +470,13 @@ const helperModule = (function () {
                         }
 
                         for (let i=0;i<children.length;i++ ) {
-
                             let child = children[i];
                             let id = child.getAttribute('id');
                             let id_arr = id.split('_');
+
                             reorder_obj.type = id_arr.pop();
                             reorder_obj.uuid = id_arr.pop();
+                            reorder_obj.timeline_id = timeline_id;
                             reorder_obj.order = i + 1;
                             updated_order.push(reorder_obj);
                             reorder_obj = {};
@@ -482,7 +485,7 @@ const helperModule = (function () {
                         const token = authModule.get_user_token();
                         const response = await httpModule.req({
                             method: 'POST',
-                            url: EXHIBITS_ENDPOINTS.exhibits.reorder_records.post.endpoint.replace(':exhibit_id', id),
+                            url: EXHIBITS_ENDPOINTS.exhibits.reorder_records.post.endpoint.replace(':exhibit_id', exhibit_id),
                             data: updated_order,
                             headers: {
                                 'Content-Type': 'application/json',
@@ -491,7 +494,7 @@ const helperModule = (function () {
                         });
 
                         if (response !== undefined && response.status === 201) {
-                            await itemsGridModule.display_grid_items(event);
+                            await itemsTimelineModule.display_timeline_items(event);
                         } else {
                             document.querySelector('#message').innerHTML = `<div class="alert alert-danger" role="alert"><i class="fa fa-exclamation"></i> An error occurred while reordering items.</div>`;
                         }
@@ -503,7 +506,8 @@ const helperModule = (function () {
             });
 
         } catch (error) {
-            document.querySelector('#message').innerHTML = `<div class="alert alert-danger" role="alert"><i class="fa fa-exclamation"></i> ${error.message}</div>`;
+            console.log(error);
+            // document.querySelector('#message').innerHTML = `<div class="alert alert-danger" role="alert"><i class="fa fa-exclamation"></i> ${error.message}</div>`;
         }
     };
 
