@@ -26,22 +26,18 @@ const itemsCommonVerticalTimelineItemFormModule = (function () {
     obj.get_common_timeline_item_form_fields = function (rich_text_data) {
 
         try {
-            console.log('rt ', rich_text_data);
+
             let media = [];
             let item = {};
+            let date_input;
             item.styles = {};
 
             // item metadata
             item.title = rich_text_data['item-title-input'].getHTMLCode();
-
-            let date_input = document.querySelector('input[type="date"]');
-            item.date = date_input.value;
             item.description = rich_text_data['item-description-input'].getHTMLCode();
             item.text = rich_text_data['item-text-input'].getHTMLCode();
-
-
             item.caption = document.querySelector('#item-caption-input').value;
-
+            item.date = document.querySelector('input[type="date"]').value;
 
             if (item.title === '<div></div>') {
                 item.title = '';
@@ -59,19 +55,6 @@ const itemsCommonVerticalTimelineItemFormModule = (function () {
                 document.querySelector('#message').innerHTML = `<div class="alert alert-danger" role="alert"><i class="fa fa-exclamation"></i> Please enter a timeline date</div>`;
                 return false;
             }
-
-            /*
-            if (item.title.length === 0 || item.title === '<div></div>') {
-                document.querySelector('#message').innerHTML = `<div class="alert alert-danger" role="alert"><i class="fa fa-exclamation"></i> Please enter a title</div>`;
-                return false;
-            }
-            */
-
-            /*
-            if (item.text.length === 0 || item.text === '<div></div>') {
-                item.text = '';
-            }
-            */
 
             // item media
             item.thumbnail = document.querySelector('#item-thumbnail').value;
