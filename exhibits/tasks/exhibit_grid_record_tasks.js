@@ -375,7 +375,7 @@ const Exhibit_grid_record_tasks = class {
     }
 
     /**
-     * Sets is_published flogs to true for all grid items by exhibit id
+     * Sets is_published flogs to true for all grid items by grid id
      * @param uuid
      */
     async set_to_publish_grid_items(uuid) {

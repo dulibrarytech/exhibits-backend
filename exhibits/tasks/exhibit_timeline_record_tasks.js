@@ -400,6 +400,31 @@ const Exhibit_timeline_record_tasks = class {
     }
 
     /**
+     * Sets is_published flogs to true for all timeline by timeline id
+     * @param uuid
+     */
+    async set_to_publish_timeline_items(uuid) {
+
+        try {
+
+            await this.DB(this.TABLE.timeline_item_records)
+            .where({
+                is_member_of_timeline: uuid
+            })
+            .update({
+                is_published: 1
+            });
+
+            LOGGER.module().info('INFO: [/exhibits/exhibit_timeline_record_tasks (set_to_publish_timeline_items)] Timeline items is_published set.');
+            return true;
+
+        } catch (error) {
+            LOGGER.module().error('ERROR: [/exhibits/exhibit_timeline_record_tasks (set_to_publish_timeline_items)] unable to set timeline items is_published. ' + error.message);
+            return false;
+        }
+    }
+
+    /**
      * Sets is_published flogs to false for all timeline records by exhibit id
      * @param uuid
      */

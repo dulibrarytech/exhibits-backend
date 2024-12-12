@@ -28,6 +28,7 @@ const EXHIBIT_RECORD_TASKS = require('../exhibits/tasks/exhibit_record_tasks');
 const EXHIBIT_ITEM_RECORD_TASKS = require('./tasks/exhibit_item_record_tasks');
 const EXHIBIT_HEADING_RECORD_TASKS = require('./tasks/exhibit_heading_record_tasks');
 const EXHIBIT_GRID_RECORD_TASKS = require('./tasks/exhibit_grid_record_tasks');
+const EXHIBIT_TIMELINE_RECORD_TASKS = require('./tasks/exhibit_timeline_record_tasks');
 const HELPER = require('../libs/helper');
 const VALIDATOR = require('../libs/validate');
 const INDEXER_MODEL = require('../indexer/model');
@@ -324,11 +325,13 @@ exports.publish_exhibit = async function (uuid) {
         const ITEM_TASKS = new EXHIBIT_ITEM_RECORD_TASKS(DB, TABLES);
         const HEADING_TASKS = new EXHIBIT_HEADING_RECORD_TASKS(DB, TABLES);
         const GRID_TASKS = new EXHIBIT_GRID_RECORD_TASKS(DB, TABLES);
+        const TIMELINE_TASKS = new EXHIBIT_TIMELINE_RECORD_TASKS(DB, TABLES);
 
         const heading_count = await HEADING_TASKS.get_record_count(uuid);
         const item_count = await ITEM_TASKS.get_record_count(uuid);
         const grid_count = await GRID_TASKS.get_record_count(uuid);
-        const total_count = heading_count + item_count + grid_count;
+        const timeline_count = await TIMELINE_TASKS.get_record_count(uuid);
+        const total_count = heading_count + item_count + grid_count + timeline_count;
 
         if (total_count === 0) {
             LOGGER.module().info('INFO: [/exhibits/model (publish_exhibit)] Exhibit does not have any items');
@@ -342,8 +345,49 @@ exports.publish_exhibit = async function (uuid) {
         const is_item_published = await ITEM_TASKS.set_to_publish(uuid);
         const is_heading_published = await HEADING_TASKS.set_to_publish(uuid);
         const is_grid_published = await GRID_TASKS.set_to_publish(uuid);
+        const is_timeline_published = await TIMELINE_TASKS.set_to_publish(uuid);
         const is_grid_item_published = await GRID_TASKS.set_to_publish_grid_items(uuid);
+        const is_timeline_item_published =  await TIMELINE_TASKS.set_to_publish_timeline_items(uuid);
 
+        let errors = [];
+
+        if (is_exhibit_published === false) {
+            errors.push(-1);
+        }
+
+        if (is_item_published === false) {
+            errors.push(-1);
+        }
+
+        if (is_heading_published === false) {
+            errors.push(-1);
+        }
+
+        if (is_grid_published === false) {
+            errors.push(-1);
+        }
+
+        if (is_timeline_published === false) {
+            errors.push(-1);
+        }
+
+        if (is_grid_item_published === false) {
+            errors.push(-1);
+        }
+
+        if (is_timeline_item_published === false) {
+            errors.push(-1);
+        }
+
+        if (errors.length > 0) {
+            LOGGER.module().error('ERROR: [/exhibits/model (publish_exhibit)] Unable to publish exhibit');
+            return {
+                status: false,
+                message: 'Unable to publish Exhibit'
+            };
+        }
+
+        /*
         if (is_exhibit_published === false || is_item_published === false || is_heading_published === false || is_grid_published === false) {
             LOGGER.module().error('ERROR: [/exhibits/model (publish_exhibit)] Unable to publish exhibit');
             return {
@@ -351,6 +395,8 @@ exports.publish_exhibit = async function (uuid) {
                 message: 'Unable to publish Exhibit'
             };
         }
+
+         */
 
         const is_indexed = await INDEXER_MODEL.index_exhibit(uuid);
 
@@ -386,19 +432,43 @@ exports.suppress_exhibit = async function (uuid) {
         const ITEM_TASKS = new EXHIBIT_ITEM_RECORD_TASKS(DB, TABLES);
         const HEADING_TASKS = new EXHIBIT_HEADING_RECORD_TASKS(DB, TABLES);
         const GRID_TASKS = new EXHIBIT_GRID_RECORD_TASKS(DB, TABLES);
+        const TIMELINE_TASKS = new EXHIBIT_TIMELINE_RECORD_TASKS(DB, TABLES);
         const is_exhibit_suppressed = await EXHIBIT_TASKS.set_to_suppress(uuid);
         const is_item_suppressed = await ITEM_TASKS.set_to_suppress(uuid);
         const is_heading_suppressed = await HEADING_TASKS.set_to_suppress(uuid);
         const is_grid_suppressed = await GRID_TASKS.set_to_suppress(uuid);
+        const is_timeline_suppressed = await TIMELINE_TASKS.set_to_suppress(uuid);
+        let errors = [];
 
-        if (is_exhibit_suppressed === false || is_item_suppressed === false || is_heading_suppressed === false || is_grid_suppressed === false) {
+        if (is_exhibit_suppressed === false) {
+            errors.push(-1);
+        }
+
+        if (is_item_suppressed === false) {
+            errors.push(-1);
+        }
+
+        if (is_heading_suppressed === false) {
+            errors.push(-1);
+        }
+
+        if (is_grid_suppressed === false) {
+            errors.push(-1);
+        }
+
+        if (is_timeline_suppressed === false) {
+            errors.push(-1);
+        }
+
+        if (errors.length > 0) {
             LOGGER.module().error('ERROR: [/exhibits/model (publish_exhibit)] Unable to suppress exhibit');
             return false;
         }
 
+        const headings = await HEADING_TASKS.get_heading_records(uuid);
         const items = await ITEM_TASKS.get_item_records(uuid);
         const grids = await GRID_TASKS.get_grid_records(uuid);
-        const headings = await HEADING_TASKS.get_heading_records(uuid);
+        const timelines = await TIMELINE_TASKS.get_timeline_records(uuid);
 
         let is_exhibit_deleted = await INDEXER_MODEL.delete_record(uuid);
 
@@ -420,13 +490,24 @@ exports.suppress_exhibit = async function (uuid) {
 
                 for (let g=0;g<grids.length;g++) {
 
-                    // const is_grid_item_suppressed = await GRID_TASKS.set_to_suppressed_grid_items(uuid);
-                    // console.log(is_grid_item_suppressed);
                     await GRID_TASKS.set_to_suppressed_grid_items(grids[g].uuid);
                     let is_deleted = await INDEXER_MODEL.delete_record(grids[g].uuid);
 
                     if (is_deleted.status !== 204) {
                         LOGGER.module().error('ERROR: [/exhibits/model (suppress_exhibit)] Unable to delete grid ' + grids[g].uuid + ' from index');
+                    }
+                }
+            }
+
+            if (timelines.length > 0) {
+
+                for (let t=0;t<timelines.length;t++) {
+
+                    await TIMELINE_TASKS.set_to_suppressed_timeline_items(timelines[t].uuid);
+                    let is_deleted = await INDEXER_MODEL.delete_record(timelines[t].uuid);
+
+                    if (is_deleted.status !== 204) {
+                        LOGGER.module().error('ERROR: [/exhibits/model (suppress_exhibit)] Unable to delete timeline ' + timelines[t].uuid + ' from index');
                     }
                 }
             }
