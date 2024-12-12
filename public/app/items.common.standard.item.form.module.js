@@ -23,9 +23,6 @@ const itemsCommonStandardItemFormModule = (function () {
     const EXHIBITS_ENDPOINTS = endpointsModule.get_exhibits_endpoints();
     let obj = {};
 
-    /**
-     * Gets common standard item form fields
-     */
     obj.get_common_standard_item_form_fields = function (rich_text_data) {
 
         try {
@@ -138,9 +135,6 @@ const itemsCommonStandardItemFormModule = (function () {
         }
     };
 
-    /**
-     * Deletes media
-     */
     obj.delete_media = function () {
 
         try {
@@ -182,9 +176,6 @@ const itemsCommonStandardItemFormModule = (function () {
         return false;
     };
 
-    /**
-     * Deletes thumbnail image
-     */
     obj.delete_thumbnail_image = function () {
 
         try {
@@ -225,9 +216,6 @@ const itemsCommonStandardItemFormModule = (function () {
         return false;
     };
 
-    /**
-     * Init function for standard item common add/edit forms
-     */
     obj.init = async function () {
 
         try {

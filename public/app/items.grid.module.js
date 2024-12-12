@@ -176,7 +176,7 @@ const itemsGridModule = (function () {
 
         try {
 
-            const exhibit_links = Array.from(document.getElementsByClassName('publish'));
+            const exhibit_links = Array.from(document.getElementsByClassName('publish-item'));
 
             exhibit_links.forEach(exhibit_link => {
                 exhibit_link.addEventListener('click', async (event) => {
@@ -194,7 +194,7 @@ const itemsGridModule = (function () {
 
         try {
 
-            const exhibit_links = Array.from(document.getElementsByClassName('suppress'));
+            const exhibit_links = Array.from(document.getElementsByClassName('suppress-item'));
 
             exhibit_links.forEach(exhibit_link => {
                 exhibit_link.addEventListener('click', async () => {
