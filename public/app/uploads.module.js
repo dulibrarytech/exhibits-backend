@@ -123,7 +123,7 @@ const uploadsModule = (function () {
             url: APP_PATH + '/uploads',
             uploadMultiple: false,
             maxFiles: 1,
-            acceptedFiles: 'image/*,video/*,audio/*,application/pdf',
+            acceptedFiles: 'image/*,application/pdf',
             ignoreHiddenFiles: true,
             timeout: 20000,
             dictDefaultMessage: 'Drag and Drop Item Media file here or Click to Upload',
