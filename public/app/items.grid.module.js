@@ -110,7 +110,7 @@ const itemsGridModule = (function () {
 
                 setTimeout(() => {
                     location.reload();
-                }, 1000);
+                }, 900);
             }
 
             if (response.status === 204) {
@@ -155,7 +155,7 @@ const itemsGridModule = (function () {
 
                 setTimeout(() => {
                     location.reload();
-                }, 1000);
+                }, 900);
             }
 
             if (response.status === 204) {

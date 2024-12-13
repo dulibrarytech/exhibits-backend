@@ -169,7 +169,7 @@ const itemsModule = (function () {
                     'x-access-token': token
                 }
             });
-
+            console.log(response);
             if (response.status === 200) {
 
                 document.querySelector('#message').innerHTML = `<div class="alert alert-success" role="alert"><i class="fa fa-check"></i> Item published</div>`;
@@ -213,6 +213,7 @@ const itemsModule = (function () {
             const EXHIBITS_ENDPOINTS = endpointsModule.get_exhibits_endpoints();
             const etmp = EXHIBITS_ENDPOINTS.exhibits.item_records.item_suppress.post.endpoint.replace(':exhibit_id', exhibit_id);
             const endpoint = etmp.replace(':item_id', item_id);
+            console.log(endpoint)
             const token = authModule.get_user_token();
             const response = await httpModule.req({
                 method: 'POST',
@@ -222,14 +223,14 @@ const itemsModule = (function () {
                     'x-access-token': token
                 }
             });
-
+            console.log(response); // TODO:
             if (response.status === 200) {
 
                 document.querySelector('#message').innerHTML = `<div class="alert alert-success" role="alert"><i class="fa fa-check"></i> Item unpublished</div>`;
 
                 setTimeout(() => {
                     location.reload();
-                }, 1000);
+                }, 900);
             }
 
         } catch (error) {

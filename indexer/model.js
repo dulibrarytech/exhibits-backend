@@ -506,6 +506,56 @@ exports.index_grid_item_record = async function (grid_id, grid_item_id, grid_ite
 };
 
 /**
+ * Index timeline record
+ * @param exhibit_id
+ * @param item_id
+ */
+exports.index_timeline_record = async function (exhibit_id, item_id) {
+
+    const INDEX_TASKS = new INDEXER_INDEX_TASKS(DB, TABLES, CLIENT, ES_CONFIG.elasticsearch_index);
+    const TIMELINE_RECORD_TASK = new EXHIBIT_TIMELINE_RECORD_TASKS(DB, TABLES);
+    const timeline_records = await TIMELINE_RECORD_TASK.get_timeline_records(exhibit_id, item_id);
+    let timeline_index_records = [];
+    let timeline_items = [];
+
+    // get timeline items
+    for (let i=0;i<timeline_records.length;i++) {
+
+        let items = await TIMELINE_RECORD_TASK.get_timeline_item_records(timeline_records[i].is_member_of_exhibit, timeline_records[i].uuid);
+
+        for (let j=0;j<items.length;j++) {
+            items[j].is_published = 1;
+            await TIMELINE_RECORD_TASK.set_timeline_item_to_publish(items[j].uuid);
+            timeline_items.push(construct_item_index_record(items[j]));
+        }
+
+        timeline_records[i].items = timeline_items;
+        timeline_items = [];
+    }
+
+    for (let g=0;g<timeline_records.length;g++) {
+        timeline_index_records.push(construct_timeline_index_record(timeline_records[g]));
+    }
+
+    let timeline_items_timer = setInterval(async () => {
+
+        if (timeline_index_records.length === 0) {
+            clearInterval(timeline_items_timer);
+            LOGGER.module().info('INFO: [/indexer/model (index_timeline_record)] Timeline item records indexed.');
+            return false;
+        }
+
+        let timeline_item_index_record = timeline_index_records.pop();
+        const response = await INDEX_TASKS.index_record(timeline_item_index_record);
+
+        if (response === true) {
+            LOGGER.module().info('INFO: [/indexer/model (index_timeline_record)] Timeline item record ' + timeline_item_index_record.uuid + ' indexed.');
+        }
+
+    }, 150);
+};
+
+/**
  * indexes record
  * @param record
  */

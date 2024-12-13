@@ -91,7 +91,7 @@ const itemsTimelineModule = (function () {
             const timeline_item_id = uuid;
             const type = 'timeline_item';
             const EXHIBITS_ENDPOINTS = endpointsModule.get_exhibits_endpoints();
-            const etmp = EXHIBITS_ENDPOINTS.exhibits.timeline_item_records.grid_item_publish.post.endpoint.replace(':exhibit_id', exhibit_id);
+            const etmp = EXHIBITS_ENDPOINTS.exhibits.timeline_item_records.timeline_item_publish.post.endpoint.replace(':exhibit_id', exhibit_id);
             const gtmp = etmp.replace(':timeline_id', timeline_id);
             const endpoint = gtmp.replace(':timeline_item_id', timeline_item_id);
             const token = authModule.get_user_token();
@@ -130,13 +130,13 @@ const itemsTimelineModule = (function () {
     async function suppress_timeline_item(uuid) {
 
         try {
-
+            console.log('suppress');
             const exhibit_id = helperModule.get_parameter_by_name('exhibit_id');
             const timeline_id = helperModule.get_parameter_by_name('timeline_id');
             const timeline_item_id = uuid;
             const type = 'timeline_item';
             const EXHIBITS_ENDPOINTS = endpointsModule.get_exhibits_endpoints();
-            const etmp = EXHIBITS_ENDPOINTS.exhibits.timeline_item_records.grid_item_suppress.post.endpoint.replace(':exhibit_id', exhibit_id);
+            const etmp = EXHIBITS_ENDPOINTS.exhibits.timeline_item_records.timeline_item_suppress.post.endpoint.replace(':exhibit_id', exhibit_id);
             const gtmp = etmp.replace(':timeline_id', timeline_id);
             const endpoint = gtmp.replace(':timeline_item_id', timeline_item_id);
             const token = authModule.get_user_token();
@@ -176,7 +176,7 @@ const itemsTimelineModule = (function () {
 
         try {
 
-            const exhibit_links = Array.from(document.getElementsByClassName('publish'));
+            const exhibit_links = Array.from(document.getElementsByClassName('publish-item'));
 
             exhibit_links.forEach(exhibit_link => {
                 exhibit_link.addEventListener('click', async (event) => {
@@ -194,7 +194,7 @@ const itemsTimelineModule = (function () {
 
         try {
 
-            const exhibit_links = Array.from(document.getElementsByClassName('suppress'));
+            const exhibit_links = Array.from(document.getElementsByClassName('suppress-item'));
 
             exhibit_links.forEach(exhibit_link => {
                 exhibit_link.addEventListener('click', async () => {

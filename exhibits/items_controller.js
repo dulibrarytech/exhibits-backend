@@ -173,6 +173,8 @@ exports.publish_item_record = async function (req, res) {
             result = await HEADINGS_MODEL.publish_heading_record(exhibit_id, item_id);
         } else if (type === 'grid') {
             result = await GRIDS_MODEL.publish_grid_record(exhibit_id, item_id);
+        } else if (type === 'timeline') {
+            result = await TIMELINES_MODEL.publish_timeline_record(exhibit_id, item_id);
         } else {
 
             res.status(204).send({
@@ -217,6 +219,8 @@ exports.suppress_item_record = async function (req, res) {
             result = await HEADINGS_MODEL.suppress_heading_record(exhibit_id, item_id);
         } else if (type === 'grid') {
             result = await GRIDS_MODEL.suppress_grid_record(exhibit_id, item_id);
+        } else if (type === 'timeline') {
+            result = await TIMELINES_MODEL.suppress_timeline_record(exhibit_id, item_id);
         } else {
 
             res.status(204).send({
