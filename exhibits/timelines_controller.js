@@ -167,6 +167,72 @@ exports.update_timeline_item_record = async function (req, res) {
     }
 };
 
+exports.publish_timeline_item_record = async function (req, res) {
+
+    try {
+
+        const exhibit_id = req.params.exhibit_id;
+        const timeline_id = req.params.timeline_id;
+        const timeline_item_id = req.params.timeline_item_id;
+        const type = req.query.type;
+        let result;
+
+        if (exhibit_id === undefined || exhibit_id.length === 0 && timeline_id === undefined || timeline_id.length === 0) {
+            res.status(400).send('Bad request.');
+            return false;
+        }
+
+        result = await TIMELINES_MODEL.publish_timeline_item_record(exhibit_id, timeline_id, timeline_item_id);
+
+        if (result.status === true) {
+
+            res.status(200).send({
+                message: 'timeline item published.'
+            });
+        } else if (result.status === false) {
+            res.status(204).send({
+                message: 'Unable to publish timeline item'
+            });
+        }
+
+    } catch (error) {
+        res.status(500).send({message: `Unable to publish timeline item record. ${error.message}`});
+    }
+};
+
+exports.suppress_timeline_item_record = async function (req, res) {
+
+    try {
+
+        const exhibit_id = req.params.exhibit_id;
+        const timeline_id = req.params.timeline_id;
+        const timeline_item_id = req.params.timeline_item_id;
+        const type = req.query.type;
+        let result;
+
+        if (exhibit_id === undefined || exhibit_id.length === 0 && timeline_id === undefined || timeline_id.length === 0) {
+            res.status(400).send('Bad request.');
+            return false;
+        }
+
+        result = await TIMELINES_MODEL.suppress_timeline_item_record(exhibit_id, timeline_id, timeline_item_id);
+
+        if (result === true) {
+            res.status(200).send({
+                message: 'Item timeline suppressed.'
+            });
+        } else if (result === false) {
+            res.status(204).send({
+                message: 'Unable to suppress timeline item'
+            });
+        }
+
+    } catch (error) {
+        res.status(500).send({message: `Unable to suppress timeline item record. ${error.message}`});
+    }
+};
+
+
 /*
 
 
@@ -218,71 +284,5 @@ exports.delete_grid_item_media = function (req, res) {
         res.status(404).send({message: `Unable to delete exhibit media file. ${error.message}`});
     }
 };
-
-exports.publish_grid_item_record = async function (req, res) {
-
-    try {
-
-        const exhibit_id = req.params.exhibit_id;
-        const grid_id = req.params.grid_id;
-        const grid_item_id = req.params.grid_item_id;
-        const type = req.query.type;
-        let result;
-
-        if (exhibit_id === undefined || exhibit_id.length === 0 && grid_id === undefined || grid_id.length === 0) {
-            res.status(400).send('Bad request.');
-            return false;
-        }
-
-        result = await GRIDS_MODEL.publish_grid_item_record(exhibit_id, grid_id, grid_item_id);
-
-        if (result.status === true) {
-
-            res.status(200).send({
-                message: 'Grid item published.'
-            });
-        } else if (result.status === false) {
-            res.status(204).send({
-                message: 'Unable to publish grid item'
-            });
-        }
-
-    } catch (error) {
-        res.status(500).send({message: `Unable to publish grid item record. ${error.message}`});
-    }
-};
-
-exports.suppress_grid_item_record = async function (req, res) {
-
-    try {
-
-        const exhibit_id = req.params.exhibit_id;
-        const grid_id = req.params.grid_id;
-        const grid_item_id = req.params.grid_item_id;
-        const type = req.query.type;
-        let result;
-
-        if (exhibit_id === undefined || exhibit_id.length === 0 && grid_id === undefined || grid_id.length === 0) {
-            res.status(400).send('Bad request.');
-            return false;
-        }
-
-        result = await GRIDS_MODEL.suppress_grid_item_record(exhibit_id, grid_id, grid_item_id);
-
-        if (result === true) {
-            res.status(200).send({
-                message: 'Item grid suppressed.'
-            });
-        } else if (result === false) {
-            res.status(204).send({
-                message: 'Unable to suppress grid item'
-            });
-        }
-
-    } catch (error) {
-        res.status(500).send({message: `Unable to suppress grid item record. ${error.message}`});
-    }
-};
-
 
  */

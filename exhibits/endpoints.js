@@ -18,6 +18,7 @@
 
 'use strict';
 
+// TODO: Split up into different files
 const APP_PATH = '/exhibits-dashboard';
 const PREFIX = '/api/';
 const VERSION = 'v1';
@@ -231,7 +232,7 @@ const ENDPOINTS = {
                 params: 'token or api_key'
             }
         },
-        timeline_records: {
+        timeline_records: { /// TODO
             get: {
                 description: 'Retrieves all timelines records by exhibit id and timeline id',
                 endpoint: `${APP_PATH}${PREFIX}${VERSION}${ENDPOINT}/:exhibit_id/timelines/:timeline_id`,
@@ -281,13 +282,13 @@ const ENDPOINTS = {
             timeline_item_publish: {
                 post: {
                     description: 'Publishes timeline item',
-                    endpoint: `${APP_PATH}${PREFIX}${VERSION}${ENDPOINT}/:exhibit_id/publish/:timeline_id/item/:timeline_item_id`
+                    endpoint: `${APP_PATH}${PREFIX}${VERSION}${ENDPOINT}/:exhibit_id/timelines/publish/:timeline_id/item/:timeline_item_id`
                 }
             },
             timeline_item_suppress: {
                 post: {
                     description: 'Suppresses timeline item',
-                    endpoint: `${APP_PATH}${PREFIX}${VERSION}${ENDPOINT}/:exhibit_id/suppress/:timeline_id/item/:timeline_item_id`
+                    endpoint: `${APP_PATH}${PREFIX}${VERSION}${ENDPOINT}/:exhibit_id/timelines/suppress/:timeline_id/item/:timeline_item_id`
                 }
             },
         },
@@ -303,7 +304,7 @@ const ENDPOINTS = {
                 description: 'Deletes timeline item media',
                 endpoint: `${APP_PATH}${PREFIX}${VERSION}${ENDPOINT}/:exhibit_id/timelines/:timelines_id/items/:item_id/media/:media`
             }
-        },
+        }, // TODO
         repo_items: {
             description: 'Retrieves repository item metadata',
             endpoint: `${APP_PATH}/repo/:uuid`,

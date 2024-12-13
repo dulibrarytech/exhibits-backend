@@ -169,7 +169,7 @@ const itemsModule = (function () {
                     'x-access-token': token
                 }
             });
-            console.log(response);
+
             if (response.status === 200) {
 
                 document.querySelector('#message').innerHTML = `<div class="alert alert-success" role="alert"><i class="fa fa-check"></i> Item published</div>`;

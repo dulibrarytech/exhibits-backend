@@ -130,7 +130,7 @@ const itemsTimelineModule = (function () {
     async function suppress_timeline_item(uuid) {
 
         try {
-            console.log('suppress');
+
             const exhibit_id = helperModule.get_parameter_by_name('exhibit_id');
             const timeline_id = helperModule.get_parameter_by_name('timeline_id');
             const timeline_item_id = uuid;

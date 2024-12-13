@@ -556,6 +556,39 @@ exports.index_timeline_record = async function (exhibit_id, item_id) {
 };
 
 /**
+* Indexes timeline item
+* @param timeline_id
+* @param timeline_item_id
+* @param timeline_item_record
+*/
+exports.index_timeline_item_record = async function (timeline_id, timeline_item_id, timeline_item_record) {
+
+    let timeline_item_index_record = construct_item_index_record(timeline_item_record);
+    let indexed_record = await this.get_indexed_record(timeline_id);
+    let items = indexed_record.data._source.items;
+    let updated_items = [];
+
+    for (let i=0;i<items.length;i++) {
+        updated_items.push(items[i]);
+    }
+
+    timeline_item_index_record.is_published = 1;
+    updated_items.push(timeline_item_index_record);
+
+    indexed_record.data._source.items = updated_items.sort((a, b) => {
+        return a.order - b.order;
+    });
+
+    const is_indexed = await this.index_record(indexed_record.data._source);
+
+    if (is_indexed === true) {
+        return true;
+    } else {
+        return false;
+    }
+};
+
+/**
  * indexes record
  * @param record
  */
