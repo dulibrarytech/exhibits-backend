@@ -21,7 +21,9 @@
                 </li>
                 <li class="menu-title">Menu</li>
             </ul>
-            <ul class="nav navbar-nav"><li id="preview-link"></li></ul>
+            <ul class="nav navbar-nav">
+                <li id="preview-link"></li>
+            </ul>
             <ul class="nav navbar-nav">
                 <li>
                     <a id="back-to-items" href="#" data-keyboard="false">
@@ -57,7 +59,8 @@
                                 <div class="form-text text-muted" style="font-size: 17px">
                                     Title <small><em>(Optional)</em></small>
                                 </div>
-                                <small class="form-text text-muted"><i class="fa fa-exclamation-circle"></i> <em>The item title becomes a subheading in the navigation</em></small>
+                                <small class="form-text text-muted"><i class="fa fa-exclamation-circle"></i> <em>The
+                                        item title becomes a subheading in the navigation</em></small>
                                 <span id="item-title-error" class="is-error"></span>
                                 <div id="item-title-input" style="height: 100px"></div>
                             </div>
@@ -68,7 +71,8 @@
                     <div class="col-12 col-md-12">
                         <div class="row form-group">
                             <div class="col-12">
-                                <div class="form-text text-muted" style="font-size: 17px">Text <small><em>(Optional)</em></small></div>
+                                <div class="form-text text-muted" style="font-size: 17px">Text
+                                    <small><em>(Optional)</em></small></div>
                                 <div id="item-text-input" style="height: 100px"></div>
                             </div>
                         </div>
@@ -78,8 +82,10 @@
                     <div class="col-12 col-md-12">
                         <div class="row form-group">
                             <div class="col-12">
-                                <small class="form-text text-muted"><i class="fa fa-exclamation-circle"></i> <em>Text will be wrapped around item by default</em></small>
-                                <label class="form-text text-muted" style="font-size: 17px" for="media-padding">Wrap Text&nbsp;
+                                <small class="form-text text-muted"><i class="fa fa-exclamation-circle"></i> <em>Text
+                                        will be wrapped around item by default</em></small>
+                                <label class="form-text text-muted" style="font-size: 17px" for="media-padding">Wrap
+                                    Text&nbsp;
                                     <input type="checkbox" id="wrap-text" name="wrap_text" checked>
                                 </label>
                             </div>
@@ -90,8 +96,10 @@
                     <div class="col-12 col-md-12">
                         <div class="row form-group">
                             <div class="col-12">
-                                <div class="form-text text-muted" style="font-size: 17px">Caption <small><em>(Optional)</em></small></div>
-                                <textarea id="item-caption-input" class="form-control" name="item_caption_input" rows="4"></textarea>
+                                <div class="form-text text-muted" style="font-size: 17px">Caption
+                                    <small><em>(Optional)</em></small></div>
+                                <textarea id="item-caption-input" class="form-control" name="item_caption_input"
+                                          rows="4"></textarea>
                             </div>
                         </div>
                     </div>
@@ -109,28 +117,39 @@
                 <div class="container">
                     <ul class="nav nav-tabs" id="mediaTab" role="tablist">
                         <li class="nav-item">
-                            <a class="nav-link active" id="upload-media-tab" data-toggle="tab" href="#upload-media" role="tab" aria-controls="upload-media" aria-selected="true">Upload Media</a>
+                            <a class="nav-link active" id="upload-media-tab" data-toggle="tab" href="#upload-media"
+                               role="tab" aria-controls="upload-media" aria-selected="true">Upload Media</a>
                         </li>
                         <li class="nav-item">
-                            <a class="nav-link" id="import-audio-video-tab" data-toggle="tab" href="#import-audio-video" role="tab" aria-controls="import-audio-video" aria-selected="false">Import Audio/Video</a>
+                            <a class="nav-link" id="import-audio-video-tab" data-toggle="tab" href="#import-audio-video"
+                               role="tab" aria-controls="import-audio-video" aria-selected="false">Import
+                                Audio/Video</a>
                         </li>
                         <li class="nav-item">
-                            <a class="nav-link" id="import-repo-media-tab" data-toggle="tab" href="#import-repo-media" role="tab" aria-controls="import-repo-media" aria-selected="false">Import Repository Media</a>
+                            <a class="nav-link" id="import-repo-media-tab" data-toggle="tab" href="#import-repo-media"
+                               role="tab" aria-controls="import-repo-media" aria-selected="false">Import Repository
+                                Media</a>
                         </li>
                         <li class="nav-item">
-                            <a class="nav-link" id="media-padding-tab" data-toggle="tab" href="#media-padding" role="tab" aria-controls="media-padding" aria-selected="false">Media Padding</a>
+                            <a class="nav-link" id="media-padding-tab" data-toggle="tab" href="#media-padding"
+                               role="tab" aria-controls="media-padding" aria-selected="false">Media Padding</a>
                         </li>
                     </ul>
                     <div class="tab-content" id="mediaTabContent">
-                        <div class="tab-pane fade show active" id="upload-media" role="tabpanel" aria-labelledby="upload-media-tab"><%- include('partials/tab-upload-media.ejs'); %></div>
-                        <div class="tab-pane fade" id="import-audio-video" role="tabpanel" aria-labelledby="import-audio-video-tab"><%- include('partials/tab-import-audio-video.ejs'); %></div>
-                        <div class="tab-pane fade" id="import-repo-media" role="tabpanel" aria-labelledby="import-repo-media-tab"><%- include('partials/tab-import-repo-media.ejs'); %></div>
-                        <div class="tab-pane fade" id="media-padding" role="tabpanel" aria-labelledby="media-padding-tab"><%- include('partials/tab-media-padding.ejs'); %></div>
+                        <div class="tab-pane fade show active" id="upload-media" role="tabpanel"
+                             aria-labelledby="upload-media-tab"><%- include('partials/tab-upload-media.ejs'); %></div>
+                        <div class="tab-pane fade" id="import-audio-video" role="tabpanel"
+                             aria-labelledby="import-audio-video-tab"><%- include('partials/tab-import-audio-video.ejs'); %></div>
+                        <div class="tab-pane fade" id="import-repo-media" role="tabpanel"
+                             aria-labelledby="import-repo-media-tab"><%- include('partials/tab-import-repo-media.ejs'); %></div>
+                        <div class="tab-pane fade" id="media-padding" role="tabpanel"
+                             aria-labelledby="media-padding-tab"><%- include('partials/tab-media-padding.ejs'); %></div>
                     </div>
                 </div>
+                <%- include('partials/embed-item.ejs'); %>
             </div>
-            </div>
-            <div id="item-layout-card" class="card">
+        </div>
+        <div id="item-layout-card" class="card">
             <div class="card-header">
                 <strong class="card-title mb-3">Item Layout</strong>
             </div>
@@ -140,9 +159,12 @@
                 </div>
                 <div class="row">
                     <div class="col-4 col-md-4">
-                        <p style="height: 135px"><img src="/exhibits-dashboard/static/images/item_layout_text_left_media_right.png" height="100"></p>
+                        <p style="height: 135px"><img
+                                    src="/exhibits-dashboard/static/images/item_layout_text_left_media_right.png"
+                                    height="100"></p>
                         <p>
-                            <label class="btn btn-default" for="item-layout-media-right" style="font-size: 15px">Text media pair, media on the right
+                            <label class="btn btn-default" for="item-layout-media-right" style="font-size: 15px">Text
+                                media pair, media on the right
                                 <input type="radio"
                                        name="layout"
                                        id="item-layout-media-right"
@@ -151,9 +173,11 @@
                         </p>
                     </div>
                     <div class="col-4 col-md-4">
-                        <p><img src="/exhibits-dashboard/static/images/item_layout_media_top_text_bottom.png" width="145" height="135"></p>
+                        <p><img src="/exhibits-dashboard/static/images/item_layout_media_top_text_bottom.png"
+                                width="145" height="135"></p>
                         <p>
-                            <label class="btn btn-default" for="item-layout-media-top" style="font-size: 15px">Text media pair,
+                            <label class="btn btn-default" for="item-layout-media-top" style="font-size: 15px">Text
+                                media pair,
                                 text below media
                                 <input type="radio"
                                        name="layout"
@@ -163,9 +187,11 @@
                         </p>
                     </div>
                     <div class="col-4 col-md-4">
-                        <p><img src="/exhibits-dashboard/static/images/item_layout_text_top_media_bottom.png" width="135" height="135"></p>
+                        <p><img src="/exhibits-dashboard/static/images/item_layout_text_top_media_bottom.png"
+                                width="135" height="135"></p>
                         <p>
-                            <label class="btn btn-default" for="item-layout-media-bottom" style="font-size: 15px">Text media
+                            <label class="btn btn-default" for="item-layout-media-bottom" style="font-size: 15px">Text
+                                media
                                 pair, text above the media
                                 <input type="radio"
                                        name="layout"
@@ -177,9 +203,11 @@
                 </div>
                 <div class="row">
                     <div class="col-4 col-md-4">
-                        <p style="height: 135px"><img src="/exhibits-dashboard/static/images/item_layout_media_only.png" height="100"></p>
+                        <p style="height: 135px"><img src="/exhibits-dashboard/static/images/item_layout_media_only.png"
+                                                      height="100"></p>
                         <p>
-                            <label class="btn btn-default" for="item-layout-media-only" style="font-size: 15px">Media only, no text
+                            <label class="btn btn-default" for="item-layout-media-only" style="font-size: 15px">Media
+                                only, no text
                                 <input type="radio"
                                        name="layout"
                                        id="item-layout-media-only"
@@ -188,9 +216,11 @@
                         </p>
                     </div>
                     <div class="col-4 col-md-4">
-                        <p style="height: 135px"><img src="/exhibits-dashboard/static/images/item_layout_text_only.png" height="100"></p>
+                        <p style="height: 135px"><img src="/exhibits-dashboard/static/images/item_layout_text_only.png"
+                                                      height="100"></p>
                         <p>
-                            <label class="btn btn-default" for="item-layout-text-only" style="font-size: 15px">Text only, no media
+                            <label class="btn btn-default" for="item-layout-text-only" style="font-size: 15px">Text
+                                only, no media
                                 <input type="radio"
                                        name="layout"
                                        id="item-layout-text-only"
@@ -199,9 +229,12 @@
                         </p>
                     </div>
                     <div class="col-4 col-md-4">
-                        <p style="height: 135px"><img src="/exhibits-dashboard/static/images/item_layout_media_left_text_right.png" height="100"></p>
+                        <p style="height: 135px"><img
+                                    src="/exhibits-dashboard/static/images/item_layout_media_left_text_right.png"
+                                    height="100"></p>
                         <p>
-                            <label class="btn btn-default" for="item-layout-media-left" style="font-size: 15px">Text media pair, media on the left
+                            <label class="btn btn-default" for="item-layout-media-left" style="font-size: 15px">Text
+                                media pair, media on the left
                                 <input type="radio"
                                        name="layout"
                                        id="item-layout-media-left"

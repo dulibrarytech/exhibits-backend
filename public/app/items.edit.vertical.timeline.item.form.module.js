@@ -92,8 +92,13 @@ const itemsEditTimelineItemFormModule = (function () {
         document.querySelector('#item-caption-input').value = record.caption;
 
         let date_arr = record.date.split('T');
-        let date = date_arr.shift();
-        document.querySelector('#item-date-input').value = date;
+        document.querySelector('#item-date-input').value = date_arr.shift();
+
+        if (record.is_embedded === 1) {
+            document.querySelector('#embed-item').checked = true;
+        } else {
+            document.querySelector('#embed-item').checked = false;
+        }
 
         if (record.media.length > 0) {
 

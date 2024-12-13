@@ -36,6 +36,7 @@ const itemsCommonGridItemFormModule = (function () {
             item.description = rich_text_data['item-description-input'].getHTMLCode();
             item.text = rich_text_data['item-text-input'].getHTMLCode();
             item.caption = document.querySelector('#item-caption-input').value;
+            item.is_embedded = document.querySelector('#embed-item').checked;
 
             if (item.title === '<div></div>') {
                 item.title = '';
@@ -47,6 +48,12 @@ const itemsCommonGridItemFormModule = (function () {
 
             if (item.text === '<div></div>') {
                 item.text = '';
+            }
+
+            if (item.is_embedded === true) {
+                item.is_embedded = 1;
+            } else if (item.is_embedded === false) {
+                item.is_embedded = 0;
             }
 
             // item media

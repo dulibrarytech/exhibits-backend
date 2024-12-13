@@ -36,6 +36,7 @@ const itemsCommonStandardItemFormModule = (function () {
             item.text = rich_text_data['item-text-input'].getHTMLCode();
             item.caption = document.querySelector('#item-caption-input').value;
             item.wrap_text = document.querySelector('#wrap-text').checked;
+            item.is_embedded = document.querySelector('#embed-item').checked;
 
             if (item.title === '<div></div>') {
                 item.title = '';
@@ -49,6 +50,12 @@ const itemsCommonStandardItemFormModule = (function () {
                 item.wrap_text = 1;
             } else if (item.wrap_text === false) {
                 item.wrap_text = 0;
+            }
+
+            if (item.is_embedded === true) {
+                item.is_embedded = 1;
+            } else if (item.is_embedded === false) {
+                item.is_embedded = 0;
             }
 
             // item media

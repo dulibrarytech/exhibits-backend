@@ -91,6 +91,12 @@ const itemsEditGridItemFormModule = (function () {
         rich_text_data['item-text-input'].setHTMLCode(helperModule.unescape(record.text));
         document.querySelector('#item-caption-input').value = record.caption;
 
+        if (record.is_embedded === 1) {
+            document.querySelector('#embed-item').checked = true;
+        } else {
+            document.querySelector('#embed-item').checked = false;
+        }
+
         if (record.media.length > 0) {
 
             if (record.is_repo_item === 0 && record.is_kaltura_item === 0) {

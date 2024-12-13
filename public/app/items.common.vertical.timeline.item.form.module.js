@@ -37,6 +37,7 @@ const itemsCommonVerticalTimelineItemFormModule = (function () {
             item.text = rich_text_data['item-text-input'].getHTMLCode();
             item.caption = document.querySelector('#item-caption-input').value;
             item.date = document.querySelector('input[type="date"]').value;
+            item.is_embedded = document.querySelector('#embed-item').checked;
 
             if (item.title === '<div></div>') {
                 item.title = '';
@@ -48,6 +49,12 @@ const itemsCommonVerticalTimelineItemFormModule = (function () {
 
             if (item.text === '<div></div>') {
                 item.text = '';
+            }
+
+            if (item.is_embedded === true) {
+                item.is_embedded = 1;
+            } else if (item.is_embedded === false) {
+                item.is_embedded = 0;
             }
 
             if (item.date.length === 0) {

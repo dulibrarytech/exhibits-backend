@@ -92,6 +92,12 @@ const itemsEditStandardItemFormModule = (function () {
             document.querySelector('#wrap-text').checked = false;
         }
 
+        if (record.is_embedded === 1) {
+            document.querySelector('#embed-item').checked = true;
+        } else {
+            document.querySelector('#embed-item').checked = false;
+        }
+
         if (record.media.length > 0) {
 
             if (record.is_repo_item === 0 && record.is_kaltura_item === 0) {
