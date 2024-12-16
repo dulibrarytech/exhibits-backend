@@ -234,7 +234,7 @@ const itemsGridModule = (function () {
 
                 setTimeout(() => {
                     window.location.replace(`${APP_PATH}/items/grid/items?exhibit_id=${exhibit_id}&grid_id=${grid_id}`);
-                }, 2000);
+                }, 900);
             }
 
         } catch (error) {

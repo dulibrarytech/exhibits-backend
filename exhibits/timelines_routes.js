@@ -52,13 +52,15 @@ module.exports = function (app) {
     app.route(ENDPOINTS().exhibits.timeline_item_records.timeline_item_suppress.post.endpoint)
     .post(CONTROLLER.suppress_timeline_item_record);
 
+    app.route(ENDPOINTS().exhibits.timeline_item_records.delete.endpoint)
+    .delete(TOKEN.verify, CONTROLLER.delete_timeline_item_record);
+
     /*
 
     app.route(ENDPOINTS().exhibits.grid_item_media.delete.endpoint)
     .delete(TOKEN.verify, CONTROLLER.delete_grid_item_media);
 
-    app.route(ENDPOINTS().exhibits.grid_item_records.delete.endpoint)
-    .delete(TOKEN.verify, CONTROLLER.delete_grid_item_record);
+
 
     app.route(ENDPOINTS().exhibits.grid_item_records.grid_item_publish.post.endpoint)
     .post(CONTROLLER.publish_grid_item_record);

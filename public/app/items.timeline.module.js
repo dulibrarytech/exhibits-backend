@@ -233,8 +233,8 @@ const itemsTimelineModule = (function () {
             if (response !== undefined && response.status === 204) {
 
                 setTimeout(() => {
-                    window.location.replace(`${APP_PATH}/items/timeline/items?exhibit_id=${exhibit_id}&timeline_id=${grid_id}`);
-                }, 2000);
+                    window.location.replace(`${APP_PATH}/items/timeline/items?exhibit_id=${exhibit_id}&timeline_id=${timeline_id}`);
+                }, 900);
             }
 
         } catch (error) {

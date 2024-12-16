@@ -222,6 +222,14 @@ exports.get_dashboard_item_timeline_items = function (req, res) {
     });
 };
 
+exports.get_dashboard_timeline_items_delete_form = function (req, res) {
+    res.render('dashboard-timeline-items-delete-form', {
+        host: CONFIG.host,
+        appname: CONFIG.app_name,
+        appversion: CONFIG.app_version,
+        organization: CONFIG.organization
+    });
+};
 
 //======================== auth ========================//
 exports.get_dashboard_login = function (req, res) {

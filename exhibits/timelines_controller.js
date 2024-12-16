@@ -232,32 +232,29 @@ exports.suppress_timeline_item_record = async function (req, res) {
     }
 };
 
-
-/*
-
-
-
-exports.delete_grid_item_record = async function (req, res) {
+exports.delete_timeline_item_record = async function (req, res) {
 
     try {
 
         const is_member_of_exhibit = req.params.exhibit_id;
-        const grid_id = req.params.grid_id;
-        const grid_item_id = req.params.item_id;
+        const timeline_id = req.params.timeline_id;
+        const timeline_item_id = req.params.item_id;
         const type = req.query.type;
 
-        if (grid_item_id === undefined || grid_item_id.length === 0 && grid_id === undefined || grid_id.length === 0) {
+        if (timeline_item_id === undefined || timeline_item_id.length === 0 && timeline_id === undefined || timeline_id.length === 0) {
             res.status(400).send('Bad request.');
             return false;
         }
 
-        const result = await GRIDS_MODEL.delete_grid_item_record(is_member_of_exhibit, grid_id, grid_item_id, type);
+        const result = await TIMELINES_MODEL.delete_timeline_item_record(is_member_of_exhibit, timeline_id, timeline_item_id, type);
         res.status(result.status).send(result);
 
     } catch (error) {
-        res.status(500).send({message: `Unable to delete grid item. ${error.message}`});
+        res.status(500).send({message: `Unable to delete timeline item. ${error.message}`});
     }
 };
+
+/*
 
 exports.delete_grid_item_media = function (req, res) {
 
