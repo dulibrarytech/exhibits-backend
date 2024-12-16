@@ -343,7 +343,8 @@ const itemsListDisplayModule = (function () {
                 url = EXHIBITS_ENDPOINTS.exhibits.exhibit_media.get.endpoint.replace(':exhibit_id', item.is_member_of_exhibit).replace(':media', item.thumbnail);
                 thumbnail = `<p><img alt="${url}" src="${url}" height="100" width="100"></p>`;
             } else {
-                thumbnail = '';
+                thumbnail = `${APP_PATH}/static/images/image-tn.png`;
+                img = `<p><img src="${thumbnail}" alt="thumbnail" height="100" width="100"></p>`;
             }
 
             if (item_obj.edit.length !== 0) {
