@@ -32,8 +32,8 @@ const itemsListDisplayModule = (function () {
             published_obj.draggable = `<tr id="${item.uuid}_${item.type}">`;
             published_obj.item_order = `<td class="item-order"><span style="padding-left: 4px;">${item.order}</span></td>`;
             published_obj.status = `<a href="#" id="${item.uuid}" class="suppress-item"><span id="suppress" title="published"><i class="fa fa-cloud" style="color: green"></i><br>Published</span></a>`;
-            published_obj.edit = '';
-            published_obj.delete_item = '';
+            published_obj.edit = `<i title="Can only edit if unpublished" style="color: #d3d3d3" class="fa fa-edit pr-1"></i>`;
+            published_obj.delete_item = `<i title="Can only delete if unpublished" style="color: #d3d3d3" class="fa fa-trash pr-1"></i>`;
         } else if (item.is_published === 0) {
             published_obj.draggable = `<tr class="dropzone" id="${item.uuid}_${item.type}" draggable='true'>`;
             published_obj.item_order = `<td class="grabbable item-order"><i class="fa fa-reorder"></i><span style="padding-left: 4px;">${item.order}</span></td>`;
@@ -273,11 +273,8 @@ const itemsListDisplayModule = (function () {
                 img = `<p><img src="${thumbnail}" alt="thumbnail" height="100" width="100"></p>`;
             }
 
-            if (item_obj.edit.length !== 0) {
+            if (item.is_published === 0) {
                 item_obj.edit = `<a href="${APP_PATH}/items/grid/item/edit?exhibit_id=${item.is_member_of_exhibit}&grid_id=${item.is_member_of_grid}&item_id=${item.uuid}" title="Edit"><i class="fa fa-edit pr-1"></i></a>`;
-            }
-
-            if (item_obj.delete_item.length !== 0) {
                 item_obj.delete_item = `<a href="${APP_PATH}/items/grid/item/delete?exhibit_id=${item.is_member_of_exhibit}&grid_id=${item.is_member_of_grid}&item_id=${item.uuid}" title="Delete"><i class="fa fa-trash pr-1"></i></a>`;
             }
 
@@ -347,11 +344,8 @@ const itemsListDisplayModule = (function () {
                 img = `<p><img src="${thumbnail}" alt="thumbnail" height="100" width="100"></p>`;
             }
 
-            if (item_obj.edit.length !== 0) {
+            if (item.is_published === 0) {
                 item_obj.edit = `<a href="${APP_PATH}/items/vertical-timeline/item/edit?exhibit_id=${item.is_member_of_exhibit}&timeline_id=${item.is_member_of_timeline}&item_id=${item.uuid}" title="Edit"><i class="fa fa-edit pr-1"></i></a>`;
-            }
-
-            if (item_obj.delete_item.length !== 0) {
                 item_obj.delete_item = `<a href="${APP_PATH}/items/vertical-timeline/item/delete?exhibit_id=${item.is_member_of_exhibit}&timeline_id=${item.is_member_of_timeline}&item_id=${item.uuid}" title="Delete"><i class="fa fa-trash pr-1"></i></a>`;
             }
 

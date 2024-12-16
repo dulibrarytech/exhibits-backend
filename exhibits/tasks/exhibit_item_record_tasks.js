@@ -57,7 +57,7 @@ const Exhibit_item_record_tasks = class {
         }
     }
 
-    /** TODO: refactor based on updated schema
+    /**
      * Gets item records by exhibit
      * @param is_member_of_exhibit
      */

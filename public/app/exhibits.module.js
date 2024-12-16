@@ -76,7 +76,7 @@ const exhibitsModule = (function () {
             let uuid = exhibits[i].uuid;
             let is_published = exhibits[i].is_published;
             let preview_link = `${APP_PATH}/preview?exhibit_id=${uuid}`;
-            let exhibit_items = `<a href="${APP_PATH}/items?exhibit_id=${exhibits[i].uuid}" title="Exhibit items"><i class="fa fa-search pr-1"></i></a>&nbsp;`;
+            let exhibit_items = `<a href="${APP_PATH}/items?exhibit_id=${exhibits[i].uuid}" title="View Exhibit Items"><i class="fa fa-search pr-1"></i></a>&nbsp;`;
             let thumbnail_url = '';
             let thumbnail_fragment = '';
             let status;
@@ -86,7 +86,8 @@ const exhibitsModule = (function () {
 
             if (is_published === 1) {
                 status = `<a href="#" id="${exhibits[i].uuid}" class="suppress-exhibit"><span id="suppress" title="published"><i class="fa fa-cloud" style="color: green"></i><br>Published</span></a>`;
-                trash = '';
+                exhibit_edit = `<i title="Can only edit if unpublished" style="color: #d3d3d3" class="fa fa-edit pr-1"></i>`;
+                trash = `<i title="Can only delete if unpublished" style="color: #d3d3d3" class="fa fa-trash pr-1"></i>`;
             } else if (is_published === 0) {
                 status = `<a href="#" id="${exhibits[i].uuid}" class="publish-exhibit"><span id="publish" title="suppressed"><i class="fa fa-cloud-upload" style="color: darkred"></i><br>Unpublished</span></a>`;
                 exhibit_edit = `<a href="${APP_PATH}/exhibits/exhibit/edit?exhibit_id=${uuid}" title="Edit"><i class="fa fa-edit pr-1"></i> </a>`;
@@ -122,9 +123,9 @@ const exhibitsModule = (function () {
             exhibit_data += `<td style="width: 10%">
                                 <div class="card-text text-sm-center">
                                     ${exhibit_items}&nbsp;
-                                    ${exhibit_edit}
-                                    &nbsp;
                                     <a href="${APP_PATH}/items/standard?exhibit_id=${uuid}" title="Add Items"><i class="fa fa-plus pr-1"></i> </a>
+                                    &nbsp;
+                                    ${exhibit_edit}
                                     &nbsp;
                                     ${trash}
                                 </div>
