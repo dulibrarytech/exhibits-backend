@@ -28,7 +28,17 @@ const itemsModule = (function () {
 
         try {
 
-            let token = authModule.get_user_token();
+            const token = authModule.get_user_token();
+
+            if (token === false || EXHIBITS_ENDPOINTS === null) {
+
+                document.querySelector('#message').innerHTML = `<div class="alert alert-danger" role="alert"><i class="fa fa-exclamation"></i> Session Expired. One moment please...</div>`;
+                setTimeout(() => {
+                    authModule.redirect_to_auth();
+                }, 1000);
+                return false;
+            }
+
             let response = await httpModule.req({
                 method: 'GET',
                 url: EXHIBITS_ENDPOINTS.exhibits.item_records.endpoint.replace(':exhibit_id', uuid),
@@ -61,6 +71,11 @@ const itemsModule = (function () {
             const items = await get_items(exhibit_id);
             let item_data = '';
             let item_order = [];
+
+            if (items === false) {
+                document.querySelector('#item-card').innerHTML = '';
+                return false;
+            }
 
             if (items.length === 0) {
                 document.querySelector('.card').innerHTML = '';

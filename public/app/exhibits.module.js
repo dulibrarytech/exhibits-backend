@@ -29,7 +29,7 @@ const exhibitsModule = (function () {
         try {
 
             const EXHIBITS_ENDPOINTS = endpointsModule.get_exhibits_endpoints();
-            let token = authModule.get_user_token();
+            const token = authModule.get_user_token();
 
             if (token === false || EXHIBITS_ENDPOINTS === null) {
 
