@@ -29,16 +29,14 @@ const exhibitsModule = (function () {
         try {
 
             const EXHIBITS_ENDPOINTS = endpointsModule.get_exhibits_endpoints();
-            const token = authModule.get_user_token();
+            let token = authModule.get_user_token();
 
             if (token === false || EXHIBITS_ENDPOINTS === null) {
 
-                document.querySelector('#message').innerHTML = `<div class="alert alert-danger" role="alert"><i class="fa fa-exclamation"></i> 'ERROR: Unable to get API endpoints'</div>`;
-
+                document.querySelector('#message').innerHTML = `<div class="alert alert-danger" role="alert"><i class="fa fa-exclamation"></i> Session Expired. One moment please...</div>`;
                 setTimeout(() => {
                     authModule.redirect_to_auth();
-                }, 2000);
-
+                }, 1000);
                 return false;
             }
 
@@ -64,6 +62,11 @@ const exhibitsModule = (function () {
 
         const exhibits = await get_exhibits();
         let exhibit_data = '';
+
+        if (exhibits === false) {
+            document.querySelector('#exhibit-card').innerHTML = '';
+            return false;
+        }
 
         if (exhibits.length === 0) {
             document.querySelector('.card').innerHTML = '';
