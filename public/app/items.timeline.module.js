@@ -28,9 +28,19 @@ const itemsTimelineModule = (function () {
 
         try {
 
+            const token = authModule.get_user_token();
+
+            if (token === false || EXHIBITS_ENDPOINTS === null) {
+
+                document.querySelector('#message').innerHTML = `<div class="alert alert-danger" role="alert"><i class="fa fa-exclamation"></i> Session Expired. One moment please...</div>`;
+                setTimeout(() => {
+                    authModule.redirect_to_auth();
+                }, 1000);
+                return false;
+            }
+
             let tmp = EXHIBITS_ENDPOINTS.exhibits.timeline_item_records.get.endpoint.replace(':exhibit_id', exhibit_id);
             const endpoint = tmp.replace(':timeline_id', timeline_id);
-            const token = authModule.get_user_token();
             const response = await httpModule.req({
                 method: 'GET',
                 url: endpoint,
@@ -60,6 +70,11 @@ const itemsTimelineModule = (function () {
         await exhibitsModule.set_exhibit_title(exhibit_id);
         const items = await get_timeline_items(exhibit_id, timeline_id);
         let item_data = '';
+
+        if (items === false) {
+            document.querySelector('#item-card').innerHTML = '';
+            return false;
+        }
 
         if (items.length === 0) {
             document.querySelector('.card').innerHTML = '';
