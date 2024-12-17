@@ -60,6 +60,7 @@ const itemsModule = (function () {
             const exhibit_id = helperModule.get_parameter_by_name('exhibit_id');
             const items = await get_items(exhibit_id);
             let item_data = '';
+            let item_order = [];
 
             if (items.length === 0) {
                 document.querySelector('.card').innerHTML = '';
@@ -72,6 +73,8 @@ const itemsModule = (function () {
 
                 const type = items[i].type;
                 const record = items[i];
+
+                item_order.push(items[i].order);
 
                 switch(type) {
                     case 'heading':
@@ -97,10 +100,10 @@ const itemsModule = (function () {
                 paging: false
             });
 
+            await helperModule.reorder_items_after_action(item_order);
             bind_publish_item_events();
             bind_suppress_item_events();
             helperModule.reorder_items(event, exhibit_id, 'items');
-            // TODO await helperModule.reorder_items_after_delete();
 
         } catch (error) {
             document.querySelector('#message').innerHTML = `<div class="alert alert-danger" role="alert"><i class="fa fa-exclamation"></i> ${error.message}</div>`;

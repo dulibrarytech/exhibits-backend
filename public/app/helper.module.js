@@ -514,32 +514,16 @@ const helperModule = (function () {
         }
     };
 
-    obj.reorder_items_after_delete = async function () {
+    obj.reorder_items_after_action = async function (item_order) {
 
         try {
 
-            let referrer = document.referrer;
-            console.log(referrer);
-            // http://localhost/exhibits-dashboard/items/delete?exhibit_id=07a35570-b200-4109-ad7f-d5e533487224&item_id=7941643a-01f4-4a14-a8a8-d7e166a84676&type=item
-            console.log(referrer.indexOf('delete'))
-
-            // const is_deleted = helperModule.get_parameter_by_name('deleted');
-
-            if (referrer.indexOf('delete') === -1) {
-                console.log('do nothing');
-                return false;
-            }
-
-            // let cleared = document.referrer = '';
-            // console.log('cleared ', cleared);
-            console.log('deleted reorder');
-
-            /*
             const exhibit_id = helperModule.get_parameter_by_name('exhibit_id');
             const EXHIBITS_ENDPOINTS = endpointsModule.get_exhibits_endpoints();
             const tr_elem = Array.from(document.getElementsByTagName('tr'));
             let reorder_obj = {};
             let updated_order = [];
+            let order_check = [];
             // remove header tr
             tr_elem.shift();
 
@@ -547,11 +531,15 @@ const helperModule = (function () {
 
                 let id_arr = tr_elem[i].id.split('_');
                 reorder_obj.type = id_arr.pop();
-                reorder_obj.type = id_arr.pop();
                 reorder_obj.uuid = id_arr.pop();
                 reorder_obj.order = i + 1;
                 updated_order.push(reorder_obj);
+                order_check.push(reorder_obj.order);
                 reorder_obj = {};
+            }
+
+            if (JSON.stringify(item_order) === JSON.stringify(order_check)) {
+                return false;
             }
 
             const token = authModule.get_user_token();
@@ -566,12 +554,10 @@ const helperModule = (function () {
             });
 
             if (response !== undefined && response.status === 201) {
-                await itemsModule.display_items();
+                location.reload();
             } else {
                 document.querySelector('#message').innerHTML = `<div class="alert alert-danger" role="alert"><i class="fa fa-exclamation"></i> An error occurred while reordering items.</div>`;
             }
-
-             */
 
         } catch (error) {
             document.querySelector('#message').innerHTML = `<div class="alert alert-danger" role="alert"><i class="fa fa-exclamation"></i> ${error.message}</div>`;
