@@ -100,6 +100,7 @@ const itemsModule = (function () {
             bind_publish_item_events();
             bind_suppress_item_events();
             helperModule.reorder_items(event, exhibit_id, 'items');
+            // TODO await helperModule.reorder_items_after_delete();
 
         } catch (error) {
             document.querySelector('#message').innerHTML = `<div class="alert alert-danger" role="alert"><i class="fa fa-exclamation"></i> ${error.message}</div>`;

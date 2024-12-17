@@ -659,6 +659,6 @@ exports.reorder_timeline_items = async function (timeline_id, timeline) {
         const TASKS = new EXHIBIT_TIMELINE_RECORD_TASKS(DB, TABLES);
         return await TASKS.reorder_timeline_items(timeline_id, timeline);
     } catch (error) {
-        LOGGER.module().error('ERROR: [/exhibits/model (reorder_timeline)] ' + error.message);
+        LOGGER.module().error('ERROR: [/exhibits/model (reorder_timeline_items)] ' + error.message);
     }
 };

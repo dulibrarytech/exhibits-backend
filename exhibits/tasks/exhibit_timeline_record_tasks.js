@@ -501,16 +501,16 @@ const Exhibit_timeline_record_tasks = class {
 
     /**
      * Reorders timelines
-     * @param is_member_of_timeline
+     * @param is_member_of_exhibit
      * @param timelines
      */
-    async reorder_timelines(is_member_of_timeline, timelines) {
+    async reorder_timelines(is_member_of_exhibit, timelines) {
 
         try {
 
-            await this.DB(this.TABLE.timeline_item_records)
+            await this.DB(this.TABLE.timeline_records)
             .where({
-                is_member_of_timeline: is_member_of_timeline,
+                is_member_of_exhibit: is_member_of_exhibit,
                 uuid: timelines.uuid
             })
             .update({

@@ -296,9 +296,12 @@ const helperModule = (function () {
                                 await itemsModule.display_items(event);
                             }
 
+                            /*
                             if (type === 'grid_items') {
                                 await itemsGridModule.display_grid_items(event);
                             }
+
+                             */
 
                         } else {
                             document.querySelector('#message').innerHTML = `<div class="alert alert-danger" role="alert"><i class="fa fa-exclamation"></i> An error occurred while reordering items.</div>`;
@@ -508,6 +511,70 @@ const helperModule = (function () {
         } catch (error) {
             console.log(error);
             // document.querySelector('#message').innerHTML = `<div class="alert alert-danger" role="alert"><i class="fa fa-exclamation"></i> ${error.message}</div>`;
+        }
+    };
+
+    obj.reorder_items_after_delete = async function () {
+
+        try {
+
+            let referrer = document.referrer;
+            console.log(referrer);
+            // http://localhost/exhibits-dashboard/items/delete?exhibit_id=07a35570-b200-4109-ad7f-d5e533487224&item_id=7941643a-01f4-4a14-a8a8-d7e166a84676&type=item
+            console.log(referrer.indexOf('delete'))
+
+            // const is_deleted = helperModule.get_parameter_by_name('deleted');
+
+            if (referrer.indexOf('delete') === -1) {
+                console.log('do nothing');
+                return false;
+            }
+
+            // let cleared = document.referrer = '';
+            // console.log('cleared ', cleared);
+            console.log('deleted reorder');
+
+            /*
+            const exhibit_id = helperModule.get_parameter_by_name('exhibit_id');
+            const EXHIBITS_ENDPOINTS = endpointsModule.get_exhibits_endpoints();
+            const tr_elem = Array.from(document.getElementsByTagName('tr'));
+            let reorder_obj = {};
+            let updated_order = [];
+            // remove header tr
+            tr_elem.shift();
+
+            for (let i = 0; i < tr_elem.length; i++) {
+
+                let id_arr = tr_elem[i].id.split('_');
+                reorder_obj.type = id_arr.pop();
+                reorder_obj.type = id_arr.pop();
+                reorder_obj.uuid = id_arr.pop();
+                reorder_obj.order = i + 1;
+                updated_order.push(reorder_obj);
+                reorder_obj = {};
+            }
+
+            const token = authModule.get_user_token();
+            const response = await httpModule.req({
+                method: 'POST',
+                url: EXHIBITS_ENDPOINTS.exhibits.reorder_records.post.endpoint.replace(':exhibit_id', exhibit_id),
+                data: updated_order,
+                headers: {
+                    'Content-Type': 'application/json',
+                    'x-access-token': token
+                }
+            });
+
+            if (response !== undefined && response.status === 201) {
+                await itemsModule.display_items();
+            } else {
+                document.querySelector('#message').innerHTML = `<div class="alert alert-danger" role="alert"><i class="fa fa-exclamation"></i> An error occurred while reordering items.</div>`;
+            }
+
+             */
+
+        } catch (error) {
+            document.querySelector('#message').innerHTML = `<div class="alert alert-danger" role="alert"><i class="fa fa-exclamation"></i> ${error.message}</div>`;
         }
     };
 
