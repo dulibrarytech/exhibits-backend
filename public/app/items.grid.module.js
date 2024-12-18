@@ -29,16 +29,6 @@ const itemsGridModule = (function () {
         try {
 
             const token = authModule.get_user_token();
-
-            if (token === false || EXHIBITS_ENDPOINTS === null) {
-
-                document.querySelector('#message').innerHTML = `<div class="alert alert-danger" role="alert"><i class="fa fa-exclamation"></i> Session Expired. One moment please...</div>`;
-                setTimeout(() => {
-                    authModule.redirect_to_auth();
-                }, 1000);
-                return false;
-            }
-
             let tmp = EXHIBITS_ENDPOINTS.exhibits.grid_item_records.get.endpoint.replace(':exhibit_id', exhibit_id);
             const endpoint = tmp.replace(':grid_id', grid_id);
             const response = await httpModule.req({
@@ -260,6 +250,9 @@ const itemsGridModule = (function () {
     obj.init = async function () {
 
         try {
+
+            const token = authModule.get_user_token();
+            await authModule.check_auth(token);
 
             navModule.init();
             navModule.back_to_items();

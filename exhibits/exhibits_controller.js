@@ -279,6 +279,12 @@ exports.suppress_exhibit = async function (req, res) {
     }
 }
 
+exports.verify = function (req, res) {
+    res.status(200).send({
+        message: 'Token Verified'
+    });
+};
+
 exports.get_trashed_records = async function (req, res) {
 
     try {

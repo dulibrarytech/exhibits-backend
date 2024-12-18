@@ -244,6 +244,9 @@ const exhibitsCommonFormModule = (function () {
 
         try {
 
+            const token = authModule.get_user_token();
+            await authModule.check_auth(token);
+
             navModule.init();
             document.querySelector('#hero-trash').style.display = 'none';
             document.querySelector('#thumbnail-trash').style.display = 'none';

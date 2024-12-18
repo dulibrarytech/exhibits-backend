@@ -30,17 +30,7 @@ const exhibitsModule = (function () {
 
             const EXHIBITS_ENDPOINTS = endpointsModule.get_exhibits_endpoints();
             const token = authModule.get_user_token();
-
-            if (token === false || EXHIBITS_ENDPOINTS === null) {
-
-                document.querySelector('#message').innerHTML = `<div class="alert alert-danger" role="alert"><i class="fa fa-exclamation"></i> Session Expired. One moment please...</div>`;
-                setTimeout(() => {
-                    authModule.redirect_to_auth();
-                }, 1000);
-                return false;
-            }
-
-            let response = await httpModule.req({
+            const response = await httpModule.req({
                 method: 'GET',
                 url: EXHIBITS_ENDPOINTS.exhibits.exhibit_records.endpoint,
                 headers: {
@@ -364,6 +354,9 @@ const exhibitsModule = (function () {
     obj.init = async function () {
 
         try {
+
+            const token = authModule.get_user_token();
+            await authModule.check_auth(token);
 
             await exhibitsModule.display_exhibits();
             helperModule.show_form();

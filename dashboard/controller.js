@@ -244,6 +244,15 @@ exports.get_dashboard_login = function (req, res) {
     });
 };
 
+exports.get_dashboard_session_out = function (req, res) {
+    res.render('dashboard-session-out', {
+        host: CONFIG.host,
+        appname: CONFIG.app_name,
+        appversion: CONFIG.app_version,
+        organization: CONFIG.organization
+    });
+};
+
 exports.get_dashboard_logout = function (req, res) {
     res.render('dashboard-logout', {
         host: CONFIG.host,

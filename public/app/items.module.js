@@ -29,17 +29,7 @@ const itemsModule = (function () {
         try {
 
             const token = authModule.get_user_token();
-
-            if (token === false || EXHIBITS_ENDPOINTS === null) {
-
-                document.querySelector('#message').innerHTML = `<div class="alert alert-danger" role="alert"><i class="fa fa-exclamation"></i> Session Expired. One moment please...</div>`;
-                setTimeout(() => {
-                    authModule.redirect_to_auth();
-                }, 1000);
-                return false;
-            }
-
-            let response = await httpModule.req({
+            const response = await httpModule.req({
                 method: 'GET',
                 url: EXHIBITS_ENDPOINTS.exhibits.item_records.endpoint.replace(':exhibit_id', uuid),
                 headers: {
@@ -232,7 +222,6 @@ const itemsModule = (function () {
             const EXHIBITS_ENDPOINTS = endpointsModule.get_exhibits_endpoints();
             const etmp = EXHIBITS_ENDPOINTS.exhibits.item_records.item_suppress.post.endpoint.replace(':exhibit_id', exhibit_id);
             const endpoint = etmp.replace(':item_id', item_id);
-            console.log(endpoint)
             const token = authModule.get_user_token();
             const response = await httpModule.req({
                 method: 'POST',
@@ -242,7 +231,7 @@ const itemsModule = (function () {
                     'x-access-token': token
                 }
             });
-            console.log(response); // TODO:
+
             if (response.status === 200) {
 
                 document.querySelector('#message').innerHTML = `<div class="alert alert-success" role="alert"><i class="fa fa-check"></i> Item unpublished</div>`;
@@ -296,6 +285,11 @@ const itemsModule = (function () {
     obj.init = function (event) {
 
         try {
+
+            (async function () {
+                const token = authModule.get_user_token();
+                await authModule.check_auth(token);
+            })();
 
             const exhibit_id = helperModule.get_parameter_by_name('exhibit_id');
             exhibitsModule.set_exhibit_title(exhibit_id);

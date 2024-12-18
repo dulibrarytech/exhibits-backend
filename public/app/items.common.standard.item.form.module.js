@@ -227,6 +227,9 @@ const itemsCommonStandardItemFormModule = (function () {
 
         try {
 
+            const token = authModule.get_user_token();
+            await authModule.check_auth(token);
+
             navModule.init();
             navModule.back_to_items();
 

@@ -318,6 +318,11 @@ const ENDPOINTS = {
                 body: 'item array of objects'
             }
         },
+        token_verify: {
+            description: 'Verifies token',
+            endpoint: `${APP_PATH}${PREFIX}${VERSION}${ENDPOINT}/verify`,
+            header: 'token',
+        },
         trashed_records: {
             get: {
                 description: 'Retrieves all records flagged as deleted',
