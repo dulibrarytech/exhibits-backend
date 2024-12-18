@@ -35,6 +35,7 @@ const itemsCommonStandardItemFormModule = (function () {
             item.title = rich_text_data['item-title-input'].getHTMLCode();
             item.text = rich_text_data['item-text-input'].getHTMLCode();
             item.caption = document.querySelector('#item-caption-input').value;
+            item.pdf_open_to_page = document.querySelector('#pdf-open-to-page').value;
             item.wrap_text = document.querySelector('#wrap-text').checked;
             item.is_embedded = document.querySelector('#embed-item').checked;
 

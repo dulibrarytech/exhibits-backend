@@ -84,6 +84,7 @@ const itemsEditStandardItemFormModule = (function () {
         rich_text_data['item-title-input'].setHTMLCode(helperModule.unescape(record.title));
         rich_text_data['item-text-input'] = helperModule.set_rich_text_editor('item-text-input');
         rich_text_data['item-text-input'].setHTMLCode(helperModule.unescape(record.text));
+        document.querySelector('#pdf-open-to-page').value = record.pdf_open_to_page;
         document.querySelector('#item-caption-input').value = record.caption;
 
         if (record.wrap_text === 1) {
