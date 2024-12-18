@@ -94,7 +94,7 @@ const itemsListDisplayModule = (function () {
             if (item.mime_type.indexOf('image') !== -1) {
                 item_type = '<i class="fa fa-image"></i>';
             } else if (item.mime_type.indexOf('video') !== -1) {
-                item_type = '<i class="fa fa-file-video-o"><i>';
+                item_type = '<i class="fa fa-file-video-o"></i>';
             } else if (item.mime_type.indexOf('audio') !== -1) {
                 item_type = '<i class="fa fa-file-audio-o"></i>';
             } else if (item.mime_type.indexOf('pdf') !== -1) {
@@ -116,6 +116,7 @@ const itemsListDisplayModule = (function () {
             item_data += item_obj.item_order;
 
             item_data += `<td class="item-metadata">
+                    
                     <p><button class="btn btn-default">${item_type} <small>${type}</small></button></p>
                     <p><strong>${title}</strong></p>
                     ${img}                   
@@ -256,7 +257,7 @@ const itemsListDisplayModule = (function () {
             if (item.mime_type.indexOf('image') !== -1) {
                 item_type = '<i class="fa fa-image"></i>';
             } else if (item.mime_type.indexOf('video') !== -1) {
-                item_type = '<i class="fa fa-file-video-o"><i>';
+                item_type = '<i class="fa fa-file-video-o"></i>';
             } else if (item.mime_type.indexOf('audio') !== -1) {
                 item_type = '<i class="fa fa-file-audio-o"></i>';
             } else if (item.mime_type.indexOf('pdf') !== -1) {
@@ -327,7 +328,7 @@ const itemsListDisplayModule = (function () {
             if (item.mime_type.indexOf('image') !== -1) {
                 item_type = '<i class="fa fa-image"></i>';
             } else if (item.mime_type.indexOf('video') !== -1) {
-                item_type = '<i class="fa fa-file-video-o"><i>';
+                item_type = '<i class="fa fa-file-video-o"></i>';
             } else if (item.mime_type.indexOf('audio') !== -1) {
                 item_type = '<i class="fa fa-file-audio-o"></i>';
             } else if (item.mime_type.indexOf('pdf') !== -1) {
