@@ -65,6 +65,7 @@ const itemsCommonGridItemFormModule = (function () {
             item.media_prev = document.querySelector('#item-media-prev').value;
             item.kaltura = document.querySelector('#audio-video').value;
             item.repo_uuid = document.querySelector('#repo-uuid').value;
+            item.pdf_open_to_page = document.querySelector('#pdf-open-to-page').value;
 
             if (item.media.length === 0 && item.kaltura.length === 0 && item.repo_uuid.length === 0) {
                 if (item.text.length === 0) {
