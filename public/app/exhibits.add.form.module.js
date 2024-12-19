@@ -64,7 +64,7 @@ const exhibitsAddFormModule = (function () {
             let token = authModule.get_user_token();
             let response;
             let data = get_exhibit_data();
-            console.log('create ', data);
+
             if (data === false) {
                 return false;
             }
