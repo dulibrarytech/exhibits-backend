@@ -163,7 +163,6 @@ const helperModule = (function () {
             if (response !== undefined && response.status === 200) {
 
                 if (response.data.data.is_compound === 1) {
-                    console.log('is compound ', response.data.data.is_compound);
                     document.querySelector('#repo-item-metadata').innerHTML = `<p style="color:red">Repository compound objects are not supported.</p>`;
                     return false;
                 }

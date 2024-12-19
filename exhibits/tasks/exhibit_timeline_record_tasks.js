@@ -137,7 +137,8 @@ const Exhibit_timeline_record_tasks = class {
                 is_member_of_exhibit: is_member_of_exhibit,
                 is_member_of_timeline: is_member_of_timeline,
                 is_deleted: 0
-            });
+            })
+            .orderBy('order');
 
         } catch (error) {
             LOGGER.module().error('ERROR: [/exhibits/exhibit_timeline_record_tasks (get_timeline_item_records)] unable to get records ' + error.message);

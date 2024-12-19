@@ -80,7 +80,7 @@ const itemsGridModule = (function () {
 
         document.querySelector('#grid-item-list').innerHTML = item_data;
 
-        let grid_items_table = new DataTable('#grid-items', {
+        new DataTable('#grid-items', {
             paging: false
         });
 
