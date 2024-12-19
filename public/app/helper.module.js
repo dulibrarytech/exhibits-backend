@@ -162,6 +162,12 @@ const helperModule = (function () {
 
             if (response !== undefined && response.status === 200) {
 
+                if (response.data.data.is_compound === 1) {
+                    console.log('is compound ', response.data.data.is_compound);
+                    document.querySelector('#repo-item-metadata').innerHTML = `<p style="color:red">Repository compound objects are not supported.</p>`;
+                    return false;
+                }
+
                 document.querySelector('#item-mime-type').value = response.data.data.mime_type;
                 let mime_type = response.data.data.mime_type;
                 let item_type;
@@ -318,7 +324,7 @@ const helperModule = (function () {
         }
     };
 
-    /**
+    /** TODO: merge with reorder items
      * Reorders grid item list via drag and drop
      * @param event
      * @param id
@@ -416,7 +422,7 @@ const helperModule = (function () {
     };
 
     /**
-     * TODO
+     * TODO: merge with reorder items
      * Reorders timeline item list via drag and drop
      * @param event
      * @param id
