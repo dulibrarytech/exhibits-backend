@@ -105,7 +105,7 @@ const itemsModule = (function () {
                 paging: false
             });
 
-            await helperModule.reorder_items_after_action(item_order);
+            await helperModule.reorder_items_after_action(item_order, 'items');
             bind_publish_item_events();
             bind_suppress_item_events();
             helperModule.reorder_items(event, exhibit_id, 'items');

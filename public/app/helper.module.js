@@ -514,7 +514,7 @@ const helperModule = (function () {
         }
     };
 
-    obj.reorder_items_after_action = async function (item_order) {
+    obj.reorder_items_after_action = async function (item_order, type) {
 
         try {
 
@@ -533,6 +533,15 @@ const helperModule = (function () {
                 reorder_obj.type = id_arr.pop();
                 reorder_obj.uuid = id_arr.pop();
                 reorder_obj.order = i + 1;
+
+                if (type === 'grid_items') {
+                    reorder_obj.grid_id = helperModule.get_parameter_by_name('grid_id');
+                }
+
+                if (type === 'timeline_items') {
+                    reorder_obj.timeline_id = helperModule.get_parameter_by_name('timeline_id');
+                }
+
                 updated_order.push(reorder_obj);
                 order_check.push(reorder_obj.order);
                 reorder_obj = {};
