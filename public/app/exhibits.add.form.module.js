@@ -42,7 +42,13 @@ const exhibitsAddFormModule = (function () {
         try {
 
             let exhibit = exhibitsCommonFormModule.get_common_form_fields(rich_text_data);
+
+            if (exhibit === false) {
+                return exhibit;
+            }
+
             exhibit.styles = exhibitsCommonFormModule.get_exhibit_styles();
+
             return exhibit;
 
         } catch (error) {
@@ -58,7 +64,7 @@ const exhibitsAddFormModule = (function () {
             let token = authModule.get_user_token();
             let response;
             let data = get_exhibit_data();
-
+            console.log('create ', data);
             if (data === false) {
                 return false;
             }

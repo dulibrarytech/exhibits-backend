@@ -103,7 +103,6 @@ const exhibitsCommonFormModule = (function () {
             let exhibit_nav_font_color = document.querySelector('#nav-font-color').value;
             let exhibit_nav_font = document.querySelector('#nav-font').value;
             let exhibit_nav_font_size = document.querySelector('#nav-font-size').value;
-
             let exhibit_template_background_color = document.querySelector('#template-background-color').value;
             let exhibit_template_font_color = document.querySelector('#template-font-color').value;
             let exhibit_template_font = document.querySelector('#template-font').value;
@@ -145,7 +144,7 @@ const exhibitsCommonFormModule = (function () {
                 navigation: navigation,
                 template: template
             };
-
+            console.log('styles ', exhibit);
             return exhibit;
 
         } catch (error) {
