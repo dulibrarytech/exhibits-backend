@@ -21,6 +21,7 @@ const uploadsModule = (function () {
     'use strict';
 
     const APP_PATH = window.localStorage.getItem('exhibits_app_path');
+    const UPLOAD_ENDPOINT = `${location.protocol}//${location.host}${APP_PATH}/uploads`;
     let obj = {};
 
     obj.upload_exhibit_hero_image = function() {
@@ -28,8 +29,8 @@ const uploadsModule = (function () {
         const EXHIBIT_HERO = Dropzone;
         EXHIBIT_HERO.options.heroDropzone = {
             paramName: 'files',
-            maxFilesize: 5000, // 5MB
-            url: APP_PATH + '/uploads',
+            maxFilesize: 1000, // 1MB
+            url: UPLOAD_ENDPOINT,
             uploadMultiple: false,
             maxFiles: 1,
             acceptedFiles: 'image/*',
@@ -73,8 +74,8 @@ const uploadsModule = (function () {
         const THUMBNAIL = Dropzone;
         THUMBNAIL.options.thumbnailDropzone = {
             paramName: 'files',
-            maxFilesize: 5000, // 5MB
-            url: APP_PATH + '/uploads',
+            maxFilesize: 1000, // 1MB
+            url: UPLOAD_ENDPOINT,
             uploadMultiple: false,
             maxFiles: 1,
             acceptedFiles: 'image/*',
@@ -119,8 +120,8 @@ const uploadsModule = (function () {
         const ITEM_MEDIA = Dropzone;
         ITEM_MEDIA.options.itemDropzone = {
             paramName: 'files',
-            maxFilesize: 10000, // - TODO: temp
-            url: APP_PATH + '/uploads',
+            maxFilesize: 10000, // 10MB
+            url: UPLOAD_ENDPOINT,
             uploadMultiple: false,
             maxFiles: 1,
             acceptedFiles: 'image/*,application/pdf',
@@ -191,7 +192,7 @@ const uploadsModule = (function () {
         ITEM_THUMBNAIL.options.itemThumbnailDropzone = {
             paramName: 'files',
             maxFilesize: 5000, // 5MB
-            url: APP_PATH + '/uploads',
+            url: UPLOAD_ENDPOINT,
             uploadMultiple: false,
             maxFiles: 1,
             acceptedFiles: 'image/*',
