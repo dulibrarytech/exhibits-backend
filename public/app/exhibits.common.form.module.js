@@ -243,16 +243,15 @@ const exhibitsCommonFormModule = (function () {
 
         try {
 
+            uploadsModule.upload_exhibit_hero_image();
+            uploadsModule.upload_exhibit_thumbnail_image();
+
             const token = authModule.get_user_token();
             await authModule.check_auth(token);
 
             navModule.init();
             document.querySelector('#hero-trash').style.display = 'none';
             document.querySelector('#thumbnail-trash').style.display = 'none';
-
-            uploadsModule.upload_exhibit_hero_image();
-            uploadsModule.upload_exhibit_thumbnail_image();
-
             document.querySelector('#nav-background-color-picker').addEventListener('input', () => {
                 if (document.querySelector('#nav-background-color')) {
                     document.querySelector('#nav-background-color').value = document.querySelector('#nav-background-color-picker').value;
