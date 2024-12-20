@@ -100,6 +100,11 @@
                 <div class="row">
                     <span class="upload-error"></span>
                     <div class="col-6 col-md-6">
+                        <form class="form-horizontal dropzone" id="hero-dropzone" action="/exhibits-dashboard/uploads"
+                              method="post"
+                              enctype="multipart/form-data">
+                        </form>
+                        <br>
                         <div class="col-12">
                             <div id="hero-image-display"></div>
                             <p><span id="hero-image-filename-display"></span>&nbsp;&nbsp;
@@ -108,12 +113,13 @@
                             <input type="hidden" id="hero-image" name="hero_image">
                             <input type="hidden" id="hero-image-prev" name="hero_image-prev">
                         </div>
-                        <form class="form-horizontal dropzone" id="hero-dropzone" action="/exhibits-dashboard/uploads"
+                    </div>
+                    <div class="col-6 col-md-6">
+                        <form class="form-horizontal dropzone" id="thumbnail-dropzone" action="/exhibits-dashboard/uploads"
                               method="post"
                               enctype="multipart/form-data">
                         </form>
-                    </div>
-                    <div class="col-6 col-md-6">
+                        <br>
                         <div class="col-12">
                             <div id="thumbnail-image-display"></div>
                             <p>
@@ -123,10 +129,6 @@
                             <input type="hidden" id="thumbnail-image" name="thumbnail">
                             <input type="hidden" id="thumbnail-image-prev" name="thumbnail-prev">
                         </div>
-                        <form class="form-horizontal dropzone" id="thumbnail-dropzone" action="/exhibits-dashboard/uploads"
-                              method="post"
-                              enctype="multipart/form-data">
-                        </form>
                     </div>
                 </div>
             </div>
