@@ -127,7 +127,7 @@ const uploadsModule = (function () {
             acceptedFiles: 'image/*,application/pdf',
             ignoreHiddenFiles: true,
             timeout: 20000,
-            dictDefaultMessage: 'Drag and Drop Item Media file here or Click to Upload',
+            dictDefaultMessage: '<small><em>Drag and Drop Item Media file here or Click to Upload</em></small>',
             autoProcessQueue: true,
             init: function () {},
             renameFile: function (file) {
@@ -198,7 +198,7 @@ const uploadsModule = (function () {
             acceptedFiles: 'image/*',
             ignoreHiddenFiles: true,
             timeout: 20000,
-            dictDefaultMessage: 'Drag and Drop Item Thumbnail file here or Click to Upload',
+            dictDefaultMessage: '<small><em>Drag and Drop Item Thumbnail file here or Click to Upload</em></small>',
             autoProcessQueue: true,
             init: function () {},
             renameFile: function (file) {

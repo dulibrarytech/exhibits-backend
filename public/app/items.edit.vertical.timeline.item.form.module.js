@@ -183,6 +183,7 @@ const itemsEditTimelineItemFormModule = (function () {
             document.querySelector('#item-thumbnail-trash').style.display = 'inline';
         }
 
+        /*
         let layouts = document.getElementsByName('layout');
 
         for (let j = 0; j < layouts.length; j++) {
@@ -198,6 +199,8 @@ const itemsEditTimelineItemFormModule = (function () {
                 document.querySelector('#' + media_width[j].id).checked = true;
             }
         }
+
+         */
 
         let styles = JSON.parse(record.styles);
 
