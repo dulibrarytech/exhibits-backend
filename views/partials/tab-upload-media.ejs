@@ -5,6 +5,10 @@
     <span class="upload-error"></span>
     <div class="col-6 col-md-6">
         <div class="col-12">
+            <form class="form-horizontal dropzone" id="item-dropzone" action="/exhibits-dashboard/uploads"
+                  method="post"
+                  enctype="multipart/form-data">
+            </form>
             <p>
                 <br>
                 <span id="item-media-thumbnail-image-display"></span>
@@ -18,15 +22,14 @@
             <input type="hidden" id="item-type" name="item_type">
             <input type="hidden" id="item-mime-type" name="item-mime_type">
             <input type="hidden" id="item-media-prev" name="item-media-prev">
-
-            <form class="form-horizontal dropzone" id="item-dropzone" action="/exhibits-dashboard/uploads"
-                  method="post"
-                  enctype="multipart/form-data">
-            </form>
         </div>
     </div>
     <div class="col-6 col-md-6">
         <div class="col-12">
+            <form class="form-horizontal dropzone" id="item-thumbnail-dropzone" action="/exhibits-dashboard/uploads"
+                  method="post"
+                  enctype="multipart/form-data">
+            </form>
             <p>
                 <br>
                 <span id="item-thumbnail-image-display"></span>
@@ -36,11 +39,6 @@
                                     </span>
             </p>
             <input type="hidden" id="item-thumbnail" name="item_thumbnail">
-
-            <form class="form-horizontal dropzone" id="item-thumbnail-dropzone" action="/exhibits-dashboard/uploads"
-                  method="post"
-                  enctype="multipart/form-data">
-            </form>
         </div>
     </div>
 </div>
