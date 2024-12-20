@@ -275,7 +275,7 @@ const itemsEditGridItemFormModule = (function () {
                 document.querySelector('#message').innerHTML = `<div class="alert alert-success" role="alert"><i class="fa fa-info"></i> ${message}</div>`;
 
                 setTimeout(() => {
-                    location.reload();
+                    window.location.replace(APP_PATH + '/items/grid/items?exhibit_id=' + exhibit_id + '&grid_id=' + grid_id);
                 }, 900);
             }
 
