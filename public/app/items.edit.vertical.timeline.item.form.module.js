@@ -281,7 +281,7 @@ const itemsEditTimelineItemFormModule = (function () {
                 document.querySelector('#message').innerHTML = `<div class="alert alert-success" role="alert"><i class="fa fa-info"></i> ${message}</div>`;
 
                 setTimeout(() => {
-                    location.reload();
+                    window.location.replace(APP_PATH + '/items/timeline/items?exhibit_id=' + exhibit_id + '&timeline_id=' + timeline_id);
                 }, 900);
             }
 
