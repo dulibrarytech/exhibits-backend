@@ -144,7 +144,7 @@ const exhibitsCommonFormModule = (function () {
                 navigation: navigation,
                 template: template
             };
-            console.log('styles ', exhibit);
+
             return exhibit;
 
         } catch (error) {

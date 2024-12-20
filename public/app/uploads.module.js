@@ -25,7 +25,7 @@ const uploadsModule = (function () {
     let obj = {};
 
     obj.upload_exhibit_hero_image = function() {
-        console.log('upload endpoint ', UPLOAD_ENDPOINT);
+
         const EXHIBIT_HERO = Dropzone;
         EXHIBIT_HERO.options.heroDropzone = {
             paramName: 'files',
@@ -48,7 +48,6 @@ const uploadsModule = (function () {
                 // console.log('SUCCESS: ', file.upload);
                 // console.log(file.upload.filename);
                 // console.log(file.upload.total);
-                console.log('exhibit upload ', response);
 
                 const filename = file.upload.filename;
                 document.querySelector('.upload-error').innerHTML = '';
