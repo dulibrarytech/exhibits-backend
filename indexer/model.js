@@ -106,6 +106,7 @@ const construct_item_index_record = function (record) {
         media_width: record.media_width,
         media_padding: record.media_padding,
         pdf_open_to_page: record.pdf_open_to_page,
+        date: record.date,
         styles: record.styles,
         order: record.order,
         is_published: record.is_published,
