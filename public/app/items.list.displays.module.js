@@ -324,6 +324,11 @@ const itemsListDisplayModule = (function () {
             let url;
             let item_type;
             let img = '';
+            let item_date = new Date(item.date);
+            let year = new Intl.DateTimeFormat('en', { year: 'numeric' }).format(item_date);
+            let month = new Intl.DateTimeFormat('en', { month: 'numeric' }).format(item_date);
+            let day = new Intl.DateTimeFormat('en', { day: '2-digit' }).format(item_date);
+            let date = `${month}/${day}/${year}`;
 
             if (item.mime_type.indexOf('image') !== -1) {
                 item_type = '<i class="fa fa-image"></i>';
@@ -351,8 +356,8 @@ const itemsListDisplayModule = (function () {
             }
 
             // start rows
-            item_data += item_obj.draggable;
-            item_data += item_obj.item_order;
+            item_data += `<tr id="${item.uuid}_${item.type}">`;
+            // item_data += `<td class="item-order"><span style="padding-left: 4px;">${item.order}</span></td>`;
 
             if (item.thumbnail.length > 0) {
                 thumbnail = EXHIBITS_ENDPOINTS.exhibits.exhibit_media.get.endpoint.replace(':exhibit_id', item.is_member_of_exhibit).replace(':media', item.thumbnail);
@@ -362,6 +367,7 @@ const itemsListDisplayModule = (function () {
             item_data += `<td class="item-metadata">
                     <p><button class="btn btn-default">${item_type} <small>timeline item</small></button></p>
                     <p><strong>${title}</strong></p>
+                    <p><strong>${date}</strong></p>
                     ${img}
                    
                     </td>`;

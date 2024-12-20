@@ -60,7 +60,7 @@ const itemsTimelineModule = (function () {
         await exhibitsModule.set_exhibit_title(exhibit_id);
         const items = await get_timeline_items(exhibit_id, timeline_id);
         let item_data = '';
-        let item_order = [];
+        // let item_order = [];
 
         if (items === false) {
             document.querySelector('#item-card').innerHTML = '';
@@ -74,20 +74,20 @@ const itemsTimelineModule = (function () {
         }
 
         for (let i = 0; i < items.length; i++) {
-            item_order.push(items[i].order);
+            // item_order.push(items[i].order);
             item_data += itemsListDisplayModule.display_timeline_items(items[i]);
         }
 
         document.querySelector('#timeline-item-list').innerHTML = item_data;
 
-        let timeline_items_table = new DataTable('#timeline-items', {
+        new DataTable('#timeline-items', {
             paging: false
         });
 
-        await helperModule.reorder_items_after_action(item_order, 'timeline_items');
+        // await helperModule.reorder_items_after_action(item_order, 'timeline_items');
         bind_publish_timeline_item_events();
         bind_suppress_timeline_item_events();
-        helperModule.reorder_timeline_items(event, timeline_id, 'timeline_items');
+        // helperModule.reorder_timeline_items(event, timeline_id, 'timeline_items');
     };
 
     async function publish_timeline_item(uuid) {
