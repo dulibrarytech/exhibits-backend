@@ -25,7 +25,8 @@
                     <div class="col-12 col-md-12">
                         <div class="row form-group">
                             <div class="col-12">
-                                <div class="form-text text-muted" style="font-size: 17px"><span style="color: darkred">*</span>
+                                <div class="form-text text-muted" style="font-size: 17px"><span
+                                            style="color: darkred">*</span>
                                     Title <small><em>(Required)</em></small>
                                 </div>
                                 <span id="exhibit-title-error" class="is-error"></span>
@@ -38,7 +39,8 @@
                     <div class="col-6 col-md-6">
                         <div class="row form-group">
                             <div class="col-12">
-                                <div class="form-text text-muted" style="font-size: 17px">Sub Title <small><em>(Optional)</em></small></div>
+                                <div class="form-text text-muted" style="font-size: 17px">Sub Title <small><em>(Optional)</em></small>
+                                </div>
                                 <div id="exhibit-sub-title-input" style="height: 100px"></div>
                             </div>
                         </div>
@@ -46,7 +48,8 @@
                     <div class="col-6 col-md-6">
                         <div class="row form-group">
                             <div class="col-12">
-                                <div class="form-text text-muted" style="font-size: 17px">Alert Text <small><em>(Optional)</em></small></div>
+                                <div class="form-text text-muted" style="font-size: 17px">Alert Text <small><em>(Optional)</em></small>
+                                </div>
                                 <div id="exhibit-alert-text-input" style="height: 100px"></div>
                             </div>
                         </div>
@@ -56,7 +59,8 @@
                     <div class="col-12 col-md-12">
                         <div class="row form-group">
                             <div class="col-12">
-                                <div class="form-text text-muted" style="font-size: 17px">Description <small><em>(Optional)</em></small></div>
+                                <div class="form-text text-muted" style="font-size: 17px">Description <small><em>(Optional)</em></small>
+                                </div>
                                 <div id="exhibit-description-input" style="height: 100px"></div>
                             </div>
                         </div>
@@ -66,7 +70,8 @@
                     <div class="col-12 col-md-12">
                         <div class="row form-group">
                             <div class="col-12">
-                                <div class="form-text text-muted" style="font-size: 17px">About the curators <small><em>(Optional)</em></small></div>
+                                <div class="form-text text-muted" style="font-size: 17px">About the curators <small><em>(Optional)</em></small>
+                                </div>
                                 <div id="exhibit-about-the-curators-input" style="height: 100px"></div>
                             </div>
                         </div>
@@ -78,11 +83,12 @@
                         <div class="row form-group">
                             <div class="col-12">
                                 <p style="padding-top: 20px">
-                                    <small class="form-text text-muted"><i class="fa fa-exclamation-circle"></i> <em>Exhibit will be featured on the main page</em></small>
+                                    <small class="form-text text-muted"><i class="fa fa-exclamation-circle"></i> <em>Exhibit
+                                            will be featured on the main page</em></small>
                                     <label for="is-featured">Feature exhibit&nbsp;
-                                    <input type="checkbox" id="is-featured" name="is_featured">
-                                </label>
-                            </p>
+                                        <input type="checkbox" id="is-featured" name="is_featured">
+                                    </label>
+                                </p>
                             </div>
                         </div>
                     </div>
@@ -100,6 +106,11 @@
                 <div class="row">
                     <span class="upload-error"></span>
                     <div class="col-6 col-md-6">
+                        <form class="form-horizontal dropzone" id="hero-dropzone" action="/exhibits-dashboard/uploads"
+                              method="post"
+                              enctype="multipart/form-data">
+                        </form>
+                        <br>
                         <div class="col-12">
                             <span id="hero-image-display"></span>
                             <p><span id="hero-image-filename-display"></span>&nbsp;&nbsp;
@@ -107,24 +118,24 @@
                             </p>
                             <input type="hidden" id="hero-image" name="hero_image">
                         </div>
-                        <form class="form-horizontal dropzone" id="hero-dropzone" action="/exhibits-dashboard/uploads"
+                    </div>
+                    <div class="col-6 col-md-6">
+
+                        <form class="form-horizontal dropzone" id="thumbnail-dropzone"
+                              action="/exhibits-dashboard/uploads"
                               method="post"
                               enctype="multipart/form-data">
                         </form>
-                    </div>
-                    <div class="col-6 col-md-6">
+                        <br>
                         <div class="col-12">
                             <span id="thumbnail-image-display"></span>
                             <p>
                                 <span id="thumbnail-filename-display"></span>&nbsp;&nbsp;
-                                <span><a id="thumbnail-trash" title="Delete thumbnail" href="#"><i class="fa fa-trash"></i></a></span>
+                                <span><a id="thumbnail-trash" title="Delete thumbnail" href="#"><i
+                                                class="fa fa-trash"></i></a></span>
                             </p>
                             <input type="hidden" id="thumbnail-image" name="thumbnail">
                         </div>
-                        <form class="form-horizontal dropzone" id="thumbnail-dropzone" action="/uploads"
-                              method="post"
-                              enctype="multipart/form-data">
-                        </form>
                     </div>
                 </div>
             </div>
@@ -141,11 +152,11 @@
                     <div class="col-4 col-md-4">
                         <p><img src="/exhibits-dashboard/static/images/banner_1.png"></p>
                         <p>
-                        <label class="btn btn-default" for="exhibit-banner-1">
-                        <input type="radio" class="btn-check" name="banner_template"
-                               id="exhibit-banner-1" value="banner_1" autocomplete="off" checked/>
-                            <span style="font-size: 12px">Hero image above description, no title</span>
-                        </label>
+                            <label class="btn btn-default" for="exhibit-banner-1">
+                                <input type="radio" class="btn-check" name="banner_template"
+                                       id="exhibit-banner-1" value="banner_1" autocomplete="off" checked/>
+                                <span style="font-size: 12px">Hero image above description, no title</span>
+                            </label>
                         </p>
                     </div>
                     <div class="col-4 col-md-4">
@@ -161,11 +172,11 @@
                     <div class="col-4 col-md-4">
                         <p><img src="/exhibits-dashboard/static/images/banner_3.png"></p>
                         <p>
-                        <label class="btn btn-default" for="exhibit-banner-3">
-                        <input type="radio" class="btn-check" name="banner_template"
-                               id="exhibit-banner-3" value="banner_3" autocomplete="off"/>
-                            <span style="font-size: 12px">Hero image above description, title text over image</span>
-                        </label>
+                            <label class="btn btn-default" for="exhibit-banner-3">
+                                <input type="radio" class="btn-check" name="banner_template"
+                                       id="exhibit-banner-3" value="banner_3" autocomplete="off"/>
+                                <span style="font-size: 12px">Hero image above description, title text over image</span>
+                            </label>
                         </p>
                     </div>
                 </div>
@@ -300,7 +311,8 @@
                     </div>
                     <div class="col-6 col-md-6">
                         <p>
-                            <span class="form-text text-muted" style="font-size: 17px">Apply Custom Styles to Exhibit</span>
+                            <span class="form-text text-muted"
+                                  style="font-size: 17px">Apply Custom Styles to Exhibit</span>
                         </p>
                         <div class="row form-group">
                             <div class="col-12 col-md-12">

@@ -102,7 +102,7 @@ const itemsEditStandardItemFormModule = (function () {
         if (record.media.length > 0) {
 
             if (record.is_repo_item === 0 && record.is_kaltura_item === 0) {
-                console.log(record);
+
                 if (record.mime_type.indexOf('image') !== -1) {
                     thumbnail_url = EXHIBITS_ENDPOINTS.exhibits.exhibit_media.get.endpoint.replace(':exhibit_id', record.is_member_of_exhibit).replace(':media', record.media);
                     thumbnail_fragment = `<p><img src="${thumbnail_url}" height="200" ></p>`;
