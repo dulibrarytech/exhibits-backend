@@ -34,6 +34,7 @@ const itemsCommonStandardGridFormModule = (function () {
 
             // grid metadata
             grid.title = rich_text_data['grid-title-input'].getHTMLCode();
+            grid.text = rich_text_data['item-text-input'].getHTMLCode();
             grid.columns = document.querySelector('#grid-columns').value;
 
             if (grid.title === '<div></div>') {
