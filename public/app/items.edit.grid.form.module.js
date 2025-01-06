@@ -27,7 +27,7 @@ const itemsEditGridFormModule = (function () {
 
     function set_rich_text_editors () {
         const ids = ['grid-title-input',
-            'item-text-input'];
+            'grid-text-input'];
 
         ids.forEach((id) => {
             rich_text_data[id] = helperModule.set_rich_text_editor(id);
@@ -124,6 +124,9 @@ const itemsEditGridFormModule = (function () {
 
         rich_text_data['grid-title-input'] = helperModule.set_rich_text_editor('grid-title-input');
         rich_text_data['grid-title-input'].setHTMLCode(helperModule.unescape(record.title));
+
+        rich_text_data['grid-text-input'] = helperModule.set_rich_text_editor('grid-text-input');
+        rich_text_data['grid-text-input'].setHTMLCode(helperModule.unescape(record.text));
 
         document.querySelector('#grid-columns').value = record.columns;
 

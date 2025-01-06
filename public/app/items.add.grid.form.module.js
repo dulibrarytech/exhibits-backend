@@ -27,7 +27,7 @@ const itemsAddGridFormModule = (function () {
 
     function set_rich_text_editors () {
         const ids = ['grid-title-input',
-            'item-text-input'];
+            'grid-text-input'];
 
         ids.forEach((id) => {
             rich_text_data[id] = helperModule.set_rich_text_editor(id);
