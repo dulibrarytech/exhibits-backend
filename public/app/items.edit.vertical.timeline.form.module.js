@@ -26,7 +26,8 @@ const itemsEditVerticalTimelineFormModule = (function () {
     let rich_text_data = {};
 
     function set_rich_text_editors () {
-        const ids = ['timeline-title-input'];
+        const ids = ['timeline-title-input',
+            'timeline-text-input'];
 
         ids.forEach((id) => {
             rich_text_data[id] = helperModule.set_rich_text_editor(id);
@@ -123,6 +124,9 @@ const itemsEditVerticalTimelineFormModule = (function () {
 
         rich_text_data['timeline-title-input'] = helperModule.set_rich_text_editor('timeline-title-input');
         rich_text_data['timeline-title-input'].setHTMLCode(helperModule.unescape(record.title));
+
+        rich_text_data['timeline-text-input'] = helperModule.set_rich_text_editor('timeline-text-input');
+        rich_text_data['timeline-text-input'].setHTMLCode(helperModule.unescape(record.text));
 
         let styles = JSON.parse(record.styles);
 

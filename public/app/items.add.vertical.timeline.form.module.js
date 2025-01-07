@@ -26,7 +26,8 @@ const itemsAddVerticalTimelineFormModule = (function () {
     let rich_text_data = {};
 
     function set_rich_text_editors () {
-        const ids = ['timeline-title-input'];
+        const ids = ['timeline-title-input',
+            'timeline-text-input'];
 
         ids.forEach((id) => {
             rich_text_data[id] = helperModule.set_rich_text_editor(id);

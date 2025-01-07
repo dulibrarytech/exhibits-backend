@@ -32,6 +32,7 @@ const itemsCommonVerticalTimelineFormModule = (function () {
 
             // grid metadata
             timeline.title = rich_text_data['timeline-title-input'].getHTMLCode();
+            timeline.text = rich_text_data['timeline-text-input'].getHTMLCode();
 
             if (timeline.title === '<div></div>') {
                 timeline.title = '';
