@@ -130,10 +130,12 @@
                                role="tab" aria-controls="import-repo-media" aria-selected="false">Import Repository
                                 Media</a>
                         </li>
+                        <!--
                         <li class="nav-item">
                             <a class="nav-link" id="media-padding-tab" data-toggle="tab" href="#media-padding"
                                role="tab" aria-controls="media-padding" aria-selected="false">Media Padding</a>
                         </li>
+                        -->
                     </ul>
                     <div class="tab-content" id="mediaTabContent">
                         <div class="tab-pane fade show active" id="upload-media" role="tabpanel"
@@ -142,11 +144,15 @@
                              aria-labelledby="import-audio-video-tab"><%- include('partials/tab-import-audio-video.ejs'); %></div>
                         <div class="tab-pane fade" id="import-repo-media" role="tabpanel"
                              aria-labelledby="import-repo-media-tab"><%- include('partials/tab-import-repo-media.ejs'); %></div>
+                        <!--
                         <div class="tab-pane fade" id="media-padding" role="tabpanel"
-                             aria-labelledby="media-padding-tab"><%- include('partials/tab-media-padding.ejs'); %></div>
+                             aria-labelledby="media-padding-tab"><%- include('partials/media-padding.ejs'); %></div>
+                             -->
                     </div>
                 </div>
                 <%- include('partials/embed-item.ejs'); %>
+                <hr>
+                <%- include('partials/media-padding.ejs'); %>
             </div>
         </div>
         <div id="item-layout-card" class="card">

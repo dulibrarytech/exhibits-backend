@@ -38,6 +38,7 @@ const itemsCommonStandardItemFormModule = (function () {
             item.pdf_open_to_page = document.querySelector('#pdf-open-to-page').value;
             item.wrap_text = document.querySelector('#wrap-text').checked;
             item.is_embedded = document.querySelector('#embed-item').checked;
+            item.media_padding = document.querySelector('#media-padding').checked;
 
             if (item.title === '<div></div>') {
                 item.title = '';
@@ -59,6 +60,12 @@ const itemsCommonStandardItemFormModule = (function () {
                 item.is_embedded = 0;
             }
 
+            if (item.media_padding === true) {
+                item.media_padding = 1;
+            } else if (item.media_padding === false) {
+                item.media_padding = 0;
+            }
+
             // item media
             item.thumbnail = document.querySelector('#item-thumbnail').value;
             item.thumbnail_prev = document.querySelector('#item-thumbnail-image-prev').value;
@@ -68,7 +75,6 @@ const itemsCommonStandardItemFormModule = (function () {
             item.media_prev = document.querySelector('#item-media-prev').value;
             item.kaltura = document.querySelector('#audio-video').value;
             item.repo_uuid = document.querySelector('#repo-uuid').value;
-            item.media_padding = document.querySelector('#media-padding').value;
 
             if (item.media.length === 0 && item.kaltura.length === 0 && item.repo_uuid.length === 0) {
                 if (item.text.length === 0) {
