@@ -234,14 +234,14 @@ const itemsCommonStandardItemFormModule = (function () {
 
         try {
 
+            uploadsModule.upload_item_media();
+            uploadsModule.upload_item_thumbnail();
+
             const token = authModule.get_user_token();
             await authModule.check_auth(token);
 
             navModule.init();
             navModule.back_to_items();
-
-            uploadsModule.upload_item_media();
-            uploadsModule.upload_item_thumbnail();
 
             document.querySelector('#item-media-trash').style.display = 'none';
             document.querySelector('#item-thumbnail-trash').style.display = 'none';
