@@ -110,34 +110,50 @@ const exhibitsCommonFormModule = (function () {
 
             if (exhibit_nav_background_color.length > 0) {
                 navigation.backgroundColor = exhibit_nav_background_color;
+            } else {
+                navigation.backgroundColor = '';
             }
 
             if (exhibit_nav_font_color.length > 0) {
                 navigation.color = exhibit_nav_font_color;
+            } else {
+                navigation.color = '';
             }
 
             if (exhibit_nav_font.length > 0) {
                 navigation.fontFamily = exhibit_nav_font;
+            } else {
+                navigation.fontFamily = '';
             }
 
             if (exhibit_nav_font_size.length > 0) {
                 navigation.fontSize = `${exhibit_nav_font_size}px`;
+            } else {
+                navigation.fontSize = '';
             }
 
             if (exhibit_template_background_color.length > 0) {
                 template.backgroundColor = exhibit_template_background_color;
+            } else {
+                template.backgroundColor = '';
             }
 
             if (exhibit_template_font_color.length > 0) {
                 template.color = exhibit_template_font_color;
+            } else {
+                template.color = '';
             }
 
             if (exhibit_template_font.length > 0) {
                 template.fontFamily = exhibit_template_font;
+            } else {
+                template.fontFamily = '';
             }
 
             if (exhibit_template_font_size.length > 0) {
                 template.fontSize = `${exhibit_template_font_size}px`;
+            } else {
+                template.fontSize = '';
             }
 
             exhibit.exhibit = {
