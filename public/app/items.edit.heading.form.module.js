@@ -151,7 +151,8 @@ const itemsEditHeadingFormModule = (function () {
                 document.querySelector('#message').innerHTML = `<div class="alert alert-success" role="alert"><i class="fa fa-info"></i> Heading record updated</div>`;
 
                 setTimeout(() => {
-                    window.location.replace('edit?exhibit_id=' + exhibit_id + '&item_id=' + item_id);
+                    window.location.reload();
+                    // window.location.replace('edit?exhibit_id=' + exhibit_id + '&item_id=' + item_id);
                 }, 900);
             }
 

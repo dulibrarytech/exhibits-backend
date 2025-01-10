@@ -68,7 +68,8 @@ const itemsAddHeadingFormModule = (function () {
                 document.querySelector('#message').innerHTML = `<div class="alert alert-success" role="alert"><i class="fa fa-info"></i> Heading record created</div>`;
 
                 setTimeout(() => {
-                    window.location.replace(APP_PATH + '/items?exhibit_id=' + exhibit_id);
+                    window.location.reload();
+                    // window.location.replace(APP_PATH + '/items?exhibit_id=' + exhibit_id);
                 }, 900);
             }
 

@@ -109,7 +109,8 @@ const itemsEditVerticalTimelineFormModule = (function () {
                 const timeline_id = response.data.data;
 
                 setTimeout(() => {
-                    location.replace(`${APP_PATH}/items?exhibit_id=${exhibit_id}`);
+                    window.location.reload();
+                    // location.replace(`${APP_PATH}/items?exhibit_id=${exhibit_id}`);
                 }, 900);
             }
 

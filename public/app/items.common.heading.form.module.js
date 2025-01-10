@@ -45,18 +45,26 @@ const itemsCommonHeadingFormModule = (function () {
 
             if (heading_background_color.length > 0) {
                 item_heading.styles.backgroundColor = heading_background_color;
+            } else {
+                item_heading.styles.backgroundColor = '';
             }
 
             if (heading_font_color.length > 0) {
                 item_heading.styles.color = heading_font_color;
+            } else {
+                item_heading.styles.color = '';
             }
 
             if (heading_font.length > 0) {
                 item_heading.styles.fontFamily = heading_font;
+            } else {
+                item_heading.styles.fontFamily = '';
             }
 
             if (heading_font_size.length > 0) {
                 item_heading.styles.fontSize = `${heading_font_size}px`;
+            } else {
+                item_heading.styles.fontSize = '';
             }
 
             return item_heading;

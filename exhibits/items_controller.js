@@ -354,12 +354,6 @@ exports.reorder_items = async function (req, res) {
 
         if (ordered_errors.length === 0) {
 
-            const exhibit_record = await EXHIBITS_MODEL.get_exhibit_record(id);
-
-            if (exhibit_record.data[0].is_published === 1) {
-                await EXHIBITS_MODEL.publish_exhibit(id);
-            }
-
             res.status(201).send({
                 message: 'Exhibit items reordered.'
             });

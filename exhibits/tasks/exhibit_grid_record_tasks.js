@@ -209,7 +209,7 @@ const Exhibit_grid_record_tasks = class {
             })
             .update(data);
 
-            LOGGER.module().info('INFO: [/exhibits/exhibit_grid_record_tasks (update_grid_item_record)] Grid record updated.');
+            LOGGER.module().info('INFO: [/exhibits/exhibit_grid_record_tasks (update_grid_item_record)] Grid item record updated.');
             return true;
 
         } catch (error) {

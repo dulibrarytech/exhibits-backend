@@ -77,7 +77,8 @@ const itemsAddGridItemFormModule = (function () {
                 let message = 'Grid item record created';
                 document.querySelector('#message').innerHTML = `<div class="alert alert-success" role="alert"><i class="fa fa-info"></i> ${message}</div>`;
                 setTimeout(() => {
-                    window.location.replace(APP_PATH + '/items/grid/items?exhibit_id=' + exhibit_id + '&grid_id=' + grid_id);
+                    window.location.reload();
+                    // window.location.replace(APP_PATH + '/items/grid/items?exhibit_id=' + exhibit_id + '&grid_id=' + grid_id);
                 }, 900);
             }
 

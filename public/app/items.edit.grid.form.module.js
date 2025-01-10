@@ -105,11 +105,12 @@ const itemsEditGridFormModule = (function () {
             if (response !== undefined && response.status === 201) {
 
                 window.scrollTo(0, 0);
-                document.querySelector('#message').innerHTML = `<div class="alert alert-success" role="alert"><i class="fa fa-info"></i> Grid record created</div>`;
+                document.querySelector('#message').innerHTML = `<div class="alert alert-success" role="alert"><i class="fa fa-info"></i> Grid record updated</div>`;
                 const grid_id = response.data.data;
 
                 setTimeout(() => {
-                    location.replace(`${APP_PATH}/items?exhibit_id=${exhibit_id}`);
+                    window.location.reload();
+                    // location.replace(`${APP_PATH}/items?exhibit_id=${exhibit_id}`);
                 }, 900);
             }
 
