@@ -255,6 +255,11 @@ const itemsCommonGridItemFormModule = (function () {
             }, 1000);
 
             document.querySelector('#repo-uuid-btn').addEventListener('click', await helperModule.get_repo_item_data);
+            document.querySelector('#audio-video').addEventListener('focusout', () => {
+                helperModule.clear_media_fields('kaltura_media');
+                document.querySelector('#is-kaltura-item').value = 1;
+            });
+
             helperModule.show_form();
 
         } catch (error) {
