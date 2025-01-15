@@ -61,9 +61,9 @@ const itemsCommonStandardItemFormModule = (function () {
             }
 
             if (item.media_padding === true) {
-                item.media_padding = 1;
-            } else if (item.media_padding === false) {
                 item.media_padding = 0;
+            } else if (item.media_padding === false) {
+                item.media_padding = 1;
             }
 
             // item media
@@ -75,6 +75,8 @@ const itemsCommonStandardItemFormModule = (function () {
             item.media_prev = document.querySelector('#item-media-prev').value;
             item.kaltura = document.querySelector('#audio-video').value;
             item.repo_uuid = document.querySelector('#repo-uuid').value;
+            item.is_repo_item = parseInt(document.querySelector('#is-repo-item').value);
+            item.is_kaltura_item = parseInt(document.querySelector('#is-kaltura-item').value);
 
             if (item.media.length === 0 && item.kaltura.length === 0 && item.repo_uuid.length === 0) {
                 if (item.text.length === 0) {
@@ -168,6 +170,8 @@ const itemsCommonStandardItemFormModule = (function () {
 
                 if (response !== undefined && response.status === 204) {
 
+                    document.querySelector('#item-type').value = '';
+                    document.querySelector('#item-mime-type').value = '';
                     document.querySelector('#item-media').value = '';
                     document.querySelector('#item-media-thumbnail-image-display').innerHTML = '';
                     document.querySelector('#item-media-filename-display').innerHTML = '';
@@ -263,6 +267,11 @@ const itemsCommonStandardItemFormModule = (function () {
             }, 1000);
 
             document.querySelector('#repo-uuid-btn').addEventListener('click', await helperModule.get_repo_item_data);
+            document.querySelector('#audio-video').addEventListener('focusout', () => {
+                helperModule.clear_media_fields('kaltura_media');
+                document.querySelector('#is-kaltura-item').value = 1;
+            });
+
             helperModule.show_form();
 
         } catch (error) {

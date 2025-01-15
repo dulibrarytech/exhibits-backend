@@ -71,9 +71,11 @@ const itemsAddStandardItemFormModule = (function () {
             if (response !== undefined && response.status === 201) {
 
                 document.querySelector('#message').innerHTML = `<div class="alert alert-success" role="alert"><i class="fa fa-info"></i> Item record created</div>`;
+                const item_id = response.data.data;
 
                 setTimeout(() => {
-                    window.location.reload();
+                    window.location.replace(`${APP_PATH}/items/standard/edit?exhibit_id=${uuid}&item_id=${item_id}`);
+                    // window.location.reload();
                     // location.replace(`${APP_PATH}/items?exhibit_id=${uuid}`);
                 }, 900);
             }

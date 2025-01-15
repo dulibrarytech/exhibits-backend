@@ -100,9 +100,9 @@ const itemsEditStandardItemFormModule = (function () {
         }
 
         if (record.media_padding === 1) {
-            document.querySelector('#media-padding').checked = true;
-        } else {
             document.querySelector('#media-padding').checked = false;
+        } else {
+            document.querySelector('#media-padding').checked = true;
         }
 
         if (record.media.length > 0) {
@@ -143,6 +143,7 @@ const itemsEditStandardItemFormModule = (function () {
                 document.getElementById('upload-media-tab').setAttribute('aria-selected', 'false');
                 document.getElementById('import-repo-media-tab').setAttribute('aria-selected', 'true');
                 document.querySelector('#repo-uuid').value = record.media;
+                document.querySelector('#is-repo-item').value = 1;
                 await helperModule.get_repo_item_data();
             }
 
@@ -157,6 +158,7 @@ const itemsEditStandardItemFormModule = (function () {
                 document.getElementById('upload-media-tab').setAttribute('aria-selected', 'false');
                 document.getElementById('import-audio-video-tab').setAttribute('aria-selected', 'true');
                 document.querySelector('#audio-video').value = record.media;
+                document.querySelector('#is-kaltura-item').value = 1;
 
                 let item_types = document.getElementsByName('item_type');
 

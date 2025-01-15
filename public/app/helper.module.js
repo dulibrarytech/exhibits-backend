@@ -185,6 +185,8 @@ const helperModule = (function () {
 
                 document.querySelector('#item-type').value = item_type;
                 document.querySelector('#repo-item-metadata').innerHTML = `<p><strong>${response.data.data.title}</strong><br><em>${response.data.data.mime_type}</em></p>`;
+                document.querySelector('#is-repo-item').value = 1;
+                helperModule.clear_media_fields('repo_media');
 
             } else {
                 document.querySelector('#repo-item-metadata').innerHTML = `<p style="color:red">Metadata record not found in repository.</p>`;
@@ -193,6 +195,36 @@ const helperModule = (function () {
         } catch (error) {
             document.querySelector('#message').innerHTML = `<div class="alert alert-danger" role="alert"><i class="fa fa-exclamation"></i> ${error.message}</div>`;
         }
+    };
+
+    /**
+     * Clears media fields
+     */
+    obj.clear_media_fields = function (type) {
+
+        if (type === 'uploaded_media') {
+            document.querySelector('#repo-uuid').value = '';
+            document.querySelector('#audio-video').value = '';
+            document.querySelector('#is-kaltura-item').value = 0;
+            document.querySelector('#is-repo-item').value = 0;
+        }
+
+        if (type === 'repo_media') {
+            document.querySelector('#audio-video').value = '';
+            document.querySelector('#is-kaltura-item').value = 0;
+        }
+
+        if (type === 'kaltura_media') {
+            document.querySelector('#repo-uuid').value = '';
+            document.querySelector('#is-repo-item').value = 0;
+        }
+
+        document.querySelector('#item-type').value = '';
+        document.querySelector('#item-mime-type').value = '';
+        document.querySelector('#item-media').value = '';
+        document.querySelector('#item-media-thumbnail-image-display').innerHTML = '';
+        document.querySelector('#item-media-filename-display').innerHTML = '';
+        document.querySelector('#item-media-trash').style.display = 'none';
     };
 
     /**
@@ -481,109 +513,44 @@ const helperModule = (function () {
         }
     };
 
+    obj.check_bandwidth = function (cb) {
+
+        const URL = 'https://upload.wikimedia.org/wikipedia/commons/9/90/ODJBcard.JPG';
+        const FILE_SIZE = 55 // KB
+        // const URL = 'http://upload.wikimedia.org/wikipedia/commons/5/51/Google.png';
+        // const FILE_SIZE = 238; // KB
+        let start = new Date().getTime();
+        let bandwidth;
+        let count = 10;
+        let i = 0;
+
+        (async function request() {
+
+            const response = await httpModule.req({
+                method: 'GET',
+                url: URL
+            });
+
+            if (response.status === 200) {
+
+                let x = new Date().getTime() - start;
+                let bw = Number(((FILE_SIZE / (x / 1000))));
+                bandwidth = ((bandwidth || bw) + bw) / 2;
+                i++;
+
+                if (i < count) {
+                    start = new Date().getTime();
+                    await request();
+                 } else {
+                    cb(bandwidth.toFixed(0));
+                 }
+            }
+
+        })();
+    };
+
     obj.init = function () {};
 
     return obj;
 
 }());
-
-/**
- * TODO: Remove - timeline items should not be reordered
- * Reorders timeline item list via drag and drop
- * @param event
- * @param id
- */
-/*
-obj.reorder_timeline_items = function (event, id) {
-
-    try {
-
-        const exhibit_id = helperModule.get_parameter_by_name('exhibit_id');
-        const timeline_id = helperModule.get_parameter_by_name('timeline_id');
-        const EXHIBITS_ENDPOINTS = endpointsModule.get_exhibits_endpoints();
-        const tr_elem = Array.from(document.getElementsByTagName('tr'));
-        let row;
-        let children;
-        let updated_order = [];
-        let reorder_obj = {};
-
-        tr_elem.forEach(tr => {
-
-            tr.addEventListener('dragstart', (event) => {
-                row = event.target;
-            });
-
-            tr.addEventListener('dragover', (event) => {
-
-                try {
-
-                    let e = event;
-                    e.preventDefault();
-
-                    children = Array.from(e.target.parentNode.parentNode.children);
-
-                    if (children.indexOf(e.target.parentNode) > children.indexOf(row)) {
-                        // move down
-                        e.target.parentNode.after(row);
-                    } else {
-                        // move up
-                        e.target.parentNode.before(row);
-                    }
-
-                } catch (error) {
-                    console.log(error);
-                    // document.querySelector('#message').innerHTML = `<div class="alert alert-danger" role="alert"><i class="fa fa-exclamation"></i> ${error.message}</div>`;
-                }
-            });
-
-            tr.addEventListener('drop', async (event) => {
-
-                try {
-
-                    if (event.target.className === 'dropzone') {
-                        row.parentNode.removeChild(row);
-                        event.target.appendChild(row);
-                    }
-
-                    for (let i=0;i<children.length;i++ ) {
-                        let child = children[i];
-                        let id = child.getAttribute('id');
-                        let id_arr = id.split('_');
-
-                        reorder_obj.type = id_arr.pop();
-                        reorder_obj.uuid = id_arr.pop();
-                        reorder_obj.timeline_id = timeline_id;
-                        reorder_obj.order = i + 1;
-                        updated_order.push(reorder_obj);
-                        reorder_obj = {};
-                    }
-
-                    const token = authModule.get_user_token();
-                    const response = await httpModule.req({
-                        method: 'POST',
-                        url: EXHIBITS_ENDPOINTS.exhibits.reorder_records.post.endpoint.replace(':exhibit_id', exhibit_id),
-                        data: updated_order,
-                        headers: {
-                            'Content-Type': 'application/json',
-                            'x-access-token': token
-                        }
-                    });
-
-                    if (response !== undefined && response.status === 201) {
-                        await itemsTimelineModule.display_timeline_items(event);
-                    } else {
-                        document.querySelector('#message').innerHTML = `<div class="alert alert-danger" role="alert"><i class="fa fa-exclamation"></i> An error occurred while reordering items.</div>`;
-                    }
-
-                } catch (error) {
-                    console.log(error);
-                }
-            });
-        });
-
-    } catch (error) {
-        console.log(error);
-        // document.querySelector('#message').innerHTML = `<div class="alert alert-danger" role="alert"><i class="fa fa-exclamation"></i> ${error.message}</div>`;
-    }
-};
-*/

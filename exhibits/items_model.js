@@ -205,7 +205,26 @@ exports.update_item_record = async function (is_member_of_exhibit, item_id, data
         if (data.kaltura.length > 0) {
             data.media = data.kaltura;
             data.is_kaltura_item = 1;
-        } else if (data.repo_uuid.length > 0) {
+        }
+
+        if (data.kaltura.length === 0 && data.item_type !== 'audio') {
+            data.is_kaltura_item = 0;
+        }
+
+        if (data.kaltura.length === 0 && data.item_type !== 'video') {
+            data.is_kaltura_item = 0;
+        }
+
+        if (data.item_type === 'audio') {
+            data.is_kaltura_item = 1;
+        }
+
+        if (data.item_type === 'video') {
+            data.is_kaltura_item = 1;
+        }
+
+
+        if (data.repo_uuid.length > 0) {
             data.media = data.repo_uuid;
             data.is_repo_item = 1;
         }
