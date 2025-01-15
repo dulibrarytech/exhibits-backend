@@ -89,20 +89,25 @@ const exhibitsEditFormModule = (function () {
             let thumbnail_fragment = '';
 
             // exhibit data
-            rich_text_data['exhibit-title-input'] = helperModule.set_rich_text_editor('exhibit-title-input');
-            rich_text_data['exhibit-title-input'].setHTMLCode(helperModule.unescape(record.title));
+            // rich_text_data['exhibit-title-input'] = helperModule.set_rich_text_editor('exhibit-title-input');
+            // rich_text_data['exhibit-title-input'].setHTMLCode(helperModule.unescape(record.title));
+            document.querySelector('#exhibit-title-input').value = helperModule.unescape(record.title);
 
-            rich_text_data['exhibit-sub-title-input'] = helperModule.set_rich_text_editor('exhibit-sub-title-input');
-            rich_text_data['exhibit-sub-title-input'].setHTMLCode(helperModule.unescape(record.subtitle));
+            // rich_text_data['exhibit-sub-title-input'] = helperModule.set_rich_text_editor('exhibit-sub-title-input');
+            // rich_text_data['exhibit-sub-title-input'].setHTMLCode(helperModule.unescape(record.subtitle));
+            document.querySelector('#exhibit-sub-title-input').value = helperModule.unescape(record.subtitle);
 
-            rich_text_data['exhibit-alert-text-input'] = helperModule.set_rich_text_editor('exhibit-alert-text-input');
-            rich_text_data['exhibit-alert-text-input'].setHTMLCode(helperModule.unescape(record.alert_text));
+            // rich_text_data['exhibit-alert-text-input'] = helperModule.set_rich_text_editor('exhibit-alert-text-input');
+            // rich_text_data['exhibit-alert-text-input'].setHTMLCode(helperModule.unescape(record.alert_text));
+            document.querySelector('#exhibit-alert-text-input').value = helperModule.unescape(record.alert_text);
 
-            rich_text_data['exhibit-description-input'] = helperModule.set_rich_text_editor('exhibit-description-input');
-            rich_text_data['exhibit-description-input'].setHTMLCode(helperModule.unescape(record.description));
+            // rich_text_data['exhibit-description-input'] = helperModule.set_rich_text_editor('exhibit-description-input');
+            // rich_text_data['exhibit-description-input'].setHTMLCode(helperModule.unescape(record.description));
+            document.querySelector('#exhibit-description-input').value = helperModule.unescape(record.description);
 
-            rich_text_data['exhibit-about-the-curators-input'] = helperModule.set_rich_text_editor('exhibit-about-the-curators-input');
-            rich_text_data['exhibit-about-the-curators-input'].setHTMLCode(helperModule.unescape(record.about_the_curators));
+            // rich_text_data['exhibit-about-the-curators-input'] = helperModule.set_rich_text_editor('exhibit-about-the-curators-input');
+            // rich_text_data['exhibit-about-the-curators-input'].setHTMLCode(helperModule.unescape(record.about_the_curators));
+            document.querySelector('#exhibit-about-the-curators-input').value = helperModule.unescape(record.about_the_curators);
 
             if (record.is_featured === 1) {
                 document.querySelector('#is-featured').checked = true;
@@ -342,7 +347,7 @@ const exhibitsEditFormModule = (function () {
 
         try {
 
-            helperModule.set_rich_text_editor_config();
+            // helperModule.set_rich_text_editor_config();
             document.querySelector('#save-exhibit-btn').addEventListener('click', exhibitsEditFormModule.update_exhibit_record);
             await display_edit_record();
 
