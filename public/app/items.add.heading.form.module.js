@@ -25,6 +25,7 @@ const itemsAddHeadingFormModule = (function () {
     let obj = {};
     let rich_text_data = {};
 
+    /*
     function set_rich_text_editors () {
         const ids = ['item-heading-text-input'];
 
@@ -32,6 +33,8 @@ const itemsAddHeadingFormModule = (function () {
             rich_text_data[id] = helperModule.set_rich_text_editor(id);
         });
     }
+
+     */
 
     obj.create_heading_record = async function () {
 
@@ -68,8 +71,9 @@ const itemsAddHeadingFormModule = (function () {
                 document.querySelector('#message').innerHTML = `<div class="alert alert-success" role="alert"><i class="fa fa-info"></i> Heading record created</div>`;
 
                 setTimeout(() => {
-                    window.location.reload();
+                    // window.location.reload();
                     // window.location.replace(APP_PATH + '/items?exhibit_id=' + exhibit_id);
+                    window.location.replace(`${APP_PATH}/items/heading/edit?exhibit_id=${exhibit_id}&item_id=${response.data.data}`);
                 }, 900);
             }
 
@@ -83,8 +87,8 @@ const itemsAddHeadingFormModule = (function () {
         const exhibit_id = helperModule.get_parameter_by_name('exhibit_id');
         exhibitsModule.set_exhibit_title(exhibit_id);
 
-        helperModule.set_rich_text_editor_config();
-        set_rich_text_editors();
+        // helperModule.set_rich_text_editor_config();
+        // set_rich_text_editors();
 
         document.querySelector('#save-heading-btn').addEventListener('click', itemsAddHeadingFormModule.create_heading_record);
     };

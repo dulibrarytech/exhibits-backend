@@ -31,9 +31,10 @@ const itemsCommonHeadingFormModule = (function () {
 
             let item_heading = {};
             item_heading.styles = {};
-            item_heading.text = rich_text_data['item-heading-text-input'].getHTMLCode();
+            // item_heading.text = rich_text_data['item-heading-text-input'].getHTMLCode();
+            item_heading.text = document.querySelector('#item-heading-text-input').value;
 
-            if (item_heading.text.length === 0 || item_heading.text === '<div></div>') {
+            if (item_heading.text.length === 0) { //  || item_heading.text === '<div></div>'
                 document.querySelector('#message').innerHTML = `<div class="alert alert-danger" role="alert"><i class="fa fa-exclamation"></i> Please enter heading text</div>`;
                 return false;
             }
