@@ -25,6 +25,7 @@ const itemsAddVerticalTimelineFormModule = (function () {
     let obj = {};
     let rich_text_data = {};
 
+    /*
     function set_rich_text_editors () {
         const ids = ['timeline-title-input',
             'timeline-text-input'];
@@ -33,6 +34,8 @@ const itemsAddVerticalTimelineFormModule = (function () {
             rich_text_data[id] = helperModule.set_rich_text_editor(id);
         });
     }
+
+     */
 
     obj.create_timeline_record = async function () {
 
@@ -48,7 +51,12 @@ const itemsAddVerticalTimelineFormModule = (function () {
 
             document.querySelector('#message').innerHTML = `<div class="alert alert-info" role="alert"><i class="fa fa-info"></i> Creating timeline record...</div>`;
 
-            let data = itemsCommonVerticalTimelineFormModule.get_common_timeline_form_fields(rich_text_data);
+            const data = itemsCommonVerticalTimelineFormModule.get_common_timeline_form_fields(rich_text_data);
+
+            if (data === false) {
+                return false;
+            }
+
             let token = authModule.get_user_token();
             let response = await httpModule.req({
                 method: 'POST',
@@ -67,8 +75,10 @@ const itemsAddVerticalTimelineFormModule = (function () {
                 const timeline_id = response.data.data;
                 console.log(timeline_id);
                 setTimeout(() => {
-                    window.location.reload();
+                    // window.location.reload();
                     // location.replace(`${APP_PATH}/items?exhibit_id=${exhibit_id}`);
+                    // /items/vertical-timeline/edit?exhibit_id=a6c9e125-ca19-4434-888d-977f60224c33&item_id=061eda2e-7d22-4e88-b1c3-860f90fc514e
+                    window.location.replace(`${APP_PATH}/items/vertical-timeline/edit?exhibit_id=${exhibit_id}&item_id=${timeline_id}`);
                 }, 900);
             }
 
@@ -83,8 +93,8 @@ const itemsAddVerticalTimelineFormModule = (function () {
 
             const exhibit_id = helperModule.get_parameter_by_name('exhibit_id');
             exhibitsModule.set_exhibit_title(exhibit_id);
-            helperModule.set_rich_text_editor_config();
-            set_rich_text_editors();
+            // helperModule.set_rich_text_editor_config();
+            // set_rich_text_editors();
             document.querySelector('#save-timeline-btn').addEventListener('click', itemsAddVerticalTimelineFormModule.create_timeline_record);
 
         } catch (error) {

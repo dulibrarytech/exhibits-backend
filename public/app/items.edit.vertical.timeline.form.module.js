@@ -25,6 +25,7 @@ const itemsEditVerticalTimelineFormModule = (function () {
     let obj = {};
     let rich_text_data = {};
 
+    /*
     function set_rich_text_editors () {
         const ids = ['timeline-title-input',
             'timeline-text-input'];
@@ -33,6 +34,8 @@ const itemsEditVerticalTimelineFormModule = (function () {
             rich_text_data[id] = helperModule.set_rich_text_editor(id);
         });
     }
+
+     */
 
     async function get_timeline_record () {
 
@@ -89,6 +92,11 @@ const itemsEditVerticalTimelineFormModule = (function () {
             document.querySelector('#message').innerHTML = `<div class="alert alert-info" role="alert"><i class="fa fa-info"></i> Updating timeline record...</div>`;
 
             const data = itemsCommonVerticalTimelineFormModule.get_common_timeline_form_fields(rich_text_data);
+
+            if (data === false) {
+                return false;
+            }
+
             let tmp = EXHIBITS_ENDPOINTS.exhibits.timeline_records.put.endpoint.replace(':exhibit_id', exhibit_id);
             let endpoint = tmp.replace(':timeline_id', timeline_id);
             const token = authModule.get_user_token();
@@ -121,15 +129,17 @@ const itemsEditVerticalTimelineFormModule = (function () {
 
     async function display_edit_record () {
 
-        let record = await get_timeline_record();
+        const record = await get_timeline_record();
+        console.log(record);
+        // rich_text_data['timeline-title-input'] = helperModule.set_rich_text_editor('timeline-title-input');
+        // rich_text_data['timeline-title-input'].setHTMLCode(helperModule.unescape(record.title));
+        document.querySelector('#timeline-title-input').value = helperModule.unescape(record.title);
 
-        rich_text_data['timeline-title-input'] = helperModule.set_rich_text_editor('timeline-title-input');
-        rich_text_data['timeline-title-input'].setHTMLCode(helperModule.unescape(record.title));
+        // rich_text_data['timeline-text-input'] = helperModule.set_rich_text_editor('timeline-text-input');
+        // rich_text_data['timeline-text-input'].setHTMLCode(helperModule.unescape(record.text));
+        document.querySelector('#timeline-text-input').value = helperModule.unescape(record.text);
 
-        rich_text_data['timeline-text-input'] = helperModule.set_rich_text_editor('timeline-text-input');
-        rich_text_data['timeline-text-input'].setHTMLCode(helperModule.unescape(record.text));
-
-        let styles = JSON.parse(record.styles);
+        const styles = JSON.parse(record.styles);
 
         if (Object.keys(styles).length !== 0) {
 
@@ -166,8 +176,6 @@ const itemsEditVerticalTimelineFormModule = (function () {
     obj.init = async function () {
         const exhibit_id = helperModule.get_parameter_by_name('exhibit_id');
         exhibitsModule.set_exhibit_title(exhibit_id);
-        helperModule.set_rich_text_editor_config();
-        set_rich_text_editors();
         document.querySelector('#save-timeline-btn').addEventListener('click', itemsEditVerticalTimelineFormModule.update_timeline_record);
         await display_edit_record();
     };
