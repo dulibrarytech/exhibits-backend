@@ -43,7 +43,7 @@ exports.sanitize_req_body = function(req, res, next) {
         if (req.body.hasOwnProperty(prop)) {
 
             if (prop !== 'is_active' && typeof req.body[prop] === 'string') {
-                req.body[prop] = VALIDATOR.escape(VALIDATOR.trim(req.body[prop]));
+                req.body[prop] = VALIDATOR.escape(DOMPURIFY.sanitize(VALIDATOR.trim(req.body[prop])));
             }
         }
     });
@@ -68,7 +68,7 @@ exports.sanitize_req_params = function(req, res, next) {
     keys.map(function (prop) {
 
         if (req.params.hasOwnProperty(prop) && typeof req.params[prop] === 'string') {
-            req.params[prop] = DOMPURIFY.sanitize(VALIDATOR.isUUID(VALIDATOR.escape(VALIDATOR.trim(req.params[prop]))));
+            req.params[prop] = VALIDATOR.isUUID(VALIDATOR.escape(DOMPURIFY.sanitize(VALIDATOR.trim(req.params[prop]))));
         }
     });
 
@@ -92,7 +92,7 @@ exports.sanitize_req_query = function(req, res, next) {
     keys.map(function (prop) {
 
         if (req.query.hasOwnProperty(prop) && typeof req.query[prop] === 'string') {
-            req.query[prop] = DOMPURIFY.sanitize(VALIDATOR.escape(VALIDATOR.trim(req.query[prop])));
+            req.query[prop] = VALIDATOR.escape(DOMPURIFY.sanitize(VALIDATOR.trim(req.query[prop])));
         }
     });
 
