@@ -25,6 +25,7 @@ const itemsAddGridItemFormModule = (function () {
     let obj = {};
     let rich_text_data = {};
 
+    /*
     function set_rich_text_editors() {
         const ids = ['item-title-input',
             'item-description-input',
@@ -34,6 +35,8 @@ const itemsAddGridItemFormModule = (function () {
             rich_text_data[id] = helperModule.set_rich_text_editor(id);
         });
     }
+
+     */
 
     obj.create_grid_item_record = async function () {
 
@@ -76,9 +79,12 @@ const itemsAddGridItemFormModule = (function () {
 
                 let message = 'Grid item record created';
                 document.querySelector('#message').innerHTML = `<div class="alert alert-success" role="alert"><i class="fa fa-info"></i> ${message}</div>`;
+                const grid_item_id = response.data.data;
                 setTimeout(() => {
-                    window.location.reload();
+                    // window.location.reload();
                     // window.location.replace(APP_PATH + '/items/grid/items?exhibit_id=' + exhibit_id + '&grid_id=' + grid_id);
+                    // /items/grid/item/edit?exhibit_id=<>&grid_id=<>&item_id=<>
+                    window.location.replace(`${APP_PATH}/items/grid/item/edit?exhibit_id=${exhibit_id}&grid_id=${grid_id}&item_id=${grid_item_id}`);
                 }, 900);
             }
 
@@ -94,8 +100,8 @@ const itemsAddGridItemFormModule = (function () {
             const exhibit_id = helperModule.get_parameter_by_name('exhibit_id');
             exhibitsModule.set_exhibit_title(exhibit_id);
 
-            helperModule.set_rich_text_editor_config();
-            set_rich_text_editors();
+            // helperModule.set_rich_text_editor_config();
+            // set_rich_text_editors();
 
             uploadsModule.upload_item_media();
             uploadsModule.upload_item_thumbnail();
