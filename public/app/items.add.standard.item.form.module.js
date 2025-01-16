@@ -25,6 +25,7 @@ const itemsAddStandardItemFormModule = (function () {
     let obj = {};
     let rich_text_data = {};
 
+    /*
     function set_rich_text_editors () {
         const ids = ['item-title-input',
             'item-text-input'];
@@ -33,6 +34,8 @@ const itemsAddStandardItemFormModule = (function () {
             rich_text_data[id] = helperModule.set_rich_text_editor(id);
         });
     }
+
+     */
 
     obj.create_item_record = async function () {
 
@@ -90,8 +93,8 @@ const itemsAddStandardItemFormModule = (function () {
         const exhibit_id = helperModule.get_parameter_by_name('exhibit_id');
         exhibitsModule.set_exhibit_title(exhibit_id);
 
-        helperModule.set_rich_text_editor_config();
-        set_rich_text_editors();
+        // helperModule.set_rich_text_editor_config();
+        // set_rich_text_editors();
 
         document.querySelector('#save-item-btn').addEventListener('click', itemsAddStandardItemFormModule.create_item_record);
     };

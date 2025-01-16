@@ -32,17 +32,22 @@ const itemsCommonStandardItemFormModule = (function () {
             item.styles = {};
 
             // item metadata
-            item.title = rich_text_data['item-title-input'].getHTMLCode();
-            item.text = rich_text_data['item-text-input'].getHTMLCode();
+            // item.title = rich_text_data['item-title-input'].getHTMLCode();
+            // item.text = rich_text_data['item-text-input'].getHTMLCode();
+            item.title = document.querySelector('#item-title-input').value;
+            item.text = document.querySelector('#item-text-input').value;
             item.caption = document.querySelector('#item-caption-input').value;
             item.pdf_open_to_page = document.querySelector('#pdf-open-to-page').value;
             item.wrap_text = document.querySelector('#wrap-text').checked;
             item.is_embedded = document.querySelector('#embed-item').checked;
             item.media_padding = document.querySelector('#media-padding').checked;
 
+            /*
             if (item.title === '<div></div>') {
                 item.title = '';
             }
+
+             */
 
             if (item.text === '<div></div>') {
                 item.text = '';
