@@ -22,9 +22,6 @@ const itemsCommonStandardGridFormModule = (function () {
 
     let obj = {};
 
-    /**
-     * Gets common standard grid form fields
-     */
     obj.get_common_grid_form_fields = function (rich_text_data) {
 
         try {
@@ -33,20 +30,22 @@ const itemsCommonStandardGridFormModule = (function () {
             grid.styles = {};
 
             // grid metadata
-            grid.title = rich_text_data['grid-title-input'].getHTMLCode();
-            grid.text = rich_text_data['grid-text-input'].getHTMLCode();
+            // grid.title = rich_text_data['grid-title-input'].getHTMLCode();
+            grid.title = document.querySelector('#grid-title-input').value;
+            // grid.text = rich_text_data['grid-text-input'].getHTMLCode();
+            grid.text = document.querySelector('#grid-text-input').value;
             grid.columns = document.querySelector('#grid-columns').value;
 
+            /*
             if (grid.title === '<div></div>') {
                 grid.title = '';
             }
+             */
 
-            /*
-            if (grid.title.length === 0 || grid.title === '<div></div>') {
+            if (grid.title.length === 0) { // || grid.title === '<div></div>'
                 document.querySelector('#message').innerHTML = `<div class="alert alert-danger" role="alert"><i class="fa fa-exclamation"></i> Please enter a title</div>`;
                 return false;
             }
-            */
 
             // grid styles
             let grid_background_color = document.querySelector('#grid-background-color').value;
@@ -77,9 +76,6 @@ const itemsCommonStandardGridFormModule = (function () {
         }
     };
 
-    /**
-     * Init function for grid common add/edit forms
-     */
     obj.init = async function () {
 
         try {

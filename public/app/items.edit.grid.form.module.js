@@ -25,6 +25,7 @@ const itemsEditGridFormModule = (function () {
     let obj = {};
     let rich_text_data = {};
 
+    /*
     function set_rich_text_editors () {
         const ids = ['grid-title-input',
             'grid-text-input'];
@@ -33,6 +34,8 @@ const itemsEditGridFormModule = (function () {
             rich_text_data[id] = helperModule.set_rich_text_editor(id);
         });
     }
+
+     */
 
     async function get_grid_record () {
 
@@ -123,12 +126,13 @@ const itemsEditGridFormModule = (function () {
 
         let record = await get_grid_record();
 
-        rich_text_data['grid-title-input'] = helperModule.set_rich_text_editor('grid-title-input');
-        rich_text_data['grid-title-input'].setHTMLCode(helperModule.unescape(record.title));
+        // rich_text_data['grid-title-input'] = helperModule.set_rich_text_editor('grid-title-input');
+        // rich_text_data['grid-title-input'].setHTMLCode(helperModule.unescape(record.title));
+        document.querySelector('#grid-title-input').value = helperModule.unescape(record.title);
 
-        rich_text_data['grid-text-input'] = helperModule.set_rich_text_editor('grid-text-input');
-        rich_text_data['grid-text-input'].setHTMLCode(helperModule.unescape(record.text));
-
+        // rich_text_data['grid-text-input'] = helperModule.set_rich_text_editor('grid-text-input');
+        // rich_text_data['grid-text-input'].setHTMLCode(helperModule.unescape(record.text));
+        document.querySelector('#grid-text-input').value = helperModule.unescape(record.text);
         document.querySelector('#grid-columns').value = record.columns;
 
         let styles = JSON.parse(record.styles);
@@ -168,8 +172,8 @@ const itemsEditGridFormModule = (function () {
     obj.init = async function () {
         const exhibit_id = helperModule.get_parameter_by_name('exhibit_id');
         exhibitsModule.set_exhibit_title(exhibit_id);
-        helperModule.set_rich_text_editor_config();
-        set_rich_text_editors();
+        // helperModule.set_rich_text_editor_config();
+        // set_rich_text_editors();
         document.querySelector('#save-item-btn').addEventListener('click', itemsEditGridFormModule.update_grid_record);
         await display_edit_record();
     };
