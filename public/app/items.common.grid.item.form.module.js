@@ -224,7 +224,7 @@ const itemsCommonGridItemFormModule = (function () {
             await authModule.check_auth(token);
 
             navModule.init();
-            navModule.back_to_items();
+            navModule.back_to_grid_items();
 
             uploadsModule.upload_item_media();
             uploadsModule.upload_item_thumbnail();
