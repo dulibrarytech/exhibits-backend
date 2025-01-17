@@ -44,21 +44,6 @@ const itemsCommonGridItemFormModule = (function () {
             item.caption = document.querySelector('#item-caption-input').value;
             item.is_embedded = document.querySelector('#embed-item').checked;
 
-            /*
-            if (item.title === '<div></div>') {
-                item.title = '';
-            }
-
-            if (item.description === '<div></div>') {
-                item.description = '';
-            }
-
-            if (item.text === '<div></div>') {
-                item.text = '';
-            }
-
-             */
-
             if (item.is_embedded === true) {
                 item.is_embedded = 1;
             } else if (item.is_embedded === false) {
