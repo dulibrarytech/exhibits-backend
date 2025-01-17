@@ -251,6 +251,7 @@ const itemsCommonStandardItemFormModule = (function () {
 
             navModule.init();
             navModule.back_to_items();
+            navModule.set_preview_link();
 
             document.querySelector('#item-media-trash').style.display = 'none';
             document.querySelector('#item-thumbnail-trash').style.display = 'none';

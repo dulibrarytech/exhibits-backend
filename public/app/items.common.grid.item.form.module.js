@@ -225,6 +225,7 @@ const itemsCommonGridItemFormModule = (function () {
 
             navModule.init();
             navModule.back_to_grid_items();
+            navModule.set_preview_link();
 
             uploadsModule.upload_item_media();
             uploadsModule.upload_item_thumbnail();

@@ -87,6 +87,7 @@ const itemsCommonHeadingFormModule = (function () {
 
             navModule.init();
             navModule.back_to_items();
+            navModule.set_preview_link();
 
             document.querySelector('#heading-background-color-picker').addEventListener('input', () => {
                 if (document.querySelector('#heading-background-color')) {

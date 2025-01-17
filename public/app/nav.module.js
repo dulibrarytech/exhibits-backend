@@ -99,14 +99,12 @@ const navModule = (function () {
         document.querySelector('#back-to-items').setAttribute('href', `${APP_PATH}/items/timeline/items?exhibit_id=${exhibit_id}&timeline_id=${timeline_id}`);
     };
 
-    // /items/timeline/items?exhibit_id=a6c9e125-ca19-4434-888d-977f60224c33&timeline_id=080f19dd-c3d5-4440-89b6-d683dbb5ee51
-
     obj.set_preview_link = function () {
 
         let uuid = helperModule.get_parameter_by_name('exhibit_id');
         let preview_link = `${APP_PATH}/preview?uuid=${uuid}`;
         let preview_menu_fragment = `
-                    <a href="#" onclick="exhibitsModule.open_preview('${preview_link}')">
+                    <a title="Previews Exhibit" href="#" onclick="exhibitsModule.open_preview('${preview_link}')">
                         <i class=" menu-icon fa fa-eye"></i>Preview
                     </a>`;
 

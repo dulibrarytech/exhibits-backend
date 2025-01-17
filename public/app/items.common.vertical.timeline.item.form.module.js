@@ -242,7 +242,7 @@ const itemsCommonVerticalTimelineItemFormModule = (function () {
 
             navModule.init();
             navModule.back_to_timeline_items();
-            // navModule.back_to_items();
+            navModule.set_preview_link();
 
             uploadsModule.upload_item_media();
             uploadsModule.upload_item_thumbnail();
