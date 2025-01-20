@@ -259,6 +259,7 @@ const itemsGridModule = (function () {
 
             navModule.init();
             navModule.back_to_items();
+            navModule.set_preview_link();
             navModule.set_grid_item_nav_menu_links();
             navModule.set_logout_link();
             helperModule.show_form();

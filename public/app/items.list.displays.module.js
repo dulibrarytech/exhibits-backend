@@ -243,16 +243,21 @@ const itemsListDisplayModule = (function () {
     obj.display_grid_items = function (item) {
 
         try {
-
+            console.log(item);
             item.type = '';
             item.type = 'griditem';
             let title = helperModule.unescape(item.title);
             const item_obj = check_published_status(item, 'grid/item');
             let thumbnail;
+            let media = '';
             let url;
             let item_type;
             let img = '';
             let item_data = '';
+
+            if (item.media.length > 0) {
+                media = item.media;
+            }
 
             if (item.mime_type.indexOf('image') !== -1) {
                 item_type = '<i class="fa fa-image"></i>';
@@ -292,7 +297,7 @@ const itemsListDisplayModule = (function () {
                     <p><button class="btn btn-default">${item_type} <small>grid item</small></button></p>
                     <p><strong>${title}</strong></p>
                     ${img}
-                   
+                    ${media}
                     </td>`;
 
             item_data += `<td style="width: 5%;text-align: center"><small>${item_obj.status}</small></td>`;
