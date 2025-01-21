@@ -243,10 +243,9 @@ const itemsListDisplayModule = (function () {
     obj.display_grid_items = function (item) {
 
         try {
-            console.log(item);
+
             item.type = '';
             item.type = 'griditem';
-            let title = helperModule.unescape(item.title);
             const item_obj = check_published_status(item, 'grid/item');
             let thumbnail;
             let media = '';
@@ -254,6 +253,27 @@ const itemsListDisplayModule = (function () {
             let item_type;
             let img = '';
             let item_data = '';
+            let title = '';
+
+            // TODO: check items
+            if (item.is_repo_item === 1 && item.title.length === 0) {
+                // TODO: get repo title
+                // TODO: show repo thumbnail
+            }
+
+            if (item.is_kaltura_item === 1 && item.title.length === 0) {
+                // TODO: display Kaltura info
+            }
+
+            if (item.title.length > 0) {
+                title = helperModule.unescape(item.title);
+            }
+
+            if (item.text.length > 0) {
+                title = helperModule.unescape(item.text);
+            } else if (item.description.length > 0) {
+                title = helperModule.unescape(item.description);
+            }
 
             if (item.media.length > 0) {
                 media = item.media;
