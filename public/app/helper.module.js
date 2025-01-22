@@ -167,9 +167,16 @@ const helperModule = (function () {
                     return false;
                 }
 
-                document.querySelector('#item-mime-type').value = response.data.data.mime_type;
-                let mime_type = response.data.data.mime_type;
+                const tn_array = response.data.data.thumbnail.data;
+                const array_buffer_view = new Uint8Array(tn_array);
+                const blob = new Blob([array_buffer_view], { type: "image/jpeg" });
+                const url_creator = window.URL || window.webkitURL;
+                const tn_url = url_creator.createObjectURL(blob);
+                const mime_type = response.data.data.mime_type;
                 let item_type;
+
+                document.querySelector('#tn').innerHTML = `<img src="${tn_url}" alt="thumbnail" height="200" width="200">`;
+                document.querySelector('#item-mime-type').value = response.data.data.mime_type;
 
                 if (mime_type.indexOf('image') !== -1) {
                     item_type = 'image';

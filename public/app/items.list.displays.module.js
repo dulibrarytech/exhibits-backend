@@ -103,6 +103,12 @@ const itemsListDisplayModule = (function () {
                 item_type = '<i class="fa fa-file-o"></i>';
             }
 
+            // TODO: handle repo and kaltura items better
+            // TODO: if is_repo_item
+            // TODO: get uuid
+            // TODO: if NO title is entered, use repo title
+            // TODO: get thumbnail via TN service
+
             if (item.thumbnail.length > 0) {
                 thumbnail = EXHIBITS_ENDPOINTS.exhibits.exhibit_media.get.endpoint.replace(':exhibit_id', item.is_member_of_exhibit).replace(':media', item.thumbnail);
                 img = `<p><img alt="thumbnail" src="${thumbnail}" height="75" width="75"></p>`;

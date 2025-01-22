@@ -27,7 +27,9 @@ const WEBSERVICES_CONFIG = {
     exhibit_preview_url: process.env.EXHIBIT_URL,
     exhibit_preview_api_key: process.env.EXHIBIT_PREVIEW_API_KEY,
     repo_item_api_url: process.env.REPO_ITEM_API_URL,
-    repo_item_api_key: process.env.REPO_ITEM_API_KEY
+    repo_item_api_key: process.env.REPO_ITEM_API_KEY,
+    tn_service: process.env.TN_SERVICE,
+    tn_service_api_key: process.env.TN_SERVICE_API_KEY
 };
 
 module.exports = () => {

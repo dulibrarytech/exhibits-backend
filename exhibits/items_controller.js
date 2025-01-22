@@ -19,7 +19,7 @@
 'use strict';
 
 const STORAGE_CONFIG = require('../config/storage_config')();
-const EXHIBITS_MODEL = require('../exhibits/exhibits_model');
+// const EXHIBITS_MODEL = require('../exhibits/exhibits_model');
 const ITEMS_MODEL = require('../exhibits/items_model');
 const HEADINGS_MODEL = require('../exhibits/headings_model');
 const GRIDS_MODEL = require('../exhibits/grid_model');
@@ -257,6 +257,9 @@ exports.get_repo_item_record = async function (req, res) {
         }
 
         let response = await ITEMS_MODEL.get_repo_item_record(uuid);
+        const tn = await ITEMS_MODEL.get_repo_tn(uuid);
+        delete response.data.thumbnail;
+        response.data.thumbnail = tn;
 
         if (response.status === 200) {
 
