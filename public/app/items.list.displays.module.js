@@ -146,6 +146,9 @@ const itemsListDisplayModule = (function () {
                 if (item.thumbnail.length > 0) {
                     thumbnail = EXHIBITS_ENDPOINTS.exhibits.exhibit_media.get.endpoint.replace(':exhibit_id', item.is_member_of_exhibit).replace(':media', item.thumbnail);
                     img = `<p><img src="${thumbnail}" alt="thumbnail" height="75" width="75"></p>`;
+                } else if (item.thumbnail.length === 0 && item.item_type === 'image') {
+                    thumbnail = EXHIBITS_ENDPOINTS.exhibits.exhibit_media.get.endpoint.replace(':exhibit_id', item.is_member_of_exhibit).replace(':media', item.media);
+                    img = `<p><img src="${thumbnail}" alt="thumbnail" height="75" width="75"></p>`;
                 } else {
                     thumbnail = `${APP_PATH}/static/images/image-tn.png`;
                     img = `<p><img src="${thumbnail}" alt="thumbnail" height="75" width="75"></p>`;
@@ -354,6 +357,9 @@ const itemsListDisplayModule = (function () {
 
                 if (item.thumbnail.length > 0) {
                     thumbnail = EXHIBITS_ENDPOINTS.exhibits.exhibit_media.get.endpoint.replace(':exhibit_id', item.is_member_of_exhibit).replace(':media', item.thumbnail);
+                    img = `<p><img src="${thumbnail}" alt="thumbnail" height="75" width="75"></p>`;
+                } else if (item.thumbnail.length === 0 && item.item_type === 'image') {
+                    thumbnail = EXHIBITS_ENDPOINTS.exhibits.exhibit_media.get.endpoint.replace(':exhibit_id', item.is_member_of_exhibit).replace(':media', item.media);
                     img = `<p><img src="${thumbnail}" alt="thumbnail" height="75" width="75"></p>`;
                 } else {
                     thumbnail = `${APP_PATH}/static/images/image-tn.png`;
