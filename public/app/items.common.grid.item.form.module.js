@@ -249,7 +249,10 @@ const itemsCommonGridItemFormModule = (function () {
                 document.querySelector('#item-thumbnail-trash').addEventListener('click', itemsCommonGridItemFormModule.delete_thumbnail_image);
             }, 1000);
 
-            document.querySelector('#repo-uuid-btn').addEventListener('click', await helperModule.get_repo_item_data);
+            document.querySelector('#repo-uuid-btn').addEventListener('click', async () => {
+                await helperModule.get_repo_item_data(null);
+            });
+
             document.querySelector('#audio-video').addEventListener('focusout', () => {
                 helperModule.clear_media_fields('kaltura_media');
                 document.querySelector('#is-kaltura-item').value = 1;

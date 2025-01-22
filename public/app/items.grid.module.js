@@ -28,8 +28,8 @@ const itemsGridModule = (function () {
 
         try {
 
-            const token = authModule.get_user_token();
             let tmp = EXHIBITS_ENDPOINTS.exhibits.grid_item_records.get.endpoint.replace(':exhibit_id', exhibit_id);
+            const token = authModule.get_user_token();
             const endpoint = tmp.replace(':grid_id', grid_id);
             const response = await httpModule.req({
                 method: 'GET',
@@ -75,7 +75,7 @@ const itemsGridModule = (function () {
 
         for (let i = 0; i < items.length; i++) {
             item_order.push(items[i].order);
-            item_data += itemsListDisplayModule.display_grid_items(items[i]);
+            item_data += await itemsListDisplayModule.display_grid_items(items[i]);
         }
 
         document.querySelector('#grid-item-list').innerHTML = item_data;

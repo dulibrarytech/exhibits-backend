@@ -282,7 +282,7 @@ const itemsListDisplayModule = (function () {
         }
     }
 
-    obj.display_grid_items = function (item) {
+    obj.display_grid_items = async function (item) {
 
         try {
 
@@ -297,48 +297,68 @@ const itemsListDisplayModule = (function () {
             let item_data = '';
             let title = '';
 
-            // TODO: check items
-            if (item.is_repo_item === 1 && item.title.length === 0) {
-                // TODO: get repo title
-                // TODO: show repo thumbnail
+            if (item.mime_type.indexOf('image') !== -1 || item.item_type === 'image') {
+                item_type = '<i class="fa fa-image"></i>';
+            } else if (item.mime_type.indexOf('video') !== -1 || item.item_type === 'video') {
+                item_type = '<i class="fa fa-file-video-o"></i>';
+                thumbnail = `${APP_PATH}/static/images/video-tn.png`;
+                img = `<p><img src="${thumbnail}" alt="thumbnail" height="75" width="75"></p>`;
+            } else if (item.mime_type.indexOf('audio') !== -1 || item.item_type === 'audio') {
+                item_type = '<i class="fa fa-file-audio-o"></i>';
+                thumbnail = `${APP_PATH}/static/images/audio-tn.png`;
+                img = `<p><img src="${thumbnail}" alt="thumbnail" height="75" width="75"></p>`;
+            } else if (item.mime_type.indexOf('pdf') !== -1 || item.item_type === 'pdf') {
+                item_type = '<i class="fa fa-file-pdf-o"></i>';
+                thumbnail = `${APP_PATH}/static/images/pdf-tn.png`;
+                img = `<p><img src="${thumbnail}" alt="thumbnail" height="75" width="75"></p>`;
+            } else if (item.item_type === 'text') {
+                item_type = '<i class="fa fa-file-text-o"></i>';
+                media = 'Text only';
+            } else {
+                item_type = '<i class="fa fa-file-o"></i>';
             }
 
-            if (item.is_kaltura_item === 1 && item.title.length === 0) {
-                // TODO: display Kaltura info
+            if (item.is_repo_item === 1) {
+
+                const repo_record = await helperModule.get_repo_item_data(item.media);
+
+                if (title.length === 0) {
+                    title = repo_record.title;
+                }
+
+                thumbnail = helperModule.render_repo_thumbnail(repo_record.thumbnail.data);
+                img = `<p><img alt="thumbnail" src="${thumbnail}" height="75" width="75"></p>`;
             }
 
-            if (item.title.length > 0) {
-                title = helperModule.unescape(item.title);
+            if (item.is_kaltura_item === 1) {
+
+                if (title.length === 0) {
+                    title = 'Kaltura Item';
+                }
             }
 
-            if (item.text.length > 0) {
+            if (title.length === 0 && item.text.length > 0) {
+
                 title = helperModule.unescape(item.text);
-            } else if (item.description.length > 0) {
-                title = helperModule.unescape(item.description);
+
+                if (title.length > 200) {
+                    title = title.substring(0, 200) + '...';
+                }
             }
 
             if (item.media.length > 0) {
                 media = item.media;
             }
 
-            if (item.mime_type.indexOf('image') !== -1) {
-                item_type = '<i class="fa fa-image"></i>';
-            } else if (item.mime_type.indexOf('video') !== -1) {
-                item_type = '<i class="fa fa-file-video-o"></i>';
-            } else if (item.mime_type.indexOf('audio') !== -1) {
-                item_type = '<i class="fa fa-file-audio-o"></i>';
-            } else if (item.mime_type.indexOf('pdf') !== -1) {
-                item_type = '<i class="fa fa-file-pdf-o"></i>';
-            } else {
-                item_type = '<i class="fa fa-file-o"></i>';
-            }
+            if (img.length === 0) {
 
-            if (item.thumbnail.length > 0) {
-                url = EXHIBITS_ENDPOINTS.exhibits.exhibit_media.get.endpoint.replace(':exhibit_id', item.is_member_of_exhibit).replace(':media', item.thumbnail);
-                thumbnail = `<p><img alt="${url}" src="${url}" height="100" width="100"></p>`;
-            } else {
-                thumbnail = `${APP_PATH}/static/images/image-tn.png`;
-                img = `<p><img src="${thumbnail}" alt="thumbnail" height="100" width="100"></p>`;
+                if (item.thumbnail.length > 0) {
+                    thumbnail = EXHIBITS_ENDPOINTS.exhibits.exhibit_media.get.endpoint.replace(':exhibit_id', item.is_member_of_exhibit).replace(':media', item.thumbnail);
+                    img = `<p><img src="${thumbnail}" alt="thumbnail" height="75" width="75"></p>`;
+                } else {
+                    thumbnail = `${APP_PATH}/static/images/image-tn.png`;
+                    img = `<p><img src="${thumbnail}" alt="thumbnail" height="75" width="75"></p>`;
+                }
             }
 
             if (item.is_published === 0) {
@@ -359,7 +379,7 @@ const itemsListDisplayModule = (function () {
                     <p><button class="btn btn-default">${item_type} <small>grid item</small></button></p>
                     <p><strong>${title}</strong></p>
                     ${img}
-                    ${media}
+                    <small><em>${media}</em></small>
                     </td>`;
 
             item_data += `<td style="width: 5%;text-align: center"><small>${item_obj.status}</small></td>`;
