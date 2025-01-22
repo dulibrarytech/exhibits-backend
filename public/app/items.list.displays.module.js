@@ -133,7 +133,12 @@ const itemsListDisplayModule = (function () {
             }
 
             if (title.length === 0 && item.text.length > 0) {
-                title = item.text;
+
+                title = helperModule.unescape(item.text);
+
+                if (title.length > 200) {
+                    title = title.substring(0, 200) + '...';
+                }
             }
 
             if (img.length === 0) {
