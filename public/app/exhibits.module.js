@@ -95,7 +95,8 @@ const exhibitsModule = (function () {
                 thumbnail_fragment = `<p><img src="${thumbnail_url}" alt="thumbnail" height="100" width="100"></p>`;
             }
 
-            title = helperModule.unescape(exhibits[i].title);
+            title = helperModule.strip_html(helperModule.unescape(exhibits[i].title));
+
             exhibit_data += '<tr>';
             exhibit_data += `<td style="width: 35%">
                     <p><strong>${title}</strong></p>

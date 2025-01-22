@@ -85,7 +85,8 @@ const itemsListDisplayModule = (function () {
 
             const type = item.type;
             const item_obj = check_published_status(item, 'standard');
-            let title = helperModule.unescape(item.title);
+            let title = helperModule.strip_html(helperModule.unescape(item.title));
+            // let title = helperModule.unescape(item.title);
             let item_data = '';
             let thumbnail = '';
             let img = '';
@@ -134,7 +135,7 @@ const itemsListDisplayModule = (function () {
 
             if (title.length === 0 && item.text.length > 0) {
 
-                title = helperModule.unescape(item.text);
+                title = helperModule.strip_html(helperModule.unescape(item.text));
 
                 if (title.length > 200) {
                     title = title.substring(0, 200) + '...';
