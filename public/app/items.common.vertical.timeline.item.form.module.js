@@ -266,7 +266,9 @@ const itemsCommonVerticalTimelineItemFormModule = (function () {
                 document.querySelector('#item-thumbnail-trash').addEventListener('click', itemsCommonVerticalTimelineItemFormModule.delete_thumbnail_image);
             }, 1000);
 
-            document.querySelector('#repo-uuid-btn').addEventListener('click', await helperModule.get_repo_item_data);
+            document.querySelector('#repo-uuid-btn').addEventListener('click', async () => {
+                await helperModule.get_repo_item_data(null);
+            });
             helperModule.show_form();
 
         } catch (error) {

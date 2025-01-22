@@ -212,8 +212,8 @@ const itemsListDisplayModule = (function () {
             item_data += `<td class="item-metadata">
                     <p><button class="btn btn-default"><i class="fa fa-th"></i> <small>${type}</small></button></p>
                     <p><strong>${title}</strong></p>
-                    <p>${item.columns} columns</p>
-                    <p>${grid_item_count}</p>
+                    <p><small>${item.columns} columns</small></p>
+                    <p><small>${grid_item_count}</small></p>
                     <div id="grid-items-${item.is_member_of_exhibit}"><em>${grid_items_fragment}</em></div>
                     </td>`;
 
@@ -264,7 +264,7 @@ const itemsListDisplayModule = (function () {
             item_data += `<td class="item-metadata">
                     <p><button class="btn btn-default"><i class="fa fa-calendar"></i> <small>${type}</small></button></p>
                     <p><strong>${title}</strong></p>
-                    <p>${timeline_item_count}</p>
+                    <p><small>${timeline_item_count}</small></p>
                     <div id="grid-items-${item.is_member_of_exhibit}"><em>${timeline_items_fragment}</em></div>
                     </td>`;
 
@@ -295,7 +295,7 @@ const itemsListDisplayModule = (function () {
             const item_obj = check_published_status(item, 'grid/item');
             let thumbnail;
             let media = '';
-            let url;
+            // let url;
             let item_type;
             let img = '';
             let item_data = '';
@@ -405,17 +405,18 @@ const itemsListDisplayModule = (function () {
         }
     }
 
-    obj.display_timeline_items = function (item) {
+    obj.display_timeline_items = async function (item) {
 
         try {
 
             item.type = '';
             item.type = 'timelineitem';
-            let title = helperModule.unescape(item.title);
+            let title = helperModule.strip_html(helperModule.unescape(item.title));
             const item_obj = check_published_status(item, 'vertical-timeline/item');
             let item_data = '';
             let thumbnail;
-            let url;
+            let media = '';
+            // let url;
             let item_type;
             let img = '';
             let item_date = new Date(item.date);
@@ -424,24 +425,71 @@ const itemsListDisplayModule = (function () {
             let day = new Intl.DateTimeFormat('en', { day: '2-digit' }).format(item_date);
             let date = `${month}/${day}/${year}`;
 
-            if (item.mime_type.indexOf('image') !== -1) {
+            if (item.mime_type.indexOf('image') !== -1 || item.item_type === 'image') {
                 item_type = '<i class="fa fa-image"></i>';
-            } else if (item.mime_type.indexOf('video') !== -1) {
+            } else if (item.mime_type.indexOf('video') !== -1 || item.item_type === 'video') {
                 item_type = '<i class="fa fa-file-video-o"></i>';
-            } else if (item.mime_type.indexOf('audio') !== -1) {
+                thumbnail = `${APP_PATH}/static/images/video-tn.png`;
+                img = `<p><img src="${thumbnail}" alt="thumbnail" height="75" width="75"></p>`;
+            } else if (item.mime_type.indexOf('audio') !== -1 || item.item_type === 'audio') {
                 item_type = '<i class="fa fa-file-audio-o"></i>';
-            } else if (item.mime_type.indexOf('pdf') !== -1) {
+                thumbnail = `${APP_PATH}/static/images/audio-tn.png`;
+                img = `<p><img src="${thumbnail}" alt="thumbnail" height="75" width="75"></p>`;
+            } else if (item.mime_type.indexOf('pdf') !== -1 || item.item_type === 'pdf') {
                 item_type = '<i class="fa fa-file-pdf-o"></i>';
+                thumbnail = `${APP_PATH}/static/images/pdf-tn.png`;
+                img = `<p><img src="${thumbnail}" alt="thumbnail" height="75" width="75"></p>`;
+            } else if (item.item_type === 'text') {
+                item_type = '<i class="fa fa-file-text-o"></i>';
+                media = 'Text only';
             } else {
                 item_type = '<i class="fa fa-file-o"></i>';
             }
 
-            if (item.thumbnail.length > 0) {
-                url = EXHIBITS_ENDPOINTS.exhibits.exhibit_media.get.endpoint.replace(':exhibit_id', item.is_member_of_exhibit).replace(':media', item.thumbnail);
-                thumbnail = `<p><img alt="${url}" src="${url}" height="100" width="100"></p>`;
-            } else {
-                thumbnail = `${APP_PATH}/static/images/image-tn.png`;
-                img = `<p><img src="${thumbnail}" alt="thumbnail" height="100" width="100"></p>`;
+            if (item.is_repo_item === 1) {
+
+                const repo_record = await helperModule.get_repo_item_data(item.media);
+
+                if (title.length === 0) {
+                    title = repo_record.title;
+                }
+
+                thumbnail = helperModule.render_repo_thumbnail(repo_record.thumbnail.data);
+                img = `<p><img alt="thumbnail" src="${thumbnail}" height="75" width="75"></p>`;
+            }
+
+            if (item.is_kaltura_item === 1) {
+
+                if (title.length === 0) {
+                    title = 'Kaltura Item';
+                }
+            }
+
+            if (title.length === 0 && item.text.length > 0) {
+
+                title = helperModule.unescape(item.text);
+
+                if (title.length > 200) {
+                    title = title.substring(0, 200) + '...';
+                }
+            }
+
+            if (item.media.length > 0) {
+                media = item.media;
+            }
+
+            if (img.length === 0) {
+
+                if (item.thumbnail.length > 0) {
+                    thumbnail = EXHIBITS_ENDPOINTS.exhibits.exhibit_media.get.endpoint.replace(':exhibit_id', item.is_member_of_exhibit).replace(':media', item.thumbnail);
+                    img = `<p><img src="${thumbnail}" alt="thumbnail" height="75" width="75"></p>`;
+                } else if (item.thumbnail.length === 0 && item.item_type === 'image') {
+                    thumbnail = EXHIBITS_ENDPOINTS.exhibits.exhibit_media.get.endpoint.replace(':exhibit_id', item.is_member_of_exhibit).replace(':media', item.media);
+                    img = `<p><img src="${thumbnail}" alt="thumbnail" height="75" width="75"></p>`;
+                } else {
+                    thumbnail = `${APP_PATH}/static/images/image-tn.png`;
+                    img = `<p><img src="${thumbnail}" alt="thumbnail" height="75" width="75"></p>`;
+                }
             }
 
             if (item.is_published === 0) {
@@ -461,9 +509,9 @@ const itemsListDisplayModule = (function () {
             item_data += `<td class="item-metadata">
                     <p><button class="btn btn-default">${item_type} <small>timeline item</small></button></p>
                     <p><strong>${title}</strong></p>
-                    <p><strong>${date}</strong></p>
+                    <p><small><em>${date}</em></small></p>
                     ${img}
-                   
+                    <small><em>${media}</em></small>
                     </td>`;
 
             item_data += `<td style="width: 5%;text-align: center"><small>${item_obj.status}</small></td>`;

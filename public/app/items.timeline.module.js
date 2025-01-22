@@ -74,8 +74,7 @@ const itemsTimelineModule = (function () {
         }
 
         for (let i = 0; i < items.length; i++) {
-            // item_order.push(items[i].order);
-            item_data += itemsListDisplayModule.display_timeline_items(items[i]);
+            item_data += await itemsListDisplayModule.display_timeline_items(items[i]);
         }
 
         document.querySelector('#timeline-item-list').innerHTML = item_data;
