@@ -84,37 +84,67 @@ const itemsListDisplayModule = (function () {
         try {
 
             const type = item.type;
-            const title = helperModule.unescape(item.title);
             const item_obj = check_published_status(item, 'standard');
+            let title = helperModule.unescape(item.title);
             let item_data = '';
             let thumbnail = '';
             let img = '';
             let item_type;
+            let media = item.media;
 
-            if (item.mime_type.indexOf('image') !== -1) {
+            if (item.mime_type.indexOf('image') !== -1 || item.item_type === 'image') {
                 item_type = '<i class="fa fa-image"></i>';
-            } else if (item.mime_type.indexOf('video') !== -1) {
+            } else if (item.mime_type.indexOf('video') !== -1 || item.item_type === 'video') {
                 item_type = '<i class="fa fa-file-video-o"></i>';
-            } else if (item.mime_type.indexOf('audio') !== -1) {
+                thumbnail = `${APP_PATH}/static/images/video-tn.png`;
+                img = `<p><img src="${thumbnail}" alt="thumbnail" height="75" width="75"></p>`;
+            } else if (item.mime_type.indexOf('audio') !== -1 || item.item_type === 'audio') {
                 item_type = '<i class="fa fa-file-audio-o"></i>';
-            } else if (item.mime_type.indexOf('pdf') !== -1) {
+                thumbnail = `${APP_PATH}/static/images/audio-tn.png`;
+                img = `<p><img src="${thumbnail}" alt="thumbnail" height="75" width="75"></p>`;
+            } else if (item.mime_type.indexOf('pdf') !== -1 || item.item_type === 'pdf') {
                 item_type = '<i class="fa fa-file-pdf-o"></i>';
+                thumbnail = `${APP_PATH}/static/images/pdf-tn.png`;
+                img = `<p><img src="${thumbnail}" alt="thumbnail" height="75" width="75"></p>`;
+            } else if (item.item_type === 'text') {
+                item_type = '<i class="fa fa-file-text-o"></i>';
+                media = 'Text only';
             } else {
                 item_type = '<i class="fa fa-file-o"></i>';
             }
 
-            // TODO: handle repo and kaltura items better
-            // TODO: if is_repo_item
-            // TODO: get uuid
-            // TODO: if NO title is entered, use repo title
-            // TODO: get thumbnail via TN service
+            if (item.is_repo_item === 1) {
 
-            if (item.thumbnail.length > 0) {
-                thumbnail = EXHIBITS_ENDPOINTS.exhibits.exhibit_media.get.endpoint.replace(':exhibit_id', item.is_member_of_exhibit).replace(':media', item.thumbnail);
+                const repo_record = await helperModule.get_repo_item_data(item.media);
+
+                if (title.length === 0) {
+                    title = repo_record.title;
+                }
+
+                thumbnail = helperModule.render_repo_thumbnail(repo_record.thumbnail.data);
                 img = `<p><img alt="thumbnail" src="${thumbnail}" height="75" width="75"></p>`;
-            } else {
-                thumbnail = `${APP_PATH}/static/images/image-tn.png`;
-                img = `<p><img src="${thumbnail}" alt="thumbnail" height="100" width="100"></p>`;
+            }
+
+            if (item.is_kaltura_item === 1) {
+
+                if (title.length === 0) {
+                    title = 'Kaltura Item';
+                }
+            }
+
+            if (title.length === 0 && item.text.length > 0) {
+                title = item.text;
+            }
+
+            if (img.length === 0) {
+
+                if (item.thumbnail.length > 0) {
+                    thumbnail = EXHIBITS_ENDPOINTS.exhibits.exhibit_media.get.endpoint.replace(':exhibit_id', item.is_member_of_exhibit).replace(':media', item.thumbnail);
+                    img = `<p><img src="${thumbnail}" alt="thumbnail" height="75" width="75"></p>`;
+                } else {
+                    thumbnail = `${APP_PATH}/static/images/image-tn.png`;
+                    img = `<p><img src="${thumbnail}" alt="thumbnail" height="75" width="75"></p>`;
+                }
             }
 
             // start row
@@ -126,6 +156,7 @@ const itemsListDisplayModule = (function () {
                     <p><button class="btn btn-default">${item_type} <small>${type}</small></button></p>
                     <p><strong>${title}</strong></p>
                     ${img}                   
+                    <small><em>${media}</em></small>
                     </td>`;
 
             item_data += `<td class="item-status"><small>${item_obj.status}</small></td>`;

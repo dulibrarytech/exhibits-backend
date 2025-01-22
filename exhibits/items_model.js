@@ -487,23 +487,14 @@ exports.get_repo_tn = async function (uuid) {
 
     try {
 
-        const endpoint = CONFIG.tn_service + 'datastream/' + uuid + '/tn?key=' + CONFIG.tn_service_api_key;
+        const endpoint = `${CONFIG.tn_service}datastream/${uuid}/tn?key=${CONFIG.tn_service_api_key}`;
         const response = await HTTP.get(endpoint, {
             timeout: 45000,
             responseType: 'arraybuffer'
         });
 
         if (response.status === 200) {
-            // CACHE.cache_tn(uuid, response.data);
             return response.data;
-            /*
-            callback({
-                error: false,
-                status: 200,
-                data: response.data
-            });
-
-             */
         }
 
     } catch (error) {

@@ -138,13 +138,20 @@ const helperModule = (function () {
 
     /**
      * Gets repo item metadata
+     * @param uuid
      */
-    obj.get_repo_item_data = async function () {
+    obj.get_repo_item_data = async function (uuid) {
 
         try {
 
             const EXHIBITS_ENDPOINTS = endpointsModule.get_exhibits_endpoints();
-            const uuid = document.querySelector('#repo-uuid').value;
+            let is_list = true;
+
+            if (uuid === null) {
+                uuid = document.querySelector('#repo-uuid').value;
+                helperModule.clear_media_fields('repo_media');
+                is_list = false;
+            }
 
             if (uuid.length === 0) {
                 document.querySelector('#message').innerHTML = `<div class="alert alert-danger" role="alert"><i class="fa fa-exclamation"></i> Please enter a Repository UUID</div>`;
@@ -167,16 +174,22 @@ const helperModule = (function () {
                     return false;
                 }
 
-                const tn_array = response.data.data.thumbnail.data;
-                const array_buffer_view = new Uint8Array(tn_array);
-                const blob = new Blob([array_buffer_view], { type: "image/jpeg" });
-                const url_creator = window.URL || window.webkitURL;
-                const tn_url = url_creator.createObjectURL(blob);
                 const mime_type = response.data.data.mime_type;
                 let item_type;
+                let tn = document.querySelector('#tn');
+                let item_mime_type = document.querySelector('#item-mime-type');
+                let type = document.querySelector('#item-type');
+                let repo_item_metadata = document.querySelector('#repo-item-metadata');
+                let is_repo_item = document.querySelector('#is-repo-item');
 
-                document.querySelector('#tn').innerHTML = `<img src="${tn_url}" alt="thumbnail" height="200" width="200">`;
-                document.querySelector('#item-mime-type').value = response.data.data.mime_type;
+                if (tn !== null) {
+                    const tn_url = helperModule.render_repo_thumbnail(response.data.data.thumbnail.data);
+                    tn.innerHTML = `<img src="${tn_url}" alt="thumbnail" height="200" width="200">`;
+                }
+
+                if (item_mime_type !== null) {
+                    item_mime_type.value = mime_type;
+                }
 
                 if (mime_type.indexOf('image') !== -1) {
                     item_type = 'image';
@@ -190,10 +203,21 @@ const helperModule = (function () {
                     item_type = 'Unable to Determine Type';
                 }
 
-                document.querySelector('#item-type').value = item_type;
-                document.querySelector('#repo-item-metadata').innerHTML = `<p><strong>${response.data.data.title}</strong><br><em>${response.data.data.mime_type}</em></p>`;
-                document.querySelector('#is-repo-item').value = 1;
-                helperModule.clear_media_fields('repo_media');
+                if (type !== null) {
+                    type.value = item_type;
+                }
+
+                if (repo_item_metadata !== null) {
+                    repo_item_metadata.innerHTML = `<p><strong>${response.data.data.title}</strong><br><em>${mime_type}</em></p>`;
+                }
+
+                if (is_repo_item !== null) {
+                    is_repo_item.value = 1;
+                }
+
+                if (is_list === true) {
+                    return response.data.data;
+                }
 
             } else {
                 document.querySelector('#repo-item-metadata').innerHTML = `<p style="color:red">Metadata record not found in repository.</p>`;
@@ -204,9 +228,13 @@ const helperModule = (function () {
         }
     };
 
-    /**
-     * Clears media fields
-     */
+    obj.render_repo_thumbnail = function (thumbnail_data_array) {
+        const array_buffer_view = new Uint8Array(thumbnail_data_array);
+        const blob = new Blob([array_buffer_view], {type: 'image/jpeg'});
+        const url_creator = window.URL || window.webkitURL;
+        return url_creator.createObjectURL(blob);
+    };
+
     obj.clear_media_fields = function (type) {
 
         if (type === 'uploaded_media') {
@@ -234,9 +262,6 @@ const helperModule = (function () {
         document.querySelector('#item-media-trash').style.display = 'none';
     };
 
-    /**
-     * Shows form - changes .card class to visible
-     */
     obj.show_form = function () {
 
         try {
