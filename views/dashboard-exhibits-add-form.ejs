@@ -15,96 +15,8 @@
     <%- include('partials/main-header.ejs'); %>
     <div class="content" style="min-height: 875px;">
         <div id="message"></div>
-        <div id="exhibit-data-card" class="card">
-            <div class="card-header">
-                <strong class="card-title mb-3">Exhibit Data</strong>
-            </div>
-            <div class="card-body">
-                <div class="alert alert-info"><i class="fa fa-info"></i> Provide info to user about this form</div>
-                <div class="row">
-                    <div class="col-12 col-md-12">
-                        <div class="row form-group">
-                            <div class="col-12">
-                                <div class="form-text text-muted" style="font-size: 17px"><span
-                                            style="color: darkred">*</span>
-                                    Title <small><em>(Required)</em></small>
-                                </div>
-                                <span id="exhibit-title-error" class="is-error"></span>
-                                <textarea id="exhibit-title-input" class="form-control" name="exhibit_title_input"
-                                          rows="4"></textarea>
-                                <!--<div id="exhibit-title-input" style="height: 100px"></div>-->
-                            </div>
-                        </div>
-                    </div>
-                </div>
-                <div class="row">
-                    <div class="col-6 col-md-6">
-                        <div class="row form-group">
-                            <div class="col-12">
-                                <div class="form-text text-muted" style="font-size: 17px">Sub Title <small><em>(Optional)</em></small>
-                                </div>
-                                <textarea id="exhibit-sub-title-input" class="form-control" name="exhibit_sub_title_input"
-                                          rows="4"></textarea>
-                                <!--<div id="exhibit-sub-title-input" style="height: 100px"></div>-->
-                            </div>
-                        </div>
-                    </div>
-                    <div class="col-6 col-md-6">
-                        <div class="row form-group">
-                            <div class="col-12">
-                                <div class="form-text text-muted" style="font-size: 17px">Alert Text <small><em>(Optional)</em></small>
-                                </div>
-                                <!--<div id="exhibit-alert-text-input" style="height: 100px"></div>-->
-                                <textarea id="exhibit-alert-text-input" class="form-control" name="exhibit_alert_text_input"
-                                          rows="4"></textarea>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-                <div class="row">
-                    <div class="col-12 col-md-12">
-                        <div class="row form-group">
-                            <div class="col-12">
-                                <div class="form-text text-muted" style="font-size: 17px">Description <small><em>(Optional)</em></small>
-                                </div>
-                                <textarea id="exhibit-description-input" class="form-control" name="exhibit_description_input"
-                                          rows="4"></textarea>
-                                <!--<div id="exhibit-description-input" style="height: 100px"></div>-->
-                            </div>
-                        </div>
-                    </div>
-                </div>
-                <div class="row">
-                    <div class="col-12 col-md-12">
-                        <div class="row form-group">
-                            <div class="col-12">
-                                <div class="form-text text-muted" style="font-size: 17px">About the curators <small><em>(Optional)</em></small>
-                                </div>
-                                <textarea id="exhibit-about-the-curators-input" class="form-control" name="exhibit_about_the_curators_input"
-                                          rows="4"></textarea>
-                                <!--<div id="exhibit-about-the-curators-input" style="height: 100px"></div>-->
-                            </div>
-                        </div>
-                    </div>
-                </div>
-                <hr>
-                <div class="row">
-                    <div class="col-12 col-md-12">
-                        <div class="row form-group">
-                            <div class="col-12">
-                                <p style="padding-top: 20px">
-                                    <small class="form-text text-muted"><i class="fa fa-exclamation-circle"></i> <em>Exhibit
-                                            will be featured on the main page</em></small>
-                                    <label for="is-featured">Feature exhibit&nbsp;
-                                        <input type="checkbox" id="is-featured" name="is_featured">
-                                    </label>
-                                </p>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
+        <!-- exhibit data card -->
+        <%- include('partials/exhibit-data-card.ejs'); %>
         <div id="exhibit-media-card" class="card">
             <div class="card-header">
                 <strong class="card-title mb-3">Exhibit Media</strong>
@@ -411,6 +323,7 @@
     </div>
     <div class="clearfix"></div>
     <%- include('partials/footer.ejs'); %>
+    <%- include('partials/preview-html-modal.ejs'); %>
 </div>
 <script src="https://code.jquery.com/jquery-3.7.0.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/popper.js@1.14.4/dist/umd/popper.min.js"></script>
@@ -419,8 +332,6 @@
 <script src="https://cdn.jsdelivr.net/npm/interactjs/dist/interact.min.js"></script>
 <script src="https://cdn.datatables.net/1.13.6/js/jquery.dataTables.min.js"></script>
 <script src="https://unpkg.com/dropzone@5/dist/min/dropzone.min.js"></script>
-<script src="/exhibits-dashboard/static/libs/richtexteditor/rte.js"></script>
-<script src='/exhibits-dashboard/static/libs/richtexteditor/plugins/all_plugins.js'></script>
 <script src="/exhibits-dashboard/static/libs/axios-2.x/dist/axios.min.js"></script>
 <script src="/exhibits-dashboard/static/libs/dompurify/purify.min.js"></script>
 <script src="/exhibits-dashboard/static/app/http.module.js"></script>

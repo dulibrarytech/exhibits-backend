@@ -33,17 +33,18 @@ const exhibitsCommonFormModule = (function () {
             let exhibit = {};
 
             // exhibit data
-            // exhibit.title = rich_text_data['exhibit-title-input'].getHTMLCode();
-            exhibit.title = document.querySelector('#exhibit-title-input').value;
-            // exhibit.subtitle = rich_text_data['exhibit-sub-title-input'].getHTMLCode();
-            exhibit.subtitle = document.querySelector('#exhibit-sub-title-input').value;
-            // exhibit.alert_text = rich_text_data['exhibit-alert-text-input'].getHTMLCode();
-            exhibit.alert_text = document.querySelector('#exhibit-alert-text-input').value;
-            // exhibit.description = rich_text_data['exhibit-description-input'].getHTMLCode();
-            exhibit.description = document.querySelector('#exhibit-description-input').value;
-            // exhibit.about_the_curators = rich_text_data['exhibit-about-the-curators-input'].getHTMLCode();
-            exhibit.about_the_curators = document.querySelector('#exhibit-about-the-curators-input').value;
+            exhibit.title = helperModule.clean_html(document.querySelector('#exhibit-title-input').value);
+            exhibit.subtitle = helperModule.clean_html(document.querySelector('#exhibit-sub-title-input').value);
+            exhibit.alert_text = helperModule.clean_html(document.querySelector('#exhibit-alert-text-input').value);
+            exhibit.description = helperModule.clean_html(document.querySelector('#exhibit-description-input').value);
+            exhibit.about_the_curators = helperModule.clean_html(document.querySelector('#exhibit-about-the-curators-input').value);
             exhibit.is_featured = document.querySelector('#is-featured').checked;
+
+            // exhibit.title = rich_text_data['exhibit-title-input'].getHTMLCode();
+            // exhibit.subtitle = rich_text_data['exhibit-sub-title-input'].getHTMLCode();
+            // exhibit.alert_text = rich_text_data['exhibit-alert-text-input'].getHTMLCode();
+            // exhibit.description = rich_text_data['exhibit-description-input'].getHTMLCode();
+            // exhibit.about_the_curators = rich_text_data['exhibit-about-the-curators-input'].getHTMLCode();
 
             if (exhibit.is_featured === true) {
                 exhibit.is_featured = 1;
@@ -55,27 +56,6 @@ const exhibitsCommonFormModule = (function () {
             if (exhibit.title.length === 0) { //  || exhibit.title === '<div></div>'
                 document.querySelector('#exhibit-title-error').innerHTML = '<div class="alert alert-danger" role="alert"><i class="fa fa-exclamation"></i> Please enter an exhibit title</div>';
                 return false;
-            }
-
-            /*
-            if (exhibit.subtitle === '<div></div>') {
-                exhibit.subtitle = '';
-            }
-             */
-
-            /*
-            if (exhibit.alert_text === '<div></div>') {
-                exhibit.alert_text = '';
-            }
-
-             */
-
-            if (exhibit.description === '<div></div>') {
-                exhibit.description = '';
-            }
-
-            if (exhibit.about_the_curators === '<div></div>') {
-                exhibit.about_the_curators = '';
             }
 
             // exhibit media

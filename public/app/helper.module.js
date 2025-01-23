@@ -61,59 +61,59 @@ const helperModule = (function () {
     };
 
     /**
-     * Strips HTML elements
-     * @param data
+     * Strips HTML elements - used in item list displays to prevent HTML render
+     * @param html
      */
-    obj.strip_html = function (data) {
-        return data.replace(/(<([^>]+)>)/gi, '');
+    obj.strip_html = function (html) {
+        return html.replace(/(<([^>]+)>)/gi, '');
     };
 
     /**
-     * Set text editor config
+     * Removes exploitable HTML elements
+     * @param html
      */
-    obj.set_rich_text_editor_config = function () {
+    obj.clean_html = function (html) {
 
-        const BASE_URL = '/exhibits-dashboard/static/libs';
-        window.RTE_DefaultConfig.url_base = BASE_URL + "/richtexteditor";
-        window.RTE_DefaultConfig.contentCssUrl = window.RTE_DefaultConfig.url_base + "/runtime/richtexteditor_content.css"; // Specifies the location of the style sheet that will be used by the editable area.
-        window.RTE_DefaultConfig.previewCssUrl = window.RTE_DefaultConfig.url_base + "/runtime/richtexteditor_preview.css"; // Specifies the location of the style sheet that will be used by the preview window.
-        window.RTE_DefaultConfig.previewScriptUrl = window.RTE_DefaultConfig.url_base + "/runtime/richtexteditor_preview.js"; // Specifies the location of javascript file that will be used by the preview window.
-        window.RTE_DefaultConfig.helpUrl = window.RTE_DefaultConfig.url_base + "/runtime/help.htm";
-    };
+        let div = document.createElement('div');
 
-    /**
-     * Sets rte to designated fields
-     * @param id
-     */
-    obj.set_rich_text_editor = function (id) {
-        return helperModule.render_rich_text_editor('#' + id);
-    };
+        div.innerHTML = html;
 
-    /**
-     * Creates rich text editor object
-     * @param id
-     */
-    obj.render_rich_text_editor = function(id) {
-        const editor_config = {}
-        editor_config.toolbar = 'custom';
-        editor_config.toolbar_custom = '{code} | {bold, italic, underline, superscript, subscript} | {justifyleft, justifycenter, justifyright, indent} | {preview}';
-        editor_config.enterKeyTag = '';
-        return new RichTextEditor(id, editor_config);
-    };
+        let list = ['script',
+            'iframe',
+            'html',
+            'head',
+            'body',
+            'head',
+            'title',
+            'img',
+            'embed',
+            'applet',
+            'object',
+            'style',
+            'link',
+            'input',
+            'button',
+            'video',
+            'source',
+            'math',
+            'maction',
+            'picture',
+            'map',
+            'svg',
+            'details',
+            'frameset',
+            'comment',
+            'base'];
 
-    /**
-     * Sets rich text editor on defined input fields
-     * @param ids
-     */
-    obj.set_rich_text_editors = function(ids) {
+        for (let i = 0;i<list.length;i++) {
 
-        let rich_text_data = {};
-
-        for (let i=0;i<ids.length;i++) {
-            rich_text_data[i] = helperModule.set_rich_text_editor(i);
+            let elements = div.getElementsByTagName(list[i]);
+            while (elements[0]) {
+                elements[0].parentNode.removeChild(elements[0]);
+            }
         }
 
-        return rich_text_data;
+        return div.innerHTML;
     };
 
     /**
@@ -508,12 +508,6 @@ const helperModule = (function () {
                     reorder_obj.grid_id = helperModule.get_parameter_by_name('grid_id');
                 }
 
-                /*
-                if (type === 'timeline_items') {
-                    reorder_obj.timeline_id = helperModule.get_parameter_by_name('timeline_id');
-                }
-                 */
-
                 updated_order.push(reorder_obj);
                 order_check.push(reorder_obj.order);
                 reorder_obj = {};
@@ -581,8 +575,72 @@ const helperModule = (function () {
         })();
     };
 
+    obj.preview_html = function (id) {
+        document.querySelector('#preview-html').innerHTML = helperModule.clean_html(document.querySelector('#' + id).value);
+        return false;
+    };
+
     obj.init = function () {};
 
     return obj;
 
 }());
+
+/**
+ * Set text editor config
+ */
+/*
+obj.set_rich_text_editor_config = function () {
+
+    const BASE_URL = '/exhibits-dashboard/static/libs';
+    window.RTE_DefaultConfig.url_base = BASE_URL + "/richtexteditor";
+    window.RTE_DefaultConfig.contentCssUrl = window.RTE_DefaultConfig.url_base + "/runtime/richtexteditor_content.css"; // Specifies the location of the style sheet that will be used by the editable area.
+    window.RTE_DefaultConfig.previewCssUrl = window.RTE_DefaultConfig.url_base + "/runtime/richtexteditor_preview.css"; // Specifies the location of the style sheet that will be used by the preview window.
+    window.RTE_DefaultConfig.previewScriptUrl = window.RTE_DefaultConfig.url_base + "/runtime/richtexteditor_preview.js"; // Specifies the location of javascript file that will be used by the preview window.
+    window.RTE_DefaultConfig.helpUrl = window.RTE_DefaultConfig.url_base + "/runtime/help.htm";
+};
+
+ */
+
+/**
+ * Sets rte to designated fields
+ * @param id
+ */
+/*
+obj.set_rich_text_editor = function (id) {
+    return helperModule.render_rich_text_editor('#' + id);
+};
+
+ */
+
+/**
+ * Creates rich text editor object
+ * @param id
+ */
+/*
+obj.render_rich_text_editor = function(id) {
+    const editor_config = {}
+    editor_config.toolbar = 'custom';
+    editor_config.toolbar_custom = '{code} | {bold, italic, underline, superscript, subscript} | {justifyleft, justifycenter, justifyright, indent} | {preview}';
+    editor_config.enterKeyTag = '';
+    return new RichTextEditor(id, editor_config);
+};
+
+ */
+
+/**
+ * Sets rich text editor on defined input fields
+ * @param ids
+ */
+/*
+obj.set_rich_text_editors = function(ids) {
+
+    let rich_text_data = {};
+
+    for (let i=0;i<ids.length;i++) {
+        rich_text_data[i] = helperModule.set_rich_text_editor(i);
+    }
+
+    return rich_text_data;
+};
+*/
