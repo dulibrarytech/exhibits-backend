@@ -91,6 +91,7 @@ const helperModule = (function () {
             'object',
             'style',
             'link',
+            'form',
             'input',
             'button',
             'video',
