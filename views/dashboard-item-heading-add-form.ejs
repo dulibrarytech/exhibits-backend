@@ -43,32 +43,7 @@
     <%- include('partials/main-header.ejs'); %>
     <div class="content" style="min-height: 875px;">
         <div id="message"></div>
-        <div id="item-heading-card" class="card">
-            <div class="card-header">
-                <strong class="card-title mb-3">Add heading to '<span id="exhibit-title"></span>' exhibit</strong>
-            </div>
-            <form id="item-heading-form" class="form-horizontal">
-                <div class="card-body">
-                    <input id="exhibit-uuid" type="hidden" name="exhibit_uuid">
-                    <div class="alert alert-info"><i class="fa fa-info"></i> Provide info to user about this form</div>
-                    <div class="row">
-                        <div class="col-12 col-md-12">
-                            <div class="row form-group">
-                                <div class="col-12">
-                                    <div class="form-text text-muted" style="font-size: 17px"><span style="color: darkred">*</span>
-                                        Heading Text <small><em>(Required)</em></small>
-                                    </div>
-                                    <span id="item-heading-text-error" class="is-error"></span>
-                                    <!--<div id="item-heading-text-input" style="height: 100px"></div>-->
-                                    <textarea id="item-heading-text-input" class="form-control" name="item_heading_text_input"
-                                              rows="4"></textarea>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </form>
-        </div>
+        <%- include('partials/item-heading-data-card.ejs'); %>
         <div id="heading-styles-card" class="card">
             <div class="card-header">
                 <strong class="card-title mb-3">Heading Styles</strong>
@@ -154,6 +129,7 @@
     </div>
     <div class="clearfix"></div>
     <%- include('partials/footer.ejs'); %>
+    <%- include('partials/preview-html-modal.ejs'); %>
 </div>
 <script src="https://code.jquery.com/jquery-3.7.0.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/popper.js@1.14.4/dist/umd/popper.min.js"></script>
