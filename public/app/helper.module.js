@@ -117,6 +117,13 @@ const helperModule = (function () {
         return div.innerHTML;
     };
 
+    obj.preview_html = function (id) {
+        let cleaned_html = helperModule.clean_html(document.querySelector('#' + id).value);
+        document.querySelector('#preview-html').innerHTML = cleaned_html;
+        document.querySelector('#' + id).value = cleaned_html;
+        return false;
+    };
+
     /**
      * Gets checked radio button value
      * @param radio_buttons
@@ -574,11 +581,6 @@ const helperModule = (function () {
             }
 
         })();
-    };
-
-    obj.preview_html = function (id) {
-        document.querySelector('#preview-html').innerHTML = helperModule.clean_html(document.querySelector('#' + id).value);
-        return false;
     };
 
     obj.init = function () {};
