@@ -43,63 +43,7 @@
     <%- include('partials/main-header.ejs'); %>
     <div class="content" style="min-height: 875px;">
         <div id="message"></div>
-        <div id="item-data-card" class="card">
-            <div class="card-header">
-                <strong class="card-title mb-3">Edit Item in '<span id="exhibit-title"></span>' exhibit grid</strong>
-            </div>
-            <div class="card-body">
-                <div class="alert alert-info"><i class="fa fa-info"></i> Provide info to user about this form</div>
-                <div class="row">
-                    <div class="col-12 col-md-12">
-                        <div class="row form-group">
-                            <div class="col-12">
-                                <div class="form-text text-muted" style="font-size: 17px"><!--<span style="color: darkred">*</span>-->
-                                    Title <small><em>(Optional)</em></small>
-                                </div>
-                                <span id="item-title-error" class="is-error"></span>
-                                <textarea id="item-title-input" class="form-control" name="item_title_input"
-                                          rows="4"></textarea>
-                                <!--<div id="item-title-input" style="height: 100px"></div>-->
-                            </div>
-                        </div>
-                    </div>
-                </div>
-                <div class="row">
-                    <div class="col-12 col-md-12">
-                        <div class="row form-group">
-                            <div class="col-12">
-                                <div class="form-text text-muted" style="font-size: 17px">Text <small><em>(Optional)</em></small></div>
-                                <textarea id="item-text-input" class="form-control" name="item_text_input"
-                                          rows="4"></textarea>
-                                <!--<div id="item-text-input" style="height: 100px"></div>-->
-                            </div>
-                        </div>
-                    </div>
-                </div>
-                <div class="row">
-                    <div class="col-12 col-md-12">
-                        <div class="row form-group">
-                            <div class="col-12">
-                                <div class="form-text text-muted" style="font-size: 17px">Description <small><em>(Optional)</em></small></div>
-                                <textarea id="item-description-input" class="form-control" name="item_description_input"
-                                          rows="4"></textarea>
-                                <!--<div id="item-description-input" style="height: 100px"></div>-->
-                            </div>
-                        </div>
-                    </div>
-                </div>
-                <div class="row">
-                    <div class="col-12 col-md-12">
-                        <div class="row form-group">
-                            <div class="col-12">
-                                <div class="form-text text-muted" style="font-size: 17px">Caption <small><em>(Optional)</em></small></div>
-                                <textarea id="item-caption-input" class="form-control" name="item_caption_input" rows="4"></textarea>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
+        <%- include('partials/item-grid-item-data-card.ejs'); %>
         <div id="item-media-card" class="card">
             <div class="card-header">
                 <strong class="card-title mb-3">Item Media</strong>
@@ -300,6 +244,7 @@
     </div>
     <div class="clearfix"></div>
     <%- include('partials/footer.ejs'); %>
+    <%- include('partials/preview-html-modal.ejs'); %>
 </div>
 <script src="https://code.jquery.com/jquery-3.7.0.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/popper.js@1.14.4/dist/umd/popper.min.js"></script>
