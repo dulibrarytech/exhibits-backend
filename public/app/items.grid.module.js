@@ -80,14 +80,19 @@ const itemsGridModule = (function () {
 
         document.querySelector('#grid-item-list').innerHTML = item_data;
 
-        new DataTable('#grid-items', {
-            paging: false
+        const GRID_ITEM_LIST = new DataTable('#grid-items', {
+            paging: false,
+            rowReorder: true
         });
 
-        await helperModule.reorder_items_after_action(item_order, 'grid_items');
+        GRID_ITEM_LIST.on('row-reordered', async (e, reordered_items) => {
+            await helperModule.reorder_items(e, reordered_items);
+        });
+
+        // await helperModule.reorder_items_after_action(item_order, 'grid_items');
         bind_publish_grid_item_events();
         bind_suppress_grid_item_events();
-        helperModule.reorder_grid_items(event, grid_id);
+        // helperModule.reorder_grid_items(event, grid_id);
     };
 
     async function publish_grid_item(uuid) {

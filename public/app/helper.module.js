@@ -293,11 +293,18 @@ const helperModule = (function () {
         }
     };
 
-    obj.reorder_items = async function (e, reordered_items, exhibit_id) {
+    /**
+     * Reorders item list via drag and drop
+     * @param e
+     * @param reordered_items
+     */
+    obj.reorder_items = async function (e, reordered_items) {
 
         try {
 
             const EXHIBITS_ENDPOINTS = endpointsModule.get_exhibits_endpoints();
+            const exhibit_id = helperModule.get_parameter_by_name('exhibit_id');
+            const grid_id = helperModule.get_parameter_by_name('grid_id');
             let reorder_obj = {};
             let updated_order = [];
 
@@ -310,10 +317,13 @@ const helperModule = (function () {
                 reorder_obj.type = id_arr.pop();
                 reorder_obj.uuid = id_arr.pop();
                 reorder_obj.order = reordered_items[i].node.childNodes[0].childNodes[1].innerText;
+
+                if (grid_id !== null) {
+                    reorder_obj.grid_id = grid_id;
+                }
+
                 updated_order.push(reorder_obj);
                 reorder_obj = {};
-                // TODO: user feedback after reorder here
-                // $(node.addClass('reordered');
             }
 
             const token = authModule.get_user_token();
@@ -330,7 +340,7 @@ const helperModule = (function () {
             if (response !== undefined && response.status === 201) {
                 console.log(response);
             } else {
-                document.querySelector('#message').innerHTML = `<div class="alert alert-danger" role="alert"><i class="fa fa-exclamation"></i> A server error occurred while reordering items.</div>`;
+                document.querySelector('#message').innerHTML = `<div class="alert alert-danger" role="alert"><i class="fa fa-exclamation"></i> An HTTP request error occurred while reordering items.</div>`;
             }
 
         } catch (error) {

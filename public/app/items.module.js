@@ -107,7 +107,7 @@ const itemsModule = (function () {
             });
 
             ITEM_LIST.on('row-reordered', async (e, reordered_items) => {
-                await helperModule.reorder_items(e, reordered_items, exhibit_id);
+                await helperModule.reorder_items(e, reordered_items);
             });
 
             // await helperModule.reorder_items_after_action(item_order, 'items');
