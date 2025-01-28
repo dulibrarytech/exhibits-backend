@@ -53,9 +53,12 @@ const itemsModule = (function () {
 
         try {
 
+            /*
             if ($.fn.dataTable.isDataTable('#items')) {
                 $('#items').DataTable().clear().destroy();
             }
+
+             */
 
             const exhibit_id = helperModule.get_parameter_by_name('exhibit_id');
             const items = await get_items(exhibit_id);

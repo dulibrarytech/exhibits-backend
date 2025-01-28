@@ -131,7 +131,7 @@ const exhibitsModule = (function () {
         bind_publish_exhibit_events();
         bind_suppress_exhibit_events();
 
-        let table = new DataTable('#exhibits', {
+        new DataTable('#exhibits', {
             order: [
                 [0, 'asc'],
                 [1, 'asc']

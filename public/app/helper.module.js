@@ -454,11 +454,12 @@ const helperModule = (function () {
     };
     */
 
-    /**
+    /** Deprecate - merged/replaced
      * Reorders grid item list via drag and drop
      * @param event
      * @param id
      */
+    /*
     obj.reorder_grid_items = function (event, id) {
 
         try {
@@ -551,6 +552,9 @@ const helperModule = (function () {
         }
     };
 
+     */
+
+    // Deprecated - no longer required
     obj.reorder_items_after_action = async function (item_order, type) {
 
         try {

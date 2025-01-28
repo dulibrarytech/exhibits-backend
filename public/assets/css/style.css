@@ -78,7 +78,7 @@
   transition: all 0.3s ease; }
 
 body {
-  display: table;
+  /*display: table;*/
   font-family: "Open Sans", sans-serif;
   font-size: 16px;
   width: 100%; }
@@ -763,69 +763,7 @@ header .form-inline {
     font-weight: 600;
     font-size: 1em;
     padding: 5px 0; }
-  .card .weather-title.box-title {
-    padding: 0 15px;
-    line-height: 50px;
-    background: #fff;
-    border-radius: 5px 5px 0 0; }
-  .card.weather-box .card-body {
-    padding-top: 0; }
-  .card.weather-box .top {
-    background: #eceff1;
-    margin-left: -20px;
-    margin-right: -20px;
-    padding: 20px;
-    padding-top: 22px;
-    overflow: hidden; }
-    .card.weather-box .top .wi {
-      float: left;
-      width: 100px;
-      text-align: left;
-      padding-bottom: 10px; }
-      .card.weather-box .top .wi:before {
-        font-size: 60px; }
-    .card.weather-box .top .updates {
-      font-size: 14px;
-      text-align: right; }
-    .card.weather-box .top .currently {
-      font-size: 22px;
-      text-align: right; }
-  .card.weather-box .middle {
-    clear: both;
-    position: relative;
-    height: 80px;
-    color: #333648; }
-    .card.weather-box .middle .city {
-      padding-top: 15px;
-      width: 100%;
-      font-weight: 700;
-      font-size: 16px; }
-      .card.weather-box .middle .city span {
-        font-size: 14px;
-        display: block;
-        font-weight: 400; }
-    .card.weather-box .middle .temp {
-      position: absolute;
-      font-size: 34px;
-      top: 10px;
-      right: 0; }
-      .card.weather-box .middle .temp span {
-        font-size: 16px; }
-  .card.weather-box .nextdays {
-    clear: both;
-    padding-top: 22px;
-    text-align: center;
-    margin-left: -20px;
-    margin-right: -20px;
-    border-top: 1px solid #ededed;
-    background: #fff;
-    font-family: "Open Sans", sans-serif; }
-    .card.weather-box .nextdays .days {
-      display: inline-block;
-      width: 20%;
-      font-size: 14px; }
-      .card.weather-box .nextdays .days span {
-        display: block; }
+
   .card .card-top,
   .card .card-footer {
     background: #fafafa;
@@ -891,7 +829,7 @@ header .form-inline {
     background-color: #f0f3f5;
     border-top: 1px solid #c2cfd6; }
     .card .card-footer ul li {
-      display: table-cell;
+      /*display: table-cell;*/
       padding: 0 1rem;
       text-align: center; }
   .card .nav-tabs {
@@ -997,22 +935,6 @@ header .form-inline {
   left: inherit !important;
   right: 0 !important;
   top: 93% !important; }
-
-.dataTables_paginate .pagination {
-  border-radius: 0; }
-  .dataTables_paginate .pagination li {
-    border-radius: 0 !important; }
-    .dataTables_paginate .pagination li a {
-      border-radius: 0 !important;
-      color: #292b35; }
-    .dataTables_paginate .pagination li.active a {
-      background: #292b35;
-      border-color: #292b35;
-      color: #fff; }
-    .dataTables_paginate .pagination li:hover a {
-      background: #292b35;
-      border-color: #292b35;
-      color: #fff; }
 
 /* Footer */
 footer.site-footer {
@@ -1293,6 +1215,10 @@ footer.site-footer {
 }
 
 /* item lists */
+table {
+  border:0px;
+}
+
 td {
   height: 165px;
 }

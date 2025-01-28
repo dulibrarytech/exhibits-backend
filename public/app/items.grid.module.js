@@ -51,9 +51,12 @@ const itemsGridModule = (function () {
 
     obj.display_grid_items = async function (event) {
 
+        /*
         if ($.fn.dataTable.isDataTable('#grid-items')) {
             $('#grid-items').DataTable().clear().destroy();
         }
+
+         */
 
         const exhibit_id = helperModule.get_parameter_by_name('exhibit_id');
         const grid_id = helperModule.get_parameter_by_name('grid_id');

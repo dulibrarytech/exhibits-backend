@@ -35,7 +35,7 @@ const itemsListDisplayModule = (function () {
             published_obj.edit = `<i title="Can only edit if unpublished" style="color: #d3d3d3" class="fa fa-edit pr-1"></i>`;
             published_obj.delete_item = `<i title="Can only delete if unpublished" style="color: #d3d3d3" class="fa fa-trash pr-1"></i>`;
         } else if (item.is_published === 0) {
-            published_obj.draggable = `<tr class="dropzone" id="${item.uuid}_${item.type}" draggable='true'>`;
+            published_obj.draggable = `<tr id="${item.uuid}_${item.type}">`; // class="dropzone" draggable='true'
             published_obj.item_order = `<td class="grabbable item-order"><i class="fa fa-reorder"></i><span style="padding-left: 4px;">${item.order}</span></td>`;
             published_obj.status = `<a href="#" id="${item.uuid}" class="publish-item"><span id="publish" title="suppressed"><i class="fa fa-cloud-upload" style="color: darkred"></i><br>Unpublished</span></a>`;
             published_obj.edit = `<a href="${APP_PATH}/items/${item_route}/edit?exhibit_id=${item.is_member_of_exhibit}&item_id=${item.uuid}" title="Edit"><i class="fa fa-edit pr-1"></i></a>`;
