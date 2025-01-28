@@ -51,9 +51,12 @@ const itemsTimelineModule = (function () {
 
     obj.display_timeline_items = async function (event) {
 
+        /*
         if ($.fn.dataTable.isDataTable('#timeline-items')) {
             $('#timeline-items').DataTable().clear().destroy();
         }
+
+         */
 
         const exhibit_id = helperModule.get_parameter_by_name('exhibit_id');
         const timeline_id = helperModule.get_parameter_by_name('timeline_id');
