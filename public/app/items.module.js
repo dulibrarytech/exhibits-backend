@@ -101,14 +101,19 @@ const itemsModule = (function () {
 
             document.querySelector('#item-data').innerHTML = item_data;
 
-            new DataTable('#items', {
-                paging: false
+            const ITEM_LIST = new DataTable('#items', {
+                paging: false,
+                rowReorder: true
             });
 
-            await helperModule.reorder_items_after_action(item_order, 'items');
+            ITEM_LIST.on('row-reordered', async (e, reordered_items) => {
+                await helperModule.reorder_items(e, reordered_items, exhibit_id);
+            });
+
+            // await helperModule.reorder_items_after_action(item_order, 'items');
             bind_publish_item_events();
             bind_suppress_item_events();
-            helperModule.reorder_items(event, exhibit_id, 'items');
+            // helperModule.reorder_items(event, exhibit_id, 'items');
 
         } catch (error) {
             document.querySelector('#message').innerHTML = `<div class="alert alert-danger" role="alert"><i class="fa fa-exclamation"></i> ${error.message}</div>`;

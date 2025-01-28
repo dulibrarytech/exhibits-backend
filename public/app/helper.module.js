@@ -117,6 +117,10 @@ const helperModule = (function () {
         return div.innerHTML;
     };
 
+    /**
+     * Previews HTML entered in form fields
+     * @param id
+     */
     obj.preview_html = function (id) {
         let cleaned_html = helperModule.clean_html(document.querySelector('#' + id).value);
         document.querySelector('#preview-html').innerHTML = cleaned_html;
@@ -289,13 +293,60 @@ const helperModule = (function () {
         }
     };
 
-    /** TODO: DOMException: Element.after: The new child is an ancestor of the parent
+    obj.reorder_items = async function (e, reordered_items, exhibit_id) {
+
+        try {
+
+            const EXHIBITS_ENDPOINTS = endpointsModule.get_exhibits_endpoints();
+            let reorder_obj = {};
+            let updated_order = [];
+
+            for (let i = 0, ien = reordered_items.length; i < ien; i++) {
+
+                let node = reordered_items[i].node;
+                let id = node.getAttribute('id');
+                let id_arr = id.split('_');
+
+                reorder_obj.type = id_arr.pop();
+                reorder_obj.uuid = id_arr.pop();
+                reorder_obj.order = reordered_items[i].node.childNodes[0].childNodes[1].innerText;
+                updated_order.push(reorder_obj);
+                reorder_obj = {};
+                // TODO: user feedback after reorder here
+                // $(node.addClass('reordered');
+            }
+
+            const token = authModule.get_user_token();
+            const response = await httpModule.req({
+                method: 'POST',
+                url: EXHIBITS_ENDPOINTS.exhibits.reorder_records.post.endpoint.replace(':exhibit_id', exhibit_id),
+                data: updated_order,
+                headers: {
+                    'Content-Type': 'application/json',
+                    'x-access-token': token
+                }
+            });
+
+            if (response !== undefined && response.status === 201) {
+                console.log(response);
+            } else {
+                document.querySelector('#message').innerHTML = `<div class="alert alert-danger" role="alert"><i class="fa fa-exclamation"></i> A server error occurred while reordering items.</div>`;
+            }
+
+        } catch (error) {
+            document.querySelector('#message').innerHTML = `<div class="alert alert-danger" role="alert"><i class="fa fa-exclamation"></i> ${error.message}</div>`;
+        }
+    };
+
+    /** Deprecate - replaced
+     * TODO: DOMException: Element.after: The new child is an ancestor of the parent
      * Reorders item list via drag and drop
      * @param event
      * @param id (exhibit or grid)
      * @param type
      */
-    obj.reorder_items = function (event, id, type) {
+    /*
+    obj.reorder_items_ = function (event, id, type) {
 
         try {
 
@@ -373,12 +424,9 @@ const helperModule = (function () {
                                 await itemsModule.display_items(event);
                             }
 
-                            /*
                             if (type === 'grid_items') {
                                 await itemsGridModule.display_grid_items(event);
                             }
-
-                             */
 
                         } else {
                             document.querySelector('#message').innerHTML = `<div class="alert alert-danger" role="alert"><i class="fa fa-exclamation"></i> An error occurred while reordering items.</div>`;
@@ -394,8 +442,9 @@ const helperModule = (function () {
             document.querySelector('#message').innerHTML = `<div class="alert alert-danger" role="alert"><i class="fa fa-exclamation"></i> ${error.message}</div>`;
         }
     };
+    */
 
-    /** TODO: merge with reorder items
+    /**
      * Reorders grid item list via drag and drop
      * @param event
      * @param id
