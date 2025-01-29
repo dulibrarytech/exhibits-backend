@@ -30,4 +30,7 @@ module.exports = function (app) {
         .put(TOKEN.verify, CONTROLLER.update_user)
         .post(TOKEN.verify, FIELDS.validate_user, CONTROLLER.save_user)
         .delete(TOKEN.verify, CONTROLLER.delete_user);
+
+    app.route(ENDPOINTS().users.user_status.endpoint)
+        .put(TOKEN.verify, CONTROLLER.update_status);
 };

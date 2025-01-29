@@ -263,6 +263,19 @@ exports.get_dashboard_logout = function (req, res) {
     });
 };
 
+//======================== users ========================//
+exports.get_dashboard_users = function (req, res) {
+    res.render('dashboard-users', {
+        host: CONFIG.host,
+        appname: CONFIG.app_name,
+        appversion: CONFIG.app_version,
+        organization: CONFIG.organization,
+        sso_logout_url: SSO_CONFIG.sso_logout_url
+    });
+};
+
+
+
 // TODO
 exports.get_dashboard_trash = function (req, res) {
     res.render('dashboard-trash', {
@@ -275,14 +288,6 @@ exports.get_dashboard_trash = function (req, res) {
 
 /*
 
-exports.get_dashboard_users = function (req, res) {
-    res.render('dashboard-users', {
-        host: CONFIG.host,
-        appname: CONFIG.appName,
-        appversion: CONFIG.appVersion,
-        organization: CONFIG.organization
-    });
-};
 
 exports.get_dashboard_user_detail = function (req, res) {
     res.render('dashboard-users-detail', {

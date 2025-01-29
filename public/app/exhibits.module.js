@@ -240,7 +240,7 @@ const exhibitsModule = (function () {
 
             setTimeout(() => {
                 location.reload();
-            }, 1000);
+            }, 900);
 
             /*
             setTimeout(() => {
@@ -288,7 +288,7 @@ const exhibitsModule = (function () {
 
             setTimeout(() => {
                 location.reload();
-            }, 1000);
+            }, 900);
 
             /*
             setTimeout(() => {

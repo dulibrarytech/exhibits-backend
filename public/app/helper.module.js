@@ -29,24 +29,30 @@ const helperModule = (function () {
      */
     obj.get_parameter_by_name = function (name, url) {
 
-        if (!url) {
-            url = window.location.href;
+        try {
+
+            if (!url) {
+                url = window.location.href;
+            }
+
+            name = name.replace(/[\[\]]/g, "\\$&");
+
+            let regex = new RegExp("[?&]" + name + "(=([^&#]*)|&|#|$)"),
+                results = regex.exec(url);
+
+            if (!results) {
+                return null;
+            }
+
+            if (!results[2]) {
+                return '';
+            }
+
+            return decodeURIComponent(DOMPurify.sanitize(results[2].replace(/\+/g, " ")));
+
+        } catch (error) {
+            document.querySelector('#message').innerHTML = `<div class="alert alert-danger" role="alert"><i class="fa fa-exclamation"></i> ${error.message}</div>`;
         }
-
-        name = name.replace(/[\[\]]/g, "\\$&");
-
-        let regex = new RegExp("[?&]" + name + "(=([^&#]*)|&|#|$)"),
-            results = regex.exec(url);
-
-        if (!results) {
-            return null;
-        }
-
-        if (!results[2]) {
-            return '';
-        }
-
-        return decodeURIComponent(DOMPurify.sanitize(results[2].replace(/\+/g, " ")));
     };
 
     /**
@@ -55,9 +61,16 @@ const helperModule = (function () {
      * @param data
      */
     obj.unescape = function (data) {
-        let elem = document.createElement('textarea');
-        elem.innerHTML = data;
-        return elem.value;
+
+        try {
+
+            let elem = document.createElement('textarea');
+            elem.innerHTML = data;
+            return elem.value;
+
+        } catch (error) {
+            document.querySelector('#message').innerHTML = `<div class="alert alert-danger" role="alert"><i class="fa fa-exclamation"></i> ${error.message}</div>`;
+        }
     };
 
     /**
@@ -65,7 +78,12 @@ const helperModule = (function () {
      * @param html
      */
     obj.strip_html = function (html) {
-        return html.replace(/(<([^>]+)>)/gi, '');
+
+        try {
+            return html.replace(/(<([^>]+)>)/gi, '');
+        } catch (error) {
+            document.querySelector('#message').innerHTML = `<div class="alert alert-danger" role="alert"><i class="fa fa-exclamation"></i> ${error.message}</div>`;
+        }
     };
 
     /**
@@ -74,47 +92,53 @@ const helperModule = (function () {
      */
     obj.clean_html = function (html) {
 
-        let div = document.createElement('div');
+        try {
 
-        div.innerHTML = html;
+            let div = document.createElement('div');
 
-        let list = ['script',
-            'iframe',
-            'html',
-            'head',
-            'body',
-            'head',
-            'title',
-            'img',
-            'embed',
-            'applet',
-            'object',
-            'style',
-            'link',
-            'form',
-            'input',
-            'button',
-            'video',
-            'source',
-            'math',
-            'maction',
-            'picture',
-            'map',
-            'svg',
-            'details',
-            'frameset',
-            'comment',
-            'base'];
+            div.innerHTML = html;
 
-        for (let i = 0;i<list.length;i++) {
+            let list = ['script',
+                'iframe',
+                'html',
+                'head',
+                'body',
+                'head',
+                'title',
+                'img',
+                'embed',
+                'applet',
+                'object',
+                'style',
+                'link',
+                'form',
+                'input',
+                'button',
+                'video',
+                'source',
+                'math',
+                'maction',
+                'picture',
+                'map',
+                'svg',
+                'details',
+                'frameset',
+                'comment',
+                'base'];
 
-            let elements = div.getElementsByTagName(list[i]);
-            while (elements[0]) {
-                elements[0].parentNode.removeChild(elements[0]);
+            for (let i = 0;i<list.length;i++) {
+
+                let elements = div.getElementsByTagName(list[i]);
+                while (elements[0]) {
+                    elements[0].parentNode.removeChild(elements[0]);
+                }
             }
-        }
 
-        return div.innerHTML;
+            return div.innerHTML;
+
+        } catch (error) {
+            document.querySelector('#message').innerHTML = `<div class="alert alert-danger" role="alert"><i class="fa fa-exclamation"></i> ${error.message}</div>`;
+        }
     };
 
     /**
@@ -122,10 +146,17 @@ const helperModule = (function () {
      * @param id
      */
     obj.preview_html = function (id) {
-        let cleaned_html = helperModule.clean_html(document.querySelector('#' + id).value);
-        document.querySelector('#preview-html').innerHTML = cleaned_html;
-        document.querySelector('#' + id).value = cleaned_html;
-        return false;
+
+        try {
+
+            const cleaned_html = helperModule.clean_html(document.querySelector('#' + id).value);
+            document.querySelector('#preview-html').innerHTML = cleaned_html;
+            document.querySelector('#' + id).value = cleaned_html;
+            return false;
+
+        } catch (error) {
+            document.querySelector('#message').innerHTML = `<div class="alert alert-danger" role="alert"><i class="fa fa-exclamation"></i> ${error.message}</div>`;
+        }
     };
 
     /**
@@ -133,10 +164,17 @@ const helperModule = (function () {
      * @param radio_buttons
      */
     obj.get_checked_radio_button = function(radio_buttons) {
-        for (let i = 0; i < radio_buttons.length; i++) {
-            if (radio_buttons[i].checked) {
-                return radio_buttons[i].value;
+
+        try {
+
+            for (let i = 0; i < radio_buttons.length; i++) {
+                if (radio_buttons[i].checked) {
+                    return radio_buttons[i].value;
+                }
             }
+
+        } catch (error) {
+            document.querySelector('#message').innerHTML = `<div class="alert alert-danger" role="alert"><i class="fa fa-exclamation"></i> ${error.message}</div>`;
         }
     };
 
@@ -144,8 +182,13 @@ const helperModule = (function () {
      * Gets current year
      */
     obj.get_current_year = function () {
-        let cdate = new Date().getFullYear();
-        domModule.html('#cdate', DOMPurify.sanitize(cdate));
+
+        try {
+            const cdate = new Date().getFullYear();
+            domModule.html('#cdate', DOMPurify.sanitize(cdate));
+        } catch (error) {
+            document.querySelector('#message').innerHTML = `<div class="alert alert-danger" role="alert"><i class="fa fa-exclamation"></i> ${error.message}</div>`;
+        }
     };
 
     /**
@@ -241,10 +284,17 @@ const helperModule = (function () {
     };
 
     obj.render_repo_thumbnail = function (thumbnail_data_array) {
-        const array_buffer_view = new Uint8Array(thumbnail_data_array);
-        const blob = new Blob([array_buffer_view], {type: 'image/jpeg'});
-        const url_creator = window.URL || window.webkitURL;
-        return url_creator.createObjectURL(blob);
+
+        try {
+
+            const array_buffer_view = new Uint8Array(thumbnail_data_array);
+            const blob = new Blob([array_buffer_view], {type: 'image/jpeg'});
+            const url_creator = window.URL || window.webkitURL;
+            return url_creator.createObjectURL(blob);
+
+        } catch (error) {
+            document.querySelector('#message').innerHTML = `<div class="alert alert-danger" role="alert"><i class="fa fa-exclamation"></i> ${error.message}</div>`;
+        }
     };
 
     obj.clear_media_fields = function (type) {
@@ -273,6 +323,28 @@ const helperModule = (function () {
         document.querySelector('#item-media-filename-display').innerHTML = '';
         document.querySelector('#item-media-trash').style.display = 'none';
     };
+
+    /* TODO: test
+    obj.show_list = function () {
+
+        try {
+
+            const form_cards = Array.from(document.getElementsByClassName('card'));
+
+            setTimeout(() => {
+
+                form_cards.forEach(card => {
+                    card.style.visibility = 'visible';
+                });
+
+            }, 600*2);
+
+        } catch (error) {
+            document.querySelector('#message').innerHTML = `<div class="alert alert-danger" role="alert"><i class="fa fa-exclamation"></i> ${error.message}</div>`;
+        }
+    };
+
+     */
 
     obj.show_form = function () {
 

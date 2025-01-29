@@ -86,7 +86,6 @@ const itemsTimelineModule = (function () {
             paging: false
         });
 
-
         // await helperModule.reorder_items_after_action(item_order, 'timeline_items');
         bind_publish_timeline_item_events();
         bind_suppress_timeline_item_events();

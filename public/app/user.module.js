@@ -20,64 +20,122 @@ const userModule = (function () {
 
     'use strict';
 
-    const api = configModule.getApi();
-    const endpoints = endpointsModule.get_users_endpoints();
-    const users_table = '#users-data-table';
+    const APP_PATH = window.localStorage.getItem('exhibits_app_path');
+    const USER_ENDPOINTS = endpointsModule.get_users_endpoints();
     let obj = {};
 
     /**
-     * Renders user profile data
-     * @param data
+     * Gets all users
      */
-    function render_users(data) {
+     async function get_users () {
 
-        let users = '';
-        let user;
+         try {
 
-        users += `<thead>
-        <tr>
-            <th>First Name</th>
-            <th>Last Name</th>
-            <th>Email</th>
-            <th>Active</th>
-            <th>Edit</th>
-        </tr>
-        </thead>`;
+             const token = authModule.get_user_token();
+             const response = await httpModule.req({
+                 method: 'GET',
+                 url: USER_ENDPOINTS.users.endpoint,
+                 headers: {
+                     'Content-Type': 'application/json',
+                     'x-access-token': token
+                 }
+             });
 
-        users += '<tbody>';
+             if (response.status === 200) {
+                 return response.data;
+             }
 
-        for (let i = 0; i < data.length; i++) {
+         } catch (error) {
+             document.querySelector('#message').innerHTML = `<div class="alert alert-danger" role="alert"><i class="fa fa-exclamation"></i> ${error.message}</div>`;
+         }
+    }
 
-            user = data[i];
+    /**
+     * displays user profile data
+     */
+    obj.display_users = async function () {
 
-            users += '<tr>';
-            users += '<td>' + DOMPurify.sanitize(user.first_name) + '</td>';
-            users += '<td>' + DOMPurify.sanitize(user.last_name) + '</td>';
-            users += '<td>' + DOMPurify.sanitize(user.email) + '</td>';
+        try {
 
-            if (user.is_active === 1) {
-                users += '<td>Active</td>';
-            } else if (user.is_active === 0) {
-                users += '<td>Inactive</td>';
+            const users = await get_users();
+            let user_data = '';
+
+            if (users === false) {
+                document.querySelector('#user-card').innerHTML = '';
+                return false;
             }
 
-            users += '<td>';
-            users += '&nbsp;';
-            users += '<a class="btn btn-xs btn-default" href="/exhibits-dashboard/edit-user?id=' + DOMPurify.sanitize(user.id) + '" title="Edit User"><i class="fa fa-edit"></i></a>&nbsp;&nbsp;&nbsp;&nbsp;';
-            users += '</td>';
-            users += '</tr>';
+            if (users.length === 0) {
+                document.querySelector('.card').innerHTML = '';
+                document.querySelector('#message').innerHTML = '<div class="alert alert-info" role="alert"><span id="exhibit-title"></span> No User Profiles found.</div>';
+                return false;
+            }
+
+            for (let i = 0; i < users.length; i++) {
+
+                const is_active = users[i].is_active;
+                let status;
+                let user_edit = '';
+                let trash = '';
+                const user = JSON.parse(window.sessionStorage.getItem('exhibits_user'));
+
+                if (user === null) {
+                    document.querySelector('#message').innerHTML = `<div class="alert alert-danger" role="alert"><i class="fa fa-exclamation"></i> Unable to get your user id</div>`;
+                    return false;
+                }
+
+                if (is_active === 1) {
+
+                    if (parseInt(user.uid) === users[i].id) {
+                        status = `<span id="inactive" title="active"><i class="fa fa-user" style="color: green"></i><br>Active</span>`;
+                        user_edit = `<a href="${APP_PATH}/users/edit?user_id=${users[i].id}" title="Edit"><i class="fa fa-edit pr-1"></i> </a>`;
+                        trash = `<i title="Can only delete if unpublished" style="color: #d3d3d3" class="fa fa-trash pr-1"></i>`;
+                    } else {
+                        status = `<a href="#" id="${users[i].id}" class="inactive-user"><span id="inactive" title="active"><i class="fa fa-user" style="color: green"></i><br>Active</span></a>`;
+                        user_edit = `<i title="Can only edit if unpublished" style="color: #d3d3d3" class="fa fa-edit pr-1"></i>`;
+                        trash = `<i title="Can only delete if unpublished" style="color: #d3d3d3" class="fa fa-trash pr-1"></i>`;
+                    }
+
+                } else if (is_active === 0) {
+                    status = `<a href="#" id="${users[i].id}" class="active-user"><span id="active" title="inactive"><i class="fa fa-user" style="color: darkred"></i><br>Inactive</span></a>`;
+                    user_edit = `<a href="${APP_PATH}/users/edit?user_id=${users[i].id}" title="Edit"><i class="fa fa-edit pr-1"></i> </a>`;
+                    trash = `<a href="${APP_PATH}/users/delete?user_id=${users[i].id}" title="Delete"><i class="fa fa-trash pr-1"></i></a>`;
+                }
+
+                user_data += '<tr>';
+                user_data += `<td style="width: 35%;padding-left: 7%">
+                    <p><i class="fa fa-user"></i>&nbsp;&nbsp;<strong>${users[i].first_name} ${users[i].last_name}</strong></p>
+                    <p><i class="fa fa-envelope"></i>&nbsp;&nbsp;${users[i].email}</p>
+                    </td>`;
+
+                user_data += `<td style="width: 5%;text-align: center"><small>${status}</small></td>`;
+                user_data += `<td style="width: 10%">
+                                <div class="card-text text-sm-center">
+                                    ${user_edit}
+                                    &nbsp;
+                                    ${trash}
+                                </div>
+                               </td>`;
+                user_data += '</tr>';
+            }
+
+            document.querySelector('#user-data').innerHTML = user_data;
+
+            new DataTable('#users', {
+                order: [
+                    [0, 'asc']
+                ]
+            });
+
+            bind_activate_user_events();
+            bind_deactivate_user_events();
+            helperModule.show_form();
+
+            return false;
+
+        } catch (error) {
+            document.querySelector('#message').innerHTML = `<div class="alert alert-danger" role="alert"><i class="fa fa-exclamation"></i> ${error.message}</div>`;
         }
-
-        users += '</tbody>';
-
-        domModule.html(users_table, users);
-
-        $(users_table).DataTable({
-            responsive: true,
-            order: [[2, 'asc']]
-        });
-
-        return false;
     }
 
     /**
@@ -109,36 +167,9 @@ const userModule = (function () {
     }
 
     /**
-     * Gets all users
-     */
-    obj.get_users = function() {
-
-        (async () => {
-
-            let response = await httpModule.req({
-                method: 'GET',
-                url: api + endpoints.users.endpoint,
-                headers: {
-                    'Content-Type': 'application/json',
-                    'x-access-token': authModule.get_user_token()
-                }
-            });
-
-            if (response.status === 200) {
-                render_users(response.data);
-            } else if (response.status === 401) {
-                window.location.replace('/exhibits-dashboard/login');
-            } else {
-                window.location.replace('/exhibits-dashboard/error?e=' + DOMPurify.sanitize(response.status));
-            }
-
-        })();
-    };
-
-    /**
      * Retrieves user profile data for edit form
      */
-    obj.getUserDetails = function() {
+    obj.getUserDetails = function () {
 
         (async () => {
 
@@ -167,7 +198,7 @@ const userModule = (function () {
      * Checks if user data is in session storage
      * @returns {boolean}
      */
-    obj.check_user_data = function() {
+    obj.check_user_data = function () {
 
         let data = window.sessionStorage.getItem('exhibits_user');
 
@@ -210,7 +241,7 @@ const userModule = (function () {
     /**
      * Adds new user
      */
-    obj.add_user = function(event) {
+    obj.add_user = function (event) {
 
         event.preventDefault();
 
@@ -260,7 +291,7 @@ const userModule = (function () {
     /**
      * Updates user data
      */
-    obj.update_user = function(event) {
+    obj.update_user = function (event) {
 
         event.preventDefault();
 
@@ -314,7 +345,7 @@ const userModule = (function () {
     /** TODO:
      * Deletes user data
      */
-    obj.delete_user = function() {
+    obj.delete_user = function () {
 
         // const endpoints = endpointsModule.endpoints();
         let id = helperModule.get_parameter_by_name('id');
@@ -362,6 +393,118 @@ const userModule = (function () {
 
         httpModule.req(request, callback);
     };
+
+    function bind_activate_user_events() {
+
+        try {
+
+            const user_links = Array.from(document.getElementsByClassName('active-user'));
+
+            user_links.forEach(user_link => {
+                user_link.addEventListener('click', async (event) => {
+                    const id = user_link.getAttribute('id');
+                    await activate_user(id);
+                });
+            });
+
+        } catch (error) {
+            document.querySelector('#message').innerHTML = `<div class="alert alert-danger" role="alert"><i class="fa fa-exclamation"></i> ${error.message}</div>`;
+        }
+    }
+
+    function bind_deactivate_user_events() {
+
+        try {
+
+            const user_links = Array.from(document.getElementsByClassName('inactive-user'));
+
+            user_links.forEach(user_link => {
+                user_link.addEventListener('click', async () => {
+                    const id = user_link.getAttribute('id');
+                    await deactivate_user(id);
+                });
+            });
+
+        } catch (error) {
+            document.querySelector('#message').innerHTML = `<div class="alert alert-danger" role="alert"><i class="fa fa-exclamation"></i> ${error.message}</div>`;
+        }
+    }
+
+    async function activate_user(id) {
+
+        const token = authModule.get_user_token();
+        const response = await httpModule.req({
+            method: 'PUT',
+            url: USER_ENDPOINTS.users.user_status.endpoint.replace(':id', id).replace(':is_active', '1'),
+            headers: {
+                'Content-Type': 'application/json',
+                'x-access-token': token
+            }
+        });
+
+        if (response.status === 200) {
+
+            scrollTo(0, 0);
+            document.querySelector('#message').innerHTML = `<div class="alert alert-success" role="alert"><i class="fa fa-check"></i> User activated</div>`;
+
+            setTimeout(() => {
+                location.reload();
+            }, 500);
+
+            /*
+            setTimeout(() => {
+                let elem = document.getElementById(uuid);
+                document.getElementById(uuid).classList.remove('publish-exhibit');
+                document.getElementById(uuid).classList.add('suppress-exhibit');
+                document.getElementById(uuid).replaceWith(elem.cloneNode(true));
+                document.getElementById(uuid).innerHTML = '<span id="suppress" title="published"><i class="fa fa-cloud" style="color: green"></i><br>Published</span>';
+                document.getElementById(uuid).addEventListener('click', async () => {
+                    const uuid = elem.getAttribute('id');
+                    await suppress_exhibit(uuid);
+                }, false);
+            }, 0);
+
+             */
+        }
+    }
+
+    async function deactivate_user(id) {
+
+        const token = authModule.get_user_token();
+        const response = await httpModule.req({
+            method: 'PUT',
+            url: USER_ENDPOINTS.users.user_status.endpoint.replace(':id', id).replace(':is_active', '0'),
+            headers: {
+                'Content-Type': 'application/json',
+                'x-access-token': token
+            }
+        });
+
+        if (response.status === 200) {
+
+            scrollTo(0, 0);
+            document.querySelector('#message').innerHTML = `<div class="alert alert-success" role="alert"><i class="fa fa-check"></i> User deactivated</div>`;
+
+            setTimeout(() => {
+                location.reload();
+            }, 500);
+
+            /*
+            setTimeout(() => {
+                let elem = document.getElementById(uuid);
+                document.getElementById(uuid).classList.remove('suppress-exhibit');
+                document.getElementById(uuid).classList.add('publish-exhibit');
+                document.getElementById(uuid).replaceWith(elem.cloneNode(true));
+                document.getElementById(uuid).innerHTML = '<span id="publish" title="suppressed"><i class="fa fa-cloud-upload" style="color: darkred"></i><br>Suppressed</span>';
+                document.getElementById(uuid).addEventListener('click', async (event) => {
+                    const uuid = elem.getAttribute('id');
+                    await publish_exhibit(uuid);
+                }, false);
+            }, 0);
+
+             */
+        }
+    }
 
     obj.init = function () {};
 

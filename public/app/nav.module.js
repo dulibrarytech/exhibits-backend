@@ -25,12 +25,13 @@ const navModule = (function () {
 
     obj.set_item_nav_menu_links = function () {
 
-        let uuid = helperModule.get_parameter_by_name('exhibit_id');
-        let heading_link = `${APP_PATH}/items/heading?exhibit_id=${uuid}`;
-        let standard_item_link = `${APP_PATH}/items/standard?exhibit_id=${uuid}`;
-        let item_grid_link = `${APP_PATH}/items/grid?exhibit_id=${uuid}`;
-        let item_vertical_timeline_link = `${APP_PATH}/items/vertical-timeline?exhibit_id=${uuid}`;
-        let items_menu_fragment = `
+        const uuid = helperModule.get_parameter_by_name('exhibit_id');
+        const heading_link = `${APP_PATH}/items/heading?exhibit_id=${uuid}`;
+        const standard_item_link = `${APP_PATH}/items/standard?exhibit_id=${uuid}`;
+        const item_grid_link = `${APP_PATH}/items/grid?exhibit_id=${uuid}`;
+        const item_vertical_timeline_link = `${APP_PATH}/items/vertical-timeline?exhibit_id=${uuid}`;
+        const users_link = `${APP_PATH}/users`;
+        const items_menu_fragment = `
                 <li>
                     <a href="${heading_link}" data-keyboard="false"> 
                         <i class=" menu-icon ti-menu-alt"></i>Add Heading

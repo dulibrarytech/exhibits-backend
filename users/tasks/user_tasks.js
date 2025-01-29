@@ -1,6 +1,6 @@
 /**
 
- Copyright 2023 University of Denver
+ Copyright 2025 University of Denver
 
  Licensed under the Apache License, Version 2.0 (the "License");
  you may not use this file except in compliance with the License.
@@ -18,7 +18,7 @@
 
 'use strict';
 
-const LOGGER = require('../../libs/log4')
+const LOGGER = require('../../libs/log4');
 
 /**
  * User record tasks
@@ -33,30 +33,15 @@ const User_tasks = class {
 
     /**
      * Gets all users
-     * @returns {boolean}
      */
-    get_users() {
+    async get_users() {
 
-        let promise = new Promise((resolve, reject) => {
-
-            this.DB(this.TABLE)
-                .select('*')
-                .then((data) => {
-                    resolve(data);
-                })
-                .catch((error) => {
-                    LOGGER.module().fatal('FATAL: [/users/tasks (get_users)] unable to get users ' + error.message);
-                    reject(false);
-                });
-
-        });
-
-        return promise.then((result) => {
-            return result;
-        }).catch((error) => {
-            return error;
-        });
-    };
+        try {
+            return await this.DB(this.TABLE).select('*');
+        } catch (error) {
+            LOGGER.module().error('ERROR: [/users/tasks (get_users)] unable to get users ' + error.message);
+        }
+    }
 
     /**
      * Gets single user record
@@ -230,6 +215,28 @@ const User_tasks = class {
             return error;
         });
     };
+
+    /**
+     * Updates user status
+     * @param id
+     * @param is_active
+     */
+    async update_status(id, is_active) {
+
+        try {
+
+            return await this.DB(this.TABLE)
+            .where({
+                id: id
+            })
+            .update({
+                is_active: is_active
+            });
+
+        } catch (error) {
+            LOGGER.module().error('ERROR: [/users/tasks (update_status)] unable to update user status ' + error.message);
+        }
+    }
 };
 
 module.exports = User_tasks;

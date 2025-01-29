@@ -18,37 +18,30 @@
 
 'use strict';
 
-const DB =require('../config/db_config')();
-const TABLE = 'tbl_users_test';
+const DB = require('../config/db_config')();
+const DB_TABLES = require('../config/db_tables_config')();
+const TABLE = DB_TABLES.exhibits.user_records;
 const USER_TASKS = require('../users/tasks/user_tasks');
+const LOGGER = require('../libs/log4');
 
 /**
  * Gets all users
- * @param callback
- * @returns {boolean}
  */
-exports.get_users = (callback) => {
+exports.get_users = async function () {
 
-    (async () => {
+    try {
 
         const TASKS = new USER_TASKS(DB, TABLE);
-        const data = await TASKS.get_users();
-        let response = {
+        return {
             status: 200,
-            message: 'User records retrieved.',
-            data: data
+            message: 'User data retrieved.',
+            data: await TASKS.get_users()
         };
 
-        if (data === false) {
-            response = {
-                status: 404,
-                message: 'Unable to retrieve user records.',
-                data: data
-            }
-        }
-
-        callback(response);
-    })();
+    } catch (error) {
+        LOGGER.module().error('ERROR: [/users/model (get_users)] unable to get user profiles ' + error.message);
+        return false;
+    }
 };
 
 /**
@@ -56,6 +49,7 @@ exports.get_users = (callback) => {
  * @param id
  * @param callback
  */
+/*
 exports.get_user = function (id, callback) {
 
     (async () => {
@@ -80,12 +74,15 @@ exports.get_user = function (id, callback) {
     })();
 };
 
+ */
+
 /**
  * Updates user data
  * @param id
  * @param user
  * @param callback
  */
+/*
 exports.update_user = function (id, user, callback) {
 
     (async () => {
@@ -109,12 +106,14 @@ exports.update_user = function (id, user, callback) {
         callback(response);
     })();
 };
+*/
 
 /**
  * Saves user data
  * @param user
  * @param callback
  */
+/*
 exports.save_user = function (user, callback) {
 
     (async () => {
@@ -139,12 +138,14 @@ exports.save_user = function (user, callback) {
         callback(response);
     })();
 };
+*/
 
 /**
  * Deletes user data
  * @param id
  * @param callback
  */
+/*
 exports.delete_user = function (id, callback) {
 
     (async () => {
@@ -166,4 +167,28 @@ exports.delete_user = function (id, callback) {
 
         callback(response);
     })();
+};
+
+ */
+
+/**
+ * Updates user status
+ * @param id
+ * @param is_active
+ */
+exports.update_status = async function (id, is_active) {
+
+    try {
+
+        const TASKS = new USER_TASKS(DB, TABLE);
+        await TASKS.update_status(id, is_active);
+        return {
+            status: 200,
+            message: 'User status updated.'
+        };
+
+    } catch (error) {
+        LOGGER.module().error('ERROR: [/users/model (update_status)] unable to get user profiles ' + error.message);
+        return false;
+    }
 };

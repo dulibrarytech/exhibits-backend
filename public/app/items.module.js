@@ -57,7 +57,6 @@ const itemsModule = (function () {
             if ($.fn.dataTable.isDataTable('#items')) {
                 $('#items').DataTable().clear().destroy();
             }
-
              */
 
             const exhibit_id = helperModule.get_parameter_by_name('exhibit_id');

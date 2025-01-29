@@ -18,14 +18,15 @@
 
 'use strict';
 
+const APP_PATH = '/exhibits-dashboard';
 const PREFIX = '/api/';
-const VERSION = 'v2';
+const VERSION = 'v1';
 const ENDPOINT = '/users';
 const ENDPOINTS = {
     users: {
-        endpoint: `${PREFIX}${VERSION}${ENDPOINT}`,
+        endpoint: `${APP_PATH}${PREFIX}${VERSION}${ENDPOINT}`,
         get_users: {
-            description: 'Collects and delivers repository stats',
+            description: 'Gets all user records',
             get: {
                 description: 'Gets user record(s)',
                 params: 'id, all records returned if no id is included, token or api_key'
@@ -53,6 +54,11 @@ const ENDPOINTS = {
                 description: 'Deletes user record',
                 params: 'id, token or api_key'
             }
+        },
+        user_status: {
+            description: '',
+            endpoint: `${APP_PATH}${PREFIX}${VERSION}${ENDPOINT}/status/:id/:is_active`,
+            params: 'id, token, is_active'
         }
     }
 };

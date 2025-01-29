@@ -25,22 +25,22 @@ const MODEL = require('../users/model');
  * @param req
  * @param res
  */
-exports.get_users = (req, res) => {
+exports.get_users = async function (req, res) {
 
     if (req.query.id !== undefined && req.query.id.length !== 0) {
 
-        let id = req.query.id;
+        const id = req.query.id;
 
+        /*
         MODEL.get_user(id, (data) => {
             res.status(data.status).send(data.data);
         });
-
+        */
         return false;
     }
 
-    MODEL.get_users((data) => {
-        res.status(data.status).send(data.data);
-    });
+    const data = await MODEL.get_users();
+    res.status(data.status).send(data.data);
 };
 
 /**
@@ -80,9 +80,22 @@ exports.update_user = (req, res) => {
  */
 exports.delete_user = (req, res) => {
 
-    let id = req.query.id;
+    const id = req.query.id;
 
     MODEL.delete_user(id, (data) => {
         res.status(data.status).send(data.data);
     });
+};
+
+/**
+ * Updates user status
+ * @param req
+ * @param res
+ */
+exports.update_status = async function (req, res) {
+
+    const id = req.params.id;
+    const is_active = req.params.is_active;
+    const data = await MODEL.update_status(id, is_active);
+    res.status(data.status).send(data.data);
 };

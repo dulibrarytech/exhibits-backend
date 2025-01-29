@@ -89,8 +89,8 @@ module.exports = function (app) {
     app.route(APP_PATH + '/items/vertical-timeline/item/delete')
     .get(CONTROLLER.get_dashboard_timeline_items_delete_form);
 
-    app.route(APP_PATH + '/trash')
-    .get(CONTROLLER.get_dashboard_trash);
+    app.route(APP_PATH + '/users')
+    .get(CONTROLLER.get_dashboard_users);
 
     app.route(APP_PATH + '/session')
     .get(CONTROLLER.get_dashboard_session_out);
@@ -98,9 +98,10 @@ module.exports = function (app) {
     app.route(APP_PATH + '/logout')
     .get(CONTROLLER.get_dashboard_logout);
 
+    app.route(APP_PATH + '/trash')
+    .get(CONTROLLER.get_dashboard_trash);
+
     /*
-    app.route('/dashboard/users')
-    .get(CONTROLLER.get_dashboard_users);
 
     app.route('/dashboard/users/edit')
     .get(CONTROLLER.get_dashboard_user_edit_form);
