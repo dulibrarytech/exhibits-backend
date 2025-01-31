@@ -86,6 +86,24 @@ const User_tasks = class {
     };
 
     /**
+     * Saves user data
+     * @param user
+     */
+    async save_user(user) {
+
+        try {
+
+            user.email = user.email.toLowerCase();
+
+            return await this.DB(this.TABLE)
+            .insert(user);
+
+        } catch (error) {
+            LOGGER.module().error('ERROR: [/users/tasks (save_user)] unable to save user data ' + error.message);
+        }
+    }
+
+    /**
      * Checks if username already exists
      * @param username
      */
@@ -94,53 +112,25 @@ const User_tasks = class {
         let promise = new Promise((resolve, reject) => {
 
             this.DB(this.TABLE)
-                .count('du_id as du_id')
-                .where('du_id', username)
-                .then((data) => {
+            .count('du_id as du_id')
+            .where('du_id', username)
+            .then((data) => {
 
-                    if (data[0].du_id === 1) {
-                        resolve({
-                            is_duplicate: true
-                        });
-                    } else {
-                        resolve({
-                            is_duplicate: false
-                        });
-                    }
+                if (data[0].du_id === 1) {
+                    resolve({
+                        is_duplicate: true
+                    });
+                } else {
+                    resolve({
+                        is_duplicate: false
+                    });
+                }
 
-                })
-                .catch((error) => {
-                    LOGGER.module().error('FATAL: [/users/tasks (check_username)] unable to check username ' + error.message);
-                    reject(false);
-                });
-        });
-
-        return promise.then((result) => {
-            return result;
-        }).catch((error) => {
-            return error;
-        });
-    };
-
-    /**
-     * Saves user data
-     * @param user
-     */
-    save_user(user) {
-
-        let promise = new Promise((resolve, reject) => {
-
-            user.email = user.email.toLowerCase();
-
-            this.DB(this.TABLE)
-                .insert(user)
-                .then((data) => {
-                    resolve(data);
-                })
-                .catch((error) => {
-                    LOGGER.module().error('FATAL: [/users/tasks (save_user)] unable to save user data ' + error.message);
-                    reject(false);
-                });
+            })
+            .catch((error) => {
+                LOGGER.module().error('FATAL: [/users/tasks (check_username)] unable to check username ' + error.message);
+                reject(false);
+            });
         });
 
         return promise.then((result) => {

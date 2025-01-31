@@ -162,7 +162,7 @@ const userModule = (function () {
 
             const record = await get_user_record();
             const user = record.pop();
-            console.log(user);
+
             // user data
             document.querySelector('#first-name-input').value = user.first_name;
             document.querySelector('#last-name-input').value = user.last_name;
@@ -174,21 +174,6 @@ const userModule = (function () {
         } catch (error) {
             document.querySelector('#message').innerHTML = `<div class="alert alert-danger" role="alert"><i class="fa fa-exclamation"></i> ${error.message}</div>`;
         }
-    };
-
-    /**
-     * Checks if user data is in session storage
-     * @returns {boolean}
-     */
-    obj.check_user_data = function () {
-
-        let data = window.sessionStorage.getItem('exhibits_user');
-
-        if (data !== null) {
-            return true;
-        }
-
-        return false;
     };
 
     function validate(div_id, value) {
@@ -262,6 +247,7 @@ const userModule = (function () {
                     window.location.reload();
                 }, 900);
             }
+
             return false;
 
         } catch (error) {
@@ -269,105 +255,58 @@ const userModule = (function () {
         }
     };
 
-    obj.update_user = function (event) {
+    obj.save_user_record = async function (event) {
 
-        event.preventDefault();
+        try {
 
-        (async () => {
+            event.preventDefault();
+            const data = get_user_form_data();
+            const token = authModule.get_user_token();
 
-            let user = get_user_form_data();
-            user.id = helperModule.get_parameter_by_name('id');
-
-            if ($('#is_active').prop('checked')) {
-                user.is_active = 1;
-            } else {
-                user.is_active = 0;
-            }
-
-            for (let prop in user) {
-                if (user[prop] === false) {
-                    return false;
-                }
-            }
-
-            domModule.hide('#user-form');
-            domModule.html('#message', '<div class="alert alert-info">Updating User...</div>');
-
-            let response = await httpModule.req({
-                method: 'PUT',
-                url: api + endpoints.users.endpoint,
-                headers: {
-                    'Content-Type': 'application/json',
-                    'x-access-token': authModule.get_user_token()
-                },
-                data: JSON.stringify(user),
-            });
-
-            if (response.status === 201) {
-
-                domModule.html('#message', '<div class="alert alert-success">User updated.</div>');
-
+            if (token === false) {
                 setTimeout(() => {
-                    window.location.replace('/exhibits-dashboard/users');
-                }, 3000);
+                    document.querySelector('#message').innerHTML = `<div class="alert alert-danger" role="alert"><i class="fa fa-exclamation"></i> Unable to get session token</div>`;
+                    authModule.logout();
+                }, 1000);
 
-            } else if (response.status === 401) {
-                window.location.replace('/exhibits-dashboard/login');
-            } else {
-                window.location.replace('/exhibits-dashboard/error?e=' + DOMPurify.sanitize(response.status));
+                return false;
             }
 
-        })();
-    };
-
-    /**
-     * Adds new user
-     */
-    obj.add_user = function (event) {
-
-        event.preventDefault();
-
-        (async () => {
-
-            let user = get_user_form_data();
-
-            for (let prop in user) {
-                if (user[prop] === false) {
-                    return false;
-                }
+            if (data === undefined) {
+                document.querySelector('#message').innerHTML = `<div class="alert alert-danger" role="alert"><i class="fa fa-exclamation"></i> Unable to get form field values</div>`;
+                return false;
+            } else if (data === false) {
+                return false;
             }
 
-            domModule.hide('#user-form');
-            domModule.html('#message', '<div class="alert alert-info">Adding User...</div>');
+            document.querySelector('#message').innerHTML = `<div class="alert alert-info" role="alert"><i class="fa fa-info"></i> Saving user record...</div>`;
 
-            let response = await httpModule.req({
+            const endpoint = USER_ENDPOINTS.users.endpoint;
+            const response = await httpModule.req({
                 method: 'POST',
-                url: api + endpoints.users.endpoint,
+                url: endpoint,
+                data: data,
                 headers: {
                     'Content-Type': 'application/json',
-                    'x-access-token': authModule.getUserToken()
-                },
-                data: JSON.stringify(user),
+                    'x-access-token': token
+                }
             });
 
-            if (response.status === 201) {
-                domModule.html('#message', '<div class="alert alert-success">User added.</div>');
+            if (response !== undefined && response.status === 201) {
+
+                const user_id = response.data[0];
+                document.querySelector('#message').innerHTML = `<div class="alert alert-success" role="alert"><i class="fa fa-info"></i> User record saved</div>`;
 
                 setTimeout(() => {
-                    window.location.replace('/exhibits-dashboard/users');
-                }, 3000);
-
-            } else if (response.status === 401) {
-                window.location.replace('/exhibits-dashboard/login');
-            } else if (response.status === 400) {
-                console.log(response);
-            } else {
-                window.location.replace('/exhibits-dashboard/error?e=' + DOMPurify.sanitize(response.status));
+                    window.location.replace(`${APP_PATH}/users/edit?user_id=${user_id}`);
+                }, 900);
             }
 
-        })();
+            return false;
 
-        return false;
+        } catch (error) {
+            document.querySelector('#message').innerHTML = `<div class="alert alert-danger" role="alert"><i class="fa fa-exclamation"></i> ${error.message}</div>`;
+        }
     };
 
     /** TODO:
@@ -533,6 +472,17 @@ const userModule = (function () {
              */
         }
     }
+
+    obj.check_user_data = function () {
+
+        let data = window.sessionStorage.getItem('exhibits_user');
+
+        if (data !== null) {
+            return true;
+        }
+
+        return false;
+    };
 
     obj.init = function () {
     };

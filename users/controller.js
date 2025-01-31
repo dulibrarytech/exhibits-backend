@@ -91,13 +91,24 @@ exports.update_user = async function (req, res) {
  * @param req
  * @param res
  */
-exports.save_user = (req, res) => {
+exports.save_user = async function (req, res) {
 
-    let user = req.body;
+    const data = req.body;
 
+    if (data === undefined) {
+        res.status(400).send('Bad request.');
+        return false;
+    }
+
+    const response = await MODEL.save_user(data);
+    res.status(response.status).send(response.data);
+
+    /*
     MODEL.save_user(user, (data) => {
         res.status(data.status).send(data.data);
     });
+
+     */
 };
 
 /**

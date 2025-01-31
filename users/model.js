@@ -84,74 +84,33 @@ exports.update_user = async function (id, user) {
         };
 
     } catch (error) {
-        LOGGER.module().error('ERROR: [/users/model (update_user)] unable to update user ' + error.message);
+        LOGGER.module().error('ERROR: [/users/model (update_user)] unable to update user data' + error.message);
         return false;
     }
 };
 
 /**
- * Updates user data
- * @param id
- * @param user
- * @param callback
- */
-/*
-exports.update_user = function (id, user, callback) {
-
-    (async () => {
-
-        const TASKS = new USER_TASKS(DB, TABLE);
-        const data = await TASKS.update_user(id, user);
-        let response = {
-            status: 201,
-            message: 'User record updated.',
-            data: data
-        };
-
-        if (data === false) {
-            response = {
-                status: 400,
-                message: 'Unable to update user record.',
-                data: []
-            }
-        }
-
-        callback(response);
-    })();
-};
-*/
-
-/**
  * Saves user data
  * @param user
- * @param callback
  */
-/*
-exports.save_user = function (user, callback) {
+exports.save_user = async function (user) {
 
-    (async () => {
+    try {
 
         const TASKS = new USER_TASKS(DB, TABLE);
         const data = await TASKS.save_user(user);
 
-        let response = {
+        return {
             status: 201,
-            message: 'User record saved.',
+            message: 'User saved.',
             data: data
         };
 
-        if (data === false) {
-            response = {
-                status: 500,
-                message: 'Unable to save user record.',
-                data: []
-            }
-        }
-
-        callback(response);
-    })();
+    } catch (error) {
+        LOGGER.module().error('ERROR: [/users/model (save_user)] unable to save user data' + error.message);
+        return false;
+    }
 };
-*/
 
 /**
  * Deletes user data

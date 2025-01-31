@@ -60,10 +60,10 @@
 <script src="/exhibits-dashboard/static/app/auth.module.js"></script>
 <script src="/exhibits-dashboard/static/app/nav.module.js"></script>
 <script src="/exhibits-dashboard/static/app/user.module.js"></script>
-<script>navModule.init();</script>
 <script>
+    navModule.init();
+    document.querySelector('#save-user-btn').addEventListener('click', userModule.save_user_record);
     helperModule.show_form();
-    // userModule.display_users();
 </script>
 </body>
 </html>
