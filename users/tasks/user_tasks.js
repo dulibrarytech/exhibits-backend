@@ -44,39 +44,22 @@ const User_tasks = class {
     }
 
     /**
-     * Gets single user record
+     * Gets one user by id
      * @param id
      */
-    get_user(id) {
+    async get_user(id) {
 
-        let promise = new Promise((resolve, reject) => {
+        try {
 
-            this.DB(this.TABLE)
-                .select('*')
-                .where({
-                    id: id
-                })
-                .then(function (data) {
+            return await this.DB(this.TABLE).select('*')
+            .where({
+                id: id
+            });
 
-                    if (data.length === 1) {
-                        resolve(data);
-                    } else {
-                        reject(false);
-                    }
-                })
-                .catch(function (error) {
-                    LOGGER.module().fatal('FATAL: [/users/tasks (get_user)] unable to get user ' + error.message);
-                    reject(false);
-                });
-        });
-
-        return promise.then((result) => {
-            return result;
-        }).catch((error) => {
-            return error;
-        });
-    };
-
+        } catch (error) {
+            LOGGER.module().error('ERROR: [/users/tasks (get_user)] unable to get user ' + error.message);
+        }
+    }
 
     /**
      * Updates user data
@@ -85,41 +68,21 @@ const User_tasks = class {
      */
     update_user(id, user) {
 
-        let promise = new Promise((resolve, reject) => {
+        try {
 
-            this.DB(this.TABLE)
-                .where({
-                    id: id
-                })
-                .update({
-                    email: user.email,
-                    first_name: user.first_name,
-                    last_name: user.last_name,
-                    is_active: user.is_active
-                })
-                .then((data) => {
+            return this.DB(this.TABLE)
+            .where({
+                id: id
+            })
+            .update({
+                first_name: user.first_name,
+                last_name: user.last_name,
+                email: user.email
+            });
 
-                    if (data === 1) {
-                        resolve({
-                            data: data
-                        });
-                    } else {
-                        reject(false);
-                    }
-
-                    return null;
-                })
-                .catch((error) => {
-                    LOGGER.module().fatal('FATAL: [/users/tasks (update_user)] unable to update user record ' + error.message);
-                    reject(false);
-                });
-        });
-
-        return promise.then((result) => {
-            return result;
-        }).catch((error) => {
-            return error;
-        });
+        } catch (error) {
+            LOGGER.module().error('ERROR: [/users/tasks (update_user)] unable to update user ' + error.message);
+        }
     };
 
     /**

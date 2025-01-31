@@ -1,2 +1,69 @@
 <%- include('partials/header.ejs'); %>
-<%- include('partials/footer.ejs'); %>
+<body>
+<aside id="left-panel" class="left-panel">
+    <nav class="navbar navbar-expand-sm navbar-default">
+        <div id="main-menu" class="main-menu">
+            <ul class="nav navbar-nav">
+                <li class="active">
+                    <a href="/exhibits-dashboard/exhibits">
+                        <i class="menu-icon fa fa-home"></i>Exhibits Home
+                    </a>
+                </li>
+                <li class="menu-title">Menu</li>
+            </ul>
+            <ul class="nav navbar-nav">
+                <li>
+                    <a id="back-to-items" href="/exhibits-dashboard/users" data-keyboard="false">
+                        <i class=" menu-icon fa fa-arrow-left"></i>Back to Users</a>
+                </li>
+            </ul>
+            <ul id="items-menu" class="nav navbar-nav"></ul>
+            <ul class="nav navbar-nav">
+                <li>
+                    <a href="#" id="logout" data-keyboard="false">
+                        <i class="menu-icon fa fa-sign-out"></i>Logout
+                    </a>
+                </li>
+            </ul>
+        </div>
+    </nav>
+</aside>
+<div id="right-panel" class="right-panel">
+    <%- include('partials/main-header.ejs'); %>
+    <div class="content" style="min-height: 875px;">
+        <div id="message"></div>
+        <%- include('partials/user-data-card.ejs'); %>
+        <div id="item-submit-card" class="card">
+            <div class="card-body">
+                <button class="btn btn-primary" type="button" id="save-user-btn">
+                    <i class="fa fa-save"></i>&nbsp;&nbsp;Save
+                </button>
+            </div>
+            <div class="card-footer text-muted"><small>User</small></div>
+        </div>
+    </div>
+    <div class="clearfix"></div>
+    <%- include('partials/footer.ejs'); %>
+    <%- include('partials/preview-html-modal.ejs'); %>
+</div>
+<script src="https://code.jquery.com/jquery-3.7.0.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/popper.js@1.16.1/dist/umd/popper.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@4.6.2/dist/js/bootstrap.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/jquery-match-height@0.7.2/dist/jquery.matchHeight.min.js"></script>
+<script src="/exhibits-dashboard/static/libs/data_tables/datatables.min.js"></script>
+<script src="https://unpkg.com/dropzone@5/dist/min/dropzone.min.js"></script>
+<script src="/exhibits-dashboard/static/libs/axios-2.x/dist/axios.min.js"></script>
+<script src="/exhibits-dashboard/static/libs/dompurify/purify.min.js"></script>
+<script src="/exhibits-dashboard/static/app/http.module.js"></script>
+<script src="/exhibits-dashboard/static/app/helper.module.js"></script>
+<script src="/exhibits-dashboard/static/app/endpoints.module.js"></script>
+<script src="/exhibits-dashboard/static/app/auth.module.js"></script>
+<script src="/exhibits-dashboard/static/app/nav.module.js"></script>
+<script src="/exhibits-dashboard/static/app/user.module.js"></script>
+<script>navModule.init();</script>
+<script>
+    helperModule.show_form();
+    // userModule.display_users();
+</script>
+</body>
+</html>

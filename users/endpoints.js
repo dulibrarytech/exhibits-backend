@@ -32,6 +32,11 @@ const ENDPOINTS = {
                 params: 'id, all records returned if no id is included, token or api_key'
             }
         },
+        get_user: {
+          description: 'Gets single user record',
+          endpoint: `${APP_PATH}${PREFIX}${VERSION}${ENDPOINT}/:user_id`,
+          params: 'id '
+        },
         create_user: {
             description: 'Creates user record',
             post: {
@@ -44,6 +49,7 @@ const ENDPOINTS = {
             description: 'Updates user record',
             put: {
                 description: 'Updates user record',
+                endpoint: `${APP_PATH}${PREFIX}${VERSION}${ENDPOINT}/:user_id`,
                 params: 'token or api_key',
                 body: 'id, du_id, email, first_name, last_name'
             }

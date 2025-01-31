@@ -47,34 +47,47 @@ exports.get_users = async function () {
 /**
  * Gets one user
  * @param id
- * @param callback
  */
-/*
-exports.get_user = function (id, callback) {
+exports.get_user = async function (id) {
 
-    (async () => {
+    try {
 
         const TASKS = new USER_TASKS(DB, TABLE);
-        const data = await TASKS.get_user(id);
-        let response = {
+        return {
             status: 200,
-            message: 'User retrieved.',
+            message: 'User data retrieved.',
+            data: await TASKS.get_user(id)
+        };
+
+    } catch (error) {
+        LOGGER.module().error('ERROR: [/users/model (get_user)] unable to get user profile ' + error.message);
+        return false;
+    }
+};
+
+/**
+ * Updates user profile
+ * @param id
+ * @param user
+ */
+exports.update_user = async function (id, user) {
+
+    try {
+
+        const TASKS = new USER_TASKS(DB, TABLE);
+        const data = await TASKS.update_user(id, user);
+
+        return {
+            status: 201,
+            message: 'User updated.',
             data: data
         };
 
-        if (data === false) {
-            response = {
-                status: 404,
-                message: 'Unable to retrieve user record.',
-                data: []
-            }
-        }
-
-        callback(response);
-    })();
+    } catch (error) {
+        LOGGER.module().error('ERROR: [/users/model (update_user)] unable to update user ' + error.message);
+        return false;
+    }
 };
-
- */
 
 /**
  * Updates user data

@@ -112,7 +112,7 @@ const navModule = (function () {
         document.querySelector('#preview-link').innerHTML = preview_menu_fragment;
     };
 
-    obj.set_logout_link = function () {
+    obj.set_logout_link = function () {;
         document.querySelector('#logout').addEventListener('click', authModule.logout);
     };
 

@@ -21,15 +21,19 @@
 const CONTROLLER = require('../users/controller');
 const ENDPOINTS = require('../users/endpoints');
 const TOKEN = require('../libs/tokens');
-const FIELDS = require('../users/validate');
 
 module.exports = function (app) {
 
     app.route(ENDPOINTS().users.endpoint)
         .get(TOKEN.verify, CONTROLLER.get_users)
-        .put(TOKEN.verify, CONTROLLER.update_user)
-        .post(TOKEN.verify, FIELDS.validate_user, CONTROLLER.save_user)
+        .post(TOKEN.verify, CONTROLLER.save_user)
         .delete(TOKEN.verify, CONTROLLER.delete_user);
+
+    app.route(ENDPOINTS().users.update_user.put.endpoint)
+        .put(TOKEN.verify, CONTROLLER.update_user);
+
+    app.route(ENDPOINTS().users.get_user.endpoint)
+        .get(TOKEN.verify, CONTROLLER.get_user);
 
     app.route(ENDPOINTS().users.user_status.endpoint)
         .put(TOKEN.verify, CONTROLLER.update_status);

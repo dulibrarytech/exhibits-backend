@@ -19,6 +19,8 @@
 'use strict';
 
 const MODEL = require('../users/model');
+const LOGGER = require("../libs/log4");
+const EXHIBITS_MODEL = require("../exhibits/exhibits_model");
 
 /**
  * Gets Users
@@ -27,20 +29,61 @@ const MODEL = require('../users/model');
  */
 exports.get_users = async function (req, res) {
 
-    if (req.query.id !== undefined && req.query.id.length !== 0) {
-
-        const id = req.query.id;
-
-        /*
-        MODEL.get_user(id, (data) => {
-            res.status(data.status).send(data.data);
-        });
-        */
-        return false;
+    try {
+        const data = await MODEL.get_users();
+        res.status(data.status).send(data.data);
+    } catch (error) {
+        LOGGER.module().error('ERROR: [/auth/controller (get_users)] unable to get users ' + error.message);
     }
+};
 
-    const data = await MODEL.get_users();
-    res.status(data.status).send(data.data);
+/**
+ * Gets single user record
+ * @param req
+ * @param res
+ */
+exports.get_user = async function (req, res) {
+
+    try {
+
+        const user_id = req.params.user_id;
+
+        if (user_id === undefined || user_id.length === 0) {
+            res.status(400).send('Bad request.');
+            return false;
+        }
+
+        const data = await MODEL.get_user(user_id);
+        res.status(data.status).send(data.data);
+
+    } catch (error) {
+        LOGGER.module().error('ERROR: [/auth/controller (get_user)] unable to get user ' + error.message);
+    }
+};
+
+/**
+ * Updates user
+ * @param req
+ * @param res
+ */
+exports.update_user = async function (req, res) {
+
+    try {
+
+        const user_id = req.params.user_id;
+        const data = req.body;
+
+        if (user_id === undefined || data === undefined) {
+            res.status(400).send('Bad request.');
+            return false;
+        }
+
+        const result = await MODEL.update_user(user_id, data);
+        res.status(result.status).send(result);
+
+    } catch (error) {
+        res.status(500).send({message: `Unable to update exhibit record. ${error.message}`});
+    }
 };
 
 /**
@@ -53,22 +96,6 @@ exports.save_user = (req, res) => {
     let user = req.body;
 
     MODEL.save_user(user, (data) => {
-        res.status(data.status).send(data.data);
-    });
-};
-
-/**
- * Updates user
- * @param req
- * @param res
- */
-exports.update_user = (req, res) => {
-
-    let user = req.body;
-    let id = user.id;
-    delete user.id;
-
-    MODEL.update_user(id, user, (data) => {
         res.status(data.status).send(data.data);
     });
 };
@@ -94,8 +121,14 @@ exports.delete_user = (req, res) => {
  */
 exports.update_status = async function (req, res) {
 
-    const id = req.params.id;
-    const is_active = req.params.is_active;
-    const data = await MODEL.update_status(id, is_active);
-    res.status(data.status).send(data.data);
+    try {
+
+        const id = req.params.id;
+        const is_active = req.params.is_active;
+        const data = await MODEL.update_status(id, is_active);
+        res.status(data.status).send(data.data);
+
+    } catch (error) {
+        LOGGER.module().error('ERROR: [/auth/controller (update_status)] unable update status ' + error.message);
+    }
 };

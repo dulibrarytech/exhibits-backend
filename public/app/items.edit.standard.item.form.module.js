@@ -78,16 +78,12 @@ const itemsEditStandardItemFormModule = (function () {
 
     async function display_edit_record () {
 
-        let record = await get_item_record();
+        const record = await get_item_record();
         let thumbnail_fragment = '';
         let thumbnail_url = '';
 
         // item data
-        // rich_text_data['item-title-input'] = helperModule.set_rich_text_editor('item-title-input');
-        // rich_text_data['item-title-input'].setHTMLCode(helperModule.unescape(record.title));
         document.querySelector('#item-title-input').value = helperModule.unescape(record.title);
-        // rich_text_data['item-text-input'] = helperModule.set_rich_text_editor('item-text-input');
-        // rich_text_data['item-text-input'].setHTMLCode(helperModule.unescape(record.text));
         document.querySelector('#item-text-input').value = helperModule.unescape(record.text);
         document.querySelector('#pdf-open-to-page').value = record.pdf_open_to_page;
         document.querySelector('#item-caption-input').value = record.caption;
@@ -296,7 +292,6 @@ const itemsEditStandardItemFormModule = (function () {
 
                 setTimeout(() => {
                     window.location.reload();
-                    // location.replace(`${APP_PATH}/items?exhibit_id=${exhibit_id}`);
                 }, 900);
             }
 
@@ -399,8 +394,6 @@ const itemsEditStandardItemFormModule = (function () {
 
             const exhibit_id = helperModule.get_parameter_by_name('exhibit_id');
             exhibitsModule.set_exhibit_title(exhibit_id);
-            // helperModule.set_rich_text_editor_config();
-            // set_rich_text_editors();
             await display_edit_record();
             document.querySelector('#update-item-btn').addEventListener('click', itemsEditStandardItemFormModule.update_item_record);
 

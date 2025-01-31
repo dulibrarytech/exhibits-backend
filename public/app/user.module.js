@@ -24,40 +24,58 @@ const userModule = (function () {
     const USER_ENDPOINTS = endpointsModule.get_users_endpoints();
     let obj = {};
 
-    /**
-     * Gets all users
-     */
-     async function get_users () {
-
-         try {
-
-             const token = authModule.get_user_token();
-             const response = await httpModule.req({
-                 method: 'GET',
-                 url: USER_ENDPOINTS.users.endpoint,
-                 headers: {
-                     'Content-Type': 'application/json',
-                     'x-access-token': token
-                 }
-             });
-
-             if (response.status === 200) {
-                 return response.data;
-             }
-
-         } catch (error) {
-             document.querySelector('#message').innerHTML = `<div class="alert alert-danger" role="alert"><i class="fa fa-exclamation"></i> ${error.message}</div>`;
-         }
-    }
-
-    /**
-     * displays user profile data
-     */
-    obj.display_users = async function () {
+    async function get_user_records() {
 
         try {
 
-            const users = await get_users();
+            const token = authModule.get_user_token();
+            const response = await httpModule.req({
+                method: 'GET',
+                url: USER_ENDPOINTS.users.endpoint,
+                headers: {
+                    'Content-Type': 'application/json',
+                    'x-access-token': token
+                }
+            });
+
+            if (response.status === 200) {
+                return response.data;
+            }
+
+        } catch (error) {
+            document.querySelector('#message').innerHTML = `<div class="alert alert-danger" role="alert"><i class="fa fa-exclamation"></i> ${error.message}</div>`;
+        }
+    }
+
+    async function get_user_record() {
+
+        try {
+
+            const user_id = helperModule.get_parameter_by_name('user_id');
+            const token = authModule.get_user_token();
+            const response = await httpModule.req({
+                method: 'GET',
+                url: USER_ENDPOINTS.users.get_user.endpoint.replace(':user_id', user_id),
+                headers: {
+                    'Content-Type': 'application/json',
+                    'x-access-token': token
+                }
+            });
+
+            if (response.status === 200) {
+                return response.data;
+            }
+
+        } catch (error) {
+            document.querySelector('#message').innerHTML = `<div class="alert alert-danger" role="alert"><i class="fa fa-exclamation"></i> ${error.message}</div>`;
+        }
+    }
+
+    obj.display_user_records = async function () {
+
+        try {
+
+            const users = await get_user_records();
             let user_data = '';
 
             if (users === false) {
@@ -136,62 +154,26 @@ const userModule = (function () {
         } catch (error) {
             document.querySelector('#message').innerHTML = `<div class="alert alert-danger" role="alert"><i class="fa fa-exclamation"></i> ${error.message}</div>`;
         }
-    }
+    };
 
-    /**
-     * Renders user profile data for edit form
-     * @param data
-     */
-    function render_user_details(data) {
+    obj.display_user_record = async function () {
 
-        let user;
+        try {
 
-        for (let i = 0; i < data.length; i++) {
+            const record = await get_user_record();
+            const user = record.pop();
+            console.log(user);
+            // user data
+            document.querySelector('#first-name-input').value = user.first_name;
+            document.querySelector('#last-name-input').value = user.last_name;
+            document.querySelector('#email-input').value = user.email;
+            document.querySelector('#du-id-input').value = user.du_id;
 
-            user = data[i];
+            return false;
 
-            domModule.val('#id', user.id);
-            domModule.val('#username', user.du_id);
-            domModule.val('#email', user.email);
-            domModule.val('#first_name', user.first_name);
-            domModule.val('#last_name', user.last_name);
-
-            if (user.is_active === 1) {
-                $('#is_active').prop('checked', true);
-            } else {
-                $('#is_active').prop('checked', false);
-            }
+        } catch (error) {
+            document.querySelector('#message').innerHTML = `<div class="alert alert-danger" role="alert"><i class="fa fa-exclamation"></i> ${error.message}</div>`;
         }
-
-        return false;
-    }
-
-    /**
-     * Retrieves user profile data for edit form
-     */
-    obj.getUserDetails = function () {
-
-        (async () => {
-
-            let id = helperModule.getParameterByName('id');
-            let response = await httpModule.req({
-                method: 'GET',
-                url: api + endpoints.users.endpoint + '?id=' + id,
-                headers: {
-                    'Content-Type': 'application/json',
-                    'x-access-token': authModule.getUserToken()
-                }
-            });
-
-            if (response.status === 200) {
-                renderUserDetails(response.data);
-            } else if (response.status === 401) {
-                window.location.replace('/exhbits-dashboard/login');
-            } else {
-                window.location.replace('/exhbits-dashboard/error?e=' + DOMPurify.sanitize(response.status));
-            }
-
-        })();
     };
 
     /**
@@ -209,88 +191,84 @@ const userModule = (function () {
         return false;
     };
 
-    /**
-     * Validate user form fields
-     * @param div_id
-     * @param value
-     * @return {boolean/string}
-     */
     function validate(div_id, value) {
+
         if (value.length === 0) {
-            domModule.html(`#${div_id}_error`, '<span style="color: red"><i class="fa fa-exclamation-circle"></i> Please enter a value</span>')
+            document.querySelector('#' + div_id + '-error').innerHTML = '<span style="color: red"><i class="fa fa-exclamation-circle"></i> Please enter a value</span>';
             return false;
         } else {
-            domModule.html(`#${div_id}_error`, '');
+            document.querySelector('#' + div_id + '-error').innerHTML = '';
             return value;
         }
-    };
+    }
 
-    /**
-     * Retrieves user form data
-     * @returns {object}
-     */
     function get_user_form_data() {
         return {
-            du_id: validate('username', domModule.val('#username', null)),
-            email: validate('email', domModule.val('#email', null)),
-            first_name: validate('first_name', domModule.val('#first_name', null)),
-            last_name: validate('last_name', domModule.val('#last_name', null))
+            first_name: validate('first-name-input', document.querySelector('#first-name-input').value),
+            last_name: validate('last-name-input', document.querySelector('#last-name-input').value),
+            email: validate('email-input', document.querySelector('#email-input').value),
+            du_id: validate('du-id-input', document.querySelector('#du-id-input').value)
         };
     }
 
-    /**
-     * Adds new user
-     */
-    obj.add_user = function (event) {
+    obj.update_user_record = async function (event) {
 
-        event.preventDefault();
+        try {
 
-        (async () => {
+            event.preventDefault();
+            const user_id = helperModule.get_parameter_by_name('user_id');
+            const data = get_user_form_data();
+            const token = authModule.get_user_token();
 
-            let user = get_user_form_data();
-
-            for (let prop in user) {
-                if (user[prop] === false) {
-                    return false;
-                }
+            if (user_id === undefined) {
+                document.querySelector('#message').innerHTML = `<div class="alert alert-danger" role="alert"><i class="fa fa-exclamation"></i> Unable to get user ID</div>`;
+                return false;
             }
 
-            domModule.hide('#user-form');
-            domModule.html('#message', '<div class="alert alert-info">Adding User...</div>');
+            if (token === false) {
+                setTimeout(() => {
+                    document.querySelector('#message').innerHTML = `<div class="alert alert-danger" role="alert"><i class="fa fa-exclamation"></i> Unable to get session token</div>`;
+                    authModule.logout();
+                }, 1000);
 
-            let response = await httpModule.req({
-                method: 'POST',
-                url: api + endpoints.users.endpoint,
+                return false;
+            }
+
+            if (data === undefined) {
+                document.querySelector('#message').innerHTML = `<div class="alert alert-danger" role="alert"><i class="fa fa-exclamation"></i> Unable to get form field values</div>`;
+                return false;
+            } else if (data === false) {
+                return false;
+            }
+
+            document.querySelector('#message').innerHTML = `<div class="alert alert-info" role="alert"><i class="fa fa-info"></i> Updating user record...</div>`;
+
+            const endpoint = USER_ENDPOINTS.users.update_user.put.endpoint.replace(':user_id', user_id);
+            const response = await httpModule.req({
+                method: 'PUT',
+                url: endpoint,
+                data: data,
                 headers: {
                     'Content-Type': 'application/json',
-                    'x-access-token': authModule.getUserToken()
-                },
-                data: JSON.stringify(user),
+                    'x-access-token': token
+                }
             });
 
-            if (response.status === 201) {
-                domModule.html('#message', '<div class="alert alert-success">User added.</div>');
+            if (response !== undefined && response.status === 201) {
+
+                document.querySelector('#message').innerHTML = `<div class="alert alert-success" role="alert"><i class="fa fa-info"></i> User record updated</div>`;
 
                 setTimeout(() => {
-                    window.location.replace('/exhibits-dashboard/users');
-                }, 3000);
-
-            } else if (response.status === 401) {
-                window.location.replace('/exhibits-dashboard/login');
-            } else if (response.status === 400) {
-                console.log(response);
-            } else {
-                window.location.replace('/exhibits-dashboard/error?e=' + DOMPurify.sanitize(response.status));
+                    window.location.reload();
+                }, 900);
             }
+            return false;
 
-        })();
-
-        return false;
+        } catch (error) {
+            document.querySelector('#message').innerHTML = `<div class="alert alert-danger" role="alert"><i class="fa fa-exclamation"></i> ${error.message}</div>`;
+        }
     };
 
-    /**
-     * Updates user data
-     */
     obj.update_user = function (event) {
 
         event.preventDefault();
@@ -340,6 +318,56 @@ const userModule = (function () {
             }
 
         })();
+    };
+
+    /**
+     * Adds new user
+     */
+    obj.add_user = function (event) {
+
+        event.preventDefault();
+
+        (async () => {
+
+            let user = get_user_form_data();
+
+            for (let prop in user) {
+                if (user[prop] === false) {
+                    return false;
+                }
+            }
+
+            domModule.hide('#user-form');
+            domModule.html('#message', '<div class="alert alert-info">Adding User...</div>');
+
+            let response = await httpModule.req({
+                method: 'POST',
+                url: api + endpoints.users.endpoint,
+                headers: {
+                    'Content-Type': 'application/json',
+                    'x-access-token': authModule.getUserToken()
+                },
+                data: JSON.stringify(user),
+            });
+
+            if (response.status === 201) {
+                domModule.html('#message', '<div class="alert alert-success">User added.</div>');
+
+                setTimeout(() => {
+                    window.location.replace('/exhibits-dashboard/users');
+                }, 3000);
+
+            } else if (response.status === 401) {
+                window.location.replace('/exhibits-dashboard/login');
+            } else if (response.status === 400) {
+                console.log(response);
+            } else {
+                window.location.replace('/exhibits-dashboard/error?e=' + DOMPurify.sanitize(response.status));
+            }
+
+        })();
+
+        return false;
     };
 
     /** TODO:
@@ -506,8 +534,41 @@ const userModule = (function () {
         }
     }
 
-    obj.init = function () {};
+    obj.init = function () {
+    };
 
     return obj;
 
 }());
+
+
+/**
+ * Renders user profile data for edit form
+ * @param data
+ */
+/*
+function render_user_details(data) {
+
+    let user;
+
+    for (let i = 0; i < data.length; i++) {
+
+        user = data[i];
+
+        domModule.val('#id', user.id);
+        domModule.val('#username', user.du_id);
+        domModule.val('#email', user.email);
+        domModule.val('#first_name', user.first_name);
+        domModule.val('#last_name', user.last_name);
+
+        if (user.is_active === 1) {
+            $('#is_active').prop('checked', true);
+        } else {
+            $('#is_active').prop('checked', false);
+        }
+    }
+
+    return false;
+}
+
+ */

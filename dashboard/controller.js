@@ -274,7 +274,25 @@ exports.get_dashboard_users = function (req, res) {
     });
 };
 
+exports.get_dashboard_users_add_form = function (req, res) {
+    res.render('dashboard-add-user', {
+        host: CONFIG.host,
+        appname: CONFIG.app_name,
+        appversion: CONFIG.app_version,
+        organization: CONFIG.organization,
+        sso_logout_url: SSO_CONFIG.sso_logout_url
+    });
+};
 
+exports.get_dashboard_users_edit_form = function (req, res) {
+    res.render('dashboard-edit-user', {
+        host: CONFIG.host,
+        appname: CONFIG.app_name,
+        appversion: CONFIG.app_version,
+        organization: CONFIG.organization,
+        sso_logout_url: SSO_CONFIG.sso_logout_url
+    });
+};
 
 // TODO
 exports.get_dashboard_trash = function (req, res) {

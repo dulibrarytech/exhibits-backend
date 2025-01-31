@@ -62,7 +62,14 @@ exports.sso = async function (req, res) {
 };
 
 exports.get_auth_user_data = async function (req, res) {
-    const ID = req.query.id;
-    const data = await MODEL.get_auth_user_data(ID);
-    res.status(data.status).send(data.data);
+
+    try {
+
+        const ID = req.query.id;
+        const data = await MODEL.get_auth_user_data(ID);
+        res.status(data.status).send(data.data);
+
+    } catch (error) {
+        LOGGER.module().error('ERROR: [/auth/controller (get_auth_user_data)] unable to get user auth data ' + error.message);
+    }
 };

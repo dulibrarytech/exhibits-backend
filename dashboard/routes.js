@@ -92,6 +92,12 @@ module.exports = function (app) {
     app.route(APP_PATH + '/users')
     .get(CONTROLLER.get_dashboard_users);
 
+    app.route(APP_PATH + '/users/add')
+    .get(CONTROLLER.get_dashboard_users_add_form);
+
+    app.route(APP_PATH + '/users/edit')
+    .get(CONTROLLER.get_dashboard_users_edit_form);
+
     app.route(APP_PATH + '/session')
     .get(CONTROLLER.get_dashboard_session_out);
 
