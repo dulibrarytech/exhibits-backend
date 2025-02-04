@@ -58,6 +58,7 @@ const ENDPOINTS = {
             description: 'Deletes user',
             delete: {
                 description: 'Deletes user record',
+                endpoint: `${APP_PATH}${PREFIX}${VERSION}${ENDPOINT}/:user_id`,
                 params: 'id, token or api_key'
             }
         },

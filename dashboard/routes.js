@@ -98,6 +98,9 @@ module.exports = function (app) {
     app.route(APP_PATH + '/users/edit')
     .get(CONTROLLER.get_dashboard_users_edit_form);
 
+    app.route(APP_PATH + '/users/delete')
+    .get(CONTROLLER.get_dashboard_users_delete_form);
+
     app.route(APP_PATH + '/session')
     .get(CONTROLLER.get_dashboard_session_out);
 

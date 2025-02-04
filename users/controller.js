@@ -33,7 +33,8 @@ exports.get_users = async function (req, res) {
         const data = await MODEL.get_users();
         res.status(data.status).send(data.data);
     } catch (error) {
-        LOGGER.module().error('ERROR: [/auth/controller (get_users)] unable to get users ' + error.message);
+        LOGGER.module().error('ERROR: [/auth/controller (get_users)] unable to get user records ' + error.message);
+        res.status(500).send({message: `Unable to get user records. ${error.message}`});
     }
 };
 
@@ -57,7 +58,8 @@ exports.get_user = async function (req, res) {
         res.status(data.status).send(data.data);
 
     } catch (error) {
-        LOGGER.module().error('ERROR: [/auth/controller (get_user)] unable to get user ' + error.message);
+        LOGGER.module().error('ERROR: [/user/controller (get_user)] unable to get user ' + error.message);
+        res.status(500).send({message: `Unable to get user record. ${error.message}`});
     }
 };
 
@@ -82,7 +84,8 @@ exports.update_user = async function (req, res) {
         res.status(result.status).send(result);
 
     } catch (error) {
-        res.status(500).send({message: `Unable to update exhibit record. ${error.message}`});
+        LOGGER.module().error('ERROR: [/user/controller (update_user)] unable to update user record ' + error.message);
+        res.status(500).send({message: `Unable to update user record. ${error.message}`});
     }
 };
 
@@ -93,22 +96,22 @@ exports.update_user = async function (req, res) {
  */
 exports.save_user = async function (req, res) {
 
-    const data = req.body;
+    try {
 
-    if (data === undefined) {
-        res.status(400).send('Bad request.');
-        return false;
+        const data = req.body;
+
+        if (data === undefined) {
+            res.status(400).send('Bad request.');
+            return false;
+        }
+
+        const response = await MODEL.save_user(data);
+        res.status(response.status).send(response.data);
+
+    } catch (error) {
+        LOGGER.module().error('ERROR: [/user/controller (save_user)] unable to save user record ' + error.message);
+        res.status(500).send({message: `Unable to save user record. ${error.message}`});
     }
-
-    const response = await MODEL.save_user(data);
-    res.status(response.status).send(response.data);
-
-    /*
-    MODEL.save_user(user, (data) => {
-        res.status(data.status).send(data.data);
-    });
-
-     */
 };
 
 /**
@@ -116,13 +119,24 @@ exports.save_user = async function (req, res) {
  * @param req
  * @param res
  */
-exports.delete_user = (req, res) => {
+exports.delete_user = async function (req, res) {
 
-    const id = req.query.id;
+    try {
 
-    MODEL.delete_user(id, (data) => {
-        res.status(data.status).send(data.data);
-    });
+        const user_id = req.params.user_id;
+
+        if (user_id === undefined) {
+            res.status(400).send('Bad request.');
+            return false;
+        }
+
+        const response = await MODEL.delete_user(user_id);
+        res.sendStatus(response.status);
+
+    } catch (error) {
+        LOGGER.module().error('ERROR: [/user/controller (delete_user)] unable to delete user record ' + error.message);
+        res.status(500).send({message: `Unable to delete user record. ${error.message}`});
+    }
 };
 
 /**

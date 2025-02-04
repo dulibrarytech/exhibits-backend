@@ -83,7 +83,7 @@ const User_tasks = class {
         } catch (error) {
             LOGGER.module().error('ERROR: [/users/tasks (update_user)] unable to update user ' + error.message);
         }
-    };
+    }
 
     /**
      * Saves user data
@@ -107,67 +107,45 @@ const User_tasks = class {
      * Checks if username already exists
      * @param username
      */
-    check_username(username) {
+    async check_username(username) {
 
-        let promise = new Promise((resolve, reject) => {
+        try {
 
-            this.DB(this.TABLE)
+            let is_duplicate = await this.DB(this.TABLE)
             .count('du_id as du_id')
-            .where('du_id', username)
-            .then((data) => {
+            .where('du_id', username);
 
-                if (data[0].du_id === 1) {
-                    resolve({
-                        is_duplicate: true
-                    });
-                } else {
-                    resolve({
-                        is_duplicate: false
-                    });
-                }
+            if (is_duplicate[0].du_id === 1) {
+                is_duplicate = true;
+            } else {
+                is_duplicate = false;
+            }
 
-            })
-            .catch((error) => {
-                LOGGER.module().error('FATAL: [/users/tasks (check_username)] unable to check username ' + error.message);
-                reject(false);
-            });
-        });
+            return is_duplicate;
 
-        return promise.then((result) => {
-            return result;
-        }).catch((error) => {
-            return error;
-        });
-    };
+        } catch (error) {
+            LOGGER.module().error('ERROR: [/users/tasks (check_username)] unable to check username ' + error.message);
+        }
+    }
 
     /**
      * Deletes user data
-     * @param id
+     * @param user_id
      */
-    delete_user(id) {
+    async delete_user(user_id) {
 
-        let promise = new Promise((resolve, reject) => {
+        try {
 
-            this.DB(this.TABLE)
-                .where({
-                    id: id
-                })
-                .del()
-                .then((data) => {
-                    resolve(data);
-                })
-                .catch((error) => {
-                    LOGGER.module().fatal('FATAL: [/users/tasks (delete_user)] unable to delete user record ' + error.message);
-                    reject(false);
-                });
-        });
+            return await this.DB(this.TABLE)
+            .where({
+                id: user_id
+            })
+            .del();
 
-        return promise.then((result) => {
-            return result;
-        }).catch((error) => {
-            return error;
-        });
-    };
+        } catch (error) {
+            LOGGER.module().error('ERROR: [/users/tasks (save_user)] unable to delete user record ' + error.message);
+        }
+    }
 
     /**
      * Updates user status

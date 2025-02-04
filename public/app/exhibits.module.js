@@ -205,7 +205,7 @@ const exhibitsModule = (function () {
 
                     setTimeout(() => {
                         window.location.replace(APP_PATH + '/exhibits');
-                    }, 2000);
+                    }, 900);
 
                 } else {
                     document.querySelector('#exhibit-no-delete').innerHTML = `<i class="fa fa-exclamation"></i> ${response.data.message}`;

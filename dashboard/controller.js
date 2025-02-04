@@ -294,6 +294,16 @@ exports.get_dashboard_users_edit_form = function (req, res) {
     });
 };
 
+exports.get_dashboard_users_delete_form = function (req, res) {
+    res.render('dashboard-delete-user-form', {
+        host: CONFIG.host,
+        appname: CONFIG.app_name,
+        appversion: CONFIG.app_version,
+        organization: CONFIG.organization,
+        sso_logout_url: SSO_CONFIG.sso_logout_url
+    });
+};
+
 // TODO
 exports.get_dashboard_trash = function (req, res) {
     res.render('dashboard-trash', {

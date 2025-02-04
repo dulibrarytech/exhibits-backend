@@ -98,6 +98,16 @@ exports.save_user = async function (user) {
     try {
 
         const TASKS = new USER_TASKS(DB, TABLE);
+        const is_duplicate = await TASKS.check_username(user.du_id);
+
+        if (is_duplicate === true) {
+            LOGGER.module().info('INFO: [/users/model (save_user)] user already exists');
+            return {
+                status: 200,
+                message: 'User already exists.',
+            };
+        }
+
         const data = await TASKS.save_user(user);
 
         return {
@@ -113,35 +123,33 @@ exports.save_user = async function (user) {
 };
 
 /**
- * Deletes user data
- * @param id
- * @param callback
+ * Deletes user
+ * @param user_id
  */
-/*
-exports.delete_user = function (id, callback) {
+exports.delete_user = async function (user_id) {
 
-    (async () => {
+    try {
 
         const TASKS = new USER_TASKS(DB, TABLE);
-        const data = await TASKS.delete_user(id);
+        const data = await TASKS.delete_user(user_id);
 
-        let response = {
-            status: 204,
-            message: 'User record deleted.'
-        };
-
-        if (data === false) {
-            response = {
-                status: 500,
+        if (data !== 1) {
+            return {
+                status: 200,
                 message: 'Unable to delete user record.'
-            }
+            };
         }
 
-        callback(response);
-    })();
-};
+        return {
+            status: 204,
+            message: 'User deleted.'
+        };
 
- */
+    } catch (error) {
+        LOGGER.module().error('ERROR: [/users/model (delete_user)] unable to delete user record' + error.message);
+        return false;
+    }
+};
 
 /**
  * Updates user status

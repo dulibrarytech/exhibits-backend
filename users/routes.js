@@ -27,10 +27,12 @@ module.exports = function (app) {
     app.route(ENDPOINTS().users.endpoint)
         .get(TOKEN.verify, CONTROLLER.get_users)
         .post(TOKEN.verify, CONTROLLER.save_user)
-        .delete(TOKEN.verify, CONTROLLER.delete_user);
 
     app.route(ENDPOINTS().users.update_user.put.endpoint)
         .put(TOKEN.verify, CONTROLLER.update_user);
+
+    app.route(ENDPOINTS().users.delete_user.delete.endpoint)
+        .delete(TOKEN.verify, CONTROLLER.delete_user);
 
     app.route(ENDPOINTS().users.get_user.endpoint)
         .get(TOKEN.verify, CONTROLLER.get_user);

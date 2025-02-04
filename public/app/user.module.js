@@ -71,6 +71,10 @@ const userModule = (function () {
         }
     }
 
+    obj.display_user = async function (user_id) {
+        return await get_user_record(user_id);
+    };
+
     obj.display_user_records = async function () {
 
         try {
@@ -300,6 +304,9 @@ const userModule = (function () {
                 setTimeout(() => {
                     window.location.replace(`${APP_PATH}/users/edit?user_id=${user_id}`);
                 }, 900);
+
+            } else if (response.status === 200) {
+                document.querySelector('#message').innerHTML = `<div class="alert alert-danger" role="alert"><i class="fa fa-exclamation"></i> User already exists</div>`;
             }
 
             return false;
@@ -309,56 +316,38 @@ const userModule = (function () {
         }
     };
 
-    /** TODO:
+    /**
      * Deletes user data
      */
-    obj.delete_user = function () {
+    obj.delete_user = async function () {
 
-        // const endpoints = endpointsModule.endpoints();
-        let id = helperModule.get_parameter_by_name('id');
-        domModule.hide('#user-delete-form');
-        domModule.html('#message', '<div class="alert alert-info">Deleting User...</div>');
+        try {
 
-        let token = authModule.get_user_token();
-        let url = api + endpoints.users.endpoint + '?id=' + id,
-            request = new Request(url, {
+            document.querySelector('#delete-message').innerHTML = 'Deleting user...';
+            const user_id = helperModule.get_parameter_by_name('user_id');
+            const token = authModule.get_user_token();
+            const response = await httpModule.req({
                 method: 'DELETE',
+                url: USER_ENDPOINTS.users.delete_user.delete.endpoint.replace(':user_id', user_id),
                 headers: {
                     'Content-Type': 'application/json',
                     'x-access-token': token
-                },
-                mode: 'cors'
+                }
             });
 
-        const callback = function (response) {
+            if (response !== undefined && response.status === 204) {
 
-            if (response.status === 204) {
-
-                domModule.html('#message', '<div class="alert alert-success">User deleted</div>');
-                setTimeout(function () {
-                    domModule.html('#message', null);
-                    window.location.replace('/exhibits-dashboard/users');
-                }, 3000);
-
-                return false;
-
-            } else if (response.status === 401) {
-
-                response.json().then(function (response) {
-
-                    helperModule.renderError('Error: (HTTP status ' + response.status + '). Your session has expired.  You will be redirected to the login page momentarily.');
-
-                    setTimeout(function () {
-                        window.location.replace('/login');
-                    }, 3000);
-                });
+                setTimeout(() => {
+                    window.location.replace(APP_PATH + '/users');
+                }, 900);
 
             } else {
-                helperModule.renderError('Error: (HTTP status ' + response.status + ').  Unable to delete user.');
+                document.querySelector('#exhibit-no-delete').innerHTML = `<i class="fa fa-exclamation"></i> ${response.data.message}`;
             }
-        };
 
-        httpModule.req(request, callback);
+        } catch (error) {
+            document.querySelector('#message').innerHTML = `<div class="alert alert-danger" role="alert"><i class="fa fa-exclamation"></i> ${error.message}</div>`;
+        }
     };
 
     function bind_activate_user_events() {
