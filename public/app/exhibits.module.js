@@ -398,15 +398,16 @@ const exhibitsModule = (function () {
 
             if (response !== undefined && response.status === 201) {
 
-                // const shared_url = response.data.shared_url;
                 document.querySelector('#shared-url-copy').innerText = response.data.shared_url;
                 setTimeout(async () => {
 
                     document.querySelector('#shared-url').innerHTML = `<div class="d-flex align-items-center">
-                                                                                    <small>Shared URL created.</small>&nbsp;&nbsp; 
+                                                                                    <p>
+                                                                                    Shared URL created.&nbsp;&nbsp; 
                                                                                     <button type="button" class="btn btn-sm btn-primary" onclick="exhibitsModule.copy();">
                                                                                     <i class="fa fa-copy"> Copy</i>
                                                                                     </button>
+                                                                                    </p>
                                                                                 </div>`;
                 }, 900);
             }
@@ -425,6 +426,10 @@ const exhibitsModule = (function () {
                 const shared_url = elem.textContent;
                 await navigator.clipboard.writeText(shared_url);
                 document.querySelector('#copy-message').innerHTML = `<div class="alert alert-info" role="alert"><i class="fa fa-info"></i> URL copied to clipboard!</div>`;
+
+                setTimeout(() => {
+                    document.querySelector('#copy-message').innerHTML = '';
+                }, 5000);
             })();
 
         } catch (error) {
