@@ -87,8 +87,15 @@ const ENDPOINTS = {
           get: {
               description: 'Previews exhibit',
               endpoint: `${APP_PATH}/preview`,
-              params: ''
+              params: 'token'
           }
+        },
+        exhibit_shared: {
+            get: {
+                description: 'Shares exhibit preview',
+                endpoint: `${APP_PATH}/shared`,
+                params: 'token'
+            }
         },
         exhibit_publish: {
             post: {

@@ -68,7 +68,7 @@ const exhibitsModule = (function () {
 
             let uuid = exhibits[i].uuid;
             let is_published = exhibits[i].is_published;
-            let preview_link = `${APP_PATH}/preview?uuid=${uuid}`; // `${APP_PATH}/preview?exhibit_id=${uuid}`;
+            let preview_link = `${APP_PATH}/preview?uuid=${uuid}`;
             let exhibit_items = `<a href="${APP_PATH}/items?exhibit_id=${exhibits[i].uuid}" title="View Exhibit Items"><i class="fa fa-search pr-1"></i></a>&nbsp;`;
             let thumbnail_url = '';
             let thumbnail_fragment = '';
@@ -107,6 +107,13 @@ const exhibitsModule = (function () {
                                     <button type="button" class="btn btn-sm btn-outline-secondary" onclick="exhibitsModule.open_preview('${preview_link}');">
                                         <i class=" menu-icon fa fa-eye"></i>
                                         <small>Preview</small>
+                                    </button>
+                                    </span>
+                                    &nbsp;&nbsp;
+                                    <span id="share-link">
+                                    <button type="button" class="btn btn-sm btn-outline-secondary" data-toggle="modal" data-target=".shared-url-modal" onclick="exhibitsModule.create_shared_preview_url('${uuid}');">
+                                        <i class="fa fa-share-alt"></i>
+                                        <small>Share</small>
                                     </button>
                                     </span>
                                 </div>
@@ -171,11 +178,19 @@ const exhibitsModule = (function () {
 
     obj.open_preview = function (preview_link) {
 
+        scrollTo(0, 0);
+        const token = authModule.get_user_token();
+
         if (link !== undefined) {
             exhibitsModule.close_preview();
         }
 
-        link = window.open(preview_link, '_blank', 'location=yes,scrollbars=yes,status=yes');
+        document.querySelector('#message').innerHTML = `<div class="alert alert-info" role="alert"><i class="fa fa-info-circle"></i> Building Exhibit Preview...</div>`;
+
+        setTimeout(() => {
+            link = window.open(preview_link + '&t=' + token, '_blank', 'location=yes,scrollbars=yes,status=yes');
+            document.querySelector('#message').innerHTML = '';
+        }, 900);
     };
 
     obj.close_preview = function () {
@@ -186,7 +201,7 @@ const exhibitsModule = (function () {
 
         try {
 
-            (async function() {
+            (async function () {
 
                 document.querySelector('#delete-message').innerHTML = 'Deleting exhibit...';
                 const EXHIBITS_ENDPOINTS = endpointsModule.get_exhibits_endpoints();
@@ -349,6 +364,71 @@ const exhibitsModule = (function () {
 
         } catch (error) {
             document.querySelector('#message').innerHTML = `<div class="alert alert-danger" role="alert"><i class="fa fa-exclamation"></i> ${error.message}</div>`;
+        }
+    }
+
+    obj.create_shared_preview_url = function (uuid) {
+
+        (async function () {
+
+            document.querySelector('#shared-url').innerHTML = `<div class="alert alert-info" role="alert"><i class="fa fa-info"></i> Generating Shared URL...</div>`;
+
+            const EXHIBITS_ENDPOINTS = endpointsModule.get_exhibits_endpoints();
+            let token = authModule.get_user_token();
+            let response;
+
+            if (token === false) {
+
+                setTimeout(() => {
+                    document.querySelector('#message').innerHTML = `<div class="alert alert-info" role="alert"><i class="fa fa-info"></i> Unable to get session token</div>`;
+                    authModule.logout();
+                }, 1000);
+
+                return false;
+            }
+
+            response = await httpModule.req({
+                method: 'POST',
+                url: EXHIBITS_ENDPOINTS.exhibits.exhibit_shared.get.endpoint + '?uuid=' + uuid,
+                headers: {
+                    'Content-Type': 'application/json',
+                    'x-access-token': token
+                }
+            });
+
+            if (response !== undefined && response.status === 201) {
+
+                // const shared_url = response.data.shared_url;
+                document.querySelector('#shared-url-copy').innerText = response.data.shared_url;
+                setTimeout(async () => {
+
+                    document.querySelector('#shared-url').innerHTML = `<div class="d-flex align-items-center">
+                                                                                    <small>Shared URL created.</small>&nbsp;&nbsp; 
+                                                                                    <button type="button" class="btn btn-sm btn-primary" onclick="exhibitsModule.copy();">
+                                                                                    <i class="fa fa-copy"> Copy</i>
+                                                                                    </button>
+                                                                                </div>`;
+                }, 900);
+            }
+
+            return false;
+
+        })();
+    };
+
+    obj.copy = function () {
+
+        try {
+
+            (async function () {
+                let elem = document.querySelector('#shared-url-copy');
+                const shared_url = elem.textContent;
+                await navigator.clipboard.writeText(shared_url);
+                document.querySelector('#copy-message').innerHTML = `<div class="alert alert-info" role="alert"><i class="fa fa-info"></i> URL copied to clipboard!</div>`;
+            })();
+
+        } catch (error) {
+            document.querySelector('#message').innerHTML = `<div class="alert alert-info" role="alert"><i class="fa fa-info"></i> Failed to copy shared URL to clipboard. Error: ${error.message}</div>`;
         }
     }
 

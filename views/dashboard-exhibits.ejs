@@ -48,19 +48,27 @@
     </div>
     <div class="clearfix"></div>
     <%- include('partials/footer.ejs'); %>
+    <div class="modal shared-url-modal" tabindex="-1" role="dialog" aria-labelledby="shared-url-modal" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered modal-lg" role="document">
+            <div class="modal-content" style="background-color: #f2f2f2;">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="staticBackdropLabel"><i class="fa fa-info"></i> Generates preview URL to share with staff that does not have access to the system</h5>
+                </div>
+                <div id="copy-message"></div>
+                <div id="shared-url" class="modal-body"></div>
+                <div id="shared-url-copy" style="visibility: hidden"></div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+                </div>
+            </div>
+        </div>
+    </div>
 </div>
 <script src="https://code.jquery.com/jquery-3.7.0.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/popper.js@1.16.1/dist/umd/popper.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@4.6.2/dist/js/bootstrap.min.js"></script>
-<!--
-<script src="https://cdn.jsdelivr.net/npm/popper.js@1.14.4/dist/umd/popper.min.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/bootstrap@4.1.3/dist/js/bootstrap.min.js"></script>
--->
 <script src="https://cdn.jsdelivr.net/npm/jquery-match-height@0.7.2/dist/jquery.matchHeight.min.js"></script>
 <script src="/exhibits-dashboard/static/libs/data_tables/datatables.min.js"></script>
-<!--
-<script src="//cdn.datatables.net/1.13.6/js/jquery.dataTables.min.js"></script>
--->
 <script src="https://unpkg.com/dropzone@5/dist/min/dropzone.min.js"></script>
 <script src="/exhibits-dashboard/static/libs/axios-2.x/dist/axios.min.js"></script>
 <script src="/exhibits-dashboard/static/libs/dompurify/purify.min.js"></script>

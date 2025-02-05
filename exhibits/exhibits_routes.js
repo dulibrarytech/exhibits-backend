@@ -52,7 +52,7 @@ module.exports = function (app) {
     .delete(CONTROLLER.delete_media);
 
     app.route(ENDPOINTS().exhibits.exhibit_preview.get.endpoint)
-    .get(CONTROLLER.build_exhibit_preview);  // TOKEN verify
+    .get(TOKEN.verify, CONTROLLER.build_exhibit_preview);
 
     app.route(ENDPOINTS().exhibits.exhibit_publish.post.endpoint)
     .post(CONTROLLER.publish_exhibit);

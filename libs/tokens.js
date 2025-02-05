@@ -48,6 +48,29 @@ exports.create = function (username) {
 };
 
 /**
+ * Creates token for shared URL
+ * @param uuid
+ */
+exports.create_shared = function (uuid) {
+
+    try {
+
+        let token_data = {
+            sub: uuid,
+            iss: TOKEN_CONFIG.token_issuer
+        };
+
+        return JWT.sign(token_data, TOKEN_CONFIG.token_secret, {
+            algorithm: TOKEN_CONFIG.token_algo,
+            expiresIn: '7d'
+        });
+
+    } catch (error) {
+        LOGGER.module().error('ERROR: [/libs/tokens lib (create_shared)] unable to create token for shared preview URL ' + error.message);
+    }
+};
+
+/**
  * Verifies session token
  * @param req
  * @param res
@@ -100,6 +123,36 @@ exports.verify = function (req, res, next) {
 
         LOGGER.module().error('ERROR: [/libs/tokens lib (verify)] unable to verify api key');
         res.redirect(WEBSERVICES_CONFIG.sso_url + '?app_url=' + WEBSERVICES_CONFIG.sso_response_url);
+    }
+};
+
+/**
+ *
+ * @param req
+ * @param res
+ * @param next
+ */
+exports.verify_shared = function (req, res, next) {
+
+    let token = req.query.t;
+
+    if (token !== undefined && VALIDATOR.isJWT(token)) {
+
+        JWT.verify(token, TOKEN_CONFIG.token_secret, function (error, decoded) {
+
+            if (error) {
+
+                LOGGER.module().error('ERROR: [/libs/tokens lib (verify_shared)] unable to verify shared token ' + error.message);
+                res.status(403).send({
+                    message: 'Preview Token Expired.'
+                });
+
+                return false;
+            }
+
+            req.decoded = decoded;
+            next();
+        });
     }
 };
 

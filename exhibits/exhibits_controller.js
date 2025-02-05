@@ -206,10 +206,10 @@ exports.build_exhibit_preview = async function (req, res) {
         const result = await EXHIBITS_MODEL.build_exhibit_preview(uuid);
 
         if (result.status === true) {
-            console.log(WEBSERVICES_CONFIG.exhibit_preview_url + uuid + '?key=' + WEBSERVICES_CONFIG.exhibit_preview_api_key);
+            // console.log(`${WEBSERVICES_CONFIG.exhibit_preview_url}${uuid}?key=${WEBSERVICES_CONFIG.exhibit_preview_api_key}`);
             setTimeout(() => {
-                res.redirect(WEBSERVICES_CONFIG.exhibit_preview_url + uuid + '?key=' + WEBSERVICES_CONFIG.exhibit_preview_api_key);
-            }, 1000);
+                res.redirect(`${WEBSERVICES_CONFIG.exhibit_preview_url}${uuid}?key=${WEBSERVICES_CONFIG.exhibit_preview_api_key}`);
+            }, 2000);
         }
 
     } catch (error) {
