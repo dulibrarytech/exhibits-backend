@@ -236,31 +236,6 @@ const Exhibit_record_tasks = class {
     }
 
     /**
-     * Sets preview flag
-     * @param uuid
-     */
-    async set_preview(uuid) {
-
-        try {
-
-            await this.DB(this.TABLE.exhibit_records)
-            .where({
-                uuid: uuid
-            })
-            .update({
-                is_preview: 1
-            });
-
-            LOGGER.module().info('INFO: [/exhibits/exhibit_record_tasks (set_preview)] Exhibit preview set.');
-            return true;
-
-        } catch (error) {
-            LOGGER.module().error('ERROR: [/exhibits/exhibit_record_tasks (set_preview)] unable to set exhibit preview ' + error.message);
-            return false;
-        }
-    }
-
-    /**
      * Sets is_published flog to true
      * @param uuid
      */
@@ -307,6 +282,56 @@ const Exhibit_record_tasks = class {
 
         } catch (error) {
             LOGGER.module().error('ERROR: [/exhibits/exhibit_record_tasks (set_to_suppress)] unable to set exhibit is_published. ' + error.message);
+            return false;
+        }
+    }
+
+    /**
+     * Sets preview flag
+     * @param uuid
+     */
+    async set_preview(uuid) {
+
+        try {
+
+            await this.DB(this.TABLE.exhibit_records)
+            .where({
+                uuid: uuid
+            })
+            .update({
+                is_preview: 1
+            });
+
+            LOGGER.module().info('INFO: [/exhibits/exhibit_record_tasks (set_preview)] Exhibit preview set.');
+            return true;
+
+        } catch (error) {
+            LOGGER.module().error('ERROR: [/exhibits/exhibit_record_tasks (set_preview)] unable to set exhibit preview ' + error.message);
+            return false;
+        }
+    }
+
+    /**
+     * Changes preview flag to false
+     * @param uuid
+     */
+    async unset_preview(uuid) {
+
+        try {
+
+            await this.DB(this.TABLE.exhibit_records)
+            .where({
+                uuid: uuid
+            })
+            .update({
+                is_preview: 0
+            });
+
+            LOGGER.module().info('INFO: [/exhibits/exhibit_record_tasks (unset_preview)] Exhibit preview set.');
+            return true;
+
+        } catch (error) {
+            LOGGER.module().error('ERROR: [/exhibits/exhibit_record_tasks (unset_preview)] unable to unset exhibit preview ' + error.message);
             return false;
         }
     }

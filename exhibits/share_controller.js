@@ -51,21 +51,72 @@ exports.share_exhibit_preview = async function (req, res) {
     try {
 
         const uuid = req.query.uuid;
-        const result = await EXHIBITS_MODEL.build_exhibit_preview(uuid);
 
         if (uuid === undefined || uuid.length === 0) {
             res.status(400).send('Bad request.');
             return false;
         }
 
-        if (result.status === true) {
+        const response = await EXHIBITS_MODEL.check_preview(uuid);
 
-            const preview_url =`${WEBSERVICES_CONFIG.exhibit_preview_url}${uuid}?key=${WEBSERVICES_CONFIG.exhibit_preview_api_key}`;
+        if (response === true) {
+
+            const preview_url = `${WEBSERVICES_CONFIG.exhibit_preview_url}${uuid}?key=${WEBSERVICES_CONFIG.exhibit_preview_api_key}`;
 
             res.render('share', {
                 preview_url: preview_url
             });
+
+        } else {
+
+            setTimeout(async () => {
+
+                const result = await EXHIBITS_MODEL.build_exhibit_preview(uuid);
+
+                if (result.status === true) {
+
+                    const preview_url = `${WEBSERVICES_CONFIG.exhibit_preview_url}${uuid}?key=${WEBSERVICES_CONFIG.exhibit_preview_api_key}`;
+
+                    res.render('share', {
+                        preview_url: preview_url
+                    });
+                }
+            }, 2000);
         }
+
+        /*
+        const response = await EXHIBITS_MODEL.check_preview(uuid);
+
+        if (response === true) {
+
+            console.log('Tearing down old preview');
+
+            const result = await EXHIBITS_MODEL.delete_exhibit_preview(uuid);
+
+            if (result.status === false) {
+
+                res.status(200).send({message: `Unable to unset exhibit preview.`});
+                return false;
+            }
+        }
+         */
+
+        /*
+        setTimeout(async () => {
+
+            const result = await EXHIBITS_MODEL.build_exhibit_preview(uuid);
+
+            if (result.status === true) {
+
+                const preview_url = `${WEBSERVICES_CONFIG.exhibit_preview_url}${uuid}?key=${WEBSERVICES_CONFIG.exhibit_preview_api_key}`;
+
+                res.render('share', {
+                    preview_url: preview_url
+                });
+            }
+        }, 2000);
+
+         */
 
     } catch (error) {
         res.status(500).send({message: `Unable to share exhibit preview. ${error.message}`});

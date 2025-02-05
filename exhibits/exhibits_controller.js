@@ -203,14 +203,32 @@ exports.build_exhibit_preview = async function (req, res) {
             return false;
         }
 
-        const result = await EXHIBITS_MODEL.build_exhibit_preview(uuid);
+        const response = await EXHIBITS_MODEL.check_preview(uuid);
 
-        if (result.status === true) {
-            // console.log(`${WEBSERVICES_CONFIG.exhibit_preview_url}${uuid}?key=${WEBSERVICES_CONFIG.exhibit_preview_api_key}`);
-            setTimeout(() => {
-                res.redirect(`${WEBSERVICES_CONFIG.exhibit_preview_url}${uuid}?key=${WEBSERVICES_CONFIG.exhibit_preview_api_key}`);
-            }, 2000);
+        if (response === true) {
+
+            console.log('Tearing down old preview');
+
+            const result = await EXHIBITS_MODEL.delete_exhibit_preview(uuid);
+
+            if (result.status === false) {
+
+                res.status(200).send({message: `Unable to unset exhibit preview.`});
+                return false;
+            }
         }
+
+        setTimeout(async () => {
+
+            console.log('Building new preview');
+            const result = await EXHIBITS_MODEL.build_exhibit_preview(uuid);
+
+            if (result.status === true) {
+                setTimeout(() => {
+                    res.redirect(`${WEBSERVICES_CONFIG.exhibit_preview_url}${uuid}?key=${WEBSERVICES_CONFIG.exhibit_preview_api_key}`);
+                }, 2000);
+            }
+        }, 2000);
 
     } catch (error) {
         res.status(500).send({message: `Unable to build exhibit preview. ${error.message}`});

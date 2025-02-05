@@ -461,7 +461,7 @@ exports.suppress_exhibit = async function (uuid) {
         }
 
         if (errors.length > 0) {
-            LOGGER.module().error('ERROR: [/exhibits/model (publish_exhibit)] Unable to suppress exhibit');
+            LOGGER.module().error('ERROR: [/exhibits/model (suppress_exhibit)] Unable to suppress exhibit');
             return false;
         }
 
@@ -537,8 +537,125 @@ exports.suppress_exhibit = async function (uuid) {
             };
         }
 
-
     } catch (error) {
         LOGGER.module().error('ERROR: [/exhibits/model (suppress_exhibit)] ' + error.message);
+    }
+};
+
+/**
+ * Deletes exhibit preview instance
+ * @param uuid
+ */
+exports.delete_exhibit_preview = async function (uuid) {
+
+    try {
+
+        const EXHIBIT_TASKS = new EXHIBIT_RECORD_TASKS(DB, TABLES);
+        const ITEM_TASKS = new EXHIBIT_ITEM_RECORD_TASKS(DB, TABLES);
+        const HEADING_TASKS = new EXHIBIT_HEADING_RECORD_TASKS(DB, TABLES);
+        const GRID_TASKS = new EXHIBIT_GRID_RECORD_TASKS(DB, TABLES);
+        const TIMELINE_TASKS = new EXHIBIT_TIMELINE_RECORD_TASKS(DB, TABLES);
+        const is_exhibit_preview_unset = await EXHIBIT_TASKS.unset_preview(uuid);
+        let errors = [];
+
+        if (is_exhibit_preview_unset === false) {
+            errors.push(-1);
+        }
+
+        if (errors.length > 0) {
+            LOGGER.module().error('ERROR: [/exhibits/model (delete_exhibit_preview)] Unable to unset exhibit preview');
+            return false;
+        }
+
+        const headings = await HEADING_TASKS.get_heading_records(uuid);
+        const items = await ITEM_TASKS.get_item_records(uuid);
+        const grids = await GRID_TASKS.get_grid_records(uuid);
+        const timelines = await TIMELINE_TASKS.get_timeline_records(uuid);
+
+        let is_exhibit_deleted = await INDEXER_MODEL.delete_record(uuid);
+
+        if (is_exhibit_deleted.status === 204) {
+
+            if (items.length > 0) {
+
+                for (let i=0;i<items.length;i++) {
+
+                    let is_deleted = await INDEXER_MODEL.delete_record(items[i].uuid);
+
+                    if (is_deleted.status !== 204) {
+                        LOGGER.module().error('ERROR: [/exhibits/model (delete_exhibit_preview)] Unable to unset item preview ' + items[i].uuid + ' from index');
+                    }
+                }
+            }
+
+            if (grids.length > 0) {
+
+                for (let g=0;g<grids.length;g++) {
+
+                    await GRID_TASKS.set_to_suppressed_grid_items(grids[g].uuid);
+                    let is_deleted = await INDEXER_MODEL.delete_record(grids[g].uuid);
+
+                    if (is_deleted.status !== 204) {
+                        LOGGER.module().error('ERROR: [/exhibits/model (delete_exhibit_preview)] Unable to unset grid preview ' + grids[g].uuid + ' from index');
+                    }
+                }
+            }
+
+            if (timelines.length > 0) {
+
+                for (let t=0;t<timelines.length;t++) {
+
+                    await TIMELINE_TASKS.set_to_suppressed_timeline_items(timelines[t].uuid);
+                    let is_deleted = await INDEXER_MODEL.delete_record(timelines[t].uuid);
+
+                    if (is_deleted.status !== 204) {
+                        LOGGER.module().error('ERROR: [/exhibits/model (delete_exhibit_preview)] Unable to unset timeline preview' + timelines[t].uuid + ' from index');
+                    }
+                }
+            }
+
+            if (headings.length > 0) {
+
+                for (let h=0;h<headings.length;h++) {
+
+                    let is_deleted = await INDEXER_MODEL.delete_record(headings[h].uuid);
+
+                    if (is_deleted.status !== 204) {
+                        LOGGER.module().error('ERROR: [/exhibits/model (delete_exhibit_preview)] Unable to unset heading preview ' + headings[h].uuid + ' from index');
+                    }
+                }
+            }
+
+            return {
+                status: true,
+                message: 'Exhibit preview unset.'
+            };
+
+        } else {
+
+            return {
+                status: false,
+                message: 'Unable to unset exhibit preview.'
+            };
+        }
+
+    } catch (error) {
+        LOGGER.module().error('ERROR: [/exhibits/model (delete_exhibit_preview)] ' + error.message);
+    }
+};
+
+/**
+ * Checks if there is an existing exhibit preview instance
+ * @param uuid
+ */
+exports.check_preview = async function (uuid) {
+
+    try {
+
+        const record = await INDEXER_MODEL.get_indexed_record(uuid);
+        return record.data.found;
+
+    } catch (error) {
+        LOGGER.module().error('ERROR: [/exhibits/model (check_preview)] ' + error.message);
     }
 };

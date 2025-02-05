@@ -403,10 +403,12 @@ const exhibitsModule = (function () {
 
                     document.querySelector('#shared-url').innerHTML = `<div class="d-flex align-items-center">
                                                                                     <p>
-                                                                                    Shared URL created.&nbsp;&nbsp; 
+                                                                                    - Shared URL created.&nbsp;&nbsp; 
                                                                                     <button type="button" class="btn btn-sm btn-primary" onclick="exhibitsModule.copy();">
                                                                                     <i class="fa fa-copy"> Copy</i>
                                                                                     </button>
+                                                                                    <br>
+                                                                                    - Preview URL expires in 7 days
                                                                                     </p>
                                                                                 </div>`;
                 }, 900);

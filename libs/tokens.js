@@ -62,7 +62,7 @@ exports.create_shared = function (uuid) {
 
         return JWT.sign(token_data, TOKEN_CONFIG.token_secret, {
             algorithm: TOKEN_CONFIG.token_algo,
-            expiresIn: '1m' // 7d
+            expiresIn: '7d'
         });
 
     } catch (error) {
