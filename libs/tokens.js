@@ -62,7 +62,7 @@ exports.create_shared = function (uuid) {
 
         return JWT.sign(token_data, TOKEN_CONFIG.token_secret, {
             algorithm: TOKEN_CONFIG.token_algo,
-            expiresIn: '7d'
+            expiresIn: '1m' // 7d
         });
 
     } catch (error) {
@@ -127,7 +127,7 @@ exports.verify = function (req, res, next) {
 };
 
 /**
- *
+ * Verifies token for shared preview url
  * @param req
  * @param res
  * @param next
@@ -143,8 +143,9 @@ exports.verify_shared = function (req, res, next) {
             if (error) {
 
                 LOGGER.module().error('ERROR: [/libs/tokens lib (verify_shared)] unable to verify shared token ' + error.message);
+
                 res.status(403).send({
-                    message: 'Preview Token Expired.'
+                    message: 'Exhibit preview URL has expired.'
                 });
 
                 return false;
