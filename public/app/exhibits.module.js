@@ -408,7 +408,7 @@ const exhibitsModule = (function () {
                                                                                     <i class="fa fa-copy"> Copy</i>
                                                                                     </button>
                                                                                     <br>
-                                                                                    - Preview URL expires in 7 days
+                                                                                    - Shared URL expires in 7 days.
                                                                                     </p>
                                                                                 </div>`;
                 }, 900);
