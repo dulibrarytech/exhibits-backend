@@ -221,6 +221,7 @@ exports.build_exhibit_preview = async function (req, res) {
         setTimeout(async () => {
 
             console.log('Building new preview');
+
             const result = await EXHIBITS_MODEL.build_exhibit_preview(uuid);
 
             if (result.status === true) {

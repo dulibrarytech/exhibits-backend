@@ -159,10 +159,11 @@ const construct_timeline_index_record = function (record) {
 };
 
 /**
- * Indexes exhibit (publish and preview)
+ * Indexes exhibit
  * @param uuid
+ * @param type (publish/preview)
  */
-exports.index_exhibit = async function (uuid) {
+exports.index_exhibit = async function (uuid, type) {
 
     LOGGER.module().info('INFO: [/indexer/model (index_exhibit)] Indexing exhibit...');
 
@@ -252,8 +253,12 @@ exports.index_exhibit = async function (uuid) {
             let items = await GRID_RECORD_TASK.get_grid_item_records(grid_records[i].is_member_of_exhibit, grid_records[i].uuid);
 
             for (let j=0;j<items.length;j++) {
-                items[j].is_published = 1;
-                await GRID_RECORD_TASK.set_grid_item_to_publish(items[j].uuid);
+
+                if (type === 'publish') {
+                    items[j].is_published = 1;
+                    await GRID_RECORD_TASK.set_grid_item_to_publish(items[j].uuid);
+                }
+
                 grid_items.push(construct_item_index_record(items[j]));
             }
 
@@ -291,8 +296,12 @@ exports.index_exhibit = async function (uuid) {
             let items = await TIMELINE_RECORD_TASK.get_timeline_item_records(timeline_records[i].is_member_of_exhibit, timeline_records[i].uuid);
 
             for (let j=0;j<items.length;j++) {
-                items[j].is_published = 1;
-                await TIMELINE_RECORD_TASK.set_timeline_item_to_publish(items[j].uuid);
+
+                if (type === 'publish') {
+                    items[j].is_published = 1;
+                    await TIMELINE_RECORD_TASK.set_timeline_item_to_publish(items[j].uuid);
+                }
+
                 timeline_items.push(construct_item_index_record(items[j]));
             }
 
