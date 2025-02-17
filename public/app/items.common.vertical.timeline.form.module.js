@@ -20,10 +20,9 @@ const itemsCommonVerticalTimelineFormModule = (function () {
 
     'use strict';
 
-    // const EXHIBITS_ENDPOINTS = endpointsModule.get_exhibits_endpoints();
     let obj = {};
 
-    obj.get_common_timeline_form_fields = function (rich_text_data) {
+    obj.get_common_timeline_form_fields = function () {
 
         try {
 
@@ -31,15 +30,8 @@ const itemsCommonVerticalTimelineFormModule = (function () {
             timeline.styles = {};
 
             // timeline metadata
-            // timeline.title = rich_text_data['timeline-title-input'].getHTMLCode();
             timeline.title = document.querySelector('#timeline-title-input').value;
-            // timeline.text = rich_text_data['timeline-text-input'].getHTMLCode();
             timeline.text = document.querySelector('#timeline-text-input').value;
-
-            if (timeline.title.length === 0) {
-                document.querySelector('#message').innerHTML = `<div class="alert alert-danger" role="alert"><i class="fa fa-exclamation"></i> Please enter a title</div>`;
-                return false;
-            }
 
             // timeline styles
             let timeline_background_color = document.querySelector('#timeline-background-color').value;
