@@ -23,19 +23,7 @@ const itemsAddGridFormModule = (function () {
     const APP_PATH = window.localStorage.getItem('exhibits_app_path');
     const EXHIBITS_ENDPOINTS = endpointsModule.get_exhibits_endpoints();
     let obj = {};
-    let rich_text_data = {};
-
-    /*
-    function set_rich_text_editors () {
-        const ids = ['grid-title-input',
-            'grid-text-input'];
-
-        ids.forEach((id) => {
-            rich_text_data[id] = helperModule.set_rich_text_editor(id);
-        });
-    }
-
-     */
+    // let rich_text_data = {};
 
     obj.create_grid_record = async function () {
 
@@ -51,7 +39,7 @@ const itemsAddGridFormModule = (function () {
 
             document.querySelector('#message').innerHTML = `<div class="alert alert-info" role="alert"><i class="fa fa-info"></i> Creating grid record...</div>`;
 
-            const data = itemsCommonStandardGridFormModule.get_common_grid_form_fields(rich_text_data);
+            const data = itemsCommonStandardGridFormModule.get_common_grid_form_fields();
 
             if (data === false) {
                 return false;
@@ -75,8 +63,6 @@ const itemsAddGridFormModule = (function () {
                 const grid_id = response.data.data;
 
                 setTimeout(() => {
-                    // window.location.reload();
-                    // location.replace(`${APP_PATH}/items?exhibit_id=${exhibit_id}`);
                     location.replace(`${APP_PATH}/items/grid/edit?exhibit_id=${exhibit_id}&item_id=${grid_id}`);
                 }, 900);
             }
@@ -89,8 +75,6 @@ const itemsAddGridFormModule = (function () {
     obj.init = async function () {
         const exhibit_id = helperModule.get_parameter_by_name('exhibit_id');
         exhibitsModule.set_exhibit_title(exhibit_id);
-        // helperModule.set_rich_text_editor_config();
-        // set_rich_text_editors();
         document.querySelector('#save-item-btn').addEventListener('click', itemsAddGridFormModule.create_grid_record);
 
     };
