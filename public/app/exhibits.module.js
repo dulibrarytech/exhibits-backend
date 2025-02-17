@@ -69,7 +69,7 @@ const exhibitsModule = (function () {
             let uuid = exhibits[i].uuid;
             let is_published = exhibits[i].is_published;
             let preview_link = `${APP_PATH}/preview?uuid=${uuid}`;
-            let exhibit_items = `<a href="${APP_PATH}/items?exhibit_id=${exhibits[i].uuid}" title="View Exhibit Items"><i class="fa fa-search pr-1"></i></a>&nbsp;`;
+            let exhibit_items = `<a href="${APP_PATH}/items?exhibit_id=${exhibits[i].uuid}" title="View Exhibit Items"><i class="fa fa-list pr-1"></i></a>&nbsp;`;
             let thumbnail_url = '';
             let thumbnail_fragment = '';
             let status;
