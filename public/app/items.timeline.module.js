@@ -51,19 +51,11 @@ const itemsTimelineModule = (function () {
 
     obj.display_timeline_items = async function (event) {
 
-        /*
-        if ($.fn.dataTable.isDataTable('#timeline-items')) {
-            $('#timeline-items').DataTable().clear().destroy();
-        }
-
-         */
-
         const exhibit_id = helperModule.get_parameter_by_name('exhibit_id');
         const timeline_id = helperModule.get_parameter_by_name('timeline_id');
         await exhibitsModule.set_exhibit_title(exhibit_id);
         const items = await get_timeline_items(exhibit_id, timeline_id);
         let item_data = '';
-        // let item_order = [];
 
         if (items === false) {
             document.querySelector('#item-card').innerHTML = '';
@@ -76,6 +68,12 @@ const itemsTimelineModule = (function () {
             return false;
         }
 
+        /*
+        const ordered = items.sort((a, b) => {
+            return new Date(a.date) - new Date(b.date);
+        });
+        */
+
         for (let i = 0; i < items.length; i++) {
             item_data += await itemsListDisplayModule.display_timeline_items(items[i]);
         }
@@ -83,13 +81,19 @@ const itemsTimelineModule = (function () {
         document.querySelector('#timeline-item-list').innerHTML = item_data;
 
         new DataTable('#timeline-items', {
-            paging: false
+            paging: false,
+            order: [[1, 'asc']],
+            columnDefs: [
+                {
+                    target: 1,
+                    visible: true,
+                    searchable: true
+                },
+            ]
         });
 
-        // await helperModule.reorder_items_after_action(item_order, 'timeline_items');
         bind_publish_timeline_item_events();
         bind_suppress_timeline_item_events();
-        // helperModule.reorder_timeline_items(event, timeline_id, 'timeline_items');
     };
 
     async function publish_timeline_item(uuid) {

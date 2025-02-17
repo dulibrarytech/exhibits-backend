@@ -113,7 +113,7 @@ const helperModule = (function () {
                 'link',
                 'form',
                 'input',
-                'button',
+                // 'button',
                 'video',
                 'source',
                 'math',

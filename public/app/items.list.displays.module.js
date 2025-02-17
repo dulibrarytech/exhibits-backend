@@ -416,7 +416,6 @@ const itemsListDisplayModule = (function () {
             let item_data = '';
             let thumbnail;
             let media = '';
-            // let url;
             let item_type;
             let img = '';
             let item_date = new Date(item.date);
@@ -509,11 +508,12 @@ const itemsListDisplayModule = (function () {
             item_data += `<td class="item-metadata">
                     <p><button class="btn btn-default">${item_type} <small>timeline item</small></button></p>
                     <p><strong>${title}</strong></p>
-                    <p><small><em>${date}</em></small></p>
+                    <!--<p><small><em>${date}</em></small></p>-->
                     ${img}
                     <small><em>${media}</em></small>
                     </td>`;
 
+            item_data += `<td style="width: 5%;text-align: center"><small>${date}</small></td>`;
             item_data += `<td style="width: 5%;text-align: center"><small>${item_obj.status}</small></td>`;
             item_data += `<td style="width: 10%">
                                 <div class="card-text text-sm-center">
