@@ -112,7 +112,7 @@ const itemsEditGridItemFormModule = (function () {
             if (record.is_repo_item === 0 && record.is_kaltura_item === 0) {
 
                 if (record.mime_type.indexOf('image') !== -1) {
-                    thumbnail_url = EXHIBITS_ENDPOINTS.exhibits.exhibit_media.get.endpoint.replace(':exhibit_id', record.is_member_of_exhibit).replace(':media', record.thumbnail);
+                    thumbnail_url = EXHIBITS_ENDPOINTS.exhibits.exhibit_media.get.endpoint.replace(':exhibit_id', record.is_member_of_exhibit).replace(':media', record.media);
                     thumbnail_fragment = `<p><img src="${thumbnail_url}" height="200" ></p>`;
                 } else if (record.mime_type.indexOf('video') !== -1) {
                     thumbnail_url = '/exhibits-dashboard/static/images/video-tn.png';
@@ -177,7 +177,7 @@ const itemsEditGridItemFormModule = (function () {
             document.querySelector('#item-media-prev').value = record.media;
 
         }
-        console.log(record.thumbnail);
+
         if (record.thumbnail.length > 0) {
 
             thumbnail_url = EXHIBITS_ENDPOINTS.exhibits.exhibit_media.get.endpoint.replace(':exhibit_id', record.is_member_of_exhibit).replace(':media', record.thumbnail);
