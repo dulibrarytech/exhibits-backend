@@ -80,7 +80,7 @@ const itemsTimelineModule = (function () {
             columnDefs: [
                 {
                     target: 1,
-                    visible: true,
+                    visible: false,
                     searchable: true
                 },
             ]

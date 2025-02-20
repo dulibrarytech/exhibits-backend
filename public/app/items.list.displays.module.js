@@ -422,7 +422,8 @@ const itemsListDisplayModule = (function () {
             let year = new Intl.DateTimeFormat('en', { year: 'numeric' }).format(item_date);
             let month = new Intl.DateTimeFormat('en', { month: 'numeric' }).format(item_date);
             let day = new Intl.DateTimeFormat('en', { day: '2-digit' }).format(item_date);
-            let date = `${month}/${day}/${year}`;
+            let sort_date = `${year}-${month}-${day}`;
+            let display_date = `${year}`
 
             if (item.mime_type.indexOf('image') !== -1 || item.item_type === 'image') {
                 item_type = '<i class="fa fa-image"></i>';
@@ -508,11 +509,12 @@ const itemsListDisplayModule = (function () {
             item_data += `<td class="item-metadata">
                     <p><button class="btn btn-default">${item_type} <small>timeline item</small></button></p>
                     <p><strong>${title}</strong></p>
+                    <p><strong>${display_date}</strong></p>
                     ${img}
                     <small><em>${media}</em></small>
                     </td>`;
 
-            item_data += `<td style="width: 5%;text-align: center"><small>${date}</small></td>`;
+            item_data += `<td style="width: 5%;text-align: center"><small>${sort_date}</small></td>`;
             item_data += `<td style="width: 5%;text-align: center"><small>${item_obj.status}</small></td>`;
             item_data += `<td style="width: 10%">
                                 <div class="card-text text-sm-center">
