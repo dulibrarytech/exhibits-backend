@@ -1,0 +1,57 @@
+<!doctype html>
+<!--[if lt IE 7]>      <html class="no-js lt-ie9 lt-ie8 lt-ie7" lang="en"> <![endif]-->
+<!--[if IE 7]>         <html class="no-js lt-ie9 lt-ie8" lang="en"> <![endif]-->
+<!--[if IE 8]>         <html class="no-js lt-ie9" lang="en"> <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js" lang="en"> <!--<![endif]-->
+<head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <title>DU Exhibit Preview</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@4.6.2/dist/css/bootstrap.min.css">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/font-awesome@4.7.0/css/font-awesome.min.css">
+    <style>
+        html
+        {
+            overflow: auto;
+        }
+
+        html, body, iframe {
+            margin: 0px;
+            padding: 0px;
+            height: 100%;
+            border: none;
+        }
+
+        iframe {
+            display: block;
+            width: 100%;
+            border: none;
+            overflow-y: auto;
+            overflow-x: hidden;
+        }
+    </style>
+</head>
+<body>
+<div>
+    <nav class="navbar navbar-expand-lg navbar-light bg-light">
+        <!--<a class="navbar-brand" href="#">Exhibit Preview</a>-->
+        <a onclick="refresh_exhibit_preview();" id="refresh-btn" class="btn btn-primary" type="button"> <i class="menu-icon fa fa-refresh"></i> Refresh Preview</a>
+        </div>
+    </nav>
+</div>
+<iframe id="i-frame"
+        title="DU Exhibit Preview"
+        src="<%=preview_url%>"
+        allowfullscreen
+        width="100%"
+        height="90%">
+</iframe>
+<script>
+    function refresh_exhibit_preview() {
+        document.querySelector('#refresh-btn').innerHTML = '<i class="menu-icon fa fa-refresh"></i> Refreshing Preview...'
+        location.reload();
+        return false;
+    }
+</script>
+</body>
+</html>

@@ -225,10 +225,22 @@ exports.build_exhibit_preview = async function (req, res) {
             const result = await EXHIBITS_MODEL.build_exhibit_preview(uuid);
 
             if (result.status === true) {
+
+                const preview_url = `${WEBSERVICES_CONFIG.exhibit_preview_url}${uuid}?key=${WEBSERVICES_CONFIG.exhibit_preview_api_key}`;
+
+                setTimeout(() => {
+                    res.render('preview', {
+                        preview_url: preview_url
+                    });
+                }, 2000);
+            }
+            /*
+            if (result.status === true) {
                 setTimeout(() => {
                     res.redirect(`${WEBSERVICES_CONFIG.exhibit_preview_url}${uuid}?key=${WEBSERVICES_CONFIG.exhibit_preview_api_key}`);
                 }, 2000);
             }
+             */
         }, 2000);
 
     } catch (error) {
