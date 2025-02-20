@@ -68,12 +68,6 @@ const itemsTimelineModule = (function () {
             return false;
         }
 
-        /*
-        const ordered = items.sort((a, b) => {
-            return new Date(a.date) - new Date(b.date);
-        });
-        */
-
         for (let i = 0; i < items.length; i++) {
             item_data += await itemsListDisplayModule.display_timeline_items(items[i]);
         }

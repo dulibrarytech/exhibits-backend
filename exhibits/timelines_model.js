@@ -293,7 +293,6 @@ exports.update_timeline_item_record = async function (is_member_of_exhibit, is_m
         data.is_member_of_exhibit = is_member_of_exhibit;
         data.is_member_of_timeline = is_member_of_timeline;
         data.uuid = item_id;
-        data.styles = JSON.stringify(data.styles);
         let is_valid = VALIDATE_TASK.validate(data);
 
         if (is_valid !== true) {

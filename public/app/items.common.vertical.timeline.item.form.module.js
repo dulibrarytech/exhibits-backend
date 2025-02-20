@@ -32,29 +32,12 @@ const itemsCommonVerticalTimelineItemFormModule = (function () {
             item.styles = {};
 
             // item metadata
-            // item.title = rich_text_data['item-title-input'].getHTMLCode();
             item.title = document.querySelector('#item-title-input').value;
-            // item.description = rich_text_data['item-description-input'].getHTMLCode();
             item.description = document.querySelector('#item-description-input').value;
-            // item.text = rich_text_data['item-text-input'].getHTMLCode();
             item.text = document.querySelector('#item-text-input').value;
             item.caption = document.querySelector('#item-caption-input').value;
             item.date = document.querySelector('input[type="date"]').value;
             item.is_embedded = document.querySelector('#embed-item').checked;
-
-            /*
-            if (item.title === '<div></div>') {
-                item.title = '';
-            }
-
-            if (item.description === '<div></div>') {
-                item.description = '';
-            }
-
-            if (item.text === '<div></div>') {
-                item.text = '';
-            }
-            */
 
             if (item.is_embedded === true) {
                 item.is_embedded = 1;
@@ -118,10 +101,6 @@ const itemsCommonVerticalTimelineItemFormModule = (function () {
             if (media.length === 0 && item.text.length !== 0) {
                 item.item_type = 'text';
             }
-
-            // item layout and width - standard item only
-            // item.layout = helperModule.get_checked_radio_button(document.getElementsByName('layout'));
-            // item.media_width = helperModule.get_checked_radio_button(document.getElementsByName('media_width'));
 
             // item styles
             let item_background_color = document.querySelector('#item-background-color').value;

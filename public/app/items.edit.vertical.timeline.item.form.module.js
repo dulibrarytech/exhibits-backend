@@ -23,20 +23,6 @@ const itemsEditTimelineItemFormModule = (function () {
     const APP_PATH = window.localStorage.getItem('exhibits_app_path');
     const EXHIBITS_ENDPOINTS = endpointsModule.get_exhibits_endpoints();
     let obj = {};
-    let rich_text_data = {};
-
-    /*
-    function set_rich_text_editors() {
-        const ids = ['item-title-input',
-            'item-description-input',
-            'item-text-input'];
-
-        ids.forEach((id) => {
-            rich_text_data[id] = helperModule.set_rich_text_editor(id);
-        });
-    }
-
-     */
 
     async function get_timeline_item_record () {
 
@@ -86,18 +72,9 @@ const itemsEditTimelineItemFormModule = (function () {
         let thumbnail_url = '';
 
         // item data
-        // rich_text_data['item-title-input'] = helperModule.set_rich_text_editor('item-title-input');
-        // rich_text_data['item-title-input'].setHTMLCode(helperModule.unescape(record.title));
         document.querySelector('#item-title-input').value = helperModule.unescape(record.title);
-
-        // rich_text_data['item-description-input'] = helperModule.set_rich_text_editor('item-description-input');
-        // rich_text_data['item-description-input'].setHTMLCode(helperModule.unescape(record.description));
         document.querySelector('#item-description-input').value = helperModule.unescape(record.description);
-
-        // rich_text_data['item-text-input'] = helperModule.set_rich_text_editor('item-text-input');
-        // rich_text_data['item-text-input'].setHTMLCode(helperModule.unescape(record.text));
         document.querySelector('#item-text-input').value = helperModule.unescape(record.text);
-
         document.querySelector('#item-caption-input').value = record.caption;
         document.querySelector('#pdf-open-to-page').value = record.pdf_open_to_page;
 
@@ -190,28 +167,9 @@ const itemsEditTimelineItemFormModule = (function () {
             document.querySelector('#item-thumbnail-image-prev').value = record.thumbnail;
             document.querySelector('#item-thumbnail-trash').style.display = 'inline';
         }
-
-        /*
-        let layouts = document.getElementsByName('layout');
-
-        for (let j = 0; j < layouts.length; j++) {
-            if (layouts[j].value === record.layout) {
-                document.querySelector('#' + layouts[j].id).checked = true;
-            }
-        }
-
-        let media_width = document.getElementsByName('media_width');
-
-        for (let j = 0; j < media_width.length; j++) {
-            if (parseInt(media_width[j].value) === parseInt(record.media_width)) {
-                document.querySelector('#' + media_width[j].id).checked = true;
-            }
-        }
-
-         */
-
+        console.log(record.styles);
         let styles = JSON.parse(record.styles);
-
+        console.log(styles);
         if (Object.keys(styles).length !== 0) {
 
             if (styles.backgroundColor !== undefined) {
@@ -260,7 +218,7 @@ const itemsEditTimelineItemFormModule = (function () {
 
             document.querySelector('#message').innerHTML = `<div class="alert alert-info" role="alert"><i class="fa fa-info"></i> Updating timeline item record...</div>`;
 
-            let data = itemsCommonVerticalTimelineItemFormModule.get_common_timeline_item_form_fields(rich_text_data);
+            let data = itemsCommonVerticalTimelineItemFormModule.get_common_timeline_item_form_fields();
 
             if (data === undefined) {
                 document.querySelector('#message').innerHTML = `<div class="alert alert-danger" role="alert"><i class="fa fa-exclamation"></i> Unable to get form field values</div>`;
@@ -290,7 +248,6 @@ const itemsEditTimelineItemFormModule = (function () {
 
                 setTimeout(() => {
                     window.location.reload();
-                    // window.location.replace(APP_PATH + '/items/timeline/items?exhibit_id=' + exhibit_id + '&timeline_id=' + timeline_id);
                 }, 900);
             }
 
@@ -397,9 +354,7 @@ const itemsEditTimelineItemFormModule = (function () {
 
             const exhibit_id = helperModule.get_parameter_by_name('exhibit_id');
             exhibitsModule.set_exhibit_title(exhibit_id);
-            navModule.set_timeline_item_nav_menu_links(); // TODO: must go back to timeline item list
-            // helperModule.set_rich_text_editor_config();
-            // set_rich_text_editors();
+            navModule.set_timeline_item_nav_menu_links();
             await display_edit_record();
             document.querySelector('#save-item-btn').addEventListener('click', itemsEditTimelineItemFormModule.update_timeline_item_record);
 

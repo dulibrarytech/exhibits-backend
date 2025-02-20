@@ -23,19 +23,6 @@ const itemsAddVerticalTimelineItemFormModule = (function () {
     const APP_PATH = window.localStorage.getItem('exhibits_app_path');
     const EXHIBITS_ENDPOINTS = endpointsModule.get_exhibits_endpoints();
     let obj = {};
-    let rich_text_data = {};
-
-    /*
-    function set_rich_text_editors() {
-        const ids = ['item-title-input',
-            'item-description-input',
-            'item-text-input'];
-
-        ids.forEach((id) => {
-            rich_text_data[id] = helperModule.set_rich_text_editor(id);
-        });
-    }
-     */
 
     obj.create_grid_item_record = async function () {
 
@@ -52,7 +39,7 @@ const itemsAddVerticalTimelineItemFormModule = (function () {
 
             document.querySelector('#message').innerHTML = `<div class="alert alert-info" role="alert"><i class="fa fa-info"></i> Creating timeline item record...</div>`;
 
-            let data = itemsCommonVerticalTimelineItemFormModule.get_common_timeline_item_form_fields(rich_text_data);
+            let data = itemsCommonVerticalTimelineItemFormModule.get_common_timeline_item_form_fields();
 
             if (data === undefined) {
                 document.querySelector('#message').innerHTML = `<div class="alert alert-danger" role="alert"><i class="fa fa-exclamation"></i> Unable to get form field values</div>`;
@@ -78,12 +65,10 @@ const itemsAddVerticalTimelineItemFormModule = (function () {
 
                 let message = 'Timeline item record created';
                 document.querySelector('#message').innerHTML = `<div class="alert alert-success" role="alert"><i class="fa fa-info"></i> ${message}</div>`;
-                console.log(response.data.data);
+
                 const timeline_item_id = response.data.data;
 
                 setTimeout(() => {
-                    // window.location.reload();
-                    // window.location.replace(APP_PATH + '/items/timeline/items?exhibit_id=' + exhibit_id + '&timeline_id=' + timeline_id);
                     window.location.replace(`${APP_PATH}/items/vertical-timeline/item/edit?exhibit_id=${exhibit_id}&timeline_id=${timeline_id}&item_id=${timeline_item_id}`);
                 }, 900);
             }
@@ -99,9 +84,6 @@ const itemsAddVerticalTimelineItemFormModule = (function () {
 
             const exhibit_id = helperModule.get_parameter_by_name('exhibit_id');
             exhibitsModule.set_exhibit_title(exhibit_id);
-
-            // helperModule.set_rich_text_editor_config();
-            // set_rich_text_editors();
 
             uploadsModule.upload_item_media();
             uploadsModule.upload_item_thumbnail();
