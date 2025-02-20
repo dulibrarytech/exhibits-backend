@@ -32,15 +32,9 @@ const itemsCommonGridItemFormModule = (function () {
             item.styles = {};
 
             // item metadata
-            // item.title = rich_text_data['item-title-input'].getHTMLCode();
             item.title = document.querySelector('#item-title-input').value;
-
-            // item.text = rich_text_data['item-text-input'].getHTMLCode();
             item.text = document.querySelector('#item-text-input').value;
-
-            // item.description = rich_text_data['item-description-input'].getHTMLCode();
             item.description = document.querySelector('#item-description-input').value;
-
             item.caption = document.querySelector('#item-caption-input').value;
             item.is_embedded = document.querySelector('#embed-item').checked;
 
@@ -220,15 +214,15 @@ const itemsCommonGridItemFormModule = (function () {
 
         try {
 
+            uploadsModule.upload_item_media();
+            uploadsModule.upload_item_thumbnail();
+
             const token = authModule.get_user_token();
             await authModule.check_auth(token);
 
             navModule.init();
             navModule.back_to_grid_items();
             navModule.set_preview_link();
-
-            uploadsModule.upload_item_media();
-            uploadsModule.upload_item_thumbnail();
 
             document.querySelector('#item-media-trash').style.display = 'none';
             document.querySelector('#item-thumbnail-trash').style.display = 'none';

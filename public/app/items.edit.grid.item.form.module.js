@@ -177,7 +177,7 @@ const itemsEditGridItemFormModule = (function () {
             document.querySelector('#item-media-prev').value = record.media;
 
         }
-
+        console.log(record.thumbnail);
         if (record.thumbnail.length > 0) {
 
             thumbnail_url = EXHIBITS_ENDPOINTS.exhibits.exhibit_media.get.endpoint.replace(':exhibit_id', record.is_member_of_exhibit).replace(':media', record.thumbnail);
