@@ -87,6 +87,7 @@ const Exhibit_record_tasks = class {
                 'is_published',
                 'is_preview',
                 'is_featured',
+                'is_student_curated',
                 'created'
             )
             .where({
@@ -123,6 +124,7 @@ const Exhibit_record_tasks = class {
                 'is_published',
                 'is_preview',
                 'is_featured',
+                'is_student_curated',
                 'is_locked',
                 'created'
             )

@@ -39,12 +39,7 @@ const exhibitsCommonFormModule = (function () {
             exhibit.description = helperModule.clean_html(document.querySelector('#exhibit-description-input').value);
             exhibit.about_the_curators = helperModule.clean_html(document.querySelector('#exhibit-about-the-curators-input').value);
             exhibit.is_featured = document.querySelector('#is-featured').checked;
-
-            // exhibit.title = rich_text_data['exhibit-title-input'].getHTMLCode();
-            // exhibit.subtitle = rich_text_data['exhibit-sub-title-input'].getHTMLCode();
-            // exhibit.alert_text = rich_text_data['exhibit-alert-text-input'].getHTMLCode();
-            // exhibit.description = rich_text_data['exhibit-description-input'].getHTMLCode();
-            // exhibit.about_the_curators = rich_text_data['exhibit-about-the-curators-input'].getHTMLCode();
+            exhibit.is_student_curated = document.querySelector('#is-student-curated').checked;
 
             if (exhibit.is_featured === true) {
                 exhibit.is_featured = 1;
@@ -52,8 +47,14 @@ const exhibitsCommonFormModule = (function () {
                 exhibit.is_featured = 0;
             }
 
+            if (exhibit.is_student_curated === true) {
+                exhibit.is_student_curated = 1;
+            } else if (exhibit.is_student_curated === false) {
+                exhibit.is_student_curated = 0;
+            }
+
             // validate
-            if (exhibit.title.length === 0) { //  || exhibit.title === '<div></div>'
+            if (exhibit.title.length === 0) {
                 document.querySelector('#exhibit-title-error').innerHTML = '<div class="alert alert-danger" role="alert"><i class="fa fa-exclamation"></i> Please enter an exhibit title</div>';
                 return false;
             }

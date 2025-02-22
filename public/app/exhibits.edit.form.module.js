@@ -95,21 +95,16 @@ const exhibitsEditFormModule = (function () {
             document.querySelector('#exhibit-description-input').value = helperModule.unescape(record.description);
             document.querySelector('#exhibit-about-the-curators-input').value = helperModule.unescape(record.about_the_curators);
 
-            // rich_text_data['exhibit-title-input'] = helperModule.set_rich_text_editor('exhibit-title-input');
-            // rich_text_data['exhibit-title-input'].setHTMLCode(helperModule.unescape(record.title));
-            // rich_text_data['exhibit-sub-title-input'] = helperModule.set_rich_text_editor('exhibit-sub-title-input');
-            // rich_text_data['exhibit-sub-title-input'].setHTMLCode(helperModule.unescape(record.subtitle));
-            // rich_text_data['exhibit-alert-text-input'] = helperModule.set_rich_text_editor('exhibit-alert-text-input');
-            // rich_text_data['exhibit-alert-text-input'].setHTMLCode(helperModule.unescape(record.alert_text));
-            // rich_text_data['exhibit-description-input'] = helperModule.set_rich_text_editor('exhibit-description-input');
-            // rich_text_data['exhibit-description-input'].setHTMLCode(helperModule.unescape(record.description));
-            // rich_text_data['exhibit-about-the-curators-input'] = helperModule.set_rich_text_editor('exhibit-about-the-curators-input');
-            // rich_text_data['exhibit-about-the-curators-input'].setHTMLCode(helperModule.unescape(record.about_the_curators));
-
             if (record.is_featured === 1) {
                 document.querySelector('#is-featured').checked = true;
             } else {
                 document.querySelector('#is-featured').checked = false;
+            }
+
+            if (record.is_student_curated === 1) {
+                document.querySelector('#is-student-curated').checked = true;
+            } else {
+                document.querySelector('#is-student-curated').checked = false;
             }
 
             // exhibit media
