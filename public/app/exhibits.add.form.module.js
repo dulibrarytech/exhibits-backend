@@ -23,29 +23,12 @@ const exhibitsAddFormModule = (function () {
     const APP_PATH = window.localStorage.getItem('exhibits_app_path');
     const EXHIBITS_ENDPOINTS = endpointsModule.get_exhibits_endpoints();
     let obj = {};
-    let rich_text_data = {};
-
-    /*
-    function set_rich_text_editors () {
-        const ids = [//'exhibit-title-input',
-            // 'exhibit-sub-title-input',
-            // 'exhibit-alert-text-input',
-            // 'exhibit-description-input',
-            // 'exhibit-about-the-curators-input'
-            ];
-
-            ids.forEach((id) => {
-            rich_text_data[id] = helperModule.set_rich_text_editor(id);
-        });
-    }
-
-     */
 
     function get_exhibit_data () {
 
         try {
 
-            let exhibit = exhibitsCommonFormModule.get_common_form_fields(rich_text_data);
+            let exhibit = exhibitsCommonFormModule.get_common_form_fields();
 
             if (exhibit === false) {
                 return exhibit;
@@ -113,8 +96,6 @@ const exhibitsAddFormModule = (function () {
 
         try {
 
-            // helperModule.set_rich_text_editor_config();
-            // set_rich_text_editors();
             document.querySelector('#save-exhibit-btn').addEventListener('click', exhibitsAddFormModule.create_exhibit_record);
             document.querySelector('#hero-trash').addEventListener('click', exhibitsCommonFormModule.delete_hero_image);
             document.querySelector('#thumbnail-trash').addEventListener('click', exhibitsCommonFormModule.delete_thumbnail_image);

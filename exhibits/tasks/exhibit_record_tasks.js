@@ -84,6 +84,7 @@ const Exhibit_record_tasks = class {
                 'page_layout',
                 'exhibit_template',
                 'styles',
+                'order',
                 'is_published',
                 'is_preview',
                 'is_featured',
@@ -121,6 +122,7 @@ const Exhibit_record_tasks = class {
                 'page_layout',
                 'exhibit_template',
                 'styles',
+                'order',
                 'is_published',
                 'is_preview',
                 'is_featured',
@@ -334,6 +336,32 @@ const Exhibit_record_tasks = class {
 
         } catch (error) {
             LOGGER.module().error('ERROR: [/exhibits/exhibit_record_tasks (unset_preview)] unable to unset exhibit preview ' + error.message);
+            return false;
+        }
+    }
+
+    /**
+     * Reorder exhibits
+     * @param uuid
+     * @param order
+     */
+    async reorder_exhibits(uuid, order) {
+
+        try {
+
+            await this.DB(this.TABLE.exhibit_records)
+            .where({
+                uuid: uuid
+            })
+            .update({
+                order: order
+            });
+
+            LOGGER.module().info('INFO: [/exhibits/item_record_tasks (reorder_items)] Item reordered.');
+            return true;
+
+        } catch (error) {
+            LOGGER.module().error('ERROR: [/exhibits/exhibit_record_tasks (reorder_exhibits)] unable to reorder exhibits ' + error.message);
             return false;
         }
     }

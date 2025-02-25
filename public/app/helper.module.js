@@ -113,7 +113,6 @@ const helperModule = (function () {
                 'link',
                 'form',
                 'input',
-                // 'button',
                 'video',
                 'source',
                 'math',
@@ -324,28 +323,6 @@ const helperModule = (function () {
         document.querySelector('#item-media-trash').style.display = 'none';
     };
 
-    /* TODO: test
-    obj.show_list = function () {
-
-        try {
-
-            const form_cards = Array.from(document.getElementsByClassName('card'));
-
-            setTimeout(() => {
-
-                form_cards.forEach(card => {
-                    card.style.visibility = 'visible';
-                });
-
-            }, 600*2);
-
-        } catch (error) {
-            document.querySelector('#message').innerHTML = `<div class="alert alert-danger" role="alert"><i class="fa fa-exclamation"></i> ${error.message}</div>`;
-        }
-    };
-
-     */
-
     obj.show_form = function () {
 
         try {
@@ -359,6 +336,55 @@ const helperModule = (function () {
                 });
 
             }, 500*2);
+
+        } catch (error) {
+            document.querySelector('#message').innerHTML = `<div class="alert alert-danger" role="alert"><i class="fa fa-exclamation"></i> ${error.message}</div>`;
+        }
+    };
+
+    /**
+     * Reorders exhibit list via drag and drop
+     * @param e
+     * @param reordered_exhibits
+     */
+    obj.reorder_exhibits = async function (e, reordered_exhibits) {
+
+        try {
+
+            const EXHIBITS_ENDPOINTS = endpointsModule.get_exhibits_endpoints();
+            const exhibit_id = helperModule.get_parameter_by_name('exhibit_id');
+            let reorder_obj = {};
+            let updated_order = [];
+
+            for (let i = 0, ien = reordered_exhibits.length; i < ien; i++) {
+
+                let node = reordered_exhibits[i].node;
+                let id = node.getAttribute('id');
+                let id_arr = id.split('_');
+
+                reorder_obj.type = id_arr.pop();
+                reorder_obj.uuid = id_arr.pop();
+                reorder_obj.order = reordered_exhibits[i].node.childNodes[0].childNodes[1].innerText;
+                updated_order.push(reorder_obj);
+                reorder_obj = {};
+            }
+
+            const token = authModule.get_user_token();
+            const response = await httpModule.req({
+                method: 'POST',
+                url: EXHIBITS_ENDPOINTS.exhibits.reorder_exhibits_records.post.endpoint.replace(':exhibit_id', exhibit_id),
+                data: updated_order,
+                headers: {
+                    'Content-Type': 'application/json',
+                    'x-access-token': token
+                }
+            });
+
+            if (response !== undefined && response.status === 201) {
+                console.log(response);
+            } else {
+                document.querySelector('#message').innerHTML = `<div class="alert alert-danger" role="alert"><i class="fa fa-exclamation"></i> An HTTP request error occurred while reordering items.</div>`;
+            }
 
         } catch (error) {
             document.querySelector('#message').innerHTML = `<div class="alert alert-danger" role="alert"><i class="fa fa-exclamation"></i> ${error.message}</div>`;
@@ -420,268 +446,6 @@ const helperModule = (function () {
         }
     };
 
-    /** Deprecate - replaced
-     * TODO: DOMException: Element.after: The new child is an ancestor of the parent
-     * Reorders item list via drag and drop
-     * @param event
-     * @param id (exhibit or grid)
-     * @param type
-     */
-    /*
-    obj.reorder_items_ = function (event, id, type) {
-
-        try {
-
-            const EXHIBITS_ENDPOINTS = endpointsModule.get_exhibits_endpoints();
-            const tr_elem = Array.from(document.getElementsByTagName('tr'));
-            let row;
-            let children;
-            let updated_order = [];
-            let reorder_obj = {};
-
-            tr_elem.forEach(tr => {
-
-                tr.addEventListener('dragstart', (event) => {
-                    row = event.target;
-                });
-
-                tr.addEventListener('dragover', (event) => {
-
-                    try {
-
-                        let e = event;
-                        e.preventDefault();
-
-                        children = Array.from(e.target.parentNode.parentNode.children);
-
-                        if (children.indexOf(e.target.parentNode) > children.indexOf(row)) {
-                            // move down
-                            e.target.parentNode.after(row);
-                        } else {
-                            // move up
-                            e.target.parentNode.before(row);
-                        }
-
-                    } catch (error) {
-                        console.log(error);
-                        // document.querySelector('#message').innerHTML = `<div class="alert alert-danger" role="alert"><i class="fa fa-exclamation"></i> ${error.message}</div>`;
-                    }
-                });
-
-                tr.addEventListener('drop', async (event) => {
-
-                    try {
-
-                        if (event.target.className === 'dropzone') {
-                            row.parentNode.removeChild(row);
-                            event.target.appendChild(row);
-                        }
-
-                        for (let i=0;i<children.length;i++ ) {
-
-                            let child = children[i];
-                            let id = child.getAttribute('id');
-                            let id_arr = id.split('_');
-                            reorder_obj.type = id_arr.pop();
-                            reorder_obj.uuid = id_arr.pop();
-                            reorder_obj.order = i + 1;
-                            updated_order.push(reorder_obj);
-                            reorder_obj = {};
-                        }
-
-                        const token = authModule.get_user_token();
-                        const response = await httpModule.req({
-                            method: 'POST',
-                            url: EXHIBITS_ENDPOINTS.exhibits.reorder_records.post.endpoint.replace(':exhibit_id', id),
-                            data: updated_order,
-                            headers: {
-                                'Content-Type': 'application/json',
-                                'x-access-token': token
-                            }
-                        });
-
-                        if (response !== undefined && response.status === 201) {
-
-                            if (type === 'items') {
-                                await itemsModule.display_items(event);
-                            }
-
-                            if (type === 'grid_items') {
-                                await itemsGridModule.display_grid_items(event);
-                            }
-
-                        } else {
-                            document.querySelector('#message').innerHTML = `<div class="alert alert-danger" role="alert"><i class="fa fa-exclamation"></i> An error occurred while reordering items.</div>`;
-                        }
-
-                    } catch (error) {
-                        console.log(error);
-                    }
-                });
-            });
-
-        } catch (error) {
-            document.querySelector('#message').innerHTML = `<div class="alert alert-danger" role="alert"><i class="fa fa-exclamation"></i> ${error.message}</div>`;
-        }
-    };
-    */
-
-    /** Deprecate - merged/replaced
-     * Reorders grid item list via drag and drop
-     * @param event
-     * @param id
-     */
-    /*
-    obj.reorder_grid_items = function (event, id) {
-
-        try {
-
-            const exhibit_id = helperModule.get_parameter_by_name('exhibit_id');
-            const grid_id = helperModule.get_parameter_by_name('grid_id');
-            const EXHIBITS_ENDPOINTS = endpointsModule.get_exhibits_endpoints();
-            const tr_elem = Array.from(document.getElementsByTagName('tr'));
-            let row;
-            let children;
-            let updated_order = [];
-            let reorder_obj = {};
-
-            tr_elem.forEach(tr => {
-
-                tr.addEventListener('dragstart', (event) => {
-                    row = event.target;
-                });
-
-                tr.addEventListener('dragover', (event) => {
-
-                    try {
-
-                        let e = event;
-                        e.preventDefault();
-
-                        children = Array.from(e.target.parentNode.parentNode.children);
-
-                        if (children.indexOf(e.target.parentNode) > children.indexOf(row)) {
-                            // move down
-                            e.target.parentNode.after(row);
-                        } else {
-                            // move up
-                            e.target.parentNode.before(row);
-                        }
-
-                    } catch (error) {
-                        console.log(error);
-                        // document.querySelector('#message').innerHTML = `<div class="alert alert-danger" role="alert"><i class="fa fa-exclamation"></i> ${error.message}</div>`;
-                    }
-                });
-
-                tr.addEventListener('drop', async (event) => {
-
-                    try {
-
-                        if (event.target.className === 'dropzone') {
-                            row.parentNode.removeChild(row);
-                            event.target.appendChild(row);
-                        }
-
-                        for (let i=0;i<children.length;i++ ) {
-                            let child = children[i];
-                            let id = child.getAttribute('id');
-                            let id_arr = id.split('_');
-                            reorder_obj.type = id_arr.pop();
-                            reorder_obj.uuid = id_arr.pop();
-                            reorder_obj.grid_id = grid_id;
-                            reorder_obj.order = i + 1;
-                            updated_order.push(reorder_obj);
-                            reorder_obj = {};
-                        }
-
-                        const token = authModule.get_user_token();
-                        const response = await httpModule.req({
-                            method: 'POST',
-                            url: EXHIBITS_ENDPOINTS.exhibits.reorder_records.post.endpoint.replace(':exhibit_id', exhibit_id),
-                            data: updated_order,
-                            headers: {
-                                'Content-Type': 'application/json',
-                                'x-access-token': token
-                            }
-                        });
-
-                        if (response !== undefined && response.status === 201) {
-                            await itemsGridModule.display_grid_items(event);
-                        } else {
-                            document.querySelector('#message').innerHTML = `<div class="alert alert-danger" role="alert"><i class="fa fa-exclamation"></i> An error occurred while reordering items.</div>`;
-                        }
-
-                    } catch (error) {
-                        console.log(error);
-                    }
-                });
-            });
-
-        } catch (error) {
-            console.log(error);
-            // document.querySelector('#message').innerHTML = `<div class="alert alert-danger" role="alert"><i class="fa fa-exclamation"></i> ${error.message}</div>`;
-        }
-    };
-
-     */
-
-    // Deprecated - no longer required
-    obj.reorder_items_after_action = async function (item_order, type) {
-
-        try {
-
-            const exhibit_id = helperModule.get_parameter_by_name('exhibit_id');
-            const EXHIBITS_ENDPOINTS = endpointsModule.get_exhibits_endpoints();
-            const tr_elem = Array.from(document.getElementsByTagName('tr'));
-            let reorder_obj = {};
-            let updated_order = [];
-            let order_check = [];
-            // remove header tr
-            tr_elem.shift();
-
-            for (let i = 0; i < tr_elem.length; i++) {
-
-                let id_arr = tr_elem[i].id.split('_');
-                reorder_obj.type = id_arr.pop();
-                reorder_obj.uuid = id_arr.pop();
-                reorder_obj.order = i + 1;
-
-                if (type === 'grid_items') {
-                    reorder_obj.grid_id = helperModule.get_parameter_by_name('grid_id');
-                }
-
-                updated_order.push(reorder_obj);
-                order_check.push(reorder_obj.order);
-                reorder_obj = {};
-            }
-
-            if (JSON.stringify(item_order) === JSON.stringify(order_check)) {
-                return false;
-            }
-
-            const token = authModule.get_user_token();
-            const response = await httpModule.req({
-                method: 'POST',
-                url: EXHIBITS_ENDPOINTS.exhibits.reorder_records.post.endpoint.replace(':exhibit_id', exhibit_id),
-                data: updated_order,
-                headers: {
-                    'Content-Type': 'application/json',
-                    'x-access-token': token
-                }
-            });
-
-            if (response !== undefined && response.status === 201) {
-                location.reload();
-            } else {
-                document.querySelector('#message').innerHTML = `<div class="alert alert-danger" role="alert"><i class="fa fa-exclamation"></i> An error occurred while reordering items.</div>`;
-            }
-
-        } catch (error) {
-            document.querySelector('#message').innerHTML = `<div class="alert alert-danger" role="alert"><i class="fa fa-exclamation"></i> ${error.message}</div>`;
-        }
-    };
-
     obj.check_bandwidth = function (cb) {
 
         const URL = 'https://upload.wikimedia.org/wikipedia/commons/9/90/ODJBcard.JPG';
@@ -724,6 +488,87 @@ const helperModule = (function () {
 
 }());
 
+// TODO Deprecated - no longer required
+/*
+obj.reorder_items_after_action = async function (item_order, type) {
+
+    try {
+
+        const exhibit_id = helperModule.get_parameter_by_name('exhibit_id');
+        const EXHIBITS_ENDPOINTS = endpointsModule.get_exhibits_endpoints();
+        const tr_elem = Array.from(document.getElementsByTagName('tr'));
+        let reorder_obj = {};
+        let updated_order = [];
+        let order_check = [];
+        // remove header tr
+        tr_elem.shift();
+
+        for (let i = 0; i < tr_elem.length; i++) {
+
+            let id_arr = tr_elem[i].id.split('_');
+            reorder_obj.type = id_arr.pop();
+            reorder_obj.uuid = id_arr.pop();
+            reorder_obj.order = i + 1;
+
+            if (type === 'grid_items') {
+                reorder_obj.grid_id = helperModule.get_parameter_by_name('grid_id');
+            }
+
+            updated_order.push(reorder_obj);
+            order_check.push(reorder_obj.order);
+            reorder_obj = {};
+        }
+
+        if (JSON.stringify(item_order) === JSON.stringify(order_check)) {
+            return false;
+        }
+
+        const token = authModule.get_user_token();
+        const response = await httpModule.req({
+            method: 'POST',
+            url: EXHIBITS_ENDPOINTS.exhibits.reorder_records.post.endpoint.replace(':exhibit_id', exhibit_id),
+            data: updated_order,
+            headers: {
+                'Content-Type': 'application/json',
+                'x-access-token': token
+            }
+        });
+
+        if (response !== undefined && response.status === 201) {
+            location.reload();
+        } else {
+            document.querySelector('#message').innerHTML = `<div class="alert alert-danger" role="alert"><i class="fa fa-exclamation"></i> An error occurred while reordering items.</div>`;
+        }
+
+    } catch (error) {
+        document.querySelector('#message').innerHTML = `<div class="alert alert-danger" role="alert"><i class="fa fa-exclamation"></i> ${error.message}</div>`;
+    }
+};
+
+ */
+
+/* TODO: test
+    obj.show_list = function () {
+
+        try {
+
+            const form_cards = Array.from(document.getElementsByClassName('card'));
+
+            setTimeout(() => {
+
+                form_cards.forEach(card => {
+                    card.style.visibility = 'visible';
+                });
+
+            }, 600*2);
+
+        } catch (error) {
+            document.querySelector('#message').innerHTML = `<div class="alert alert-danger" role="alert"><i class="fa fa-exclamation"></i> ${error.message}</div>`;
+        }
+    };
+
+     */
+
 /**
  * Set text editor config
  */
@@ -739,46 +584,3 @@ obj.set_rich_text_editor_config = function () {
 };
 
  */
-
-/**
- * Sets rte to designated fields
- * @param id
- */
-/*
-obj.set_rich_text_editor = function (id) {
-    return helperModule.render_rich_text_editor('#' + id);
-};
-
- */
-
-/**
- * Creates rich text editor object
- * @param id
- */
-/*
-obj.render_rich_text_editor = function(id) {
-    const editor_config = {}
-    editor_config.toolbar = 'custom';
-    editor_config.toolbar_custom = '{code} | {bold, italic, underline, superscript, subscript} | {justifyleft, justifycenter, justifyright, indent} | {preview}';
-    editor_config.enterKeyTag = '';
-    return new RichTextEditor(id, editor_config);
-};
-
- */
-
-/**
- * Sets rich text editor on defined input fields
- * @param ids
- */
-/*
-obj.set_rich_text_editors = function(ids) {
-
-    let rich_text_data = {};
-
-    for (let i=0;i<ids.length;i++) {
-        rich_text_data[i] = helperModule.set_rich_text_editor(i);
-    }
-
-    return rich_text_data;
-};
-*/

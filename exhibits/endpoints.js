@@ -239,7 +239,7 @@ const ENDPOINTS = {
                 params: 'token or api_key'
             }
         },
-        timeline_records: { /// TODO
+        timeline_records: {
             get: {
                 description: 'Retrieves all timelines records by exhibit id and timeline id',
                 endpoint: `${APP_PATH}${PREFIX}${VERSION}${ENDPOINT}/:exhibit_id/timelines/:timeline_id`,
@@ -311,13 +311,21 @@ const ENDPOINTS = {
                 description: 'Deletes timeline item media',
                 endpoint: `${APP_PATH}${PREFIX}${VERSION}${ENDPOINT}/:exhibit_id/timelines/:timelines_id/items/:item_id/media/:media`
             }
-        }, // TODO
+        },
         repo_items: {
             description: 'Retrieves repository item metadata',
             endpoint: `${APP_PATH}/repo/:uuid`,
             params: 'token or api_key, gets repository item metadata'
         },
-        reorder_records: {
+        reorder_exhibits_records: {
+            post: {
+                description: 'reorders exhibits',
+                endpoint: `${APP_PATH}${PREFIX}${VERSION}${ENDPOINT}/reorder`,
+                params: 'token or api_key',
+                body: 'item array of objects'
+            }
+        },
+        reorder_records: { // items
             post: {
                 description: 'reorders items in exhibit',
                 endpoint: `${APP_PATH}${PREFIX}${VERSION}${ENDPOINT}/:exhibit_id/items/reorder`,

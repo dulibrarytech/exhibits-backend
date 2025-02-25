@@ -138,6 +138,25 @@ const Helper = class {
     }
 
     /**
+     * order exhibits
+     * @param uuid
+     * @param db
+     * @param tables
+     */
+    async order_exhibits(uuid, db, tables) {
+
+        try {
+
+            let exhibit_order = await db(tables.exhibit_records).select('order'); // .where('uuid', uuid);
+            return this.order_items(exhibit_order);
+
+        } catch (error) {
+            LOGGER.module().error('ERROR: [/libs/helper (order_exhibits)] unable to order exhibits ' + error.message);
+            return false;
+        }
+    }
+
+    /**
      * Orders exhibit items
      * @param uuid
      * @param db

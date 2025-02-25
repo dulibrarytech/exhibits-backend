@@ -54,6 +54,9 @@ module.exports = function (app) {
     app.route(ENDPOINTS().exhibits.exhibit_preview.get.endpoint)
     .get(TOKEN.verify, CONTROLLER.build_exhibit_preview);
 
+    app.route(ENDPOINTS().exhibits.reorder_exhibits_records.post.endpoint)
+    .post(CONTROLLER.reorder_exhibit_items);
+
     app.route(ENDPOINTS().exhibits.exhibit_publish.post.endpoint)
     .post(CONTROLLER.publish_exhibit);
 

@@ -23,6 +23,10 @@ const STORAGE_CONFIG = require('../config/storage_config')();
 const EXHIBITS_MODEL = require('../exhibits/exhibits_model');
 const TRASH_MODEL = require('../exhibits/trash_model');
 const FS = require('fs');
+const ITEMS_MODEL = require("./items_model");
+const GRIDS_MODEL = require("./grid_model");
+const HEADINGS_MODEL = require("./headings_model");
+const TIMELINES_MODEL = require("./timelines_model");
 
 exports.create_exhibit_record = async function (req, res) {
 
@@ -314,6 +318,37 @@ exports.verify = function (req, res) {
     res.status(200).send({
         message: 'Token Verified'
     });
+};
+
+exports.reorder_exhibit_items = async function (req, res) {
+
+    try {
+
+        const updated_order = req.body;
+
+        if (updated_order.length === 0) {
+            res.status(400).send('Bad request.');
+            return false;
+        }
+
+        let is_reordered = await EXHIBITS_MODEL.reorder_exhibits(updated_order);
+
+        if (is_reordered === false) {
+
+            res.status(204).send({
+                message: 'Unable to reorder exhibit items.'
+            });
+
+        } else {
+
+            res.status(201).send({
+                message: 'Exhibits reordered.'
+            });
+        }
+
+    } catch (error) {
+        res.status(500).send({message: `Unable to reorder exhibits. ${error.message}`});
+    }
 };
 
 exports.get_trashed_records = async function (req, res) {

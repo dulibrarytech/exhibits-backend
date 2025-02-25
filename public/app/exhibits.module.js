@@ -69,7 +69,8 @@ const exhibitsModule = (function () {
             let uuid = exhibits[i].uuid;
             let is_published = exhibits[i].is_published;
             let preview_link = `${APP_PATH}/preview?uuid=${uuid}`;
-            let exhibit_items = `<a href="${APP_PATH}/items?exhibit_id=${exhibits[i].uuid}" title="View Exhibit Items"><i class="fa fa-list pr-1"></i></a>&nbsp;`;
+            let exhibit_items = `<a href="${APP_PATH}/items?exhibit_id=${uuid}" title="View Exhibit Items"><i class="fa fa-list pr-1"></i></a>&nbsp;`;
+            let order = `${exhibits[i].order}`;
             let thumbnail_url = '';
             let thumbnail_fragment = '';
             let status;
@@ -78,13 +79,15 @@ const exhibitsModule = (function () {
             let trash = '';
 
             if (is_published === 1) {
-                status = `<a href="#" id="${exhibits[i].uuid}" class="suppress-exhibit"><span id="suppress" title="published"><i class="fa fa-cloud" style="color: green"></i><br>Published</span></a>`;
+                order = `<td style="width: 4%" class="item-order"><span style="padding-left: 4px;">${order}</span></td>`;
+                status = `<a href="#" id="${uuid}" class="suppress-exhibit"><span id="suppress" title="published"><i class="fa fa-cloud" style="color: green"></i><br>Published</span></a>`;
                 exhibit_edit = `<i title="Can only edit if unpublished" style="color: #d3d3d3" class="fa fa-edit pr-1"></i>`;
                 trash = `<i title="Can only delete if unpublished" style="color: #d3d3d3" class="fa fa-trash pr-1"></i>`;
             } else if (is_published === 0) {
-                status = `<a href="#" id="${exhibits[i].uuid}" class="publish-exhibit"><span id="publish" title="suppressed"><i class="fa fa-cloud-upload" style="color: darkred"></i><br>Unpublished</span></a>`;
+                order = `<td style="width: 4%;" class="grabbable item-order"><i class="fa fa-reorder"></i><span style="padding-left: 4px;">${order}</span></td>`;
+                status = `<a href="#" id="${uuid}" class="publish-exhibit"><span id="publish" title="suppressed"><i class="fa fa-cloud-upload" style="color: darkred"></i><br>Unpublished</span></a>`;
                 exhibit_edit = `<a href="${APP_PATH}/exhibits/exhibit/edit?exhibit_id=${uuid}" title="Edit"><i class="fa fa-edit pr-1"></i> </a>`;
-                trash = `<a href="${APP_PATH}/exhibits/exhibit/delete?exhibit_id=${exhibits[i].uuid}" title="Delete exhibit"><i class="fa fa-trash pr-1"></i></a>`;
+                trash = `<a href="${APP_PATH}/exhibits/exhibit/delete?exhibit_id=${uuid}" title="Delete exhibit"><i class="fa fa-trash pr-1"></i></a>`;
             }
 
             if (exhibits[i].thumbnail.length > 0) {
@@ -97,7 +100,8 @@ const exhibitsModule = (function () {
 
             title = helperModule.strip_html(helperModule.unescape(exhibits[i].title));
 
-            exhibit_data += '<tr>';
+            exhibit_data += `<tr id="${uuid}">`;
+            exhibit_data += order; // '<td style="width: 3%">order</td>';
             exhibit_data += `<td style="width: 35%">
                     <p><strong>${title}</strong></p>
                     ${thumbnail_fragment}
@@ -135,15 +139,28 @@ const exhibitsModule = (function () {
         }
 
         document.querySelector('#exhibits-data').innerHTML = exhibit_data;
+
+        const EXHIBIT_LIST = new DataTable('#exhibits', {
+            paging: true,
+            rowReorder: true
+        });
+
+        EXHIBIT_LIST.on('row-reordered', async (e, reordered_exhibits) => {
+            await helperModule.reorder_exhibits(e, reordered_exhibits);
+        });
+
         bind_publish_exhibit_events();
         bind_suppress_exhibit_events();
 
+        /*
         new DataTable('#exhibits', {
             order: [
                 [0, 'asc'],
                 [1, 'asc']
             ]
         });
+
+         */
     };
 
     obj.get_exhibit_title = async function (uuid) {

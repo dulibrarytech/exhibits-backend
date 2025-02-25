@@ -73,6 +73,7 @@ exports.create_exhibit_record = async function (data) {
         }
 
         data.styles = JSON.stringify(data.styles);
+        data.order = await HELPER_TASK.order_exhibits(data.uuid, DB, TABLES);
 
         const CREATE_RECORD_TASK = new EXHIBIT_RECORD_TASKS(DB, TABLES);
         let result = await CREATE_RECORD_TASK.create_exhibit_record(data);
@@ -646,5 +647,37 @@ exports.check_preview = async function (uuid) {
 
     } catch (error) {
         LOGGER.module().error('ERROR: [/exhibits/model (check_preview)] ' + error.message);
+    }
+};
+
+/**
+ * Updates exhibit order
+ * @param data
+ */
+exports.reorder_exhibits = async function (data) {
+
+    try {
+
+        const TASKS = new EXHIBIT_RECORD_TASKS(DB, TABLES);
+        let is_updated = '';
+        let errors = [];
+
+        for (let i=0;i<data.length;i++) {
+
+            is_updated = await TASKS.reorder_exhibits(data[i].type, data[i].order);
+
+            if (is_updated === false) {
+                errors.push(-1);
+            }
+        }
+
+        if (errors.length === 0) {
+            return true;
+        } else {
+            return false;
+        }
+
+    } catch (error) {
+        LOGGER.module().error('ERROR: [/exhibits/model (reorder_exhibits)] ' + error.message);
     }
 };

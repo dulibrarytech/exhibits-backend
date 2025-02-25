@@ -26,7 +26,7 @@ const exhibitsCommonFormModule = (function () {
     /**
      * Gets common form fields
      */
-    obj.get_common_form_fields = function (rich_text_data) {
+    obj.get_common_form_fields = function () {
 
         try {
 

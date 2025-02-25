@@ -53,12 +53,6 @@ const itemsModule = (function () {
 
         try {
 
-            /*
-            if ($.fn.dataTable.isDataTable('#items')) {
-                $('#items').DataTable().clear().destroy();
-            }
-             */
-
             const exhibit_id = helperModule.get_parameter_by_name('exhibit_id');
             const items = await get_items(exhibit_id);
             let item_data = '';
@@ -112,10 +106,8 @@ const itemsModule = (function () {
                 await helperModule.reorder_items(e, reordered_items);
             });
 
-            // await helperModule.reorder_items_after_action(item_order, 'items');
             bind_publish_item_events();
             bind_suppress_item_events();
-            // helperModule.reorder_items(event, exhibit_id, 'items');
 
         } catch (error) {
             document.querySelector('#message').innerHTML = `<div class="alert alert-danger" role="alert"><i class="fa fa-exclamation"></i> ${error.message}</div>`;
