@@ -55,6 +55,8 @@ const construct_exhibit_index_record = function (record) {
         page_layout: record.page_layout,
         exhibit_template: record.exhibit_template,
         styles: record.styles,
+        order: record.order,
+        is_student_curated: record.is_student_curated,
         is_published: record.is_published,
         is_featured: record.is_featured,
         is_preview: record.is_preview,
