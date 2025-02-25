@@ -7,7 +7,7 @@
 #
 # Host: 127.0.0.1 (MySQL 5.5.5-10.5.22-MariaDB)
 # Database: exhibits
-# Generation Time: 2025-02-22 18:24:18 +0000
+# Generation Time: 2025-02-25 04:43:15 +0000
 # ************************************************************
 
 
@@ -40,6 +40,7 @@ CREATE TABLE `tbl_exhibits` (
   `page_layout` varchar(50) NOT NULL DEFAULT 'top_nav' COMMENT '{''top_nav'', ''side_nav} (default: top_nav)',
   `exhibit_template` varchar(50) NOT NULL DEFAULT 'vertical_scroll' COMMENT '{''vertical_scroll'' | ''item_centered''} (R)',
   `styles` longtext DEFAULT NULL COMMENT 'JSON String',
+  `order` int(11) DEFAULT 0,
   `is_student_curated` tinyint(1) NOT NULL DEFAULT 0,
   `is_published` tinyint(1) NOT NULL DEFAULT 0 COMMENT '{0,1} (default: 0)',
   `is_featured` tinyint(1) DEFAULT 0 COMMENT '{0,1) if 1, will appear in featured exhibits display (default: 0)',
