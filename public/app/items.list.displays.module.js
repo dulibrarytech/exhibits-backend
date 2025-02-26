@@ -30,16 +30,16 @@ const itemsListDisplayModule = (function () {
 
         if (item.is_published === 1) {
             published_obj.draggable = `<tr id="${item.uuid}_${item.type}">`;
-            published_obj.item_order = `<td class="item-order"><span style="padding-left: 4px;">${item.order}</span></td>`;
-            published_obj.status = `<a href="#" id="${item.uuid}" class="suppress-item"><span id="suppress" title="published"><i class="fa fa-cloud" style="color: green"></i><br>Published</span></a>`;
-            published_obj.edit = `<i title="Can only edit if unpublished" style="color: #d3d3d3" class="fa fa-edit pr-1"></i>`;
-            published_obj.delete_item = `<i title="Can only delete if unpublished" style="color: #d3d3d3" class="fa fa-trash pr-1"></i>`;
+            published_obj.item_order = `<td class="item-order"><span style="padding-left: 4px;" aria-label="item-order">${item.order}</span></td>`;
+            published_obj.status = `<a href="#" id="${item.uuid}" class="suppress-item" aria-label="item-status"><span id="suppress" title="published"><i class="fa fa-cloud" style="color: green"></i><br>Published</span></a>`;
+            published_obj.edit = `<i title="Can only edit if unpublished" style="color: #d3d3d3" class="fa fa-edit pr-1" aria-label="edit-item"></i>`;
+            published_obj.delete_item = `<i title="Can only delete if unpublished" style="color: #d3d3d3" class="fa fa-trash pr-1" aria-label="delete-item"></i>`;
         } else if (item.is_published === 0) {
             published_obj.draggable = `<tr id="${item.uuid}_${item.type}">`;
-            published_obj.item_order = `<td class="grabbable item-order"><i class="fa fa-reorder"></i><span style="padding-left: 4px;">${item.order}</span></td>`;
-            published_obj.status = `<a href="#" id="${item.uuid}" class="publish-item"><span id="publish" title="suppressed"><i class="fa fa-cloud-upload" style="color: darkred"></i><br>Unpublished</span></a>`;
-            published_obj.edit = `<a href="${APP_PATH}/items/${item_route}/edit?exhibit_id=${item.is_member_of_exhibit}&item_id=${item.uuid}" title="Edit"><i class="fa fa-edit pr-1"></i></a>`;
-            published_obj.delete_item = `<a href="${APP_PATH}/items/delete?exhibit_id=${item.is_member_of_exhibit}&item_id=${item.uuid}&type=${item.type}" title="Delete"><i class="fa fa-trash pr-1"></i></a>`;
+            published_obj.item_order = `<td class="grabbable item-order"><i class="fa fa-reorder"></i><span style="padding-left: 4px;" aria-label="item-order">${item.order}</span></td>`;
+            published_obj.status = `<a href="#" id="${item.uuid}" class="publish-item" aria-label="item-status"><span id="publish" title="suppressed"><i class="fa fa-cloud-upload" style="color: darkred"></i><br>Unpublished</span></a>`;
+            published_obj.edit = `<a href="${APP_PATH}/items/${item_route}/edit?exhibit_id=${item.is_member_of_exhibit}&item_id=${item.uuid}" title="Edit" aria-label="edit-item"><i class="fa fa-edit pr-1"></i></a>`;
+            published_obj.delete_item = `<a href="${APP_PATH}/items/delete?exhibit_id=${item.is_member_of_exhibit}&item_id=${item.uuid}&type=${item.type}" title="Delete" aria-label="delete-item"><i class="fa fa-trash pr-1"></i></a>`;
         }
 
         return published_obj;
@@ -122,7 +122,7 @@ const itemsListDisplayModule = (function () {
                 }
 
                 thumbnail = helperModule.render_repo_thumbnail(repo_record.thumbnail.data);
-                img = `<p><img alt="thumbnail" src="${thumbnail}" height="75" width="75"></p>`;
+                img = `<p><img alt="thumbnail" src="${thumbnail}" height="75" width="75" alt="${item.media}"></p>`;
             }
 
             if (item.is_kaltura_item === 1) {
@@ -145,13 +145,13 @@ const itemsListDisplayModule = (function () {
 
                 if (item.thumbnail.length > 0) {
                     thumbnail = EXHIBITS_ENDPOINTS.exhibits.exhibit_media.get.endpoint.replace(':exhibit_id', item.is_member_of_exhibit).replace(':media', item.thumbnail);
-                    img = `<p><img src="${thumbnail}" alt="thumbnail" height="75" width="75"></p>`;
+                    img = `<p><img src="${thumbnail}" alt="thumbnail" height="75" width="75" alt="${item.thumbnail}"></p>`;
                 } else if (item.thumbnail.length === 0 && item.item_type === 'image') {
                     thumbnail = EXHIBITS_ENDPOINTS.exhibits.exhibit_media.get.endpoint.replace(':exhibit_id', item.is_member_of_exhibit).replace(':media', item.media);
-                    img = `<p><img src="${thumbnail}" alt="thumbnail" height="75" width="75"></p>`;
+                    img = `<p><img src="${thumbnail}" alt="thumbnail" height="75" width="75" alt="${item.media}"></p>`;
                 } else {
                     thumbnail = `${APP_PATH}/static/images/image-tn.png`;
-                    img = `<p><img src="${thumbnail}" alt="thumbnail" height="75" width="75"></p>`;
+                    img = `<p><img src="${thumbnail}" alt="thumbnail" height="75" width="75" alt="no-thumbnail"></p>`;
                 }
             }
 
