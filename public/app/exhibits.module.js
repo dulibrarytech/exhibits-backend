@@ -92,10 +92,10 @@ const exhibitsModule = (function () {
 
             if (exhibits[i].thumbnail.length > 0) {
                 thumbnail_url = `${APP_PATH}/api/v1/exhibits/${uuid}/media/${exhibits[i].thumbnail}`;
-                thumbnail_fragment = `<p><img src="${thumbnail_url}" alt="thumbnail" height="100" width="100"></p>`;
+                thumbnail_fragment = `<p><img src="${thumbnail_url}" alt="${uuid}-thumbnail" height="100" width="100"></p>`;
             } else {
                 thumbnail_url = `${APP_PATH}/static/images/image-tn.png`;
-                thumbnail_fragment = `<p><img src="${thumbnail_url}" alt="thumbnail" height="100" width="100"></p>`;
+                thumbnail_fragment = `<p><img src="${thumbnail_url}" alt="${uuid}-thumbnail" height="100" width="100"></p>`;
             }
 
             title = helperModule.strip_html(helperModule.unescape(exhibits[i].title));
