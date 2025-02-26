@@ -79,15 +79,15 @@ const exhibitsModule = (function () {
             let trash = '';
 
             if (is_published === 1) {
-                order = `<td style="width: 4%" class="item-order"><span style="padding-left: 4px;">${order}</span></td>`;
-                status = `<a href="#" id="${uuid}" class="suppress-exhibit"><span id="suppress" title="published"><i class="fa fa-cloud" style="color: green"></i><br>Published</span></a>`;
-                exhibit_edit = `<i title="Can only edit if unpublished" style="color: #d3d3d3" class="fa fa-edit pr-1"></i>`;
-                trash = `<i title="Can only delete if unpublished" style="color: #d3d3d3" class="fa fa-trash pr-1"></i>`;
+                order = `<td style="width: 4%" class="item-order" aria-label="exhibit-order"><span style="padding-left: 4px;">${order}</span></td>`;
+                status = `<a href="#" id="${uuid}" class="suppress-exhibit" aria-label="exhibit-status"><span id="suppress" title="published"><i class="fa fa-cloud" style="color: green"></i><br>Published</span></a>`;
+                exhibit_edit = `<i title="Can only edit if unpublished" style="color: #d3d3d3" class="fa fa-edit pr-1" aria-label="edit-exhibit"></i>`;
+                trash = `<i title="Can only delete if unpublished" style="color: #d3d3d3" class="fa fa-trash pr-1" aria-label="delete-exhibit"></i>`;
             } else if (is_published === 0) {
-                order = `<td style="width: 4%;" class="grabbable item-order"><i class="fa fa-reorder"></i><span style="padding-left: 4px;">${order}</span></td>`;
-                status = `<a href="#" id="${uuid}" class="publish-exhibit"><span id="publish" title="suppressed"><i class="fa fa-cloud-upload" style="color: darkred"></i><br>Unpublished</span></a>`;
-                exhibit_edit = `<a href="${APP_PATH}/exhibits/exhibit/edit?exhibit_id=${uuid}" title="Edit"><i class="fa fa-edit pr-1"></i> </a>`;
-                trash = `<a href="${APP_PATH}/exhibits/exhibit/delete?exhibit_id=${uuid}" title="Delete exhibit"><i class="fa fa-trash pr-1"></i></a>`;
+                order = `<td style="width: 4%;" class="grabbable item-order" aria-label="exhibit-order"><i class="fa fa-reorder"></i><span style="padding-left: 4px;">${order}</span></td>`;
+                status = `<a href="#" id="${uuid}" class="publish-exhibit" aria-label="exhibit-status"><span id="publish" title="suppressed"><i class="fa fa-cloud-upload" style="color: darkred"></i><br>Unpublished</span></a>`;
+                exhibit_edit = `<a href="${APP_PATH}/exhibits/exhibit/edit?exhibit_id=${uuid}" title="Edit" aria-label="edit-exhibit"><i class="fa fa-edit pr-1"></i> </a>`;
+                trash = `<a href="${APP_PATH}/exhibits/exhibit/delete?exhibit_id=${uuid}" title="Delete exhibit" aria-label="delete-exhibit"><i class="fa fa-trash pr-1"></i></a>`;
             }
 
             if (exhibits[i].thumbnail.length > 0) {
