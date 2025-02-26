@@ -101,7 +101,7 @@ const exhibitsModule = (function () {
             title = helperModule.strip_html(helperModule.unescape(exhibits[i].title));
 
             exhibit_data += `<tr id="${uuid}">`;
-            exhibit_data += order; // '<td style="width: 3%">order</td>';
+            exhibit_data += order;
             exhibit_data += `<td style="width: 35%">
                     <p><strong>${title}</strong></p>
                     ${thumbnail_fragment}
@@ -128,7 +128,7 @@ const exhibitsModule = (function () {
             exhibit_data += `<td style="width: 10%">
                                 <div class="card-text text-sm-center">
                                     ${exhibit_items}&nbsp;
-                                    <a href="${APP_PATH}/items/standard?exhibit_id=${uuid}" title="Add Items"><i class="fa fa-plus pr-1"></i> </a>
+                                    <a href="${APP_PATH}/items/standard?exhibit_id=${uuid}" title="Add Items" aria-label="add-items"><i class="fa fa-plus pr-1"></i> </a>
                                     &nbsp;
                                     ${exhibit_edit}
                                     &nbsp;
@@ -151,16 +151,6 @@ const exhibitsModule = (function () {
 
         bind_publish_exhibit_events();
         bind_suppress_exhibit_events();
-
-        /*
-        new DataTable('#exhibits', {
-            order: [
-                [0, 'asc'],
-                [1, 'asc']
-            ]
-        });
-
-         */
     };
 
     obj.get_exhibit_title = async function (uuid) {
