@@ -58,6 +58,10 @@ const exhibitsModule = (function () {
             return false;
         }
 
+        if (exhibits === undefined) {
+            authModule.redirect_to_auth();
+        }
+
         if (exhibits.length === 0) {
             document.querySelector('.card').innerHTML = '';
             document.querySelector('#message').innerHTML = '<div class="alert alert-info" role="alert">No Exhibits found.</div>';

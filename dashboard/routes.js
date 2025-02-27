@@ -23,6 +23,7 @@ const APP_PATH = '/exhibits-dashboard';
 
 module.exports = function (app) {
 
+    //============Exhibits============//
     app.route(APP_PATH + '/exhibits')
     .get(CONTROLLER.get_dashboard_exhibits);
 
@@ -35,6 +36,7 @@ module.exports = function (app) {
     app.route(APP_PATH + '/exhibits/exhibit/delete')
     .get(CONTROLLER.get_dashboard_exhibits_delete_form);
 
+    //============Standard Items============//
     app.route(APP_PATH + '/items')
     .get(CONTROLLER.get_dashboard_items);
 
@@ -44,20 +46,19 @@ module.exports = function (app) {
     app.route(APP_PATH + '/items/standard/edit')
     .get(CONTROLLER.get_dashboard_items_standard_edit_form);
 
+    //============Headings============//
     app.route(APP_PATH + '/items/heading')
     .get(CONTROLLER.get_dashboard_item_heading_add_form);
 
     app.route(APP_PATH + '/items/heading/edit')
     .get(CONTROLLER.get_dashboard_items_heading_edit_form);
 
+    //============Grids============//
     app.route(APP_PATH + '/items/grid')
     .get(CONTROLLER.get_dashboard_grid_add_form);
 
     app.route(APP_PATH + '/items/grid/edit')
     .get(CONTROLLER.get_dashboard_grid_edit_form);
-
-    app.route(APP_PATH + '/items/delete')
-    .get(CONTROLLER.get_dashboard_items_delete_form);
 
     app.route(APP_PATH + '/items/grid/item')
     .get(CONTROLLER.get_dashboard_grid_add_item_form);
@@ -71,6 +72,7 @@ module.exports = function (app) {
     app.route(APP_PATH + '/items/grid/item/delete')
     .get(CONTROLLER.get_dashboard_grid_items_delete_form);
 
+    //============Timelines============//
     app.route(APP_PATH + '/items/vertical-timeline')
     .get(CONTROLLER.get_dashboard_vertical_timeline_add_form);
 
@@ -89,6 +91,10 @@ module.exports = function (app) {
     app.route(APP_PATH + '/items/vertical-timeline/item/delete')
     .get(CONTROLLER.get_dashboard_timeline_items_delete_form);
 
+    app.route(APP_PATH + '/items/delete')
+    .get(CONTROLLER.get_dashboard_items_delete_form);
+
+    //============Users============//
     app.route(APP_PATH + '/users')
     .get(CONTROLLER.get_dashboard_users);
 
@@ -109,17 +115,4 @@ module.exports = function (app) {
 
     app.route(APP_PATH + '/trash')
     .get(CONTROLLER.get_dashboard_trash);
-
-    /*
-
-    app.route('/dashboard/users/edit')
-    .get(CONTROLLER.get_dashboard_user_edit_form);
-
-    app.route('/dashboard/users/add')
-    .get(CONTROLLER.get_dashboard_user_add_form);
-
-    app.route('/dashboard/users/delete')
-    .get(CONTROLLER.get_dashboard_user_delete_form);
-
-     */
 };

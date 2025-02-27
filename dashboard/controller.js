@@ -27,7 +27,7 @@ exports.default = function (req, res) {
     });
 };
 
-//======================== exhibits ========================//
+//======================== Exhibits ========================//
 exports.get_dashboard_exhibits = function (req, res) {
     res.render('dashboard-exhibits', {
         host: CONFIG.host,
@@ -64,7 +64,7 @@ exports.get_dashboard_exhibits_delete_form = function (req, res) {
     });
 };
 
-//======================== heading items ========================//
+//======================== Heading items ========================//
 exports.get_dashboard_item_heading_add_form = function (req, res) {
     res.render('dashboard-item-heading-add-form', {
         host: CONFIG.host,
@@ -83,7 +83,7 @@ exports.get_dashboard_items_heading_edit_form = function (req, res) {
     });
 }
 
-//======================== standard items ========================//
+//======================== Standard items ========================//
 exports.get_dashboard_items = function (req, res) {
     res.render('dashboard-items', {
         host: CONFIG.host,
@@ -120,7 +120,7 @@ exports.get_dashboard_items_standard_edit_form = function (req, res) {
     });
 };
 
-//======================== grids ========================//
+//======================== Grids ========================//
 exports.get_dashboard_grid_add_form = function (req, res) {
     res.render('dashboard-grid-add-form', {
         host: CONFIG.host,
@@ -231,7 +231,7 @@ exports.get_dashboard_timeline_items_delete_form = function (req, res) {
     });
 };
 
-//======================== auth ========================//
+//======================== Auth ========================//
 exports.get_dashboard_login = function (req, res) {
     res.render('dashboard-login', {
         host: CONFIG.host,
@@ -263,7 +263,7 @@ exports.get_dashboard_logout = function (req, res) {
     });
 };
 
-//======================== users ========================//
+//======================== Users ========================//
 exports.get_dashboard_users = function (req, res) {
     res.render('dashboard-users', {
         host: CONFIG.host,
@@ -313,44 +313,3 @@ exports.get_dashboard_trash = function (req, res) {
         organization: CONFIG.organization
     });
 };
-
-/*
-
-
-exports.get_dashboard_user_detail = function (req, res) {
-    res.render('dashboard-users-detail', {
-        host: CONFIG.host,
-        appname: CONFIG.appName,
-        appversion: CONFIG.appVersion,
-        organization: CONFIG.organization
-    });
-};
-
-exports.get_dashboard_user_add_form = function (req, res) {
-    res.renderStatic('dashboard-add-user', {
-        host: CONFIG.host,
-        appname: CONFIG.appName,
-        appversion: CONFIG.appVersion,
-        organization: CONFIG.organization
-    });
-};
-
-exports.get_dashboard_user_edit_form = function (req, res) {
-    res.render('dashboard-edit-user', {
-        host: CONFIG.host,
-        appname: CONFIG.appName,
-        appversion: CONFIG.appVersion,
-        organization: CONFIG.organization
-    });
-};
-
-exports.get_dashboard_user_delete_form = function (req, res) {
-    res.render('dashboard-delete-user', {
-        host: CONFIG.host,
-        appname: CONFIG.appName,
-        appversion: CONFIG.appVersion,
-        organization: CONFIG.organization
-    });
-};
-
- */

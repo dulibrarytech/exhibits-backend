@@ -65,8 +65,8 @@ exports.get_auth_user_data = async function (req, res) {
 
     try {
 
-        const ID = req.query.id;
-        const data = await MODEL.get_auth_user_data(ID);
+        const id = req.query.id;
+        const data = await MODEL.get_auth_user_data(id);
         res.status(data.status).send(data.data);
 
     } catch (error) {
