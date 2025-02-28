@@ -23,10 +23,6 @@ const STORAGE_CONFIG = require('../config/storage_config')();
 const EXHIBITS_MODEL = require('../exhibits/exhibits_model');
 const TRASH_MODEL = require('../exhibits/trash_model');
 const FS = require('fs');
-const ITEMS_MODEL = require("./items_model");
-const GRIDS_MODEL = require("./grid_model");
-const HEADINGS_MODEL = require("./headings_model");
-const TIMELINES_MODEL = require("./timelines_model");
 
 exports.create_exhibit_record = async function (req, res) {
 
@@ -238,13 +234,7 @@ exports.build_exhibit_preview = async function (req, res) {
                     });
                 }, 2000);
             }
-            /*
-            if (result.status === true) {
-                setTimeout(() => {
-                    res.redirect(`${WEBSERVICES_CONFIG.exhibit_preview_url}${uuid}?key=${WEBSERVICES_CONFIG.exhibit_preview_api_key}`);
-                }, 2000);
-            }
-             */
+
         }, 2000);
 
     } catch (error) {
