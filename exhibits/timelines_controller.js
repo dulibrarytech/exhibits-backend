@@ -19,7 +19,6 @@
 'use strict';
 
 const TIMELINES_MODEL = require('../exhibits/timelines_model');
-const FS = require('fs');
 
 exports.create_timeline_record = async function (req, res) {
 
@@ -58,7 +57,6 @@ exports.update_timeline_record = async function (req, res) {
         res.status(result.status).send(result);
 
     } catch (error) {
-        console.log(error);
         res.status(500).send({message: `Unable to update timeline record. ${error.message}`});
     }
 };
@@ -174,7 +172,6 @@ exports.publish_timeline_item_record = async function (req, res) {
         const exhibit_id = req.params.exhibit_id;
         const timeline_id = req.params.timeline_id;
         const timeline_item_id = req.params.timeline_item_id;
-        const type = req.query.type;
         let result;
 
         if (exhibit_id === undefined || exhibit_id.length === 0 && timeline_id === undefined || timeline_id.length === 0) {
@@ -207,7 +204,6 @@ exports.suppress_timeline_item_record = async function (req, res) {
         const exhibit_id = req.params.exhibit_id;
         const timeline_id = req.params.timeline_id;
         const timeline_item_id = req.params.timeline_item_id;
-        const type = req.query.type;
         let result;
 
         if (exhibit_id === undefined || exhibit_id.length === 0 && timeline_id === undefined || timeline_id.length === 0) {
@@ -253,33 +249,3 @@ exports.delete_timeline_item_record = async function (req, res) {
         res.status(500).send({message: `Unable to delete timeline item. ${error.message}`});
     }
 };
-
-/*
-
-exports.delete_grid_item_media = function (req, res) {
-
-    try {
-
-        const exhibit_id = req.params.exhibit_id;
-        const item_id = req.params.item_id;
-        const media = req.params.media;
-
-        if (media !== undefined && media.length !== 0) {
-
-            (async function () {
-                await GRIDS_MODEL.delete_media_value(item_id, media);
-            })();
-
-            FS.unlinkSync(`./storage/${exhibit_id}/${media}`);
-            res.status(204).send('Media deleted');
-
-        } else {
-            res.status(200).send('Unable to delete media file');
-        }
-
-    } catch(error) {
-        res.status(404).send({message: `Unable to delete exhibit media file. ${error.message}`});
-    }
-};
-
- */
