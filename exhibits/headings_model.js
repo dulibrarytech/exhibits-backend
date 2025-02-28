@@ -28,7 +28,6 @@ const HELPER = require('../libs/helper');
 const VALIDATOR = require('../libs/validate');
 const LOGGER = require('../libs/log4');
 const EXHIBIT_RECORD_TASKS = require("./tasks/exhibit_record_tasks");
-const EXHIBIT_ITEM_RECORD_TASKS = require("./tasks/exhibit_item_record_tasks");
 const INDEXER_MODEL = require("../indexer/model");
 
 /**
