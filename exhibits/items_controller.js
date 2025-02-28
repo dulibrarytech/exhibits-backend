@@ -19,7 +19,6 @@
 'use strict';
 
 const STORAGE_CONFIG = require('../config/storage_config')();
-// const EXHIBITS_MODEL = require('../exhibits/exhibits_model');
 const ITEMS_MODEL = require('../exhibits/items_model');
 const HEADINGS_MODEL = require('../exhibits/headings_model');
 const GRIDS_MODEL = require('../exhibits/grid_model');
