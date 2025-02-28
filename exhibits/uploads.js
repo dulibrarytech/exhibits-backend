@@ -23,8 +23,6 @@ const MULTER = require('multer');
 const STORAGE_CONFIG = require('../config/storage_config')();
 const STORAGE = STORAGE_CONFIG.storage_path;
 const LIMIT = STORAGE_CONFIG.upload_max;
-const LOGGER = require('../libs/log4');
-// TOKEN = require('../libs/tokens'),
 
 module.exports = function (app) {
 
@@ -35,8 +33,7 @@ module.exports = function (app) {
             LOGGER.module().error('ERROR: Upload Failed. File is not .jpg');
             callback(null, false);
         }
-
-         */
+        */
 
         callback(null, true);
     };
