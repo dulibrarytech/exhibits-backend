@@ -108,61 +108,6 @@ const Indexer_index_tasks = class {
     }
 
     /**
-     * Gets record for full indexing
-     */
-    async get_record() {
-
-        try {
-
-            const data = await this.DB(this.TABLE)
-            .select('*')
-            .where({
-                is_published: 1,
-                is_deleted: 0,
-                is_indexed: 0
-            })
-            .limit(1);
-
-            if (data === undefined || data.length === 0) {
-                return 0;
-            }
-
-            return data[0];
-
-        } catch (error) {
-            LOGGER.module().error('ERROR: [/indexer/indexer_index_tasks (get_record)] unable to get record ' + error.message);
-        }
-    }
-
-    /**
-     * Gets record for single record index
-     * @param uuid
-     */
-    async get_index_record(uuid) {
-
-        try {
-
-            const data = await this.DB(this.TABLE)
-            .select('*')
-            .where({
-                uuid: uuid,
-                is_published: 1,
-                is_deleted: 0
-            })
-            .limit(1);
-
-            if (data === undefined || data.length === 0) {
-                return 0;
-            }
-
-            return data[0];
-
-        } catch (error) {
-            LOGGER.module().error('ERROR: [/indexer/indexer_index_tasks (get_index_record)] unable to get record ' + error.message);
-        }
-    }
-
-    /**
      * Updates is_indexed status flag after a successful record index
      * @param uuid
      */

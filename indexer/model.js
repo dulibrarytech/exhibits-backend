@@ -167,87 +167,317 @@ const construct_timeline_index_record = function (record) {
  */
 exports.index_exhibit = async function (uuid, type) {
 
-    LOGGER.module().info('INFO: [/indexer/model (index_exhibit)] Indexing exhibit...');
+    try {
 
-    let heading_index_records = [];
-    let item_index_records = [];
-    let grid_index_records = [];
-    let timeline_index_records = [];
-    let grid_items = [];
-    let timeline_items = [];
+        LOGGER.module().info('INFO: [/indexer/model (index_exhibit)] Indexing exhibit...');
 
-    const INDEX_TASKS = new INDEXER_INDEX_TASKS(DB, TABLES, CLIENT, ES_CONFIG.elasticsearch_index);
-    const EXHIBIT_RECORD_TASK = new EXHIBIT_RECORD_TASKS(DB, TABLES);
-    const HEADING_RECORD_TASK = new EXHIBIT_HEADING_RECORD_TASKS(DB, TABLES);
-    const ITEM_RECORD_TASK = new EXHIBIT_ITEM_RECORD_TASKS(DB, TABLES);
-    const GRID_RECORD_TASK = new EXHIBIT_GRID_RECORD_TASKS(DB, TABLES);
-    const TIMELINE_RECORD_TASK = new EXHIBIT_TIMELINE_RECORD_TASKS(DB, TABLES);
-    const exhibit_record = await EXHIBIT_RECORD_TASK.get_exhibit_record(uuid);
-    const heading_records = await HEADING_RECORD_TASK.get_heading_records(uuid);
-    const item_records = await ITEM_RECORD_TASK.get_item_records(uuid);
-    const grid_records = await GRID_RECORD_TASK.get_grid_records(uuid);
-    const timeline_records = await TIMELINE_RECORD_TASK.get_timeline_records(uuid);
-    const exhibit_index_record = construct_exhibit_index_record(exhibit_record.pop());
-    const response = await INDEX_TASKS.index_record(exhibit_index_record);
+        let heading_index_records = [];
+        let item_index_records = [];
+        let grid_index_records = [];
+        let timeline_index_records = [];
+        let grid_items = [];
+        let timeline_items = [];
 
-    if (response === false) {
+        const INDEX_TASKS = new INDEXER_INDEX_TASKS(DB, TABLES, CLIENT, ES_CONFIG.elasticsearch_index);
+        const EXHIBIT_RECORD_TASK = new EXHIBIT_RECORD_TASKS(DB, TABLES);
+        const HEADING_RECORD_TASK = new EXHIBIT_HEADING_RECORD_TASKS(DB, TABLES);
+        const ITEM_RECORD_TASK = new EXHIBIT_ITEM_RECORD_TASKS(DB, TABLES);
+        const GRID_RECORD_TASK = new EXHIBIT_GRID_RECORD_TASKS(DB, TABLES);
+        const TIMELINE_RECORD_TASK = new EXHIBIT_TIMELINE_RECORD_TASKS(DB, TABLES);
+        const exhibit_record = await EXHIBIT_RECORD_TASK.get_exhibit_record(uuid);
+        const heading_records = await HEADING_RECORD_TASK.get_heading_records(uuid);
+        const item_records = await ITEM_RECORD_TASK.get_item_records(uuid);
+        const grid_records = await GRID_RECORD_TASK.get_grid_records(uuid);
+        const timeline_records = await TIMELINE_RECORD_TASK.get_timeline_records(uuid);
+        const exhibit_index_record = construct_exhibit_index_record(exhibit_record.pop());
+        const response = await INDEX_TASKS.index_record(exhibit_index_record);
+
+        if (response === false) {
+            return {
+                status: 200,
+                message: 'Unable to index exhibit'
+            };
+        }
+
+        LOGGER.module().info('INFO: [/indexer/model (index_exhibit)] Exhibit record ' + exhibit_index_record.uuid + ' indexed.');
+
+        if (heading_records.length > 0) {
+
+            for (let h=0;h<heading_records.length;h++) {
+                heading_index_records.push(construct_heading_index_record(heading_records[h]));
+            }
+
+            let headings_timer = setInterval(async () => {
+
+                if (heading_index_records.length === 0) {
+                    clearInterval(headings_timer);
+                    LOGGER.module().info('INFO: [/indexer/model (index_exhibit)] Heading records indexed.');
+                    return false;
+                }
+
+                let heading_index_record = heading_index_records.pop();
+                const response = await INDEX_TASKS.index_record(heading_index_record);
+
+                if (response === true) {
+                    LOGGER.module().info('INFO: [/indexer/model (index_exhibit)] Heading record ' + heading_index_record.uuid + ' indexed.');
+                }
+
+            }, 50);
+        }
+
+        if (item_records.length > 0) {
+
+            for (let i=0;i<item_records.length;i++) {
+                item_index_records.push(construct_item_index_record(item_records[i]));
+            }
+
+            let items_timer = setInterval(async () => {
+
+                if (item_index_records.length === 0) {
+                    clearInterval(items_timer);
+                    LOGGER.module().info('INFO: [/indexer/model (index_exhibit)] Item records indexed.');
+                    return false;
+                }
+
+                let item_index_record = item_index_records.pop();
+                const response = await INDEX_TASKS.index_record(item_index_record);
+
+                if (response === true) {
+                    LOGGER.module().info('INFO: [/indexer/model (index_exhibit)] Item record ' + item_index_record.uuid + ' indexed.');
+                }
+
+            }, 100);
+        }
+
+        if (grid_records.length > 0) {
+
+            // get grid items
+            for (let i=0;i<grid_records.length;i++) {
+
+                let items = await GRID_RECORD_TASK.get_grid_item_records(grid_records[i].is_member_of_exhibit, grid_records[i].uuid);
+
+                for (let j=0;j<items.length;j++) {
+
+                    if (type === 'publish') {
+                        items[j].is_published = 1;
+                        await GRID_RECORD_TASK.set_grid_item_to_publish(items[j].uuid);
+                    }
+
+                    grid_items.push(construct_item_index_record(items[j]));
+                }
+
+                grid_records[i].items = grid_items;
+                grid_items = [];
+            }
+
+            for (let g=0;g<grid_records.length;g++) {
+                grid_index_records.push(construct_grid_index_record(grid_records[g]));
+            }
+
+            let grid_items_timer = setInterval(async () => {
+
+                if (grid_index_records.length === 0) {
+                    clearInterval(grid_items_timer);
+                    LOGGER.module().info('INFO: [/indexer/model (index_exhibit)] Grid item records indexed.');
+                    return false;
+                }
+
+                let grid_item_index_record = grid_index_records.pop();
+                const response = await INDEX_TASKS.index_record(grid_item_index_record);
+
+                if (response === true) {
+                    LOGGER.module().info('INFO: [/indexer/model (index_exhibit)] Grid item record ' + grid_item_index_record.uuid + ' indexed.');
+                }
+
+            }, 150);
+        }
+
+        if (timeline_records.length > 0) {
+
+            // get timeline items
+            for (let i=0;i<timeline_records.length;i++) {
+
+                let items = await TIMELINE_RECORD_TASK.get_timeline_item_records(timeline_records[i].is_member_of_exhibit, timeline_records[i].uuid);
+
+                for (let j=0;j<items.length;j++) {
+
+                    if (type === 'publish') {
+                        items[j].is_published = 1;
+                        await TIMELINE_RECORD_TASK.set_timeline_item_to_publish(items[j].uuid);
+                    }
+
+                    timeline_items.push(construct_item_index_record(items[j]));
+                }
+
+                timeline_records[i].items = timeline_items;
+                timeline_items = [];
+            }
+
+            for (let g=0;g<timeline_records.length;g++) {
+                timeline_index_records.push(construct_timeline_index_record(timeline_records[g]));
+            }
+
+            let timeline_items_timer = setInterval(async () => {
+
+                if (timeline_index_records.length === 0) {
+                    clearInterval(timeline_items_timer);
+                    LOGGER.module().info('INFO: [/indexer/model (index_exhibit)] Timeline item records indexed.');
+                    return false;
+                }
+
+                let timeline_item_index_record = timeline_index_records.pop();
+                const response = await INDEX_TASKS.index_record(timeline_item_index_record);
+
+                if (response === true) {
+                    LOGGER.module().info('INFO: [/indexer/model (index_exhibit)] Timeline item record ' + timeline_item_index_record.uuid + ' indexed.');
+                }
+
+            }, 150);
+        }
+
+        return {
+            status: 201,
+            message: 'Exhibit indexed'
+        };
+
+    } catch (error) {
+        LOGGER.module().error('ERROR: [/indexer/model (index_exhibit)] ' + error.message);
+    }
+};
+
+/**
+ * Gets indexed record
+ * @param uuid
+ */
+exports.get_indexed_record = async function (uuid) {
+
+    try {
+
+        const INDEX_TASKS = new INDEXER_INDEX_TASKS(DB, TABLES, CLIENT, ES_CONFIG.elasticsearch_index);
+        let response = await INDEX_TASKS.get_indexed_record(uuid);
+
+        if (response.found === false) {
+
+            return {
+                status: 404,
+                message: 'record not found.'
+            };
+
+        } else if (response.found === true) {
+
+            return {
+                status: 200,
+                message: 'record found.',
+                data: response
+            };
+        }
+
+    } catch (error) {
+        LOGGER.module().error('ERROR: [/indexer/model (get_indexed_record)] ' + error.message);
+    }
+};
+
+/**
+ * Deletes record from index
+ * @param uuid
+ */
+exports.delete_record = async function (uuid) {
+
+    try {
+
+        const INDEX_TASKS = new INDEXER_INDEX_TASKS(DB, TABLES, CLIENT, ES_CONFIG.elasticsearch_index);
+        let is_deleted = await INDEX_TASKS.delete_record(uuid);
+
+        if (is_deleted === true) {
+
+            LOGGER.module().info('INFO: [/indexer/model (delete_record)] indexed record ' + uuid + ' deleted');
+
+            return {
+                status: 204,
+                message: 'record deleted.'
+            };
+        }
+
         return {
             status: 200,
-            message: 'Unable to index exhibit'
+            message: 'Unable to delete record.'
         };
+
+    } catch (error) {
+        LOGGER.module().error('ERROR: [/indexer/model (delete_record)] ' + error.message);
     }
+};
 
-    LOGGER.module().info('INFO: [/indexer/model (index_exhibit)] Exhibit record ' + exhibit_index_record.uuid + ' indexed.');
+/**
+ * Index record
+ * @param exhibit_id
+ * @param item_id
+ */
+exports.index_item_record = async function (exhibit_id, item_id) {
 
-    if (heading_records.length > 0) {
+    try {
 
-        for (let h=0;h<heading_records.length;h++) {
-            heading_index_records.push(construct_heading_index_record(heading_records[h]));
+        const INDEX_TASKS = new INDEXER_INDEX_TASKS(DB, TABLES, CLIENT, ES_CONFIG.elasticsearch_index);
+        const ITEM_RECORD_TASK = new EXHIBIT_ITEM_RECORD_TASKS(DB, TABLES);
+        const item_record = await ITEM_RECORD_TASK.get_item_record(exhibit_id, item_id);
+        const item_index_record = construct_item_index_record(item_record.pop());
+        const response = await INDEX_TASKS.index_record(item_index_record);
+
+        if (response === true) {
+            LOGGER.module().info('INFO: [/indexer/model (index_item_record)] Item record ' + item_index_record.uuid + ' indexed.');
+            return true;
+        } else {
+            LOGGER.module().error('ERROR: [/indexer/model (index_item_record)] Unable to index item record ' + item_index_record.uuid + '.');
+            return false;
         }
 
-        let headings_timer = setInterval(async () => {
-
-            if (heading_index_records.length === 0) {
-                clearInterval(headings_timer);
-                LOGGER.module().info('INFO: [/indexer/model (index_exhibit)] Heading records indexed.');
-                return false;
-            }
-
-            let heading_index_record = heading_index_records.pop();
-            const response = await INDEX_TASKS.index_record(heading_index_record);
-
-            if (response === true) {
-                LOGGER.module().info('INFO: [/indexer/model (index_exhibit)] Heading record ' + heading_index_record.uuid + ' indexed.');
-            }
-
-        }, 50);
+    } catch (error) {
+        LOGGER.module().error('ERROR: [/indexer/model (index_item_record)] ' + error.message);
     }
+};
 
-    if (item_records.length > 0) {
+/**
+ * Index heading record
+ * @param exhibit_id
+ * @param item_id
+ */
+exports.index_heading_record = async function (exhibit_id, item_id) {
 
-        for (let i=0;i<item_records.length;i++) {
-            item_index_records.push(construct_item_index_record(item_records[i]));
+    try {
+
+        const INDEX_TASKS = new INDEXER_INDEX_TASKS(DB, TABLES, CLIENT, ES_CONFIG.elasticsearch_index);
+        const HEADING_RECORD_TASK = new EXHIBIT_HEADING_RECORD_TASKS(DB, TABLES);
+        const item_record = await HEADING_RECORD_TASK.get_heading_record(exhibit_id, item_id);
+        const item_index_record = construct_heading_index_record(item_record.pop());
+        const response = await INDEX_TASKS.index_record(item_index_record);
+
+        if (response === true) {
+            LOGGER.module().info('INFO: [/indexer/model (index_heading_record)] Heading record ' + item_index_record.uuid + ' indexed.');
+            return true;
+        } else {
+            LOGGER.module().error('ERROR: [/indexer/model (index_heading_record)] Unable to index heading record ' + item_index_record.uuid + '.');
+            return false;
         }
 
-        let items_timer = setInterval(async () => {
-
-            if (item_index_records.length === 0) {
-                clearInterval(items_timer);
-                LOGGER.module().info('INFO: [/indexer/model (index_exhibit)] Item records indexed.');
-                return false;
-            }
-
-            let item_index_record = item_index_records.pop();
-            const response = await INDEX_TASKS.index_record(item_index_record);
-
-            if (response === true) {
-                LOGGER.module().info('INFO: [/indexer/model (index_exhibit)] Item record ' + item_index_record.uuid + ' indexed.');
-            }
-
-        }, 100);
+    } catch (error) {
+        LOGGER.module().error('ERROR: [/indexer/model (index_heading_record)] ' + error.message);
     }
+};
 
-    if (grid_records.length > 0) {
+/**
+ * Index grid record
+ * @param exhibit_id
+ * @param item_id
+ */
+exports.index_grid_record = async function (exhibit_id, item_id) {
+
+    try {
+
+        const INDEX_TASKS = new INDEXER_INDEX_TASKS(DB, TABLES, CLIENT, ES_CONFIG.elasticsearch_index);
+        const GRID_RECORD_TASK = new EXHIBIT_GRID_RECORD_TASKS(DB, TABLES);
+        const grid_records = await GRID_RECORD_TASK.get_grid_records(exhibit_id, item_id);
+        let grid_index_records = [];
+        let grid_items = [];
 
         // get grid items
         for (let i=0;i<grid_records.length;i++) {
@@ -255,12 +485,8 @@ exports.index_exhibit = async function (uuid, type) {
             let items = await GRID_RECORD_TASK.get_grid_item_records(grid_records[i].is_member_of_exhibit, grid_records[i].uuid);
 
             for (let j=0;j<items.length;j++) {
-
-                if (type === 'publish') {
-                    items[j].is_published = 1;
-                    await GRID_RECORD_TASK.set_grid_item_to_publish(items[j].uuid);
-                }
-
+                items[j].is_published = 1;
+                await GRID_RECORD_TASK.set_grid_item_to_publish(items[j].uuid);
                 grid_items.push(construct_item_index_record(items[j]));
             }
 
@@ -276,7 +502,7 @@ exports.index_exhibit = async function (uuid, type) {
 
             if (grid_index_records.length === 0) {
                 clearInterval(grid_items_timer);
-                LOGGER.module().info('INFO: [/indexer/model (index_exhibit)] Grid item records indexed.');
+                LOGGER.module().info('INFO: [/indexer/model (index_grid_record)] Grid item records indexed.');
                 return false;
             }
 
@@ -284,13 +510,69 @@ exports.index_exhibit = async function (uuid, type) {
             const response = await INDEX_TASKS.index_record(grid_item_index_record);
 
             if (response === true) {
-                LOGGER.module().info('INFO: [/indexer/model (index_exhibit)] Grid item record ' + grid_item_index_record.uuid + ' indexed.');
+                LOGGER.module().info('INFO: [/indexer/model (index_grid_record)] Grid item record ' + grid_item_index_record.uuid + ' indexed.');
             }
 
         }, 150);
-    }
 
-    if (timeline_records.length > 0) {
+    } catch (error) {
+        LOGGER.module().error('ERROR: [/indexer/model (index_grid_record)] ' + error.message);
+    }
+};
+
+/**
+ * Indexes grid item
+ * @param grid_id
+ * @param grid_item_id
+ * @param grid_item_record
+ */
+exports.index_grid_item_record = async function (grid_id, grid_item_id, grid_item_record) {
+
+    try {
+
+        let grid_item_index_record = construct_item_index_record(grid_item_record);
+        let indexed_record = await this.get_indexed_record(grid_id);
+        let items = indexed_record.data._source.items;
+        let updated_items = [];
+
+        for (let i=0;i<items.length;i++) {
+            updated_items.push(items[i]);
+        }
+
+        grid_item_index_record.is_published = 1;
+        updated_items.push(grid_item_index_record);
+
+        indexed_record.data._source.items = updated_items.sort((a, b) => {
+            return a.order - b.order;
+        });
+
+        const is_indexed = await this.index_record(indexed_record.data._source);
+
+        if (is_indexed === true) {
+            return true;
+        } else {
+            return false;
+        }
+
+    } catch (error) {
+        LOGGER.module().error('ERROR: [/indexer/model (index_grid_item_record)] ' + error.message);
+    }
+};
+
+/**
+ * Index timeline record
+ * @param exhibit_id
+ * @param item_id
+ */
+exports.index_timeline_record = async function (exhibit_id, item_id) {
+
+    try {
+
+        const INDEX_TASKS = new INDEXER_INDEX_TASKS(DB, TABLES, CLIENT, ES_CONFIG.elasticsearch_index);
+        const TIMELINE_RECORD_TASK = new EXHIBIT_TIMELINE_RECORD_TASKS(DB, TABLES);
+        const timeline_records = await TIMELINE_RECORD_TASK.get_timeline_records(exhibit_id, item_id);
+        let timeline_index_records = [];
+        let timeline_items = [];
 
         // get timeline items
         for (let i=0;i<timeline_records.length;i++) {
@@ -298,12 +580,8 @@ exports.index_exhibit = async function (uuid, type) {
             let items = await TIMELINE_RECORD_TASK.get_timeline_item_records(timeline_records[i].is_member_of_exhibit, timeline_records[i].uuid);
 
             for (let j=0;j<items.length;j++) {
-
-                if (type === 'publish') {
-                    items[j].is_published = 1;
-                    await TIMELINE_RECORD_TASK.set_timeline_item_to_publish(items[j].uuid);
-                }
-
+                items[j].is_published = 1;
+                await TIMELINE_RECORD_TASK.set_timeline_item_to_publish(items[j].uuid);
                 timeline_items.push(construct_item_index_record(items[j]));
             }
 
@@ -319,7 +597,7 @@ exports.index_exhibit = async function (uuid, type) {
 
             if (timeline_index_records.length === 0) {
                 clearInterval(timeline_items_timer);
-                LOGGER.module().info('INFO: [/indexer/model (index_exhibit)] Timeline item records indexed.');
+                LOGGER.module().info('INFO: [/indexer/model (index_timeline_record)] Timeline item records indexed.');
                 return false;
             }
 
@@ -327,244 +605,14 @@ exports.index_exhibit = async function (uuid, type) {
             const response = await INDEX_TASKS.index_record(timeline_item_index_record);
 
             if (response === true) {
-                LOGGER.module().info('INFO: [/indexer/model (index_exhibit)] Timeline item record ' + timeline_item_index_record.uuid + ' indexed.');
+                LOGGER.module().info('INFO: [/indexer/model (index_timeline_record)] Timeline item record ' + timeline_item_index_record.uuid + ' indexed.');
             }
 
         }, 150);
+
+    } catch (error) {
+        LOGGER.module().error('ERROR: [/indexer/model (index_timeline_record)] ' + error.message);
     }
-
-    return {
-        status: 201,
-        message: 'Exhibit indexed'
-    };
-};
-
-/**
- * Gets indexed record
- * @param uuid
- */
-exports.get_indexed_record = async function (uuid) {
-
-    const INDEX_TASKS = new INDEXER_INDEX_TASKS(DB, TABLES, CLIENT, ES_CONFIG.elasticsearch_index);
-    let response = await INDEX_TASKS.get_indexed_record(uuid);
-
-    if (response.found === false) {
-
-        return {
-            status: 404,
-            message: 'record not found.'
-        };
-
-    } else if (response.found === true) {
-
-        return {
-            status: 200,
-            message: 'record found.',
-            data: response
-        };
-    }
-};
-
-/**
- * Deletes record from index
- * @param uuid
- */
-exports.delete_record = async function (uuid) {
-
-    const INDEX_TASKS = new INDEXER_INDEX_TASKS(DB, TABLES, CLIENT, ES_CONFIG.elasticsearch_index);
-    let is_deleted = await INDEX_TASKS.delete_record(uuid);
-
-    if (is_deleted === true) {
-
-        LOGGER.module().info('INFO: [/indexer/model (delete_record)] indexed record ' + uuid + ' deleted');
-
-        return {
-            status: 204,
-            message: 'record deleted.'
-        };
-    }
-
-    return {
-        status: 200,
-        message: 'Unable to delete record.'
-    };
-};
-
-/**
- * Index record
- * @param exhibit_id
- * @param item_id
- */
-exports.index_item_record = async function (exhibit_id, item_id) {
-
-    const INDEX_TASKS = new INDEXER_INDEX_TASKS(DB, TABLES, CLIENT, ES_CONFIG.elasticsearch_index);
-    const ITEM_RECORD_TASK = new EXHIBIT_ITEM_RECORD_TASKS(DB, TABLES);
-    const item_record = await ITEM_RECORD_TASK.get_item_record(exhibit_id, item_id);
-    const item_index_record = construct_item_index_record(item_record.pop());
-    const response = await INDEX_TASKS.index_record(item_index_record);
-
-    if (response === true) {
-        LOGGER.module().info('INFO: [/indexer/model (index_item_record)] Item record ' + item_index_record.uuid + ' indexed.');
-        return true;
-    } else {
-        LOGGER.module().error('ERROR: [/indexer/model (index_item_record)] Unable to index item record ' + item_index_record.uuid + '.');
-        return false;
-    }
-};
-
-/**
- * Index heading record
- * @param exhibit_id
- * @param item_id
- */
-exports.index_heading_record = async function (exhibit_id, item_id) {
-
-    const INDEX_TASKS = new INDEXER_INDEX_TASKS(DB, TABLES, CLIENT, ES_CONFIG.elasticsearch_index);
-    const HEADING_RECORD_TASK = new EXHIBIT_HEADING_RECORD_TASKS(DB, TABLES);
-    const item_record = await HEADING_RECORD_TASK.get_heading_record(exhibit_id, item_id);
-    const item_index_record = construct_heading_index_record(item_record.pop());
-    const response = await INDEX_TASKS.index_record(item_index_record);
-
-    if (response === true) {
-        LOGGER.module().info('INFO: [/indexer/model (index_heading_record)] Heading record ' + item_index_record.uuid + ' indexed.');
-        return true;
-    } else {
-        LOGGER.module().error('ERROR: [/indexer/model (index_heading_record)] Unable to index heading record ' + item_index_record.uuid + '.');
-        return false;
-    }
-};
-
-/**
- * Index grid record
- * @param exhibit_id
- * @param item_id
- */
-exports.index_grid_record = async function (exhibit_id, item_id) {
-
-    const INDEX_TASKS = new INDEXER_INDEX_TASKS(DB, TABLES, CLIENT, ES_CONFIG.elasticsearch_index);
-    const GRID_RECORD_TASK = new EXHIBIT_GRID_RECORD_TASKS(DB, TABLES);
-    const grid_records = await GRID_RECORD_TASK.get_grid_records(exhibit_id, item_id);
-    let grid_index_records = [];
-    let grid_items = [];
-
-    // get grid items
-    for (let i=0;i<grid_records.length;i++) {
-
-        let items = await GRID_RECORD_TASK.get_grid_item_records(grid_records[i].is_member_of_exhibit, grid_records[i].uuid);
-
-        for (let j=0;j<items.length;j++) {
-            items[j].is_published = 1;
-            await GRID_RECORD_TASK.set_grid_item_to_publish(items[j].uuid);
-            grid_items.push(construct_item_index_record(items[j]));
-        }
-
-        grid_records[i].items = grid_items;
-        grid_items = [];
-    }
-
-    for (let g=0;g<grid_records.length;g++) {
-        grid_index_records.push(construct_grid_index_record(grid_records[g]));
-    }
-
-    let grid_items_timer = setInterval(async () => {
-
-        if (grid_index_records.length === 0) {
-            clearInterval(grid_items_timer);
-            LOGGER.module().info('INFO: [/indexer/model (index_grid_record)] Grid item records indexed.');
-            return false;
-        }
-
-        let grid_item_index_record = grid_index_records.pop();
-        const response = await INDEX_TASKS.index_record(grid_item_index_record);
-
-        if (response === true) {
-            LOGGER.module().info('INFO: [/indexer/model (index_grid_record)] Grid item record ' + grid_item_index_record.uuid + ' indexed.');
-        }
-
-    }, 150);
-};
-
-/**
- * Indexes grid item
- * @param grid_id
- * @param grid_item_id
- * @param grid_item_record
- */
-exports.index_grid_item_record = async function (grid_id, grid_item_id, grid_item_record) {
-
-    let grid_item_index_record = construct_item_index_record(grid_item_record);
-    let indexed_record = await this.get_indexed_record(grid_id);
-    let items = indexed_record.data._source.items;
-    let updated_items = [];
-
-    for (let i=0;i<items.length;i++) {
-        updated_items.push(items[i]);
-    }
-
-    grid_item_index_record.is_published = 1;
-    updated_items.push(grid_item_index_record);
-
-    indexed_record.data._source.items = updated_items.sort((a, b) => {
-        return a.order - b.order;
-    });
-
-    const is_indexed = await this.index_record(indexed_record.data._source);
-
-    if (is_indexed === true) {
-        return true;
-    } else {
-        return false;
-    }
-};
-
-/**
- * Index timeline record
- * @param exhibit_id
- * @param item_id
- */
-exports.index_timeline_record = async function (exhibit_id, item_id) {
-
-    const INDEX_TASKS = new INDEXER_INDEX_TASKS(DB, TABLES, CLIENT, ES_CONFIG.elasticsearch_index);
-    const TIMELINE_RECORD_TASK = new EXHIBIT_TIMELINE_RECORD_TASKS(DB, TABLES);
-    const timeline_records = await TIMELINE_RECORD_TASK.get_timeline_records(exhibit_id, item_id);
-    let timeline_index_records = [];
-    let timeline_items = [];
-
-    // get timeline items
-    for (let i=0;i<timeline_records.length;i++) {
-
-        let items = await TIMELINE_RECORD_TASK.get_timeline_item_records(timeline_records[i].is_member_of_exhibit, timeline_records[i].uuid);
-
-        for (let j=0;j<items.length;j++) {
-            items[j].is_published = 1;
-            await TIMELINE_RECORD_TASK.set_timeline_item_to_publish(items[j].uuid);
-            timeline_items.push(construct_item_index_record(items[j]));
-        }
-
-        timeline_records[i].items = timeline_items;
-        timeline_items = [];
-    }
-
-    for (let g=0;g<timeline_records.length;g++) {
-        timeline_index_records.push(construct_timeline_index_record(timeline_records[g]));
-    }
-
-    let timeline_items_timer = setInterval(async () => {
-
-        if (timeline_index_records.length === 0) {
-            clearInterval(timeline_items_timer);
-            LOGGER.module().info('INFO: [/indexer/model (index_timeline_record)] Timeline item records indexed.');
-            return false;
-        }
-
-        let timeline_item_index_record = timeline_index_records.pop();
-        const response = await INDEX_TASKS.index_record(timeline_item_index_record);
-
-        if (response === true) {
-            LOGGER.module().info('INFO: [/indexer/model (index_timeline_record)] Timeline item record ' + timeline_item_index_record.uuid + ' indexed.');
-        }
-
-    }, 150);
 };
 
 /**
@@ -575,28 +623,34 @@ exports.index_timeline_record = async function (exhibit_id, item_id) {
 */
 exports.index_timeline_item_record = async function (timeline_id, timeline_item_id, timeline_item_record) {
 
-    let timeline_item_index_record = construct_item_index_record(timeline_item_record);
-    let indexed_record = await this.get_indexed_record(timeline_id);
-    let items = indexed_record.data._source.items;
-    let updated_items = [];
+    try {
 
-    for (let i=0;i<items.length;i++) {
-        updated_items.push(items[i]);
-    }
+        let timeline_item_index_record = construct_item_index_record(timeline_item_record);
+        let indexed_record = await this.get_indexed_record(timeline_id);
+        let items = indexed_record.data._source.items;
+        let updated_items = [];
 
-    timeline_item_index_record.is_published = 1;
-    updated_items.push(timeline_item_index_record);
+        for (let i=0;i<items.length;i++) {
+            updated_items.push(items[i]);
+        }
 
-    indexed_record.data._source.items = updated_items.sort((a, b) => {
-        return a.order - b.order;
-    });
+        timeline_item_index_record.is_published = 1;
+        updated_items.push(timeline_item_index_record);
 
-    const is_indexed = await this.index_record(indexed_record.data._source);
+        indexed_record.data._source.items = updated_items.sort((a, b) => {
+            return a.order - b.order;
+        });
 
-    if (is_indexed === true) {
-        return true;
-    } else {
-        return false;
+        const is_indexed = await this.index_record(indexed_record.data._source);
+
+        if (is_indexed === true) {
+            return true;
+        } else {
+            return false;
+        }
+
+    } catch (error) {
+        LOGGER.module().error('ERROR: [/indexer/model (index_timeline_item_record)] ' + error.message);
     }
 };
 
@@ -606,14 +660,20 @@ exports.index_timeline_item_record = async function (timeline_id, timeline_item_
  */
 exports.index_record = async function (record) {
 
-    const INDEX_TASKS = new INDEXER_INDEX_TASKS(DB, TABLES, CLIENT, ES_CONFIG.elasticsearch_index);
-    const response = await INDEX_TASKS.index_record(record);
+    try {
 
-    if (response === true) {
-        LOGGER.module().info('INFO: [/indexer/model (index_record)] Record ' + record.uuid + ' indexed.');
-        return true;
-    } else {
-        LOGGER.module().error('ERROR: [/indexer/model (index_record)] Unable to index record ' + record.uuid + '.');
-        return false;
+        const INDEX_TASKS = new INDEXER_INDEX_TASKS(DB, TABLES, CLIENT, ES_CONFIG.elasticsearch_index);
+        const response = await INDEX_TASKS.index_record(record);
+
+        if (response === true) {
+            LOGGER.module().info('INFO: [/indexer/model (index_record)] Record ' + record.uuid + ' indexed.');
+            return true;
+        } else {
+            LOGGER.module().error('ERROR: [/indexer/model (index_record)] Unable to index record ' + record.uuid + '.');
+            return false;
+        }
+
+    } catch (error) {
+        LOGGER.module().error('ERROR: [/indexer/model (index_record)] ' + error.message);
     }
 };

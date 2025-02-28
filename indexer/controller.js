@@ -21,80 +21,71 @@
 const MODEL = require('../indexer/model');
 const SERVICE = require('../indexer/service');
 
-/**
- * Creates exhibits index
- * @param req
- * @param res
- */
 exports.create_index = async function (req, res) {
-    const result = await SERVICE.create_index();
-    res.status(result.status).send(result);
+
+    try {
+        const result = await SERVICE.create_index();
+        res.status(result.status).send(result);
+    } catch (error) {
+        res.status(500).send({message: `Unable to create index. ${error.message}`});
+    }
 };
 
-/**
- * Index/preview exhibit
- * @param req
- * @param res
- */
 exports.index_exhibit = async function (req, res) {
-    const uuid = req.params.uuid;
-    const result = await MODEL.index_exhibit(uuid);
-    res.status(result.status).send(result);
+
+    try {
+        const uuid = req.params.uuid;
+        const result = await MODEL.index_exhibit(uuid);
+        res.status(result.status).send(result);
+    } catch (error) {
+        res.status(500).send({message: `Unable to index exhibit. ${error.message}`});
+    }
 };
 
-/**
- * Gets indexed record
- * @param req
- * @param res
- */
 exports.get_indexed_record = async function (req, res) {
-    let uuid = req.params.uuid;
-    let response = await MODEL.get_indexed_record(uuid);
-    res.status(response.status).send(response.data);
+
+    try {
+        const uuid = req.params.uuid;
+        const response = await MODEL.get_indexed_record(uuid);
+        res.status(response.status).send(response.data);
+    } catch (error) {
+        res.status(500).send({message: `Unable to get indexed record. ${error.message}`});
+    }
+
 };
 
-/**
- * Deletes record from index
- * @param req
- * @param res
- */
 exports.delete_record = async function (req, res) {
-    let uuid = req.params.uuid;
-    let result = await MODEL.delete_record(uuid);
-    res.status(result.status).send(result);
+
+    try {
+        const uuid = req.params.uuid;
+        const result = await MODEL.delete_record(uuid);
+        res.status(result.status).send(result);
+    } catch (error) {
+        res.status(500).send({message: `Unable to delete record. ${error.message}`});
+    }
 };
 
-/**
- * Indexes all active exhibit, heading, and item records
- * @param req
- * @param res
- */
-exports.index_all_records = function (req, res) {
-    const result = MODEL.index_all_records();
-    res.status(result.status).send(result);
-};
-
-/**
- * Indexes single record
- * @param req
- * @param res
- * @return {boolean}
- */
 exports.index_record = async function (req, res) {
 
-    let uuid = req.params.uuid;
-    let type = req.query.type;
+    try {
 
-    if (uuid === undefined || uuid.length === 0) {
-        res.status(400).send('Bad request.');
-        return false;
+        const uuid = req.params.uuid;
+        const type = req.query.type;
+
+        if (uuid === undefined || uuid.length === 0) {
+            res.status(400).send('Bad request.');
+            return false;
+        }
+
+        if (type === undefined || type.length === 0) {
+            res.status(400).send('Bad request.');
+            return false;
+        }
+
+        let result = await MODEL.index_record(uuid, type);
+        res.status(result.status).send(result);
+
+    } catch (error) {
+        res.status(500).send({message: `Unable to index. ${error.message}`});
     }
-
-    if (type === undefined || type.length === 0) {
-        res.status(400).send('Bad request.');
-        return false;
-    }
-
-    let result = await MODEL.index_record(uuid, type);
-    res.status(result.status).send(result);
 };
