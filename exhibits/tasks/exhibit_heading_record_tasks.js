@@ -22,7 +22,7 @@ const LOGGER = require('../../libs/log4');
 const HELPER = require("../../libs/helper");
 
 /**
- * Object contains tasks used to manage exhibit item records
+ * Object contains tasks used to manage exhibit heading records
  * @param DB
  * @param TABLE
  * @type {Exhibit_record_tasks}
@@ -54,7 +54,7 @@ const Exhibit_heading_record_tasks = class {
             return true;
 
         } catch (error) {
-            LOGGER.module().error('ERROR: [/exhibits/exhibit_heading_record_tasks (create_heading_record)] unable to create record ' + error.message);
+            LOGGER.module().error('ERROR: [/exhibits/exhibit_heading_record_tasks (create_heading_record)] unable to create heading record ' + error.message);
         }
     }
 
@@ -74,7 +74,7 @@ const Exhibit_heading_record_tasks = class {
             });
 
         } catch (error) {
-            LOGGER.module().error('ERROR: [/exhibits/exhibit_heading_record_tasks (get_heading_records)] unable to get records ' + error.message);
+            LOGGER.module().error('ERROR: [/exhibits/exhibit_heading_record_tasks (get_heading_records)] unable to get heading records ' + error.message);
         }
     }
 
@@ -112,7 +112,7 @@ const Exhibit_heading_record_tasks = class {
             }
 
         } catch (error) {
-            LOGGER.module().error('ERROR: [/exhibits/exhibit_heading_record_tasks (get_heading_record)] unable to get records ' + error.message);
+            LOGGER.module().error('ERROR: [/exhibits/exhibit_heading_record_tasks (get_heading_record)] unable to get heading records ' + error.message);
         }
     }
 
@@ -135,7 +135,7 @@ const Exhibit_heading_record_tasks = class {
             return true;
 
         } catch (error) {
-            LOGGER.module().error('ERROR: [/exhibits/exhibit_heading_record_tasks (update_heading_record)] unable to update record ' + error.message);
+            LOGGER.module().error('ERROR: [/exhibits/exhibit_heading_record_tasks (update_heading_record)] unable to update heading record ' + error.message);
         }
     }
 
@@ -161,7 +161,7 @@ const Exhibit_heading_record_tasks = class {
             return true;
 
         } catch (error) {
-            LOGGER.module().error('ERROR: [/exhibits/exhibit_heading_record_tasks (delete_heading_record)] unable to delete record ' + error.message);
+            LOGGER.module().error('ERROR: [/exhibits/exhibit_heading_record_tasks (delete_heading_record)] unable to delete heading record ' + error.message);
         }
     }
 
@@ -186,7 +186,7 @@ const Exhibit_heading_record_tasks = class {
     }
 
     /**
-     * Sets is_published flogs to true
+     * Sets is_published flogs to true for heading records
      * @param uuid
      */
     async set_to_publish(uuid) {
@@ -211,7 +211,32 @@ const Exhibit_heading_record_tasks = class {
     }
 
     /**
-     * Sets is_published flogs to false
+     * Sets is_published flog to true
+     * @param uuid
+     */
+    async set_heading_to_publish(uuid) {
+
+        try {
+
+            await this.DB(this.TABLE.heading_records)
+            .where({
+                uuid: uuid
+            })
+            .update({
+                is_published: 1
+            });
+
+            LOGGER.module().info('INFO: [/exhibits/exhibit_item_record_tasks (set_heading_to_publish)] Heading is_published set.');
+            return true;
+
+        } catch (error) {
+            LOGGER.module().error('ERROR: [/exhibits/exhibit_item_record_tasks (set_heading_to_publish)] unable to set heading is_published ' + error.message);
+            return false;
+        }
+    }
+
+    /**
+     * Sets is_published flogs to false for heading records
      * @param uuid
      */
     async set_to_suppress(uuid) {
@@ -231,6 +256,31 @@ const Exhibit_heading_record_tasks = class {
 
         } catch (error) {
             LOGGER.module().error('ERROR: [/exhibits/exhibit_heading_record_tasks (set_to_suppress)] unable to set heading is_published. ' + error.message);
+            return false;
+        }
+    }
+
+    /**
+     * Sets is_published flog to false
+     * @param uuid
+     */
+    async set_heading_to_suppress(uuid) {
+
+        try {
+
+            await this.DB(this.TABLE.heading_records)
+            .where({
+                uuid: uuid
+            })
+            .update({
+                is_published: 0
+            });
+
+            LOGGER.module().info('INFO: [/exhibits/exhibit_item_record_tasks (set_heading_to_suppress)] Heading is_published set.');
+            return true;
+
+        } catch (error) {
+            LOGGER.module().error('ERROR: [/exhibits/exhibit_item_record_tasks (set_heading_to_suppress)] unable to set heading is_published. ' + error.message);
             return false;
         }
     }

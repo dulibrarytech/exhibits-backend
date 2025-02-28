@@ -41,26 +41,14 @@ const Trashed_record_tasks = class {
         try {
 
             return await this.DB(this.TABLE.exhibit_records)
-            .select('uuid',
-                'type',
-                'title',
-                'subtitle',
-                'banner',
-                'hero_image',
-                'description',
-                'page_layout',
-                'template',
-                'styles',
-                'is_published',
-                'created'
-            )
+            .select('*')
             .where({
                 is_published: 0,
                 is_deleted: 1
             });
 
         } catch (error) {
-            LOGGER.module().error('ERROR: [/exhibits/exhibit_trashed_record_tasks (get_trashed_exhibit_records)] unable to get records ' + error.message);
+            LOGGER.module().error('ERROR: [/exhibits/exhibit_trashed_record_tasks (get_trashed_exhibit_records)] unable to get trashed records ' + error.message);
         }
     }
 
@@ -72,23 +60,14 @@ const Trashed_record_tasks = class {
         try {
 
             return await this.DB(this.TABLE.heading_records)
-            .select('is_member_of_exhibit',
-                'uuid',
-                'type',
-                'text',
-                'subtext',
-                'order',
-                'is_published',
-                'is_locked',
-                'created'
-            )
+            .select('*')
             .where({
                 is_published: 0,
                 is_deleted: 1
             });
 
         } catch (error) {
-            LOGGER.module().error('ERROR: [/exhibits/exhibit_trashed_record_tasks (get_trashed_heading_records)] unable to get records ' + error.message);
+            LOGGER.module().error('ERROR: [/exhibits/exhibit_trashed_record_tasks (get_trashed_heading_records)] unable to get trashed heading records ' + error.message);
         }
     }
 
@@ -100,31 +79,14 @@ const Trashed_record_tasks = class {
         try {
 
             return await this.DB(this.TABLE.item_records)
-            .select('is_member_of_exhibit',
-                'uuid',
-                'type',
-                'date',
-                'title',
-                'description',
-                'caption',
-                'template',
-                'item_type',
-                'url',
-                'text',
-                'layout',
-                'styles',
-                'columns',
-                'order',
-                'is_published',
-                'created'
-            )
+            .select('*')
             .where({
                 is_published: 0,
                 is_deleted: 1
             });
 
         } catch (error) {
-            LOGGER.module().error('ERROR: [/exhibits/exhibit_trashed_record_tasks (get_trashed_item_records)] unable to get records ' + error.message);
+            LOGGER.module().error('ERROR: [/exhibits/exhibit_trashed_record_tasks (get_trashed_item_records)] unable to get trashed item records ' + error.message);
         }
     }
 
@@ -145,7 +107,7 @@ const Trashed_record_tasks = class {
             .delete();
 
         } catch (error) {
-            LOGGER.module().error('ERROR: [/exhibits/exhibit_trashed_record_tasks (delete_trashed_record)] unable to delete record ' + error.message);
+            LOGGER.module().error('ERROR: [/exhibits/exhibit_trashed_record_tasks (delete_trashed_record)] unable to permanently delete record ' + error.message);
         }
     }
 
@@ -164,7 +126,7 @@ const Trashed_record_tasks = class {
             .delete();
 
         } catch (error) {
-            LOGGER.module().error('ERROR: [/exhibits/exhibit_trashed_record_tasks (delete_all_trashed_records)] unable to delete record ' + error.message);
+            LOGGER.module().error('ERROR: [/exhibits/exhibit_trashed_record_tasks (delete_all_trashed_records)] unable to delete all records ' + error.message);
         }
     }
 
@@ -183,7 +145,7 @@ const Trashed_record_tasks = class {
                 uuid: uuid
             })
             .update({
-                is_deleted: 1
+                is_deleted: 0
             });
 
         } catch (error) {

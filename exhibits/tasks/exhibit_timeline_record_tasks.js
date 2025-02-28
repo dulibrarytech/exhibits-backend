@@ -53,7 +53,7 @@ const Exhibit_timeline_record_tasks = class {
             return true;
 
         } catch (error) {
-            LOGGER.module().error('ERROR: [/exhibits/exhibit_timeline_record_tasks (create_timeline_record)] unable to create record ' + error.message);
+            LOGGER.module().error('ERROR: [/exhibits/exhibit_timeline_record_tasks (create_timeline_record)] unable to create timeline record ' + error.message);
         }
     }
 
@@ -73,7 +73,7 @@ const Exhibit_timeline_record_tasks = class {
             });
 
         } catch (error) {
-            LOGGER.module().error('ERROR: [/exhibits/exhibit_timeline_record_tasks (get_timeline_records)] unable to get records ' + error.message);
+            LOGGER.module().error('ERROR: [/exhibits/exhibit_timeline_record_tasks (get_timeline_records)] unable to get timeline records ' + error.message);
         }
     }
 
@@ -96,7 +96,7 @@ const Exhibit_timeline_record_tasks = class {
             return true;
 
         } catch (error) {
-            LOGGER.module().error('ERROR: [/exhibits/exhibit_timeline_record_tasks (update_timeline_record)] unable to update record ' + error.message);
+            LOGGER.module().error('ERROR: [/exhibits/exhibit_timeline_record_tasks (update_timeline_record)] unable to update timeline record ' + error.message);
         }
     }
 
@@ -141,7 +141,7 @@ const Exhibit_timeline_record_tasks = class {
             .orderBy('order');
 
         } catch (error) {
-            LOGGER.module().error('ERROR: [/exhibits/exhibit_timeline_record_tasks (get_timeline_item_records)] unable to get records ' + error.message);
+            LOGGER.module().error('ERROR: [/exhibits/exhibit_timeline_record_tasks (get_timeline_item_records)] unable to get timeline records ' + error.message);
         }
     }
 
@@ -189,7 +189,7 @@ const Exhibit_timeline_record_tasks = class {
             });
 
         } catch (error) {
-            LOGGER.module().error('ERROR: [/exhibits/exhibit_timeline_record_tasks (get_timeline_item_record)] unable to get record ' + error.message);
+            LOGGER.module().error('ERROR: [/exhibits/exhibit_timeline_record_tasks (get_timeline_item_record)] unable to get timeline item record ' + error.message);
         }
     }
 
@@ -209,11 +209,11 @@ const Exhibit_timeline_record_tasks = class {
             })
             .update(data);
 
-            LOGGER.module().info('INFO: [/exhibits/exhibit_timeline_record_tasks (update_timeline_item_record)] Timeline record updated.');
+            LOGGER.module().info('INFO: [/exhibits/exhibit_timeline_record_tasks (update_timeline_item_record)] Timeline item record updated.');
             return true;
 
         } catch (error) {
-            LOGGER.module().error('ERROR: [/exhibits/exhibit_timeline_record_tasks (update_timeline_item_record)] unable to update record ' + error.message);
+            LOGGER.module().error('ERROR: [/exhibits/exhibit_timeline_record_tasks (update_timeline_item_record)] unable to update timeline item record ' + error.message);
         }
     }
 
@@ -251,7 +251,7 @@ const Exhibit_timeline_record_tasks = class {
         }
     }
 
-    /**
+    /** * delete occurs in exhibit_item_record_tasks.js
      * Deletes timeline record
      * @param is_member_of_exhibit
      * @param uuid
@@ -273,7 +273,7 @@ const Exhibit_timeline_record_tasks = class {
             return true;
 
         } catch (error) {
-            LOGGER.module().error('ERROR: [/exhibits/exhibit_timeline_record_tasks (delete_timeline_record)] unable to delete record ' + error.message);
+            LOGGER.module().error('ERROR: [/exhibits/exhibit_timeline_record_tasks (delete_timeline_record)] unable to delete timeline record ' + error.message);
         }
     }
 
@@ -301,7 +301,7 @@ const Exhibit_timeline_record_tasks = class {
             return true;
 
         } catch (error) {
-            LOGGER.module().error('ERROR: [/exhibits/exhibit_timeline_record_tasks (delete_timeline_item_record)] unable to delete record ' + error.message);
+            LOGGER.module().error('ERROR: [/exhibits/exhibit_timeline_record_tasks (delete_timeline_item_record)] unable to delete timeline item record ' + error.message);
         }
     }
 

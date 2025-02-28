@@ -59,7 +59,7 @@ const Exhibit_record_tasks = class {
             }
 
         } catch (error) {
-            LOGGER.module().error('ERROR: [/exhibits/exhibit_record_tasks (create_exhibit_record)] unable to create record ' + error.message);
+            LOGGER.module().error('ERROR: [/exhibits/exhibit_record_tasks (create_exhibit_record)] unable to create exhibit record ' + error.message);
         }
     }
 
@@ -96,7 +96,7 @@ const Exhibit_record_tasks = class {
             });
 
         } catch (error) {
-            LOGGER.module().error('ERROR: [/exhibits/exhibit_record_tasks (get_exhibit_records)] unable to get records ' + error.message);
+            LOGGER.module().error('ERROR: [/exhibits/exhibit_record_tasks (get_exhibit_records)] unable to get exhibit records ' + error.message);
         }
     }
 
@@ -152,7 +152,7 @@ const Exhibit_record_tasks = class {
             }
 
         } catch (error) {
-            LOGGER.module().error('ERROR: [/exhibits/exhibit_record_tasks (get_exhibit_record)] unable to get records ' + error.message);
+            LOGGER.module().error('ERROR: [/exhibits/exhibit_record_tasks (get_exhibit_record)] unable to get exhibit record ' + error.message);
         }
     }
 
@@ -175,7 +175,7 @@ const Exhibit_record_tasks = class {
             return true;
 
         } catch (error) {
-            LOGGER.module().error('ERROR: [/exhibits/exhibit_record_tasks (update_exhibit_record)] unable to update record ' + error.message);
+            LOGGER.module().error('ERROR: [/exhibits/exhibit_record_tasks (update_exhibit_record)] unable to update exhibit record ' + error.message);
             return false;
         }
     }
@@ -201,7 +201,7 @@ const Exhibit_record_tasks = class {
             return true;
 
         } catch (error) {
-            LOGGER.module().error('ERROR: [/exhibits/exhibit_record_tasks (delete_item_record)] unable to delete record ' + error.message);
+            LOGGER.module().error('ERROR: [/exhibits/exhibit_record_tasks (delete_item_record)] unable to delete exhibit record ' + error.message);
         }
     }
 
@@ -230,11 +230,11 @@ const Exhibit_record_tasks = class {
             })
             .update(update);
 
-            LOGGER.module().info('INFO: [/exhibits/exhibit_record_tasks (set_preview)] Exhibit preview set.');
+            LOGGER.module().info('INFO: [/exhibits/exhibit_record_tasks (delete_media_value)] Media value deleted.');
             return true;
 
         } catch (error) {
-            LOGGER.module().error('ERROR: [/exhibits/exhibit_record_tasks (set_preview)] unable to set exhibit preview ' + error.message);
+            LOGGER.module().error('ERROR: [/exhibits/exhibit_record_tasks (delete_media_value)] unable to delete media value ' + error.message);
             return false;
         }
     }
@@ -357,7 +357,7 @@ const Exhibit_record_tasks = class {
                 order: order
             });
 
-            LOGGER.module().info('INFO: [/exhibits/item_record_tasks (reorder_items)] Item reordered.');
+            LOGGER.module().info('INFO: [/exhibits/item_record_tasks (reorder_exhibits)] Exhibits reordered.');
             return true;
 
         } catch (error) {

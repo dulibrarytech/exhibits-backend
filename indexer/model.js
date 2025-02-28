@@ -420,8 +420,8 @@ exports.index_item_record = async function (exhibit_id, item_id) {
 exports.index_heading_record = async function (exhibit_id, item_id) {
 
     const INDEX_TASKS = new INDEXER_INDEX_TASKS(DB, TABLES, CLIENT, ES_CONFIG.elasticsearch_index);
-    const ITEM_RECORD_TASK = new EXHIBIT_ITEM_RECORD_TASKS(DB, TABLES);
-    const item_record = await ITEM_RECORD_TASK.get_heading_record(exhibit_id, item_id);
+    const HEADING_RECORD_TASK = new EXHIBIT_HEADING_RECORD_TASKS(DB, TABLES);
+    const item_record = await HEADING_RECORD_TASK.get_heading_record(exhibit_id, item_id);
     const item_index_record = construct_heading_index_record(item_record.pop());
     const response = await INDEX_TASKS.index_record(item_index_record);
 

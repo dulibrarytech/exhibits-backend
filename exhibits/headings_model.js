@@ -126,19 +126,6 @@ exports.update_heading_record = async function (is_member_of_exhibit, uuid, data
 
     try {
 
-        /*
-        if (data.is_published !== undefined && data.is_locked !== undefined) {
-            data.is_published = parseInt(data.is_published);
-            data.is_locked = parseInt(data.is_locked);
-            data.order = parseInt(data.order);
-        } else {
-            return {
-                status: 400,
-                message: 'Bad Request.'
-            };
-        }
-        */
-
         data.is_member_of_exhibit = is_member_of_exhibit;
         data.uuid = uuid;
 
@@ -217,7 +204,7 @@ exports.publish_heading_record = async function (exhibit_id, heading_id) {
     try {
 
         const EXHIBIT_TASKS = new EXHIBIT_RECORD_TASKS(DB, TABLES);
-        const ITEM_TASKS = new EXHIBIT_ITEM_RECORD_TASKS(DB, TABLES);
+        const HEADING_TASKS = new EXHIBIT_HEADING_RECORD_TASKS(DB, TABLES);
         const exhibit_record = await EXHIBIT_TASKS.get_exhibit_record(exhibit_id);
 
         if (exhibit_record[0].is_published === 0) {
@@ -230,7 +217,7 @@ exports.publish_heading_record = async function (exhibit_id, heading_id) {
             };
         }
 
-        const is_item_published = await ITEM_TASKS.set_heading_to_publish(heading_id);
+        const is_item_published = await HEADING_TASKS.set_heading_to_publish(heading_id);
         const is_indexed = await INDEXER_MODEL.index_heading_record(exhibit_id, heading_id);
 
         if (is_indexed === false) {
@@ -274,7 +261,7 @@ exports.suppress_heading_record = async function (exhibit_id, item_id) {
 
     try {
 
-        const ITEM_TASKS = new EXHIBIT_ITEM_RECORD_TASKS(DB, TABLES);
+        const HEADING_TASKS = new EXHIBIT_HEADING_RECORD_TASKS(DB, TABLES);
         const is_deleted = await INDEXER_MODEL.delete_record(item_id);
 
         if (is_deleted === false) {
@@ -287,7 +274,7 @@ exports.suppress_heading_record = async function (exhibit_id, item_id) {
             };
         }
 
-        const is_item_suppressed = await ITEM_TASKS.set_heading_to_suppress(item_id);
+        const is_item_suppressed = await HEADING_TASKS.set_heading_to_suppress(item_id);
 
         if (is_item_suppressed === false) {
 

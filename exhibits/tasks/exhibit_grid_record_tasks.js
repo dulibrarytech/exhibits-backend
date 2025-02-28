@@ -21,7 +21,7 @@
 const LOGGER = require('../../libs/log4');
 
 /**
- * Object contains tasks used to manage exhibit item records
+ * Object contains tasks used to manage exhibit grid and grid item records
  * @param DB
  * @param TABLE
  * @type {Exhibit_record_tasks}
@@ -53,7 +53,7 @@ const Exhibit_grid_record_tasks = class {
             return true;
 
         } catch (error) {
-            LOGGER.module().error('ERROR: [/exhibits/exhibit_grid_record_tasks (create_grid_record)] unable to create record ' + error.message);
+            LOGGER.module().error('ERROR: [/exhibits/exhibit_grid_record_tasks (create_grid_record)] unable to create grid record ' + error.message);
         }
     }
 
@@ -73,7 +73,7 @@ const Exhibit_grid_record_tasks = class {
             });
 
         } catch (error) {
-            LOGGER.module().error('ERROR: [/exhibits/exhibit_grid_record_tasks (get_grid_records)] unable to get records ' + error.message);
+            LOGGER.module().error('ERROR: [/exhibits/exhibit_grid_record_tasks (get_grid_records)] unable to get grid records ' + error.message);
         }
     }
 
@@ -92,11 +92,11 @@ const Exhibit_grid_record_tasks = class {
             })
             .update(data);
 
-            LOGGER.module().info('INFO: [/exhibits/exhibit_grid_record_tasks (update_heading_record)] Grid record updated.');
+            LOGGER.module().info('INFO: [/exhibits/exhibit_grid_record_tasks (update_grid_record)] Grid record updated.');
             return true;
 
         } catch (error) {
-            LOGGER.module().error('ERROR: [/exhibits/exhibit_grid_record_tasks (update_grid_record)] unable to update record ' + error.message);
+            LOGGER.module().error('ERROR: [/exhibits/exhibit_grid_record_tasks (update_grid_record)] unable to update grid record ' + error.message);
         }
     }
 
@@ -141,7 +141,7 @@ const Exhibit_grid_record_tasks = class {
                 .orderBy('order');
 
         } catch (error) {
-            LOGGER.module().error('ERROR: [/exhibits/exhibit_grid_record_tasks (get_grid_item_records)] unable to get records ' + error.message);
+            LOGGER.module().error('ERROR: [/exhibits/exhibit_grid_record_tasks (get_grid_item_records)] unable to get grid item records ' + error.message);
         }
     }
 
@@ -189,7 +189,7 @@ const Exhibit_grid_record_tasks = class {
             });
 
         } catch (error) {
-            LOGGER.module().error('ERROR: [/exhibits/exhibit_grid_record_tasks (get_grid_item_record)] unable to get record ' + error.message);
+            LOGGER.module().error('ERROR: [/exhibits/exhibit_grid_record_tasks (get_grid_item_record)] unable to get grid item record ' + error.message);
         }
     }
 
@@ -213,7 +213,7 @@ const Exhibit_grid_record_tasks = class {
             return true;
 
         } catch (error) {
-            LOGGER.module().error('ERROR: [/exhibits/exhibit_grid_record_tasks (update_grid_item_record)] unable to update record ' + error.message);
+            LOGGER.module().error('ERROR: [/exhibits/exhibit_grid_record_tasks (update_grid_item_record)] unable to update grid item record ' + error.message);
         }
     }
 
@@ -273,7 +273,7 @@ const Exhibit_grid_record_tasks = class {
             return true;
 
         } catch (error) {
-            LOGGER.module().error('ERROR: [/exhibits/exhibit_heading_record_tasks (delete_heading_record)] unable to delete record ' + error.message);
+            LOGGER.module().error('ERROR: [/exhibits/exhibit_heading_record_tasks (delete_heading_record)] unable to delete grid record ' + error.message);
         }
     }
 
@@ -301,7 +301,7 @@ const Exhibit_grid_record_tasks = class {
             return true;
 
         } catch (error) {
-            LOGGER.module().error('ERROR: [/exhibits/exhibit_heading_record_tasks (delete_grid_item_record)] unable to delete record ' + error.message);
+            LOGGER.module().error('ERROR: [/exhibits/exhibit_heading_record_tasks (delete_grid_item_record)] unable to delete grid item record ' + error.message);
         }
     }
 
@@ -351,7 +351,7 @@ const Exhibit_grid_record_tasks = class {
     }
 
     /**
-     * Sets is_published flog to true for each grid item record
+     * Sets is_published flog to true for grid item record
      * @param uuid
      */
     async set_grid_item_to_publish(uuid) {
