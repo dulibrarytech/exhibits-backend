@@ -304,9 +304,8 @@ exports.get_dashboard_users_delete_form = function (req, res) {
     });
 };
 
-// TODO
-exports.get_dashboard_trash = function (req, res) {
-    res.render('dashboard-trash', {
+exports.get_dashboard_recycle = function (req, res) {
+    res.render('dashboard-recycle', {
         host: CONFIG.host,
         appname: CONFIG.app_name,
         appversion: CONFIG.app_version,

@@ -89,6 +89,7 @@ const exhibitsCommonFormModule = (function () {
             let exhibit = {};
             let navigation = {};
             let template = {};
+            let introduction = {};
 
             let exhibit_nav_background_color = document.querySelector('#nav-background-color').value;
             let exhibit_nav_font_color = document.querySelector('#nav-font-color').value;
@@ -98,6 +99,11 @@ const exhibitsCommonFormModule = (function () {
             let exhibit_template_font_color = document.querySelector('#template-font-color').value;
             let exhibit_template_font = document.querySelector('#template-font').value;
             let exhibit_template_font_size = document.querySelector('#template-font-size').value;
+
+            let exhibit_introduction_background_color = document.querySelector('#introduction-background-color').value;
+            let exhibit_introduction_font_color = document.querySelector('#introduction-font-color').value;
+            let exhibit_introduction_font = document.querySelector('#introduction-font').value;
+            let exhibit_introduction_font_size = document.querySelector('#introduction-font-size').value;
 
             if (exhibit_nav_background_color.length > 0) {
                 navigation.backgroundColor = exhibit_nav_background_color;
@@ -147,9 +153,34 @@ const exhibitsCommonFormModule = (function () {
                 template.fontSize = '';
             }
 
+            if (exhibit_introduction_background_color.length > 0) {
+                introduction.backgroundColor = exhibit_introduction_background_color;
+            } else {
+                introduction.backgroundColor = '';
+            }
+
+            if (exhibit_introduction_font_color.length > 0) {
+                introduction.color = exhibit_introduction_font_color;
+            } else {
+                introduction.color = '';
+            }
+
+            if (exhibit_introduction_font.length > 0) {
+                introduction.fontFamily = exhibit_introduction_font;
+            } else {
+                introduction.fontFamily = '';
+            }
+
+            if (exhibit_introduction_font_size.length > 0) {
+                introduction.fontSize = `${exhibit_introduction_font_size}px`;
+            } else {
+                introduction.fontSize = '';
+            }
+
             exhibit.exhibit = {
                 navigation: navigation,
-                template: template
+                template: template,
+                introduction: introduction
             };
 
             return exhibit;
@@ -259,6 +290,21 @@ const exhibitsCommonFormModule = (function () {
             navModule.init();
             document.querySelector('#hero-trash').style.display = 'none';
             document.querySelector('#thumbnail-trash').style.display = 'none';
+
+            document.querySelector('#introduction-background-color-picker').addEventListener('input', () => {
+                if (document.querySelector('#introduction-background-color')) {
+                    document.querySelector('#introduction-background-color').value = document.querySelector('#introduction-background-color-picker').value;
+                }
+            });
+
+            document.querySelector('#introduction-font-color-picker').addEventListener('input', () => {
+                if (document.querySelector('#introduction-font-color')) {
+                    document.querySelector('#introduction-font-color').value = document.querySelector('#introduction-font-color-picker').value;
+                }
+            });
+
+
+
             document.querySelector('#nav-background-color-picker').addEventListener('input', () => {
                 if (document.querySelector('#nav-background-color')) {
                     document.querySelector('#nav-background-color').value = document.querySelector('#nav-background-color-picker').value;

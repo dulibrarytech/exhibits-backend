@@ -65,19 +65,4 @@ module.exports = function (app) {
 
     app.route(ENDPOINTS().exhibits.token_verify.endpoint)
     .post(TOKEN.verify, CONTROLLER.verify);
-
-    /*
-    app.route(ENDPOINTS().exhibits.trashed_records.get.endpoint)
-    .get(CONTROLLER.get_trashed_records);
-
-    app.route(ENDPOINTS().exhibits.trashed_records.put.endpoint)
-    .put(CONTROLLER.restore_trashed_record);
-
-    app.route(ENDPOINTS().exhibits.trashed_records.delete.endpoint)
-    .delete(CONTROLLER.delete_trashed_record);
-
-    app.route(ENDPOINTS().exhibits.trashed_records.post.endpoint)
-    .post(CONTROLLER.delete_all_trashed_records);
-
-     */
 };

@@ -113,6 +113,6 @@ module.exports = function (app) {
     app.route(APP_PATH + '/logout')
     .get(CONTROLLER.get_dashboard_logout);
 
-    app.route(APP_PATH + '/trash')
-    .get(CONTROLLER.get_dashboard_trash);
+    app.route(APP_PATH + '/recycle')
+    .get(CONTROLLER.get_dashboard_recycle);
 };

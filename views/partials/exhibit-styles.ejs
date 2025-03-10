@@ -1,0 +1,231 @@
+<div id="exhibit-styles-card" class="card">
+    <div class="card-header">
+        <strong class="card-title mb-3">Exhibit Styles</strong>
+    </div>
+    <div class="card-body">
+        <div class="alert alert-info">
+            <i class="fa fa-info"></i> <span id="info-message">Provide info to user about exhibit styles</span>
+        </div>
+        <div class="row">
+            <div class="col-4 col-md-4">
+                <p>
+                    <span class="form-text text-muted"
+                          style="font-size: 14px"><strong>Apply Styles to Exhibit Introduction</strong></span>
+                </p>
+                <div class="row form-group">
+                    <div class="col-12 col-md-12">
+                        <p>
+                        <div class="form-text text-muted" style="font-size: 13px">
+                            <label for="introduction-background-color">Introduction Background Color</label>
+                        </div>
+                        </p>
+                        <div class="input-group">
+                            <div class="input-group-btn">
+                                <input title="Color Picker" class="color-picker btn btn-default" type="color"
+                                       id="introduction-background-color-picker" value="#ffffff">
+                            </div>
+                            <input type="text" id="introduction-background-color" name="introduction_background_color"
+                                   placeholder="i.e. #FFFFFF" class="form-control" style="height: 40px">
+                        </div>
+                    </div>
+                </div>
+                <div class="row form-group">
+                    <div class="col-12 col-md-12">
+                        <p>
+                        <div class="form-text text-muted" style="font-size: 13px">
+                            <label for="introduction-font-color">Introduction Font Color</label>
+                        </div>
+                        </p>
+                        <div class="input-group">
+                            <div class="input-group-btn">
+                                <input title="Color Picker" class="color-picker btn btn-default" type="color"
+                                       id="introduction-font-color-picker"
+                                       value="#ffffff">
+                            </div>
+                            <input type="text" id="introduction-font-color" name="nav_font_color"
+                                   placeholder="i.e. #FFFFFF" class="form-control" style="height: 40px">
+                        </div>
+                    </div>
+                </div>
+                <div class="row form-group">
+                    <div class="col-12 col-md-12">
+                        <p>
+                        <div class="form-text text-muted" style="font-size: 13px">
+                            <label for="introduction-font-size">Introduction Font Size</label>
+                        </div>
+                        </p>
+                        <div class="input-group">
+                            <input type="number" id="introduction-font-size" name="introduction_font_size"
+                                   placeholder="" class="form-control" min="1" max="50" style="height: 40px">
+                            <div class="input-group-append">
+                                <span class="input-group-text" id="basic-addon2">px</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="row form-group">
+                    <div class="col-12 col-md-12">
+                        <p>
+                        <div class="form-text text-muted" style="font-size: 13px">
+                            <label for="introduction_font">Introduction Font</label>
+                        </div>
+                        </p>
+                        <div class="input-group">
+                            <select name="introduction_font" id="introduction-font"
+                                    class="form-control-lg form-control text-muted" style="height: 40px">
+                                <option value="">----------</option>
+                                <%- include('exhibit-fonts-options-list.ejs'); %>
+                            </select>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-4 col-md-4">
+                <p>
+                    <span class="form-text text-muted"
+                          style="font-size: 14px"><strong>Apply Styles to Navigation Menu</strong></span>
+                </p>
+                <div class="row form-group">
+                    <div class="col-12 col-md-12">
+                        <p>
+                        <div class="form-text text-muted" style="font-size: 13px">
+                            <label for="nav-background-color">Navigation Background Color</label>
+                        </div>
+                        </p>
+                        <div class="input-group">
+                            <div class="input-group-btn">
+                                <input title="Color Picker" class="color-picker btn btn-default" type="color"
+                                       id="nav-background-color-picker" value="#ffffff">
+                            </div>
+                            <input type="text" id="nav-background-color" name="nav_background_color"
+                                   placeholder="i.e. #FFFFFF" class="form-control" style="height: 40px">
+                        </div>
+                    </div>
+                </div>
+                <div class="row form-group">
+                    <div class="col-12 col-md-12">
+                        <p>
+                        <div class="form-text text-muted" style="font-size: 13px">
+                            <label for="nav-font-color">Navigation Font Color</label>
+                        </div>
+                        </p>
+                        <div class="input-group">
+                            <div class="input-group-btn">
+                                <input title="Color Picker" class="color-picker btn btn-default" type="color"
+                                       id="nav-font-color-picker"
+                                       value="#ffffff">
+                            </div>
+                            <input type="text" id="nav-font-color" name="nav_font_color"
+                                   placeholder="i.e. #FFFFFF" class="form-control" style="height: 40px">
+                        </div>
+                    </div>
+                </div>
+                <div class="row form-group">
+                    <div class="col-12 col-md-12">
+                        <p>
+                        <div class="form-text text-muted" style="font-size: 13px">
+                            <label for="nav-font-size">Navigation Font Size</label>
+                        </div>
+                        </p>
+                        <div class="input-group">
+                            <input type="number" id="nav-font-size" name="nav_font_size"
+                                   placeholder="" class="form-control" min="1" max="50" style="height: 40px">
+                            <div class="input-group-append">
+                                <span class="input-group-text" id="basic-addon2">px</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="row form-group">
+                    <div class="col-12 col-md-12">
+                        <p>
+                        <div class="form-text text-muted" style="font-size: 13px">
+                            <label for="nav_font">Navigation Font</label>
+                        </div>
+                        </p>
+                        <div class="input-group">
+                            <select name="nav_font" id="nav-font"
+                                    class="form-control-lg form-control text-muted" style="height: 40px">
+                                <option value="">----------</option>
+                                <%- include('exhibit-fonts-options-list.ejs'); %>
+                            </select>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-4 col-md-4">
+                <p>
+                            <span class="form-text text-muted"
+                                  style="font-size: 14px"><strong>Apply Styles to Exhibit</strong></span>
+                </p>
+                <div class="row form-group">
+                    <div class="col-12 col-md-12">
+                        <p>
+                        <div class="form-text text-muted" style="font-size: 13px">
+                            <label for="template-background-color">Exhibit Background Color</label>
+                        </div>
+                        </p>
+                        <div class="input-group">
+                            <div class="input-group-btn">
+                                <input title="Color Picker" class="color-picker btn btn-default" type="color"
+                                       id="template-background-color-picker" value="#ffffff">
+                            </div>
+                            <input type="text" id="template-background-color" name="template_background_color"
+                                   placeholder="i.e. #FFFFFF" class="form-control" style="height: 40px">
+                        </div>
+                    </div>
+                </div>
+                <div class="row form-group">
+                    <div class="col-12 col-md-12">
+                        <p>
+                        <div class="form-text text-muted" style="font-size: 13px">
+                            <label for="template-font-color">Exhibit Font Color</label>
+                        </div>
+                        </p>
+                        <div class="input-group">
+                            <div class="input-group-btn">
+                                <input title="Color Picker" class="color-picker btn btn-default" type="color"
+                                       id="template-font-color-picker"
+                                       value="#ffffff">
+                            </div>
+                            <input type="text" id="template-font-color" name="template_font_color"
+                                   placeholder="i.e. #FFFFFF" class="form-control" style="height: 40px">
+                        </div>
+                    </div>
+                </div>
+                <div class="row form-group">
+                    <div class="col-12 col-md-12">
+                        <p>
+                        <div class="form-text text-muted" style="font-size: 13px">
+                            <label for="template-font-size">Exhibit Font Size</label>
+                        </div>
+                        </p>
+                        <div class="input-group">
+                            <input type="number" id="template-font-size" name="template_font_size"
+                                   placeholder="" class="form-control" min="1" max="50" style="height: 40px">
+                            <div class="input-group-append">
+                                <span class="input-group-text" id="basic-addon2">px</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="row form-group">
+                    <div class="col-12 col-md-12">
+                        <p>
+                        <div class="form-text text-muted" style="font-size: 13px">
+                            <label for="template-font">Exhibit Font</label>
+                        </div>
+                        </p>
+                        <div class="input-group">
+                            <select name="template_font" id="template-font"
+                                    class="form-control-lg form-control text-muted" style="height: 40px">
+                                <option value="">----------</option>
+                                <%- include('exhibit-fonts-options-list.ejs'); %>
+                            </select>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

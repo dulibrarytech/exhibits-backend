@@ -61,6 +61,7 @@ module.exports = function() {
     require('../exhibits/share_routes')(APP);
     require('../indexer/routes')(APP);
     require('../users/routes')(APP);
+    require('../exhibits/recycle_routes')(APP);
     require('../exhibits/uploads')(APP);
 
     if (!FS.existsSync(`./storage`)){

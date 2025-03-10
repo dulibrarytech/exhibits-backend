@@ -191,6 +191,29 @@ const exhibitsEditFormModule = (function () {
                 }
             }
 
+            if (styles.exhibit.introduction !== undefined) {
+
+                if (styles.exhibit.introduction.backgroundColor !== undefined) {
+                    document.querySelector('#introduction-background-color').value = styles.exhibit.introduction.backgroundColor;
+                }
+
+                if (styles.exhibit.introduction.color !== undefined) {
+                    document.querySelector('#introduction-font-color').value = styles.exhibit.introduction.color;
+                }
+
+                let font_values = document.querySelector('#introduction-font');
+
+                for (let i = 0; i < font_values.length; i++) {
+                    if (font_values[i].value === styles.exhibit.introduction.fontFamily) {
+                        document.querySelector('#introduction-font').value = styles.exhibit.introduction.fontFamily;
+                    }
+                }
+
+                if (styles.exhibit.introduction.fontSize !== undefined) {
+                    document.querySelector('#introduction-font-size').value = styles.exhibit.introduction.fontSize.replace('px', '');
+                }
+            }
+
             return false;
 
         } catch (error) {

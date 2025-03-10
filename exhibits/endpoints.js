@@ -337,25 +337,25 @@ const ENDPOINTS = {
             endpoint: `${APP_PATH}${PREFIX}${VERSION}${ENDPOINT}/verify`,
             header: 'token',
         },
-        trashed_records: {
+        recycled_records: {
             get: {
                 description: 'Retrieves all records flagged as deleted',
-                endpoint: `${APP_PATH}${PREFIX}${VERSION}/trash`,
+                endpoint: `${APP_PATH}${PREFIX}${VERSION}/recycle`,
                 params: 'token or api_key'
             },
             delete: {
                 description: 'Permanently deletes a record',
-                endpoint: `${APP_PATH}${PREFIX}${VERSION}/trash/:exhibit_id/:uuid/:type`,
+                endpoint: `${APP_PATH}${PREFIX}${VERSION}/recycle/:exhibit_id/:uuid/:type`,
                 params: 'token or api_key'
             },
             post: {
                 description: 'Permanently deletes all trash records',
-                endpoint: `${APP_PATH}${PREFIX}${VERSION}/trash/:exhibit_id/:uuid/:type`,
+                endpoint: `${APP_PATH}${PREFIX}${VERSION}/recycle/:exhibit_id/:uuid/:type`,
                 params: 'token or api_key'
             },
             put: {
                 description: 'Restores trashed record',
-                endpoint: `${APP_PATH}${PREFIX}${VERSION}/trash/:exhibit_id/:uuid/:type`,
+                endpoint: `${APP_PATH}${PREFIX}${VERSION}/recycle/:exhibit_id/:uuid/:type`,
                 params: 'token or api_key'
             }
         }

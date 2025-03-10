@@ -19,12 +19,21 @@
     <%- include('partials/main-header.ejs'); %>
     <div class="content" style="min-height: 875px;">
         <div id="message"></div>
-        <div id="item-card" class="card" style="visibility: visible">
+        <div id="recycled-data-card" class="card" style="visibility: visible">
             <div class="card-header">
-                <strong class="card-title mb-3"><h2>Trash</h2></strong>
+                <strong class="card-title mb-3">Deleted data</strong>
             </div>
             <div class="card-body">
-                // TODO: trash - datatables
+                <table id="exhibits" class="display">
+                    <thead>
+                    <tr>
+                        <th aria-label="order">ID</th>
+                        <th aria-label="title">Title</th>
+                        <th aria-label="actions">Actions</th>
+                    </tr>
+                    </thead>
+                    <tbody id="exhibits-data"></tbody>
+                </table>
             </div>
         </div>
     </div>
@@ -44,15 +53,12 @@
 <script src="/exhibits-dashboard/static/app/helper.module.js"></script>
 <script src="/exhibits-dashboard/static/app/endpoints.module.js"></script>
 <script src="/exhibits-dashboard/static/app/auth.module.js"></script>
-<!--
-<script src="<%=host%>/app/uploads.module.js"></script>
-<script src="<%=host%>/app/exhibits.module.js"></script>
-<script src="<%=host%>/app/items.module.js"></script>
--->
+<script src="/exhibits-dashboard/static/app/nav.module.js"></script>
+<script src="/exhibits-dashboard/static/app/recycle.module.js"></script>
 <script>
-    // itemsModule.set_item_nav_menu_links();
-    // uploadsModule.upload_item_media();
-    // uploadsModule.upload_item_thumbnail();
+    (async function () {
+        await recycleModule.init();
+    })();
 </script>
 </body>
 </html>

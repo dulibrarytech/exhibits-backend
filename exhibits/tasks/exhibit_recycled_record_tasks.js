@@ -1,6 +1,6 @@
 /**
 
- Copyright 2023 University of Denver
+ Copyright 2025 University of Denver
 
  Licensed under the Apache License, Version 2.0 (the "License");
  you may not use this file except in compliance with the License.
@@ -21,12 +21,12 @@
 const LOGGER = require('../../libs/log4');
 
 /**
- * Object contains tasks used to manage trashed records
+ * Object contains tasks used to manage recycled records
  * @param DB
  * @param TABLE
- * @type {Exhibit_record_tasks}
+ * @type {Recycled_record_tasks}
  */
-const Trashed_record_tasks = class {
+const Recycled_record_tasks = class {
 
     constructor(DB, TABLE) {
         this.DB = DB;
@@ -36,7 +36,7 @@ const Trashed_record_tasks = class {
     /**
      * Gets trashed exhibit records
      */
-    async get_trashed_exhibit_records() {
+    async get_recycled_exhibit_records() {
 
         try {
 
@@ -48,14 +48,14 @@ const Trashed_record_tasks = class {
             });
 
         } catch (error) {
-            LOGGER.module().error('ERROR: [/exhibits/exhibit_trashed_record_tasks (get_trashed_exhibit_records)] unable to get trashed records ' + error.message);
+            LOGGER.module().error('ERROR: [/exhibits/exhibit_recycled_record_tasks (get_recycled_exhibit_records)] unable to get recycled records ' + error.message);
         }
     }
 
     /**
      * Gets trashed heading records
      */
-    async get_trashed_heading_records() {
+    async get_recycled_heading_records() {
 
         try {
 
@@ -67,14 +67,14 @@ const Trashed_record_tasks = class {
             });
 
         } catch (error) {
-            LOGGER.module().error('ERROR: [/exhibits/exhibit_trashed_record_tasks (get_trashed_heading_records)] unable to get trashed heading records ' + error.message);
+            LOGGER.module().error('ERROR: [/exhibits/exhibit_recycled_record_tasks (get_recycled_heading_records)] unable to get recycled heading records ' + error.message);
         }
     }
 
     /**
-     * Gets trashed item records
+     * Gets recycled item records
      */
-    async get_trashed_item_records() {
+    async get_recycled_item_records() {
 
         try {
 
@@ -86,16 +86,16 @@ const Trashed_record_tasks = class {
             });
 
         } catch (error) {
-            LOGGER.module().error('ERROR: [/exhibits/exhibit_trashed_record_tasks (get_trashed_item_records)] unable to get trashed item records ' + error.message);
+            LOGGER.module().error('ERROR: [/exhibits/exhibit_recycled_record_tasks (get_recycled_item_records)] unable to get recycled item records ' + error.message);
         }
     }
 
     /**
-     * Permanently deletes trashed record
+     * Permanently deletes recycled record
      * @param is_member_of_exhibit
      * @param uuid
      */
-    async delete_trashed_record(is_member_of_exhibit, uuid) {
+    async delete_recycled_record(is_member_of_exhibit, uuid) {
 
         try {
 
@@ -107,14 +107,14 @@ const Trashed_record_tasks = class {
             .delete();
 
         } catch (error) {
-            LOGGER.module().error('ERROR: [/exhibits/exhibit_trashed_record_tasks (delete_trashed_record)] unable to permanently delete record ' + error.message);
+            LOGGER.module().error('ERROR: [/exhibits/exhibit_recycled_record_tasks (delete_recycled_record)] unable to permanently delete record ' + error.message);
         }
     }
 
     /**
-     * Permanently deletes all trashed records
+     * Permanently deletes all recycled records
      */
-    async delete_all_trashed_records() {
+    async delete_all_recycled_records() {
 
         try {
 
@@ -126,16 +126,16 @@ const Trashed_record_tasks = class {
             .delete();
 
         } catch (error) {
-            LOGGER.module().error('ERROR: [/exhibits/exhibit_trashed_record_tasks (delete_all_trashed_records)] unable to delete all records ' + error.message);
+            LOGGER.module().error('ERROR: [/exhibits/exhibit_recycled_record_tasks (delete_all_recycled_records)] unable to delete all records ' + error.message);
         }
     }
 
     /**
-     * Restores trashed records
+     * Restores recycled records
      * @param is_member_of_exhibit
      * @param uuid
      */
-    async restore_trashed_record(is_member_of_exhibit, uuid) {
+    async restore_recycled_record(is_member_of_exhibit, uuid) {
 
         try {
 
@@ -149,9 +149,9 @@ const Trashed_record_tasks = class {
             });
 
         } catch (error) {
-            LOGGER.module().error('ERROR: [/exhibits/exhibit_trashed_record_tasks (restore_trashed_record)] unable to restore record ' + error.message);
+            LOGGER.module().error('ERROR: [/exhibits/exhibit_recycled_record_tasks (restore_recycled_record)] unable to restore record ' + error.message);
         }
     }
 };
 
-module.exports = Trashed_record_tasks;
+module.exports = Recycled_record_tasks;
