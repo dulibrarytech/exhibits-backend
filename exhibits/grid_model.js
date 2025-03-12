@@ -335,7 +335,6 @@ exports.update_grid_item_record = async function (is_member_of_exhibit, is_membe
         delete data.media_prev;
         delete data.thumbnail_prev;
 
-        data.order = await HELPER_TASK.order_exhibit_items(data.is_member_of_grid, DB, TABLES);
         const UPDATE_RECORD_TASK = new EXHIBIT_GRID_RECORD_TASKS(DB, TABLES);
         let result = await UPDATE_RECORD_TASK.update_grid_item_record(data);
 
