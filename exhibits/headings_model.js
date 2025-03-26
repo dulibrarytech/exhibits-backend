@@ -177,6 +177,13 @@ exports.delete_heading_record = async function (is_member_of_exhibit, uuid) {
     try {
 
         const TASK = new EXHIBIT_HEADING_RECORD_TASKS(DB, TABLES);
+        const is_heading_deleted = await INDEXER_MODEL.delete_record(uuid);
+
+        if (is_heading_deleted.status === 204) {
+            console.log('Index record deleted');
+        } else {
+            console.log('Index record not deleted');
+        }
 
         return {
             status: 204,
