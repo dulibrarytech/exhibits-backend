@@ -326,7 +326,7 @@ exports.delete_item_record = async function (is_member_of_exhibit, item_id, type
         const is_item_deleted = await INDEXER_MODEL.delete_record(item_id);
 
         if (is_item_deleted.status === 204) {
-            LOGGER.module().info('INFO: [/exhibits/model (delete_item_record)] Item record deleted ' + error.message);
+            LOGGER.module().info('INFO: [/exhibits/model (delete_item_record)] Item record deleted');
         } else {
             LOGGER.module().info('INFO: [/exhibits/model (delete_item_record)] Record not found in index');
         }
