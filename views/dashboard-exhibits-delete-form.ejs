@@ -42,10 +42,19 @@
 <script src="/exhibits-dashboard/static/app/exhibits.module.js"></script>
 <script>
     (async function() {
-        const uuid = helperModule.get_parameter_by_name('exhibit_id');
-        await exhibitsModule.set_exhibit_title(uuid);
-        document.querySelector('#delete-exhibit-btn').addEventListener('click', exhibitsModule.delete_exhibit);
-        helperModule.show_form();
+
+        try {
+
+            const token = authModule.get_user_token();
+            await authModule.check_auth(token);
+            const uuid = helperModule.get_parameter_by_name('exhibit_id');
+            await exhibitsModule.set_exhibit_title(uuid);
+            document.querySelector('#delete-exhibit-btn').addEventListener('click', exhibitsModule.delete_exhibit);
+            helperModule.show_form();
+        } catch (error) {
+            document.querySelector('#message').innerHTML = `<div class="alert alert-danger" role="alert"><i class="fa fa-exclamation"></i> ${error.message}</div>`;
+        }
+
     })();
 </script>
 </body>
