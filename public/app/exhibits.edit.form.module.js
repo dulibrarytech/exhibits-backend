@@ -110,7 +110,7 @@ const exhibitsEditFormModule = (function () {
             // exhibit media
             if (record.hero_image.length > 0) {
                 hero_image_url = `${APP_PATH}/api/v1/exhibits/${record.uuid}/media/${record.hero_image}`;
-                hero_image_fragment = `<p><img src="${hero_image_url}" height="200"></p>`;
+                hero_image_fragment = `<p><img alt="${record.hero_image}" src="${hero_image_url}" height="200"></p>`;
                 document.querySelector('#hero-image-display').innerHTML = hero_image_fragment;
                 document.querySelector('#hero-image-filename-display').innerHTML = `<span style="font-size: 11px">${record.hero_image}</span>`;
                 document.querySelector('#hero-image').value = record.hero_image;
@@ -120,7 +120,7 @@ const exhibitsEditFormModule = (function () {
 
             if (record.thumbnail.length > 0) {
                 thumbnail_url = `${APP_PATH}/api/v1/exhibits/${record.uuid}/media/${record.thumbnail}`;
-                thumbnail_fragment = `<p><img src="${thumbnail_url}" height="200" ></p>`;
+                thumbnail_fragment = `<p><img alt="${record.thumbnail}" src="${thumbnail_url}" height="200"></p>`;
                 document.querySelector('#thumbnail-image-display').innerHTML = thumbnail_fragment;
                 document.querySelector('#thumbnail-filename-display').innerHTML = `<span style="font-size: 11px">${record.thumbnail}</span>`;
                 document.querySelector('#thumbnail-image').value = record.thumbnail;

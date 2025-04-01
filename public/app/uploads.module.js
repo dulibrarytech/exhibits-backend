@@ -58,7 +58,7 @@ const uploadsModule = (function () {
                 setTimeout(() => {
                     this.removeFile(file);
                     const hero_url = `${APP_PATH}/media?media=${filename}`;
-                    document.querySelector('#hero-image-display').innerHTML = `<p><img src="${hero_url}" height="200"></p>`;
+                    document.querySelector('#hero-image-display').innerHTML = `<p><img alt="${filename}" src="${hero_url}" height="200"></p>`;
                 }, 2000);
 
             },
@@ -103,7 +103,7 @@ const uploadsModule = (function () {
 
                 setTimeout(() => {
                     const thumbnail_url = `${APP_PATH}/media?media=${filename}`;
-                    document.querySelector('#thumbnail-image-display').innerHTML = `<p><img src="${thumbnail_url}" height="200"></p>`;
+                    document.querySelector('#thumbnail-image-display').innerHTML = `<p><img alt="${filename}" src="${thumbnail_url}" height="200"></p>`;
                     this.removeFile(file);
                 }, 2000);
 

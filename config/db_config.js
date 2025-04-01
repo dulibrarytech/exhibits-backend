@@ -28,7 +28,8 @@ const CONNECTION_CONFIG = {
 };
 const DB = require('knex')({
         client: 'mysql2',
-        connection: HELPER_TASK.check_config(CONNECTION_CONFIG)
+        connection: HELPER_TASK.check_config(CONNECTION_CONFIG),
+        pool: {min: 0, max: 10}
 });
 
 module.exports = function () {
