@@ -153,10 +153,12 @@ const exhibitsEditFormModule = (function () {
 
                 if (styles.exhibit.navigation.backgroundColor !== undefined) {
                     document.querySelector('#nav-background-color').value = styles.exhibit.navigation.backgroundColor;
+                    document.querySelector('#nav-background-color-picker').value = styles.exhibit.navigation.backgroundColor;
                 }
 
                 if (styles.exhibit.navigation.color !== undefined) {
                     document.querySelector('#nav-font-color').value = styles.exhibit.navigation.color;
+                    document.querySelector('#nav-font-color-picker').value = styles.exhibit.navigation.color;
                 }
 
                 let font_values = document.querySelector('#nav-font');
@@ -174,8 +176,21 @@ const exhibitsEditFormModule = (function () {
 
             if (styles.exhibit.template !== undefined) {
 
-                document.querySelector('#template-background-color').value = styles.exhibit.template.backgroundColor;
-                document.querySelector('#template-font-color').value = styles.exhibit.template.color;
+                if (styles.exhibit.template.backgroundColor !== undefined) {
+                    document.querySelector('#template-background-color').value = styles.exhibit.template.backgroundColor;
+                    document.querySelector('#template-background-color-picker').value = styles.exhibit.template.backgroundColor;
+                } else {
+                    document.querySelector('#template-background-color').value = '#FFFFFF';
+                    document.querySelector('#template-background-color-picker').value = '#FFFFFF';
+                }
+
+                if (styles.exhibit.template.color !== undefined) {
+                    document.querySelector('#template-font-color').value = styles.exhibit.template.color;
+                    document.querySelector('#template-font-color-picker').value = styles.exhibit.template.color;
+                } else {
+                    document.querySelector('#template-font-color').value = '#FFFFFF';
+                    document.querySelector('#template-font-color-picker').value = '#FFFFFF';
+                }
 
                 let template_font_values = document.querySelector('#template-font');
 
@@ -194,11 +209,26 @@ const exhibitsEditFormModule = (function () {
             if (styles.exhibit.introduction !== undefined) {
 
                 if (styles.exhibit.introduction.backgroundColor !== undefined) {
-                    document.querySelector('#introduction-background-color').value = styles.exhibit.introduction.backgroundColor;
+
+                    if (styles.exhibit.introduction.backgroundColor.length > 0) {
+                        document.querySelector('#introduction-background-color').value = styles.exhibit.introduction.backgroundColor;
+                        document.querySelector('#introduction-background-color-picker').value = styles.exhibit.introduction.backgroundColor;
+                    } else {
+                        document.querySelector('#introduction-background-color').value = '#FFFFFF';
+                        document.querySelector('#introduction-background-color-picker').value = '#FFFFFF';
+                    }
+
                 }
 
                 if (styles.exhibit.introduction.color !== undefined) {
-                    document.querySelector('#introduction-font-color').value = styles.exhibit.introduction.color;
+
+                    if (styles.exhibit.introduction.color.length > 0) {
+                        document.querySelector('#introduction-font-color').value = styles.exhibit.introduction.color;
+                        document.querySelector('#introduction-font-color-picker').value = styles.exhibit.introduction.color;
+                    } else {
+                        document.querySelector('#introduction-font-color').value = '#FFFFFF';
+                        document.querySelector('#introduction-font-color-picker').value = '#FFFFFF';
+                    }
                 }
 
                 let font_values = document.querySelector('#introduction-font');
@@ -362,7 +392,6 @@ const exhibitsEditFormModule = (function () {
 
         try {
 
-            // helperModule.set_rich_text_editor_config();
             document.querySelector('#save-exhibit-btn').addEventListener('click', exhibitsEditFormModule.update_exhibit_record);
 
             setTimeout(async () => {

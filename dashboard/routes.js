@@ -25,94 +25,97 @@ module.exports = function (app) {
 
     //============Exhibits============//
     app.route(APP_PATH + '/exhibits')
-    .get(CONTROLLER.get_dashboard_exhibits);
+        .get(CONTROLLER.get_dashboard_exhibits);
 
     app.route(APP_PATH + '/exhibits/exhibit')
-    .get(CONTROLLER.get_dashboard_exhibits_add_form);
+        .get(CONTROLLER.get_dashboard_exhibits_add_form);
+
+    app.route(APP_PATH + '/exhibits/exhibit/details')
+        .get(CONTROLLER.get_dashboard_exhibits_details);
 
     app.route(APP_PATH + '/exhibits/exhibit/edit')
-    .get(CONTROLLER.get_dashboard_exhibits_edit_form);
+        .get(CONTROLLER.get_dashboard_exhibits_edit_form);
 
     app.route(APP_PATH + '/exhibits/exhibit/delete')
-    .get(CONTROLLER.get_dashboard_exhibits_delete_form);
+        .get(CONTROLLER.get_dashboard_exhibits_delete_form);
 
     //============Standard Items============//
     app.route(APP_PATH + '/items')
-    .get(CONTROLLER.get_dashboard_items);
+        .get(CONTROLLER.get_dashboard_items);
 
     app.route(APP_PATH + '/items/standard')
-    .get(CONTROLLER.get_dashboard_items_standard_add_form);
+        .get(CONTROLLER.get_dashboard_items_standard_add_form);
 
     app.route(APP_PATH + '/items/standard/edit')
-    .get(CONTROLLER.get_dashboard_items_standard_edit_form);
+        .get(CONTROLLER.get_dashboard_items_standard_edit_form);
 
     //============Headings============//
     app.route(APP_PATH + '/items/heading')
-    .get(CONTROLLER.get_dashboard_item_heading_add_form);
+        .get(CONTROLLER.get_dashboard_item_heading_add_form);
 
     app.route(APP_PATH + '/items/heading/edit')
-    .get(CONTROLLER.get_dashboard_items_heading_edit_form);
+        .get(CONTROLLER.get_dashboard_items_heading_edit_form);
 
     //============Grids============//
     app.route(APP_PATH + '/items/grid')
-    .get(CONTROLLER.get_dashboard_grid_add_form);
+        .get(CONTROLLER.get_dashboard_grid_add_form);
 
     app.route(APP_PATH + '/items/grid/edit')
-    .get(CONTROLLER.get_dashboard_grid_edit_form);
+        .get(CONTROLLER.get_dashboard_grid_edit_form);
 
     app.route(APP_PATH + '/items/grid/item')
-    .get(CONTROLLER.get_dashboard_grid_add_item_form);
+        .get(CONTROLLER.get_dashboard_grid_add_item_form);
 
     app.route(APP_PATH + '/items/grid/item/edit')
-    .get(CONTROLLER.get_dashboard_grid_edit_item_form);
+        .get(CONTROLLER.get_dashboard_grid_edit_item_form);
 
     app.route(APP_PATH + '/items/grid/items')
-    .get(CONTROLLER.get_dashboard_item_grid_items);
+        .get(CONTROLLER.get_dashboard_item_grid_items);
 
     app.route(APP_PATH + '/items/grid/item/delete')
-    .get(CONTROLLER.get_dashboard_grid_items_delete_form);
+        .get(CONTROLLER.get_dashboard_grid_items_delete_form);
 
     //============Timelines============//
     app.route(APP_PATH + '/items/vertical-timeline')
-    .get(CONTROLLER.get_dashboard_vertical_timeline_add_form);
+        .get(CONTROLLER.get_dashboard_vertical_timeline_add_form);
 
     app.route(APP_PATH + '/items/vertical-timeline/edit')
-    .get(CONTROLLER.get_dashboard_vertical_timeline_edit_form);
+        .get(CONTROLLER.get_dashboard_vertical_timeline_edit_form);
 
     app.route(APP_PATH + '/items/vertical-timeline/item')
-    .get(CONTROLLER.get_dashboard_vertical_timeline_item_add_form);
+        .get(CONTROLLER.get_dashboard_vertical_timeline_item_add_form);
 
     app.route(APP_PATH + '/items/vertical-timeline/item/edit')
-    .get(CONTROLLER.get_dashboard_vertical_timeline_item_edit_form);
+        .get(CONTROLLER.get_dashboard_vertical_timeline_item_edit_form);
 
     app.route(APP_PATH + '/items/timeline/items')
-    .get(CONTROLLER.get_dashboard_item_timeline_items);
+        .get(CONTROLLER.get_dashboard_item_timeline_items);
 
     app.route(APP_PATH + '/items/vertical-timeline/item/delete')
-    .get(CONTROLLER.get_dashboard_timeline_items_delete_form);
+        .get(CONTROLLER.get_dashboard_timeline_items_delete_form);
 
     app.route(APP_PATH + '/items/delete')
-    .get(CONTROLLER.get_dashboard_items_delete_form);
+        .get(CONTROLLER.get_dashboard_items_delete_form);
 
     //============Users============//
     app.route(APP_PATH + '/users')
-    .get(CONTROLLER.get_dashboard_users);
+        .get(CONTROLLER.get_dashboard_users);
 
     app.route(APP_PATH + '/users/add')
-    .get(CONTROLLER.get_dashboard_users_add_form);
+        .get(CONTROLLER.get_dashboard_users_add_form);
 
     app.route(APP_PATH + '/users/edit')
-    .get(CONTROLLER.get_dashboard_users_edit_form);
+        .get(CONTROLLER.get_dashboard_users_edit_form);
 
     app.route(APP_PATH + '/users/delete')
-    .get(CONTROLLER.get_dashboard_users_delete_form);
+        .get(CONTROLLER.get_dashboard_users_delete_form);
 
     app.route(APP_PATH + '/session')
-    .get(CONTROLLER.get_dashboard_session_out);
+        .get(CONTROLLER.get_dashboard_session_out);
 
     app.route(APP_PATH + '/logout')
-    .get(CONTROLLER.get_dashboard_logout);
+        .get(CONTROLLER.get_dashboard_logout);
 
     app.route(APP_PATH + '/recycle')
-    .get(CONTROLLER.get_dashboard_recycle);
+        .get(CONTROLLER.get_dashboard_recycle);
 };
