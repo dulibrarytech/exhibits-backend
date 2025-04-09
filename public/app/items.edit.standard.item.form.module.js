@@ -25,18 +25,6 @@ const itemsEditStandardItemFormModule = (function () {
     let obj = {};
     let rich_text_data = {};
 
-    /*
-    function set_rich_text_editors () {
-        const ids = ['item-title-input',
-            'item-text-input'];
-
-        ids.forEach((id) => {
-            rich_text_data[id] = helperModule.set_rich_text_editor(id);
-        });
-    }
-
-     */
-
     async function get_item_record () {
 
         try {
@@ -211,12 +199,14 @@ const itemsEditStandardItemFormModule = (function () {
 
             if (styles.backgroundColor !== undefined) {
                 document.querySelector('#item-background-color').value = styles.backgroundColor;
+                document.querySelector('#item-background-color-picker').value = styles.backgroundColor;
             } else {
                 document.querySelector('#item-background-color').value = '';
             }
 
             if (styles.color !== undefined) {
                 document.querySelector('#item-font-color').value = styles.color;
+                document.querySelector('#item-font-color-picker').value = styles.color;
             } else {
                 document.querySelector('#item-font-color').value = '';
             }

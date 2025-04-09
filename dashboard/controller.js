@@ -102,6 +102,15 @@ exports.get_dashboard_items = function (req, res) {
     });
 };
 
+exports.get_dashboard_items_standard_details = function (req, res) {
+    res.render('dashboard-item-standard-details', {
+        host: CONFIG.host,
+        appname: CONFIG.app_name,
+        appversion: CONFIG.app_version,
+        organization: CONFIG.organization
+    });
+};
+
 exports.get_dashboard_items_delete_form = function (req, res) {
     res.render('dashboard-items-delete-form', {
         host: CONFIG.host,

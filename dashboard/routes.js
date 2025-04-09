@@ -46,6 +46,9 @@ module.exports = function (app) {
     app.route(APP_PATH + '/items/standard')
         .get(CONTROLLER.get_dashboard_items_standard_add_form);
 
+    app.route(APP_PATH + '/items/standard/details')
+        .get(CONTROLLER.get_dashboard_items_standard_details);
+
     app.route(APP_PATH + '/items/standard/edit')
         .get(CONTROLLER.get_dashboard_items_standard_edit_form);
 

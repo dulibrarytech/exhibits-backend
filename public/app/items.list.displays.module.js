@@ -32,7 +32,9 @@ const itemsListDisplayModule = (function () {
             published_obj.draggable = `<tr id="${item.uuid}_${item.type}">`;
             published_obj.item_order = `<td class="item-order"><span style="padding-left: 4px;" aria-label="item-order">${item.order}</span></td>`;
             published_obj.status = `<a href="#" id="${item.uuid}" class="suppress-item" aria-label="item-status"><span id="suppress" title="published"><i class="fa fa-cloud" style="color: green"></i><br>Published</span></a>`;
-            published_obj.edit = `<i title="Can only edit if unpublished" style="color: #d3d3d3" class="fa fa-edit pr-1" aria-label="edit-item"></i>`;
+            // published_obj.edit = `<i title="Can only edit if unpublished" style="color: #d3d3d3" class="fa fa-edit pr-1" aria-label="edit-item"></i>`;
+            /// published_obj.edit = `<i title="View item details" style="color: #d3d3d3" class="fa fa-folder-open pr-1" aria-label="view-item-details"></i>`;
+            published_obj.edit = `<a href="${APP_PATH}/items/${item_route}/details?exhibit_id=${item.is_member_of_exhibit}&item_id=${item.uuid}" title="View details" aria-label="view-item-details"><i class="fa fa-folder-open pr-1"></i></a>`;
             published_obj.delete_item = `<i title="Can only delete if unpublished" style="color: #d3d3d3" class="fa fa-trash pr-1" aria-label="delete-item"></i>`;
         } else if (item.is_published === 0) {
             published_obj.draggable = `<tr id="${item.uuid}_${item.type}">`;
