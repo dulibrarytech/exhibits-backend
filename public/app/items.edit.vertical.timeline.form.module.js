@@ -25,18 +25,6 @@ const itemsEditVerticalTimelineFormModule = (function () {
     let obj = {};
     let rich_text_data = {};
 
-    /*
-    function set_rich_text_editors () {
-        const ids = ['timeline-title-input',
-            'timeline-text-input'];
-
-        ids.forEach((id) => {
-            rich_text_data[id] = helperModule.set_rich_text_editor(id);
-        });
-    }
-
-     */
-
     async function get_timeline_record () {
 
         try {
@@ -118,7 +106,6 @@ const itemsEditVerticalTimelineFormModule = (function () {
 
                 setTimeout(() => {
                     window.location.reload();
-                    // location.replace(`${APP_PATH}/items?exhibit_id=${exhibit_id}`);
                 }, 900);
             }
 
@@ -130,27 +117,22 @@ const itemsEditVerticalTimelineFormModule = (function () {
     async function display_edit_record () {
 
         const record = await get_timeline_record();
-        console.log(record);
-        // rich_text_data['timeline-title-input'] = helperModule.set_rich_text_editor('timeline-title-input');
-        // rich_text_data['timeline-title-input'].setHTMLCode(helperModule.unescape(record.title));
         document.querySelector('#timeline-title-input').value = helperModule.unescape(record.title);
-
-        // rich_text_data['timeline-text-input'] = helperModule.set_rich_text_editor('timeline-text-input');
-        // rich_text_data['timeline-text-input'].setHTMLCode(helperModule.unescape(record.text));
         document.querySelector('#timeline-text-input').value = helperModule.unescape(record.text);
-
         const styles = JSON.parse(record.styles);
 
         if (Object.keys(styles).length !== 0) {
 
             if (styles.backgroundColor !== undefined) {
                 document.querySelector('#timeline-background-color').value = styles.backgroundColor;
+                document.querySelector('#timeline-background-color-picker').value = styles.backgroundColor;
             } else {
                 document.querySelector('#timeline-background-color').value = '';
             }
 
             if (styles.color !== undefined) {
                 document.querySelector('#timeline-font-color').value = styles.color;
+                document.querySelector('#timeline-font-color-picker').value = styles.color;
             } else {
                 document.querySelector('#timeline-font-color').value = '';
             }

@@ -221,6 +221,15 @@ exports.get_dashboard_vertical_timeline_add_form = function (req, res) {
     });
 };
 
+exports.get_dashboard_vertical_timeline_details = function (req, res) {
+    res.render('dashboard-vertical-timeline-details', {
+        host: CONFIG.host,
+        appname: CONFIG.app_name,
+        appversion: CONFIG.app_version,
+        organization: CONFIG.organization
+    });
+};
+
 exports.get_dashboard_vertical_timeline_edit_form = function (req, res) {
     res.render('dashboard-vertical-timeline-edit-form', {
         host: CONFIG.host,
@@ -229,7 +238,6 @@ exports.get_dashboard_vertical_timeline_edit_form = function (req, res) {
         organization: CONFIG.organization
     });
 };
-
 
 exports.get_dashboard_vertical_timeline_item_add_form = function (req, res) {
     res.render('dashboard-vertical-timeline-item-add-form', {

@@ -167,19 +167,21 @@ const itemsEditTimelineItemFormModule = (function () {
             document.querySelector('#item-thumbnail-image-prev').value = record.thumbnail;
             document.querySelector('#item-thumbnail-trash').style.display = 'inline';
         }
-        console.log(record.styles);
+
         let styles = JSON.parse(record.styles);
-        console.log(styles);
+
         if (Object.keys(styles).length !== 0) {
 
             if (styles.backgroundColor !== undefined) {
                 document.querySelector('#item-background-color').value = styles.backgroundColor;
+                document.querySelector('#item-background-color-picker').value = styles.backgroundColor;
             } else {
                 document.querySelector('#item-background-color').value = '';
             }
 
             if (styles.color !== undefined) {
                 document.querySelector('#item-font-color').value = styles.color;
+                document.querySelector('#item-font-color-picker').value = styles.color;
             } else {
                 document.querySelector('#item-font-color').value = '';
             }
