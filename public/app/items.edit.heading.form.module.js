@@ -25,16 +25,6 @@ const itemsEditHeadingFormModule = (function () {
     let obj = {};
     let rich_text_data = {};
 
-    /*
-    function set_rich_text_editors () {
-        const ids = ['item-heading-text-input'];
-
-        ids.forEach((id) => {
-            rich_text_data[id] = helperModule.set_rich_text_editor(id);
-        });
-    }
-    */
-
     async function get_item_heading_record () {
 
         try {
@@ -42,7 +32,7 @@ const itemsEditHeadingFormModule = (function () {
             const exhibit_id = helperModule.get_parameter_by_name('exhibit_id');
             const item_id = helperModule.get_parameter_by_name('item_id');
             const token = authModule.get_user_token();
-            let tmp = EXHIBITS_ENDPOINTS.exhibits.heading_records.get.endpoint.replace(':exhibit_id', exhibit_id)
+            let tmp = EXHIBITS_ENDPOINTS.exhibits.heading_records.get.endpoint.replace(':exhibit_id', exhibit_id);
             let endpoint = tmp.replace(':heading_id', item_id);
 
             if (token === false) {
@@ -79,8 +69,6 @@ const itemsEditHeadingFormModule = (function () {
         let record = await get_item_heading_record();
         let styles;
 
-        // rich_text_data['item-heading-text-input'] = helperModule.set_rich_text_editor('item-heading-text-input');
-        // rich_text_data['item-heading-text-input'].setHTMLCode(helperModule.unescape(record.text));
         document.querySelector('#item-heading-text-input').value = helperModule.unescape(record.text);
 
         if (typeof record.styles === 'string') {
@@ -88,11 +76,26 @@ const itemsEditHeadingFormModule = (function () {
         }
 
         if (Object.keys(styles).length !== 0) {
-            // TODO: check for undefined values
 
-            document.querySelector('#heading-background-color').value = styles.backgroundColor;
-            document.querySelector('#heading-font-color').value = styles.color;
-            document.querySelector('#heading-font-size').value = styles.fontSize.replace('px', '');
+            if (styles.backgroundColor !== undefined) {
+                document.querySelector('#heading-background-color').value = styles.backgroundColor;
+                document.querySelector('#heading-background-color-picker').value = styles.backgroundColor;
+            } else {
+                document.querySelector('#heading-background-color').value = '';
+            }
+
+            if (styles.color !== undefined) {
+                document.querySelector('#heading-font-color').value = styles.color;
+                document.querySelector('#heading-font-color-picker').value = styles.color;
+            } else {
+                document.querySelector('#heading-font-color').value = '';
+            }
+
+            if (styles.fontSize !== undefined) {
+                document.querySelector('#heading-font-size').value = styles.fontSize.replace('px', '');
+            } else {
+                document.querySelector('#heading-font-size').value = '';
+            }
 
             let font_values = document.querySelector('#heading-font');
 

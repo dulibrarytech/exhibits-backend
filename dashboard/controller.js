@@ -83,6 +83,15 @@ exports.get_dashboard_item_heading_add_form = function (req, res) {
     });
 };
 
+exports.get_dashboard_item_heading_details = function (req, res) {
+    res.render('dashboard-item-heading-details', {
+        host: CONFIG.host,
+        appname: CONFIG.app_name,
+        appversion: CONFIG.app_version,
+        organization: CONFIG.organization
+    });
+};
+
 exports.get_dashboard_items_heading_edit_form = function (req, res) {
     res.render('dashboard-item-heading-edit-form', {
         host: CONFIG.host,
@@ -90,7 +99,7 @@ exports.get_dashboard_items_heading_edit_form = function (req, res) {
         appversion: CONFIG.app_version,
         organization: CONFIG.organization
     });
-}
+};
 
 //======================== Standard items ========================//
 exports.get_dashboard_items = function (req, res) {
