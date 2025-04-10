@@ -25,18 +25,6 @@ const itemsEditGridFormModule = (function () {
     let obj = {};
     let rich_text_data = {};
 
-    /*
-    function set_rich_text_editors () {
-        const ids = ['grid-title-input',
-            'grid-text-input'];
-
-        ids.forEach((id) => {
-            rich_text_data[id] = helperModule.set_rich_text_editor(id);
-        });
-    }
-
-     */
-
     async function get_grid_record () {
 
         try {
@@ -126,12 +114,7 @@ const itemsEditGridFormModule = (function () {
 
         let record = await get_grid_record();
 
-        // rich_text_data['grid-title-input'] = helperModule.set_rich_text_editor('grid-title-input');
-        // rich_text_data['grid-title-input'].setHTMLCode(helperModule.unescape(record.title));
         document.querySelector('#grid-title-input').value = helperModule.unescape(record.title);
-
-        // rich_text_data['grid-text-input'] = helperModule.set_rich_text_editor('grid-text-input');
-        // rich_text_data['grid-text-input'].setHTMLCode(helperModule.unescape(record.text));
         document.querySelector('#grid-text-input').value = helperModule.unescape(record.text);
         document.querySelector('#grid-columns').value = record.columns;
 
@@ -141,12 +124,14 @@ const itemsEditGridFormModule = (function () {
 
             if (styles.backgroundColor !== undefined) {
                 document.querySelector('#grid-background-color').value = styles.backgroundColor;
+                document.querySelector('#grid-background-color-picker').value = styles.backgroundColor;
             } else {
                 document.querySelector('#grid-background-color').value = '';
             }
 
             if (styles.color !== undefined) {
                 document.querySelector('#grid-font-color').value = styles.color;
+                document.querySelector('#grid-font-color-picker').value = styles.color;
             } else {
                 document.querySelector('#grid-font-color').value = '';
             }
