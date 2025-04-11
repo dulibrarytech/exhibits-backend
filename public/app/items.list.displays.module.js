@@ -371,6 +371,8 @@ const itemsListDisplayModule = (function () {
             if (item.is_published === 0) {
                 item_obj.edit = `<a href="${APP_PATH}/items/grid/item/edit?exhibit_id=${item.is_member_of_exhibit}&grid_id=${item.is_member_of_grid}&item_id=${item.uuid}" title="Edit" aria-label="edit-grid-item"><i class="fa fa-edit pr-1"></i></a>`;
                 item_obj.delete_item = `<a href="${APP_PATH}/items/grid/item/delete?exhibit_id=${item.is_member_of_exhibit}&grid_id=${item.is_member_of_grid}&item_id=${item.uuid}" title="Delete" aria-label="delete-grid-item"><i class="fa fa-trash pr-1"></i></a>`;
+            } else if (item.is_published === 1) {
+                item_obj.edit = `<a href="${APP_PATH}/items/grid/item/details?exhibit_id=${item.is_member_of_exhibit}&grid_id=${item.is_member_of_grid}&item_id=${item.uuid}" title="View details" aria-label="grid-item-details"><i class="fa fa-folder-open pr-1"></i></a>`;
             }
 
             // start row

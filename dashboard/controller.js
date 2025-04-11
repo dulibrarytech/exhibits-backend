@@ -193,6 +193,15 @@ exports.get_dashboard_grid_edit_item_form = function (req, res) {
     });
 };
 
+exports.get_dashboard_grid_item_details = function (req, res) {
+    res.render('dashboard-grid-item-details', {
+        host: CONFIG.host,
+        appname: CONFIG.app_name,
+        appversion: CONFIG.app_version,
+        organization: CONFIG.organization
+    });
+};
+
 exports.get_dashboard_item_grid_items = function (req, res) {
     res.render('dashboard-grid-items', {
         host: CONFIG.host,
