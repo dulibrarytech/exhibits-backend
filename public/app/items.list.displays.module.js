@@ -497,6 +497,8 @@ const itemsListDisplayModule = (function () {
             if (item.is_published === 0) {
                 item_obj.edit = `<a href="${APP_PATH}/items/vertical-timeline/item/edit?exhibit_id=${item.is_member_of_exhibit}&timeline_id=${item.is_member_of_timeline}&item_id=${item.uuid}" title="Edit" aria-label="edit-timeline-item"><i class="fa fa-edit pr-1"></i></a>`;
                 item_obj.delete_item = `<a href="${APP_PATH}/items/vertical-timeline/item/delete?exhibit_id=${item.is_member_of_exhibit}&timeline_id=${item.is_member_of_timeline}&item_id=${item.uuid}" title="Delete" aria-label="delete-timeline-item"><i class="fa fa-trash pr-1"></i></a>`;
+            } else if (item.is_published === 1) {
+                item_obj.edit = `<a href="${APP_PATH}/items/vertical-timeline/item/details?exhibit_id=${item.is_member_of_exhibit}&timeline_id=${item.is_member_of_timeline}&item_id=${item.uuid}" title="View details" aria-label="timeline-item-details"><i class="fa fa-folder-open pr-1"></i></a>`;
             }
 
             // start rows
