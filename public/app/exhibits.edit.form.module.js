@@ -138,6 +138,7 @@ const exhibitsEditFormModule = (function () {
             }
 
             // exhibit layout
+            /*
             let page_layouts = document.getElementsByName('page_layout');
 
             for (let j = 0; j < page_layouts.length; j++) {
@@ -145,6 +146,7 @@ const exhibitsEditFormModule = (function () {
                     document.querySelector('#' + page_layouts[j].id).checked = true;
                 }
             }
+             */
 
             // exhibit styles
             let styles = JSON.parse(record.styles);
