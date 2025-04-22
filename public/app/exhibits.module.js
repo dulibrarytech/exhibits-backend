@@ -148,7 +148,7 @@ const exhibitsModule = (function () {
         document.querySelector('#exhibits-data').innerHTML = exhibit_data;
 
         const EXHIBIT_LIST = new DataTable('#exhibits', {
-            paging: true,
+            paging: false,
             rowReorder: true
         });
 

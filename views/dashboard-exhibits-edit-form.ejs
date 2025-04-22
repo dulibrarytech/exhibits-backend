@@ -22,9 +22,11 @@
                 <strong class="card-title mb-3">Exhibit Media</strong>
             </div>
             <div class="card-body">
+                <!--
                 <div class="alert alert-info">
                     <i class="fa fa-info"></i> <span id="info-message">Provide info to user about uploading exhibit media</span>
                 </div>
+                -->
                 <div class="row">
                     <span class="upload-error"></span>
                     <div class="col-6 col-md-6">
@@ -62,6 +64,7 @@
             </div>
         </div>
         <%- include('partials/exhibit-banners.ejs'); %>
+        <!--
         <div id="exhibit-page-layout-card" class="card">
             <div class="card-header">
                 <strong class="card-title mb-3">Exhibit Page Layout</strong>
@@ -95,10 +98,13 @@
                 </div>
             </div>
         </div>
+        -->
         <!-- styles -->
         <%- include('partials/exhibit-styles.ejs'); %>
         <div id="exhibit-submit-card" class="card">
             <div class="card-body">
+                <input type="hidden" name="page_layout"
+                       id="exhibit-page-layout" value="top_nav" />
                 <input type="hidden" name="exhibit_template" id="exhibit-template"
                        value="vertical_scroll"/>
                 <button class="btn btn-primary" type="button" id="save-exhibit-btn">
