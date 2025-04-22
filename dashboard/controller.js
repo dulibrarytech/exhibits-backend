@@ -33,7 +33,8 @@ exports.get_dashboard_exhibits = function (req, res) {
         host: CONFIG.host,
         appname: CONFIG.app_name,
         appversion: CONFIG.app_version,
-        organization: CONFIG.organization
+        organization: CONFIG.organization,
+        app_message: CONFIG.app_message
     });
 };
 

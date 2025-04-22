@@ -10,6 +10,7 @@
 <div id="right-panel" class="right-panel">
     <%- include('partials/main-header.ejs'); %>
     <div class="content" style="min-height: 875px;">
+        <div id="app-message"></div>
         <div class="alert alert-primary" role="alert"><span id="message">Online exhibits authentication</span></div>
         <p>
             <a href="/exhibits-dashboard/auth/login" class="btn btn-primary" type="button">Authenticate <i class="fa fa-sign-in"></i></a>
@@ -21,11 +22,7 @@
     <script src="/exhibits-dashboard/static/app/http.module.js"></script>
     <script src="/exhibits-dashboard/static/app/helper.module.js"></script>
     <script>
-        /*
-        helperModule.check_bandwidth(function (bandwidth) {
-            console.log('bandwidth ', bandwidth);
-        });
-        */
+        helperModule.check_app_env();
     </script>
     <%- include('partials/footer.ejs'); %>
 </div>

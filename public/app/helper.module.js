@@ -482,105 +482,24 @@ const helperModule = (function () {
         })();
     };
 
+    obj.check_app_env = function () {
+
+        const hostname = window.location.hostname;
+
+        if (hostname === 'localhost' || hostname === 'libwebapw01-vlt.du.edu' || hostname === 'exhibits.dev') {
+
+            const app_message = document.querySelector('#app-message');
+
+            if (app_message !== null) {
+                app_message.innerHTML = '<div class="alert alert-warning"><i class="fa fa-exclamation-circle"></i> <strong>This the Development Site</strong>&nbsp;&nbsp;&nbsp;<a class="btn btn-info" href="https://exhibits-backend.library.du.edu/exhibits-dashboard/auth" target="_blank">Go to Live Site </a> </div>';
+            }
+        }
+    };
+
     obj.init = function () {};
 
     return obj;
 
 }());
 
-// TODO Deprecated - no longer required
-/*
-obj.reorder_items_after_action = async function (item_order, type) {
-
-    try {
-
-        const exhibit_id = helperModule.get_parameter_by_name('exhibit_id');
-        const EXHIBITS_ENDPOINTS = endpointsModule.get_exhibits_endpoints();
-        const tr_elem = Array.from(document.getElementsByTagName('tr'));
-        let reorder_obj = {};
-        let updated_order = [];
-        let order_check = [];
-        // remove header tr
-        tr_elem.shift();
-
-        for (let i = 0; i < tr_elem.length; i++) {
-
-            let id_arr = tr_elem[i].id.split('_');
-            reorder_obj.type = id_arr.pop();
-            reorder_obj.uuid = id_arr.pop();
-            reorder_obj.order = i + 1;
-
-            if (type === 'grid_items') {
-                reorder_obj.grid_id = helperModule.get_parameter_by_name('grid_id');
-            }
-
-            updated_order.push(reorder_obj);
-            order_check.push(reorder_obj.order);
-            reorder_obj = {};
-        }
-
-        if (JSON.stringify(item_order) === JSON.stringify(order_check)) {
-            return false;
-        }
-
-        const token = authModule.get_user_token();
-        const response = await httpModule.req({
-            method: 'POST',
-            url: EXHIBITS_ENDPOINTS.exhibits.reorder_records.post.endpoint.replace(':exhibit_id', exhibit_id),
-            data: updated_order,
-            headers: {
-                'Content-Type': 'application/json',
-                'x-access-token': token
-            }
-        });
-
-        if (response !== undefined && response.status === 201) {
-            location.reload();
-        } else {
-            document.querySelector('#message').innerHTML = `<div class="alert alert-danger" role="alert"><i class="fa fa-exclamation"></i> An error occurred while reordering items.</div>`;
-        }
-
-    } catch (error) {
-        document.querySelector('#message').innerHTML = `<div class="alert alert-danger" role="alert"><i class="fa fa-exclamation"></i> ${error.message}</div>`;
-    }
-};
-
- */
-
-/* TODO: test
-    obj.show_list = function () {
-
-        try {
-
-            const form_cards = Array.from(document.getElementsByClassName('card'));
-
-            setTimeout(() => {
-
-                form_cards.forEach(card => {
-                    card.style.visibility = 'visible';
-                });
-
-            }, 600*2);
-
-        } catch (error) {
-            document.querySelector('#message').innerHTML = `<div class="alert alert-danger" role="alert"><i class="fa fa-exclamation"></i> ${error.message}</div>`;
-        }
-    };
-
-     */
-
-/**
- * Set text editor config
- */
-/*
-obj.set_rich_text_editor_config = function () {
-
-    const BASE_URL = '/exhibits-dashboard/static/libs';
-    window.RTE_DefaultConfig.url_base = BASE_URL + "/richtexteditor";
-    window.RTE_DefaultConfig.contentCssUrl = window.RTE_DefaultConfig.url_base + "/runtime/richtexteditor_content.css"; // Specifies the location of the style sheet that will be used by the editable area.
-    window.RTE_DefaultConfig.previewCssUrl = window.RTE_DefaultConfig.url_base + "/runtime/richtexteditor_preview.css"; // Specifies the location of the style sheet that will be used by the preview window.
-    window.RTE_DefaultConfig.previewScriptUrl = window.RTE_DefaultConfig.url_base + "/runtime/richtexteditor_preview.js"; // Specifies the location of javascript file that will be used by the preview window.
-    window.RTE_DefaultConfig.helpUrl = window.RTE_DefaultConfig.url_base + "/runtime/help.htm";
-};
-
- */
+helperModule.init();
