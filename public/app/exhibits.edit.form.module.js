@@ -89,6 +89,7 @@ const exhibitsEditFormModule = (function () {
             let thumbnail_fragment = '';
 
             // exhibit data
+            console.log(record.subtitle);
             document.querySelector('#exhibit-title-input').value = helperModule.unescape(record.title);
             document.querySelector('#exhibit-sub-title-input').value = helperModule.unescape(record.subtitle);
             document.querySelector('#exhibit-alert-text-input').value = helperModule.unescape(record.alert_text);

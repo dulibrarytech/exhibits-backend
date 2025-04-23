@@ -133,7 +133,7 @@ const helperModule = (function () {
                 }
             }
 
-            return div.innerHTML;
+            return div.innerHTML.replace(/&amp;/g, '&');
 
         } catch (error) {
             document.querySelector('#message').innerHTML = `<div class="alert alert-danger" role="alert"><i class="fa fa-exclamation"></i> ${error.message}</div>`;
