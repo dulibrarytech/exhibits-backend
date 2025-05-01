@@ -1,5 +1,5 @@
 {
-  "uuid": {
+  "about_the_curators": {
     "type": "text",
     "fields": {
       "keyword": {
@@ -8,25 +8,7 @@
       }
     }
   },
-  "type": {
-    "type": "text",
-    "fields": {
-      "keyword": {
-        "type": "keyword",
-        "ignore_above": 256
-      }
-    }
-  },
-  "title": {
-    "type": "keyword",
-    "fields": {
-      "keyword": {
-        "type": "keyword",
-        "ignore_above": 256
-      }
-    }
-  },
-  "subtitle": {
+  "alert_text": {
     "type": "text",
     "fields": {
       "keyword": {
@@ -44,97 +26,7 @@
       }
     }
   },
-  "hero_image": {
-    "type": "text",
-    "fields": {
-      "keyword": {
-        "type": "keyword",
-        "ignore_above": 256
-      }
-    }
-  },
-  "description": {
-    "type": "text",
-    "fields": {
-      "keyword": {
-        "type": "keyword",
-        "ignore_above": 256
-      }
-    }
-  },
-  "page_layout": {
-    "type": "text",
-    "fields": {
-      "keyword": {
-        "type": "keyword",
-        "ignore_above": 256
-      }
-    }
-  },
-  "template": {
-    "type": "text",
-    "fields": {
-      "keyword": {
-        "type": "keyword",
-        "ignore_above": 256
-      }
-    }
-  },
-  "styles": {
-    "type": "text",
-    "fields": {
-      "keyword": {
-        "type": "keyword",
-        "ignore_above": 256
-      }
-    }
-  },
-  "is_published": {
-    "type": "integer",
-    "fields": {
-      "keyword": {
-        "type": "keyword",
-        "ignore_above": 256
-      }
-    }
-  },
-  "is_member_of_exhibit": {
-    "type": "text",
-    "fields": {
-      "keyword": {
-        "type": "keyword",
-        "ignore_above": 256
-      }
-    }
-  },
-  "text": {
-    "type": "text",
-    "fields": {
-      "keyword": {
-        "type": "keyword",
-        "ignore_above": 256
-      }
-    }
-  },
-  "subtext": {
-    "type": "text",
-    "fields": {
-      "keyword": {
-        "type": "keyword",
-        "ignore_above": 256
-      }
-    }
-  },
-  "order": {
-    "type": "integer",
-    "fields": {
-      "keyword": {
-        "type": "keyword",
-        "ignore_above": 256
-      }
-    }
-  },
-  "date": {
+  "banner_template": {
     "type": "text",
     "fields": {
       "keyword": {
@@ -144,33 +36,6 @@
     }
   },
   "caption": {
-    "type": "text",
-    "fields": {
-      "keyword": {
-        "type": "keyword",
-        "ignore_above": 256
-      }
-    }
-  },
-  "item_type": {
-    "type": "text",
-    "fields": {
-      "keyword": {
-        "type": "keyword",
-        "ignore_above": 256
-      }
-    }
-  },
-  "url": {
-    "type": "text",
-    "fields": {
-      "keyword": {
-        "type": "keyword",
-        "ignore_above": 256
-      }
-    }
-  },
-  "layout": {
     "type": "text",
     "fields": {
       "keyword": {
@@ -190,5 +55,404 @@
   },
   "created": {
     "type": "date"
+  },
+  "date": {
+    "type": "text",
+    "fields": {
+      "keyword": {
+        "type": "keyword",
+        "ignore_above": 256
+      }
+    }
+  },
+  "description": {
+    "type": "text",
+    "fields": {
+      "keyword": {
+        "type": "keyword",
+        "ignore_above": 256
+      }
+    }
+  },
+  "exhibit_template": {
+    "type": "text",
+    "fields": {
+      "keyword": {
+        "type": "keyword",
+        "ignore_above": 256
+      }
+    }
+  },
+  "hero_image": {
+    "type": "text",
+    "fields": {
+      "keyword": {
+        "type": "keyword",
+        "ignore_above": 256
+      }
+    }
+  },
+  "is_anchor": {
+    "type": "long"
+  },
+  "is_embedded": {
+    "type": "long"
+  },
+  "is_featured": {
+    "type": "long"
+  },
+  "is_kaltura_item": {
+    "type": "long"
+  },
+  "is_member_of_exhibit": {
+    "type": "text",
+    "fields": {
+      "keyword": {
+        "type": "keyword",
+        "ignore_above": 256
+      }
+    },
+    "analyzer": "whitespace"
+  },
+  "is_preview": {
+    "type": "long"
+  },
+  "is_published": {
+    "type": "integer",
+    "fields": {
+      "keyword": {
+        "type": "keyword",
+        "ignore_above": 256
+      }
+    }
+  },
+  "is_repo_item": {
+    "type": "long"
+  },
+  "is_student_curated": {
+    "type": "long"
+  },
+  "is_visible": {
+    "type": "long"
+  },
+  "item_type": {
+    "type": "text",
+    "fields": {
+      "keyword": {
+        "type": "keyword",
+        "ignore_above": 256
+      }
+    }
+  },
+  "items": {
+    "type": "nested",
+    "properties": {
+      "caption": {
+        "type": "text",
+        "fields": {
+          "keyword": {
+            "type": "keyword",
+            "ignore_above": 256
+          }
+        }
+      },
+      "created": {
+        "type": "date"
+      },
+      "date": {
+        "type": "date"
+      },
+      "description": {
+        "type": "text",
+        "fields": {
+          "keyword": {
+            "type": "keyword",
+            "ignore_above": 256
+          }
+        }
+      },
+      "is_embedded": {
+        "type": "long"
+      },
+      "is_kaltura_item": {
+        "type": "long"
+      },
+      "is_member_of_exhibit": {
+        "type": "text",
+        "fields": {
+          "keyword": {
+            "type": "keyword",
+            "ignore_above": 256
+          }
+        },
+        "analyzer": "whitespace"
+      },
+      "is_published": {
+        "type": "long"
+      },
+      "is_repo_item": {
+        "type": "long"
+      },
+      "item_type": {
+        "type": "text",
+        "fields": {
+          "keyword": {
+            "type": "keyword",
+            "ignore_above": 256
+          }
+        }
+      },
+      "layout": {
+        "type": "text",
+        "fields": {
+          "keyword": {
+            "type": "keyword",
+            "ignore_above": 256
+          }
+        }
+      },
+      "media": {
+        "type": "text",
+        "fields": {
+          "keyword": {
+            "type": "keyword",
+            "ignore_above": 256
+          }
+        }
+      },
+      "media_padding": {
+        "type": "long"
+      },
+      "media_width": {
+        "type": "long"
+      },
+      "order": {
+        "type": "long"
+      },
+      "pdf_open_to_page": {
+        "type": "long"
+      },
+      "styles": {
+        "type": "text",
+        "fields": {
+          "keyword": {
+            "type": "keyword",
+            "ignore_above": 256
+          }
+        }
+      },
+      "text": {
+        "type": "text",
+        "fields": {
+          "keyword": {
+            "type": "keyword",
+            "ignore_above": 256
+          }
+        }
+      },
+      "thumbnail": {
+        "type": "text",
+        "fields": {
+          "keyword": {
+            "type": "keyword",
+            "ignore_above": 256
+          }
+        }
+      },
+      "title": {
+        "type": "text",
+        "fields": {
+          "keyword": {
+            "type": "keyword",
+            "ignore_above": 256
+          }
+        }
+      },
+      "type": {
+        "type": "text",
+        "fields": {
+          "keyword": {
+            "type": "keyword",
+            "ignore_above": 256
+          }
+        }
+      },
+      "uuid": {
+        "type": "text",
+        "fields": {
+          "keyword": {
+            "type": "keyword",
+            "ignore_above": 256
+          }
+        }
+      },
+      "wrap_text": {
+        "type": "long"
+      }
+    }
+  },
+  "layout": {
+    "type": "text",
+    "fields": {
+      "keyword": {
+        "type": "keyword",
+        "ignore_above": 256
+      }
+    }
+  },
+  "media": {
+    "type": "text",
+    "fields": {
+      "keyword": {
+        "type": "keyword",
+        "ignore_above": 256
+      }
+    }
+  },
+  "media_padding": {
+    "type": "long"
+  },
+  "media_width": {
+    "type": "long"
+  },
+  "order": {
+    "type": "integer",
+    "fields": {
+      "keyword": {
+        "type": "keyword",
+        "ignore_above": 256
+      }
+    }
+  },
+  "page_layout": {
+    "type": "text",
+    "fields": {
+      "keyword": {
+        "type": "keyword",
+        "ignore_above": 256
+      }
+    }
+  },
+  "pdf_open_to_page": {
+    "type": "long"
+  },
+  "query": {
+    "properties": {
+      "match": {
+        "properties": {
+          "entry_id": {
+            "type": "text",
+            "fields": {
+              "keyword": {
+                "type": "keyword",
+                "ignore_above": 256
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  "styles": {
+    "type": "text",
+    "fields": {
+      "keyword": {
+        "type": "keyword",
+        "ignore_above": 256
+      }
+    }
+  },
+  "subtext": {
+    "type": "text",
+    "fields": {
+      "keyword": {
+        "type": "keyword",
+        "ignore_above": 256
+      }
+    }
+  },
+  "subtitle": {
+    "type": "text",
+    "fields": {
+      "keyword": {
+        "type": "keyword",
+        "ignore_above": 256
+      }
+    }
+  },
+  "template": {
+    "type": "text",
+    "fields": {
+      "keyword": {
+        "type": "keyword",
+        "ignore_above": 256
+      }
+    }
+  },
+  "text": {
+    "type": "text",
+    "fields": {
+      "keyword": {
+        "type": "keyword",
+        "ignore_above": 256
+      }
+    }
+  },
+  "thumbnail": {
+    "type": "text",
+    "fields": {
+      "keyword": {
+        "type": "keyword",
+        "ignore_above": 256
+      }
+    }
+  },
+  "thumbnail_image": {
+    "type": "text",
+    "fields": {
+      "keyword": {
+        "type": "keyword",
+        "ignore_above": 256
+      }
+    }
+  },
+  "title": {
+    "type": "keyword",
+    "fields": {
+      "keyword": {
+        "type": "keyword",
+        "ignore_above": 256
+      }
+    }
+  },
+  "type": {
+    "type": "text",
+    "fields": {
+      "keyword": {
+        "type": "keyword",
+        "ignore_above": 256
+      }
+    }
+  },
+  "url": {
+    "type": "text",
+    "fields": {
+      "keyword": {
+        "type": "keyword",
+        "ignore_above": 256
+      }
+    }
+  },
+  "uuid": {
+    "type": "text",
+    "fields": {
+      "keyword": {
+        "type": "keyword",
+        "ignore_above": 256
+      }
+    }
+  },
+  "wrap_text": {
+    "type": "long"
   }
 }
