@@ -98,7 +98,7 @@ const exhibitsModule = (function () {
             }
 
             if (is_featured === 1) {
-                featured = '&nbsp;&nbsp;<button disabled class="btn-xs btn-warning" aria-label="featured exhibit"><small><em><strong>Featured</strong></em></small></button>';
+                featured = '&nbsp;&nbsp;<i class="fa fa-star" title="Featured" aria-label="featured exhibit" style="color: #BA8E23"></i>';
             }
 
             if (exhibits[i].thumbnail.length > 0) {
