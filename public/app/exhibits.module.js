@@ -72,6 +72,7 @@ const exhibitsModule = (function () {
 
             let uuid = exhibits[i].uuid;
             let is_published = exhibits[i].is_published;
+            let is_featured = exhibits[i].is_featured;
             let preview_link = `${APP_PATH}/preview?uuid=${uuid}`;
             let exhibit_items = `<a href="${APP_PATH}/items?exhibit_id=${uuid}" title="View Exhibit Items"><i class="fa fa-list pr-1"></i></a>&nbsp;`;
             let order = `${exhibits[i].order}`;
@@ -79,14 +80,13 @@ const exhibitsModule = (function () {
             let thumbnail_fragment = '';
             let status;
             let title;
+            let featured = '';
             let exhibit_edit = '';
-            // let exhibit_details = '';
             let trash = '';
 
             if (is_published === 1) {
                 order = `<td style="width: 4%" class="item-order" aria-label="exhibit-order"><span style="padding-left: 4px;">${order}</span></td>`;
                 status = `<a href="#" id="${uuid}" class="suppress-exhibit" aria-label="exhibit-status"><span id="suppress" title="published"><i class="fa fa-cloud" style="color: green"></i><br>Published</span></a>`;
-                // exhibit_edit = `<i title="Can only edit if unpublished" style="color: #d3d3d3" class="fa fa-edit pr-1" aria-label="edit-exhibit"></i>`;
                 // details view
                 exhibit_edit = `<a href="${APP_PATH}/exhibits/exhibit/details?exhibit_id=${uuid}" title="View details" aria-label="exhibit-details"><i class="fa fa-folder-open pr-1"></i> </a>`;
                 trash = `<i title="Can only delete if unpublished" style="color: #d3d3d3" class="fa fa-trash pr-1" aria-label="delete-exhibit"></i>`;
@@ -95,6 +95,10 @@ const exhibitsModule = (function () {
                 status = `<a href="#" id="${uuid}" class="publish-exhibit" aria-label="exhibit-status"><span id="publish" title="suppressed"><i class="fa fa-cloud-upload" style="color: darkred"></i><br>Unpublished</span></a>`;
                 exhibit_edit = `<a href="${APP_PATH}/exhibits/exhibit/edit?exhibit_id=${uuid}" title="Edit" aria-label="edit-exhibit"><i class="fa fa-edit pr-1"></i> </a>`;
                 trash = `<a href="${APP_PATH}/exhibits/exhibit/delete?exhibit_id=${uuid}" title="Delete exhibit" aria-label="delete-exhibit"><i class="fa fa-trash pr-1"></i></a>`;
+            }
+
+            if (is_featured === 1) {
+                featured = '&nbsp;&nbsp;<button disabled class="btn-xs btn-warning" aria-label="featured exhibit"><small><em><strong>Featured</strong></em></small></button>';
             }
 
             if (exhibits[i].thumbnail.length > 0) {
@@ -110,7 +114,7 @@ const exhibitsModule = (function () {
             exhibit_data += `<tr id="${uuid}">`;
             exhibit_data += order;
             exhibit_data += `<td style="width: 35%">
-                    <p><strong>${title}</strong></p>
+                    <p><strong>${title}</strong> ${featured}</p>
                     ${thumbnail_fragment}
                     <div class="d-flex justify-content-between align-items-center">
                                 <div class="btn-group">
