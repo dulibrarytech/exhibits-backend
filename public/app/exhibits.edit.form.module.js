@@ -172,12 +172,12 @@ const exhibitsEditFormModule = (function () {
 
             if (styles.exhibit.navigation !== undefined) {
 
-                if (styles.exhibit.navigation.backgroundColor !== undefined) {
+                if (styles.exhibit.navigation.backgroundColor !== undefined && styles.exhibit.navigation.backgroundColor.length > 0) {
                     document.querySelector('#nav-background-color').value = styles.exhibit.navigation.backgroundColor;
                     document.querySelector('#nav-background-color-picker').value = styles.exhibit.navigation.backgroundColor;
                 }
 
-                if (styles.exhibit.navigation.color !== undefined) {
+                if (styles.exhibit.navigation.color !== undefined && styles.exhibit.navigation.color.length > 0) {
                     document.querySelector('#nav-font-color').value = styles.exhibit.navigation.color;
                     document.querySelector('#nav-font-color-picker').value = styles.exhibit.navigation.color;
                 }
@@ -195,7 +195,7 @@ const exhibitsEditFormModule = (function () {
                 }
             }
 
-            if (styles.exhibit.template !== undefined) {
+            if (styles.exhibit.template !== undefined && styles.exhibit.template.length > 0) {
 
                 if (styles.exhibit.template.backgroundColor !== undefined) {
                     document.querySelector('#template-background-color').value = styles.exhibit.template.backgroundColor;
