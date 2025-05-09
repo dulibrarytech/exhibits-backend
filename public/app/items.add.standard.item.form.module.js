@@ -60,6 +60,15 @@ const itemsAddStandardItemFormModule = (function () {
 
             document.querySelector('#message').innerHTML = `<div class="alert alert-info" role="alert"><i class="fa fa-info"></i> Creating item record...</div>`;
 
+            const user = JSON.parse(sessionStorage.getItem('exhibits_user'));
+
+            if (user.name === null) {
+                document.querySelector('#message').innerHTML = `<div class="alert alert-danger" role="alert"><i class="fa fa-exclamation"></i> Unable to retrieve your name</div>`;
+                return false;
+            }
+
+            data.created_by = user.name;
+
             let token = authModule.get_user_token();
             let response = await httpModule.req({
                 method: 'POST',
