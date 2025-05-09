@@ -68,6 +68,25 @@ const itemsEditHeadingFormModule = (function () {
 
         let record = await get_item_heading_record();
         let styles;
+        let created_by = record.created_by;
+        let created = record.created;
+        let create_date = new Date(created);
+        let updated_by = record.updated_by;
+        let updated = record.updated;
+        let update_date = new Date(updated);
+        let item_created = '';
+        let create_date_time = helperModule.format_date(create_date);
+        let update_date_time = helperModule.format_date(update_date);
+
+        if (created_by !== null) {
+            item_created += `<em>Created by ${created_by} on ${create_date_time}</em>`;
+        }
+
+        if (updated_by !== null) {
+            item_created += ` | <em>Last updated by ${updated_by} on ${update_date_time}</em>`;
+        }
+
+        document.querySelector('#created').innerHTML = item_created;
 
         document.querySelector('#item-heading-text-input').value = helperModule.unescape(record.text);
 
@@ -77,18 +96,14 @@ const itemsEditHeadingFormModule = (function () {
 
         if (Object.keys(styles).length !== 0) {
 
-            if (styles.backgroundColor !== undefined) {
+            if (styles.backgroundColor !== undefined && styles.backgroundColor.length !== 0) {
                 document.querySelector('#heading-background-color').value = styles.backgroundColor;
                 document.querySelector('#heading-background-color-picker').value = styles.backgroundColor;
-            } else {
-                document.querySelector('#heading-background-color').value = '';
             }
 
-            if (styles.color !== undefined) {
+            if (styles.color !== undefined && styles.color.length !== 0) {
                 document.querySelector('#heading-font-color').value = styles.color;
                 document.querySelector('#heading-font-color-picker').value = styles.color;
-            } else {
-                document.querySelector('#heading-font-color').value = '';
             }
 
             if (styles.fontSize !== undefined) {
@@ -138,6 +153,15 @@ const itemsEditHeadingFormModule = (function () {
 
                 return false;
             }
+
+            const user = JSON.parse(sessionStorage.getItem('exhibits_user'));
+
+            if (user.name === null) {
+                document.querySelector('#message').innerHTML = `<div class="alert alert-danger" role="alert"><i class="fa fa-exclamation"></i> Unable to retrieve your name</div>`;
+                return false;
+            }
+
+            data.updated_by = user.name;
 
             let tmp = EXHIBITS_ENDPOINTS.exhibits.heading_records.put.endpoint.replace(':exhibit_id', exhibit_id);
             let endpoint = tmp.replace(':heading_id', item_id);

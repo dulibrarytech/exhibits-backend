@@ -23,18 +23,6 @@ const itemsAddHeadingFormModule = (function () {
     const APP_PATH = window.localStorage.getItem('exhibits_app_path');
     const EXHIBITS_ENDPOINTS = endpointsModule.get_exhibits_endpoints();
     let obj = {};
-    let rich_text_data = {};
-
-    /*
-    function set_rich_text_editors () {
-        const ids = ['item-heading-text-input'];
-
-        ids.forEach((id) => {
-            rich_text_data[id] = helperModule.set_rich_text_editor(id);
-        });
-    }
-
-     */
 
     obj.create_heading_record = async function () {
 
@@ -49,11 +37,20 @@ const itemsAddHeadingFormModule = (function () {
             }
 
             document.querySelector('#message').innerHTML = `<div class="alert alert-info" role="alert"><i class="fa fa-info"></i> Creating item heading record...</div>`;
-            let data = itemsCommonHeadingFormModule.get_common_heading_form_fields(rich_text_data);
+            let data = itemsCommonHeadingFormModule.get_common_heading_form_fields();
 
             if (data === false) {
                 return false;
             }
+
+            const user = JSON.parse(sessionStorage.getItem('exhibits_user'));
+
+            if (user.name === null) {
+                document.querySelector('#message').innerHTML = `<div class="alert alert-danger" role="alert"><i class="fa fa-exclamation"></i> Unable to retrieve your name</div>`;
+                return false;
+            }
+
+            data.created_by = user.name;
 
             let token = authModule.get_user_token();
             let response = await httpModule.req({
@@ -84,10 +81,6 @@ const itemsAddHeadingFormModule = (function () {
 
         const exhibit_id = helperModule.get_parameter_by_name('exhibit_id');
         exhibitsModule.set_exhibit_title(exhibit_id);
-
-        // helperModule.set_rich_text_editor_config();
-        // set_rich_text_editors();
-
         document.querySelector('#save-heading-btn').addEventListener('click', itemsAddHeadingFormModule.create_heading_record);
     };
 

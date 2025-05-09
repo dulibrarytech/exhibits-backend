@@ -288,6 +288,7 @@ const itemsEditStandardItemFormModule = (function () {
             }
 
             data.updated_by = user.name;
+
             document.querySelector('#message').innerHTML = `<div class="alert alert-info" role="alert"><i class="fa fa-info"></i> Updating item record...</div>`;
 
             let tmp = EXHIBITS_ENDPOINTS.exhibits.item_records.put.endpoint.replace(':exhibit_id', exhibit_id);
