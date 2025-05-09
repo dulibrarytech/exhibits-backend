@@ -259,46 +259,55 @@ const exhibitsModule = (function () {
 
     async function publish_exhibit(uuid) {
 
-        const EXHIBITS_ENDPOINTS = endpointsModule.get_exhibits_endpoints();
-        const token = authModule.get_user_token();
-        const response = await httpModule.req({
-            method: 'POST',
-            url: EXHIBITS_ENDPOINTS.exhibits.exhibit_publish.post.endpoint.replace(':exhibit_id', uuid),
-            headers: {
-                'Content-Type': 'application/json',
-                'x-access-token': token
+        try {
+
+            const EXHIBITS_ENDPOINTS = endpointsModule.get_exhibits_endpoints();
+            const token = authModule.get_user_token();
+            const response = await httpModule.req({
+                method: 'POST',
+                url: EXHIBITS_ENDPOINTS.exhibits.exhibit_publish.post.endpoint.replace(':exhibit_id', uuid),
+                headers: {
+                    'Content-Type': 'application/json',
+                    'x-access-token': token
+                }
+            });
+
+            if (response.status === 200) {
+
+                scrollTo(0, 0);
+                document.querySelector('#message').innerHTML = `<div class="alert alert-success" role="alert"><i class="fa fa-check"></i> Exhibit published</div>`;
+
+                setTimeout(() => {
+                    location.reload();
+                }, 900);
+
+                /*
+                setTimeout(() => {
+                    let elem = document.getElementById(uuid);
+                    document.getElementById(uuid).classList.remove('publish-exhibit');
+                    document.getElementById(uuid).classList.add('suppress-exhibit');
+                    document.getElementById(uuid).replaceWith(elem.cloneNode(true));
+                    document.getElementById(uuid).innerHTML = '<span id="suppress" title="published"><i class="fa fa-cloud" style="color: green"></i><br>Published</span>';
+                    document.getElementById(uuid).addEventListener('click', async () => {
+                        const uuid = elem.getAttribute('id');
+                        await suppress_exhibit(uuid);
+                    }, false);
+                }, 0);
+
+                 */
             }
-        });
 
-        if (response.status === 200) {
+            if (response.status === 204) {
+                scrollTo(0, 0);
+                document.querySelector('#message').innerHTML = `<div class="alert alert-warning" role="alert"><i class="fa fa-warning"></i> Exhibit must contain at least one item to publish</div>`;
 
-            scrollTo(0, 0);
-            document.querySelector('#message').innerHTML = `<div class="alert alert-success" role="alert"><i class="fa fa-check"></i> Exhibit published</div>`;
+                setTimeout(() => {
+                    document.querySelector('#message').innerHTML = '';
+                }, 5000);
+            }
 
-            setTimeout(() => {
-                location.reload();
-            }, 900);
-
-            /*
-            setTimeout(() => {
-                let elem = document.getElementById(uuid);
-                document.getElementById(uuid).classList.remove('publish-exhibit');
-                document.getElementById(uuid).classList.add('suppress-exhibit');
-                document.getElementById(uuid).replaceWith(elem.cloneNode(true));
-                document.getElementById(uuid).innerHTML = '<span id="suppress" title="published"><i class="fa fa-cloud" style="color: green"></i><br>Published</span>';
-                document.getElementById(uuid).addEventListener('click', async () => {
-                    const uuid = elem.getAttribute('id');
-                    await suppress_exhibit(uuid);
-                }, false);
-            }, 0);
-
-             */
-        }
-
-        if (response.status === 204) {
-            scrollTo(0, 0);
-            document.querySelector('#message').innerHTML = `<div class="alert alert-warning" role="alert"><i class="fa fa-warning"></i> Exhibit must contain at least one item to publish</div>`;
-
+        } catch (error) {
+            document.querySelector('#message').innerHTML = `<div class="alert alert-danger" role="alert"><i class="fa fa-exclamation"></i> An error occurred while publishing exhibit</div>`;
             setTimeout(() => {
                 document.querySelector('#message').innerHTML = '';
             }, 5000);
@@ -307,46 +316,46 @@ const exhibitsModule = (function () {
 
     async function suppress_exhibit(uuid) {
 
-        const EXHIBITS_ENDPOINTS = endpointsModule.get_exhibits_endpoints();
-        const token = authModule.get_user_token();
-        const response = await httpModule.req({
-            method: 'POST',
-            url: EXHIBITS_ENDPOINTS.exhibits.exhibit_suppress.post.endpoint.replace(':exhibit_id', uuid),
-            headers: {
-                'Content-Type': 'application/json',
-                'x-access-token': token
+        try {
+
+            const EXHIBITS_ENDPOINTS = endpointsModule.get_exhibits_endpoints();
+            const token = authModule.get_user_token();
+            const response = await httpModule.req({
+                method: 'POST',
+                url: EXHIBITS_ENDPOINTS.exhibits.exhibit_suppress.post.endpoint.replace(':exhibit_id', uuid),
+                headers: {
+                    'Content-Type': 'application/json',
+                    'x-access-token': token
+                }
+            });
+
+            if (response.status === 200) {
+
+                scrollTo(0, 0);
+                document.querySelector('#message').innerHTML = `<div class="alert alert-success" role="alert"><i class="fa fa-check"></i> Exhibit suppressed</div>`;
+
+                setTimeout(() => {
+                    location.reload();
+                }, 900);
+
+                /*
+                setTimeout(() => {
+                    let elem = document.getElementById(uuid);
+                    document.getElementById(uuid).classList.remove('suppress-exhibit');
+                    document.getElementById(uuid).classList.add('publish-exhibit');
+                    document.getElementById(uuid).replaceWith(elem.cloneNode(true));
+                    document.getElementById(uuid).innerHTML = '<span id="publish" title="suppressed"><i class="fa fa-cloud-upload" style="color: darkred"></i><br>Suppressed</span>';
+                    document.getElementById(uuid).addEventListener('click', async (event) => {
+                        const uuid = elem.getAttribute('id');
+                        await publish_exhibit(uuid);
+                    }, false);
+                }, 0);
+
+                 */
             }
-        });
 
-        if (response.status === 200) {
-
-            scrollTo(0, 0);
-            document.querySelector('#message').innerHTML = `<div class="alert alert-success" role="alert"><i class="fa fa-check"></i> Exhibit suppressed</div>`;
-
-            setTimeout(() => {
-                location.reload();
-            }, 900);
-
-            /*
-            setTimeout(() => {
-                let elem = document.getElementById(uuid);
-                document.getElementById(uuid).classList.remove('suppress-exhibit');
-                document.getElementById(uuid).classList.add('publish-exhibit');
-                document.getElementById(uuid).replaceWith(elem.cloneNode(true));
-                document.getElementById(uuid).innerHTML = '<span id="publish" title="suppressed"><i class="fa fa-cloud-upload" style="color: darkred"></i><br>Suppressed</span>';
-                document.getElementById(uuid).addEventListener('click', async (event) => {
-                    const uuid = elem.getAttribute('id');
-                    await publish_exhibit(uuid);
-                }, false);
-            }, 0);
-
-             */
-        }
-
-        if (response.status === 204) {
-            scrollTo(0, 0);
-            document.querySelector('#message').innerHTML = `<div class="alert alert-danger" role="alert"><i class="fa fa-exclamation"></i> Unable to suppress exhibit</div>`;
-
+        } catch (error) {
+            document.querySelector('#message').innerHTML = `<div class="alert alert-danger" role="alert"><i class="fa fa-exclamation"></i> An error occurred while suppressing exhibit</div>`;
             setTimeout(() => {
                 document.querySelector('#message').innerHTML = '';
             }, 5000);

@@ -37,7 +37,7 @@ const check_index = async function () {
         const INDEX_UTILS_TASKS = new INDEXER_UTILS_TASKS(INDEX, CLIENT, ES_CONFIG);
         let exists = await INDEX_UTILS_TASKS.check_index(INDEX);
         let is_deleted = false;
-        console.log(exists);
+
         if (exists === true) {
             is_deleted = await delete_index(INDEX);
             if (is_deleted === true) {
