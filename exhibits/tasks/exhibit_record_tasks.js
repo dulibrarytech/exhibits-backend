@@ -89,7 +89,10 @@ const Exhibit_record_tasks = class {
                 'is_preview',
                 'is_featured',
                 'is_student_curated',
-                'created'
+                'created',
+                'updated',
+                'created_by',
+                'updated_by'
             )
             .where({
                 is_deleted: 0
@@ -128,7 +131,10 @@ const Exhibit_record_tasks = class {
                 'is_featured',
                 'is_student_curated',
                 'is_locked',
-                'created'
+                'created',
+                'updated',
+                'created_by',
+                'updated_by'
             )
             .where({
                 uuid: uuid,

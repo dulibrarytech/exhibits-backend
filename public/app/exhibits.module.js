@@ -69,7 +69,7 @@ const exhibitsModule = (function () {
         }
 
         for (let i = 0; i < exhibits.length; i++) {
-
+            console.log(exhibits[i]);
             let uuid = exhibits[i].uuid;
             let is_published = exhibits[i].is_published;
             let is_featured = exhibits[i].is_featured;
@@ -82,6 +82,7 @@ const exhibitsModule = (function () {
             let title;
             let featured = '';
             let exhibit_edit = '';
+            let created_by = `Exibit created by ${exhibits[i].created_by}`;
             let trash = '';
 
             if (is_published === 1) {
@@ -133,6 +134,9 @@ const exhibitsModule = (function () {
                                     </span>
                                 </div>
                             </div>
+                            <p>
+                                <span style="font-size: x-small"><em>${created_by}</em></span>
+                            </p>
                     </td>`;
 
             exhibit_data += `<td style="width: 5%;text-align: center"><small>${status}</small></td>`;

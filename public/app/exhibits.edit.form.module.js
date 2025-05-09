@@ -87,9 +87,27 @@ const exhibitsEditFormModule = (function () {
             let hero_image_fragment = '';
             let thumbnail_url = '';
             let thumbnail_fragment = '';
+            let created_by = record.created_by;
+            let created = record.created;
+            let create_date = new Date(created);
+            let updated_by = record.updated_by;
+            let updated = record.updated;
+            let update_date = new Date(updated);
+            let exhibit_created = '';
+            let create_date_time = helperModule.format_date(create_date);
+            let update_date_time = helperModule.format_date(update_date);
+
+            if (created_by !== null) {
+                exhibit_created += `<em>Created by ${created_by} on ${create_date_time}</em>`;
+            }
+
+            if (updated_by !== null) {
+                exhibit_created += ` | <em>Last updated by ${updated_by} on ${update_date_time}</em>`;
+            }
+
+            document.querySelector('#created').innerHTML = exhibit_created;
 
             // exhibit data
-            console.log(record.subtitle);
             document.querySelector('#exhibit-title-input').value = helperModule.unescape(record.title);
             document.querySelector('#exhibit-sub-title-input').value = helperModule.unescape(record.subtitle);
             document.querySelector('#exhibit-alert-text-input').value = helperModule.unescape(record.alert_text);
@@ -280,6 +298,15 @@ const exhibitsEditFormModule = (function () {
                 return false;
             }
 
+            const user = JSON.parse(sessionStorage.getItem('exhibits_user'));
+
+            if (user.name === null) {
+                document.querySelector('#message').innerHTML = `<div class="alert alert-danger" role="alert"><i class="fa fa-exclamation"></i> Unable to retrieve your name</div>`;
+                return false;
+            }
+
+            data.updated_by = user.name;
+
             response = await httpModule.req({
                 method: 'PUT',
                 url: EXHIBITS_ENDPOINTS.exhibits.exhibit_records.endpoints.put.endpoint.replace(':exhibit_id', uuid),
@@ -296,7 +323,6 @@ const exhibitsEditFormModule = (function () {
 
                 setTimeout(() => {
                     window.location.reload();
-                    // window.location.replace(APP_PATH + '/exhibits/exhibit/edit?exhibit_id=' + uuid);
                 }, 900);
             }
 
