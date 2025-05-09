@@ -31,6 +31,7 @@ module.exports = () => {
         banner_template: {type: 'string'},
         page_layout: {type: 'string'},
         exhibit_template: {type: 'string'},
-        styles: {type: 'object'}
+        styles: {type: 'object'},
+        created_by: {type: 'string'}
     };
 };
