@@ -172,12 +172,12 @@ const exhibitsEditFormModule = (function () {
 
             if (styles.exhibit.navigation !== undefined) {
 
-                if (styles.exhibit.navigation.backgroundColor !== undefined && styles.exhibit.navigation.backgroundColor.length > 0) {
+                if (styles.exhibit.navigation.backgroundColor !== undefined && styles.exhibit.navigation.backgroundColor.length !== 0) {
                     document.querySelector('#nav-background-color').value = styles.exhibit.navigation.backgroundColor;
                     document.querySelector('#nav-background-color-picker').value = styles.exhibit.navigation.backgroundColor;
                 }
 
-                if (styles.exhibit.navigation.color !== undefined && styles.exhibit.navigation.color.length > 0) {
+                if (styles.exhibit.navigation.color !== undefined && styles.exhibit.navigation.color.length !== 0) {
                     document.querySelector('#nav-font-color').value = styles.exhibit.navigation.color;
                     document.querySelector('#nav-font-color-picker').value = styles.exhibit.navigation.color;
                 }
@@ -195,22 +195,16 @@ const exhibitsEditFormModule = (function () {
                 }
             }
 
-            if (styles.exhibit.template !== undefined && styles.exhibit.template.length > 0) {
+            if (styles.exhibit.template !== undefined && styles.exhibit.template.length !== 0) {
 
-                if (styles.exhibit.template.backgroundColor !== undefined) {
+                if (styles.exhibit.template.backgroundColor !== undefined && styles.exhibit.template.backgroundColor.length !== 0) {
                     document.querySelector('#template-background-color').value = styles.exhibit.template.backgroundColor;
                     document.querySelector('#template-background-color-picker').value = styles.exhibit.template.backgroundColor;
-                } else {
-                    document.querySelector('#template-background-color').value = '#FFFFFF';
-                    document.querySelector('#template-background-color-picker').value = '#FFFFFF';
                 }
 
-                if (styles.exhibit.template.color !== undefined) {
+                if (styles.exhibit.template.color !== undefined && styles.exhibit.template.color.length !== 0) {
                     document.querySelector('#template-font-color').value = styles.exhibit.template.color;
                     document.querySelector('#template-font-color-picker').value = styles.exhibit.template.color;
-                } else {
-                    document.querySelector('#template-font-color').value = '#FFFFFF';
-                    document.querySelector('#template-font-color-picker').value = '#FFFFFF';
                 }
 
                 let template_font_values = document.querySelector('#template-font');
@@ -229,26 +223,19 @@ const exhibitsEditFormModule = (function () {
 
             if (styles.exhibit.introduction !== undefined) {
 
-                if (styles.exhibit.introduction.backgroundColor !== undefined) {
+                if (styles.exhibit.introduction.backgroundColor !== undefined && styles.exhibit.introduction.backgroundColor.length !== 0) {
 
                     if (styles.exhibit.introduction.backgroundColor.length > 0) {
                         document.querySelector('#introduction-background-color').value = styles.exhibit.introduction.backgroundColor;
                         document.querySelector('#introduction-background-color-picker').value = styles.exhibit.introduction.backgroundColor;
-                    } else {
-                        document.querySelector('#introduction-background-color').value = '#FFFFFF';
-                        document.querySelector('#introduction-background-color-picker').value = '#FFFFFF';
                     }
-
                 }
 
                 if (styles.exhibit.introduction.color !== undefined) {
 
-                    if (styles.exhibit.introduction.color.length > 0) {
+                    if (styles.exhibit.introduction.color.length > 0 && styles.exhibit.introduction.color.length !== 0) {
                         document.querySelector('#introduction-font-color').value = styles.exhibit.introduction.color;
                         document.querySelector('#introduction-font-color-picker').value = styles.exhibit.introduction.color;
-                    } else {
-                        document.querySelector('#introduction-font-color').value = '#FFFFFF';
-                        document.querySelector('#introduction-font-color-picker').value = '#FFFFFF';
                     }
                 }
 
