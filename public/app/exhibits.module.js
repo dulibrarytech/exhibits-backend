@@ -69,7 +69,7 @@ const exhibitsModule = (function () {
         }
 
         for (let i = 0; i < exhibits.length; i++) {
-            console.log(exhibits[i]);
+
             let uuid = exhibits[i].uuid;
             let is_published = exhibits[i].is_published;
             let is_featured = exhibits[i].is_featured;
