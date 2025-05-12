@@ -71,6 +71,7 @@ const itemsEditGridFormModule = (function () {
             window.scrollTo(0, 0);
             const exhibit_id = helperModule.get_parameter_by_name('exhibit_id');
             const grid_id = helperModule.get_parameter_by_name('item_id');
+            const data = itemsCommonStandardGridFormModule.get_common_grid_form_fields();
 
             if (exhibit_id === undefined || grid_id === undefined) {
                 document.querySelector('#message').innerHTML = `<div class="alert alert-warning" role="alert"><i class="fa fa-info"></i> Unable to update grid record.</div>`;
@@ -79,7 +80,15 @@ const itemsEditGridFormModule = (function () {
 
             document.querySelector('#message').innerHTML = `<div class="alert alert-info" role="alert"><i class="fa fa-info"></i> Updating grid record...</div>`;
 
-            const data = itemsCommonStandardGridFormModule.get_common_grid_form_fields(rich_text_data);
+            const user = JSON.parse(sessionStorage.getItem('exhibits_user'));
+
+            if (user.name === null) {
+                document.querySelector('#message').innerHTML = `<div class="alert alert-danger" role="alert"><i class="fa fa-exclamation"></i> Unable to retrieve your name</div>`;
+                return false;
+            }
+
+            data.updated_by = user.name;
+
             let tmp = EXHIBITS_ENDPOINTS.exhibits.grid_records.put.endpoint.replace(':exhibit_id', exhibit_id);
             let endpoint = tmp.replace(':grid_id', grid_id);
             const token = authModule.get_user_token();
@@ -113,7 +122,25 @@ const itemsEditGridFormModule = (function () {
     async function display_edit_record () {
 
         let record = await get_grid_record();
+        let created_by = record.created_by;
+        let created = record.created;
+        let create_date = new Date(created);
+        let updated_by = record.updated_by;
+        let updated = record.updated;
+        let update_date = new Date(updated);
+        let item_created = '';
+        let create_date_time = helperModule.format_date(create_date);
+        let update_date_time = helperModule.format_date(update_date);
 
+        if (created_by !== null) {
+            item_created += `<em>Created by ${created_by} on ${create_date_time}</em>`;
+        }
+
+        if (updated_by !== null) {
+            item_created += ` | <em>Last updated by ${updated_by} on ${update_date_time}</em>`;
+        }
+
+        document.querySelector('#created').innerHTML = item_created;
         document.querySelector('#grid-title-input').value = helperModule.unescape(record.title);
         document.querySelector('#grid-text-input').value = helperModule.unescape(record.text);
         document.querySelector('#grid-columns').value = record.columns;

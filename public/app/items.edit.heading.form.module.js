@@ -87,7 +87,6 @@ const itemsEditHeadingFormModule = (function () {
         }
 
         document.querySelector('#created').innerHTML = item_created;
-
         document.querySelector('#item-heading-text-input').value = helperModule.unescape(record.text);
 
         if (typeof record.styles === 'string') {
