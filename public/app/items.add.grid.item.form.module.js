@@ -23,20 +23,6 @@ const itemsAddGridItemFormModule = (function () {
     const APP_PATH = window.localStorage.getItem('exhibits_app_path');
     const EXHIBITS_ENDPOINTS = endpointsModule.get_exhibits_endpoints();
     let obj = {};
-    let rich_text_data = {};
-
-    /*
-    function set_rich_text_editors() {
-        const ids = ['item-title-input',
-            'item-description-input',
-            'item-text-input'];
-
-        ids.forEach((id) => {
-            rich_text_data[id] = helperModule.set_rich_text_editor(id);
-        });
-    }
-
-     */
 
     obj.create_grid_item_record = async function () {
 
@@ -53,7 +39,7 @@ const itemsAddGridItemFormModule = (function () {
 
             document.querySelector('#message').innerHTML = `<div class="alert alert-info" role="alert"><i class="fa fa-info"></i> Creating grid item record...</div>`;
 
-            let data = itemsCommonGridItemFormModule.get_common_grid_item_form_fields(rich_text_data);
+            let data = itemsCommonGridItemFormModule.get_common_grid_item_form_fields();
 
             if (data === undefined) {
                 document.querySelector('#message').innerHTML = `<div class="alert alert-danger" role="alert"><i class="fa fa-exclamation"></i> Unable to get form field values</div>`;
@@ -61,6 +47,15 @@ const itemsAddGridItemFormModule = (function () {
             } else if (data === false) {
                 return false;
             }
+
+            const user = JSON.parse(sessionStorage.getItem('exhibits_user'));
+
+            if (user.name === null) {
+                document.querySelector('#message').innerHTML = `<div class="alert alert-danger" role="alert"><i class="fa fa-exclamation"></i> Unable to retrieve your name</div>`;
+                return false;
+            }
+
+            data.created_by = user.name;
 
             let tmp = EXHIBITS_ENDPOINTS.exhibits.grid_item_records.post.endpoint.replace(':exhibit_id', exhibit_id);
             let endpoint = tmp.replace(':grid_id', grid_id);
@@ -81,8 +76,6 @@ const itemsAddGridItemFormModule = (function () {
                 document.querySelector('#message').innerHTML = `<div class="alert alert-success" role="alert"><i class="fa fa-info"></i> ${message}</div>`;
                 const grid_item_id = response.data.data;
                 setTimeout(() => {
-                    // window.location.reload();
-                    // window.location.replace(APP_PATH + '/items/grid/items?exhibit_id=' + exhibit_id + '&grid_id=' + grid_id);
                     window.location.replace(`${APP_PATH}/items/grid/item/edit?exhibit_id=${exhibit_id}&grid_id=${grid_id}&item_id=${grid_item_id}`);
                 }, 900);
             }
@@ -98,9 +91,6 @@ const itemsAddGridItemFormModule = (function () {
 
             const exhibit_id = helperModule.get_parameter_by_name('exhibit_id');
             exhibitsModule.set_exhibit_title(exhibit_id);
-
-            // helperModule.set_rich_text_editor_config();
-            // set_rich_text_editors();
 
             uploadsModule.upload_item_media();
             uploadsModule.upload_item_thumbnail();

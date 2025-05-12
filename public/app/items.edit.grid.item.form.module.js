@@ -23,7 +23,6 @@ const itemsEditGridItemFormModule = (function () {
     const APP_PATH = window.localStorage.getItem('exhibits_app_path');
     const EXHIBITS_ENDPOINTS = endpointsModule.get_exhibits_endpoints();
     let obj = {};
-    let rich_text_data = {};
 
     async function get_grid_item_record () {
 
@@ -71,6 +70,25 @@ const itemsEditGridItemFormModule = (function () {
         let record = await get_grid_item_record();
         let thumbnail_fragment = '';
         let thumbnail_url = '';
+        let created_by = record.created_by;
+        let created = record.created;
+        let create_date = new Date(created);
+        let updated_by = record.updated_by;
+        let updated = record.updated;
+        let update_date = new Date(updated);
+        let item_created = '';
+        let create_date_time = helperModule.format_date(create_date);
+        let update_date_time = helperModule.format_date(update_date);
+
+        if (created_by !== null) {
+            item_created += `<em>Created by ${created_by} on ${create_date_time}</em>`;
+        }
+
+        if (updated_by !== null) {
+            item_created += ` | <em>Last updated by ${updated_by} on ${update_date_time}</em>`;
+        }
+
+        document.querySelector('#created').innerHTML = item_created;
 
         // item data
         document.querySelector('#item-title-input').value = helperModule.unescape(record.title);
@@ -235,7 +253,7 @@ const itemsEditGridItemFormModule = (function () {
 
             document.querySelector('#message').innerHTML = `<div class="alert alert-info" role="alert"><i class="fa fa-info"></i> Updating grid item record...</div>`;
 
-            let data = itemsCommonGridItemFormModule.get_common_grid_item_form_fields(rich_text_data);
+            let data = itemsCommonGridItemFormModule.get_common_grid_item_form_fields();
 
             if (data === undefined) {
                 document.querySelector('#message').innerHTML = `<div class="alert alert-danger" role="alert"><i class="fa fa-exclamation"></i> Unable to get form field values</div>`;
@@ -243,6 +261,15 @@ const itemsEditGridItemFormModule = (function () {
             } else if (data === false) {
                 return false;
             }
+
+            const user = JSON.parse(sessionStorage.getItem('exhibits_user'));
+
+            if (user.name === null) {
+                document.querySelector('#message').innerHTML = `<div class="alert alert-danger" role="alert"><i class="fa fa-exclamation"></i> Unable to retrieve your name</div>`;
+                return false;
+            }
+
+            data.updated_by = user.name;
 
             let etmp = EXHIBITS_ENDPOINTS.exhibits.grid_item_records.put.endpoint.replace(':exhibit_id', exhibit_id);
             let itmp = etmp.replace(':grid_id', grid_id);
