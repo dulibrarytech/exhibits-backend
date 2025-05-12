@@ -23,19 +23,6 @@ const itemsAddVerticalTimelineFormModule = (function () {
     const APP_PATH = '/exhibits-dashboard';
     const EXHIBITS_ENDPOINTS = endpointsModule.get_exhibits_endpoints();
     let obj = {};
-    let rich_text_data = {};
-
-    /*
-    function set_rich_text_editors () {
-        const ids = ['timeline-title-input',
-            'timeline-text-input'];
-
-        ids.forEach((id) => {
-            rich_text_data[id] = helperModule.set_rich_text_editor(id);
-        });
-    }
-
-     */
 
     obj.create_timeline_record = async function () {
 
@@ -51,11 +38,20 @@ const itemsAddVerticalTimelineFormModule = (function () {
 
             document.querySelector('#message').innerHTML = `<div class="alert alert-info" role="alert"><i class="fa fa-info"></i> Creating timeline record...</div>`;
 
-            const data = itemsCommonVerticalTimelineFormModule.get_common_timeline_form_fields(rich_text_data);
+            const data = itemsCommonVerticalTimelineFormModule.get_common_timeline_form_fields();
 
             if (data === false) {
                 return false;
             }
+
+            const user = JSON.parse(sessionStorage.getItem('exhibits_user'));
+
+            if (user.name === null) {
+                document.querySelector('#message').innerHTML = `<div class="alert alert-danger" role="alert"><i class="fa fa-exclamation"></i> Unable to retrieve your name</div>`;
+                return false;
+            }
+
+            data.created_by = user.name;
 
             let token = authModule.get_user_token();
             let response = await httpModule.req({

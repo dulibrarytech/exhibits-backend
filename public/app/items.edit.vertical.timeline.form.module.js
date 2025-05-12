@@ -85,6 +85,15 @@ const itemsEditVerticalTimelineFormModule = (function () {
                 return false;
             }
 
+            const user = JSON.parse(sessionStorage.getItem('exhibits_user'));
+
+            if (user.name === null) {
+                document.querySelector('#message').innerHTML = `<div class="alert alert-danger" role="alert"><i class="fa fa-exclamation"></i> Unable to retrieve your name</div>`;
+                return false;
+            }
+
+            data.updated_by = user.name;
+
             let tmp = EXHIBITS_ENDPOINTS.exhibits.timeline_records.put.endpoint.replace(':exhibit_id', exhibit_id);
             let endpoint = tmp.replace(':timeline_id', timeline_id);
             const token = authModule.get_user_token();
@@ -117,8 +126,28 @@ const itemsEditVerticalTimelineFormModule = (function () {
     async function display_edit_record () {
 
         const record = await get_timeline_record();
+        let created_by = record.created_by;
+        let created = record.created;
+        let create_date = new Date(created);
+        let updated_by = record.updated_by;
+        let updated = record.updated;
+        let update_date = new Date(updated);
+        let item_created = '';
+        let create_date_time = helperModule.format_date(create_date);
+        let update_date_time = helperModule.format_date(update_date);
+
+        if (created_by !== null) {
+            item_created += `<em>Created by ${created_by} on ${create_date_time}</em>`;
+        }
+
+        if (updated_by !== null) {
+            item_created += ` | <em>Last updated by ${updated_by} on ${update_date_time}</em>`;
+        }
+
+        document.querySelector('#created').innerHTML = item_created;
         document.querySelector('#timeline-title-input').value = helperModule.unescape(record.title);
         document.querySelector('#timeline-text-input').value = helperModule.unescape(record.text);
+
         const styles = JSON.parse(record.styles);
 
         if (Object.keys(styles).length !== 0) {
