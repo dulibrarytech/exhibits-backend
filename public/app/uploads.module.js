@@ -192,7 +192,7 @@ const uploadsModule = (function () {
         const ITEM_THUMBNAIL = Dropzone;
         ITEM_THUMBNAIL.options.itemThumbnailDropzone = {
             paramName: 'files',
-            maxFilesize: 5000, // 5MB
+            maxFilesize: 1000, // 1MB
             url: UPLOAD_ENDPOINT,
             uploadMultiple: false,
             maxFiles: 1,
