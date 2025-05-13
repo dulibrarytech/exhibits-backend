@@ -408,6 +408,7 @@ const exhibitsEditFormModule = (function () {
 
         try {
 
+            navModule.back_to_exhibits();
             document.querySelector('#save-exhibit-btn').addEventListener('click', exhibitsEditFormModule.update_exhibit_record);
 
             setTimeout(async () => {
@@ -430,7 +431,7 @@ const exhibitsEditFormModule = (function () {
                     document.querySelector('#thumbnail-trash').addEventListener('click', delete_thumbnail_image);
                 }
 
-            }, 1000);
+            }, 500);
 
         } catch (error) {
             document.querySelector('#message').innerHTML = `<div class="alert alert-danger" role="alert"><i class="fa fa-exclamation"></i> ${error.message}</div>`;

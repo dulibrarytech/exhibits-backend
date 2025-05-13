@@ -29,14 +29,12 @@ const homeModule = (function () {
             await authModule.get_auth_user_data();
         }
 
-        history.replaceState({}, '', APP_PATH + '/exhibits');
-        history.pushState({}, '', APP_PATH + '/exhibits');
-
         let home_timer = setTimeout(async () => {
             await exhibitsModule.init();
             clearTimeout(home_timer);
-        }, 0);
-
+            history.replaceState({}, '', APP_PATH + '/exhibits');
+            history.pushState({}, '', APP_PATH + '/exhibits');
+            }, 0);
     };
 
     return obj;

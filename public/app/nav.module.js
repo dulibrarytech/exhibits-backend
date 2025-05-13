@@ -26,12 +26,18 @@ const navModule = (function () {
     obj.set_item_nav_menu_links = function () {
 
         const uuid = helperModule.get_parameter_by_name('exhibit_id');
+        const exhibits_link = `${APP_PATH}/exhibits?exhibit_id=${uuid}`;
         const heading_link = `${APP_PATH}/items/heading?exhibit_id=${uuid}`;
         const standard_item_link = `${APP_PATH}/items/standard?exhibit_id=${uuid}`;
         const item_grid_link = `${APP_PATH}/items/grid?exhibit_id=${uuid}`;
         const item_vertical_timeline_link = `${APP_PATH}/items/vertical-timeline?exhibit_id=${uuid}`;
-        const users_link = `${APP_PATH}/users`;
+        // const users_link = `${APP_PATH}/users`;
         const items_menu_fragment = `
+                <li>
+                    <a href="${exhibits_link}" data-keyboard="false"> 
+                        <i class=" menu-icon fa fa-arrow-left"></i>Back to Exhibits
+                    </a>
+                </li>
                 <li>
                     <a href="${heading_link}" data-keyboard="false"> 
                         <i class=" menu-icon ti-menu-alt"></i>Add Heading
@@ -81,6 +87,11 @@ const navModule = (function () {
                 </li>`;
 
         document.querySelector('#items-menu').innerHTML = items_menu_fragment;
+    };
+
+    obj.back_to_exhibits = function () {
+        const exhibit_id = helperModule.get_parameter_by_name('exhibit_id');
+        document.querySelector('#back-to-exhibits').setAttribute('href', `${APP_PATH}/exhibits?exhibit_id=${exhibit_id}`);
     };
 
     obj.back_to_items = function () {
