@@ -349,7 +349,7 @@ const helperModule = (function () {
                     card.style.visibility = 'visible';
                 });
 
-            }, 500*2);
+            }, 250*2);
 
         } catch (error) {
             document.querySelector('#message').innerHTML = `<div class="alert alert-danger" role="alert"><i class="fa fa-exclamation"></i> ${error.message}</div>`;
