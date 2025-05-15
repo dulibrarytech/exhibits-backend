@@ -95,8 +95,22 @@ const navModule = (function () {
     };
 
     obj.back_to_items = function () {
+
         const exhibit_id = helperModule.get_parameter_by_name('exhibit_id');
-        document.querySelector('#back-to-items').setAttribute('href', `${APP_PATH}/items?exhibit_id=${exhibit_id}`);
+        const grid_id = helperModule.get_parameter_by_name('grid_id');
+        const timeline_id = helperModule.get_parameter_by_name('timeline_id');
+        let id = '0';
+        let type = '0';
+
+        if (grid_id !== null) {
+            id = grid_id;
+            type = 'grid';
+        } else if (timeline_id !== null) {
+            id = timeline_id;
+            type = 'timeline';
+        }
+
+        document.querySelector('#back-to-items').setAttribute('href', `${APP_PATH}/items?exhibit_id=${exhibit_id}&id=${id}&type=${type}`);
     };
 
     obj.back_to_grid_items = function () {

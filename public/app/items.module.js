@@ -109,6 +109,15 @@ const itemsModule = (function () {
             bind_publish_item_events();
             bind_suppress_item_events();
 
+            const id = helperModule.get_parameter_by_name('id');
+            const type = helperModule.get_parameter_by_name('type');
+            history.replaceState({}, '', APP_PATH + '/exhibits?exhibit_id=' + exhibit_id);
+            history.pushState({}, '', APP_PATH + '/exhibits?exhibit_id=' + exhibit_id);
+
+            if (id !== null) {
+                location.href = '#' + id + '_' + type;
+            }
+
         } catch (error) {
             document.querySelector('#message').innerHTML = `<div class="alert alert-danger" role="alert"><i class="fa fa-exclamation"></i> ${error.message}</div>`;
         }
