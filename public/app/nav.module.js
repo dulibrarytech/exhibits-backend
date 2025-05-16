@@ -31,7 +31,6 @@ const navModule = (function () {
         const standard_item_link = `${APP_PATH}/items/standard?exhibit_id=${uuid}`;
         const item_grid_link = `${APP_PATH}/items/grid?exhibit_id=${uuid}`;
         const item_vertical_timeline_link = `${APP_PATH}/items/vertical-timeline?exhibit_id=${uuid}`;
-        // const users_link = `${APP_PATH}/users`;
         const items_menu_fragment = `
                 <li>
                     <a href="${exhibits_link}" data-keyboard="false"> 
