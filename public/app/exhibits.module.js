@@ -141,7 +141,7 @@ const exhibitsModule = (function () {
 
             exhibit_data += `<td style="width: 5%;text-align: center"><small>${status}</small></td>`;
             exhibit_data += `<td style="width: 10%">
-                                <div class="card-text text-sm-center">
+                                <div class="card-text text-sm-center" id="${uuid}-actions">
                                     ${exhibit_items}&nbsp;
                                     <a href="${APP_PATH}/items/standard?exhibit_id=${uuid}" title="Add Items" aria-label="add-items"><i class="fa fa-plus pr-1"></i> </a>
                                     &nbsp;
@@ -294,6 +294,21 @@ const exhibitsModule = (function () {
                         await suppress_exhibit(uuid);
                     }, false);
                 }, 0);
+
+                setTimeout(() => {
+                    uuid = uuid.replace('-status', '');
+                    let exhibit_items = `<a href="${APP_PATH}/items?exhibit_id=${uuid}" title="View Exhibit Items"><i class="fa fa-list pr-1"></i></a>&nbsp;`;
+                    let uuid_actions = uuid + '-actions';
+                    let elem = document.getElementById(uuid_actions);
+                    let exhibit_edit = `<a href="${APP_PATH}/exhibits/exhibit/details?exhibit_id=${uuid}" title="View details" aria-label="exhibit-details"><i class="fa fa-folder-open pr-1"></i> </a>`;
+                    let add_item = `<a href="${APP_PATH}/items/standard?exhibit_id=${uuid}" title="Add Items" aria-label="add-items"><i class="fa fa-plus pr-1"></i> </a>`;
+                    let trash = `<i title="Can only delete if unpublished" style="color: #d3d3d3" class="fa fa-trash pr-1" aria-label="delete-exhibit"></i>`;
+                    elem.innerHTML = `
+                        ${exhibit_items}&nbsp;
+                        ${add_item}&nbsp;
+                        ${exhibit_edit}&nbsp;
+                        ${trash}`;
+                }, 0);
             }
 
             if (response.status === 204) {
@@ -343,6 +358,21 @@ const exhibitsModule = (function () {
                         const uuid = elem.getAttribute('id');
                         await publish_exhibit(uuid);
                     }, false);
+                }, 0);
+
+                setTimeout(() => {
+                    uuid = uuid.replace('-status', '');
+                    let exhibit_items = `<a href="${APP_PATH}/items?exhibit_id=${uuid}" title="View Exhibit Items"><i class="fa fa-list pr-1"></i></a>&nbsp;`;
+                    let uuid_actions = uuid + '-actions';
+                    let elem = document.getElementById(uuid_actions);
+                    let add_item = `<a href="${APP_PATH}/items/standard?exhibit_id=${uuid}" title="Add Items" aria-label="add-items"><i class="fa fa-plus pr-1"></i> </a>`;
+                    let exhibit_edit = `<a href="${APP_PATH}/exhibits/exhibit/edit?exhibit_id=${uuid}" title="Edit" aria-label="edit-exhibit"><i class="fa fa-edit pr-1"></i> </a>`;
+                    let trash = `<a href="${APP_PATH}/exhibits/exhibit/delete?exhibit_id=${uuid}" title="Delete exhibit" aria-label="delete-exhibit"><i class="fa fa-trash pr-1"></i></a>`;
+                    elem.innerHTML = `
+                        ${exhibit_items}&nbsp;
+                        ${add_item}&nbsp;
+                        ${exhibit_edit}&nbsp;
+                        ${trash}`;
                 }, 0);
             }
 

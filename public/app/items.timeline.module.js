@@ -114,14 +114,6 @@ const itemsTimelineModule = (function () {
 
             if (response.status === 200) {
 
-                /*
-                document.querySelector('#message').innerHTML = `<div class="alert alert-success" role="alert"><i class="fa fa-check"></i> Timeline item published</div>`;
-
-                setTimeout(() => {
-                    location.reload();
-                }, 1000);
-                 */
-
                 setTimeout(() => {
                     let elem = document.getElementById(uuid);
                     document.getElementById(uuid).classList.remove('publish-item');
@@ -176,14 +168,6 @@ const itemsTimelineModule = (function () {
             });
 
             if (response.status === 200) {
-
-                /*
-                document.querySelector('#message').innerHTML = `<div class="alert alert-success" role="alert"><i class="fa fa-check"></i> Timeline item unpublished</div>`;
-
-                setTimeout(() => {
-                    location.reload();
-                }, 1000);
-                 */
 
                 setTimeout(() => {
                     let elem = document.getElementById(uuid);
