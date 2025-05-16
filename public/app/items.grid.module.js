@@ -51,13 +51,6 @@ const itemsGridModule = (function () {
 
     obj.display_grid_items = async function (event) {
 
-        /*
-        if ($.fn.dataTable.isDataTable('#grid-items')) {
-            $('#grid-items').DataTable().clear().destroy();
-        }
-
-         */
-
         const exhibit_id = helperModule.get_parameter_by_name('exhibit_id');
         const grid_id = helperModule.get_parameter_by_name('grid_id');
         await exhibitsModule.set_exhibit_title(exhibit_id);
@@ -92,10 +85,8 @@ const itemsGridModule = (function () {
             await helperModule.reorder_items(e, reordered_items);
         });
 
-        // await helperModule.reorder_items_after_action(item_order, 'grid_items');
         bind_publish_grid_item_events();
         bind_suppress_grid_item_events();
-        // helperModule.reorder_grid_items(event, grid_id);
     };
 
     async function publish_grid_item(uuid) {
@@ -122,11 +113,18 @@ const itemsGridModule = (function () {
 
             if (response.status === 200) {
 
-                document.querySelector('#message').innerHTML = `<div class="alert alert-success" role="alert"><i class="fa fa-check"></i> Grid item published</div>`;
-
                 setTimeout(() => {
-                    location.reload();
-                }, 900);
+                    let elem = document.getElementById(uuid);
+                    document.getElementById(uuid).classList.remove('publish-item');
+                    document.getElementById(uuid).classList.add('suppress-item');
+                    document.getElementById(uuid).replaceWith(elem.cloneNode(true));
+                    document.getElementById(uuid).innerHTML = '<span id="suppress" title="published"><i class="fa fa-cloud" style="color: green"></i><br>Published</span>';
+                    document.getElementById(uuid).addEventListener('click', async (event) => {
+                        event.preventDefault();
+                        const uuid = elem.getAttribute('id');
+                        await suppress_grid_item(uuid);
+                    }, false);
+                }, 0);
             }
 
             if (response.status === 204) {
@@ -137,6 +135,8 @@ const itemsGridModule = (function () {
                     document.querySelector('#message').innerHTML = '';
                 }, 5000);
             }
+
+            return false;
 
         } catch (error) {
             document.querySelector('#message').innerHTML = `<div class="alert alert-danger" role="alert"><i class="fa fa-exclamation"></i> ${error.message}</div>`;
@@ -167,11 +167,18 @@ const itemsGridModule = (function () {
 
             if (response.status === 200) {
 
-                document.querySelector('#message').innerHTML = `<div class="alert alert-success" role="alert"><i class="fa fa-check"></i> Grid item unpublished</div>`;
-
                 setTimeout(() => {
-                    location.reload();
-                }, 900);
+                    let elem = document.getElementById(uuid);
+                    document.getElementById(uuid).classList.remove('suppress-item');
+                    document.getElementById(uuid).classList.add('publish-item');
+                    document.getElementById(uuid).replaceWith(elem.cloneNode(true));
+                    document.getElementById(uuid).innerHTML = '<span id="publish" title="suppressed"><i class="fa fa-cloud-upload" style="color: darkred"></i><br>Suppressed</span>';
+                    document.getElementById(uuid).addEventListener('click', async (event) => {
+                        event.preventDefault();
+                        const uuid = elem.getAttribute('id');
+                        await publish_grid_item(uuid);
+                    }, false);
+                }, 0);
             }
 
             if (response.status === 204) {
@@ -182,6 +189,8 @@ const itemsGridModule = (function () {
                     document.querySelector('#message').innerHTML = '';
                 }, 5000);
             }
+
+            return false;
 
         } catch (error) {
             document.querySelector('#message').innerHTML = `<div class="alert alert-danger" role="alert"><i class="fa fa-exclamation"></i> ${error.message}</div>`;
@@ -196,6 +205,7 @@ const itemsGridModule = (function () {
 
             exhibit_links.forEach(exhibit_link => {
                 exhibit_link.addEventListener('click', async (event) => {
+                    event.preventDefault();
                     const uuid = exhibit_link.getAttribute('id');
                     await publish_grid_item(uuid);
                 });
@@ -213,7 +223,8 @@ const itemsGridModule = (function () {
             const exhibit_links = Array.from(document.getElementsByClassName('suppress-item'));
 
             exhibit_links.forEach(exhibit_link => {
-                exhibit_link.addEventListener('click', async () => {
+                exhibit_link.addEventListener('click', async (event) => {
+                    event.preventDefault();
                     const uuid = exhibit_link.getAttribute('id');
                     await suppress_grid_item(uuid);
                 });
