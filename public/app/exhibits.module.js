@@ -168,10 +168,10 @@ const exhibitsModule = (function () {
         bind_suppress_exhibit_events();
 
         const exhibit_id = helperModule.get_parameter_by_name('exhibit_id');
-        history.replaceState({}, '', APP_PATH + '/exhibits');
-        history.pushState({}, '', APP_PATH + '/exhibits');
 
         if (exhibit_id !== null) {
+            history.replaceState({}, '', APP_PATH + '/exhibits');
+            history.pushState({}, '', APP_PATH + '/exhibits');
             location.href = "#" + exhibit_id;
         }
     };
