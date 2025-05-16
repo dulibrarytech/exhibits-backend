@@ -114,11 +114,27 @@ const itemsTimelineModule = (function () {
 
             if (response.status === 200) {
 
+                /*
                 document.querySelector('#message').innerHTML = `<div class="alert alert-success" role="alert"><i class="fa fa-check"></i> Timeline item published</div>`;
 
                 setTimeout(() => {
                     location.reload();
                 }, 1000);
+                 */
+
+                setTimeout(() => {
+                    let elem = document.getElementById(uuid);
+                    document.getElementById(uuid).classList.remove('publish-item');
+                    document.getElementById(uuid).classList.add('suppress-item');
+                    document.getElementById(uuid).replaceWith(elem.cloneNode(true));
+                    document.getElementById(uuid).innerHTML = '<span id="suppress" title="published"><i class="fa fa-cloud" style="color: green"></i><br>Published</span>';
+                    document.getElementById(uuid).addEventListener('click', async (event) => {
+                        event.preventDefault();
+                        const uuid = elem.getAttribute('id');
+                        await suppress_timeline_item(uuid);
+                    }, false);
+                }, 0);
+
             }
 
             if (response.status === 204) {
@@ -129,6 +145,8 @@ const itemsTimelineModule = (function () {
                     document.querySelector('#message').innerHTML = '';
                 }, 5000);
             }
+
+            return false;
 
         } catch (error) {
             document.querySelector('#message').innerHTML = `<div class="alert alert-danger" role="alert"><i class="fa fa-exclamation"></i> ${error.message}</div>`;
@@ -159,11 +177,26 @@ const itemsTimelineModule = (function () {
 
             if (response.status === 200) {
 
+                /*
                 document.querySelector('#message').innerHTML = `<div class="alert alert-success" role="alert"><i class="fa fa-check"></i> Timeline item unpublished</div>`;
 
                 setTimeout(() => {
                     location.reload();
                 }, 1000);
+                 */
+
+                setTimeout(() => {
+                    let elem = document.getElementById(uuid);
+                    document.getElementById(uuid).classList.remove('suppress-item');
+                    document.getElementById(uuid).classList.add('publish-item');
+                    document.getElementById(uuid).replaceWith(elem.cloneNode(true));
+                    document.getElementById(uuid).innerHTML = '<span id="publish" title="suppressed"><i class="fa fa-cloud-upload" style="color: darkred"></i><br>Suppressed</span>';
+                    document.getElementById(uuid).addEventListener('click', async (event) => {
+                        event.preventDefault();
+                        const uuid = elem.getAttribute('id');
+                        await publish_timeline_item(uuid);
+                    }, false);
+                }, 0);
             }
 
             if (response.status === 204) {
@@ -174,6 +207,8 @@ const itemsTimelineModule = (function () {
                     document.querySelector('#message').innerHTML = '';
                 }, 5000);
             }
+
+            return false;
 
         } catch (error) {
             document.querySelector('#message').innerHTML = `<div class="alert alert-danger" role="alert"><i class="fa fa-exclamation"></i> ${error.message}</div>`;
@@ -188,6 +223,7 @@ const itemsTimelineModule = (function () {
 
             exhibit_links.forEach(exhibit_link => {
                 exhibit_link.addEventListener('click', async (event) => {
+                    event.preventDefault();
                     const uuid = exhibit_link.getAttribute('id');
                     await publish_timeline_item(uuid);
                 });
@@ -205,7 +241,8 @@ const itemsTimelineModule = (function () {
             const exhibit_links = Array.from(document.getElementsByClassName('suppress-item'));
 
             exhibit_links.forEach(exhibit_link => {
-                exhibit_link.addEventListener('click', async () => {
+                exhibit_link.addEventListener('click', async (event) => {
+                    event.preventDefault();
                     const uuid = exhibit_link.getAttribute('id');
                     await suppress_timeline_item(uuid);
                 });
