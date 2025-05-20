@@ -87,6 +87,7 @@ const exhibitsEditFormModule = (function () {
             let hero_image_fragment = '';
             let thumbnail_url = '';
             let thumbnail_fragment = '';
+            let is_published = record.is_published;
             let created_by = record.created_by;
             let created = record.created;
             let create_date = new Date(created);
@@ -106,6 +107,12 @@ const exhibitsEditFormModule = (function () {
             }
 
             document.querySelector('#created').innerHTML = exhibit_created;
+
+            if (document.querySelector('#is-published') !== null && is_published === 1) {
+                document.querySelector('#is-published').value = true;
+            } else if (document.querySelector('#is-published') !== null && is_published === 0) {
+                document.querySelector('#is-published').value = false;
+            }
 
             // exhibit data
             document.querySelector('#exhibit-title-input').value = helperModule.unescape(record.title);

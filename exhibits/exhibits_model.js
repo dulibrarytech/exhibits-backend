@@ -166,6 +166,7 @@ exports.update_exhibit_record = async function (uuid, data) {
         const HELPER_TASK = new HELPER();
         const VALIDATE_TASK = new VALIDATOR(EXHIBITS_UPDATE_RECORD_SCHEMA);
         let is_valid = VALIDATE_TASK.validate(data);
+        let is_published = false;
 
         if (is_valid !== true) {
 
@@ -195,6 +196,8 @@ exports.update_exhibit_record = async function (uuid, data) {
         }
 
         data.styles = JSON.stringify(data.styles);
+        is_published = data.is_published;
+        delete data.is_published;
 
         const UPDATE_RECORD_TASK = new EXHIBIT_RECORD_TASKS(DB, TABLES);
         let result = await UPDATE_RECORD_TASK.update_exhibit_record(uuid, data);
@@ -205,6 +208,24 @@ exports.update_exhibit_record = async function (uuid, data) {
                 message: 'Unable to update exhibit record'
             };
         } else {
+
+            if (is_published === 'true') {
+
+                const is_suppressed = await suppress_exhibit(uuid);
+
+                if (is_suppressed.status === true) {
+                    setTimeout(async () => {
+
+                        const is_published = await publish_exhibit(uuid);
+
+                        if (is_published.status === true) {
+                            LOGGER.module().info('INFO: [/exhibits/model (update_exhibit_record)] Exhibit re-published successfully.');
+                        }
+
+                    }, 3000);
+                }
+            }
+
             return {
                 status: 201,
                 message: 'Exhibit record updated'
@@ -318,7 +339,7 @@ exports.build_exhibit_preview = async function (uuid) {
  * Publishes exhibit
  * @param uuid
  */
-exports.publish_exhibit = async function (uuid) {
+const publish_exhibit = async function (uuid) {
 
     try {
 
@@ -414,7 +435,7 @@ exports.publish_exhibit = async function (uuid) {
  * Suppresses exhibit
  * @param uuid
  */
-exports.suppress_exhibit = async function (uuid) {
+const suppress_exhibit = async function (uuid) {
 
     try {
 
@@ -681,3 +702,6 @@ exports.reorder_exhibits = async function (data) {
         LOGGER.module().error('ERROR: [/exhibits/model (reorder_exhibits)] ' + error.message);
     }
 };
+
+exports.publish_exhibit = publish_exhibit;
+exports.suppress_exhibit = suppress_exhibit;

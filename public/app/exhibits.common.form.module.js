@@ -41,6 +41,10 @@ const exhibitsCommonFormModule = (function () {
             exhibit.is_featured = document.querySelector('#is-featured').checked;
             exhibit.is_student_curated = document.querySelector('#is-student-curated').checked;
 
+            if (document.querySelector('#is-published') !== null) {
+                exhibit.is_published = document.querySelector('#is-published').value;
+            }
+
             if (exhibit.is_featured === true) {
                 exhibit.is_featured = 1;
             } else if (exhibit.is_featured === false) {
