@@ -222,7 +222,7 @@ exports.update_exhibit_record = async function (uuid, data) {
                             LOGGER.module().info('INFO: [/exhibits/model (update_exhibit_record)] Exhibit re-published successfully.');
                         }
 
-                    }, 3000);
+                    }, 5000);
                 }
             }
 
