@@ -68,6 +68,7 @@ const itemsEditHeadingFormModule = (function () {
 
         let record = await get_item_heading_record();
         let styles;
+        let is_published = record.is_published;
         let created_by = record.created_by;
         let created = record.created;
         let create_date = new Date(created);
@@ -88,6 +89,12 @@ const itemsEditHeadingFormModule = (function () {
 
         document.querySelector('#created').innerHTML = item_created;
         document.querySelector('#item-heading-text-input').value = helperModule.unescape(record.text);
+
+        if (document.querySelector('#is-published') !== null && is_published === 1) {
+            document.querySelector('#is-published').value = true;
+        } else if (document.querySelector('#is-published') !== null && is_published === 0) {
+            document.querySelector('#is-published').value = false;
+        }
 
         if (typeof record.styles === 'string') {
             styles = JSON.parse(record.styles);

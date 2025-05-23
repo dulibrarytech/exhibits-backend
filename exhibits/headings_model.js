@@ -130,6 +130,7 @@ exports.update_heading_record = async function (is_member_of_exhibit, uuid, data
 
         const VALIDATE_TASK = new VALIDATOR(EXHIBITS_UPDATE_HEADING_SCHEMA);
         let is_valid = VALIDATE_TASK.validate(data);
+        let is_published = false;
 
         if (is_valid !== true) {
 
@@ -142,6 +143,8 @@ exports.update_heading_record = async function (is_member_of_exhibit, uuid, data
         }
 
         data.styles = JSON.stringify(data.styles);
+        is_published = data.is_published;
+        delete data.is_published;
 
         const UPDATE_RECORD_TASK = new EXHIBIT_HEADING_RECORD_TASKS(DB, TABLES);
         let result = await UPDATE_RECORD_TASK.update_heading_record(data);
@@ -152,6 +155,24 @@ exports.update_heading_record = async function (is_member_of_exhibit, uuid, data
                 message: 'Unable to update heading record'
             };
         } else {
+
+            if (is_published === 'true') {
+
+                const is_suppressed = await suppress_heading_record(is_member_of_exhibit, uuid);
+
+                if (is_suppressed.status === true) {
+                    setTimeout(async () => {
+
+                        const is_published = await publish_heading_record(is_member_of_exhibit, uuid);
+
+                        if (is_published.status === true) {
+                            LOGGER.module().info('INFO: [/exhibits/model (update_heading_record)] Heading record re-published successfully.');
+                        }
+
+                    }, 5000);
+                }
+            }
+
             return {
                 status: 201,
                 message: 'Heading record updated'
@@ -205,7 +226,7 @@ exports.delete_heading_record = async function (is_member_of_exhibit, uuid) {
  * @param exhibit_id
  * @param heading_id
  */
-exports.publish_heading_record = async function (exhibit_id, heading_id) {
+const publish_heading_record = async function (exhibit_id, heading_id) {
 
     try {
 
@@ -263,7 +284,7 @@ exports.publish_heading_record = async function (exhibit_id, heading_id) {
  * @param exhibit_id
  * @param item_id
  */
-exports.suppress_heading_record = async function (exhibit_id, item_id) {
+const suppress_heading_record = async function (exhibit_id, item_id) {
 
     try {
 
@@ -318,3 +339,6 @@ exports.reorder_headings = async function (exhibit_id, heading) {
         LOGGER.module().error('ERROR: [/exhibits/model (reorder_headings)] ' + error.message);
     }
 };
+
+exports.publish_heading_record = publish_heading_record;
+exports.suppress_heading_record = suppress_heading_record;
