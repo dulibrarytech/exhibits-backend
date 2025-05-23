@@ -40,6 +40,10 @@ const itemsCommonStandardItemFormModule = (function () {
             item.is_embedded = document.querySelector('#embed-item').checked;
             item.media_padding = document.querySelector('#media-padding').checked;
 
+            if (document.querySelector('#is-published') !== null) {
+                item.is_published = document.querySelector('#is-published').value;
+            }
+
             if (item.wrap_text === true) {
                 item.wrap_text = 1;
             } else if (item.wrap_text === false) {

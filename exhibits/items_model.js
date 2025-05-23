@@ -181,6 +181,7 @@ exports.update_item_record = async function (is_member_of_exhibit, item_id, data
 
         const VALIDATE_TASK = new VALIDATOR(EXHIBITS_UPDATE_ITEM_SCHEMA);
         let is_valid = VALIDATE_TASK.validate(data);
+        let is_published = false;
 
         if (is_valid !== true) {
 
@@ -223,7 +224,6 @@ exports.update_item_record = async function (is_member_of_exhibit, item_id, data
             data.is_kaltura_item = 1;
         }
 
-
         if (data.repo_uuid.length > 0) {
             data.media = data.repo_uuid;
             data.is_repo_item = 1;
@@ -234,6 +234,8 @@ exports.update_item_record = async function (is_member_of_exhibit, item_id, data
         }
 
         data.styles = JSON.stringify(data.styles);
+        is_published = data.is_published;
+        delete data.is_published;
 
         delete data.kaltura;
         delete data.repo_uuid;
@@ -249,6 +251,24 @@ exports.update_item_record = async function (is_member_of_exhibit, item_id, data
                 message: 'Unable to update item record'
             };
         } else {
+
+            if (is_published === 'true') {
+
+                const is_suppressed = await suppress_item_record(is_member_of_exhibit, item_id);
+
+                if (is_suppressed.status === true) {
+                    setTimeout(async () => {
+
+                        const is_published = await publish_item_record(is_member_of_exhibit, item_id);
+
+                        if (is_published.status === true) {
+                            LOGGER.module().info('INFO: [/exhibits/model (update_item_record)] Item re-published successfully.');
+                        }
+
+                    }, 5000);
+                }
+            }
+
             return {
                 status: 201,
                 message: 'Item record updated'
@@ -352,7 +372,7 @@ exports.delete_item_record = async function (is_member_of_exhibit, item_id, type
  * @param exhibit_id
  * @param item_id
  */
-exports.publish_item_record = async function (exhibit_id, item_id) {
+const publish_item_record = async function (exhibit_id, item_id) {
 
     try {
 
@@ -410,7 +430,7 @@ exports.publish_item_record = async function (exhibit_id, item_id) {
  * @param exhibit_id
  * @param item_id
  */
-exports.suppress_item_record = async function (exhibit_id, item_id) {
+const suppress_item_record = async function (exhibit_id, item_id) {
 
     try {
 
@@ -509,3 +529,6 @@ exports.get_repo_tn = async function (uuid) {
         LOGGER.module().error('ERROR: [/exhibits/model (get_repo_tn)] ' + error.message);
     }
 };
+
+exports.publish_item_record = publish_item_record;
+exports.suppress_item_record = suppress_item_record;

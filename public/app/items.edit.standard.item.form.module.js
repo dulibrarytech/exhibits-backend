@@ -23,7 +23,6 @@ const itemsEditStandardItemFormModule = (function () {
     const APP_PATH = window.localStorage.getItem('exhibits_app_path');
     const EXHIBITS_ENDPOINTS = endpointsModule.get_exhibits_endpoints();
     let obj = {};
-    let rich_text_data = {};
 
     async function get_item_record () {
 
@@ -69,6 +68,7 @@ const itemsEditStandardItemFormModule = (function () {
         const record = await get_item_record();
         let thumbnail_fragment = '';
         let thumbnail_url = '';
+        let is_published = record.is_published;
         let created_by = record.created_by;
         let created = record.created;
         let create_date = new Date(created);
@@ -88,6 +88,12 @@ const itemsEditStandardItemFormModule = (function () {
         }
 
         document.querySelector('#created').innerHTML = item_created;
+
+        if (document.querySelector('#is-published') !== null && is_published === 1) {
+            document.querySelector('#is-published').value = true;
+        } else if (document.querySelector('#is-published') !== null && is_published === 0) {
+            document.querySelector('#is-published').value = false;
+        }
 
         // item data
         document.querySelector('#item-title-input').value = helperModule.unescape(record.title);
@@ -255,7 +261,7 @@ const itemsEditStandardItemFormModule = (function () {
             scrollTo(0, 0);
             let exhibit_id = helperModule.get_parameter_by_name('exhibit_id');
             let item_id = helperModule.get_parameter_by_name('item_id');
-            let data = itemsCommonStandardItemFormModule.get_common_standard_item_form_fields(rich_text_data);
+            let data = itemsCommonStandardItemFormModule.get_common_standard_item_form_fields();
             let token = authModule.get_user_token();
             let response;
 
