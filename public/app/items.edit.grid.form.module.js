@@ -184,8 +184,6 @@ const itemsEditGridFormModule = (function () {
     obj.init = async function () {
         const exhibit_id = helperModule.get_parameter_by_name('exhibit_id');
         exhibitsModule.set_exhibit_title(exhibit_id);
-        // helperModule.set_rich_text_editor_config();
-        // set_rich_text_editors();
         document.querySelector('#save-item-btn').addEventListener('click', itemsEditGridFormModule.update_grid_record);
         await display_edit_record();
     };

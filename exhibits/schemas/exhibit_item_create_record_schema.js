@@ -23,6 +23,7 @@ module.exports = () => {
     return {
         is_member_of_exhibit: {type: 'string'},
         title: {type: 'string'},
-        media: {type: 'string'}
+        media: {type: 'string'},
+        alt_text: {type: 'string'}
     };
 };

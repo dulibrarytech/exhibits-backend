@@ -23,19 +23,7 @@ const itemsAddStandardItemFormModule = (function () {
     const APP_PATH = window.localStorage.getItem('exhibits_app_path');
     const EXHIBITS_ENDPOINTS = endpointsModule.get_exhibits_endpoints();
     let obj = {};
-    let rich_text_data = {};
-
-    /*
-    function set_rich_text_editors () {
-        const ids = ['item-title-input',
-            'item-text-input'];
-
-        ids.forEach((id) => {
-            rich_text_data[id] = helperModule.set_rich_text_editor(id);
-        });
-    }
-
-     */
+    // let rich_text_data = {};
 
     obj.create_item_record = async function () {
 
@@ -49,7 +37,7 @@ const itemsAddStandardItemFormModule = (function () {
                 return false;
             }
 
-            let data = itemsCommonStandardItemFormModule.get_common_standard_item_form_fields(rich_text_data);
+            let data = itemsCommonStandardItemFormModule.get_common_standard_item_form_fields();
 
             if (data === undefined) {
                 document.querySelector('#message').innerHTML = `<div class="alert alert-danger" role="alert"><i class="fa fa-exclamation"></i> Unable to get form field values</div>`;
@@ -63,7 +51,7 @@ const itemsAddStandardItemFormModule = (function () {
             const user = JSON.parse(sessionStorage.getItem('exhibits_user'));
 
             if (user.name === null) {
-                document.querySelector('#message').innerHTML = `<div class="alert alert-danger" role="alert"><i class="fa fa-exclamation"></i> Unable to retrieve your name</div>`;
+                document.querySelector('#message').innerHTML = `<div class="alert alert-danger" role="alert"><i class="fa fa-exclamation"></i> Unable to retrieve your profile</div>`;
                 return false;
             }
 
@@ -87,8 +75,6 @@ const itemsAddStandardItemFormModule = (function () {
 
                 setTimeout(() => {
                     window.location.replace(`${APP_PATH}/items/standard/edit?exhibit_id=${uuid}&item_id=${item_id}`);
-                    // window.location.reload();
-                    // location.replace(`${APP_PATH}/items?exhibit_id=${uuid}`);
                 }, 900);
             }
 
@@ -98,13 +84,8 @@ const itemsAddStandardItemFormModule = (function () {
     };
 
     obj.init = async function () {
-
         const exhibit_id = helperModule.get_parameter_by_name('exhibit_id');
         exhibitsModule.set_exhibit_title(exhibit_id);
-
-        // helperModule.set_rich_text_editor_config();
-        // set_rich_text_editors();
-
         document.querySelector('#save-item-btn').addEventListener('click', itemsAddStandardItemFormModule.create_item_record);
     };
 

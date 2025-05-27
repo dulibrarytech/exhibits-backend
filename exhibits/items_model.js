@@ -235,8 +235,8 @@ exports.update_item_record = async function (is_member_of_exhibit, item_id, data
 
         data.styles = JSON.stringify(data.styles);
         is_published = data.is_published;
-        delete data.is_published;
 
+        delete data.is_published;
         delete data.kaltura;
         delete data.repo_uuid;
         delete data.media_prev;

@@ -23,7 +23,7 @@ const itemsCommonStandardItemFormModule = (function () {
     const EXHIBITS_ENDPOINTS = endpointsModule.get_exhibits_endpoints();
     let obj = {};
 
-    obj.get_common_standard_item_form_fields = function (rich_text_data) {
+    obj.get_common_standard_item_form_fields = function () {
 
         try {
 
@@ -37,6 +37,7 @@ const itemsCommonStandardItemFormModule = (function () {
             item.caption = document.querySelector('#item-caption-input').value;
             item.pdf_open_to_page = document.querySelector('#pdf-open-to-page').value;
             item.wrap_text = document.querySelector('#wrap-text').checked;
+            item.alt_text = document.querySelector('#item-alt-text-input').value;
             item.is_embedded = document.querySelector('#embed-item').checked;
             item.media_padding = document.querySelector('#media-padding').checked;
 
@@ -60,6 +61,13 @@ const itemsCommonStandardItemFormModule = (function () {
                 item.media_padding = 0;
             } else if (item.media_padding === false) {
                 item.media_padding = 1;
+            }
+
+            if (item.alt_text.length === 0 && item.alt_text.length === 0) {
+                if (item.alt_text.length === 0) {
+                    document.querySelector('#message').innerHTML = `<div class="alert alert-danger" role="alert"><i class="fa fa-exclamation"></i> Please enter "alt text" for this item</div>`;
+                    return false;
+                }
             }
 
             // item media

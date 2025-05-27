@@ -98,6 +98,7 @@ const itemsEditStandardItemFormModule = (function () {
         // item data
         document.querySelector('#item-title-input').value = helperModule.unescape(record.title);
         document.querySelector('#item-text-input').value = helperModule.unescape(record.text);
+        document.querySelector('#item-alt-text-input').value = helperModule.unescape(record.alt_text);
         document.querySelector('#pdf-open-to-page').value = record.pdf_open_to_page;
         document.querySelector('#item-caption-input').value = record.caption;
 
