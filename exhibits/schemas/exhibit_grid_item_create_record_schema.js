@@ -24,6 +24,7 @@ module.exports = () => {
         is_member_of_exhibit: {type: 'string'},
         is_member_of_grid: {type: 'string'},
         title: {type: 'string'},
-        media: {type: 'string'}
+        media: {type: 'string'},
+        alt_text: {type: 'string'}
     };
 };

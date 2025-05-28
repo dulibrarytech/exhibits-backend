@@ -95,6 +95,7 @@ const itemsEditGridItemFormModule = (function () {
         document.querySelector('#item-text-input').value = helperModule.unescape(record.text);
         document.querySelector('#item-description-input').value = helperModule.unescape(record.description);
         document.querySelector('#item-caption-input').value = record.caption;
+        document.querySelector('#item-alt-text-input').value = helperModule.unescape(record.alt_text);
         document.querySelector('#pdf-open-to-page').value = record.pdf_open_to_page;
 
         if (record.is_embedded === 1) {
