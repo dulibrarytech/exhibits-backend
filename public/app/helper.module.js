@@ -505,7 +505,7 @@ const helperModule = (function () {
             const app_message = document.querySelector('#app-message');
 
             if (app_message !== null) {
-                app_message.innerHTML = '<div class="alert alert-warning"><i class="fa fa-exclamation-circle"></i> <strong>Development Site</strong>&nbsp;&nbsp;&nbsp;<a class="btn btn-info" href="https://exhibits-backend.library.du.edu/exhibits-dashboard/auth" target="_blank">Go to Live Site </a> </div>';
+                app_message.innerHTML = '<div class="alert alert-danger"><i class="fa fa-exclamation-circle"></i> <strong>"STOP! Do not use Development Site"</strong>&nbsp;&nbsp;&nbsp;<a class="btn btn-info" href="https://exhibits-backend.library.du.edu/exhibits-dashboard/auth" target="_blank">Go to Live Site </a> </div>';
             }
         }
     };
