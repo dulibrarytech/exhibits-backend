@@ -82,7 +82,7 @@ const exhibitsModule = (function () {
             let title;
             let featured = '';
             let exhibit_edit = '';
-            let created_by = `Exibit created by ${exhibits[i].created_by}`;
+            let created_by = `Exhibit created by ${exhibits[i].created_by}`;
             let trash = '';
 
             if (is_published === 1) {
