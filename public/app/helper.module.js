@@ -356,6 +356,26 @@ const helperModule = (function () {
         }
     };
 
+    obj.toggle_alt_text = function () {
+
+        try {
+
+            let toggle_elem = document.querySelector('#item-alt-text-input');
+            let is_decorative_toggle = toggle_elem.disabled;
+
+            if (is_decorative_toggle === false) {
+                toggle_elem.disabled = true;
+            } else if (is_decorative_toggle === true) {
+                toggle_elem.disabled = false;
+            }
+
+            return false;
+
+        } catch (error) {
+            document.querySelector('#message').innerHTML = `<div class="alert alert-danger" role="alert"><i class="fa fa-exclamation"></i> ${error.message}</div>`;
+        }
+    };
+
     /**
      * Reorders exhibit list via drag and drop
      * @param e

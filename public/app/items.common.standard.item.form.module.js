@@ -37,7 +37,7 @@ const itemsCommonStandardItemFormModule = (function () {
             item.caption = document.querySelector('#item-caption-input').value;
             item.pdf_open_to_page = document.querySelector('#pdf-open-to-page').value;
             item.wrap_text = document.querySelector('#wrap-text').checked;
-            item.alt_text = document.querySelector('#item-alt-text-input').value;
+            item.is_alt_text_decorative = document.querySelector('#is-alt-text-decorative').checked;
             item.is_embedded = document.querySelector('#embed-item').checked;
             item.media_padding = document.querySelector('#media-padding').checked;
 
@@ -58,16 +58,17 @@ const itemsCommonStandardItemFormModule = (function () {
             }
 
             if (item.media_padding === true) {
-                item.media_padding = 0;
-            } else if (item.media_padding === false) {
                 item.media_padding = 1;
+            } else if (item.media_padding === false) {
+                item.media_padding = 0;
             }
 
-            if (item.alt_text.length === 0 && item.alt_text.length === 0) {
-                if (item.alt_text.length === 0) {
-                    document.querySelector('#message').innerHTML = `<div class="alert alert-danger" role="alert"><i class="fa fa-exclamation"></i> Please enter "alt text" for this item</div>`;
-                    return false;
-                }
+            if (item.is_alt_text_decorative === true) {
+                item.is_alt_text_decorative = 1;
+                item.alt_text = '';
+            } else if (item.is_alt_text_decorative === false) {
+                item.is_alt_text_decorative = 0;
+                item.alt_text = document.querySelector('#item-alt-text-input').value;
             }
 
             // item media
@@ -274,9 +275,14 @@ const itemsCommonStandardItemFormModule = (function () {
             document.querySelector('#repo-uuid-btn').addEventListener('click', async () => {
                 await helperModule.get_repo_item_data(null);
             });
+
             document.querySelector('#audio-video').addEventListener('focusout', () => {
                 helperModule.clear_media_fields('kaltura_media');
                 document.querySelector('#is-kaltura-item').value = 1;
+            });
+
+            document.querySelector('#is-alt-text-decorative').addEventListener('click', () => {
+                helperModule.toggle_alt_text();
             });
 
             helperModule.show_form();
