@@ -100,6 +100,9 @@ const itemsAddVerticalTimelineItemFormModule = (function () {
             document.querySelector('#save-item-btn').addEventListener('click', itemsAddVerticalTimelineItemFormModule.create_grid_item_record);
             document.querySelector('#item-media-trash').style.display = 'none';
             document.querySelector('#item-thumbnail-trash').style.display = 'none';
+            document.querySelector('#is-alt-text-decorative').addEventListener('click', () => {
+                helperModule.toggle_alt_text();
+            });
             document.querySelectorAll('.item-layout-left-right-radio-btn').forEach((radio_input) => {
                 radio_input.addEventListener('click', () => {
                     document.querySelector('#item-media-width').style.display = 'block';

@@ -107,6 +107,15 @@ const itemsEditTimelineItemFormModule = (function () {
             document.querySelector('#embed-item').checked = false;
         }
 
+        if (record.is_alt_text_decorative === 1) {
+            document.querySelector('#is-alt-text-decorative').checked = true;
+            let toggle_elem = document.querySelector('#item-alt-text-input');
+            toggle_elem.disabled = true;
+        } else {
+            document.querySelector('#is-alt-text-decorative').checked = false;
+            document.querySelector('#item-alt-text-input').value = helperModule.unescape(record.alt_text);
+        }
+
         if (record.media.length > 0) {
 
             if (record.is_repo_item === 0 && record.is_kaltura_item === 0) {
@@ -388,6 +397,9 @@ const itemsEditTimelineItemFormModule = (function () {
             navModule.set_timeline_item_nav_menu_links();
             await display_edit_record();
             document.querySelector('#save-item-btn').addEventListener('click', itemsEditTimelineItemFormModule.update_timeline_item_record);
+            document.querySelector('#is-alt-text-decorative').addEventListener('click', () => {
+                helperModule.toggle_alt_text();
+            });
 
             setTimeout(() => {
 

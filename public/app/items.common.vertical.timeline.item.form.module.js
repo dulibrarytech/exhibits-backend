@@ -36,7 +36,8 @@ const itemsCommonVerticalTimelineItemFormModule = (function () {
             item.description = document.querySelector('#item-description-input').value;
             item.text = document.querySelector('#item-text-input').value;
             item.caption = document.querySelector('#item-caption-input').value;
-            item.alt_text = document.querySelector('#item-alt-text-input').value;
+            // item.alt_text = document.querySelector('#item-alt-text-input').value;
+            item.is_alt_text_decorative = document.querySelector('#is-alt-text-decorative').checked;
             item.date = document.querySelector('input[type="date"]').value;
             item.is_embedded = document.querySelector('#embed-item').checked;
 
@@ -51,12 +52,23 @@ const itemsCommonVerticalTimelineItemFormModule = (function () {
                 return false;
             }
 
+            if (item.is_alt_text_decorative === true) {
+                item.is_alt_text_decorative = 1;
+                item.alt_text = '';
+            } else if (item.is_alt_text_decorative === false) {
+                item.is_alt_text_decorative = 0;
+                item.alt_text = document.querySelector('#item-alt-text-input').value;
+            }
+
+            /*
             if (item.alt_text.length === 0 && item.alt_text.length === 0) {
                 if (item.alt_text.length === 0) {
                     document.querySelector('#message').innerHTML = `<div class="alert alert-danger" role="alert"><i class="fa fa-exclamation"></i> Please enter "alt text" for this item</div>`;
                     return false;
                 }
             }
+
+             */
             
             // item media
             item.thumbnail = document.querySelector('#item-thumbnail').value;
