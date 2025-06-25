@@ -121,8 +121,8 @@ const itemsEditStandardItemFormModule = (function () {
 
         if (record.is_alt_text_decorative === 1) {
             document.querySelector('#is-alt-text-decorative').checked = true;
-            console.log('disable alt text field');
-            // TODO: disable alt text field
+            let toggle_elem = document.querySelector('#item-alt-text-input');
+            toggle_elem.disabled = true;
         } else {
             document.querySelector('#is-alt-text-decorative').checked = false;
             document.querySelector('#item-alt-text-input').value = helperModule.unescape(record.alt_text);
@@ -429,6 +429,9 @@ const itemsEditStandardItemFormModule = (function () {
             exhibitsModule.set_exhibit_title(exhibit_id);
             await display_edit_record();
             document.querySelector('#update-item-btn').addEventListener('click', itemsEditStandardItemFormModule.update_item_record);
+            document.querySelector('#is-alt-text-decorative').addEventListener('click', () => {
+                helperModule.toggle_alt_text();
+            });
 
             setTimeout(() => {
 

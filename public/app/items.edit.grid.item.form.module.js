@@ -104,6 +104,17 @@ const itemsEditGridItemFormModule = (function () {
             document.querySelector('#embed-item').checked = false;
         }
 
+        /*
+        let toggle_elem = document.querySelector('#item-alt-text-input');
+        let is_decorative_toggle = toggle_elem.disabled;
+
+        if (is_decorative_toggle === false) {
+            toggle_elem.disabled = true;
+        } else if (is_decorative_toggle === true) {
+            toggle_elem.disabled = false;
+        }
+        */
+
         // TODO: alt text
         console.log(record.is_alt_text_decorative);
 

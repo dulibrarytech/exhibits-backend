@@ -52,8 +52,7 @@ const itemsCommonGridItemFormModule = (function () {
                 item.is_alt_text_decorative = 0;
                 item.alt_text = document.querySelector('#item-alt-text-input').value;
             }
-            console.log('item', item);
-            return false;
+
             // item media
             item.thumbnail = document.querySelector('#item-thumbnail').value;
             item.thumbnail_prev = document.querySelector('#item-thumbnail-image-prev').value;
@@ -260,10 +259,6 @@ const itemsCommonGridItemFormModule = (function () {
             document.querySelector('#audio-video').addEventListener('focusout', () => {
                 helperModule.clear_media_fields('kaltura_media');
                 document.querySelector('#is-kaltura-item').value = 1;
-            });
-
-            document.querySelector('#is-alt-text-decorative').addEventListener('click', () => {
-                helperModule.toggle_alt_text();
             });
 
             helperModule.show_form();
