@@ -98,7 +98,6 @@ const itemsEditStandardItemFormModule = (function () {
         // item data
         document.querySelector('#item-title-input').value = helperModule.unescape(record.title);
         document.querySelector('#item-text-input').value = helperModule.unescape(record.text);
-        document.querySelector('#item-alt-text-input').value = helperModule.unescape(record.alt_text);
         document.querySelector('#pdf-open-to-page').value = record.pdf_open_to_page;
         document.querySelector('#item-caption-input').value = record.caption;
 
@@ -118,6 +117,15 @@ const itemsEditStandardItemFormModule = (function () {
             document.querySelector('#media-padding').checked = false;
         } else {
             document.querySelector('#media-padding').checked = true;
+        }
+
+        if (record.is_alt_text_decorative === 1) {
+            document.querySelector('#is-alt-text-decorative').checked = true;
+            console.log('disable alt text field');
+            // TODO: disable alt text field
+        } else {
+            document.querySelector('#is-alt-text-decorative').checked = false;
+            document.querySelector('#item-alt-text-input').value = helperModule.unescape(record.alt_text);
         }
 
         if (record.media.length > 0) {

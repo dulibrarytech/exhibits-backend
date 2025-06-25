@@ -281,10 +281,6 @@ const itemsCommonStandardItemFormModule = (function () {
                 document.querySelector('#is-kaltura-item').value = 1;
             });
 
-            document.querySelector('#is-alt-text-decorative').addEventListener('click', () => {
-                helperModule.toggle_alt_text();
-            });
-
             helperModule.show_form();
 
         } catch (error) {
