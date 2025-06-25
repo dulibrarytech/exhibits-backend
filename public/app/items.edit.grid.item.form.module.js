@@ -104,19 +104,14 @@ const itemsEditGridItemFormModule = (function () {
             document.querySelector('#embed-item').checked = false;
         }
 
-        /*
-        let toggle_elem = document.querySelector('#item-alt-text-input');
-        let is_decorative_toggle = toggle_elem.disabled;
-
-        if (is_decorative_toggle === false) {
+        if (record.is_alt_text_decorative === 1) {
+            document.querySelector('#is-alt-text-decorative').checked = true;
+            let toggle_elem = document.querySelector('#item-alt-text-input');
             toggle_elem.disabled = true;
-        } else if (is_decorative_toggle === true) {
-            toggle_elem.disabled = false;
+        } else {
+            document.querySelector('#is-alt-text-decorative').checked = false;
+            document.querySelector('#item-alt-text-input').value = helperModule.unescape(record.alt_text);
         }
-        */
-
-        // TODO: alt text
-        console.log(record.is_alt_text_decorative);
 
         if (record.media.length > 0) {
 
@@ -417,6 +412,9 @@ const itemsEditGridItemFormModule = (function () {
             navModule.back_to_grid_items();
             await display_edit_record();
             document.querySelector('#save-item-btn').addEventListener('click', itemsEditGridItemFormModule.update_grid_item_record);
+            document.querySelector('#is-alt-text-decorative').addEventListener('click', () => {
+                helperModule.toggle_alt_text();
+            });
 
             setTimeout(() => {
 
