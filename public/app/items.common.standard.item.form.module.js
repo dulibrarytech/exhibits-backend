@@ -68,7 +68,6 @@ const itemsCommonStandardItemFormModule = (function () {
                 item.alt_text = '';
             } else if (item.is_alt_text_decorative === false) {
                 item.is_alt_text_decorative = 0;
-                // TODO: require alt text if not decorative
                 item.alt_text = document.querySelector('#item-alt-text-input').value;
 
                 if (item.alt_text.length === 0 && item.alt_text.length === 0) {
