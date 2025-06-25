@@ -59,16 +59,6 @@ const itemsCommonVerticalTimelineItemFormModule = (function () {
                 item.is_alt_text_decorative = 0;
                 item.alt_text = document.querySelector('#item-alt-text-input').value;
             }
-
-            /*
-            if (item.alt_text.length === 0 && item.alt_text.length === 0) {
-                if (item.alt_text.length === 0) {
-                    document.querySelector('#message').innerHTML = `<div class="alert alert-danger" role="alert"><i class="fa fa-exclamation"></i> Please enter "alt text" for this item</div>`;
-                    return false;
-                }
-            }
-
-             */
             
             // item media
             item.thumbnail = document.querySelector('#item-thumbnail').value;
