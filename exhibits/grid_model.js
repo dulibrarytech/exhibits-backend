@@ -297,6 +297,7 @@ exports.update_grid_item_record = async function (is_member_of_exhibit, is_membe
         data.uuid = item_id;
         data.styles = JSON.stringify(data.styles);
         let is_valid = VALIDATE_TASK.validate(data);
+        let is_published = false;
 
         if (is_valid !== true) {
 
@@ -329,6 +330,7 @@ exports.update_grid_item_record = async function (is_member_of_exhibit, is_membe
         }
 
         data.styles = JSON.stringify(data.styles);
+        is_published = data.is_published;
 
         delete data.kaltura;
         delete data.repo_uuid;
@@ -344,6 +346,24 @@ exports.update_grid_item_record = async function (is_member_of_exhibit, is_membe
                 message: 'Unable to update grid item record'
             };
         } else {
+
+            if (is_published === 'true') {
+
+                const is_suppressed = await suppress_grid_item_record(is_member_of_exhibit, is_member_of_grid, item_id);
+
+                if (is_suppressed.status === true) {
+                    setTimeout(async () => {
+
+                        const is_published = await publish_grid_item_record(is_member_of_exhibit, is_member_of_grid, item_id);
+
+                        if (is_published.status === true) {
+                            LOGGER.module().info('INFO: [/exhibits/grid_model (update_grid_item_record)] Grid item re-published successfully.');
+                        }
+
+                    }, 5000);
+                }
+            }
+
             return {
                 status: 201,
                 message: 'Grid item record updated',
@@ -410,7 +430,7 @@ exports.delete_grid_item_record = async function (is_member_of_exhibit, grid_id,
  * @param exhibit_id
  * @param grid_id
  */
-exports.publish_grid_record = async function (exhibit_id, grid_id) {
+const publish_grid_record = async function (exhibit_id, grid_id) {
 
     try {
 
@@ -468,7 +488,7 @@ exports.publish_grid_record = async function (exhibit_id, grid_id) {
  * @param exhibit_id
  * @param item_id
  */
-exports.suppress_grid_record = async function (exhibit_id, item_id) {
+const suppress_grid_record = async function (exhibit_id, item_id) {
 
     try {
 
@@ -526,7 +546,7 @@ exports.suppress_grid_record = async function (exhibit_id, item_id) {
  * @param grid_id
  * @param grid_item_id
  */
-exports.publish_grid_item_record = async function (exhibit_id, grid_id, grid_item_id) {
+const publish_grid_item_record = async function (exhibit_id, grid_id, grid_item_id) {
 
     try {
 
@@ -583,7 +603,7 @@ exports.publish_grid_item_record = async function (exhibit_id, grid_id, grid_ite
  * @param grid_id
  * @param grid_item_id
  */
-exports.suppress_grid_item_record = async function (exhibit_id, grid_id, grid_item_id) {
+const suppress_grid_item_record = async function (exhibit_id, grid_id, grid_item_id) {
 
     try {
 
@@ -663,3 +683,8 @@ exports.reorder_grid_items = async function (grid_id, grid) {
         LOGGER.module().error('ERROR: [/exhibits/model (reorder_grids)] ' + error.message);
     }
 };
+
+exports.publish_grid_record = publish_grid_record;
+exports.suppress_grid_record = suppress_grid_record;
+exports.publish_grid_item_record = publish_grid_item_record;
+exports.suppress_grid_item_record = suppress_grid_item_record;
