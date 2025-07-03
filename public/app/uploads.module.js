@@ -132,9 +132,9 @@ const uploadsModule = (function () {
             init: function () {},
             renameFile: function (file) {
 
-                console.log('item media: ', file);
-                console.log('orig name: ', file.name);
-                console.log('mime type: ', file.type);
+                // console.log('item media: ', file);
+                // console.log('orig name: ', file.name);
+                // console.log('mime type: ', file.type);
 
                 let extension = file.name.split('.').pop();
                 return `${Date.now()}_item_media.${extension}`;
@@ -153,6 +153,7 @@ const uploadsModule = (function () {
                 if (file.type.indexOf('image') !== -1) {
                     thumbnail_url = `${APP_PATH}/media?media=${filename}`;
                     item_type = 'image';
+                    document.querySelector('#image-alt-text').style.display = 'block';
                 } else if (file.type.indexOf('video') !== -1) {
                     thumbnail_url = '/exhibits-dashboard/static/images/video-tn.png';
                     item_type = 'video';

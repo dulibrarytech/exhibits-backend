@@ -45,20 +45,6 @@ const itemsCommonGridItemFormModule = (function () {
                 item.is_embedded = 0;
             }
 
-            if (item.is_alt_text_decorative === true) {
-                item.is_alt_text_decorative = 1;
-                item.alt_text = '';
-            } else if (item.is_alt_text_decorative === false) {
-                item.is_alt_text_decorative = 0;
-                item.alt_text = document.querySelector('#item-alt-text-input').value;
-                if (item.alt_text.length === 0 && item.alt_text.length === 0) {
-                    if (item.alt_text.length === 0) {
-                        document.querySelector('#message').innerHTML = `<div class="alert alert-danger" role="alert"><i class="fa fa-exclamation"></i> Please enter "alt text" for this item</div>`;
-                        return false;
-                    }
-                }
-            }
-
             // item media
             item.thumbnail = document.querySelector('#item-thumbnail').value;
             item.thumbnail_prev = document.querySelector('#item-thumbnail-image-prev').value;
@@ -69,6 +55,22 @@ const itemsCommonGridItemFormModule = (function () {
             item.kaltura = document.querySelector('#audio-video').value;
             item.repo_uuid = document.querySelector('#repo-uuid').value;
             item.pdf_open_to_page = document.querySelector('#pdf-open-to-page').value;
+
+            if (item.mime_type.indexOf('image') !== -1) {
+                if (item.is_alt_text_decorative === true) {
+                    item.is_alt_text_decorative = 1;
+                    item.alt_text = '';
+                } else if (item.is_alt_text_decorative === false) {
+                    item.is_alt_text_decorative = 0;
+                    item.alt_text = document.querySelector('#item-alt-text-input').value;
+                    if (item.alt_text.length === 0 && item.alt_text.length === 0) {
+                        if (item.alt_text.length === 0) {
+                            document.querySelector('#message').innerHTML = `<div class="alert alert-danger" role="alert"><i class="fa fa-exclamation"></i> Please enter "alt text" for this item</div>`;
+                            return false;
+                        }
+                    }
+                }
+            }
 
             if (item.media.length === 0 && item.kaltura.length === 0 && item.repo_uuid.length === 0) {
                 if (item.text.length === 0) {
@@ -170,6 +172,7 @@ const itemsCommonGridItemFormModule = (function () {
                     document.querySelector('#message').innerHTML = `<div class="alert alert-success" role="alert"><i class="fa fa-info"></i> Media deleted</div>`;
                     // only for PDF
                     document.querySelector('#toggle-open-to-page').style.visibility = 'hidden';
+                    document.querySelector('#image-alt-text').style.display = 'none';
 
                     setTimeout(() => {
                         document.querySelector('#message').innerHTML = '';

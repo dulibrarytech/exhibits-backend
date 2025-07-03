@@ -22,7 +22,6 @@ module.exports = () => {
 
     return {
         title: {type: 'string'},
-        media: {type: 'string'},
-        alt_text: {type: 'string'}
+        media: {type: 'string'}
     };
 };

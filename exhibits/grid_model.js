@@ -346,7 +346,8 @@ exports.update_grid_item_record = async function (is_member_of_exhibit, is_membe
                 message: 'Unable to update grid item record'
             };
         } else {
-
+            // TODO: is published is undefined - update form
+            console.log('grid item ', is_published);
             if (is_published === 'true') {
 
                 const is_suppressed = await suppress_grid_item_record(is_member_of_exhibit, is_member_of_grid, item_id);
