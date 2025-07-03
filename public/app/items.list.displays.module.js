@@ -146,7 +146,7 @@ const itemsListDisplayModule = (function () {
                 if (item.thumbnail.length > 0) {
                     thumbnail = EXHIBITS_ENDPOINTS.exhibits.exhibit_media.get.endpoint.replace(':exhibit_id', item.is_member_of_exhibit).replace(':media', item.thumbnail);
                     img = `<p><img src="${thumbnail}" height="75" width="75" alt="${item.uuid}-thumbnail"></p>`;
-                } else if (item.thumbnail.length === 0 && item.item_type === 'image') {
+                } else if (item.thumbnail.length === 0 && item.item_type === 'image' && item.media.length > 0) {
                     thumbnail = EXHIBITS_ENDPOINTS.exhibits.exhibit_media.get.endpoint.replace(':exhibit_id', item.is_member_of_exhibit).replace(':media', item.media);
                     img = `<p><img src="${thumbnail}" height="75" width="75" alt="${item.uuid}-media"></p>`;
                 } else {
