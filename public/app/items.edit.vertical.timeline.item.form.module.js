@@ -314,14 +314,14 @@ const itemsEditTimelineItemFormModule = (function () {
         try {
 
             (async function() {
-
+                console.log(EXHIBITS_ENDPOINTS.exhibits.timeline_item_media.delete.endpoint);
                 const exhibit_id = helperModule.get_parameter_by_name('exhibit_id');
                 const timeline_id = helperModule.get_parameter_by_name('timeline_id');
                 const item_id = helperModule.get_parameter_by_name('item_id');
                 let media = document.querySelector('#item-media').value;
-                let etmp = EXHIBITS_ENDPOINTS.exhibits.grid_item_media.delete.endpoint.replace(':exhibit_id', exhibit_id);
-                let gtmp = etmp.replace(':timeline_id', timeline_id);
-                let itmp = gtmp.replace(':item_id', item_id);
+                let etmp = EXHIBITS_ENDPOINTS.exhibits.timeline_item_media.delete.endpoint.replace(':exhibit_id', exhibit_id);
+                let ttmp = etmp.replace(':timeline_id', timeline_id);
+                let itmp = ttmp.replace(':item_id', item_id);
                 let endpoint = itmp.replace(':media', media);
                 let token = authModule.get_user_token();
                 let response = await httpModule.req({

@@ -25,32 +25,35 @@ const TOKEN = require('../libs/tokens');
 module.exports = function (app) {
 
     app.route(ENDPOINTS().exhibits.timeline_records.get.endpoint)
-    .get(TOKEN.verify, CONTROLLER.get_timeline_record);
+        .get(TOKEN.verify, CONTROLLER.get_timeline_record);
 
     app.route(ENDPOINTS().exhibits.timeline_records.post.endpoint)
-    .post(TOKEN.verify, CONTROLLER.create_timeline_record);
+        .post(TOKEN.verify, CONTROLLER.create_timeline_record);
 
     app.route(ENDPOINTS().exhibits.timeline_records.put.endpoint)
-    .put(TOKEN.verify, CONTROLLER.update_timeline_record);
+        .put(TOKEN.verify, CONTROLLER.update_timeline_record);
 
     app.route(ENDPOINTS().exhibits.timeline_item_records.post.endpoint)
-    .post(TOKEN.verify, CONTROLLER.create_timeline_item_record);
+        .post(TOKEN.verify, CONTROLLER.create_timeline_item_record);
 
     app.route(ENDPOINTS().exhibits.timeline_item_records.get.endpoint)
-    .get(TOKEN.verify, CONTROLLER.get_timeline_item_records);
+        .get(TOKEN.verify, CONTROLLER.get_timeline_item_records);
 
     app.route(ENDPOINTS().exhibits.timeline_item_record.get.endpoint)
-    .get(TOKEN.verify, CONTROLLER.get_timeline_item_record);
+        .get(TOKEN.verify, CONTROLLER.get_timeline_item_record);
 
     app.route(ENDPOINTS().exhibits.timeline_item_records.put.endpoint)
-    .put(TOKEN.verify, CONTROLLER.update_timeline_item_record);
+        .put(TOKEN.verify, CONTROLLER.update_timeline_item_record);
 
     app.route(ENDPOINTS().exhibits.timeline_item_records.timeline_item_publish.post.endpoint)
-    .post(CONTROLLER.publish_timeline_item_record);
+        .post(CONTROLLER.publish_timeline_item_record);
 
     app.route(ENDPOINTS().exhibits.timeline_item_records.timeline_item_suppress.post.endpoint)
-    .post(CONTROLLER.suppress_timeline_item_record);
+        .post(CONTROLLER.suppress_timeline_item_record);
+
+    app.route(ENDPOINTS().exhibits.timeline_item_media.delete.endpoint)
+        .delete(TOKEN.verify, CONTROLLER.delete_timeline_item_media);
 
     app.route(ENDPOINTS().exhibits.timeline_item_records.delete.endpoint)
-    .delete(TOKEN.verify, CONTROLLER.delete_timeline_item_record);
+        .delete(TOKEN.verify, CONTROLLER.delete_timeline_item_record);
 };

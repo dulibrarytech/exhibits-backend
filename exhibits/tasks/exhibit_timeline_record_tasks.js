@@ -236,7 +236,7 @@ const Exhibit_timeline_record_tasks = class {
                 update.thumbnail = '';
             }
 
-            await this.DB(this.TABLE.grid_item_records)
+            await this.DB(this.TABLE.timeline_item_records)
             .where({
                 uuid: uuid
             })

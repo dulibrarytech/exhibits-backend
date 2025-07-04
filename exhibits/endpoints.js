@@ -308,7 +308,7 @@ const ENDPOINTS = {
         timeline_item_media: {
             delete: {
                 description: 'Deletes timeline item media',
-                endpoint: `${APP_PATH}${PREFIX}${VERSION}${ENDPOINT}/:exhibit_id/timelines/:timelines_id/items/:item_id/media/:media`
+                endpoint: `${APP_PATH}${PREFIX}${VERSION}${ENDPOINT}/:exhibit_id/timelines/:timeline_id/items/:item_id/media/:media`
             }
         },
         repo_items: {
