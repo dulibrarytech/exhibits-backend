@@ -28,7 +28,8 @@ const navModule = (function () {
         const uuid = helperModule.get_parameter_by_name('exhibit_id');
         const exhibits_link = `${APP_PATH}/exhibits?exhibit_id=${uuid}`;
         const heading_link = `${APP_PATH}/items/heading?exhibit_id=${uuid}`;
-        const standard_item_link = `${APP_PATH}/items/standard?exhibit_id=${uuid}`;
+        const standard_media_item_link = `${APP_PATH}/items/standard?exhibit_id=${uuid}`;
+        const standard_text_item_link = `${APP_PATH}/items/standard?exhibit_id=${uuid}`;
         const item_grid_link = `${APP_PATH}/items/grid?exhibit_id=${uuid}`;
         const item_vertical_timeline_link = `${APP_PATH}/items/vertical-timeline?exhibit_id=${uuid}`;
         const items_menu_fragment = `
@@ -39,12 +40,17 @@ const navModule = (function () {
                 </li>
                 <li>
                     <a href="${heading_link}" data-keyboard="false"> 
-                        <i class=" menu-icon ti-menu-alt"></i>Add Heading
+                        <i class=" menu-icon ti-layout-menu"></i>Add Heading
                     </a>
                 </li>
                 <li>
-                    <a href="${standard_item_link}" data-keyboard="false"> 
-                        <i class=" menu-icon ti-menu-alt"></i>Add Item
+                    <a href="${standard_media_item_link}" data-keyboard="false"> 
+                        <i class=" menu-icon ti-image"></i>Add Media Item
+                    </a>
+                </li>
+                 <li>
+                    <a href="${standard_text_item_link}" data-keyboard="false"> 
+                        <i class=" menu-icon ti-align-center"></i>Add Text Item
                     </a>
                 </li>
                 <li>

@@ -81,7 +81,7 @@ const itemsListDisplayModule = (function () {
 
     obj.display_standard_items = async function(item) {
 
-        try {
+       try {
 
             const type = item.type;
             const item_obj = check_published_status(item, 'standard');

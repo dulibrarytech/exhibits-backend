@@ -377,6 +377,24 @@ const helperModule = (function () {
     };
 
     /**
+     * Set alt text
+     * @param record
+     */
+    obj.set_alt_text = function (record) {
+
+        document.querySelector('#image-alt-text').style.display = 'block';
+
+        if (record.is_alt_text_decorative === 1) {
+            document.querySelector('#is-alt-text-decorative').checked = true;
+            let toggle_elem = document.querySelector('#item-alt-text-input');
+            toggle_elem.disabled = true;
+        } else {
+            document.querySelector('#is-alt-text-decorative').checked = false;
+            document.querySelector('#item-alt-text-input').value = helperModule.unescape(record.alt_text);
+        }
+    };
+
+    /**
      * Reorders exhibit list via drag and drop
      * @param e
      * @param reordered_exhibits

@@ -127,17 +127,7 @@ const itemsEditStandardItemFormModule = (function () {
 
                     thumbnail_url = EXHIBITS_ENDPOINTS.exhibits.exhibit_media.get.endpoint.replace(':exhibit_id', record.is_member_of_exhibit).replace(':media', record.media);
                     thumbnail_fragment = `<p><img src="${thumbnail_url}" height="200" ></p>`;
-
-                    document.querySelector('#image-alt-text').style.display = 'block';
-
-                    if (record.is_alt_text_decorative === 1) {
-                        document.querySelector('#is-alt-text-decorative').checked = true;
-                        let toggle_elem = document.querySelector('#item-alt-text-input');
-                        toggle_elem.disabled = true;
-                    } else {
-                        document.querySelector('#is-alt-text-decorative').checked = false;
-                        document.querySelector('#item-alt-text-input').value = helperModule.unescape(record.alt_text);
-                    }
+                    helperModule.set_alt_text(record);
 
                 } else if (record.mime_type.indexOf('video') !== -1) {
                     thumbnail_url = '/exhibits-dashboard/static/images/video-tn.png';
@@ -172,6 +162,10 @@ const itemsEditStandardItemFormModule = (function () {
                 document.querySelector('#repo-uuid').value = record.media;
                 document.querySelector('#is-repo-item').value = 1;
                 await helperModule.get_repo_item_data(null);
+
+                if (record.item_type === 'image') {
+                    helperModule.set_alt_text(record);
+                }
             }
 
             if (record.is_kaltura_item === 1) {
