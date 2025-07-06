@@ -43,14 +43,20 @@ module.exports = function (app) {
     app.route(APP_PATH + '/items')
         .get(CONTROLLER.get_dashboard_items);
 
-    app.route(APP_PATH + '/items/standard')
-        .get(CONTROLLER.get_dashboard_items_standard_add_form);
+    app.route(APP_PATH + '/items/standard/media')
+        .get(CONTROLLER.get_dashboard_items_standard_media_add_form);
+
+    app.route(APP_PATH + '/items/standard/text')
+        .get(CONTROLLER.get_dashboard_items_standard_text_add_form);
 
     app.route(APP_PATH + '/items/standard/details')
         .get(CONTROLLER.get_dashboard_items_standard_details);
 
-    app.route(APP_PATH + '/items/standard/edit')
-        .get(CONTROLLER.get_dashboard_items_standard_edit_form);
+    app.route(APP_PATH + '/items/standard/media/edit')
+        .get(CONTROLLER.get_dashboard_items_standard_media_edit_form);
+
+    app.route(APP_PATH + '/items/standard/text/edit')
+        .get(CONTROLLER.get_dashboard_items_standard_text_edit_form);
 
     //============Headings============//
     app.route(APP_PATH + '/items/heading')

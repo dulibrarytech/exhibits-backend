@@ -24,7 +24,7 @@ const itemsEditStandardItemFormModule = (function () {
     const EXHIBITS_ENDPOINTS = endpointsModule.get_exhibits_endpoints();
     let obj = {};
 
-    async function get_item_record () {
+    async function get_item_record() {
 
         try {
 
@@ -63,7 +63,7 @@ const itemsEditStandardItemFormModule = (function () {
         }
     }
 
-    async function display_edit_record () {
+    async function display_edit_record() {
 
         const record = await get_item_record();
         let thumbnail_fragment = '';
@@ -98,115 +98,119 @@ const itemsEditStandardItemFormModule = (function () {
         // item data
         document.querySelector('#item-title-input').value = helperModule.unescape(record.title);
         document.querySelector('#item-text-input').value = helperModule.unescape(record.text);
-        document.querySelector('#pdf-open-to-page').value = record.pdf_open_to_page;
         document.querySelector('#item-caption-input').value = record.caption;
 
-        if (record.wrap_text === 1) {
-            document.querySelector('#wrap-text').checked = true;
-        } else {
-            document.querySelector('#wrap-text').checked = false;
-        }
+        if (window.location.pathname.indexOf('media') !== -1) {
 
-        if (record.is_embedded === 1) {
-            document.querySelector('#embed-item').checked = true;
-        } else {
-            document.querySelector('#embed-item').checked = false;
-        }
+            document.querySelector('#pdf-open-to-page').value = record.pdf_open_to_page;
 
-        if (record.media_padding === 1) {
-            document.querySelector('#media-padding').checked = false;
-        } else {
-            document.querySelector('#media-padding').checked = true;
-        }
-
-        if (record.media.length > 0) {
-
-            if (record.is_repo_item === 0 && record.is_kaltura_item === 0) {
-
-                if (record.mime_type.indexOf('image') !== -1) {
-
-                    thumbnail_url = EXHIBITS_ENDPOINTS.exhibits.exhibit_media.get.endpoint.replace(':exhibit_id', record.is_member_of_exhibit).replace(':media', record.media);
-                    thumbnail_fragment = `<p><img src="${thumbnail_url}" height="200" ></p>`;
-                    helperModule.set_alt_text(record);
-
-                } else if (record.mime_type.indexOf('video') !== -1) {
-                    thumbnail_url = '/exhibits-dashboard/static/images/video-tn.png';
-                    thumbnail_fragment = `<p><img src="${thumbnail_url}" height="200" ></p>`;
-                } else if (record.mime_type.indexOf('audio') !== -1) {
-                    thumbnail_url = '/exhibits-dashboard/static/images/audio-tn.png';
-                    thumbnail_fragment = `<p><img src="${thumbnail_url}" height="200" ></p>`;
-                } else if (record.mime_type.indexOf('pdf') !== -1) {
-                    thumbnail_url = '/exhibits-dashboard/static/images/pdf-tn.png';
-                    thumbnail_fragment = `<p><img src="${thumbnail_url}" height="200" ></p>`;
-                    document.querySelector('#toggle-open-to-page').style.visibility = 'visible';
-                } else {
-                    console.log('Unable to Determine Type');
-                }
-
-                document.querySelector('#item-media-trash').style.display = 'inline';
-                document.querySelector('#item-media-filename-display').innerHTML = `<span style="font-size: 11px">${record.media}</span>`;
+            if (record.wrap_text === 1) {
+                document.querySelector('#wrap-text').checked = true;
+            } else {
+                document.querySelector('#wrap-text').checked = false;
             }
 
-            document.querySelector('#item-type').value = record.item_type;
-
-            if (record.is_repo_item === 1) {
-
-                document.getElementById('upload-media-tab').classList.remove('active');
-                document.getElementById('import-repo-media-tab').classList.add('active');
-                document.getElementById('upload-media').classList.remove('active');
-                document.getElementById('upload-media').classList.remove('show');
-                document.getElementById('import-repo-media').classList.add('show');
-                document.getElementById('import-repo-media').classList.add('active');
-                document.getElementById('upload-media-tab').setAttribute('aria-selected', 'false');
-                document.getElementById('import-repo-media-tab').setAttribute('aria-selected', 'true');
-                document.querySelector('#repo-uuid').value = record.media;
-                document.querySelector('#is-repo-item').value = 1;
-                await helperModule.get_repo_item_data(null);
-
-                if (record.item_type === 'image') {
-                    helperModule.set_alt_text(record);
-                }
+            if (record.is_embedded === 1) {
+                document.querySelector('#embed-item').checked = true;
+            } else {
+                document.querySelector('#embed-item').checked = false;
             }
 
-            if (record.is_kaltura_item === 1) {
+            if (record.media_padding === 1) {
+                document.querySelector('#media-padding').checked = false;
+            } else {
+                document.querySelector('#media-padding').checked = true;
+            }
 
-                document.getElementById('upload-media-tab').classList.remove('active');
-                document.getElementById('import-audio-video-tab').classList.add('active');
-                document.getElementById('upload-media').classList.remove('active');
-                document.getElementById('upload-media').classList.remove('show');
-                document.getElementById('import-audio-video').classList.add('show');
-                document.getElementById('import-audio-video').classList.add('active');
-                document.getElementById('upload-media-tab').setAttribute('aria-selected', 'false');
-                document.getElementById('import-audio-video-tab').setAttribute('aria-selected', 'true');
-                document.querySelector('#audio-video').value = record.media;
-                document.querySelector('#is-kaltura-item').value = 1;
+            if (record.media.length > 0) {
 
-                let item_types = document.getElementsByName('item_type');
+                if (record.is_repo_item === 0 && record.is_kaltura_item === 0) {
 
-                for (let j = 0; j < item_types.length; j++) {
-                    if (item_types[j].value === record.item_type) {
-                        document.querySelector('#' + item_types[j].id).checked = true;
+                    if (record.mime_type.indexOf('image') !== -1) {
+
+                        thumbnail_url = EXHIBITS_ENDPOINTS.exhibits.exhibit_media.get.endpoint.replace(':exhibit_id', record.is_member_of_exhibit).replace(':media', record.media);
+                        thumbnail_fragment = `<p><img src="${thumbnail_url}" height="200" ></p>`;
+                        helperModule.set_alt_text(record);
+
+                    } else if (record.mime_type.indexOf('video') !== -1) {
+                        thumbnail_url = '/exhibits-dashboard/static/images/video-tn.png';
+                        thumbnail_fragment = `<p><img src="${thumbnail_url}" height="200" ></p>`;
+                    } else if (record.mime_type.indexOf('audio') !== -1) {
+                        thumbnail_url = '/exhibits-dashboard/static/images/audio-tn.png';
+                        thumbnail_fragment = `<p><img src="${thumbnail_url}" height="200" ></p>`;
+                    } else if (record.mime_type.indexOf('pdf') !== -1) {
+                        thumbnail_url = '/exhibits-dashboard/static/images/pdf-tn.png';
+                        thumbnail_fragment = `<p><img src="${thumbnail_url}" height="200" ></p>`;
+                        document.querySelector('#toggle-open-to-page').style.visibility = 'visible';
+                    } else {
+                        console.log('Unable to Determine Type');
+                    }
+
+                    document.querySelector('#item-media-trash').style.display = 'inline';
+                    document.querySelector('#item-media-filename-display').innerHTML = `<span style="font-size: 11px">${record.media}</span>`;
+                }
+
+                document.querySelector('#item-type').value = record.item_type;
+
+                if (record.is_repo_item === 1) {
+
+                    document.getElementById('upload-media-tab').classList.remove('active');
+                    document.getElementById('import-repo-media-tab').classList.add('active');
+                    document.getElementById('upload-media').classList.remove('active');
+                    document.getElementById('upload-media').classList.remove('show');
+                    document.getElementById('import-repo-media').classList.add('show');
+                    document.getElementById('import-repo-media').classList.add('active');
+                    document.getElementById('upload-media-tab').setAttribute('aria-selected', 'false');
+                    document.getElementById('import-repo-media-tab').setAttribute('aria-selected', 'true');
+                    document.querySelector('#repo-uuid').value = record.media;
+                    document.querySelector('#is-repo-item').value = 1;
+                    await helperModule.get_repo_item_data(null);
+
+                    if (record.item_type === 'image') {
+                        helperModule.set_alt_text(record);
                     }
                 }
 
-                document.querySelector('#item-type').value = 'kaltura';
+                if (record.is_kaltura_item === 1) {
+
+                    document.getElementById('upload-media-tab').classList.remove('active');
+                    document.getElementById('import-audio-video-tab').classList.add('active');
+                    document.getElementById('upload-media').classList.remove('active');
+                    document.getElementById('upload-media').classList.remove('show');
+                    document.getElementById('import-audio-video').classList.add('show');
+                    document.getElementById('import-audio-video').classList.add('active');
+                    document.getElementById('upload-media-tab').setAttribute('aria-selected', 'false');
+                    document.getElementById('import-audio-video-tab').setAttribute('aria-selected', 'true');
+                    document.querySelector('#audio-video').value = record.media;
+                    document.querySelector('#is-kaltura-item').value = 1;
+
+                    let item_types = document.getElementsByName('item_type');
+
+                    for (let j = 0; j < item_types.length; j++) {
+                        if (item_types[j].value === record.item_type) {
+                            document.querySelector('#' + item_types[j].id).checked = true;
+                        }
+                    }
+
+                    document.querySelector('#item-type').value = 'kaltura';
+                }
+
+                document.querySelector('#item-mime-type').value = helperModule.unescape(record.mime_type);
+                document.querySelector('#item-media-thumbnail-image-display').innerHTML = thumbnail_fragment;
+                document.querySelector('#item-media').value = record.media;
+                document.querySelector('#item-media-prev').value = record.media;
             }
 
-            document.querySelector('#item-mime-type').value = helperModule.unescape(record.mime_type);
-            document.querySelector('#item-media-thumbnail-image-display').innerHTML = thumbnail_fragment;
-            document.querySelector('#item-media').value = record.media;
-            document.querySelector('#item-media-prev').value = record.media;
-        }
+            if (record.thumbnail.length > 0) {
 
-        if (record.thumbnail.length > 0) {
-
-            thumbnail_url = EXHIBITS_ENDPOINTS.exhibits.exhibit_media.get.endpoint.replace(':exhibit_id', record.is_member_of_exhibit).replace(':media', record.thumbnail);
-            thumbnail_fragment = `<p><img src="${thumbnail_url}" height="200" ></p>`;
-            document.querySelector('#item-thumbnail-image-display').innerHTML = thumbnail_fragment;
-            document.querySelector('#item-thumbnail-filename-display').innerHTML = `<span style="font-size: 11px">${record.thumbnail}</span>`;
-            document.querySelector('#item-thumbnail').value = record.thumbnail;
-            document.querySelector('#item-thumbnail-image-prev').value = record.thumbnail;
-            document.querySelector('#item-thumbnail-trash').style.display = 'inline';
+                thumbnail_url = EXHIBITS_ENDPOINTS.exhibits.exhibit_media.get.endpoint.replace(':exhibit_id', record.is_member_of_exhibit).replace(':media', record.thumbnail);
+                thumbnail_fragment = `<p><img src="${thumbnail_url}" height="200" ></p>`;
+                document.querySelector('#item-thumbnail-image-display').innerHTML = thumbnail_fragment;
+                document.querySelector('#item-thumbnail-filename-display').innerHTML = `<span style="font-size: 11px">${record.thumbnail}</span>`;
+                document.querySelector('#item-thumbnail').value = record.thumbnail;
+                document.querySelector('#item-thumbnail-image-prev').value = record.thumbnail;
+                document.querySelector('#item-thumbnail-trash').style.display = 'inline';
+            }
         }
 
         let layouts = document.getElementsByName('layout');
@@ -245,7 +249,7 @@ const itemsEditStandardItemFormModule = (function () {
 
             let font_values = document.querySelector('#item-font');
 
-            for (let i=0;i<font_values.length;i++) {
+            for (let i = 0; i < font_values.length; i++) {
                 if (font_values[i].value === styles.fontFamily) {
                     document.querySelector('#item-font').value = styles.fontFamily;
                 }
@@ -331,11 +335,11 @@ const itemsEditStandardItemFormModule = (function () {
         }
     };
 
-    function delete_media () {
+    function delete_media() {
 
         try {
 
-            (async function() {
+            (async function () {
 
                 const exhibit_id = helperModule.get_parameter_by_name('exhibit_id');
                 const item_id = helperModule.get_parameter_by_name('item_id');
@@ -378,7 +382,7 @@ const itemsEditStandardItemFormModule = (function () {
 
         try {
 
-            (async function() {
+            (async function () {
 
                 const exhibit_id = helperModule.get_parameter_by_name('exhibit_id');
                 const item_id = helperModule.get_parameter_by_name('item_id');
@@ -427,29 +431,33 @@ const itemsEditStandardItemFormModule = (function () {
             exhibitsModule.set_exhibit_title(exhibit_id);
             await display_edit_record();
             document.querySelector('#update-item-btn').addEventListener('click', itemsEditStandardItemFormModule.update_item_record);
-            document.querySelector('#is-alt-text-decorative').addEventListener('click', () => {
-                helperModule.toggle_alt_text();
-            });
 
-            setTimeout(() => {
+            if (window.location.pathname.indexOf('media') !== -1) {
 
-                if (document.querySelector('#item-media').value.length === 0) {
-                    document.querySelector('#item-media-trash').removeEventListener('click', delete_media);
-                    document.querySelector('#item-media-trash').addEventListener('click', itemsCommonStandardItemFormModule.delete_media);
-                } else if (document.querySelector('#item-media').value !== 0) {
-                    document.querySelector('#item-media-trash').removeEventListener('click', itemsCommonStandardItemFormModule.delete_media);
-                    document.querySelector('#item-media-trash').addEventListener('click', delete_media);
-                }
+                document.querySelector('#is-alt-text-decorative').addEventListener('click', () => {
+                    helperModule.toggle_alt_text();
+                });
 
-                if (document.querySelector('#item-thumbnail').value.length === 0) {
-                    document.querySelector('#item-thumbnail-trash').removeEventListener('click', delete_thumbnail_image);
-                    document.querySelector('#item-thumbnail-trash').addEventListener('click', itemsCommonStandardItemFormModule.delete_thumbnail_image);
-                } else if (document.querySelector('#item-thumbnail').value.length !== 0) {
-                    document.querySelector('#item-thumbnail-trash').removeEventListener('click', itemsCommonStandardItemFormModule.delete_thumbnail_image);
-                    document.querySelector('#item-thumbnail-trash').addEventListener('click', delete_thumbnail_image);
-                }
+                setTimeout(() => {
 
-            }, 1000);
+                    if (document.querySelector('#item-media').value.length === 0) {
+                        document.querySelector('#item-media-trash').removeEventListener('click', delete_media);
+                        document.querySelector('#item-media-trash').addEventListener('click', itemsCommonStandardItemFormModule.delete_media);
+                    } else if (document.querySelector('#item-media').value !== 0) {
+                        document.querySelector('#item-media-trash').removeEventListener('click', itemsCommonStandardItemFormModule.delete_media);
+                        document.querySelector('#item-media-trash').addEventListener('click', delete_media);
+                    }
+
+                    if (document.querySelector('#item-thumbnail').value.length === 0) {
+                        document.querySelector('#item-thumbnail-trash').removeEventListener('click', delete_thumbnail_image);
+                        document.querySelector('#item-thumbnail-trash').addEventListener('click', itemsCommonStandardItemFormModule.delete_thumbnail_image);
+                    } else if (document.querySelector('#item-thumbnail').value.length !== 0) {
+                        document.querySelector('#item-thumbnail-trash').removeEventListener('click', itemsCommonStandardItemFormModule.delete_thumbnail_image);
+                        document.querySelector('#item-thumbnail-trash').addEventListener('click', delete_thumbnail_image);
+                    }
+
+                }, 1000);
+            }
 
         } catch (error) {
             document.querySelector('#message').innerHTML = `<div class="alert alert-danger" role="alert"><i class="fa fa-exclamation"></i> ${error.message}</div>`;

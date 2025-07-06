@@ -21,7 +21,7 @@
 module.exports = () => {
 
     return {
-        title: {type: 'string'},
-        media: {type: 'string'}
+        // title: {type: 'string'},
+        // media: {type: 'string'}
     };
 };

@@ -28,8 +28,8 @@ const navModule = (function () {
         const uuid = helperModule.get_parameter_by_name('exhibit_id');
         const exhibits_link = `${APP_PATH}/exhibits?exhibit_id=${uuid}`;
         const heading_link = `${APP_PATH}/items/heading?exhibit_id=${uuid}`;
-        const standard_media_item_link = `${APP_PATH}/items/standard?exhibit_id=${uuid}`;
-        const standard_text_item_link = `${APP_PATH}/items/standard?exhibit_id=${uuid}`;
+        const standard_media_item_link = `${APP_PATH}/items/standard/media?exhibit_id=${uuid}`;
+        const standard_text_item_link = `${APP_PATH}/items/standard/text?exhibit_id=${uuid}`;
         const item_grid_link = `${APP_PATH}/items/grid?exhibit_id=${uuid}`;
         const item_vertical_timeline_link = `${APP_PATH}/items/vertical-timeline?exhibit_id=${uuid}`;
         const items_menu_fragment = `

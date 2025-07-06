@@ -23,7 +23,6 @@ const itemsAddStandardItemFormModule = (function () {
     const APP_PATH = window.localStorage.getItem('exhibits_app_path');
     const EXHIBITS_ENDPOINTS = endpointsModule.get_exhibits_endpoints();
     let obj = {};
-    // let rich_text_data = {};
 
     obj.create_item_record = async function () {
 
@@ -74,8 +73,16 @@ const itemsAddStandardItemFormModule = (function () {
                 const item_id = response.data.data;
 
                 setTimeout(() => {
-                    window.location.replace(`${APP_PATH}/items/standard/edit?exhibit_id=${uuid}&item_id=${item_id}`);
-                }, 900);
+
+                    let item_form = 'text';
+
+                    if (window.location.pathname.indexOf('media') !== -1) {
+                        item_form = 'media';
+                    }
+
+                    window.location.replace(`${APP_PATH}/items/standard/${item_form}/edit?exhibit_id=${uuid}&item_id=${item_id}`);
+
+                    }, 900);
             }
 
         } catch (error) {
@@ -84,12 +91,20 @@ const itemsAddStandardItemFormModule = (function () {
     };
 
     obj.init = async function () {
+
         const exhibit_id = helperModule.get_parameter_by_name('exhibit_id');
         exhibitsModule.set_exhibit_title(exhibit_id);
         document.querySelector('#save-item-btn').addEventListener('click', itemsAddStandardItemFormModule.create_item_record);
-        document.querySelector('#is-alt-text-decorative').addEventListener('click', () => {
-            helperModule.toggle_alt_text();
-        });
+
+        const elem_id = document.querySelector('#is-alt-text-decorative');
+
+        if (elem_id) {
+            document.querySelector('#is-alt-text-decorative').addEventListener('click', () => {
+                helperModule.toggle_alt_text();
+            });
+        }
+
+
     };
 
     return obj;

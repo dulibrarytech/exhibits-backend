@@ -109,22 +109,32 @@ exports.create_item_record = async function (is_member_of_exhibit, data) {
             };
         }
 
-        HELPER_TASK.check_storage_path(data.is_member_of_exhibit, STORAGE_CONFIG.storage_path);
+        if (data.item_type !== 'text') {
 
-        if (data.media.length > 0 && data.media !== data.media_prev) {
-            data.media = HELPER_TASK.process_uploaded_media(data.is_member_of_exhibit, data.uuid, data.media, STORAGE_CONFIG.storage_path);
-        }
+            HELPER_TASK.check_storage_path(data.is_member_of_exhibit, STORAGE_CONFIG.storage_path);
 
-        if (data.thumbnail.length > 0 && data.thumbnail !== data.thumbnail_prev) {
-            data.thumbnail = HELPER_TASK.process_uploaded_media(data.is_member_of_exhibit, data.uuid, data.thumbnail, STORAGE_CONFIG.storage_path);
-        }
+            if (data.media.length > 0 && data.media !== data.media_prev) {
+                data.media = HELPER_TASK.process_uploaded_media(data.is_member_of_exhibit, data.uuid, data.media, STORAGE_CONFIG.storage_path);
+            }
 
-        if (data.kaltura.length > 0) {
-            data.media = data.kaltura;
-            data.is_kaltura_item = 1;
-        } else if (data.repo_uuid.length > 0) {
-            data.media = data.repo_uuid;
-            data.is_repo_item = 1;
+            if (data.thumbnail.length > 0 && data.thumbnail !== data.thumbnail_prev) {
+                data.thumbnail = HELPER_TASK.process_uploaded_media(data.is_member_of_exhibit, data.uuid, data.thumbnail, STORAGE_CONFIG.storage_path);
+            }
+
+            if (data.kaltura.length > 0) {
+                data.media = data.kaltura;
+                data.is_kaltura_item = 1;
+            } else if (data.repo_uuid.length > 0) {
+                data.media = data.repo_uuid;
+                data.is_repo_item = 1;
+            }
+
+            delete data.kaltura;
+            delete data.repo_uuid;
+            delete data.media_prev;
+            delete data.thumbnail_prev;
+        } else {
+            data.mime_type = 'text/plain';
         }
 
         if (data.styles === undefined || data.styles.length === 0) {
@@ -132,11 +142,6 @@ exports.create_item_record = async function (is_member_of_exhibit, data) {
         }
 
         data.styles = JSON.stringify(data.styles);
-        delete data.kaltura;
-        delete data.repo_uuid;
-        delete data.media_prev;
-        delete data.thumbnail_prev;
-
         data.order = await HELPER_TASK.order_exhibit_items(data.is_member_of_exhibit, DB, TABLES);
 
         const CREATE_RECORD_TASK = new EXHIBIT_ITEM_RECORD_TASKS(DB, TABLES);

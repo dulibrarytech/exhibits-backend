@@ -27,110 +27,119 @@ const itemsCommonStandardItemFormModule = (function () {
 
         try {
 
-            let media = [];
             let item = {};
             item.styles = {};
 
             // item metadata
             item.title = document.querySelector('#item-title-input').value;
             item.text = document.querySelector('#item-text-input').value;
-            item.caption = document.querySelector('#item-caption-input').value;
-            item.pdf_open_to_page = document.querySelector('#pdf-open-to-page').value;
-            item.wrap_text = document.querySelector('#wrap-text').checked;
-            item.is_alt_text_decorative = document.querySelector('#is-alt-text-decorative').checked;
-            item.is_embedded = document.querySelector('#embed-item').checked;
-            item.media_padding = document.querySelector('#media-padding').checked;
+
 
             if (document.querySelector('#is-published') !== null) {
                 item.is_published = document.querySelector('#is-published').value;
             }
 
-            if (item.wrap_text === true) {
-                item.wrap_text = 1;
-            } else if (item.wrap_text === false) {
-                item.wrap_text = 0;
-            }
+            if (window.location.pathname.indexOf('media') !== -1) {
 
-            if (item.is_embedded === true) {
-                item.is_embedded = 1;
-            } else if (item.is_embedded === false) {
-                item.is_embedded = 0;
-            }
+                let media = [];
+                item.caption = document.querySelector('#item-caption-input').value;
+                item.pdf_open_to_page = document.querySelector('#pdf-open-to-page').value;
+                item.is_alt_text_decorative = document.querySelector('#is-alt-text-decorative').checked;
+                item.is_embedded = document.querySelector('#embed-item').checked;
+                item.media_padding = document.querySelector('#media-padding').checked;
+                item.wrap_text = document.querySelector('#wrap-text').checked;
 
-            if (item.media_padding === true) {
-                item.media_padding = 1;
-            } else if (item.media_padding === false) {
-                item.media_padding = 0;
-            }
+                if (item.wrap_text === true) {
+                    item.wrap_text = 1;
+                } else if (item.wrap_text === false) {
+                    item.wrap_text = 0;
+                }
 
-            // item media
-            item.thumbnail = document.querySelector('#item-thumbnail').value;
-            item.thumbnail_prev = document.querySelector('#item-thumbnail-image-prev').value;
-            item.item_type = document.querySelector('#item-type').value;
-            item.mime_type = document.querySelector('#item-mime-type').value;
-            item.media = document.querySelector('#item-media').value;
-            item.media_prev = document.querySelector('#item-media-prev').value;
-            item.kaltura = document.querySelector('#audio-video').value;
-            item.repo_uuid = document.querySelector('#repo-uuid').value;
-            item.is_repo_item = parseInt(document.querySelector('#is-repo-item').value);
-            item.is_kaltura_item = parseInt(document.querySelector('#is-kaltura-item').value);
+                if (item.is_embedded === true) {
+                    item.is_embedded = 1;
+                } else if (item.is_embedded === false) {
+                    item.is_embedded = 0;
+                }
 
-            if (item.mime_type.indexOf('image') !== -1) {
-                if (item.is_alt_text_decorative === true) {
-                    item.is_alt_text_decorative = 1;
-                    item.alt_text = '';
-                } else if (item.is_alt_text_decorative === false) {
-                    item.is_alt_text_decorative = 0;
-                    item.alt_text = document.querySelector('#item-alt-text-input').value;
-                    if (item.alt_text.length === 0 && item.alt_text.length === 0) {
-                        if (item.alt_text.length === 0) {
-                            document.querySelector('#message').innerHTML = `<div class="alert alert-danger" role="alert"><i class="fa fa-exclamation"></i> Please enter "alt text" for this item</div>`;
-                            return false;
+                if (item.media_padding === true) {
+                    item.media_padding = 1;
+                } else if (item.media_padding === false) {
+                    item.media_padding = 0;
+                }
+
+                // item media
+                item.thumbnail = document.querySelector('#item-thumbnail').value;
+                item.thumbnail_prev = document.querySelector('#item-thumbnail-image-prev').value;
+                item.item_type = document.querySelector('#item-type').value;
+                item.mime_type = document.querySelector('#item-mime-type').value;
+                item.media = document.querySelector('#item-media').value;
+                item.media_prev = document.querySelector('#item-media-prev').value;
+                item.kaltura = document.querySelector('#audio-video').value;
+                item.repo_uuid = document.querySelector('#repo-uuid').value;
+                item.is_repo_item = parseInt(document.querySelector('#is-repo-item').value);
+                item.is_kaltura_item = parseInt(document.querySelector('#is-kaltura-item').value);
+
+                if (item.mime_type.indexOf('image') !== -1) {
+                    if (item.is_alt_text_decorative === true) {
+                        item.is_alt_text_decorative = 1;
+                        item.alt_text = '';
+                    } else if (item.is_alt_text_decorative === false) {
+                        item.is_alt_text_decorative = 0;
+                        item.alt_text = document.querySelector('#item-alt-text-input').value;
+                        if (item.alt_text.length === 0 && item.alt_text.length === 0) {
+                            if (item.alt_text.length === 0) {
+                                document.querySelector('#message').innerHTML = `<div class="alert alert-danger" role="alert"><i class="fa fa-exclamation"></i> Please enter "alt text" for this item</div>`;
+                                return false;
+                            }
                         }
                     }
                 }
-            }
 
-            if (item.media.length === 0 && item.kaltura.length === 0 && item.repo_uuid.length === 0) {
-                if (item.text.length === 0) {
-                    document.querySelector('#message').innerHTML = `<div class="alert alert-danger" role="alert"><i class="fa fa-exclamation"></i> Please upload or import a media item</div>`;
+                if (item.media.length === 0 && item.kaltura.length === 0 && item.repo_uuid.length === 0) {
+                    if (item.text.length === 0) {
+                        document.querySelector('#message').innerHTML = `<div class="alert alert-danger" role="alert"><i class="fa fa-exclamation"></i> Please upload or import a media item</div>`;
+                        return false;
+                    }
+                }
+
+                if (item.media.length > 0 && item.repo_uuid.length > 0 && item.media === item.repo_uuid) {
+                    item.repo_uuid = '';
+                }
+
+                if (item.media.length > 0 && item.kaltura.length > 0 && item.media === item.kaltura) {
+                    item.kaltura = '';
+                }
+
+                if (item.media.length > 0) {
+                    media.push(item.media);
+                }
+
+                if (item.kaltura.length > 0) {
+                    media.push(item.kaltura);
+                    item.item_type = 'kaltura';
+                }
+
+                if (item.repo_uuid.length > 0) {
+                    media.push(item.repo_uuid);
+                }
+
+                if (media.length > 1) {
+                    document.querySelector('#message').innerHTML = `<div class="alert alert-danger" role="alert"><i class="fa fa-exclamation"></i> Please upload or import only one media item</div>`;
                     return false;
                 }
+
+                if (item.item_type === 'kaltura') {
+                    item.item_type = document.querySelector('input[name="item_type"]:checked').value;
+                }
+            } else {
+                item.item_type = 'text';
             }
 
-            if (item.media.length > 0 && item.repo_uuid.length > 0 && item.media === item.repo_uuid) {
-                item.repo_uuid = '';
-            }
-
-            if (item.media.length > 0 && item.kaltura.length > 0 && item.media === item.kaltura) {
-                item.kaltura = '';
-            }
-
-            if (item.media.length > 0) {
-                media.push(item.media);
-            }
-
-            if (item.kaltura.length > 0) {
-                media.push(item.kaltura);
-                item.item_type = 'kaltura';
-            }
-
-            if (item.repo_uuid.length > 0) {
-                media.push(item.repo_uuid);
-            }
-
-            if (media.length > 1) {
-                document.querySelector('#message').innerHTML = `<div class="alert alert-danger" role="alert"><i class="fa fa-exclamation"></i> Please upload or import only one media item</div>`;
-                return false;
-            }
-
-            if (item.item_type === 'kaltura') {
-                item.item_type = document.querySelector('input[name="item_type"]:checked').value;
-            }
-
+            /*
             if (media.length === 0 && item.text.length !== 0) {
                 item.item_type = 'text';
             }
+             */
 
             item.layout = helperModule.get_checked_radio_button(document.getElementsByName('layout'));
             item.media_width = helperModule.get_checked_radio_button(document.getElementsByName('media_width'));
@@ -251,8 +260,27 @@ const itemsCommonStandardItemFormModule = (function () {
 
         try {
 
-            uploadsModule.upload_item_media();
-            uploadsModule.upload_item_thumbnail();
+            if (window.location.pathname.indexOf('media') !== -1) {
+
+                uploadsModule.upload_item_media();
+                uploadsModule.upload_item_thumbnail();
+                document.querySelector('#item-media-trash').style.display = 'none';
+                document.querySelector('#item-thumbnail-trash').style.display = 'none';
+
+                setTimeout(() => {
+                    document.querySelector('#item-thumbnail-trash').addEventListener('click', itemsCommonStandardItemFormModule.delete_thumbnail_image);
+                    document.querySelector('#item-media-trash').addEventListener('click', itemsCommonStandardItemFormModule.delete_media);
+                }, 1000);
+
+                document.querySelector('#repo-uuid-btn').addEventListener('click', async () => {
+                    await helperModule.get_repo_item_data(null);
+                });
+
+                document.querySelector('#audio-video').addEventListener('focusout', () => {
+                    helperModule.clear_media_fields('kaltura_media');
+                    document.querySelector('#is-kaltura-item').value = 1;
+                });
+            }
 
             const token = authModule.get_user_token();
             await authModule.check_auth(token);
@@ -261,8 +289,6 @@ const itemsCommonStandardItemFormModule = (function () {
             navModule.back_to_items();
             navModule.set_preview_link();
 
-            document.querySelector('#item-media-trash').style.display = 'none';
-            document.querySelector('#item-thumbnail-trash').style.display = 'none';
             document.querySelector('#item-background-color-picker').addEventListener('input', () => {
                 if (document.querySelector('#item-background-color')) {
                     document.querySelector('#item-background-color').value = document.querySelector('#item-background-color-picker').value;
@@ -273,20 +299,6 @@ const itemsCommonStandardItemFormModule = (function () {
                 if (document.querySelector('#item-font-color')) {
                     document.querySelector('#item-font-color').value = document.querySelector('#item-font-color-picker').value;
                 }
-            });
-
-            setTimeout(() => {
-                document.querySelector('#item-thumbnail-trash').addEventListener('click', itemsCommonStandardItemFormModule.delete_thumbnail_image);
-                document.querySelector('#item-media-trash').addEventListener('click', itemsCommonStandardItemFormModule.delete_media);
-            }, 1000);
-
-            document.querySelector('#repo-uuid-btn').addEventListener('click', async () => {
-                await helperModule.get_repo_item_data(null);
-            });
-
-            document.querySelector('#audio-video').addEventListener('focusout', () => {
-                helperModule.clear_media_fields('kaltura_media');
-                document.querySelector('#is-kaltura-item').value = 1;
             });
 
             helperModule.show_form();

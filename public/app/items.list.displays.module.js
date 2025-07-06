@@ -38,7 +38,13 @@ const itemsListDisplayModule = (function () {
             published_obj.draggable = `<tr id="${item.uuid}_${item.type}">`;
             published_obj.item_order = `<td class="grabbable item-order"><i class="fa fa-reorder"></i><span style="padding-left: 4px;" aria-label="item-order">${item.order}</span></td>`;
             published_obj.status = `<a href="#" id="${item.uuid}" class="publish-item" aria-label="item-status"><span id="publish" title="suppressed"><i class="fa fa-cloud-upload" style="color: darkred"></i><br>Unpublished</span></a>`;
-            published_obj.edit = `<a href="${APP_PATH}/items/${item_route}/edit?exhibit_id=${item.is_member_of_exhibit}&item_id=${item.uuid}" title="Edit" aria-label="edit-item"><i class="fa fa-edit pr-1"></i></a>`;
+
+            if (item.item_type === 'text') {
+                published_obj.edit = `<a href="${APP_PATH}/items/${item_route}/text/edit?exhibit_id=${item.is_member_of_exhibit}&item_id=${item.uuid}" title="Edit" aria-label="edit-item"><i class="fa fa-edit pr-1"></i></a>`;
+            } else {
+                published_obj.edit = `<a href="${APP_PATH}/items/${item_route}/media/edit?exhibit_id=${item.is_member_of_exhibit}&item_id=${item.uuid}" title="Edit" aria-label="edit-item"><i class="fa fa-edit pr-1"></i></a>`;
+            }
+
             published_obj.delete_item = `<a href="${APP_PATH}/items/delete?exhibit_id=${item.is_member_of_exhibit}&item_id=${item.uuid}&type=${item.type}" title="Delete" aria-label="delete-item"><i class="fa fa-trash pr-1"></i></a>`;
         }
 
@@ -113,22 +119,39 @@ const itemsListDisplayModule = (function () {
                 item_type = '<i class="fa fa-file-o"></i>';
             }
 
-            if (item.is_repo_item === 1) {
+            if (item.item_type !== 'text') {
 
-                const repo_record = await helperModule.get_repo_item_data(item.media);
+                if (item.is_repo_item === 1) {
 
-                if (title.length === 0) {
-                    title = repo_record.title;
+                    const repo_record = await helperModule.get_repo_item_data(item.media);
+
+                    if (title.length === 0) {
+                        title = repo_record.title;
+                    }
+
+                    thumbnail = helperModule.render_repo_thumbnail(repo_record.thumbnail.data);
+                    img = `<p><img src="${thumbnail}" height="75" width="75" alt="${item.uuid}"></p>`;
                 }
 
-                thumbnail = helperModule.render_repo_thumbnail(repo_record.thumbnail.data);
-                img = `<p><img src="${thumbnail}" height="75" width="75" alt="${item.uuid}"></p>`;
-            }
+                if (item.is_kaltura_item === 1) {
 
-            if (item.is_kaltura_item === 1) {
+                    if (title.length === 0) {
+                        title = 'Kaltura Item';
+                    }
+                }
 
-                if (title.length === 0) {
-                    title = 'Kaltura Item';
+                if (img.length === 0) {
+
+                    if (item.thumbnail.length > 0) {
+                        thumbnail = EXHIBITS_ENDPOINTS.exhibits.exhibit_media.get.endpoint.replace(':exhibit_id', item.is_member_of_exhibit).replace(':media', item.thumbnail);
+                        img = `<p><img src="${thumbnail}" height="75" width="75" alt="${item.uuid}-thumbnail"></p>`;
+                    } else if (item.thumbnail.length === 0 && item.item_type === 'image' && item.media.length > 0) {
+                        thumbnail = EXHIBITS_ENDPOINTS.exhibits.exhibit_media.get.endpoint.replace(':exhibit_id', item.is_member_of_exhibit).replace(':media', item.media);
+                        img = `<p><img src="${thumbnail}" height="75" width="75" alt="${item.uuid}-media"></p>`;
+                    } else {
+                        thumbnail = `${APP_PATH}/static/images/image-tn.png`;
+                        img = `<p><img src="${thumbnail}" height="75" width="75" alt="no-thumbnail"></p>`;
+                    }
                 }
             }
 
@@ -138,20 +161,6 @@ const itemsListDisplayModule = (function () {
 
                 if (title.length > 200) {
                     title = title.substring(0, 200) + '...';
-                }
-            }
-
-            if (img.length === 0) {
-
-                if (item.thumbnail.length > 0) {
-                    thumbnail = EXHIBITS_ENDPOINTS.exhibits.exhibit_media.get.endpoint.replace(':exhibit_id', item.is_member_of_exhibit).replace(':media', item.thumbnail);
-                    img = `<p><img src="${thumbnail}" height="75" width="75" alt="${item.uuid}-thumbnail"></p>`;
-                } else if (item.thumbnail.length === 0 && item.item_type === 'image' && item.media.length > 0) {
-                    thumbnail = EXHIBITS_ENDPOINTS.exhibits.exhibit_media.get.endpoint.replace(':exhibit_id', item.is_member_of_exhibit).replace(':media', item.media);
-                    img = `<p><img src="${thumbnail}" height="75" width="75" alt="${item.uuid}-media"></p>`;
-                } else {
-                    thumbnail = `${APP_PATH}/static/images/image-tn.png`;
-                    img = `<p><img src="${thumbnail}" height="75" width="75" alt="no-thumbnail"></p>`;
                 }
             }
 
