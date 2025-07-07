@@ -34,6 +34,10 @@ const itemsCommonStandardItemFormModule = (function () {
             item.title = document.querySelector('#item-title-input').value;
             item.text = document.querySelector('#item-text-input').value;
 
+            if (window.location.pathname.indexOf('text') !== -1 && item.text.length === 0) {
+                document.querySelector('#message').innerHTML = `<div class="alert alert-danger" role="alert"><i class="fa fa-exclamation"></i> Please enter "Text" for this item</div>`;
+                return false;
+            }
 
             if (document.querySelector('#is-published') !== null) {
                 item.is_published = document.querySelector('#is-published').value;
