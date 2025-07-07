@@ -282,6 +282,10 @@ const itemsCommonStandardItemFormModule = (function () {
                 });
             }
 
+            if (window.location.pathname.indexOf('text') !== -1) {
+                document.querySelector('#is-required-text').innerHTML = '<span style="color: darkred">*</span> Text<small><em>(Required)</em></small>';
+            }
+
             const token = authModule.get_user_token();
             await authModule.check_auth(token);
 
