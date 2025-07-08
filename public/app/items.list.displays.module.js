@@ -36,7 +36,7 @@ const itemsListDisplayModule = (function () {
 
             if (item.item_type === 'text') {
                 published_obj.edit = `<a href="${APP_PATH}/items/${item_route}/text/details?exhibit_id=${item.is_member_of_exhibit}&item_id=${item.uuid}" title="View details" aria-label="view-item-details"><i class="fa fa-folder-open pr-1"></i></a>`;
-            } else if (item.type === 'heading') {
+            } else if (item.type === 'heading' || item.type === 'timeline') {
                 published_obj.edit = `<a href="${APP_PATH}/items/${item_route}/details?exhibit_id=${item.is_member_of_exhibit}&item_id=${item.uuid}" title="View details" aria-label="view-item-details"><i class="fa fa-folder-open pr-1"></i></a>`;
             } else {
                 published_obj.edit = `<a href="${APP_PATH}/items/${item_route}/media/details?exhibit_id=${item.is_member_of_exhibit}&item_id=${item.uuid}" title="View details" aria-label="view-item-details"><i class="fa fa-folder-open pr-1"></i></a>`;
