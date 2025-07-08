@@ -294,7 +294,7 @@ exports.get_grid_item_record = async function (is_member_of_exhibit, is_member_o
 exports.update_grid_item_record = async function (is_member_of_exhibit, is_member_of_grid, item_id, data) {
 
     try {
-
+        console.log(data);
         const HELPER_TASK = new HELPER();
         const VALIDATE_TASK = new VALIDATOR(EXHIBITS_UPDATE_GRID_ITEM_SCHEMA);
         data.is_member_of_exhibit = is_member_of_exhibit;
@@ -342,7 +342,17 @@ exports.update_grid_item_record = async function (is_member_of_exhibit, is_membe
             data.styles = {};
         }
 
-        // TODO: pass is_published in
+        /*
+        if (data.is_published === 'true') {
+            data.is_published = 1;
+            is_published = 1;
+        } else if (data.is_published === 'false') {
+            data.is_published = 0;
+            is_published = 0;
+        }
+
+         */
+
         is_published = data.is_published;
         delete data.is_published;
 
@@ -653,9 +663,15 @@ const suppress_grid_item_record = async function (exhibit_id, grid_id, grid_item
         const is_indexed = await INDEXER_MODEL.index_record(indexed_record.data._source);
 
         if (is_indexed === true) {
-            return true;
+            return {
+                status: true,
+                message: 'Grid item suppressed'
+            };
         } else {
-            return false;
+            return {
+                status: false,
+                message: 'Unable to suppress grid item'
+            };
         }
 
     } catch (error) {
