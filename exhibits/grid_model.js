@@ -342,6 +342,7 @@ exports.update_grid_item_record = async function (is_member_of_exhibit, is_membe
             data.styles = {};
         }
 
+        // TODO: pass is_published in
         is_published = data.is_published;
         delete data.is_published;
 
