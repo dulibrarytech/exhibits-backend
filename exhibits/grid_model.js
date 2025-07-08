@@ -187,28 +187,33 @@ exports.create_grid_item_record = async function (is_member_of_exhibit, grid_id,
             };
         }
 
-        if (data.media.length > 0 && data.media !== data.media_prev) {
-            data.media = HELPER_TASK.process_uploaded_media(data.is_member_of_exhibit, data.uuid, data.media, STORAGE_CONFIG.storage_path);
-        }
+        if (data.item_type !== 'text') {
 
-        if (data.thumbnail.length > 0 && data.thumbnail !== data.thumbnail_prev) {
-            data.thumbnail = HELPER_TASK.process_uploaded_media(data.is_member_of_exhibit, data.uuid, data.thumbnail, STORAGE_CONFIG.storage_path);
-        }
+            if (data.media.length > 0 && data.media !== data.media_prev) {
+                data.media = HELPER_TASK.process_uploaded_media(data.is_member_of_exhibit, data.uuid, data.media, STORAGE_CONFIG.storage_path);
+            }
 
-        if (data.kaltura.length > 0) {
-            data.media = data.kaltura;
-            data.is_kaltura_item = 1;
-        } else if (data.repo_uuid.length > 0) {
-            data.media = data.repo_uuid;
-            data.is_repo_item = 1;
+            if (data.thumbnail.length > 0 && data.thumbnail !== data.thumbnail_prev) {
+                data.thumbnail = HELPER_TASK.process_uploaded_media(data.is_member_of_exhibit, data.uuid, data.thumbnail, STORAGE_CONFIG.storage_path);
+            }
+
+            if (data.kaltura.length > 0) {
+                data.media = data.kaltura;
+                data.is_kaltura_item = 1;
+            } else if (data.repo_uuid.length > 0) {
+                data.media = data.repo_uuid;
+                data.is_repo_item = 1;
+            }
+
+            delete data.kaltura;
+            delete data.repo_uuid;
+            delete data.media_prev;
+            delete data.thumbnail_prev;
+        } else {
+            data.mime_type = 'text/plain';
         }
 
         data.styles = JSON.stringify(data.styles);
-        delete data.kaltura;
-        delete data.repo_uuid;
-        delete data.media_prev;
-        delete data.thumbnail_prev;
-
         data.order = await HELPER_TASK.order_grid_items(data.is_member_of_grid, DB, TABLES);
 
         const CREATE_RECORD_TASK = new EXHIBIT_GRID_RECORD_TASKS(DB, TABLES);
@@ -309,33 +314,36 @@ exports.update_grid_item_record = async function (is_member_of_exhibit, is_membe
             };
         }
 
-        if (data.media.length > 0 && data.media !== data.media_prev) {
-            data.media = HELPER_TASK.process_uploaded_media(data.is_member_of_exhibit, data.uuid, data.media, STORAGE_CONFIG.storage_path);
-        }
+        if (data.item_type !== 'text') {
 
-        if (data.thumbnail.length > 0 && data.thumbnail !== data.thumbnail_prev) {
-            data.thumbnail = HELPER_TASK.process_uploaded_media(data.is_member_of_exhibit, data.uuid, data.thumbnail, STORAGE_CONFIG.storage_path);
-        }
+            if (data.media.length > 0 && data.media !== data.media_prev) {
+                data.media = HELPER_TASK.process_uploaded_media(data.is_member_of_exhibit, data.uuid, data.media, STORAGE_CONFIG.storage_path);
+            }
 
-        if (data.kaltura.length > 0) {
-            data.media = data.kaltura;
-            data.is_kaltura_item = 1;
-        } else if (data.repo_uuid.length > 0) {
-            data.media = data.repo_uuid;
-            data.is_repo_item = 1;
+            if (data.thumbnail.length > 0 && data.thumbnail !== data.thumbnail_prev) {
+                data.thumbnail = HELPER_TASK.process_uploaded_media(data.is_member_of_exhibit, data.uuid, data.thumbnail, STORAGE_CONFIG.storage_path);
+            }
+
+            if (data.kaltura.length > 0) {
+                data.media = data.kaltura;
+                data.is_kaltura_item = 1;
+            } else if (data.repo_uuid.length > 0) {
+                data.media = data.repo_uuid;
+                data.is_repo_item = 1;
+            }
+
+            delete data.kaltura;
+            delete data.repo_uuid;
+            delete data.media_prev;
+            delete data.thumbnail_prev;
         }
 
         if (data.styles === undefined || data.styles.length === 0) {
             data.styles = {};
         }
 
-        data.styles = JSON.stringify(data.styles);
         is_published = data.is_published;
-
-        delete data.kaltura;
-        delete data.repo_uuid;
-        delete data.media_prev;
-        delete data.thumbnail_prev;
+        delete data.is_published;
 
         const UPDATE_RECORD_TASK = new EXHIBIT_GRID_RECORD_TASKS(DB, TABLES);
         let result = await UPDATE_RECORD_TASK.update_grid_item_record(data);
@@ -346,8 +354,7 @@ exports.update_grid_item_record = async function (is_member_of_exhibit, is_membe
                 message: 'Unable to update grid item record'
             };
         } else {
-            // TODO: is published is undefined - update form
-            console.log('grid item ', is_published);
+
             if (is_published === 'true') {
 
                 const is_suppressed = await suppress_grid_item_record(is_member_of_exhibit, is_member_of_grid, item_id);
@@ -509,12 +516,12 @@ const suppress_grid_record = async function (exhibit_id, item_id) {
         const is_item_suppressed = await GRID_TASKS.set_grid_to_suppress(item_id);
         const grid_records = await GRID_TASKS.get_grid_records(exhibit_id, item_id);
 
-        for (let i=0;i<grid_records.length;i++) {
+        for (let i = 0; i < grid_records.length; i++) {
 
             await GRID_TASKS.set_to_suppressed_grid_items(grid_records[i].is_member_of_exhibit);
             let items = await GRID_TASKS.get_grid_item_records(grid_records[i].is_member_of_exhibit, grid_records[i].uuid);
 
-            for (let j=0;j<items.length;j++) {
+            for (let j = 0; j < items.length; j++) {
                 await GRID_TASKS.set_to_suppressed_grid_items(items[j].is_member_of_grid);
             }
         }
@@ -620,7 +627,7 @@ const suppress_grid_item_record = async function (exhibit_id, grid_id, grid_item
         let items = indexed_record.data._source.items;
         let updated_items = [];
 
-        for (let i=0;i<items.length;i++) {
+        for (let i = 0; i < items.length; i++) {
             if (items[i].uuid !== grid_item_id) {
                 updated_items.push(items[i]);
             }

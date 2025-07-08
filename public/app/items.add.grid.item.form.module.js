@@ -75,8 +75,17 @@ const itemsAddGridItemFormModule = (function () {
                 let message = 'Grid item record created';
                 document.querySelector('#message').innerHTML = `<div class="alert alert-success" role="alert"><i class="fa fa-info"></i> ${message}</div>`;
                 const grid_item_id = response.data.data;
+
                 setTimeout(() => {
-                    window.location.replace(`${APP_PATH}/items/grid/item/edit?exhibit_id=${exhibit_id}&grid_id=${grid_id}&item_id=${grid_item_id}`);
+
+                    let item_form = 'text';
+
+                    if (window.location.pathname.indexOf('media') !== -1) {
+                        item_form = 'media';
+                    }
+
+                    window.location.replace(`${APP_PATH}/items/grid/item/${item_form}/edit?exhibit_id=${exhibit_id}&grid_id=${grid_id}&item_id=${grid_item_id}`);
+
                 }, 900);
             }
 
@@ -89,24 +98,31 @@ const itemsAddGridItemFormModule = (function () {
 
         try {
 
+            if (window.location.pathname.indexOf('media') !== -1) {
+
+                uploadsModule.upload_item_media();
+                uploadsModule.upload_item_thumbnail();
+
+                document.querySelector('#item-media-trash').style.display = 'none';
+                document.querySelector('#item-thumbnail-trash').style.display = 'none';
+                document.querySelectorAll('.item-layout-left-right-radio-btn').forEach((radio_input) => {
+                    radio_input.addEventListener('click', () => {
+                        document.querySelector('#item-media-width').style.display = 'block';
+                    });
+                });
+
+                const elem_id = document.querySelector('#is-alt-text-decorative');
+
+                if (elem_id) {
+                    document.querySelector('#is-alt-text-decorative').addEventListener('click', () => {
+                        helperModule.toggle_alt_text();
+                    });
+                }
+            }
+
             const exhibit_id = helperModule.get_parameter_by_name('exhibit_id');
             exhibitsModule.set_exhibit_title(exhibit_id);
-
-            uploadsModule.upload_item_media();
-            uploadsModule.upload_item_thumbnail();
-
             document.querySelector('#save-item-btn').addEventListener('click', itemsAddGridItemFormModule.create_grid_item_record);
-            document.querySelector('#item-media-trash').style.display = 'none';
-            document.querySelector('#item-thumbnail-trash').style.display = 'none';
-            document.querySelectorAll('.item-layout-left-right-radio-btn').forEach((radio_input) => {
-                radio_input.addEventListener('click', () => {
-                    document.querySelector('#item-media-width').style.display = 'block';
-                });
-            });
-
-            document.querySelector('#is-alt-text-decorative').addEventListener('click', () => {
-                helperModule.toggle_alt_text();
-            });
 
         } catch (error) {
             document.querySelector('#message').innerHTML = `<div class="alert alert-danger" role="alert"><i class="fa fa-exclamation"></i> ${error.message}</div>`;

@@ -176,6 +176,15 @@ exports.get_dashboard_grid_add_form = function (req, res) {
     });
 };
 
+exports.get_dashboard_grid_add_form = function (req, res) {
+    res.render('dashboard-grid-add-form', {
+        host: CONFIG.host,
+        appname: CONFIG.app_name,
+        appversion: CONFIG.app_version,
+        organization: CONFIG.organization
+    });
+};
+
 exports.get_dashboard_grid_details = function (req, res) {
     res.render('dashboard-grid-details', {
         host: CONFIG.host,
@@ -194,8 +203,8 @@ exports.get_dashboard_grid_edit_form = function (req, res) {
     });
 };
 
-exports.get_dashboard_grid_add_item_form = function (req, res) {
-    res.render('dashboard-grid-add-item-form', {
+exports.get_dashboard_grid_add_media_item_form = function (req, res) {
+    res.render('dashboard-grid-add-media-item-form', {
         host: CONFIG.host,
         appname: CONFIG.app_name,
         appversion: CONFIG.app_version,
@@ -203,8 +212,26 @@ exports.get_dashboard_grid_add_item_form = function (req, res) {
     });
 };
 
-exports.get_dashboard_grid_edit_item_form = function (req, res) {
-    res.render('dashboard-grid-edit-item-form', {
+exports.get_dashboard_grid_add_text_item_form = function (req, res) {
+    res.render('dashboard-grid-add-text-item-form', {
+        host: CONFIG.host,
+        appname: CONFIG.app_name,
+        appversion: CONFIG.app_version,
+        organization: CONFIG.organization
+    });
+};
+
+exports.get_dashboard_grid_edit_media_item_form = function (req, res) {
+    res.render('dashboard-grid-edit-media-item-form', {
+        host: CONFIG.host,
+        appname: CONFIG.app_name,
+        appversion: CONFIG.app_version,
+        organization: CONFIG.organization
+    });
+};
+
+exports.get_dashboard_grid_edit_text_item_form = function (req, res) {
+    res.render('dashboard-grid-edit-text-item-form', {
         host: CONFIG.host,
         appname: CONFIG.app_name,
         appversion: CONFIG.app_version,

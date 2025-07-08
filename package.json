@@ -1,6 +1,6 @@
 {
   "name": "duexhibits-backend",
-  "version": "0.9.6",
+  "version": "1.0.0",
   "description": "DU Exhibits Backend Application",
   "main": "exhibits.js",
   "scripts": {

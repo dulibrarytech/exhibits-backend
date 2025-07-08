@@ -22,8 +22,8 @@ module.exports = () => {
 
     return {
         is_member_of_exhibit: {type: 'string'},
-        is_member_of_grid: {type: 'string'},
-        title: {type: 'string'},
-        media: {type: 'string'}
+        is_member_of_grid: {type: 'string'}
+        // title: {type: 'string'},
+        // media: {type: 'string'}
     };
 };

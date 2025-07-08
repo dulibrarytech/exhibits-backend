@@ -133,6 +133,7 @@ exports.create_item_record = async function (is_member_of_exhibit, data) {
             delete data.repo_uuid;
             delete data.media_prev;
             delete data.thumbnail_prev;
+
         } else {
             data.mime_type = 'text/plain';
         }
@@ -198,40 +199,48 @@ exports.update_item_record = async function (is_member_of_exhibit, item_id, data
             };
         }
 
-        HELPER_TASK.check_storage_path(data.is_member_of_exhibit, STORAGE_CONFIG.storage_path);
+        if (data.item_type !== 'text') {
 
-        if (data.media.length > 0 && data.media !== data.media_prev) {
-            data.media = HELPER_TASK.process_uploaded_media(data.is_member_of_exhibit, data.uuid, data.media, STORAGE_CONFIG.storage_path);
-        }
+            HELPER_TASK.check_storage_path(data.is_member_of_exhibit, STORAGE_CONFIG.storage_path);
 
-        if (data.thumbnail.length > 0 && data.thumbnail !== data.thumbnail_prev) {
-            data.thumbnail = HELPER_TASK.process_uploaded_media(data.is_member_of_exhibit, data.uuid, data.thumbnail, STORAGE_CONFIG.storage_path);
-        }
+            if (data.media.length > 0 && data.media !== data.media_prev) {
+                data.media = HELPER_TASK.process_uploaded_media(data.is_member_of_exhibit, data.uuid, data.media, STORAGE_CONFIG.storage_path);
+            }
 
-        if (data.kaltura.length > 0) {
-            data.media = data.kaltura;
-            data.is_kaltura_item = 1;
-        }
+            if (data.thumbnail.length > 0 && data.thumbnail !== data.thumbnail_prev) {
+                data.thumbnail = HELPER_TASK.process_uploaded_media(data.is_member_of_exhibit, data.uuid, data.thumbnail, STORAGE_CONFIG.storage_path);
+            }
 
-        if (data.kaltura.length === 0 && data.item_type !== 'audio') {
-            data.is_kaltura_item = 0;
-        }
+            if (data.kaltura.length > 0) {
+                data.media = data.kaltura;
+                data.is_kaltura_item = 1;
+            }
 
-        if (data.kaltura.length === 0 && data.item_type !== 'video') {
-            data.is_kaltura_item = 0;
-        }
+            if (data.kaltura.length === 0 && data.item_type !== 'audio') {
+                data.is_kaltura_item = 0;
+            }
 
-        if (data.item_type === 'audio') {
-            data.is_kaltura_item = 1;
-        }
+            if (data.kaltura.length === 0 && data.item_type !== 'video') {
+                data.is_kaltura_item = 0;
+            }
 
-        if (data.item_type === 'video') {
-            data.is_kaltura_item = 1;
-        }
+            if (data.item_type === 'audio') {
+                data.is_kaltura_item = 1;
+            }
 
-        if (data.repo_uuid.length > 0) {
-            data.media = data.repo_uuid;
-            data.is_repo_item = 1;
+            if (data.item_type === 'video') {
+                data.is_kaltura_item = 1;
+            }
+
+            if (data.repo_uuid.length > 0) {
+                data.media = data.repo_uuid;
+                data.is_repo_item = 1;
+            }
+
+            delete data.kaltura;
+            delete data.repo_uuid;
+            delete data.media_prev;
+            delete data.thumbnail_prev;
         }
 
         if (data.styles === undefined || data.styles.length === 0) {
@@ -240,12 +249,7 @@ exports.update_item_record = async function (is_member_of_exhibit, item_id, data
 
         data.styles = JSON.stringify(data.styles);
         is_published = data.is_published;
-
         delete data.is_published;
-        delete data.kaltura;
-        delete data.repo_uuid;
-        delete data.media_prev;
-        delete data.thumbnail_prev;
 
         const UPDATE_RECORD_TASK = new EXHIBIT_ITEM_RECORD_TASKS(DB, TABLES);
         const result = await UPDATE_RECORD_TASK.update_item_record(data);

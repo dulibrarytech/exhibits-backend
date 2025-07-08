@@ -78,14 +78,20 @@ module.exports = function (app) {
     app.route(APP_PATH + '/items/grid/edit')
         .get(CONTROLLER.get_dashboard_grid_edit_form);
 
-    app.route(APP_PATH + '/items/grid/item')
-        .get(CONTROLLER.get_dashboard_grid_add_item_form);
+    app.route(APP_PATH + '/items/grid/item/media')
+        .get(CONTROLLER.get_dashboard_grid_add_media_item_form);
+
+    app.route(APP_PATH + '/items/grid/item/text')
+        .get(CONTROLLER.get_dashboard_grid_add_text_item_form);
 
     app.route(APP_PATH + '/items/grid/item/details')
         .get(CONTROLLER.get_dashboard_grid_item_details);
 
-    app.route(APP_PATH + '/items/grid/item/edit')
-        .get(CONTROLLER.get_dashboard_grid_edit_item_form);
+    app.route(APP_PATH + '/items/grid/item/media/edit')
+        .get(CONTROLLER.get_dashboard_grid_edit_media_item_form);
+
+    app.route(APP_PATH + '/items/grid/item/text/edit')
+        .get(CONTROLLER.get_dashboard_grid_edit_text_item_form);
 
     app.route(APP_PATH + '/items/grid/items')
         .get(CONTROLLER.get_dashboard_item_grid_items);

@@ -70,11 +70,16 @@ const navModule = (function () {
 
         let exhibit_id = helperModule.get_parameter_by_name('exhibit_id');
         let grid_id = helperModule.get_parameter_by_name('grid_id');
-        let grid_item_link = `${APP_PATH}/items/grid/item?exhibit_id=${exhibit_id}&grid_id=${grid_id}`;
+        let grid_media_item_link = `${APP_PATH}/items/grid/item/media?exhibit_id=${exhibit_id}&grid_id=${grid_id}`;
+        let grid_text_item_link = `${APP_PATH}/items/grid/item/text?exhibit_id=${exhibit_id}&grid_id=${grid_id}`;
         let items_menu_fragment = `
                 <li>
-                    <a href="${grid_item_link}" data-keyboard="false"> <i
-                                class=" menu-icon fa fa-th"></i>Add Grid Item</a>
+                    <a href="${grid_media_item_link}" data-keyboard="false"> <i
+                                class=" menu-icon ti-image"></i>Add Media Grid Item</a>
+                </li>
+                <li>
+                    <a href="${grid_text_item_link}" data-keyboard="false"> <i
+                                class=" menu-icon ti-align-center"></i>Add Text Grid Item</a>
                 </li>`;
 
         document.querySelector('#items-menu').innerHTML = items_menu_fragment;

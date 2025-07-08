@@ -103,8 +103,6 @@ const itemsAddStandardItemFormModule = (function () {
                 helperModule.toggle_alt_text();
             });
         }
-
-
     };
 
     return obj;
