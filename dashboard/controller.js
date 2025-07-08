@@ -267,6 +267,24 @@ exports.get_dashboard_grid_item_details = function (req, res) {
     });
 };
 
+exports.get_dashboard_grid_item_media_details = function (req, res) {
+    res.render('dashboard-grid-item-media-details', {
+        host: CONFIG.host,
+        appname: CONFIG.app_name,
+        appversion: CONFIG.app_version,
+        organization: CONFIG.organization
+    });
+};
+
+exports.get_dashboard_grid_item_text_details = function (req, res) {
+    res.render('dashboard-grid-item-text-details', {
+        host: CONFIG.host,
+        appname: CONFIG.app_name,
+        appversion: CONFIG.app_version,
+        organization: CONFIG.organization
+    });
+};
+
 exports.get_dashboard_item_grid_items = function (req, res) {
     res.render('dashboard-grid-items', {
         host: CONFIG.host,

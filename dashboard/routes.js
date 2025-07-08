@@ -93,6 +93,12 @@ module.exports = function (app) {
     app.route(APP_PATH + '/items/grid/item/details')
         .get(CONTROLLER.get_dashboard_grid_item_details);
 
+    app.route(APP_PATH + '/items/grid/item/media/details')
+        .get(CONTROLLER.get_dashboard_grid_item_media_details);
+
+    app.route(APP_PATH + '/items/grid/item/text/details')
+        .get(CONTROLLER.get_dashboard_grid_item_text_details);
+
     app.route(APP_PATH + '/items/grid/item/media/edit')
         .get(CONTROLLER.get_dashboard_grid_edit_media_item_form);
 
