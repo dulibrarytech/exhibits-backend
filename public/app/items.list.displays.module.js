@@ -51,9 +51,11 @@ const itemsListDisplayModule = (function () {
             published_obj.status = `<a href="#" id="${item.uuid}" class="publish-item" aria-label="item-status"><span id="publish" title="suppressed"><i class="fa fa-cloud-upload" style="color: darkred"></i><br>Unpublished</span></a>`;
 
             if (item.item_type === 'text') {
-                published_obj.edit = `<a href="${APP_PATH}/items/${item_route}/text/edit?exhibit_id=${item.is_member_of_exhibit}&item_id=${item.uuid}" title="Edit" aria-label="edit-item"><i class="fa fa-edit pr-1"></i></a>`;
+                published_obj.edit = `<a href="${APP_PATH}/items/${item_route}/text/edit?exhibit_id=${item.is_member_of_exhibit}&item_id=${item.uuid}" title="View details" aria-label="view-item-details"><i class="fa fa-edit pr-1"></i></a>`;
+            } else if (item.type === 'heading' || item.type === 'timeline') {
+                published_obj.edit = `<a href="${APP_PATH}/items/${item_route}/edit?exhibit_id=${item.is_member_of_exhibit}&item_id=${item.uuid}" title="View details" aria-label="view-item-details"><i class="fa fa-edit pr-1"></i></a>`;
             } else {
-                published_obj.edit = `<a href="${APP_PATH}/items/${item_route}/media/edit?exhibit_id=${item.is_member_of_exhibit}&item_id=${item.uuid}" title="Edit" aria-label="edit-item"><i class="fa fa-edit pr-1"></i></a>`;
+                published_obj.edit = `<a href="${APP_PATH}/items/${item_route}/media/edit?exhibit_id=${item.is_member_of_exhibit}&item_id=${item.uuid}" title="View details" aria-label="view-item-details"><i class="fa fa-edit pr-1"></i></a>`;
             }
 
             published_obj.delete_item = `<a href="${APP_PATH}/items/delete?exhibit_id=${item.is_member_of_exhibit}&item_id=${item.uuid}&type=${item.type}" title="Delete" aria-label="delete-item"><i class="fa fa-trash pr-1"></i></a>`;
