@@ -88,11 +88,11 @@ const itemsListDisplayModule = (function () {
         let published_obj = {};
 
         if (item.is_published === 1) {
+
             published_obj.draggable = `<tr id="${item.uuid}_${item.type}">`;
             published_obj.item_order = `<td class="item-order"><span style="padding-left: 4px;" aria-label="item-order">${item.order}</span></td>`;
             published_obj.status = `<a href="#" id="${item.uuid}" class="suppress-item" aria-label="item-status"><span id="suppress" title="published"><i class="fa fa-cloud" style="color: green"></i><br>Published</span></a>`;
 
-            // published_obj.edit = `<a href="${APP_PATH}/items/${item_route}/details?exhibit_id=${item.is_member_of_exhibit}&item_id=${item.uuid}" title="View details" aria-label="view-item-details"><i class="fa fa-folder-open pr-1"></i></a>`;
             if (item.item_type === 'text') {
                 published_obj.edit = `<a href="${APP_PATH}/items/${item_route}/text/details?exhibit_id=${item.is_member_of_exhibit}&grid_id=${item.is_member_of_grid}&item_id=${item.uuid}" title="View details" aria-label="view-item-details"><i class="fa fa-folder-open pr-1"></i></a>`;
             } else {
@@ -102,20 +102,18 @@ const itemsListDisplayModule = (function () {
             published_obj.delete_item = `<i title="Can only delete if unpublished" style="color: #d3d3d3" class="fa fa-trash pr-1" aria-label="delete-item"></i>`;
 
         } else if (item.is_published === 0) {
+
             published_obj.draggable = `<tr id="${item.uuid}_${item.type}">`;
             published_obj.item_order = `<td class="grabbable item-order"><i class="fa fa-reorder"></i><span style="padding-left: 4px;" aria-label="item-order">${item.order}</span></td>`;
             published_obj.status = `<a href="#" id="${item.uuid}" class="publish-item" aria-label="item-status"><span id="publish" title="suppressed"><i class="fa fa-cloud-upload" style="color: darkred"></i><br>Unpublished</span></a>`;
 
             if (item.item_type === 'text') {
                 published_obj.edit = `<a href="${APP_PATH}/items/grid/item/text/edit?exhibit_id=${item.is_member_of_exhibit}&grid_id=${item.is_member_of_grid}&item_id=${item.uuid}" title="Edit" aria-label="edit-grid-item"><i class="fa fa-edit pr-1"></i></a>`;
-                // published_obj.edit = `<a href="${APP_PATH}/items/${item_route}/text/edit?exhibit_id=${item.is_member_of_exhibit}&item_id=${item.uuid}" title="Edit" aria-label="edit-item"><i class="fa fa-edit pr-1"></i></a>`;
             } else {
                 published_obj.edit = `<a href="${APP_PATH}/items/grid/item/media/edit?exhibit_id=${item.is_member_of_exhibit}&grid_id=${item.is_member_of_grid}&item_id=${item.uuid}" title="Edit" aria-label="edit-grid-item"><i class="fa fa-edit pr-1"></i></a>`;
-                // published_obj.edit = `<a href="${APP_PATH}/items/${item_route}/media/edit?exhibit_id=${item.is_member_of_exhibit}&item_id=${item.uuid}" title="Edit" aria-label="edit-item"><i class="fa fa-edit pr-1"></i></a>`;
             }
 
             published_obj.delete_item = `<a href="${APP_PATH}/items/grid/item/delete?exhibit_id=${item.is_member_of_exhibit}&grid_id=${item.is_member_of_grid}&item_id=${item.uuid}" title="Delete" aria-label="delete-grid-item"><i class="fa fa-trash pr-1"></i></a>`;
-            // published_obj.delete_item = `<a href="${APP_PATH}/items/delete?exhibit_id=${item.is_member_of_exhibit}&item_id=${item.uuid}&type=${item.type}" title="Delete" aria-label="delete-item"><i class="fa fa-trash pr-1"></i></a>`;
         }
 
         return published_obj;
@@ -140,7 +138,7 @@ const itemsListDisplayModule = (function () {
                     </td>`;
 
             item_data += `<td class="item-status"><small>${item_obj.status}</small></td>`;
-            item_data += `<td class="item-actions">
+            item_data += `<td id="${item.uuid}-item-actions" style="width: 10%">
                                 <div class="card-text text-sm-center">
                                     ${item_obj.edit}&nbsp;
                                     ${item_obj.delete_item}
@@ -239,7 +237,6 @@ const itemsListDisplayModule = (function () {
             item_data += item_obj.item_order;
 
             item_data += `<td class="item-metadata">
-                    
                     <p><button class="btn btn-default">${item_type} <small>${type}</small></button></p>
                     <p><strong>${title}</strong></p>
                     ${img}                   
@@ -247,7 +244,7 @@ const itemsListDisplayModule = (function () {
                     </td>`;
 
             item_data += `<td class="item-status"><small>${item_obj.status}</small></td>`;
-            item_data += `<td class="item-actions">
+            item_data += `<td id="${item.uuid}-item-actions" style="width: 10%">
                                 <div class="card-text text-sm-center">
                                     ${item_obj.edit}&nbsp;
                                     ${item_obj.delete_item}
@@ -296,7 +293,7 @@ const itemsListDisplayModule = (function () {
                     </td>`;
 
             item_data += `<td class="item-status"><small>${item_obj.status}</small></td>`;
-            item_data += `<td class="item-actions"><!-- ${add_grid_items}&nbsp; -->
+            item_data += `<td id="${item.uuid}-item-actions" style="width: 10%"><!-- ${add_grid_items}&nbsp; -->
                                 <div class="card-text text-sm-center">
                                     ${view_grid_items}&nbsp;
                                     ${item_obj.edit}&nbsp;
@@ -346,7 +343,7 @@ const itemsListDisplayModule = (function () {
                     </td>`;
 
             item_data += `<td class="item-status"><small>${item_obj.status}</small></td>`;
-            item_data += `<td class="item-actions">
+            item_data += `<td id="${item.uuid}-item-actions" style="width: 10%">
                                 <div class="card-text text-sm-center">
                                     ${view_timeline_items}&nbsp;
                                     ${add_timeline_items}&nbsp;
@@ -464,7 +461,7 @@ const itemsListDisplayModule = (function () {
                     </td>`;
 
             item_data += `<td style="width: 5%;text-align: center"><small>${item_obj.status}</small></td>`;
-            item_data += `<td style="width: 10%">
+            item_data += `<td id="${item.uuid}-item-actions" style="width: 10%">
                                 <div class="card-text text-sm-center">
                                     ${item_obj.edit}&nbsp;
                                     ${item_obj.delete_item}
@@ -591,7 +588,7 @@ const itemsListDisplayModule = (function () {
 
             item_data += `<td style="width: 5%;text-align: center"><small>${sort_date}</small></td>`;
             item_data += `<td style="width: 5%;text-align: center"><small>${item_obj.status}</small></td>`;
-            item_data += `<td style="width: 10%">
+            item_data += `<td id="${item.uuid}-item-actions" style="width: 10%">
                                 <div class="card-text text-sm-center">
                                     ${item_obj.edit}&nbsp;
                                     ${item_obj.delete_item}

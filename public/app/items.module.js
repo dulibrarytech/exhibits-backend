@@ -201,6 +201,42 @@ const itemsModule = (function () {
                         await suppress_item(uuid);
                     }, false);
                 }, 0);
+
+                setTimeout(() => {
+
+                    const trIds = Array.from(document.querySelectorAll('tr')).map(tr => tr.id).filter(id => id);
+                    let uuid_found = trIds.find((arr_result) => {
+
+                        let uuid_arr = arr_result.split('_');
+
+                        if (uuid === uuid_arr[0]) {
+                            return true;
+                        } else {
+                            return false;
+                        }
+                    });
+
+                    let type = uuid_found.split('_');
+                    let path;
+
+                    if (type[1] === 'heading') {
+                        path = `${APP_PATH}/items/heading/details?exhibit_id=${exhibit_id}&item_id=${uuid}`;
+                    } else if (type[1] !== 'text') {
+                        path = `${APP_PATH}/items/standard/media/details?exhibit_id=${exhibit_id}&item_id=${uuid}`;
+                    } else {
+                        path = `${APP_PATH}/items/standard/text/details?exhibit_id=${exhibit_id}&item_id=${uuid}`;
+                    }
+
+                    let uuid_actions = `${uuid}-item-actions`;
+                    let elem = document.getElementById(uuid_actions);
+                    let item_edit = `<a href="${path}" title="View details" aria-label="item-details"><i class="fa fa-folder-open pr-1"></i> </a>`;
+                    let trash = `<i title="Can only delete if unpublished" style="color: #d3d3d3" class="fa fa-trash pr-1" aria-label="delete-exhibit"></i>`;
+                    elem.innerHTML = `
+                        <div class="card-text text-sm-center">
+                        ${item_edit}&nbsp;
+                        ${trash}
+                        </div>`;
+                }, 0);
             }
 
             if (response.status === 204) {
@@ -262,6 +298,61 @@ const itemsModule = (function () {
                         const uuid = elem.getAttribute('id');
                         await publish_item(uuid);
                     }, false);
+                }, 0);
+
+                setTimeout(() => {
+
+                    const trIds = Array.from(document.querySelectorAll('tr')).map(tr => tr.id).filter(id => id);
+                    let uuid_found = trIds.find((arr_result) => {
+
+                        let uuid_arr = arr_result.split('_');
+
+                        if (uuid === uuid_arr[0]) {
+                            return true;
+                        } else {
+                            return false;
+                        }
+                    });
+
+                    let type = uuid_found.split('_');
+                    let path;
+
+                    if (type[1] === 'heading') {
+                        path = `${APP_PATH}/items/heading/edit?exhibit_id=${exhibit_id}&item_id=${uuid}`;
+                    } else if (type[1] !== 'text') {
+                        path = `${APP_PATH}/items/standard/media/edit?exhibit_id=${exhibit_id}&item_id=${uuid}`;
+                    } else {
+                        path = `${APP_PATH}/items/standard/text/edit?exhibit_id=${exhibit_id}&item_id=${uuid}`;
+                    }
+
+                    // TODO: item edit paths
+                    // TODO: grid items
+                    // TODO: timeline items
+
+                    let uuid_actions = `${uuid}-item-actions`;
+                    let elem = document.getElementById(uuid_actions);
+                    let item_edit = `<a href="${path}" title="View details" aria-label="item-details"><i class="fa fa-folder-open pr-1"></i> </a>`;
+                    let trash = `<i title="Can only delete if unpublished" style="color: #d3d3d3" class="fa fa-trash pr-1" aria-label="delete-exhibit"></i>`;
+                    elem.innerHTML = `
+                        <div class="card-text text-sm-center">
+                        ${item_edit}&nbsp;
+                        ${trash}
+                        </div>`;
+
+                    /*
+                   uuid = uuid.replace('-status', '');
+                    let exhibit_items = `<a href="${APP_PATH}/items?exhibit_id=${uuid}" title="View Exhibit Items"><i class="fa fa-list pr-1"></i></a>&nbsp;`;
+                    let uuid_actions = uuid + '-actions';
+                    let elem = document.getElementById(uuid_actions);
+                    // let add_item = `<a href="${APP_PATH}/items/standard?exhibit_id=${uuid}" title="Add Items" aria-label="add-items"><i class="fa fa-plus pr-1"></i> </a>`;
+                    let exhibit_edit = `<a href="${APP_PATH}/exhibits/exhibit/edit?exhibit_id=${uuid}" title="Edit" aria-label="edit-exhibit"><i class="fa fa-edit pr-1"></i> </a>`;
+                    let trash = `<a href="${APP_PATH}/exhibits/exhibit/delete?exhibit_id=${uuid}" title="Delete exhibit" aria-label="delete-exhibit"><i class="fa fa-trash pr-1"></i></a>`;
+                    elem.innerHTML = `
+                        ${exhibit_items}&nbsp;
+                        ${add_item}&nbsp;
+                        ${exhibit_edit}&nbsp;
+                        ${trash}`;
+                     */
                 }, 0);
             }
 

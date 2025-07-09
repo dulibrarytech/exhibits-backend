@@ -37,7 +37,7 @@ const navModule = (function () {
         const items_menu_fragment = `
                 <li>
                     <a href="${exhibits_link}" data-keyboard="false"> 
-                        <i class=" menu-icon fa fa-arrow-left"></i>Back to Exhibits
+                        <i class=" menu-icon fa fa-arrow-left"></i>Back to Exhibit Details
                     </a>
                 </li>
                 <li>
@@ -66,6 +66,11 @@ const navModule = (function () {
                 </li>`;
 
         document.querySelector('#items-menu').innerHTML = items_menu_fragment;
+    };
+
+    obj.set_item_list_link = function () {
+        const exhibit_id = helperModule.get_parameter_by_name('exhibit_id');
+        document.querySelector('#item-list').setAttribute('href', `${APP_PATH}/items?exhibit_id=${exhibit_id}`);
     };
 
     obj.set_grid_item_nav_menu_links = function () {
