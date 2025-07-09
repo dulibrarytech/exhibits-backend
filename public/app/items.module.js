@@ -240,7 +240,7 @@ const itemsModule = (function () {
                     let trash = `<i title="Can only delete if unpublished" style="color: #d3d3d3" class="fa fa-trash pr-1" aria-label="delete-exhibit"></i>`;
                     elem.innerHTML = `
                         <div class="card-text text-sm-center">
-                         ${view_items}&nbsp;
+                        ${view_items}&nbsp;
                         ${item_edit}&nbsp;
                         ${trash}
                         </div>`;
@@ -326,7 +326,7 @@ const itemsModule = (function () {
                     let edit_path;
                     let delete_path;
                     let item_type = 'item';
-                    let view_items;
+                    let view_items = '';
 
                     // edit paths
                     if (type[1] === 'heading') {
