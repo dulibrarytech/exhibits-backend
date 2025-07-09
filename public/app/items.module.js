@@ -217,22 +217,30 @@ const itemsModule = (function () {
                     });
 
                     let type = uuid_found.split('_');
-                    let path;
+                    let details_path;
+                    let view_items = '';
 
                     if (type[1] === 'heading') {
-                        path = `${APP_PATH}/items/heading/details?exhibit_id=${exhibit_id}&item_id=${uuid}`;
-                    } else if (type[1] !== 'text') {
-                        path = `${APP_PATH}/items/standard/media/details?exhibit_id=${exhibit_id}&item_id=${uuid}`;
+                        details_path = `${APP_PATH}/items/heading/details?exhibit_id=${exhibit_id}&item_id=${uuid}`;
+                    } else if (type[1] === 'text') {
+                        details_path = `${APP_PATH}/items/standard/text/edit?exhibit_id=${exhibit_id}&item_id=${uuid}`;
+                    } else if (type[1] === 'grid') {
+                        details_path = `${APP_PATH}/items/grid/edit?exhibit_id=${exhibit_id}&item_id=${uuid}`;
+                        view_items = `<a href="${APP_PATH}/items/grid/items?exhibit_id=${exhibit_id}&grid_id=${uuid}" title="View grid Items" aria-label="view-grid-items"><i class="fa fa-list pr-1"></i></a>`;
+                    } else if (type[1] === 'timeline') {
+                        details_path = `${APP_PATH}/items/vertical-timeline/edit?exhibit_id=${exhibit_id}&item_id=${uuid}`;
+                        view_items = `<a href="${APP_PATH}/items/timeline/items?exhibit_id=${exhibit_id}&timeline_id=${uuid}" title="View Timeline Items" aria-label="view-timeline-items"><i class="fa fa-list pr-1"></i></a>`;
                     } else {
-                        path = `${APP_PATH}/items/standard/text/details?exhibit_id=${exhibit_id}&item_id=${uuid}`;
+                        details_path = `${APP_PATH}/items/standard/media/edit?exhibit_id=${exhibit_id}&item_id=${uuid}`;
                     }
 
                     let uuid_actions = `${uuid}-item-actions`;
                     let elem = document.getElementById(uuid_actions);
-                    let item_edit = `<a href="${path}" title="View details" aria-label="item-details"><i class="fa fa-folder-open pr-1"></i> </a>`;
+                    let item_edit = `<a href="${details_path}" title="View details" aria-label="item-details"><i class="fa fa-folder-open pr-1"></i> </a>`;
                     let trash = `<i title="Can only delete if unpublished" style="color: #d3d3d3" class="fa fa-trash pr-1" aria-label="delete-exhibit"></i>`;
                     elem.innerHTML = `
                         <div class="card-text text-sm-center">
+                         ${view_items}&nbsp;
                         ${item_edit}&nbsp;
                         ${trash}
                         </div>`;
@@ -315,44 +323,41 @@ const itemsModule = (function () {
                     });
 
                     let type = uuid_found.split('_');
-                    let path;
+                    let edit_path;
+                    let delete_path;
+                    let item_type = 'item';
+                    let view_items;
 
+                    // edit paths
                     if (type[1] === 'heading') {
-                        path = `${APP_PATH}/items/heading/edit?exhibit_id=${exhibit_id}&item_id=${uuid}`;
-                    } else if (type[1] !== 'text') {
-                        path = `${APP_PATH}/items/standard/media/edit?exhibit_id=${exhibit_id}&item_id=${uuid}`;
+                        edit_path = `${APP_PATH}/items/heading/edit?exhibit_id=${exhibit_id}&item_id=${uuid}`;
+                        item_type = 'heading';
+                    } else if (type[1] === 'text') {
+                        edit_path = `${APP_PATH}/items/standard/text/edit?exhibit_id=${exhibit_id}&item_id=${uuid}`;
+                    } else if (type[1] === 'grid') {
+                        edit_path = `${APP_PATH}/items/grid/edit?exhibit_id=${exhibit_id}&item_id=${uuid}`;
+                        item_type = 'grid';
+                        view_items = `<a href="${APP_PATH}/items/grid/items?exhibit_id=${exhibit_id}&grid_id=${uuid}" title="View grid Items" aria-label="view-grid-items"><i class="fa fa-list pr-1"></i></a>`;
+                    } else if (type[1] === 'timeline') {
+                        edit_path = `${APP_PATH}/items/vertical-timeline/edit?exhibit_id=${exhibit_id}&item_id=${uuid}`;
+                        item_type = 'timeline';
+                        view_items = `<a href="${APP_PATH}/items/timeline/items?exhibit_id=${exhibit_id}&timeline_id=${uuid}" title="View Timeline Items" aria-label="view-timeline-items"><i class="fa fa-list pr-1"></i></a>`;
                     } else {
-                        path = `${APP_PATH}/items/standard/text/edit?exhibit_id=${exhibit_id}&item_id=${uuid}`;
+                        edit_path = `${APP_PATH}/items/standard/media/edit?exhibit_id=${exhibit_id}&item_id=${uuid}`;
                     }
 
-                    // TODO: item edit paths
-                    // TODO: grid items
-                    // TODO: timeline items
+                    delete_path = `${APP_PATH}/items/delete?exhibit_id=${exhibit_id}&item_id=${uuid}&type=${item_type}`;
 
                     let uuid_actions = `${uuid}-item-actions`;
                     let elem = document.getElementById(uuid_actions);
-                    let item_edit = `<a href="${path}" title="View details" aria-label="item-details"><i class="fa fa-folder-open pr-1"></i> </a>`;
-                    let trash = `<i title="Can only delete if unpublished" style="color: #d3d3d3" class="fa fa-trash pr-1" aria-label="delete-exhibit"></i>`;
+                    let item_edit = `<a href="${edit_path}" title="Edit item" aria-label="edit-item"><i class="fa fa-edit pr-1"></i> </a>`;
+                    let trash = `<a href="${delete_path}" title="Delete item" aria-label="delete-item"><i class="fa fa-trash pr-1"></i></a>`;
                     elem.innerHTML = `
                         <div class="card-text text-sm-center">
+                        ${view_items}&nbsp;
                         ${item_edit}&nbsp;
                         ${trash}
                         </div>`;
-
-                    /*
-                   uuid = uuid.replace('-status', '');
-                    let exhibit_items = `<a href="${APP_PATH}/items?exhibit_id=${uuid}" title="View Exhibit Items"><i class="fa fa-list pr-1"></i></a>&nbsp;`;
-                    let uuid_actions = uuid + '-actions';
-                    let elem = document.getElementById(uuid_actions);
-                    // let add_item = `<a href="${APP_PATH}/items/standard?exhibit_id=${uuid}" title="Add Items" aria-label="add-items"><i class="fa fa-plus pr-1"></i> </a>`;
-                    let exhibit_edit = `<a href="${APP_PATH}/exhibits/exhibit/edit?exhibit_id=${uuid}" title="Edit" aria-label="edit-exhibit"><i class="fa fa-edit pr-1"></i> </a>`;
-                    let trash = `<a href="${APP_PATH}/exhibits/exhibit/delete?exhibit_id=${uuid}" title="Delete exhibit" aria-label="delete-exhibit"><i class="fa fa-trash pr-1"></i></a>`;
-                    elem.innerHTML = `
-                        ${exhibit_items}&nbsp;
-                        ${add_item}&nbsp;
-                        ${exhibit_edit}&nbsp;
-                        ${trash}`;
-                     */
                 }, 0);
             }
 
