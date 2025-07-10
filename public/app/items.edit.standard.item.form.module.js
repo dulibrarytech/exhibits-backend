@@ -117,9 +117,9 @@ const itemsEditStandardItemFormModule = (function () {
             }
 
             if (record.media_padding === 1) {
-                document.querySelector('#media-padding').checked = false;
-            } else {
                 document.querySelector('#media-padding').checked = true;
+            } else {
+                document.querySelector('#media-padding').checked = false;
             }
 
             if (record.media.length > 0) {
