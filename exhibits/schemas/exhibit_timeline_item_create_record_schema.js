@@ -22,9 +22,8 @@ module.exports = () => {
 
     return {
         is_member_of_exhibit: {type: 'string'},
-        is_member_of_timeline: {type: 'string'},
-        title: {type: 'string'},
-        media: {type: 'string'},
-        alt_text: {type: 'string'}
+        is_member_of_timeline: {type: 'string'}
+        // title: {type: 'string'},
+        // media: {type: 'string'}
     };
 };

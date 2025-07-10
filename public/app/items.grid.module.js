@@ -232,7 +232,6 @@ const itemsGridModule = (function () {
                     let type = uuid_found.split('_');
                     let edit_path;
                     let delete_path;
-                    let item_type = 'item';
                     let view_items = '';
 
                     if (type[1] === 'griditem' && type[2] === 'text') {

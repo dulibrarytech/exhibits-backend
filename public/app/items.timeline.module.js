@@ -127,6 +127,8 @@ const itemsTimelineModule = (function () {
                     }, false);
                 }, 0);
 
+                // TODO
+                console.log('change actions on publish');
             }
 
             if (response.status === 204) {
@@ -181,6 +183,9 @@ const itemsTimelineModule = (function () {
                         await publish_timeline_item(uuid);
                     }, false);
                 }, 0);
+
+                // TODO
+                console.log('change actions on suppress');
             }
 
             if (response.status === 204) {

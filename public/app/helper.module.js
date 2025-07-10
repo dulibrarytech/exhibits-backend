@@ -260,7 +260,15 @@ const helperModule = (function () {
                 }
 
                 if (mime_type.indexOf('image') !== -1) {
+
                     item_type = 'image';
+
+                    let alt_text = document.querySelector('#image-alt-text');
+
+                    if (alt_text !== null) {
+                        document.querySelector('#image-alt-text').style.display = 'block';
+                    }
+
                 } else if (mime_type.indexOf('video') !== -1) {
                     item_type = 'video';
                 } else if (mime_type.indexOf('audio') !== -1) {
