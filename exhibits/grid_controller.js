@@ -264,11 +264,11 @@ exports.suppress_grid_item_record = async function (req, res) {
 
         result = await GRIDS_MODEL.suppress_grid_item_record(exhibit_id, grid_id, grid_item_id);
 
-        if (result === true) {
+        if (result.status === true) {
             res.status(200).send({
                 message: 'Item grid suppressed.'
             });
-        } else if (result === false) {
+        } else if (result.status === false) {
             res.status(204).send({
                 message: 'Unable to suppress grid item'
             });

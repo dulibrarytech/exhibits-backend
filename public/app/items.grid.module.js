@@ -125,6 +125,66 @@ const itemsGridModule = (function () {
                         await suppress_grid_item(uuid);
                     }, false);
                 }, 0);
+
+                // TODO
+                setTimeout(() => {
+
+                    const trIds = Array.from(document.querySelectorAll('tr')).map(tr => tr.id).filter(id => id);
+                    let uuid_found = trIds.find((arr_result) => {
+
+                        let uuid_arr = arr_result.split('_');
+
+                        if (uuid === uuid_arr[0]) {
+                            return true;
+                        } else {
+                            return false;
+                        }
+                    });
+
+                    let type = uuid_found.split('_');
+                    let details_path;
+                    let view_items = '';
+
+                     // TODO: check item_type e.g. 'text'
+                    console.log('grid ', type);
+
+                    if (type[1] === 'griditem' && type[2] === 'text') {
+                        console.log('grid item text');
+                    } else {
+                        console.log('grid item media');
+                    }
+
+                    /*
+                    if (type[1] === 'heading') {
+                        details_path = `${APP_PATH}/items/heading/details?exhibit_id=${exhibit_id}&item_id=${uuid}`;
+                    } else if (type[1] === 'text') {
+                        details_path = `${APP_PATH}/items/grid/text/details?exhibit_id=${exhibit_id}&item_id=${uuid}`;
+                    } else if (type[1] === 'grid') {
+                        details_path = `${APP_PATH}/items/grid/edit?exhibit_id=${exhibit_id}&item_id=${uuid}`;
+                        view_items = `<a href="${APP_PATH}/items/grid/items?exhibit_id=${exhibit_id}&grid_id=${uuid}" title="View grid Items" aria-label="view-grid-items"><i class="fa fa-list pr-1"></i></a>`;
+                    } else if (type[1] === 'timeline') {
+                        details_path = `${APP_PATH}/items/vertical-timeline/edit?exhibit_id=${exhibit_id}&item_id=${uuid}`;
+                        view_items = `<a href="${APP_PATH}/items/timeline/items?exhibit_id=${exhibit_id}&timeline_id=${uuid}" title="View Timeline Items" aria-label="view-timeline-items"><i class="fa fa-list pr-1"></i></a>`;
+                    } else {
+                        details_path = `${APP_PATH}/items/standard/media/edit?exhibit_id=${exhibit_id}&item_id=${uuid}`;
+                    }
+
+                     */
+
+                    /*
+                    let uuid_actions = `${uuid}-item-actions`;
+                    let elem = document.getElementById(uuid_actions);
+                    let item_edit = `<a href="${details_path}" title="View details" aria-label="item-details"><i class="fa fa-folder-open pr-1"></i> </a>`;
+                    let trash = `<i title="Can only delete if unpublished" style="color: #d3d3d3" class="fa fa-trash pr-1" aria-label="delete-exhibit"></i>`;
+                    elem.innerHTML = `
+                        <div class="card-text text-sm-center">
+                        ${view_items}&nbsp;
+                        ${item_edit}&nbsp;
+                        ${trash}
+                        </div>`;
+
+                     */
+                }, 0);
             }
 
             if (response.status === 204) {
@@ -144,7 +204,7 @@ const itemsGridModule = (function () {
     }
 
     async function suppress_grid_item(uuid) {
-
+        console.log('suppress_grid_item', uuid);
         try {
 
             const exhibit_id = helperModule.get_parameter_by_name('exhibit_id');
@@ -156,6 +216,7 @@ const itemsGridModule = (function () {
             const gtmp = etmp.replace(':grid_id', grid_id);
             const endpoint = gtmp.replace(':grid_item_id', grid_item_id);
             const token = authModule.get_user_token();
+            console.log(endpoint);
             const response = await httpModule.req({
                 method: 'POST',
                 url: endpoint + '?type=' + type,
@@ -164,7 +225,7 @@ const itemsGridModule = (function () {
                     'x-access-token': token
                 }
             });
-
+            console.log('test', response);
             if (response.status === 200) {
 
                 setTimeout(() => {
@@ -178,6 +239,70 @@ const itemsGridModule = (function () {
                         const uuid = elem.getAttribute('id');
                         await publish_grid_item(uuid);
                     }, false);
+                }, 0);
+
+                // TODO
+                setTimeout(() => {
+
+                    const trIds = Array.from(document.querySelectorAll('tr')).map(tr => tr.id).filter(id => id);
+                    let uuid_found = trIds.find((arr_result) => {
+
+                        let uuid_arr = arr_result.split('_');
+
+                        if (uuid === uuid_arr[0]) {
+                            return true;
+                        } else {
+                            return false;
+                        }
+                    });
+
+                    let type = uuid_found.split('_');
+                    let edit_path;
+                    let delete_path;
+                    let item_type = 'item';
+                    let view_items = '';
+
+                    if (type[1] === 'griditem' && type[2] === 'text') {
+                        console.log('grid item text');
+                    } else {
+                        console.log('grid item media');
+                    }
+
+                    // edit paths
+                    /*
+                    if (type[1] === 'heading') {
+                        edit_path = `${APP_PATH}/items/heading/edit?exhibit_id=${exhibit_id}&item_id=${uuid}`;
+                        item_type = 'heading';
+                    } else if (type[1] === 'text') {
+                        edit_path = `${APP_PATH}/items/standard/text/edit?exhibit_id=${exhibit_id}&item_id=${uuid}`;
+                    } else if (type[1] === 'grid') {
+                        edit_path = `${APP_PATH}/items/grid/edit?exhibit_id=${exhibit_id}&item_id=${uuid}`;
+                        item_type = 'grid';
+                        view_items = `<a href="${APP_PATH}/items/grid/items?exhibit_id=${exhibit_id}&grid_id=${uuid}" title="View grid Items" aria-label="view-grid-items"><i class="fa fa-list pr-1"></i></a>`;
+                    } else if (type[1] === 'timeline') {
+                        edit_path = `${APP_PATH}/items/vertical-timeline/edit?exhibit_id=${exhibit_id}&item_id=${uuid}`;
+                        item_type = 'timeline';
+                        view_items = `<a href="${APP_PATH}/items/timeline/items?exhibit_id=${exhibit_id}&timeline_id=${uuid}" title="View Timeline Items" aria-label="view-timeline-items"><i class="fa fa-list pr-1"></i></a>`;
+                    } else {
+                        edit_path = `${APP_PATH}/items/standard/media/edit?exhibit_id=${exhibit_id}&item_id=${uuid}`;
+                    }
+
+                    delete_path = `${APP_PATH}/items/delete?exhibit_id=${exhibit_id}&item_id=${uuid}&type=${item_type}`;
+
+                    /*
+
+                    let uuid_actions = `${uuid}-item-actions`;
+                    let elem = document.getElementById(uuid_actions);
+                    let item_edit = `<a href="${edit_path}" title="Edit item" aria-label="edit-item"><i class="fa fa-edit pr-1"></i> </a>`;
+                    let trash = `<a href="${delete_path}" title="Delete item" aria-label="delete-item"><i class="fa fa-trash pr-1"></i></a>`;
+                    elem.innerHTML = `
+                        <div class="card-text text-sm-center">
+                        ${view_items}&nbsp;
+                        ${item_edit}&nbsp;
+                        ${trash}
+                        </div>`;
+
+                     */
                 }, 0);
             }
 

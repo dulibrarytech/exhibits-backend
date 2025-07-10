@@ -651,7 +651,7 @@ const suppress_grid_item_record = async function (exhibit_id, grid_id, grid_item
 
         if (is_deleted === false) {
 
-            LOGGER.module().error('ERROR: [/exhibits/model (suppress_grid_item_record)] Unable to suppress grid item');
+            LOGGER.module().error('ERROR: [/grid/model (suppress_grid_item_record)] Unable to suppress grid item');
 
             return {
                 status: false,
@@ -675,7 +675,7 @@ const suppress_grid_item_record = async function (exhibit_id, grid_id, grid_item
         }
 
     } catch (error) {
-        LOGGER.module().error('ERROR: [/exhibits/model (suppress_grid_item_record)] ' + error.message);
+        LOGGER.module().error('ERROR: [/grid/model (suppress_grid_item_record)] ' + error.message);
     }
 };
 
@@ -705,7 +705,7 @@ exports.reorder_grid_items = async function (grid_id, grid) {
         const TASKS = new EXHIBIT_GRID_RECORD_TASKS(DB, TABLES);
         return await TASKS.reorder_grid_items(grid_id, grid);
     } catch (error) {
-        LOGGER.module().error('ERROR: [/exhibits/model (reorder_grids)] ' + error.message);
+        LOGGER.module().error('ERROR: [/grid/model (reorder_grids)] ' + error.message);
     }
 };
 
