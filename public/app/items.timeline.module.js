@@ -127,8 +127,41 @@ const itemsTimelineModule = (function () {
                     }, false);
                 }, 0);
 
-                // TODO
-                console.log('change actions on publish');
+                setTimeout(() => {
+
+                    const trIds = Array.from(document.querySelectorAll('tr')).map(tr => tr.id).filter(id => id);
+                    let uuid_found = trIds.find((arr_result) => {
+
+                        let uuid_arr = arr_result.split('_');
+
+                        if (uuid === uuid_arr[0]) {
+                            return true;
+                        } else {
+                            return false;
+                        }
+                    });
+
+                    let type = uuid_found.split('_');
+                    let details_path;
+                    // TODO
+                    if (type[1] === 'timelineitem' && type[2] === 'text') {
+                        // details_path = `${APP_PATH}/items/vertical-timeline/item/text/details?exhibit_id=${exhibit_id}&timeline_id=${timeline_id}&item_id=${uuid}`;
+                        details_path = `${APP_PATH}/items/vertical-timeline/item/details?exhibit_id=${exhibit_id}&timeline_id=${timeline_id}&item_id=${uuid}`;
+                    } else {
+                        // details_path = `${APP_PATH}/items/vertical-timeline/item/media/details?exhibit_id=${exhibit_id}&timeline_id=${timeline_id}&item_id=${uuid}`;
+                        details_path = `${APP_PATH}/items/vertical-timeline/item/details?exhibit_id=${exhibit_id}&timeline_id=${timeline_id}&item_id=${uuid}`;
+                    }
+
+                    let uuid_actions = `${uuid}-item-actions`;
+                    let elem = document.getElementById(uuid_actions);
+                    let item_details = `<a href="${details_path}" title="View details" aria-label="item-details"><i class="fa fa-folder-open pr-1"></i> </a>`;
+                    let trash = `<i title="Can only delete if unpublished" style="color: #d3d3d3" class="fa fa-trash pr-1" aria-label="delete-timeline-item"></i>`;
+                    elem.innerHTML = `
+                        <div class="card-text text-sm-center">
+                        ${item_details}&nbsp;
+                        ${trash}
+                        </div>`;
+                }, 0);
             }
 
             if (response.status === 204) {
@@ -185,7 +218,46 @@ const itemsTimelineModule = (function () {
                 }, 0);
 
                 // TODO
-                console.log('change actions on suppress');
+                setTimeout(() => {
+
+                    const trIds = Array.from(document.querySelectorAll('tr')).map(tr => tr.id).filter(id => id);
+                    let uuid_found = trIds.find((arr_result) => {
+
+                        let uuid_arr = arr_result.split('_');
+
+                        if (uuid === uuid_arr[0]) {
+                            return true;
+                        } else {
+                            return false;
+                        }
+                    });
+
+                    let type = uuid_found.split('_');
+                    let edit_path;
+                    let delete_path;
+                    let view_items = '';
+
+                    if (type[1] === 'griditem' && type[2] === 'text') {
+                        // edit_path = `${APP_PATH}/items/timeline/item/text/edit?exhibit_id=${exhibit_id}&timeline_id=${timeline_id}&item_id=${uuid}`;
+                        edit_path = `${APP_PATH}/items/vertical-timeline/item/edit?exhibit_id=${exhibit_id}&timeline_id=${timeline_id}&item_id=${uuid}`;
+                    } else {
+                        // edit_path = `${APP_PATH}/items/timeline/item/media/edit?exhibit_id=${exhibit_id}&timeline_id=${timeline_id}&item_id=${uuid}`;
+                        edit_path = `${APP_PATH}/items/vertical-timeline/item/edit?exhibit_id=${exhibit_id}&timeline_id=${timeline_id}&item_id=${uuid}`;
+                    }
+
+                    delete_path = `${APP_PATH}/items/vertical-timeline/item/delete?exhibit_id=${exhibit_id}&timeline_id=${timeline_id}&item_id=${uuid}`;
+
+                    let uuid_actions = `${uuid}-item-actions`;
+                    let elem = document.getElementById(uuid_actions);
+                    let item_edit = `<a href="${edit_path}" title="Edit item" aria-label="edit-item"><i class="fa fa-edit pr-1"></i> </a>`;
+                    let trash = `<a href="${delete_path}" title="Delete item" aria-label="delete-item"><i class="fa fa-trash pr-1"></i></a>`;
+                    elem.innerHTML = `
+                        <div class="card-text text-sm-center">
+                        ${view_items}&nbsp;
+                        ${item_edit}&nbsp;
+                        ${trash}
+                        </div>`;
+                }, 0);
             }
 
             if (response.status === 204) {

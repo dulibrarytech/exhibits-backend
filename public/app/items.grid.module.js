@@ -190,7 +190,7 @@ const itemsGridModule = (function () {
             const gtmp = etmp.replace(':grid_id', grid_id);
             const endpoint = gtmp.replace(':grid_item_id', grid_item_id);
             const token = authModule.get_user_token();
-            console.log(endpoint);
+
             const response = await httpModule.req({
                 method: 'POST',
                 url: endpoint + '?type=' + type,

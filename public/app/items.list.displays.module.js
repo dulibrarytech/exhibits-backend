@@ -125,15 +125,15 @@ const itemsListDisplayModule = (function () {
     function check_timeline_item_published_status(item, item_route) {
 
         let published_obj = {};
-        console.log(item);
+
         if (item.is_published === 1) {
-            published_obj.draggable = `<tr id="${item.uuid}_${item.type}">`;
+            published_obj.draggable = `<tr id="${item.uuid}_${item.type}_${item.item_type}">`;
             published_obj.item_order = `<td class="item-order"><span style="padding-left: 4px;" aria-label="item-order">${item.order}</span></td>`;
             published_obj.status = `<a href="#" id="${item.uuid}" class="suppress-item" aria-label="item-status"><span id="suppress" title="published"><i class="fa fa-cloud" style="color: green"></i><br>Published</span></a>`;
             published_obj.edit = `<a href="${APP_PATH}/items/${item_route}/details?exhibit_id=${item.is_member_of_exhibit}&timeline_id=${item.is_member_of_timeline}&item_id=${item.uuid}" title="View details" aria-label="view-item-details"><i class="fa fa-folder-open pr-1"></i></a>`;
             published_obj.delete_item = `<i title="Can only delete if unpublished" style="color: #d3d3d3" class="fa fa-trash pr-1" aria-label="delete-item"></i>`;
         } else if (item.is_published === 0) {
-            published_obj.draggable = `<tr id="${item.uuid}_${item.type}">`;
+            published_obj.draggable = `<tr id="${item.uuid}_${item.type}_${item.item_type}">`;
             published_obj.item_order = `<td class="grabbable item-order"><i class="fa fa-reorder"></i><span style="padding-left: 4px;" aria-label="item-order">${item.order}</span></td>`;
             published_obj.status = `<a href="#" id="${item.uuid}" class="publish-item" aria-label="item-status"><span id="publish" title="suppressed"><i class="fa fa-cloud-upload" style="color: darkred"></i><br>Unpublished</span></a>`;
             published_obj.edit = `<a href="${APP_PATH}/items/${item_route}/edit?exhibit_id=${item.is_member_of_exhibit}&timeline_id=${item.is_member_of_timeline}&item_id=${item.uuid}" title="Edit" aria-label="edit-item"><i class="fa fa-edit pr-1"></i></a>`;
