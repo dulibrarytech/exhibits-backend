@@ -270,6 +270,7 @@ const itemsCommonStandardItemFormModule = (function () {
                 uploadsModule.upload_item_thumbnail();
                 document.querySelector('#item-media-trash').style.display = 'none';
                 document.querySelector('#item-thumbnail-trash').style.display = 'none';
+                document.querySelector('#is-media-only-caption').style.display = 'block';
 
                 setTimeout(() => {
                     document.querySelector('#item-thumbnail-trash').addEventListener('click', itemsCommonStandardItemFormModule.delete_thumbnail_image);
