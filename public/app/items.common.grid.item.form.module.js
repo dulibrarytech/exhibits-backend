@@ -256,6 +256,7 @@ const itemsCommonGridItemFormModule = (function () {
 
                 document.querySelector('#item-media-trash').style.display = 'none';
                 document.querySelector('#item-thumbnail-trash').style.display = 'none';
+                document.querySelector('#is-media-only-caption').style.display = 'block';
 
                 setTimeout(() => {
                     document.querySelector('#item-media-trash').addEventListener('click', itemsCommonGridItemFormModule.delete_media);
