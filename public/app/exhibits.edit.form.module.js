@@ -117,7 +117,6 @@ const exhibitsEditFormModule = (function () {
             // exhibit data
             document.querySelector('#exhibit-title-input').value = helperModule.unescape(record.title);
             document.querySelector('#exhibit-sub-title-input').value = helperModule.unescape(record.subtitle);
-            document.querySelector('#exhibit-alert-text-input').value = helperModule.unescape(record.alert_text);
             document.querySelector('#exhibit-description-input').value = helperModule.unescape(record.description);
             document.querySelector('#exhibit-about-the-curators-input').value = helperModule.unescape(record.about_the_curators);
 
@@ -131,6 +130,11 @@ const exhibitsEditFormModule = (function () {
                 document.querySelector('#is-student-curated').checked = true;
             } else {
                 document.querySelector('#is-student-curated').checked = false;
+            }
+
+            if (record.alert_text.length > 0) {
+                document.querySelector('#is-content-advisory').checked = true;
+                document.querySelector('#exhibit-alert-text-input').value = helperModule.unescape(record.alert_text);
             }
 
             // exhibit media

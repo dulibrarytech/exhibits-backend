@@ -506,9 +506,7 @@ const itemsListDisplayModule = (function () {
             item.type = '';
             item.type = 'timelineitem';
             let title = helperModule.strip_html(helperModule.unescape(item.title));
-            // TODO
             const item_obj = check_timeline_item_published_status(item, 'vertical-timeline/item');
-            // const item_obj = check_published_status(item, 'vertical-timeline/item');
             let item_data = '';
             let thumbnail;
             let media = '';

@@ -294,7 +294,7 @@ exports.get_grid_item_record = async function (is_member_of_exhibit, is_member_o
 exports.update_grid_item_record = async function (is_member_of_exhibit, is_member_of_grid, item_id, data) {
 
     try {
-        console.log(data);
+
         const HELPER_TASK = new HELPER();
         const VALIDATE_TASK = new VALIDATOR(EXHIBITS_UPDATE_GRID_ITEM_SCHEMA);
         data.is_member_of_exhibit = is_member_of_exhibit;

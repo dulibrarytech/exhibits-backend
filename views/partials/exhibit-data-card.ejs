@@ -6,9 +6,6 @@
         </div>
     </div>
     <div class="card-body">
-        <!--
-        <div class="alert alert-info"><i class="fa fa-info"></i> Provide info to user about this form</div>
-        -->
         <div class="row">
             <div class="col-12 col-md-12">
                 <div class="row form-group">
@@ -27,7 +24,8 @@
             </div>
         </div>
         <div class="row">
-            <div class="col-6 col-md-6">
+            <div class="col-12 col-md-12">
+            <!--<div class="col-6 col-md-6">-->
                 <div class="row form-group">
                     <div class="col-12">
                         <div class="form-text text-muted" style="font-size: 17px">Sub Title <small><em>(Optional)</em></small>
@@ -39,6 +37,7 @@
                     </div>
                 </div>
             </div>
+            <!--
             <div class="col-6 col-md-6">
                 <div class="row form-group">
                     <div class="col-12">
@@ -51,6 +50,7 @@
                     </div>
                 </div>
             </div>
+            -->
         </div>
         <div class="row">
             <div class="col-12 col-md-12">
@@ -74,6 +74,45 @@
                         </div>
                         <textarea id="exhibit-about-the-curators-input" class="form-control" name="exhibit_about_the_curators_input"
                                   rows="4"></textarea>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <!--
+        <div class="row">
+            <div class="col-12 col-md-12">
+                <div class="row form-group">
+                    <div class="col-12">
+                        <div class="form-text text-muted" style="font-size: 17px">Harmful Content Disclaimer <small><em>(Optional)</em></small>
+
+                            &nbsp;&nbsp;<a onclick="helperModule.preview_html('exhibit-alert-text-input');return false;" data-toggle="modal" data-target=".preview-html" class="btn-xs btn-light"><span style="padding: 5px"><i class="fa fa-code"></i> <small>Preview Field</small></span></a>
+
+                        </div>
+
+                        <textarea id="exhibit-alert-text-input" class="form-control" name="exhibit_alert_text_input"
+                                  rows="4"></textarea>
+                    </div>
+                </div>
+            </div>
+        </div>
+        -->
+        <div class="row">
+            <div class="col-6 col-md-6">
+                <div class="row form-group">
+                    <div class="col-12">
+                        <p style="padding-top: 20px">
+                            <small class="form-text text-muted"><i class="fa fa-exclamation-circle"></i> <em>Click to add content disclaimer</em></small>
+                            <label for="is-content-advisory">Harmful Content Disclaimer&nbsp;
+                                <input type="checkbox" id="is-content-advisory" name="is_content_advisory">
+                            </label>
+                            <small id="exhibit-content-advisory" class="form-text text-muted">
+                                "Content Advisory: This exhibit may include materials containing racist, colonialist, or otherwise harmful content. Some items may be upsetting or traumatizing. Please engage with care."
+                            </small>
+                            <input type="hidden"
+                                   id="exhibit-alert-text-input"
+                                   name="exhibit_alert_text_input"
+                                   value="Content Advisory: This exhibit may include materials containing racist, colonialist, or otherwise harmful content. Some items may be upsetting or traumatizing. Please engage with care.">
+                        </p>
                     </div>
                 </div>
             </div>
