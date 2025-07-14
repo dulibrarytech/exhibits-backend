@@ -75,17 +75,7 @@ const exhibitsModule = (function () {
             let is_featured = exhibits[i].is_featured;
             let preview_link = `${APP_PATH}/preview?uuid=${uuid}`;
             let exhibit_items = `<a href="${APP_PATH}/items?exhibit_id=${uuid}" title="View Exhibit Items"><i class="fa fa-list pr-1"></i></a>&nbsp;`;
-
-            // TODO: replace order with created and updated columns
-            // TODO: format dates
-            // let created = `${helperModule.format_exhibit_sort_date(exhibits[i].created)}`;
-
-            let created = new Date(exhibits[i].created);
-            let updated = new Date(exhibits[i].updated);
-            let created_sort_date = helperModule.format_date(created);
-            let updated_sort_date = helperModule.format_date(updated);
-            // let order = `${exhibits[i].order}`;
-
+            let order = `${exhibits[i].order}`;
             let thumbnail_url = '';
             let thumbnail_fragment = '';
             let status;
@@ -96,13 +86,13 @@ const exhibitsModule = (function () {
             let trash = '';
 
             if (is_published === 1) {
-                // order = `<td style="width: 4%" class="item-order" aria-label="exhibit-order"><span style="padding-left: 4px;">${order}</span></td>`;
+                order = `<td style="width: 4%" class="item-order" aria-label="exhibit-order"><span style="padding-left: 4px;">${order}</span></td>`;
                 status = `<a href="#" id="${uuid}-status" class="suppress-exhibit" aria-label="exhibit-status"><span id="suppress" title="published"><i class="fa fa-cloud" style="color: green"></i><br>Published</span></a>`;
                 // details view
                 exhibit_edit = `<a href="${APP_PATH}/exhibits/exhibit/details?exhibit_id=${uuid}" title="View details" aria-label="exhibit-details"><i class="fa fa-folder-open pr-1"></i> </a>`;
                 trash = `<i title="Can only delete if unpublished" style="color: #d3d3d3" class="fa fa-trash pr-1" aria-label="delete-exhibit"></i>`;
             } else if (is_published === 0) {
-                // order = `<td style="width: 4%;" class="grabbable item-order" aria-label="exhibit-order"><i class="fa fa-reorder"></i><span style="padding-left: 4px;">${order}</span></td>`;
+                order = `<td style="width: 4%;" class="grabbable item-order" aria-label="exhibit-order"><i class="fa fa-reorder"></i><span style="padding-left: 4px;">${order}</span></td>`;
                 status = `<a href="#" id="${uuid}-status" class="publish-exhibit" aria-label="exhibit-status"><span id="publish" title="suppressed"><i class="fa fa-cloud-upload" style="color: darkred"></i><br>Unpublished</span></a>`;
                 exhibit_edit = `<a href="${APP_PATH}/exhibits/exhibit/edit?exhibit_id=${uuid}" title="Edit" aria-label="edit-exhibit"><i class="fa fa-edit pr-1"></i> </a>`;
                 trash = `<a href="${APP_PATH}/exhibits/exhibit/delete?exhibit_id=${uuid}" title="Delete exhibit" aria-label="delete-exhibit"><i class="fa fa-trash pr-1"></i></a>`;
@@ -123,8 +113,7 @@ const exhibitsModule = (function () {
             title = helperModule.strip_html(helperModule.unescape(exhibits[i].title));
 
             exhibit_data += `<tr id="${uuid}">`;
-            // exhibit_data += order;
-
+            exhibit_data += order;
             exhibit_data += `<td style="width: 35%">
                     <p><strong>${title}</strong> ${featured}</p>
                     ${thumbnail_fragment}
@@ -161,10 +150,6 @@ const exhibitsModule = (function () {
                                     ${trash}
                                 </div>
                             </td>`;
-
-            exhibit_data += `<td style="width: 4%" class="item-order" aria-label="exhibit-created"><span style="padding-left: 4px;">${created_sort_date}</span></td>`;
-            exhibit_data += `<td style="width: 4%" class="item-order" aria-label="exhibit-updated"><span style="padding-left: 4px;">${updated_sort_date}</span></td>`;
-
             exhibit_data += '</tr>';
         }
 
@@ -172,7 +157,6 @@ const exhibitsModule = (function () {
 
         const EXHIBIT_LIST = new DataTable('#exhibits', {
             paging: false,
-            order: [[4, 'desc']],
             rowReorder: true
         });
 
