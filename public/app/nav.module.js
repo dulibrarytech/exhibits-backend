@@ -26,7 +26,6 @@ const navModule = (function () {
     obj.set_item_nav_menu_links = function () {
 
         const uuid = helperModule.get_parameter_by_name('exhibit_id');
-        // const exhibits_link = `${APP_PATH}/exhibits?exhibit_id=${uuid}`;
         // TODO: adjust exhibits link depending on published status
         const exhibits_link = `${APP_PATH}/exhibits/exhibit/details?exhibit_id=${uuid}`;
         const heading_link = `${APP_PATH}/items/heading?exhibit_id=${uuid}`;
