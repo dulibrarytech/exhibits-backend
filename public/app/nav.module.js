@@ -69,8 +69,14 @@ const navModule = (function () {
     };
 
     obj.set_item_list_link = function () {
+
         const exhibit_id = helperModule.get_parameter_by_name('exhibit_id');
-        document.querySelector('#item-list').setAttribute('href', `${APP_PATH}/items?exhibit_id=${exhibit_id}`);
+
+        if (exhibit_id !== null) {
+            document.querySelector('#item-list').setAttribute('href', `${APP_PATH}/items?exhibit_id=${exhibit_id}`);
+        } else {
+            document.querySelector('#item-list-nav').remove();
+        }
     };
 
     obj.set_grid_item_nav_menu_links = function () {
