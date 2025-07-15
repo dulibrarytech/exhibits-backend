@@ -25,7 +25,7 @@ const itemsCommonHeadingFormModule = (function () {
     /**
      * Gets common heading form fields
      */
-    obj.get_common_heading_form_fields = function (rich_text_data) {
+    obj.get_common_heading_form_fields = function () {
 
         try {
 

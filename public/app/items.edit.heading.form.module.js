@@ -79,6 +79,11 @@ const itemsEditHeadingFormModule = (function () {
         let create_date_time = helperModule.format_date(create_date);
         let update_date_time = helperModule.format_date(update_date);
 
+        if (record.is_locked === 1) {
+            document.querySelector('#item-submit-card').style.display = 'none';
+            document.querySelector('#message').innerHTML = `<div class="alert alert-warning" role="alert"><i class="fa fa-lock"></i> This record is currently being worked on by another user.</div>`;
+        }
+
         if (created_by !== null) {
             item_created += `<em>Created by ${created_by} on ${create_date_time}</em>`;
         }
