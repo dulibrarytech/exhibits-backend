@@ -304,10 +304,18 @@ const itemsCommonStandardItemFormModule = (function () {
                 }
             });
 
+            document.querySelector('#item-background-color').addEventListener('input', () => {
+                document.querySelector('#item-background-color-picker').value = document.querySelector('#item-background-color').value;
+            });
+
             document.querySelector('#item-font-color-picker').addEventListener('input', () => {
                 if (document.querySelector('#item-font-color')) {
                     document.querySelector('#item-font-color').value = document.querySelector('#item-font-color-picker').value;
                 }
+            });
+
+            document.querySelector('#item-font-color').addEventListener('input', () => {
+                document.querySelector('#item-font-color-picker').value = document.querySelector('#item-font-color').value;
             });
 
             helperModule.show_form();

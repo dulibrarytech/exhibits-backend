@@ -83,7 +83,9 @@
         </div>
         -->
 
-        <input type="radio" name="media_width" id="item-width-50" value="50" checked style="visibility: hidden"/>
+        <%- include('partials/standard-item-styles.ejs'); %>
+
+        <!--
         <div id="item-styles-card" class="card">
             <div class="card-header">
                 <strong class="card-title mb-3">Item Styles</strong>
@@ -157,7 +159,7 @@
                                             class="form-control-lg form-control text-muted" style="height: 40px">
                                         <option value="">Select From Menu</option>
                                         <option value="">----------</option>
-                                        <%- include('partials/exhibit-fonts-options-list.ejs'); %>
+                                        <%- // include('partials/exhibit-fonts-options-list.ejs'); %>
                                     </select>
                                 </div>
                             </div>
@@ -166,6 +168,9 @@
                 </div>
             </div>
         </div>
+        -->
+
+        <input type="radio" name="media_width" id="item-width-50" value="50" checked style="visibility: hidden"/>
         <div id="item-submit-card" class="card">
             <div class="card-body">
                 <button class="btn btn-primary" type="button" id="save-item-btn">

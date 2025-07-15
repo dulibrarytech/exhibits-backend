@@ -309,10 +309,18 @@ const exhibitsCommonFormModule = (function () {
                 }
             });
 
+            document.querySelector('#introduction-background-color').addEventListener('input', () => {
+                document.querySelector('#introduction-background-color-picker').value = document.querySelector('#introduction-background-color').value;
+            });
+
             document.querySelector('#introduction-font-color-picker').addEventListener('input', () => {
                 if (document.querySelector('#introduction-font-color')) {
                     document.querySelector('#introduction-font-color').value = document.querySelector('#introduction-font-color-picker').value;
                 }
+            });
+
+            document.querySelector('#introduction-font-color').addEventListener('input', () => {
+                document.querySelector('#introduction-font-color-picker').value = document.querySelector('#introduction-font-color').value;
             });
 
             document.querySelector('#nav-background-color-picker').addEventListener('input', () => {
@@ -321,10 +329,18 @@ const exhibitsCommonFormModule = (function () {
                 }
             });
 
+            document.querySelector('#nav-background-color').addEventListener('input', () => {
+                document.querySelector('#nav-background-color-picker').value = document.querySelector('#nav-background-color').value;
+            });
+
             document.querySelector('#nav-font-color-picker').addEventListener('input', () => {
                 if (document.querySelector('#nav-font-color')) {
                     document.querySelector('#nav-font-color').value = document.querySelector('#nav-font-color-picker').value;
                 }
+            });
+
+            document.querySelector('#nav-font-color').addEventListener('input', () => {
+                document.querySelector('#nav-font-color-picker').value = document.querySelector('#nav-font-color').value;
             });
 
             document.querySelector('#template-background-color-picker').addEventListener('input', () => {
@@ -333,10 +349,18 @@ const exhibitsCommonFormModule = (function () {
                 }
             });
 
+            document.querySelector('#template-background-color').addEventListener('input', () => {
+                document.querySelector('#template-background-color-picker').value = document.querySelector('#template-background-color').value;
+            });
+
             document.querySelector('#template-font-color-picker').addEventListener('input', () => {
                 if (document.querySelector('#template-font-color')) {
                     document.querySelector('#template-font-color').value = document.querySelector('#template-font-color-picker').value;
                 }
+            });
+
+            document.querySelector('#template-font-color').addEventListener('input', () => {
+                document.querySelector('#template-font-color-picker').value = document.querySelector('#template-font-color').value;
             });
 
             helperModule.show_form();

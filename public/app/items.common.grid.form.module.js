@@ -80,10 +80,18 @@ const itemsCommonStandardGridFormModule = (function () {
                 }
             });
 
+            document.querySelector('#grid-background-color').addEventListener('input', () => {
+                document.querySelector('#grid-background-color-picker').value = document.querySelector('#grid-background-color').value;
+            });
+
             document.querySelector('#grid-font-color-picker').addEventListener('input', () => {
                 if (document.querySelector('#grid-font-color')) {
                     document.querySelector('#grid-font-color').value = document.querySelector('#grid-font-color-picker').value;
                 }
+            });
+
+            document.querySelector('#grid-font-color').addEventListener('input', () => {
+                document.querySelector('#grid-font-color-picker').value = document.querySelector('#grid-font-color').value;
             });
 
             helperModule.show_form();

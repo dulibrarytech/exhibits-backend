@@ -98,10 +98,18 @@ const itemsCommonHeadingFormModule = (function () {
                 }
             });
 
+            document.querySelector('#heading-background-color').addEventListener('input', () => {
+                document.querySelector('#heading-background-color-picker').value = document.querySelector('#heading-background-color').value;
+            });
+
             document.querySelector('#heading-font-color-picker').addEventListener('input', () => {
                 if (document.querySelector('#heading-font-color')) {
                     document.querySelector('#heading-font-color').value = document.querySelector('#heading-font-color-picker').value;
                 }
+            });
+
+            document.querySelector('#heading-font-color').addEventListener('input', () => {
+                document.querySelector('#heading-font-color-picker').value = document.querySelector('#heading-font-color').value;
             });
 
             helperModule.show_form();
