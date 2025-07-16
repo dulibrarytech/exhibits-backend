@@ -311,7 +311,7 @@ const exhibitsModule = (function () {
                     }, false);
                 }, 0);
 
-                setTimeout(() => {
+                setTimeout(() => { // <!--${add_item}&nbsp;-->
                     uuid = uuid.replace('-status', '');
                     let exhibit_items = `<a href="${APP_PATH}/items?exhibit_id=${uuid}" title="View Exhibit Items"><i class="fa fa-list pr-1"></i></a>&nbsp;`;
                     let uuid_actions = uuid + '-actions';
@@ -321,7 +321,6 @@ const exhibitsModule = (function () {
                     let trash = `<i title="Can only delete if unpublished" style="color: #d3d3d3" class="fa fa-trash pr-1" aria-label="delete-exhibit"></i>`;
                     elem.innerHTML = `
                         ${exhibit_items}&nbsp;
-                        ${add_item}&nbsp;
                         ${exhibit_edit}&nbsp;
                         ${trash}`;
                 }, 0);
@@ -376,7 +375,7 @@ const exhibitsModule = (function () {
                     }, false);
                 }, 0);
 
-                setTimeout(() => {
+                setTimeout(() => { // ${add_item}&nbsp;
                     uuid = uuid.replace('-status', '');
                     let exhibit_items = `<a href="${APP_PATH}/items?exhibit_id=${uuid}" title="View Exhibit Items"><i class="fa fa-list pr-1"></i></a>&nbsp;`;
                     let uuid_actions = uuid + '-actions';
@@ -386,7 +385,6 @@ const exhibitsModule = (function () {
                     let trash = `<a href="${APP_PATH}/exhibits/exhibit/delete?exhibit_id=${uuid}" title="Delete exhibit" aria-label="delete-exhibit"><i class="fa fa-trash pr-1"></i></a>`;
                     elem.innerHTML = `
                         ${exhibit_items}&nbsp;
-                        ${add_item}&nbsp;
                         ${exhibit_edit}&nbsp;
                         ${trash}`;
                 }, 0);
