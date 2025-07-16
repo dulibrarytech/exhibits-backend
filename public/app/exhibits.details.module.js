@@ -1,6 +1,6 @@
 /**
 
- Copyright 2024 University of Denver
+ Copyright 2025 University of Denver
 
  Licensed under the Apache License, Version 2.0 (the "License");
  you may not use this file except in compliance with the License.
@@ -16,7 +16,7 @@
 
  */
 
-const exhibitsEditFormModule = (function () {
+const exhibitsDetailsModule = (function () {
 
     'use strict';
 
@@ -64,22 +64,7 @@ const exhibitsEditFormModule = (function () {
         }
     }
 
-    function get_exhibit_data() {
-
-        try {
-
-            let exhibit = exhibitsCommonFormModule.get_common_form_fields();
-            exhibit.styles = exhibitsCommonFormModule.get_exhibit_styles();
-            exhibit.hero_image_prev = document.querySelector('#hero-image-prev').value;
-            exhibit.thumbnail_prev = document.querySelector('#thumbnail-image-prev').value;
-            return exhibit;
-
-        } catch (error) {
-            document.querySelector('#message').innerHTML = `<div class="alert alert-danger" role="alert"><i class="fa fa-exclamation"></i> ${error.message}</div>`;
-        }
-    }
-
-    async function display_edit_record() {
+    async function display_details_record() {
 
         try {
 
@@ -99,7 +84,7 @@ const exhibitsEditFormModule = (function () {
             let create_date_time = helperModule.format_date(create_date);
             let update_date_time = helperModule.format_date(update_date);
 
-            helperModule.check_if_locked(record, '#exhibit-submit-card');
+            // helperModule.check_if_locked(record, '#exhibit-submit-card');
 
             if (created_by !== null) {
                 exhibit_created += `<em>Created by ${created_by} on ${create_date_time}</em>`;
@@ -262,179 +247,13 @@ const exhibitsEditFormModule = (function () {
         }
     }
 
-    obj.update_exhibit_record = async function () {
-
-        try {
-
-            scrollTo(0, 0);
-            document.querySelector('#message').innerHTML = `<div class="alert alert-info" role="alert"><i class="fa fa-info"></i> Updating exhibit record...</div>`;
-            let uuid = helperModule.get_parameter_by_name('exhibit_id');
-            let data = get_exhibit_data();
-            let token = authModule.get_user_token();
-            let response;
-
-            if (uuid === undefined) {
-                document.querySelector('#message').innerHTML = `<div class="alert alert-danger" role="alert"><i class="fa fa-exclamation"></i> Unable to get record UUID</div>`;
-                return false;
-            }
-
-            if (token === false) {
-
-                setTimeout(() => {
-                    document.querySelector('#message').innerHTML = `<div class="alert alert-danger" role="alert"><i class="fa fa-exclamation"></i> Unable to get session token</div>`;
-                    authModule.logout();
-                }, 1000);
-
-                return false;
-            }
-
-            const user = JSON.parse(sessionStorage.getItem('exhibits_user'));
-
-            if (user.name === null) {
-                document.querySelector('#message').innerHTML = `<div class="alert alert-danger" role="alert"><i class="fa fa-exclamation"></i> Unable to retrieve your name</div>`;
-                return false;
-            }
-
-            data.updated_by = user.name;
-
-            response = await httpModule.req({
-                method: 'PUT',
-                url: EXHIBITS_ENDPOINTS.exhibits.exhibit_records.endpoints.put.endpoint.replace(':exhibit_id', uuid),
-                data: data,
-                headers: {
-                    'Content-Type': 'application/json',
-                    'x-access-token': token
-                }
-            });
-
-            if (response !== undefined && response.status === 201) {
-
-                document.querySelector('#message').innerHTML = `<div class="alert alert-success" role="alert"><i class="fa fa-info"></i> Exhibit record updated</div>`;
-
-                setTimeout(() => {
-                    window.location.reload();
-                }, 900);
-            }
-
-        } catch (error) {
-            document.querySelector('#message').innerHTML = `<div class="alert alert-danger" role="alert"><i class="fa fa-exclamation"></i> ${error.message}</div>`;
-        }
-    };
-
-    function delete_hero_image() {
-
-        try {
-
-            (async function () {
-
-                const uuid = helperModule.get_parameter_by_name('exhibit_id');
-                let hero_image = document.querySelector('#hero-image').value;
-                let tmp = EXHIBITS_ENDPOINTS.exhibits.exhibit_media.get.endpoint.replace(':exhibit_id', uuid)
-                let endpoint = tmp.replace(':media', hero_image);
-                let token = authModule.get_user_token();
-                let response = await httpModule.req({
-                    method: 'DELETE',
-                    url: endpoint,
-                    headers: {
-                        'Content-Type': 'application/json',
-                        'x-access-token': token
-                    }
-                });
-
-                if (response !== undefined && response.status === 204) {
-
-                    document.querySelector('#hero-image').value = '';
-                    document.querySelector('#hero-image-filename-display').innerHTML = '';
-                    document.querySelector('#hero-trash').style.display = 'none';
-                    document.querySelector('#hero-image-display').innerHTML = '';
-                    document.querySelector('#message').innerHTML = `<div class="alert alert-success" role="alert"><i class="fa fa-info"></i> Hero image deleted</div>`;
-
-                    setTimeout(() => {
-                        document.querySelector('#message').innerHTML = '';
-                        window.location.reload();
-                    }, 900);
-                }
-
-            })();
-
-        } catch (error) {
-            document.querySelector('#message').innerHTML = `<div class="alert alert-danger" role="alert"><i class="fa fa-exclamation"></i> ${error.message}</div>`;
-        }
-
-        return false;
-    }
-
-    function delete_thumbnail_image() {
-
-        try {
-
-            (async function () {
-
-                const uuid = helperModule.get_parameter_by_name('exhibit_id');
-                let hero_image = document.querySelector('#thumbnail-image').value;
-                let tmp = EXHIBITS_ENDPOINTS.exhibits.exhibit_media.get.endpoint.replace(':exhibit_id', uuid)
-                let endpoint = tmp.replace(':media', hero_image);
-                let token = authModule.get_user_token();
-                let response = await httpModule.req({
-                    method: 'DELETE',
-                    url: endpoint,
-                    headers: {
-                        'Content-Type': 'application/json',
-                        'x-access-token': token
-                    }
-                });
-
-                if (response !== undefined && response.status === 204) {
-
-                    document.querySelector('#thumbnail-image').value = '';
-                    document.querySelector('#thumbnail-filename-display').innerHTML = '';
-                    document.querySelector('#thumbnail-trash').style.display = 'none';
-                    document.querySelector('#thumbnail-image-display').innerHTML = '';
-                    document.querySelector('#message').innerHTML = `<div class="alert alert-success" role="alert"><i class="fa fa-info"></i> Thumbnail deleted</div>`;
-
-                    setTimeout(() => {
-                        document.querySelector('#message').innerHTML = '';
-                        window.location.reload();
-                    }, 900);
-                }
-
-            })();
-
-        } catch (error) {
-            document.querySelector('#message').innerHTML = `<div class="alert alert-danger" role="alert"><i class="fa fa-exclamation"></i> ${error.message}</div>`;
-        }
-
-        return false;
-    }
-
     obj.init = async function () {
 
         try {
 
             navModule.back_to_exhibits();
-            document.querySelector('#save-exhibit-btn').addEventListener('click', exhibitsEditFormModule.update_exhibit_record);
-
-            setTimeout(async () => {
-
-                await display_edit_record();
-
-                if (document.querySelector('#hero-image').value.length === 0) {
-                    document.querySelector('#hero-trash').removeEventListener('click', delete_hero_image);
-                    document.querySelector('#hero-trash').addEventListener('click', exhibitsCommonFormModule.delete_hero_image);
-                } else if (document.querySelector('#hero-image').value !== 0) {
-                    document.querySelector('#hero-trash').removeEventListener('click', exhibitsCommonFormModule.delete_hero_image);
-                    document.querySelector('#hero-trash').addEventListener('click', delete_hero_image);
-                }
-
-                if (document.querySelector('#thumbnail-image').value.length === 0) {
-                    document.querySelector('#thumbnail-trash').removeEventListener('click', delete_thumbnail_image);
-                    document.querySelector('#thumbnail-trash').addEventListener('click', exhibitsCommonFormModule.delete_thumbnail_image);
-                } else if (document.querySelector('#thumbnail-image').value.length !== 0) {
-                    document.querySelector('#thumbnail-trash').removeEventListener('click', exhibitsCommonFormModule.delete_thumbnail_image);
-                    document.querySelector('#thumbnail-trash').addEventListener('click', delete_thumbnail_image);
-                }
-
-            }, 500);
+            document.querySelector('#save-exhibit-btn').addEventListener('click', exhibitsDetailsModule.update_exhibit_record);
+            await display_details_record();
 
         } catch (error) {
             document.querySelector('#message').innerHTML = `<div class="alert alert-danger" role="alert"><i class="fa fa-exclamation"></i> ${error.message}</div>`;
