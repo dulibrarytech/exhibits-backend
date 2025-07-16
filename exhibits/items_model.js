@@ -319,8 +319,9 @@ exports.delete_media_value = async function (uuid, media) {
  * Gets item record by uuid and is_member_of_exhibit
  * @param is_member_of_exhibit
  * @param uuid
+ * @param uid
  */
-exports.get_item_record = async function (is_member_of_exhibit, uuid) {
+exports.get_item_record = async function (uid, is_member_of_exhibit, uuid) {
 
     try {
 
@@ -329,7 +330,7 @@ exports.get_item_record = async function (is_member_of_exhibit, uuid) {
         return {
             status: 200,
             message: 'Item record',
-            data: await TASK.get_item_record(is_member_of_exhibit, uuid)
+            data: await TASK.get_item_record(uid, is_member_of_exhibit, uuid)
         };
 
     } catch (error) {

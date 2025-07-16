@@ -82,8 +82,9 @@ const Exhibit_heading_record_tasks = class {
      * Gets heading record
      * @param is_member_of_exhibit
      * @param uuid
+     * @param uid
      */
-    async get_heading_record(is_member_of_exhibit, uuid) {
+    async get_heading_record(uid, is_member_of_exhibit, uuid) {
 
         try {
 
@@ -100,7 +101,7 @@ const Exhibit_heading_record_tasks = class {
                 try {
 
                     const HELPER_TASK = new HELPER();
-                    await HELPER_TASK.lock_record(uuid, this.DB, this.TABLE.heading_records);
+                    await HELPER_TASK.lock_record(uid, uuid, this.DB, this.TABLE.heading_records);
                     return data;
 
                 } catch (error) {

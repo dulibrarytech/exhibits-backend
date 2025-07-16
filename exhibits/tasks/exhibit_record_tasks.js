@@ -104,10 +104,33 @@ const Exhibit_record_tasks = class {
     }
 
     /**
-     * Gets exhibit record by uuid
+     * Gets exhibit title
      * @param uuid
      */
-    async get_exhibit_record(uuid) {
+    async get_exhibit_title(uuid) {
+
+        try {
+
+            return await this.DB(this.TABLE.exhibit_records)
+                .select('uuid',
+                    'title'
+                )
+                .where({
+                    uuid: uuid,
+                    is_deleted: 0
+                });
+
+        } catch (error) {
+            LOGGER.module().error('ERROR: [/exhibits/exhibit_record_tasks (get_exhibit_title)] unable to get exhibit title ' + error.message);
+        }
+    }
+
+    /**
+     * Gets exhibit record by uuid
+     * @param uuid
+     * @param uid
+     */
+    async get_exhibit_record(uid, uuid) {
 
         try {
 
@@ -131,6 +154,7 @@ const Exhibit_record_tasks = class {
                 'is_featured',
                 'is_student_curated',
                 'is_locked',
+                'locked_by_user',
                 'created',
                 'updated',
                 'created_by',
@@ -146,7 +170,7 @@ const Exhibit_record_tasks = class {
                 try {
 
                     const HELPER_TASK = new HELPER();
-                    await HELPER_TASK.lock_record(uuid, this.DB, this.TABLE.exhibit_records);
+                    await HELPER_TASK.lock_record(uid, uuid, this.DB, this.TABLE.exhibit_records);
                     return data;
 
                 } catch (error) {

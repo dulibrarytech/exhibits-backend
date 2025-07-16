@@ -59,13 +59,20 @@ exports.get_exhibit_record = async function (req, res) {
     try {
 
         const uuid = req.params.exhibit_id;
+        let uid = req.query.uid;
+
+        if (uid === undefined) {
+            const data = await EXHIBITS_MODEL.get_exhibit_title(uuid);
+            res.status(data.status).send(data);
+            return false;
+        }
 
         if (uuid === undefined || uuid.length === 0) {
             res.status(400).send('Bad request.');
             return false;
         }
 
-        const data = await EXHIBITS_MODEL.get_exhibit_record(uuid);
+        const data = await EXHIBITS_MODEL.get_exhibit_record(uid, uuid);
         res.status(data.status).send(data);
 
     } catch (error) {

@@ -32,6 +32,7 @@ const itemsEditHeadingFormModule = (function () {
             const exhibit_id = helperModule.get_parameter_by_name('exhibit_id');
             const item_id = helperModule.get_parameter_by_name('item_id');
             const token = authModule.get_user_token();
+            const profile = authModule.get_user_profile_data();
             let tmp = EXHIBITS_ENDPOINTS.exhibits.heading_records.get.endpoint.replace(':exhibit_id', exhibit_id);
             let endpoint = tmp.replace(':heading_id', item_id);
 
@@ -48,7 +49,7 @@ const itemsEditHeadingFormModule = (function () {
 
             let response = await httpModule.req({
                 method: 'GET',
-                url: endpoint,
+                url: endpoint + '?uid=' + profile.uid,
                 headers: {
                     'Content-Type': 'application/json',
                     'x-access-token': token
@@ -79,13 +80,7 @@ const itemsEditHeadingFormModule = (function () {
         let create_date_time = helperModule.format_date(create_date);
         let update_date_time = helperModule.format_date(update_date);
 
-        /*
-        if (record.is_locked === 1) {
-            document.querySelector('#item-submit-card').style.display = 'none';
-            document.querySelector('#message').innerHTML = `<div class="alert alert-warning" role="alert"><i class="fa fa-lock"></i> This record is currently being worked on by another user.</div>`;
-        }
-
-         */
+        helperModule.check_if_locked(record, '#item-submit-card');
 
         if (created_by !== null) {
             item_created += `<em>Created by ${created_by} on ${create_date_time}</em>`;

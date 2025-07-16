@@ -93,8 +93,9 @@ exports.create_heading_record = async function (is_member_of_exhibit, data) {
  * Gets heading record
  * @param is_member_of_exhibit
  * @param uuid
+ * @param uid
  */
-exports.get_heading_record = async function (is_member_of_exhibit, uuid) {
+exports.get_heading_record = async function (uid, is_member_of_exhibit, uuid) {
 
     try {
 
@@ -103,7 +104,7 @@ exports.get_heading_record = async function (is_member_of_exhibit, uuid) {
         return {
             status: 200,
             message: 'Heading record',
-            data: await TASK.get_heading_record(is_member_of_exhibit, uuid)
+            data: await TASK.get_heading_record(uid, is_member_of_exhibit, uuid)
         };
 
     } catch (error) {

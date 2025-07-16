@@ -64,6 +64,17 @@ const authModule = (function () {
         }
     };
 
+    obj.get_user_profile_data = function () {
+
+        let profile = window.sessionStorage.getItem('exhibits_user');
+
+        if (profile !== null) {
+            return JSON.parse(profile);
+        } else {
+            authModule.redirect_to_auth();
+        }
+    };
+
     obj.check_user_auth_data = function () {
 
         let data = window.sessionStorage.getItem('exhibits_user');

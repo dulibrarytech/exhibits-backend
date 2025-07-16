@@ -64,13 +64,14 @@ exports.get_item_record = async function (req, res) {
 
         const is_member_of_exhibit = req.params.exhibit_id;
         const uuid = req.params.item_id;
+        const uid = req.query.uid;
 
         if (uuid === undefined || uuid.length === 0 && is_member_of_exhibit === undefined || is_member_of_exhibit.length === 0) {
             res.status(400).send('Bad request.');
             return false;
         }
 
-        const data = await ITEMS_MODEL.get_item_record(is_member_of_exhibit, uuid);
+        const data = await ITEMS_MODEL.get_item_record(uid, is_member_of_exhibit, uuid);
         res.status(data.status).send(data);
 
     } catch (error) {

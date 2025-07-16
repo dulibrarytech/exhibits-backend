@@ -81,8 +81,9 @@ const Exhibit_item_record_tasks = class {
      * Gets item record
      * @param is_member_of_exhibit
      * @param uuid
+     * @param uid
      */
-    async get_item_record(is_member_of_exhibit, uuid) {
+    async get_item_record(uid, is_member_of_exhibit, uuid) {
 
         try {
 
@@ -99,7 +100,7 @@ const Exhibit_item_record_tasks = class {
                 try {
 
                     const HELPER_TASK = new HELPER();
-                    await HELPER_TASK.lock_record(uuid, this.DB, this.TABLE.item_records);
+                    await HELPER_TASK.lock_record(uid, uuid, this.DB, this.TABLE.item_records);
                     return data;
 
                 } catch (error) {

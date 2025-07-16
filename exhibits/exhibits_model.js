@@ -130,10 +130,10 @@ exports.get_exhibit_records = async function () {
 };
 
 /**
- * Gets exhibit record by uuid
+ * Gets exhibit title
  * @param uuid
  */
-exports.get_exhibit_record = async function (uuid) {
+exports.get_exhibit_title = async function (uuid) {
 
     try {
 
@@ -142,7 +142,33 @@ exports.get_exhibit_record = async function (uuid) {
         return {
             status: 200,
             message: 'Exhibit records',
-            data: await TASK.get_exhibit_record(uuid)
+            data: await TASK.get_exhibit_title(uuid)
+        };
+
+    } catch (error) {
+        LOGGER.module().error('ERROR: [/exhibits/model (get_exhibit_title)] ' + error.message);
+        return {
+            status: 400,
+            message: error.message
+        };
+    }
+};
+
+/**
+ * Gets exhibit record by uuid
+ * @param uuid
+ * @param uid
+ */
+exports.get_exhibit_record = async function (uid, uuid) {
+
+    try {
+
+        const TASK = new EXHIBIT_RECORD_TASKS(DB, TABLES);
+
+        return {
+            status: 200,
+            message: 'Exhibit records',
+            data: await TASK.get_exhibit_record(uid, uuid)
         };
 
     } catch (error) {

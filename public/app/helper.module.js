@@ -506,6 +506,19 @@ const helperModule = (function () {
         }
     };
 
+    obj.check_if_locked = function (record, card_id) {
+
+        const profile = authModule.get_user_profile_data();
+
+        if (record.is_locked === 1 && record.locked_by_user !== parseInt(profile.uid)) {
+            document.querySelector(card_id).style.display = 'none';
+            let message_id = document.querySelector('#message');
+            if (message_id !== null) {
+                document.querySelector('#message').innerHTML = `<div class="alert alert-warning" role="alert"><i class="fa fa-lock"></i> This record is currently being worked on by another user.</div>`;
+            }
+        }
+    };
+
     obj.check_bandwidth = function (cb) {
 
         const URL = 'https://upload.wikimedia.org/wikipedia/commons/9/90/ODJBcard.JPG';

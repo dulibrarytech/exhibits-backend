@@ -49,11 +49,13 @@ const Helper = class {
     /**
      * Locks record
      * @param uuid
+     * @param uid
      * @param db
      * @param table
      */
-    async lock_record(uuid, db, table) {
-
+    async lock_record(uid, uuid, db, table) {
+        console.log('user id ', uid);
+        console.log('uuid', uuid);
         try {
 
             await db(table)
@@ -61,7 +63,8 @@ const Helper = class {
                 uuid: uuid
             })
             .update({
-                is_locked: 1
+                is_locked: 1,
+                locked_by_user: uid
             });
 
             LOGGER.module().info('INFO: [/exhibits/helper (lock_record)] record locked.');
@@ -90,7 +93,8 @@ const Helper = class {
                     uuid: uuid
                 })
                 .update({
-                    is_locked: 0
+                    is_locked: 0,
+                    locked_by_user: 0
                 });
 
                 LOGGER.module().info('INFO: [/exhibits/helper (lock_record)] record unlocked.');
@@ -100,7 +104,7 @@ const Helper = class {
                 return false;
             }
 
-        }, 15 * 60 * 1000); // 15 min
+        }, 5 * 60 * 1000); // 5 min
     }
 
     /**
