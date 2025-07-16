@@ -100,7 +100,7 @@ const Helper = class {
                 return false;
             }
 
-        }, 15 * 60 * 1000); // 15 min *30 60000
+        }, 15 * 60 * 1000); // 15 min
     }
 
     /**
