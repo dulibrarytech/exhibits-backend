@@ -98,10 +98,16 @@ const exhibitsEditFormModule = (function () {
             let create_date_time = helperModule.format_date(create_date);
             let update_date_time = helperModule.format_date(update_date);
 
+            /*
             if (record.is_locked === 1) {
                 document.querySelector('#exhibit-submit-card').style.display = 'none';
-                document.querySelector('#message').innerHTML = `<div class="alert alert-warning" role="alert"><i class="fa fa-lock"></i> This record is currently being worked on by another user.</div>`;
+                let message_id = document.querySelector('#message');
+                if (message_id !== null) {
+                    document.querySelector('#message').innerHTML = `<div class="alert alert-warning" role="alert"><i class="fa fa-lock"></i> This record is currently being worked on by another user.</div>`;
+                }
             }
+
+             */
 
             if (created_by !== null) {
                 exhibit_created += `<em>Created by ${created_by} on ${create_date_time}</em>`;
@@ -171,17 +177,6 @@ const exhibitsEditFormModule = (function () {
                     document.querySelector('#' + banner_templates[i].id).checked = true;
                 }
             }
-
-            // exhibit layout
-            /*
-            let page_layouts = document.getElementsByName('page_layout');
-
-            for (let j = 0; j < page_layouts.length; j++) {
-                if (page_layouts[j].value === record.page_layout) {
-                    document.querySelector('#' + page_layouts[j].id).checked = true;
-                }
-            }
-             */
 
             // exhibit styles
             let styles = JSON.parse(record.styles);
@@ -330,7 +325,8 @@ const exhibitsEditFormModule = (function () {
             }
 
         } catch (error) {
-            document.querySelector('#message').innerHTML = `<div class="alert alert-danger" role="alert"><i class="fa fa-exclamation"></i> ${error.message}</div>`;
+           console.log(error);
+            //  document.querySelector('#message').innerHTML = `<div class="alert alert-danger" role="alert"><i class="fa fa-exclamation"></i> ${error.message}</div>`;
         }
     };
 
