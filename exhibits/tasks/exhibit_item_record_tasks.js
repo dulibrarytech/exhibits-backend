@@ -81,9 +81,8 @@ const Exhibit_item_record_tasks = class {
      * Gets item record
      * @param is_member_of_exhibit
      * @param uuid
-     * @param uid
      */
-    async get_item_record(uid, is_member_of_exhibit, uuid) {
+    async get_item_record(is_member_of_exhibit, uuid) {
 
         try {
 

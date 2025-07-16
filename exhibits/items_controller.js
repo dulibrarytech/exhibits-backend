@@ -66,7 +66,6 @@ exports.get_item_record = async function (req, res) {
         // TODO: type=edit,index,title
         const is_member_of_exhibit = req.params.exhibit_id;
         const uuid = req.params.item_id;
-        const uid = req.query.uid;
         const type = req.query.type;
 
         if (uuid === undefined || uuid.length === 0 && is_member_of_exhibit === undefined || is_member_of_exhibit.length === 0) {
