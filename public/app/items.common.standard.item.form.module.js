@@ -66,9 +66,9 @@ const itemsCommonStandardItemFormModule = (function () {
                 }
 
                 if (item.media_padding === true) {
-                    item.media_padding = 1;
-                } else if (item.media_padding === false) {
                     item.media_padding = 0;
+                } else if (item.media_padding === false) {
+                    item.media_padding = 1;
                 }
 
                 // item media
@@ -138,12 +138,6 @@ const itemsCommonStandardItemFormModule = (function () {
             } else {
                 item.item_type = 'text';
             }
-
-            /*
-            if (media.length === 0 && item.text.length !== 0) {
-                item.item_type = 'text';
-            }
-             */
 
             item.layout = helperModule.get_checked_radio_button(document.getElementsByName('layout'));
             item.media_width = helperModule.get_checked_radio_button(document.getElementsByName('media_width'));
