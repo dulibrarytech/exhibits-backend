@@ -250,10 +250,12 @@
 <script src="/exhibits-dashboard/static/app/exhibits.module.js"></script>
 <script src="/exhibits-dashboard/static/app/items.module.js"></script>
 <script src="/exhibits-dashboard/static/app/items.common.standard.item.form.module.js"></script>
-<script src="/exhibits-dashboard/static/app/items.edit.standard.item.form.module.js"></script>
+<!--<script src="/exhibits-dashboard/static/app/items.edit.standard.item.form.module.js"></script>-->
+<script src="/exhibits-dashboard/static/app/items.details.standard.item.module.js"></script>
 <script>
     itemsCommonStandardItemFormModule.init();
-    itemsEditStandardItemFormModule.init();
+    itemsDetailsStandardItemModule.init();
+    // itemsEditStandardItemFormModule.init();
     navModule.init();
     document.querySelector('#edit-item-btn').addEventListener('click', (event) => {
         event.preventDefault();
