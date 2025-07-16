@@ -87,13 +87,36 @@ const Exhibit_item_record_tasks = class {
 
         try {
 
-            const data = await this.DB(this.TABLE.item_records)
+            return await this.DB(this.TABLE.item_records)
             .select('*')
             .where({
                 is_member_of_exhibit: is_member_of_exhibit,
                 uuid: uuid,
                 is_deleted: 0
             });
+
+        } catch (error) {
+            LOGGER.module().error('ERROR: [/exhibits/exhibit_item_record_tasks (get_item_record)] unable to get item records ' + error.message);
+        }
+    }
+
+    /**
+     * Gets item record
+     * @param is_member_of_exhibit
+     * @param uuid
+     * @param uid
+     */
+    async get_item_edit_record(uid, is_member_of_exhibit, uuid) {
+
+        try {
+
+            const data = await this.DB(this.TABLE.item_records)
+                .select('*')
+                .where({
+                    is_member_of_exhibit: is_member_of_exhibit,
+                    uuid: uuid,
+                    is_deleted: 0
+                });
 
             if (data.length !== 0 && data[0].is_locked === 0) {
 

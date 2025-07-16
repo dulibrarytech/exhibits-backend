@@ -31,7 +31,7 @@ const ENDPOINTS = {
                 get: {
                     description: 'Retrieves exhibit record by id',
                     endpoint: `${APP_PATH}${PREFIX}${VERSION}${ENDPOINT}/:exhibit_id`,
-                    params: 'token or api_key, gets all records by exhibit via uuid param'
+                    params: 'token or api_key, gets all records by exhibit via uuid param - ?type=edit,index,title'
                 },
                 post: {
                     description: 'Creates exhibit record',

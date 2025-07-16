@@ -128,9 +128,29 @@ const Exhibit_record_tasks = class {
     /**
      * Gets exhibit record by uuid
      * @param uuid
+     */
+    async get_exhibit_record(uuid) {
+
+        try {
+
+            return await this.DB(this.TABLE.exhibit_records)
+                .select('*')
+                .where({
+                    uuid: uuid,
+                    is_deleted: 0
+                });
+
+        } catch (error) {
+            LOGGER.module().error('ERROR: [/exhibits/exhibit_record_tasks (get_exhibit_record)] unable to get exhibit record ' + error.message);
+        }
+    }
+
+    /**
+     * Gets exhibit record by uuid
+     * @param uuid
      * @param uid
      */
-    async get_exhibit_record(uid, uuid) {
+    async get_exhibit_edit_record(uid, uuid) {
 
         try {
 

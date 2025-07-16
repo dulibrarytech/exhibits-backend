@@ -57,23 +57,34 @@ exports.get_exhibit_records = async function (req, res) {
 exports.get_exhibit_record = async function (req, res) {
 
     try {
-
+        // TODO: type=edit,index,title
+        const type = req.query.type;
         const uuid = req.params.exhibit_id;
-        let uid = req.query.uid;
-
-        if (uid === undefined) {
-            const data = await EXHIBITS_MODEL.get_exhibit_title(uuid);
-            res.status(data.status).send(data);
-            return false;
-        }
 
         if (uuid === undefined || uuid.length === 0) {
             res.status(400).send('Bad request.');
             return false;
         }
 
-        const data = await EXHIBITS_MODEL.get_exhibit_record(uid, uuid);
-        res.status(data.status).send(data);
+        if (type === undefined) {
+            const data = await EXHIBITS_MODEL.get_exhibit_record(uuid);
+            res.status(data.status).send(data);
+            return false;
+        }
+
+        if (type === 'edit') {
+
+            const uid = req.query.uid;
+
+            if (uid === undefined || uid.length === 0) {
+                res.status(400).send('Bad request.');
+                return false;
+            }
+
+            const data = await EXHIBITS_MODEL.get_exhibit_edit_record(uid, uuid);
+            res.status(data.status).send(data);
+            return false;
+        }
 
     } catch (error) {
         res.status(500).send({message: `Unable to get exhibit record. ${error.message}`});

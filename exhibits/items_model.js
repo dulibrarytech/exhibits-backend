@@ -319,9 +319,8 @@ exports.delete_media_value = async function (uuid, media) {
  * Gets item record by uuid and is_member_of_exhibit
  * @param is_member_of_exhibit
  * @param uuid
- * @param uid
  */
-exports.get_item_record = async function (uid, is_member_of_exhibit, uuid) {
+exports.get_item_record = async function (is_member_of_exhibit, uuid) {
 
     try {
 
@@ -330,7 +329,34 @@ exports.get_item_record = async function (uid, is_member_of_exhibit, uuid) {
         return {
             status: 200,
             message: 'Item record',
-            data: await TASK.get_item_record(uid, is_member_of_exhibit, uuid)
+            data: await TASK.get_item_record(is_member_of_exhibit, uuid)
+        };
+
+    } catch (error) {
+        LOGGER.module().error('ERROR: [/exhibits/model (get_item_record)] Unable to get item record ' + error.message);
+        return {
+            status: 400,
+            message: error.message
+        };
+    }
+};
+
+/**
+ * Gets item edit record by uuid and is_member_of_exhibit
+ * @param is_member_of_exhibit
+ * @param uuid
+ * @param uid
+ */
+exports.get_item_edit_record = async function (uid, is_member_of_exhibit, uuid) {
+
+    try {
+
+        const TASK = new EXHIBIT_ITEM_RECORD_TASKS(DB, TABLES);
+
+        return {
+            status: 200,
+            message: 'Item record',
+            data: await TASK.get_item_edit_record(uid, is_member_of_exhibit, uuid)
         };
 
     } catch (error) {

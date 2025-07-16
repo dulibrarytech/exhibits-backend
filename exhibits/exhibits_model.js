@@ -181,6 +181,32 @@ exports.get_exhibit_record = async function (uid, uuid) {
 };
 
 /**
+ * Gets exhibit edit record by uuid
+ * @param uuid
+ * @param uid
+ */
+exports.get_exhibit_edit_record = async function (uid, uuid) {
+
+    try {
+
+        const TASK = new EXHIBIT_RECORD_TASKS(DB, TABLES);
+
+        return {
+            status: 200,
+            message: 'Exhibit records',
+            data: await TASK.get_exhibit_edit_record(uid, uuid)
+        };
+
+    } catch (error) {
+        LOGGER.module().error('ERROR: [/exhibits/model (get_exhibit_record)] ' + error.message);
+        return {
+            status: 400,
+            message: error.message
+        };
+    }
+};
+
+/**
  * Updates exhibit record
  * @param uuid
  * @param data

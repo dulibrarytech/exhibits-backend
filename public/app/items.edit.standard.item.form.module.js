@@ -48,7 +48,7 @@ const itemsEditStandardItemFormModule = (function () {
 
             let response = await httpModule.req({
                 method: 'GET',
-                url: endpoint + '?uid=' + profile.uid,
+                url: endpoint + '?type=edit&uid=' + profile.uid,
                 headers: {
                     'Content-Type': 'application/json',
                     'x-access-token': token

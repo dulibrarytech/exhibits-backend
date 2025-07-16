@@ -46,9 +46,10 @@ const exhibitsEditFormModule = (function () {
 
             document.querySelector('#exhibit-title').innerHTML = await exhibitsModule.get_exhibit_title(uuid);
 
-            let response = await httpModule.req({
+            const endpoint = EXHIBITS_ENDPOINTS.exhibits.exhibit_records.endpoints.get.endpoint.replace(':exhibit_id', uuid) + '?type=edit&uid=' + profile.uid;
+            const response = await httpModule.req({
                 method: 'GET',
-                url: EXHIBITS_ENDPOINTS.exhibits.exhibit_records.endpoints.get.endpoint.replace(':exhibit_id', uuid) + '?uid=' + profile.uid,
+                url: endpoint,
                 headers: {
                     'Content-Type': 'application/json',
                     'x-access-token': token

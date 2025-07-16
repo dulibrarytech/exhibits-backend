@@ -82,19 +82,41 @@ const Exhibit_heading_record_tasks = class {
      * Gets heading record
      * @param is_member_of_exhibit
      * @param uuid
-     * @param uid
      */
-    async get_heading_record(uid, is_member_of_exhibit, uuid) {
+    async get_heading_record(is_member_of_exhibit, uuid) {
 
         try {
 
-            const data = await this.DB(this.TABLE.heading_records)
+            return await this.DB(this.TABLE.heading_records)
             .select('*')
             .where({
                 is_member_of_exhibit: is_member_of_exhibit,
                 uuid: uuid,
                 is_deleted: 0
             });
+
+        } catch (error) {
+            LOGGER.module().error('ERROR: [/exhibits/exhibit_heading_record_tasks (get_heading_record)] unable to get heading records ' + error.message);
+        }
+    }
+
+    /**
+     * Gets heading edit record
+     * @param is_member_of_exhibit
+     * @param uuid
+     * @param uid
+     */
+    async get_heading_edit_record(uid, is_member_of_exhibit, uuid) {
+
+        try {
+
+            const data = await this.DB(this.TABLE.heading_records)
+                .select('*')
+                .where({
+                    is_member_of_exhibit: is_member_of_exhibit,
+                    uuid: uuid,
+                    is_deleted: 0
+                });
 
             if (data.length !== 0 && data[0].is_locked === 0) {
 

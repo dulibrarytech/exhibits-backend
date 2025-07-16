@@ -24,6 +24,7 @@ const HEADINGS_MODEL = require('../exhibits/headings_model');
 const GRIDS_MODEL = require('../exhibits/grid_model');
 const TIMELINES_MODEL = require('../exhibits/timelines_model');
 const FS = require('fs');
+const EXHIBITS_MODEL = require("./exhibits_model");
 
 exports.create_item_record = async function (req, res) {
 
@@ -62,17 +63,36 @@ exports.get_item_record = async function (req, res) {
 
     try {
 
+        // TODO: type=edit,index,title
         const is_member_of_exhibit = req.params.exhibit_id;
         const uuid = req.params.item_id;
         const uid = req.query.uid;
+        const type = req.query.type;
 
         if (uuid === undefined || uuid.length === 0 && is_member_of_exhibit === undefined || is_member_of_exhibit.length === 0) {
             res.status(400).send('Bad request.');
             return false;
         }
 
-        const data = await ITEMS_MODEL.get_item_record(uid, is_member_of_exhibit, uuid);
-        res.status(data.status).send(data);
+        if (type === undefined) {
+            const data = await ITEMS_MODEL.get_item_record(is_member_of_exhibit, uuid);
+            res.status(data.status).send(data);
+            return false;
+        }
+
+        if (type === 'edit') {
+
+            const uid = req.query.uid;
+
+            if (uid === undefined || uid.length === 0) {
+                res.status(400).send('Bad request.');
+                return false;
+            }
+
+            const data = await ITEMS_MODEL.get_item_edit_record(uid, is_member_of_exhibit, uuid);
+            res.status(data.status).send(data);
+            return false;
+        }
 
     } catch (error) {
         res.status(500).send({message: `Unable to get item record. ${error.message}`});

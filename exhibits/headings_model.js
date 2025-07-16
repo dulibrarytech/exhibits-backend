@@ -93,9 +93,8 @@ exports.create_heading_record = async function (is_member_of_exhibit, data) {
  * Gets heading record
  * @param is_member_of_exhibit
  * @param uuid
- * @param uid
  */
-exports.get_heading_record = async function (uid, is_member_of_exhibit, uuid) {
+exports.get_heading_record = async function (is_member_of_exhibit, uuid) {
 
     try {
 
@@ -104,7 +103,34 @@ exports.get_heading_record = async function (uid, is_member_of_exhibit, uuid) {
         return {
             status: 200,
             message: 'Heading record',
-            data: await TASK.get_heading_record(uid, is_member_of_exhibit, uuid)
+            data: await TASK.get_heading_record(is_member_of_exhibit, uuid)
+        };
+
+    } catch (error) {
+        LOGGER.module().error('ERROR: [/exhibits/model (get_heading_record)] ' + error.message);
+        return {
+            status: 400,
+            message: error.message
+        };
+    }
+};
+
+/**
+ * Gets heading edit record
+ * @param is_member_of_exhibit
+ * @param uuid
+ * @param uid
+ */
+exports.get_heading_edit_record = async function (uid, is_member_of_exhibit, uuid) {
+
+    try {
+
+        const TASK = new EXHIBIT_HEADING_RECORD_TASKS(DB, TABLES);
+
+        return {
+            status: 200,
+            message: 'Heading record',
+            data: await TASK.get_heading_edit_record(uid, is_member_of_exhibit, uuid)
         };
 
     } catch (error) {

@@ -19,6 +19,7 @@
 'use strict';
 
 const HEADINGS_MODEL = require('../exhibits/headings_model');
+const EXHIBITS_MODEL = require("./exhibits_model");
 
 exports.create_heading_record = async function (req, res) {
 
@@ -44,17 +45,36 @@ exports.get_heading_record = async function (req, res) {
 
     try {
 
+        // TODO: type=edit,index,title
         const is_member_of_exhibit = req.params.exhibit_id;
         const uuid = req.params.heading_id;
         const uid = req.query.uid;
+        const type = req.query.type;
 
         if (uuid === undefined || uuid.length === 0 && is_member_of_exhibit === undefined || is_member_of_exhibit.length === 0) {
             res.status(400).send('Bad request.');
             return false;
         }
 
-        const data = await HEADINGS_MODEL.get_heading_record(uid, is_member_of_exhibit, uuid);
-        res.status(data.status).send(data);
+        if (type === undefined) {
+            const data = await HEADINGS_MODEL.get_heading_record(is_member_of_exhibit, uuid);
+            res.status(data.status).send(data);
+            return false;
+        }
+
+        if (type === 'edit') {
+
+            const uid = req.query.uid;
+
+            if (uid === undefined || uid.length === 0) {
+                res.status(400).send('Bad request.');
+                return false;
+            }
+
+            const data = await HEADINGS_MODEL.get_heading_edit_record(uid, is_member_of_exhibit, uuid);
+            res.status(data.status).send(data);
+            return false;
+        }
 
     } catch (error) {
         res.status(408).send({message: `Unable to get heading record. ${error.message}`});
