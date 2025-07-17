@@ -429,7 +429,7 @@ const itemsEditGridItemFormModule = (function () {
     obj.init = async function () {
 
         try {
-
+            console.log('test');
             const exhibit_id = helperModule.get_parameter_by_name('exhibit_id');
             exhibitsModule.set_exhibit_title(exhibit_id);
             navModule.back_to_grid_items();

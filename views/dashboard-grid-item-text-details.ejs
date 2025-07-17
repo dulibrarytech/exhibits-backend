@@ -248,10 +248,10 @@
 <script src="/exhibits-dashboard/static/app/exhibits.module.js"></script>
 <script src="/exhibits-dashboard/static/app/items.module.js"></script>
 <script src="/exhibits-dashboard/static/app/items.common.grid.item.form.module.js"></script>
-<script src="/exhibits-dashboard/static/app/items.edit.grid.item.form.module.js"></script>
+<script src="/exhibits-dashboard/static/app/items.details.grid.item.module.js"></script>
 <script>
     itemsCommonGridItemFormModule.init();
-    itemsEditGridItemFormModule.init();
+    itemsDetailsGridItemModule.init();
     document.querySelector('#edit-item-btn').addEventListener('click', (event) => {
         event.preventDefault();
         document.querySelector('.content').style.visibility = 'hidden';
