@@ -75,24 +75,17 @@ const exhibitsModule = (function () {
             let is_featured = exhibits[i].is_featured;
             let preview_link = `${APP_PATH}/preview?uuid=${uuid}`;
             let exhibit_items = `<a href="${APP_PATH}/items?exhibit_id=${uuid}" title="View Exhibit Items"><i class="fa fa-list pr-1"></i></a>&nbsp;`;
-
-            // TODO: replace order with created and updated columns
-            // TODO: format dates
-            // let created = `${helperModule.format_exhibit_sort_date(exhibits[i].created)}`;
-
             let created = new Date(exhibits[i].created);
             let updated = new Date(exhibits[i].updated);
             let created_sort_date = helperModule.format_date(created);
             let updated_sort_date = helperModule.format_date(updated);
-            // let order = `${exhibits[i].order}`;
-
+            let created_by = `Exhibit created by ${exhibits[i].created_by}`;
             let thumbnail_url = '';
             let thumbnail_fragment = '';
             let status;
             let title;
             let featured = '';
             let exhibit_edit = '';
-            let created_by = `Exhibit created by ${exhibits[i].created_by}`;
             let trash = '';
 
             if (is_published === 1) {
@@ -173,12 +166,14 @@ const exhibitsModule = (function () {
         const EXHIBIT_LIST = new DataTable('#exhibits', {
             paging: false,
             order: [[4, 'desc']],
-            rowReorder: true
+            rowReorder: false
         });
 
+        /*
         EXHIBIT_LIST.on('row-reordered', async (e, reordered_exhibits) => {
             await helperModule.reorder_exhibits(e, reordered_exhibits);
         });
+         */
 
         bind_publish_exhibit_events();
         bind_suppress_exhibit_events();
