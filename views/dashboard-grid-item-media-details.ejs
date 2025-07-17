@@ -435,6 +435,90 @@
                     <div class="col-6 col-md-6">
                         <div class="row form-group">
                             <div class="col-12 col-md-12">
+                                <p>
+                                <div class="form-text text-muted" style="font-size: 17px">
+                                    <label for="item-background-color">Item Background Color</label>
+                                </div>
+                                </p>
+                                <div class="input-group">
+                                    <div class="input-group-btn">
+                                        <input disabled title="Color Picker" class="color-picker btn btn-default" type="color"
+                                               id="item-background-color-picker" value="#ffffff">
+                                    </div>
+                                    <input disabled type="text" id="item-background-color" name="item_background_color"
+                                           placeholder="i.e. #FFFFFF" class="form-control" style="height: 40px">
+
+                                </div>
+                            </div>
+                        </div>
+                        <div class="row form-group">
+                            <div class="col-12 col-md-12">
+                                <p>
+                                <div class="form-text text-muted" style="font-size: 17px">
+                                    <label for="item-font-size">Item Font Size</label>
+                                </div>
+                                </p>
+                                <div class="input-group">
+                                    <input disabled type="number" id="item-font-size" name="item_font_size"
+                                           placeholder="" class="form-control" min="1" max="50" style="height: 40px">
+                                    <div class="input-group-append">
+                                        <span class="input-group-text" id="basic-addon2">px</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-6 col-md-6">
+                        <div class="row form-group">
+                            <div class="col-12 col-md-12">
+                                <p>
+                                <div class="form-text text-muted" style="font-size: 17px">
+                                    <label for="item-font-color">Item Font Color</label>
+                                </div>
+                                </p>
+                                <div class="input-group">
+                                    <div class="input-group-btn">
+                                        <input title="Color Picker" class="color-picker btn btn-default" type="color"
+                                               id="item-font-color-picker"
+                                               value="#ffffff">
+                                    </div>
+                                    <input disabled type="text" id="item-font-color" name="item_font_color"
+                                           placeholder="i.e. #FFFFFF" class="form-control" style="height: 40px">
+                                </div>
+                            </div>
+                        </div>
+                        <div class="row form-group">
+                            <div class="col-12 col-md-12">
+                                <p>
+                                <div class="form-text text-muted" style="font-size: 17px">
+                                    <label for="item-font">Item Font</label>
+                                </div>
+                                </p>
+                                <div class="input-group">
+                                    <select disabled name="item_font" id="item-font"
+                                            class="form-control-lg form-control text-muted" style="height: 40px">
+                                        <option value="">Select From Menu</option>
+                                        <option value="">----------</option>
+                                        <%- include('partials/exhibit-fonts-options-list.ejs'); %>
+                                    </select>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!--
+        <div id="item-styles-card" class="card">
+            <div class="card-header">
+                <strong class="card-title mb-3">Item Styles</strong>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-6 col-md-6">
+                        <div class="row form-group">
+                            <div class="col-12 col-md-12">
                                 <div class="input-group">
                                     <div class="input-group-btn">
                                         <input disabled title="Color Picker" class="color-picker btn btn-default" type="color"
@@ -488,6 +572,7 @@
                 </div>
             </div>
         </div>
+        -->
         <div id="item-submit-card" class="card">
             <div class="card-body">
                 <button class="btn btn-primary" type="button" id="edit-item-btn">
