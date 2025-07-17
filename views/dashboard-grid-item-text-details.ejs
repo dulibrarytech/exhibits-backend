@@ -21,18 +21,14 @@
                 </li>
                 <li class="menu-title">Menu</li>
             </ul>
-            <ul class="nav navbar-nav"><li id="preview-link"></li></ul>
+            <ul class="nav navbar-nav">
+                <li id="preview-link"></li>
+            </ul>
             <ul class="nav navbar-nav">
                 <li>
                     <a id="back-to-items" href="#" data-keyboard="false">
                         <i class=" menu-icon fa fa-arrow-left"></i>Back to Grid Items</a>
                 </li>
-                <!--
-                <li id="item-list-nav">
-                    <a id="item-list" title="View Items" href="#" data-keyboard="false">
-                        <i class=" menu-icon fa fa-list pr-1"></i>Items</a>
-                </li>
-                -->
             </ul>
             <ul id="items-menu" class="nav navbar-nav"></ul>
             <ul class="nav navbar-nav">
@@ -63,7 +59,10 @@
                             <div class="col-12">
                                 <div class="form-text text-muted" style="font-size: 17px">
                                     Title
-                                    &nbsp;&nbsp;<a onclick="helperModule.preview_html('item-title-input');return false;" data-toggle="modal" data-target=".preview-html" class="btn-xs btn-light"><span style="padding: 5px"><i class="fa fa-code"></i> <small>Preview Field</small></span></a>
+                                    &nbsp;&nbsp;<a onclick="helperModule.preview_html('item-title-input');return false;"
+                                                   data-toggle="modal" data-target=".preview-html"
+                                                   class="btn-xs btn-light"><span style="padding: 5px"><i
+                                                    class="fa fa-code"></i> <small>Preview Field</small></span></a>
                                 </div>
                                 <span id="item-title-error" class="is-error"></span>
                                 <textarea disabled id="item-title-input" class="form-control" name="item_title_input"
@@ -78,7 +77,10 @@
                             <div class="col-12">
                                 <div class="form-text text-muted" style="font-size: 17px"><span id="is-required-text">Text
                             <small><em>(Optional)</em></small></span>
-                                    &nbsp;&nbsp;<a onclick="helperModule.preview_html('item-text-input');return false;" data-toggle="modal" data-target=".preview-html" class="btn-xs btn-light"><span style="padding: 5px"><i class="fa fa-code"></i> <small>Preview Field</small></span></a>
+                                    &nbsp;&nbsp;<a onclick="helperModule.preview_html('item-text-input');return false;"
+                                                   data-toggle="modal" data-target=".preview-html"
+                                                   class="btn-xs btn-light"><span style="padding: 5px"><i
+                                                    class="fa fa-code"></i> <small>Preview Field</small></span></a>
                                 </div>
                                 <textarea disabled id="item-text-input" class="form-control" name="item_text_input"
                                           rows="4"></textarea>
@@ -91,9 +93,14 @@
                         <div class="row form-group">
                             <div class="col-12">
                                 <div class="form-text text-muted" style="font-size: 17px">Description
-                                    &nbsp;&nbsp;<a onclick="helperModule.preview_html('item-description-input');return false;" data-toggle="modal" data-target=".preview-html" class="btn-xs btn-light"><span style="padding: 5px"><i class="fa fa-code"></i> <small>Preview Field</small></span></a>
+                                    &nbsp;&nbsp;<a
+                                            onclick="helperModule.preview_html('item-description-input');return false;"
+                                            data-toggle="modal" data-target=".preview-html"
+                                            class="btn-xs btn-light"><span style="padding: 5px"><i
+                                                    class="fa fa-code"></i> <small>Preview Field</small></span></a>
                                 </div>
-                                <textarea disabled id="item-description-input" class="form-control" name="item_description_input"
+                                <textarea disabled id="item-description-input" class="form-control"
+                                          name="item_description_input"
                                           rows="4"></textarea>
                             </div>
                         </div>
@@ -104,107 +111,20 @@
                         <div class="row form-group">
                             <div class="col-12">
                                 <div class="form-text text-muted" style="font-size: 17px">Caption
-                                    &nbsp;&nbsp;<a onclick="helperModule.preview_html('item-caption-input');return false;" data-toggle="modal" data-target=".preview-html" class="btn-xs btn-light"><span style="padding: 5px"><i class="fa fa-code"></i> <small>Preview Field</small></span></a>
+                                    &nbsp;&nbsp;<a
+                                            onclick="helperModule.preview_html('item-caption-input');return false;"
+                                            data-toggle="modal" data-target=".preview-html"
+                                            class="btn-xs btn-light"><span style="padding: 5px"><i
+                                                    class="fa fa-code"></i> <small>Preview Field</small></span></a>
                                 </div>
-                                <textarea disabled id="item-caption-input" class="form-control" name="item_caption_input" rows="4"></textarea>
+                                <textarea disabled id="item-caption-input" class="form-control"
+                                          name="item_caption_input" rows="4"></textarea>
                             </div>
                         </div>
                     </div>
                 </div>
             </div>
         </div>
-        <div id="item-layout-card" class="card">
-            <div class="card-header">
-                <strong class="card-title mb-3">Item Layout</strong>
-            </div>
-            <div class="card-body">
-                <div class="row">
-                    <div class="col-4 col-md-4">
-                        <p style="height: 135px"><img src="/exhibits-dashboard/static/images/item_layout_text_only.png" height="100"></p>
-                        <p>
-                            <label class="btn btn-default" for="item-layout-text-only" style="font-size: 15px">Text only, no media
-                                <input disabled type="radio"
-                                       name="layout"
-                                       id="item-layout-text-only"
-                                       value="text_only"/>
-                            </label>
-                        </p>
-                    </div>
-                </div>
-            </div>
-        </div>
-
-        <input type="radio" name="media_width" id="item-width-50" value="50" checked style="visibility: hidden"/>
-
-        <!--
-        <div id="item-media-widths-card" class="card">
-            <div class="card-header">
-                <strong class="card-title mb-3">Item Media Widths</strong>
-            </div>
-            <div class="card-body">
-                <div class="alert alert-info">
-                    <i class="fa fa-info"></i> <span
-                            id="info-message">Provide info to user about media widths</span>
-                </div>
-
-                <%- // include('partials/item-media-widths.ejs'); %>
-
-                <div class="row">
-                    <div class="col-4 col-md-4">
-                        <p style="height: 65px"><img src="/exhibits-dashboard/static/images/media_25_width.png"></p>
-                        <p>
-                            <label class="btn btn-default" for="item-layout-quarter" style="font-size: 14px">Media width is 25% of the exhibit item
-                                <input disabled type="radio" name="media_width" id="item-width-quarter" value="25"/>
-                            </label>
-                        </p>
-                    </div>
-                    <div class="col-4 col-md-4">
-                        <p style="height: 65px"><img src="/exhibits-dashboard/static/images/media_33_width.png"></p>
-                        <p>
-                            <label class="btn btn-default" for="item-layout-third" style="font-size: 14px">Media width is 33% of the exhibit item
-                                <input disabled type="radio" name="media_width" id="item-width-33" value="33"/>
-                            </label>
-                        </p>
-                    </div>
-                    <div class="col-4 col-md-4">
-                        <p style="height: 65px"><img src="/exhibits-dashboard/static/images/media_50_width.png"></p>
-                        <p>
-                            <label class="btn btn-default" for="item-layout-half" style="font-size: 14px">Media width is 50% of the exhibit item
-                                <input disabled type="radio" name="media_width" id="item-width-50" value="50" checked/>
-                            </label>
-                        </p>
-                    </div>
-                </div>
-                <div class="row">
-                    <div class="col-4 col-md-4">
-                        <p style="height: 65px"><img src="/exhibits-dashboard/static/images/media_66_width.png"></p>
-                        <p>
-                            <label class="btn btn-default" for="item-layout-third" style="font-size: 14px">Media width is 66% of the exhibit item
-                                <input disabled type="radio" name="media_width" id="item-width-66" value="66"/>
-                            </label>
-                        </p>
-                    </div>
-                    <div class="col-4 col-md-4">
-                        <p style="height: 65px"><img src="/exhibits-dashboard/static/images/media_75_width.png"></p>
-                        <p>
-                            <label class="btn btn-default" for="item-layout-half" style="font-size: 14px">Media width is 75% of the exhibit item
-                                <input disabled type="radio" name="media_width" id="item-width-75" value="75"/>
-                            </label>
-                        </p>
-                    </div>
-                    <div class="col-4 col-md-4">
-                        <p style="height: 65px"><img src="/exhibits-dashboard/static/images/media_100_width.png"></p>
-                        <p>
-                            <label class="btn btn-default" for="item-layout-quarter" style="font-size: 14px">Media width 100% of the exhibit item
-                                <input disabled type="radio" name="media_width" id="item-width-100" value="100"/>
-                            </label>
-                        </p>
-                    </div>
-                </div>
-            </div>
-        </div>
-        -->
-
         <div id="item-styles-card" class="card">
             <div class="card-header">
                 <strong class="card-title mb-3">Item Styles</strong>
@@ -214,9 +134,15 @@
                     <div class="col-6 col-md-6">
                         <div class="row form-group">
                             <div class="col-12 col-md-12">
+                                <p>
+                                <div class="form-text text-muted" style="font-size: 17px">
+                                    <label for="item-background-color">Item Background Color</label>
+                                </div>
+                                </p>
                                 <div class="input-group">
                                     <div class="input-group-btn">
-                                        <input disabled title="Color Picker" class="color-picker btn btn-default" type="color"
+                                        <input disabled title="Color Picker" class="color-picker btn btn-default"
+                                               type="color"
                                                id="item-background-color-picker" value="#ffffff">
                                     </div>
                                     <input disabled type="text" id="item-background-color" name="item_background_color"
@@ -227,9 +153,14 @@
                         </div>
                         <div class="row form-group">
                             <div class="col-12 col-md-12">
+                                <p>
+                                <div class="form-text text-muted" style="font-size: 17px">
+                                    <label for="item-font-size">Item Font Size</label>
+                                </div>
+                                </p>
                                 <div class="input-group">
                                     <input disabled type="number" id="item-font-size" name="item_font_size"
-                                           placeholder="Item Font Size" class="form-control" min="1" max="50" style="height: 40px">
+                                           placeholder="" class="form-control" min="1" max="50" style="height: 40px">
                                     <div class="input-group-append">
                                         <span class="input-group-text" id="basic-addon2">px</span>
                                     </div>
@@ -240,9 +171,15 @@
                     <div class="col-6 col-md-6">
                         <div class="row form-group">
                             <div class="col-12 col-md-12">
+                                <p>
+                                <div class="form-text text-muted" style="font-size: 17px">
+                                    <label for="item-font-color">Item Font Color</label>
+                                </div>
+                                </p>
                                 <div class="input-group">
                                     <div class="input-group-btn">
-                                        <input disabled title="Color Picker" class="color-picker btn btn-default" type="color"
+                                        <input disabled title="Color Picker" class="color-picker btn btn-default"
+                                               type="color"
                                                id="item-font-color-picker"
                                                value="#ffffff">
                                     </div>
@@ -253,6 +190,11 @@
                         </div>
                         <div class="row form-group">
                             <div class="col-12 col-md-12">
+                                <p>
+                                <div class="form-text text-muted" style="font-size: 17px">
+                                    <label for="item-font">Item Font</label>
+                                </div>
+                                </p>
                                 <div class="input-group">
                                     <select disabled name="item_font" id="item-font"
                                             class="form-control-lg form-control text-muted" style="height: 40px">
@@ -267,6 +209,11 @@
                 </div>
             </div>
         </div>
+        <input disabled type="radio"
+               name="layout"
+               id="item-layout-text-only"
+               value="text_only" style="visibility: hidden"/>
+        <input type="radio" name="media_width" id="item-width-50" value="50" checked style="visibility: hidden"/>
         <div id="item-submit-card" class="card">
             <div class="card-body">
                 <button class="btn btn-primary" type="button" id="edit-item-btn">
