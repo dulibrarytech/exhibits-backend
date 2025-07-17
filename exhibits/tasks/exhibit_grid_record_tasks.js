@@ -19,6 +19,7 @@
 'use strict';
 
 const LOGGER = require('../../libs/log4');
+const HELPER = require("../../libs/helper");
 
 /**
  * Object contains tasks used to manage exhibit grid and grid item records
@@ -43,10 +44,10 @@ const Exhibit_grid_record_tasks = class {
 
             const result = await this.DB.transaction((trx) => {
                 this.DB.insert(data)
-                .into(this.TABLE.grid_records)
-                .transacting(trx)
-                .then(trx.commit)
-                .catch(trx.rollback);
+                    .into(this.TABLE.grid_records)
+                    .transacting(trx)
+                    .then(trx.commit)
+                    .catch(trx.rollback);
             });
 
             LOGGER.module().info('INFO: [/exhibits/exhibit_grid_record_tasks (create_grid_record)] ' + result.length + ' Grid record created.');
@@ -66,11 +67,11 @@ const Exhibit_grid_record_tasks = class {
         try {
 
             return await this.DB(this.TABLE.grid_records)
-            .select('*')
-            .where({
-                is_member_of_exhibit: is_member_of_exhibit,
-                is_deleted: 0
-            });
+                .select('*')
+                .where({
+                    is_member_of_exhibit: is_member_of_exhibit,
+                    is_deleted: 0
+                });
 
         } catch (error) {
             LOGGER.module().error('ERROR: [/exhibits/exhibit_grid_record_tasks (get_grid_records)] unable to get grid records ' + error.message);
@@ -86,11 +87,11 @@ const Exhibit_grid_record_tasks = class {
         try {
 
             await this.DB(this.TABLE.grid_records)
-            .where({
-                is_member_of_exhibit: data.is_member_of_exhibit,
-                uuid: data.uuid
-            })
-            .update(data);
+                .where({
+                    is_member_of_exhibit: data.is_member_of_exhibit,
+                    uuid: data.uuid
+                })
+                .update(data);
 
             LOGGER.module().info('INFO: [/exhibits/exhibit_grid_record_tasks (update_grid_record)] Grid record updated.');
             return true;
@@ -110,12 +111,12 @@ const Exhibit_grid_record_tasks = class {
         try {
 
             return await this.DB(this.TABLE.grid_records)
-            .select('*')
-            .where({
-                is_member_of_exhibit: is_member_of_exhibit,
-                uuid: grid_id,
-                is_deleted: 0
-            });
+                .select('*')
+                .where({
+                    is_member_of_exhibit: is_member_of_exhibit,
+                    uuid: grid_id,
+                    is_deleted: 0
+                });
 
         } catch (error) {
             LOGGER.module().error('ERROR: [/exhibits/exhibit_grid_record_tasks (get_grid_record)] unable to get grid record ' + error.message);
@@ -132,12 +133,12 @@ const Exhibit_grid_record_tasks = class {
         try {
 
             return await this.DB(this.TABLE.grid_item_records)
-            .select('*')
-            .where({
-                is_member_of_exhibit: is_member_of_exhibit,
-                is_member_of_grid: is_member_of_grid,
-                is_deleted: 0
-            })
+                .select('*')
+                .where({
+                    is_member_of_exhibit: is_member_of_exhibit,
+                    is_member_of_grid: is_member_of_grid,
+                    is_deleted: 0
+                })
                 .orderBy('order');
 
         } catch (error) {
@@ -155,10 +156,10 @@ const Exhibit_grid_record_tasks = class {
 
             const result = await this.DB.transaction((trx) => {
                 this.DB.insert(data)
-                .into(this.TABLE.grid_item_records)
-                .transacting(trx)
-                .then(trx.commit)
-                .catch(trx.rollback);
+                    .into(this.TABLE.grid_item_records)
+                    .transacting(trx)
+                    .then(trx.commit)
+                    .catch(trx.rollback);
             });
 
             LOGGER.module().info('INFO: [/exhibits/exhibit_grid_record_tasks (create_grid_item_record)] ' + result.length + ' Grid item record created.');
@@ -180,16 +181,57 @@ const Exhibit_grid_record_tasks = class {
         try {
 
             return await this.DB(this.TABLE.grid_item_records)
-            .select('*')
-            .where({
-                is_member_of_exhibit: is_member_of_exhibit,
-                is_member_of_grid: grid_id,
-                uuid: item_id,
-                is_deleted: 0
-            });
+                .select('*')
+                .where({
+                    is_member_of_exhibit: is_member_of_exhibit,
+                    is_member_of_grid: grid_id,
+                    uuid: item_id,
+                    is_deleted: 0
+                });
 
         } catch (error) {
             LOGGER.module().error('ERROR: [/exhibits/exhibit_grid_record_tasks (get_grid_item_record)] unable to get grid item record ' + error.message);
+        }
+    }
+
+    /**
+     * Gets grid item record
+     * @param is_member_of_exhibit
+     * @param grid_id
+     * @param item_id
+     * @param uid
+     */
+    async get_grid_item_edit_record(uid, is_member_of_exhibit, grid_id, item_id) {
+
+        try {
+
+            const data = await this.DB(this.TABLE.grid_item_records)
+                .select('*')
+                .where({
+                    is_member_of_exhibit: is_member_of_exhibit,
+                    is_member_of_grid: grid_id,
+                    uuid: item_id,
+                    is_deleted: 0
+                });
+
+            if (data.length !== 0 && data[0].is_locked === 0) {
+
+                try {
+
+                    const HELPER_TASK = new HELPER();
+                    await HELPER_TASK.lock_record(uid, item_id, this.DB, this.TABLE.grid_item_records);
+                    return data;
+
+                } catch (error) {
+                    LOGGER.module().error('ERROR: [/exhibits/exhibit_item_record_tasks (get_item_edit_record)] unable to lock record ' + error.message);
+                }
+
+            } else {
+                return data;
+            }
+
+        } catch (error) {
+            LOGGER.module().error('ERROR: [/exhibits/exhibit_grid_record_tasks (get_grid_item_edit_record)] unable to get grid item record ' + error.message);
         }
     }
 
@@ -202,12 +244,12 @@ const Exhibit_grid_record_tasks = class {
         try {
 
             await this.DB(this.TABLE.grid_item_records)
-            .where({
-                is_member_of_exhibit: data.is_member_of_exhibit,
-                is_member_of_grid: data.is_member_of_grid,
-                uuid: data.uuid
-            })
-            .update(data);
+                .where({
+                    is_member_of_exhibit: data.is_member_of_exhibit,
+                    is_member_of_grid: data.is_member_of_grid,
+                    uuid: data.uuid
+                })
+                .update(data);
 
             LOGGER.module().info('INFO: [/exhibits/exhibit_grid_record_tasks (update_grid_item_record)] Grid item record updated.');
             return true;
@@ -237,10 +279,10 @@ const Exhibit_grid_record_tasks = class {
             }
 
             await this.DB(this.TABLE.grid_item_records)
-            .where({
-                uuid: uuid
-            })
-            .update(update);
+                .where({
+                    uuid: uuid
+                })
+                .update(update);
 
             LOGGER.module().info('INFO: [/exhibits/item_record_tasks (delete_media_value)] Media value deleted.');
             return true;
@@ -261,13 +303,13 @@ const Exhibit_grid_record_tasks = class {
         try {
 
             await this.DB(this.TABLE.grid_records)
-            .where({
-                is_member_of_exhibit: is_member_of_exhibit,
-                uuid: uuid
-            })
-            .update({
-                is_deleted: 1
-            });
+                .where({
+                    is_member_of_exhibit: is_member_of_exhibit,
+                    uuid: uuid
+                })
+                .update({
+                    is_deleted: 1
+                });
 
             LOGGER.module().info('INFO: [/exhibits/exhibit_grid_record_tasks (delete_grid_record)] Grid record deleted.');
             return true;
@@ -288,14 +330,14 @@ const Exhibit_grid_record_tasks = class {
         try {
 
             await this.DB(this.TABLE.grid_item_records)
-            .where({
-                is_member_of_exhibit: is_member_of_exhibit,
-                is_member_of_grid: grid_id,
-                uuid: grid_item_id
-            })
-            .update({
-                is_deleted: 1
-            });
+                .where({
+                    is_member_of_exhibit: is_member_of_exhibit,
+                    is_member_of_grid: grid_id,
+                    uuid: grid_item_id
+                })
+                .update({
+                    is_deleted: 1
+                });
 
             LOGGER.module().info('INFO: [/exhibits/exhibit_grid_record_tasks (delete_grid_item_record)] Grid item record deleted.');
             return true;
@@ -314,9 +356,9 @@ const Exhibit_grid_record_tasks = class {
         try {
 
             const count = await this.DB(this.TABLE.grid_records).count('id as count')
-            .where({
-                is_member_of_exhibit: uuid
-            });
+                .where({
+                    is_member_of_exhibit: uuid
+                });
 
             return count[0].count;
 
@@ -334,12 +376,12 @@ const Exhibit_grid_record_tasks = class {
         try {
 
             await this.DB(this.TABLE.grid_records)
-            .where({
-                is_member_of_exhibit: uuid
-            })
-            .update({
-                is_published: 1
-            });
+                .where({
+                    is_member_of_exhibit: uuid
+                })
+                .update({
+                    is_published: 1
+                });
 
             LOGGER.module().info('INFO: [/exhibits/exhibit_grid_record_tasks (set_to_publish)] Grid is_published set.');
             return true;
@@ -359,12 +401,12 @@ const Exhibit_grid_record_tasks = class {
         try {
 
             await this.DB(this.TABLE.grid_item_records)
-            .where({
-                uuid: uuid
-            })
-            .update({
-                is_published: 1
-            });
+                .where({
+                    uuid: uuid
+                })
+                .update({
+                    is_published: 1
+                });
 
             LOGGER.module().info('INFO: [/exhibits/exhibit_grid_record_tasks (set_grid_item_to_publish)] Grid item is_published set.');
             return true;
@@ -384,12 +426,12 @@ const Exhibit_grid_record_tasks = class {
         try {
 
             await this.DB(this.TABLE.grid_item_records)
-            .where({
-                is_member_of_grid: uuid
-            })
-            .update({
-                is_published: 1
-            });
+                .where({
+                    is_member_of_grid: uuid
+                })
+                .update({
+                    is_published: 1
+                });
 
             LOGGER.module().info('INFO: [/exhibits/exhibit_grid_record_tasks (set_to_publish_grid_items)] Grid items is_published set.');
             return true;
@@ -409,12 +451,12 @@ const Exhibit_grid_record_tasks = class {
         try {
 
             await this.DB(this.TABLE.grid_records)
-            .where({
-                uuid: uuid
-            })
-            .update({
-                is_published: 1
-            });
+                .where({
+                    uuid: uuid
+                })
+                .update({
+                    is_published: 1
+                });
 
             LOGGER.module().info('INFO: [/exhibits/exhibit_item_record_tasks (set_grid_to_publish)] Grid is_published set.');
             return true;
@@ -434,12 +476,12 @@ const Exhibit_grid_record_tasks = class {
         try {
 
             await this.DB(this.TABLE.grid_records)
-            .where({
-                is_member_of_exhibit: uuid
-            })
-            .update({
-                is_published: 0
-            });
+                .where({
+                    is_member_of_exhibit: uuid
+                })
+                .update({
+                    is_published: 0
+                });
 
             LOGGER.module().info('INFO: [/exhibits/exhibit_grid_record_tasks (set_to_suppress)] Grid is_published set.');
             return true;
@@ -459,12 +501,12 @@ const Exhibit_grid_record_tasks = class {
         try {
 
             await this.DB(this.TABLE.grid_records)
-            .where({
-                uuid: uuid
-            })
-            .update({
-                is_published: 0
-            });
+                .where({
+                    uuid: uuid
+                })
+                .update({
+                    is_published: 0
+                });
 
             LOGGER.module().info('INFO: [/exhibits/exhibit_item_record_tasks (set_grid_to_suppress)] Grid is_published set.');
             return true;
@@ -484,12 +526,12 @@ const Exhibit_grid_record_tasks = class {
         try {
 
             await this.DB(this.TABLE.grid_item_records)
-            .where({
-                is_member_of_grid: uuid
-            })
-            .update({
-                is_published: 0
-            });
+                .where({
+                    is_member_of_grid: uuid
+                })
+                .update({
+                    is_published: 0
+                });
 
             LOGGER.module().info('INFO: [/exhibits/exhibit_grid_record_tasks (set_to_suppressed_grid_items)] Grid items is_published set.');
             return true;
@@ -510,13 +552,13 @@ const Exhibit_grid_record_tasks = class {
         try {
 
             await this.DB(this.TABLE.grid_records)
-            .where({
-                is_member_of_exhibit: is_member_of_exhibit,
-                uuid: grids.uuid
-            })
-            .update({
-                order: grids.order
-            });
+                .where({
+                    is_member_of_exhibit: is_member_of_exhibit,
+                    uuid: grids.uuid
+                })
+                .update({
+                    order: grids.order
+                });
 
             LOGGER.module().info('INFO: [/exhibits/exhibit_grid_record_tasks (reorder_grids)] Grid reordered.');
             return true;
@@ -538,13 +580,13 @@ const Exhibit_grid_record_tasks = class {
         try {
 
             await this.DB(this.TABLE.grid_item_records)
-            .where({
-                is_member_of_grid: is_member_of_grid,
-                uuid: grids.uuid
-            })
-            .update({
-                order: grids.order
-            });
+                .where({
+                    is_member_of_grid: is_member_of_grid,
+                    uuid: grids.uuid
+                })
+                .update({
+                    order: grids.order
+                });
 
             LOGGER.module().info('INFO: [/exhibits/exhibit_grid_record_tasks (reorder_grid_items)] Grid item reordered.');
             return true;

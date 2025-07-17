@@ -20,6 +20,7 @@
 
 const GRIDS_MODEL = require('../exhibits/grid_model');
 const FS = require('fs');
+const ITEMS_MODEL = require("./items_model");
 
 exports.create_grid_record = async function (req, res) {
 
@@ -130,14 +131,32 @@ exports.get_grid_item_record = async function (req, res) {
         const is_member_of_exhibit = req.params.exhibit_id;
         const is_member_of_grid = req.params.grid_id;
         const item_id = req.params.item_id;
+        const type = req.query.type;
 
         if (is_member_of_exhibit === undefined || is_member_of_grid === undefined || item_id === undefined) {
             res.status(400).send('Bad request.');
             return false;
         }
 
-        const result = await GRIDS_MODEL.get_grid_item_record(is_member_of_exhibit, is_member_of_grid, item_id);
-        res.status(result.status).send(result);
+        if (type === undefined) {
+            const result = await GRIDS_MODEL.get_grid_item_record(is_member_of_exhibit, is_member_of_grid, item_id);
+            res.status(result.status).send(result);
+            return false;
+        }
+
+        if (type === 'edit') {
+
+            const uid = req.query.uid;
+
+            if (uid === undefined || uid.length === 0) {
+                res.status(400).send('Bad request.');
+                return false;
+            }
+
+            const result = await GRIDS_MODEL.get_grid_item_edit_record(uid, is_member_of_exhibit, is_member_of_grid, item_id);
+            res.status(result.status).send(result);
+            return false;
+        }
 
     } catch (error) {
         res.status(500).send({message: `Unable to get grid item. ${error.message}`});

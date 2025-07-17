@@ -32,6 +32,7 @@ const itemsEditGridItemFormModule = (function () {
             const grid_id = helperModule.get_parameter_by_name('grid_id');
             const item_id = helperModule.get_parameter_by_name('item_id');
             const token = authModule.get_user_token();
+            const profile = authModule.get_user_profile_data();
             let etmp = EXHIBITS_ENDPOINTS.exhibits.grid_item_record.get.endpoint.replace(':exhibit_id', exhibit_id);
             let itmp = etmp.replace(':grid_id', grid_id);
             let endpoint = itmp.replace(':item_id', item_id);
@@ -49,7 +50,7 @@ const itemsEditGridItemFormModule = (function () {
 
             let response = await httpModule.req({
                 method: 'GET',
-                url: endpoint,
+                url: endpoint + '?type=edit&uid=' + profile.uid,
                 headers: {
                     'Content-Type': 'application/json',
                     'x-access-token': token

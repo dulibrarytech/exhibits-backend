@@ -285,6 +285,31 @@ exports.get_grid_item_record = async function (is_member_of_exhibit, is_member_o
 };
 
 /**
+ * Gets grid item edit record
+ * @param is_member_of_exhibit
+ * @param is_member_of_grid
+ * @param item_id
+ * @param uid
+ */
+exports.get_grid_item_edit_record = async function (uid, is_member_of_exhibit, is_member_of_grid, item_id) {
+
+    try {
+
+        const GRID_TASK = new EXHIBIT_GRID_RECORD_TASKS(DB, TABLES);
+        const grid_items = await GRID_TASK.get_grid_item_edit_record(uid, is_member_of_exhibit, is_member_of_grid, item_id);
+
+        return {
+            status: 200,
+            message: 'Exhibit grid item record',
+            data: grid_items
+        };
+
+    } catch (error) {
+        LOGGER.module().error('ERROR: [/exhibits/model (get_grid_item_record)] ' + error.message);
+    }
+};
+
+/**
  * Updates grid item
  * @param is_member_of_exhibit
  * @param is_member_of_grid
