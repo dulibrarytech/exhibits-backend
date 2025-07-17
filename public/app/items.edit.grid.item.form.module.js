@@ -82,6 +82,8 @@ const itemsEditGridItemFormModule = (function () {
         let create_date_time = helperModule.format_date(create_date);
         let update_date_time = helperModule.format_date(update_date);
 
+        helperModule.check_if_locked(record, '#item-submit-card');
+
         if (created_by !== null) {
             item_created += `<em>Created by ${created_by} on ${create_date_time}</em>`;
         }
