@@ -21,7 +21,9 @@
                 </li>
                 <li class="menu-title">Menu</li>
             </ul>
-            <ul class="nav navbar-nav"><li id="preview-link"></li></ul>
+            <ul class="nav navbar-nav">
+                <li id="preview-link"></li>
+            </ul>
             <ul class="nav navbar-nav">
                 <li>
                     <a id="back-to-items" href="#" data-keyboard="false">
@@ -56,7 +58,10 @@
                             <div class="col-12">
                                 <div class="form-text text-muted" style="font-size: 17px">
                                     Title
-                                    &nbsp;&nbsp;<a onclick="helperModule.preview_html('item-title-input');return false;" data-toggle="modal" data-target=".preview-html" class="btn-xs btn-light"><span style="padding: 5px"><i class="fa fa-code"></i> <small>Preview Field</small></span></a>
+                                    &nbsp;&nbsp;<a onclick="helperModule.preview_html('item-title-input');return false;"
+                                                   data-toggle="modal" data-target=".preview-html"
+                                                   class="btn-xs btn-light"><span style="padding: 5px"><i
+                                                    class="fa fa-code"></i> <small>Preview Field</small></span></a>
                                 </div>
                                 <small class="form-text text-muted"><i class="fa fa-exclamation-circle"></i> <em>The
                                         item title becomes a subheading in the navigation</em></small>
@@ -73,7 +78,10 @@
                             <div class="col-12">
                                 <div class="form-text text-muted" style="font-size: 17px"><span id="is-required-text">Text
                             <small><em>(Optional)</em></small></span>
-                                    &nbsp;&nbsp;<a onclick="helperModule.preview_html('item-text-input');return false;" data-toggle="modal" data-target=".preview-html" class="btn-xs btn-light"><span style="padding: 5px"><i class="fa fa-code"></i> <small>Preview Field</small></span></a>
+                                    &nbsp;&nbsp;<a onclick="helperModule.preview_html('item-text-input');return false;"
+                                                   data-toggle="modal" data-target=".preview-html"
+                                                   class="btn-xs btn-light"><span style="padding: 5px"><i
+                                                    class="fa fa-code"></i> <small>Preview Field</small></span></a>
                                 </div>
                                 <textarea disabled id="item-text-input" class="form-control" name="item_text_input"
                                           rows="4"></textarea>
@@ -100,9 +108,14 @@
                         <div class="row form-group">
                             <div class="col-12">
                                 <div class="form-text text-muted" style="font-size: 17px">Caption
-                                    &nbsp;&nbsp;<a onclick="helperModule.preview_html('item-caption-input');return false;" data-toggle="modal" data-target=".preview-html" class="btn-xs btn-light"><span style="padding: 5px"><i class="fa fa-code"></i> <small>Preview Field</small></span></a>
+                                    &nbsp;&nbsp;<a
+                                            onclick="helperModule.preview_html('item-caption-input');return false;"
+                                            data-toggle="modal" data-target=".preview-html"
+                                            class="btn-xs btn-light"><span style="padding: 5px"><i
+                                                    class="fa fa-code"></i> <small>Preview Field</small></span></a>
                                 </div>
-                                <textarea disabled id="item-caption-input" class="form-control" name="item_caption_input"
+                                <textarea disabled id="item-caption-input" class="form-control"
+                                          name="item_caption_input"
                                           rows="4"></textarea>
                             </div>
                         </div>
@@ -110,30 +123,11 @@
                 </div>
             </div>
         </div>
-        <div id="item-layout-card" class="card">
-            <div class="card-header">
-                <strong class="card-title mb-3">Item Layout</strong>
-            </div>
-            <div class="card-body">
-                <div class="row"></div>
-                <div class="row">
-                    <div class="col-4 col-md-4">
-                        <p style="height: 135px"><img src="/exhibits-dashboard/static/images/item_layout_text_only.png" height="100"></p>
-                        <p>
-                            <label class="btn btn-default" for="item-layout-text-only" style="font-size: 15px">Text only, no media
-                                <input disabled type="radio"
-                                       name="layout"
-                                       id="item-layout-text-only"
-                                       value="text_only"/>
-                            </label>
-                        </p>
-                    </div>
-                </div>
-            </div>
-        </div>
-
+        <input disabled type="radio"
+               name="layout"
+               id="item-layout-text-only"
+               value="text_only" style="visibility: hidden"/>
         <input type="radio" name="media_width" id="item-width-50" value="50" checked style="visibility: hidden"/>
-
         <div id="item-styles-card" class="card">
             <div class="card-header">
                 <strong class="card-title mb-3">Item Styles</strong>
@@ -150,7 +144,8 @@
                             <div class="col-12 col-md-12">
                                 <div class="input-group">
                                     <div class="input-group-btn">
-                                        <input disabled title="Color Picker" class="color-picker btn btn-default" type="color"
+                                        <input disabled title="Color Picker" class="color-picker btn btn-default"
+                                               type="color"
                                                id="item-background-color-picker" value="#ffffff">
                                     </div>
                                     <input disabled type="text" id="item-background-color" name="item_background_color"
@@ -186,7 +181,8 @@
                                 </p>
                                 <div class="input-group">
                                     <div class="input-group-btn">
-                                        <input disabled title="Color Picker" class="color-picker btn btn-default" type="color"
+                                        <input disabled title="Color Picker" class="color-picker btn btn-default"
+                                               type="color"
                                                id="item-font-color-picker"
                                                value="#ffffff">
                                     </div>
@@ -207,7 +203,7 @@
                                             class="form-control-lg form-control text-muted" style="height: 40px">
                                         <option value="">Select From Menu</option>
                                         <option value="">----------</option>
-                                        <%- // include('partials/exhibit-fonts-options-list.ejs'); %>
+                                        <%- // include('partials/exhibit-fonts-options-list.ejs');  %>
                                     </select>
                                 </div>
                             </div>
