@@ -1,4 +1,4 @@
-<%- include('partials/header.ejs'); %>
+<%- include('../partials/header.ejs'); %>
 <style>
     .color-picker {
         background-color: none;
@@ -40,13 +40,60 @@
     </nav>
 </aside>
 <div id="right-panel" class="right-panel">
-    <%- include('partials/main-header.ejs'); %>
+    <%- include('../partials/main-header.ejs'); %>
     <div class="content" style="min-height: 875px;">
-        <div id="message"></div>
-        <%- include('partials/item-grid-data-card.ejs'); %>
-        <%- include('partials/grid-styles.ejs'); %>
+        <div id="grid-data-card" class="card">
+            <div class="card-header">
+                <strong class="card-title mb-3"><span id="exhibit-title"></span> - Grid</strong>
+                <div class="btn-group float-right">
+                    <span id="created" style="text-align: right; font-size: x-small"></span>
+                </div>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-8 col-md-8">
+                        <div class="row form-group">
+                            <div class="col-12">
+                                <div class="form-text text-muted" style="font-size: 17px">
+                                    Title
+                                    &nbsp;&nbsp;<a onclick="helperModule.preview_html('grid-title-input');return false;" data-toggle="modal" data-target=".preview-html" class="btn-xs btn-light"><span style="padding: 5px"><i class="fa fa-code"></i> <small>Preview Field</small></span></a>
+                                </div>
+                                <span id="grid-title-error" class="is-error"></span>
+                                <textarea disabled id="grid-title-input" class="form-control" name="grid_title_input"
+                                          rows="4"></textarea>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-4 col-md-4">
+                        <div class="row form-group">
+                            <div class="col-12">
+                                <div class="form-text text-muted" style="font-size: 17px">
+                                    Grid Columns
+                                </div>
+                                <input disabled type="number" id="grid-columns" name="grid_columns"
+                                       class="form-control" min="1"
+                                       style="width: 150px" value="4"><small class="form-text text-muted"></small>
 
-        <!--
+                                <span id="grid-title-error" class="is-error"></span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="row">
+                    <div class="col-12 col-md-12">
+                        <div class="row form-group">
+                            <div class="col-12">
+                                <div class="form-text text-muted" style="font-size: 17px">Text
+                                    &nbsp;&nbsp;<a onclick="helperModule.preview_html('grid-text-input');return false;" data-toggle="modal" data-target=".preview-html" class="btn-xs btn-light"><span style="padding: 5px"><i class="fa fa-code"></i> <small>Preview Field</small></span></a>
+                                </div>
+                                <textarea disabled id="grid-text-input" class="form-control" name="grid_text_input"
+                                          rows="4"></textarea>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
         <div id="grid-styles-card" class="card">
             <div class="card-header">
                 <strong class="card-title mb-3">Grid Styles</strong>
@@ -63,10 +110,10 @@
                                 </p>
                                 <div class="input-group">
                                     <div class="input-group-btn">
-                                        <input title="Color Picker" class="color-picker btn btn-default" type="color"
+                                        <input disabled title="Color Picker" class="color-picker btn btn-default" type="color"
                                                id="grid-background-color-picker" value="#ffffff">
                                     </div>
-                                    <input type="text" id="grid-background-color" name="grid_background_color"
+                                    <input disabled type="text" id="grid-background-color" name="grid_background_color"
                                            placeholder="i.e. #FFFFFF" class="form-control" style="height: 40px">
 
                                 </div>
@@ -80,7 +127,7 @@
                                 </div>
                                 </p>
                                 <div class="input-group">
-                                    <input type="number" id="grid-font-size" name="grid_font_size"
+                                    <input disabled type="number" id="grid-font-size" name="grid_font_size"
                                            placeholder="" class="form-control" min="1" max="50" style="height: 40px">
                                     <div class="input-group-append">
                                         <span class="input-group-text" id="basic-addon2">px</span>
@@ -99,11 +146,11 @@
                                 </p>
                                 <div class="input-group">
                                     <div class="input-group-btn">
-                                        <input title="Color Picker" class="color-picker btn btn-default" type="color"
+                                        <input disabled title="Color Picker" class="color-picker btn btn-default" type="color"
                                                id="grid-font-color-picker"
                                                value="#ffffff">
                                     </div>
-                                    <input type="text" id="grid-font-color" name="grid_font_color"
+                                    <input disabled type="text" id="grid-font-color" name="grid_font_color"
                                            placeholder="i.e. #FFFFFF" class="form-control" style="height: 40px">
                                 </div>
                             </div>
@@ -116,11 +163,11 @@
                                 </div>
                                 </p>
                                 <div class="input-group">
-                                    <select name="grid_font" id="grid-font"
+                                    <select disabled name="grid_font" id="grid-font"
                                             class="form-control-lg form-control text-muted" style="height: 40px">
                                         <option value="">Select From Menu</option>
                                         <option value="">----------</option>
-                                        <%- // include('partials/exhibit-fonts-options-list.ejs'); %>
+                                        <%- include('../exhibits/partials/exhibit-fonts-options-list.ejs'); %>
                                     </select>
                                 </div>
                             </div>
@@ -129,11 +176,12 @@
                 </div>
             </div>
         </div>
-        -->
-
         <div id="item-submit-card" class="card">
-            <div class="card-body">
-                <button class="btn btn-primary" type="button" id="save-item-btn">
+             <div class="card-body">
+                 <button class="btn btn-primary" type="button" id="edit-item-btn">
+                     <i class="fa fa-edit"></i>&nbsp;&nbsp;Edit
+                 </button>&nbsp;&nbsp;<span class="alert alert-warning"><i class="fa fa-warning"></i> Changes made to published exhibit grids are immediately visible to the public</span>
+                 <button class="btn btn-primary" type="button" id="save-item-btn" style="visibility: hidden">
                     <i class="fa fa-save"></i>&nbsp;&nbsp;Save
                 </button>
             </div>
@@ -141,8 +189,8 @@
         </div>
     </div>
     <div class="clearfix"></div>
-    <%- include('partials/footer.ejs'); %>
-    <%- include('partials/preview-html-modal.ejs'); %>
+    <%- include('../partials/footer.ejs'); %>
+    <%- include('../partials/preview-html-modal.ejs'); %>
 </div>
 <script src="https://code.jquery.com/jquery-3.7.0.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/popper.js@1.16.1/dist/umd/popper.min.js"></script>
@@ -167,6 +215,14 @@
 <script>
     itemsCommonStandardGridFormModule.init();
     itemsEditGridFormModule.init();
+    document.querySelector('#edit-item-btn').addEventListener('click', (event) => {
+        event.preventDefault();
+        document.querySelector('.content').style.visibility = 'hidden';
+        const exhibit_id = helperModule.get_parameter_by_name('exhibit_id');
+        const item_id = helperModule.get_parameter_by_name('item_id');
+        window.location.replace(`/exhibits-dashboard/items/grid/edit?exhibit_id=${exhibit_id}&item_id=${item_id}`);
+        return false;
+    });
 </script>
 </body>
 </html>

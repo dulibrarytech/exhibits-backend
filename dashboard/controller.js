@@ -187,7 +187,7 @@ exports.get_dashboard_items_standard_text_edit_form = function (req, res) {
 
 //======================== Grids ========================//
 exports.get_dashboard_grid_add_form = function (req, res) {
-    res.render('dashboard-grid-add-form', {
+    res.render('grid-items/dashboard-grid-add-form', {
         host: CONFIG.host,
         appname: CONFIG.app_name,
         appversion: CONFIG.app_version,
@@ -196,7 +196,7 @@ exports.get_dashboard_grid_add_form = function (req, res) {
 };
 
 exports.get_dashboard_grid_add_form = function (req, res) {
-    res.render('dashboard-grid-add-form', {
+    res.render('grid-items/dashboard-grid-add-form', {
         host: CONFIG.host,
         appname: CONFIG.app_name,
         appversion: CONFIG.app_version,
@@ -205,7 +205,7 @@ exports.get_dashboard_grid_add_form = function (req, res) {
 };
 
 exports.get_dashboard_grid_details = function (req, res) {
-    res.render('dashboard-grid-details', {
+    res.render('grid-items/dashboard-grid-details', {
         host: CONFIG.host,
         appname: CONFIG.app_name,
         appversion: CONFIG.app_version,
@@ -214,7 +214,7 @@ exports.get_dashboard_grid_details = function (req, res) {
 };
 
 exports.get_dashboard_grid_edit_form = function (req, res) {
-    res.render('dashboard-grid-edit-form', {
+    res.render('grid-items/dashboard-grid-edit-form', {
         host: CONFIG.host,
         appname: CONFIG.app_name,
         appversion: CONFIG.app_version,
@@ -223,7 +223,7 @@ exports.get_dashboard_grid_edit_form = function (req, res) {
 };
 
 exports.get_dashboard_grid_add_media_item_form = function (req, res) {
-    res.render('dashboard-grid-add-media-item-form', {
+    res.render('grid-items/dashboard-grid-add-media-item-form', {
         host: CONFIG.host,
         appname: CONFIG.app_name,
         appversion: CONFIG.app_version,
@@ -232,7 +232,7 @@ exports.get_dashboard_grid_add_media_item_form = function (req, res) {
 };
 
 exports.get_dashboard_grid_add_text_item_form = function (req, res) {
-    res.render('dashboard-grid-add-text-item-form', {
+    res.render('grid-items/dashboard-grid-add-text-item-form', {
         host: CONFIG.host,
         appname: CONFIG.app_name,
         appversion: CONFIG.app_version,
@@ -241,7 +241,7 @@ exports.get_dashboard_grid_add_text_item_form = function (req, res) {
 };
 
 exports.get_dashboard_grid_edit_media_item_form = function (req, res) {
-    res.render('dashboard-grid-edit-media-item-form', {
+    res.render('grid-items/dashboard-grid-edit-media-item-form', {
         host: CONFIG.host,
         appname: CONFIG.app_name,
         appversion: CONFIG.app_version,
@@ -250,7 +250,7 @@ exports.get_dashboard_grid_edit_media_item_form = function (req, res) {
 };
 
 exports.get_dashboard_grid_edit_text_item_form = function (req, res) {
-    res.render('dashboard-grid-edit-text-item-form', {
+    res.render('grid-items/dashboard-grid-edit-text-item-form', {
         host: CONFIG.host,
         appname: CONFIG.app_name,
         appversion: CONFIG.app_version,
@@ -259,7 +259,7 @@ exports.get_dashboard_grid_edit_text_item_form = function (req, res) {
 };
 
 exports.get_dashboard_grid_item_details = function (req, res) {
-    res.render('dashboard-grid-item-details', {
+    res.render('grid-items/dashboard-grid-item-details', {
         host: CONFIG.host,
         appname: CONFIG.app_name,
         appversion: CONFIG.app_version,
@@ -268,7 +268,7 @@ exports.get_dashboard_grid_item_details = function (req, res) {
 };
 
 exports.get_dashboard_grid_item_media_details = function (req, res) {
-    res.render('dashboard-grid-item-media-details', {
+    res.render('grid-items/dashboard-grid-item-media-details', {
         host: CONFIG.host,
         appname: CONFIG.app_name,
         appversion: CONFIG.app_version,
@@ -277,7 +277,7 @@ exports.get_dashboard_grid_item_media_details = function (req, res) {
 };
 
 exports.get_dashboard_grid_item_text_details = function (req, res) {
-    res.render('dashboard-grid-item-text-details', {
+    res.render('grid-items/dashboard-grid-item-text-details', {
         host: CONFIG.host,
         appname: CONFIG.app_name,
         appversion: CONFIG.app_version,
@@ -286,7 +286,7 @@ exports.get_dashboard_grid_item_text_details = function (req, res) {
 };
 
 exports.get_dashboard_item_grid_items = function (req, res) {
-    res.render('dashboard-grid-items', {
+    res.render('grid-items/dashboard-grid-items', {
         host: CONFIG.host,
         appname: CONFIG.app_name,
         appversion: CONFIG.app_version,
@@ -295,7 +295,7 @@ exports.get_dashboard_item_grid_items = function (req, res) {
 };
 
 exports.get_dashboard_grid_items_delete_form = function (req, res) {
-    res.render('dashboard-grid-items-delete-form', {
+    res.render('grid-items/dashboard-grid-items-delete-form', {
         host: CONFIG.host,
         appname: CONFIG.app_name,
         appversion: CONFIG.app_version,
