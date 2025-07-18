@@ -410,7 +410,7 @@ exports.get_dashboard_logout = function (req, res) {
 
 //======================== Users ========================//
 exports.get_dashboard_users = function (req, res) {
-    res.render('dashboard-users', {
+    res.render('users/dashboard-users', {
         host: CONFIG.host,
         appname: CONFIG.app_name,
         appversion: CONFIG.app_version,
@@ -420,7 +420,7 @@ exports.get_dashboard_users = function (req, res) {
 };
 
 exports.get_dashboard_users_add_form = function (req, res) {
-    res.render('dashboard-add-user', {
+    res.render('users/dashboard-add-user', {
         host: CONFIG.host,
         appname: CONFIG.app_name,
         appversion: CONFIG.app_version,
@@ -430,7 +430,7 @@ exports.get_dashboard_users_add_form = function (req, res) {
 };
 
 exports.get_dashboard_users_edit_form = function (req, res) {
-    res.render('dashboard-edit-user', {
+    res.render('users/dashboard-edit-user', {
         host: CONFIG.host,
         appname: CONFIG.app_name,
         appversion: CONFIG.app_version,
@@ -440,7 +440,7 @@ exports.get_dashboard_users_edit_form = function (req, res) {
 };
 
 exports.get_dashboard_users_delete_form = function (req, res) {
-    res.render('dashboard-delete-user-form', {
+    res.render('users/dashboard-delete-user-form', {
         host: CONFIG.host,
         appname: CONFIG.app_name,
         appversion: CONFIG.app_version,
