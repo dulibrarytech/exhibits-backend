@@ -76,7 +76,7 @@ exports.get_dashboard_exhibits_delete_form = function (req, res) {
 
 //======================== Heading items ========================//
 exports.get_dashboard_item_heading_add_form = function (req, res) {
-    res.render('dashboard-item-heading-add-form', {
+    res.render('heading-items/dashboard-item-heading-add-form', {
         host: CONFIG.host,
         appname: CONFIG.app_name,
         appversion: CONFIG.app_version,
@@ -85,7 +85,7 @@ exports.get_dashboard_item_heading_add_form = function (req, res) {
 };
 
 exports.get_dashboard_item_heading_details = function (req, res) {
-    res.render('dashboard-item-heading-details', {
+    res.render('heading-items/dashboard-item-heading-details', {
         host: CONFIG.host,
         appname: CONFIG.app_name,
         appversion: CONFIG.app_version,
@@ -94,7 +94,7 @@ exports.get_dashboard_item_heading_details = function (req, res) {
 };
 
 exports.get_dashboard_items_heading_edit_form = function (req, res) {
-    res.render('dashboard-item-heading-edit-form', {
+    res.render('heading-items/dashboard-item-heading-edit-form', {
         host: CONFIG.host,
         appname: CONFIG.app_name,
         appversion: CONFIG.app_version,
