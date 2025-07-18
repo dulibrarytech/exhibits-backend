@@ -29,7 +29,7 @@ exports.default = function (req, res) {
 
 //======================== Exhibits ========================//
 exports.get_dashboard_exhibits = function (req, res) {
-    res.render('dashboard-exhibits', {
+    res.render('exhibits/dashboard-exhibits', {
         host: CONFIG.host,
         appname: CONFIG.app_name,
         appversion: CONFIG.app_version,
@@ -39,7 +39,7 @@ exports.get_dashboard_exhibits = function (req, res) {
 };
 
 exports.get_dashboard_exhibits_add_form = function (req, res) {
-    res.render('dashboard-exhibits-add-form', {
+    res.render('exhibits/dashboard-exhibits-add-form', {
         host: CONFIG.host,
         appname: CONFIG.app_name,
         appversion: CONFIG.app_version,
@@ -48,7 +48,7 @@ exports.get_dashboard_exhibits_add_form = function (req, res) {
 };
 
 exports.get_dashboard_exhibits_details = function (req, res) {
-    res.render('dashboard-exhibits-details', {
+    res.render('exhibits/dashboard-exhibits-details', {
         host: CONFIG.host,
         appname: CONFIG.app_name,
         appversion: CONFIG.app_version,
@@ -57,7 +57,7 @@ exports.get_dashboard_exhibits_details = function (req, res) {
 };
 
 exports.get_dashboard_exhibits_edit_form = function (req, res) {
-    res.render('dashboard-exhibits-edit-form', {
+    res.render('exhibits/dashboard-exhibits-edit-form', {
         host: CONFIG.host,
         appname: CONFIG.app_name,
         appversion: CONFIG.app_version,
@@ -66,7 +66,7 @@ exports.get_dashboard_exhibits_edit_form = function (req, res) {
 };
 
 exports.get_dashboard_exhibits_delete_form = function (req, res) {
-    res.render('dashboard-exhibits-delete-form', {
+    res.render('exhibits/dashboard-exhibits-delete-form', {
         host: CONFIG.host,
         appname: CONFIG.app_name,
         appversion: CONFIG.app_version,

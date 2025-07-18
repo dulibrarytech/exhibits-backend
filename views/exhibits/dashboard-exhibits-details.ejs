@@ -1,4 +1,4 @@
-<%- include('partials/header.ejs'); %>
+<%- include('../partials/header.ejs'); %>
 <style>
     .color-picker {
         background-color: none;
@@ -10,9 +10,9 @@
     }
 </style>
 <body>
-<%- include('partials/nav.ejs'); %>
+<%- include('../partials/nav.ejs'); %>
 <div id="right-panel" class="right-panel">
-    <%- include('partials/main-header.ejs'); %>
+    <%- include('../partials/main-header.ejs'); %>
     <div class="content" style="min-height: 875px;">
         <div id="exhibit-data-card" class="card">
             <div class="card-header">
@@ -51,20 +51,6 @@
                             </div>
                         </div>
                     </div>
-                    <!--
-                    <div class="col-6 col-md-6">
-                        <div class="row form-group">
-                            <div class="col-12">
-                                <div class="form-text text-muted" style="font-size: 17px">Alert Text
-                                    &nbsp;&nbsp;<a onclick="helperModule.preview_html('exhibit-alert-text-input');return false;" data-toggle="modal" data-target=".preview-html" class="btn-xs btn-light"><span style="padding: 5px"><i class="fa fa-code"></i> <small>Preview Field</small></span></a>
-                                </div>
-
-                                <textarea disabled id="exhibit-alert-text-input" class="form-control" name="exhibit_alert_text_input"
-                                          rows="4"></textarea>
-                            </div>
-                        </div>
-                    </div>
-                    -->
                 </div>
                 <div class="row">
                     <div class="col-12 col-md-12">
@@ -329,7 +315,6 @@
                                             class="form-control-lg form-control text-muted" style="height: 40px">
                                         <option value="">Select From Menu</option>
                                         <option value="">----------</option>
-                                        <%- // include('exhibit-fonts-options-list.ejs'); %>
                                     </select>
                                 </div>
                             </div>
@@ -477,7 +462,6 @@
                                             class="form-control-lg form-control text-muted" style="height: 40px">
                                         <option value="">Select From Menu</option>
                                         <option value="">----------</option>
-                                        <%- // include('exhibit-fonts-options-list.ejs'); %>
                                     </select>
                                 </div>
                             </div>
@@ -501,8 +485,8 @@
         </div>
     </div>
     <div class="clearfix"></div>
-    <%- include('partials/footer.ejs'); %>
-    <%- include('partials/preview-html-modal.ejs'); %>
+    <%- include('../partials/footer.ejs'); %>
+    <%- include('../partials/preview-html-modal.ejs'); %>
 </div>
 <script src="https://code.jquery.com/jquery-3.7.0.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/popper.js@1.16.1/dist/umd/popper.min.js"></script>
