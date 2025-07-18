@@ -104,7 +104,7 @@ exports.get_dashboard_items_heading_edit_form = function (req, res) {
 
 //======================== Standard items ========================//
 exports.get_dashboard_items = function (req, res) {
-    res.render('dashboard-items', {
+    res.render('standard-items/dashboard-items', {
         host: CONFIG.host,
         appname: CONFIG.app_name,
         appversion: CONFIG.app_version,
@@ -113,7 +113,7 @@ exports.get_dashboard_items = function (req, res) {
 };
 
 exports.get_dashboard_items_standard_details = function (req, res) {
-    res.render('dashboard-item-standard-details', {
+    res.render('standard-items/dashboard-item-standard-details', {
         host: CONFIG.host,
         appname: CONFIG.app_name,
         appversion: CONFIG.app_version,
@@ -122,7 +122,7 @@ exports.get_dashboard_items_standard_details = function (req, res) {
 };
 
 exports.get_dashboard_items_standard_media_details = function (req, res) {
-    res.render('dashboard-item-standard-media-details', {
+    res.render('standard-items/dashboard-item-standard-media-details', {
         host: CONFIG.host,
         appname: CONFIG.app_name,
         appversion: CONFIG.app_version,
@@ -131,7 +131,7 @@ exports.get_dashboard_items_standard_media_details = function (req, res) {
 };
 
 exports.get_dashboard_items_standard_text_details = function (req, res) {
-    res.render('dashboard-item-standard-text-details', {
+    res.render('standard-items/dashboard-item-standard-text-details', {
         host: CONFIG.host,
         appname: CONFIG.app_name,
         appversion: CONFIG.app_version,
@@ -141,7 +141,7 @@ exports.get_dashboard_items_standard_text_details = function (req, res) {
 
 
 exports.get_dashboard_items_delete_form = function (req, res) {
-    res.render('dashboard-items-delete-form', {
+    res.render('standard-items/dashboard-items-delete-form', {
         host: CONFIG.host,
         appname: CONFIG.app_name,
         appversion: CONFIG.app_version,
@@ -150,7 +150,7 @@ exports.get_dashboard_items_delete_form = function (req, res) {
 };
 
 exports.get_dashboard_items_standard_media_add_form = function (req, res) {
-    res.render('dashboard-item-standard-media-add-form', {
+    res.render('standard-items/dashboard-item-standard-media-add-form', {
         host: CONFIG.host,
         appname: CONFIG.app_name,
         appversion: CONFIG.app_version,
@@ -159,7 +159,7 @@ exports.get_dashboard_items_standard_media_add_form = function (req, res) {
 };
 
 exports.get_dashboard_items_standard_media_edit_form = function (req, res) {
-    res.render('dashboard-item-standard-media-edit-form', {
+    res.render('standard-items/dashboard-item-standard-media-edit-form', {
         host: CONFIG.host,
         appname: CONFIG.app_name,
         appversion: CONFIG.app_version,
@@ -168,7 +168,7 @@ exports.get_dashboard_items_standard_media_edit_form = function (req, res) {
 };
 
 exports.get_dashboard_items_standard_text_add_form = function (req, res) {
-    res.render('dashboard-item-standard-text-add-form', {
+    res.render('standard-items/dashboard-item-standard-text-add-form', {
         host: CONFIG.host,
         appname: CONFIG.app_name,
         appversion: CONFIG.app_version,
@@ -177,7 +177,7 @@ exports.get_dashboard_items_standard_text_add_form = function (req, res) {
 };
 
 exports.get_dashboard_items_standard_text_edit_form = function (req, res) {
-    res.render('dashboard-item-standard-text-edit-form', {
+    res.render('standard-items/dashboard-item-standard-text-edit-form', {
         host: CONFIG.host,
         appname: CONFIG.app_name,
         appversion: CONFIG.app_version,
