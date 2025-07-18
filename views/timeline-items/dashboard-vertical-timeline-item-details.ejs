@@ -1,4 +1,4 @@
-<%- include('partials/header.ejs'); %>
+<%- include('../partials/header.ejs'); %>
 <style>
     .color-picker {
         background-color: none;
@@ -40,11 +40,9 @@
     </nav>
 </aside>
 <div id="right-panel" class="right-panel">
-    <%- include('partials/main-header.ejs'); %>
+    <%- include('../partials/main-header.ejs'); %>
     <div class="content" style="min-height: 875px;">
         <div id="message"></div>
-
-        <%- // include('partials/item-vertical-timeline-item-data-card.ejs'); %>
 
         <!-- item data card -->
         <div id="item-data-card" class="card">
@@ -120,7 +118,6 @@
                 </div>
             </div>
         </div>
-
         <!-- item media card -->
         <div id="item-media-card" class="card">
             <div class="card-header">
@@ -141,10 +138,6 @@
                         </li>
                     </ul>
                     <div class="tab-content" id="mediaTabContent">
-
-                        <!-- item media tabs
-                        <div class="tab-pane fade show active" id="upload-media" role="tabpanel" aria-labelledby="upload-media-tab"><%- include('partials/tab-upload-media.ejs'); %></div>
-                        -->
                         <p>
                         <div class="alert alert-warning">* Accepts only Images (png, jpg) and PDFs</div>
                         <span class="upload-error"></span>
@@ -152,12 +145,6 @@
                         <div class="row">
                             <div class="col-6 col-md-6">
                                 <div class="col-12">
-                                    <!--
-                                    <form class="form-horizontal dropzone" id="item-dropzone" action="/exhibits-dashboard/uploads"
-                                          method="post"
-                                          enctype="multipart/form-data">
-                                    </form>
-                                    -->
                                     <p>
                                         <br>
                                         <span id="item-media-thumbnail-image-display"></span>
@@ -175,12 +162,6 @@
                             </div>
                             <div class="col-6 col-md-6">
                                 <div class="col-12">
-                                    <!--
-                                    <form class="form-horizontal dropzone" id="item-thumbnail-dropzone" action="/exhibits-dashboard/uploads"
-                                          method="post"
-                                          enctype="multipart/form-data">
-                                    </form>
-                                    -->
                                     <p>
                                         <br>
                                         <span id="item-thumbnail-image-display"></span>
@@ -210,16 +191,14 @@
                         </div>
 
 
-                        <div class="tab-pane fade" id="import-audio-video" role="tabpanel" aria-labelledby="import-audio-video-tab"><%- include('partials/tab-import-audio-video.ejs'); %></div>
-                        <div class="tab-pane fade" id="import-repo-media" role="tabpanel" aria-labelledby="import-repo-media-tab"><%- include('partials/tab-import-repo-media.ejs'); %></div>
-
+                        <div class="tab-pane fade" id="import-audio-video" role="tabpanel" aria-labelledby="import-audio-video-tab"><%- include('../partials/tab-import-audio-video.ejs'); %></div>
+                        <div class="tab-pane fade" id="import-repo-media" role="tabpanel" aria-labelledby="import-repo-media-tab"><%- include('../partials/tab-import-repo-media.ejs'); %></div>
                     </div>
                 </div>
-                <%- include('partials/item-alt-text.ejs'); %>
-                <%- include('partials/embed-item.ejs'); %>
+                <%- include('../standard-items/partials/item-alt-text.ejs'); %>
+                <%- include('../standard-items/partials/embed-item.ejs'); %>
             </div>
         </div>
-
         <div id="item-styles-card" class="card">
             <div class="card-header">
                 <strong class="card-title mb-3">Item Styles</strong>
@@ -273,7 +252,7 @@
                                             class="form-control-lg form-control text-muted" style="height: 40px">
                                         <option value="">Select From Menu</option>
                                         <option value="">----------</option>
-                                        <%- include('partials/exhibit-fonts-options-list.ejs'); %>
+                                        <%- include('../exhibits/partials/exhibit-fonts-options-list.ejs'); %>
                                     </select>
                                 </div>
                             </div>
@@ -292,8 +271,8 @@
         </div>
     </div>
     <div class="clearfix"></div>
-    <%- include('partials/footer.ejs'); %>
-    <%- include('partials/preview-html-modal.ejs'); %>
+    <%- include('../partials/footer.ejs'); %>
+    <%- include('../partials/preview-html-modal.ejs'); %>
 </div>
 <script src="https://code.jquery.com/jquery-3.7.0.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/popper.js@1.16.1/dist/umd/popper.min.js"></script>

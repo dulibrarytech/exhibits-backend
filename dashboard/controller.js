@@ -305,7 +305,7 @@ exports.get_dashboard_grid_items_delete_form = function (req, res) {
 
 //======================== Timelines ========================//
 exports.get_dashboard_vertical_timeline_add_form = function (req, res) {
-    res.render('dashboard-vertical-timeline-add-form', {
+    res.render('timeline-items/dashboard-vertical-timeline-add-form', {
         host: CONFIG.host,
         appname: CONFIG.app_name,
         appversion: CONFIG.app_version,
@@ -314,7 +314,7 @@ exports.get_dashboard_vertical_timeline_add_form = function (req, res) {
 };
 
 exports.get_dashboard_vertical_timeline_details = function (req, res) {
-    res.render('dashboard-vertical-timeline-details', {
+    res.render('timeline-items/dashboard-vertical-timeline-details', {
         host: CONFIG.host,
         appname: CONFIG.app_name,
         appversion: CONFIG.app_version,
@@ -323,7 +323,7 @@ exports.get_dashboard_vertical_timeline_details = function (req, res) {
 };
 
 exports.get_dashboard_vertical_timeline_edit_form = function (req, res) {
-    res.render('dashboard-vertical-timeline-edit-form', {
+    res.render('timeline-items/dashboard-vertical-timeline-edit-form', {
         host: CONFIG.host,
         appname: CONFIG.app_name,
         appversion: CONFIG.app_version,
@@ -332,7 +332,7 @@ exports.get_dashboard_vertical_timeline_edit_form = function (req, res) {
 };
 
 exports.get_dashboard_vertical_timeline_item_add_form = function (req, res) {
-    res.render('dashboard-vertical-timeline-item-add-form', {
+    res.render('timeline-items/dashboard-vertical-timeline-item-add-form', {
         host: CONFIG.host,
         appname: CONFIG.app_name,
         appversion: CONFIG.app_version,
@@ -341,7 +341,7 @@ exports.get_dashboard_vertical_timeline_item_add_form = function (req, res) {
 };
 
 exports.get_dashboard_vertical_timeline_item_edit_form = function (req, res) {
-    res.render('dashboard-vertical-timeline-item-edit-form', {
+    res.render('timeline-items/dashboard-vertical-timeline-item-edit-form', {
         host: CONFIG.host,
         appname: CONFIG.app_name,
         appversion: CONFIG.app_version,
@@ -350,7 +350,7 @@ exports.get_dashboard_vertical_timeline_item_edit_form = function (req, res) {
 };
 
 exports.get_dashboard_vertical_timeline_item_details = function (req, res) {
-    res.render('dashboard-vertical-timeline-item-details', {
+    res.render('timeline-items/dashboard-vertical-timeline-item-details', {
         host: CONFIG.host,
         appname: CONFIG.app_name,
         appversion: CONFIG.app_version,
@@ -359,7 +359,7 @@ exports.get_dashboard_vertical_timeline_item_details = function (req, res) {
 };
 
 exports.get_dashboard_item_timeline_items = function (req, res) {
-    res.render('dashboard-timeline-items', {
+    res.render('timeline-items/dashboard-timeline-items', {
         host: CONFIG.host,
         appname: CONFIG.app_name,
         appversion: CONFIG.app_version,
@@ -368,7 +368,7 @@ exports.get_dashboard_item_timeline_items = function (req, res) {
 };
 
 exports.get_dashboard_timeline_items_delete_form = function (req, res) {
-    res.render('dashboard-timeline-items-delete-form', {
+    res.render('timeline-items/dashboard-timeline-items-delete-form', {
         host: CONFIG.host,
         appname: CONFIG.app_name,
         appversion: CONFIG.app_version,
