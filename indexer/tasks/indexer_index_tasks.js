@@ -79,7 +79,9 @@ const Indexer_index_tasks = class {
 
         } catch (error) {
             LOGGER.module().error('ERROR: [/indexer/indexer_index_tasks (get_indexed_record)] unable to get indexed record ' + error.message);
-            return false;
+            return {
+                found: false
+            };
         }
     }
 

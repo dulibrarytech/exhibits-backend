@@ -379,12 +379,17 @@ exports.delete_item_record = async function (is_member_of_exhibit, item_id, type
     try {
 
         const TASK = new EXHIBIT_ITEM_RECORD_TASKS(DB, TABLES);
-        const is_item_deleted = await INDEXER_MODEL.delete_record(item_id);
+        const index_record = await INDEXER_MODEL.get_indexed_record(item_id);
 
-        if (is_item_deleted.status === 204) {
-            LOGGER.module().info('INFO: [/exhibits/model (delete_item_record)] Item record deleted');
-        } else {
-            LOGGER.module().info('INFO: [/exhibits/model (delete_item_record)] Record not found in index');
+        if (index_record.status !== 404) {
+
+            const is_item_deleted = await INDEXER_MODEL.delete_record(item_id);
+
+            if (is_item_deleted.status === 204) {
+                LOGGER.module().info('INFO: [/exhibits/model (delete_item_record)] Item record deleted');
+            } else {
+                LOGGER.module().info('INFO: [/exhibits/model (delete_item_record)] Record not found in index');
+            }
         }
 
         return {
