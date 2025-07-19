@@ -25,7 +25,7 @@ const LOGGER = require('../libs/log4');
 const APP_PATH = '/exhibits-dashboard';
 
 exports.get_auth_landing = function (req, res) {
-    res.render('auth-landing', {
+    res.render('dist/auth-landing', {
         host: CONFIG.host,
         appname: CONFIG.app_name,
         appversion: CONFIG.app_version,
