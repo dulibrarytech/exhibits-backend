@@ -34,7 +34,8 @@ exports.get_dashboard_exhibits = function (req, res) {
         appname: CONFIG.app_name,
         appversion: CONFIG.app_version,
         organization: CONFIG.organization,
-        app_message: CONFIG.app_message
+        app_message: CONFIG.app_message,
+        build_version: CONFIG.build_version
     });
 };
 
@@ -43,7 +44,8 @@ exports.get_dashboard_exhibits_add_form = function (req, res) {
         host: CONFIG.host,
         appname: CONFIG.app_name,
         appversion: CONFIG.app_version,
-        organization: CONFIG.organization
+        organization: CONFIG.organization,
+        build_version: CONFIG.build_version
     });
 };
 
@@ -52,7 +54,8 @@ exports.get_dashboard_exhibits_details = function (req, res) {
         host: CONFIG.host,
         appname: CONFIG.app_name,
         appversion: CONFIG.app_version,
-        organization: CONFIG.organization
+        organization: CONFIG.organization,
+        build_version: CONFIG.build_version
     });
 };
 
@@ -61,7 +64,8 @@ exports.get_dashboard_exhibits_edit_form = function (req, res) {
         host: CONFIG.host,
         appname: CONFIG.app_name,
         appversion: CONFIG.app_version,
-        organization: CONFIG.organization
+        organization: CONFIG.organization,
+        build_version: CONFIG.build_version
     });
 };
 
@@ -70,7 +74,8 @@ exports.get_dashboard_exhibits_delete_form = function (req, res) {
         host: CONFIG.host,
         appname: CONFIG.app_name,
         appversion: CONFIG.app_version,
-        organization: CONFIG.organization
+        organization: CONFIG.organization,
+        build_version: CONFIG.build_version
     });
 };
 
@@ -80,7 +85,8 @@ exports.get_dashboard_item_heading_add_form = function (req, res) {
         host: CONFIG.host,
         appname: CONFIG.app_name,
         appversion: CONFIG.app_version,
-        organization: CONFIG.organization
+        organization: CONFIG.organization,
+        build_version: CONFIG.build_version
     });
 };
 
@@ -89,7 +95,8 @@ exports.get_dashboard_item_heading_details = function (req, res) {
         host: CONFIG.host,
         appname: CONFIG.app_name,
         appversion: CONFIG.app_version,
-        organization: CONFIG.organization
+        organization: CONFIG.organization,
+        build_version: CONFIG.build_version
     });
 };
 
@@ -98,7 +105,8 @@ exports.get_dashboard_items_heading_edit_form = function (req, res) {
         host: CONFIG.host,
         appname: CONFIG.app_name,
         appversion: CONFIG.app_version,
-        organization: CONFIG.organization
+        organization: CONFIG.organization,
+        build_version: CONFIG.build_version
     });
 };
 
@@ -108,7 +116,8 @@ exports.get_dashboard_items = function (req, res) {
         host: CONFIG.host,
         appname: CONFIG.app_name,
         appversion: CONFIG.app_version,
-        organization: CONFIG.organization
+        organization: CONFIG.organization,
+        build_version: CONFIG.build_version
     });
 };
 
@@ -117,7 +126,8 @@ exports.get_dashboard_items_standard_details = function (req, res) {
         host: CONFIG.host,
         appname: CONFIG.app_name,
         appversion: CONFIG.app_version,
-        organization: CONFIG.organization
+        organization: CONFIG.organization,
+        build_version: CONFIG.build_version
     });
 };
 
@@ -126,7 +136,8 @@ exports.get_dashboard_items_standard_media_details = function (req, res) {
         host: CONFIG.host,
         appname: CONFIG.app_name,
         appversion: CONFIG.app_version,
-        organization: CONFIG.organization
+        organization: CONFIG.organization,
+        build_version: CONFIG.build_version
     });
 };
 
@@ -135,17 +146,18 @@ exports.get_dashboard_items_standard_text_details = function (req, res) {
         host: CONFIG.host,
         appname: CONFIG.app_name,
         appversion: CONFIG.app_version,
-        organization: CONFIG.organization
+        organization: CONFIG.organization,
+        build_version: CONFIG.build_version
     });
 };
-
 
 exports.get_dashboard_items_delete_form = function (req, res) {
     res.render('standard-items/dashboard-items-delete-form', {
         host: CONFIG.host,
         appname: CONFIG.app_name,
         appversion: CONFIG.app_version,
-        organization: CONFIG.organization
+        organization: CONFIG.organization,
+        build_version: CONFIG.build_version
     });
 };
 
@@ -154,7 +166,8 @@ exports.get_dashboard_items_standard_media_add_form = function (req, res) {
         host: CONFIG.host,
         appname: CONFIG.app_name,
         appversion: CONFIG.app_version,
-        organization: CONFIG.organization
+        organization: CONFIG.organization,
+        build_version: CONFIG.build_version
     });
 };
 
@@ -163,7 +176,8 @@ exports.get_dashboard_items_standard_media_edit_form = function (req, res) {
         host: CONFIG.host,
         appname: CONFIG.app_name,
         appversion: CONFIG.app_version,
-        organization: CONFIG.organization
+        organization: CONFIG.organization,
+        build_version: CONFIG.build_version
     });
 };
 
@@ -172,7 +186,8 @@ exports.get_dashboard_items_standard_text_add_form = function (req, res) {
         host: CONFIG.host,
         appname: CONFIG.app_name,
         appversion: CONFIG.app_version,
-        organization: CONFIG.organization
+        organization: CONFIG.organization,
+        build_version: CONFIG.build_version
     });
 };
 
@@ -181,7 +196,8 @@ exports.get_dashboard_items_standard_text_edit_form = function (req, res) {
         host: CONFIG.host,
         appname: CONFIG.app_name,
         appversion: CONFIG.app_version,
-        organization: CONFIG.organization
+        organization: CONFIG.organization,
+        build_version: CONFIG.build_version
     });
 };
 
@@ -191,7 +207,8 @@ exports.get_dashboard_grid_add_form = function (req, res) {
         host: CONFIG.host,
         appname: CONFIG.app_name,
         appversion: CONFIG.app_version,
-        organization: CONFIG.organization
+        organization: CONFIG.organization,
+        build_version: CONFIG.build_version
     });
 };
 
@@ -200,7 +217,8 @@ exports.get_dashboard_grid_add_form = function (req, res) {
         host: CONFIG.host,
         appname: CONFIG.app_name,
         appversion: CONFIG.app_version,
-        organization: CONFIG.organization
+        organization: CONFIG.organization,
+        build_version: CONFIG.build_version
     });
 };
 
@@ -209,7 +227,8 @@ exports.get_dashboard_grid_details = function (req, res) {
         host: CONFIG.host,
         appname: CONFIG.app_name,
         appversion: CONFIG.app_version,
-        organization: CONFIG.organization
+        organization: CONFIG.organization,
+        build_version: CONFIG.build_version
     });
 };
 
@@ -218,7 +237,8 @@ exports.get_dashboard_grid_edit_form = function (req, res) {
         host: CONFIG.host,
         appname: CONFIG.app_name,
         appversion: CONFIG.app_version,
-        organization: CONFIG.organization
+        organization: CONFIG.organization,
+        build_version: CONFIG.build_version
     });
 };
 
@@ -227,7 +247,8 @@ exports.get_dashboard_grid_add_media_item_form = function (req, res) {
         host: CONFIG.host,
         appname: CONFIG.app_name,
         appversion: CONFIG.app_version,
-        organization: CONFIG.organization
+        organization: CONFIG.organization,
+        build_version: CONFIG.build_version
     });
 };
 
@@ -236,7 +257,8 @@ exports.get_dashboard_grid_add_text_item_form = function (req, res) {
         host: CONFIG.host,
         appname: CONFIG.app_name,
         appversion: CONFIG.app_version,
-        organization: CONFIG.organization
+        organization: CONFIG.organization,
+        build_version: CONFIG.build_version
     });
 };
 
@@ -245,7 +267,8 @@ exports.get_dashboard_grid_edit_media_item_form = function (req, res) {
         host: CONFIG.host,
         appname: CONFIG.app_name,
         appversion: CONFIG.app_version,
-        organization: CONFIG.organization
+        organization: CONFIG.organization,
+        build_version: CONFIG.build_version
     });
 };
 
@@ -254,7 +277,8 @@ exports.get_dashboard_grid_edit_text_item_form = function (req, res) {
         host: CONFIG.host,
         appname: CONFIG.app_name,
         appversion: CONFIG.app_version,
-        organization: CONFIG.organization
+        organization: CONFIG.organization,
+        build_version: CONFIG.build_version
     });
 };
 
@@ -263,7 +287,8 @@ exports.get_dashboard_grid_item_details = function (req, res) {
         host: CONFIG.host,
         appname: CONFIG.app_name,
         appversion: CONFIG.app_version,
-        organization: CONFIG.organization
+        organization: CONFIG.organization,
+        build_version: CONFIG.build_version
     });
 };
 
@@ -272,7 +297,8 @@ exports.get_dashboard_grid_item_media_details = function (req, res) {
         host: CONFIG.host,
         appname: CONFIG.app_name,
         appversion: CONFIG.app_version,
-        organization: CONFIG.organization
+        organization: CONFIG.organization,
+        build_version: CONFIG.build_version
     });
 };
 
@@ -281,7 +307,8 @@ exports.get_dashboard_grid_item_text_details = function (req, res) {
         host: CONFIG.host,
         appname: CONFIG.app_name,
         appversion: CONFIG.app_version,
-        organization: CONFIG.organization
+        organization: CONFIG.organization,
+        build_version: CONFIG.build_version
     });
 };
 
@@ -290,7 +317,8 @@ exports.get_dashboard_item_grid_items = function (req, res) {
         host: CONFIG.host,
         appname: CONFIG.app_name,
         appversion: CONFIG.app_version,
-        organization: CONFIG.organization
+        organization: CONFIG.organization,
+        build_version: CONFIG.build_version
     });
 };
 
@@ -299,7 +327,8 @@ exports.get_dashboard_grid_items_delete_form = function (req, res) {
         host: CONFIG.host,
         appname: CONFIG.app_name,
         appversion: CONFIG.app_version,
-        organization: CONFIG.organization
+        organization: CONFIG.organization,
+        build_version: CONFIG.build_version
     });
 };
 
@@ -309,7 +338,8 @@ exports.get_dashboard_vertical_timeline_add_form = function (req, res) {
         host: CONFIG.host,
         appname: CONFIG.app_name,
         appversion: CONFIG.app_version,
-        organization: CONFIG.organization
+        organization: CONFIG.organization,
+        build_version: CONFIG.build_version
     });
 };
 
@@ -318,7 +348,8 @@ exports.get_dashboard_vertical_timeline_details = function (req, res) {
         host: CONFIG.host,
         appname: CONFIG.app_name,
         appversion: CONFIG.app_version,
-        organization: CONFIG.organization
+        organization: CONFIG.organization,
+        build_version: CONFIG.build_version
     });
 };
 
@@ -327,7 +358,8 @@ exports.get_dashboard_vertical_timeline_edit_form = function (req, res) {
         host: CONFIG.host,
         appname: CONFIG.app_name,
         appversion: CONFIG.app_version,
-        organization: CONFIG.organization
+        organization: CONFIG.organization,
+        build_version: CONFIG.build_version
     });
 };
 
@@ -336,7 +368,8 @@ exports.get_dashboard_vertical_timeline_item_add_form = function (req, res) {
         host: CONFIG.host,
         appname: CONFIG.app_name,
         appversion: CONFIG.app_version,
-        organization: CONFIG.organization
+        organization: CONFIG.organization,
+        build_version: CONFIG.build_version
     });
 };
 
@@ -345,7 +378,8 @@ exports.get_dashboard_vertical_timeline_item_edit_form = function (req, res) {
         host: CONFIG.host,
         appname: CONFIG.app_name,
         appversion: CONFIG.app_version,
-        organization: CONFIG.organization
+        organization: CONFIG.organization,
+        build_version: CONFIG.build_version
     });
 };
 
@@ -354,7 +388,8 @@ exports.get_dashboard_vertical_timeline_item_details = function (req, res) {
         host: CONFIG.host,
         appname: CONFIG.app_name,
         appversion: CONFIG.app_version,
-        organization: CONFIG.organization
+        organization: CONFIG.organization,
+        build_version: CONFIG.build_version
     });
 };
 
@@ -363,7 +398,8 @@ exports.get_dashboard_item_timeline_items = function (req, res) {
         host: CONFIG.host,
         appname: CONFIG.app_name,
         appversion: CONFIG.app_version,
-        organization: CONFIG.organization
+        organization: CONFIG.organization,
+        build_version: CONFIG.build_version
     });
 };
 
@@ -372,7 +408,8 @@ exports.get_dashboard_timeline_items_delete_form = function (req, res) {
         host: CONFIG.host,
         appname: CONFIG.app_name,
         appversion: CONFIG.app_version,
-        organization: CONFIG.organization
+        organization: CONFIG.organization,
+        build_version: CONFIG.build_version
     });
 };
 
@@ -384,8 +421,8 @@ exports.get_dashboard_login = function (req, res) {
         appversion: CONFIG.app_version,
         organization: CONFIG.organization,
         sso_url: SSO_CONFIG.sso_url,
-        sso_response_url: SSO_CONFIG.sso_response_url
-
+        sso_response_url: SSO_CONFIG.sso_response_url,
+        build_version: CONFIG.build_version
     });
 };
 
@@ -394,7 +431,8 @@ exports.get_dashboard_session_out = function (req, res) {
         host: CONFIG.host,
         appname: CONFIG.app_name,
         appversion: CONFIG.app_version,
-        organization: CONFIG.organization
+        organization: CONFIG.organization,
+        build_version: CONFIG.build_version
     });
 };
 
@@ -404,7 +442,8 @@ exports.get_dashboard_logout = function (req, res) {
         appname: CONFIG.app_name,
         appversion: CONFIG.app_version,
         organization: CONFIG.organization,
-        sso_logout_url: SSO_CONFIG.sso_logout_url
+        sso_logout_url: SSO_CONFIG.sso_logout_url,
+        build_version: CONFIG.build_version
     });
 };
 
@@ -415,7 +454,8 @@ exports.get_dashboard_users = function (req, res) {
         appname: CONFIG.app_name,
         appversion: CONFIG.app_version,
         organization: CONFIG.organization,
-        sso_logout_url: SSO_CONFIG.sso_logout_url
+        sso_logout_url: SSO_CONFIG.sso_logout_url,
+        build_version: CONFIG.build_version
     });
 };
 
@@ -425,7 +465,8 @@ exports.get_dashboard_users_add_form = function (req, res) {
         appname: CONFIG.app_name,
         appversion: CONFIG.app_version,
         organization: CONFIG.organization,
-        sso_logout_url: SSO_CONFIG.sso_logout_url
+        sso_logout_url: SSO_CONFIG.sso_logout_url,
+        build_version: CONFIG.build_version
     });
 };
 
@@ -435,7 +476,8 @@ exports.get_dashboard_users_edit_form = function (req, res) {
         appname: CONFIG.app_name,
         appversion: CONFIG.app_version,
         organization: CONFIG.organization,
-        sso_logout_url: SSO_CONFIG.sso_logout_url
+        sso_logout_url: SSO_CONFIG.sso_logout_url,
+        build_version: CONFIG.build_version
     });
 };
 
@@ -445,7 +487,8 @@ exports.get_dashboard_users_delete_form = function (req, res) {
         appname: CONFIG.app_name,
         appversion: CONFIG.app_version,
         organization: CONFIG.organization,
-        sso_logout_url: SSO_CONFIG.sso_logout_url
+        sso_logout_url: SSO_CONFIG.sso_logout_url,
+        build_version: CONFIG.build_version
     });
 };
 
@@ -454,6 +497,7 @@ exports.get_dashboard_recycle = function (req, res) {
         host: CONFIG.host,
         appname: CONFIG.app_name,
         appversion: CONFIG.app_version,
-        organization: CONFIG.organization
+        organization: CONFIG.organization,
+        build_version: CONFIG.build_version
     });
 };

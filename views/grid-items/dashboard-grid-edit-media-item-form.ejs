@@ -166,24 +166,16 @@
     <%- include('../partials/footer.ejs'); %>
     <%- include('../partials/preview-html-modal.ejs'); %>
 </div>
-<script src="https://code.jquery.com/jquery-3.7.0.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/popper.js@1.16.1/dist/umd/popper.min.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/bootstrap@4.6.2/dist/js/bootstrap.min.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/jquery-match-height@0.7.2/dist/jquery.matchHeight.min.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/interactjs/dist/interact.min.js"></script>
+<!-- libs -->
+<%- include('../partials/exhibits-libs-common.ejs'); %>
 <script src="https://unpkg.com/dropzone@5/dist/min/dropzone.min.js"></script>
-<script src="/exhibits-dashboard/static/libs/axios-2.x/dist/axios.min.js"></script>
-<script src="/exhibits-dashboard/static/libs/dompurify/purify.min.js"></script>
-<script src="/exhibits-dashboard/static/app/http.module.js"></script>
-<script src="/exhibits-dashboard/static/app/helper.module.js"></script>
-<script src="/exhibits-dashboard/static/app/endpoints.module.js"></script>
-<script src="/exhibits-dashboard/static/app/auth.module.js"></script>
-<script src="/exhibits-dashboard/static/app/nav.module.js"></script>
-<script src="/exhibits-dashboard/static/app/uploads.module.js"></script>
-<script src="/exhibits-dashboard/static/app/exhibits.module.js"></script>
-<script src="/exhibits-dashboard/static/app/items.module.js"></script>
-<script src="/exhibits-dashboard/static/app/items.common.grid.item.form.module.js"></script>
-<script src="/exhibits-dashboard/static/app/items.edit.grid.item.form.module.js"></script>
+<!-- app -->
+<%- include('../partials/exhibits-app-common.ejs'); %>
+<script src="/exhibits-dashboard/static/app/dist/uploads.module.min.js?<%=build_version%>"></script>
+<script src="/exhibits-dashboard/static/app/dist/exhibits.module.min.js?<%=build_version%>"></script>
+<script src="/exhibits-dashboard/static/app/dist/items.module.min.js?<%=build_version%>"></script>
+<script src="/exhibits-dashboard/static/app/dist/items.common.grid.item.form.module.min.js?<%=build_version%>"></script>
+<script src="/exhibits-dashboard/static/app/dist/items.edit.grid.item.form.module.min.js?<%=build_version%>"></script>
 <script>
     itemsCommonGridItemFormModule.init();
     itemsEditGridItemFormModule.init();

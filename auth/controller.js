@@ -29,7 +29,8 @@ exports.get_auth_landing = function (req, res) {
         host: CONFIG.host,
         appname: CONFIG.app_name,
         appversion: CONFIG.app_version,
-        organization: CONFIG.organization
+        organization: CONFIG.organization,
+        build_version: CONFIG.build_version
     });
 };
 
