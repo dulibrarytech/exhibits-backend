@@ -122,13 +122,8 @@ const itemsCommonGridItemFormModule = (function () {
                 }
             } else {
                 item.item_type = 'text';
+                item.mime_type = 'text/plain';
             }
-
-            /*
-            if (media.length === 0 && item.text.length !== 0) {
-                item.item_type = 'text';
-            }
-             */
 
             // item layout - standard item only
             item.layout = helperModule.get_checked_radio_button(document.getElementsByName('layout'));

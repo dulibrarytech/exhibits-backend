@@ -21,7 +21,9 @@
                 </li>
                 <li class="menu-title">Menu</li>
             </ul>
-            <ul class="nav navbar-nav"><li id="preview-link"></li></ul>
+            <ul class="nav navbar-nav">
+                <li id="preview-link"></li>
+            </ul>
             <ul class="nav navbar-nav">
                 <li>
                     <a id="back-to-items" href="#" data-keyboard="false">
@@ -59,7 +61,10 @@
                             <div class="col-12">
                                 <div class="form-text text-muted" style="font-size: 17px">
                                     Title <small><em>(Optional)</em></small>
-                                    &nbsp;&nbsp;<a onclick="helperModule.preview_html('item-title-input');return false;" data-toggle="modal" data-target=".preview-html" class="btn-xs btn-light"><span style="padding: 5px"><i class="fa fa-code"></i> <small>Preview Field</small></span></a>
+                                    &nbsp;&nbsp;<a onclick="helperModule.preview_html('item-title-input');return false;"
+                                                   data-toggle="modal" data-target=".preview-html"
+                                                   class="btn-xs btn-light"><span style="padding: 5px"><i
+                                                    class="fa fa-code"></i> <small>Preview Field</small></span></a>
                                 </div>
                                 <span id="item-title-error" class="is-error"></span>
                                 <textarea disabled id="item-title-input" class="form-control" name="item_title_input"
@@ -72,8 +77,11 @@
                     <div class="col-12 col-md-12">
                         <div class="row form-group">
                             <div class="col-12">
-                                <div class="form-text text-muted" style="font-size: 17px"><span style="color: darkred">*</span>Date</div>
-                                <input disabled class="form-control" id="item-date-input" type="date" value="0000-00-00" />
+                                <div class="form-text text-muted" style="font-size: 17px"><span
+                                            style="color: darkred">*</span>Date
+                                </div>
+                                <input disabled class="form-control" id="item-date-input" type="date"
+                                       value="0000-00-00"/>
                             </div>
                         </div>
                     </div>
@@ -82,8 +90,12 @@
                     <div class="col-12 col-md-12">
                         <div class="row form-group">
                             <div class="col-12">
-                                <div class="form-text text-muted" style="font-size: 17px">Text <small><em>(Optional)</em></small>
-                                    &nbsp;&nbsp;<a onclick="helperModule.preview_html('item-text-input');return false;" data-toggle="modal" data-target=".preview-html" class="btn-xs btn-light"><span style="padding: 5px"><i class="fa fa-code"></i> <small>Preview Field</small></span></a>
+                                <div class="form-text text-muted" style="font-size: 17px">Text
+                                    <small><em>(Optional)</em></small>
+                                    &nbsp;&nbsp;<a onclick="helperModule.preview_html('item-text-input');return false;"
+                                                   data-toggle="modal" data-target=".preview-html"
+                                                   class="btn-xs btn-light"><span style="padding: 5px"><i
+                                                    class="fa fa-code"></i> <small>Preview Field</small></span></a>
                                 </div>
                                 <textarea disabled id="item-text-input" class="form-control" name="item_text_input"
                                           rows="4"></textarea>
@@ -96,9 +108,14 @@
                         <div class="row form-group">
                             <div class="col-12">
                                 <div class="form-text text-muted" style="font-size: 17px">Description <small><em>(Optional)</em></small>
-                                    &nbsp;&nbsp;<a onclick="helperModule.preview_html('item-description-input');return false;" data-toggle="modal" data-target=".preview-html" class="btn-xs btn-light"><span style="padding: 5px"><i class="fa fa-code"></i> <small>Preview Field</small></span></a>
+                                    &nbsp;&nbsp;<a
+                                            onclick="helperModule.preview_html('item-description-input');return false;"
+                                            data-toggle="modal" data-target=".preview-html"
+                                            class="btn-xs btn-light"><span style="padding: 5px"><i
+                                                    class="fa fa-code"></i> <small>Preview Field</small></span></a>
                                 </div>
-                                <textarea disabled id="item-description-input" class="form-control" name="item_description_input"
+                                <textarea disabled id="item-description-input" class="form-control"
+                                          name="item_description_input"
                                           rows="4"></textarea>
                             </div>
                         </div>
@@ -108,10 +125,16 @@
                     <div class="col-12 col-md-12">
                         <div class="row form-group">
                             <div class="col-12">
-                                <div class="form-text text-muted" style="font-size: 17px">Caption <small><em>(Optional)</em></small>
-                                    &nbsp;&nbsp;<a onclick="helperModule.preview_html('item-caption-input');return false;" data-toggle="modal" data-target=".preview-html" class="btn-xs btn-light"><span style="padding: 5px"><i class="fa fa-code"></i> <small>Preview Field</small></span></a>
+                                <div class="form-text text-muted" style="font-size: 17px">Caption
+                                    <small><em>(Optional)</em></small>
+                                    &nbsp;&nbsp;<a
+                                            onclick="helperModule.preview_html('item-caption-input');return false;"
+                                            data-toggle="modal" data-target=".preview-html"
+                                            class="btn-xs btn-light"><span style="padding: 5px"><i
+                                                    class="fa fa-code"></i> <small>Preview Field</small></span></a>
                                 </div>
-                                <textarea disabled id="item-caption-input" class="form-control" name="item_caption_input" rows="4"></textarea>
+                                <textarea disabled id="item-caption-input" class="form-control"
+                                          name="item_caption_input" rows="4"></textarea>
                             </div>
                         </div>
                     </div>
@@ -128,13 +151,18 @@
                 <div class="container">
                     <ul class="nav nav-tabs" id="mediaTab" role="tablist">
                         <li class="nav-item">
-                            <a class="nav-link active" id="upload-media-tab" data-toggle="tab" href="#upload-media" role="tab" aria-controls="upload-media" aria-selected="true">Upload Media</a>
+                            <a class="nav-link active" id="upload-media-tab" data-toggle="tab" href="#upload-media"
+                               role="tab" aria-controls="upload-media" aria-selected="true">Upload Media</a>
                         </li>
                         <li class="nav-item">
-                            <a class="nav-link" id="import-audio-video-tab" data-toggle="tab" href="#import-audio-video" role="tab" aria-controls="import-audio-video" aria-selected="false">Import Audio/Video</a>
+                            <a class="nav-link" id="import-audio-video-tab" data-toggle="tab" href="#import-audio-video"
+                               role="tab" aria-controls="import-audio-video" aria-selected="false">Import
+                                Audio/Video</a>
                         </li>
                         <li class="nav-item">
-                            <a class="nav-link" id="import-repo-media-tab" data-toggle="tab" href="#import-repo-media" role="tab" aria-controls="import-repo-media" aria-selected="false">Import Repository Media</a>
+                            <a class="nav-link" id="import-repo-media-tab" data-toggle="tab" href="#import-repo-media"
+                               role="tab" aria-controls="import-repo-media" aria-selected="false">Import Repository
+                                Media</a>
                         </li>
                     </ul>
                     <div class="tab-content" id="mediaTabContent">
@@ -185,18 +213,60 @@
                                     <input type="number" class="form-control" id="pdf-open-to-page" min="1" value="1">
                                 </div>
                             </div>
-                            <small class="form-text text-muted"><i class="fa fa-exclamation-circle"></i> <em>The viewer will automatically open
+                            <small class="form-text text-muted"><i class="fa fa-exclamation-circle"></i> <em>The viewer
+                                    will automatically open
                                     to the page entered</em></small>
                             </p>
                         </div>
 
 
-                        <div class="tab-pane fade" id="import-audio-video" role="tabpanel" aria-labelledby="import-audio-video-tab"><%- include('../partials/tab-import-audio-video.ejs'); %></div>
-                        <div class="tab-pane fade" id="import-repo-media" role="tabpanel" aria-labelledby="import-repo-media-tab"><%- include('../partials/tab-import-repo-media.ejs'); %></div>
+                        <div class="tab-pane fade" id="import-audio-video" role="tabpanel"
+                             aria-labelledby="import-audio-video-tab"><%- include('../partials/tab-import-audio-video.ejs'); %></div>
+                        <div class="tab-pane fade" id="import-repo-media" role="tabpanel"
+                             aria-labelledby="import-repo-media-tab"><%- include('../partials/tab-import-repo-media.ejs'); %></div>
                     </div>
                 </div>
-                <%- include('../standard-items/partials/item-alt-text.ejs'); %>
-                <%- include('../standard-items/partials/embed-item.ejs'); %>
+                <span id="image-alt-text" style="display: none;">
+                    <hr>
+                <div class="col-12 col-md-12">
+                    <div class="row form-group">
+                        <p style="padding-top: 20px">
+                            <small class="form-text text-muted"><i class="fa fa-exclamation-circle"></i> <em>Decorative alt text are those that do not add any important information or context to the page content and are used primarily for visual appeal</em></small>
+                            <label for="is-alt-text-decorative">Image alt text is decorative&nbsp;
+                                <input disabled type="checkbox" id="is-alt-text-decorative" name="is_alt_text_decorative">
+                            </label>
+                        </p>
+                        <div id="is-decorative-toggle" style="padding-bottom: 20px;">
+                            <div class="form-text text-muted" style="font-size: 17px">
+                                Image alt text <small><em>(<span
+                                                style="color: darkred">*</span> Required if not decorative)</em></small>
+                                <small class="form-text text-muted"><i class="fa fa-exclamation-circle"></i> <em>Alternative text (Alt
+                                        Text)
+                                        is a short description added to images on a webpage to enhance accessibility and optimize for
+                                        search
+                                        engines</em></small>
+                            </div>
+                            <span id="item-alt-text-error" class="is-error"></span>
+                            <textarea disabled id="item-alt-text-input" class="form-control" name="item_alt_text_input"
+                                      rows="4"></textarea>
+                        </div>
+                    </div>
+                </div>
+                </span>
+
+                <hr>
+                <div class="col-12 col-md-12">
+                    <div class="row form-group">
+                        <p style="padding-top: 20px">
+                            <small class="form-text text-muted"><i class="fa fa-exclamation-circle"></i> <em>Embedded
+                                    items do not
+                                    open the item viewer (popup window)</em></small>
+                            <label for="embed-item">Embed item&nbsp;
+                                <input disabled type="checkbox" id="embed-item" name="embed_item">
+                            </label>
+                        </p>
+                    </div>
+                </div>
             </div>
         </div>
         <div id="item-styles-card" class="card">
@@ -208,6 +278,11 @@
                     <div class="col-6 col-md-6">
                         <div class="row form-group">
                             <div class="col-12 col-md-12">
+                                <p>
+                                <div class="form-text text-muted" style="font-size: 17px">
+                                    <label for="item-background-color">Item Background Color</label>
+                                </div>
+                                </p>
                                 <div class="input-group">
                                     <div class="input-group-btn">
                                         <input title="Color Picker" class="color-picker btn btn-default" type="color"
@@ -221,9 +296,14 @@
                         </div>
                         <div class="row form-group">
                             <div class="col-12 col-md-12">
+                                <p>
+                                <div class="form-text text-muted" style="font-size: 17px">
+                                    <label for="item-font-size">Item Font Size</label>
+                                </div>
+                                </p>
                                 <div class="input-group">
                                     <input type="number" id="item-font-size" name="item_font_size"
-                                           placeholder="Item Font Size" class="form-control" min="1" max="50" style="height: 40px">
+                                           placeholder="" class="form-control" min="1" max="50" style="height: 40px">
                                     <div class="input-group-append">
                                         <span class="input-group-text" id="basic-addon2">px</span>
                                     </div>
@@ -234,6 +314,11 @@
                     <div class="col-6 col-md-6">
                         <div class="row form-group">
                             <div class="col-12 col-md-12">
+                                <p>
+                                <div class="form-text text-muted" style="font-size: 17px">
+                                    <label for="item-font-color">Item Font Color</label>
+                                </div>
+                                </p>
                                 <div class="input-group">
                                     <div class="input-group-btn">
                                         <input title="Color Picker" class="color-picker btn btn-default" type="color"
@@ -247,12 +332,17 @@
                         </div>
                         <div class="row form-group">
                             <div class="col-12 col-md-12">
+                                <p>
+                                <div class="form-text text-muted" style="font-size: 17px">
+                                    <label for="item-font">Item Font</label>
+                                </div>
+                                </p>
                                 <div class="input-group">
                                     <select name="item_font" id="item-font"
                                             class="form-control-lg form-control text-muted" style="height: 40px">
                                         <option value="">Select From Menu</option>
                                         <option value="">----------</option>
-                                        <%- include('../exhibits/partials/exhibit-fonts-options-list.ejs'); %>
+                                        <%- include('../../exhibits/partials/exhibit-fonts-options-list.ejs'); %>
                                     </select>
                                 </div>
                             </div>
@@ -279,11 +369,11 @@
 <script src="https://unpkg.com/dropzone@5/dist/min/dropzone.min.js"></script>
 <!-- app -->
 <%- include('../partials/exhibits-app-common.ejs'); %>
-<script src="/exhibits-dashboard/static/app/dist/uploads.module.min.js?<%=build_version%>"></script>
-<script src="/exhibits-dashboard/static/app/dist/exhibits.module.min.js?<%=build_version%>"></script>
-<script src="/exhibits-dashboard/static/app/dist/items.module.min.js?<%=build_version%>"></script>
-<script src="/exhibits-dashboard/static/app/dist/items.common.vertical.timeline.item.form.module.min.js?<%=build_version%>"></script>
-<script src="/exhibits-dashboard/static/app/dist/items.edit.vertical.timeline.item.form.module.min.js?<%=build_version%>"></script>
+<script src="/exhibits-dashboard/static/app/dist/uploads.module.min.js?<%= build_version %>"></script>
+<script src="/exhibits-dashboard/static/app/dist/exhibits.module.min.js?<%= build_version %>"></script>
+<script src="/exhibits-dashboard/static/app/dist/items.module.min.js?<%= build_version %>"></script>
+<script src="/exhibits-dashboard/static/app/dist/items.common.vertical.timeline.item.form.module.min.js?<%= build_version %>"></script>
+<script src="/exhibits-dashboard/static/app/dist/items.edit.vertical.timeline.item.form.module.min.js?<%= build_version %>"></script>
 <script>
     itemsCommonVerticalTimelineItemFormModule.init();
     itemsEditTimelineItemFormModule.init();

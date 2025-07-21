@@ -110,34 +110,49 @@ const itemsListDisplayModule = (function () {
             published_obj.status = `<a href="#" id="${item.uuid}" class="publish-item" aria-label="item-status"><span id="publish" title="suppressed"><i class="fa fa-cloud-upload" style="color: darkred"></i><br>Unpublished</span></a>`;
 
             if (item.item_type === 'text') {
-                published_obj.edit = `<a href="${APP_PATH}/items/grid/item/text/edit?exhibit_id=${item.is_member_of_exhibit}&grid_id=${item.is_member_of_grid}&item_id=${item.uuid}" title="Edit" aria-label="edit-grid-item"><i class="fa fa-edit pr-1"></i></a>`;
+                published_obj.edit = `<a href="${APP_PATH}/items/${item_route}/text/edit?exhibit_id=${item.is_member_of_exhibit}&grid_id=${item.is_member_of_grid}&item_id=${item.uuid}" title="Edit" aria-label="edit-grid-item"><i class="fa fa-edit pr-1"></i></a>`;
             } else {
-                published_obj.edit = `<a href="${APP_PATH}/items/grid/item/media/edit?exhibit_id=${item.is_member_of_exhibit}&grid_id=${item.is_member_of_grid}&item_id=${item.uuid}" title="Edit" aria-label="edit-grid-item"><i class="fa fa-edit pr-1"></i></a>`;
+                published_obj.edit = `<a href="${APP_PATH}/items/${item_route}/media/edit?exhibit_id=${item.is_member_of_exhibit}&grid_id=${item.is_member_of_grid}&item_id=${item.uuid}" title="Edit" aria-label="edit-grid-item"><i class="fa fa-edit pr-1"></i></a>`;
             }
 
-            published_obj.delete_item = `<a href="${APP_PATH}/items/grid/item/delete?exhibit_id=${item.is_member_of_exhibit}&grid_id=${item.is_member_of_grid}&item_id=${item.uuid}" title="Delete" aria-label="delete-grid-item"><i class="fa fa-trash pr-1"></i></a>`;
+            published_obj.delete_item = `<a href="${APP_PATH}/items/${item_route}/delete?exhibit_id=${item.is_member_of_exhibit}&grid_id=${item.is_member_of_grid}&item_id=${item.uuid}" title="Delete" aria-label="delete-grid-item"><i class="fa fa-trash pr-1"></i></a>`;
         }
 
         return published_obj;
     }
 
-    // TODO
     function check_timeline_item_published_status(item, item_route) {
+
 
         let published_obj = {};
 
         if (item.is_published === 1) {
+
             published_obj.draggable = `<tr id="${item.uuid}_${item.type}_${item.item_type}">`;
             published_obj.item_order = `<td class="item-order"><span style="padding-left: 4px;" aria-label="item-order">${item.order}</span></td>`;
             published_obj.status = `<a href="#" id="${item.uuid}" class="suppress-item" aria-label="item-status"><span id="suppress" title="published"><i class="fa fa-cloud" style="color: green"></i><br>Published</span></a>`;
-            published_obj.edit = `<a href="${APP_PATH}/items/${item_route}/details?exhibit_id=${item.is_member_of_exhibit}&timeline_id=${item.is_member_of_timeline}&item_id=${item.uuid}" title="View details" aria-label="view-item-details"><i class="fa fa-folder-open pr-1"></i></a>`;
+
+            if (item.item_type === 'text') {
+                published_obj.edit = `<a href="${APP_PATH}/items/${item_route}/text/details?exhibit_id=${item.is_member_of_exhibit}&timeline_id=${item.is_member_of_timeline}&item_id=${item.uuid}" title="View details" aria-label="view-item-details"><i class="fa fa-folder-open pr-1"></i></a>`;
+            } else {
+                published_obj.edit = `<a href="${APP_PATH}/items/${item_route}/media/details?exhibit_id=${item.is_member_of_exhibit}&timeline_id=${item.is_member_of_timeline}&item_id=${item.uuid}" title="View details" aria-label="view-item-details"><i class="fa fa-folder-open pr-1"></i></a>`;
+            }
+
             published_obj.delete_item = `<i title="Can only delete if unpublished" style="color: #d3d3d3" class="fa fa-trash pr-1" aria-label="delete-item"></i>`;
+
         } else if (item.is_published === 0) {
+
             published_obj.draggable = `<tr id="${item.uuid}_${item.type}_${item.item_type}">`;
             published_obj.item_order = `<td class="grabbable item-order"><i class="fa fa-reorder"></i><span style="padding-left: 4px;" aria-label="item-order">${item.order}</span></td>`;
             published_obj.status = `<a href="#" id="${item.uuid}" class="publish-item" aria-label="item-status"><span id="publish" title="suppressed"><i class="fa fa-cloud-upload" style="color: darkred"></i><br>Unpublished</span></a>`;
-            published_obj.edit = `<a href="${APP_PATH}/items/${item_route}/edit?exhibit_id=${item.is_member_of_exhibit}&timeline_id=${item.is_member_of_timeline}&item_id=${item.uuid}" title="Edit" aria-label="edit-item"><i class="fa fa-edit pr-1"></i></a>`;
-            published_obj.delete_item = `<a href="${APP_PATH}/items/delete?exhibit_id=${item.is_member_of_exhibit}&item_id=${item.uuid}&timeline_id=${item.is_member_of_timeline}&type=${item.type}" title="Delete" aria-label="delete-item"><i class="fa fa-trash pr-1"></i></a>`;
+
+            if (item.item_type === 'text') {
+                published_obj.edit = `<a href="${APP_PATH}/items/${item_route}/text/edit?exhibit_id=${item.is_member_of_exhibit}&timeline_id=${item.is_member_of_timeline}&item_id=${item.uuid}" title="Edit" aria-label="edit-timeline-item"><i class="fa fa-edit pr-1"></i></a>`;
+            } else {
+                published_obj.edit = `<a href="${APP_PATH}/items/${item_route}/media/edit?exhibit_id=${item.is_member_of_exhibit}&timeline_id=${item.is_member_of_timeline}&item_id=${item.uuid}" title="Edit" aria-label="edit-timeline-item"><i class="fa fa-edit pr-1"></i></a>`;
+            }
+
+            published_obj.delete_item = `<a href="${APP_PATH}/items/timeline/item/delete?exhibit_id=${item.is_member_of_exhibit}&timeline_id=${item.is_member_of_timeline}&item_id=${item.uuid}" title="Delete" aria-label="delete-timeline-item"><i class="fa fa-trash pr-1"></i></a>`;
         }
 
         return published_obj;
@@ -342,7 +357,6 @@ const itemsListDisplayModule = (function () {
             item.type = 'timeline';
             const title = helperModule.unescape(item.title);
             const item_obj = check_published_status(item, 'vertical-timeline');
-            let add_timeline_items = `<a href="${APP_PATH}/items/vertical-timeline/item?exhibit_id=${item.is_member_of_exhibit}&timeline_id=${item.uuid}" title="Add Timeline Item" aria-label="add-timeline-item"><i class="fa fa-plus pr-1"></i></a>&nbsp;`;
             let item_data = '';
             let view_timeline_items = '';
             let timeline_items_fragment = '';
@@ -351,9 +365,10 @@ const itemsListDisplayModule = (function () {
             if (item.timeline_items.length === 0) {
                 timeline_items_fragment += '<p><strong>No items</strong></p>';
             } else {
-                view_timeline_items = `<a href="${APP_PATH}/items/timeline/items?exhibit_id=${item.is_member_of_exhibit}&timeline_id=${item.uuid}" title="View Timeline Items" aria-label="view-timeline-items"><i class="fa fa-list pr-1"></i></a>`;
                 timeline_item_count += `Contains ${item.timeline_items.length} items`;
             }
+
+            view_timeline_items = `<a href="${APP_PATH}/items/timeline/items?exhibit_id=${item.is_member_of_exhibit}&timeline_id=${item.uuid}" title="View Timeline Items" aria-label="view-timeline-items"><i class="fa fa-list pr-1"></i></a>`;
 
             // start row
             item_data += item_obj.draggable;
@@ -370,7 +385,6 @@ const itemsListDisplayModule = (function () {
             item_data += `<td id="${item.uuid}-item-actions" style="width: 10%">
                                 <div class="card-text text-sm-center">
                                     ${view_timeline_items}&nbsp;
-                                    ${add_timeline_items}&nbsp;
                                     ${item_obj.edit}&nbsp;
                                     ${item_obj.delete_item}
                                 </div>
@@ -540,22 +554,48 @@ const itemsListDisplayModule = (function () {
                 item_type = '<i class="fa fa-file-o"></i>';
             }
 
-            if (item.is_repo_item === 1) {
+            if (item.item_type !== 'text') {
 
-                const repo_record = await helperModule.get_repo_item_data(item.media);
+                if (item.is_repo_item === 1) {
 
-                if (title.length === 0) {
-                    title = repo_record.title;
+                    const repo_record = await helperModule.get_repo_item_data(item.media);
+
+                    if (title.length === 0) {
+                        title = repo_record.title;
+                    }
+
+                    thumbnail = helperModule.render_repo_thumbnail(repo_record.thumbnail.data);
+                    img = `<p><img src="${thumbnail}" height="75" width="75" alt="repo-thumbnail"></p>`;
                 }
 
-                thumbnail = helperModule.render_repo_thumbnail(repo_record.thumbnail.data);
-                img = `<p><img src="${thumbnail}" height="75" width="75" alt="repo-thumbnail"></p>`;
-            }
+                if (item.is_kaltura_item === 1) {
 
-            if (item.is_kaltura_item === 1) {
+                    if (title.length === 0) {
+                        title = 'Kaltura Item';
+                    }
+                }
 
-                if (title.length === 0) {
-                    title = 'Kaltura Item';
+                if (item.media.length > 0) {
+                    media = item.media;
+                }
+
+                if (img.length === 0) {
+
+                    if (item.thumbnail.length > 0) {
+                        thumbnail = EXHIBITS_ENDPOINTS.exhibits.exhibit_media.get.endpoint.replace(':exhibit_id', item.is_member_of_exhibit).replace(':media', item.thumbnail);
+                        img = `<p><img src="${thumbnail}" height="75" width="75" alt="${item.uuid}-thumbnail"></p>`;
+                    } else if (item.thumbnail.length === 0 && item.item_type === 'image' && item.media.length > 0) {
+                        thumbnail = EXHIBITS_ENDPOINTS.exhibits.exhibit_media.get.endpoint.replace(':exhibit_id', item.is_member_of_exhibit).replace(':media', item.media);
+                        img = `<p><img src="${thumbnail}" height="75" width="75" alt="${item.uuid}-media"></p>`;
+                    } else {
+                        thumbnail = `${APP_PATH}/static/images/image-tn.png`;
+                        img = `<p><img src="${thumbnail}" height="75" width="75" alt="no-thumbnail"></p>`;
+                    }
+                }
+
+                if (item.thumbnail.length > 0) {
+                    thumbnail = EXHIBITS_ENDPOINTS.exhibits.exhibit_media.get.endpoint.replace(':exhibit_id', item.is_member_of_exhibit).replace(':media', item.thumbnail);
+                    img = `<p><img src="${thumbnail}" height="75" width="75" alt="${item.uuid}-thumbnail"></p>`;
                 }
             }
 
@@ -568,41 +608,8 @@ const itemsListDisplayModule = (function () {
                 }
             }
 
-            if (item.media.length > 0) {
-                media = item.media;
-            }
-
-            if (img.length === 0) {
-
-                if (item.thumbnail.length > 0) {
-                    thumbnail = EXHIBITS_ENDPOINTS.exhibits.exhibit_media.get.endpoint.replace(':exhibit_id', item.is_member_of_exhibit).replace(':media', item.thumbnail);
-                    img = `<p><img src="${thumbnail}" height="75" width="75" alt="${item.uuid}-thumbnail"></p>`;
-                } else if (item.thumbnail.length === 0 && item.item_type === 'image' && item.media.length > 0) {
-                    thumbnail = EXHIBITS_ENDPOINTS.exhibits.exhibit_media.get.endpoint.replace(':exhibit_id', item.is_member_of_exhibit).replace(':media', item.media);
-                    img = `<p><img src="${thumbnail}" height="75" width="75" alt="${item.uuid}-media"></p>`;
-                } else {
-                    thumbnail = `${APP_PATH}/static/images/image-tn.png`;
-                    img = `<p><img src="${thumbnail}" height="75" width="75" alt="no-thumbnail"></p>`;
-                }
-            }
-
-            /*
-            if (item.is_published === 0) {
-                item_obj.edit = `<a href="${APP_PATH}/items/vertical-timeline/item/edit?exhibit_id=${item.is_member_of_exhibit}&timeline_id=${item.is_member_of_timeline}&item_id=${item.uuid}" title="Edit" aria-label="edit-timeline-item"><i class="fa fa-edit pr-1"></i></a>`;
-                item_obj.delete_item = `<a href="${APP_PATH}/items/vertical-timeline/item/delete?exhibit_id=${item.is_member_of_exhibit}&timeline_id=${item.is_member_of_timeline}&item_id=${item.uuid}" title="Delete" aria-label="delete-timeline-item"><i class="fa fa-trash pr-1"></i></a>`;
-            } else if (item.is_published === 1) {
-                item_obj.edit = `<a href="${APP_PATH}/items/vertical-timeline/item/details?exhibit_id=${item.is_member_of_exhibit}&timeline_id=${item.is_member_of_timeline}&item_id=${item.uuid}" title="View details" aria-label="timeline-item-details"><i class="fa fa-folder-open pr-1"></i></a>`;
-            }
-             */
-
             // start rows
             item_data += `<tr id="${item.uuid}_${item.type}">`;
-
-            if (item.thumbnail.length > 0) {
-                thumbnail = EXHIBITS_ENDPOINTS.exhibits.exhibit_media.get.endpoint.replace(':exhibit_id', item.is_member_of_exhibit).replace(':media', item.thumbnail);
-                img = `<p><img src="${thumbnail}" height="75" width="75" alt="${item.uuid}-thumbnail"></p>`;
-            }
-
             item_data += `<td class="item-metadata">
                     <p><button class="btn btn-default">${item_type} <small>timeline item</small></button></p>
                     <p><strong>${title}</strong></p>

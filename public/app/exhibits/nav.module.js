@@ -26,7 +26,6 @@ const navModule = (function () {
     obj.set_item_nav_menu_links = function () {
 
         const uuid = helperModule.get_parameter_by_name('exhibit_id');
-        // TODO: adjust exhibits link depending on published status
         const exhibits_link = `${APP_PATH}/exhibits/exhibit/details?exhibit_id=${uuid}`;
         const heading_link = `${APP_PATH}/items/heading?exhibit_id=${uuid}`;
         const standard_media_item_link = `${APP_PATH}/items/standard/media?exhibit_id=${uuid}`;
@@ -101,11 +100,16 @@ const navModule = (function () {
 
         let exhibit_id = helperModule.get_parameter_by_name('exhibit_id');
         let timeline_id = helperModule.get_parameter_by_name('timeline_id');
-        let timeline_item_link = `${APP_PATH}/items/vertical-timeline/item?exhibit_id=${exhibit_id}&timeline_id=${timeline_id}`;
+        let timeline_media_item_link = `${APP_PATH}/items/vertical-timeline/item/media?exhibit_id=${exhibit_id}&timeline_id=${timeline_id}`;
+        let timeline_text_item_link = `${APP_PATH}/items/vertical-timeline/item/text?exhibit_id=${exhibit_id}&timeline_id=${timeline_id}`;
         let items_menu_fragment = `
                 <li>
-                    <a href="${timeline_item_link}" data-keyboard="false"> <i
-                                class=" menu-icon fa fa-calendar"></i>Add Timeline Item</a>
+                    <a href="${timeline_media_item_link}" data-keyboard="false"> <i
+                                class=" menu-icon ti-image"></i>Add Media Timeline Item</a>
+                </li>
+                <li>
+                    <a href="${timeline_text_item_link}" data-keyboard="false"> <i
+                                class=" menu-icon ti-align-center"></i>Add Text Timeline Item</a>
                 </li>`;
 
         document.querySelector('#items-menu').innerHTML = items_menu_fragment;

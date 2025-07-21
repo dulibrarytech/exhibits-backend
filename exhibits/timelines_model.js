@@ -185,28 +185,31 @@ exports.create_timeline_item_record = async function (is_member_of_exhibit, time
             };
         }
 
-        if (data.media.length > 0 && data.media !== data.media_prev) {
-            data.media = HELPER_TASK.process_uploaded_media(data.is_member_of_exhibit, data.uuid, data.media, STORAGE_CONFIG.storage_path);
-        }
+        if (data.item_type !== 'text') {
 
-        if (data.thumbnail.length > 0 && data.thumbnail !== data.thumbnail_prev) {
-            data.thumbnail = HELPER_TASK.process_uploaded_media(data.is_member_of_exhibit, data.uuid, data.thumbnail, STORAGE_CONFIG.storage_path);
-        }
+            if (data.media.length > 0 && data.media !== data.media_prev) {
+                data.media = HELPER_TASK.process_uploaded_media(data.is_member_of_exhibit, data.uuid, data.media, STORAGE_CONFIG.storage_path);
+            }
 
-        if (data.kaltura.length > 0) {
-            data.media = data.kaltura;
-            data.is_kaltura_item = 1;
-        } else if (data.repo_uuid.length > 0) {
-            data.media = data.repo_uuid;
-            data.is_repo_item = 1;
+            if (data.thumbnail.length > 0 && data.thumbnail !== data.thumbnail_prev) {
+                data.thumbnail = HELPER_TASK.process_uploaded_media(data.is_member_of_exhibit, data.uuid, data.thumbnail, STORAGE_CONFIG.storage_path);
+            }
+
+            if (data.kaltura.length > 0) {
+                data.media = data.kaltura;
+                data.is_kaltura_item = 1;
+            } else if (data.repo_uuid.length > 0) {
+                data.media = data.repo_uuid;
+                data.is_repo_item = 1;
+            }
+
+            delete data.kaltura;
+            delete data.repo_uuid;
+            delete data.media_prev;
+            delete data.thumbnail_prev;
         }
 
         data.styles = JSON.stringify(data.styles);
-        delete data.kaltura;
-        delete data.repo_uuid;
-        delete data.media_prev;
-        delete data.thumbnail_prev;
-
         data.order = await HELPER_TASK.order_timeline_items(data.is_member_of_timeline, DB, TABLES);
 
         const CREATE_RECORD_TASK = new EXHIBIT_TIMELINE_RECORD_TASKS(DB, TABLES);
@@ -305,33 +308,35 @@ exports.update_timeline_item_record = async function (is_member_of_exhibit, is_m
             };
         }
 
-        if (data.media.length > 0 && data.media !== data.media_prev) {
-            data.media = HELPER_TASK.process_uploaded_media(data.is_member_of_exhibit, data.uuid, data.media, STORAGE_CONFIG.storage_path);
-        }
+        if (data.item_type !== 'text') {
 
-        if (data.thumbnail.length > 0 && data.thumbnail !== data.thumbnail_prev) {
-            data.thumbnail = HELPER_TASK.process_uploaded_media(data.is_member_of_exhibit, data.uuid, data.thumbnail, STORAGE_CONFIG.storage_path);
-        }
+            if (data.media.length > 0 && data.media !== data.media_prev) {
+                data.media = HELPER_TASK.process_uploaded_media(data.is_member_of_exhibit, data.uuid, data.media, STORAGE_CONFIG.storage_path);
+            }
 
-        if (data.kaltura.length > 0) {
-            data.media = data.kaltura;
-            data.is_kaltura_item = 1;
-        } else if (data.repo_uuid.length > 0) {
-            data.media = data.repo_uuid;
-            data.is_repo_item = 1;
-        }
+            if (data.thumbnail.length > 0 && data.thumbnail !== data.thumbnail_prev) {
+                data.thumbnail = HELPER_TASK.process_uploaded_media(data.is_member_of_exhibit, data.uuid, data.thumbnail, STORAGE_CONFIG.storage_path);
+            }
 
-        if (data.styles === undefined || data.styles.length === 0) {
-            data.styles = {};
+            if (data.kaltura.length > 0) {
+                data.media = data.kaltura;
+                data.is_kaltura_item = 1;
+            } else if (data.repo_uuid.length > 0) {
+                data.media = data.repo_uuid;
+                data.is_repo_item = 1;
+            }
+
+            if (data.styles === undefined || data.styles.length === 0) {
+                data.styles = {};
+            }
+
+            delete data.kaltura;
+            delete data.repo_uuid;
+            delete data.media_prev;
+            delete data.thumbnail_prev;
         }
 
         data.styles = JSON.stringify(data.styles);
-
-        delete data.kaltura;
-        delete data.repo_uuid;
-        delete data.media_prev;
-        delete data.thumbnail_prev;
-
         data.order = await HELPER_TASK.order_exhibit_items(data.is_member_of_timeline, DB, TABLES);
         const UPDATE_RECORD_TASK = new EXHIBIT_TIMELINE_RECORD_TASKS(DB, TABLES);
         let result = await UPDATE_RECORD_TASK.update_timeline_item_record(data);
@@ -486,12 +491,12 @@ exports.suppress_timeline_record = async function (exhibit_id, item_id) {
         const is_item_suppressed = await TIMELINE_TASKS.set_timeline_to_suppress(item_id);
         const timeline_records = await TIMELINE_TASKS.get_timeline_records(exhibit_id, item_id);
 
-        for (let i=0;i<timeline_records.length;i++) {
+        for (let i = 0; i < timeline_records.length; i++) {
 
             await TIMELINE_TASKS.set_to_suppressed_timeline_items(timeline_records[i].is_member_of_exhibit);
             let items = await TIMELINE_TASKS.get_timeline_item_records(timeline_records[i].is_member_of_exhibit, timeline_records[i].uuid);
 
-            for (let j=0;j<items.length;j++) {
+            for (let j = 0; j < items.length; j++) {
                 await TIMELINE_TASKS.set_to_suppressed_timeline_items(items[j].is_member_of_timeline);
             }
         }
@@ -597,7 +602,7 @@ exports.suppress_timeline_item_record = async function (exhibit_id, timeline_id,
         let items = indexed_record.data._source.items;
         let updated_items = [];
 
-        for (let i=0;i<items.length;i++) {
+        for (let i = 0; i < items.length; i++) {
             if (items[i].uuid !== timeline_item_id) {
                 updated_items.push(items[i]);
             }

@@ -3,6 +3,15 @@ const uglify = require('gulp-uglify');
 const htmlmin = require('gulp-htmlmin');
 const rename = require('gulp-rename');
 
+// TODO
+/*
+const del = require('del');
+
+gulp.task('clean', function() {
+    return del(['dist/**', '!dist']);
+});
+*/
+
 gulp.task('minify-exhibit-modules', function () {
     return gulp.src([
         'public/app/exhibits/exhibits.add.form.module.js',
