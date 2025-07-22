@@ -402,7 +402,7 @@ const helperModule = (function () {
         }
     };
 
-    /**
+    /** TODO: deprecate - we no longer reorder exhibits
      * Reorders exhibit list via drag and drop
      * @param e
      * @param reordered_exhibits
@@ -459,6 +459,10 @@ const helperModule = (function () {
     obj.reorder_items = async function (e, reordered_items) {
 
         try {
+
+            if (reordered_items.length === 0) {
+                return false;
+            }
 
             const EXHIBITS_ENDPOINTS = endpointsModule.get_exhibits_endpoints();
             const exhibit_id = helperModule.get_parameter_by_name('exhibit_id');

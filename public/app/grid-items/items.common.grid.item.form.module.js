@@ -69,6 +69,7 @@ const itemsCommonGridItemFormModule = (function () {
                 item.pdf_open_to_page = document.querySelector('#pdf-open-to-page').value;
 
                 if (item.mime_type.indexOf('image') !== -1) {
+
                     if (item.is_alt_text_decorative === true) {
                         item.is_alt_text_decorative = 1;
                         item.alt_text = '';
