@@ -120,16 +120,20 @@ const Helper = class {
 
             keys.map((prop) => {
 
-                if (config[prop].length === 0) {
-                    LOGGER.module().error('ERROR: [/config/app_config] ' + prop + ' env is missing config value');
-                    return false;
-                }
+                if (typeof config[prop] === 'string') {
+                    if (config[prop].length === 0) {
+                        LOGGER.module().error('ERROR: [/config/app_config] ' + prop + ' env is missing config value');
+                        return false;
+                    }
 
-                if (VALIDATOR.isURL(config[prop]) === true) {
-                    obj[prop] = encodeURI(config[prop]);
-                }
+                    if (VALIDATOR.isURL(config[prop]) === true) {
+                        obj[prop] = encodeURI(config[prop]);
+                    }
 
-                obj[prop] = VALIDATOR.trim(config[prop]);
+                    obj[prop] = VALIDATOR.trim(config[prop]);
+                } else {
+                    obj[prop] = config[prop];
+                }
             });
 
             return obj;
