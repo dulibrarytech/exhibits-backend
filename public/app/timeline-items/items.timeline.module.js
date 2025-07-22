@@ -142,8 +142,10 @@ const itemsTimelineModule = (function () {
                     });
 
                     let type = uuid_found.split('_');
+                    console.log('split type ', type);
                     let details_path;
-
+                    console.log('type ', type[1]);
+                    console.log('type2', type[2]);
                     if (type[1] === 'timelineitem' && type[2] === 'text') {
                         details_path = `${APP_PATH}/items/vertical-timeline/item/text/details?exhibit_id=${exhibit_id}&timeline_id=${timeline_id}&item_id=${uuid}`;
                     } else {

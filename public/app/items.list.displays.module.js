@@ -123,7 +123,6 @@ const itemsListDisplayModule = (function () {
 
     function check_timeline_item_published_status(item, item_route) {
 
-
         let published_obj = {};
 
         if (item.is_published === 1) {
@@ -609,7 +608,7 @@ const itemsListDisplayModule = (function () {
             }
 
             // start rows
-            item_data += `<tr id="${item.uuid}_${item.type}">`;
+            item_data += `<tr id="${item.uuid}_${item.type}_${item.item_type}">`;
             item_data += `<td class="item-metadata">
                     <p><button class="btn btn-default">${item_type} <small>timeline item</small></button></p>
                     <p><strong>${title}</strong></p>
