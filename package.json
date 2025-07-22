@@ -4,7 +4,8 @@
   "description": "DU Exhibits Backend Application",
   "main": "exhibits.js",
   "scripts": {
-    "test": "NODE_OPTIONS=--max-old-space-size=4096 vitest --run --reporter verbose"
+    "test": "NODE_OPTIONS=--max-old-space-size=4096 vitest --run --reporter verbose",
+    "test:integration": "mocha -r dotenv/config exhibits/tests/exhibits.test.js"
   },
   "author": "fernando.reyes@du.edu",
   "license": "Apache",
