@@ -27,7 +27,7 @@
             <ul class="nav navbar-nav">
                 <li>
                     <a id="back-to-items" href="#" data-keyboard="false">
-                        <i class=" menu-icon fa fa-arrow-left"></i>Back to Items</a>
+                        <i class=" menu-icon fa fa-arrow-left"></i>Back to Timeline Items</a>
                 </li>
             </ul>
             <ul id="items-menu" class="nav navbar-nav"></ul>
@@ -288,7 +288,7 @@
                                         <input title="Color Picker" class="color-picker btn btn-default" type="color"
                                                id="item-background-color-picker" value="#ffffff">
                                     </div>
-                                    <input type="text" id="item-background-color" name="item_background_color"
+                                    <input disabled type="text" id="item-background-color" name="item_background_color"
                                            placeholder="i.e. #FFFFFF" class="form-control" style="height: 40px">
 
                                 </div>
@@ -302,7 +302,7 @@
                                 </div>
                                 </p>
                                 <div class="input-group">
-                                    <input type="number" id="item-font-size" name="item_font_size"
+                                    <input disabled type="number" id="item-font-size" name="item_font_size"
                                            placeholder="" class="form-control" min="1" max="50" style="height: 40px">
                                     <div class="input-group-append">
                                         <span class="input-group-text" id="basic-addon2">px</span>
@@ -321,11 +321,11 @@
                                 </p>
                                 <div class="input-group">
                                     <div class="input-group-btn">
-                                        <input title="Color Picker" class="color-picker btn btn-default" type="color"
+                                        <input disabled title="Color Picker" class="color-picker btn btn-default" type="color"
                                                id="item-font-color-picker"
                                                value="#ffffff">
                                     </div>
-                                    <input type="text" id="item-font-color" name="item_font_color"
+                                    <input disabled type="text" id="item-font-color" name="item_font_color"
                                            placeholder="i.e. #FFFFFF" class="form-control" style="height: 40px">
                                 </div>
                             </div>
@@ -338,7 +338,7 @@
                                 </div>
                                 </p>
                                 <div class="input-group">
-                                    <select name="item_font" id="item-font"
+                                    <select disabled name="item_font" id="item-font"
                                             class="form-control-lg form-control text-muted" style="height: 40px">
                                         <option value="">Select From Menu</option>
                                         <option value="">----------</option>
@@ -353,7 +353,10 @@
         </div>
         <div id="item-submit-card" class="card">
             <div class="card-body">
-                <button class="btn btn-primary" type="button" id="save-item-btn">
+                <button class="btn btn-primary" type="button" id="edit-item-btn">
+                    <i class="fa fa-edit"></i>&nbsp;&nbsp;Edit
+                </button>&nbsp;&nbsp;<span class="alert alert-warning"><i class="fa fa-warning"></i> Changes made to published exhibit timeline items are immediately visible to the public</span>
+                <button class="btn btn-primary" type="button" id="save-item-btn" style="visibility: hidden">
                     <i class="fa fa-save"></i>&nbsp;&nbsp;Save
                 </button>
             </div>

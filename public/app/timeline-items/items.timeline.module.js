@@ -143,13 +143,11 @@ const itemsTimelineModule = (function () {
 
                     let type = uuid_found.split('_');
                     let details_path;
-                    // TODO
+
                     if (type[1] === 'timelineitem' && type[2] === 'text') {
-                        // details_path = `${APP_PATH}/items/vertical-timeline/item/text/details?exhibit_id=${exhibit_id}&timeline_id=${timeline_id}&item_id=${uuid}`;
-                        details_path = `${APP_PATH}/items/vertical-timeline/item/details?exhibit_id=${exhibit_id}&timeline_id=${timeline_id}&item_id=${uuid}`;
+                        details_path = `${APP_PATH}/items/vertical-timeline/item/text/details?exhibit_id=${exhibit_id}&timeline_id=${timeline_id}&item_id=${uuid}`;
                     } else {
-                        // details_path = `${APP_PATH}/items/vertical-timeline/item/media/details?exhibit_id=${exhibit_id}&timeline_id=${timeline_id}&item_id=${uuid}`;
-                        details_path = `${APP_PATH}/items/vertical-timeline/item/details?exhibit_id=${exhibit_id}&timeline_id=${timeline_id}&item_id=${uuid}`;
+                        details_path = `${APP_PATH}/items/vertical-timeline/item/media/details?exhibit_id=${exhibit_id}&timeline_id=${timeline_id}&item_id=${uuid}`;
                     }
 
                     let uuid_actions = `${uuid}-item-actions`;
@@ -217,7 +215,6 @@ const itemsTimelineModule = (function () {
                     }, false);
                 }, 0);
 
-                // TODO
                 setTimeout(() => {
 
                     const trIds = Array.from(document.querySelectorAll('tr')).map(tr => tr.id).filter(id => id);
@@ -237,12 +234,10 @@ const itemsTimelineModule = (function () {
                     let delete_path;
                     let view_items = '';
 
-                    if (type[1] === 'griditem' && type[2] === 'text') {
-                        // edit_path = `${APP_PATH}/items/timeline/item/text/edit?exhibit_id=${exhibit_id}&timeline_id=${timeline_id}&item_id=${uuid}`;
-                        edit_path = `${APP_PATH}/items/vertical-timeline/item/edit?exhibit_id=${exhibit_id}&timeline_id=${timeline_id}&item_id=${uuid}`;
+                    if (type[1] === 'timelineitem' && type[2] === 'text') {
+                        edit_path = `${APP_PATH}/items/vertical-timeline/item/text/edit?exhibit_id=${exhibit_id}&timeline_id=${timeline_id}&item_id=${uuid}`;
                     } else {
-                        // edit_path = `${APP_PATH}/items/timeline/item/media/edit?exhibit_id=${exhibit_id}&timeline_id=${timeline_id}&item_id=${uuid}`;
-                        edit_path = `${APP_PATH}/items/vertical-timeline/item/edit?exhibit_id=${exhibit_id}&timeline_id=${timeline_id}&item_id=${uuid}`;
+                        edit_path = `${APP_PATH}/items/vertical-timeline/item/media/edit?exhibit_id=${exhibit_id}&timeline_id=${timeline_id}&item_id=${uuid}`;
                     }
 
                     delete_path = `${APP_PATH}/items/vertical-timeline/item/delete?exhibit_id=${exhibit_id}&timeline_id=${timeline_id}&item_id=${uuid}`;
