@@ -328,7 +328,6 @@ const itemsEditGridItemFormModule = (function () {
 
                 setTimeout(() => {
                     window.location.reload();
-                    // window.location.replace(APP_PATH + '/items/grid/items?exhibit_id=' + exhibit_id + '&grid_id=' + grid_id);
                 }, 900);
             }
 

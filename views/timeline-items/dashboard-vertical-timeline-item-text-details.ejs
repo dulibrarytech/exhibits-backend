@@ -229,6 +229,15 @@
 <script>
     itemsCommonVerticalTimelineItemFormModule.init();
     itemsEditTimelineItemFormModule.init();
+    document.querySelector('#edit-item-btn').addEventListener('click', (event) => {
+        event.preventDefault();
+        document.querySelector('.content').style.visibility = 'hidden';
+        const exhibit_id = helperModule.get_parameter_by_name('exhibit_id');
+        const timeline_id = helperModule.get_parameter_by_name('timeline_id');
+        const item_id = helperModule.get_parameter_by_name('item_id');
+        window.location.replace(`/exhibits-dashboard/items/vertical-timeline/item/text/edit?exhibit_id=${exhibit_id}&timeline_id=${timeline_id}&item_id=${item_id}`);
+        return false;
+    });
 </script>
 </body>
 </html>
