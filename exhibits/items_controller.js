@@ -25,6 +25,7 @@ const GRIDS_MODEL = require('../exhibits/grid_model');
 const TIMELINES_MODEL = require('../exhibits/timelines_model');
 const FS = require('fs');
 const EXHIBITS_MODEL = require("./exhibits_model");
+const LOGGER = require("../libs/log4");
 
 exports.create_item_record = async function (req, res) {
 
@@ -363,9 +364,25 @@ exports.reorder_items = async function (req, res) {
 
         if (ordered_errors.length === 0) {
 
-            // TODO: check if exhibit is published
-            // TODO: suppress and republish if it is
-            console.log('exhibit id ', id);
+            const data = await EXHIBITS_MODEL.get_exhibit_record(id);
+
+            if (data.data[0].is_published === 1) {
+
+                let is_suppressed= await EXHIBITS_MODEL.suppress_exhibit(id);
+
+                if (is_suppressed.status === true) {
+
+                    setTimeout(async () => {
+
+                        const is_published = await EXHIBITS_MODEL.publish_exhibit(id);
+
+                        if (is_published.status === true) {
+                            LOGGER.module().info('INFO: [/exhibits/model (update_item_record)] Item re-published successfully.');
+                        }
+
+                    }, 5000);
+                }
+            }
 
             res.status(201).send({
                 message: 'Exhibit items reordered.'

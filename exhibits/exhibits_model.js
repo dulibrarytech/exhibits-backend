@@ -157,9 +157,8 @@ exports.get_exhibit_title = async function (uuid) {
 /**
  * Gets exhibit record by uuid
  * @param uuid
- * @param uid
  */
-exports.get_exhibit_record = async function (uid, uuid) {
+exports.get_exhibit_record = async function (uuid) {
 
     try {
 
@@ -168,7 +167,7 @@ exports.get_exhibit_record = async function (uid, uuid) {
         return {
             status: 200,
             message: 'Exhibit records',
-            data: await TASK.get_exhibit_record(uid, uuid)
+            data: await TASK.get_exhibit_record(uuid)
         };
 
     } catch (error) {
@@ -723,7 +722,7 @@ exports.check_preview = async function (uuid) {
     }
 };
 
-/**
+/** TODO: deprecate
  * Updates exhibit order
  * @param data
  */

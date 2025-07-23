@@ -233,7 +233,6 @@ const Exhibit_record_tasks = class {
     /**
      * Deletes exhibit record
      * @param uuid
-     * @return {Promise<unknown | boolean>}
      */
     async delete_exhibit_record(uuid) {
 

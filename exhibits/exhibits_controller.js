@@ -57,7 +57,7 @@ exports.get_exhibit_records = async function (req, res) {
 exports.get_exhibit_record = async function (req, res) {
 
     try {
-        // TODO: type=edit,index,title
+
         const type = req.query.type;
         const uuid = req.params.exhibit_id;
 
