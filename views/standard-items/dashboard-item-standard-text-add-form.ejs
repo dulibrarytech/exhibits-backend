@@ -27,7 +27,7 @@
             <ul class="nav navbar-nav">
                 <li>
                     <a id="back-to-items" href="#" data-keyboard="false">
-                        <i class=" menu-icon fa fa-arrow-left"></i>Back to Items</a>
+                        <i class=" menu-icon fa fa-arrow-left"></i>Back to Exhibit Items</a>
                 </li>
             </ul>
             <ul id="items-menu" class="nav navbar-nav"></ul>
@@ -45,6 +45,7 @@
     <%- include('../partials/main-header.ejs'); %>
     <div class="content" style="min-height: 875px;">
         <div id="message"></div>
+        <h1><span id="exhibit-title"></span> - Text Item</h1>
 
         <%- include('partials/item-data-card.ejs'); %>
         <%- include('partials/standard-item-styles.ejs'); %>

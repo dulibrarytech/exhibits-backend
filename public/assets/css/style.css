@@ -112,7 +112,11 @@ h3,
 h4,
 h5,
 h6 {
-  margin: 0; }
+  color: #40434D;
+  font-size: 30px;
+  margin: 0;
+  padding-bottom: 8px;
+}
 
 h5 {
   font-size: 1em; }
@@ -229,7 +233,7 @@ aside.left-panel {
       .navbar .navbar-nav li.active .menu-icon, .navbar .navbar-nav li:hover .toggle_nav_button:before,
       .navbar .navbar-nav li .toggle_nav_button.nav-open:before {
         color: #5A5A5A;
-        /*color: #607d8b;*/ }
+      }
       .navbar .navbar-nav li .dropdown-toggle:after {
         display: none; }
       .navbar .navbar-nav li > a {
