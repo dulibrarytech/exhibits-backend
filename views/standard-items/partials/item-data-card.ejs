@@ -27,32 +27,30 @@
             <div class="col-12 col-md-12">
                 <div class="row form-group">
                     <div class="col-12">
-                        <div class="form-text text-muted" style="font-size: 17px"><span id="is-required-text">Text
+                        <div class="form-text text-muted" style="font-size: 17px"><span id="is-required-text">Exhibit Text
                             <small><em>(Optional)</em></small></span>
                             &nbsp;&nbsp;<a onclick="helperModule.preview_html('item-text-input');return false;" data-toggle="modal" data-target=".preview-html" class="btn-xs btn-light"><span style="padding: 5px"><i class="fa fa-code"></i> <small>Preview Field</small></span></a>
                         </div>
+                        <small class="form-text text-muted"><i class="fa fa-exclamation-circle"></i> <em>This text is displayed directly on the exhibit template</em></small>
                         <textarea id="item-text-input" class="form-control" name="item_text_input"
                                   rows="4"></textarea>
                     </div>
                 </div>
             </div>
         </div>
-        <!--
-        <div class="row">
+        <div class="row" id="is-media-only-description" style="display: none">
             <div class="col-12 col-md-12">
                 <div class="row form-group">
                     <div class="col-12">
-                        <small class="form-text text-muted"><i class="fa fa-exclamation-circle"></i> <em>Text
-                                will be wrapped around item by default</em></small>
-                        <label class="form-text text-muted" style="font-size: 17px" for="media-padding">Wrap
-                            Text&nbsp;
-                            <input type="checkbox" id="wrap-text" name="wrap_text" checked>
-                        </label>
+                        <div class="form-text text-muted" style="font-size: 17px">Pop-up Window Description <small><em>(Optional)</em></small>
+                            &nbsp;&nbsp;<a onclick="helperModule.preview_html('item-description-input');return false;" data-toggle="modal" data-target=".preview-html" class="btn-xs btn-light"><span style="padding: 5px"><i class="fa fa-code"></i> <small>Preview Field</small></span></a>
+                        </div>
+                        <textarea id="item-description-input" class="form-control" name="item_description_input"
+                                  rows="4"></textarea>
                     </div>
                 </div>
             </div>
         </div>
-        -->
         <div class="row" id="is-media-only-caption" style="display: none">
             <div class="col-12 col-md-12">
                 <div class="row form-group">

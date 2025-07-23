@@ -19,7 +19,6 @@
 'use strict';
 
 const TIMELINES_MODEL = require('../exhibits/timelines_model');
-const GRIDS_MODEL = require("./grid_model");
 const FS = require("fs");
 
 exports.create_timeline_record = async function (req, res) {

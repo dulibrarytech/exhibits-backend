@@ -101,6 +101,7 @@ const itemsEditStandardItemFormModule = (function () {
         // item data
         document.querySelector('#item-title-input').value = helperModule.unescape(record.title);
         document.querySelector('#item-text-input').value = helperModule.unescape(record.text);
+        document.querySelector('#item-description-input').value = helperModule.unescape(record.description);
         document.querySelector('#item-caption-input').value = record.caption;
 
         if (window.location.pathname.indexOf('media') !== -1) {

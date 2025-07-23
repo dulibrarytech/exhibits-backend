@@ -77,13 +77,27 @@
                     <div class="col-12 col-md-12">
                         <div class="row form-group">
                             <div class="col-12">
-                                <div class="form-text text-muted" style="font-size: 17px">Text
+                                <div class="form-text text-muted" style="font-size: 17px">Exhibit Text
                                     &nbsp;&nbsp;<a onclick="helperModule.preview_html('item-text-input');return false;"
                                                    data-toggle="modal" data-target=".preview-html"
                                                    class="btn-xs btn-light"><span style="padding: 5px"><i
                                                     class="fa fa-code"></i> <small>Preview Field</small></span></a>
                                 </div>
+                                <small class="form-text text-muted"><i class="fa fa-exclamation-circle"></i> <em>This text is displayed directly on the exhibit template</em></small>
                                 <textarea disabled id="item-text-input" class="form-control" name="item_text_input"
+                                          rows="4"></textarea>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="row" id="is-media-only-description">
+                    <div class="col-12 col-md-12">
+                        <div class="row form-group">
+                            <div class="col-12">
+                                <div class="form-text text-muted" style="font-size: 17px">Pop-up Window Description <small><em>(Optional)</em></small>
+                                    &nbsp;&nbsp;<a onclick="helperModule.preview_html('item-description-input');return false;" data-toggle="modal" data-target=".preview-html" class="btn-xs btn-light"><span style="padding: 5px"><i class="fa fa-code"></i> <small>Preview Field</small></span></a>
+                                </div>
+                                <textarea disabled id="item-description-input" class="form-control" name="item_description_input"
                                           rows="4"></textarea>
                             </div>
                         </div>

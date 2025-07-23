@@ -46,6 +46,7 @@ const itemsCommonStandardItemFormModule = (function () {
             if (window.location.pathname.indexOf('media') !== -1) {
 
                 let media = [];
+                item.description = document.querySelector('#item-description-input').value;
                 item.caption = document.querySelector('#item-caption-input').value;
                 item.pdf_open_to_page = document.querySelector('#pdf-open-to-page').value;
                 item.is_alt_text_decorative = document.querySelector('#is-alt-text-decorative').checked;
@@ -264,6 +265,7 @@ const itemsCommonStandardItemFormModule = (function () {
                 uploadsModule.upload_item_thumbnail();
                 document.querySelector('#item-media-trash').style.display = 'none';
                 document.querySelector('#item-thumbnail-trash').style.display = 'none';
+                document.querySelector('#is-media-only-description').style.display = 'block';
                 document.querySelector('#is-media-only-caption').style.display = 'block';
 
                 setTimeout(() => {
