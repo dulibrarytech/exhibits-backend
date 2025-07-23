@@ -367,17 +367,6 @@ exports.update_grid_item_record = async function (is_member_of_exhibit, is_membe
             data.styles = {};
         }
 
-        /*
-        if (data.is_published === 'true') {
-            data.is_published = 1;
-            is_published = 1;
-        } else if (data.is_published === 'false') {
-            data.is_published = 0;
-            is_published = 0;
-        }
-
-         */
-
         is_published = data.is_published;
         delete data.is_published;
 

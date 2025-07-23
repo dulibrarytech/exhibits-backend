@@ -500,7 +500,63 @@ const helperModule = (function () {
             });
 
             if (response !== undefined && response.status === 201) {
-                console.log(response);
+                console.log('items reordered');
+            } else {
+                document.querySelector('#message').innerHTML = `<div class="alert alert-danger" role="alert"><i class="fa fa-exclamation"></i> An HTTP request error occurred while reordering items.</div>`;
+            }
+
+        } catch (error) {
+            document.querySelector('#message').innerHTML = `<div class="alert alert-danger" role="alert"><i class="fa fa-exclamation"></i> ${error.message}</div>`;
+        }
+    };
+
+    /**
+     * Reorders grid item list via drag and drop
+     * @param e
+     * @param reordered_items
+     */
+    obj.reorder_grid_items = async function (e, reordered_items) {
+
+        try {
+
+            if (reordered_items.length === 0) {
+                return false;
+            }
+
+            const EXHIBITS_ENDPOINTS = endpointsModule.get_exhibits_endpoints();
+            const exhibit_id = helperModule.get_parameter_by_name('exhibit_id');
+            const grid_id = helperModule.get_parameter_by_name('grid_id');
+            let reorder_obj = {};
+            let updated_order = [];
+
+            for (let i = 0, ien = reordered_items.length; i < ien; i++) {
+
+                let node = reordered_items[i].node;
+                let id = node.getAttribute('id');
+                let id_arr = id.split('_');
+
+                reorder_obj.grid_id = grid_id;
+                reorder_obj.uuid = id_arr[0];
+                reorder_obj.type = 'griditem';
+                reorder_obj.order = reordered_items[i].node.childNodes[0].childNodes[1].innerText;
+
+                updated_order.push(reorder_obj);
+                reorder_obj = {};
+            }
+
+            const token = authModule.get_user_token();
+            const response = await httpModule.req({
+                method: 'POST',
+                url: EXHIBITS_ENDPOINTS.exhibits.reorder_records.post.endpoint.replace(':exhibit_id', exhibit_id),
+                data: updated_order,
+                headers: {
+                    'Content-Type': 'application/json',
+                    'x-access-token': token
+                }
+            });
+
+            if (response !== undefined && response.status === 201) {
+                console.log('items reordered');
             } else {
                 document.querySelector('#message').innerHTML = `<div class="alert alert-danger" role="alert"><i class="fa fa-exclamation"></i> An HTTP request error occurred while reordering items.</div>`;
             }

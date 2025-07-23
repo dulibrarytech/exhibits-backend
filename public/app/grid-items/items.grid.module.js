@@ -82,7 +82,7 @@ const itemsGridModule = (function () {
         });
 
         GRID_ITEM_LIST.on('row-reordered', async (e, reordered_items) => {
-            await helperModule.reorder_items(e, reordered_items);
+            await helperModule.reorder_grid_items(e, reordered_items);
         });
 
         bind_publish_grid_item_events();

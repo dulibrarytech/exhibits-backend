@@ -327,6 +327,7 @@ exports.verify = function (req, res) {
     });
 };
 
+// TODO: deprecate - we no longer reorder exhibits
 exports.reorder_exhibit_items = async function (req, res) {
 
     try {

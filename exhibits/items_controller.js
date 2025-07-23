@@ -304,13 +304,12 @@ exports.reorder_items = async function (req, res) {
 
         const id = req.params.exhibit_id;
         const updated_order = req.body;
+        let ordered_errors = [];
 
         if (id.length === 0 || updated_order.length === 0) {
             res.status(400).send('Bad request.');
             return false;
         }
-
-        let ordered_errors = [];
 
         for (let i=0;i<updated_order.length;i++) {
 
@@ -360,20 +359,13 @@ exports.reorder_items = async function (req, res) {
                     ordered_errors.push('-1');
                 }
             }
-
-            if (updated_order[i].type === 'timelineitem') {
-
-                let timeline_id = updated_order[i].timeline_id;
-                delete updated_order[i].timeline_id;
-                let is_reordered = await TIMELINES_MODEL.reorder_timeline_items(timeline_id, updated_order[i]);
-
-                if (is_reordered === false) {
-                    ordered_errors.push('-1');
-                }
-            }
         }
 
         if (ordered_errors.length === 0) {
+
+            // TODO: check if exhibit is published
+            // TODO: suppress and republish if it is
+            console.log('exhibit id ', id);
 
             res.status(201).send({
                 message: 'Exhibit items reordered.'
