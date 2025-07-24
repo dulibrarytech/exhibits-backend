@@ -99,7 +99,7 @@ const itemsEditTimelineItemFormModule = (function () {
 
             if (window.location.pathname.indexOf('media') !== -1) {
 
-                document.querySelector('#item-caption-input').value = record.caption;
+                document.querySelector('#item-caption-input').value = helperModule.unescape(record.caption);
                 document.querySelector('#item-alt-text-input').value = helperModule.unescape(record.alt_text);
                 document.querySelector('#pdf-open-to-page').value = record.pdf_open_to_page;
 
