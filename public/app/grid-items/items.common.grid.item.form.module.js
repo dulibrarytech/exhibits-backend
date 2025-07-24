@@ -306,8 +306,6 @@ const itemsCommonGridItemFormModule = (function () {
         } catch (error) {
             document.querySelector('#message').innerHTML = `<div class="alert alert-danger" role="alert"><i class="fa fa-exclamation"></i> ${error.message}</div>`;
         }
-
-
     };
 
     return obj;

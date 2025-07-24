@@ -35,6 +35,7 @@ const itemsCommonStandardGridFormModule = (function () {
             grid.columns = document.querySelector('#grid-columns').value;
 
             // grid styles
+            /*
             let grid_background_color = document.querySelector('#grid-background-color').value;
             let grid_color = document.querySelector('#grid-font-color').value;
             let grid_font = document.querySelector('#grid-font').value;
@@ -56,6 +57,8 @@ const itemsCommonStandardGridFormModule = (function () {
                 grid.styles.fontSize = `${grid_font_size}px`;
             }
 
+             */
+
             return grid;
 
         } catch (error) {
@@ -74,25 +77,33 @@ const itemsCommonStandardGridFormModule = (function () {
             navModule.back_to_items();
             navModule.set_preview_link();
 
-            document.querySelector('#grid-background-color-picker').addEventListener('input', () => {
-                if (document.querySelector('#grid-background-color')) {
-                    document.querySelector('#grid-background-color').value = document.querySelector('#grid-background-color-picker').value;
-                }
-            });
+            let grid_background_color_picker = document.querySelector('#grid-background-color-picker');
 
-            document.querySelector('#grid-background-color').addEventListener('input', () => {
-                document.querySelector('#grid-background-color-picker').value = document.querySelector('#grid-background-color').value;
-            });
+            if (grid_background_color_picker) {
+                document.querySelector('#grid-background-color-picker').addEventListener('input', () => {
+                    if (document.querySelector('#grid-background-color')) {
+                        document.querySelector('#grid-background-color').value = document.querySelector('#grid-background-color-picker').value;
+                    }
+                });
 
-            document.querySelector('#grid-font-color-picker').addEventListener('input', () => {
-                if (document.querySelector('#grid-font-color')) {
-                    document.querySelector('#grid-font-color').value = document.querySelector('#grid-font-color-picker').value;
-                }
-            });
+                document.querySelector('#grid-background-color').addEventListener('input', () => {
+                    document.querySelector('#grid-background-color-picker').value = document.querySelector('#grid-background-color').value;
+                });
+            }
 
-            document.querySelector('#grid-font-color').addEventListener('input', () => {
-                document.querySelector('#grid-font-color-picker').value = document.querySelector('#grid-font-color').value;
-            });
+            let grid_font_color_picker = document.querySelector('#grid-font-color-picker');
+
+            if (grid_font_color_picker) {
+                document.querySelector('#grid-font-color-picker').addEventListener('input', () => {
+                    if (document.querySelector('#grid-font-color')) {
+                        document.querySelector('#grid-font-color').value = document.querySelector('#grid-font-color-picker').value;
+                    }
+                });
+
+                document.querySelector('#grid-font-color').addEventListener('input', () => {
+                    document.querySelector('#grid-font-color-picker').value = document.querySelector('#grid-font-color').value;
+                });
+            }
 
             helperModule.show_form();
 
