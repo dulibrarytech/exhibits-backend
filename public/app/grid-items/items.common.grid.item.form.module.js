@@ -34,8 +34,6 @@ const itemsCommonGridItemFormModule = (function () {
             // item metadata
             item.title = document.querySelector('#item-title-input').value;
             item.text = document.querySelector('#item-text-input').value;
-            item.description = document.querySelector('#item-description-input').value;
-            item.caption = document.querySelector('#item-caption-input').value;
 
             if (window.location.pathname.indexOf('text') !== -1 && item.text.length === 0) {
                 document.querySelector('#message').innerHTML = `<div class="alert alert-danger" role="alert"><i class="fa fa-exclamation"></i> Please enter "Text" for this item</div>`;
@@ -48,6 +46,8 @@ const itemsCommonGridItemFormModule = (function () {
 
             if (window.location.pathname.indexOf('media') !== -1) {
 
+                item.description = document.querySelector('#item-description-input').value;
+                item.caption = document.querySelector('#item-caption-input').value;
                 item.is_alt_text_decorative = document.querySelector('#is-alt-text-decorative').checked;
                 item.is_embedded = document.querySelector('#embed-item').checked;
 
@@ -253,6 +253,7 @@ const itemsCommonGridItemFormModule = (function () {
                 document.querySelector('#item-media-trash').style.display = 'none';
                 document.querySelector('#item-thumbnail-trash').style.display = 'none';
                 document.querySelector('#is-media-only-caption').style.display = 'block';
+                document.querySelector('#is-media-only-description').style.display = 'block';
 
                 setTimeout(() => {
                     document.querySelector('#item-media-trash').addEventListener('click', itemsCommonGridItemFormModule.delete_media);

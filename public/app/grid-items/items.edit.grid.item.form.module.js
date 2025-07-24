@@ -68,209 +68,216 @@ const itemsEditGridItemFormModule = (function () {
 
     async function display_edit_record() {
 
-        let record = await get_grid_item_record();
-        let thumbnail_fragment = '';
-        let thumbnail_url = '';
-        let is_published = record.is_published;
-        let created_by = record.created_by;
-        let created = record.created;
-        let create_date = new Date(created);
-        let updated_by = record.updated_by;
-        let updated = record.updated;
-        let update_date = new Date(updated);
-        let item_created = '';
-        let create_date_time = helperModule.format_date(create_date);
-        let update_date_time = helperModule.format_date(update_date);
+        try {
 
-        helperModule.check_if_locked(record, '#item-submit-card');
+            let record = await get_grid_item_record();
+            let thumbnail_fragment = '';
+            let thumbnail_url = '';
+            let is_published = record.is_published;
+            let created_by = record.created_by;
+            let created = record.created;
+            let create_date = new Date(created);
+            let updated_by = record.updated_by;
+            let updated = record.updated;
+            let update_date = new Date(updated);
+            let item_created = '';
+            let create_date_time = helperModule.format_date(create_date);
+            let update_date_time = helperModule.format_date(update_date);
 
-        if (created_by !== null) {
-            item_created += `<em>Created by ${created_by} on ${create_date_time}</em>`;
-        }
+            helperModule.check_if_locked(record, '#item-submit-card');
 
-        if (updated_by !== null) {
-            item_created += ` | <em>Last updated by ${updated_by} on ${update_date_time}</em>`;
-        }
-
-        document.querySelector('#created').innerHTML = item_created;
-
-        if (document.querySelector('#is-published') !== null && is_published === 1) {
-            document.querySelector('#is-published').value = true;
-        } else if (document.querySelector('#is-published') !== null && is_published === 0) {
-            document.querySelector('#is-published').value = false;
-        }
-
-        // item data
-        document.querySelector('#item-title-input').value = helperModule.unescape(record.title);
-        document.querySelector('#item-text-input').value = helperModule.unescape(record.text);
-        document.querySelector('#item-description-input').value = helperModule.unescape(record.description);
-        document.querySelector('#item-caption-input').value = record.caption;
-
-        if (window.location.pathname.indexOf('media') !== -1) {
-
-            document.querySelector('#pdf-open-to-page').value = record.pdf_open_to_page;
-
-            if (record.is_embedded === 1) {
-                document.querySelector('#embed-item').checked = true;
-            } else {
-                document.querySelector('#embed-item').checked = false;
+            if (created_by !== null) {
+                item_created += `<em>Created by ${created_by} on ${create_date_time}</em>`;
             }
 
-            if (record.is_alt_text_decorative === 1) {
-                document.querySelector('#is-alt-text-decorative').checked = true;
-                let toggle_elem = document.querySelector('#item-alt-text-input');
-                toggle_elem.disabled = true;
-            } else {
-                document.querySelector('#is-alt-text-decorative').checked = false;
-                document.querySelector('#item-alt-text-input').value = helperModule.unescape(record.alt_text);
+            if (updated_by !== null) {
+                item_created += ` | <em>Last updated by ${updated_by} on ${update_date_time}</em>`;
             }
 
-            if (record.media.length > 0) {
+            document.querySelector('#created').innerHTML = item_created;
 
-                if (record.is_repo_item === 0 && record.is_kaltura_item === 0) {
+            if (document.querySelector('#is-published') !== null && is_published === 1) {
+                document.querySelector('#is-published').value = true;
+            } else if (document.querySelector('#is-published') !== null && is_published === 0) {
+                document.querySelector('#is-published').value = false;
+            }
 
-                    if (record.mime_type.indexOf('image') !== -1) {
+            // item data
+            document.querySelector('#item-title-input').value = helperModule.unescape(record.title);
+            document.querySelector('#item-text-input').value = helperModule.unescape(record.text);
 
-                        thumbnail_url = EXHIBITS_ENDPOINTS.exhibits.exhibit_media.get.endpoint.replace(':exhibit_id', record.is_member_of_exhibit).replace(':media', record.media);
-                        thumbnail_fragment = `<p><img src="${thumbnail_url}" height="200" ></p>`;
+            if (window.location.pathname.indexOf('media') !== -1) {
 
-                        document.querySelector('#image-alt-text').style.display = 'block';
+                document.querySelector('#item-description-input').value = helperModule.unescape(record.description);
+                document.querySelector('#item-caption-input').value = record.caption;
+                document.querySelector('#pdf-open-to-page').value = record.pdf_open_to_page;
 
-                        if (record.is_alt_text_decorative === 1) {
-                            document.querySelector('#is-alt-text-decorative').checked = true;
-                            let toggle_elem = document.querySelector('#item-alt-text-input');
-                            toggle_elem.disabled = true;
+                if (record.is_embedded === 1) {
+                    document.querySelector('#embed-item').checked = true;
+                } else {
+                    document.querySelector('#embed-item').checked = false;
+                }
+
+                if (record.is_alt_text_decorative === 1) {
+                    document.querySelector('#is-alt-text-decorative').checked = true;
+                    let toggle_elem = document.querySelector('#item-alt-text-input');
+                    toggle_elem.disabled = true;
+                } else {
+                    document.querySelector('#is-alt-text-decorative').checked = false;
+                    document.querySelector('#item-alt-text-input').value = helperModule.unescape(record.alt_text);
+                }
+
+                if (record.media.length > 0) {
+
+                    if (record.is_repo_item === 0 && record.is_kaltura_item === 0) {
+
+                        if (record.mime_type.indexOf('image') !== -1) {
+
+                            thumbnail_url = EXHIBITS_ENDPOINTS.exhibits.exhibit_media.get.endpoint.replace(':exhibit_id', record.is_member_of_exhibit).replace(':media', record.media);
+                            thumbnail_fragment = `<p><img src="${thumbnail_url}" height="200" ></p>`;
+
+                            document.querySelector('#image-alt-text').style.display = 'block';
+
+                            if (record.is_alt_text_decorative === 1) {
+                                document.querySelector('#is-alt-text-decorative').checked = true;
+                                let toggle_elem = document.querySelector('#item-alt-text-input');
+                                toggle_elem.disabled = true;
+                            } else {
+                                document.querySelector('#is-alt-text-decorative').checked = false;
+                                document.querySelector('#item-alt-text-input').value = helperModule.unescape(record.alt_text);
+                            }
+
+                        } else if (record.mime_type.indexOf('video') !== -1) {
+                            thumbnail_url = '/exhibits-dashboard/static/images/video-tn.png';
+                            thumbnail_fragment = `<p><img src="${thumbnail_url}" height="200" ></p>`;
+                        } else if (record.mime_type.indexOf('audio') !== -1) {
+                            thumbnail_url = '/exhibits-dashboard/static/images/audio-tn.png';
+                            thumbnail_fragment = `<p><img src="${thumbnail_url}" height="200" ></p>`;
+                        } else if (record.mime_type.indexOf('pdf') !== -1) {
+                            thumbnail_url = '/exhibits-dashboard/static/images/pdf-tn.png';
+                            thumbnail_fragment = `<p><img src="${thumbnail_url}" height="200" ></p>`;
+                            document.querySelector('#toggle-open-to-page').style.visibility = 'visible';
                         } else {
-                            document.querySelector('#is-alt-text-decorative').checked = false;
-                            document.querySelector('#item-alt-text-input').value = helperModule.unescape(record.alt_text);
+                            console.log('Unable to Determine Type');
                         }
 
-                    } else if (record.mime_type.indexOf('video') !== -1) {
-                        thumbnail_url = '/exhibits-dashboard/static/images/video-tn.png';
-                        thumbnail_fragment = `<p><img src="${thumbnail_url}" height="200" ></p>`;
-                    } else if (record.mime_type.indexOf('audio') !== -1) {
-                        thumbnail_url = '/exhibits-dashboard/static/images/audio-tn.png';
-                        thumbnail_fragment = `<p><img src="${thumbnail_url}" height="200" ></p>`;
-                    } else if (record.mime_type.indexOf('pdf') !== -1) {
-                        thumbnail_url = '/exhibits-dashboard/static/images/pdf-tn.png';
-                        thumbnail_fragment = `<p><img src="${thumbnail_url}" height="200" ></p>`;
-                        document.querySelector('#toggle-open-to-page').style.visibility = 'visible';
-                    } else {
-                        console.log('Unable to Determine Type');
+                        document.querySelector('#item-media-trash').style.display = 'inline';
+                        document.querySelector('#item-media-filename-display').innerHTML = `<span style="font-size: 11px">${record.media}</span>`;
                     }
 
-                    document.querySelector('#item-media-trash').style.display = 'inline';
-                    document.querySelector('#item-media-filename-display').innerHTML = `<span style="font-size: 11px">${record.media}</span>`;
-                }
+                    document.querySelector('#item-type').value = record.item_type;
 
-                document.querySelector('#item-type').value = record.item_type;
+                    if (record.is_repo_item === 1) {
 
-                if (record.is_repo_item === 1) {
+                        document.getElementById('upload-media-tab').classList.remove('active');
+                        document.getElementById('import-repo-media-tab').classList.add('active');
+                        document.getElementById('upload-media').classList.remove('active');
+                        document.getElementById('upload-media').classList.remove('show');
+                        document.getElementById('import-repo-media').classList.add('show');
+                        document.getElementById('import-repo-media').classList.add('active');
+                        document.getElementById('upload-media-tab').setAttribute('aria-selected', 'false');
+                        document.getElementById('import-repo-media-tab').setAttribute('aria-selected', 'true');
+                        document.querySelector('#repo-uuid').value = record.media;
+                        await helperModule.get_repo_item_data(null);
+                    }
 
-                    document.getElementById('upload-media-tab').classList.remove('active');
-                    document.getElementById('import-repo-media-tab').classList.add('active');
-                    document.getElementById('upload-media').classList.remove('active');
-                    document.getElementById('upload-media').classList.remove('show');
-                    document.getElementById('import-repo-media').classList.add('show');
-                    document.getElementById('import-repo-media').classList.add('active');
-                    document.getElementById('upload-media-tab').setAttribute('aria-selected', 'false');
-                    document.getElementById('import-repo-media-tab').setAttribute('aria-selected', 'true');
-                    document.querySelector('#repo-uuid').value = record.media;
-                    await helperModule.get_repo_item_data(null);
-                }
+                    if (record.is_kaltura_item === 1) {
 
-                if (record.is_kaltura_item === 1) {
+                        document.getElementById('upload-media-tab').classList.remove('active');
+                        document.getElementById('import-audio-video-tab').classList.add('active');
+                        document.getElementById('upload-media').classList.remove('active');
+                        document.getElementById('upload-media').classList.remove('show');
+                        document.getElementById('import-audio-video').classList.add('show');
+                        document.getElementById('import-audio-video').classList.add('active');
+                        document.getElementById('upload-media-tab').setAttribute('aria-selected', 'false');
+                        document.getElementById('import-audio-video-tab').setAttribute('aria-selected', 'true');
+                        document.querySelector('#audio-video').value = record.media;
 
-                    document.getElementById('upload-media-tab').classList.remove('active');
-                    document.getElementById('import-audio-video-tab').classList.add('active');
-                    document.getElementById('upload-media').classList.remove('active');
-                    document.getElementById('upload-media').classList.remove('show');
-                    document.getElementById('import-audio-video').classList.add('show');
-                    document.getElementById('import-audio-video').classList.add('active');
-                    document.getElementById('upload-media-tab').setAttribute('aria-selected', 'false');
-                    document.getElementById('import-audio-video-tab').setAttribute('aria-selected', 'true');
-                    document.querySelector('#audio-video').value = record.media;
+                        let item_types = document.getElementsByName('item_type');
 
-                    let item_types = document.getElementsByName('item_type');
-
-                    for (let j = 0; j < item_types.length; j++) {
-                        if (item_types[j].value === record.item_type) {
-                            document.querySelector('#' + item_types[j].id).checked = true;
+                        for (let j = 0; j < item_types.length; j++) {
+                            if (item_types[j].value === record.item_type) {
+                                document.querySelector('#' + item_types[j].id).checked = true;
+                            }
                         }
+
+                        document.querySelector('#item-type').value = 'kaltura';
                     }
 
-                    document.querySelector('#item-type').value = 'kaltura';
+                    document.querySelector('#item-mime-type').value = helperModule.unescape(record.mime_type);
+                    document.querySelector('#item-media-thumbnail-image-display').innerHTML = thumbnail_fragment;
+                    document.querySelector('#item-media').value = record.media;
+                    document.querySelector('#item-media-prev').value = record.media;
+
                 }
 
-                document.querySelector('#item-mime-type').value = helperModule.unescape(record.mime_type);
-                document.querySelector('#item-media-thumbnail-image-display').innerHTML = thumbnail_fragment;
-                document.querySelector('#item-media').value = record.media;
-                document.querySelector('#item-media-prev').value = record.media;
+                if (record.thumbnail.length > 0) {
 
-            }
-
-            if (record.thumbnail.length > 0) {
-
-                thumbnail_url = EXHIBITS_ENDPOINTS.exhibits.exhibit_media.get.endpoint.replace(':exhibit_id', record.is_member_of_exhibit).replace(':media', record.thumbnail);
-                thumbnail_fragment = `<p><img src="${thumbnail_url}" height="200" ></p>`;
-                document.querySelector('#item-thumbnail-image-display').innerHTML = thumbnail_fragment;
-                document.querySelector('#item-thumbnail-filename-display').innerHTML = `<span style="font-size: 11px">${record.thumbnail}</span>`;
-                document.querySelector('#item-thumbnail').value = record.thumbnail;
-                document.querySelector('#item-thumbnail-image-prev').value = record.thumbnail;
-                document.querySelector('#item-thumbnail-trash').style.display = 'inline';
-            }
-        }
-
-        let layouts = document.getElementsByName('layout');
-
-        for (let j = 0; j < layouts.length; j++) {
-            if (layouts[j].value === record.layout) {
-                document.querySelector('#' + layouts[j].id).checked = true;
-            }
-        }
-
-        let media_width = document.getElementsByName('media_width');
-
-        for (let j = 0; j < media_width.length; j++) {
-            if (parseInt(media_width[j].value) === parseInt(record.media_width)) {
-                document.querySelector('#' + media_width[j].id).checked = true;
-            }
-        }
-
-        let styles = JSON.parse(record.styles);
-
-        if (Object.keys(styles).length !== 0) {
-
-            if (styles.backgroundColor !== undefined) {
-                document.querySelector('#item-background-color').value = styles.backgroundColor;
-                document.querySelector('#item-background-color-picker').value = styles.backgroundColor;
-            } else {
-                document.querySelector('#item-background-color').value = '';
-            }
-
-            if (styles.color !== undefined) {
-                document.querySelector('#item-font-color').value = styles.color;
-                document.querySelector('#item-font-color-picker').value = styles.color;
-            } else {
-                document.querySelector('#item-font-color').value = '';
-            }
-
-            let font_values = document.querySelector('#item-font');
-
-            for (let i = 0; i < font_values.length; i++) {
-                if (font_values[i].value === styles.fontFamily) {
-                    document.querySelector('#item-font').value = styles.fontFamily;
+                    thumbnail_url = EXHIBITS_ENDPOINTS.exhibits.exhibit_media.get.endpoint.replace(':exhibit_id', record.is_member_of_exhibit).replace(':media', record.thumbnail);
+                    thumbnail_fragment = `<p><img src="${thumbnail_url}" height="200" ></p>`;
+                    document.querySelector('#item-thumbnail-image-display').innerHTML = thumbnail_fragment;
+                    document.querySelector('#item-thumbnail-filename-display').innerHTML = `<span style="font-size: 11px">${record.thumbnail}</span>`;
+                    document.querySelector('#item-thumbnail').value = record.thumbnail;
+                    document.querySelector('#item-thumbnail-image-prev').value = record.thumbnail;
+                    document.querySelector('#item-thumbnail-trash').style.display = 'inline';
                 }
             }
 
-            if (styles.fontSize !== undefined) {
-                document.querySelector('#item-font-size').value = styles.fontSize.replace('px', '');
-            } else {
-                document.querySelector('#item-font-size').value = '';
-            }
-        }
+            let layouts = document.getElementsByName('layout');
 
-        return false;
+            for (let j = 0; j < layouts.length; j++) {
+                if (layouts[j].value === record.layout) {
+                    document.querySelector('#' + layouts[j].id).checked = true;
+                }
+            }
+
+            let media_width = document.getElementsByName('media_width');
+
+            for (let j = 0; j < media_width.length; j++) {
+                if (parseInt(media_width[j].value) === parseInt(record.media_width)) {
+                    document.querySelector('#' + media_width[j].id).checked = true;
+                }
+            }
+
+            let styles = JSON.parse(record.styles);
+
+            if (Object.keys(styles).length !== 0) {
+
+                if (styles.backgroundColor !== undefined) {
+                    document.querySelector('#item-background-color').value = styles.backgroundColor;
+                    document.querySelector('#item-background-color-picker').value = styles.backgroundColor;
+                } else {
+                    document.querySelector('#item-background-color').value = '';
+                }
+
+                if (styles.color !== undefined) {
+                    document.querySelector('#item-font-color').value = styles.color;
+                    document.querySelector('#item-font-color-picker').value = styles.color;
+                } else {
+                    document.querySelector('#item-font-color').value = '';
+                }
+
+                let font_values = document.querySelector('#item-font');
+
+                for (let i = 0; i < font_values.length; i++) {
+                    if (font_values[i].value === styles.fontFamily) {
+                        document.querySelector('#item-font').value = styles.fontFamily;
+                    }
+                }
+
+                if (styles.fontSize !== undefined) {
+                    document.querySelector('#item-font-size').value = styles.fontSize.replace('px', '');
+                } else {
+                    document.querySelector('#item-font-size').value = '';
+                }
+            }
+
+            return false;
+
+        } catch (error) {
+            console.log(error);
+            document.querySelector('#message').innerHTML = `<div class="alert alert-danger" role="alert"><i class="fa fa-exclamation"></i> ${error.message}</div>`;
+        }
     }
 
     obj.update_grid_item_record = async function () {
