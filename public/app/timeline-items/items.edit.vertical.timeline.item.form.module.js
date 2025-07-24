@@ -216,6 +216,7 @@ const itemsEditTimelineItemFormModule = (function () {
             let date_arr = record.date.split('T');
             document.querySelector('#item-date-input').value = date_arr.shift();
 
+            /*
             let styles = JSON.parse(record.styles);
 
             if (Object.keys(styles).length !== 0) {
@@ -248,6 +249,8 @@ const itemsEditTimelineItemFormModule = (function () {
                     document.querySelector('#item-font-size').value = '';
                 }
             }
+
+             */
 
             return false;
 

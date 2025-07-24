@@ -34,6 +34,7 @@ const itemsCommonVerticalTimelineFormModule = (function () {
             timeline.text = document.querySelector('#timeline-text-input').value;
 
             // timeline styles
+            /*
             let timeline_background_color = document.querySelector('#timeline-background-color').value;
             let timeline_color = document.querySelector('#timeline-font-color').value;
             let timeline_font = document.querySelector('#timeline-font').value;
@@ -54,6 +55,7 @@ const itemsCommonVerticalTimelineFormModule = (function () {
             if (timeline_font_size.length > 0) {
                 timeline.styles.fontSize = `${timeline_font_size}px`;
             }
+            */
 
             return timeline;
 
@@ -73,17 +75,25 @@ const itemsCommonVerticalTimelineFormModule = (function () {
             navModule.back_to_items();
             navModule.set_preview_link();
 
-            document.querySelector('#timeline-background-color-picker').addEventListener('input', () => {
-                if (document.querySelector('#timeline-background-color')) {
-                    document.querySelector('#timeline-background-color').value = document.querySelector('#timeline-background-color-picker').value;
-                }
-            });
+            let timeline_background_color_picker =  document.querySelector('#timeline-background-color-picker');
 
-            document.querySelector('#timeline-font-color-picker').addEventListener('input', () => {
-                if (document.querySelector('#timeline-font-color')) {
-                    document.querySelector('#timeline-font-color').value = document.querySelector('#timeline-font-color-picker').value;
-                }
-            });
+            if (timeline_background_color_picker) {
+                document.querySelector('#timeline-background-color-picker').addEventListener('input', () => {
+                    if (document.querySelector('#timeline-background-color')) {
+                        document.querySelector('#timeline-background-color').value = document.querySelector('#timeline-background-color-picker').value;
+                    }
+                });
+            }
+
+            let timeline_font_color_picker =  document.querySelector('#timeline-font_color-picker');
+
+            if (timeline_font_color_picker) {
+                document.querySelector('#timeline-font-color-picker').addEventListener('input', () => {
+                    if (document.querySelector('#timeline-font-color')) {
+                        document.querySelector('#timeline-font-color').value = document.querySelector('#timeline-font-color-picker').value;
+                    }
+                });
+            }
 
             helperModule.show_form();
 

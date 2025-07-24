@@ -132,6 +132,7 @@ const itemsCommonVerticalTimelineItemFormModule = (function () {
             }
 
             // item styles
+            /*
             let item_background_color = document.querySelector('#item-background-color').value;
             let item_color = document.querySelector('#item-font-color').value;
             let item_font = document.querySelector('#item-font').value;
@@ -152,6 +153,8 @@ const itemsCommonVerticalTimelineItemFormModule = (function () {
             if (item_font_size.length > 0) {
                 item.styles.fontSize = `${item_font_size}px`;
             }
+
+             */
 
             return item;
 
@@ -270,25 +273,36 @@ const itemsCommonVerticalTimelineItemFormModule = (function () {
             navModule.back_to_timeline_items();
             navModule.set_preview_link();
 
-            document.querySelector('#item-background-color-picker').addEventListener('input', () => {
-                if (document.querySelector('#item-background-color')) {
-                    document.querySelector('#item-background-color').value = document.querySelector('#item-background-color-picker').value;
-                }
-            });
+            /*
+            let item_background_color_picker = document.querySelector('#item-background-color-picker').value;
 
-            document.querySelector('#item-background-color').addEventListener('input', () => {
-                document.querySelector('#item-background-color-picker').value = document.querySelector('#item-background-color').value;
-            });
+            if (item_background_color_picker) {
+                document.querySelector('#item-background-color-picker').addEventListener('input', () => {
+                    if (document.querySelector('#item-background-color')) {
+                        document.querySelector('#item-background-color').value = document.querySelector('#item-background-color-picker').value;
+                    }
+                });
 
-            document.querySelector('#item-font-color-picker').addEventListener('input', () => {
-                if (document.querySelector('#item-font-color')) {
-                    document.querySelector('#item-font-color').value = document.querySelector('#item-font-color-picker').value;
-                }
-            });
+                document.querySelector('#item-background-color').addEventListener('input', () => {
+                    document.querySelector('#item-background-color-picker').value = document.querySelector('#item-background-color').value;
+                });
+            }
 
-            document.querySelector('#item-font-color').addEventListener('input', () => {
-                document.querySelector('#item-font-color-picker').value = document.querySelector('#item-font-color').value;
-            });
+            let item_font_color_picker = document.querySelector('#item-font-color-picker').value;
+
+            if (item_font_color_picker) {
+                document.querySelector('#item-font-color-picker').addEventListener('input', () => {
+                    if (document.querySelector('#item-font-color')) {
+                        document.querySelector('#item-font-color').value = document.querySelector('#item-font-color-picker').value;
+                    }
+                });
+
+                document.querySelector('#item-font-color').addEventListener('input', () => {
+                    document.querySelector('#item-font-color-picker').value = document.querySelector('#item-font-color').value;
+                });
+            }
+
+             */
 
             helperModule.show_form();
 
