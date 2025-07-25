@@ -25,32 +25,35 @@ const TOKEN = require('../libs/tokens');
 module.exports = function (app) {
 
     app.route(ENDPOINTS().exhibits.item_records.post.endpoint)
-    .post(TOKEN.verify, CONTROLLER.create_item_record);
+        .post(TOKEN.verify, CONTROLLER.create_item_record);
 
     app.route(ENDPOINTS().exhibits.item_records.endpoint)
-    .get(TOKEN.verify, CONTROLLER.get_item_records);
+        .get(TOKEN.verify, CONTROLLER.get_item_records);
 
     app.route(ENDPOINTS().exhibits.item_records.get.endpoint)
-    .get(TOKEN.verify, CONTROLLER.get_item_record);
+        .get(TOKEN.verify, CONTROLLER.get_item_record);
 
     app.route(ENDPOINTS().exhibits.item_records.put.endpoint)
-    .put(TOKEN.verify, CONTROLLER.update_item_record);
+        .put(TOKEN.verify, CONTROLLER.update_item_record);
 
     app.route(ENDPOINTS().exhibits.item_media.delete.endpoint)
-    .delete(TOKEN.verify, CONTROLLER.delete_item_media);
+        .delete(TOKEN.verify, CONTROLLER.delete_item_media);
 
     app.route(ENDPOINTS().exhibits.item_records.delete.endpoint)
-    .delete(TOKEN.verify, CONTROLLER.delete_item_record);
+        .delete(TOKEN.verify, CONTROLLER.delete_item_record);
 
     app.route(ENDPOINTS().exhibits.item_records.item_publish.post.endpoint)
-    .post(CONTROLLER.publish_item_record);
+        .post(CONTROLLER.publish_item_record);
 
     app.route(ENDPOINTS().exhibits.item_records.item_suppress.post.endpoint)
-    .post(CONTROLLER.suppress_item_record);
+        .post(CONTROLLER.suppress_item_record);
 
     app.route(ENDPOINTS().exhibits.repo_items.endpoint)
-    .get(TOKEN.verify, CONTROLLER.get_repo_item_record);
+        .get(TOKEN.verify, CONTROLLER.get_repo_item_record);
+
+    app.route(ENDPOINTS().exhibits.kaltura_items.endpoint)
+        .get(TOKEN.verify, CONTROLLER.get_kaltura_item_record);
 
     app.route(ENDPOINTS().exhibits.reorder_records.post.endpoint)
-    .post(CONTROLLER.reorder_items);
+        .post(CONTROLLER.reorder_items);
 };

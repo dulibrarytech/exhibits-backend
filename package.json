@@ -22,6 +22,7 @@
     "helmet": "^3.23.3",
     "jsdom": "^16.4.0",
     "jsonwebtoken": "^9.0.0",
+    "kaltura-client": "^21.20.0",
     "knex": "^2.4.2",
     "log4js": "^6.4.1",
     "memory-cache": "^0.2.0",

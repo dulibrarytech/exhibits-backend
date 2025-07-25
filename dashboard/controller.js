@@ -211,6 +211,7 @@ exports.get_dashboard_session_out = function (req, res) {
 };
 
 exports.get_dashboard_logout = function (req, res) {
+    template_config.sso_logout_url = SSO_CONFIG.sso_logout_url;
     res.render('dist/dashboard-logout', template_config);
 };
 

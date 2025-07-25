@@ -20,7 +20,9 @@
 
 const STORAGE_CONFIG = require('../config/storage_config')();
 const HTTP = require('axios');
+const KALTURA = require('kaltura-client');
 const CONFIG = require('../config/webservices_config')();
+const KALTURA_CONFIG = require('../config/kaltura_config')();
 const DB = require('../config/db_config')();
 const DB_TABLES = require('../config/db_tables_config')();
 const TABLES = DB_TABLES.exhibits;
@@ -530,6 +532,62 @@ exports.get_repo_item_record = async function (uuid) {
 
     } catch (error) {
         LOGGER.module().error('ERROR: [/exhibits/model (get_repo_item_record)] ' + error.message);
+    }
+};
+
+function get_kaltura_session(config, client, callback) {
+
+    try {
+
+        // get session
+        const secret = KALTURA_CONFIG.kaltura_secret_key;
+        const userId = KALTURA_CONFIG.kaltura_user_id;
+        const type = KALTURA.enums.SessionType.USER;
+        const partnerId = KALTURA_CONFIG.kaltura_partner_id;
+        const expiry = 86400;
+        const privileges = KALTURA.enums.SessionType.ADMIN;
+
+        KALTURA.services.session.start(secret, userId, type, partnerId, expiry, privileges)
+            .execute(client)
+            .then(result => {
+                callback(result);
+            });
+
+    } catch (error) {
+        LOGGER.module().error('ERROR: [/exhibits/model (get_kaltura_item_session)] ' + error.message);
+        callback(error);
+    }
+}
+
+/**
+ * Gets kaltura item metadata
+ * @param entry_id
+ * @param callback
+ */
+exports.get_kaltura_item_record = function (entry_id, callback) {
+
+    try {
+
+        const config = new KALTURA.Configuration();
+        const client = new KALTURA.Client(config);
+
+        get_kaltura_session(config, client, (session) => {
+
+            client.setKs(session);
+            let version = -1;
+
+            KALTURA.services.media.get(entry_id, version)
+                .execute(client)
+                .then(result => {
+                    callback(result);
+                }).catch(error => {
+                LOGGER.module().error('ERROR: [/exhibits/model (get_kaltura_item_record)] callback ' + error.message);
+                callback(error.message);
+            });
+        });
+
+    } catch (error) {
+        LOGGER.module().error('ERROR: [/exhibits/model (get_kaltura_item_record)] ' + error.message);
     }
 };
 

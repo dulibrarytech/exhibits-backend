@@ -316,6 +316,11 @@ const ENDPOINTS = {
             endpoint: `${APP_PATH}/repo/:uuid`,
             params: 'token or api_key, gets repository item metadata'
         },
+        kaltura_items: {
+            description: 'Retrieves Kaltura item metadata',
+            endpoint: `${APP_PATH}/kaltura/:entry_id`,
+            params: 'token or api_key, gets Kaltura item metadata'
+        },
         reorder_exhibits_records: {
             post: {
                 description: 'reorders exhibits',

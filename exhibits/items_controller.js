@@ -289,13 +289,73 @@ exports.get_repo_item_record = async function (req, res) {
 
         } else {
             res.status(204).send({
-                message: 'Unable to get repo item metadata retrieved.',
+                message: 'Unable to get repo item metadata.',
                 data: response.data
             });
         }
 
     } catch (error) {
         res.status(404).send({message: `Unable to get repo item record. ${error.message}`});
+    }
+};
+
+exports.get_kaltura_item_record = function (req, res) {
+
+    try {
+
+        const entry_id = req.params.entry_id;
+
+        if (entry_id.length === 0) {
+            res.status(400).send('Bad request.');
+            return false;
+        }
+
+        ITEMS_MODEL.get_kaltura_item_record(entry_id, (response) => {
+
+            if (response.mediaType === undefined || response.mediaType.length === 0) {
+                res.status(200).send({
+                    message: 'Unable to get Kaltura item metadata.',
+                    data: {
+                        message: response
+                    }
+                });
+                return false;
+            }
+
+            // https://developer.kaltura.com/api-docs/service/media/action/get
+            // Enum: VIDEO [1], IMAGE [2], AUDIO [5],
+            // LIVE_STREAM_FLASH [201], LIVE_STREAM_WINDOWS_MEDIA [202],
+            // LIVE_STREAM_REAL_MEDIA [203], LIVE_STREAM_QUICKTIME [204]
+
+            let item_type;
+            let title = response.name;
+            let description = response.description;
+            let thumbnail = response.thumbnailUrl;
+
+            if (response.mediaType === 1) {
+                item_type = 'video';
+            }
+
+            if (response.mediaType === 5) {
+                item_type = 'audio';
+            }
+
+            res.status(200).send({
+                message: 'Kaltura item metadata retrieved.',
+                data: {
+                    entry_id: response.id,
+                    item_type: item_type,
+                    title: title,
+                    description: description,
+                    thumbnail: thumbnail
+                }
+            });
+
+            return false;
+        });
+
+    } catch (error) {
+        res.status(404).send({message: `Unable to get kaltura item record. ${error.message}`});
     }
 };
 

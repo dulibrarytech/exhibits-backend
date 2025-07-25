@@ -32,7 +32,6 @@ const itemsListDisplayModule = (function () {
 
             published_obj.draggable = `<tr id="${item.uuid}_${item.type}">`;
             published_obj.item_order = `<td class="grabbable item-order"><i class="fa fa-reorder"></i><span style="padding-left: 4px;" aria-label="item-order">${item.order}</span></td>`;
-            // published_obj.item_order = `<td class="item-order"><span style="padding-left: 4px;" aria-label="item-order">${item.order}</span></td>`;
             published_obj.status = `<a href="#" id="${item.uuid}" class="suppress-item" aria-label="item-status"><span id="suppress" title="published"><i class="fa fa-cloud" style="color: green"></i><br>Published</span></a>`;
 
             if (item.item_type === 'text') {
@@ -71,7 +70,6 @@ const itemsListDisplayModule = (function () {
 
         if (item.is_published === 1) {
             published_obj.draggable = `<tr id="${item.uuid}_${item.type}">`;
-            // published_obj.item_order = `<td class="item-order"><span style="padding-left: 4px;" aria-label="item-order">${item.order}</span></td>`;
             published_obj.item_order = `<td class="grabbable item-order"><i class="fa fa-reorder"></i><span style="padding-left: 4px;" aria-label="item-order">${item.order}</span></td>`;
             published_obj.status = `<a href="#" id="${item.uuid}" class="suppress-item" aria-label="item-status"><span id="suppress" title="published"><i class="fa fa-cloud" style="color: green"></i><br>Published</span></a>`;
             published_obj.edit = `<a href="${APP_PATH}/items/${item_route}/details?exhibit_id=${item.is_member_of_exhibit}&item_id=${item.uuid}" title="View details" aria-label="view-item-details"><i class="fa fa-folder-open pr-1"></i></a>`;
@@ -94,7 +92,6 @@ const itemsListDisplayModule = (function () {
         if (item.is_published === 1) {
 
             published_obj.draggable = `<tr id="${item.uuid}_${item.type}_${item.item_type}">`;
-            // published_obj.item_order = `<td class="item-order"><span style="padding-left: 4px;" aria-label="item-order">${item.order}</span></td>`;
             published_obj.item_order = `<td class="grabbable item-order"><i class="fa fa-reorder"></i><span style="padding-left: 4px;" aria-label="item-order">${item.order}</span></td>`;
             published_obj.status = `<a href="#" id="${item.uuid}" class="suppress-item" aria-label="item-status"><span id="suppress" title="published"><i class="fa fa-cloud" style="color: green"></i><br>Published</span></a>`;
 
@@ -232,13 +229,13 @@ const itemsListDisplayModule = (function () {
 
                 if (item.is_repo_item === 1) {
 
-                    const repo_record = await helperModule.get_repo_item_data(item.media);
+                    const repo_record = await helperMediaModule.get_repo_item_data(item.media);
 
                     if (title.length === 0) {
                         title = repo_record.title;
                     }
 
-                    thumbnail = helperModule.render_repo_thumbnail(repo_record.thumbnail.data);
+                    thumbnail = helperMediaModule.render_repo_thumbnail(repo_record.thumbnail.data);
                     img = `<p><img src="${thumbnail}" height="75" width="75" alt="${item.uuid}"></p>`;
                 }
 
@@ -439,13 +436,13 @@ const itemsListDisplayModule = (function () {
 
                 if (item.is_repo_item === 1) {
 
-                    const repo_record = await helperModule.get_repo_item_data(item.media);
+                    const repo_record = await helperMediaModule.get_repo_item_data(item.media);
 
                     if (title.length === 0) {
                         title = repo_record.title;
                     }
 
-                    thumbnail = helperModule.render_repo_thumbnail(repo_record.thumbnail.data);
+                    thumbnail = helperMediaModule.render_repo_thumbnail(repo_record.thumbnail.data);
                     img = `<p><img src="${thumbnail}" height="75" width="75" alt="repo-thumbnail"></p>`;
                 }
 
@@ -560,13 +557,13 @@ const itemsListDisplayModule = (function () {
 
                 if (item.is_repo_item === 1) {
 
-                    const repo_record = await helperModule.get_repo_item_data(item.media);
+                    const repo_record = await helperMediaModule.get_repo_item_data(item.media);
 
                     if (title.length === 0) {
                         title = repo_record.title;
                     }
 
-                    thumbnail = helperModule.render_repo_thumbnail(repo_record.thumbnail.data);
+                    thumbnail = helperMediaModule.render_repo_thumbnail(repo_record.thumbnail.data);
                     img = `<p><img src="${thumbnail}" height="75" width="75" alt="repo-thumbnail"></p>`;
                 }
 

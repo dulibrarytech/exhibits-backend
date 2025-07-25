@@ -67,8 +67,8 @@ const itemsDetailsStandardItemModule = (function () {
     async function display_edit_record() {
 
         const record = await get_item_record();
-        let thumbnail_fragment = '';
-        let thumbnail_url = '';
+        // let thumbnail_fragment = '';
+        // let thumbnail_url = '';
         let is_published = record.is_published;
         let created_by = record.created_by;
         let created = record.created;
@@ -101,10 +101,12 @@ const itemsDetailsStandardItemModule = (function () {
         // item data
         document.querySelector('#item-title-input').value = helperModule.unescape(record.title);
         document.querySelector('#item-text-input').value = helperModule.unescape(record.text);
-        document.querySelector('#item-caption-input').value = record.caption;
 
         if (window.location.pathname.indexOf('media') !== -1) {
+            await helperMediaModule.display_media_fields_common(record);
 
+            /*
+            document.querySelector('#item-caption-input').value = record.caption;
             document.querySelector('#pdf-open-to-page').value = record.pdf_open_to_page;
 
             if (record.wrap_text === 1) {
@@ -214,6 +216,7 @@ const itemsDetailsStandardItemModule = (function () {
                 document.querySelector('#item-thumbnail-image-prev').value = record.thumbnail;
                 document.querySelector('#item-thumbnail-trash').style.display = 'inline';
             }
+             */
         }
 
         let layouts = document.getElementsByName('layout');
@@ -268,164 +271,6 @@ const itemsDetailsStandardItemModule = (function () {
         return false;
     }
 
-    obj.update_item_record = async function () {
-
-        try {
-
-            scrollTo(0, 0);
-            let exhibit_id = helperModule.get_parameter_by_name('exhibit_id');
-            let item_id = helperModule.get_parameter_by_name('item_id');
-            let data = itemsCommonStandardItemFormModule.get_common_standard_item_form_fields();
-            let token = authModule.get_user_token();
-            let response;
-
-            if (exhibit_id === undefined || item_id === undefined) {
-                document.querySelector('#message').innerHTML = `<div class="alert alert-danger" role="alert"><i class="fa fa-exclamation"></i> Unable to get record ID</div>`;
-                return false;
-            }
-
-            if (token === false) {
-                setTimeout(() => {
-                    document.querySelector('#message').innerHTML = `<div class="alert alert-danger" role="alert"><i class="fa fa-exclamation"></i> Unable to get session token</div>`;
-                    authModule.logout();
-                }, 1000);
-
-                return false;
-            }
-
-            if (data === undefined) {
-                document.querySelector('#message').innerHTML = `<div class="alert alert-danger" role="alert"><i class="fa fa-exclamation"></i> Unable to get form field values</div>`;
-                return false;
-            } else if (data === false) {
-                return false;
-            }
-
-            const user = JSON.parse(sessionStorage.getItem('exhibits_user'));
-
-            if (user.name === null) {
-                document.querySelector('#message').innerHTML = `<div class="alert alert-danger" role="alert"><i class="fa fa-exclamation"></i> Unable to retrieve your name</div>`;
-                return false;
-            }
-
-            data.updated_by = user.name;
-
-            document.querySelector('#message').innerHTML = `<div class="alert alert-info" role="alert"><i class="fa fa-info"></i> Updating item record...</div>`;
-
-            let tmp = EXHIBITS_ENDPOINTS.exhibits.item_records.put.endpoint.replace(':exhibit_id', exhibit_id);
-            let endpoint = tmp.replace(':item_id', item_id);
-
-            response = await httpModule.req({
-                method: 'PUT',
-                url: endpoint,
-                data: data,
-                headers: {
-                    'Content-Type': 'application/json',
-                    'x-access-token': token
-                }
-            });
-
-            if (response !== undefined && response.status === 201) {
-
-                document.querySelector('#message').innerHTML = `<div class="alert alert-success" role="alert"><i class="fa fa-info"></i> Item record updated</div>`;
-
-                setTimeout(() => {
-                    window.location.reload();
-                }, 900);
-            }
-
-        } catch (error) {
-            document.querySelector('#message').innerHTML = `<div class="alert alert-danger" role="alert"><i class="fa fa-exclamation"></i> ${error.message}</div>`;
-        }
-    };
-
-    function delete_media() {
-
-        try {
-
-            (async function () {
-
-                const exhibit_id = helperModule.get_parameter_by_name('exhibit_id');
-                const item_id = helperModule.get_parameter_by_name('item_id');
-                let media = document.querySelector('#item-media').value;
-                let etmp = EXHIBITS_ENDPOINTS.exhibits.item_media.delete.endpoint.replace(':exhibit_id', exhibit_id);
-                let itmp = etmp.replace(':item_id', item_id);
-                let endpoint = itmp.replace(':media', media);
-                let token = authModule.get_user_token();
-                let response = await httpModule.req({
-                    method: 'DELETE',
-                    url: endpoint,
-                    headers: {
-                        'Content-Type': 'application/json',
-                        'x-access-token': token
-                    }
-                });
-
-                if (response !== undefined && response.status === 204) {
-
-                    document.querySelector('#item-media').value = '';
-                    document.querySelector('#item-media-filename-display').innerHTML = '';
-                    document.querySelector('#item-media-trash').style.display = 'none';
-                    document.querySelector('#item-media-thumbnail-image-display').innerHTML = '';
-                    document.querySelector('#message').innerHTML = `<div class="alert alert-success" role="alert"><i class="fa fa-info"></i> Media deleted</div>`;
-
-                    setTimeout(() => {
-                        document.querySelector('#message').innerHTML = '';
-                        window.location.reload();
-                    }, 900);
-                }
-
-            })();
-
-        } catch (error) {
-            document.querySelector('#message').innerHTML = `<div class="alert alert-danger" role="alert"><i class="fa fa-exclamation"></i> ${error.message}</div>`;
-        }
-    }
-
-    function delete_thumbnail_image() {
-
-        try {
-
-            (async function () {
-
-                const exhibit_id = helperModule.get_parameter_by_name('exhibit_id');
-                const item_id = helperModule.get_parameter_by_name('item_id');
-                let thumbnail = document.querySelector('#item-thumbnail').value;
-                let etmp = EXHIBITS_ENDPOINTS.exhibits.item_media.delete.endpoint.replace(':exhibit_id', exhibit_id);
-                let itmp = etmp.replace(':item_id', item_id);
-                let endpoint = itmp.replace(':media', thumbnail);
-                let token = authModule.get_user_token();
-                let response = await httpModule.req({
-                    method: 'DELETE',
-                    url: endpoint,
-                    headers: {
-                        'Content-Type': 'application/json',
-                        'x-access-token': token
-                    }
-                });
-
-                if (response !== undefined && response.status === 204) {
-
-                    document.querySelector('#item-thumbnail').value = '';
-                    document.querySelector('#item-thumbnail-filename-display').innerHTML = '';
-                    document.querySelector('#item-thumbnail-trash').style.display = 'none';
-                    document.querySelector('#item-thumbnail-image-display').innerHTML = '';
-                    document.querySelector('#message').innerHTML = `<div class="alert alert-success" role="alert"><i class="fa fa-info"></i> Thumbnail deleted</div>`;
-
-                    setTimeout(() => {
-                        document.querySelector('#message').innerHTML = '';
-                        window.location.reload();
-                    }, 900);
-                }
-
-            })();
-
-        } catch (error) {
-            document.querySelector('#message').innerHTML = `<div class="alert alert-danger" role="alert"><i class="fa fa-exclamation"></i> ${error.message}</div>`;
-        }
-
-        return false;
-    }
-
     obj.init = async function () {
 
         try {
@@ -433,10 +278,12 @@ const itemsDetailsStandardItemModule = (function () {
             const exhibit_id = helperModule.get_parameter_by_name('exhibit_id');
             exhibitsModule.set_exhibit_title(exhibit_id);
             await display_edit_record();
-            document.querySelector('#update-item-btn').addEventListener('click', itemsDetailsStandardItemModule.update_item_record);
+            // document.querySelector('#update-item-btn').addEventListener('click', itemsDetailsStandardItemModule.update_item_record);
 
             if (window.location.pathname.indexOf('media') !== -1) {
+                helperMediaModule.media_edit_init();
 
+                /*
                 document.querySelector('#is-alt-text-decorative').addEventListener('click', () => {
                     helperModule.toggle_alt_text();
                 });
@@ -460,6 +307,8 @@ const itemsDetailsStandardItemModule = (function () {
                     }
 
                 }, 1000);
+
+                 */
             }
 
         } catch (error) {

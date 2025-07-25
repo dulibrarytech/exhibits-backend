@@ -125,7 +125,7 @@ const helperModule = (function () {
                 'comment',
                 'base'];
 
-            for (let i = 0;i<list.length;i++) {
+            for (let i = 0; i < list.length; i++) {
 
                 let elements = div.getElementsByTagName(list[i]);
                 while (elements[0]) {
@@ -162,7 +162,7 @@ const helperModule = (function () {
      * Gets checked radio button value
      * @param radio_buttons
      */
-    obj.get_checked_radio_button = function(radio_buttons) {
+    obj.get_checked_radio_button = function (radio_buttons) {
 
         try {
 
@@ -208,6 +208,7 @@ const helperModule = (function () {
      * Gets repo item metadata
      * @param uuid
      */
+    /*
     obj.get_repo_item_data = async function (uuid) {
 
         try {
@@ -344,6 +345,7 @@ const helperModule = (function () {
         document.querySelector('#item-media-filename-display').innerHTML = '';
         document.querySelector('#item-media-trash').style.display = 'none';
     };
+    */
 
     obj.show_form = function () {
 
@@ -357,13 +359,73 @@ const helperModule = (function () {
                     card.style.visibility = 'visible';
                 });
 
-            }, 250*2);
+            }, 250 * 2);
 
         } catch (error) {
             document.querySelector('#message').innerHTML = `<div class="alert alert-danger" role="alert"><i class="fa fa-exclamation"></i> ${error.message}</div>`;
         }
     };
 
+    /*
+    obj.get_kaltura_item_data = async function (entry_id) {
+
+        try {
+
+            const EXHIBITS_ENDPOINTS = endpointsModule.get_exhibits_endpoints();
+            let is_list = true;
+
+            if (entry_id === null) {
+                entry_id = document.querySelector('#audio-video').value;
+                helperModule.clear_media_fields('kaltura_media');
+                is_list = false;
+            }
+
+            if (entry_id.length === 0) {
+                document.querySelector('#message').innerHTML = `<div class="alert alert-danger" role="alert"><i class="fa fa-exclamation"></i> Please enter a Kaltura ID</div>`;
+            }
+
+            const token = authModule.get_user_token();
+            const response = await httpModule.req({
+                method: 'GET',
+                url: EXHIBITS_ENDPOINTS.exhibits.kaltura_items.endpoint.replace(':entry_id', entry_id),
+                headers: {
+                    'Content-Type': 'application/json',
+                    'x-access-token': token
+                }
+            });
+
+            if (response !== undefined && response.status === 200) {
+
+                if (response.data.data.item_type === undefined) {
+                    document.querySelector('#kaltura-item-data').innerHTML = `<p style="color:red">${response.data.data.message}</p>`;
+                    return false;
+                }
+
+                let kaltura_item_data = document.querySelector('#kaltura-item-data');
+                kaltura_item_data.innerHTML = `<p>
+                    <strong>${response.data.data.title}</strong> (<em>${response.data.data.item_type}</em>)<br>
+                    <small>${response.data.data.description}</small><br>
+                    </p>`;
+
+                document.querySelector('#kaltura-thumbnail').src = response.data.data.thumbnail;
+                document.querySelector('#kaltura-item-type').value = response.data.data.item_type;
+                document.querySelector('#kaltura-thumbnail').style.visibility = 'visible';
+
+                if (is_list === true) {
+                    return response.data.data;
+                }
+
+            } else {
+                document.querySelector('#repo-item-metadata').innerHTML = `<p style="color:red">Metadata record not found in repository.</p>`;
+            }
+
+        } catch (error) {
+            document.querySelector('#message').innerHTML = `<div class="alert alert-danger" role="alert"><i class="fa fa-exclamation"></i> ${error.message}</div>`;
+        }
+    };
+    */
+
+    /*
     obj.toggle_alt_text = function () {
 
         try {
@@ -384,10 +446,13 @@ const helperModule = (function () {
         }
     };
 
+     */
+
     /**
      * Set alt text
      * @param record
      */
+    /*
     obj.set_alt_text = function (record) {
 
         document.querySelector('#image-alt-text').style.display = 'block';
@@ -401,6 +466,7 @@ const helperModule = (function () {
             document.querySelector('#item-alt-text-input').value = helperModule.unescape(record.alt_text);
         }
     };
+    */
 
     /** TODO: deprecate - we no longer reorder exhibits
      * Reorders exhibit list via drag and drop
@@ -607,9 +673,9 @@ const helperModule = (function () {
                 if (i < count) {
                     start = new Date().getTime();
                     await request();
-                 } else {
+                } else {
                     cb(bandwidth.toFixed(0));
-                 }
+                }
             }
 
         })();
@@ -629,7 +695,8 @@ const helperModule = (function () {
         }
     };
 
-    obj.init = function () {};
+    obj.init = function () {
+    };
 
     return obj;
 

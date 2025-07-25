@@ -221,6 +221,22 @@
                             <div class="col-12 col-md-12">
                                 <p>
                                 <form class="row form-group">
+                                    <div class="col-7 col-md-7">
+                                        <input type="text" class="form-control" id="audio-video" name="audio_video" placeholder="Kaltura ID">
+                                        <input type="hidden" id="is-kaltura-item" name="is_kaltura_item" value="0">
+                                    </div>
+                                    <div class="col-auto">
+                                        <button type="button" id="kaltura-btn" class="btn btn-secondary mb-3">Get item data</button>
+                                    </div>
+                                </form>
+                                <img id="kaltura-thumbnail" src="" alt="test" width="150" height="150" style="visibility: hidden;border: solid"><br><br>
+                                <div id="kaltura-item-data"></div>
+                                <input type="hidden" name="item_type" id="kaltura-item-type">
+                            </div>
+                            <!--
+                            <div class="col-12 col-md-12">
+                                <p>
+                                <form class="row form-group">
                                     <input disabled type="text" id="audio-video" name="audio_video"
                                            placeholder="Kaltura ID" class="form-control">
 
@@ -251,7 +267,9 @@
                                 </form>
                                 </p>
                             </div>
+                            -->
                         </div>
+
                         <div class="tab-pane fade" id="import-repo-media" role="tabpanel"
                              aria-labelledby="import-repo-media-tab">
                             <div class="col-12 col-md-12">
@@ -579,6 +597,7 @@
 <%- include('../partials/exhibits-app-common.ejs'); %>
 <script src="/exhibits-dashboard/static/app/dist/uploads.module.min.js?<%=build_version%>"></script>
 <script src="/exhibits-dashboard/static/app/dist/exhibits.module.min.js?<%=build_version%>"></script>
+<script src="/exhibits-dashboard/static/app/dist/helper.media.module.min.js?<%=build_version%>"></script>
 <script src="/exhibits-dashboard/static/app/dist/items.module.min.js?<%=build_version%>"></script>
 <script src="/exhibits-dashboard/static/app/dist/items.common.standard.item.form.module.min.js?<%=build_version%>"></script>
 <script src="/exhibits-dashboard/static/app/dist/items.details.standard.item.module.min.js?<%=build_version%>"></script>

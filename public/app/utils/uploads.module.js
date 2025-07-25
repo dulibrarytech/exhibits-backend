@@ -168,7 +168,7 @@ const uploadsModule = (function () {
                     item_type = 'Unable to Determine Type';
                 }
 
-                helperModule.clear_media_fields('uploaded_media');
+                helperMediaModule.clear_media_fields('uploaded_media');
                 document.querySelector('#item-type').value = item_type;
                 document.querySelector('#item-mime-type').value = mime_type;
                 document.querySelector('.upload-error').innerHTML = '';
@@ -204,7 +204,7 @@ const uploadsModule = (function () {
             autoProcessQueue: true,
             init: function () {},
             renameFile: function (file) {
-                // console.log('item media: ', file);
+
                 let extension = file.name.split('.').pop();
                 return `${Date.now()}_item_thumbnail.${extension}`;
             },
