@@ -20,20 +20,19 @@ const itemsCommonVerticalTimelineItemFormModule = (function () {
 
     'use strict';
 
-    const EXHIBITS_ENDPOINTS = endpointsModule.get_exhibits_endpoints();
+    // const EXHIBITS_ENDPOINTS = endpointsModule.get_exhibits_endpoints();
     let obj = {};
 
     obj.get_common_timeline_item_form_fields = function () {
 
         try {
 
-            let media = [];
+            // let media = [];
             let item = {};
             item.styles = {};
 
             // item metadata
             item.title = document.querySelector('#item-title-input').value;
-            item.description = document.querySelector('#item-description-input').value;
             item.text = document.querySelector('#item-text-input').value;
             item.date = document.querySelector('input[type="date"]').value;
 
@@ -48,7 +47,10 @@ const itemsCommonVerticalTimelineItemFormModule = (function () {
             }
 
             if (window.location.pathname.indexOf('media') !== -1) {
+                helperMediaModule.process_media_fields_common(item);
 
+                /*
+                item.description = document.querySelector('#item-description-input').value;
                 item.caption = document.querySelector('#item-caption-input').value;
                 item.is_alt_text_decorative = document.querySelector('#is-alt-text-decorative').checked;
                 item.is_embedded = document.querySelector('#embed-item').checked;
@@ -126,6 +128,8 @@ const itemsCommonVerticalTimelineItemFormModule = (function () {
                 if (media.length === 0 && item.text.length !== 0) {
                     item.item_type = 'text';
                 }
+
+                 */
             } else {
                 item.item_type = 'text';
                 item.mime_type = 'text/plain';
@@ -163,93 +167,32 @@ const itemsCommonVerticalTimelineItemFormModule = (function () {
         }
     };
 
-    obj.delete_media = function () {
-
-        try {
-
-            (async function() {
-
-                let media = document.querySelector('#item-media').value;
-                let token = authModule.get_user_token();
-                let response = await httpModule.req({
-                    method: 'DELETE',
-                    url: EXHIBITS_ENDPOINTS.exhibits.media.delete.endpoint + '?media=' + media,
-                    headers: {
-                        'Content-Type': 'application/json',
-                        'x-access-token': token
-                    }
-                });
-
-                if (response !== undefined && response.status === 204) {
-
-                    document.querySelector('#item-media').value = '';
-                    document.querySelector('#item-media-thumbnail-image-display').innerHTML = '';
-                    document.querySelector('#item-media-filename-display').innerHTML = '';
-                    document.querySelector('#item-media-trash').style.display = 'none';
-                    document.querySelector('#message').innerHTML = `<div class="alert alert-success" role="alert"><i class="fa fa-info"></i> Media deleted</div>`;
-                    // only for PDF
-                    document.querySelector('#toggle-open-to-page').style.visibility = 'hidden';
-
-                    setTimeout(() => {
-                        document.querySelector('#message').innerHTML = '';
-                    }, 3000);
-                }
-
-            })();
-
-        } catch (error) {
-            document.querySelector('#message').innerHTML = `<div class="alert alert-danger" role="alert"><i class="fa fa-exclamation"></i> ${error.message}</div>`;
-        }
-
-        return false;
-    };
-
-    obj.delete_thumbnail_image = function () {
-
-        try {
-
-            (async function() {
-
-                let thumbnail_image = document.querySelector('#item-thumbnail').value;
-                let token = authModule.get_user_token();
-                let response = await httpModule.req({
-                    method: 'DELETE',
-                    url: EXHIBITS_ENDPOINTS.exhibits.media.delete.endpoint + '?media=' + thumbnail_image,
-                    headers: {
-                        'Content-Type': 'application/json',
-                        'x-access-token': token
-                    }
-                });
-
-                if (response !== undefined && response.status === 204) {
-
-                    document.querySelector('#item-thumbnail').value = '';
-                    document.querySelector('#item-thumbnail-image-display').innerHTML = '';
-                    document.querySelector('#item-thumbnail-filename-display').innerHTML = '';
-                    document.querySelector('#item-thumbnail-trash').style.display = 'none';
-                    document.querySelector('#item-media-thumbnail-image-display').innerHTML = '';
-                    document.querySelector('#message').innerHTML = `<div class="alert alert-success" role="alert"><i class="fa fa-info"></i> Thumbnail image deleted</div>`;
-
-                    setTimeout(() => {
-                        document.querySelector('#message').innerHTML = '';
-                    }, 3000);
-                }
-
-            })();
-
-        } catch (error) {
-            document.querySelector('#message').innerHTML = `<div class="alert alert-danger" role="alert"><i class="fa fa-exclamation"></i> ${error.message}</div>`;
-        }
-
-        return false;
-    };
-
     obj.init = async function () {
 
         try {
 
             if (window.location.pathname.indexOf('media') !== -1) {
+                helperMediaModule.media_common_init();
+            }
 
+            const token = authModule.get_user_token();
+            await authModule.check_auth(token);
+
+            navModule.init();
+            navModule.back_to_timeline_items();
+            navModule.set_preview_link();
+            helperModule.show_form();
+
+        } catch (error) {
+            document.querySelector('#message').innerHTML = `<div class="alert alert-danger" role="alert"><i class="fa fa-exclamation"></i> ${error.message}</div>`;
+        }
+    };
+
+    return obj;
+
+}());
+
+/*
                 uploadsModule.upload_item_media();
                 uploadsModule.upload_item_thumbnail();
 
@@ -264,16 +207,9 @@ const itemsCommonVerticalTimelineItemFormModule = (function () {
                 document.querySelector('#repo-uuid-btn').addEventListener('click', async () => {
                     await helperModule.get_repo_item_data(null);
                 });
-            }
 
-            const token = authModule.get_user_token();
-            await authModule.check_auth(token);
-
-            navModule.init();
-            navModule.back_to_timeline_items();
-            navModule.set_preview_link();
-
-            /*
+                 */
+/*
             let item_background_color_picker = document.querySelector('#item-background-color-picker').value;
 
             if (item_background_color_picker) {
@@ -303,14 +239,3 @@ const itemsCommonVerticalTimelineItemFormModule = (function () {
             }
 
              */
-
-            helperModule.show_form();
-
-        } catch (error) {
-            document.querySelector('#message').innerHTML = `<div class="alert alert-danger" role="alert"><i class="fa fa-exclamation"></i> ${error.message}</div>`;
-        }
-    };
-
-    return obj;
-
-}());

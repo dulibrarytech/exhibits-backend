@@ -695,14 +695,30 @@ const helperMediaModule = (function () {
         uploadsModule.upload_item_media();
         uploadsModule.upload_item_thumbnail();
 
-        document.querySelector('#item-media-trash').style.display = 'none';
-        document.querySelector('#item-thumbnail-trash').style.display = 'none';
-        document.querySelector('#is-media-only-description').style.display = 'block';
-        document.querySelector('#is-media-only-caption').style.display = 'block';
+        let item_media_trash = document.querySelector('#item-media-trash');
+        let item_thumbnail_trash = document.querySelector('#item-thumbnail-trash');
+        let is_media_only_description = document.querySelector('#is-media-only-description');
+        let is_media_only_caption = document.querySelector('#is-media-only-caption');
+
+        if (item_media_trash) {
+            item_media_trash.style.display = 'none';
+        }
+
+        if (item_thumbnail_trash) {
+            item_thumbnail_trash.style.display = 'none';
+        }
+
+        if (is_media_only_description) {
+            is_media_only_description.style.display = 'block';
+        }
+
+        if (is_media_only_caption) {
+            is_media_only_caption.style.display = 'block';
+        }
 
         setTimeout(() => {
-            document.querySelector('#item-thumbnail-trash').addEventListener('click', helperMediaModule.delete_thumbnail_image);
-            document.querySelector('#item-media-trash').addEventListener('click', helperMediaModule.delete_media);
+            item_thumbnail_trash.addEventListener('click', helperMediaModule.delete_thumbnail_image);
+            item_media_trash.addEventListener('click', helperMediaModule.delete_media);
         }, 1000);
 
         document.querySelector('#repo-uuid-btn').addEventListener('click', async () => {

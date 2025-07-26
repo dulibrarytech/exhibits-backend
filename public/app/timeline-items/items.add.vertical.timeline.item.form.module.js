@@ -99,6 +99,7 @@ const itemsAddVerticalTimelineItemFormModule = (function () {
 
         try {
 
+            /*
             if (window.location.pathname.indexOf('media') !== -1) {
 
                 uploadsModule.upload_item_media();
@@ -121,6 +122,8 @@ const itemsAddVerticalTimelineItemFormModule = (function () {
                     });
                 });
             }
+
+             */
 
             const exhibit_id = helperModule.get_parameter_by_name('exhibit_id');
             exhibitsModule.set_exhibit_title(exhibit_id);

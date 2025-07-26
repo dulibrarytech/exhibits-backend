@@ -70,8 +70,6 @@ const itemsEditTimelineItemFormModule = (function () {
         try {
 
             let record = await get_timeline_item_record();
-            let thumbnail_fragment = '';
-            let thumbnail_url = '';
             let created_by = record.created_by;
             let created = record.created;
             let create_date = new Date(created);
@@ -94,11 +92,174 @@ const itemsEditTimelineItemFormModule = (function () {
 
             // item data
             document.querySelector('#item-title-input').value = helperModule.unescape(record.title);
-            document.querySelector('#item-description-input').value = helperModule.unescape(record.description);
             document.querySelector('#item-text-input').value = helperModule.unescape(record.text);
 
             if (window.location.pathname.indexOf('media') !== -1) {
+                helperMediaModule.display_media_fields_common(record);
+            }
 
+            let date_arr = record.date.split('T');
+            document.querySelector('#item-date-input').value = date_arr.shift();
+
+            /*
+            let styles = JSON.parse(record.styles);
+
+            if (Object.keys(styles).length !== 0) {
+
+                if (styles.backgroundColor !== undefined) {
+                    document.querySelector('#item-background-color').value = styles.backgroundColor;
+                    document.querySelector('#item-background-color-picker').value = styles.backgroundColor;
+                } else {
+                    document.querySelector('#item-background-color').value = '';
+                }
+
+                if (styles.color !== undefined) {
+                    document.querySelector('#item-font-color').value = styles.color;
+                    document.querySelector('#item-font-color-picker').value = styles.color;
+                } else {
+                    document.querySelector('#item-font-color').value = '';
+                }
+
+                let font_values = document.querySelector('#item-font');
+
+                for (let i=0;i<font_values.length;i++) {
+                    if (font_values[i].value === styles.fontFamily) {
+                        document.querySelector('#item-font').value = styles.fontFamily;
+                    }
+                }
+
+                if (styles.fontSize !== undefined) {
+                    document.querySelector('#item-font-size').value = styles.fontSize.replace('px', '');
+                } else {
+                    document.querySelector('#item-font-size').value = '';
+                }
+            }
+
+             */
+
+            return false;
+
+        } catch (error) {
+            document.querySelector('#message').innerHTML = `<div class="alert alert-danger" role="alert"><i class="fa fa-exclamation"></i> ${error.message}</div>`;
+        }
+    }
+
+    obj.update_timeline_item_record = async function () {
+
+        try {
+
+            window.scrollTo(0, 0);
+            const exhibit_id = helperModule.get_parameter_by_name('exhibit_id');
+            const timeline_id = helperModule.get_parameter_by_name('timeline_id');
+            const item_id = helperModule.get_parameter_by_name('item_id');
+
+            if (exhibit_id === undefined || timeline_id === undefined || item_id === undefined) {
+                document.querySelector('#message').innerHTML = `<div class="alert alert-warning" role="alert"><i class="fa fa-info"></i> Unable to update timeline item record.</div>`;
+                return false;
+            }
+
+            document.querySelector('#message').innerHTML = `<div class="alert alert-info" role="alert"><i class="fa fa-info"></i> Updating timeline item record...</div>`;
+
+            let data = itemsCommonVerticalTimelineItemFormModule.get_common_timeline_item_form_fields();
+
+            if (data === undefined) {
+                document.querySelector('#message').innerHTML = `<div class="alert alert-danger" role="alert"><i class="fa fa-exclamation"></i> Unable to get form field values</div>`;
+                return false;
+            } else if (data === false) {
+                return false;
+            }
+
+            const user = JSON.parse(sessionStorage.getItem('exhibits_user'));
+
+            if (user.name === null) {
+                document.querySelector('#message').innerHTML = `<div class="alert alert-danger" role="alert"><i class="fa fa-exclamation"></i> Unable to retrieve your name</div>`;
+                return false;
+            }
+
+            data.updated_by = user.name;
+
+            let etmp = EXHIBITS_ENDPOINTS.exhibits.timeline_item_records.put.endpoint.replace(':exhibit_id', exhibit_id);
+            let itmp = etmp.replace(':timeline_id', timeline_id);
+            let endpoint = itmp.replace(':item_id', item_id);
+            let token = authModule.get_user_token();
+            let response = await httpModule.req({
+                method: 'PUT',
+                url: endpoint,
+                data: data,
+                headers: {
+                    'Content-Type': 'application/json',
+                    'x-access-token': token
+                }
+            });
+
+            if (response !== undefined && response.status === 201) {
+
+                let message = 'Timeline item record updated';
+                document.querySelector('#message').innerHTML = `<div class="alert alert-success" role="alert"><i class="fa fa-info"></i> ${message}</div>`;
+
+                setTimeout(() => {
+                    window.location.reload();
+                }, 900);
+            }
+
+        } catch (error) {
+            document.querySelector('#message').innerHTML = `<div class="alert alert-danger" role="alert"><i class="fa fa-exclamation"></i> ${error.message}</div>`;
+        }
+    };
+
+    obj.init = async function () {
+
+        try {
+
+            const exhibit_id = helperModule.get_parameter_by_name('exhibit_id');
+            exhibitsModule.set_exhibit_title(exhibit_id);
+            navModule.set_timeline_item_nav_menu_links();
+            await display_edit_record();
+            document.querySelector('#save-item-btn').addEventListener('click', itemsEditTimelineItemFormModule.update_timeline_item_record);
+
+            if (window.location.pathname.indexOf('media') !== -1) {
+                helperMediaModule.media_edit_init();
+            }
+
+        } catch (error) {
+            document.querySelector('#message').innerHTML = `<div class="alert alert-danger" role="alert"><i class="fa fa-exclamation"></i> ${error.message}</div>`;
+        }
+    };
+
+    return obj;
+
+}());
+
+/*
+                document.querySelector('#is-alt-text-decorative').addEventListener('click', () => {
+                    helperModule.toggle_alt_text();
+                });
+
+                setTimeout(() => {
+
+                    if (document.querySelector('#item-media').value.length === 0) {
+                        document.querySelector('#item-media-trash').removeEventListener('click', delete_media);
+                        document.querySelector('#item-media-trash').addEventListener('click', itemsCommonVerticalTimelineItemFormModule.delete_media);
+                    } else if (document.querySelector('#item-media').value !== 0) {
+                        document.querySelector('#item-media-trash').removeEventListener('click', itemsCommonVerticalTimelineItemFormModule.delete_media);
+                        document.querySelector('#item-media-trash').addEventListener('click', delete_media);
+                    }
+
+                    if (document.querySelector('#item-thumbnail').value.length === 0) {
+                        document.querySelector('#item-thumbnail-trash').removeEventListener('click', delete_thumbnail_image);
+                        document.querySelector('#item-thumbnail-trash').addEventListener('click', itemsCommonVerticalTimelineItemFormModule.delete_thumbnail_image);
+                    } else if (document.querySelector('#item-thumbnail').value.length !== 0) {
+                        document.querySelector('#item-thumbnail-trash').removeEventListener('click', itemsCommonVerticalTimelineItemFormModule.delete_thumbnail_image);
+                        document.querySelector('#item-thumbnail-trash').addEventListener('click', delete_thumbnail_image);
+                    }
+
+                }, 1000);
+
+                 */
+
+
+/*
+                document.querySelector('#item-description-input').value = helperModule.unescape(record.description);
                 document.querySelector('#item-caption-input').value = helperModule.unescape(record.caption);
                 document.querySelector('#item-alt-text-input').value = helperModule.unescape(record.alt_text);
                 document.querySelector('#pdf-open-to-page').value = record.pdf_open_to_page;
@@ -211,117 +372,11 @@ const itemsEditTimelineItemFormModule = (function () {
                     document.querySelector('#item-thumbnail-image-prev').value = record.thumbnail;
                     document.querySelector('#item-thumbnail-trash').style.display = 'inline';
                 }
-            }
 
-            let date_arr = record.date.split('T');
-            document.querySelector('#item-date-input').value = date_arr.shift();
+                 */
 
-            /*
-            let styles = JSON.parse(record.styles);
 
-            if (Object.keys(styles).length !== 0) {
-
-                if (styles.backgroundColor !== undefined) {
-                    document.querySelector('#item-background-color').value = styles.backgroundColor;
-                    document.querySelector('#item-background-color-picker').value = styles.backgroundColor;
-                } else {
-                    document.querySelector('#item-background-color').value = '';
-                }
-
-                if (styles.color !== undefined) {
-                    document.querySelector('#item-font-color').value = styles.color;
-                    document.querySelector('#item-font-color-picker').value = styles.color;
-                } else {
-                    document.querySelector('#item-font-color').value = '';
-                }
-
-                let font_values = document.querySelector('#item-font');
-
-                for (let i=0;i<font_values.length;i++) {
-                    if (font_values[i].value === styles.fontFamily) {
-                        document.querySelector('#item-font').value = styles.fontFamily;
-                    }
-                }
-
-                if (styles.fontSize !== undefined) {
-                    document.querySelector('#item-font-size').value = styles.fontSize.replace('px', '');
-                } else {
-                    document.querySelector('#item-font-size').value = '';
-                }
-            }
-
-             */
-
-            return false;
-
-        } catch (error) {
-            document.querySelector('#message').innerHTML = `<div class="alert alert-danger" role="alert"><i class="fa fa-exclamation"></i> ${error.message}</div>`;
-        }
-    }
-
-    obj.update_timeline_item_record = async function () {
-
-        try {
-
-            window.scrollTo(0, 0);
-            const exhibit_id = helperModule.get_parameter_by_name('exhibit_id');
-            const timeline_id = helperModule.get_parameter_by_name('timeline_id');
-            const item_id = helperModule.get_parameter_by_name('item_id');
-
-            if (exhibit_id === undefined || timeline_id === undefined || item_id === undefined) {
-                document.querySelector('#message').innerHTML = `<div class="alert alert-warning" role="alert"><i class="fa fa-info"></i> Unable to update timeline item record.</div>`;
-                return false;
-            }
-
-            document.querySelector('#message').innerHTML = `<div class="alert alert-info" role="alert"><i class="fa fa-info"></i> Updating timeline item record...</div>`;
-
-            let data = itemsCommonVerticalTimelineItemFormModule.get_common_timeline_item_form_fields();
-
-            if (data === undefined) {
-                document.querySelector('#message').innerHTML = `<div class="alert alert-danger" role="alert"><i class="fa fa-exclamation"></i> Unable to get form field values</div>`;
-                return false;
-            } else if (data === false) {
-                return false;
-            }
-
-            const user = JSON.parse(sessionStorage.getItem('exhibits_user'));
-
-            if (user.name === null) {
-                document.querySelector('#message').innerHTML = `<div class="alert alert-danger" role="alert"><i class="fa fa-exclamation"></i> Unable to retrieve your name</div>`;
-                return false;
-            }
-
-            data.updated_by = user.name;
-
-            let etmp = EXHIBITS_ENDPOINTS.exhibits.timeline_item_records.put.endpoint.replace(':exhibit_id', exhibit_id);
-            let itmp = etmp.replace(':timeline_id', timeline_id);
-            let endpoint = itmp.replace(':item_id', item_id);
-            let token = authModule.get_user_token();
-            let response = await httpModule.req({
-                method: 'PUT',
-                url: endpoint,
-                data: data,
-                headers: {
-                    'Content-Type': 'application/json',
-                    'x-access-token': token
-                }
-            });
-
-            if (response !== undefined && response.status === 201) {
-
-                let message = 'Timeline item record updated';
-                document.querySelector('#message').innerHTML = `<div class="alert alert-success" role="alert"><i class="fa fa-info"></i> ${message}</div>`;
-
-                setTimeout(() => {
-                    window.location.reload();
-                }, 900);
-            }
-
-        } catch (error) {
-            document.querySelector('#message').innerHTML = `<div class="alert alert-danger" role="alert"><i class="fa fa-exclamation"></i> ${error.message}</div>`;
-        }
-    };
-
+/*
     function delete_media () {
 
         try {
@@ -367,95 +422,54 @@ const itemsEditTimelineItemFormModule = (function () {
         }
     }
 
-    function delete_thumbnail_image() {
+     */
 
-        try {
+/*
+function delete_thumbnail_image() {
 
-            (async function() {
+    try {
 
-                const exhibit_id = helperModule.get_parameter_by_name('exhibit_id');
-                const timeline_id = helperModule.get_parameter_by_name('timeline_id');
-                const item_id = helperModule.get_parameter_by_name('item_id');
-                let thumbnail = document.querySelector('#item-thumbnail').value;
-                let etmp = EXHIBITS_ENDPOINTS.exhibits.grid_item_media.delete.endpoint.replace(':exhibit_id', exhibit_id);
-                let gtmp = etmp.replace(':timeline_id', timeline_id);
-                let itmp = gtmp.replace(':item_id', item_id);
-                let endpoint = itmp.replace(':media', thumbnail);
-                let token = authModule.get_user_token();
-                let response = await httpModule.req({
-                    method: 'DELETE',
-                    url: endpoint,
-                    headers: {
-                        'Content-Type': 'application/json',
-                        'x-access-token': token
-                    }
-                });
-
-                if (response !== undefined && response.status === 204) {
-
-                    document.querySelector('#item-thumbnail').value = '';
-                    document.querySelector('#item-thumbnail-filename-display').innerHTML = '';
-                    document.querySelector('#item-thumbnail-trash').style.display = 'none';
-                    document.querySelector('#item-thumbnail-image-display').innerHTML = '';
-                    document.querySelector('#message').innerHTML = `<div class="alert alert-success" role="alert"><i class="fa fa-info"></i> Thumbnail deleted</div>`;
-
-                    setTimeout(() => {
-                        document.querySelector('#message').innerHTML = '';
-                        window.location.reload();
-                    }, 900);
-                }
-
-            })();
-
-        } catch (error) {
-            document.querySelector('#message').innerHTML = `<div class="alert alert-danger" role="alert"><i class="fa fa-exclamation"></i> ${error.message}</div>`;
-        }
-
-        return false;
-    }
-
-    obj.init = async function () {
-
-        try {
+        (async function() {
 
             const exhibit_id = helperModule.get_parameter_by_name('exhibit_id');
-            exhibitsModule.set_exhibit_title(exhibit_id);
-            navModule.set_timeline_item_nav_menu_links();
-            await display_edit_record();
-            document.querySelector('#save-item-btn').addEventListener('click', itemsEditTimelineItemFormModule.update_timeline_item_record);
+            const timeline_id = helperModule.get_parameter_by_name('timeline_id');
+            const item_id = helperModule.get_parameter_by_name('item_id');
+            let thumbnail = document.querySelector('#item-thumbnail').value;
+            let etmp = EXHIBITS_ENDPOINTS.exhibits.grid_item_media.delete.endpoint.replace(':exhibit_id', exhibit_id);
+            let gtmp = etmp.replace(':timeline_id', timeline_id);
+            let itmp = gtmp.replace(':item_id', item_id);
+            let endpoint = itmp.replace(':media', thumbnail);
+            let token = authModule.get_user_token();
+            let response = await httpModule.req({
+                method: 'DELETE',
+                url: endpoint,
+                headers: {
+                    'Content-Type': 'application/json',
+                    'x-access-token': token
+                }
+            });
 
-            if (window.location.pathname.indexOf('media') !== -1) {
+            if (response !== undefined && response.status === 204) {
 
-                document.querySelector('#is-alt-text-decorative').addEventListener('click', () => {
-                    helperModule.toggle_alt_text();
-                });
+                document.querySelector('#item-thumbnail').value = '';
+                document.querySelector('#item-thumbnail-filename-display').innerHTML = '';
+                document.querySelector('#item-thumbnail-trash').style.display = 'none';
+                document.querySelector('#item-thumbnail-image-display').innerHTML = '';
+                document.querySelector('#message').innerHTML = `<div class="alert alert-success" role="alert"><i class="fa fa-info"></i> Thumbnail deleted</div>`;
 
                 setTimeout(() => {
-
-                    if (document.querySelector('#item-media').value.length === 0) {
-                        document.querySelector('#item-media-trash').removeEventListener('click', delete_media);
-                        document.querySelector('#item-media-trash').addEventListener('click', itemsCommonVerticalTimelineItemFormModule.delete_media);
-                    } else if (document.querySelector('#item-media').value !== 0) {
-                        document.querySelector('#item-media-trash').removeEventListener('click', itemsCommonVerticalTimelineItemFormModule.delete_media);
-                        document.querySelector('#item-media-trash').addEventListener('click', delete_media);
-                    }
-
-                    if (document.querySelector('#item-thumbnail').value.length === 0) {
-                        document.querySelector('#item-thumbnail-trash').removeEventListener('click', delete_thumbnail_image);
-                        document.querySelector('#item-thumbnail-trash').addEventListener('click', itemsCommonVerticalTimelineItemFormModule.delete_thumbnail_image);
-                    } else if (document.querySelector('#item-thumbnail').value.length !== 0) {
-                        document.querySelector('#item-thumbnail-trash').removeEventListener('click', itemsCommonVerticalTimelineItemFormModule.delete_thumbnail_image);
-                        document.querySelector('#item-thumbnail-trash').addEventListener('click', delete_thumbnail_image);
-                    }
-
-                }, 1000);
+                    document.querySelector('#message').innerHTML = '';
+                    window.location.reload();
+                }, 900);
             }
 
-        } catch (error) {
-            document.querySelector('#message').innerHTML = `<div class="alert alert-danger" role="alert"><i class="fa fa-exclamation"></i> ${error.message}</div>`;
-        }
-    };
+        })();
 
-    return obj;
+    } catch (error) {
+        document.querySelector('#message').innerHTML = `<div class="alert alert-danger" role="alert"><i class="fa fa-exclamation"></i> ${error.message}</div>`;
+    }
 
-}());
+    return false;
+}
+
+ */

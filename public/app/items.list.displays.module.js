@@ -612,7 +612,7 @@ const itemsListDisplayModule = (function () {
             item_data += `<td class="item-metadata">
                     <p><button class="btn btn-default">${item_type} <small>timeline item</small></button></p>
                     <p><strong>${title}</strong></p>
-                    <p><strong><small>${display_date}</small></strong></p>
+                    <!--<p><strong><small>${display_date}</small></strong></p>-->
                     ${img}
                     <small><em>${media}</em></small>
                     </td>`;
