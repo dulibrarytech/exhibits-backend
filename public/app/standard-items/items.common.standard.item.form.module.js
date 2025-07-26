@@ -70,11 +70,10 @@ const itemsCommonStandardItemFormModule = (function () {
 
             if (window.location.pathname.indexOf('media') !== -1) {
                 helperMediaModule.process_media_fields_common(item);
-                // console.log('media fields ', media_fields);
             } else {
                 item.item_type = 'text';
             }
-            console.log('items ', item);
+
             return item;
 
         } catch (error) {
