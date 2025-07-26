@@ -21,7 +21,9 @@
                 </li>
                 <li class="menu-title">Menu</li>
             </ul>
-            <ul class="nav navbar-nav"><li id="preview-link"></li></ul>
+            <ul class="nav navbar-nav">
+                <li id="preview-link"></li>
+            </ul>
             <ul class="nav navbar-nav">
                 <li>
                     <a id="back-to-items" href="#" data-keyboard="false">
@@ -54,24 +56,32 @@
                 <div class="container">
                     <ul class="nav nav-tabs" id="mediaTab" role="tablist">
                         <li class="nav-item">
-                            <a class="nav-link active" id="upload-media-tab" data-toggle="tab" href="#upload-media" role="tab" aria-controls="upload-media" aria-selected="true">Upload Media</a>
+                            <a class="nav-link active" id="upload-media-tab" data-toggle="tab" href="#upload-media"
+                               role="tab" aria-controls="upload-media" aria-selected="true">Upload Media</a>
                         </li>
                         <li class="nav-item">
-                            <a class="nav-link" id="import-audio-video-tab" data-toggle="tab" href="#import-audio-video" role="tab" aria-controls="import-audio-video" aria-selected="false">Import Audio/Video</a>
+                            <a class="nav-link" id="import-audio-video-tab" data-toggle="tab" href="#import-audio-video"
+                               role="tab" aria-controls="import-audio-video" aria-selected="false">Import
+                                Audio/Video</a>
                         </li>
                         <li class="nav-item">
-                            <a class="nav-link" id="import-repo-media-tab" data-toggle="tab" href="#import-repo-media" role="tab" aria-controls="import-repo-media" aria-selected="false">Import Repository Media</a>
+                            <a class="nav-link" id="import-repo-media-tab" data-toggle="tab" href="#import-repo-media"
+                               role="tab" aria-controls="import-repo-media" aria-selected="false">Import Repository
+                                Media</a>
                         </li>
                     </ul>
                     <div class="tab-content" id="mediaTabContent">
-                        <div class="tab-pane fade show active" id="upload-media" role="tabpanel" aria-labelledby="upload-media-tab"><%- include('../partials/tab-upload-media.ejs'); %></div>
-                        <div class="tab-pane fade" id="import-audio-video" role="tabpanel" aria-labelledby="import-audio-video-tab"><%- include('../partials/tab-import-audio-video.ejs'); %></div>
-                        <div class="tab-pane fade" id="import-repo-media" role="tabpanel" aria-labelledby="import-repo-media-tab"><%- include('../partials/tab-import-repo-media.ejs'); %></div>
+                        <div class="tab-pane fade show active" id="upload-media" role="tabpanel"
+                             aria-labelledby="upload-media-tab"><%- include('../partials/tab-upload-media.ejs'); %></div>
+                        <div class="tab-pane fade" id="import-audio-video" role="tabpanel"
+                             aria-labelledby="import-audio-video-tab"><%- include('../partials/tab-import-audio-video.ejs'); %></div>
+                        <div class="tab-pane fade" id="import-repo-media" role="tabpanel"
+                             aria-labelledby="import-repo-media-tab"><%- include('../partials/tab-import-repo-media.ejs'); %></div>
                     </div>
                 </div>
                 <%- include('../standard-items/partials/item-alt-text.ejs'); %>
                 <%- include('../standard-items/partials/embed-item.ejs'); %>
-                <%- // include('partials/media-padding.ejs'); %>
+                <%- // include('partials/media-padding.ejs');  %>
             </div>
         </div>
         <div id="item-layout-card" class="card">
@@ -81,9 +91,12 @@
             <div class="card-body">
                 <div class="row">
                     <div class="col-4 col-md-4">
-                        <p style="height: 135px"><img src="/exhibits-dashboard/static/images/item_layout_text_left_media_right.png" height="100"></p>
+                        <p style="height: 135px"><img
+                                    src="/exhibits-dashboard/static/images/item_layout_text_left_media_right.png"
+                                    height="100"></p>
                         <p>
-                            <label class="btn btn-default" for="item-layout-media-right" style="font-size: 15px">Text media pair, media on the right
+                            <label class="btn btn-default" for="item-layout-media-right" style="font-size: 15px">Text
+                                media pair, media on the right
                                 <input type="radio"
                                        name="layout"
                                        id="item-layout-media-right"
@@ -92,9 +105,11 @@
                         </p>
                     </div>
                     <div class="col-4 col-md-4">
-                        <p><img src="/exhibits-dashboard/static/images/item_layout_media_top_text_bottom.png" width="145" height="135"></p>
+                        <p><img src="/exhibits-dashboard/static/images/item_layout_media_top_text_bottom.png"
+                                width="145" height="135"></p>
                         <p>
-                            <label class="btn btn-default" for="item-layout-media-top" style="font-size: 15px">Text media pair,
+                            <label class="btn btn-default" for="item-layout-media-top" style="font-size: 15px">Text
+                                media pair,
                                 text below media
                                 <input type="radio"
                                        name="layout"
@@ -104,9 +119,11 @@
                         </p>
                     </div>
                     <div class="col-4 col-md-4">
-                        <p><img src="/exhibits-dashboard/static/images/item_layout_text_top_media_bottom.png" width="135" height="135"></p>
+                        <p><img src="/exhibits-dashboard/static/images/item_layout_text_top_media_bottom.png"
+                                width="135" height="135"></p>
                         <p>
-                            <label class="btn btn-default" for="item-layout-media-bottom" style="font-size: 15px">Text media
+                            <label class="btn btn-default" for="item-layout-media-bottom" style="font-size: 15px">Text
+                                media
                                 pair, text above the media
                                 <input type="radio"
                                        name="layout"
@@ -118,9 +135,11 @@
                 </div>
                 <div class="row">
                     <div class="col-4 col-md-4">
-                        <p style="height: 135px"><img src="/exhibits-dashboard/static/images/item_layout_media_only.png" height="100"></p>
+                        <p style="height: 135px"><img src="/exhibits-dashboard/static/images/item_layout_media_only.png"
+                                                      height="100"></p>
                         <p>
-                            <label class="btn btn-default" for="item-layout-media-only" style="font-size: 15px">Media only, no text
+                            <label class="btn btn-default" for="item-layout-media-only" style="font-size: 15px">Media
+                                only, no text
                                 <input type="radio"
                                        name="layout"
                                        id="item-layout-media-only"
@@ -129,9 +148,12 @@
                         </p>
                     </div>
                     <div class="col-4 col-md-4">
-                        <p style="height: 135px"><img src="/exhibits-dashboard/static/images/item_layout_media_left_text_right.png" height="100"></p>
+                        <p style="height: 135px"><img
+                                    src="/exhibits-dashboard/static/images/item_layout_media_left_text_right.png"
+                                    height="100"></p>
                         <p>
-                            <label class="btn btn-default" for="item-layout-media-left" style="font-size: 15px">Text media pair, media on the left
+                            <label class="btn btn-default" for="item-layout-media-left" style="font-size: 15px">Text
+                                media pair, media on the left
                                 <input type="radio"
                                        name="layout"
                                        id="item-layout-media-left"
@@ -151,7 +173,7 @@
             </div>
         </div>
 
-        <!--<%- // include('partials/grid-item-styles.ejs'); %>-->
+        <!--<%- // include('partials/grid-item-styles.ejs');  %>-->
 
         <input type="hidden" id="is-published" name="is_published">
         <div id="item-submit-card" class="card">
@@ -172,11 +194,12 @@
 <script src="https://unpkg.com/dropzone@5/dist/min/dropzone.min.js"></script>
 <!-- app -->
 <%- include('../partials/exhibits-app-common.ejs'); %>
-<script src="/exhibits-dashboard/static/app/dist/uploads.module.min.js?<%=build_version%>"></script>
-<script src="/exhibits-dashboard/static/app/dist/exhibits.module.min.js?<%=build_version%>"></script>
-<script src="/exhibits-dashboard/static/app/dist/items.module.min.js?<%=build_version%>"></script>
-<script src="/exhibits-dashboard/static/app/dist/items.common.grid.item.form.module.min.js?<%=build_version%>"></script>
-<script src="/exhibits-dashboard/static/app/dist/items.edit.grid.item.form.module.min.js?<%=build_version%>"></script>
+<script src="/exhibits-dashboard/static/app/dist/uploads.module.min.js?<%= build_version %>"></script>
+<script src="/exhibits-dashboard/static/app/dist/exhibits.module.min.js?<%= build_version %>"></script>
+<script src="/exhibits-dashboard/static/app/dist/helper.media.module.min.js?<%= build_version %>"></script>
+<script src="/exhibits-dashboard/static/app/dist/items.module.min.js?<%= build_version %>"></script>
+<script src="/exhibits-dashboard/static/app/dist/items.common.grid.item.form.module.min.js?<%= build_version %>"></script>
+<script src="/exhibits-dashboard/static/app/dist/items.edit.grid.item.form.module.min.js?<%= build_version %>"></script>
 <script>
     itemsCommonGridItemFormModule.init();
     itemsEditGridItemFormModule.init();

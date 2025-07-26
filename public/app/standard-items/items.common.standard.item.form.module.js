@@ -26,6 +26,7 @@ const itemsCommonStandardItemFormModule = (function () {
 
         try {
 
+            let media_fields = '';
             let item = {};
             item.styles = {};
 
@@ -40,12 +41,6 @@ const itemsCommonStandardItemFormModule = (function () {
 
             if (document.querySelector('#is-published') !== null) {
                 item.is_published = document.querySelector('#is-published').value;
-            }
-
-            if (window.location.pathname.indexOf('media') !== -1) {
-                helperMediaModule.process_media_fields_common(item);
-            } else {
-                item.item_type = 'text';
             }
 
             item.layout = helperModule.get_checked_radio_button(document.getElementsByName('layout'));
@@ -73,6 +68,13 @@ const itemsCommonStandardItemFormModule = (function () {
                 item.styles.fontSize = `${item_font_size}px`;
             }
 
+            if (window.location.pathname.indexOf('media') !== -1) {
+                helperMediaModule.process_media_fields_common(item);
+                // console.log('media fields ', media_fields);
+            } else {
+                item.item_type = 'text';
+            }
+            console.log('items ', item);
             return item;
 
         } catch (error) {

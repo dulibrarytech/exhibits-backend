@@ -187,39 +187,20 @@
                         </div>
                         <div class="tab-pane fade" id="import-audio-video" role="tabpanel"
                              aria-labelledby="import-audio-video-tab">
-
                             <div class="col-12 col-md-12">
                                 <p>
                                 <form class="row form-group">
-                                    <input disabled type="text" id="audio-video" name="audio_video"
-                                           placeholder="Kaltura ID" class="form-control">
-
-                                    <br><br>
-                                    <div class="form-text text-muted" style="font-size: 17px">
-                                        <p>
-                                            <span style="color: darkred">*</span>
-                                            <small><em>Please choose an item type</em></small>
-                                        </p>
+                                    <div class="col-7 col-md-7">
+                                        <input type="text" class="form-control" id="audio-video" name="audio_video" placeholder="Kaltura ID">
+                                        <input type="hidden" id="is-kaltura-item" name="is_kaltura_item" value="0">
                                     </div>
-                                    <p>
-                                        <label class="btn btn-default" for="item-type-audio" style="font-size: 15px">Audio
-                                            <input disabled type="radio"
-                                                   name="item_type"
-                                                   id="item-type-audio"
-                                                   value="audio" checked/>
-                                        </label>
-                                    </p>
-                                    <p>
-                                        <label class="btn btn-default" for="item-type-video" style="font-size: 15px">Video
-                                            <input disabled type="radio"
-                                                   name="item_type"
-                                                   id="item-type-video"
-                                                   value="video"/>
-                                        </label>
-                                    </p>
-                                    <input type="hidden" id="is-kaltura-item" name="is_kaltura_item" value="0">
+                                    <div class="col-auto">
+                                        <button type="button" id="kaltura-btn" class="btn btn-secondary mb-3">Get item data</button>
+                                    </div>
                                 </form>
-                                </p>
+                                <img id="kaltura-thumbnail" src="" alt="test" width="150" height="150" style="visibility: hidden;border: solid"><br><br>
+                                <div id="kaltura-item-data"></div>
+                                <input type="hidden" name="item_type" id="kaltura-item-type">
                             </div>
                         </div>
                         <div class="tab-pane fade" id="import-repo-media" role="tabpanel"
@@ -532,6 +513,7 @@
 <%- include('../partials/exhibits-app-common.ejs'); %>
 <script src="/exhibits-dashboard/static/app/dist/uploads.module.min.js?<%=build_version%>"></script>
 <script src="/exhibits-dashboard/static/app/dist/exhibits.module.min.js?<%=build_version%>"></script>
+<script src="/exhibits-dashboard/static/app/dist/helper.media.module.min.js?<%=build_version%>"></script>
 <script src="/exhibits-dashboard/static/app/dist/items.module.min.js?<%=build_version%>"></script>
 <script src="/exhibits-dashboard/static/app/dist/items.common.grid.item.form.module.min.js?<%=build_version%>"></script>
 <script src="/exhibits-dashboard/static/app/dist/items.details.grid.item.module.min.js?<%=build_version%>"></script>

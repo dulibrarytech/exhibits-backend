@@ -68,8 +68,8 @@ const itemsDetailsGridItemModule = (function () {
     async function display_details_record() {
 
         let record = await get_grid_item_record();
-        let thumbnail_fragment = '';
-        let thumbnail_url = '';
+        // let thumbnail_fragment = '';
+        // let thumbnail_url = '';
         let is_published = record.is_published;
         let created_by = record.created_by;
         let created = record.created;
@@ -102,7 +102,9 @@ const itemsDetailsGridItemModule = (function () {
         document.querySelector('#item-text-input').value = helperModule.unescape(record.text);
 
         if (window.location.pathname.indexOf('media') !== -1) {
+            helperMediaModule.display_media_fields_common(record);
 
+            /*
             document.querySelector('#item-description-input').value = helperModule.unescape(record.description);
             document.querySelector('#item-caption-input').value = record.caption;
             document.querySelector('#pdf-open-to-page').value = record.pdf_open_to_page;
@@ -216,6 +218,8 @@ const itemsDetailsGridItemModule = (function () {
                 document.querySelector('#item-thumbnail-image-prev').value = record.thumbnail;
                 document.querySelector('#item-thumbnail-trash').style.display = 'inline';
             }
+
+             */
         }
 
         let layouts = document.getElementsByName('layout');
@@ -234,6 +238,7 @@ const itemsDetailsGridItemModule = (function () {
             }
         }
 
+        /*
         let styles = JSON.parse(record.styles);
 
         if (Object.keys(styles).length !== 0) {
@@ -266,6 +271,7 @@ const itemsDetailsGridItemModule = (function () {
                 document.querySelector('#item-font-size').value = '';
             }
         }
+        */
 
         return false;
     }

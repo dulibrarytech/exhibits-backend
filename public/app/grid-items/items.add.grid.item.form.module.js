@@ -98,28 +98,6 @@ const itemsAddGridItemFormModule = (function () {
 
         try {
 
-            if (window.location.pathname.indexOf('media') !== -1) {
-
-                uploadsModule.upload_item_media();
-                uploadsModule.upload_item_thumbnail();
-
-                document.querySelector('#item-media-trash').style.display = 'none';
-                document.querySelector('#item-thumbnail-trash').style.display = 'none';
-                document.querySelectorAll('.item-layout-left-right-radio-btn').forEach((radio_input) => {
-                    radio_input.addEventListener('click', () => {
-                        document.querySelector('#item-media-width').style.display = 'block';
-                    });
-                });
-
-                const elem_id = document.querySelector('#is-alt-text-decorative');
-
-                if (elem_id) {
-                    document.querySelector('#is-alt-text-decorative').addEventListener('click', () => {
-                        helperModule.toggle_alt_text();
-                    });
-                }
-            }
-
             const exhibit_id = helperModule.get_parameter_by_name('exhibit_id');
             exhibitsModule.set_exhibit_title(exhibit_id);
             document.querySelector('#save-item-btn').addEventListener('click', itemsAddGridItemFormModule.create_grid_item_record);
