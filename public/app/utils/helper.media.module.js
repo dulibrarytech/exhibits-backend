@@ -596,9 +596,9 @@ const helperMediaModule = (function () {
 
         if (media_padding) {
             if (record.media_padding === 1) {
-                media_padding.checked = false;
-            } else {
                 media_padding.checked = true;
+            } else {
+                media_padding.checked = false;
             }
         }
 
