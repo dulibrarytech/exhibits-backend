@@ -571,7 +571,7 @@ const helperMediaModule = (function () {
         let thumbnail_fragment = '';
         let thumbnail_url = '';
         let wrap_text = document.querySelector('#wrap-text');
-        let media_padding = document.querySelector('#media_padding');
+        let media_padding = document.querySelector('#media-padding');
         let embed_item = document.querySelector('#embed-item');
 
         document.querySelector('#item-description-input').value = helperModule.unescape(record.description);
@@ -595,10 +595,10 @@ const helperMediaModule = (function () {
         }
 
         if (media_padding) {
-            if (record.media_padding === 1) {
-                media_padding.checked = true;
-            } else {
+            if (record.media_padding === 1) { // padding
                 media_padding.checked = false;
+            } else if (record.media_padding === 0) { // no padding
+                media_padding.checked = true;
             }
         }
 
