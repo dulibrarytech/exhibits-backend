@@ -93,6 +93,7 @@ const itemsCommonStandardItemFormModule = (function () {
 
             } else {
                 item.item_type = 'text';
+                item.mime_type = 'text/plain';
             }
 
             return item;
