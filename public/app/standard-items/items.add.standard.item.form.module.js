@@ -82,7 +82,7 @@ const itemsAddStandardItemFormModule = (function () {
 
                     window.location.replace(`${APP_PATH}/items/standard/${item_form}/edit?exhibit_id=${uuid}&item_id=${item_id}`);
 
-                    }, 900);
+                }, 900);
             }
 
         } catch (error) {
