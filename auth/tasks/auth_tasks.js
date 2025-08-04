@@ -62,7 +62,7 @@ const Auth_tasks = class {
             }
 
         } catch (error) {
-            LOGGER.module().error('ERROR: [/users/tasks (check_auth_user)] unable to check auth ' + error.message);
+            LOGGER.module().error('ERROR: [/auth/tasks (check_auth_user)] unable to check auth ' + error.message);
         }
     };
 
@@ -92,9 +92,68 @@ const Auth_tasks = class {
             }
 
         } catch (error) {
-            LOGGER.module().error('ERROR: [/users/tasks (get_auth_user_data)] unable to get user data ' + error.message);
+            LOGGER.module().error('ERROR: [/auth/tasks (get_auth_user_data)] unable to get user data ' + error.message);
         }
     };
+
+    /**
+     * Saves token
+     * @param user_id
+     * @param token
+     */
+    async save_token(user_id, token) {
+
+        try {
+
+            await this.DB(this.TABLE)
+                .where({
+                    id: user_id
+                })
+                .update({
+                    token: token
+                });
+
+            LOGGER.module().info('INFO: [/auth/tasks (save_token)] Token saved.');
+            return true;
+
+        } catch (error) {
+            LOGGER.module().error('ERROR: [/auth/tasks (save_token)] unable to save token ' + error.message);
+            return false;
+        }
+    }
+
+    async get_user_permissions(token) {
+
+        try {
+
+            return await this.DB.select(
+                    'u.id',
+                    'ur.role_id',
+                    'rp.permission_id'
+                ).from('tbl_users AS u')
+                    .leftJoin('ctbl_user_roles AS ur', 'ur.user_id', 'u.id')
+                    .leftJoin('ctbl_role_permissions AS rp', 'rp.role_id', 'ur.role_id')
+                    .where('u.token', '=', token);
+
+        } catch (error) {
+            LOGGER.module().error('ERROR: [/auth/tasks (get_user_permissions)] unable to get user permissions ' + error.message);
+        }
+    }
+
+    async get_role_permissions(permission_type) {
+
+        try {
+
+            return await this.DB('tbl_user_permissions')
+                .select('id', 'permission')
+                .where({
+                    type: permission_type
+                });
+
+        } catch (error) {
+            LOGGER.module().error('ERROR: [/auth/tasks (get_role_permissions)] unable to get role permissions ' + error.message);
+        }
+    }
 };
 
 module.exports = Auth_tasks;

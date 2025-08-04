@@ -88,7 +88,7 @@ exports.verify = function (req, res, next) {
             if (error) {
 
                 LOGGER.module().error('ERROR: [/libs/tokens lib (verify)] unable to verify token ' + error.message);
-                res.status(403).send({
+                res.status(401).send({
                     message: 'Unauthorized request'
                 });
 

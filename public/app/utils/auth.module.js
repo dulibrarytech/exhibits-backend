@@ -140,6 +140,43 @@ const authModule = (function () {
         }
     };
 
+    obj.check_permission = async function (type) {
+
+        try {
+
+            const token = authModule.get_user_token();
+
+            if (token === false) {
+                document.querySelector('#message').innerHTML = `<div class="alert alert-danger" role="alert"><i class="fa fa-exclamation"></i> Session Expired. One moment please...</div>`;
+                authModule.redirect_to_auth();
+                return false;
+            }
+
+            const EXHIBITS_ENDPOINTS = endpointsModule.get_exhibits_endpoints();
+            const response = await httpModule.req({
+                method: 'POST',
+                url: EXHIBITS_ENDPOINTS.exhibits.token_verify.endpoint,
+                headers: {
+                    'Content-Type': 'application/json',
+                    'x-access-token': token
+                },
+                data: type
+            });
+
+            console.log('response ', response);
+            // TODO: handle response
+            /*
+            if (response === undefined) {
+                window.location.replace(APP_PATH + '/session');
+            }
+
+             */
+
+        } catch (error) {
+            document.querySelector('#message').innerHTML = `<div class="alert alert-danger" role="alert"><i class="fa fa-exclamation"></i> ${error.message}</div>`;
+        }
+    };
+
     obj.redirect_to_auth = function () {
         setTimeout(() => {
             window.location.replace(APP_PATH + '/auth');

@@ -84,3 +84,23 @@ exports.get_auth_user_data = async function (id) {
         return false;
     }
 };
+
+/**
+ * Saves token to user table
+ * @param id
+ * @param token
+ */
+exports.save_token = async function (id, token) {
+
+    try {
+
+        const TASKS = new AUTH_TASKS(DB, TABLE);
+        return await TASKS.save_token(id, token);
+
+    } catch (error) {
+        LOGGER.module().error('ERROR: [/auth/model (save_token)] unable to save token ' + error.message);
+        return false;
+    }
+};
+
+// TODO: roles/permissions

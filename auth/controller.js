@@ -49,7 +49,17 @@ exports.sso = async function (req, res) {
             result = await MODEL.check_auth_user(USERNAME);
 
             if (result.auth === true) {
-                res.redirect(APP_PATH + '/exhibits?t=' + token + '&id=' + result.data);
+
+                let is_token_saved = await MODEL.save_token(result.data, token);
+
+                if (is_token_saved === true) {
+                    res.redirect(APP_PATH + '/exhibits?t=' + token + '&id=' + result.data);
+                } else {
+                    res.status(401).send({
+                        message: 'Authenticate failed.'
+                    });
+                }
+
             } else {
                 res.status(401).send({
                     message: 'Authenticate failed.'
