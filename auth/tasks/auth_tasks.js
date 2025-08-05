@@ -140,15 +140,18 @@ const Auth_tasks = class {
         }
     }
 
-    async get_role_permissions(permission_type) {
+    async get_permissions() {
 
         try {
 
             return await this.DB('tbl_user_permissions')
-                .select('id', 'permission')
+                .select('id', 'permission');
+                /*
                 .where({
                     type: permission_type
                 });
+
+                 */
 
         } catch (error) {
             LOGGER.module().error('ERROR: [/auth/tasks (get_role_permissions)] unable to get role permissions ' + error.message);

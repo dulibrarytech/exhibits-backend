@@ -76,6 +76,7 @@ const exhibitsAddFormModule = (function () {
             }
 
             data.created_by = user.name;
+            data.exhibit_owner = parseInt(user.uid);
 
             response = await httpModule.req({
                 method: 'POST',

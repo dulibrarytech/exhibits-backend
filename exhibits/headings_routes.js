@@ -21,6 +21,7 @@
 const CONTROLLER = require('../exhibits/headings_controller');
 const ENDPOINTS = require('../exhibits/endpoints');
 const TOKEN = require('../libs/tokens');
+// const AUTHORIZE = require('../auth/authorize');
 
 module.exports = function (app) {
 

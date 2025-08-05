@@ -21,7 +21,9 @@
 const WEBSERVICES_CONFIG = require('../config/webservices_config')();
 const STORAGE_CONFIG = require('../config/storage_config')();
 const EXHIBITS_MODEL = require('../exhibits/exhibits_model');
+const AUTHORIZE = require('../auth/authorize');
 const FS = require('fs');
+const LOGGER = require("../libs/log4");
 
 exports.create_exhibit_record = async function (req, res) {
 
@@ -31,6 +33,18 @@ exports.create_exhibit_record = async function (req, res) {
 
         if (data === undefined) {
             res.status(400).send('Bad request.');
+            return false;
+        }
+
+        // TODO:
+        const permissions = ['add_exhibit'];
+        const is_authorized = await AUTHORIZE.check_permission(req, permissions);
+
+        if (is_authorized === false) {
+            res.status(403).send({
+                message: 'Unauthorized request'
+            });
+
             return false;
         }
 

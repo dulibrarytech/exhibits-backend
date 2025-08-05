@@ -21,12 +21,12 @@
 const CONTROLLER = require('../exhibits/exhibits_controller');
 const ENDPOINTS = require('../exhibits/endpoints');
 const TOKEN = require('../libs/tokens');
-const AUTHORIZE = require('../auth/authorize');
+// const AUTHORIZE = require('../auth/authorize');
 
 module.exports = function (app) {
 
     app.route(ENDPOINTS().exhibits.exhibit_records.endpoints.post.endpoint)
-    .post(TOKEN.verify, AUTHORIZE.check_permission('create'), CONTROLLER.create_exhibit_record);
+    .post(TOKEN.verify, CONTROLLER.create_exhibit_record);
 
     app.route(ENDPOINTS().exhibits.exhibit_records.endpoint)
     .get(TOKEN.verify, CONTROLLER.get_exhibit_records);
@@ -35,7 +35,7 @@ module.exports = function (app) {
     .get(TOKEN.verify, CONTROLLER.get_exhibit_record);
 
     app.route(ENDPOINTS().exhibits.exhibit_records.endpoints.put.endpoint)
-    .put(TOKEN.verify, AUTHORIZE.check_permission('update'), CONTROLLER.update_exhibit_record);
+    .put(TOKEN.verify, CONTROLLER.update_exhibit_record);
 
     app.route(ENDPOINTS().exhibits.exhibit_records.endpoints.delete.endpoint)
     .delete(TOKEN.verify, CONTROLLER.delete_exhibit_record);
