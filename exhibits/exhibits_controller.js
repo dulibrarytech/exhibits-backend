@@ -36,7 +36,6 @@ exports.create_exhibit_record = async function (req, res) {
             return false;
         }
 
-        // TODO:
         const permissions = ['add_exhibit'];
         const is_authorized = await AUTHORIZE.check_permission(req, permissions);
 
@@ -114,6 +113,21 @@ exports.update_exhibit_record = async function (req, res) {
 
         if (uuid === undefined || data === undefined) {
             res.status(400).send('Bad request.');
+            return false;
+        }
+
+        // TODO
+        const owner = data.exhibit_owner;
+        delete data.exhibit_owner;
+
+        const permissions = ['update_exhibit', 'update_any_exhibit'];
+        const is_authorized = await AUTHORIZE.check_permission(req, permissions, owner);
+
+        if (is_authorized === false) {
+            res.status(403).send({
+                message: 'Unauthorized request'
+            });
+
             return false;
         }
 

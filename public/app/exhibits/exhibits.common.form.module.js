@@ -39,6 +39,7 @@ const exhibitsCommonFormModule = (function () {
             exhibit.about_the_curators = helperModule.clean_html(document.querySelector('#exhibit-about-the-curators-input').value);
             exhibit.is_featured = document.querySelector('#is-featured').checked;
             exhibit.is_student_curated = document.querySelector('#is-student-curated').checked;
+            exhibit.exhibit_owner = document.querySelector('#exhibit-owner').value;
 
             if (document.querySelector('#is-published') !== null) {
                 exhibit.is_published = document.querySelector('#is-published').value;

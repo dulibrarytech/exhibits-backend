@@ -40,11 +40,11 @@ const Auth_tasks = class {
         try {
 
             const data = await this.DB(this.TABLE)
-            .select('id')
-            .where({
-                du_id: username,
-                is_active: 1
-            });
+                .select('id')
+                .where({
+                    du_id: username,
+                    is_active: 1
+                });
 
             if (data.length === 1) {
 
@@ -75,11 +75,11 @@ const Auth_tasks = class {
         try {
 
             const data = await this.DB(this.TABLE)
-            .select('id', 'du_id', 'email', 'first_name', 'last_name')
-            .where({
-                id: id,
-                is_active: 1
-            });
+                .select('id', 'du_id', 'email', 'first_name', 'last_name')
+                .where({
+                    id: id,
+                    is_active: 1
+                });
 
             if (data.length === 1) {
 
@@ -122,36 +122,54 @@ const Auth_tasks = class {
         }
     }
 
+    async get_user_id(token) {
+
+        try {
+
+            const data = await this.DB(this.TABLE)
+                .select('id')
+                .where({
+                    token: token
+                });
+
+            return data[0].id;
+
+        } catch (error) {
+            LOGGER.module().error('ERROR: [/auth/tasks (get_user_id)] unable to get user id ' + error.message);
+        }
+    }
+
     async get_user_permissions(token) {
 
         try {
 
             return await this.DB.select(
-                    'u.id',
-                    'ur.role_id',
-                    'rp.permission_id'
-                ).from('tbl_users AS u')
-                    .leftJoin('ctbl_user_roles AS ur', 'ur.user_id', 'u.id')
-                    .leftJoin('ctbl_role_permissions AS rp', 'rp.role_id', 'ur.role_id')
-                    .where('u.token', '=', token);
+                'u.id',
+                'ur.role_id',
+                'rp.permission_id'
+            ).from('tbl_users AS u')
+                .leftJoin('ctbl_user_roles AS ur', 'ur.user_id', 'u.id')
+                .leftJoin('ctbl_role_permissions AS rp', 'rp.role_id', 'ur.role_id')
+                .where('u.token', '=', token);
 
         } catch (error) {
             LOGGER.module().error('ERROR: [/auth/tasks (get_user_permissions)] unable to get user permissions ' + error.message);
         }
     }
 
+    // TODO
     async get_permissions() {
 
         try {
 
             return await this.DB('tbl_user_permissions')
                 .select('id', 'permission');
-                /*
-                .where({
-                    type: permission_type
-                });
+            /*
+            .where({
+                type: permission_type
+            });
 
-                 */
+             */
 
         } catch (error) {
             LOGGER.module().error('ERROR: [/auth/tasks (get_role_permissions)] unable to get role permissions ' + error.message);

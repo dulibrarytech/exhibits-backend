@@ -122,6 +122,7 @@ const exhibitsEditFormModule = (function () {
             document.querySelector('#exhibit-sub-title-input').value = helperModule.unescape(record.subtitle);
             document.querySelector('#exhibit-description-input').value = helperModule.unescape(record.description);
             document.querySelector('#exhibit-about-the-curators-input').value = helperModule.unescape(record.about_the_curators);
+            document.querySelector('#exhibit-owner').value = record.exhibit_owner;
 
             if (record.is_featured === 1) {
                 document.querySelector('#is-featured').checked = true;

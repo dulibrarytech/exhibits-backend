@@ -50,8 +50,6 @@ exports.sso = async function (req, res) {
 
             if (result.auth === true) {
 
-                // res.redirect(APP_PATH + '/exhibits?t=' + token + '&id=' + result.data);
-                // TODO: not working in production
                 let is_token_saved = await MODEL.save_token(result.data, token);
 
                 if (is_token_saved === true) {

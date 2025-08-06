@@ -25,83 +25,85 @@ const TABLE = DB_TABLES.exhibits.user_records;
 const AUTH = require('../auth/tasks/auth_tasks');
 const AUTH_TASKS = new AUTH(DB, TABLE);
 const LOGGER = require('../libs/log4');
-const res = require("express/lib/response");
-const {permission} = require("kaltura-client/KalturaServices");
 
 /**
  * Checks user permission
  * @param req
- * @param permissions
+ * @param actions
+ * @param owner
  */
-exports.check_permission = async function (req, permissions) {
+exports.check_permission = async function (req, actions, owner) {
 
     try {
-
+        console.log('owner ', owner);
         let user_role_permissions = [];
-        let permissions = [];
         let token = req.headers['x-access-token'];
 
         if (token === undefined && !VALIDATOR.isJWT(token)) {
             return false;
         }
 
+        let user_id = await AUTH_TASKS.get_user_id(token);
         let user_permissions = await AUTH_TASKS.get_user_permissions(token);
 
         for (let i = 0; i < user_permissions.length; i++) {
             user_role_permissions.push(user_permissions[i].permission_id);
         }
 
-        console.log('permissions for this action', permissions);
-        console.log('my permissions ', user_role_permissions);
+        const all_permissions = await AUTH_TASKS.get_permissions();
+        const get_user_permissions = (user_role_permissions, all_permissions) => {
+            let result = [];
+            result = all_permissions.filter(all => {
+                return user_role_permissions.find(arr => {
+                    if (all.id === arr) {
+                        return arr;
+                    }
+                });
+            });
 
-        let all_permissions = await AUTH_TASKS.get_permissions();
+            return result;
+        };
 
-        console.log('all ', all_permissions);
+        const user_permissions_found = get_user_permissions(user_role_permissions, all_permissions);
+        const user_permission_matches = (actions, user_permissions_found) => {
+            let result = [];
+            result = user_permissions_found.filter(all => {
+                return actions.find(arr => {
+                    if (all.permission === arr) {
+                        return arr;
+                    }
+                });
+            });
 
-        // TODO: filter
-        function check_permission(permission) {
-            return permission.permission === permissions;
-        }
+            return result;
+        };
 
-        /*
-        for (let i = 0; i < role_permissions.length; i++) {
-            permissions.push(role_permissions[i].permission);
-        }
-        console.log('All permissions ', permissions);
-        */
-        // console.log('permissions being checked', permissions);
-        /*
-        const inventory = [
-            { name: "apples", quantity: 2 },
-            { name: "bananas", quantity: 0 },
-            { name: "cherries", quantity: 5 },
-        ];
+        let user_has_permission = user_permission_matches(actions, user_permissions_found);
 
-        function isCherries(fruit) {
-            return fruit.name === "cherries";
-        }
+        if (user_has_permission.length > 0) {
 
-            console.log(inventory.find(isCherries));
-            // { name: 'cherries', quantity: 5 }
-         */
+            let permissions = [];
 
-        /*
-        let has_permission = user_role_permissions.some((permission_check) => {
-            console.log('checking permission ', permission_check);
+            for (let i = 0; i < user_has_permission.length; i++) {
+                permissions.push(user_has_permission[i].permission);
+            }
 
-            return permission_check.find(permissions) !== -1;
-        });
-        console.log('has_permission', has_permission);
-        if (has_permission === true) {
-            LOGGER.module().info('INFO: [/auth/authorize lib (check_permission)] Authorized!');
+            console.log(permissions);
+            console.log(actions);
+            console.log(owner);
+            console.log(user_id);
+
+            if (permissions.length !== actions.length) {
+                if (owner !== user_id) {
+                    return false;
+                }
+            }
+
             return true;
-        } else if (has_permission === false) {
-            LOGGER.module().warn('WARNING: [/auth/authorize lib (check_permission)] Unauthorized request');
+
+        } else {
             return false;
         }
-
-         */
-
 
     } catch (error) {
         LOGGER.module().error('ERROR: [/auth/authorize lib (check_permission)] unable to check permission ' + error.message);
@@ -116,77 +118,4 @@ exports.check_permission = async function (req, permissions) {
 exports.check_ownership = function (user_id, type) {
     console.log(user_id);
     console.log(type);
-};
-
-/**
- * Checks user permissions
- * @param permission_type
- */
-exports.check_permission_ = function () {
-
-    try {
-
-        return (req, res, next) => {
-
-            (async function () {
-
-                let user_role_permissions = [];
-                let permissions = [];
-                let token = req.headers['x-access-token'];
-
-                if (token !== undefined && VALIDATOR.isJWT(token)) {
-
-                    let user_permissions = await AUTH_TASKS.get_user_permissions(token);
-
-                    // these are the permissions the user has based on their assigned role
-
-                    for (let i = 0; i < user_permissions.length; i++) {
-                        user_role_permissions.push(user_permissions[i].permission_id);
-                    }
-
-                    console.log(user_permissions);
-                    console.log('permissions associated with role ', user_role_permissions);
-
-                    // TODO: compare user id with asset owner
-                    let role_permissions = await AUTH_TASKS.get_role_permissions();
-
-                    console.log('user permissions ', role_permissions);
-
-
-                    for (let i = 0; i < role_permissions.length; i++) {
-                        permissions.push(role_permissions[i].id);
-                    }
-
-                    console.log('permissions ', permissions);
-
-                    let has_permission = user_role_permissions.some((permission) => {
-                        return permissions.indexOf(permission) !== -1;
-                    });
-
-                    if (has_permission === true) {
-                        LOGGER.module().info('INFO: [/auth/authorize lib (check_permission)] Authorized!');
-                        next();
-                    } else if (has_permission === false) {
-
-                        res.status(403).send({
-                            message: 'Unauthorized request'
-                        });
-                    }
-
-
-                    next();
-                } else {
-
-                    res.status(401).send({
-                        message: 'Access denied'
-                    });
-                }
-
-
-            })();
-        };
-
-    } catch (error) {
-        LOGGER.module().error('ERROR: [/auth/authorize lib (check_permission)] unable to check permission ' + error.message);
-    }
 };
