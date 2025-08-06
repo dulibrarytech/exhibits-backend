@@ -80,7 +80,7 @@ const itemsAddStandardItemFormModule = (function () {
                         item_form = 'media';
                     }
 
-                    window.location.replace(`${APP_PATH}/items/standard/${item_form}/edit?exhibit_id=${uuid}&item_id=${item_id}`);
+                    // window.location.replace(`${APP_PATH}/items/standard/${item_form}/edit?exhibit_id=${uuid}&item_id=${item_id}`);
 
                 }, 900);
             }

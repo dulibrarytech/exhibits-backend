@@ -465,7 +465,7 @@ const helperMediaModule = (function () {
 
         let embed_item = document.querySelector('#embed-item');
         let wrap_text = document.querySelector('#wrap-text');
-        let media_padding = document.querySelector('#media_padding');
+        let media_padding = document.querySelector('#media-padding');
 
         if (embed_item) {
             item.is_embedded = embed_item.checked;
@@ -572,6 +572,7 @@ const helperMediaModule = (function () {
         }
 
         if (media_padding) {
+
             if (record.media_padding === 1) { // padding
                 media_padding.checked = false;
             } else if (record.media_padding === 0) { // no padding
