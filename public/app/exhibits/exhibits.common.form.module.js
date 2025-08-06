@@ -39,7 +39,12 @@ const exhibitsCommonFormModule = (function () {
             exhibit.about_the_curators = helperModule.clean_html(document.querySelector('#exhibit-about-the-curators-input').value);
             exhibit.is_featured = document.querySelector('#is-featured').checked;
             exhibit.is_student_curated = document.querySelector('#is-student-curated').checked;
-            exhibit.exhibit_owner = document.querySelector('#exhibit-owner').value;
+
+            let exhibit_owner_id = document.querySelector('#exhibit-owner');
+
+            if (exhibit_owner_id !== null) {
+                exhibit.exhibit_owner = exhibit_owner_id.value;
+            }
 
             if (document.querySelector('#is-published') !== null) {
                 exhibit.is_published = document.querySelector('#is-published').value;
@@ -79,7 +84,6 @@ const exhibitsCommonFormModule = (function () {
             exhibit.banner_template = helperModule.get_checked_radio_button(document.getElementsByName('banner_template'));
 
             // exhibit page layout
-            // exhibit.page_layout = helperModule.get_checked_radio_button(document.getElementsByName('page_layout'));
             exhibit.page_layout = document.querySelector('#exhibit-page-layout').value;
 
             // exhibit template layout - only one option set by default - hidden field in add/edit forms

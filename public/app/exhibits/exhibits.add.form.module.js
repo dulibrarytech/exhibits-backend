@@ -52,7 +52,8 @@ const exhibitsAddFormModule = (function () {
             let response;
             let data = get_exhibit_data();
 
-            if (data === false) {
+            if (data === false || data === undefined) {
+                document.querySelector('#message').innerHTML = `<div class="alert alert-danger" role="alert"><i class="fa fa-info"></i> Exhibit data could not be created</div>`;
                 return false;
             }
 
@@ -74,8 +75,10 @@ const exhibitsAddFormModule = (function () {
                 document.querySelector('#message').innerHTML = `<div class="alert alert-danger" role="alert"><i class="fa fa-exclamation"></i> Unable to retrieve your name</div>`;
                 return false;
             }
-
+            console.log(user.name);
+            console.log(data);
             data.created_by = user.name;
+            console.log(data.created_by);
             data.exhibit_owner = parseInt(user.uid);
 
             response = await httpModule.req({

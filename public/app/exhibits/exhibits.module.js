@@ -244,13 +244,14 @@ const exhibitsModule = (function () {
 
             (async function () {
 
+                const user = JSON.parse(sessionStorage.getItem('exhibits_user'));
                 document.querySelector('#delete-message').innerHTML = 'Deleting exhibit...';
                 const EXHIBITS_ENDPOINTS = endpointsModule.get_exhibits_endpoints();
                 const uuid = helperModule.get_parameter_by_name('exhibit_id');
                 const token = authModule.get_user_token();
                 const response = await httpModule.req({
                     method: 'DELETE',
-                    url: EXHIBITS_ENDPOINTS.exhibits.exhibit_records.endpoints.delete.endpoint.replace(':exhibit_id', uuid),
+                    url: EXHIBITS_ENDPOINTS.exhibits.exhibit_records.endpoints.delete.endpoint.replace(':exhibit_id', uuid) + '?uid=' + user.uid,
                     headers: {
                         'Content-Type': 'application/json',
                         'x-access-token': token
