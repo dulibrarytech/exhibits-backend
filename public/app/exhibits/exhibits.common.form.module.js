@@ -43,7 +43,7 @@ const exhibitsCommonFormModule = (function () {
             let exhibit_owner_id = document.querySelector('#exhibit-owner');
 
             if (exhibit_owner_id !== null) {
-                exhibit.exhibit_owner = exhibit_owner_id.value;
+                exhibit.owner = exhibit_owner_id.value;
             }
 
             if (document.querySelector('#is-published') !== null) {

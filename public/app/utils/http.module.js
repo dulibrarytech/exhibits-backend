@@ -28,10 +28,12 @@ const httpModule = (function() {
             return await HTTP(request);
         } catch(error) {
 
-            document.querySelector('#message').innerHTML = `<div class="alert alert-danger" role="alert"><i class="fa fa-exclamation"></i> ${error.message}</div>`;
-
             if (error.response.status === 401) {
                 authModule.redirect_to_auth();
+            } else if (error.response.status === 403) {
+                document.querySelector('#message').innerHTML = `<div class="alert alert-danger" role="alert"><i class="fa fa-exclamation"></i> You have insufficient permissions to perform this action</div>`;
+            } else {
+                document.querySelector('#message').innerHTML = `<div class="alert alert-danger" role="alert"><i class="fa fa-exclamation"></i> ${error.message}</div>`;
             }
         }
     };

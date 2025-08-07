@@ -244,14 +244,13 @@ const exhibitsModule = (function () {
 
             (async function () {
 
-                const user = JSON.parse(sessionStorage.getItem('exhibits_user'));
                 document.querySelector('#delete-message').innerHTML = 'Deleting exhibit...';
                 const EXHIBITS_ENDPOINTS = endpointsModule.get_exhibits_endpoints();
                 const uuid = helperModule.get_parameter_by_name('exhibit_id');
                 const token = authModule.get_user_token();
                 const response = await httpModule.req({
                     method: 'DELETE',
-                    url: EXHIBITS_ENDPOINTS.exhibits.exhibit_records.endpoints.delete.endpoint.replace(':exhibit_id', uuid) + '?uid=' + user.uid,
+                    url: EXHIBITS_ENDPOINTS.exhibits.exhibit_records.endpoints.delete.endpoint.replace(':exhibit_id', uuid),
                     headers: {
                         'Content-Type': 'application/json',
                         'x-access-token': token
@@ -265,6 +264,7 @@ const exhibitsModule = (function () {
                     }, 900);
 
                 } else {
+                    document.querySelector('#delete-message').innerHTML = '';
                     document.querySelector('#exhibit-no-delete').innerHTML = `<i class="fa fa-exclamation"></i> ${response.data.message}`;
                 }
 
@@ -292,7 +292,7 @@ const exhibitsModule = (function () {
                 }
             });
 
-            if (response.status === 200) {
+            if (response !== undefined && response.status === 200) {
 
                 setTimeout(() => {
                     let elem = document.getElementById(uuid);
@@ -307,7 +307,7 @@ const exhibitsModule = (function () {
                     }, false);
                 }, 0);
 
-                setTimeout(() => { // <!--${add_item}&nbsp;-->
+                setTimeout(() => {
                     uuid = uuid.replace('-status', '');
                     let exhibit_items = `<a href="${APP_PATH}/items?exhibit_id=${uuid}" title="View Exhibit Items"><i class="fa fa-list pr-1"></i></a>&nbsp;`;
                     let uuid_actions = uuid + '-actions';
@@ -322,7 +322,7 @@ const exhibitsModule = (function () {
                 }, 0);
             }
 
-            if (response.status === 204) {
+            if (response !== undefined && response.status === 204) {
                 scrollTo(0, 0);
                 document.querySelector('#message').innerHTML = `<div class="alert alert-warning" role="alert"><i class="fa fa-warning"></i> Exhibit must contain at least one item to publish</div>`;
 
@@ -334,10 +334,16 @@ const exhibitsModule = (function () {
             return false;
 
         } catch (error) {
-            document.querySelector('#message').innerHTML = `<div class="alert alert-danger" role="alert"><i class="fa fa-exclamation"></i> An error occurred while publishing exhibit</div>`;
+            console.log(error);
+            document.querySelector('#message').innerHTML = `<div class="alert alert-danger" role="alert"><i class="fa fa-exclamation"></i> ${error.message}</div>`;
+
+            // document.querySelector('#message').innerHTML = `<div class="alert alert-danger" role="alert"><i class="fa fa-exclamation"></i> An error occurred while publishing exhibit</div>`;
+            /*
             setTimeout(() => {
                 document.querySelector('#message').innerHTML = '';
             }, 5000);
+
+             */
         }
     }
 

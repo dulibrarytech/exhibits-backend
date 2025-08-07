@@ -21,21 +21,25 @@
 const VALIDATOR = require('validator');
 const DB = require('../config/db_config')();
 const DB_TABLES = require('../config/db_tables_config')();
-const TABLE = DB_TABLES.exhibits.user_records;
+const TABLE = DB_TABLES.exhibits; // .user_records
 const AUTH = require('../auth/tasks/auth_tasks');
 const AUTH_TASKS = new AUTH(DB, TABLE);
 const LOGGER = require('../libs/log4');
 
 /**
  * Checks user permission
- * @param req
- * @param actions
- * @param owner
+ * @param options
+ * req, permissions, record_type
  */
-exports.check_permission = async function (req, actions, owner) {
+exports.check_permission = async function (options) {
 
     try {
-        console.log('owner ', owner);
+
+        const req = options.req;
+        const actions = options.permissions;
+        const record_type = options.record_type;
+        const uuid = options.uuid;
+
         let user_role_permissions = [];
         let token = req.headers['x-access-token'];
 
@@ -88,13 +92,15 @@ exports.check_permission = async function (req, actions, owner) {
                 permissions.push(user_has_permission[i].permission);
             }
 
-            console.log(permissions);
-            console.log(actions);
-            console.log(owner);
-            console.log(user_id);
+            console.log('permissions ', permissions);
+            console.log('actions ', actions);
+            console.log('user id ', user_id);
 
             if (permissions.length !== actions.length) {
-                if (owner !== user_id) {
+
+                let record_owner = await AUTH_TASKS.check_ownership(user_id, uuid, record_type);
+
+                if (parseInt(user_id) !== parseInt(record_owner)) {
                     return false;
                 }
             }
@@ -113,9 +119,45 @@ exports.check_permission = async function (req, actions, owner) {
 /**
  * Checks ownership of asset
  * @param user_id
- * @param type
+ * @param record_type
  */
-exports.check_ownership = function (user_id, type) {
+/*
+const check_ownership = function (user_id, record_type) {
+
     console.log(user_id);
-    console.log(type);
+    console.log(record_type);
+
+    if (record_type === 'exhibit') {
+
+    }
+
+    if (record_type === 'standard_item') {
+
+    }
+
+    if (record_type === 'heading_item') {
+
+    }
+
+    if (record_type === 'grid') {
+
+    }
+
+    if (record_type === 'grid_item') {
+
+    }
+
+    if (record_type === 'timeline') {
+
+    }
+
+    if (record_type === 'timeline_item') {
+
+    }
+
+    return true;
 };
+
+exports.check_ownership = check_ownership;
+
+ */

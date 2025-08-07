@@ -36,9 +36,14 @@ exports.create_exhibit_record = async function (req, res) {
             return false;
         }
 
-        const owner = data.exhibit_owner;
         const permissions = ['add_exhibit'];
-        const is_authorized = await AUTHORIZE.check_permission(req, permissions, owner);
+        let options = {};
+        options.req = req;
+        options.permissions = permissions;
+        options.record_type = 'exhibit';
+        options.uuid = 'none';
+
+        const is_authorized = await AUTHORIZE.check_permission(options);
 
         if (is_authorized === false) {
             res.status(403).send({
@@ -117,11 +122,14 @@ exports.update_exhibit_record = async function (req, res) {
             return false;
         }
 
-        const owner = data.exhibit_owner;
-        delete data.exhibit_owner;
-
         const permissions = ['update_exhibit', 'update_any_exhibit'];
-        const is_authorized = await AUTHORIZE.check_permission(req, permissions, owner);
+        let options = {};
+        options.req = req;
+        options.permissions = permissions;
+        options.record_type = 'exhibit';
+        options.uuid = uuid;
+
+        const is_authorized = await AUTHORIZE.check_permission(options);
 
         if (is_authorized === false) {
             res.status(403).send({
@@ -151,7 +159,13 @@ exports.delete_exhibit_record = async function (req, res) {
         }
 
         const permissions = ['delete_exhibit', 'delete_any_exhibit'];
-        const is_authorized = await AUTHORIZE.check_permission(req, permissions);
+        let options = {};
+        options.req = req;
+        options.permissions = permissions;
+        options.record_type = 'exhibit';
+        options.uuid = uuid;
+
+        const is_authorized = await AUTHORIZE.check_permission(options);
 
         if (is_authorized === false) {
             res.status(403).send({
@@ -306,6 +320,23 @@ exports.publish_exhibit = async function (req, res) {
 
         if (uuid === undefined || uuid.length === 0) {
             res.status(400).send('Bad request.');
+            return false;
+        }
+
+        const permissions = ['publish_exhibit', 'publish_any_exhibit'];
+        let options = {};
+        options.req = req;
+        options.permissions = permissions;
+        options.record_type = 'exhibit';
+        options.uuid = uuid;
+
+        const is_authorized = await AUTHORIZE.check_permission(options);
+
+        if (is_authorized === false) {
+            res.status(403).send({
+                message: 'Unauthorized request'
+            });
+
             return false;
         }
 

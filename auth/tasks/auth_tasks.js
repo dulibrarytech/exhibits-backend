@@ -39,7 +39,7 @@ const Auth_tasks = class {
 
         try {
 
-            const data = await this.DB(this.TABLE)
+            const data = await this.DB(this.TABLE.user_records)
                 .select('id')
                 .where({
                     du_id: username,
@@ -74,7 +74,7 @@ const Auth_tasks = class {
 
         try {
 
-            const data = await this.DB(this.TABLE)
+            const data = await this.DB(this.TABLE.user_records)
                 .select('id', 'du_id', 'email', 'first_name', 'last_name')
                 .where({
                     id: id,
@@ -105,7 +105,7 @@ const Auth_tasks = class {
 
         try {
 
-            await this.DB(this.TABLE)
+            await this.DB(this.TABLE.user_records)
                 .where({
                     id: user_id
                 })
@@ -122,11 +122,15 @@ const Auth_tasks = class {
         }
     }
 
+    /**
+     * Gets user id
+     * @param token
+     */
     async get_user_id(token) {
 
         try {
 
-            const data = await this.DB(this.TABLE)
+            const data = await this.DB(this.TABLE.user_records)
                 .select('id')
                 .where({
                     token: token
@@ -139,6 +143,10 @@ const Auth_tasks = class {
         }
     }
 
+    /**
+     * Gets user permissions
+     * @param token
+     */
     async get_user_permissions(token) {
 
         try {
@@ -157,22 +165,71 @@ const Auth_tasks = class {
         }
     }
 
-    // TODO
+    /**
+      Gets all role permissions
+     */
     async get_permissions() {
 
         try {
 
             return await this.DB('tbl_user_permissions')
                 .select('id', 'permission');
-            /*
-            .where({
-                type: permission_type
-            });
-
-             */
 
         } catch (error) {
-            LOGGER.module().error('ERROR: [/auth/tasks (get_role_permissions)] unable to get role permissions ' + error.message);
+            LOGGER.module().error('ERROR: [/auth/tasks (get_permissions)] unable to get permissions ' + error.message);
+        }
+    }
+
+    /**
+     * Checks record ownership
+     * @param user_id
+     * @param uuid
+     * @param record_type
+     */
+    async check_ownership(user_id, uuid, record_type) {
+
+        try {
+
+            let table;
+
+            if (record_type === 'exhibit') {
+                table = this.TABLE.exhibit_records;
+            }
+
+            if (record_type === 'standard_item') {
+                table = this.TABLE.item_records;
+            }
+
+            if (record_type === 'heading_item') {
+                table = this.TABLE.heading_records;
+            }
+
+            if (record_type === 'grid') {
+                table = this.TABLE.grid_records;
+            }
+
+            if (record_type === 'grid_item') {
+                table = this.TABLE.grid_item_records;
+            }
+
+            if (record_type === 'timeline') {
+                table = this.TABLE.timeline_records;
+            }
+
+            if (record_type === 'timeline_item') {
+                table = this.TABLE.timeline_item_records;
+            }
+
+            const data = await this.DB(table)
+                .select('owner')
+                .where({
+                uuid: uuid
+            });
+
+            return data[0].owner;
+
+        } catch (error) {
+            LOGGER.module().error('ERROR: [/auth/tasks (check_ownership)] unable to check ownership ' + error.message);
         }
     }
 };
