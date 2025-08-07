@@ -334,15 +334,7 @@ const exhibitsModule = (function () {
             return false;
 
         } catch (error) {
-            scrollTo(0, 0);
             document.querySelector('#message').innerHTML = `<div class="alert alert-danger" role="alert"><i class="fa fa-exclamation"></i> ${error.message}</div>`;
-
-            /*
-            setTimeout(() => {
-                document.querySelector('#message').innerHTML = '';
-            }, 5000);
-
-             */
         }
     }
 
