@@ -75,11 +75,9 @@ const exhibitsAddFormModule = (function () {
                 document.querySelector('#message').innerHTML = `<div class="alert alert-danger" role="alert"><i class="fa fa-exclamation"></i> Unable to retrieve your name</div>`;
                 return false;
             }
-            console.log(user.name);
-            console.log(data);
+
             data.created_by = user.name;
-            console.log(data.created_by);
-            data.exhibit_owner = parseInt(user.uid);
+            data.owner = parseInt(user.uid);
 
             response = await httpModule.req({
                 method: 'POST',
