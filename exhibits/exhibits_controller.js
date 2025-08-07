@@ -374,6 +374,23 @@ exports.suppress_exhibit = async function (req, res) {
             return false;
         }
 
+        const permissions = ['suppress_exhibit', 'suppress_any_exhibit'];
+        let options = {};
+        options.req = req;
+        options.permissions = permissions;
+        options.record_type = 'exhibit';
+        options.uuid = uuid;
+
+        const is_authorized = await AUTHORIZE.check_permission(options);
+
+        if (is_authorized === false) {
+            res.status(403).send({
+                message: 'Unauthorized request'
+            });
+
+            return false;
+        }
+
         const result = await EXHIBITS_MODEL.suppress_exhibit(uuid);
 
         if (result.status === true) {
