@@ -334,10 +334,9 @@ const exhibitsModule = (function () {
             return false;
 
         } catch (error) {
-            console.log(error);
+            scrollTo(0, 0);
             document.querySelector('#message').innerHTML = `<div class="alert alert-danger" role="alert"><i class="fa fa-exclamation"></i> ${error.message}</div>`;
 
-            // document.querySelector('#message').innerHTML = `<div class="alert alert-danger" role="alert"><i class="fa fa-exclamation"></i> An error occurred while publishing exhibit</div>`;
             /*
             setTimeout(() => {
                 document.querySelector('#message').innerHTML = '';
