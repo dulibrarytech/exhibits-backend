@@ -140,7 +140,7 @@ const authModule = (function () {
         }
     };
 
-    obj.check_permissions = async function (permissions, record_type, uuid) {
+    obj.check_permissions = async function (permissions, record_type, uuid, redirect) {
 
         try {
 
@@ -168,14 +168,16 @@ const authModule = (function () {
                 },
                 data: data
             });
-
-            if (response === undefined) {
+            console.log('permission resposne ', response);
+            if (response === undefined && redirect === undefined) {
                 window.location.replace(APP_PATH + '/access-denied');
-                // document.querySelector('#message').innerHTML = `<div class="alert alert-danger" role="alert"><i class="fa fa-exclamation"></i> You do not have permission to perform this action.</div>`;
+            } else if (response === undefined && redirect !== undefined) {
+                window.location.replace(APP_PATH + redirect);
+            } else if (response !== undefined && response.status === 200) {
+                console.log('Authorized');
             }
 
         } catch (error) {
-            console.log('ERROR ', error);
             document.querySelector('#message').innerHTML = `<div class="alert alert-danger" role="alert"><i class="fa fa-exclamation"></i> ${error.message}</div>`;
         }
     };

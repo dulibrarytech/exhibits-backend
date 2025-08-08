@@ -413,7 +413,9 @@ const exhibitsEditFormModule = (function () {
         try {
 
             const uuid = helperModule.get_parameter_by_name('exhibit_id');
-            authModule.check_permissions(['update_exhibit', 'update_any_exhibit'], 'exhibit', uuid);
+            const redirect = '/exhibits/exhibit/details?exhibit_id=' + uuid + '&status=403';
+            await authModule.check_permissions(['update_exhibit', 'update_any_exhibit'], 'exhibit', uuid, redirect);
+
             navModule.back_to_exhibits();
             document.querySelector('#save-exhibit-btn').addEventListener('click', exhibitsEditFormModule.update_exhibit_record);
 

@@ -323,8 +323,17 @@ const exhibitsModule = (function () {
             }
 
             if (response !== undefined && response.status === 204) {
+
                 scrollTo(0, 0);
                 document.querySelector('#message').innerHTML = `<div class="alert alert-warning" role="alert"><i class="fa fa-warning"></i> Exhibit must contain at least one item to publish</div>`;
+
+                setTimeout(() => {
+                    document.querySelector('#message').innerHTML = '';
+                }, 5000);
+
+            } else if (response === undefined) {
+                scrollTo(0, 0);
+                document.querySelector('#message').innerHTML = `<div class="alert alert-danger" role="alert"><i class="fa fa-danger"></i> You do not have permission to publish this record.</div>`;
 
                 setTimeout(() => {
                     document.querySelector('#message').innerHTML = '';
@@ -353,7 +362,7 @@ const exhibitsModule = (function () {
                 }
             });
 
-            if (response.status === 200) {
+            if (response !== undefined && response.status === 200) {
 
                 setTimeout(() => {
                     let elem = document.getElementById(uuid);
@@ -381,6 +390,14 @@ const exhibitsModule = (function () {
                         ${exhibit_edit}&nbsp;
                         ${trash}`;
                 }, 0);
+
+            } else if (response === undefined) {
+                scrollTo(0, 0);
+                document.querySelector('#message').innerHTML = `<div class="alert alert-danger" role="alert"><i class="fa fa-danger"></i> You do not have permission to unplublish this record.</div>`;
+
+                setTimeout(() => {
+                    document.querySelector('#message').innerHTML = '';
+                }, 3000)
             }
 
             return false;
