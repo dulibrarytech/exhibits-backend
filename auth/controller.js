@@ -22,6 +22,7 @@ const CONFIG = require('../config/webservices_config')();
 const TOKEN = require('../libs/tokens');
 const MODEL = require('../auth/model');
 const LOGGER = require('../libs/log4');
+const AUTHORIZE = require("./authorize");
 const APP_PATH = '/exhibits-dashboard';
 
 exports.get_auth_landing = function (req, res) {
@@ -82,5 +83,35 @@ exports.get_auth_user_data = async function (req, res) {
 
     } catch (error) {
         LOGGER.module().error('ERROR: [/auth/controller (get_auth_user_data)] unable to get user auth data ' + error.message);
+    }
+};
+
+exports.check_permissions = async function (req, res) {
+
+    try {
+
+        const permissions = req.body.permissions;
+        const record_type = req.body.record_type;
+        const uuid = req.body.uuid;
+        const options = {};
+        options.req = req;
+        options.permissions = permissions;
+        options.record_type = record_type;
+        options.uuid = uuid;
+
+        const is_authorized = await AUTHORIZE.check_permission(options);
+
+        if (is_authorized === false) {
+            res.status(403).send({
+                message: 'Unauthorized request'
+            });
+
+            return false;
+        } else {
+            res.status(200).send({})
+        }
+
+    } catch (error) {
+        LOGGER.module().error('ERROR: [/auth/controller (check_permissions)] unable to check permissions ' + error.message);
     }
 };

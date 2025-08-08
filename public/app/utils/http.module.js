@@ -30,12 +30,16 @@ const httpModule = (function() {
 
             if (error.response.status === 401) {
                 authModule.redirect_to_auth();
-            } else if (error.response.status === 403) {
+            } else if (error.response.status === 103) {
                 scrollTo(0, 0);
-                document.querySelector('#message').innerHTML = `<div class="alert alert-danger" role="alert"><i class="fa fa-exclamation"></i> You have insufficient permissions to perform this action</div>`;
-            } else {
+                document.querySelector('#message').innerHTML = `<div class="alert alert-danger" role="alert"><i class="fa fa-exclamation"></i> You do no have permission to perform this action</div>`;
+            }
+            /*
+            else {
                 document.querySelector('#message').innerHTML = `<div class="alert alert-danger" role="alert"><i class="fa fa-exclamation"></i> ${error.message}</div>`;
             }
+
+             */
         }
     };
 

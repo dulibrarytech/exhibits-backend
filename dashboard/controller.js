@@ -232,6 +232,10 @@ exports.get_dashboard_users_delete_form = function (req, res) {
     res.render('dist/users/dashboard-delete-user-form', template_config);
 };
 
+exports.get_dashboard_access_denied = function (req, res) {
+    res.render('dist/dashboard-access-denied', template_config);
+};
+
 exports.get_dashboard_recycle = function (req, res) {
     res.render('dist/dashboard-recycle', template_config);
 };

@@ -167,6 +167,9 @@ module.exports = function (app) {
     app.route(APP_PATH + '/logout')
         .get(CONTROLLER.get_dashboard_logout);
 
+    app.route(APP_PATH + '/access-denied')
+        .get(CONTROLLER.get_dashboard_access_denied);
+
     app.route(APP_PATH + '/recycle')
         .get(CONTROLLER.get_dashboard_recycle);
 };

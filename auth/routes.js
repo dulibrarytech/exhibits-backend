@@ -25,14 +25,17 @@ const TOKENS = require('../libs/tokens');
 module.exports = function (app) {
 
     app.route('/exhibits-dashboard/auth')
-    .get(CONTROLLER.get_auth_landing);
+        .get(CONTROLLER.get_auth_landing);
 
     app.route('/exhibits-dashboard/auth/login')
-    .get(TOKENS.verify);
+        .get(TOKENS.verify);
 
     app.route('/exhibits-dashboard/auth/sso')
-    .post(CONTROLLER.sso);
+        .post(CONTROLLER.sso);
+
+    app.route('/exhibits-dashboard/auth/permissions')
+        .post(TOKENS.verify, CONTROLLER.check_permissions);
 
     app.route(ENDPOINTS().auth.authentication.endpoint)
-    .get(TOKENS.verify, CONTROLLER.get_auth_user_data);
+        .get(TOKENS.verify, CONTROLLER.get_auth_user_data);
 };

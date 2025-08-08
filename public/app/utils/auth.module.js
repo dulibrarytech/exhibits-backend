@@ -140,7 +140,7 @@ const authModule = (function () {
         }
     };
 
-    obj.check_permission = async function (type) {
+    obj.check_permissions = async function (permissions, record_type, uuid) {
 
         try {
 
@@ -152,27 +152,30 @@ const authModule = (function () {
                 return false;
             }
 
-            const EXHIBITS_ENDPOINTS = endpointsModule.get_exhibits_endpoints();
+            let data = {
+                permissions: permissions,
+                record_type: record_type,
+                uuid: uuid
+            };
+
+            const EXHIBITS_ENDPOINTS = '/exhibits-dashboard/auth/permissions';
             const response = await httpModule.req({
                 method: 'POST',
-                url: EXHIBITS_ENDPOINTS.exhibits.token_verify.endpoint,
+                url: EXHIBITS_ENDPOINTS,
                 headers: {
                     'Content-Type': 'application/json',
                     'x-access-token': token
                 },
-                data: type
+                data: data
             });
 
-            console.log('response ', response);
-            // TODO: handle response
-            /*
             if (response === undefined) {
-                window.location.replace(APP_PATH + '/session');
+                window.location.replace(APP_PATH + '/access-denied');
+                // document.querySelector('#message').innerHTML = `<div class="alert alert-danger" role="alert"><i class="fa fa-exclamation"></i> You do not have permission to perform this action.</div>`;
             }
 
-             */
-
         } catch (error) {
+            console.log('ERROR ', error);
             document.querySelector('#message').innerHTML = `<div class="alert alert-danger" role="alert"><i class="fa fa-exclamation"></i> ${error.message}</div>`;
         }
     };
