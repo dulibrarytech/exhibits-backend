@@ -92,10 +92,6 @@ exports.check_permission = async function (options) {
                 permissions.push(user_has_permission[i].permission);
             }
 
-            console.log('permissions ', permissions);
-            console.log('actions ', actions);
-            console.log('user id ', user_id);
-
             if (permissions.length !== actions.length) {
 
                 let record_owner = await AUTH_TASKS.check_ownership(user_id, uuid, record_type);

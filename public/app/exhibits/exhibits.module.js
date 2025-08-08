@@ -263,9 +263,10 @@ const exhibitsModule = (function () {
                         window.location.replace(APP_PATH + '/exhibits');
                     }, 900);
 
-                } else {
-                    document.querySelector('#delete-message').innerHTML = '';
-                    document.querySelector('#exhibit-no-delete').innerHTML = `<i class="fa fa-exclamation"></i> ${response.data.message}`;
+                } else if (response === undefined) {
+                    scrollTo(0, 0);
+                    document.querySelector('#delete-card').innerHTML = '';
+                    document.querySelector('#message').innerHTML = `<div class="alert alert-danger" role="alert"><i class="fa fa-exclamation"></i> You do not have permission to delete this record.</div>`;
                 }
 
             })();
