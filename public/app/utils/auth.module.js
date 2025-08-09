@@ -168,7 +168,7 @@ const authModule = (function () {
                 },
                 data: data
             });
-            console.log('permission response ', response);
+
             if (response === undefined && redirect === undefined) {
                 window.location.replace(APP_PATH + '/access-denied');
             } else if (response === undefined && redirect !== undefined) {
