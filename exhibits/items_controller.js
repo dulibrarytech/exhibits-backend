@@ -26,6 +26,7 @@ const TIMELINES_MODEL = require('../exhibits/timelines_model');
 const FS = require('fs');
 const EXHIBITS_MODEL = require("./exhibits_model");
 const LOGGER = require("../libs/log4");
+const AUTHORIZE = require("../auth/authorize");
 
 exports.create_item_record = async function (req, res) {
 
@@ -131,9 +132,51 @@ exports.delete_item_record = async function (req, res) {
         const is_member_of_exhibit = req.params.exhibit_id;
         const item_id = req.params.item_id;
         const type = req.query.type;
+        let record_type;
 
         if (item_id === undefined || item_id.length === 0 && is_member_of_exhibit === undefined || is_member_of_exhibit.length === 0) {
             res.status(400).send('Bad request.');
+            return false;
+        }
+
+        if (type === 'heading') {
+            record_type = 'heading_item';
+        }
+
+        if (type === 'item') {
+            record_type = 'standard_item';
+        }
+
+        if (type === 'grid') {
+            record_type = 'grid';
+        }
+
+        if (type === 'grid_item') {
+            record_type = 'grid_item';
+        }
+
+        if (type === 'timeline') {
+            record_type = 'timeline';
+        }
+
+        if (type === 'timeline_item') {
+            record_type = 'timeline_item';
+        }
+
+        const permissions = ['delete_item', 'delete_any_item'];
+        let options = {};
+        options.req = req;
+        options.permissions = permissions;
+        options.record_type = record_type;
+        options.uuid = is_member_of_exhibit;
+        console.log(permissions);
+        const is_authorized = await AUTHORIZE.check_permission(options);
+        console.log(is_authorized);
+        if (is_authorized === false) {
+            res.status(403).send({
+                message: 'Unauthorized request'
+            });
+
             return false;
         }
 

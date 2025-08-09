@@ -199,7 +199,32 @@ const Auth_tasks = class {
             }
 
             if (record_type === 'standard_item') {
+
                 table = this.TABLE.item_records;
+
+                const exhibit_data = await this.DB(this.TABLE.exhibit_records)
+                    .select('owner')
+                    .where({
+                        uuid: uuid
+                    });
+
+                const standard_item_data = await this.DB(table)
+                    .select('owner')
+                    .where({
+                        owner: exhibit_data[0].owner
+                    });
+
+                if (standard_item_data.length > 0) {
+
+                    if (standard_item_data[0].owner === exhibit_data[0].owner) {
+                        return standard_item_data[0].owner;
+                    } else if (standard_item_data[0].owner !== exhibit_data[0].owner) {
+                        return exhibit_data[0].owner;
+                    }
+
+                } else if (standard_item_data.length === 0) {
+                    return exhibit_data[0].owner;
+                }
             }
 
             if (record_type === 'heading_item') {

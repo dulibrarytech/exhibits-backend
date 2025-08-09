@@ -149,6 +149,10 @@ const itemsModule = (function () {
                 setTimeout(() => {
                     window.location.replace(APP_PATH + '/items?exhibit_id=' + exhibit_id);
                 }, 900);
+            } else if (response === undefined) {
+                scrollTo(0, 0);
+                document.querySelector('#delete-card').innerHTML = '';
+                document.querySelector('#message').innerHTML = `<div class="alert alert-danger" role="alert"><i class="fa fa-exclamation"></i> You do not have permission to delete this record.</div>`;
             }
 
 
