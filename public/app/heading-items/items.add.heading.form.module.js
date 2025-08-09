@@ -37,9 +37,11 @@ const itemsAddHeadingFormModule = (function () {
             }
 
             document.querySelector('#message').innerHTML = `<div class="alert alert-info" role="alert"><i class="fa fa-info"></i> Creating item heading record...</div>`;
+
             let data = itemsCommonHeadingFormModule.get_common_heading_form_fields();
 
-            if (data === false) {
+            if (data === false || data === undefined) {
+                document.querySelector('#message').innerHTML = `<div class="alert alert-danger" role="alert"><i class="fa fa-info"></i> Heading item data could not be created</div>`;
                 return false;
             }
 
@@ -51,6 +53,7 @@ const itemsAddHeadingFormModule = (function () {
             }
 
             data.created_by = user.name;
+            data.owner = parseInt(user.uid);
 
             let token = authModule.get_user_token();
             let response = await httpModule.req({
@@ -70,6 +73,8 @@ const itemsAddHeadingFormModule = (function () {
                 setTimeout(() => {
                     window.location.replace(`${APP_PATH}/items/heading/edit?exhibit_id=${exhibit_id}&item_id=${response.data.data}`);
                 }, 900);
+            } else if (response === undefined) {
+                document.querySelector('#message').innerHTML = `<div class="alert alert-danger" role="alert"><i class="fa fa-exclamation"></i> You do not have permission to add item to this exhibit.</div>`;
             }
 
         } catch (error) {
@@ -77,9 +82,13 @@ const itemsAddHeadingFormModule = (function () {
         }
     };
 
-    obj.init = function () {
+    obj.init = async function () {
 
-        const exhibit_id = helperModule.get_parameter_by_name('exhibit_id');
+        const uuid = helperModule.get_parameter_by_name('exhibit_id');
+        const redirect = '/items?exhibit_id=' + uuid + '&status=403';
+        await authModule.check_permissions(['add_item', 'add_item_to_any_exhibit'], 'heading_item', uuid, redirect);
+
+        // const exhibit_id = helperModule.get_parameter_by_name('exhibit_id');
         exhibitsModule.set_exhibit_title(exhibit_id);
         document.querySelector('#save-heading-btn').addEventListener('click', itemsAddHeadingFormModule.create_heading_record);
     };

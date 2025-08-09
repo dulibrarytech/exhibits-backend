@@ -189,7 +189,9 @@ const Auth_tasks = class {
     async check_ownership(user_id, uuid, record_type) {
 
         try {
-
+            console.log(user_id);
+            console.log(uuid);
+            console.log(record_type);
             let table;
 
             if (record_type === 'exhibit') {
@@ -201,7 +203,32 @@ const Auth_tasks = class {
             }
 
             if (record_type === 'heading_item') {
+
                 table = this.TABLE.heading_records;
+
+                const exhibit_data = await this.DB(this.TABLE.exhibit_records)
+                    .select('owner')
+                    .where({
+                        uuid: uuid
+                    });
+
+                const heading_data = await this.DB(table)
+                    .select('owner')
+                    .where({
+                        owner: exhibit_data[0].owner
+                    });
+
+                if (heading_data.length > 0) {
+
+                    if (heading_data[0].owner === exhibit_data[0].owner) {
+                        return heading_data[0].owner;
+                    } else if (heading_data[0].owner !== exhibit_data[0].owner) {
+                        return exhibit_data[0].owner;
+                    }
+
+                } else if (heading_data.length === 0) {
+                    return exhibit_data[0].owner;
+                }
             }
 
             if (record_type === 'grid') {

@@ -2,23 +2,30 @@
 <body>
 <aside id="left-panel" class="left-panel">
     <nav class="navbar navbar-expand-sm navbar-default">
-        <div id="main-menu" class="main-menu collapse navbar-collapse">
+        <div id="main-menu" class="main-menu">
             <ul class="nav navbar-nav">
                 <li class="active">
-                    <a href="/exhibits-dashboard/exhibits"><i class="menu-icon fa fa-home"></i>Exhibits Home </a>
-                </li>
-                <li class="menu-title">Menu</li>
-                <li>
-                    <a href="/exhibits-dashboard/exhibits/exhibit" data-keyboard="false">
-                        <i class="menu-icon ti-layout"></i>Add Exhibit</a>
-                </li>
-                <li>
-                    <a href="/exhibits-dashboard/users" data-keyboard="false">
-                        <i class=" menu-icon fa fa-users"></i>Users
+                    <a href="/exhibits-dashboard/exhibits">
+                        <i class="menu-icon fa fa-home"></i>Exhibits Home
                     </a>
                 </li>
+                <li class="menu-title">Menu</li>
+            </ul>
+            <ul class="nav navbar-nav">
+                <li id="preview-link"></li>
+            </ul>
+            <ul class="nav navbar-nav">
                 <li>
-                    <a href="#" id="logout"> <i class="menu-icon fa fa-sign-out"></i>Logout</a>
+                    <a id="back-to-items" href="#" data-keyboard="false">
+                        <i class=" menu-icon fa fa-arrow-left"></i>Back to Exhibit Items</a>
+                </li>
+            </ul>
+            <ul id="items-menu" class="nav navbar-nav"></ul>
+            <ul class="nav navbar-nav">
+                <li>
+                    <a href="#" id="logout" data-keyboard="false">
+                        <i class="menu-icon fa fa-sign-out"></i>Logout
+                    </a>
                 </li>
             </ul>
         </div>
@@ -49,5 +56,10 @@
         </div>
     </div>
 </div>
+<script src="/exhibits-dashboard/static/app/dist/nav.module.min.js?<%=build_version%>"></script>
+<script>
+    navModule.back_to_exhibits();
+    navModule.back_to_items();
+</script>
 </body>
 </html>

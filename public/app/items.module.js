@@ -410,12 +410,27 @@ const itemsModule = (function () {
 
         try {
 
+            const exhibit_id = helperModule.get_parameter_by_name('exhibit_id');
+            const status = helperModule.get_parameter_by_name('status');
+
+            if (status !== null && status === '403') {
+
+                document.querySelector('#message').innerHTML = `<div class="alert alert-danger" role="alert"><i class="fa fa-exclamation"></i> You do not have permission to add item.</div>`;
+
+                setTimeout(() => {
+                    window.history.replaceState({page: 'items'}, '', '/exhibits-dashboard/items?exhibit_id=' + exhibit_id);
+                }, 0);
+
+                setTimeout(() => {
+                    document.querySelector('#message').innerHTML = '';
+                }, 3000);
+            }
+
             (async function () {
                 const token = authModule.get_user_token();
                 await authModule.check_auth(token);
             })();
 
-            const exhibit_id = helperModule.get_parameter_by_name('exhibit_id');
             exhibitsModule.set_exhibit_title(exhibit_id);
             itemsModule.display_items();
             helperModule.show_form();

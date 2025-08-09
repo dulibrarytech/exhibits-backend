@@ -19,7 +19,7 @@
 'use strict';
 
 const HEADINGS_MODEL = require('../exhibits/headings_model');
-const EXHIBITS_MODEL = require("./exhibits_model");
+const AUTHORIZE = require("../auth/authorize");
 
 exports.create_heading_record = async function (req, res) {
 
@@ -30,6 +30,23 @@ exports.create_heading_record = async function (req, res) {
 
         if (data === undefined || is_member_of_exhibit === undefined) {
             res.status(400).send('Bad request.');
+            return false;
+        }
+
+        const permissions = ['add_item', 'add_item_to_any_exhibit'];
+        let options = {};
+        options.req = req;
+        options.permissions = permissions;
+        options.record_type = 'heading_item';
+        options.uuid = is_member_of_exhibit;
+
+        const is_authorized = await AUTHORIZE.check_permission(options);
+
+        if (is_authorized === false) {
+            res.status(403).send({
+                message: 'Unauthorized request'
+            });
+
             return false;
         }
 
