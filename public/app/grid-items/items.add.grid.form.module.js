@@ -73,6 +73,8 @@ const itemsAddGridFormModule = (function () {
                 setTimeout(() => {
                     location.replace(`${APP_PATH}/items/grid/edit?exhibit_id=${exhibit_id}&item_id=${grid_id}`);
                 }, 900);
+            } else if (response === undefined) {
+                document.querySelector('#message').innerHTML = `<div class="alert alert-danger" role="alert"><i class="fa fa-exclamation"></i> You do not have permission to add item to this exhibit.</div>`;
             }
 
         } catch (error) {
@@ -81,7 +83,11 @@ const itemsAddGridFormModule = (function () {
     };
 
     obj.init = async function () {
+
         const exhibit_id = helperModule.get_parameter_by_name('exhibit_id');
+        const redirect = '/items?exhibit_id=' + exhibit_id + '&status=403';
+        await authModule.check_permissions(['add_item', 'add_item_to_any_exhibit'], 'grid', exhibit_id, redirect);
+
         exhibitsModule.set_exhibit_title(exhibit_id);
         document.querySelector('#save-item-btn').addEventListener('click', itemsAddGridFormModule.create_grid_record);
 

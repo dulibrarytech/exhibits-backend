@@ -169,9 +169,9 @@ exports.delete_item_record = async function (req, res) {
         options.permissions = permissions;
         options.record_type = record_type;
         options.uuid = is_member_of_exhibit;
-        console.log(permissions);
+
         const is_authorized = await AUTHORIZE.check_permission(options);
-        console.log(is_authorized);
+
         if (is_authorized === false) {
             res.status(403).send({
                 message: 'Unauthorized request'

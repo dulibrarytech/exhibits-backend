@@ -189,11 +189,15 @@ const Auth_tasks = class {
     async check_ownership(user_id, uuid, record_type) {
 
         try {
-            console.log(user_id);
-            console.log(uuid);
-            console.log(record_type);
-            let table;
 
+            let table;
+            const exhibit_data = await this.DB(this.TABLE.exhibit_records)
+                .select('owner')
+                .where({
+                    uuid: uuid
+                });
+
+            // TODO: remove
             if (record_type === 'exhibit') {
                 table = this.TABLE.exhibit_records;
             }
@@ -201,12 +205,6 @@ const Auth_tasks = class {
             if (record_type === 'standard_item') {
 
                 table = this.TABLE.item_records;
-
-                const exhibit_data = await this.DB(this.TABLE.exhibit_records)
-                    .select('owner')
-                    .where({
-                        uuid: uuid
-                    });
 
                 const standard_item_data = await this.DB(table)
                     .select('owner')
@@ -231,12 +229,6 @@ const Auth_tasks = class {
 
                 table = this.TABLE.heading_records;
 
-                const exhibit_data = await this.DB(this.TABLE.exhibit_records)
-                    .select('owner')
-                    .where({
-                        uuid: uuid
-                    });
-
                 const heading_data = await this.DB(table)
                     .select('owner')
                     .where({
@@ -257,7 +249,26 @@ const Auth_tasks = class {
             }
 
             if (record_type === 'grid') {
+
                 table = this.TABLE.grid_records;
+
+                const grid_data = await this.DB(table)
+                    .select('owner')
+                    .where({
+                        owner: exhibit_data[0].owner
+                    });
+
+                if (grid_data.length > 0) {
+
+                    if (grid_data[0].owner === exhibit_data[0].owner) {
+                        return grid_data[0].owner;
+                    } else if (grid_data[0].owner !== exhibit_data[0].owner) {
+                        return exhibit_data[0].owner;
+                    }
+
+                } else if (grid_data.length === 0) {
+                    return exhibit_data[0].owner;
+                }
             }
 
             if (record_type === 'grid_item') {
@@ -272,6 +283,11 @@ const Auth_tasks = class {
                 table = this.TABLE.timeline_item_records;
             }
 
+            if (exhibit_data.length > 0) {
+                return exhibit_data[0].owner;
+            }
+
+            /*
             const data = await this.DB(table)
                 .select('owner')
                 .where({
@@ -279,6 +295,7 @@ const Auth_tasks = class {
             });
 
             return data[0].owner;
+             */
 
         } catch (error) {
             LOGGER.module().error('ERROR: [/auth/tasks (check_ownership)] unable to check ownership ' + error.message);
