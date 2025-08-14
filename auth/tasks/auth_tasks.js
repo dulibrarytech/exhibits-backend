@@ -276,7 +276,26 @@ const Auth_tasks = class {
             }
 
             if (record_type === 'timeline') {
+
                 table = this.TABLE.timeline_records;
+
+                const timeline_data = await this.DB(table)
+                    .select('owner')
+                    .where({
+                        owner: exhibit_data[0].owner
+                    });
+
+                if (timeline_data.length > 0) {
+
+                    if (timeline_data[0].owner === exhibit_data[0].owner) {
+                        return timeline_data[0].owner;
+                    } else if (timeline_data[0].owner !== exhibit_data[0].owner) {
+                        return exhibit_data[0].owner;
+                    }
+
+                } else if (timeline_data.length === 0) {
+                    return exhibit_data[0].owner;
+                }
             }
 
             if (record_type === 'timeline_item') {

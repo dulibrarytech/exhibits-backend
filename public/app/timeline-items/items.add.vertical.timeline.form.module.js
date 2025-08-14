@@ -71,11 +71,10 @@ const itemsAddVerticalTimelineFormModule = (function () {
                 const timeline_id = response.data.data;
                 console.log(timeline_id);
                 setTimeout(() => {
-                    // window.location.reload();
-                    // location.replace(`${APP_PATH}/items?exhibit_id=${exhibit_id}`);
-                    // /items/vertical-timeline/edit?exhibit_id=a6c9e125-ca19-4434-888d-977f60224c33&item_id=061eda2e-7d22-4e88-b1c3-860f90fc514e
                     window.location.replace(`${APP_PATH}/items/vertical-timeline/edit?exhibit_id=${exhibit_id}&item_id=${timeline_id}`);
                 }, 900);
+            } else if (response === undefined) {
+                document.querySelector('#message').innerHTML = `<div class="alert alert-danger" role="alert"><i class="fa fa-exclamation"></i> You do not have permission to add item to this exhibit.</div>`;
             }
 
         } catch (error) {
@@ -88,9 +87,10 @@ const itemsAddVerticalTimelineFormModule = (function () {
         try {
 
             const exhibit_id = helperModule.get_parameter_by_name('exhibit_id');
+            const redirect = '/items?exhibit_id=' + exhibit_id + '&status=403';
+            await authModule.check_permissions(['add_item', 'add_item_to_any_exhibit'], 'grid', exhibit_id, redirect);
+
             exhibitsModule.set_exhibit_title(exhibit_id);
-            // helperModule.set_rich_text_editor_config();
-            // set_rich_text_editors();
             document.querySelector('#save-timeline-btn').addEventListener('click', itemsAddVerticalTimelineFormModule.create_timeline_record);
 
         } catch (error) {
