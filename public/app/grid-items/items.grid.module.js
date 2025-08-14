@@ -361,13 +361,6 @@ const itemsGridModule = (function () {
                 setTimeout(() => {
                     document.querySelector('#message').innerHTML = `<div class="alert alert-danger" role="alert"><i class="fa fa-exclamation"></i> You do not have permission to add item.</div>`;
                 }, 50);
-
-                /*
-                setTimeout(() => {
-                    document.querySelector('#message').innerHTML = '';
-                }, 3000);
-
-                 */
             }
 
             const token = authModule.get_user_token();
