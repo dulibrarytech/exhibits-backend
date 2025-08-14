@@ -347,6 +347,29 @@ const itemsGridModule = (function () {
 
         try {
 
+            const status = helperModule.get_parameter_by_name('status');
+
+            if (status !== null && status === '403') {
+
+                const exhibit_id = helperModule.get_parameter_by_name('exhibit_id');
+                const grid_id = helperModule.get_parameter_by_name('grid_id');
+
+                setTimeout(() => {
+                    window.history.replaceState({page: 'items'}, '', '/exhibits-dashboard/items/grid/items?exhibit_id=' + exhibit_id + '&grid_id=' + grid_id);
+                }, 0);
+
+                setTimeout(() => {
+                    document.querySelector('#message').innerHTML = `<div class="alert alert-danger" role="alert"><i class="fa fa-exclamation"></i> You do not have permission to add item.</div>`;
+                }, 50);
+
+                /*
+                setTimeout(() => {
+                    document.querySelector('#message').innerHTML = '';
+                }, 3000);
+
+                 */
+            }
+
             const token = authModule.get_user_token();
             await authModule.check_auth(token);
 

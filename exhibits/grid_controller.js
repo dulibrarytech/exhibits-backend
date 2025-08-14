@@ -25,7 +25,7 @@ const AUTHORIZE = require("../auth/authorize");
 exports.create_grid_record = async function (req, res) {
 
     try {
-        console.log('Creating grid');
+
         const is_member_of_exhibit = req.params.exhibit_id;
         const data = req.body;
 
@@ -110,6 +110,23 @@ exports.create_grid_item_record = async function (req, res) {
 
         if (is_member_of_exhibit === undefined || grid_id === undefined || data === undefined) {
             res.status(400).send('Bad request.');
+            return false;
+        }
+
+        const permissions = ['add_item', 'add_item_to_any_exhibit'];
+        let options = {};
+        options.req = req;
+        options.permissions = permissions;
+        options.record_type = 'grid_item';
+        options.uuid = is_member_of_exhibit;
+
+        const is_authorized = await AUTHORIZE.check_permission(options);
+        console.log('is_authorized ', is_authorized);
+        if (is_authorized === false) {
+            res.status(403).send({
+                message: 'Unauthorized request'
+            });
+
             return false;
         }
 

@@ -113,6 +113,23 @@ exports.create_timeline_item_record = async function (req, res) {
             return false;
         }
 
+        const permissions = ['add_item', 'add_item_to_any_exhibit'];
+        let options = {};
+        options.req = req;
+        options.permissions = permissions;
+        options.record_type = 'grid_item';
+        options.uuid = is_member_of_exhibit;
+
+        const is_authorized = await AUTHORIZE.check_permission(options);
+        console.log('is_authorized ', is_authorized);
+        if (is_authorized === false) {
+            res.status(403).send({
+                message: 'Unauthorized request'
+            });
+
+            return false;
+        }
+
         const result = await TIMELINES_MODEL.create_timeline_item_record(is_member_of_exhibit, timeline_id, data);
         res.status(result.status).send(result);
 

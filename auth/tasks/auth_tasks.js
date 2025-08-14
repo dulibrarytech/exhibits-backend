@@ -197,11 +197,6 @@ const Auth_tasks = class {
                     uuid: uuid
                 });
 
-            // TODO: remove
-            if (record_type === 'exhibit') {
-                table = this.TABLE.exhibit_records;
-            }
-
             if (record_type === 'standard_item') {
 
                 table = this.TABLE.item_records;
@@ -272,7 +267,26 @@ const Auth_tasks = class {
             }
 
             if (record_type === 'grid_item') {
+
                 table = this.TABLE.grid_item_records;
+
+                const grid_item_data = await this.DB(table)
+                    .select('owner')
+                    .where({
+                        owner: exhibit_data[0].owner
+                    });
+
+                if (grid_item_data.length > 0) {
+
+                    if (grid_item_data[0].owner === exhibit_data[0].owner) {
+                        return grid_item_data[0].owner;
+                    } else if (grid_item_data[0].owner !== exhibit_data[0].owner) {
+                        return exhibit_data[0].owner;
+                    }
+
+                } else if (grid_item_data.length === 0) {
+                    return exhibit_data[0].owner;
+                }
             }
 
             if (record_type === 'timeline') {
@@ -299,22 +313,31 @@ const Auth_tasks = class {
             }
 
             if (record_type === 'timeline_item') {
+
                 table = this.TABLE.timeline_item_records;
+
+                const timeline_item_data = await this.DB(table)
+                    .select('owner')
+                    .where({
+                        owner: exhibit_data[0].owner
+                    });
+
+                if (timeline_item_data.length > 0) {
+
+                    if (timeline_item_data[0].owner === exhibit_data[0].owner) {
+                        return timeline_item_data[0].owner;
+                    } else if (timeline_item_data[0].owner !== exhibit_data[0].owner) {
+                        return exhibit_data[0].owner;
+                    }
+
+                } else if (timeline_item_data.length === 0) {
+                    return exhibit_data[0].owner;
+                }
             }
 
             if (exhibit_data.length > 0) {
                 return exhibit_data[0].owner;
             }
-
-            /*
-            const data = await this.DB(table)
-                .select('owner')
-                .where({
-                uuid: uuid
-            });
-
-            return data[0].owner;
-             */
 
         } catch (error) {
             LOGGER.module().error('ERROR: [/auth/tasks (check_ownership)] unable to check ownership ' + error.message);
