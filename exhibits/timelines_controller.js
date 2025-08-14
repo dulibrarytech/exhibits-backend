@@ -19,8 +19,8 @@
 'use strict';
 
 const TIMELINES_MODEL = require('../exhibits/timelines_model');
-const FS = require("fs");
-const AUTHORIZE = require("../auth/authorize");
+const FS = require('fs');
+const AUTHORIZE = require('../auth/authorize');
 
 exports.create_timeline_record = async function (req, res) {
 
@@ -117,7 +117,7 @@ exports.create_timeline_item_record = async function (req, res) {
         let options = {};
         options.req = req;
         options.permissions = permissions;
-        options.record_type = 'grid_item';
+        options.record_type = 'timeline_item';
         options.uuid = is_member_of_exhibit;
 
         const is_authorized = await AUTHORIZE.check_permission(options);

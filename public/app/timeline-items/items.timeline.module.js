@@ -347,24 +347,21 @@ const itemsTimelineModule = (function () {
 
         try {
 
-            /* TODO
-            const exhibit_id = helperModule.get_parameter_by_name('exhibit_id');
             const status = helperModule.get_parameter_by_name('status');
 
             if (status !== null && status === '403') {
 
-                document.querySelector('#message').innerHTML = `<div class="alert alert-danger" role="alert"><i class="fa fa-exclamation"></i> You do not have permission to add item.</div>`;
+                const exhibit_id = helperModule.get_parameter_by_name('exhibit_id');
+                const timeline_id = helperModule.get_parameter_by_name('timeline_id');
 
                 setTimeout(() => {
-                    window.history.replaceState({page: 'items'}, '', '/exhibits-dashboard/items?exhibit_id=' + exhibit_id);
+                    window.history.replaceState({page: 'items'}, '', '/exhibits-dashboard/items/vertical-timeline/items?exhibit_id=' + exhibit_id + '&timeline_id=' + timeline_id);
                 }, 0);
 
                 setTimeout(() => {
-                    document.querySelector('#message').innerHTML = '';
-                }, 3000);
+                    document.querySelector('#message').innerHTML = `<div class="alert alert-danger" role="alert"><i class="fa fa-exclamation"></i> You do not have permission to add item.</div>`;
+                }, 50);
             }
-
-             */
 
             const token = authModule.get_user_token();
             await authModule.check_auth(token);
