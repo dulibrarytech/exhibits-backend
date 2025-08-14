@@ -18,11 +18,11 @@
 
 'use strict';
 
+const FS = require('fs');
 const WEBSERVICES_CONFIG = require('../config/webservices_config')();
 const STORAGE_CONFIG = require('../config/storage_config')();
 const EXHIBITS_MODEL = require('../exhibits/exhibits_model');
 const AUTHORIZE = require('../auth/authorize');
-const FS = require('fs');
 const LOGGER = require("../libs/log4");
 
 exports.create_exhibit_record = async function (req, res) {

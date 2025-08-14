@@ -71,8 +71,8 @@ const itemsEditGridItemFormModule = (function () {
         try {
 
             let record = await get_grid_item_record();
-            let thumbnail_fragment = '';
-            let thumbnail_url = '';
+            // let thumbnail_fragment = '';
+            // let thumbnail_url = '';
             let is_published = record.is_published;
             let created_by = record.created_by;
             let created = record.created;

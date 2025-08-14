@@ -233,6 +233,16 @@ const itemsEditStandardItemFormModule = (function () {
         try {
 
             const exhibit_id = helperModule.get_parameter_by_name('exhibit_id');
+            const item_id = helperModule.get_parameter_by_name('item_id');
+            let type = 'media';
+
+            if (window.location.pathname.indexOf('text')) {
+                type = 'text';
+            }
+
+            const redirect = '/items/standard/' + type + '/details?exhibit_id=' + exhibit_id + '&item_id=' + item_id + '&status=403';
+            await authModule.check_permissions(['update_item', 'update_any_item'], 'item', exhibit_id, item_id, redirect);
+
             exhibitsModule.set_exhibit_title(exhibit_id);
             await display_edit_record();
             document.querySelector('#update-item-btn').addEventListener('click', itemsEditStandardItemFormModule.update_item_record);

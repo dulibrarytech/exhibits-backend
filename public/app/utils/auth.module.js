@@ -140,7 +140,7 @@ const authModule = (function () {
         }
     };
 
-    obj.check_permissions = async function (permissions, record_type, uuid, redirect) {
+    obj.check_permissions = async function (permissions, record_type, parent_id, child_id, redirect) {
 
         try {
 
@@ -155,7 +155,8 @@ const authModule = (function () {
             let data = {
                 permissions: permissions,
                 record_type: record_type,
-                uuid: uuid
+                parent_id: parent_id,
+                child_id: child_id
             };
 
             const EXHIBITS_ENDPOINTS = '/exhibits-dashboard/auth/permissions';

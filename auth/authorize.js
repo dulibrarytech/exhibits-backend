@@ -38,7 +38,8 @@ exports.check_permission = async function (options) {
         const req = options.req;
         const actions = options.permissions;
         const record_type = options.record_type;
-        const uuid = options.uuid;
+        const parent_id = options.parent_id; // exhibit_id
+        const child_id = options.child_id; // item_id
 
         let user_role_permissions = [];
         let token = req.headers['x-access-token'];
@@ -94,7 +95,7 @@ exports.check_permission = async function (options) {
 
             if (permissions.length !== actions.length) {
 
-                let record_owner = await AUTH_TASKS.check_ownership(user_id, uuid, record_type);
+                let record_owner = await AUTH_TASKS.check_ownership(user_id, parent_id, child_id, record_type);
 
                 if (parseInt(user_id) !== parseInt(record_owner)) {
                     return false;

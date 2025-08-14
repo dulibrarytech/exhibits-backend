@@ -160,6 +160,13 @@ const itemsDetailsStandardItemModule = (function () {
 
         try {
 
+            const status = helperModule.get_parameter_by_name('status');
+
+            if (status !== null && status === '403') {
+                window.scrollTo(0, 0);
+                document.querySelector('#message').innerHTML = `<div class="alert alert-danger" role="alert"><i class="fa fa-exclamation"></i> You do not have permission to edit this record.</div>`;
+            }
+
             const exhibit_id = helperModule.get_parameter_by_name('exhibit_id');
             exhibitsModule.set_exhibit_title(exhibit_id);
             await display_edit_record();

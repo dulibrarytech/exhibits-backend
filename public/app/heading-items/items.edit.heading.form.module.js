@@ -207,7 +207,7 @@ const itemsEditHeadingFormModule = (function () {
             const exhibit_id = helperModule.get_parameter_by_name('exhibit_id');
             const heading_id = helperModule.get_parameter_by_name('item_id');
             const redirect = '/items/heading/details?exhibit_id=' + exhibit_id + '&item_id=' + heading_id + '&status=403';
-            await authModule.check_permissions(['update_item', 'update_any_item'], 'heading_item', exhibit_id, redirect);
+            await authModule.check_permissions(['update_item', 'update_any_item'], 'heading_item', exhibit_id, heading_id, redirect);
             await exhibitsModule.set_exhibit_title(exhibit_id);
 
             document.querySelector('#save-heading-btn').addEventListener('click', await itemsEditHeadingFormModule.update_item_heading_record);

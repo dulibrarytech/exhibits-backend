@@ -183,10 +183,11 @@ const Auth_tasks = class {
     /**
      * Checks record ownership
      * @param user_id
-     * @param uuid
+     * @param parent_id
+     * @param child_id
      * @param record_type
      */
-    async check_ownership(user_id, uuid, record_type) {
+    async check_ownership(user_id, parent_id, child_id, record_type) {
 
         try {
 
@@ -194,7 +195,7 @@ const Auth_tasks = class {
             const exhibit_data = await this.DB(this.TABLE.exhibit_records)
                 .select('owner')
                 .where({
-                    uuid: uuid
+                    uuid: parent_id
                 });
 
             if (record_type === 'standard_item') {
@@ -204,6 +205,7 @@ const Auth_tasks = class {
                 const standard_item_data = await this.DB(table)
                     .select('owner')
                     .where({
+                        uuid: child_id,
                         owner: exhibit_data[0].owner
                     });
 
@@ -227,6 +229,7 @@ const Auth_tasks = class {
                 const heading_data = await this.DB(table)
                     .select('owner')
                     .where({
+                        uuid: child_id,
                         owner: exhibit_data[0].owner
                     });
 
@@ -250,6 +253,7 @@ const Auth_tasks = class {
                 const grid_data = await this.DB(table)
                     .select('owner')
                     .where({
+                        uuid: child_id,
                         owner: exhibit_data[0].owner
                     });
 
@@ -273,6 +277,7 @@ const Auth_tasks = class {
                 const grid_item_data = await this.DB(table)
                     .select('owner')
                     .where({
+                        uuid: child_id,
                         owner: exhibit_data[0].owner
                     });
 
@@ -296,6 +301,7 @@ const Auth_tasks = class {
                 const timeline_data = await this.DB(table)
                     .select('owner')
                     .where({
+                        uuid: child_id,
                         owner: exhibit_data[0].owner
                     });
 
@@ -319,6 +325,7 @@ const Auth_tasks = class {
                 const timeline_item_data = await this.DB(table)
                     .select('owner')
                     .where({
+                        uuid: child_id,
                         owner: exhibit_data[0].owner
                     });
 

@@ -34,6 +34,8 @@ module.exports = function (app) {
     app.route(ENDPOINTS().exhibits.heading_records.put.endpoint)
     .put(TOKEN.verify, CONTROLLER.update_heading_record);
 
+    /*
     app.route(ENDPOINTS().exhibits.heading_records.delete.endpoint)
     .delete(TOKEN.verify, CONTROLLER.delete_heading_record);
+     */
 };

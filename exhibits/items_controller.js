@@ -18,15 +18,15 @@
 
 'use strict';
 
+const FS = require('fs');
 const STORAGE_CONFIG = require('../config/storage_config')();
 const ITEMS_MODEL = require('../exhibits/items_model');
 const HEADINGS_MODEL = require('../exhibits/headings_model');
 const GRIDS_MODEL = require('../exhibits/grid_model');
 const TIMELINES_MODEL = require('../exhibits/timelines_model');
-const FS = require('fs');
-const EXHIBITS_MODEL = require("./exhibits_model");
-const LOGGER = require("../libs/log4");
-const AUTHORIZE = require("../auth/authorize");
+const EXHIBITS_MODEL = require('./exhibits_model');
+const LOGGER = require('../libs/log4');
+const AUTHORIZE = require('../auth/authorize');
 
 exports.create_item_record = async function (req, res) {
 
@@ -37,6 +37,24 @@ exports.create_item_record = async function (req, res) {
 
         if (data === undefined || is_member_of_exhibit === undefined) {
             res.status(400).send('Bad request.');
+            return false;
+        }
+
+        const permissions = ['add_item', 'add_item_to_any_exhibit'];
+        let options = {};
+        options.req = req;
+        options.permissions = permissions;
+        options.record_type = 'item';
+        options.parent_id = is_member_of_exhibit;
+        options.child_id = null;
+
+        const is_authorized = await AUTHORIZE.check_permission(options);
+        console.log('is_authorized ', is_authorized);
+        if (is_authorized === false) {
+            res.status(403).send({
+                message: 'Unauthorized request'
+            });
+
             return false;
         }
 
@@ -117,6 +135,24 @@ exports.update_item_record = async function (req, res) {
             return false;
         }
 
+        const permissions = ['update_item', 'update_any_item'];
+        let options = {};
+        options.req = req;
+        options.permissions = permissions;
+        options.record_type = 'item';
+        options.parent_id = is_member_of_exhibit;
+        options.child_id = uuid;
+
+        const is_authorized = await AUTHORIZE.check_permission(options);
+
+        if (is_authorized === false) {
+            res.status(403).send({
+                message: 'Unauthorized request'
+            });
+
+            return false;
+        }
+
         const result = await ITEMS_MODEL.update_item_record(is_member_of_exhibit, uuid, data);
         res.status(result.status).send(result);
 
@@ -168,7 +204,8 @@ exports.delete_item_record = async function (req, res) {
         options.req = req;
         options.permissions = permissions;
         options.record_type = record_type;
-        options.uuid = is_member_of_exhibit;
+        options.parent_id = is_member_of_exhibit;
+        options.child_id = item_id;
 
         const is_authorized = await AUTHORIZE.check_permission(options);
 
@@ -229,6 +266,24 @@ exports.publish_item_record = async function (req, res) {
             return false;
         }
 
+        const permissions = ['publish_item', 'publish_any_item'];
+        let options = {};
+        options.req = req;
+        options.permissions = permissions;
+        options.record_type = 'item';
+        options.parent_id = is_member_of_exhibit;
+        options.child_id = item_id;
+
+        const is_authorized = await AUTHORIZE.check_permission(options);
+
+        if (is_authorized === false) {
+            res.status(403).send({
+                message: 'Unauthorized request'
+            });
+
+            return false;
+        }
+
         if (type === 'item') {
             result = await ITEMS_MODEL.publish_item_record(exhibit_id, item_id);
         } else if (type === 'heading') {
@@ -272,6 +327,24 @@ exports.suppress_item_record = async function (req, res) {
 
         if (exhibit_id === undefined || exhibit_id.length === 0 && item_id === undefined || item_id.length === 0) {
             res.status(400).send('Bad request.');
+            return false;
+        }
+
+        const permissions = ['suppress_item', 'suppress_any_item'];
+        let options = {};
+        options.req = req;
+        options.permissions = permissions;
+        options.record_type = 'item';
+        options.parent_id = exhibit_id;
+        options.child_id = item_id;
+
+        const is_authorized = await AUTHORIZE.check_permission(options);
+
+        if (is_authorized === false) {
+            res.status(403).send({
+                message: 'Unauthorized request'
+            });
+
             return false;
         }
 

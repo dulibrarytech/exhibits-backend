@@ -19,7 +19,7 @@
 'use strict';
 
 const HEADINGS_MODEL = require('../exhibits/headings_model');
-const AUTHORIZE = require("../auth/authorize");
+const AUTHORIZE = require('../auth/authorize');
 
 exports.create_heading_record = async function (req, res) {
 
@@ -38,7 +38,8 @@ exports.create_heading_record = async function (req, res) {
         options.req = req;
         options.permissions = permissions;
         options.record_type = 'heading_item';
-        options.uuid = is_member_of_exhibit;
+        options.parent_id = is_member_of_exhibit;
+        options.child_id = null;
 
         const is_authorized = await AUTHORIZE.check_permission(options);
 
@@ -116,6 +117,24 @@ exports.update_heading_record = async function (req, res) {
             return false;
         }
 
+        const permissions = ['update_item', 'update_any_item'];
+        let options = {};
+        options.req = req;
+        options.permissions = permissions;
+        options.record_type = 'heading_item';
+        options.parent_id = is_member_of_exhibit;
+        options.child_id = heading_id;
+
+        const is_authorized = await AUTHORIZE.check_permission(options);
+
+        if (is_authorized === false) {
+            res.status(403).send({
+                message: 'Unauthorized request'
+            });
+
+            return false;
+        }
+
         const result = await HEADINGS_MODEL.update_heading_record(is_member_of_exhibit, heading_id, data);
         res.status(result.status).send(result);
 
@@ -124,6 +143,7 @@ exports.update_heading_record = async function (req, res) {
     }
 };
 
+/*
 exports.delete_heading_record = async function (req, res) {
 
     try {
@@ -143,3 +163,5 @@ exports.delete_heading_record = async function (req, res) {
         res.status(408).send({message: `Unable to delete heading record. ${error.message}`});
     }
 };
+
+ */

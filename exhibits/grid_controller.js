@@ -72,6 +72,23 @@ exports.update_grid_record = async function (req, res) {
             return false;
         }
 
+        const permissions = ['update_item', 'update_any_item'];
+        let options = {};
+        options.req = req;
+        options.permissions = permissions;
+        options.record_type = 'grid';
+        options.uuid = is_member_of_exhibit;
+
+        const is_authorized = await AUTHORIZE.check_permission(options);
+        console.log('is_authorized ', is_authorized);
+        if (is_authorized === false) {
+            res.status(403).send({
+                message: 'Unauthorized request'
+            });
+
+            return false;
+        }
+
         const result = await GRIDS_MODEL.update_grid_record(is_member_of_exhibit, grid_id, data);
         res.status(result.status).send(result);
 
@@ -208,6 +225,23 @@ exports.update_grid_item_record = async function (req, res) {
 
         if (data === undefined || is_member_of_exhibit === undefined || grid_id === undefined || item_id === undefined) {
             res.status(400).send('Bad request.');
+            return false;
+        }
+
+        const permissions = ['update_item', 'update_any_item'];
+        let options = {};
+        options.req = req;
+        options.permissions = permissions;
+        options.record_type = 'grid_item';
+        options.uuid = uuid;
+
+        const is_authorized = await AUTHORIZE.check_permission(options);
+
+        if (is_authorized === false) {
+            res.status(403).send({
+                message: 'Unauthorized request'
+            });
+
             return false;
         }
 

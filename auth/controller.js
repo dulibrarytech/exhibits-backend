@@ -92,12 +92,14 @@ exports.check_permissions = async function (req, res) {
 
         const permissions = req.body.permissions;
         const record_type = req.body.record_type;
-        const uuid = req.body.uuid;
+        const parent_id = req.body.parent_id;
+        const child_id = req.body.child_id;
         const options = {};
         options.req = req;
         options.permissions = permissions;
         options.record_type = record_type;
-        options.uuid = uuid;
+        options.parent_id = parent_id;
+        options.child_id = child_id;
 
         const is_authorized = await AUTHORIZE.check_permission(options);
 
@@ -107,8 +109,11 @@ exports.check_permissions = async function (req, res) {
             });
 
             return false;
+
         } else {
-            res.status(200).send({})
+            res.status(200).send({
+                message: 'Authorized'
+            });
         }
 
     } catch (error) {
