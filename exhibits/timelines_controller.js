@@ -18,8 +18,8 @@
 
 'use strict';
 
-const TIMELINES_MODEL = require('../exhibits/timelines_model');
 const FS = require('fs');
+const TIMELINES_MODEL = require('../exhibits/timelines_model');
 const AUTHORIZE = require('../auth/authorize');
 
 exports.create_timeline_record = async function (req, res) {
@@ -39,7 +39,8 @@ exports.create_timeline_record = async function (req, res) {
         options.req = req;
         options.permissions = permissions;
         options.record_type = 'timeline';
-        options.uuid = is_member_of_exhibit;
+        options.parent_id = is_member_of_exhibit;
+        options.child_id = null;
 
         const is_authorized = await AUTHORIZE.check_permission(options);
 
@@ -69,6 +70,24 @@ exports.update_timeline_record = async function (req, res) {
 
         if (data === undefined || is_member_of_exhibit === undefined || timeline_id === undefined) {
             res.status(400).send('Bad request.');
+            return false;
+        }
+
+        const permissions = ['update_item', 'update_any_item'];
+        let options = {};
+        options.req = req;
+        options.permissions = permissions;
+        options.record_type = 'timeline';
+        options.parent_id = is_member_of_exhibit;
+        options.child_id = timeline_id;
+
+        const is_authorized = await AUTHORIZE.check_permission(options);
+
+        if (is_authorized === false) {
+            res.status(403).send({
+                message: 'Unauthorized request'
+            });
+
             return false;
         }
 
@@ -118,7 +137,8 @@ exports.create_timeline_item_record = async function (req, res) {
         options.req = req;
         options.permissions = permissions;
         options.record_type = 'timeline_item';
-        options.uuid = is_member_of_exhibit;
+        options.parent_id = is_member_of_exhibit;
+        options.child_id = null;
 
         const is_authorized = await AUTHORIZE.check_permission(options);
         console.log('is_authorized ', is_authorized);
@@ -193,6 +213,24 @@ exports.update_timeline_item_record = async function (req, res) {
             return false;
         }
 
+        const permissions = ['update_item', 'update_any_item'];
+        let options = {};
+        options.req = req;
+        options.permissions = permissions;
+        options.record_type = 'timeline_item';
+        options.parent_id = is_member_of_exhibit;
+        options.child_id = item_id;
+
+        const is_authorized = await AUTHORIZE.check_permission(options);
+
+        if (is_authorized === false) {
+            res.status(403).send({
+                message: 'Unauthorized request'
+            });
+
+            return false;
+        }
+
         const result = await TIMELINES_MODEL.update_timeline_item_record(is_member_of_exhibit, timeline_id, item_id, data);
         res.status(result.status).send(result);
 
@@ -212,6 +250,24 @@ exports.publish_timeline_item_record = async function (req, res) {
 
         if (exhibit_id === undefined || exhibit_id.length === 0 && timeline_id === undefined || timeline_id.length === 0) {
             res.status(400).send('Bad request.');
+            return false;
+        }
+
+        const permissions = ['publish_item', 'publish_any_item'];
+        let options = {};
+        options.req = req;
+        options.permissions = permissions;
+        options.record_type = 'timeline_item';
+        options.parent_id = exhibit_id;
+        options.child_id = timeline_item_id;
+
+        const is_authorized = await AUTHORIZE.check_permission(options);
+
+        if (is_authorized === false) {
+            res.status(403).send({
+                message: 'Unauthorized request'
+            });
+
             return false;
         }
 
@@ -247,6 +303,24 @@ exports.suppress_timeline_item_record = async function (req, res) {
             return false;
         }
 
+        const permissions = ['suppress_item', 'suppress_any_item'];
+        let options = {};
+        options.req = req;
+        options.permissions = permissions;
+        options.record_type = 'timeline_item';
+        options.parent_id = exhibit_id;
+        options.child_id = timeline_item_id;
+
+        const is_authorized = await AUTHORIZE.check_permission(options);
+
+        if (is_authorized === false) {
+            res.status(403).send({
+                message: 'Unauthorized request'
+            });
+
+            return false;
+        }
+
         result = await TIMELINES_MODEL.suppress_timeline_item_record(exhibit_id, timeline_id, timeline_item_id);
 
         if (result === true) {
@@ -275,6 +349,24 @@ exports.delete_timeline_item_record = async function (req, res) {
 
         if (timeline_item_id === undefined || timeline_item_id.length === 0 && timeline_id === undefined || timeline_id.length === 0) {
             res.status(400).send('Bad request.');
+            return false;
+        }
+
+        const permissions = ['delete_item', 'delete_any_item'];
+        let options = {};
+        options.req = req;
+        options.permissions = permissions;
+        options.record_type = record_type;
+        options.parent_id = is_member_of_exhibit;
+        options.child_id = timeline_item_id;
+
+        const is_authorized = await AUTHORIZE.check_permission(options);
+
+        if (is_authorized === false) {
+            res.status(403).send({
+                message: 'Unauthorized request'
+            });
+
             return false;
         }
 

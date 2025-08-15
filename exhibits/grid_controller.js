@@ -18,9 +18,9 @@
 
 'use strict';
 
-const GRIDS_MODEL = require('../exhibits/grid_model');
 const FS = require('fs');
-const AUTHORIZE = require("../auth/authorize");
+const GRIDS_MODEL = require('../exhibits/grid_model');
+const AUTHORIZE = require('../auth/authorize');
 
 exports.create_grid_record = async function (req, res) {
 
@@ -39,7 +39,8 @@ exports.create_grid_record = async function (req, res) {
         options.req = req;
         options.permissions = permissions;
         options.record_type = 'grid';
-        options.uuid = is_member_of_exhibit;
+        options.parent_id = is_member_of_exhibit;
+        options.child_id = null;
 
         const is_authorized = await AUTHORIZE.check_permission(options);
         console.log('is_authorized ', is_authorized);
@@ -77,7 +78,8 @@ exports.update_grid_record = async function (req, res) {
         options.req = req;
         options.permissions = permissions;
         options.record_type = 'grid';
-        options.uuid = is_member_of_exhibit;
+        options.parent_id = is_member_of_exhibit;
+        options.child_id = grid_id;
 
         const is_authorized = await AUTHORIZE.check_permission(options);
         console.log('is_authorized ', is_authorized);
@@ -135,7 +137,8 @@ exports.create_grid_item_record = async function (req, res) {
         options.req = req;
         options.permissions = permissions;
         options.record_type = 'grid_item';
-        options.uuid = is_member_of_exhibit;
+        options.parent_id = is_member_of_exhibit;
+        options.child_id = grid_id;
 
         const is_authorized = await AUTHORIZE.check_permission(options);
         console.log('is_authorized ', is_authorized);
@@ -233,7 +236,8 @@ exports.update_grid_item_record = async function (req, res) {
         options.req = req;
         options.permissions = permissions;
         options.record_type = 'grid_item';
-        options.uuid = uuid;
+        options.parent_id = is_member_of_exhibit;
+        options.child_id = item_id;
 
         const is_authorized = await AUTHORIZE.check_permission(options);
 
@@ -264,6 +268,24 @@ exports.delete_grid_item_record = async function (req, res) {
 
         if (grid_item_id === undefined || grid_item_id.length === 0 && grid_id === undefined || grid_id.length === 0) {
             res.status(400).send('Bad request.');
+            return false;
+        }
+
+        const permissions = ['delete_item', 'delete_any_item'];
+        let options = {};
+        options.req = req;
+        options.permissions = permissions;
+        options.record_type = record_type;
+        options.parent_id = is_member_of_exhibit;
+        options.child_id = grid_item_id;
+
+        const is_authorized = await AUTHORIZE.check_permission(options);
+
+        if (is_authorized === false) {
+            res.status(403).send({
+                message: 'Unauthorized request'
+            });
+
             return false;
         }
 
@@ -316,6 +338,24 @@ exports.publish_grid_item_record = async function (req, res) {
             return false;
         }
 
+        const permissions = ['publish_item', 'publish_any_item'];
+        let options = {};
+        options.req = req;
+        options.permissions = permissions;
+        options.record_type = 'grid_item';
+        options.parent_id = exhibit_id;
+        options.child_id = grid_item_id;
+
+        const is_authorized = await AUTHORIZE.check_permission(options);
+
+        if (is_authorized === false) {
+            res.status(403).send({
+                message: 'Unauthorized request'
+            });
+
+            return false;
+        }
+
         result = await GRIDS_MODEL.publish_grid_item_record(exhibit_id, grid_id, grid_item_id);
 
         if (result.status === true) {
@@ -346,6 +386,24 @@ exports.suppress_grid_item_record = async function (req, res) {
 
         if (exhibit_id === undefined || exhibit_id.length === 0 && grid_id === undefined || grid_id.length === 0) {
             res.status(400).send('Bad request.');
+            return false;
+        }
+
+        const permissions = ['suppress_item', 'suppress_any_item'];
+        let options = {};
+        options.req = req;
+        options.permissions = permissions;
+        options.record_type = 'grid_item';
+        options.parent_id = exhibit_id;
+        options.child_id = grid_item_id;
+
+        const is_authorized = await AUTHORIZE.check_permission(options);
+
+        if (is_authorized === false) {
+            res.status(403).send({
+                message: 'Unauthorized request'
+            });
+
             return false;
         }
 
