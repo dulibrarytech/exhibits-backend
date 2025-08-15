@@ -27,6 +27,7 @@ gulp.task('minify-grid-items-modules', function () {
         'public/app/grid-items/items.add.grid.item.form.module.js',
         'public/app/grid-items/items.common.grid.form.module.js',
         'public/app/grid-items/items.common.grid.item.form.module.js',
+        'public/app/grid-items/items.details.grid.module.js',
         'public/app/grid-items/items.details.grid.item.module.js',
         'public/app/grid-items/items.edit.grid.form.module.js',
         'public/app/grid-items/items.edit.grid.item.form.module.js',

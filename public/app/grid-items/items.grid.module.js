@@ -111,7 +111,7 @@ const itemsGridModule = (function () {
                 }
             });
 
-            if (response.status === 200) {
+            if (response !== undefined && response.status === 200) {
 
                 setTimeout(() => {
                     let elem = document.getElementById(uuid);
@@ -159,9 +159,17 @@ const itemsGridModule = (function () {
                         ${trash}
                         </div>`;
                 }, 0);
+
+            } else if (response === undefined) {
+                scrollTo(0, 0);
+                document.querySelector('#message').innerHTML = `<div class="alert alert-danger" role="alert"><i class="fa fa-danger"></i> You do not have permission to publish this record.</div>`;
+
+                setTimeout(() => {
+                    document.querySelector('#message').innerHTML = '';
+                }, 5000);
             }
 
-            if (response.status === 204) {
+            if (response !== undefined && response.status === 204) {
                 scrollTo(0, 0);
                 document.querySelector('#message').innerHTML = `<div class="alert alert-danger" role="alert"><i class="fa fa-exclamation"></i> Unable to publish grid item</div>`;
 
@@ -200,7 +208,7 @@ const itemsGridModule = (function () {
                 }
             });
 
-            if (response.status === 200) {
+            if (response !== undefined && response.status === 200) {
 
                 setTimeout(() => {
                     let elem = document.getElementById(uuid);
@@ -253,9 +261,16 @@ const itemsGridModule = (function () {
                         ${trash}
                         </div>`;
                 }, 0);
+            } else if (response === undefined) {
+                scrollTo(0, 0);
+                document.querySelector('#message').innerHTML = `<div class="alert alert-danger" role="alert"><i class="fa fa-danger"></i> You do not have permission to unpublish this record.</div>`;
+
+                setTimeout(() => {
+                    document.querySelector('#message').innerHTML = '';
+                }, 5000);
             }
 
-            if (response.status === 204) {
+            if (response !== undefined && response.status === 204) {
                 scrollTo(0, 0);
                 document.querySelector('#message').innerHTML = `<div class="alert alert-warning" role="alert"><i class="fa fa-warning"></i> Unable to unpublish grid item</div>`;
 

@@ -109,7 +109,6 @@ const itemsEditGridFormModule = (function () {
 
                 setTimeout(() => {
                     window.location.reload();
-                    // location.replace(`${APP_PATH}/items?exhibit_id=${exhibit_id}`);
                 }, 900);
             }
 
@@ -144,6 +143,7 @@ const itemsEditGridFormModule = (function () {
         document.querySelector('#grid-text-input').value = helperModule.unescape(record.text);
         document.querySelector('#grid-columns').value = record.columns;
 
+        /*
         let styles = JSON.parse(record.styles);
 
         if (Object.keys(styles).length !== 0) {
@@ -177,11 +177,18 @@ const itemsEditGridFormModule = (function () {
             }
         }
 
+         */
+
         return false;
     }
 
     obj.init = async function () {
+
         const exhibit_id = helperModule.get_parameter_by_name('exhibit_id');
+        const item_id = helperModule.get_parameter_by_name('item_id');
+        const redirect = '/items/grid/details?exhibit_id=' + exhibit_id + '&item_id=' + item_id + '&status=403';
+        await authModule.check_permissions(['update_item', 'update_any_item'], 'grid', exhibit_id, null, redirect);
+
         exhibitsModule.set_exhibit_title(exhibit_id);
         document.querySelector('#save-item-btn').addEventListener('click', itemsEditGridFormModule.update_grid_record);
         await display_edit_record();

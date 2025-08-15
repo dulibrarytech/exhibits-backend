@@ -42,6 +42,7 @@
 <div id="right-panel" class="right-panel">
     <%- include('../partials/main-header.ejs'); %>
     <div class="content" style="min-height: 875px;">
+        <div id="message"></div>
         <h1><span id="exhibit-title"></span> - Grid</h1>
         <div id="grid-data-card" class="card">
             <div class="card-header">
@@ -202,10 +203,10 @@
 <script src="/exhibits-dashboard/static/app/dist/exhibits.module.min.js?<%=build_version%>"></script>
 <script src="/exhibits-dashboard/static/app/dist/items.module.min.js?<%=build_version%>"></script>
 <script src="/exhibits-dashboard/static/app/dist/items.common.grid.form.module.min.js?<%=build_version%>"></script>
-<script src="/exhibits-dashboard/static/app/dist/items.edit.grid.form.module.min.js?<%=build_version%>"></script>
+<script src="/exhibits-dashboard/static/app/dist/items.details.grid.module.min.js?<%=build_version%>"></script>
 <script>
     itemsCommonStandardGridFormModule.init();
-    itemsEditGridFormModule.init();
+    itemsDetailsGridFormModule.init();
     document.querySelector('#edit-item-btn').addEventListener('click', (event) => {
         event.preventDefault();
         document.querySelector('.content').style.visibility = 'hidden';
