@@ -370,7 +370,7 @@ const exhibitsModule = (function () {
                     document.getElementById(uuid).classList.remove('suppress-exhibit');
                     document.getElementById(uuid).classList.add('publish-exhibit');
                     document.getElementById(uuid).replaceWith(elem.cloneNode(true));
-                    document.getElementById(uuid).innerHTML = '<span id="publish" title="suppressed"><i class="fa fa-cloud-upload" style="color: darkred"></i><br>Suppressed</span>';
+                    document.getElementById(uuid).innerHTML = '<span id="publish" title="suppressed"><i class="fa fa-cloud-upload" style="color: darkred"></i><br>Unpublished</span>';
                     document.getElementById(uuid).addEventListener('click', async (event) => {
                         event.preventDefault();
                         const uuid = elem.getAttribute('id');

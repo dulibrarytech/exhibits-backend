@@ -41,7 +41,8 @@ exports.create_exhibit_record = async function (req, res) {
         options.req = req;
         options.permissions = permissions;
         options.record_type = 'exhibit';
-        options.uuid = 'none';
+        options.parent_id = null;
+        options.child_id = null;
 
         const is_authorized = await AUTHORIZE.check_permission(options);
 
@@ -127,7 +128,8 @@ exports.update_exhibit_record = async function (req, res) {
         options.req = req;
         options.permissions = permissions;
         options.record_type = 'exhibit';
-        options.uuid = uuid;
+        options.parent_id = uuid;
+        options.child_id = null;
 
         const is_authorized = await AUTHORIZE.check_permission(options);
 
@@ -163,7 +165,8 @@ exports.delete_exhibit_record = async function (req, res) {
         options.req = req;
         options.permissions = permissions;
         options.record_type = 'exhibit';
-        options.uuid = uuid;
+        options.parent_id = uuid;
+        options.child_id = null;
 
         const is_authorized = await AUTHORIZE.check_permission(options);
 
@@ -328,7 +331,8 @@ exports.publish_exhibit = async function (req, res) {
         options.req = req;
         options.permissions = permissions;
         options.record_type = 'exhibit';
-        options.uuid = uuid;
+        options.parent_id = uuid;
+        options.child_id = null;
 
         const is_authorized = await AUTHORIZE.check_permission(options);
 
@@ -379,7 +383,9 @@ exports.suppress_exhibit = async function (req, res) {
         options.req = req;
         options.permissions = permissions;
         options.record_type = 'exhibit';
-        options.uuid = uuid;
+        options.parent_id = uuid;
+        options.child_id = null;
+
 
         const is_authorized = await AUTHORIZE.check_permission(options);
 

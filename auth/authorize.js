@@ -38,15 +38,16 @@ exports.check_permission = async function (options) {
         const req = options.req;
         const actions = options.permissions;
         const record_type = options.record_type;
-        const parent_id = options.parent_id; // exhibit_id
-        const child_id = options.child_id; // item_id
-
+        const parent_id = options.parent_id;
+        const child_id = options.child_id;
         let user_role_permissions = [];
         let token = req.headers['x-access-token'];
 
         if (token === undefined && !VALIDATOR.isJWT(token)) {
             return false;
         }
+
+        // TODO: check option values here
 
         let user_id = await AUTH_TASKS.get_user_id(token);
         let user_permissions = await AUTH_TASKS.get_user_permissions(token);

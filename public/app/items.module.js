@@ -191,7 +191,7 @@ const itemsModule = (function () {
                 }
             });
 
-            if (response.status === 200) {
+            if (response !== undefined && response.status === 200) {
 
                 setTimeout(() => {
                     let elem = document.getElementById(uuid);
@@ -251,9 +251,17 @@ const itemsModule = (function () {
                 }, 0);
             }
 
-            if (response.status === 204) {
+            if (response !== undefined && response.status === 204) {
                 scrollTo(0, 0);
                 document.querySelector('#message').innerHTML = `<div class="alert alert-warning" role="alert"><i class="fa fa-warning"></i> Exhibit must be published in order to publish this item</div>`;
+
+                setTimeout(() => {
+                    document.querySelector('#message').innerHTML = '';
+                }, 5000);
+
+            } else if (response === undefined) {
+                scrollTo(0, 0);
+                document.querySelector('#message').innerHTML = `<div class="alert alert-danger" role="alert"><i class="fa fa-danger"></i> You do not have permission to publish this record.</div>`;
 
                 setTimeout(() => {
                     document.querySelector('#message').innerHTML = '';
@@ -297,14 +305,14 @@ const itemsModule = (function () {
                 }
             });
 
-            if (response.status === 200) {
+            if (response !== undefined && response.status === 200) {
 
                 setTimeout(() => {
                     let elem = document.getElementById(uuid);
                     document.getElementById(uuid).classList.remove('suppress-item');
                     document.getElementById(uuid).classList.add('publish-item');
                     document.getElementById(uuid).replaceWith(elem.cloneNode(true));
-                    document.getElementById(uuid).innerHTML = '<span id="publish" title="suppressed"><i class="fa fa-cloud-upload" style="color: darkred"></i><br>Suppressed</span>';
+                    document.getElementById(uuid).innerHTML = '<span id="publish" title="suppressed"><i class="fa fa-cloud-upload" style="color: darkred"></i><br>Unpublished</span>';
                     document.getElementById(uuid).addEventListener('click', async (event) => {
                         event.preventDefault();
                         const uuid = elem.getAttribute('id');
@@ -363,6 +371,14 @@ const itemsModule = (function () {
                         ${trash}
                         </div>`;
                 }, 0);
+
+            } else if (response === undefined) {
+                scrollTo(0, 0);
+                document.querySelector('#message').innerHTML = `<div class="alert alert-danger" role="alert"><i class="fa fa-danger"></i> You do not have permission to publish this record.</div>`;
+
+                setTimeout(() => {
+                    document.querySelector('#message').innerHTML = '';
+                }, 5000);
             }
 
             return false;

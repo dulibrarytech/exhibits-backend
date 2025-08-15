@@ -191,6 +191,11 @@ const Auth_tasks = class {
 
         try {
 
+            console.log(user_id);
+            console.log(parent_id);
+            console.log(child_id);
+            console.log(record_type);
+
             let table;
             const exhibit_data = await this.DB(this.TABLE.exhibit_records)
                 .select('owner')
@@ -198,7 +203,9 @@ const Auth_tasks = class {
                     uuid: parent_id
                 });
 
-            if (record_type === 'standard_item') {
+            if (record_type === 'item') {
+
+                console.log('Checking item ownership');
 
                 table = this.TABLE.item_records;
 
@@ -222,7 +229,9 @@ const Auth_tasks = class {
                 }
             }
 
-            if (record_type === 'heading_item') {
+            if (record_type === 'heading') {
+
+                console.log('Checking heading ownership');
 
                 table = this.TABLE.heading_records;
 
@@ -248,6 +257,8 @@ const Auth_tasks = class {
 
             if (record_type === 'grid') {
 
+                console.log('Checking grid ownership');
+
                 table = this.TABLE.grid_records;
 
                 const grid_data = await this.DB(table)
@@ -271,6 +282,8 @@ const Auth_tasks = class {
             }
 
             if (record_type === 'grid_item') {
+
+                console.log('Checking grid item ownership');
 
                 table = this.TABLE.grid_item_records;
 
@@ -296,6 +309,8 @@ const Auth_tasks = class {
 
             if (record_type === 'timeline') {
 
+                console.log('Checking timeline ownership');
+
                 table = this.TABLE.timeline_records;
 
                 const timeline_data = await this.DB(table)
@@ -319,6 +334,8 @@ const Auth_tasks = class {
             }
 
             if (record_type === 'timeline_item') {
+
+                console.log('Checking timeline item ownership');
 
                 table = this.TABLE.timeline_item_records;
 

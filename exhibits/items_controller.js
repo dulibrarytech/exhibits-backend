@@ -258,7 +258,7 @@ exports.publish_item_record = async function (req, res) {
 
         const exhibit_id = req.params.exhibit_id;
         const item_id = req.params.item_id;
-        const type = req.query.type;
+        let type = req.query.type;
         let result;
 
         if (exhibit_id === undefined || exhibit_id.length === 0 && item_id === undefined || item_id.length === 0) {
@@ -266,12 +266,13 @@ exports.publish_item_record = async function (req, res) {
             return false;
         }
 
-        const permissions = ['publish_item', 'publish_any_item'];
         let options = {};
+        const permissions = ['publish_item', 'publish_any_item'];
+
         options.req = req;
         options.permissions = permissions;
-        options.record_type = 'item';
-        options.parent_id = is_member_of_exhibit;
+        options.record_type = type;
+        options.parent_id = exhibit_id;
         options.child_id = item_id;
 
         const is_authorized = await AUTHORIZE.check_permission(options);
@@ -312,6 +313,7 @@ exports.publish_item_record = async function (req, res) {
         }
 
     } catch (error) {
+        console.log(error);
         res.status(500).send({message: `Unable to publish item record. ${error.message}`});
     }
 };
@@ -334,7 +336,7 @@ exports.suppress_item_record = async function (req, res) {
         let options = {};
         options.req = req;
         options.permissions = permissions;
-        options.record_type = 'item';
+        options.record_type = type;
         options.parent_id = exhibit_id;
         options.child_id = item_id;
 
