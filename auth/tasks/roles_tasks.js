@@ -33,68 +33,18 @@ const Roles_tasks = class {
 
     /**
      * Checks user access
-     * @param username
      */
-    async check_auth_user(username) {
+    async get_roles() {
 
         try {
 
-            const data = await this.DB(this.TABLE)
-                .select('id')
-                .where({
-                    du_id: username,
-                    is_active: 1
-                });
-
-            if (data.length === 1) {
-
-                return {
-                    auth: true,
-                    data: data[0].id
-                };
-
-            } else {
-
-                return {
-                    auth: false,
-                    data: []
-                };
-            }
+            return await this.DB(this.TABLE.roles_records)
+                .select('id', 'role', 'description');
 
         } catch (error) {
-            LOGGER.module().error('ERROR: [/users/tasks (check_auth_user)] unable to check auth ' + error.message);
+            LOGGER.module().error('ERROR: [/auth/tasks (get_roles)] unable to get roles ' + error.message);
         }
-    };
-
-    /**
-     * Gets user data
-     * @param id
-     */
-    async get_auth_user_data(id) {
-
-        try {
-
-            const data = await this.DB(this.TABLE)
-                .select('id', 'du_id', 'email', 'first_name', 'last_name')
-                .where({
-                    id: id,
-                    is_active: 1
-                });
-
-            if (data.length === 1) {
-
-                return {
-                    data: data
-                };
-
-            } else {
-                return false;
-            }
-
-        } catch (error) {
-            LOGGER.module().error('ERROR: [/users/tasks (get_auth_user_data)] unable to get user data ' + error.message);
-        }
-    };
+    }
 };
 
 module.exports = Roles_tasks;

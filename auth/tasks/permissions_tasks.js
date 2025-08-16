@@ -35,31 +35,11 @@ const Permissions_tasks = class {
      * Checks user access
      * @param username
      */
-    async check_auth_user(username) {
+    async get_permissions() {
 
         try {
 
-            const data = await this.DB(this.TABLE)
-                .select('id')
-                .where({
-                    du_id: username,
-                    is_active: 1
-                });
 
-            if (data.length === 1) {
-
-                return {
-                    auth: true,
-                    data: data[0].id
-                };
-
-            } else {
-
-                return {
-                    auth: false,
-                    data: []
-                };
-            }
 
         } catch (error) {
             LOGGER.module().error('ERROR: [/users/tasks (check_auth_user)] unable to check auth ' + error.message);

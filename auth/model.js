@@ -20,8 +20,9 @@
 
 const DB = require('../config/db_config')();
 const DB_TABLES = require('../config/db_tables_config')();
-const TABLE = DB_TABLES.exhibits; // .user_records
-const AUTH_TASKS = require("../auth/tasks/auth_tasks");
+const TABLE = DB_TABLES.exhibits;
+const AUTH_TASKS = require('../auth/tasks/auth_tasks');
+const ROLES_TASKS = require('../auth/tasks/roles_tasks');
 const EXHIBITS_ENDPOINTS = require('../exhibits/endpoints')();
 const USERS_ENDPOINTS = require('../users/endpoints')();
 const INDEXER_ENDPOINTS = require('../indexer/endpoints')();
@@ -96,6 +97,25 @@ exports.save_token = async function (id, token) {
 
         const TASKS = new AUTH_TASKS(DB, TABLE);
         return await TASKS.save_token(id, token);
+
+    } catch (error) {
+        LOGGER.module().error('ERROR: [/auth/model (save_token)] unable to save token ' + error.message);
+        return false;
+    }
+};
+
+/**
+ * Gets roles
+ */
+exports.get_roles = async function () {
+
+    try {
+
+        const TASKS = new ROLES_TASKS(DB, TABLE);
+        return {
+            status: 200,
+            data: await TASKS.get_roles()
+        };
 
     } catch (error) {
         LOGGER.module().error('ERROR: [/auth/model (save_token)] unable to save token ' + error.message);

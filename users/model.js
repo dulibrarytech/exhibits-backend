@@ -104,7 +104,7 @@ exports.save_user = async function (user) {
             LOGGER.module().info('INFO: [/users/model (save_user)] user already exists');
             return {
                 status: 200,
-                message: 'User already exists.',
+                message: 'User already exists.'
             };
         }
 

@@ -36,6 +36,9 @@ module.exports = function (app) {
     app.route('/exhibits-dashboard/auth/permissions')
         .post(TOKENS.verify, CONTROLLER.check_permissions);
 
+    app.route('/exhibits-dashboard/auth/roles')
+        .get(TOKENS.verify, CONTROLLER.get_roles);
+
     app.route(ENDPOINTS().auth.authentication.endpoint)
         .get(TOKENS.verify, CONTROLLER.get_auth_user_data);
 };

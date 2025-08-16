@@ -80,6 +80,7 @@ const userModule = (function () {
         try {
 
             const users = await get_user_records();
+            // TODO: get user roles
             let user_data = '';
 
             if (users === false) {
@@ -473,41 +474,58 @@ const userModule = (function () {
         return false;
     };
 
-    obj.init = function () {
+    async function get_roles() {
+
+        try {
+
+            const token = authModule.get_user_token();
+            const response = await httpModule.req({
+                method: 'GET',
+                url: '/exhibits-dashboard/auth/roles', // TODO
+                headers: {
+                    'Content-Type': 'application/json',
+                    'x-access-token': token
+                }
+            });
+
+            if (response.status === 200) {
+                return response.data;
+            }
+
+        } catch (error) {
+            document.querySelector('#message').innerHTML = `<div class="alert alert-danger" role="alert"><i class="fa fa-exclamation"></i> ${error.message}</div>`;
+        }
+    }
+
+    obj.list_roles = async function () {
+
+        try {
+
+            const roles = await get_roles();
+            console.log('roles', roles);
+            let select = '';
+
+            select += '<option value="">Select From Menu</option>';
+            select += '<option value="">----------</option>';
+
+            for (let i = 0; i < roles.length; i++) {
+                console.log(roles[i].id);
+                console.log(roles[i].role);
+                console.log(roles[i].description); // place in info tooltip
+                select += `<option value="${roles[i].id}">${roles[i].role}</option>`;
+            }
+
+            document.querySelector('#user-roles').innerHTML = select;
+
+        } catch (error) {
+            document.querySelector('#message').innerHTML = `<div class="alert alert-danger" role="alert"><i class="fa fa-exclamation"></i> ${error.message}</div>`;
+        }
+    }
+
+    obj.init = async function () {
+        await userModule.list_roles();
     };
 
     return obj;
 
 }());
-
-
-/**
- * Renders user profile data for edit form
- * @param data
- */
-/*
-function render_user_details(data) {
-
-    let user;
-
-    for (let i = 0; i < data.length; i++) {
-
-        user = data[i];
-
-        domModule.val('#id', user.id);
-        domModule.val('#username', user.du_id);
-        domModule.val('#email', user.email);
-        domModule.val('#first_name', user.first_name);
-        domModule.val('#last_name', user.last_name);
-
-        if (user.is_active === 1) {
-            $('#is_active').prop('checked', true);
-        } else {
-            $('#is_active').prop('checked', false);
-        }
-    }
-
-    return false;
-}
-
- */

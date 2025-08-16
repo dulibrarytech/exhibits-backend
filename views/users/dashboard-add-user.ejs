@@ -54,6 +54,7 @@
 <script src="/exhibits-dashboard/static/app/dist/user.module.min.js?<%=build_version%>"></script>
 <script>
     navModule.init();
+    userModule.init();
     document.querySelector('#save-user-btn').addEventListener('click', userModule.save_user_record);
     helperModule.show_form();
 </script>

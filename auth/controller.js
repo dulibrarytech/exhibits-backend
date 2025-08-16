@@ -86,6 +86,18 @@ exports.get_auth_user_data = async function (req, res) {
     }
 };
 
+exports.get_roles = async function (req, res) {
+
+    try {
+
+        const data = await MODEL.get_roles();
+        res.status(data.status).send(data.data);
+
+    } catch (error) {
+        LOGGER.module().error('ERROR: [/auth/controller (get_roles)] unable to roles ' + error.message);
+    }
+};
+
 exports.check_permissions = async function (req, res) {
 
     try {

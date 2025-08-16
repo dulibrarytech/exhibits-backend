@@ -20,7 +20,6 @@
 
 const MODEL = require('../users/model');
 const LOGGER = require("../libs/log4");
-const EXHIBITS_MODEL = require("../exhibits/exhibits_model");
 
 /**
  * Gets Users
