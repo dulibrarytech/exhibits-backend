@@ -82,6 +82,8 @@ gulp.task('minify-timeline-items-modules', function () {
         'public/app/timeline-items/items.common.vertical.timeline.item.form.module.js',
         'public/app/timeline-items/items.edit.vertical.timeline.form.module.js',
         'public/app/timeline-items/items.edit.vertical.timeline.item.form.module.js',
+        'public/app/timeline-items/items.details.vertical.timeline.module.js',
+        'public/app/timeline-items/items.details.vertical.timeline.item.module.js',
         'public/app/timeline-items/items.timeline.module.js'
     ])
         .pipe(uglify())

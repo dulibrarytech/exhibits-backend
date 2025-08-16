@@ -41,7 +41,7 @@ const itemsEditTimelineItemFormModule = (function () {
                 document.querySelector('#message').innerHTML = 'ERROR: Unable to get API endpoints';
 
                 setTimeout(() => {
-                    window.location.replace(APP_PATH + '/exhibits-dashboard/auth');
+                    authModule.redirect_to_auth();
                 }, 1000);
 
                 return false;
@@ -210,7 +210,8 @@ const itemsEditTimelineItemFormModule = (function () {
     obj.init = async function () {
 
         try {
-
+            // items/vertical-timeline/item/media/details?exhibit_id=f4a8ec55-1961-43ca-a805-f7ccc957479b&timeline_id=52c7bfb3-a73b-4f3f-bf29-769432fdcd34&item_id=ff2d0167-31b2-467a-b2b9-7067d4d7ac10
+            // items/vertical-timeline/item/media/edit?exhibit_id=f4a8ec55-1961-43ca-a805-f7ccc957479b&timeline_id=52c7bfb3-a73b-4f3f-bf29-769432fdcd34&item_id=ff2d0167-31b2-467a-b2b9-7067d4d7ac10
             const exhibit_id = helperModule.get_parameter_by_name('exhibit_id');
             exhibitsModule.set_exhibit_title(exhibit_id);
             navModule.set_timeline_item_nav_menu_links();

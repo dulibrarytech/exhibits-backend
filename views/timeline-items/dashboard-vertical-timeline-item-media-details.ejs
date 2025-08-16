@@ -378,10 +378,10 @@
 <script src="/exhibits-dashboard/static/app/dist/helper.media.module.min.js?<%=build_version%>"></script>
 <script src="/exhibits-dashboard/static/app/dist/items.module.min.js?<%= build_version %>"></script>
 <script src="/exhibits-dashboard/static/app/dist/items.common.vertical.timeline.item.form.module.min.js?<%= build_version %>"></script>
-<script src="/exhibits-dashboard/static/app/dist/items.edit.vertical.timeline.item.form.module.min.js?<%= build_version %>"></script>
+<script src="/exhibits-dashboard/static/app/dist/items.details.vertical.timeline.item.module.min.js?<%= build_version %>"></script>
 <script>
     itemsCommonVerticalTimelineItemFormModule.init();
-    itemsEditTimelineItemFormModule.init();
+    itemsDetailsTimelineItemModule.init();
     document.querySelector('#edit-item-btn').addEventListener('click', (event) => {
         event.preventDefault();
         document.querySelector('.content').style.visibility = 'hidden';

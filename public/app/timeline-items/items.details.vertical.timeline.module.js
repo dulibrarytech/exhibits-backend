@@ -16,7 +16,7 @@
 
  */
 
-const itemsDetailsVerticalTimelinemModule = (function () {
+const itemsDetailsVerticalTimelineModule = (function () {
 
     'use strict';
 
@@ -101,7 +101,6 @@ const itemsDetailsVerticalTimelinemModule = (function () {
 
         const exhibit_id = helperModule.get_parameter_by_name('exhibit_id');
         exhibitsModule.set_exhibit_title(exhibit_id);
-        document.querySelector('#save-timeline-btn').addEventListener('click', itemsEditVerticalTimelineFormModule.update_timeline_record);
         await display_edit_record();
 
     };
