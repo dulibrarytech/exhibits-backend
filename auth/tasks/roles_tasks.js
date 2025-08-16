@@ -45,6 +45,27 @@ const Roles_tasks = class {
             LOGGER.module().error('ERROR: [/auth/tasks (get_roles)] unable to get roles ' + error.message);
         }
     }
+
+    /**
+     * Gets user role
+     * @param user_id
+     */
+    async get_user_role(user_id) {
+
+        try {
+
+            return await this.DB.select(
+                'cur.user_id',
+                'cur.role_id',
+                'ur.role'
+            ).from('ctbl_user_roles AS cur')
+                .leftJoin('tbl_user_roles AS ur', 'cur.role_id', 'ur.id')
+                .where('cur.user_id', '=', user_id);
+
+        } catch (error) {
+            LOGGER.module().error('ERROR: [/auth/tasks (get_user_role)] unable to get user role ' + error.message);
+        }
+    }
 };
 
 module.exports = Roles_tasks;

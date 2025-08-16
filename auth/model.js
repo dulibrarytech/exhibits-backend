@@ -118,7 +118,27 @@ exports.get_roles = async function () {
         };
 
     } catch (error) {
-        LOGGER.module().error('ERROR: [/auth/model (save_token)] unable to save token ' + error.message);
+        LOGGER.module().error('ERROR: [/auth/model (get_roles)] unable to get roles ' + error.message);
+        return false;
+    }
+};
+
+/**
+ * Gets user role
+ * @param user_id
+ */
+exports.get_user_role = async function (user_id) {
+
+    try {
+
+        const TASKS = new ROLES_TASKS(DB, TABLE);
+        return {
+            status: 200,
+            data: await TASKS.get_user_role(user_id)
+        };
+
+    } catch (error) {
+        LOGGER.module().error('ERROR: [/auth/model (get_user_role)] unable to get user role ' + error.message);
         return false;
     }
 };

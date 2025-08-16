@@ -98,10 +98,32 @@ exports.get_roles = async function (req, res) {
     }
 };
 
+exports.get_user_role = async function (req, res) {
+
+    try {
+
+        const user_id = req.query.user_id;
+
+        if (user_id === undefined || user_id.length === 0) {
+            res.status(400).send({
+                message: 'Bad request'
+            });
+            return false;
+        }
+
+        const data = await MODEL.get_user_role(user_id);
+        res.status(data.status).send(data.data);
+
+    } catch (error) {
+        LOGGER.module().error('ERROR: [/auth/controller (get_roles)] unable to roles ' + error.message);
+    }
+};
+
 exports.check_permissions = async function (req, res) {
 
     try {
 
+        // TODO: check if req.body is defined
         const permissions = req.body.permissions;
         const record_type = req.body.record_type;
         const parent_id = req.body.parent_id;

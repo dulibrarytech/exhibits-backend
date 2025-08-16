@@ -252,7 +252,6 @@ const itemsEditStandardItemFormModule = (function () {
             }
 
         } catch (error) {
-            console.log(error);
             document.querySelector('#message').innerHTML = `<div class="alert alert-danger" role="alert"><i class="fa fa-exclamation"></i> ${error.message}</div>`;
         }
     };

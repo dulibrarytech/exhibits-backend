@@ -71,16 +71,38 @@ const userModule = (function () {
         }
     }
 
-    obj.display_user = async function (user_id) {
-        return await get_user_record(user_id);
-    };
+    async function get_user_role() {
+
+        try {
+
+            const user_id = helperModule.get_parameter_by_name('user_id');
+            const token = authModule.get_user_token();
+            const response = await httpModule.req({
+                method: 'GET',
+                url: '/exhibits-dashboard/auth/role?user_id=' + user_id,
+                headers: {
+                    'Content-Type': 'application/json',
+                    'x-access-token': token
+                }
+            });
+
+            if (response.status === 200) {
+                return response.data[0];
+            }
+
+        } catch (error) {
+            document.querySelector('#message').innerHTML = `<div class="alert alert-danger" role="alert"><i class="fa fa-exclamation"></i> ${error.message}</div>`;
+        }
+    }
 
     obj.display_user_records = async function () {
 
         try {
 
             const users = await get_user_records();
-            // TODO: get user roles
+
+            // TODO: get user role
+
             let user_data = '';
 
             if (users === false) {
@@ -161,11 +183,19 @@ const userModule = (function () {
         }
     };
 
+    obj.display_user = async function (user_id) {
+        return await get_user_record(user_id);
+    };
+
     obj.display_user_record = async function () {
 
         try {
 
+            const user_id = helperModule.get_parameter_by_name('user_id');
             const record = await get_user_record();
+            // const roles = await get_roles();
+            const role = await get_user_role(user_id);
+            await userModule.list_roles(role);
             const user = record.pop();
 
             // user data
@@ -173,6 +203,19 @@ const userModule = (function () {
             document.querySelector('#last-name-input').value = user.last_name;
             document.querySelector('#email-input').value = user.email;
             document.querySelector('#du-id-input').value = user.du_id;
+
+            /*
+            console.log(role);
+
+            for (let i = 0; i < roles.length; i++) {
+                console.log(roles[i].id);
+                if (roles[i].id === role.role_id) {
+                    console.log(roles[i].role);
+                }
+            }
+
+             */
+
 
             return false;
 
@@ -497,22 +540,30 @@ const userModule = (function () {
         }
     }
 
-    obj.list_roles = async function () {
+    obj.list_roles = async function (role) {
 
         try {
 
             const roles = await get_roles();
-            console.log('roles', roles);
             let select = '';
 
             select += '<option value="">Select From Menu</option>';
             select += '<option value="">----------</option>';
 
             for (let i = 0; i < roles.length; i++) {
+
                 console.log(roles[i].id);
                 console.log(roles[i].role);
                 console.log(roles[i].description); // place in info tooltip
-                select += `<option value="${roles[i].id}">${roles[i].role}</option>`;
+
+                if (role !== null) {
+                    select += `<option value="${roles[i].id}" selected>${roles[i].role}</option>`;
+                } else {
+                    select += `<option value="${roles[i].id}">${roles[i].role}</option>`;
+                }
+
+
+
             }
 
             document.querySelector('#user-roles').innerHTML = select;
