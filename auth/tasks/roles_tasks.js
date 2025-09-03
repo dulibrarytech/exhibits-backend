@@ -66,6 +66,27 @@ const Roles_tasks = class {
             LOGGER.module().error('ERROR: [/auth/tasks (get_user_role)] unable to get user role ' + error.message);
         }
     }
+
+    /**
+     * Saves user role data
+     * @param user_id
+     * @param role_id
+     */
+    async save_user_role(user_id, role_id) {
+
+        try {
+
+            return await this.DB(this.TABLE)
+                .insert({
+                    user_id: user_id,
+                    role_id: role_id
+                });
+
+        } catch (error) {
+            LOGGER.module().error('ERROR: [/users/tasks (save_user_role)] unable to save user role data ' + error.message);
+            return error.sqlMessage;
+        }
+    }
 };
 
 module.exports = Roles_tasks;

@@ -193,7 +193,6 @@ const userModule = (function () {
 
             const user_id = helperModule.get_parameter_by_name('user_id');
             const record = await get_user_record();
-            // const roles = await get_roles();
             const role = await get_user_role(user_id);
             await userModule.list_roles(role);
             const user = record.pop();
@@ -204,7 +203,7 @@ const userModule = (function () {
             document.querySelector('#email-input').value = user.email;
             document.querySelector('#du-id-input').value = user.du_id;
 
-            /*
+            /* TODO roles
             console.log(role);
 
             for (let i = 0; i < roles.length; i++) {
@@ -215,7 +214,6 @@ const userModule = (function () {
             }
 
              */
-
 
             return false;
 
@@ -240,7 +238,8 @@ const userModule = (function () {
             first_name: validate('first-name-input', document.querySelector('#first-name-input').value),
             last_name: validate('last-name-input', document.querySelector('#last-name-input').value),
             email: validate('email-input', document.querySelector('#email-input').value),
-            du_id: validate('du-id-input', document.querySelector('#du-id-input').value)
+            du_id: validate('du-id-input', document.querySelector('#du-id-input').value),
+            role_id: validate('user-roles', document.querySelector('#user-roles').value)
         };
     }
 
@@ -357,6 +356,7 @@ const userModule = (function () {
             return false;
 
         } catch (error) {
+            console.log('ERROR ', error);
             document.querySelector('#message').innerHTML = `<div class="alert alert-danger" role="alert"><i class="fa fa-exclamation"></i> ${error.message}</div>`;
         }
     };

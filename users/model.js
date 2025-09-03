@@ -21,7 +21,9 @@
 const DB = require('../config/db_config')();
 const DB_TABLES = require('../config/db_tables_config')();
 const TABLE = DB_TABLES.exhibits.user_records;
+const USERS_ROLES_TABLE = DB_TABLES.exhibits.users_roles;
 const USER_TASKS = require('../users/tasks/user_tasks');
+const ROLE_TASKS = require('../auth/tasks/roles_tasks');
 const LOGGER = require('../libs/log4');
 
 /**
@@ -98,24 +100,35 @@ exports.save_user = async function (user) {
     try {
 
         const TASKS = new USER_TASKS(DB, TABLE);
+        const ROLE_TASK = new ROLE_TASKS(DB, USERS_ROLES_TABLE);
         const is_duplicate = await TASKS.check_username(user.du_id);
 
         if (is_duplicate === true) {
+
             LOGGER.module().info('INFO: [/users/model (save_user)] user already exists');
+
             return {
                 status: 200,
                 message: 'User already exists.'
             };
         }
 
+        const role_id = parseInt(user.role_id);
+        delete user.role_id;
+
         const data = await TASKS.save_user(user);
+        const user_id = parseInt(data.pop());
+
+        await ROLE_TASK.save_user_role(user_id, role_id);
 
         if (typeof data === 'object') {
+
             return {
                 status: 201,
                 message: 'User saved.',
-                data: data
+                data: [user_id]
             };
+
         } else {
             return {
                 status: 200,
