@@ -307,6 +307,7 @@ const userModule = (function () {
 
         try {
 
+            window.scrollTo(0, 0);
             event.preventDefault();
             const data = get_user_form_data();
             const token = authModule.get_user_token();

@@ -110,11 +110,19 @@ exports.save_user = async function (user) {
 
         const data = await TASKS.save_user(user);
 
-        return {
-            status: 201,
-            message: 'User saved.',
-            data: data
-        };
+        if (typeof data === 'object') {
+            return {
+                status: 201,
+                message: 'User saved.',
+                data: data
+            };
+        } else {
+            return {
+                status: 200,
+                message: 'User not saved.',
+                data: data
+            };
+        }
 
     } catch (error) {
         LOGGER.module().error('ERROR: [/users/model (save_user)] unable to save user data' + error.message);

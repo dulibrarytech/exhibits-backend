@@ -100,6 +100,7 @@ const User_tasks = class {
 
         } catch (error) {
             LOGGER.module().error('ERROR: [/users/tasks (save_user)] unable to save user data ' + error.message);
+            return error.sqlMessage;
         }
     }
 
