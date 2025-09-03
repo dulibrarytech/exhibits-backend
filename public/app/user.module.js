@@ -105,6 +105,7 @@ const userModule = (function () {
             const users = await get_user_records();
 
             if (users === false) {
+                document.querySelector('#add-user').style.display = 'none';
                 document.querySelector('#message').innerHTML = `<div class="alert alert-danger" role="alert"><i class="fa fa-exclamation"></i> You do not have permission to view users.</div>`;
                 return false;
             }
