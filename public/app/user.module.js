@@ -38,11 +38,14 @@ const userModule = (function () {
                 }
             });
 
-            if (response.status === 200) {
+            if (response !== undefined && response.status === 200) {
                 return response.data;
+            } else if (response === undefined) {
+                return false;
             }
 
         } catch (error) {
+            console.error('ERROR ', error);
             document.querySelector('#message').innerHTML = `<div class="alert alert-danger" role="alert"><i class="fa fa-exclamation"></i> ${error.message}</div>`;
         }
     }
@@ -100,6 +103,11 @@ const userModule = (function () {
         try {
 
             const users = await get_user_records();
+
+            if (users === false) {
+                document.querySelector('#message').innerHTML = `<div class="alert alert-danger" role="alert"><i class="fa fa-exclamation"></i> You do not have permission to view users.</div>`;
+                return false;
+            }
 
             // TODO: get user role
 

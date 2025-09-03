@@ -20,6 +20,7 @@
 
 const MODEL = require('../users/model');
 const LOGGER = require("../libs/log4");
+const AUTHORIZE = require("../auth/authorize");
 
 /**
  * Gets Users
@@ -29,6 +30,26 @@ const LOGGER = require("../libs/log4");
 exports.get_users = async function (req, res) {
 
     try {
+
+        const permissions = ['view_users', 'add_users', 'update_users'];
+        let options = {};
+        options.req = req;
+        options.permissions = permissions;
+        options.record_type = null;
+        options.parent_id = null;
+        options.child_id = null;
+        options.users = true;
+
+        const is_authorized = await AUTHORIZE.check_permission(options);
+        console.log('is_authorized ', is_authorized);
+        if (is_authorized === false) {
+            res.status(403).send({
+                message: 'Unauthorized request'
+            });
+
+            return false;
+        }
+
         const data = await MODEL.get_users();
         res.status(data.status).send(data.data);
     } catch (error) {

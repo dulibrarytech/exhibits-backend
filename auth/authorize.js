@@ -40,6 +40,7 @@ exports.check_permission = async function (options) {
         const record_type = options.record_type;
         const parent_id = options.parent_id;
         const child_id = options.child_id;
+        const users_admin = options.users;
         let user_role_permissions = [];
         let token = req.headers['x-access-token'];
 
@@ -85,6 +86,12 @@ exports.check_permission = async function (options) {
         };
 
         let user_has_permission = user_permission_matches(actions, user_permissions_found);
+
+        // users
+        if (user_has_permission.length > 0 && users_admin !== undefined && users_admin === true) {
+            console.log('Authorized');
+            return true;
+        }
 
         if (user_has_permission.length > 0) {
 
