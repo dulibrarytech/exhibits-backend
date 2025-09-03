@@ -578,8 +578,9 @@ const userModule = (function () {
 
         await userModule.list_roles();
 
+        /*
         document.querySelector('#roles-toggle').addEventListener('click', (event) => {
-            // TODO: show/hide
+
             event.preventDefault();
 
             let toggle_elem = document.querySelector('#role-descriptions');
@@ -592,6 +593,8 @@ const userModule = (function () {
 
             return false;
         });
+
+         */
     };
 
     return obj;
