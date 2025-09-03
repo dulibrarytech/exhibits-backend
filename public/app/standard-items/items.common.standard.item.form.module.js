@@ -124,7 +124,6 @@ const itemsCommonStandardItemFormModule = (function () {
             navModule.back_to_items();
             navModule.set_preview_link();
 
-            // TODO: move to style helper
             document.querySelector('#item-background-color-picker').addEventListener('input', () => {
                 if (document.querySelector('#item-background-color')) {
                     document.querySelector('#item-background-color').value = document.querySelector('#item-background-color-picker').value;

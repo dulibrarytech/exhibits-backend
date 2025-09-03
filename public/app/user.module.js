@@ -545,27 +545,28 @@ const userModule = (function () {
         try {
 
             const roles = await get_roles();
+            let role_descriptions = '';
             let select = '';
+
+            role_descriptions += '<ul>';
 
             select += '<option value="">Select From Menu</option>';
             select += '<option value="">----------</option>';
 
             for (let i = 0; i < roles.length; i++) {
 
-                console.log(roles[i].id);
-                console.log(roles[i].role);
-                console.log(roles[i].description); // place in info tooltip
+                role_descriptions += `<li><small><strong>${roles[i].role}</strong>: ${roles[i].description}</small></li>`;
 
-                if (role !== null) {
+                if (role !== undefined) {
                     select += `<option value="${roles[i].id}" selected>${roles[i].role}</option>`;
                 } else {
                     select += `<option value="${roles[i].id}">${roles[i].role}</option>`;
                 }
-
-
-
             }
 
+            role_descriptions += '</ul>';
+
+            document.querySelector('#role-descriptions').innerHTML = role_descriptions;
             document.querySelector('#user-roles').innerHTML = select;
 
         } catch (error) {
@@ -574,7 +575,23 @@ const userModule = (function () {
     }
 
     obj.init = async function () {
+
         await userModule.list_roles();
+
+        document.querySelector('#roles-toggle').addEventListener('click', (event) => {
+            // TODO: show/hide
+            event.preventDefault();
+
+            let toggle_elem = document.querySelector('#role-descriptions');
+
+            if (toggle_elem.style.display === 'none') {
+                toggle_elem.style.display = 'block';
+            } else {
+                toggle_elem.style.display = 'none';
+            }
+
+            return false;
+        });
     };
 
     return obj;
