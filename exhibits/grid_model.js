@@ -113,8 +113,6 @@ exports.update_grid_record = async function (is_member_of_exhibit, grid_id, data
             };
         }
 
-        data.order = await HELPER_TASK.order_exhibit_items(data.is_member_of_exhibit, DB, TABLES);
-
         const CREATE_RECORD_TASK = new EXHIBIT_GRID_RECORD_TASKS(DB, TABLES);
         let result = await CREATE_RECORD_TASK.update_grid_record(data);
 

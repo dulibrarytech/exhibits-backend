@@ -466,9 +466,10 @@ const helperMediaModule = (function () {
         let embed_item = document.querySelector('#embed-item');
         let wrap_text = document.querySelector('#wrap-text');
         let media_padding = document.querySelector('#media-padding');
-
+        console.log('embed test ', embed_item);
         if (embed_item) {
             item.is_embedded = embed_item.checked;
+            console.log('item embed test ', item.is_embedded);
         }
 
         if (wrap_text) {

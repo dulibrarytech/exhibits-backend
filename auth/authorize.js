@@ -87,7 +87,7 @@ exports.check_permission = async function (options) {
 
         let user_has_permission = user_permission_matches(actions, user_permissions_found);
 
-        // users
+        // checks if user has permissions to administer users
         if (user_has_permission.length > 0 && users_admin !== undefined && users_admin === true) {
             console.log('Authorized');
             return true;
