@@ -365,7 +365,6 @@ const userModule = (function () {
             return false;
 
         } catch (error) {
-            console.log('ERROR ', error);
             document.querySelector('#message').innerHTML = `<div class="alert alert-danger" role="alert"><i class="fa fa-exclamation"></i> ${error.message}</div>`;
         }
     };
@@ -567,7 +566,7 @@ const userModule = (function () {
 
                 role_descriptions += `<li><small><strong>${roles[i].role}</strong>: ${roles[i].description}</small></li>`;
 
-                if (role !== undefined) {
+                if (role !== undefined && role.role_id === roles[i].id) {
                     select += `<option value="${roles[i].id}" selected>${roles[i].role}</option>`;
                 } else {
                     select += `<option value="${roles[i].id}">${roles[i].role}</option>`;
