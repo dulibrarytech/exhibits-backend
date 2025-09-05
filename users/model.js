@@ -34,10 +34,30 @@ exports.get_users = async function () {
     try {
 
         const TASKS = new USER_TASKS(DB, TABLE);
+        let data = await TASKS.get_users();
+
+        const ROLE_TASK = new ROLE_TASKS(DB, USERS_ROLES_TABLE);
+        let role;
+        let users = [];
+
+        for (let i=0;i<data.length;i++) {
+
+            let obj = data[i];
+            role = await ROLE_TASK.get_user_role(data[i].id);
+
+            if (role.length > 0) {
+                obj.role = role[0].role;
+            } else {
+                obj.role = 'N/A';
+            }
+
+            users.push(obj);
+        }
+
         return {
             status: 200,
             message: 'User data retrieved.',
-            data: await TASKS.get_users()
+            data: users
         };
 
     } catch (error) {

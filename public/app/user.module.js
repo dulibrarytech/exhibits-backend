@@ -110,8 +110,6 @@ const userModule = (function () {
                 return false;
             }
 
-            // TODO: get user role
-
             let user_data = '';
 
             if (users === false) {
@@ -124,6 +122,8 @@ const userModule = (function () {
                 document.querySelector('#message').innerHTML = '<div class="alert alert-info" role="alert"><span id="exhibit-title"></span> No User Profiles found.</div>';
                 return false;
             }
+
+            console.log('USERS ', users);
 
             for (let i = 0; i < users.length; i++) {
 
@@ -162,6 +162,7 @@ const userModule = (function () {
                     <p><i class="fa fa-envelope"></i>&nbsp;&nbsp;${users[i].email}</p>
                     </td>`;
 
+                user_data += `<td style="width: 15%;text-align: center">${users[i].role}</td>`;
                 user_data += `<td style="width: 5%;text-align: center"><small>${status}</small></td>`;
                 user_data += `<td style="width: 10%">
                                 <div class="card-text text-sm-center">
