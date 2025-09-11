@@ -100,6 +100,25 @@ exports.update_user = async function (req, res) {
             return false;
         }
 
+        const permissions = ['update_users'];
+        let options = {};
+        options.req = req;
+        options.permissions = permissions;
+        options.record_type = null;
+        options.parent_id = null;
+        options.child_id = null;
+        options.users = true;
+
+        const is_authorized = await AUTHORIZE.check_permission(options);
+        console.log('is_authorized ', is_authorized);
+        if (is_authorized === false) {
+            res.status(403).send({
+                message: 'Unauthorized request'
+            });
+
+            return false;
+        }
+
         const result = await MODEL.update_user(user_id, data);
         res.status(result.status).send(result);
 
@@ -147,6 +166,25 @@ exports.delete_user = async function (req, res) {
 
         if (user_id === undefined) {
             res.status(400).send('Bad request.');
+            return false;
+        }
+
+        const permissions = ['delete_users'];
+        let options = {};
+        options.req = req;
+        options.permissions = permissions;
+        options.record_type = null;
+        options.parent_id = null;
+        options.child_id = null;
+        options.users = true;
+
+        const is_authorized = await AUTHORIZE.check_permission(options);
+        console.log('is_authorized ', is_authorized);
+        if (is_authorized === false) {
+            res.status(403).send({
+                message: 'Unauthorized request'
+            });
+
             return false;
         }
 
