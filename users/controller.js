@@ -144,6 +144,25 @@ exports.save_user = async function (req, res) {
             return false;
         }
 
+        const permissions = ['add_users'];
+        let options = {};
+        options.req = req;
+        options.permissions = permissions;
+        options.record_type = null;
+        options.parent_id = null;
+        options.child_id = null;
+        options.users = true;
+
+        const is_authorized = await AUTHORIZE.check_permission(options);
+        console.log('is_authorized ', is_authorized);
+        if (is_authorized === false) {
+            res.status(403).send({
+                message: 'Unauthorized request'
+            });
+
+            return false;
+        }
+
         const response = await MODEL.save_user(data);
         res.status(response.status).send(response.data);
 
