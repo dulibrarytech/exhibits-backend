@@ -21,12 +21,14 @@
 const DB = require('../config/db_config')();
 const DB_TABLES = require('../config/db_tables_config')();
 const TABLE = DB_TABLES.exhibits;
+const USERS_ROLES_TABLE = DB_TABLES.exhibits.users_roles;
 const AUTH_TASKS = require('../auth/tasks/auth_tasks');
 const ROLES_TASKS = require('../auth/tasks/roles_tasks');
 const EXHIBITS_ENDPOINTS = require('../exhibits/endpoints')();
 const USERS_ENDPOINTS = require('../users/endpoints')();
 const INDEXER_ENDPOINTS = require('../indexer/endpoints')();
 const LOGGER = require('../libs/log4');
+const ROLE_TASKS = require("./tasks/roles_tasks");
 
 /**
  * Checks auth user
@@ -143,4 +145,18 @@ exports.get_user_role = async function (user_id) {
     }
 };
 
-// TODO: roles/permissions
+exports.update_user_role = async function (user_id, role_id) {
+
+    try {
+
+        const ROLE_TASK = new ROLE_TASKS(DB, USERS_ROLES_TABLE);
+        return {
+            status: 200,
+            data: await ROLE_TASK.update_user_role(user_id, role_id)
+        };
+
+    } catch (error) {
+        LOGGER.module().error('ERROR: [/auth/model (update_user_role)] unable to update user role ' + error.message);
+        return false;
+    }
+};

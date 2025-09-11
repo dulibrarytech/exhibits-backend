@@ -42,6 +42,9 @@ module.exports = function (app) {
     app.route('/exhibits-dashboard/auth/role')
         .get(TOKENS.verify, CONTROLLER.get_user_role);
 
+    app.route('/exhibits-dashboard/auth/role/update')
+        .get(CONTROLLER.update_user_role);
+
     app.route(ENDPOINTS().auth.authentication.endpoint)
         .get(TOKENS.verify, CONTROLLER.get_auth_user_data);
 };

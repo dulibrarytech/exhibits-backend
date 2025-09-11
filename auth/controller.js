@@ -119,6 +119,35 @@ exports.get_user_role = async function (req, res) {
     }
 };
 
+exports.update_user_role = async function (req, res) {
+
+    try {
+
+        const user_id = req.query.user_id;
+        const role_id = req.query.role_id;
+
+        if (user_id === undefined || user_id.length === 0) {
+            res.status(400).send({
+                message: 'Bad request'
+            });
+            return false;
+        }
+
+        if (role_id === undefined || role_id.length === 0) {
+            res.status(400).send({
+                message: 'Bad request'
+            });
+            return false;
+        }
+
+        const data = await MODEL.update_user_role(user_id, role_id);
+        res.status(data.status).send(data);
+
+    } catch (error) {
+        LOGGER.module().error('ERROR: [/auth/controller (update_user_role)] unable to update user role ' + error.message);
+    }
+};
+
 exports.check_permissions = async function (req, res) {
 
     try {
