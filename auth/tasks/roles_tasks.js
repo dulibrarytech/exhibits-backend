@@ -87,6 +87,23 @@ const Roles_tasks = class {
             return error.sqlMessage;
         }
     }
+
+    async update_user_role(user_id, role_id) {
+
+        try {
+
+            return this.DB(this.TABLE)
+                .where({
+                    user_id: user_id
+                })
+                .update({
+                    role_id: role_id
+                });
+
+        } catch (error) {
+            LOGGER.module().error('ERROR: [/users/tasks (save_user_role)] unable to update user role data ' + error.message);
+        }
+    }
 };
 
 module.exports = Roles_tasks;

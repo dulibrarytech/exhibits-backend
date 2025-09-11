@@ -123,8 +123,6 @@ const userModule = (function () {
                 return false;
             }
 
-            console.log('USERS ', users);
-
             for (let i = 0; i < users.length; i++) {
 
                 const is_active = users[i].is_active;
@@ -159,7 +157,6 @@ const userModule = (function () {
                 user_data += '<tr>';
                 user_data += `<td style="width: 35%;padding-left: 7%">
                     <p><i class="fa fa-user"></i>&nbsp;&nbsp;<strong>${users[i].first_name} ${users[i].last_name}</strong></p>
-                    <p><i class="fa fa-envelope"></i>&nbsp;&nbsp;${users[i].email}</p>
                     </td>`;
 
                 user_data += `<td style="width: 15%;text-align: center">${users[i].role}</td>`;
@@ -213,18 +210,6 @@ const userModule = (function () {
             document.querySelector('#email-input').value = user.email;
             document.querySelector('#du-id-input').value = user.du_id;
 
-            /* TODO roles
-            console.log(role);
-
-            for (let i = 0; i < roles.length; i++) {
-                console.log(roles[i].id);
-                if (roles[i].id === role.role_id) {
-                    console.log(roles[i].role);
-                }
-            }
-
-             */
-
             return false;
 
         } catch (error) {
@@ -257,6 +242,7 @@ const userModule = (function () {
 
         try {
 
+            window.scrollTo(0, 0);
             event.preventDefault();
             const user_id = helperModule.get_parameter_by_name('user_id');
             const data = get_user_form_data();
@@ -576,7 +562,7 @@ const userModule = (function () {
 
             role_descriptions += '</ul>';
 
-            document.querySelector('#role-descriptions').innerHTML = role_descriptions;
+            // document.querySelector('#role-descriptions').innerHTML = role_descriptions;
             document.querySelector('#user-roles').innerHTML = select;
 
         } catch (error) {

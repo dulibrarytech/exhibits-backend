@@ -35,10 +35,9 @@ exports.get_users = async function () {
 
         const TASKS = new USER_TASKS(DB, TABLE);
         let data = await TASKS.get_users();
-
         const ROLE_TASK = new ROLE_TASKS(DB, USERS_ROLES_TABLE);
-        let role;
         let users = [];
+        let role;
 
         for (let i=0;i<data.length;i++) {
 
@@ -97,7 +96,13 @@ exports.update_user = async function (id, user) {
     try {
 
         const TASKS = new USER_TASKS(DB, TABLE);
+        const ROLE_TASK = new ROLE_TASKS(DB, USERS_ROLES_TABLE);
         const data = await TASKS.update_user(id, user);
+        let user_id = id;
+        let role_id = user.role_id;
+        delete user.role_id;
+
+        await ROLE_TASK.update_user_role(user_id, role_id);
 
         return {
             status: 201,

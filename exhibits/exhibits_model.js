@@ -722,6 +722,8 @@ exports.check_preview = async function (uuid) {
     }
 };
 
+// TODO: transfer exhibits
+
 /** TODO: deprecate
  * Updates exhibit order
  * @param data
