@@ -31,7 +31,7 @@ exports.get_users = async function (req, res) {
 
     try {
 
-        const permissions = ['view_users', 'add_users', 'update_users'];
+        const permissions = ['view_users'];
         let options = {};
         options.req = req;
         options.permissions = permissions;
