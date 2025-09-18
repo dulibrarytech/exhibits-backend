@@ -221,14 +221,29 @@ const userModule = (function () {
             const user_id = helperModule.get_parameter_by_name('user_id');
             const record = await get_user_record();
             const role = await get_user_role(user_id);
-            await userModule.list_roles(role);
             const user = record.pop();
 
             // user data
-            document.querySelector('#first-name-input').value = user.first_name;
-            document.querySelector('#last-name-input').value = user.last_name;
-            document.querySelector('#email-input').value = user.email;
-            document.querySelector('#du-id-input').value = user.du_id;
+            if (user.role === 'Administrator') {
+
+                await userModule.list_roles(role);
+                document.querySelector('#first-name-input').value = user.first_name;
+                document.querySelector('#last-name-input').value = user.last_name;
+                document.querySelector('#email-input').value = user.email;
+                document.querySelector('#du-id-input').value = user.du_id;
+
+            } else {
+
+                document.querySelector('#user-form').style.display = 'none';
+                document.querySelector('#user-form-view-only').style.display = 'block'
+                document.querySelector('#save-user-btn').style.display = 'none';
+                document.querySelector('#first-name-disabled').value = user.first_name;
+                document.querySelector('#last-name-disabled').value = user.last_name;
+                document.querySelector('#email-disabled').value = user.email;
+                document.querySelector('#du-id-disabled').value = user.du_id;
+                document.querySelector('#role-disabled').value = role.role;
+                // TODO: console.log('ROLE ', role.role);
+            }
 
             return false;
 
@@ -561,17 +576,11 @@ const userModule = (function () {
         try {
 
             const roles = await get_roles();
-            let role_descriptions = '';
             let select = '';
-
-            role_descriptions += '<ul>';
-
             select += '<option value="">Select From Menu</option>';
             select += '<option value="">----------</option>';
 
             for (let i = 0; i < roles.length; i++) {
-
-                role_descriptions += `<li><small><strong>${roles[i].role}</strong>: ${roles[i].description}</small></li>`;
 
                 if (role !== undefined && role.role_id === roles[i].id) {
                     select += `<option value="${roles[i].id}" selected>${roles[i].role}</option>`;
@@ -580,9 +589,6 @@ const userModule = (function () {
                 }
             }
 
-            role_descriptions += '</ul>';
-
-            // document.querySelector('#role-descriptions').innerHTML = role_descriptions;
             document.querySelector('#user-roles').innerHTML = select;
 
         } catch (error) {
