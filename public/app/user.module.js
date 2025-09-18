@@ -224,7 +224,7 @@ const userModule = (function () {
             const user = record.pop();
 
             // user data
-            if (user.role === 'Administrator') {
+            if (role.role === 'Administrator') {
 
                 await userModule.list_roles(role);
                 document.querySelector('#first-name-input').value = user.first_name;
