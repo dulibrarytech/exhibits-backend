@@ -122,6 +122,8 @@ const userModule = (function () {
                 return false;
             }
 
+            let access = false;
+
             for (let i = 0; i < users.length; i++) {
 
                 const is_active = users[i].is_active;
@@ -135,6 +137,10 @@ const userModule = (function () {
                     return false;
                 }
 
+                if (parseInt(user.uid) === users[i].id && users[i].role === 'Administrator') {
+                    access = true;
+                }
+
                 if (is_active === 1) {
 
                     if (parseInt(user.uid) === users[i].id) {
@@ -145,7 +151,7 @@ const userModule = (function () {
 
                     } else {
 
-                        if (users[i].role === 'Administrator') {
+                        if (access === true) {
                             status = `<a href="#" id="${users[i].id}" class="inactive-user"><span id="inactive" title="active"><i class="fa fa-user" style="color: green"></i><br>Active</span></a>`;
                         } else {
                             status = `<span id="inactive" title="active"><i class="fa fa-user" style="color: green"></i><br>Active</span>`;
@@ -157,7 +163,7 @@ const userModule = (function () {
 
                 } else if (is_active === 0) {
 
-                    if (users[i].role === 'Administrator') {
+                    if (access === true) {
                         status = `<a href="#" id="${users[i].id}" class="active-user"><span id="active" title="inactive"><i class="fa fa-user" style="color: darkred"></i><br>Inactive</span></a>`;
                         user_edit = `<a href="${APP_PATH}/users/edit?user_id=${users[i].id}" title="Edit"><i class="fa fa-edit pr-1"></i> </a>`;
                         trash = `<a href="${APP_PATH}/users/delete?user_id=${users[i].id}" title="Delete"><i class="fa fa-trash pr-1"></i></a>`;
