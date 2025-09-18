@@ -141,7 +141,7 @@ const userModule = (function () {
 
                         status = `<span id="inactive" title="active"><i class="fa fa-user" style="color: green"></i><br>Active</span>`;
                         user_edit = `<a href="${APP_PATH}/users/edit?user_id=${users[i].id}" title="Edit"><i class="fa fa-edit pr-1"></i> </a>`;
-                        trash = `<i title="Can only delete if unpublished" style="color: #d3d3d3" class="fa fa-trash pr-1"></i>`;
+                        trash = `<i title="Can only delete if inactive" style="color: #d3d3d3" class="fa fa-trash pr-1"></i>`;
 
                     } else {
 
@@ -151,20 +151,23 @@ const userModule = (function () {
                             status = `<span id="inactive" title="active"><i class="fa fa-user" style="color: green"></i><br>Active</span>`;
                         }
 
-                        user_edit = `<i title="Can only edit if unpublished" style="color: #d3d3d3" class="fa fa-edit pr-1"></i>`;
-                        trash = `<i title="Can only delete if unpublished" style="color: #d3d3d3" class="fa fa-trash pr-1"></i>`;
+                        user_edit = `<i title="Can only edit if inactive" style="color: #d3d3d3" class="fa fa-edit pr-1"></i>`;
+                        trash = `<i title="Can only delete if inactive" style="color: #d3d3d3" class="fa fa-trash pr-1"></i>`;
                     }
 
                 } else if (is_active === 0) {
 
                     if (parseInt(user.uid) === users[i].id && users[i].role === 'Administrator') {
+
                         status = `<a href="#" id="${users[i].id}" class="active-user"><span id="active" title="inactive"><i class="fa fa-user" style="color: darkred"></i><br>Inactive</span></a>`;
+                        user_edit = `<a href="${APP_PATH}/users/edit?user_id=${users[i].id}" title="Edit"><i class="fa fa-edit pr-1"></i> </a>`;
+                        trash = `<a href="${APP_PATH}/users/delete?user_id=${users[i].id}" title="Delete"><i class="fa fa-trash pr-1"></i></a>`;
+
                     } else {
                         status = `<span id="active" title="inactive"><i class="fa fa-user" style="color: darkred"></i><br>Inactive</span>`;
+                        user_edit = `<i title="Can only edit if inactive" style="color: #d3d3d3" class="fa fa-edit pr-1"></i>`;
+                        trash = `<i title="Can only delete if inactive" style="color: #d3d3d3" class="fa fa-trash pr-1"></i>`;
                     }
-
-                    user_edit = `<a href="${APP_PATH}/users/edit?user_id=${users[i].id}" title="Edit"><i class="fa fa-edit pr-1"></i> </a>`;
-                    trash = `<a href="${APP_PATH}/users/delete?user_id=${users[i].id}" title="Delete"><i class="fa fa-trash pr-1"></i></a>`;
                 }
 
                 user_data += '<tr>';
