@@ -142,26 +142,3 @@ exports.update_heading_record = async function (req, res) {
         res.status(408).send({message: `Unable to update heading record. ${error.message}`});
     }
 };
-
-/*
-exports.delete_heading_record = async function (req, res) {
-
-    try {
-
-        const is_member_of_exhibit = req.params.exhibit_id;
-        const uuid = req.params.heading_id;
-
-        if (uuid === undefined || uuid.length === 0 && is_member_of_exhibit === undefined || is_member_of_exhibit.length === 0) {
-            res.status(400).send('Bad request.');
-            return false;
-        }
-
-        const result = await HEADINGS_MODEL.delete_heading_record(is_member_of_exhibit, uuid);
-        res.status(result.status).send(result);
-
-    } catch (error) {
-        res.status(408).send({message: `Unable to delete heading record. ${error.message}`});
-    }
-};
-
- */
