@@ -55,6 +55,7 @@ const itemsAddStandardItemFormModule = (function () {
             }
 
             data.created_by = user.name;
+            data.owner = parseInt(user.uid);
 
             let token = authModule.get_user_token();
             let response = await httpModule.req({

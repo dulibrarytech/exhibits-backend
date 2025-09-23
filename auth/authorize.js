@@ -48,8 +48,6 @@ exports.check_permission = async function (options) {
             return false;
         }
 
-        // TODO: check option values here
-
         let user_id = await AUTH_TASKS.get_user_id(token);
         let user_permissions = await AUTH_TASKS.get_user_permissions(token);
 

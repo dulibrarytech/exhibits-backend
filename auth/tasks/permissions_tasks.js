@@ -31,18 +31,19 @@ const Permissions_tasks = class {
         this.TABLE = TABLE;
     }
 
-    /**
-     * Checks user access
-     * @param username
+    /** TODO
+     * Gets role permissions
+     * @param role
      */
-    async get_permissions() {
+    async get_role_permissions(role) {
 
         try {
 
-
+            // TODO
+            console.log(role);
 
         } catch (error) {
-            LOGGER.module().error('ERROR: [/users/tasks (check_auth_user)] unable to check auth ' + error.message);
+            LOGGER.module().error('ERROR: [/auth/tasks (get_role_permissions)] unable to get role permissions ' + error.message);
         }
     };
 
@@ -72,7 +73,7 @@ const Permissions_tasks = class {
             }
 
         } catch (error) {
-            LOGGER.module().error('ERROR: [/users/tasks (get_auth_user_data)] unable to get user data ' + error.message);
+            LOGGER.module().error('ERROR: [/auth/tasks (get_auth_user_data)] unable to get user data ' + error.message);
         }
     };
 };

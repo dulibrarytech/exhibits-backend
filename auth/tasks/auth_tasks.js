@@ -191,11 +191,6 @@ const Auth_tasks = class {
 
         try {
 
-            console.log(user_id);
-            console.log(parent_id);
-            console.log(child_id);
-            console.log(record_type);
-
             let table;
             const exhibit_data = await this.DB(this.TABLE.exhibit_records)
                 .select('owner')

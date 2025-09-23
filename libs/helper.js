@@ -183,9 +183,9 @@ const Helper = class {
             item_order = await db(tables.item_records).select('order').where('is_member_of_exhibit', uuid);
             grid_order = await db(tables.grid_records).select('order').where('is_member_of_exhibit', uuid);
             timeline_order = await db(tables.timeline_records).select('order').where('is_member_of_exhibit', uuid);
-            console.log('HELPER GRID ORDER ', grid_order);
+
             const merged = [...heading_order, ...item_order, ...grid_order, ...timeline_order];
-            console.log('HELPER MERGED ORDER ', merged);
+
             return this.order_items(merged);
 
         } catch (error) {
