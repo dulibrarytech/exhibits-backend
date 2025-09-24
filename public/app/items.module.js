@@ -263,9 +263,12 @@ const itemsModule = (function () {
                 scrollTo(0, 0);
                 document.querySelector('#message').innerHTML = `<div class="alert alert-danger" role="alert"><i class="fa fa-danger"></i> You do not have permission to publish this record.</div>`;
 
+                /*
                 setTimeout(() => {
                     document.querySelector('#message').innerHTML = '';
                 }, 5000);
+
+                 */
             }
 
             return false;
@@ -376,9 +379,12 @@ const itemsModule = (function () {
                 scrollTo(0, 0);
                 document.querySelector('#message').innerHTML = `<div class="alert alert-danger" role="alert"><i class="fa fa-danger"></i> You do not have permission to publish this record.</div>`;
 
+                /*
                 setTimeout(() => {
                     document.querySelector('#message').innerHTML = '';
                 }, 5000);
+
+                 */
             }
 
             return false;
@@ -441,9 +447,12 @@ const itemsModule = (function () {
                     window.history.replaceState({page: 'items'}, '', '/exhibits-dashboard/items?exhibit_id=' + exhibit_id);
                 }, 0);
 
+                /*
                 setTimeout(() => {
                     document.querySelector('#message').innerHTML = '';
                 }, 3000);
+
+                 */
             }
 
             (async function () {

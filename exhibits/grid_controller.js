@@ -264,7 +264,7 @@ exports.delete_grid_item_record = async function (req, res) {
         const is_member_of_exhibit = req.params.exhibit_id;
         const grid_id = req.params.grid_id;
         const grid_item_id = req.params.item_id;
-        const type = req.query.type;
+        const record_type = req.query.type;
 
         if (grid_item_id === undefined || grid_item_id.length === 0 && grid_id === undefined || grid_id.length === 0) {
             res.status(400).send('Bad request.');
@@ -289,7 +289,7 @@ exports.delete_grid_item_record = async function (req, res) {
             return false;
         }
 
-        const result = await GRIDS_MODEL.delete_grid_item_record(is_member_of_exhibit, grid_id, grid_item_id, type);
+        const result = await GRIDS_MODEL.delete_grid_item_record(is_member_of_exhibit, grid_id, grid_item_id, record_type);
         res.status(result.status).send(result);
 
     } catch (error) {

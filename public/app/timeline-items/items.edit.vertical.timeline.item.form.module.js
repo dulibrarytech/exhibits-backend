@@ -169,14 +169,16 @@ const itemsEditTimelineItemFormModule = (function () {
                 return false;
             }
 
+            /*
             const user = JSON.parse(sessionStorage.getItem('exhibits_user'));
 
             if (user.name === null) {
                 document.querySelector('#message').innerHTML = `<div class="alert alert-danger" role="alert"><i class="fa fa-exclamation"></i> Unable to retrieve your name</div>`;
                 return false;
             }
+            */
 
-            data.updated_by = user.name;
+            data.updated_by = helperModule.get_user_name(); // user.name;
 
             let etmp = EXHIBITS_ENDPOINTS.exhibits.timeline_item_records.put.endpoint.replace(':exhibit_id', exhibit_id);
             let itmp = etmp.replace(':timeline_id', timeline_id);
@@ -210,8 +212,7 @@ const itemsEditTimelineItemFormModule = (function () {
     obj.init = async function () {
 
         try {
-            // items/vertical-timeline/item/media/details?exhibit_id=f4a8ec55-1961-43ca-a805-f7ccc957479b&timeline_id=52c7bfb3-a73b-4f3f-bf29-769432fdcd34&item_id=ff2d0167-31b2-467a-b2b9-7067d4d7ac10
-            // items/vertical-timeline/item/media/edit?exhibit_id=f4a8ec55-1961-43ca-a805-f7ccc957479b&timeline_id=52c7bfb3-a73b-4f3f-bf29-769432fdcd34&item_id=ff2d0167-31b2-467a-b2b9-7067d4d7ac10
+
             const exhibit_id = helperModule.get_parameter_by_name('exhibit_id');
             exhibitsModule.set_exhibit_title(exhibit_id);
             navModule.set_timeline_item_nav_menu_links();

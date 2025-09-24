@@ -191,6 +191,7 @@ const itemsEditGridItemFormModule = (function () {
                 return false;
             }
 
+            /*
             const user = JSON.parse(sessionStorage.getItem('exhibits_user'));
 
             if (user.name === null) {
@@ -198,7 +199,9 @@ const itemsEditGridItemFormModule = (function () {
                 return false;
             }
 
-            data.updated_by = user.name;
+             */
+
+            data.updated_by = helperModule.get_user_name(); // user.name;
 
             let etmp = EXHIBITS_ENDPOINTS.exhibits.grid_item_records.put.endpoint.replace(':exhibit_id', exhibit_id);
             let itmp = etmp.replace(':grid_id', grid_id);

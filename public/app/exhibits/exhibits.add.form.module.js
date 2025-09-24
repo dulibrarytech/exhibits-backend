@@ -69,15 +69,8 @@ const exhibitsAddFormModule = (function () {
                 return false;
             }
 
-            const user = JSON.parse(sessionStorage.getItem('exhibits_user'));
-
-            if (user.name === null) {
-                document.querySelector('#message').innerHTML = `<div class="alert alert-danger" role="alert"><i class="fa fa-exclamation"></i> Unable to retrieve your name</div>`;
-                return false;
-            }
-
-            data.created_by = user.name;
-            data.owner = parseInt(user.uid);
+            data.created_by = helperModule.get_user_name();
+            data.owner = helperModule.get_owner();
 
             response = await httpModule.req({
                 method: 'POST',

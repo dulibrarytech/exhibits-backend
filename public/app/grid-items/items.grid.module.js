@@ -329,6 +329,7 @@ const itemsGridModule = (function () {
         try {
 
             document.querySelector('#delete-message').innerHTML = 'Deleting grid item...';
+            document.querySelector('#delete-card').style.display = 'none';
             const exhibit_id = helperModule.get_parameter_by_name('exhibit_id');
             const grid_id = helperModule.get_parameter_by_name('grid_id');
             const grid_item_id = helperModule.get_parameter_by_name('item_id');
@@ -351,6 +352,8 @@ const itemsGridModule = (function () {
                 setTimeout(() => {
                     window.location.replace(`${APP_PATH}/items/grid/items?exhibit_id=${exhibit_id}&grid_id=${grid_id}`);
                 }, 900);
+            } else if (response === undefined) {
+                document.querySelector('#message').innerHTML = `<div class="alert alert-danger" role="alert"><i class="fa fa-exclamation"></i> You do not have permission to delete this item.</div>`;
             }
 
         } catch (error) {

@@ -207,16 +207,22 @@ const Auth_tasks = class {
                 const standard_item_data = await this.DB(table)
                     .select('owner')
                     .where({
-                        uuid: child_id,
-                        owner: exhibit_data[0].owner
+                        uuid: child_id
                     });
 
                 if (standard_item_data.length > 0) {
 
+                    // owner owns both exhibit and item
                     if (standard_item_data[0].owner === exhibit_data[0].owner) {
                         return standard_item_data[0].owner;
-                    } else if (standard_item_data[0].owner !== exhibit_data[0].owner) {
-                        return exhibit_data[0].owner;
+                    } else if (standard_item_data[0].owner !== exhibit_data[0].owner) { // not exhibit owner
+
+                        // check if user owns item
+                        if (standard_item_data[0].owner === user_id) {
+                            return standard_item_data[0].owner;
+                        } else {
+                            return exhibit_data[0].owner;
+                        }
                     }
 
                 } else if (standard_item_data.length === 0) {
@@ -226,15 +232,14 @@ const Auth_tasks = class {
 
             if (record_type === 'heading') {
 
-                console.log('Checking heading ownership');
+                console.log('Checking heading item ownership');
 
                 table = this.TABLE.heading_records;
 
                 const heading_data = await this.DB(table)
                     .select('owner')
                     .where({
-                        uuid: child_id,
-                        owner: exhibit_data[0].owner
+                        uuid: child_id
                     });
 
                 if (heading_data.length > 0) {
@@ -242,7 +247,12 @@ const Auth_tasks = class {
                     if (heading_data[0].owner === exhibit_data[0].owner) {
                         return heading_data[0].owner;
                     } else if (heading_data[0].owner !== exhibit_data[0].owner) {
-                        return exhibit_data[0].owner;
+
+                        if (heading_data[0].owner === user_id) {
+                            return heading_data[0].owner;
+                        } else {
+                            return exhibit_data[0].owner;
+                        }
                     }
 
                 } else if (heading_data.length === 0) {
@@ -259,8 +269,7 @@ const Auth_tasks = class {
                 const grid_data = await this.DB(table)
                     .select('owner')
                     .where({
-                        uuid: child_id,
-                        owner: exhibit_data[0].owner
+                        uuid: child_id
                     });
 
                 if (grid_data.length > 0) {
@@ -268,7 +277,12 @@ const Auth_tasks = class {
                     if (grid_data[0].owner === exhibit_data[0].owner) {
                         return grid_data[0].owner;
                     } else if (grid_data[0].owner !== exhibit_data[0].owner) {
-                        return exhibit_data[0].owner;
+
+                        if (grid_data[0].owner === user_id) {
+                            return grid_data[0].owner;
+                        } else {
+                            return exhibit_data[0].owner;
+                        }
                     }
 
                 } else if (grid_data.length === 0) {
@@ -285,8 +299,7 @@ const Auth_tasks = class {
                 const grid_item_data = await this.DB(table)
                     .select('owner')
                     .where({
-                        uuid: child_id,
-                        owner: exhibit_data[0].owner
+                        uuid: child_id
                     });
 
                 if (grid_item_data.length > 0) {
@@ -294,7 +307,12 @@ const Auth_tasks = class {
                     if (grid_item_data[0].owner === exhibit_data[0].owner) {
                         return grid_item_data[0].owner;
                     } else if (grid_item_data[0].owner !== exhibit_data[0].owner) {
-                        return exhibit_data[0].owner;
+
+                        if (grid_item_data[0].owner === user_id) {
+                            return grid_item_data[0].owner;
+                        } else {
+                            return exhibit_data[0].owner;
+                        }
                     }
 
                 } else if (grid_item_data.length === 0) {
@@ -311,8 +329,7 @@ const Auth_tasks = class {
                 const timeline_data = await this.DB(table)
                     .select('owner')
                     .where({
-                        uuid: child_id,
-                        owner: exhibit_data[0].owner
+                        uuid: child_id
                     });
 
                 if (timeline_data.length > 0) {
@@ -320,7 +337,12 @@ const Auth_tasks = class {
                     if (timeline_data[0].owner === exhibit_data[0].owner) {
                         return timeline_data[0].owner;
                     } else if (timeline_data[0].owner !== exhibit_data[0].owner) {
-                        return exhibit_data[0].owner;
+
+                        if (timeline_data[0].owner === user_id) {
+                            return timeline_data[0].owner;
+                        } else {
+                            return exhibit_data[0].owner;
+                        }
                     }
 
                 } else if (timeline_data.length === 0) {
@@ -337,8 +359,7 @@ const Auth_tasks = class {
                 const timeline_item_data = await this.DB(table)
                     .select('owner')
                     .where({
-                        uuid: child_id,
-                        owner: exhibit_data[0].owner
+                        uuid: child_id
                     });
 
                 if (timeline_item_data.length > 0) {
@@ -346,7 +367,12 @@ const Auth_tasks = class {
                     if (timeline_item_data[0].owner === exhibit_data[0].owner) {
                         return timeline_item_data[0].owner;
                     } else if (timeline_item_data[0].owner !== exhibit_data[0].owner) {
-                        return exhibit_data[0].owner;
+
+                        if (timeline_item_data[0].owner === user_id) {
+                            return timeline_item_data[0].owner;
+                        } else {
+                            return exhibit_data[0].owner;
+                        }
                     }
 
                 } else if (timeline_item_data.length === 0) {
@@ -354,8 +380,10 @@ const Auth_tasks = class {
                 }
             }
 
-            if (exhibit_data.length > 0) {
+            if (exhibit_data.length > 0 && exhibit_data[0].owner === user_id) {
                 return exhibit_data[0].owner;
+            } else {
+                return 0;
             }
 
         } catch (error) {

@@ -48,6 +48,7 @@ const itemsAddVerticalTimelineItemFormModule = (function () {
                 return false;
             }
 
+            /*
             const user = JSON.parse(sessionStorage.getItem('exhibits_user'));
 
             if (user.name === null) {
@@ -55,7 +56,9 @@ const itemsAddVerticalTimelineItemFormModule = (function () {
                 return false;
             }
 
-            data.created_by = user.name;
+             */
+
+            data.created_by = helperModule.get_user_name(); //user.name;
 
             let tmp = EXHIBITS_ENDPOINTS.exhibits.timeline_item_records.post.endpoint.replace(':exhibit_id', exhibit_id);
             let endpoint = tmp.replace(':timeline_id', timeline_id);

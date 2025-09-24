@@ -44,6 +44,7 @@ const itemsAddVerticalTimelineFormModule = (function () {
                 return false;
             }
 
+            /*
             const user = JSON.parse(sessionStorage.getItem('exhibits_user'));
 
             if (user.name === null) {
@@ -51,7 +52,9 @@ const itemsAddVerticalTimelineFormModule = (function () {
                 return false;
             }
 
-            data.created_by = user.name;
+             */
+
+            data.created_by = helperModule.get_user_name(); //user.name;
 
             let token = authModule.get_user_token();
             let response = await httpModule.req({

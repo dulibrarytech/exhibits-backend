@@ -401,7 +401,6 @@ exports.delete_item_record = async function (is_member_of_exhibit, item_id, type
         };
 
     } catch (error) {
-        console.log(error);
         LOGGER.module().error('ERROR: [/exhibits/model (delete_item_record)] ' + error.message);
         return {
             status: 400,

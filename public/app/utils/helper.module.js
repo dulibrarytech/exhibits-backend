@@ -403,6 +403,16 @@ const helperModule = (function () {
         }
     };
 
+    obj.get_user_name = function () {
+        const profile = authModule.get_user_profile_data();
+        return profile.name;
+    }
+
+    obj.get_owner = function () {
+        const profile = authModule.get_user_profile_data();
+        return parseInt(profile.uid);
+    }
+
     obj.check_bandwidth = function (cb) {
 
         const URL = 'https://upload.wikimedia.org/wikipedia/commons/9/90/ODJBcard.JPG';

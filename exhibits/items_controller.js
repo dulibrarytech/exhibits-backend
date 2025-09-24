@@ -167,36 +167,11 @@ exports.delete_item_record = async function (req, res) {
 
         const is_member_of_exhibit = req.params.exhibit_id;
         const item_id = req.params.item_id;
-        const type = req.query.type;
-        let record_type;
+        const record_type = req.query.type;
 
         if (item_id === undefined || item_id.length === 0 && is_member_of_exhibit === undefined || is_member_of_exhibit.length === 0) {
             res.status(400).send('Bad request.');
             return false;
-        }
-
-        if (type === 'heading') {
-            record_type = 'heading_item';
-        }
-
-        if (type === 'item') {
-            record_type = 'standard_item';
-        }
-
-        if (type === 'grid') {
-            record_type = 'grid';
-        }
-
-        if (type === 'grid_item') {
-            record_type = 'grid_item';
-        }
-
-        if (type === 'timeline') {
-            record_type = 'timeline';
-        }
-
-        if (type === 'timeline_item') {
-            record_type = 'timeline_item';
         }
 
         const permissions = ['delete_item', 'delete_any_item'];
@@ -208,7 +183,7 @@ exports.delete_item_record = async function (req, res) {
         options.child_id = item_id;
 
         const is_authorized = await AUTHORIZE.check_permission(options);
-
+        console.log('IS_AUTHORIZED ', is_authorized);
         if (is_authorized === false) {
             res.status(403).send({
                 message: 'Unauthorized request'
@@ -217,7 +192,7 @@ exports.delete_item_record = async function (req, res) {
             return false;
         }
 
-        const result = await ITEMS_MODEL.delete_item_record(is_member_of_exhibit, item_id, type);
+        const result = await ITEMS_MODEL.delete_item_record(is_member_of_exhibit, item_id, record_type);
         res.status(result.status).send(result);
 
     } catch (error) {
