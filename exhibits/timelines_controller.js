@@ -345,7 +345,7 @@ exports.delete_timeline_item_record = async function (req, res) {
         const is_member_of_exhibit = req.params.exhibit_id;
         const timeline_id = req.params.timeline_id;
         const timeline_item_id = req.params.item_id;
-        const type = req.query.type;
+        const record_type = req.query.type;
 
         if (timeline_item_id === undefined || timeline_item_id.length === 0 && timeline_id === undefined || timeline_id.length === 0) {
             res.status(400).send('Bad request.');
