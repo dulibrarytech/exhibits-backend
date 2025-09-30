@@ -377,7 +377,7 @@ exports.unlock_heading_record = async function (uuid) {
     } catch (error) {
         LOGGER.module().error('ERROR: [/exhibits/model (unlock_heading_record)] ' + error.message);
     }
-}
+};
 
 exports.publish_heading_record = publish_heading_record;
 exports.suppress_heading_record = suppress_heading_record;

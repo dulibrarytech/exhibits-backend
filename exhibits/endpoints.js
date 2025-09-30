@@ -120,6 +120,12 @@ const ENDPOINTS = {
                 endpoint: `${APP_PATH}${PREFIX}${VERSION}${ENDPOINT}/:exhibit_id/headings/:heading_id/unlock`
             }
         },
+        item_unlock_record: {
+            post: {
+                description: 'Unlock standard item record',
+                endpoint: `${APP_PATH}${PREFIX}${VERSION}${ENDPOINT}/:exhibit_id/items/:item_id/unlock`
+            }
+        },
         grid_records: {
             get: {
                 description: 'Retrieves all grid records by exhibit id and grid id',

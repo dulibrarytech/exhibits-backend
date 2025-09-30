@@ -56,4 +56,7 @@ module.exports = function (app) {
 
     app.route(ENDPOINTS().exhibits.reorder_records.post.endpoint)
         .post(CONTROLLER.reorder_items);
+
+    app.route(ENDPOINTS().exhibits.item_unlock_record.post.endpoint)
+        .post(CONTROLLER.unlock_item_record);
 };

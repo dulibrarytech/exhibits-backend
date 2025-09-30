@@ -431,12 +431,13 @@ const helperModule = (function () {
             endpoint = tmp.replace(':heading_id', heading_id);
         }
 
-        /*
-        if (window.location.pathname.indexOf('standard')) {
-            console.log('standard');
-            type = 'standard';
+        if (window.location.pathname.indexOf('items/standard')) {
+            let item_id = helperModule.get_parameter_by_name('item_id');
+            let tmp = EXHIBITS_ENDPOINTS.exhibits.item_unlock_record.post.endpoint.replace(':exhibit_id', exhibit_id);
+            endpoint = tmp.replace(':item_id', item_id);
         }
 
+        /*
         if (window.location.pathname.indexOf('grid')) {
             console.log('grid');
             type = 'grid';

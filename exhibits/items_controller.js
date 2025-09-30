@@ -551,3 +551,50 @@ exports.reorder_items = async function (req, res) {
         res.status(500).send({message: `Unable to reorder items. ${error.message}`});
     }
 };
+
+exports.unlock_item_record = async function (req, res) {
+
+    try {
+
+        const exhibit_id = req.params.exhibit_id;
+        const item_id = req.params.item_id;
+
+        if (item_id === undefined || item_id.length === 0) {
+            res.status(400).send('Bad request.');
+            return false;
+        }
+
+        const permissions = ['update_any_item'];
+        let options = {};
+        options.req = req;
+        options.permissions = permissions;
+        options.record_type = 'item';
+        options.parent_id = exhibit_id;
+        options.child_id = item_id;
+
+        const is_authorized = await AUTHORIZE.check_permission(options);
+
+        if (is_authorized === false) {
+            res.status(403).send({
+                message: 'Unauthorized request'
+            });
+
+            return false;
+        }
+
+        const result = await ITEMS_MODEL.unlock_item_record(item_id);
+
+        if (result === true) {
+            res.status(200).send({
+                message: 'Item record unlocked.'
+            });
+        } else {
+            res.status(400).send({
+                message: 'Unable to unlock item record'
+            });
+        }
+
+    } catch (error) {
+        res.status(500).send({message: `Unable to unlock item record. ${error.message}`});
+    }
+};

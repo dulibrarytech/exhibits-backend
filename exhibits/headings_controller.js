@@ -187,7 +187,6 @@ exports.unlock_heading_record = async function (req, res) {
         }
 
     } catch (error) {
-        console.log(error);
         res.status(500).send({message: `Unable to unlock heading record. ${error.message}`});
     }
 };
