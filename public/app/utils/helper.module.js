@@ -390,6 +390,11 @@ const helperModule = (function () {
         }
     };
 
+    /**
+     * Checks if a record is currently locked
+     * @param record
+     * @param card_id
+     */
     obj.check_if_locked = function (record, card_id) {
 
         const profile = authModule.get_user_profile_data();
@@ -403,18 +408,20 @@ const helperModule = (function () {
                     <button class="btn btn-xs btn-secondary"><i class="fa fa-unlock-alt"></i> Unlock</button>
                 </div>`;
 
+                // TODO: render unlock button available only to admin role
+                // TODO: bind unlock action to button
+                document.addEventListener('click', helperModule.unlock_record);
+
                 // let unlock = ``;
                 let message = `<i class="fa fa-lock"></i> This record is currently being worked on by another user.`;
                 document.querySelector('#message').innerHTML = `<div class="alert alert-warning" role="alert">${message}  <br><span>${unlock}</span></div>`;
             }
-
-            // TODO: render unlock button available only to admin role
-            // TODO: bind unlock action to button
-            document.addEventListener('click', helperModule.unlock_record);
-
         }
     };
 
+    /**
+     * Unlocks record
+     */
     obj.unlock_record = async function () {
 
         const EXHIBITS_ENDPOINTS = endpointsModule.get_exhibits_endpoints();
@@ -437,16 +444,20 @@ const helperModule = (function () {
             endpoint = tmp.replace(':item_id', item_id);
         }
 
+        if (window.location.pathname.indexOf('grid/item')) {
+            let grid_id = helperModule.get_parameter_by_name('grid_id');
+            let item_id = helperModule.get_parameter_by_name('item_id');
+            let tmp = EXHIBITS_ENDPOINTS.exhibits.grid_item_unlock_record.post.endpoint.replace(':exhibit_id', exhibit_id);
+            let tmp2 = tmp.replace(':grid_id', grid_id);
+            endpoint = tmp2.replace(':item_id', item_id);
+        }
+
         /*
         if (window.location.pathname.indexOf('grid')) {
             console.log('grid');
             type = 'grid';
         }
 
-        if (window.location.pathname.indexOf('grid/item')) {
-            console.log('grid/item');
-            type = 'grid_item';
-        }
 
         if (window.location.pathname.indexOf('vertical-timeline')) {
             console.log('vertical-timeline');

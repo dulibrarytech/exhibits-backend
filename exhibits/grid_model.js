@@ -721,6 +721,18 @@ exports.reorder_grid_items = async function (grid_id, grid) {
     }
 };
 
+exports.unlock_grid_item_record = async function (uuid) {
+
+    try {
+
+        const HELPER_TASK = new HELPER();
+        return await HELPER_TASK.unlock_record(0, uuid, DB, TABLES.grid_item_records);
+
+    } catch (error) {
+        LOGGER.module().error('ERROR: [/exhibits/model (unlock_grid_item_record)] ' + error.message);
+    }
+};
+
 exports.publish_grid_record = publish_grid_record;
 exports.suppress_grid_record = suppress_grid_record;
 exports.publish_grid_item_record = publish_grid_item_record;

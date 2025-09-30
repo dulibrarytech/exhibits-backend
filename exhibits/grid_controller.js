@@ -21,6 +21,7 @@
 const FS = require('fs');
 const GRIDS_MODEL = require('../exhibits/grid_model');
 const AUTHORIZE = require('../auth/authorize');
+const ITEMS_MODEL = require("./items_model");
 
 exports.create_grid_record = async function (req, res) {
 
@@ -421,5 +422,53 @@ exports.suppress_grid_item_record = async function (req, res) {
 
     } catch (error) {
         res.status(500).send({message: `Unable to suppress grid item record. ${error.message}`});
+    }
+};
+
+exports.unlock_grid_item_record = async function (req, res) {
+
+    try {
+
+        const exhibit_id = req.params.exhibit_id;
+        const grid_id = req.params.grid_id;
+        const item_id = req.params.item_id;
+
+        if (item_id === undefined || item_id.length === 0) {
+            res.status(400).send('Bad request.');
+            return false;
+        }
+
+        const permissions = ['update_any_item'];
+        let options = {};
+        options.req = req;
+        options.permissions = permissions;
+        options.record_type = 'grid_item';
+        options.parent_id = exhibit_id;
+        options.child_id = item_id;
+
+        const is_authorized = await AUTHORIZE.check_permission(options);
+
+        if (is_authorized === false) {
+            res.status(403).send({
+                message: 'Unauthorized request'
+            });
+
+            return false;
+        }
+
+        const result = await GRIDS_MODEL.unlock_grid_item_record(item_id);
+
+        if (result === true) {
+            res.status(200).send({
+                message: 'Grid item record unlocked.'
+            });
+        } else {
+            res.status(400).send({
+                message: 'Unable to unlock grid item record'
+            });
+        }
+
+    } catch (error) {
+        res.status(500).send({message: `Unable to unlock grid item record. ${error.message}`});
     }
 };

@@ -56,4 +56,7 @@ module.exports = function (app) {
 
     app.route(ENDPOINTS().exhibits.grid_item_records.grid_item_suppress.post.endpoint)
     .post(CONTROLLER.suppress_grid_item_record);
+
+    app.route(ENDPOINTS().exhibits.grid_item_unlock_record.post.endpoint)
+        .post(CONTROLLER.unlock_grid_item_record);
 };
