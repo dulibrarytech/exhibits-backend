@@ -42,7 +42,7 @@ const itemsEditGridItemFormModule = (function () {
                 document.querySelector('#message').innerHTML = 'ERROR: Unable to get API endpoints';
 
                 setTimeout(() => {
-                    window.location.replace(APP_PATH + '/exhibits-dashboard/auth');
+                    authModule.redirect_to_auth();
                 }, 1000);
 
                 return false;
@@ -71,8 +71,6 @@ const itemsEditGridItemFormModule = (function () {
         try {
 
             let record = await get_grid_item_record();
-            // let thumbnail_fragment = '';
-            // let thumbnail_url = '';
             let is_published = record.is_published;
             let created_by = record.created_by;
             let created = record.created;

@@ -21,6 +21,7 @@
 const FS = require('fs');
 const TIMELINES_MODEL = require('../exhibits/timelines_model');
 const AUTHORIZE = require('../auth/authorize');
+const GRIDS_MODEL = require("./grid_model");
 
 exports.create_timeline_record = async function (req, res) {
 
@@ -185,14 +186,31 @@ exports.get_timeline_item_record = async function (req, res) {
         const is_member_of_exhibit = req.params.exhibit_id;
         const is_member_of_timeline = req.params.timeline_id;
         const item_id = req.params.item_id;
+        const type = req.query.type;
 
         if (is_member_of_exhibit === undefined || is_member_of_timeline === undefined || item_id === undefined) {
             res.status(400).send('Bad request.');
             return false;
         }
 
-        const result = await TIMELINES_MODEL.get_timeline_item_record(is_member_of_exhibit, is_member_of_timeline, item_id);
-        res.status(result.status).send(result);
+        if (type === undefined) {
+            const result = await TIMELINES_MODEL.get_timeline_item_record(is_member_of_exhibit, is_member_of_timeline, item_id);
+            res.status(result.status).send(result);
+        }
+
+        if (type === 'edit') {
+
+            const uid = req.query.uid;
+
+            if (uid === undefined || uid.length === 0) {
+                res.status(400).send('Bad request.');
+                return false;
+            }
+
+            const result = await TIMELINES_MODEL.get_timeline_item_edit_record(uid, is_member_of_exhibit, is_member_of_timeline, item_id);
+            res.status(result.status).send(result);
+            return false;
+        }
 
     } catch (error) {
         res.status(500).send({message: `Unable to get timeline item. ${error.message}`});
@@ -401,5 +419,53 @@ exports.delete_timeline_item_media = function (req, res) {
 
     } catch(error) {
         res.status(404).send({message: `Unable to delete exhibit media file. ${error.message}`});
+    }
+};
+
+exports.unlock_timeline_item_record = async function (req, res) {
+
+    try {
+
+        const exhibit_id = req.params.exhibit_id;
+        const timeline_id = req.params.timeline_id;
+        const item_id = req.params.item_id;
+
+        if (item_id === undefined || item_id.length === 0) {
+            res.status(400).send('Bad request.');
+            return false;
+        }
+
+        const permissions = ['update_any_item'];
+        let options = {};
+        options.req = req;
+        options.permissions = permissions;
+        options.record_type = 'timeline_item';
+        options.parent_id = exhibit_id;
+        options.child_id = item_id;
+
+        const is_authorized = await AUTHORIZE.check_permission(options);
+
+        if (is_authorized === false) {
+            res.status(403).send({
+                message: 'Unauthorized request'
+            });
+
+            return false;
+        }
+
+        const result = await TIMELINES_MODEL.unlock_timeline_item_record(item_id);
+
+        if (result === true) {
+            res.status(200).send({
+                message: 'Timeline item record unlocked.'
+            });
+        } else {
+            res.status(400).send({
+                message: 'Unable to unlock timeline item record'
+            });
+        }
+
+    } catch (error) {
+        res.status(500).send({message: `Unable to unlock timeline item record. ${error.message}`});
     }
 };

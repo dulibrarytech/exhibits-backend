@@ -56,4 +56,7 @@ module.exports = function (app) {
 
     app.route(ENDPOINTS().exhibits.timeline_item_records.delete.endpoint)
         .delete(TOKEN.verify, CONTROLLER.delete_timeline_item_record);
+
+    app.route(ENDPOINTS().exhibits.timeline_item_unlock_record.post.endpoint)
+        .post(CONTROLLER.unlock_timeline_item_record);
 };

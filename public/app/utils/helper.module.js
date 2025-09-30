@@ -452,23 +452,24 @@ const helperModule = (function () {
             endpoint = tmp2.replace(':item_id', item_id);
         }
 
+        if (window.location.pathname.indexOf('vertical-timeline/item')) {
+            let timeline_id = helperModule.get_parameter_by_name('timeline_id');
+            let item_id = helperModule.get_parameter_by_name('item_id');
+            let tmp = EXHIBITS_ENDPOINTS.exhibits.timeline_item_unlock_record.post.endpoint.replace(':exhibit_id', exhibit_id);
+            let tmp2 = tmp.replace(':timeline_id', timeline_id);
+            endpoint = tmp2.replace(':item_id', item_id);
+        }
+
         /*
         if (window.location.pathname.indexOf('grid')) {
             console.log('grid');
             type = 'grid';
         }
 
-
         if (window.location.pathname.indexOf('vertical-timeline')) {
             console.log('vertical-timeline');
             type = 'timeline';
         }
-
-        if (window.location.pathname.indexOf('vertical-timeline/item')) {
-            console.log('vertical-timeline/item');
-            type = 'timeline';
-        }
-
          */
 
         const token = authModule.get_user_token();

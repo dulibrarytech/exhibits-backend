@@ -32,6 +32,7 @@ const itemsEditTimelineItemFormModule = (function () {
             const timeline_id = helperModule.get_parameter_by_name('timeline_id');
             const item_id = helperModule.get_parameter_by_name('item_id');
             const token = authModule.get_user_token();
+            const profile = authModule.get_user_profile_data();
             let etmp = EXHIBITS_ENDPOINTS.exhibits.timeline_item_record.get.endpoint.replace(':exhibit_id', exhibit_id);
             let itmp = etmp.replace(':timeline_id', timeline_id);
             let endpoint = itmp.replace(':item_id', item_id);
@@ -49,7 +50,7 @@ const itemsEditTimelineItemFormModule = (function () {
 
             let response = await httpModule.req({
                 method: 'GET',
-                url: endpoint,
+                url: endpoint + '?type=edit&uid=' + profile.uid,
                 headers: {
                     'Content-Type': 'application/json',
                     'x-access-token': token
@@ -79,6 +80,8 @@ const itemsEditTimelineItemFormModule = (function () {
             let item_created = '';
             let create_date_time = helperModule.format_date(create_date);
             let update_date_time = helperModule.format_date(update_date);
+
+            helperModule.check_if_locked(record, '#item-submit-card');
 
             if (created_by !== null) {
                 item_created += `<em>Created by ${created_by} on ${create_date_time}</em>`;

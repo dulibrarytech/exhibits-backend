@@ -281,6 +281,31 @@ exports.get_timeline_item_record = async function (is_member_of_exhibit, is_memb
 };
 
 /**
+ * Gets timeline item edit record
+ * @param is_member_of_exhibit
+ * @param is_member_of_timeline
+ * @param item_id
+ * @param uid
+ */
+exports.get_timeline_item_edit_record = async function (uid, is_member_of_exhibit, is_member_of_timeline, item_id) {
+
+    try {
+
+        const TIMELINE_TASK = new EXHIBIT_TIMELINE_RECORD_TASKS(DB, TABLES);
+        const timeline_items = await TIMELINE_TASK.get_timeline_item_edit_record(uid, is_member_of_exhibit, is_member_of_timeline, item_id);
+
+        return {
+            status: 200,
+            message: 'Exhibit grid item record',
+            data: timeline_items
+        };
+
+    } catch (error) {
+        LOGGER.module().error('ERROR: [/exhibits/model (get_timeline_item_record)] ' + error.message);
+    }
+};
+
+/**
  * Updates timeline item
  * @param is_member_of_exhibit
  * @param is_member_of_timeline
@@ -664,5 +689,17 @@ exports.reorder_timeline_items = async function (timeline_id, timeline) {
         return await TASKS.reorder_timeline_items(timeline_id, timeline);
     } catch (error) {
         LOGGER.module().error('ERROR: [/exhibits/model (reorder_timeline_items)] ' + error.message);
+    }
+};
+
+exports.unlock_timeline_item_record = async function (uuid) {
+
+    try {
+
+        const HELPER_TASK = new HELPER();
+        return await HELPER_TASK.unlock_record(0, uuid, DB, TABLES.timeline_item_records);
+
+    } catch (error) {
+        LOGGER.module().error('ERROR: [/exhibits/model (unlock_timeline_item_record)] ' + error.message);
     }
 };

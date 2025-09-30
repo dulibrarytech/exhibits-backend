@@ -19,6 +19,7 @@
 'use strict';
 
 const LOGGER = require('../../libs/log4');
+const HELPER = require("../../libs/helper");
 
 /**
  * Object contains tasks used to manage exhibit timeline records
@@ -190,6 +191,40 @@ const Exhibit_timeline_record_tasks = class {
 
         } catch (error) {
             LOGGER.module().error('ERROR: [/exhibits/exhibit_timeline_record_tasks (get_timeline_item_record)] unable to get timeline item record ' + error.message);
+        }
+    }
+
+    async get_timeline_item_edit_record(uid, is_member_of_exhibit, timeline_id, item_id) {
+
+        try {
+
+            const data = await this.DB(this.TABLE.timeline_item_records)
+                .select('*')
+                .where({
+                    is_member_of_exhibit: is_member_of_exhibit,
+                    is_member_of_timeline: timeline_id,
+                    uuid: item_id,
+                    is_deleted: 0
+                });
+
+            if (data.length !== 0 && data[0].is_locked === 0) {
+
+                try {
+
+                    const HELPER_TASK = new HELPER();
+                    await HELPER_TASK.lock_record(uid, item_id, this.DB, this.TABLE.timeline_item_records);
+                    return data;
+
+                } catch (error) {
+                    LOGGER.module().error('ERROR: [/exhibits/exhibit_item_record_tasks (get_timeline_item_edit_record)] unable to lock record ' + error.message);
+                }
+
+            } else {
+                return data;
+            }
+
+        } catch (error) {
+            LOGGER.module().error('ERROR: [/exhibits/exhibit_timeline_record_tasks (get_timeline_item_edit_record)] unable to get grid item record ' + error.message);
         }
     }
 
