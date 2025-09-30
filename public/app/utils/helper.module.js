@@ -417,19 +417,18 @@ const helperModule = (function () {
 
     obj.unlock_record = async function () {
 
-        const EXHIBITS_ENDPOINTS = endpointsModule.get_exhibits_endpoints();;
+        const EXHIBITS_ENDPOINTS = endpointsModule.get_exhibits_endpoints();
+        let exhibit_id = helperModule.get_parameter_by_name('exhibit_id');
         let endpoint;
-        let type;
 
         if (window.location.pathname.indexOf('exhibits/exhibit/') !== -1) {
-            let exhibit_id = helperModule.get_parameter_by_name('exhibit_id');
             endpoint = EXHIBITS_ENDPOINTS.exhibits.exhibit_unlock_record.post.endpoint.replace(':exhibit_id', exhibit_id);
-            type = 'exhibit';
         }
 
         if (window.location.pathname.indexOf('items/heading') !== -1) {
-            console.log('Set heading');
-            type = 'heading';
+            let heading_id = helperModule.get_parameter_by_name('item_id');
+            let tmp = EXHIBITS_ENDPOINTS.exhibits.heading_unlock_record.post.endpoint.replace(':exhibit_id', exhibit_id);
+            endpoint = tmp.replace(':heading_id', heading_id);
         }
 
         /*

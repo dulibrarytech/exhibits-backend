@@ -367,5 +367,17 @@ exports.reorder_headings = async function (exhibit_id, heading) {
     }
 };
 
+exports.unlock_heading_record = async function (uuid) {
+
+    try {
+
+        const HELPER_TASK = new HELPER();
+        return await HELPER_TASK.unlock_record(0, uuid, DB, TABLES.heading_records);
+
+    } catch (error) {
+        LOGGER.module().error('ERROR: [/exhibits/model (unlock_heading_record)] ' + error.message);
+    }
+}
+
 exports.publish_heading_record = publish_heading_record;
 exports.suppress_heading_record = suppress_heading_record;

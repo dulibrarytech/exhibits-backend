@@ -20,6 +20,7 @@
 
 const HEADINGS_MODEL = require('../exhibits/headings_model');
 const AUTHORIZE = require('../auth/authorize');
+const EXHIBITS_MODEL = require("./exhibits_model");
 
 exports.create_heading_record = async function (req, res) {
 
@@ -140,5 +141,53 @@ exports.update_heading_record = async function (req, res) {
 
     } catch (error) {
         res.status(408).send({message: `Unable to update heading record. ${error.message}`});
+    }
+};
+
+exports.unlock_heading_record = async function (req, res) {
+
+    try {
+
+        const exhibit_id = req.params.exhibit_id;
+        const heading_id = req.params.heading_id;
+
+        if (heading_id === undefined || heading_id.length === 0) {
+            res.status(400).send('Bad request.');
+            return false;
+        }
+
+        const permissions = ['update_any_item'];
+        let options = {};
+        options.req = req;
+        options.permissions = permissions;
+        options.record_type = 'heading';
+        options.parent_id = exhibit_id;
+        options.child_id = heading_id;
+
+        const is_authorized = await AUTHORIZE.check_permission(options);
+
+        if (is_authorized === false) {
+            res.status(403).send({
+                message: 'Unauthorized request'
+            });
+
+            return false;
+        }
+
+        const result = await HEADINGS_MODEL.unlock_heading_record(heading_id);
+
+        if (result === true) {
+            res.status(200).send({
+                message: 'Heading record unlocked.'
+            });
+        } else {
+            res.status(400).send({
+                message: 'Unable to unlock heading record'
+            });
+        }
+
+    } catch (error) {
+        console.log(error);
+        res.status(500).send({message: `Unable to unlock heading record. ${error.message}`});
     }
 };
