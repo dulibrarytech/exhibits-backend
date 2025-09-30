@@ -190,16 +190,7 @@ const itemsEditStandardItemFormModule = (function () {
                 return false;
             }
 
-            /*
-            const user = JSON.parse(sessionStorage.getItem('exhibits_user'));
-
-            if (user.name === null) {
-                document.querySelector('#message').innerHTML = `<div class="alert alert-danger" role="alert"><i class="fa fa-exclamation"></i> Unable to retrieve your name</div>`;
-                return false;
-            }
-            */
-
-            data.updated_by = helperModule.get_user_name(); // user.name;
+            data.updated_by = helperModule.get_user_name();
 
             document.querySelector('#message').innerHTML = `<div class="alert alert-info" role="alert"><i class="fa fa-info"></i> Updating item record...</div>`;
 

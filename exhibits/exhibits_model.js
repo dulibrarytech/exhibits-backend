@@ -756,5 +756,17 @@ exports.reorder_exhibits = async function (data) {
     }
 };
 
+exports.unlock_exhibit_record = async function (uuid) {
+
+    try {
+
+        const HELPER_TASK = new HELPER();
+        return await HELPER_TASK.unlock_record(0, uuid, DB, TABLES.exhibit_records);
+
+    } catch (error) {
+        LOGGER.module().error('ERROR: [/exhibits/model (unlock_exhibit_record)] ' + error.message);
+    }
+}
+
 exports.publish_exhibit = publish_exhibit;
 exports.suppress_exhibit = suppress_exhibit;

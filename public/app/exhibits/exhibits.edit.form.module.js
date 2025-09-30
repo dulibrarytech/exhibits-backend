@@ -36,11 +36,6 @@ const exhibitsEditFormModule = (function () {
 
                 document.querySelector('#message').innerHTML = 'ERROR: Unable to get API endpoints';
                 helperModule.redirect_to_auth();
-                /*
-                setTimeout(() => {
-                    window.location.replace(APP_PATH + '/dashboard/login');
-                }, 1000);
-                */
                 return false;
             }
 
@@ -101,6 +96,8 @@ const exhibitsEditFormModule = (function () {
             let update_date_time = helperModule.format_date(update_date);
 
             helperModule.check_if_locked(record, '#exhibit-submit-card');
+
+            // TODO: get user ID to determine role
 
             if (created_by !== null) {
                 exhibit_created += `<em>Created by ${created_by} on ${create_date_time}</em>`;
@@ -289,15 +286,6 @@ const exhibitsEditFormModule = (function () {
 
                 return false;
             }
-
-            /*
-            const user = JSON.parse(sessionStorage.getItem('exhibits_user'));
-
-            if (user.name === null) {
-                document.querySelector('#message').innerHTML = `<div class="alert alert-danger" role="alert"><i class="fa fa-exclamation"></i> Unable to retrieve your name</div>`;
-                return false;
-            }
-            */
 
             data.updated_by = helperModule.get_user_name();
 

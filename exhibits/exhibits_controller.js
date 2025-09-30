@@ -414,6 +414,53 @@ exports.suppress_exhibit = async function (req, res) {
     }
 }
 
+exports.unlock_exhibit_record = async function (req, res) {
+
+    try {
+
+        const uuid = req.params.exhibit_id;
+
+        if (uuid === undefined || uuid.length === 0) {
+            res.status(400).send('Bad request.');
+            return false;
+        }
+
+        // TODO: permission check
+        const permissions = ['update_any_exhibit'];
+        let options = {};
+        options.req = req;
+        options.permissions = permissions;
+        options.record_type = 'exhibit';
+        options.parent_id = uuid;
+        options.child_id = null;
+
+        const is_authorized = await AUTHORIZE.check_permission(options);
+
+        if (is_authorized === false) {
+            res.status(403).send({
+                message: 'Unauthorized request'
+            });
+
+            return false;
+        }
+
+        const result = await EXHIBITS_MODEL.unlock_exhibit_record(uuid);
+        console.log(result);
+        if (result === true) {
+            res.status(200).send({
+                message: 'Exhibit record unlocked.'
+            });
+        } else {
+            res.status(400).send({
+                message: 'Unable to unlock exhibit record'
+            });
+        }
+
+    } catch (error) {
+        res.status(500).send({message: `Unable to unlock exhibit record. ${error.message}`});
+    }
+};
+
 exports.verify = function (req, res) {
     res.status(200).send({
         message: 'Token Verified'

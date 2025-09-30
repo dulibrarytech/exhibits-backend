@@ -108,6 +108,12 @@ const ENDPOINTS = {
                 endpoint: `${APP_PATH}${PREFIX}${VERSION}${ENDPOINT}/:exhibit_id/suppress`
             }
         },
+        exhibit_unlock_record: {
+            post: {
+                description: 'Unlock exhibit record',
+                endpoint: `${APP_PATH}${PREFIX}${VERSION}${ENDPOINT}/:exhibit_id/unlock`
+            }
+        },
         grid_records: {
             get: {
                 description: 'Retrieves all grid records by exhibit id and grid id',

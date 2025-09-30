@@ -43,7 +43,6 @@
                 document.querySelector('#message').innerHTML = `<div class="alert alert-danger" role="alert"><i class="fa fa-exclamation"></i> You do not have permission to delete this item.</div>`;
 
                 setTimeout(() => {
-                    // TODO: add grid id and grid item id
                     window.history.replaceState({page: 'items'}, '', '/exhibits-dashboard/items/grid/item/delete?exhibit_id=' + exhibit_id + '&grid_id=' + grid_id + '&item_id=' + item_id);
                 }, 0);
 

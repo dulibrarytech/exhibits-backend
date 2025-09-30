@@ -21,7 +21,6 @@
 const CONTROLLER = require('../exhibits/exhibits_controller');
 const ENDPOINTS = require('../exhibits/endpoints');
 const TOKEN = require('../libs/tokens');
-// const AUTHORIZE = require('../auth/authorize');
 
 module.exports = function (app) {
 
@@ -63,6 +62,9 @@ module.exports = function (app) {
 
     app.route(ENDPOINTS().exhibits.exhibit_suppress.post.endpoint)
     .post(TOKEN.verify, CONTROLLER.suppress_exhibit);
+
+    app.route(ENDPOINTS().exhibits.exhibit_unlock_record.post.endpoint)
+        .post(TOKEN.verify, CONTROLLER.unlock_exhibit_record);
 
     app.route(ENDPOINTS().exhibits.token_verify.endpoint)
     .post(TOKEN.verify, CONTROLLER.verify);

@@ -398,8 +398,83 @@ const helperModule = (function () {
             document.querySelector(card_id).style.display = 'none';
             let message_id = document.querySelector('#message');
             if (message_id !== null) {
-                document.querySelector('#message').innerHTML = `<div class="alert alert-warning" role="alert"><i class="fa fa-lock"></i> This record is currently being worked on by another user.</div>`;
+
+                let unlock = `<div class="btn-group float-right">
+                    <button class="btn btn-xs btn-secondary"><i class="fa fa-unlock-alt"></i> Unlock</button>
+                </div>`;
+
+                // let unlock = ``;
+                let message = `<i class="fa fa-lock"></i> This record is currently being worked on by another user.`;
+                document.querySelector('#message').innerHTML = `<div class="alert alert-warning" role="alert">${message}  <br><span>${unlock}</span></div>`;
             }
+
+            // TODO: render unlock button available only to admin role
+            // TODO: bind unlock action to button
+            document.addEventListener('click', helperModule.unlock_record);
+
+        }
+    };
+
+    obj.unlock_record = async function () {
+
+        const EXHIBITS_ENDPOINTS = endpointsModule.get_exhibits_endpoints();;
+        let endpoint;
+        let type;
+
+        if (window.location.pathname.indexOf('exhibits/exhibit/') !== -1) {
+            let exhibit_id = helperModule.get_parameter_by_name('exhibit_id');
+            endpoint = EXHIBITS_ENDPOINTS.exhibits.exhibit_unlock_record.post.endpoint.replace(':exhibit_id', exhibit_id);
+            type = 'exhibit';
+        }
+
+        if (window.location.pathname.indexOf('items/heading') !== -1) {
+            console.log('Set heading');
+            type = 'heading';
+        }
+
+        /*
+        if (window.location.pathname.indexOf('standard')) {
+            console.log('standard');
+            type = 'standard';
+        }
+
+        if (window.location.pathname.indexOf('grid')) {
+            console.log('grid');
+            type = 'grid';
+        }
+
+        if (window.location.pathname.indexOf('grid/item')) {
+            console.log('grid/item');
+            type = 'grid_item';
+        }
+
+        if (window.location.pathname.indexOf('vertical-timeline')) {
+            console.log('vertical-timeline');
+            type = 'timeline';
+        }
+
+        if (window.location.pathname.indexOf('vertical-timeline/item')) {
+            console.log('vertical-timeline/item');
+            type = 'timeline';
+        }
+
+         */
+
+        const token = authModule.get_user_token();
+        const response = await httpModule.req({
+            method: 'POST',
+            url: endpoint,
+            headers: {
+                'Content-Type': 'application/json',
+                'x-access-token': token
+            }
+        });
+
+        if (response !== undefined && response.status === 200) {
+            console.log(response);
+            document.querySelector('#message').innerHTML = '';
+        } else {
+            document.querySelector('#message').innerHTML = `<div class="alert alert-danger" role="alert"><i class="fa fa-exclamation"></i> An HTTP request error occurred unlocking record.</div>`;
         }
     };
 
