@@ -471,8 +471,7 @@ const helperModule = (function () {
         });
 
         if (response !== undefined && response.status === 200) {
-            console.log(response);
-            document.querySelector('#message').innerHTML = '';
+            window.location.reload();
         } else {
             document.querySelector('#message').innerHTML = `<div class="alert alert-danger" role="alert"><i class="fa fa-exclamation"></i> An HTTP request error occurred unlocking record.</div>`;
         }

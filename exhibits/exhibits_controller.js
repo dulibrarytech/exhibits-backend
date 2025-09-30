@@ -445,7 +445,7 @@ exports.unlock_exhibit_record = async function (req, res) {
         }
 
         const result = await EXHIBITS_MODEL.unlock_exhibit_record(uuid);
-        console.log(result);
+
         if (result === true) {
             res.status(200).send({
                 message: 'Exhibit record unlocked.'
