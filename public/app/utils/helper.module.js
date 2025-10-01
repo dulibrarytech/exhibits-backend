@@ -460,7 +460,7 @@ const helperModule = (function () {
             endpoint = tmp2.replace(':item_id', item_id);
         }
 
-        /*
+        /* TODO
         if (window.location.pathname.indexOf('grid')) {
             console.log('grid');
             type = 'grid';

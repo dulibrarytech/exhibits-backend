@@ -103,6 +103,7 @@ const exhibitsAddFormModule = (function () {
             document.querySelector('#save-exhibit-btn').addEventListener('click', exhibitsAddFormModule.create_exhibit_record);
             document.querySelector('#hero-trash').addEventListener('click', exhibitsCommonFormModule.delete_hero_image);
             document.querySelector('#thumbnail-trash').addEventListener('click', exhibitsCommonFormModule.delete_thumbnail_image);
+            document.querySelector('#item-list-nav').innerHTML = '';
 
         } catch (error) {
             document.querySelector('#message').innerHTML = `<div class="alert alert-danger" role="alert"><i class="fa fa-exclamation"></i> ${error.message}</div>`;
