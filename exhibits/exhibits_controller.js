@@ -404,7 +404,7 @@ exports.suppress_exhibit = async function (req, res) {
                 message: 'Exhibit suppressed.'
             });
         } else {
-            res.status(400).send({
+            res.status(200).send({
                 message: 'Unable to suppress exhibit'
             });
         }

@@ -164,9 +164,21 @@ const exhibitsModule = (function () {
         document.querySelector('#exhibits-data').innerHTML = exhibit_data;
 
         const EXHIBIT_LIST = new DataTable('#exhibits', {
-            paging: false,
+            paging: true,
             order: [[4, 'desc']],
             rowReorder: false
+        });
+
+        EXHIBIT_LIST.on('click', 'tbody tr .publish-exhibit', async (event) => {
+            event.preventDefault();
+            const uuid = event.currentTarget.getAttribute('id');
+            await publish_exhibit(uuid);
+        });
+
+        EXHIBIT_LIST.on('click', 'tbody tr .suppress-exhibit', async (event) => {
+            event.preventDefault();
+            const uuid = event.currentTarget.getAttribute('id');
+            await suppress_exhibit(uuid);
         });
 
         /*
@@ -175,8 +187,8 @@ const exhibitsModule = (function () {
         });
          */
 
-        bind_publish_exhibit_events();
-        bind_suppress_exhibit_events();
+        // bind_publish_exhibit_events();
+        // bind_suppress_exhibit_events();
 
         const exhibit_id = helperModule.get_parameter_by_name('exhibit_id');
 
@@ -397,7 +409,7 @@ const exhibitsModule = (function () {
                 document.querySelector('#message').innerHTML = `<div class="alert alert-danger" role="alert"><i class="fa fa-danger"></i> You do not have permission to unplublish this record.</div>`;
 
                 setTimeout(() => {
-                    document.querySelector('#message').innerHTML = '';
+                    // document.querySelector('#message').innerHTML = '';
                 }, 3000)
             }
 
@@ -406,11 +418,12 @@ const exhibitsModule = (function () {
         } catch (error) {
             document.querySelector('#message').innerHTML = `<div class="alert alert-danger" role="alert"><i class="fa fa-exclamation"></i> An error occurred while suppressing exhibit</div>`;
             setTimeout(() => {
-                document.querySelector('#message').innerHTML = '';
+                // document.querySelector('#message').innerHTML = '';
             }, 5000);
         }
     }
 
+    // TODO: deprecate
     function bind_publish_exhibit_events() {
 
         try {
@@ -430,6 +443,7 @@ const exhibitsModule = (function () {
         }
     }
 
+    // TODO: deprecate
     function bind_suppress_exhibit_events() {
 
         try {

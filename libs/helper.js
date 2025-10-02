@@ -87,8 +87,7 @@ const Helper = class {
      * @param table
      */
     async unlock_record(uid, uuid, db, table) {
-        console.log('user id ', uid);
-        console.log('uuid', uuid);
+
         try {
 
             await db(table)
@@ -97,7 +96,6 @@ const Helper = class {
                 })
                 .update({
                     is_locked: 0
-                    //locked_by_user: 0
                 });
 
             LOGGER.module().info('INFO: [/exhibits/helper (unlock_record)] record unlocked.');
