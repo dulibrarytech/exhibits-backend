@@ -24,7 +24,8 @@ const itemsModule = (function () {
     const EXHIBITS_ENDPOINTS = endpointsModule.get_exhibits_endpoints();
     let obj = {};
 
-    async function get_items(uuid) {
+    obj.get_items = async function (uuid) {
+    //async function get_items(uuid) {
 
         try {
 
@@ -49,12 +50,12 @@ const itemsModule = (function () {
         }
     }
 
-    obj.display_items = async function (event) {
+    obj.display_items = async function () {
 
         try {
 
             const exhibit_id = helperModule.get_parameter_by_name('exhibit_id');
-            const items = await get_items(exhibit_id);
+            const items = await itemsModule.get_items(exhibit_id);
             let item_data = '';
             let item_order = [];
 
@@ -149,6 +150,7 @@ const itemsModule = (function () {
                 setTimeout(() => {
                     window.location.replace(APP_PATH + '/items?exhibit_id=' + exhibit_id);
                 }, 900);
+
             } else if (response === undefined) {
                 scrollTo(0, 0);
                 document.querySelector('#delete-card').innerHTML = '';

@@ -303,9 +303,10 @@ exports.delete_exhibit_record = async function (uuid) {
         const TASK = new EXHIBIT_RECORD_TASKS(DB, TABLES);
         const ITEM_TASK = new EXHIBIT_ITEM_RECORD_TASKS(DB, TABLES);
         let results = await ITEM_TASK.get_item_records(uuid);
-
+        // console.log('ITEMS ', results);
         if (results.length > 0) {
-
+            // TODO: delete item here
+            // TODO: pass in uuid as is_member_of_exhibit
             return {
                 status: 200,
                 message: 'Cannot delete an exhibit that contains items.'

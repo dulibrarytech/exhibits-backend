@@ -166,7 +166,14 @@ const exhibitsModule = (function () {
         const EXHIBIT_LIST = new DataTable('#exhibits', {
             paging: true,
             order: [[4, 'desc']],
-            rowReorder: false
+            rowReorder: false,
+            language: {
+                bottomEnd: {
+                    paging: {
+                        firstLast: false
+                    }
+                }
+            }
         });
 
         EXHIBIT_LIST.on('click', 'tbody tr .publish-exhibit', async (event) => {
@@ -274,6 +281,12 @@ const exhibitsModule = (function () {
                     setTimeout(() => {
                         window.location.replace(APP_PATH + '/exhibits');
                     }, 900);
+
+                } else if (response !== undefined && response.status === 200) {
+
+                    scrollTo(0, 0);
+                    document.querySelector('#delete-card').innerHTML = '';
+                    document.querySelector('#message').innerHTML = `<div class="alert alert-warning" role="alert"><i class="fa fa-warning"></i> Cannot delete an exhibit that contains items.</div>`;
 
                 } else if (response === undefined) {
                     scrollTo(0, 0);

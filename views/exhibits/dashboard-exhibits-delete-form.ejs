@@ -27,6 +27,7 @@
 <!-- app -->
 <%- include('../partials/exhibits-app-common.ejs'); %>
 <script src="/exhibits-dashboard/static/app/dist/exhibits.module.min.js?<%=build_version%>"></script>
+<script src="/exhibits-dashboard/static/app/dist/items.module.min.js?<%=build_version%>"></script>
 <script>
     (async function() {
 
@@ -36,8 +37,19 @@
             await authModule.check_auth(token);
             const uuid = helperModule.get_parameter_by_name('exhibit_id');
             await exhibitsModule.set_exhibit_title(uuid);
+            const items = await itemsModule.get_items(uuid);
+
+            if (items.length > 0) {
+
+                scrollTo(0, 0);
+                document.querySelector('#delete-card').innerHTML = '';
+                document.querySelector('#message').innerHTML = `<div class="alert alert-warning" role="alert"><i class="fa fa-warning"></i> Cannot delete an exhibit that contains items.</div>`;
+                return false;
+            }
+
             document.querySelector('#delete-exhibit-btn').addEventListener('click', exhibitsModule.delete_exhibit);
             helperModule.show_form();
+
         } catch (error) {
             document.querySelector('#message').innerHTML = `<div class="alert alert-danger" role="alert"><i class="fa fa-exclamation"></i> ${error.message}</div>`;
         }
