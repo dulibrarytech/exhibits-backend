@@ -370,7 +370,7 @@ exports.get_item_edit_record = async function (uid, is_member_of_exhibit, uuid) 
     }
 };
 
-// TODO: delete item records
+// TODO: delete item records?
 
 /**
  * Deletes item record

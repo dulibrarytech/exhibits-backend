@@ -73,11 +73,10 @@ const userModule = (function () {
         }
     }
 
-    async function get_user_role() {
+    async function get_user_role(user_id) {
 
         try {
 
-            const user_id = helperModule.get_parameter_by_name('user_id');
             const token = authModule.get_user_token();
             const response = await httpModule.req({
                 method: 'GET',
@@ -138,6 +137,9 @@ const userModule = (function () {
                 }
 
                 if (parseInt(user.uid) === users[i].id && users[i].role === 'Administrator') {
+                    console.log(user.uid);
+                    console.log(users[i].id);
+                    console.log(users[i].role);
                     access = true;
                 }
 
@@ -218,9 +220,9 @@ const userModule = (function () {
 
         try {
 
-            const user_id = helperModule.get_parameter_by_name('user_id');
+            const profile = authModule.get_user_profile_data();
             const record = await get_user_record();
-            const role = await get_user_role(user_id);
+            const role = await get_user_role(profile.uid);
             const user = record.pop();
 
             // user data
