@@ -137,9 +137,6 @@ const userModule = (function () {
                 }
 
                 if (parseInt(user.uid) === users[i].id && users[i].role === 'Administrator') {
-                    console.log(user.uid);
-                    console.log(users[i].id);
-                    console.log(users[i].role);
                     access = true;
                 }
 
