@@ -50,7 +50,7 @@
 <script src="/exhibits-dashboard/static/libs/data_tables/datatables.min.js"></script>
 <!-- app -->
 <%- include('../partials/exhibits-app-common.ejs'); %>
-<script src="/exhibits-dashboard/static/app/user.module.js"></script>
+<script src="/exhibits-dashboard/static/app/dist/user.module.min.js?<%=build_version%>"></script>
 <script>navModule.init();</script>
 <script>userModule.display_user_records();</script>
 </body>
