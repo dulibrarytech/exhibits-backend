@@ -39,16 +39,63 @@ const authModule = (function () {
 
     obj.get_auth_user_data = async function () {
 
-        let id = helperModule.get_parameter_by_name('id');
+        try {
 
-        if (id !== null) {
+            let id = helperModule.get_parameter_by_name('id');
 
-            authModule.save_token();
-            let token = authModule.get_user_token();
-            let url = init_endpoints.authenticate + '?id=' + id;
-            let response = await httpModule.req({
+            if (id !== null) {
+
+                authModule.save_token();
+                let token = authModule.get_user_token();
+                let url = init_endpoints.authenticate + '?id=' + id;
+                let response = await httpModule.req({
+                    method: 'GET',
+                    url: url,
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'x-access-token': token
+                    }
+                });
+
+                if (response.status === 200) {
+                    authModule.save_user_auth_data(response.data);
+                    return true;
+                } else {
+                    authModule.redirect_to_auth();
+                }
+            }
+
+        } catch (error) {
+            document.querySelector('#message').innerHTML = `<div class="alert alert-danger" role="alert"><i class="fa fa-exclamation"></i> ${error.message}</div>`;
+        }
+    };
+
+    obj.get_user_profile_data = function () {
+
+        try {
+
+            let profile = window.sessionStorage.getItem('exhibits_user');
+
+            if (profile !== null) {
+                return JSON.parse(profile);
+            } else {
+                authModule.redirect_to_auth();
+            }
+
+        } catch (error) {
+            document.querySelector('#message').innerHTML = `<div class="alert alert-danger" role="alert"><i class="fa fa-exclamation"></i> ${error.message}</div>`;
+        }
+    };
+
+    obj.get_user_role = async function (user_id) {
+
+        try {
+
+            const token = this.get_user_token();
+            const EXHIBITS_ENDPOINTS = '/exhibits-dashboard/auth/role?user_id=' + user_id;
+            const response = await httpModule.req({
                 method: 'GET',
-                url: url,
+                url: EXHIBITS_ENDPOINTS,
                 headers: {
                     'Content-Type': 'application/json',
                     'x-access-token': token
@@ -56,34 +103,29 @@ const authModule = (function () {
             });
 
             if (response.status === 200) {
-                authModule.save_user_auth_data(response.data);
-                return true;
-            } else {
-                authModule.redirect_to_auth();
+                return response.data[0].role;
             }
-        }
-    };
 
-    obj.get_user_profile_data = function () {
-
-        let profile = window.sessionStorage.getItem('exhibits_user');
-
-        if (profile !== null) {
-            return JSON.parse(profile);
-        } else {
-            authModule.redirect_to_auth();
+        } catch (error) {
+            document.querySelector('#message').innerHTML = `<div class="alert alert-danger" role="alert"><i class="fa fa-exclamation"></i> ${error.message}</div>`;
         }
     };
 
     obj.check_user_auth_data = function () {
 
-        let data = window.sessionStorage.getItem('exhibits_user');
+        try {
 
-        if (data !== null) {
-            return true;
+            let data = window.sessionStorage.getItem('exhibits_user');
+
+            if (data !== null) {
+                return true;
+            }
+
+            return false;
+
+        } catch (error) {
+            document.querySelector('#message').innerHTML = `<div class="alert alert-danger" role="alert"><i class="fa fa-exclamation"></i> Unable to check user auth data</div>`;
         }
-
-        return false;
     };
 
     obj.save_user_auth_data = function (data) {

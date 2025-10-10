@@ -410,6 +410,12 @@ const helperModule = (function () {
 
                 // TODO: render unlock button available only to admin role
                 // TODO: bind unlock action to button
+                (async function () {
+                    const user_role = await authModule.get_user_role(parseInt(profile.uid));
+
+                })();
+
+
                 document.addEventListener('click', helperModule.unlock_record);
 
                 // let unlock = ``;

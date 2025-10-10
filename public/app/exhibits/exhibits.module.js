@@ -436,9 +436,6 @@ const exhibitsModule = (function () {
 
         } catch (error) {
             document.querySelector('#message').innerHTML = `<div class="alert alert-danger" role="alert"><i class="fa fa-exclamation"></i> An error occurred while suppressing exhibit</div>`;
-            setTimeout(() => {
-                // document.querySelector('#message').innerHTML = '';
-            }, 5000);
         }
     }
 
