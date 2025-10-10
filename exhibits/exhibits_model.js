@@ -32,6 +32,9 @@ const EXHIBIT_TIMELINE_RECORD_TASKS = require('./tasks/exhibit_timeline_record_t
 const HELPER = require('../libs/helper');
 const VALIDATOR = require('../libs/validate');
 const INDEXER_MODEL = require('../indexer/model');
+const ITEMS_MODEL = require('../exhibits/items_model');
+const GRIDS_MODEL = require('../exhibits/grid_model');
+const TIMELINES_MODEL = require('../exhibits/timelines_model');
 const LOGGER = require('../libs/log4');
 
 /**
@@ -293,7 +296,7 @@ exports.update_exhibit_record = async function (uuid, data) {
 };
 
 /**
- * Deletes exhibit record
+ * Deletes exhibit record and its items
  * @param uuid
  */
 exports.delete_exhibit_record = async function (uuid) {
@@ -303,14 +306,55 @@ exports.delete_exhibit_record = async function (uuid) {
         const TASK = new EXHIBIT_RECORD_TASKS(DB, TABLES);
         const ITEM_TASK = new EXHIBIT_ITEM_RECORD_TASKS(DB, TABLES);
         let results = await ITEM_TASK.get_item_records(uuid);
-        // console.log('ITEMS ', results);
+
         if (results.length > 0) {
-            // TODO: delete item here
-            // TODO: pass in uuid as is_member_of_exhibit
-            return {
-                status: 200,
-                message: 'Cannot delete an exhibit that contains items.'
-            };
+
+            let result = await ITEMS_MODEL.get_item_records(uuid);
+
+            for (let i=0; i<result.data.length; i++) {
+
+                if (result.data[i].type === 'grid') {
+
+                    let grid_items = await GRIDS_MODEL.get_grid_item_records(uuid, result.data[i].uuid);
+
+                    if (grid_items.data.length > 0) {
+
+                        for (let i=0; i<grid_items.data.length; i++) {
+
+                            let is_deleted = await GRIDS_MODEL.delete_grid_item_record(grid_items.data[i].is_member_of_exhibit, grid_items.data[i].is_member_of_grid, grid_items.data[i].uuid);
+
+                            if (is_deleted.data !== true) {
+                                LOGGER.module().error('ERROR: [/exhibits/model (delete_exhibit_record)] Unable to delete grid item ' + grid_items.data[i].uuid);
+                            }
+                        }
+                    }
+                }
+
+                if (result.data[i].type === 'vertical_timeline') {
+
+                    let timeline_items = await TIMELINES_MODEL.get_timeline_item_records(uuid, result.data[i].uuid);
+
+                    if (timeline_items.data.length > 0) {
+
+                        for (let i=0; i<timeline_items.data.length; i++) {
+
+                            let is_deleted = await TIMELINES_MODEL.delete_timeline_item_record(timeline_items.data[i].is_member_of_exhibit, timeline_items.data[i].is_member_of_timeline, timeline_items.data[i].uuid);
+
+                            if (is_deleted.data !== true) {
+                                LOGGER.module().error('ERROR: [/exhibits/model (delete_exhibit_record)] Unable to delete timeline item ' + timeline_items.data[i].uuid);
+                            }
+                        }
+                    }
+
+                    result.data[i].type = 'timeline';
+                }
+
+                let is_deleted = await ITEM_TASK.delete_item_record(result.data[i].is_member_of_exhibit, result.data[i].uuid, result.data[i].type);
+
+                if (is_deleted === false) {
+                    LOGGER.module().error('ERROR: [/exhibits/model (delete_exhibit_record)] Unable to delete exhibit item ' + result.data[i].uuid + ' / ' + result.data[i].type);
+                }
+            }
         }
 
         if (await TASK.delete_exhibit_record(uuid) === true) {
