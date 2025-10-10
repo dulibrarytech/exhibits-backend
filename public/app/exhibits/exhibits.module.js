@@ -73,6 +73,7 @@ const exhibitsModule = (function () {
             let uuid = exhibits[i].uuid;
             let is_published = exhibits[i].is_published;
             let is_featured = exhibits[i].is_featured;
+            let is_locked = exhibits[i].is_locked;
             let preview_link = `${APP_PATH}/preview?uuid=${uuid}`;
             let exhibit_items = `<a href="${APP_PATH}/items?exhibit_id=${uuid}" title="View Exhibit Items"><i class="fa fa-list pr-1"></i></a>&nbsp;`;
             let created = new Date(exhibits[i].created);
@@ -85,6 +86,7 @@ const exhibitsModule = (function () {
             let status;
             let title;
             let featured = '';
+            let locked = '';
             let exhibit_edit = '';
             let trash = '';
 
@@ -105,6 +107,10 @@ const exhibitsModule = (function () {
                 featured = '&nbsp;&nbsp;<i class="fa fa-star" title="Featured" aria-label="featured exhibit" style="color: #BA8E23"></i>';
             }
 
+            if (is_locked === 1) {
+                locked = '&nbsp;&nbsp;<i class="fa fa-lock" title="Record is currently locked" aria-label="exhibit-is-locked" style="color: #BA8E23"></i>';
+            }
+
             if (exhibits[i].thumbnail.length > 0) {
                 thumbnail_url = `${APP_PATH}/api/v1/exhibits/${uuid}/media/${exhibits[i].thumbnail}`;
                 thumbnail_fragment = `<p><img src="${thumbnail_url}" alt="${uuid}-thumbnail" height="100" width="100"></p>`;
@@ -119,7 +125,7 @@ const exhibitsModule = (function () {
             // exhibit_data += order;
 
             exhibit_data += `<td style="width: 35%">
-                    <p><strong>${title}</strong> ${featured}</p>
+                    <p><strong>${title}</strong> ${featured} ${locked}</p>
                     ${thumbnail_fragment}
                     <div class="d-flex justify-content-between align-items-center">
                                 <div class="btn-group">

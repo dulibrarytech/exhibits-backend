@@ -88,6 +88,7 @@ const Exhibit_record_tasks = class {
                 'is_published',
                 'is_preview',
                 'is_featured',
+                'is_locked',
                 'is_student_curated',
                 'owner',
                 'created',
