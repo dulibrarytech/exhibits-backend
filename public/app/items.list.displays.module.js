@@ -157,7 +157,7 @@ const itemsListDisplayModule = (function () {
         return published_obj;
     }
 
-    obj.display_heading_items = async function(item) {
+    obj.display_heading_items = async function (item) {
 
         try {
 
@@ -165,13 +165,18 @@ const itemsListDisplayModule = (function () {
             const text = helperModule.unescape(item.text);
             let item_obj = check_published_status(item, 'heading');
             let item_data = '';
+            let locked = '';
+
+            if (item.is_locked === 1) {
+                locked = '&nbsp;&nbsp;<i class="fa fa-lock" title="Record is currently locked" aria-label="exhibit-is-locked" style="color: #BA8E23"></i>';
+            }
 
             // start row
             item_data += item_obj.draggable;
             item_data += item_obj.item_order;
 
             item_data += `<td class="item-metadata">
-                    <p><button class="btn btn-default"><small>${type}</small></button></p>
+                    <p><button class="btn btn-default"><small>${type}</small></button> ${locked}</p>
                     <p><strong>${text}</strong></p>
                     </td>`;
 
@@ -191,9 +196,9 @@ const itemsListDisplayModule = (function () {
         }
     };
 
-    obj.display_standard_items = async function(item) {
+    obj.display_standard_items = async function (item) {
 
-       try {
+        try {
 
             const type = item.type;
             const item_obj = check_published_status(item, 'standard');
@@ -203,6 +208,11 @@ const itemsListDisplayModule = (function () {
             let img = '';
             let item_type;
             let media = item.media;
+            let locked = '';
+
+            if (item.is_locked === 1) {
+                locked = '&nbsp;&nbsp;<i class="fa fa-lock" title="Record is currently locked" aria-label="exhibit-is-locked" style="color: #BA8E23"></i>';
+            }
 
             if (item.mime_type.indexOf('image') !== -1 || item.item_type === 'image') {
                 item_type = '<i class="fa fa-image"></i>';
@@ -275,7 +285,7 @@ const itemsListDisplayModule = (function () {
             item_data += item_obj.item_order;
 
             item_data += `<td class="item-metadata">
-                    <p><button class="btn btn-default">${item_type} <small>${type}</small></button></p>
+                    <p><button class="btn btn-default">${item_type} <small>${type}</small></button> ${locked}</p>
                     <p><strong>${title}</strong></p>
                     ${img}                   
                     <small><em>${media}</em></small>
@@ -297,7 +307,7 @@ const itemsListDisplayModule = (function () {
         }
     };
 
-    obj.display_grids = async function(item) {
+    obj.display_grids = async function (item) {
 
         try {
 
@@ -309,6 +319,11 @@ const itemsListDisplayModule = (function () {
             let view_grid_items = '';
             let grid_items_fragment = '';
             let grid_item_count = '';
+            let locked = '';
+
+            if (item.is_locked === 1) {
+                locked = '&nbsp;&nbsp;<i class="fa fa-lock" title="Record is currently locked" aria-label="exhibit-is-locked" style="color: #BA8E23"></i>';
+            }
 
             if (item.grid_items.length === 0) {
                 grid_items_fragment += '<p><strong>No items</strong></p>';
@@ -323,7 +338,7 @@ const itemsListDisplayModule = (function () {
             item_data += item_obj.item_order;
 
             item_data += `<td class="item-metadata">
-                    <p><button class="btn btn-default"><i class="fa fa-th"></i> <small>${type}</small></button></p>
+                    <p><button class="btn btn-default"><i class="fa fa-th"></i> <small>${type}</small></button> ${locked}</p>
                     <p><strong>${title}</strong></p>
                     <p><small>${item.columns} columns</small></p>
                     <p><small>${grid_item_count}</small></p>
@@ -347,7 +362,7 @@ const itemsListDisplayModule = (function () {
         }
     };
 
-    obj.display_timelines = async function(item) {
+    obj.display_timelines = async function (item) {
 
         try {
 
@@ -360,6 +375,11 @@ const itemsListDisplayModule = (function () {
             let view_timeline_items = '';
             let timeline_items_fragment = '';
             let timeline_item_count = '';
+            let locked = '';
+
+            if (item.is_locked === 1) {
+                locked = '&nbsp;&nbsp;<i class="fa fa-lock" title="Record is currently locked" aria-label="exhibit-is-locked" style="color: #BA8E23"></i>';
+            }
 
             if (item.timeline_items.length === 0) {
                 timeline_items_fragment += '<p><strong>No items</strong></p>';
@@ -374,7 +394,7 @@ const itemsListDisplayModule = (function () {
             item_data += item_obj.item_order;
 
             item_data += `<td class="item-metadata">
-                    <p><button class="btn btn-default"><i class="fa fa-calendar"></i> <small>${type}</small></button></p>
+                    <p><button class="btn btn-default"><i class="fa fa-calendar"></i> <small>${type}</small></button> ${locked}</p>
                     <p><strong>${title}</strong></p>
                     <p><small>${timeline_item_count}</small></p>
                     <div id="grid-items-${item.is_member_of_exhibit}"><em>${timeline_items_fragment}</em></div>
@@ -410,6 +430,11 @@ const itemsListDisplayModule = (function () {
             let img = '';
             let item_data = '';
             let title = '';
+            let locked = '';
+
+            if (item.is_locked === 1) {
+                locked = '&nbsp;&nbsp;<i class="fa fa-lock" title="Record is currently locked" aria-label="exhibit-is-locked" style="color: #BA8E23"></i>';
+            }
 
             if (item.mime_type.indexOf('image') !== -1 || item.item_type === 'image') {
                 item_type = '<i class="fa fa-image"></i>';
@@ -490,7 +515,7 @@ const itemsListDisplayModule = (function () {
             item_data += item_obj.draggable;
             item_data += item_obj.item_order;
             item_data += `<td class="item-metadata">
-                    <p><button class="btn btn-default">${item_type} <small>grid item</small></button></p>
+                    <p><button class="btn btn-default">${item_type} <small>grid item</small></button> ${locked}</p>
                     <p><strong>${title}</strong></p>
                     ${img}
                     <small><em>${media}</em></small>
@@ -526,11 +551,16 @@ const itemsListDisplayModule = (function () {
             let item_type;
             let img = '';
             let item_date = new Date(item.date);
-            let year = new Intl.DateTimeFormat('en', { year: 'numeric' }).format(item_date);
-            let month = new Intl.DateTimeFormat('en', { month: 'numeric' }).format(item_date);
-            let day = new Intl.DateTimeFormat('en', { day: '2-digit' }).format(item_date);
+            let year = new Intl.DateTimeFormat('en', {year: 'numeric'}).format(item_date);
+            let month = new Intl.DateTimeFormat('en', {month: 'numeric'}).format(item_date);
+            let day = new Intl.DateTimeFormat('en', {day: '2-digit'}).format(item_date);
             let sort_date = `${year}-${month}-${day}`;
-            let display_date = `${year}`
+            let display_date = `${year}`;
+            let locked = '';
+
+            if (item.is_locked === 1) {
+                locked = '&nbsp;&nbsp;<i class="fa fa-lock" title="Record is currently locked" aria-label="exhibit-is-locked" style="color: #BA8E23"></i>';
+            }
 
             if (item.mime_type.indexOf('image') !== -1 || item.item_type === 'image') {
                 item_type = '<i class="fa fa-image"></i>';
@@ -610,7 +640,7 @@ const itemsListDisplayModule = (function () {
             // start rows
             item_data += `<tr id="${item.uuid}_${item.type}_${item.item_type}">`;
             item_data += `<td class="item-metadata">
-                    <p><button class="btn btn-default">${item_type} <small>timeline item</small></button></p>
+                    <p><button class="btn btn-default">${item_type} <small>timeline item</small></button> ${locked}</p>
                     <p><strong>${title}</strong></p>
                     <!--<p><strong><small>${display_date}</small></strong></p>-->
                     ${img}
@@ -634,7 +664,8 @@ const itemsListDisplayModule = (function () {
         }
     };
 
-    obj.init = function () {};
+    obj.init = function () {
+    };
 
     return obj;
 
