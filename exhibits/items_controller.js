@@ -558,8 +558,14 @@ exports.unlock_item_record = async function (req, res) {
 
         const exhibit_id = req.params.exhibit_id;
         const item_id = req.params.item_id;
+        const uid = req.query.uid;
 
         if (item_id === undefined || item_id.length === 0) {
+            res.status(400).send('Bad request.');
+            return false;
+        }
+
+        if (uid === undefined || uid.length === 0) {
             res.status(400).send('Bad request.');
             return false;
         }
@@ -582,7 +588,7 @@ exports.unlock_item_record = async function (req, res) {
             return false;
         }
 
-        const result = await ITEMS_MODEL.unlock_item_record(item_id);
+        const result = await ITEMS_MODEL.unlock_item_record(uid, item_id);
 
         if (result === true) {
             res.status(200).send({

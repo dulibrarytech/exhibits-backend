@@ -628,12 +628,12 @@ exports.get_repo_tn = async function (uuid) {
     }
 };
 
-exports.unlock_item_record = async function (uuid) {
+exports.unlock_item_record = async function (uid, uuid) {
 
     try {
 
         const HELPER_TASK = new HELPER();
-        return await HELPER_TASK.unlock_record(0, uuid, DB, TABLES.item_records);
+        return await HELPER_TASK.unlock_record(uid, uuid, DB, TABLES.item_records);
 
     } catch (error) {
         LOGGER.module().error('ERROR: [/exhibits/model (unlock_item_record)] ' + error.message);

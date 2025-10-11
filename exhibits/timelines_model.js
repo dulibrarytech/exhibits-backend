@@ -692,12 +692,12 @@ exports.reorder_timeline_items = async function (timeline_id, timeline) {
     }
 };
 
-exports.unlock_timeline_item_record = async function (uuid) {
+exports.unlock_timeline_item_record = async function (uid, uuid) {
 
     try {
 
         const HELPER_TASK = new HELPER();
-        return await HELPER_TASK.unlock_record(0, uuid, DB, TABLES.timeline_item_records);
+        return await HELPER_TASK.unlock_record(uid, uuid, DB, TABLES.timeline_item_records);
 
     } catch (error) {
         LOGGER.module().error('ERROR: [/exhibits/model (unlock_timeline_item_record)] ' + error.message);

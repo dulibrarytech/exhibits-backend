@@ -367,12 +367,12 @@ exports.reorder_headings = async function (exhibit_id, heading) {
     }
 };
 
-exports.unlock_heading_record = async function (uuid) {
+exports.unlock_heading_record = async function (uid, uuid) {
 
     try {
 
         const HELPER_TASK = new HELPER();
-        return await HELPER_TASK.unlock_record(0, uuid, DB, TABLES.heading_records);
+        return await HELPER_TASK.unlock_record(uid, uuid, DB, TABLES.heading_records);
 
     } catch (error) {
         LOGGER.module().error('ERROR: [/exhibits/model (unlock_heading_record)] ' + error.message);

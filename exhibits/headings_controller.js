@@ -150,8 +150,14 @@ exports.unlock_heading_record = async function (req, res) {
 
         const exhibit_id = req.params.exhibit_id;
         const heading_id = req.params.heading_id;
+        const uid = req.query.uid;
 
         if (heading_id === undefined || heading_id.length === 0) {
+            res.status(400).send('Bad request.');
+            return false;
+        }
+
+        if (uid === undefined || uid.length === 0) {
             res.status(400).send('Bad request.');
             return false;
         }
@@ -174,7 +180,7 @@ exports.unlock_heading_record = async function (req, res) {
             return false;
         }
 
-        const result = await HEADINGS_MODEL.unlock_heading_record(heading_id);
+        const result = await HEADINGS_MODEL.unlock_heading_record(uid, heading_id);
 
         if (result === true) {
             res.status(200).send({

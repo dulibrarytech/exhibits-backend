@@ -443,23 +443,23 @@ const helperModule = (function () {
         let exhibit_id = helperModule.get_parameter_by_name('exhibit_id');
         let endpoint;
 
-        if (window.location.pathname.indexOf('exhibits/exhibit/edit') !== -1) {
+        if (window.location.pathname.includes('exhibits/exhibit/edit') === true) {
             endpoint = EXHIBITS_ENDPOINTS.exhibits.exhibit_unlock_record.post.endpoint.replace(':exhibit_id', exhibit_id);
         }
 
-        if (window.location.pathname.indexOf('items/heading/edit') !== -1) {
+        if (window.location.pathname.includes('items/heading/edit') === true) {
             let heading_id = helperModule.get_parameter_by_name('item_id');
             let tmp = EXHIBITS_ENDPOINTS.exhibits.heading_unlock_record.post.endpoint.replace(':exhibit_id', exhibit_id);
             endpoint = tmp.replace(':heading_id', heading_id);
         }
 
-        if (window.location.pathname.indexOf('items/standard/text/edit') || window.location.pathname.indexOf('items/standard/media/edit')) {
+        if (window.location.pathname.includes('items/standard/text/edit') === true || window.location.pathname.includes('items/standard/media/edit') === true) {
             let item_id = helperModule.get_parameter_by_name('item_id');
             let tmp = EXHIBITS_ENDPOINTS.exhibits.item_unlock_record.post.endpoint.replace(':exhibit_id', exhibit_id);
             endpoint = tmp.replace(':item_id', item_id);
         }
 
-        if (window.location.pathname.indexOf('items/grid/item/media/edit') || window.location.pathname.indexOf('items/grid/item/text/edit')) {
+        if (window.location.pathname.includes('items/grid/item/media/edit') === true || window.location.pathname.includes('items/grid/item/text/edit') === true) {
             let grid_id = helperModule.get_parameter_by_name('grid_id');
             let item_id = helperModule.get_parameter_by_name('item_id');
             let tmp = EXHIBITS_ENDPOINTS.exhibits.grid_item_unlock_record.post.endpoint.replace(':exhibit_id', exhibit_id);
@@ -467,7 +467,7 @@ const helperModule = (function () {
             endpoint = tmp2.replace(':item_id', item_id);
         }
 
-        if (window.location.pathname.indexOf('items/vertical-timeline/item/media/edit') || window.location.pathname.indexOf('items/vertical-timeline/item/text/edit')) {
+        if (window.location.pathname.includes('items/vertical-timeline/item/media/edit') === true || window.location.pathname.includes('items/vertical-timeline/item/text/edit') === true) {
             let timeline_id = helperModule.get_parameter_by_name('timeline_id');
             let item_id = helperModule.get_parameter_by_name('item_id');
             let tmp = EXHIBITS_ENDPOINTS.exhibits.timeline_item_unlock_record.post.endpoint.replace(':exhibit_id', exhibit_id);
@@ -487,12 +487,11 @@ const helperModule = (function () {
         }
          */
 
-        console.log(endpoint);
-
+        const profile = authModule.get_user_profile_data();
         const token = authModule.get_user_token();
         const response = await httpModule.req({
             method: 'POST',
-            url: endpoint,
+            url: endpoint + '?uid=' + profile.uid,
             headers: {
                 'Content-Type': 'application/json',
                 'x-access-token': token
@@ -504,7 +503,7 @@ const helperModule = (function () {
             document.querySelector('#message').innerHTML = `<div class="alert alert-success" role="alert">Unlocked</div>`;
             setTimeout(() => {
                 window.location.reload();
-            }, 2000);
+            }, 1000);
 
         } else {
             document.querySelector('#message').innerHTML = `<div class="alert alert-danger" role="alert"><i class="fa fa-exclamation"></i> An HTTP request error occurred unlocking record.</div>`;

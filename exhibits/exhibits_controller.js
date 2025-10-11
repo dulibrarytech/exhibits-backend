@@ -419,8 +419,14 @@ exports.unlock_exhibit_record = async function (req, res) {
     try {
 
         const uuid = req.params.exhibit_id;
+        const uid = req.query.uid;
 
         if (uuid === undefined || uuid.length === 0) {
+            res.status(400).send('Bad request.');
+            return false;
+        }
+
+        if (uid === undefined || uid.length === 0) {
             res.status(400).send('Bad request.');
             return false;
         }
@@ -444,7 +450,7 @@ exports.unlock_exhibit_record = async function (req, res) {
             return false;
         }
 
-        const result = await EXHIBITS_MODEL.unlock_exhibit_record(uuid);
+        const result = await EXHIBITS_MODEL.unlock_exhibit_record(uid, uuid);
 
         if (result === true) {
             res.status(200).send({
