@@ -397,32 +397,41 @@ const helperModule = (function () {
      */
     obj.check_if_locked = function (record, card_id) {
 
-        const profile = authModule.get_user_profile_data();
+        (async function () {
 
-        if (record.is_locked === 1 && record.locked_by_user !== parseInt(profile.uid)) {
-            document.querySelector(card_id).style.display = 'none';
-            let message_id = document.querySelector('#message');
-            if (message_id !== null) {
+            try {
 
-                let unlock = `<div class="btn-group float-right">
-                    <button class="btn btn-xs btn-secondary"><i class="fa fa-unlock-alt"></i> Unlock</button>
-                </div>`;
+                const profile = authModule.get_user_profile_data();
 
-                // TODO: render unlock button available only to admin role
-                // TODO: bind unlock action to button
-                (async function () {
+                if (record.is_locked === 1 && record.locked_by_user !== parseInt(profile.uid)) {
+
+                    document.querySelector(card_id).style.display = 'none';
                     const user_role = await authModule.get_user_role(parseInt(profile.uid));
+                    let message_id = document.querySelector('#message');
+                    let unlock = '';
 
-                })();
+                    if (message_id !== null) {
 
+                        if (user_role === 'Administrator') {
+                            unlock = `<br><span><div class="btn-group float-right">
+                        <button id="unlock-record" class="btn btn-xs btn-secondary"><i class="fa fa-unlock-alt"></i> Unlock</button>
+                        </div></span>`;
+                        }
 
-                document.addEventListener('click', helperModule.unlock_record);
+                        let message = `<i class="fa fa-lock"></i> This record is currently being worked on by another user.`;
+                        document.querySelector('#message').innerHTML = `<div class="alert alert-warning" role="alert">${message}  ${unlock}</div>`;
 
-                // let unlock = ``;
-                let message = `<i class="fa fa-lock"></i> This record is currently being worked on by another user.`;
-                document.querySelector('#message').innerHTML = `<div class="alert alert-warning" role="alert">${message}  <br><span>${unlock}</span></div>`;
+                        if (document.querySelector('#unlock-record') !== null) {
+                            document.querySelector('#unlock-record').addEventListener('click', helperModule.unlock_record);
+                        }
+                    }
+                }
+
+            } catch (error) {
+                document.querySelector('#message').innerHTML = `<div class="alert alert-danger" role="alert"><i class="fa fa-exclamation"></i> ${error.message}</div>`;
             }
-        }
+
+        })();
     };
 
     /**
@@ -434,23 +443,23 @@ const helperModule = (function () {
         let exhibit_id = helperModule.get_parameter_by_name('exhibit_id');
         let endpoint;
 
-        if (window.location.pathname.indexOf('exhibits/exhibit/') !== -1) {
+        if (window.location.pathname.indexOf('exhibits/exhibit/edit') !== -1) {
             endpoint = EXHIBITS_ENDPOINTS.exhibits.exhibit_unlock_record.post.endpoint.replace(':exhibit_id', exhibit_id);
         }
 
-        if (window.location.pathname.indexOf('items/heading') !== -1) {
+        if (window.location.pathname.indexOf('items/heading/edit') !== -1) {
             let heading_id = helperModule.get_parameter_by_name('item_id');
             let tmp = EXHIBITS_ENDPOINTS.exhibits.heading_unlock_record.post.endpoint.replace(':exhibit_id', exhibit_id);
             endpoint = tmp.replace(':heading_id', heading_id);
         }
 
-        if (window.location.pathname.indexOf('items/standard')) {
+        if (window.location.pathname.indexOf('items/standard/text/edit') || window.location.pathname.indexOf('items/standard/media/edit')) {
             let item_id = helperModule.get_parameter_by_name('item_id');
             let tmp = EXHIBITS_ENDPOINTS.exhibits.item_unlock_record.post.endpoint.replace(':exhibit_id', exhibit_id);
             endpoint = tmp.replace(':item_id', item_id);
         }
 
-        if (window.location.pathname.indexOf('grid/item')) {
+        if (window.location.pathname.indexOf('items/grid/item/media/edit') || window.location.pathname.indexOf('items/grid/item/text/edit')) {
             let grid_id = helperModule.get_parameter_by_name('grid_id');
             let item_id = helperModule.get_parameter_by_name('item_id');
             let tmp = EXHIBITS_ENDPOINTS.exhibits.grid_item_unlock_record.post.endpoint.replace(':exhibit_id', exhibit_id);
@@ -458,7 +467,7 @@ const helperModule = (function () {
             endpoint = tmp2.replace(':item_id', item_id);
         }
 
-        if (window.location.pathname.indexOf('vertical-timeline/item')) {
+        if (window.location.pathname.indexOf('items/vertical-timeline/item/media/edit') || window.location.pathname.indexOf('items/vertical-timeline/item/text/edit')) {
             let timeline_id = helperModule.get_parameter_by_name('timeline_id');
             let item_id = helperModule.get_parameter_by_name('item_id');
             let tmp = EXHIBITS_ENDPOINTS.exhibits.timeline_item_unlock_record.post.endpoint.replace(':exhibit_id', exhibit_id);
@@ -478,6 +487,8 @@ const helperModule = (function () {
         }
          */
 
+        console.log(endpoint);
+
         const token = authModule.get_user_token();
         const response = await httpModule.req({
             method: 'POST',
@@ -488,8 +499,13 @@ const helperModule = (function () {
             }
         });
 
-        if (response !== undefined && response.status === 200) {
-            window.location.reload();
+        if (response.status === 200) {
+
+            document.querySelector('#message').innerHTML = `<div class="alert alert-success" role="alert">Unlocked</div>`;
+            setTimeout(() => {
+                window.location.reload();
+            }, 2000);
+
         } else {
             document.querySelector('#message').innerHTML = `<div class="alert alert-danger" role="alert"><i class="fa fa-exclamation"></i> An HTTP request error occurred unlocking record.</div>`;
         }
