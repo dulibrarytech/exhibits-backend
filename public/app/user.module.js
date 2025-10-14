@@ -198,6 +198,21 @@ const userModule = (function () {
                 ]
             });
 
+            // TODO: attach events to data table
+            /* EXAMPLES
+            EXHIBIT_LIST.on('click', 'tbody tr .publish-exhibit', async (event) => {
+            event.preventDefault();
+            const uuid = event.currentTarget.getAttribute('id');
+            await publish_exhibit(uuid);
+        });
+
+        EXHIBIT_LIST.on('click', 'tbody tr .suppress-exhibit', async (event) => {
+            event.preventDefault();
+            const uuid = event.currentTarget.getAttribute('id');
+            await suppress_exhibit(uuid);
+        });
+             */
+
             bind_activate_user_events();
             bind_deactivate_user_events();
             helperModule.show_form();

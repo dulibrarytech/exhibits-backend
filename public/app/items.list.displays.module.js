@@ -162,7 +162,7 @@ const itemsListDisplayModule = (function () {
         try {
 
             const type = item.type;
-            const text = helperModule.unescape(item.text);
+            const text = helperModule.strip_html(helperModule.unescape(item.text));
             let item_obj = check_published_status(item, 'heading');
             let item_data = '';
             let locked = '';
@@ -312,7 +312,7 @@ const itemsListDisplayModule = (function () {
         try {
 
             const type = item.type;
-            const title = helperModule.unescape(item.title);
+            const title = helperModule.strip_html(helperModule.unescape(item.title));
             const item_obj = check_grid_published_status(item, 'grid');
             let add_grid_items = `<a href="${APP_PATH}/items/grid/item?exhibit_id=${item.is_member_of_exhibit}&grid_id=${item.uuid}" title="Add Grid Item" aria-label="add-grid-items"><i class="fa fa-plus pr-1"></i></a>&nbsp;`;
             let item_data = '';
@@ -369,7 +369,7 @@ const itemsListDisplayModule = (function () {
             const type = item.type;
             item.type = '';
             item.type = 'timeline';
-            const title = helperModule.unescape(item.title);
+            const title = helperModule.strip_html(helperModule.unescape(item.title));
             const item_obj = check_published_status(item, 'vertical-timeline');
             let item_data = '';
             let view_timeline_items = '';
