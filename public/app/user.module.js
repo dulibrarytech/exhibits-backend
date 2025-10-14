@@ -192,29 +192,27 @@ const userModule = (function () {
 
             document.querySelector('#user-data').innerHTML = user_data;
 
-            new DataTable('#users', {
+            const USER_LIST = new DataTable('#users', {
+                paging: true,
                 order: [
                     [0, 'asc']
                 ]
             });
 
-            // TODO: attach events to data table
-            /* EXAMPLES
-            EXHIBIT_LIST.on('click', 'tbody tr .publish-exhibit', async (event) => {
-            event.preventDefault();
-            const uuid = event.currentTarget.getAttribute('id');
-            await publish_exhibit(uuid);
-        });
+            USER_LIST.on('click', 'tbody tr .inactive-user', async (event) => {
+                event.preventDefault();
+                const user_id = event.currentTarget.getAttribute('id');
+                await deactivate_user(user_id);
+            });
 
-        EXHIBIT_LIST.on('click', 'tbody tr .suppress-exhibit', async (event) => {
-            event.preventDefault();
-            const uuid = event.currentTarget.getAttribute('id');
-            await suppress_exhibit(uuid);
-        });
-             */
+            USER_LIST.on('click', 'tbody tr .active-user', async (event) => {
+                event.preventDefault();
+                const user_id = event.currentTarget.getAttribute('id');
+                await activate_user(user_id);
+            });
 
-            bind_activate_user_events();
-            bind_deactivate_user_events();
+            // bind_activate_user_events();
+            // bind_deactivate_user_events();
             helperModule.show_form();
 
             return false;
@@ -237,7 +235,6 @@ const userModule = (function () {
             const role = await get_user_role(profile.uid);
             const user = record.pop();
 
-            // TODO: ADMINISTRATOR can update any user
             // user data
             if (role.role === 'Administrator' && parseInt(profile.uid) === parseInt(user.id)) {
 
@@ -458,6 +455,7 @@ const userModule = (function () {
         }
     };
 
+    // TODO: deprecate
     function bind_activate_user_events() {
 
         try {
@@ -476,6 +474,7 @@ const userModule = (function () {
         }
     }
 
+    // TODO: deprecate
     function bind_deactivate_user_events() {
 
         try {
