@@ -223,7 +223,7 @@ const userModule = (function () {
             const user = record.pop();
 
             // user data
-            if (role.role === 'Administrator') {
+            if (role.role === 'Administrator' || parseInt(profile.uid) === parseInt(user.id)) {
 
                 await userModule.list_roles(role);
                 document.querySelector('#first-name-input').value = user.first_name;

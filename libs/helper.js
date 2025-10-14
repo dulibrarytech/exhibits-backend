@@ -70,7 +70,7 @@ const Helper = class {
 
             setTimeout(async () => {
                 await this.unlock_record(uid, uuid, db, table);
-            }, 5 * 60 * 1000); // 5 min
+            }, 20 * 60 * 1000); // 20 min
 
             return true;
 
@@ -87,8 +87,7 @@ const Helper = class {
      * @param table
      */
     async unlock_record(uid, uuid, db, table) {
-        console.log(uid);
-        console.log(uuid);
+
         try {
 
             await db(table)
