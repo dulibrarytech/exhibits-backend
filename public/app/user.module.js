@@ -223,13 +223,23 @@ const userModule = (function () {
             const user = record.pop();
 
             // user data
-            if (role.role === 'Administrator' || parseInt(profile.uid) === parseInt(user.id)) {
+            if (role.role === 'Administrator' && parseInt(profile.uid) === parseInt(user.id)) {
 
                 await userModule.list_roles(role);
                 document.querySelector('#first-name-input').value = user.first_name;
                 document.querySelector('#last-name-input').value = user.last_name;
                 document.querySelector('#email-input').value = user.email;
                 document.querySelector('#du-id-input').value = user.du_id;
+
+            } else if (role.role !== 'Administrator' && parseInt(profile.uid) === parseInt(user.id)) {
+
+                await userModule.list_roles(role);
+                document.querySelector('#first-name-input').value = user.first_name;
+                document.querySelector('#last-name-input').value = user.last_name;
+                document.querySelector('#email-input').value = user.email;
+                document.querySelector('#du-id-input').value = user.du_id;
+                document.querySelector('#du-id-input').setAttribute('disabled', '');
+                document.querySelector('#user-roles').setAttribute('disabled', '');
 
             } else {
 

@@ -100,7 +100,7 @@ exports.update_user = async function (req, res) {
             return false;
         }
 
-        const permissions = ['update_users'];
+        const permissions = ['update_users', 'update_user'];
         let options = {};
         options.req = req;
         options.permissions = permissions;
