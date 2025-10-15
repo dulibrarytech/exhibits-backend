@@ -172,10 +172,10 @@ const userModule = (function () {
                         trash = `<i title="Can only delete if inactive" style="color: #d3d3d3" class="fa fa-trash pr-1"></i>`;
                     }
                 }
-
-                user_data += '<tr>';
+                // <p><i class="fa fa-user"></i>&nbsp;&nbsp;<strong>${users[i].first_name} ${users[i].last_name}</strong></p>
+                user_data += '<tr style="height: 10%">';
                 user_data += `<td style="width: 35%;padding-left: 7%">
-                    <p><i class="fa fa-user"></i>&nbsp;&nbsp;<strong>${users[i].first_name} ${users[i].last_name}</strong></p>
+                    <small>${users[i].first_name} ${users[i].last_name}</small>
                     </td>`;
 
                 user_data += `<td style="width: 15%;text-align: center"><small>${users[i].role}</small></td>`;

@@ -1222,11 +1222,11 @@ footer.site-footer {
 table {
   border:0px;
 }
-
+/*
 td {
   height: 165px;
 }
-
+*/
 td.item-order {
   font-size: small;
   text-align: center;
