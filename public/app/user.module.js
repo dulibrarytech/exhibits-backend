@@ -180,7 +180,7 @@ const userModule = (function () {
 
                 user_data += `<td style="width: 15%;text-align: center">${users[i].role}</td>`;
                 user_data += `<td style="width: 5%;text-align: center"><small>${status}</small></td>`;
-                user_data += `<td style="width: 10%">
+                user_data += `<td id="${users[i].id}-user-actions" style="width: 10%">
                                 <div class="card-text text-sm-center">
                                     ${user_edit}
                                     &nbsp;
@@ -272,7 +272,6 @@ const userModule = (function () {
                 document.querySelector('#email-disabled').value = user.email;
                 document.querySelector('#du-id-disabled').value = user.du_id;
                 document.querySelector('#role-disabled').value = role.role;
-                // TODO: console.log('ROLE ', role.role);
             }
 
             return false;
@@ -507,27 +506,32 @@ const userModule = (function () {
 
         if (response.status === 200) {
 
-            scrollTo(0, 0);
-            document.querySelector('#message').innerHTML = `<div class="alert alert-success" role="alert"><i class="fa fa-check"></i> User activated</div>`;
-
             setTimeout(() => {
-                location.reload();
-            }, 500);
 
-            /*
-            setTimeout(() => {
-                let elem = document.getElementById(uuid);
-                document.getElementById(uuid).classList.remove('publish-exhibit');
-                document.getElementById(uuid).classList.add('suppress-exhibit');
-                document.getElementById(uuid).replaceWith(elem.cloneNode(true));
-                document.getElementById(uuid).innerHTML = '<span id="suppress" title="published"><i class="fa fa-cloud" style="color: green"></i><br>Published</span>';
-                document.getElementById(uuid).addEventListener('click', async () => {
-                    const uuid = elem.getAttribute('id');
-                    await suppress_exhibit(uuid);
+                let elem = document.getElementById(id);
+                document.getElementById(id).classList.remove('active-user');
+                document.getElementById(id).classList.add('inactive-user');
+                document.getElementById(id).replaceWith(elem.cloneNode(true));
+                document.getElementById(id).innerHTML = '<span id="suppress" title="published"><i class="fa fa-user" style="color: green"></i><br>Active</span>';
+                document.getElementById(id).addEventListener('click', async () => {
+                    await deactivate_user(id);
                 }, false);
             }, 0);
 
-             */
+            setTimeout(() => {
+
+                let actions_id = `${id}-user-actions`;
+                let elem = document.getElementById(actions_id);
+                let user_edit = `<i title="Only administrators can view user details" style="color: #d3d3d3" class="fa fa-edit pr-1"></i>`;
+                let trash = `<i title="Only administrators can delete users" style="color: #d3d3d3" class="fa fa-trash pr-1" aria-label="delete-user"></i>`;
+
+                elem.innerHTML = `
+                        <div class="card-text text-sm-center">
+                        ${user_edit}&nbsp;
+                        ${trash}
+                        </div>`;
+
+            }, 0);
         }
     }
 
@@ -545,27 +549,31 @@ const userModule = (function () {
 
         if (response.status === 200) {
 
-            scrollTo(0, 0);
-            document.querySelector('#message').innerHTML = `<div class="alert alert-success" role="alert"><i class="fa fa-check"></i> User deactivated</div>`;
-
             setTimeout(() => {
-                location.reload();
-            }, 500);
-
-            /*
-            setTimeout(() => {
-                let elem = document.getElementById(uuid);
-                document.getElementById(uuid).classList.remove('suppress-exhibit');
-                document.getElementById(uuid).classList.add('publish-exhibit');
-                document.getElementById(uuid).replaceWith(elem.cloneNode(true));
-                document.getElementById(uuid).innerHTML = '<span id="publish" title="suppressed"><i class="fa fa-cloud-upload" style="color: darkred"></i><br>Suppressed</span>';
-                document.getElementById(uuid).addEventListener('click', async (event) => {
-                    const uuid = elem.getAttribute('id');
-                    await publish_exhibit(uuid);
+                let elem = document.getElementById(id);
+                document.getElementById(id).classList.remove('inactive-user');
+                document.getElementById(id).classList.add('active-user');
+                document.getElementById(id).replaceWith(elem.cloneNode(true));
+                document.getElementById(id).innerHTML = '<span id="publish" title="suppressed"><i class="fa fa-user" style="color: darkred"></i><br>Inactive</span>';
+                document.getElementById(id).addEventListener('click', async (event) => {
+                    await activate_user(id);
                 }, false);
             }, 0);
 
-             */
+            setTimeout(() => {
+
+                let actions_id = `${id}-user-actions`;
+                let elem = document.getElementById(actions_id);
+                let user_edit = `<a href="${APP_PATH}/users/edit?user_id=${id}" title="View user details" aria-label="user-details"><i class="fa fa-edit pr-1"></i></a>`;
+                let trash = `<a href="${APP_PATH}/users/delete?user_id=${id}" title="Delete User" aria-label="delete-user"><i class="fa fa-trash pr-1"></i></a>`;
+
+                elem.innerHTML = `
+                        <div class="card-text text-sm-center">
+                        ${user_edit}&nbsp;
+                        ${trash}
+                        </div>`;
+
+            }, 0);
         }
     }
 
