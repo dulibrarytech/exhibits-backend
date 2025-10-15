@@ -238,6 +238,7 @@ const userModule = (function () {
             // user data
             if (role.role === 'Administrator' && parseInt(profile.uid) === parseInt(user.id)) {
 
+                const role = await get_user_role(user.id);
                 await userModule.list_roles(role);
                 document.querySelector('#first-name-input').value = user.first_name;
                 document.querySelector('#last-name-input').value = user.last_name;
@@ -246,6 +247,7 @@ const userModule = (function () {
 
             } else if (role.role === 'Administrator' && parseInt(profile.uid) !== parseInt(user.id)) {
 
+                const role = await get_user_role(user.id);
                 await userModule.list_roles(role);
                 document.querySelector('#first-name-input').value = user.first_name;
                 document.querySelector('#last-name-input').value = user.last_name;
