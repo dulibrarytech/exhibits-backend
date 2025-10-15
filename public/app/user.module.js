@@ -178,7 +178,7 @@ const userModule = (function () {
                     <p><i class="fa fa-user"></i>&nbsp;&nbsp;<strong>${users[i].first_name} ${users[i].last_name}</strong></p>
                     </td>`;
 
-                user_data += `<td style="width: 15%;text-align: center">${users[i].role}</td>`;
+                user_data += `<td style="width: 15%;text-align: center"><small>${users[i].role}</small></td>`;
                 user_data += `<td style="width: 5%;text-align: center"><small>${status}</small></td>`;
                 user_data += `<td id="${users[i].id}-user-actions" style="width: 10%">
                                 <div class="card-text text-sm-center">
