@@ -403,6 +403,7 @@ const userModule = (function () {
         await display_user_records();
     };
 
+    /*
     obj.display_user_records__ = async function () {
 
         try {
@@ -528,6 +529,7 @@ const userModule = (function () {
             document.querySelector(MESSAGE_SELECTOR).innerHTML = `<div class="alert alert-danger" role="alert"><i class="fa fa-exclamation"></i> ${error.message}</div>`;
         }
     };
+    */
 
     obj.display_user_record = async function () {
 
@@ -657,8 +659,9 @@ const userModule = (function () {
         /**
          * Determine user access level and return configuration
          */
-        function determine_access_level(profile, user, role) {
-            const is_admin = role.role === 'Administrator';
+        function determine_access_level(profile, user, profile_role) {
+
+            const is_admin = profile_role.role === 'Administrator';
             const is_own_profile = parseInt(profile.uid) === parseInt(user.id);
 
             if (is_admin && is_own_profile) {
@@ -681,6 +684,7 @@ const userModule = (function () {
          * Configure form based on access level
          */
         function configure_form(access_config, user, role) {
+
             if (access_config.form_type === 'view_only') {
                 populate_read_only_form(user, role);
             } else {
@@ -701,6 +705,7 @@ const userModule = (function () {
          * Display and populate user record form
          */
         async function display_user_record() {
+
             try {
 
                 clear_cache();
@@ -713,6 +718,7 @@ const userModule = (function () {
                 }
 
                 const record = await get_user_record();
+
                 if (!record || !Array.isArray(record) || record.length === 0) {
                     show_error('Unable to retrieve user record');
                     setTimeout(() => {
@@ -729,9 +735,16 @@ const userModule = (function () {
                 }
 
                 // Fetch user role
-                const role = await get_user_role(user.id);
+                const role = await get_user_role(user.id); // for user edit record
+                const profile_role = await get_user_role(profile.uid); // to determine if is_admin
+
                 if (!role) {
                     show_error('Unable to retrieve user role');
+                    return false;
+                }
+
+                if (!profile_role) {
+                    show_error('Unable to retrieve profile role');
                     return false;
                 }
 
@@ -741,7 +754,8 @@ const userModule = (function () {
                 }
 
                 // Determine access level and configure form
-                const access_config = determine_access_level(profile, user, role);
+                const access_config = determine_access_level(profile, user, profile_role);
+                console.log('access_config', access_config);
                 configure_form(access_config, user, role);
 
                 return true;
