@@ -352,6 +352,11 @@ const ENDPOINTS = {
             endpoint: `${APP_PATH}/kaltura/:entry_id`,
             params: 'token or api_key, gets Kaltura item metadata'
         },
+        item_subjects: {
+            description: 'Retrieves Subject terms',
+            endpoint: `${APP_PATH}/subjects`,
+            params: 'token or api_key, gets subject terms from specialcollections.du.edu'
+        },
         reorder_exhibits_records: {
             post: {
                 description: 'reorders exhibits',

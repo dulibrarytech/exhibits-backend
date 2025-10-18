@@ -97,8 +97,6 @@ const exhibitsEditFormModule = (function () {
 
             helperModule.check_if_locked(record, '#exhibit-submit-card');
 
-            // TODO: get user ID to determine role
-
             if (created_by !== null) {
                 exhibit_created += `<em>Created by ${created_by} on ${create_date_time}</em>`;
             }

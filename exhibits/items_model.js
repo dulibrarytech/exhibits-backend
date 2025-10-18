@@ -640,5 +640,24 @@ exports.unlock_item_record = async function (uid, uuid) {
     }
 };
 
+exports.get_item_subjects = async function () {
+
+    try {
+
+        const response = await HTTP({
+            method: 'GET',
+            url: `${CONFIG.item_subjects_api_url}?key=${CONFIG.item_subjects_api_key}`,
+            headers: {
+                'Content-Type': 'application/json'
+            }
+        });
+
+        return response.data;
+
+    } catch (error) {
+        LOGGER.module().error('ERROR: [/exhibits/model (get_item_subjects)] ' + error.message);
+    }
+};
+
 exports.publish_item_record = publish_item_record;
 exports.suppress_item_record = suppress_item_record;

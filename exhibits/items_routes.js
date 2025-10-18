@@ -59,4 +59,7 @@ module.exports = function (app) {
 
     app.route(ENDPOINTS().exhibits.item_unlock_record.post.endpoint)
         .post(CONTROLLER.unlock_item_record);
+
+    app.route(ENDPOINTS().exhibits.item_subjects.endpoint)
+        .get(TOKEN.verify, CONTROLLER.get_item_subjects);
 };

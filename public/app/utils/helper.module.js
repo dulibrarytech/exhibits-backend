@@ -422,7 +422,9 @@ const helperModule = (function () {
                         document.querySelector('#message').innerHTML = `<div class="alert alert-warning" role="alert">${message}  ${unlock}</div>`;
 
                         if (document.querySelector('#unlock-record') !== null) {
-                            document.querySelector('#unlock-record').addEventListener('click', helperModule.unlock_record);
+                            document.querySelector('#unlock-record').addEventListener('click', () => {
+                                helperModule.unlock_record();
+                            });
                         }
                     }
                 }
@@ -499,12 +501,7 @@ const helperModule = (function () {
         });
 
         if (response.status === 200) {
-
             document.querySelector('#message').innerHTML = `<div class="alert alert-success" role="alert">Unlocked</div>`;
-            setTimeout(() => {
-                window.location.reload();
-            }, 1000);
-
         } else {
             document.querySelector('#message').innerHTML = `<div class="alert alert-danger" role="alert"><i class="fa fa-exclamation"></i> An HTTP request error occurred unlocking record.</div>`;
         }
@@ -518,6 +515,186 @@ const helperModule = (function () {
     obj.get_owner = function () {
         const profile = authModule.get_user_profile_data();
         return parseInt(profile.uid);
+    }
+
+    obj.create_subjects_menu = async function () {
+
+        try {
+
+            const all_items = await this.get_item_subjects();
+            const header = document.getElementById('dropdownHeader');
+            const list = document.getElementById('dropdownList');
+            const virtual_list = document.getElementById('virtualList');
+            const arrow = document.getElementById('arrow');
+            const selected_text = document.getElementById('selectedText');
+            const result_list = document.getElementById('resultList');
+            const search_box = document.getElementById('searchBox');
+            const search_input = document.getElementById('searchInput');
+
+            let selected = new Set();
+            let filtered_items = all_items;
+            let item_map = new Map();
+            let is_open = false;
+
+            const ITEM_HEIGHT = 48;
+            const VISIBLE_ITEMS = 5;
+            const BUFFER = 50;
+
+            // Debounce search
+            let search_timeout;
+            search_input.addEventListener('input', (e) => {
+                clearTimeout(search_timeout);
+                search_timeout = setTimeout(() => {
+                    const query = e.target.value.toLowerCase();
+                    filtered_items = query
+                        ? all_items.filter(item => item.toLowerCase().includes(query))
+                        : all_items;
+                    render_virtual_list();
+                }, 150);
+            });
+
+            function render_virtual_list() {
+                virtual_list.innerHTML = '';
+                item_map.clear();
+
+                // Calculate visible range
+                const scroll_top = list.scrollTop || 0;
+                const start_idx = Math.max(0, Math.floor(scroll_top / ITEM_HEIGHT) - BUFFER);
+                const end_idx = Math.min(filtered_items.length, Math.ceil((scroll_top + list.clientHeight) / ITEM_HEIGHT) + BUFFER);
+
+                // Set container height for scrollbar
+                virtual_list.style.height = `${filtered_items.length * ITEM_HEIGHT}px`;
+                virtual_list.style.position = 'relative';
+
+                // Render visible items
+                for (let i = start_idx; i < end_idx; i++) {
+                    const item = filtered_items[i];
+                    const div = document.createElement('div');
+                    div.className = 'dropdown-item';
+                    div.style.position = 'absolute';
+                    div.style.top = `${i * ITEM_HEIGHT}px`;
+                    div.style.width = '100%';
+
+                    const checkbox = document.createElement('input');
+                    checkbox.type = 'checkbox';
+                    checkbox.value = item;
+                    checkbox.className = 'form-check-input';
+                    checkbox.checked = selected.has(item);
+
+                    const label = document.createElement('label');
+                    label.className = 'ms-2';
+                    label.style.cursor = 'pointer';
+                    label.style.marginBottom = '0';
+                    label.textContent = item;
+                    label.style.paddingLeft = '30px';
+
+                    checkbox.addEventListener('change', (e) => {
+                        if (e.target.checked) {
+                            selected.add(item);
+                        } else {
+                            selected.delete(item);
+                        }
+                        update_selected();
+                    });
+
+                    label.addEventListener('click', (e) => {
+                        e.stopPropagation();
+                        checkbox.checked = !checkbox.checked;
+                        checkbox.dispatchEvent(new Event('change'));
+                    });
+
+                    div.appendChild(checkbox);
+                    div.appendChild(label);
+                    virtual_list.appendChild(div);
+                    item_map.set(item, checkbox);
+                }
+            }
+
+            list.addEventListener('scroll', () => {
+                render_virtual_list();
+            });
+
+            header.addEventListener('click', () => {
+                is_open = !is_open;
+                list.classList.toggle('show');
+                header.classList.toggle('active');
+                arrow.classList.toggle('rotate');
+                search_box.classList.toggle('show');
+
+                if (is_open) {
+                    search_input.focus();
+                    render_virtual_list();
+                } else {
+                    search_input.value = '';
+                    filtered_items = all_items;
+                }
+            });
+
+            document.addEventListener('click', (e) => {
+                if (!e.target.closest('.dropdown-container')) {
+                    is_open = false;
+                    list.classList.remove('show');
+                    header.classList.remove('active');
+                    arrow.classList.remove('rotate');
+                    search_box.classList.remove('show');
+                    search_input.value = '';
+                    filtered_items = all_items;
+                }
+            });
+
+            function update_selected() {
+                if (selected.size === 0) {
+                    selected_text.innerHTML = '<span class="placeholder">Select subjects...</span>';
+                    result_list.innerHTML = '<li style="color: #999;">None selected</li>';
+                } else {
+                    const selected_array = Array.from(selected);
+                    const count = selected.size;
+                    const display = selected_array.length <= 2
+                        ? selected_array.join(', ')
+                        : `${selected_array[0]}, ${selected_array[1]}...`;
+
+                    selected_text.innerHTML = `${display} <span class="selected-count">${count}</span>`;
+
+                    result_list.innerHTML = selected_array
+                        .sort()
+                        .map(item => `<li>${item}</li>`)
+                        .join('');
+
+                    console.log('selected subjects ', selected_array);
+                    document.querySelector('#selected-subjects').value = selected_array;
+                }
+            }
+
+            // Initial render
+            render_virtual_list();
+
+        } catch (error) {
+            console.log(error);
+        }
+    };
+
+    obj.get_item_subjects = async function () {
+
+        try {
+
+            const EXHIBITS_ENDPOINTS = endpointsModule.get_exhibits_endpoints();
+            const token = authModule.get_user_token();
+            const response = await httpModule.req({
+                method: 'GET',
+                url: EXHIBITS_ENDPOINTS.exhibits.item_subjects.endpoint,
+                headers: {
+                    'Content-Type': 'application/json',
+                    'x-access-token': token
+                }
+            });
+
+            if (response !== undefined && response.status === 200) {
+                return response.data.data;
+            }
+
+        } catch (error) {
+            document.querySelector('#message').innerHTML = `<div class="alert alert-danger" role="alert"><i class="fa fa-exclamation"></i> ${error.message}</div>`;
+        }
     }
 
     obj.check_bandwidth = function (cb) {

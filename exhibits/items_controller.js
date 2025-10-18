@@ -604,3 +604,18 @@ exports.unlock_item_record = async function (req, res) {
         res.status(500).send({message: `Unable to unlock item record. ${error.message}`});
     }
 };
+
+exports.get_item_subjects = async function (req, res) {
+
+    try {
+
+        const subjects = await ITEMS_MODEL.get_item_subjects();
+
+        res.status(200).send({
+            data: subjects
+        });
+
+    } catch (error) {
+        res.status(500).send({message: `Unable to get item subjects. ${error.message}`});
+    }
+};

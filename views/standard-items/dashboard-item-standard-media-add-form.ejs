@@ -176,6 +176,7 @@
             </div>
         </div>
 
+        <%- include('../partials/item-media-subjects-card'); %>
         <%- include('partials/standard-item-styles.ejs'); %>
 
         <div id="item-submit-card" class="card">
@@ -205,6 +206,7 @@
 <script>
     itemsCommonStandardItemFormModule.init();
     itemsAddStandardItemFormModule.init();
+    helperModule.get_item_subjects();
 </script>
 </body>
 </html>

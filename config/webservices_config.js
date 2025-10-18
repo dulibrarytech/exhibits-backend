@@ -29,7 +29,9 @@ const WEBSERVICES_CONFIG = {
     repo_item_api_url: process.env.REPO_ITEM_API_URL,
     repo_item_api_key: process.env.REPO_ITEM_API_KEY,
     tn_service: process.env.TN_SERVICE,
-    tn_service_api_key: process.env.TN_SERVICE_API_KEY
+    tn_service_api_key: process.env.TN_SERVICE_API_KEY,
+    item_subjects_api_url: process.env.ITEM_SUBJECTS_API_URL,
+    item_subjects_api_key: process.env.ITEM_SUBJECTS_API_KEY
 };
 
 module.exports = () => {
