@@ -210,6 +210,7 @@ const userModule = (function () {
          * Generate status HTML based on user state
          */
         function generate_status_html(user, is_current_user, is_admin) {
+
             const status = STATUS_CONFIG[user.is_active === 1 ? 'active' : 'inactive'];
 
             if (is_current_user) {
@@ -259,7 +260,8 @@ const userModule = (function () {
          * Generate action buttons HTML
          */
         function generate_actions_html(user, is_current_user, is_admin) {
-            const can_edit = is_admin || is_current_user;
+
+            const can_edit = is_admin && user.is_active === 0;
             const can_delete = is_admin && user.is_active === 0;
 
             const edit_button = can_edit
@@ -277,6 +279,7 @@ const userModule = (function () {
          * Generate single user row HTML
          */
         function generate_user_row(user, current_user, is_admin) {
+
             const is_current_user = current_user && parseInt(current_user.uid) === user.id;
             const status_html = generate_status_html(user, is_current_user, is_admin);
             const actions_html = generate_actions_html(user, is_current_user, is_admin);
@@ -398,6 +401,132 @@ const userModule = (function () {
         }
 
         await display_user_records();
+    };
+
+    obj.display_user_records__ = async function () {
+
+        try {
+
+            const users = await get_user_records();
+
+            if (users === false) {
+                document.querySelector('#add-user').style.display = 'none';
+                document.querySelector(MESSAGE_SELECTOR).innerHTML = `<div class="alert alert-danger" role="alert"><i class="fa fa-exclamation"></i> You do not have permission to view users.</div>`;
+                return false;
+            }
+
+            let user_data = '';
+
+            if (users === false) {
+                document.querySelector('#user-card').innerHTML = '';
+                return false;
+            }
+
+            if (users.length === 0) {
+                document.querySelector('.card').innerHTML = '';
+                document.querySelector(MESSAGE_SELECTOR).innerHTML = '<div class="alert alert-info" role="alert"><span id="exhibit-title"></span> No User Profiles found.</div>';
+                return false;
+            }
+
+            let access = false;
+
+            for (let i = 0; i < users.length; i++) {
+
+                const is_active = users[i].is_active;
+                let status;
+                let user_edit = '';
+                let trash = '';
+                const user = JSON.parse(window.sessionStorage.getItem('exhibits_user'));
+
+                if (user === null) {
+                    document.querySelector(MESSAGE_SELECTOR).innerHTML = `<div class="alert alert-danger" role="alert"><i class="fa fa-exclamation"></i> Unable to get your user id</div>`;
+                    return false;
+                }
+
+                if (parseInt(user.uid) === users[i].id && users[i].role === 'Administrator') {
+                    access = true;
+                }
+
+                if (is_active === 1) {
+
+                    if (parseInt(user.uid) === users[i].id) {
+
+                        status = `<span id="inactive" title="active"><i class="fa fa-user" style="color: green"></i><br>Active</span>`;
+                        user_edit = `<a href="${APP_PATH}/users/edit?user_id=${users[i].id}" title="Edit"><i class="fa fa-edit pr-1"></i> </a>`;
+                        trash = `<i title="Can only delete if inactive" style="color: #d3d3d3" class="fa fa-trash pr-1"></i>`;
+
+                    } else {
+
+                        if (access === true) {
+                            status = `<a href="#" id="${users[i].id}" class="inactive-user"><span id="inactive" title="active"><i class="fa fa-user" style="color: green"></i><br>Active</span></a>`;
+                        } else {
+                            status = `<span id="inactive" title="active"><i class="fa fa-user" style="color: green"></i><br>Active</span>`;
+                        }
+
+                        user_edit = `<i title="Can only edit if inactive" style="color: #d3d3d3" class="fa fa-edit pr-1"></i>`;
+                        trash = `<i title="Can only delete if inactive" style="color: #d3d3d3" class="fa fa-trash pr-1"></i>`;
+                    }
+
+                } else if (is_active === 0) {
+
+                    if (access === true) {
+                        status = `<a href="#" id="${users[i].id}" class="active-user"><span id="active" title="inactive"><i class="fa fa-user" style="color: darkred"></i><br>Inactive</span></a>`;
+                        user_edit = `<a href="${APP_PATH}/users/edit?user_id=${users[i].id}" title="Edit"><i class="fa fa-edit pr-1"></i> </a>`;
+                        trash = `<a href="${APP_PATH}/users/delete?user_id=${users[i].id}" title="Delete"><i class="fa fa-trash pr-1"></i></a>`;
+                    } else {
+                        status = `<span id="active" title="inactive"><i class="fa fa-user" style="color: darkred"></i><br>Inactive</span>`;
+                        user_edit = `<i title="Can only edit if inactive" style="color: #d3d3d3" class="fa fa-edit pr-1"></i>`;
+                        trash = `<i title="Can only delete if inactive" style="color: #d3d3d3" class="fa fa-trash pr-1"></i>`;
+                    }
+                }
+                // <p><i class="fa fa-user"></i>&nbsp;&nbsp;<strong>${users[i].first_name} ${users[i].last_name}</strong></p>
+                user_data += '<tr style="height: 10%">';
+                user_data += `<td style="width: 35%;padding-left: 7%">
+                    <small>${users[i].first_name} ${users[i].last_name}</small>
+                    </td>`;
+
+                user_data += `<td style="width: 15%;text-align: center"><small>${users[i].role}</small></td>`;
+                user_data += `<td style="width: 5%;text-align: center"><small>${status}</small></td>`;
+                user_data += `<td id="${users[i].id}-user-actions" style="width: 10%">
+                                <div class="card-text text-sm-center">
+                                    ${user_edit}
+                                    &nbsp;
+                                    ${trash}
+                                </div>
+                               </td>`;
+                user_data += '</tr>';
+            }
+
+            document.querySelector('#user-data').innerHTML = user_data;
+
+            const USER_LIST = new DataTable('#users', {
+                paging: true,
+                order: [
+                    [0, 'asc']
+                ]
+            });
+
+            USER_LIST.on('click', 'tbody tr .inactive-user', async (event) => {
+                event.preventDefault();
+                const user_id = event.currentTarget.getAttribute('id');
+                await deactivate_user(user_id);
+            });
+
+            USER_LIST.on('click', 'tbody tr .active-user', async (event) => {
+                event.preventDefault();
+                const user_id = event.currentTarget.getAttribute('id');
+                await activate_user(user_id);
+            });
+
+            // bind_activate_user_events();
+            // bind_deactivate_user_events();
+            helperModule.show_form();
+
+            return false;
+
+        } catch (error) {
+            document.querySelector(MESSAGE_SELECTOR).innerHTML = `<div class="alert alert-danger" role="alert"><i class="fa fa-exclamation"></i> ${error.message}</div>`;
+        }
     };
 
     obj.display_user_record = async function () {
@@ -1332,131 +1461,6 @@ obj.display_user_record_ = async function () {
  */
 
 /*
-    obj.display_user_records_ = async function () {
-
-        try {
-
-            const users = await get_user_records();
-
-            if (users === false) {
-                document.querySelector('#add-user').style.display = 'none';
-                document.querySelector(MESSAGE_SELECTOR).innerHTML = `<div class="alert alert-danger" role="alert"><i class="fa fa-exclamation"></i> You do not have permission to view users.</div>`;
-                return false;
-            }
-
-            let user_data = '';
-
-            if (users === false) {
-                document.querySelector('#user-card').innerHTML = '';
-                return false;
-            }
-
-            if (users.length === 0) {
-                document.querySelector('.card').innerHTML = '';
-                document.querySelector(MESSAGE_SELECTOR).innerHTML = '<div class="alert alert-info" role="alert"><span id="exhibit-title"></span> No User Profiles found.</div>';
-                return false;
-            }
-
-            let access = false;
-
-            for (let i = 0; i < users.length; i++) {
-
-                const is_active = users[i].is_active;
-                let status;
-                let user_edit = '';
-                let trash = '';
-                const user = JSON.parse(window.sessionStorage.getItem('exhibits_user'));
-
-                if (user === null) {
-                    document.querySelector(MESSAGE_SELECTOR).innerHTML = `<div class="alert alert-danger" role="alert"><i class="fa fa-exclamation"></i> Unable to get your user id</div>`;
-                    return false;
-                }
-
-                if (parseInt(user.uid) === users[i].id && users[i].role === 'Administrator') {
-                    access = true;
-                }
-
-                if (is_active === 1) {
-
-                    if (parseInt(user.uid) === users[i].id) {
-
-                        status = `<span id="inactive" title="active"><i class="fa fa-user" style="color: green"></i><br>Active</span>`;
-                        user_edit = `<a href="${APP_PATH}/users/edit?user_id=${users[i].id}" title="Edit"><i class="fa fa-edit pr-1"></i> </a>`;
-                        trash = `<i title="Can only delete if inactive" style="color: #d3d3d3" class="fa fa-trash pr-1"></i>`;
-
-                    } else {
-
-                        if (access === true) {
-                            status = `<a href="#" id="${users[i].id}" class="inactive-user"><span id="inactive" title="active"><i class="fa fa-user" style="color: green"></i><br>Active</span></a>`;
-                        } else {
-                            status = `<span id="inactive" title="active"><i class="fa fa-user" style="color: green"></i><br>Active</span>`;
-                        }
-
-                        user_edit = `<i title="Can only edit if inactive" style="color: #d3d3d3" class="fa fa-edit pr-1"></i>`;
-                        trash = `<i title="Can only delete if inactive" style="color: #d3d3d3" class="fa fa-trash pr-1"></i>`;
-                    }
-
-                } else if (is_active === 0) {
-
-                    if (access === true) {
-                        status = `<a href="#" id="${users[i].id}" class="active-user"><span id="active" title="inactive"><i class="fa fa-user" style="color: darkred"></i><br>Inactive</span></a>`;
-                        user_edit = `<a href="${APP_PATH}/users/edit?user_id=${users[i].id}" title="Edit"><i class="fa fa-edit pr-1"></i> </a>`;
-                        trash = `<a href="${APP_PATH}/users/delete?user_id=${users[i].id}" title="Delete"><i class="fa fa-trash pr-1"></i></a>`;
-                    } else {
-                        status = `<span id="active" title="inactive"><i class="fa fa-user" style="color: darkred"></i><br>Inactive</span>`;
-                        user_edit = `<i title="Can only edit if inactive" style="color: #d3d3d3" class="fa fa-edit pr-1"></i>`;
-                        trash = `<i title="Can only delete if inactive" style="color: #d3d3d3" class="fa fa-trash pr-1"></i>`;
-                    }
-                }
-                // <p><i class="fa fa-user"></i>&nbsp;&nbsp;<strong>${users[i].first_name} ${users[i].last_name}</strong></p>
-                user_data += '<tr style="height: 10%">';
-                user_data += `<td style="width: 35%;padding-left: 7%">
-                    <small>${users[i].first_name} ${users[i].last_name}</small>
-                    </td>`;
-
-                user_data += `<td style="width: 15%;text-align: center"><small>${users[i].role}</small></td>`;
-                user_data += `<td style="width: 5%;text-align: center"><small>${status}</small></td>`;
-                user_data += `<td id="${users[i].id}-user-actions" style="width: 10%">
-                                <div class="card-text text-sm-center">
-                                    ${user_edit}
-                                    &nbsp;
-                                    ${trash}
-                                </div>
-                               </td>`;
-                user_data += '</tr>';
-            }
-
-            document.querySelector('#user-data').innerHTML = user_data;
-
-            const USER_LIST = new DataTable('#users', {
-                paging: true,
-                order: [
-                    [0, 'asc']
-                ]
-            });
-
-            USER_LIST.on('click', 'tbody tr .inactive-user', async (event) => {
-                event.preventDefault();
-                const user_id = event.currentTarget.getAttribute('id');
-                await deactivate_user(user_id);
-            });
-
-            USER_LIST.on('click', 'tbody tr .active-user', async (event) => {
-                event.preventDefault();
-                const user_id = event.currentTarget.getAttribute('id');
-                await activate_user(user_id);
-            });
-
-            // bind_activate_user_events();
-            // bind_deactivate_user_events();
-            helperModule.show_form();
-
-            return false;
-
-        } catch (error) {
-            document.querySelector(MESSAGE_SELECTOR).innerHTML = `<div class="alert alert-danger" role="alert"><i class="fa fa-exclamation"></i> ${error.message}</div>`;
-        }
-    };
 
      */
 
