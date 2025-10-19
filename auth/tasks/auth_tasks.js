@@ -81,45 +81,73 @@ const Auth_tasks = class {
     }
 
     /**
-     * Checks user access
-     * @param username
-     */
-    async check_auth_user__(username) {
-
-        try {
-
-            const data = await this.DB(this.TABLE.user_records)
-                .select('id')
-                .where({
-                    du_id: username,
-                    is_active: 1
-                });
-
-            if (data.length === 1) {
-
-                return {
-                    auth: true,
-                    data: data[0].id
-                };
-
-            } else {
-
-                return {
-                    auth: false,
-                    data: []
-                };
-            }
-
-        } catch (error) {
-            LOGGER.module().error('ERROR: [/auth/tasks (check_auth_user)] unable to check auth ' + error.message);
-        }
-    }
-
-    /**
      * Gets user data
      * @param id
      */
     async get_auth_user_data(id) {
+
+        try {
+
+            if (id === null || id === undefined) {
+                return null;
+            }
+
+            const user_id = Number(id);
+
+            if (!Number.isInteger(user_id) || user_id <= 0) {
+                LOGGER.module().warn(`Invalid user ID format: ${id}`);
+                return null;
+            }
+
+            // Query user data with limited fields for security
+            const data = await this.DB(this.TABLE.user_records)
+                .select('id', 'du_id', 'email', 'first_name', 'last_name')
+                .where({
+                    id: user_id,
+                    is_active: 1
+                })
+                .limit(1);
+
+            // Validate result
+            if (!data || !Array.isArray(data) || data.length === 0) {
+                return null;
+            }
+
+            if (data.length !== 1) {
+                LOGGER.module().warn(
+                    `Unexpected number of records returned for user ID: ${user_id}`
+                );
+                return null;
+            }
+
+            // Extract first record and validate required fields
+            const user_record = data[0];
+
+            if (!user_record.id || !user_record.du_id) {
+                LOGGER.module().error(
+                    `Missing critical fields in user record for ID: ${user_id}`
+                );
+                return null;
+            }
+
+            // Return normalized user data
+            return {
+                id: user_record.id,
+                du_id: user_record.du_id,
+                email: user_record.email || null,
+                first_name: user_record.first_name || null,
+                last_name: user_record.last_name || null
+            };
+
+        } catch (error) {
+            LOGGER.module().error(
+                `ERROR: [/auth/tasks (get_auth_user_data)] unable to get user data: ${error.message}`
+            );
+            return null;
+        }
+    }
+
+    async get_auth_user_data__(id) {
 
         try {
 
@@ -143,7 +171,7 @@ const Auth_tasks = class {
         } catch (error) {
             LOGGER.module().error('ERROR: [/auth/tasks (get_auth_user_data)] unable to get user data ' + error.message);
         }
-    };
+    }
 
     /**
      * Saves token

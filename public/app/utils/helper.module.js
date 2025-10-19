@@ -597,7 +597,6 @@ const helperModule = (function () {
             let is_open = false;
 
             const ITEM_HEIGHT = 48;
-            // const VISIBLE_ITEMS = 5;
             const BUFFER = 50;
 
             // Debounce search
