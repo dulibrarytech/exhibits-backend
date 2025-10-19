@@ -39,6 +39,55 @@ const Auth_tasks = class {
 
         try {
 
+            if (!username || typeof username !== 'string') {
+                return {
+                    auth: false,
+                    data: null
+                };
+            }
+
+            const data = await this.DB(this.TABLE.user_records)
+                .select('id')
+                .where({
+                    du_id: username,
+                    is_active: 1
+                })
+                .limit(1);
+
+            // Check if exactly one user found
+            if (data && data.length === 1) {
+                return {
+                    auth: true,
+                    data: data[0].id
+                };
+            }
+
+            return {
+                auth: false,
+                data: null
+            };
+
+        } catch (error) {
+            LOGGER.module().error(
+                `ERROR: [/auth/tasks (check_auth_user)] unable to check auth: ${error.message}`
+            );
+
+            // Return consistent error response
+            return {
+                auth: false,
+                data: null
+            };
+        }
+    }
+
+    /**
+     * Checks user access
+     * @param username
+     */
+    async check_auth_user__(username) {
+
+        try {
+
             const data = await this.DB(this.TABLE.user_records)
                 .select('id')
                 .where({
@@ -64,7 +113,7 @@ const Auth_tasks = class {
         } catch (error) {
             LOGGER.module().error('ERROR: [/auth/tasks (check_auth_user)] unable to check auth ' + error.message);
         }
-    };
+    }
 
     /**
      * Gets user data
@@ -189,205 +238,71 @@ const Auth_tasks = class {
      */
     async check_ownership(user_id, parent_id, child_id, record_type) {
 
+        console.log('checking ownership...');
+
         try {
+            // TODO: account for record type - exhibit
+            const record_type_map = {
+                'item': this.TABLE.item_records,
+                'heading': this.TABLE.heading_records,
+                'grid': this.TABLE.grid_records,
+                'grid_item': this.TABLE.grid_item_records,
+                'timeline': this.TABLE.timeline_records,
+                'timeline_item': this.TABLE.timeline_item_records
+            };
 
-            let table;
-            const exhibit_data = await this.DB(this.TABLE.exhibit_records)
-                .select('owner')
-                .where({
-                    uuid: parent_id
-                });
-
-            if (record_type === 'item') {
-
-                console.log('Checking item ownership');
-
-                table = this.TABLE.item_records;
-
-                const standard_item_data = await this.DB(table)
-                    .select('owner')
-                    .where({
-                        uuid: child_id
-                    });
-
-                if (standard_item_data.length > 0) {
-
-                    // owner owns both exhibit and item
-                    if (standard_item_data[0].owner === exhibit_data[0].owner) {
-                        return standard_item_data[0].owner;
-                    } else if (standard_item_data[0].owner !== exhibit_data[0].owner) { // not exhibit owner
-
-                        // check if user owns item
-                        if (standard_item_data[0].owner === user_id) {
-                            return standard_item_data[0].owner;
-                        } else {
-                            return exhibit_data[0].owner;
-                        }
-                    }
-
-                } else if (standard_item_data.length === 0) {
-                    return exhibit_data[0].owner;
-                }
-            }
-
-            if (record_type === 'heading') {
-
-                console.log('Checking heading item ownership');
-
-                table = this.TABLE.heading_records;
-
-                const heading_data = await this.DB(table)
-                    .select('owner')
-                    .where({
-                        uuid: child_id
-                    });
-
-                if (heading_data.length > 0) {
-
-                    if (heading_data[0].owner === exhibit_data[0].owner) {
-                        return heading_data[0].owner;
-                    } else if (heading_data[0].owner !== exhibit_data[0].owner) {
-
-                        if (heading_data[0].owner === user_id) {
-                            return heading_data[0].owner;
-                        } else {
-                            return exhibit_data[0].owner;
-                        }
-                    }
-
-                } else if (heading_data.length === 0) {
-                    return exhibit_data[0].owner;
-                }
-            }
-
-            if (record_type === 'grid') {
-
-                console.log('Checking grid ownership');
-
-                table = this.TABLE.grid_records;
-
-                const grid_data = await this.DB(table)
-                    .select('owner')
-                    .where({
-                        uuid: child_id
-                    });
-
-                if (grid_data.length > 0) {
-
-                    if (grid_data[0].owner === exhibit_data[0].owner) {
-                        return grid_data[0].owner;
-                    } else if (grid_data[0].owner !== exhibit_data[0].owner) {
-
-                        if (grid_data[0].owner === user_id) {
-                            return grid_data[0].owner;
-                        } else {
-                            return exhibit_data[0].owner;
-                        }
-                    }
-
-                } else if (grid_data.length === 0) {
-                    return exhibit_data[0].owner;
-                }
-            }
-
-            if (record_type === 'grid_item') {
-
-                console.log('Checking grid item ownership');
-
-                table = this.TABLE.grid_item_records;
-
-                const grid_item_data = await this.DB(table)
-                    .select('owner')
-                    .where({
-                        uuid: child_id
-                    });
-
-                if (grid_item_data.length > 0) {
-
-                    if (grid_item_data[0].owner === exhibit_data[0].owner) {
-                        return grid_item_data[0].owner;
-                    } else if (grid_item_data[0].owner !== exhibit_data[0].owner) {
-
-                        if (grid_item_data[0].owner === user_id) {
-                            return grid_item_data[0].owner;
-                        } else {
-                            return exhibit_data[0].owner;
-                        }
-                    }
-
-                } else if (grid_item_data.length === 0) {
-                    return exhibit_data[0].owner;
-                }
-            }
-
-            if (record_type === 'timeline') {
-
-                console.log('Checking timeline ownership');
-
-                table = this.TABLE.timeline_records;
-
-                const timeline_data = await this.DB(table)
-                    .select('owner')
-                    .where({
-                        uuid: child_id
-                    });
-
-                if (timeline_data.length > 0) {
-
-                    if (timeline_data[0].owner === exhibit_data[0].owner) {
-                        return timeline_data[0].owner;
-                    } else if (timeline_data[0].owner !== exhibit_data[0].owner) {
-
-                        if (timeline_data[0].owner === user_id) {
-                            return timeline_data[0].owner;
-                        } else {
-                            return exhibit_data[0].owner;
-                        }
-                    }
-
-                } else if (timeline_data.length === 0) {
-                    return exhibit_data[0].owner;
-                }
-            }
-
-            if (record_type === 'timeline_item') {
-
-                console.log('Checking timeline item ownership');
-
-                table = this.TABLE.timeline_item_records;
-
-                const timeline_item_data = await this.DB(table)
-                    .select('owner')
-                    .where({
-                        uuid: child_id
-                    });
-
-                if (timeline_item_data.length > 0) {
-
-                    if (timeline_item_data[0].owner === exhibit_data[0].owner) {
-                        return timeline_item_data[0].owner;
-                    } else if (timeline_item_data[0].owner !== exhibit_data[0].owner) {
-
-                        if (timeline_item_data[0].owner === user_id) {
-                            return timeline_item_data[0].owner;
-                        } else {
-                            return exhibit_data[0].owner;
-                        }
-                    }
-
-                } else if (timeline_item_data.length === 0) {
-                    return exhibit_data[0].owner;
-                }
-            }
-
-            if (exhibit_data.length > 0 && exhibit_data[0].owner === user_id) {
-                return exhibit_data[0].owner;
-            } else {
+            // Validate input
+            if (!record_type_map[record_type]) {
+                LOGGER.module().error(`ERROR: [/auth/tasks (check_ownership)] invalid record_type: ${record_type}`);
                 return 0;
             }
 
+            // Fetch exhibit and child record data in parallel
+            const [exhibit_data, child_data] = await Promise.all([
+                this.DB(this.TABLE.exhibit_records)
+                    .select('owner')
+                    .where({ uuid: parent_id }),
+                this.DB(record_type_map[record_type])
+                    .select('owner')
+                    .where({ uuid: child_id })
+            ]);
+
+            // Validate exhibit exists
+            if (exhibit_data.length === 0) {
+                LOGGER.module().warn(`WARNING: [/auth/tasks (check_ownership)] exhibit not found: ${parent_id}`);
+                return 0;
+            }
+
+            const exhibit_owner = exhibit_data[0].owner;
+
+            // If child record doesn't exist, return exhibit owner
+            if (child_data.length === 0) {
+                return exhibit_owner;
+            }
+
+            const child_owner = child_data[0].owner;
+
+            // If child is owned by exhibit owner, return exhibit owner
+            if (child_owner === exhibit_owner) {
+                return child_owner;
+            }
+
+            // If child is owned by current user, return child owner
+            if (child_owner === user_id) {
+                return child_owner;
+            }
+
+            // If current user is exhibit owner, return exhibit owner
+            if (exhibit_owner === user_id) {
+                return exhibit_owner;
+            }
+
+            // No ownership match found
+            return 0;
+
         } catch (error) {
-            LOGGER.module().error('ERROR: [/auth/tasks (check_ownership)] unable to check ownership ' + error.message);
+            LOGGER.module().error(`ERROR: [/auth/tasks (check_ownership)] unable to check ownership - ${error.message}`);
+            return 0;
         }
     }
 };

@@ -66,98 +66,135 @@ const itemsEditStandardItemFormModule = (function () {
 
     async function display_edit_record() {
 
-        const record = await get_item_record();
-        let is_published = record.is_published;
-        let created_by = record.created_by;
-        let created = record.created;
-        let create_date = new Date(created);
-        let updated_by = record.updated_by;
-        let updated = record.updated;
-        let update_date = new Date(updated);
-        let item_created = '';
-        let create_date_time = helperModule.format_date(create_date);
-        let update_date_time = helperModule.format_date(update_date);
+        try {
 
-        helperModule.check_if_locked(record, '#exhibit-submit-card');
+            const record = await get_item_record();
 
-        if (created_by !== null) {
-            item_created += `<em>Created by ${created_by} on ${create_date_time}</em>`;
-        }
-
-        if (updated_by !== null) {
-            item_created += ` | <em>Last updated by ${updated_by} on ${update_date_time}</em>`;
-        }
-
-        document.querySelector('#created').innerHTML = item_created;
-
-        if (document.querySelector('#is-published') !== null && is_published === 1) {
-            document.querySelector('#is-published').value = true;
-        } else if (document.querySelector('#is-published') !== null && is_published === 0) {
-            document.querySelector('#is-published').value = false;
-        }
-
-        // item data
-        document.querySelector('#item-title-input').value = helperModule.unescape(record.title);
-        document.querySelector('#item-text-input').value = helperModule.unescape(record.text);
-
-        if (window.location.pathname.indexOf('media') !== -1) {
-
-            await helperMediaModule.display_media_fields_common(record);
-            let subjects = record.item_subjects.split('|');
-            await helperModule.create_subjects_menu(subjects);
-        }
-
-        let layouts = document.getElementsByName('layout');
-
-        for (let j = 0; j < layouts.length; j++) {
-            if (layouts[j].value === record.layout) {
-                document.querySelector('#' + layouts[j].id).checked = true;
-            }
-        }
-
-        let media_width = document.getElementsByName('media_width');
-
-        for (let j = 0; j < media_width.length; j++) {
-            if (parseInt(media_width[j].value) === parseInt(record.media_width)) {
-                document.querySelector('#' + media_width[j].id).checked = true;
-            }
-        }
-
-        // TODO: move to style helper
-        let styles = JSON.parse(record.styles);
-
-        if (Object.keys(styles).length !== 0) {
-
-            if (styles.backgroundColor !== undefined) {
-                document.querySelector('#item-background-color').value = styles.backgroundColor;
-                document.querySelector('#item-background-color-picker').value = styles.backgroundColor;
-            } else {
-                document.querySelector('#item-background-color').value = '';
+            if (!record) {
+                console.error('No record returned from get_item_record()');
+                return false;
             }
 
-            if (styles.color !== undefined) {
-                document.querySelector('#item-font-color').value = styles.color;
-                document.querySelector('#item-font-color-picker').value = styles.color;
-            } else {
-                document.querySelector('#item-font-color').value = '';
+            const is_media_path = window.location.pathname.includes('media');
+
+            // Helper function for safe DOM queries
+            const set_element_value = (selector, value) => {
+                const el = document.querySelector(selector);
+                if (el) {
+                    el.value = value;
+                }
+            };
+
+            const set_element_checked = (selector, checked) => {
+                const el = document.querySelector(selector);
+                if (el) {
+                    el.checked = !!checked;
+                }
+            };
+
+            // Format and display creation/update metadata
+            const create_datetime = helperModule.format_date(new Date(record.created));
+            const update_datetime = helperModule.format_date(new Date(record.updated));
+            const metadata_parts = [];
+
+            if (record.created_by) {
+                metadata_parts.push(`<em>Created by ${record.created_by} on ${create_datetime}</em>`);
+            }
+            if (record.updated_by) {
+                metadata_parts.push(`<em>Last updated by ${record.updated_by} on ${update_datetime}</em>`);
             }
 
-            let font_values = document.querySelector('#item-font');
+            const created_el = document.querySelector('#created');
+            if (created_el) {
+                created_el.innerHTML = metadata_parts.join(' | ');
+            }
 
-            for (let i = 0; i < font_values.length; i++) {
-                if (font_values[i].value === styles.fontFamily) {
-                    document.querySelector('#item-font').value = styles.fontFamily;
+            // Check if record is locked
+            helperModule.check_if_locked(record, '#exhibit-submit-card');
+
+            // Set published status
+            const published_el = document.querySelector('#is-published');
+            if (published_el) {
+                published_el.value = record.is_published === 1;
+            }
+
+            // Set basic item data
+            set_element_value('#item-title-input', helperModule.unescape(record.title));
+            set_element_value('#item-text-input', helperModule.unescape(record.text));
+
+            // Handle media-specific fields
+            if (is_media_path) {
+                await helperMediaModule.display_media_fields_common(record);
+
+                if (record.item_subjects?.length > 0) {
+                    const subjects = record.item_subjects.split('|');
+                    await helperModule.create_subjects_menu(subjects);
                 }
             }
 
-            if (styles.fontSize !== undefined) {
-                document.querySelector('#item-font-size').value = styles.fontSize.replace('px', '');
-            } else {
-                document.querySelector('#item-font-size').value = '';
-            }
-        }
+            // Set radio button selections efficiently
+            const set_radio_value = (name, value) => {
+                const elements = document.getElementsByName(name);
+                for (const el of elements) {
+                    if (el.value === value) {
+                        set_element_checked(`#${el.id}`, true);
+                        break; // Found match, exit early
+                    }
+                }
+            };
 
-        return false;
+            set_radio_value('layout', record.layout);
+            set_radio_value('media_width', String(record.media_width));
+
+            // Parse and apply styles
+            const apply_styles = () => {
+                let styles = {};
+
+                try {
+                    styles = JSON.parse(record.styles || '{}');
+                } catch (e) {
+                    console.error('Invalid styles JSON:', e.message);
+                    return;
+                }
+
+                if (Object.keys(styles).length === 0) {
+                    return;
+                }
+
+                const style_field_map = {
+                    backgroundColor: ['#item-background-color', '#item-background-color-picker'],
+                    color: ['#item-font-color', '#item-font-color-picker'],
+                };
+
+                // Apply color and background styles
+                for (const [style_key, selectors] of Object.entries(style_field_map)) {
+                    const value = styles[style_key] || '';
+                    selectors.forEach(selector => set_element_value(selector, value));
+                }
+
+                // Set font family
+                if (styles.fontFamily) {
+                    set_element_value('#item-font', styles.fontFamily);
+                }
+
+                // Set font size (remove 'px' suffix)
+                if (styles.fontSize) {
+                    const font_size_value = styles.fontSize.replace(/px$/, '');
+                    set_element_value('#item-font-size', font_size_value);
+                } else {
+                    set_element_value('#item-font-size', '');
+                }
+            };
+
+            apply_styles();
+
+            return false;
+
+        } catch (error) {
+            console.error('Error in display_edit_record:', error.message);
+            document.querySelector('#message').innerHTML = `<div class="alert alert-danger" role="alert"><i class="fa fa-exclamation"></i> ${error.message}</div>`;
+            return false;
+        }
     }
 
     obj.update_item_record = async function () {

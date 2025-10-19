@@ -32,89 +32,79 @@ const LOGGER = require('../libs/log4');
  * req, permissions, record_type
  */
 exports.check_permission = async function (options) {
-
+    console.log('checking permission...');
     try {
+        // Early validation of input
+        const { req, permissions: actions, record_type, parent_id, child_id, users: users_admin } = options;
 
-        const req = options.req;
-        const actions = options.permissions;
-        const record_type = options.record_type;
-        const parent_id = options.parent_id;
-        const child_id = options.child_id;
-        const users_admin = options.users;
-        let user_role_permissions = [];
-        let token = req.headers['x-access-token'];
-
-        if (token === undefined && !VALIDATOR.isJWT(token)) {
+        if (!req || !actions || !Array.isArray(actions) || actions.length === 0) {
             return false;
         }
 
-        let user_id = await AUTH_TASKS.get_user_id(token);
-        let user_permissions = await AUTH_TASKS.get_user_permissions(token);
-
-        for (let i = 0; i < user_permissions.length; i++) {
-            user_role_permissions.push(user_permissions[i].permission_id);
-        }
-
-        const all_permissions = await AUTH_TASKS.get_permissions();
-        const get_user_permissions = (user_role_permissions, all_permissions) => {
-            let result = [];
-            result = all_permissions.filter(all => {
-                return user_role_permissions.find(arr => {
-                    if (all.id === arr) {
-                        return arr;
-                    }
-                });
-            });
-
-            return result;
-        };
-
-        const user_permissions_found = get_user_permissions(user_role_permissions, all_permissions);
-        const user_permission_matches = (actions, user_permissions_found) => {
-            let result = [];
-            result = user_permissions_found.filter(all => {
-                return actions.find(arr => {
-                    if (all.permission === arr) {
-                        return arr;
-                    }
-                });
-            });
-
-            return result;
-        };
-
-        let user_has_permission = user_permission_matches(actions, user_permissions_found);
-
-        // checks if user has permissions to administer users
-        if (user_has_permission.length > 0 && users_admin !== undefined && users_admin === true) {
-            console.log('Authorized');
-            return true;
-        }
-
-        if (user_has_permission.length > 0) {
-
-            let permissions = [];
-
-            for (let i = 0; i < user_has_permission.length; i++) {
-                permissions.push(user_has_permission[i].permission);
-            }
-
-            if (permissions.length !== actions.length) {
-
-                let record_owner = await AUTH_TASKS.check_ownership(user_id, parent_id, child_id, record_type);
-
-                if (parseInt(user_id) !== parseInt(record_owner)) {
-                    return false;
-                }
-            }
-
-            return true;
-
-        } else {
+        // Extract and validate token
+        const token = req.headers?.['x-access-token'];
+        if (!token || !VALIDATOR.isJWT(token)) {
             return false;
         }
+
+        // Fetch all required data in parallel
+        const [user_id, user_permissions, all_permissions] = await Promise.all([
+            AUTH_TASKS.get_user_id(token),
+            AUTH_TASKS.get_user_permissions(token),
+            AUTH_TASKS.get_permissions()
+        ]);
+
+        // Validate critical data
+        if (!user_id || !Array.isArray(user_permissions) || !Array.isArray(all_permissions)) {
+            return false;
+        }
+
+        // Extract user permission IDs efficiently
+        const user_permission_ids = new Set(
+            user_permissions.map(p => p.permission_id).filter(Boolean)
+        );
+
+        // Find user permissions with O(n) lookup using Set
+        const user_permissions_found = all_permissions.filter(
+            perm => user_permission_ids.has(perm.id)
+        );
+
+        // Find matching action permissions
+        const actions_set = new Set(actions);
+        const matching_permissions = user_permissions_found.filter(
+            perm => actions_set.has(perm.permission)
+        );
+
+        // No permissions granted
+        if (matching_permissions.length === 0) {
+            return false;
+        }
+
+        // User admin check
+        if (users_admin === true) {
+            return true;
+        }
+
+        // If user has all required permissions, authorization complete
+        if (matching_permissions.length === actions.length) {
+            return true;
+        }
+
+        // Check ownership for partial permissions
+        const record_owner = await AUTH_TASKS.check_ownership(
+            user_id,
+            parent_id,
+            child_id,
+            record_type
+        );
+
+        // Safely compare IDs (handle string/number conversion)
+        return String(user_id) === String(record_owner);
 
     } catch (error) {
-        LOGGER.module().error('ERROR: [/auth/authorize lib (check_permission)] unable to check permission ' + error.message);
+        LOGGER.module().error(
+            `ERROR: [/auth/authorize lib (check_permission)] unable to check permission: ${error.message}`
+        );
+        return false;
     }
 };

@@ -25,76 +25,105 @@ const itemsCommonStandardItemFormModule = (function () {
     obj.get_common_standard_item_form_fields = function () {
 
         try {
+            const item = { styles: {} };
+            const path = window.location.pathname;
+            const isTextPath = path.includes('text');
+            const isMediaPath = path.includes('media');
 
-            // let media_fields = '';
-            let item = {};
-            item.styles = {};
+            // Helper function for safe DOM queries
+            const getElementValue = (selector, defaultValue = '') => {
+                const el = document.querySelector(selector);
+                return el?.value?.trim() ?? defaultValue;
+            };
 
-            // item metadata
-            item.title = document.querySelector('#item-title-input').value;
-            item.text = document.querySelector('#item-text-input').value;
+            const showError = (message) => {
+                const messageEl = document.querySelector('#message');
+                if (messageEl) {
+                    messageEl.innerHTML = `<div class="alert alert-danger" role="alert"><i class="fa fa-exclamation"></i> ${message}</div>`;
+                }
+            };
 
-            if (window.location.pathname.indexOf('text') !== -1 && item.text.length === 0) {
-                document.querySelector('#message').innerHTML = `<div class="alert alert-danger" role="alert"><i class="fa fa-exclamation"></i> Please enter "Text" for this item</div>`;
+            // Get item metadata
+            item.title = getElementValue('#item-title-input');
+            item.text = getElementValue('#item-text-input');
+
+            // Validate text content for text paths
+            if (isTextPath && item.text.length === 0) {
+                showError('Please enter "Text" for this item');
                 return false;
             }
 
-            if (document.querySelector('#is-published') !== null) {
-                item.is_published = document.querySelector('#is-published').value;
+            // Get optional published status
+            const publishedEl = document.querySelector('#is-published');
+            if (publishedEl) {
+                item.is_published = publishedEl.value;
             }
 
+            // Get radio button selections
             item.layout = helperModule.get_checked_radio_button(document.getElementsByName('layout'));
             item.media_width = helperModule.get_checked_radio_button(document.getElementsByName('media_width'));
-            item.item_subjects = document.querySelector('#selected-subjects').value;
+            item.item_subjects = getElementValue('#selected-subjects');
 
-            // item styles
-            let item_background_color = document.querySelector('#item-background-color').value;
-            let item_color = document.querySelector('#item-font-color').value;
-            let item_font = document.querySelector('#item-font').value;
-            let item_font_size = document.querySelector('#item-font-size').value;
+            // Build styles object with safe access
+            const buildStyles = () => {
+                const styleMap = {
+                    backgroundColor: '#item-background-color',
+                    color: '#item-font-color',
+                    fontFamily: '#item-font',
+                };
 
-            if (item_background_color.length > 0) {
-                item.styles.backgroundColor = item_background_color;
-            }
+                for (const [cssKey, selector] of Object.entries(styleMap)) {
+                    const value = getElementValue(selector);
+                    if (value) {
+                        item.styles[cssKey] = value;
+                    }
+                }
 
-            if (item_color.length > 0) {
-                item.styles.color = document.querySelector('#item-font-color').value;
-            }
+                // Handle font size with unit
+                const fontSize = getElementValue('#item-font-size');
+                if (fontSize) {
+                    item.styles.fontSize = `${fontSize}px`;
+                }
+            };
 
-            if (item_font.length > 0) {
-                item.styles.fontFamily = item_font;
-            }
+            buildStyles();
 
-            if (item_font_size.length > 0) {
-                item.styles.fontSize = `${item_font_size}px`;
-            }
-
-            if (window.location.pathname.indexOf('media') !== -1) {
-
+            // Handle media-specific logic
+            if (isMediaPath) {
                 helperMediaModule.process_media_fields_common(item);
 
-                if (item.media.length === 0 && item.kaltura.length === 0 && item.repo_uuid.length === 0) {
-                    document.querySelector('#message').innerHTML = `<div class="alert alert-danger" role="alert"><i class="fa fa-exclamation"></i> Please upload or import a media item</div>`;
+                // Validate media content
+                const hasMedia = (
+                    (item.media?.length > 0) ||
+                    (item.kaltura?.length > 0) ||
+                    (item.repo_uuid?.length > 0)
+                );
+
+                if (!hasMedia) {
+                    showError('Please upload or import a media item');
                     return false;
                 }
 
+                // Handle image alt text validation
                 if (item.item_type === 'image') {
+                    const altTextInput = document.querySelector('#item-alt-text-input');
+                    const altText = altTextInput?.value?.trim() ?? '';
+
                     if (item.is_alt_text_decorative === true) {
                         item.is_alt_text_decorative = 1;
                         item.alt_text = '';
                     } else if (item.is_alt_text_decorative === false) {
                         item.is_alt_text_decorative = 0;
-                        item.alt_text = document.querySelector('#item-alt-text-input').value;
-                        if (item.alt_text.length === 0 && item.alt_text.length === 0) {
-                            if (item.alt_text.length === 0) {
-                                document.querySelector('#message').innerHTML = `<div class="alert alert-danger" role="alert"><i class="fa fa-exclamation"></i> Please enter "alt text" for this item</div>`;
-                                return false;
-                            }
+                        item.alt_text = altText;
+
+                        if (altText.length === 0) {
+                            showError('Please enter "alt text" for this item');
+                            return false;
                         }
                     }
                 }
-
             } else {
+                // Default to text type for non-media paths
                 item.item_type = 'text';
                 item.mime_type = 'text/plain';
             }
@@ -102,7 +131,11 @@ const itemsCommonStandardItemFormModule = (function () {
             return item;
 
         } catch (error) {
-            document.querySelector('#message').innerHTML = `<div class="alert alert-danger" role="alert"><i class="fa fa-exclamation"></i> ${error.message}</div>`;
+            const messageEl = document.querySelector('#message');
+            if (messageEl) {
+                messageEl.innerHTML = `<div class="alert alert-danger" role="alert"><i class="fa fa-exclamation"></i> ${error.message}</div>`;
+            }
+            return false; // Return false on error for consistency
         }
     };
 
@@ -148,7 +181,6 @@ const itemsCommonStandardItemFormModule = (function () {
             helperModule.show_form();
 
         } catch (error) {
-            console.log('init error ', error);
             document.querySelector('#message').innerHTML = `<div class="alert alert-danger" role="alert"><i class="fa fa-exclamation"></i> ${error.message}</div>`;
         }
     };

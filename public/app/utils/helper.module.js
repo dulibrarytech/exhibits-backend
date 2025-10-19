@@ -441,71 +441,131 @@ const helperModule = (function () {
      */
     obj.unlock_record = async function () {
 
-        const EXHIBITS_ENDPOINTS = endpointsModule.get_exhibits_endpoints();
-        let exhibit_id = helperModule.get_parameter_by_name('exhibit_id');
-        let endpoint;
+        try {
 
-        if (window.location.pathname.includes('exhibits/exhibit/edit') === true) {
-            endpoint = EXHIBITS_ENDPOINTS.exhibits.exhibit_unlock_record.post.endpoint.replace(':exhibit_id', exhibit_id);
-        }
+            const exhibits_endpoints = endpointsModule.get_exhibits_endpoints();
+            const pathname = window.location.pathname;
+            const exhibit_id = helperModule.get_parameter_by_name('exhibit_id');
 
-        if (window.location.pathname.includes('items/heading/edit') === true) {
-            let heading_id = helperModule.get_parameter_by_name('item_id');
-            let tmp = EXHIBITS_ENDPOINTS.exhibits.heading_unlock_record.post.endpoint.replace(':exhibit_id', exhibit_id);
-            endpoint = tmp.replace(':heading_id', heading_id);
-        }
+            // Path to endpoint configuration map
+            const endpoint_config_map = [
+                {
+                    paths: ['exhibits/exhibit/edit'],
+                    endpoint_key: 'exhibits.exhibit_unlock_record.post.endpoint',
+                    params: { exhibit_id }
+                },
+                {
+                    paths: ['items/heading/edit'],
+                    endpoint_key: 'exhibits.heading_unlock_record.post.endpoint',
+                    params: () => ({
+                        exhibit_id,
+                        heading_id: helperModule.get_parameter_by_name('item_id')
+                    })
+                },
+                {
+                    paths: ['items/standard/text/edit', 'items/standard/media/edit'],
+                    endpoint_key: 'exhibits.item_unlock_record.post.endpoint',
+                    params: () => ({
+                        exhibit_id,
+                        item_id: helperModule.get_parameter_by_name('item_id')
+                    })
+                },
+                {
+                    paths: ['items/grid/item/media/edit', 'items/grid/item/text/edit'],
+                    endpoint_key: 'exhibits.grid_item_unlock_record.post.endpoint',
+                    params: () => ({
+                        exhibit_id,
+                        grid_id: helperModule.get_parameter_by_name('grid_id'),
+                        item_id: helperModule.get_parameter_by_name('item_id')
+                    })
+                },
+                {
+                    paths: ['items/vertical-timeline/item/media/edit', 'items/vertical-timeline/item/text/edit'],
+                    endpoint_key: 'exhibits.timeline_item_unlock_record.post.endpoint',
+                    params: () => ({
+                        exhibit_id,
+                        timeline_id: helperModule.get_parameter_by_name('timeline_id'),
+                        item_id: helperModule.get_parameter_by_name('item_id')
+                    })
+                }
+            ];
 
-        if (window.location.pathname.includes('items/standard/text/edit') === true || window.location.pathname.includes('items/standard/media/edit') === true) {
-            let item_id = helperModule.get_parameter_by_name('item_id');
-            let tmp = EXHIBITS_ENDPOINTS.exhibits.item_unlock_record.post.endpoint.replace(':exhibit_id', exhibit_id);
-            endpoint = tmp.replace(':item_id', item_id);
-        }
+            // Find matching endpoint configuration
+            let endpoint_template = null;
+            let endpoint_params = {};
 
-        if (window.location.pathname.includes('items/grid/item/media/edit') === true || window.location.pathname.includes('items/grid/item/text/edit') === true) {
-            let grid_id = helperModule.get_parameter_by_name('grid_id');
-            let item_id = helperModule.get_parameter_by_name('item_id');
-            let tmp = EXHIBITS_ENDPOINTS.exhibits.grid_item_unlock_record.post.endpoint.replace(':exhibit_id', exhibit_id);
-            let tmp2 = tmp.replace(':grid_id', grid_id);
-            endpoint = tmp2.replace(':item_id', item_id);
-        }
-
-        if (window.location.pathname.includes('items/vertical-timeline/item/media/edit') === true || window.location.pathname.includes('items/vertical-timeline/item/text/edit') === true) {
-            let timeline_id = helperModule.get_parameter_by_name('timeline_id');
-            let item_id = helperModule.get_parameter_by_name('item_id');
-            let tmp = EXHIBITS_ENDPOINTS.exhibits.timeline_item_unlock_record.post.endpoint.replace(':exhibit_id', exhibit_id);
-            let tmp2 = tmp.replace(':timeline_id', timeline_id);
-            endpoint = tmp2.replace(':item_id', item_id);
-        }
-
-        /* TODO
-        if (window.location.pathname.indexOf('grid')) {
-            console.log('grid');
-            type = 'grid';
-        }
-
-        if (window.location.pathname.indexOf('vertical-timeline')) {
-            console.log('vertical-timeline');
-            type = 'timeline';
-        }
-         */
-
-        const profile = authModule.get_user_profile_data();
-        const token = authModule.get_user_token();
-        const response = await httpModule.req({
-            method: 'POST',
-            url: endpoint + '?uid=' + profile.uid,
-            headers: {
-                'Content-Type': 'application/json',
-                'x-access-token': token
+            for (const config of endpoint_config_map) {
+                const path_matches = config.paths.some(path => pathname.includes(path));
+                if (path_matches) {
+                    endpoint_template = get_nested_value(exhibits_endpoints, config.endpoint_key);
+                    endpoint_params = typeof config.params === 'function' ? config.params() : config.params;
+                    break;
+                }
             }
-        });
 
-        if (response.status === 200) {
-            document.querySelector('#message').innerHTML = `<div class="alert alert-success" role="alert">Unlocked</div>`;
-        } else {
-            document.querySelector('#message').innerHTML = `<div class="alert alert-danger" role="alert"><i class="fa fa-exclamation"></i> An HTTP request error occurred unlocking record.</div>`;
+            if (!endpoint_template) {
+                console.error('No matching endpoint found for current path:', pathname);
+                show_message('An error occurred: unable to determine record type.', 'danger');
+                return;
+            }
+
+            // Replace all placeholders in endpoint
+            let endpoint = endpoint_template;
+            for (const [key, value] of Object.entries(endpoint_params)) {
+                endpoint = endpoint.replace(`:${key}`, value);
+            }
+
+            // Get auth data and make request
+            const profile = authModule.get_user_profile_data();
+            const token = authModule.get_user_token();
+
+            if (!profile?.uid || !token) {
+                console.error('Missing authentication data');
+                show_message('Authentication error: unable to unlock record.', 'danger');
+                return;
+            }
+
+            const response = await httpModule.req({
+                method: 'POST',
+                url: `${endpoint}?uid=${profile.uid}`,
+                headers: {
+                    'Content-Type': 'application/json',
+                    'x-access-token': token
+                }
+            });
+
+            // Display result message
+            const message_el = document.querySelector('#message');
+
+            if (message_el) {
+                if (response.status === 200) {
+                    message_el.innerHTML = '<div class="alert alert-success" role="alert">Unlocked</div>';
+                } else {
+                    message_el.innerHTML = '<div class="alert alert-danger" role="alert"><i class="fa fa-exclamation"></i> An HTTP request error occurred unlocking record.</div>';
+                }
+            }
+
+        } catch (error) {
+            console.error('Error in unlock_record:', error.message);
+            const message_el = document.querySelector('#message');
+            if (message_el) {
+                message_el.innerHTML = '<div class="alert alert-danger" role="alert"><i class="fa fa-exclamation"></i> An error occurred unlocking record.</div>';
+            }
         }
     };
+
+    // Helper function to safely get nested object values
+    function get_nested_value(obj, path) {
+        return path.split('.').reduce((current, prop) => current?.[prop], obj);
+    }
+
+    // Helper function to display messages
+    function show_message(message, type = 'danger') {
+        const message_el = document.querySelector('#message');
+        if (message_el) {
+            message_el.innerHTML = `<div class="alert alert-${type}" role="alert">${message}</div>`;
+        }
+    }
 
     obj.get_user_name = function () {
         const profile = authModule.get_user_profile_data();

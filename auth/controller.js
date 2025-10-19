@@ -37,39 +37,77 @@ exports.get_auth_landing = function (req, res) {
 
 exports.sso = async function (req, res) {
 
-    const SSO_HOST = req.body.HTTP_HOST;
-    const USERNAME = req.body.employeeID;
+    try {
 
-    if (SSO_HOST === CONFIG.sso_host && USERNAME !== undefined) {
-
-        try {
-
-            let result;
-            let token = TOKEN.create(USERNAME);
-            token = encodeURIComponent(token);
-            result = await MODEL.check_auth_user(USERNAME);
-
-            if (result.auth === true) {
-
-                let is_token_saved = await MODEL.save_token(result.data, token);
-
-                if (is_token_saved === true) {
-                    res.redirect(APP_PATH + '/exhibits?t=' + token + '&id=' + result.data);
-                } else {
-                    res.status(401).send({
-                        message: 'Authenticate failed.'
-                    });
-                }
-
-            } else {
-                res.status(401).send({
-                    message: 'Authenticate failed.'
-                });
-            }
-
-        } catch (error) {
-            LOGGER.module().error('ERROR: [/auth/controller (sso)] unable to complete authentication ' + error.message);
+        if (!req.body) {
+            return res.status(400).json({ message: 'Invalid request.' });
         }
+
+        const sso_host = req.body.HTTP_HOST;
+        const username = req.body.employeeID;
+
+        // Validate required parameters
+        if (!sso_host || !username || typeof username !== 'string') {
+            return res.status(400).json({ message: 'Missing required parameters.' });
+        }
+
+        // Validate SSO host against whitelist
+        if (sso_host !== CONFIG.sso_host) {
+            LOGGER.module().warn(
+                `SSO attempt from unauthorized host: ${sso_host}`
+            );
+            return res.status(403).json({ message: 'Unauthorized host.' });
+        }
+
+        // Sanitize username to prevent injection
+        const sanitized_username = username.trim();
+        if (sanitized_username.length === 0 || sanitized_username.length > 255) {
+            return res.status(400).json({ message: 'Invalid username format.' });
+        }
+
+        // Check user authentication
+        const auth_result = await MODEL.check_auth_user(sanitized_username);
+
+        if (!auth_result?.auth) {
+            return res.status(401).json({ message: 'Authentication failed.' });
+        }
+
+        // Create and encode token
+        const token = TOKEN.create(sanitized_username);
+        if (!token) {
+            LOGGER.module().error('Failed to create authentication token');
+            return res.status(500).json({ message: 'Authentication failed.' });
+        }
+
+        const encoded_token = encodeURIComponent(token);
+
+        // Save token to database
+        const is_token_saved = await MODEL.save_token(auth_result.data, encoded_token);
+
+        if (!is_token_saved) {
+            LOGGER.module().error(
+                `Failed to save token for user: ${sanitized_username}`
+            );
+            return res.status(500).json({ message: 'Authentication failed.' });
+        }
+
+        // Validate user ID is numeric to prevent injection in redirect
+        if (!Number.isInteger(auth_result.data)) {
+            LOGGER.module().error(
+                `Invalid user ID type for user: ${sanitized_username}`
+            );
+            return res.status(500).json({ message: 'Authentication failed.' });
+        }
+
+        // Successful authentication - redirect with token
+        const redirect_url = `${APP_PATH}/exhibits?t=${encoded_token}&id=${auth_result.data}`;
+        res.redirect(redirect_url);
+
+    } catch (error) {
+        LOGGER.module().error(
+            `ERROR: [/auth/controller (sso)] unable to complete authentication: ${error.message}`
+        );
+        res.status(500).json({ message: 'Authentication failed.' });
     }
 };
 
