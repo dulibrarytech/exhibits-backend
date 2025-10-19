@@ -31,149 +31,639 @@ const helperModule = (function () {
 
         try {
 
-            if (!url) {
-                url = window.location.href;
-            }
-
-            name = name.replace(/[\[\]]/g, "\\$&");
-
-            let regex = new RegExp("[?&]" + name + "(=([^&#]*)|&|#|$)"),
-                results = regex.exec(url);
-
-            if (!results) {
+            if (!name || typeof name !== 'string') {
+                console.warn('Invalid or missing parameter name');
                 return null;
             }
 
-            if (!results[2]) {
+            // Use provided URL or default to current location
+            const target_url = url && typeof url === 'string' ? url : window.location.href;
+
+            if (!target_url || typeof target_url !== 'string') {
+                console.warn('Invalid URL provided');
+                return null;
+            }
+
+            // Use URLSearchParams for modern, reliable parsing
+            try {
+                const url_obj = new URL(target_url);
+                const search_params = new URLSearchParams(url_obj.search);
+
+                const param_value = search_params.get(name);
+
+                // Return null if parameter doesn't exist
+                if (param_value === null) {
+                    return null;
+                }
+
+                // Return empty string if parameter exists but has no value
+                if (param_value === '') {
+                    return '';
+                }
+
+                // Validate parameter value is a string
+                if (typeof param_value !== 'string') {
+                    console.warn(`Parameter value is not a string: ${name}`);
+                    return null;
+                }
+
+                // Sanitize to prevent XSS attacks
+                const sanitized_value = DOMPurify.sanitize(param_value, { ALLOWED_TAGS: [] });
+
+                // Validate sanitization didn't remove content (indicates malicious input)
+                if (sanitized_value !== param_value) {
+                    console.warn(`Parameter contained potentially malicious content: ${name}`);
+                    return null;
+                }
+
+                return sanitized_value;
+
+            } catch (url_error) {
+                // Fallback to regex parsing for edge cases or invalid URLs
+                console.debug('URLSearchParams failed, using regex fallback:', url_error.message);
+                return parse_parameter_regex(name, target_url);
+            }
+
+        } catch (error) {
+            console.error('Error in get_parameter_by_name:', error.message);
+            show_error_message(`An error occurred: ${error.message}`);
+            return null;
+        }
+    };
+
+    // Fallback regex-based parameter parsing
+    function parse_parameter_regex(name, url) {
+
+        try {
+
+            if (!name || typeof name !== 'string' || !url || typeof url !== 'string') {
+                return null;
+            }
+
+            // Escape special regex characters in parameter name
+            const escaped_name = name.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+
+            // Create regex pattern for parameter matching
+            const param_pattern = new RegExp(`[?&]${escaped_name}(=([^&#]*)|&|#|$)`, 'i');
+            const matches = param_pattern.exec(url);
+
+            // Return null if parameter not found
+            if (!matches) {
+                return null;
+            }
+
+            // Return empty string if parameter has no value
+            if (!matches[2]) {
                 return '';
             }
 
-            return decodeURIComponent(DOMPurify.sanitize(results[2].replace(/\+/g, " ")));
+            // Decode and sanitize parameter value
+            const decoded_value = decodeURIComponent(matches[2].replace(/\+/g, ' '));
+
+            // Validate decoded value is a string
+            if (typeof decoded_value !== 'string') {
+                console.warn(`Decoded parameter value is not a string: ${name}`);
+                return null;
+            }
+
+            // Sanitize to prevent XSS attacks
+            const sanitized_value = DOMPurify.sanitize(decoded_value, { ALLOWED_TAGS: [] });
+
+            // Validate sanitization didn't remove content
+            if (sanitized_value !== decoded_value) {
+                console.warn(`Parameter contained potentially malicious content: ${name}`);
+                return null;
+            }
+
+            return sanitized_value;
 
         } catch (error) {
-            document.querySelector('#message').innerHTML = `<div class="alert alert-danger" role="alert"><i class="fa fa-exclamation"></i> ${error.message}</div>`;
+            console.error('Error in parse_parameter_regex:', error.message);
+            return null;
         }
-    };
+    }
 
-    /**
-     * https://stackoverflow.com/questions/7394748/whats-the-right-way-to-decode-a-string-that-has-special-html-entities-in-it
-     * Unescapes HTML elements
-     * @param data
-     */
-    obj.unescape = function (data) {
+    // Helper function for consistent error messaging
+    function show_error_message(message) {
+        try {
+            const message_el = document.querySelector('#message');
+            if (message_el) {
+                message_el.innerHTML = `<div class="alert alert-danger" role="alert"><i class="fa fa-exclamation"></i> ${message}</div>`;
+            }
+        } catch (error) {
+            console.error('Error displaying message:', error.message);
+        }
+    }
+
+    obj.unescape = function (data) { // _safe
 
         try {
+            // Validate input parameter
+            if (data === null || data === undefined) {
+                return '';
+            }
 
-            let elem = document.createElement('textarea');
-            elem.innerHTML = data;
-            return elem.value;
+            // Convert to string if necessary
+            if (typeof data !== 'string') {
+                console.warn(`Data is not a string, converting from ${typeof data}`);
+                data = String(data);
+            }
+
+            // Return empty string for empty input
+            if (data === '' || data.trim() === '') {
+                return '';
+            }
+
+            // HTML entity map for common entities
+            const entity_map = {
+                '&amp;': '&',
+                '&lt;': '<',
+                '&gt;': '>',
+                '&quot;': '"',
+                '&#39;': "'",
+                '&#x27;': "'",
+                '&#x2F;': '/',
+                '&apos;': "'"
+            };
+
+            // Replace HTML entities using the map
+            let unescaped_value = data;
+            for (const [entity, character] of Object.entries(entity_map)) {
+                unescaped_value = unescaped_value.split(entity).join(character);
+            }
+
+            // Handle numeric character references (&#123; or &#xABC;)
+            unescaped_value = unescaped_value.replace(/&#(\d+);/g, (match, dec) => {
+
+                const code = parseInt(dec, 10);
+
+                // Validate character code is in valid range
+                if (code > 0 && code <= 0x10FFFF) {
+                    return String.fromCharCode(code);
+                }
+                return match;
+            });
+
+            // Handle hex character references (&#xABC; or &#XABC;)
+            unescaped_value = unescaped_value.replace(/&#x([0-9a-fA-F]+);/g, (match, hex) => {
+
+                const code = parseInt(hex, 16);
+
+                // Validate character code is in valid range
+                if (code > 0 && code <= 0x10FFFF) {
+                    return String.fromCharCode(code);
+                }
+                return match;
+            });
+
+            // Validate result is a string
+            if (typeof unescaped_value !== 'string') {
+                console.warn('Unescaped value is not a string');
+                return '';
+            }
+
+            return unescaped_value;
 
         } catch (error) {
-            document.querySelector('#message').innerHTML = `<div class="alert alert-danger" role="alert"><i class="fa fa-exclamation"></i> ${error.message}</div>`;
+            console.error('Error in unescape_safe:', error.message);
+            show_error_message(`An error occurred: ${error.message}`);
+            return '';
         }
     };
 
-    /**
-     * Strips HTML elements - used in item list displays to prevent HTML render
-     * @param html
-     */
     obj.strip_html = function (html) {
 
         try {
-            return html.replace(/(<([^>]+)>)/gi, '');
+
+            if (html === null || html === undefined) {
+                return '';
+            }
+
+            // Convert to string if necessary
+            if (typeof html !== 'string') {
+                console.warn(`Input is not a string, converting from ${typeof html}`);
+                html = String(html);
+            }
+
+            // Return empty string for empty input
+            if (html === '' || html.trim() === '') {
+                return '';
+            }
+
+            // Use DOMParser for safe, reliable HTML stripping
+            // This is more secure and standards-compliant than regex
+            try {
+                const parser = new DOMParser();
+                const dom = parser.parseFromString(html, 'text/html');
+                const text_content = dom.body.textContent || '';
+
+                return text_content;
+
+            } catch (parser_error) {
+                console.debug('DOMParser failed, using regex fallback:', parser_error.message);
+                return strip_html_regex(html);
+            }
+
         } catch (error) {
-            document.querySelector('#message').innerHTML = `<div class="alert alert-danger" role="alert"><i class="fa fa-exclamation"></i> ${error.message}</div>`;
+            console.error('Error in strip_html:', error.message);
+            show_error_message(`An error occurred: ${error.message}`);
+            return '';
         }
     };
 
-    /**
-     * Removes exploitable HTML elements
-     * @param html
-     */
+    // Fallback regex-based HTML stripping (less secure but works everywhere)
+    function strip_html_regex(html) {
+
+        try {
+            // Validate input
+            if (!html || typeof html !== 'string') {
+                return '';
+            }
+
+            // Remove HTML tags using comprehensive regex pattern
+            // This handles: <tag>, <tag/>, <tag attr="value">, etc.
+            let stripped = html.replace(/<[^>]*>/g, '');
+
+            // Remove multiple consecutive spaces
+            stripped = stripped.replace(/\s+/g, ' ');
+
+            // Trim leading and trailing whitespace
+            stripped = stripped.trim();
+
+            // Decode common HTML entities
+            const entity_map = {
+                '&amp;': '&',
+                '&lt;': '<',
+                '&gt;': '>',
+                '&quot;': '"',
+                '&#39;': "'",
+                '&#x27;': "'",
+                '&#x2F;': '/'
+            };
+
+            for (const [entity, character] of Object.entries(entity_map)) {
+                stripped = stripped.split(entity).join(character);
+            }
+
+            // Handle numeric character references
+            stripped = stripped.replace(/&#(\d+);/g, (match, dec) => {
+                const code = parseInt(dec, 10);
+
+                if (code > 0 && code <= 0x10FFFF) {
+                    return String.fromCharCode(code);
+                }
+                return match;
+            });
+
+            // Handle hex character references
+            stripped = stripped.replace(/&#x([0-9a-fA-F]+);/g, (match, hex) => {
+
+                const code = parseInt(hex, 16);
+
+                if (code > 0 && code <= 0x10FFFF) {
+                    return String.fromCharCode(code);
+                }
+                return match;
+            });
+
+            // Validate result is a string
+            if (typeof stripped !== 'string') {
+                console.warn('Stripped value is not a string');
+                return '';
+            }
+
+            return stripped;
+
+        } catch (error) {
+            console.error('Error in strip_html_regex:', error.message);
+            return '';
+        }
+    }
+
     obj.clean_html = function (html) {
 
         try {
 
-            let div = document.createElement('div');
+            if (html === null || html === undefined) {
+                return '';
+            }
 
-            div.innerHTML = html;
+            // Convert to string if necessary
+            if (typeof html !== 'string') {
+                console.warn(`Input is not a string, converting from ${typeof html}`);
+                html = String(html);
+            }
 
-            let list = ['script',
-                'iframe',
-                'html',
-                'head',
-                'body',
-                'head',
-                'title',
-                'img',
-                'embed',
-                'applet',
-                'object',
-                'style',
-                'link',
-                'form',
-                'input',
-                'video',
-                'source',
-                'math',
-                'maction',
-                'picture',
-                'map',
-                'svg',
-                'details',
-                'frameset',
-                'comment',
-                'base'];
+            // Return empty string for empty input
+            if (html === '' || html.trim() === '') {
+                return '';
+            }
 
-            for (let i = 0; i < list.length; i++) {
+            // Use DOMPurify for comprehensive and secure HTML sanitization
+            // This is the gold standard for HTML cleaning
+            if (typeof DOMPurify !== 'undefined') {
+                try {
+                    const cleaned = DOMPurify.sanitize(html, {
+                        ALLOWED_TAGS: ['b', 'i', 'em', 'strong', 'a', 'p', 'br', 'ul', 'ol', 'li', 'blockquote', 'h1', 'h2', 'h3', 'h4', 'h5', 'h6', 'span', 'div'],
+                        ALLOWED_ATTR: ['href', 'title', 'target', 'rel'],
+                        KEEP_CONTENT: true,
+                        FORCE_BODY: false
+                    });
 
-                let elements = div.getElementsByTagName(list[i]);
-                while (elements[0]) {
-                    elements[0].parentNode.removeChild(elements[0]);
+                    // Validate output is a string
+                    if (typeof cleaned !== 'string') {
+                        console.warn('DOMPurify output is not a string');
+                        return '';
+                    }
+
+                    return cleaned;
+
+                } catch (dompur_error) {
+                    console.error('DOMPurify sanitization failed:', dompur_error.message);
+                    return manual_clean_html(html);
                 }
             }
 
-            return div.innerHTML.replace(/&amp;/g, '&');
+            // Fallback to manual cleaning if DOMPurify not available
+            console.debug('DOMPurify not available, using manual HTML cleaning');
+            return manual_clean_html(html);
 
         } catch (error) {
-            document.querySelector('#message').innerHTML = `<div class="alert alert-danger" role="alert"><i class="fa fa-exclamation"></i> ${error.message}</div>`;
+            console.error('Error in clean_html:', error.message);
+            show_error_message(`An error occurred: ${error.message}`);
+            return '';
         }
     };
 
-    /**
-     * Previews HTML entered in form fields
-     * @param id
-     */
+    // Manual HTML cleaning fallback (when DOMPurify not available)
+    function manual_clean_html(html) {
+
+        try {
+
+            if (!html || typeof html !== 'string') {
+                return '';
+            }
+
+            // List of dangerous tags to remove
+            const dangerous_tags = [
+                'script', 'iframe', 'html', 'head', 'body', 'title', 'img', 'embed',
+                'applet', 'object', 'style', 'link', 'form', 'input', 'video',
+                'source', 'math', 'maction', 'picture', 'map', 'svg', 'details',
+                'frameset', 'comment', 'base', 'meta', 'noscript', 'onclick',
+                'onerror', 'onload', 'onmouseover', 'frame', 'bgsound', 'marquee'
+            ];
+
+            // Create a container element for parsing
+            const container = document.createElement('div');
+
+            try {
+                container.innerHTML = html;
+            } catch (parse_error) {
+                console.warn('Failed to parse HTML:', parse_error.message);
+                return '';
+            }
+
+            // Remove dangerous tags and their content
+            for (const tag of dangerous_tags) {
+                const elements = container.querySelectorAll(tag);
+                for (const element of elements) {
+                    element.remove();
+                }
+            }
+
+            // Remove event handler attributes (XSS prevention)
+            const event_handlers = [
+                'onclick', 'onerror', 'onload', 'onmouseover', 'onmouseout',
+                'onkeydown', 'onkeyup', 'onfocus', 'onblur', 'onchange',
+                'onsubmit', 'ondblclick', 'onmouseenter', 'onmouseleave',
+                'oncontextmenu', 'onwheel', 'ondrag', 'ondrop'
+            ];
+
+            const all_elements = container.querySelectorAll('*');
+            for (const element of all_elements) {
+                // Remove dangerous attributes
+                for (const handler of event_handlers) {
+                    element.removeAttribute(handler);
+                }
+
+                // Whitelist allowed attributes
+                const allowed_attrs = ['href', 'title', 'target', 'rel', 'class', 'id'];
+                const attrs_to_remove = [];
+
+                for (const attr of element.attributes) {
+                    if (!allowed_attrs.includes(attr.name.toLowerCase())) {
+                        attrs_to_remove.push(attr.name);
+                    }
+                }
+
+                for (const attr of attrs_to_remove) {
+                    element.removeAttribute(attr);
+                }
+            }
+
+            // Get cleaned content
+            let cleaned_html = container.innerHTML;
+
+            // Decode HTML entities carefully (only safe entities)
+            const entity_map = {
+                '&amp;': '&',
+                '&lt;': '<',
+                '&gt;': '>',
+                '&quot;': '"',
+                '&#39;': "'"
+            };
+
+            for (const [entity, character] of Object.entries(entity_map)) {
+                cleaned_html = cleaned_html.split(entity).join(character);
+            }
+
+            // Trim excessive whitespace
+            cleaned_html = cleaned_html.replace(/\s+/g, ' ').trim();
+
+            // Validate result is a string
+            if (typeof cleaned_html !== 'string') {
+                console.warn('Cleaned HTML is not a string');
+                return '';
+            }
+
+            return cleaned_html;
+
+        } catch (error) {
+            console.error('Error in manual_clean_html:', error.message);
+            return '';
+        }
+    }
+
     obj.preview_html = function (id) {
 
         try {
 
-            const cleaned_html = helperModule.clean_html(document.querySelector('#' + id).value);
-            document.querySelector('#preview-html').innerHTML = cleaned_html;
-            document.querySelector('#' + id).value = cleaned_html;
+            if (!helperModule) {
+                console.error('helperModule is not available');
+                show_error_message('System configuration error.');
+                return false;
+            }
+
+            // Validate input ID parameter
+            if (!id || typeof id !== 'string') {
+                console.warn('Invalid or missing element ID parameter');
+                show_error_message('Invalid element ID provided.');
+                return false;
+            }
+
+            // Sanitize element ID to prevent selector injection
+            const sanitized_id = id.replace(/[^a-zA-Z0-9_-]/g, '');
+
+            if (sanitized_id !== id) {
+                console.warn(`Element ID contained invalid characters: ${id}`);
+                show_error_message('Invalid element ID format.');
+                return false;
+            }
+
+            // Get source element
+            const source_element = document.getElementById(sanitized_id);
+
+            if (!source_element) {
+                console.warn(`Source element not found: ${sanitized_id}`);
+                show_error_message(`Element with ID "${sanitized_id}" not found.`);
+                return false;
+            }
+
+            // Validate source element has value property (textarea, input, etc.)
+            if (typeof source_element.value !== 'string') {
+                console.warn(`Source element does not have a string value property: ${sanitized_id}`);
+                show_error_message('Source element has invalid value.');
+                return false;
+            }
+
+            // Get HTML content to clean
+            const raw_html = source_element.value;
+
+            // Handle empty HTML content by clearing previous data
+            if (!raw_html || raw_html.trim() === '') {
+                console.debug('No HTML content to preview, clearing previous data');
+
+                // Clear preview element
+                const preview_element = document.getElementById('preview-html');
+                if (preview_element) {
+                    preview_element.innerHTML = '';
+                }
+
+                // Clear source element
+                source_element.value = '';
+
+                return false;
+            }
+
+            // Clean HTML using helper module
+            const cleaned_html = helperModule.clean_html(raw_html);
+
+            // Validate cleaned HTML is valid
+            if (!cleaned_html || typeof cleaned_html !== 'string') {
+                console.error('HTML cleaning failed or returned invalid result');
+                show_error_message('Failed to clean HTML content.');
+                return false;
+            }
+
+            // Get preview element
+            const preview_element = document.getElementById('preview-html');
+            if (!preview_element) {
+                console.warn('Preview element not found: preview-html');
+                show_error_message('Preview element not found in page.');
+                return false;
+            }
+
+            // Set preview content using textContent first for safety, then innerHTML
+            // This two-step approach ensures proper rendering while maintaining security
+            try {
+                preview_element.innerHTML = cleaned_html;
+            } catch (preview_error) {
+                console.error('Failed to set preview HTML:', preview_error.message);
+                show_error_message('Failed to display HTML preview.');
+                return false;
+            }
+
+            // Update source element with cleaned HTML
+            try {
+                source_element.value = cleaned_html;
+            } catch (update_error) {
+                console.error('Failed to update source element:', update_error.message);
+                show_error_message('Failed to update HTML content.');
+                return false;
+            }
+
+            // Log successful preview
+            console.debug(`HTML preview successfully generated for element: ${sanitized_id}`);
             return false;
 
         } catch (error) {
-            document.querySelector('#message').innerHTML = `<div class="alert alert-danger" role="alert"><i class="fa fa-exclamation"></i> ${error.message}</div>`;
+            console.error('Error in preview_html:', error.message);
+            show_error_message(`An error occurred: ${error.message}`);
+            return false;
         }
     };
 
-    /**
-     * Gets checked radio button value
-     * @param radio_buttons
-     */
     obj.get_checked_radio_button = function (radio_buttons) {
 
         try {
 
-            for (let i = 0; i < radio_buttons.length; i++) {
-                if (radio_buttons[i].checked) {
-                    return radio_buttons[i].value;
-                }
+            if (!radio_buttons) {
+                console.warn('Missing radio_buttons parameter');
+                return null;
             }
 
+            // Validate input is array-like (NodeList or Array)
+            if (!radio_buttons.length) {
+                console.warn('radio_buttons is not array-like or is empty');
+                return null;
+            }
+
+            // Ensure radio_buttons is iterable
+            if (typeof radio_buttons[Symbol.iterator] !== 'function' && typeof radio_buttons.length !== 'number') {
+                console.warn('radio_buttons is not iterable');
+                return null;
+            }
+
+            // Use find() method for cleaner, more efficient search
+            // Convert to Array if NodeList to use Array methods
+            const buttons_array = Array.from(radio_buttons);
+
+            const checked_button = buttons_array.find(button => {
+                // Validate button is an object with checked property
+                if (!button || typeof button !== 'object' || !('checked' in button)) {
+                    console.warn('Invalid radio button element in collection');
+                    return false;
+                }
+
+                return button.checked === true;
+            });
+
+            // Return value of checked button or null if none found
+            if (!checked_button) {
+                console.debug('No radio button is currently checked');
+                return null;
+            }
+
+            // Validate checked button has value property
+            if (!('value' in checked_button)) {
+                console.warn('Checked radio button does not have value property');
+                return null;
+            }
+
+            // Validate value is a string
+            const button_value = String(checked_button.value);
+
+            if (button_value === '' || button_value === 'undefined') {
+                console.warn('Checked radio button has empty or undefined value');
+                return null;
+            }
+
+            return button_value;
+
         } catch (error) {
-            document.querySelector('#message').innerHTML = `<div class="alert alert-danger" role="alert"><i class="fa fa-exclamation"></i> ${error.message}</div>`;
+            console.error('Error in get_checked_radio_button:', error.message);
+            show_error_message(`An error occurred: ${error.message}`);
+            return null;
         }
     };
 
@@ -220,55 +710,6 @@ const helperModule = (function () {
                 });
 
             }, 250);
-
-        } catch (error) {
-            document.querySelector('#message').innerHTML = `<div class="alert alert-danger" role="alert"><i class="fa fa-exclamation"></i> ${error.message}</div>`;
-        }
-    };
-
-    /** TODO: deprecate - we no longer reorder exhibits
-     * Reorders exhibit list via drag and drop
-     * @param e
-     * @param reordered_exhibits
-     */
-    obj.reorder_exhibits = async function (e, reordered_exhibits) {
-
-        try {
-
-            const EXHIBITS_ENDPOINTS = endpointsModule.get_exhibits_endpoints();
-            const exhibit_id = helperModule.get_parameter_by_name('exhibit_id');
-            let reorder_obj = {};
-            let updated_order = [];
-
-            for (let i = 0, ien = reordered_exhibits.length; i < ien; i++) {
-
-                let node = reordered_exhibits[i].node;
-                let id = node.getAttribute('id');
-                let id_arr = id.split('_');
-
-                reorder_obj.type = id_arr.pop();
-                reorder_obj.uuid = id_arr.pop();
-                reorder_obj.order = reordered_exhibits[i].node.childNodes[0].childNodes[1].innerText;
-                updated_order.push(reorder_obj);
-                reorder_obj = {};
-            }
-
-            const token = authModule.get_user_token();
-            const response = await httpModule.req({
-                method: 'POST',
-                url: EXHIBITS_ENDPOINTS.exhibits.reorder_exhibits_records.post.endpoint.replace(':exhibit_id', exhibit_id),
-                data: updated_order,
-                headers: {
-                    'Content-Type': 'application/json',
-                    'x-access-token': token
-                }
-            });
-
-            if (response !== undefined && response.status === 201) {
-                console.log(response);
-            } else {
-                document.querySelector('#message').innerHTML = `<div class="alert alert-danger" role="alert"><i class="fa fa-exclamation"></i> An HTTP request error occurred while reordering items.</div>`;
-            }
 
         } catch (error) {
             document.querySelector('#message').innerHTML = `<div class="alert alert-danger" role="alert"><i class="fa fa-exclamation"></i> ${error.message}</div>`;
@@ -777,6 +1218,7 @@ const helperModule = (function () {
         }
     }
 
+    // TODO: remove
     obj.check_bandwidth = function (cb) {
 
         const URL = 'https://upload.wikimedia.org/wikipedia/commons/9/90/ODJBcard.JPG';
@@ -835,3 +1277,55 @@ const helperModule = (function () {
 }());
 
 helperModule.init();
+
+/*
+/** TODO: deprecate - we no longer reorder exhibits
+     * Reorders exhibit list via drag and drop
+     * @param e
+     * @param reordered_exhibits
+
+obj.reorder_exhibits = async function (e, reordered_exhibits) {
+
+    try {
+
+        const EXHIBITS_ENDPOINTS = endpointsModule.get_exhibits_endpoints();
+        const exhibit_id = helperModule.get_parameter_by_name('exhibit_id');
+        let reorder_obj = {};
+        let updated_order = [];
+
+        for (let i = 0, ien = reordered_exhibits.length; i < ien; i++) {
+
+            let node = reordered_exhibits[i].node;
+            let id = node.getAttribute('id');
+            let id_arr = id.split('_');
+
+            reorder_obj.type = id_arr.pop();
+            reorder_obj.uuid = id_arr.pop();
+            reorder_obj.order = reordered_exhibits[i].node.childNodes[0].childNodes[1].innerText;
+            updated_order.push(reorder_obj);
+            reorder_obj = {};
+        }
+
+        const token = authModule.get_user_token();
+        const response = await httpModule.req({
+            method: 'POST',
+            url: EXHIBITS_ENDPOINTS.exhibits.reorder_exhibits_records.post.endpoint.replace(':exhibit_id', exhibit_id),
+            data: updated_order,
+            headers: {
+                'Content-Type': 'application/json',
+                'x-access-token': token
+            }
+        });
+
+        if (response !== undefined && response.status === 201) {
+            console.log(response);
+        } else {
+            document.querySelector('#message').innerHTML = `<div class="alert alert-danger" role="alert"><i class="fa fa-exclamation"></i> An HTTP request error occurred while reordering items.</div>`;
+        }
+
+    } catch (error) {
+        document.querySelector('#message').innerHTML = `<div class="alert alert-danger" role="alert"><i class="fa fa-exclamation"></i> ${error.message}</div>`;
+    }
+};
+
+ */
