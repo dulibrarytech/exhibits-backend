@@ -101,7 +101,10 @@ const itemsEditStandardItemFormModule = (function () {
         document.querySelector('#item-text-input').value = helperModule.unescape(record.text);
 
         if (window.location.pathname.indexOf('media') !== -1) {
+
             await helperMediaModule.display_media_fields_common(record);
+            let subjects = record.item_subjects.split('|');
+            await helperModule.create_subjects_menu(subjects);
         }
 
         let layouts = document.getElementsByName('layout');

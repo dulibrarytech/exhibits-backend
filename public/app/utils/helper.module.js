@@ -517,7 +517,7 @@ const helperModule = (function () {
         return parseInt(profile.uid);
     }
 
-    obj.create_subjects_menu = async function () {
+    obj.create_subjects_menu = async function (subjects = []) {
 
         try {
 
@@ -531,13 +531,13 @@ const helperModule = (function () {
             const search_box = document.getElementById('searchBox');
             const search_input = document.getElementById('searchInput');
 
-            let selected = new Set();
+            let selected = new Set(subjects);
             let filtered_items = all_items;
             let item_map = new Map();
             let is_open = false;
 
             const ITEM_HEIGHT = 48;
-            const VISIBLE_ITEMS = 5;
+            // const VISIBLE_ITEMS = 5;
             const BUFFER = 50;
 
             // Debounce search
@@ -554,6 +554,7 @@ const helperModule = (function () {
             });
 
             function render_virtual_list() {
+
                 virtual_list.innerHTML = '';
                 item_map.clear();
 
@@ -657,19 +658,39 @@ const helperModule = (function () {
 
                     result_list.innerHTML = selected_array
                         .sort()
-                        .map(item => `<li>${item}</li>`)
+                        .map(item => `<li>
+                            <span>${item}</span>
+                            <button class="uncheck-btn" title="Remove subject" data-item="${item}" style="background: none; border: none; cursor: pointer; color: #999; padding: 0 5px; font-size: 18px; line-height: 1;">×</button>
+                        </li>`)
                         .join('');
 
-                    console.log('selected subjects ', selected_array);
-                    document.querySelector('#selected-subjects').value = selected_array;
+                    // Add event listeners to uncheck buttons
+                    result_list.querySelectorAll('.uncheck-btn').forEach(btn => {
+                        btn.addEventListener('click', (e) => {
+                            e.preventDefault();
+                            const item = btn.dataset.item;
+                            selected.delete(item);
+
+                            // Uncheck the checkbox in the dropdown if visible
+                            const checkbox = item_map.get(item);
+                            if (checkbox) {
+                                checkbox.checked = false;
+                            }
+
+                            update_selected();
+                        });
+                    });
+
+                    document.querySelector('#selected-subjects').value = selected_array.join('|');
                 }
             }
 
-            // Initial render
+            // Initial render with preselected items displayed
             render_virtual_list();
+            update_selected();
 
         } catch (error) {
-            console.log(error);
+            document.querySelector('#message').innerHTML = `<div class="alert alert-danger" role="alert"><i class="fa fa-exclamation"></i> ${error.message}</div>`;
         }
     };
 

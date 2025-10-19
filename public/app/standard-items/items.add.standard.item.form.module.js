@@ -47,17 +47,8 @@ const itemsAddStandardItemFormModule = (function () {
 
             document.querySelector('#message').innerHTML = `<div class="alert alert-info" role="alert"><i class="fa fa-info"></i> Creating item record...</div>`;
 
-            /*
-            const user = JSON.parse(sessionStorage.getItem('exhibits_user'));
-
-            if (user.name === null) {
-                document.querySelector('#message').innerHTML = `<div class="alert alert-danger" role="alert"><i class="fa fa-exclamation"></i> Unable to retrieve your profile</div>`;
-                return false;
-            }
-             */
-
-            data.created_by = helperModule.get_user_name(); //user.name;
-            data.owner = helperModule.get_owner(); // parseInt(user.uid);
+            data.created_by = helperModule.get_user_name();
+            data.owner = helperModule.get_owner();
 
             let token = authModule.get_user_token();
             let response = await httpModule.req({
@@ -104,7 +95,9 @@ const itemsAddStandardItemFormModule = (function () {
             exhibitsModule.set_exhibit_title(exhibit_id);
             document.querySelector('#save-item-btn').addEventListener('click', itemsAddStandardItemFormModule.create_item_record);
 
-            helperModule.create_subjects_menu();
+            if (window.location.pathname.indexOf('media') !== -1) {
+                helperModule.create_subjects_menu();
+            }
 
         } catch (error) {
             document.querySelector('#message').innerHTML = `<div class="alert alert-danger" role="alert"><i class="fa fa-exclamation"></i> ${error.message}</div>`;
