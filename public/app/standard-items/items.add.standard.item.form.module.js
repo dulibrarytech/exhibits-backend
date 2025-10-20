@@ -90,7 +90,7 @@ const itemsAddStandardItemFormModule = (function () {
 
             const exhibit_id = helperModule.get_parameter_by_name('exhibit_id');
             const redirect = '/items?exhibit_id=' + exhibit_id + '&status=403';
-            await authModule.check_permissions(['add_item', 'add_item_to_any_exhibit'], 'item', exhibit_id, redirect);
+            await authModule.check_permissions(['add_item', 'add_item_to_any_exhibit'], 'item', exhibit_id, '', redirect);
 
             exhibitsModule.set_exhibit_title(exhibit_id);
             document.querySelector('#save-item-btn').addEventListener('click', itemsAddStandardItemFormModule.create_item_record);
