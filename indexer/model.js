@@ -233,6 +233,13 @@ exports.index_exhibit = async function (uuid, type) {
         if (item_records.length > 0) {
 
             for (let i=0;i<item_records.length;i++) {
+
+                if (item_records[i].item_subjects.length > 0) {
+                    item_records[i].item_subjects = item_records[i].item_subjects.split('|');
+                } else {
+                    item_records[i].item_subjects = '';
+                }
+
                 item_index_records.push(construct_item_index_record(item_records[i]));
             }
 

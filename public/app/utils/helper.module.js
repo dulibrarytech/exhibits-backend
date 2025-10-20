@@ -1022,6 +1022,246 @@ const helperModule = (function () {
 
         try {
 
+            if (!Array.isArray(subjects)) {
+                console.warn('Subjects parameter is not an array, converting');
+                subjects = [];
+            }
+
+            // Fetch all available subjects
+            const all_items = await this.get_item_subjects();
+
+            if (!all_items || !Array.isArray(all_items)) {
+                console.error('Failed to retrieve item subjects');
+                show_error_message('Failed to load subjects.');
+                return;
+            }
+
+            // Get DOM elements with validation
+            const elements = {
+                header: document.getElementById('dropdownHeader'),
+                list: document.getElementById('dropdownList'),
+                virtual_list: document.getElementById('virtualList'),
+                arrow: document.getElementById('arrow'),
+                selected_text: document.getElementById('selectedText'),
+                result_list: document.getElementById('resultList'),
+                search_box: document.getElementById('searchBox'),
+                search_input: document.getElementById('searchInput'),
+                selected_subjects_input: document.getElementById('selected-subjects')
+            };
+
+            // Validate all required elements exist
+            for (const [key, element] of Object.entries(elements)) {
+                if (!element) {
+                    console.error(`Required element not found: ${key}`);
+                    show_error_message(`Missing required UI element: ${key}`);
+                    return;
+                }
+            }
+
+            // State management
+            const state = {
+                selected: new Set(subjects.filter(s => s && s.trim())), // Filter out empty strings
+                filtered_items: [...all_items],
+                item_map: new Map(),
+                is_open: false,
+                ITEM_HEIGHT: 48,
+                BUFFER: 50
+            };
+
+            let search_timeout;
+
+            // Debounced search handler
+            elements.search_input.addEventListener('input', (e) => {
+                clearTimeout(search_timeout);
+                search_timeout = setTimeout(() => {
+                    const query = e.target.value.toLowerCase().trim();
+                    state.filtered_items = query
+                        ? all_items.filter(item => item.toLowerCase().includes(query))
+                        : [...all_items];
+                    render_virtual_list();
+                }, 150);
+            });
+
+            // Render virtual list for performance with large datasets
+            function render_virtual_list() {
+                elements.virtual_list.innerHTML = '';
+                state.item_map.clear();
+
+                // Calculate visible range
+                const scroll_top = elements.list.scrollTop || 0;
+                const start_idx = Math.max(0, Math.floor(scroll_top / state.ITEM_HEIGHT) - state.BUFFER);
+                const end_idx = Math.min(
+                    state.filtered_items.length,
+                    Math.ceil((scroll_top + elements.list.clientHeight) / state.ITEM_HEIGHT) + state.BUFFER
+                );
+
+                // Set container height for proper scrollbar
+                elements.virtual_list.style.height = `${state.filtered_items.length * state.ITEM_HEIGHT}px`;
+                elements.virtual_list.style.position = 'relative';
+
+                // Render only visible items
+                for (let i = start_idx; i < end_idx; i++) {
+                    const item = state.filtered_items[i];
+                    const div = document.createElement('div');
+                    div.className = 'dropdown-item';
+                    div.style.position = 'absolute';
+                    div.style.top = `${i * state.ITEM_HEIGHT}px`;
+                    div.style.width = '100%';
+
+                    const checkbox = document.createElement('input');
+                    checkbox.type = 'checkbox';
+                    checkbox.value = item;
+                    checkbox.className = 'form-check-input';
+                    checkbox.checked = state.selected.has(item);
+
+                    const label = document.createElement('label');
+                    label.className = 'ms-2';
+                    label.style.cursor = 'pointer';
+                    label.style.marginBottom = '0';
+                    label.textContent = item;
+                    label.style.paddingLeft = '30px';
+
+                    // Checkbox change handler
+                    checkbox.addEventListener('change', (e) => {
+                        if (e.target.checked) {
+                            state.selected.add(item);
+                        } else {
+                            state.selected.delete(item);
+                        }
+                        update_selected();
+                    });
+
+                    // Label click handler
+                    label.addEventListener('click', (e) => {
+                        e.stopPropagation();
+                        checkbox.checked = !checkbox.checked;
+                        checkbox.dispatchEvent(new Event('change'));
+                    });
+
+                    div.appendChild(checkbox);
+                    div.appendChild(label);
+                    elements.virtual_list.appendChild(div);
+                    state.item_map.set(item, checkbox);
+                }
+            }
+
+            // Scroll handler for virtual list
+            elements.list.addEventListener('scroll', () => {
+                render_virtual_list();
+            });
+
+            // Dropdown toggle handler
+            elements.header.addEventListener('click', () => {
+                state.is_open = !state.is_open;
+                elements.list.classList.toggle('show');
+                elements.header.classList.toggle('active');
+                elements.arrow.classList.toggle('rotate');
+                elements.search_box.classList.toggle('show');
+
+                if (state.is_open) {
+                    elements.search_input.focus();
+                    render_virtual_list();
+                } else {
+                    elements.search_input.value = '';
+                    state.filtered_items = [...all_items];
+                }
+            });
+
+            // Close dropdown when clicking outside
+            document.addEventListener('click', (e) => {
+                if (!e.target.closest('.dropdown-container')) {
+                    state.is_open = false;
+                    elements.list.classList.remove('show');
+                    elements.header.classList.remove('active');
+                    elements.arrow.classList.remove('rotate');
+                    elements.search_box.classList.remove('show');
+                    elements.search_input.value = '';
+                    state.filtered_items = [...all_items];
+                }
+            });
+
+            // Update selected items display
+            function update_selected() {
+                // Convert Set to Array and filter out any empty strings
+                const selected_array = Array.from(state.selected).filter(item => item && item.trim());
+
+                // Update the Set to match the filtered array (removes any empty strings)
+                state.selected = new Set(selected_array);
+
+                const count = selected_array.length;
+
+                if (count === 0) {
+                    elements.selected_text.innerHTML = '<span class="placeholder">Select subjects...</span>';
+                    elements.result_list.innerHTML = '<li style="color: #999;">None selected</li>';
+                    elements.selected_subjects_input.value = '';
+                } else {
+                    const display = count <= 2
+                        ? selected_array.join(', ')
+                        : `${selected_array[0]}, ${selected_array[1]}...`;
+
+                    elements.selected_text.innerHTML = `${display} <span class="selected-count">${count}</span>`;
+
+                    elements.result_list.innerHTML = selected_array
+                        .sort()
+                        .map(item => {
+                            // Escape HTML to prevent XSS
+                            const escaped_item = document.createElement('div');
+                            escaped_item.textContent = item;
+                            const safe_item = escaped_item.innerHTML;
+
+                            return `<li>
+              <span>${safe_item}</span>
+              <button class="uncheck-btn" title="Remove subject" data-item="${safe_item}" style="background: none; border: none; cursor: pointer; color: #999; padding: 0 5px; font-size: 18px; line-height: 1;">×</button>
+            </li>`;
+                        })
+                        .join('');
+
+                    // Add event listeners to remove buttons
+                    elements.result_list.querySelectorAll('.uncheck-btn').forEach(btn => {
+                        btn.addEventListener('click', (e) => {
+                            e.preventDefault();
+                            e.stopPropagation();
+
+                            const item = btn.dataset.item;
+
+                            // Remove from selected Set
+                            state.selected.delete(item);
+
+                            // Uncheck the checkbox in the dropdown if visible
+                            const checkbox = state.item_map.get(item);
+                            if (checkbox) {
+                                checkbox.checked = false;
+                            }
+
+                            // Re-render to ensure UI is in sync
+                            update_selected();
+
+                            // Also re-render the virtual list if dropdown is open
+                            if (state.is_open) {
+                                render_virtual_list();
+                            }
+                        });
+                    });
+
+                    // Update hidden input with pipe-separated values
+                    elements.selected_subjects_input.value = selected_array.join('|');
+                }
+            }
+
+            // Initial render with preselected items
+            render_virtual_list();
+            update_selected();
+
+        } catch (error) {
+            console.error('Error in create_subjects_menu:', error.message);
+            show_error_message(`An error occurred: ${error.message}`);
+        }
+    };
+
+    obj.create_subjects_menu__ = async function (subjects = []) {
+
+        try {
+
             const all_items = await this.get_item_subjects();
             const header = document.getElementById('dropdownHeader');
             const list = document.getElementById('dropdownList');
@@ -1144,6 +1384,7 @@ const helperModule = (function () {
             });
 
             function update_selected() {
+
                 if (selected.size === 0) {
                     selected_text.innerHTML = '<span class="placeholder">Select subjects...</span>';
                     result_list.innerHTML = '<li style="color: #999;">None selected</li>';
