@@ -235,6 +235,10 @@ const itemsEditGridItemFormModule = (function () {
         try {
 
             const exhibit_id = helperModule.get_parameter_by_name('exhibit_id');
+            const item_id = helperModule.get_parameter_by_name('item_id');
+            const redirect = '/items/grid/details?exhibit_id=' + exhibit_id + '&item_id=' + item_id + '&status=403';
+            await authModule.check_permissions(['update_item', 'update_any_item'], 'grid_item', exhibit_id, item_id, redirect);
+
             exhibitsModule.set_exhibit_title(exhibit_id);
             navModule.back_to_grid_items();
             await display_edit_record();
