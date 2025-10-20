@@ -34,7 +34,7 @@ const LOGGER = require('../libs/log4');
 exports.check_permission = async function (options) {
 
     try {
-        // Early validation of input
+
         const { req, permissions: actions, record_type, parent_id, child_id, users: users_admin } = options;
 
         if (!req || !actions || !Array.isArray(actions) || actions.length === 0) {
