@@ -48,17 +48,7 @@ const itemsAddVerticalTimelineItemFormModule = (function () {
                 return false;
             }
 
-            /*
-            const user = JSON.parse(sessionStorage.getItem('exhibits_user'));
-
-            if (user.name === null) {
-                document.querySelector('#message').innerHTML = `<div class="alert alert-danger" role="alert"><i class="fa fa-exclamation"></i> Unable to retrieve your name</div>`;
-                return false;
-            }
-
-             */
-
-            data.created_by = helperModule.get_user_name(); //user.name;
+            data.created_by = helperModule.get_user_name();
 
             let tmp = EXHIBITS_ENDPOINTS.exhibits.timeline_item_records.post.endpoint.replace(':exhibit_id', exhibit_id);
             let endpoint = tmp.replace(':timeline_id', timeline_id);
@@ -106,7 +96,7 @@ const itemsAddVerticalTimelineItemFormModule = (function () {
 
             const exhibit_id = helperModule.get_parameter_by_name('exhibit_id');
             const redirect = '/items?exhibit_id=' + exhibit_id + '&status=403';
-            await authModule.check_permissions(['add_item', 'add_item_to_any_exhibit'], 'timeline_item', exhibit_id, redirect);
+            await authModule.check_permissions(['add_item', 'add_item_to_any_exhibit'], 'timeline_item', exhibit_id, null, redirect);
 
             exhibitsModule.set_exhibit_title(exhibit_id);
             document.querySelector('#save-item-btn').addEventListener('click', itemsAddVerticalTimelineItemFormModule.create_timeline_item_record);

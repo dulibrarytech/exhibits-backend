@@ -32,7 +32,7 @@ const LOGGER = require('../libs/log4');
  * req, permissions, record_type
  */
 exports.check_permission = async function (options) {
-    console.log('checking permission...');
+
     try {
         // Early validation of input
         const { req, permissions: actions, record_type, parent_id, child_id, users: users_admin } = options;

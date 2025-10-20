@@ -124,11 +124,14 @@ const itemsEditStandardItemFormModule = (function () {
 
             // Handle media-specific fields
             if (is_media_path) {
+
                 await helperMediaModule.display_media_fields_common(record);
 
-                if (record.item_subjects?.length > 0) {
+                if (record.item_subjects !== null && record.item_subjects?.length > 0) {
                     const subjects = record.item_subjects.split('|');
                     await helperModule.create_subjects_menu(subjects);
+                } else {
+                    await helperModule.create_subjects_menu();
                 }
             }
 

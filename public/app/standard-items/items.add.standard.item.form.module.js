@@ -96,7 +96,7 @@ const itemsAddStandardItemFormModule = (function () {
             document.querySelector('#save-item-btn').addEventListener('click', itemsAddStandardItemFormModule.create_item_record);
 
             if (window.location.pathname.indexOf('media') !== -1) {
-                helperModule.create_subjects_menu();
+                await helperModule.create_subjects_menu();
             }
 
         } catch (error) {

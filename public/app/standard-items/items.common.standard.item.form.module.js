@@ -106,6 +106,7 @@ const itemsCommonStandardItemFormModule = (function () {
 
                 // Handle image alt text validation
                 if (item.item_type === 'image') {
+
                     const altTextInput = document.querySelector('#item-alt-text-input');
                     const altText = altTextInput?.value?.trim() ?? '';
 
