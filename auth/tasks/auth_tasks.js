@@ -267,16 +267,15 @@ const Auth_tasks = class {
     async check_ownership(user_id, parent_id, child_id, record_type) {
 
         try {
-
             console.log('checking ownership...');
 
+            // Validate user_id
             if (user_id === null || user_id === undefined) {
                 LOGGER.module().warn('WARNING: [/auth/tasks (check_ownership)] missing user_id');
                 return 0;
             }
 
             const parsed_user_id = Number(user_id);
-
             if (!Number.isInteger(parsed_user_id) || parsed_user_id <= 0) {
                 LOGGER.module().warn(`WARNING: [/auth/tasks (check_ownership)] invalid user_id: ${user_id}`);
                 return 0;
@@ -289,14 +288,15 @@ const Auth_tasks = class {
             }
 
             const uuid_pattern = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
-
             if (!uuid_pattern.test(parent_id)) {
                 LOGGER.module().warn(`WARNING: [/auth/tasks (check_ownership)] invalid parent_id UUID: ${parent_id}`);
                 return 0;
             }
 
             // Validate child_id (UUID) if provided
-            if (child_id !== null && child_id !== undefined) {
+            const is_child_provided = child_id !== null && child_id !== undefined && child_id !== '';
+
+            if (is_child_provided) {
                 if (typeof child_id !== 'string' || !uuid_pattern.test(child_id)) {
                     LOGGER.module().warn(`WARNING: [/auth/tasks (check_ownership)] invalid child_id UUID: ${child_id}`);
                     return 0;
@@ -326,6 +326,32 @@ const Auth_tasks = class {
                 return 0;
             }
 
+            // If child_id is not provided, only check exhibit ownership
+            if (!is_child_provided) {
+                LOGGER.module().debug('No child_id provided, checking exhibit ownership only');
+
+                const exhibit_data = await this.DB(this.TABLE.exhibit_records)
+                    .select('owner')
+                    .where({ uuid: parent_id })
+                    .limit(1);
+
+                if (!exhibit_data || exhibit_data.length === 0) {
+                    LOGGER.module().warn(`WARNING: [/auth/tasks (check_ownership)] exhibit not found: ${parent_id}`);
+                    return 0;
+                }
+
+                const exhibit_owner = exhibit_data[0].owner;
+
+                // Validate owner is a valid number
+                const parsed_exhibit_owner = Number(exhibit_owner);
+                if (!Number.isInteger(parsed_exhibit_owner) || parsed_exhibit_owner <= 0) {
+                    LOGGER.module().error(`ERROR: [/auth/tasks (check_ownership)] invalid exhibit owner: ${exhibit_owner}`);
+                    return 0;
+                }
+
+                return parsed_exhibit_owner;
+            }
+
             // Handle exhibit record type specially (no parent/child hierarchy)
             if (normalized_record_type === 'exhibit') {
                 const exhibit_data = await this.DB(this.TABLE.exhibit_records)
@@ -350,11 +376,7 @@ const Auth_tasks = class {
                 return parsed_exhibit_owner;
             }
 
-            // Handle child record types (require both parent and child)
-            if (!child_id) {
-                LOGGER.module().warn(`WARNING: [/auth/tasks (check_ownership)] child_id required for record_type: ${normalized_record_type}`);
-                return 0;
-            }
+            // Handle child record types (child_id is provided at this point)
 
             // Fetch exhibit and child record data in parallel
             const [exhibit_data, child_data] = await Promise.all([

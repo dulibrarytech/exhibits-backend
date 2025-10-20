@@ -97,7 +97,7 @@ exports.check_permission = async function (options) {
             child_id,
             record_type
         );
-
+        console.log('RECORD OWNER ', record_owner);
         // Safely compare IDs (handle string/number conversion)
         return String(user_id) === String(record_owner);
 
