@@ -26,43 +26,50 @@ const itemsCommonStandardGridFormModule = (function () {
 
         try {
 
-            let grid = {};
-            grid.styles = {};
+            const grid = { styles: {} };
 
-            // grid metadata
-            grid.title = document.querySelector('#grid-title-input').value;
-            grid.text = document.querySelector('#grid-text-input').value;
-            grid.columns = document.querySelector('#grid-columns').value;
+            // Helper function for safe DOM queries
+            const get_element_value = (selector, default_value = '') => {
+                const el = document.querySelector(selector);
+                return el?.value?.trim() ?? default_value;
+            };
 
-            // grid styles
-            /*
-            let grid_background_color = document.querySelector('#grid-background-color').value;
-            let grid_color = document.querySelector('#grid-font-color').value;
-            let grid_font = document.querySelector('#grid-font').value;
-            let grid_font_size = document.querySelector('#grid-font-size').value;
+            const show_error = (message) => {
+                const message_el = document.querySelector('#message');
+                if (message_el) {
+                    message_el.innerHTML = `<div class="alert alert-danger" role="alert"><i class="fa fa-exclamation"></i> ${message}</div>`;
+                }
+            };
 
-            if (grid_background_color.length > 0) {
-                grid.styles.backgroundColor = grid_background_color;
+            // Get grid metadata
+            grid.title = get_element_value('#grid-title-input');
+            grid.text = get_element_value('#grid-text-input');
+
+            const columns_value = get_element_value('#grid-columns');
+
+            // Validate columns is a valid number
+            if (!columns_value || columns_value === '') {
+                show_error('Please enter the number of columns');
+                return false;
             }
 
-            if (grid_color.length > 0) {
-                grid.styles.color = document.querySelector('#grid-font-color').value;
+            const parsed_columns = Number(columns_value);
+            if (!Number.isInteger(parsed_columns) || parsed_columns <= 0 || parsed_columns > 12) {
+                show_error('Please enter a valid number of columns (1-12)');
+                return false;
             }
 
-            if (grid_font.length > 0) {
-                grid.styles.fontFamily = grid_font;
-            }
-
-            if (grid_font_size.length > 0) {
-                grid.styles.fontSize = `${grid_font_size}px`;
-            }
-
-             */
+            grid.columns = parsed_columns.toString(); // converted to number at server
 
             return grid;
 
         } catch (error) {
-            document.querySelector('#message').innerHTML = `<div class="alert alert-danger" role="alert"><i class="fa fa-exclamation"></i> ${error.message}</div>`;
+            console.error('Error in get_common_grid_form_fields:', error.message);
+            const message_el = document.querySelector('#message');
+            if (message_el) {
+                message_el.innerHTML = `<div class="alert alert-danger" role="alert"><i class="fa fa-exclamation"></i> ${error.message}</div>`;
+            }
+            return false;
         }
     };
 

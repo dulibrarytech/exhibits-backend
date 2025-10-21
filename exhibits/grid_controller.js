@@ -21,7 +21,6 @@
 const FS = require('fs');
 const GRIDS_MODEL = require('../exhibits/grid_model');
 const AUTHORIZE = require('../auth/authorize');
-const ITEMS_MODEL = require("./items_model");
 
 exports.create_grid_record = async function (req, res) {
 
