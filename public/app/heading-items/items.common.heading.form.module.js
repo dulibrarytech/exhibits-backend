@@ -94,59 +94,6 @@ const itemsCommonHeadingFormModule = (function () {
         }
     };
 
-    obj.get_common_heading_form_fields__ = function () {
-
-        try {
-
-            let item_heading = {};
-            item_heading.styles = {};
-            item_heading.text = document.querySelector('#item-heading-text-input').value;
-
-            if (item_heading.text.length === 0) {
-                document.querySelector('#message').innerHTML = `<div class="alert alert-danger" role="alert"><i class="fa fa-exclamation"></i> Please enter heading text</div>`;
-                return false;
-            }
-
-            if (document.querySelector('#is-published') !== null) {
-                item_heading.is_published = document.querySelector('#is-published').value;
-            }
-
-            let heading_background_color =  document.querySelector('#heading-background-color').value;
-            let heading_font_color = document.querySelector('#heading-font-color').value;
-            let heading_font_size = document.querySelector('#heading-font-size').value;
-            let heading_font = document.querySelector('#heading-font').value;
-
-            if (heading_background_color.length > 0) {
-                item_heading.styles.backgroundColor = heading_background_color;
-            } else {
-                item_heading.styles.backgroundColor = '';
-            }
-
-            if (heading_font_color.length > 0) {
-                item_heading.styles.color = heading_font_color;
-            } else {
-                item_heading.styles.color = '';
-            }
-
-            if (heading_font.length > 0) {
-                item_heading.styles.fontFamily = heading_font;
-            } else {
-                item_heading.styles.fontFamily = '';
-            }
-
-            if (heading_font_size.length > 0) {
-                item_heading.styles.fontSize = `${heading_font_size}px`;
-            } else {
-                item_heading.styles.fontSize = '';
-            }
-
-            return item_heading;
-
-        } catch (error) {
-            document.querySelector('#message').innerHTML = `<div class="alert alert-danger" role="alert"><i class="fa fa-exclamation"></i> ${error.message}</div>`;
-        }
-    };
-
     /**
      * Init function for exhibits common add/edit forms
      */
