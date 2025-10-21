@@ -20,7 +20,7 @@
 
 const HEADINGS_MODEL = require('../exhibits/headings_model');
 const AUTHORIZE = require('../auth/authorize');
-const EXHIBITS_MODEL = require("./exhibits_model");
+// const EXHIBITS_MODEL = require("./exhibits_model");
 
 exports.create_heading_record = async function (req, res) {
 
@@ -38,7 +38,7 @@ exports.create_heading_record = async function (req, res) {
         let options = {};
         options.req = req;
         options.permissions = permissions;
-        options.record_type = 'heading_item';
+        options.record_type = 'heading';
         options.parent_id = is_member_of_exhibit;
         options.child_id = null;
 

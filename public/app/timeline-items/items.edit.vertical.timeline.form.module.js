@@ -182,7 +182,11 @@ const itemsEditVerticalTimelineFormModule = (function () {
         const exhibit_id = helperModule.get_parameter_by_name('exhibit_id');
         const item_id = helperModule.get_parameter_by_name('item_id');
         const redirect = '/items/vertical-timeline/details?exhibit_id=' + exhibit_id + '&item_id=' + item_id + '&status=403';
-        await authModule.check_permissions(['update_item', 'update_any_item'], 'timeline', exhibit_id, item_id, redirect);
+
+        console.log(exhibit_id);
+        console.log(item_id);
+        console.log(redirect);
+        // await authModule.check_permissions(['update_item', 'update_any_item'], 'timeline', exhibit_id, item_id, redirect);
 
         exhibitsModule.set_exhibit_title(exhibit_id);
         document.querySelector('#save-timeline-btn').addEventListener('click', itemsEditVerticalTimelineFormModule.update_timeline_record);
