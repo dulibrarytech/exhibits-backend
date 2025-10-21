@@ -20,7 +20,6 @@
 
 const HEADINGS_MODEL = require('../exhibits/headings_model');
 const AUTHORIZE = require('../auth/authorize');
-// const EXHIBITS_MODEL = require("./exhibits_model");
 
 exports.create_heading_record = async function (req, res) {
 

@@ -44,7 +44,8 @@ const itemsAddVerticalTimelineFormModule = (function () {
                 return false;
             }
 
-            data.created_by = helperModule.get_user_name(); //user.name;
+            data.created_by = helperModule.get_user_name();
+            data.owner = helperModule.get_owner();
 
             let token = authModule.get_user_token();
             let response = await httpModule.req({
