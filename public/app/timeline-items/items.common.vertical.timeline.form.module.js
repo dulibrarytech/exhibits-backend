@@ -26,41 +26,42 @@ const itemsCommonVerticalTimelineFormModule = (function () {
 
         try {
 
-            let timeline = {};
-            timeline.styles = {};
+            const timeline = { styles: {} };
 
-            // timeline metadata
-            timeline.title = document.querySelector('#timeline-title-input').value;
-            timeline.text = document.querySelector('#timeline-text-input').value;
+            // Helper function for safe DOM queries
+            const get_element_value = (selector, default_value = '') => {
+                const el = document.querySelector(selector);
+                return el?.value?.trim() ?? default_value;
+            };
 
-            // timeline styles
+            const show_error = (message) => {
+                const message_el = document.querySelector('#message');
+                if (message_el) {
+                    message_el.innerHTML = `<div class="alert alert-danger" role="alert"><i class="fa fa-exclamation"></i> ${message}</div>`;
+                }
+            };
+
+            // Get timeline metadata
+            timeline.title = get_element_value('#timeline-title-input');
+            timeline.text = get_element_value('#timeline-text-input');
+
+            // Validate required title field
             /*
-            let timeline_background_color = document.querySelector('#timeline-background-color').value;
-            let timeline_color = document.querySelector('#timeline-font-color').value;
-            let timeline_font = document.querySelector('#timeline-font').value;
-            let timeline_font_size = document.querySelector('#timeline-font-size').value;
-
-            if (timeline_background_color.length > 0) {
-                timeline.styles.backgroundColor = timeline_background_color;
-            }
-
-            if (timeline_color.length > 0) {
-                timeline.styles.color = document.querySelector('#timeline-font-color').value;
-            }
-
-            if (timeline_font.length > 0) {
-                timeline.styles.fontFamily = timeline_font;
-            }
-
-            if (timeline_font_size.length > 0) {
-                timeline.styles.fontSize = `${timeline_font_size}px`;
+            if (!timeline.title || timeline.title.length === 0) {
+                show_error('Please enter a title for the timeline');
+                return false;
             }
             */
 
             return timeline;
 
         } catch (error) {
-            document.querySelector('#message').innerHTML = `<div class="alert alert-danger" role="alert"><i class="fa fa-exclamation"></i> ${error.message}</div>`;
+            console.error('Error in get_common_timeline_form_fields:', error.message);
+            const message_el = document.querySelector('#message');
+            if (message_el) {
+                message_el.innerHTML = `<div class="alert alert-danger" role="alert"><i class="fa fa-exclamation"></i> ${error.message}</div>`;
+            }
+            return false;
         }
     };
 
