@@ -25,6 +25,7 @@ const itemsCommonStandardItemFormModule = (function () {
     obj.get_common_standard_item_form_fields = function () {
 
         try {
+
             const item = { styles: {} };
             const path = window.location.pathname;
             const isTextPath = path.includes('text');

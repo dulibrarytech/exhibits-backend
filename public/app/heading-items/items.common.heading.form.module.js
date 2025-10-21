@@ -29,6 +29,75 @@ const itemsCommonHeadingFormModule = (function () {
 
         try {
 
+            const item_heading = { styles: {} };
+
+            // Helper function for safe DOM queries
+            const get_element_value = (selector, default_value = '') => {
+                const el = document.querySelector(selector);
+                return el?.value?.trim() ?? default_value;
+            };
+
+            const show_error = (message) => {
+
+                const message_el = document.querySelector('#message');
+
+                if (message_el) {
+                    message_el.innerHTML = `<div class="alert alert-danger" role="alert"><i class="fa fa-exclamation"></i> ${message}</div>`;
+                }
+            };
+
+            // Get heading text
+            item_heading.text = get_element_value('#item-heading-text-input');
+
+            // Validate required heading text
+            if (!item_heading.text || item_heading.text.length === 0) {
+                show_error('Please enter heading text');
+                return false;
+            }
+
+            // Get optional published status
+            const published_el = document.querySelector('#is-published');
+
+            if (published_el) {
+                item_heading.is_published = published_el.value;
+            }
+
+            // Build styles object efficiently
+            const style_fields = {
+                backgroundColor: '#heading-background-color',
+                color: '#heading-font-color',
+                fontFamily: '#heading-font',
+                fontSize: '#heading-font-size'
+            };
+
+            for (const [style_key, selector] of Object.entries(style_fields)) {
+                const value = get_element_value(selector);
+
+                // Add 'px' suffix for fontSize if value exists
+                if (style_key === 'fontSize' && value) {
+                    item_heading.styles[style_key] = `${value}px`;
+                } else {
+                    // Set value or empty string
+                    item_heading.styles[style_key] = value || '';
+                }
+            }
+
+            return item_heading;
+
+        } catch (error) {
+            console.error('Error in get_common_heading_form_fields:', error.message);
+            const message_el = document.querySelector('#message');
+            if (message_el) {
+                message_el.innerHTML = `<div class="alert alert-danger" role="alert"><i class="fa fa-exclamation"></i> ${error.message}</div>`;
+            }
+            return false;
+        }
+    };
+
+    obj.get_common_heading_form_fields__ = function () {
+
+        try {
+
             let item_heading = {};
             item_heading.styles = {};
             item_heading.text = document.querySelector('#item-heading-text-input').value;
