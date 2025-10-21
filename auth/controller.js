@@ -115,12 +115,61 @@ exports.get_auth_user_data = async function (req, res) {
 
     try {
 
-        const id = req.query.id;
-        const data = await MODEL.get_auth_user_data(id);
-        res.status(data.status).send(data.data);
+        if (!req.query || typeof req.query !== 'object') {
+            return res.status(400).json({
+                message: 'Invalid request parameters.'
+            });
+        }
+
+        // Extract and validate user ID
+        const user_id = req.query.id;
+
+        if (!user_id) {
+            return res.status(400).json({
+                message: 'Missing required parameter: id'
+            });
+        }
+
+        // Validate user ID is numeric and positive
+        const parsed_id = Number(user_id);
+        if (!Number.isInteger(parsed_id) || parsed_id <= 0) {
+            return res.status(400).json({
+                message: 'Invalid user ID format.'
+            });
+        }
+
+        // Fetch user data from model
+        const response = await MODEL.get_auth_user_data(parsed_id);
+
+        // Validate model response
+        if (!response || !response.data) {
+            return res.status(404).json({
+                message: 'User not found.'
+            });
+        }
+
+        // Check if user_data is the expected object structure
+        if (typeof response.data !== 'object') {
+            LOGGER.module().error(
+                `ERROR: [/auth/controller (get_auth_user_data)] invalid response from model for user ID: ${parsed_id}`
+            );
+            return res.status(500).json({
+                message: 'Invalid user data format.'
+            });
+        }
+
+        // Return successful response with user data
+        return res.status(200).json(response.data);
 
     } catch (error) {
-        LOGGER.module().error('ERROR: [/auth/controller (get_auth_user_data)] unable to get user auth data ' + error.message);
+        LOGGER.module().error(
+            `ERROR: [/auth/controller (get_auth_user_data)] unable to get user auth data: ${error.message}`
+        );
+
+        // Return error response
+        res.status(500).json({
+            message: 'An error occurred while retrieving user data.'
+        });
     }
 };
 
@@ -190,34 +239,78 @@ exports.check_permissions = async function (req, res) {
 
     try {
 
-        // TODO: check if req.body is defined
-        const permissions = req.body.permissions;
-        const record_type = req.body.record_type;
-        const parent_id = req.body.parent_id;
-        const child_id = req.body.child_id;
-        const options = {};
-        options.req = req;
-        options.permissions = permissions;
-        options.record_type = record_type;
-        options.parent_id = parent_id;
-        options.child_id = child_id;
+        if (!req.body || typeof req.body !== 'object') {
+            return res.status(400).json({
+                message: 'Invalid request body.'
+            });
+        }
 
+        // Extract and validate required parameters
+        const { permissions, record_type, parent_id, child_id } = req.body;
+
+        // Validate permissions is an array
+        if (!permissions || !Array.isArray(permissions) || permissions.length === 0) {
+            return res.status(400).json({
+                message: 'Invalid or missing permissions parameter.'
+            });
+        }
+
+        // Validate record_type is a string
+        if (!record_type || typeof record_type !== 'string') {
+            return res.status(400).json({
+                message: 'Invalid or missing record_type parameter.'
+            });
+        }
+
+        // Validate parent_id is a valid UUID
+        const uuid_pattern = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+        if (!parent_id || typeof parent_id !== 'string' || !uuid_pattern.test(parent_id)) {
+            return res.status(400).json({
+                message: 'Invalid or missing parent_id parameter.'
+            });
+        }
+
+        // Validate child_id is a valid UUID if provided
+        if (child_id !== null && child_id !== undefined && child_id !== '') {
+            if (typeof child_id !== 'string' || !uuid_pattern.test(child_id)) {
+                return res.status(400).json({
+                    message: 'Invalid child_id parameter.'
+                });
+            }
+        }
+
+        // Build options object for authorization check
+        const options = {
+            req,
+            permissions,
+            record_type,
+            parent_id,
+            child_id: child_id || null
+        };
+
+        // Check authorization
         const is_authorized = await AUTHORIZE.check_permission(options);
 
-        if (is_authorized === false) {
-            res.status(403).send({
-                message: 'Unauthorized request'
-            });
-
-            return false;
-
-        } else {
-            res.status(200).send({
+        // Handle authorization result
+        if (is_authorized === true) {
+            return res.status(200).json({
                 message: 'Authorized'
             });
         }
 
+        // Authorization failed
+        return res.status(403).json({
+            message: 'Unauthorized request'
+        });
+
     } catch (error) {
-        LOGGER.module().error('ERROR: [/auth/controller (check_permissions)] unable to check permissions ' + error.message);
+        LOGGER.module().error(
+            `ERROR: [/auth/controller (check_permissions)] unable to check permissions: ${error.message}`
+        );
+
+        // Return error response
+        res.status(500).json({
+            message: 'An error occurred while checking permissions.'
+        });
     }
 };
