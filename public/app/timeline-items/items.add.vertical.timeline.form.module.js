@@ -82,7 +82,7 @@ const itemsAddVerticalTimelineFormModule = (function () {
 
             const exhibit_id = helperModule.get_parameter_by_name('exhibit_id');
             const redirect = '/items?exhibit_id=' + exhibit_id + '&status=403';
-            await authModule.check_permissions(['add_item', 'add_item_to_any_exhibit'], 'grid', exhibit_id, null, redirect);
+            await authModule.check_permissions(['add_item', 'add_item_to_any_exhibit'], 'timeline', exhibit_id, null, redirect);
 
             exhibitsModule.set_exhibit_title(exhibit_id);
             document.querySelector('#save-timeline-btn').addEventListener('click', itemsAddVerticalTimelineFormModule.create_timeline_record);
