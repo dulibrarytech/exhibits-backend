@@ -369,9 +369,9 @@ exports.save_user = async function (req, res) {
 
         // Save user to database
         const saved_user = await MODEL.save_user(user_data);
-
+        console.log('saved user: ', saved_user);
         // Validate model response
-        if (saved_user === null || saved_user === undefined) {
+        if (saved_user.data === null || saved_user.data === undefined) {
             LOGGER.module().error(
                 'ERROR: [/user/controller (save_user)] model returned null/undefined response'
             );
@@ -381,7 +381,7 @@ exports.save_user = async function (req, res) {
         }
 
         // Check if save was successful
-        if (saved_user === false) { // 409
+        if (saved_user.data === false) { // 409
             return res.status(200).json({
                 message: 'User already exists'
             });

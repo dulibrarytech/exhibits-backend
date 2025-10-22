@@ -844,13 +844,13 @@ const userModule = (function () {
             // Handle successful user creation
             if (response.status === 201) {
                 // Validate response contains user data
-                if (!response.data || !response.data.user || !response.data.user.id) {
+                if (!response.data || !response.data.user || !response.data.user.data.id) {
                     console.error('Invalid user data in response');
                     show_message('User saved but unable to retrieve user ID.');
                     return false;
                 }
 
-                const user_id = response.data.user.id;
+                const user_id = response.data.user.data.id;
 
                 // Validate user ID
                 if (!Number.isInteger(user_id) || user_id <= 0) {
