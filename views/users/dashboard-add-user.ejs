@@ -53,10 +53,109 @@
 <%- include('../partials/exhibits-app-common.ejs'); %>
 <script src="/exhibits-dashboard/static/app/dist/user.module.min.js?<%=build_version%>"></script>
 <script>
-    navModule.init();
-    userModule.init();
-    document.querySelector('#save-user-btn').addEventListener('click', userModule.save_user_record);
-    helperModule.show_form();
+
+    (async function () {
+
+        try {
+
+            const show_error = (message) => {
+                const message_el = document.querySelector('#message');
+                if (message_el) {
+                    message_el.innerHTML = `<div class="alert alert-danger" role="alert"><i class="fa fa-exclamation"></i> ${message}</div>`;
+                }
+            };
+
+            // Validate required modules exist
+            const required_modules = {
+                userModule: userModule,
+                navModule: navModule,
+                helperModule: helperModule
+            };
+
+            for (const [module_name, module] of Object.entries(required_modules)) {
+                if (!module) {
+                    console.error(`Required module not available: ${module_name}`);
+                    show_error('System configuration error. Please refresh the page.');
+                    return;
+                }
+            }
+
+            // Check user permission to add users
+            const has_permission = await userModule.check_add_user_permission();
+
+            if (!has_permission) {
+
+                show_error('You do not have permission to add users.');
+
+                // Hide form if permission denied
+                const form_container = document.querySelector('#form-container');
+                if (form_container) {
+                    form_container.style.display = 'none';
+                }
+
+                return;
+            }
+
+            // Initialize navigation module
+            if (typeof navModule.init === 'function') {
+                navModule.init();
+            } else {
+                console.warn('navModule.init is not a function');
+            }
+
+            // Initialize user module
+            if (typeof userModule.init === 'function') {
+                await userModule.init();
+            } else {
+                console.warn('userModule.init is not a function');
+            }
+
+            // Get save button and validate it exists
+            const save_button = document.querySelector('#save-user-btn');
+
+            if (!save_button) {
+                console.error('Save user button not found in DOM');
+                show_error('Form initialization error. Please refresh the page.');
+                return;
+            }
+
+            // Validate save function exists
+            if (typeof userModule.save_user_record !== 'function') {
+                console.error('userModule.save_user_record is not a function');
+                show_error('System configuration error. Please refresh the page.');
+                return;
+            }
+
+            // Add event listener to save button
+            save_button.addEventListener('click', userModule.save_user_record);
+
+            // Show the form
+            if (typeof helperModule.show_form === 'function') {
+                helperModule.show_form();
+            } else {
+                console.warn('helperModule.show_form is not a function');
+                // Fallback: show form manually
+                const form_container = document.querySelector('#form-container');
+                if (form_container) {
+                    form_container.style.display = 'block';
+                }
+            }
+
+            // Clear loading message
+            const message_el = document.querySelector('#message');
+            if (message_el) {
+                message_el.innerHTML = '';
+            }
+
+        } catch (error) {
+            console.error('Error initializing add user page:', error.message);
+
+            const message_el = document.querySelector('#message');
+            if (message_el) {
+                message_el.innerHTML = `<div class="alert alert-danger" role="alert"><i class="fa fa-exclamation"></i> An error occurred while loading the page. Please refresh and try again.</div>`;
+            }
+        }
+    })();
 </script>
 </body>
 </html>

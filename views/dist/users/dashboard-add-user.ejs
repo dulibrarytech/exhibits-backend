@@ -1,4 +1,102 @@
-<%- include('../partials/header.ejs'); %> <body><aside id="left-panel" class="left-panel"><nav class="navbar navbar-expand-sm navbar-default"><div id="main-menu" class="main-menu"><ul class="nav navbar-nav"><li class="active"><a href="/exhibits-dashboard/exhibits"><i class="menu-icon fa fa-home"></i>Exhibits Home</a></li><li class="menu-title">Menu</li></ul><ul class="nav navbar-nav"><li><a id="back-to-items" href="/exhibits-dashboard/users" data-keyboard="false"><i class="menu-icon fa fa-arrow-left"></i>Back to Users</a></li></ul><ul id="items-menu" class="nav navbar-nav"></ul><ul class="nav navbar-nav"><li><a href="#" id="logout" data-keyboard="false"><i class="menu-icon fa fa-sign-out"></i>Logout</a></li></ul></div></nav></aside><div id="right-panel" class="right-panel"> <%- include('../partials/main-header.ejs'); %> <div class="content" style="min-height: 875px;"><div id="message"></div> <%- include('partials/user-data-card.ejs'); %> <div id="item-submit-card" class="card"><div class="card-body"><button class="btn btn-primary" type="button" id="save-user-btn"><i class="fa fa-save"></i>&nbsp;&nbsp;Save</button></div><div class="card-footer text-muted"><small>User</small></div></div></div><div class="clearfix"></div> <%- include('../partials/footer.ejs'); %> <%- include('../partials/preview-html-modal.ejs'); %> </div><!-- libs --> <%- include('../partials/exhibits-libs-common.ejs'); %> <script src="/exhibits-dashboard/static/libs/data_tables/datatables.min.js"></script><!-- app --> <%- include('../partials/exhibits-app-common.ejs'); %> <script src="/exhibits-dashboard/static/app/dist/user.module.min.js?<%=build_version%>"></script><script>navModule.init();
-    userModule.init();
-    document.querySelector('#save-user-btn').addEventListener('click', userModule.save_user_record);
-    helperModule.show_form();</script></body>
+<%- include('../partials/header.ejs'); %> <body><aside id="left-panel" class="left-panel"><nav class="navbar navbar-expand-sm navbar-default"><div id="main-menu" class="main-menu"><ul class="nav navbar-nav"><li class="active"><a href="/exhibits-dashboard/exhibits"><i class="menu-icon fa fa-home"></i>Exhibits Home</a></li><li class="menu-title">Menu</li></ul><ul class="nav navbar-nav"><li><a id="back-to-items" href="/exhibits-dashboard/users" data-keyboard="false"><i class="menu-icon fa fa-arrow-left"></i>Back to Users</a></li></ul><ul id="items-menu" class="nav navbar-nav"></ul><ul class="nav navbar-nav"><li><a href="#" id="logout" data-keyboard="false"><i class="menu-icon fa fa-sign-out"></i>Logout</a></li></ul></div></nav></aside><div id="right-panel" class="right-panel"> <%- include('../partials/main-header.ejs'); %> <div class="content" style="min-height: 875px;"><div id="message"></div> <%- include('partials/user-data-card.ejs'); %> <div id="item-submit-card" class="card"><div class="card-body"><button class="btn btn-primary" type="button" id="save-user-btn"><i class="fa fa-save"></i>&nbsp;&nbsp;Save</button></div><div class="card-footer text-muted"><small>User</small></div></div></div><div class="clearfix"></div> <%- include('../partials/footer.ejs'); %> <%- include('../partials/preview-html-modal.ejs'); %> </div><!-- libs --> <%- include('../partials/exhibits-libs-common.ejs'); %> <script src="/exhibits-dashboard/static/libs/data_tables/datatables.min.js"></script><!-- app --> <%- include('../partials/exhibits-app-common.ejs'); %> <script src="/exhibits-dashboard/static/app/dist/user.module.min.js?<%=build_version%>"></script><script>(async function () {
+
+        try {
+
+            const show_error = (message) => {
+                const message_el = document.querySelector('#message');
+                if (message_el) {
+                    message_el.innerHTML = `<div class="alert alert-danger" role="alert"><i class="fa fa-exclamation"></i> ${message}</div>`;
+                }
+            };
+
+            // Validate required modules exist
+            const required_modules = {
+                userModule: userModule,
+                navModule: navModule,
+                helperModule: helperModule
+            };
+
+            for (const [module_name, module] of Object.entries(required_modules)) {
+                if (!module) {
+                    console.error(`Required module not available: ${module_name}`);
+                    show_error('System configuration error. Please refresh the page.');
+                    return;
+                }
+            }
+
+            // Check user permission to add users
+            const has_permission = await userModule.check_add_user_permission();
+
+            if (!has_permission) {
+
+                show_error('You do not have permission to add users.');
+
+                // Hide form if permission denied
+                const form_container = document.querySelector('#form-container');
+                if (form_container) {
+                    form_container.style.display = 'none';
+                }
+
+                return;
+            }
+
+            // Initialize navigation module
+            if (typeof navModule.init === 'function') {
+                navModule.init();
+            } else {
+                console.warn('navModule.init is not a function');
+            }
+
+            // Initialize user module
+            if (typeof userModule.init === 'function') {
+                await userModule.init();
+            } else {
+                console.warn('userModule.init is not a function');
+            }
+
+            // Get save button and validate it exists
+            const save_button = document.querySelector('#save-user-btn');
+
+            if (!save_button) {
+                console.error('Save user button not found in DOM');
+                show_error('Form initialization error. Please refresh the page.');
+                return;
+            }
+
+            // Validate save function exists
+            if (typeof userModule.save_user_record !== 'function') {
+                console.error('userModule.save_user_record is not a function');
+                show_error('System configuration error. Please refresh the page.');
+                return;
+            }
+
+            // Add event listener to save button
+            save_button.addEventListener('click', userModule.save_user_record);
+
+            // Show the form
+            if (typeof helperModule.show_form === 'function') {
+                helperModule.show_form();
+            } else {
+                console.warn('helperModule.show_form is not a function');
+                // Fallback: show form manually
+                const form_container = document.querySelector('#form-container');
+                if (form_container) {
+                    form_container.style.display = 'block';
+                }
+            }
+
+            // Clear loading message
+            const message_el = document.querySelector('#message');
+            if (message_el) {
+                message_el.innerHTML = '';
+            }
+
+        } catch (error) {
+            console.error('Error initializing add user page:', error.message);
+
+            const message_el = document.querySelector('#message');
+            if (message_el) {
+                message_el.innerHTML = `<div class="alert alert-danger" role="alert"><i class="fa fa-exclamation"></i> An error occurred while loading the page. Please refresh and try again.</div>`;
+            }
+        }
+    })();</script></body>

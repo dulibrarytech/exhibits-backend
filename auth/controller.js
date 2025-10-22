@@ -177,11 +177,34 @@ exports.get_roles = async function (req, res) {
 
     try {
 
-        const data = await MODEL.get_roles();
-        res.status(data.status).send(data.data);
+        const response = await MODEL.get_roles();
+
+        if (!response || !response.data || !Array.isArray(response.data)) {
+            return res.status(404).json({
+                message: 'No roles found.'
+            });
+        }
+
+        // Validate roles is an array
+        if (!Array.isArray(response.data)) {
+            LOGGER.module().error('ERROR: [/auth/controller (get_roles)] invalid response format from model');
+            return res.status(500).json({
+                message: 'Invalid roles data format.'
+            });
+        }
+
+        // Return successful response with roles
+        return res.status(200).json(response.data);
 
     } catch (error) {
-        LOGGER.module().error('ERROR: [/auth/controller (get_roles)] unable to roles ' + error.message);
+        LOGGER.module().error(
+            `ERROR: [/auth/controller (get_roles)] unable to get roles: ${error.message}`
+        );
+
+        // Return error response
+        res.status(500).json({
+            message: 'An error occurred while retrieving roles.'
+        });
     }
 };
 
@@ -189,49 +212,134 @@ exports.get_user_role = async function (req, res) {
 
     try {
 
-        const user_id = req.query.user_id;
-
-        if (user_id === undefined || user_id.length === 0) {
-            res.status(400).send({
-                message: 'Bad request'
+        if (!req.query || typeof req.query !== 'object') {
+            return res.status(400).json({
+                message: 'Invalid request parameters.'
             });
-            return false;
         }
 
-        const data = await MODEL.get_user_role(user_id);
-        res.status(data.status).send(data.data);
+        // Extract and validate user_id
+        const user_id = req.query.user_id;
+
+        if (!user_id || user_id === '') {
+            return res.status(400).json({
+                message: 'Missing required parameter: user_id'
+            });
+        }
+
+        // Validate user_id is numeric and positive
+        const parsed_user_id = Number(user_id);
+
+        if (!Number.isInteger(parsed_user_id) || parsed_user_id <= 0) {
+            return res.status(400).json({
+                message: 'Invalid user_id format.'
+            });
+        }
+
+        const response = await MODEL.get_user_role(parsed_user_id);
+
+        if (!response || !response.data || !Array.isArray(response.data)) {
+            return res.status(404).json({
+                message: 'User role not found.'
+            });
+        }
+
+        // Return successful response with user role
+        return res.status(200).json(response.data);
 
     } catch (error) {
-        LOGGER.module().error('ERROR: [/auth/controller (get_roles)] unable to roles ' + error.message);
+        LOGGER.module().error(
+            `ERROR: [/auth/controller (get_user_role)] unable to get user role: ${error.message}`
+        );
+
+        // Return error response
+        res.status(500).json({
+            message: 'An error occurred while retrieving user role.'
+        });
     }
 };
 
+// TODO: test updates
 exports.update_user_role = async function (req, res) {
 
     try {
 
+        if (!req.query || typeof req.query !== 'object') {
+            return res.status(400).json({
+                message: 'Invalid request parameters.'
+            });
+        }
+
+        // Extract and validate user_id
         const user_id = req.query.user_id;
+
+        if (!user_id || user_id === '') {
+            return res.status(400).json({
+                message: 'Missing required parameter: user_id'
+            });
+        }
+
+        // Validate user_id is numeric and positive
+        const parsed_user_id = Number(user_id);
+        if (!Number.isInteger(parsed_user_id) || parsed_user_id <= 0) {
+            return res.status(400).json({
+                message: 'Invalid user_id format.'
+            });
+        }
+
+        // Extract and validate role_id
         const role_id = req.query.role_id;
 
-        if (user_id === undefined || user_id.length === 0) {
-            res.status(400).send({
-                message: 'Bad request'
+        if (!role_id || role_id === '') {
+            return res.status(400).json({
+                message: 'Missing required parameter: role_id'
             });
-            return false;
         }
 
-        if (role_id === undefined || role_id.length === 0) {
-            res.status(400).send({
-                message: 'Bad request'
+        // Validate role_id is numeric and positive
+        const parsed_role_id = Number(role_id);
+        if (!Number.isInteger(parsed_role_id) || parsed_role_id <= 0) {
+            return res.status(400).json({
+                message: 'Invalid role_id format.'
             });
-            return false;
         }
 
-        const data = await MODEL.update_user_role(user_id, role_id);
-        res.status(data.status).send(data);
+        // Update user role in model
+        const update_result = await MODEL.update_user_role(parsed_user_id, parsed_role_id);
+        console.log('UPDATE', update_result);
+        // Validate model response
+        if (!update_result) {
+            LOGGER.module().error(
+                `ERROR: [/auth/controller (update_user_role)] update failed for user ID: ${parsed_user_id}`
+            );
+            return res.status(500).json({
+                message: 'Failed to update user role.'
+            });
+        }
+
+        // Check if update was successful (model should return true/false or updated object)
+        if (update_result === false) {
+            return res.status(404).json({
+                message: 'User not found or role not updated.'
+            });
+        }
+
+        // Return successful response
+        return res.status(200).json({
+            message: 'User role updated successfully.',
+            user_id: parsed_user_id,
+            role_id: parsed_role_id
+        });
 
     } catch (error) {
-        LOGGER.module().error('ERROR: [/auth/controller (update_user_role)] unable to update user role ' + error.message);
+        LOGGER.module().error(
+            `ERROR: [/auth/controller (update_user_role)] unable to update user role: ${error.message}`
+        );
+
+        // Return error response
+        res.status(500).json({
+            message: 'An error occurred while updating user role.'
+        });
     }
 };
 

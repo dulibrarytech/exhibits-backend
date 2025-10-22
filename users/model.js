@@ -118,9 +118,104 @@ exports.update_user = async function (id, user) {
 
 /**
  * Saves user data
- * @param user
+ * @param {Object} user - User object containing user data
+ * @returns {Object|null} - Saved user object on success, null on error
  */
 exports.save_user = async function (user) {
+
+    try {
+
+        if (!user || typeof user !== 'object') {
+            LOGGER.module().warn('WARNING: [/users/model (save_user)] invalid user parameter');
+            return null;
+        }
+
+        // Validate required fields
+        const required_fields = ['du_id', 'first_name', 'last_name', 'email', 'role_id'];
+        for (const field of required_fields) {
+            if (!user[field]) {
+                LOGGER.module().warn(`WARNING: [/users/model (save_user)] missing required field: ${field}`);
+                return null;
+            }
+        }
+
+        // Validate and parse role_id
+        const role_id = Number(user.role_id);
+        if (!Number.isInteger(role_id) || role_id <= 0) {
+            LOGGER.module().warn(`WARNING: [/users/model (save_user)] invalid role_id: ${user.role_id}`);
+            return null;
+        }
+
+        // Initialize task instances
+        const user_tasks = new USER_TASKS(DB, TABLE);
+        const role_tasks = new ROLE_TASKS(DB, USERS_ROLES_TABLE);
+
+        // Check for duplicate username
+        const is_duplicate = await user_tasks.check_username(user.du_id);
+
+        if (is_duplicate === true) {
+            LOGGER.module().info(`INFO: [/users/model (save_user)] user already exists: ${user.du_id}`);
+            return false; // Return null to indicate conflict/failure
+        }
+
+        // Create user data object without role_id
+        const user_data = { ...user };
+        delete user_data.role_id;
+
+        // Save user to database
+        const save_result = await user_tasks.save_user(user_data);
+
+        // Validate save result
+        if (!save_result || !Array.isArray(save_result) || save_result.length === 0) {
+            LOGGER.module().error('ERROR: [/users/model (save_user)] invalid save result from database');
+            return null;
+        }
+
+        // Extract user ID from result
+        const user_id = Number(save_result[0]);
+
+        // Validate user ID
+        if (!Number.isInteger(user_id) || user_id <= 0) {
+            LOGGER.module().error(`ERROR: [/users/model (save_user)] invalid user_id from database: ${save_result[0]}`);
+            return null;
+        }
+
+        // Save user role
+        try {
+
+            const role_saved = await role_tasks.save_user_role(user_id, role_id);
+
+            if (!role_saved) {
+                LOGGER.module().error(`ERROR: [/users/model (save_user)] failed to save user role for user_id: ${user_id}`);
+                // User was created but role assignment failed
+                // Consider rolling back user creation or flagging for manual intervention
+            }
+        } catch (role_error) {
+            LOGGER.module().error(`ERROR: [/users/model (save_user)] error saving user role: ${role_error.message}`);
+            // User exists but role assignment failed
+        }
+
+        // Return saved user object
+        return {
+            id: user_id,
+            du_id: user_data.du_id,
+            first_name: user_data.first_name,
+            last_name: user_data.last_name,
+            email: user_data.email,
+            role_id: role_id
+        };
+
+    } catch (error) {
+        LOGGER.module().error(`ERROR: [/users/model (save_user)] unable to save user data: ${error.message}`);
+        return null;
+    }
+};
+
+/**
+ * Saves user data
+ * @param user
+ */
+exports.save_user___ = async function (user) {
 
     try {
 

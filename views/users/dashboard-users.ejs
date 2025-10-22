@@ -51,7 +51,9 @@
 <!-- app -->
 <%- include('../partials/exhibits-app-common.ejs'); %>
 <script src="/exhibits-dashboard/static/app/dist/user.module.min.js?<%=build_version%>"></script>
-<script>navModule.init();</script>
-<script>userModule.display_user_records();</script>
+<script>
+    navModule.init();
+    userModule.display_user_records();
+</script>
 </body>
 </html>

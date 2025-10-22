@@ -22,16 +22,7 @@ const userModule = (function () {
 
     const APP_PATH = window.localStorage.getItem('exhibits_app_path');
     const USER_ENDPOINTS = endpointsModule.get_users_endpoints();
-    // TODO
     const MESSAGE_SELECTOR = '#message';
-    const DELETE_MESSAGE_SELECTOR = '#delete-message';
-    const FORM_SELECTORS = {
-        first_name: '#first-name-input',
-        last_name: '#last-name-input',
-        email: '#email-input',
-        du_id: '#du-id-input',
-        user_roles: '#user-roles'
-    };
 
     let obj = {};
 
@@ -347,6 +338,7 @@ const userModule = (function () {
          * Main display function
          */
         async function display_user_records() {
+
             try {
 
                 clear_cache();
@@ -402,134 +394,6 @@ const userModule = (function () {
 
         await display_user_records();
     };
-
-    /*
-    obj.display_user_records__ = async function () {
-
-        try {
-
-            const users = await get_user_records();
-
-            if (users === false) {
-                document.querySelector('#add-user').style.display = 'none';
-                document.querySelector(MESSAGE_SELECTOR).innerHTML = `<div class="alert alert-danger" role="alert"><i class="fa fa-exclamation"></i> You do not have permission to view users.</div>`;
-                return false;
-            }
-
-            let user_data = '';
-
-            if (users === false) {
-                document.querySelector('#user-card').innerHTML = '';
-                return false;
-            }
-
-            if (users.length === 0) {
-                document.querySelector('.card').innerHTML = '';
-                document.querySelector(MESSAGE_SELECTOR).innerHTML = '<div class="alert alert-info" role="alert"><span id="exhibit-title"></span> No User Profiles found.</div>';
-                return false;
-            }
-
-            let access = false;
-
-            for (let i = 0; i < users.length; i++) {
-
-                const is_active = users[i].is_active;
-                let status;
-                let user_edit = '';
-                let trash = '';
-                const user = JSON.parse(window.sessionStorage.getItem('exhibits_user'));
-
-                if (user === null) {
-                    document.querySelector(MESSAGE_SELECTOR).innerHTML = `<div class="alert alert-danger" role="alert"><i class="fa fa-exclamation"></i> Unable to get your user id</div>`;
-                    return false;
-                }
-
-                if (parseInt(user.uid) === users[i].id && users[i].role === 'Administrator') {
-                    access = true;
-                }
-
-                if (is_active === 1) {
-
-                    if (parseInt(user.uid) === users[i].id) {
-
-                        status = `<span id="inactive" title="active"><i class="fa fa-user" style="color: green"></i><br>Active</span>`;
-                        user_edit = `<a href="${APP_PATH}/users/edit?user_id=${users[i].id}" title="Edit"><i class="fa fa-edit pr-1"></i> </a>`;
-                        trash = `<i title="Can only delete if inactive" style="color: #d3d3d3" class="fa fa-trash pr-1"></i>`;
-
-                    } else {
-
-                        if (access === true) {
-                            status = `<a href="#" id="${users[i].id}" class="inactive-user"><span id="inactive" title="active"><i class="fa fa-user" style="color: green"></i><br>Active</span></a>`;
-                        } else {
-                            status = `<span id="inactive" title="active"><i class="fa fa-user" style="color: green"></i><br>Active</span>`;
-                        }
-
-                        user_edit = `<i title="Can only edit if inactive" style="color: #d3d3d3" class="fa fa-edit pr-1"></i>`;
-                        trash = `<i title="Can only delete if inactive" style="color: #d3d3d3" class="fa fa-trash pr-1"></i>`;
-                    }
-
-                } else if (is_active === 0) {
-
-                    if (access === true) {
-                        status = `<a href="#" id="${users[i].id}" class="active-user"><span id="active" title="inactive"><i class="fa fa-user" style="color: darkred"></i><br>Inactive</span></a>`;
-                        user_edit = `<a href="${APP_PATH}/users/edit?user_id=${users[i].id}" title="Edit"><i class="fa fa-edit pr-1"></i> </a>`;
-                        trash = `<a href="${APP_PATH}/users/delete?user_id=${users[i].id}" title="Delete"><i class="fa fa-trash pr-1"></i></a>`;
-                    } else {
-                        status = `<span id="active" title="inactive"><i class="fa fa-user" style="color: darkred"></i><br>Inactive</span>`;
-                        user_edit = `<i title="Can only edit if inactive" style="color: #d3d3d3" class="fa fa-edit pr-1"></i>`;
-                        trash = `<i title="Can only delete if inactive" style="color: #d3d3d3" class="fa fa-trash pr-1"></i>`;
-                    }
-                }
-                // <p><i class="fa fa-user"></i>&nbsp;&nbsp;<strong>${users[i].first_name} ${users[i].last_name}</strong></p>
-                user_data += '<tr style="height: 10%">';
-                user_data += `<td style="width: 35%;padding-left: 7%">
-                    <small>${users[i].first_name} ${users[i].last_name}</small>
-                    </td>`;
-
-                user_data += `<td style="width: 15%;text-align: center"><small>${users[i].role}</small></td>`;
-                user_data += `<td style="width: 5%;text-align: center"><small>${status}</small></td>`;
-                user_data += `<td id="${users[i].id}-user-actions" style="width: 10%">
-                                <div class="card-text text-sm-center">
-                                    ${user_edit}
-                                    &nbsp;
-                                    ${trash}
-                                </div>
-                               </td>`;
-                user_data += '</tr>';
-            }
-
-            document.querySelector('#user-data').innerHTML = user_data;
-
-            const USER_LIST = new DataTable('#users', {
-                paging: true,
-                order: [
-                    [0, 'asc']
-                ]
-            });
-
-            USER_LIST.on('click', 'tbody tr .inactive-user', async (event) => {
-                event.preventDefault();
-                const user_id = event.currentTarget.getAttribute('id');
-                await deactivate_user(user_id);
-            });
-
-            USER_LIST.on('click', 'tbody tr .active-user', async (event) => {
-                event.preventDefault();
-                const user_id = event.currentTarget.getAttribute('id');
-                await activate_user(user_id);
-            });
-
-            // bind_activate_user_events();
-            // bind_deactivate_user_events();
-            helperModule.show_form();
-
-            return false;
-
-        } catch (error) {
-            document.querySelector(MESSAGE_SELECTOR).innerHTML = `<div class="alert alert-danger" role="alert"><i class="fa fa-exclamation"></i> ${error.message}</div>`;
-        }
-    };
-    */
 
     obj.display_user_record = async function () {
 
@@ -701,10 +565,7 @@ const userModule = (function () {
             }
         }
 
-        /**
-         * Display and populate user record form
-         */
-        async function display_user_record() {
+        async function process_user_record() {
 
             try {
 
@@ -729,6 +590,7 @@ const userModule = (function () {
 
                 // Extract user (record is an array, get last element)
                 const user = record[record.length - 1];
+
                 if (!user) {
                     show_error('User record is empty');
                     return false;
@@ -755,7 +617,6 @@ const userModule = (function () {
 
                 // Determine access level and configure form
                 const access_config = determine_access_level(profile, user, profile_role);
-                console.log('access_config', access_config);
                 configure_form(access_config, user, role);
 
                 return true;
@@ -767,7 +628,7 @@ const userModule = (function () {
             }
         }
 
-        await display_user_record();
+        await process_user_record();
     };
 
     /**
@@ -901,91 +762,318 @@ const userModule = (function () {
 
         try {
 
+            // Prevent default form submission and scroll to top
+            event?.preventDefault();
             window.scrollTo(0, 0);
-            event.preventDefault();
-            const data = get_user_form_data();
+
+            const show_message = (message, type = 'danger') => {
+                const message_el = document.querySelector(MESSAGE_SELECTOR);
+                if (message_el) {
+                    message_el.innerHTML = `<div class="alert alert-${type}" role="alert"><i class="fa fa-${type === 'success' ? 'check' : type === 'info' ? 'info' : 'exclamation'}"></i> ${message}</div>`;
+                }
+            };
+
+            // Validate required modules exist
+            if (!authModule || !httpModule) {
+                console.error('Required modules are not available');
+                show_message('System configuration error.');
+                return false;
+            }
+
+            // Get authentication token
             const token = authModule.get_user_token();
 
-            if (token === false) {
+            if (!token || token === false) {
+                show_message('Session expired. Redirecting to login...');
                 setTimeout(() => {
-                    document.querySelector(MESSAGE_SELECTOR).innerHTML = `<div class="alert alert-danger" role="alert"><i class="fa fa-exclamation"></i> Unable to get session token</div>`;
                     authModule.logout();
                 }, 1000);
-
                 return false;
             }
 
-            if (data === undefined) {
-                document.querySelector(MESSAGE_SELECTOR).innerHTML = `<div class="alert alert-danger" role="alert"><i class="fa fa-exclamation"></i> Unable to get form field values</div>`;
-                return false;
-            } else if (data === null) {
+            // Get form data
+            const user_data = get_user_form_data();
+
+            if (user_data === undefined) {
+                show_message('Unable to retrieve form field values.');
                 return false;
             }
 
-            document.querySelector(MESSAGE_SELECTOR).innerHTML = `<div class="alert alert-info" role="alert"><i class="fa fa-info"></i> Saving user record...</div>`;
+            if (user_data === null || user_data === false) {
+                // Form validation failed, error message already shown by get_user_form_data
+                return false;
+            }
+
+            // Validate user data is an object
+            if (typeof user_data !== 'object') {
+                show_message('Invalid form data format.');
+                return false;
+            }
+
+            // Show saving message
+            show_message('Saving user record...', 'info');
+
+            // Validate endpoint exists
+            if (!USER_ENDPOINTS?.users?.endpoint) {
+                console.error('User endpoint not configured');
+                show_message('System configuration error.');
+                return false;
+            }
 
             const endpoint = USER_ENDPOINTS.users.endpoint;
+
+            // Make API request to save user
             const response = await httpModule.req({
                 method: 'POST',
                 url: endpoint,
-                data: data,
+                data: user_data,
                 headers: {
                     'Content-Type': 'application/json',
                     'x-access-token': token
-                }
+                },
+                timeout: 10000
             });
 
-            if (response !== undefined && response.status === 201) {
+            // Validate response structure
+            if (!response || typeof response !== 'object') {
+                console.error('Invalid response from server');
+                show_message('Server communication error.');
+                return false;
+            }
 
-                const user_id = response.data[0];
-                document.querySelector(MESSAGE_SELECTOR).innerHTML = `<div class="alert alert-success" role="alert"><i class="fa fa-info"></i> User record saved</div>`;
+            // Handle successful user creation
+            if (response.status === 201) {
+                // Validate response contains user data
+                if (!response.data || !response.data.user || !response.data.user.id) {
+                    console.error('Invalid user data in response');
+                    show_message('User saved but unable to retrieve user ID.');
+                    return false;
+                }
+
+                const user_id = response.data.user.id;
+
+                // Validate user ID
+                if (!Number.isInteger(user_id) || user_id <= 0) {
+                    console.error('Invalid user ID in response:', user_id);
+                    show_message('User saved but invalid user ID received.');
+                    return false;
+                }
+
+                show_message('User record saved successfully.', 'success');
 
                 setTimeout(() => {
                     window.location.replace(`${APP_PATH}/users/edit?user_id=${user_id}`);
                 }, 900);
 
-            } else if (response.status === 200) {
-                document.querySelector(MESSAGE_SELECTOR).innerHTML = `<div class="alert alert-danger" role="alert"><i class="fa fa-exclamation"></i> User already exists</div>`;
+                return true;
             }
 
+            // Handle other success responses that indicate no save
+            if (response.status === 200) { // 409
+                const message = response.data?.message || 'User already exists.';
+                show_message(message);
+                return false;
+            }
+
+            // Handle authentication failures
+            if (response.status === 401 || response.status === 403) {
+                show_message('You do not have permission to create users.');
+                setTimeout(() => {
+                    authModule.logout();
+                }, 2000);
+                return false;
+            }
+
+            // Handle validation errors
+            if (response.status === 400) {
+                const message = response.data?.message || 'Invalid user data provided.';
+                show_message(message);
+                return false;
+            }
+
+            // Handle other HTTP errors
+            console.error(`Unexpected response status: ${response.status}`);
+            const error_message = response.data?.message || 'Failed to save user record.';
+            show_message(error_message);
             return false;
 
         } catch (error) {
-            document.querySelector(MESSAGE_SELECTOR).innerHTML = `<div class="alert alert-danger" role="alert"><i class="fa fa-exclamation"></i> ${error.message}</div>`;
+            console.error('Error in save_user_record:', error.message);
+
+            const message_el = document.querySelector(MESSAGE_SELECTOR);
+            if (message_el) {
+                // Differentiate error types
+                let error_message = 'An error occurred while saving user record.';
+
+                if (error.message.includes('timeout')) {
+                    error_message = 'Request timeout. Please try again.';
+                } else if (error.message.includes('network')) {
+                    error_message = 'Network error. Please check your connection.';
+                } else if (error.message.includes('401') || error.message.includes('unauthorized')) {
+                    error_message = 'Session expired. Please log in again.';
+                    setTimeout(() => {
+                        authModule.logout();
+                    }, 2000);
+                }
+
+                message_el.innerHTML = `<div class="alert alert-danger" role="alert"><i class="fa fa-exclamation"></i> ${error_message}</div>`;
+            }
+
+            return false;
         }
     };
 
-    /**
-     * Deletes user data
-     */
     obj.delete_user = async function () {
 
         try {
 
-            document.querySelector('#delete-message').innerHTML = 'Deleting user...';
+            const show_message = (message, type = 'danger', selector = MESSAGE_SELECTOR) => {
+                const message_el = document.querySelector(selector);
+                if (message_el) {
+                    if (type === 'loading') {
+                        message_el.innerHTML = `<i class="fa fa-spinner fa-spin"></i> ${message}`;
+                    } else {
+                        message_el.innerHTML = `<div class="alert alert-${type}" role="alert"><i class="fa fa-exclamation"></i> ${message}</div>`;
+                    }
+                }
+            };
+
+            // Show loading message
+            show_message('Deleting user...', 'loading', '#delete-message');
+
+            // Validate required modules exist
+            if (!helperModule || !authModule || !httpModule) {
+                console.error('Required modules are not available');
+                show_message('System configuration error.');
+                return false;
+            }
+
+            // Get and validate user_id parameter
             const user_id = helperModule.get_parameter_by_name('user_id');
+
+            if (!user_id) {
+                console.warn('Missing user_id parameter');
+                show_message('Invalid user ID.', 'danger', '#exhibit-no-delete');
+                return false;
+            }
+
+            // Validate user_id is numeric and positive
+            const parsed_user_id = Number(user_id);
+            if (!Number.isInteger(parsed_user_id) || parsed_user_id <= 0) {
+                console.warn(`Invalid user_id format: ${user_id}`);
+                show_message('Invalid user ID format.', 'danger', '#exhibit-no-delete');
+                return false;
+            }
+
+            // Get and validate authentication token
             const token = authModule.get_user_token();
+
+            if (!token || token === false) {
+                console.warn('No authentication token available');
+                show_message('Session expired. Please log in again.');
+                setTimeout(() => {
+                    authModule.logout();
+                }, 2000);
+                return false;
+            }
+
+            // Validate endpoint exists and build URL
+            if (!USER_ENDPOINTS?.users?.delete_user?.delete?.endpoint) {
+                console.error('Delete user endpoint not configured');
+                show_message('System configuration error.');
+                return false;
+            }
+
+            const endpoint = USER_ENDPOINTS.users.delete_user.delete.endpoint.replace(':user_id', parsed_user_id);
+
+            // Make delete request
             const response = await httpModule.req({
                 method: 'DELETE',
-                url: USER_ENDPOINTS.users.delete_user.delete.endpoint.replace(':user_id', user_id),
+                url: endpoint,
                 headers: {
                     'Content-Type': 'application/json',
                     'x-access-token': token
-                }
+                },
+                timeout: 10000
             });
 
-            if (response !== undefined && response.status === 204) {
-
-                setTimeout(() => {
-                    window.location.replace(APP_PATH + '/users');
-                }, 900);
-
-            } else {
-                document.querySelector('#exhibit-no-delete').innerHTML = `<i class="fa fa-exclamation"></i> ${response.data.message}`;
+            // Validate response structure
+            if (!response || typeof response !== 'object') {
+                console.error('Invalid response from server');
+                show_message('Server communication error.', 'danger', '#exhibit-no-delete');
+                return false;
             }
 
+            // Handle successful deletion (204 No Content)
+            if (response.status === 204) {
+
+                document.querySelector('#delete-card').innerHTML = '';
+                show_message('User deleted successfully.', 'success', '#message');
+
+                setTimeout(() => {
+                    window.location.replace(`${APP_PATH}/users`);
+                }, 900);
+
+                return true;
+            }
+
+            // Handle authentication failures
+            if (response.status === 401 || response.status === 403) {
+                const message = response.data?.message || 'You do not have permission to delete users.';
+                show_message(message, 'danger', '#exhibit-no-delete');
+
+                if (response.status === 401) {
+                    setTimeout(() => {
+                        authModule.logout();
+                    }, 2000);
+                }
+
+                return false;
+            }
+
+            // Handle not found
+            if (response.status === 404) {
+                const message = response.data?.message || 'User not found.';
+                show_message(message, 'danger', '#exhibit-no-delete');
+                return false;
+            }
+
+            // Handle conflict (e.g., user cannot be deleted due to dependencies)
+            if (response.status === 409) {
+                const message = response.data?.message || 'User cannot be deleted due to existing dependencies.';
+                show_message(message, 'danger', '#exhibit-no-delete');
+                return false;
+            }
+
+            // Handle other errors
+            console.error(`Unexpected response status: ${response.status}`);
+            const error_message = response.data?.message || 'Failed to delete user.';
+            show_message(error_message, 'danger', '#exhibit-no-delete');
+            return false;
+
         } catch (error) {
-            document.querySelector(MESSAGE_SELECTOR).innerHTML = `<div class="alert alert-danger" role="alert"><i class="fa fa-exclamation"></i> ${error.message}</div>`;
+            console.error('Error in delete_user:', error.message);
+
+            const message_el = document.querySelector(MESSAGE_SELECTOR);
+            if (message_el) {
+                // Differentiate error types
+                let error_message = 'An error occurred while deleting user.';
+
+                if (error.message.includes('timeout')) {
+                    error_message = 'Request timeout. Please try again.';
+                } else if (error.message.includes('network')) {
+                    error_message = 'Network error. Please check your connection.';
+                } else if (error.message.includes('401') || error.message.includes('unauthorized')) {
+                    error_message = 'Session expired. Please log in again.';
+                    setTimeout(() => {
+                        authModule.logout();
+                    }, 2000);
+                }
+
+                message_el.innerHTML = `<div class="alert alert-danger" role="alert"><i class="fa fa-exclamation"></i> ${error_message}</div>`;
+            }
+
+            return false;
         }
     };
 
@@ -1062,7 +1150,6 @@ const userModule = (function () {
 
         }
     }
-
 
     obj.user_status_manager = async function (status, user_id) {
 
@@ -1184,6 +1271,7 @@ const userModule = (function () {
          * Update action buttons
          */
         function update_action_buttons(user_id, show_edit_delete) {
+
             const actions_element = get_element(`${user_id}-user-actions`);
             if (!actions_element) return;
 
@@ -1195,6 +1283,7 @@ const userModule = (function () {
          * Attach click handler to status element
          */
         function attach_status_click_handler(element, user_id, next_action) {
+
             if (!element) return;
 
             // Clone to remove all existing listeners
@@ -1221,6 +1310,7 @@ const userModule = (function () {
          * Core status update logic
          */
         async function update_user_state(user_id, target_status) {
+
             try {
                 const config = STATUS_CONFIG[target_status];
                 if (!config) {
@@ -1278,63 +1368,124 @@ const userModule = (function () {
         } else if (status === 'deactivate') {
             await deactivate_user(user_id);
         }
-
-        // Public API
-        /*
-        return {
-            activate_user: activate_user,
-            deactivate_user: deactivate_user,
-            update_status: update_user_status_api,
-            clear_cache: clear_cache
-        };
-
-         */
-    };
-
-    /*
-    async function activate_user(id) {
-        console.log(id);
-        return user_status_manager.activate_user(id);
-    }
-
-    async function deactivate_user(id) {
-        console.log(id);
-        return user_status_manager.deactivate_user(id);
-    }
-
-     */
-
-    obj.check_user_data = function () {
-
-        let data = window.sessionStorage.getItem('exhibits_user');
-
-        if (data !== null) {
-            return true;
-        }
-
-        return false;
     };
 
     async function get_roles() {
 
         try {
 
+            const show_error = (message) => {
+                const message_el = document.querySelector(MESSAGE_SELECTOR);
+                if (message_el) {
+                    message_el.innerHTML = `<div class="alert alert-danger" role="alert"><i class="fa fa-exclamation"></i> ${message}</div>`;
+                }
+            };
+
+            // Validate required modules exist
+            if (!authModule || !httpModule) {
+                console.error('Required modules are not available');
+                show_error('System configuration error.');
+                return null;
+            }
+
+            // Get and validate authentication token
             const token = authModule.get_user_token();
+
+            if (!token || token === false) {
+                console.warn('No authentication token available');
+                show_error('Session expired. Please log in again.');
+                setTimeout(() => {
+                    authModule.logout();
+                }, 2000);
+                return null;
+            }
+
+            // Make API request to get roles
             const response = await httpModule.req({
                 method: 'GET',
-                url: '/exhibits-dashboard/auth/roles', // TODO
+                url: '/exhibits-dashboard/auth/roles',
                 headers: {
                     'Content-Type': 'application/json',
                     'x-access-token': token
-                }
+                },
+                timeout: 10000
             });
 
+            // Validate response structure
+            if (!response || typeof response !== 'object') {
+                console.error('Invalid response from server');
+                show_error('Server communication error.');
+                return null;
+            }
+
+            // Handle successful response
             if (response.status === 200) {
+                // Validate response data exists
+                if (!response.data) {
+                    console.warn('No roles data in response');
+                    return [];
+                }
+
+                // Validate response data is an array
+                if (!Array.isArray(response.data)) {
+                    console.error('Invalid roles data format - expected array');
+                    show_error('Invalid server response format.');
+                    return null;
+                }
+
                 return response.data;
             }
 
+            // Handle authentication failures
+            if (response.status === 401 || response.status === 403) {
+                console.warn(`Authorization failed with status ${response.status}`);
+                show_error('You do not have permission to access roles.');
+
+                if (response.status === 401) {
+                    setTimeout(() => {
+                        authModule.logout();
+                    }, 2000);
+                }
+
+                return null;
+            }
+
+            // Handle not found
+            if (response.status === 404) {
+                console.warn('Roles endpoint not found');
+                show_error('Roles service not available.');
+                return null;
+            }
+
+            // Handle other HTTP errors
+            console.error(`Unexpected response status: ${response.status}`);
+            const error_message = response.data?.message || 'Failed to retrieve roles.';
+            show_error(error_message);
+            return null;
+
         } catch (error) {
-            document.querySelector(MESSAGE_SELECTOR).innerHTML = `<div class="alert alert-danger" role="alert"><i class="fa fa-exclamation"></i> ${error.message}</div>`;
+            console.error('Error in get_roles:', error.message);
+
+            const message_el = document.querySelector(MESSAGE_SELECTOR);
+            if (message_el) {
+                // Differentiate error types
+                let error_message = 'An error occurred while retrieving roles.';
+
+                if (error.message.includes('timeout')) {
+                    error_message = 'Request timeout. Please try again.';
+                } else if (error.message.includes('network')) {
+                    error_message = 'Network error. Please check your connection.';
+                } else if (error.message.includes('401') || error.message.includes('unauthorized')) {
+                    error_message = 'Session expired. Please log in again.';
+                    setTimeout(() => {
+                        authModule.logout();
+                    }, 2000);
+                }
+
+                message_el.innerHTML = `<div class="alert alert-danger" role="alert"><i class="fa fa-exclamation"></i> ${error_message}</div>`;
+            }
+
+            return null;
         }
     }
 
@@ -1342,26 +1493,212 @@ const userModule = (function () {
 
         try {
 
+            const show_error = (message) => {
+                const message_el = document.querySelector(MESSAGE_SELECTOR);
+                if (message_el) {
+                    message_el.innerHTML = `<div class="alert alert-danger" role="alert"><i class="fa fa-exclamation"></i> ${message}</div>`;
+                }
+            };
+
+            // Validate get_roles function exists
+            if (typeof get_roles !== 'function') {
+                console.error('get_roles function is not available');
+                show_error('System configuration error.');
+                return false;
+            }
+
+            // Get roles from API
             const roles = await get_roles();
-            let select = '';
-            select += '<option value="">Select From Menu</option>';
-            select += '<option value="">----------</option>';
 
-            for (let i = 0; i < roles.length; i++) {
+            // Validate roles data
+            if (roles === null) {
+                console.error('Failed to retrieve roles');
+                show_error('Unable to load roles. Please refresh the page.');
+                return false;
+            }
 
-                if (role !== undefined && role.role_id === roles[i].id) {
-                    select += `<option value="${roles[i].id}" selected>${roles[i].role}</option>`;
-                } else {
-                    select += `<option value="${roles[i].id}">${roles[i].role}</option>`;
+            if (!Array.isArray(roles)) {
+                console.error('Invalid roles data format');
+                show_error('Invalid roles data received.');
+                return false;
+            }
+
+            // Get select element and validate it exists
+            const select_element = document.querySelector('#user-roles');
+
+            if (!select_element) {
+                console.error('User roles select element not found');
+                show_error('Form element not found.');
+                return false;
+            }
+
+            // Validate role parameter if provided
+            let selected_role_id = null;
+            if (role !== null && role !== undefined && typeof role === 'object') {
+                selected_role_id = Number(role.role_id);
+
+                if (!Number.isInteger(selected_role_id) || selected_role_id <= 0) {
+                    console.warn('Invalid role_id in role parameter');
+                    selected_role_id = null;
                 }
             }
 
-            document.querySelector('#user-roles').innerHTML = select;
+            // Build options array for better performance
+            const options = [
+                { value: '', text: 'Select From Menu', selected: false },
+                { value: '', text: '----------', disabled: true, selected: false }
+            ];
+
+            // Add role options with HTML escaping
+            for (const role_item of roles) {
+                // Validate role item structure
+                if (!role_item || typeof role_item !== 'object' || !role_item.id || !role_item.role) {
+                    console.warn('Invalid role item structure:', role_item);
+                    continue;
+                }
+
+                const role_id = Number(role_item.id);
+
+                // Validate role ID
+                if (!Number.isInteger(role_id) || role_id <= 0) {
+                    console.warn('Invalid role ID:', role_item.id);
+                    continue;
+                }
+
+                // Escape HTML to prevent XSS
+                const escaped_role_name = escape_html(role_item.role);
+
+                options.push({
+                    value: role_id,
+                    text: escaped_role_name,
+                    selected: selected_role_id === role_id
+                });
+            }
+
+            // Build HTML using array join (more efficient than string concatenation)
+            const options_html = options.map(opt => {
+                const value_attr = opt.value !== '' ? `value="${opt.value}"` : 'value=""';
+                const selected_attr = opt.selected ? ' selected' : '';
+                const disabled_attr = opt.disabled ? ' disabled' : '';
+
+                return `<option ${value_attr}${selected_attr}${disabled_attr}>${opt.text}</option>`;
+            }).join('');
+
+            // Update select element
+            select_element.innerHTML = options_html;
+
+            return true;
 
         } catch (error) {
-            document.querySelector(MESSAGE_SELECTOR).innerHTML = `<div class="alert alert-danger" role="alert"><i class="fa fa-exclamation"></i> ${error.message}</div>`;
+            console.error('Error in list_roles:', error.message);
+
+            const message_el = document.querySelector(MESSAGE_SELECTOR);
+            if (message_el) {
+                message_el.innerHTML = `<div class="alert alert-danger" role="alert"><i class="fa fa-exclamation"></i> An error occurred while loading roles.</div>`;
+            }
+
+            return false;
         }
+    };
+
+    // Helper function to escape HTML (prevent XSS)
+    function escape_html(text) {
+        if (typeof text !== 'string') {
+            return String(text);
+        }
+
+        const div = document.createElement('div');
+        div.textContent = text;
+        return div.innerHTML;
     }
+
+    obj.check_add_user_permission = async function () {
+
+        try {
+
+            const show_error = (message) => {
+                const message_el = document.querySelector(MESSAGE_SELECTOR);
+                if (message_el) {
+                    message_el.innerHTML = `<div class="alert alert-danger" role="alert"><i class="fa fa-exclamation"></i> ${message}</div>`;
+                }
+            };
+
+            // Validate required modules exist
+            if (!authModule) {
+                console.error('authModule is not available');
+                show_error('System configuration error.');
+                return false;
+            }
+
+            // Get user profile data
+            const profile = authModule.get_user_profile_data();
+
+            // Validate profile exists
+            if (!profile) {
+                console.warn('No user profile found');
+                show_error('User profile not found. Please log in again.');
+                authModule.redirect_to_auth();
+                return false;
+            }
+
+            // Validate profile has required fields
+            if (!profile.uid || typeof profile.uid !== 'string') {
+                console.warn('Invalid user profile structure');
+                show_error('Invalid user profile data.');
+                return false;
+            }
+
+            // Validate get_user_role function exists
+            if (typeof get_user_role !== 'function') {
+                console.error('get_user_role function is not available');
+                show_error('System configuration error.');
+                return false;
+            }
+
+            // Get user role data
+            const role_data = await get_user_role(profile.uid);
+
+            // Validate role data exists
+            if (!role_data) {
+                console.warn(`No role data found for user: ${profile.uid}`);
+                show_error('Unable to verify user permissions.');
+                return false;
+            }
+
+            // Validate role data structure
+            if (typeof role_data !== 'object' || !role_data.role) {
+                console.warn('Invalid role data structure');
+                show_error('Invalid role data.');
+                return false;
+            }
+
+            // Validate role is a string
+            if (typeof role_data.role !== 'string') {
+                console.warn('Role is not a string');
+                return false;
+            }
+
+            // Check if user is Administrator (case-insensitive)
+            const user_role = role_data.role.trim().toLowerCase();
+            const is_admin = user_role === 'administrator';
+
+            if (!is_admin) {
+                console.debug(`User does not have add user permission. Role: ${role_data.role}`);
+            }
+
+            return is_admin;
+
+        } catch (error) {
+            console.error('Error in check_add_user_permission:', error.message);
+
+            const message_el = document.querySelector(MESSAGE_SELECTOR);
+            if (message_el) {
+                message_el.innerHTML = `<div class="alert alert-danger" role="alert"><i class="fa fa-exclamation"></i> An error occurred while checking permissions.</div>`;
+            }
+
+            return false;
+        }
+    };
 
     obj.init = async function () {
         await userModule.list_roles();
@@ -1370,137 +1707,3 @@ const userModule = (function () {
     return obj;
 
 }());
-
-
-/*
-
-// TODO: deprecate
-    function bind_activate_user_events() {
-
-        try {
-
-            const user_links = Array.from(document.getElementsByClassName('active-user'));
-
-            user_links.forEach(user_link => {
-                user_link.addEventListener('click', async (event) => {
-                    const id = user_link.getAttribute('id');
-                    await activate_user(id);
-                });
-            });
-
-        } catch (error) {
-            document.querySelector('#message').innerHTML = `<div class="alert alert-danger" role="alert"><i class="fa fa-exclamation"></i> ${error.message}</div>`;
-        }
-    }
-
-    // TODO: deprecate
-    function bind_deactivate_user_events() {
-
-        try {
-
-            const user_links = Array.from(document.getElementsByClassName('inactive-user'));
-
-            user_links.forEach(user_link => {
-                user_link.addEventListener('click', async () => {
-                    const id = user_link.getAttribute('id');
-                    await deactivate_user(id);
-                });
-            });
-
-        } catch (error) {
-            document.querySelector(MESSAGE_SELECTOR).innerHTML = `<div class="alert alert-danger" role="alert"><i class="fa fa-exclamation"></i> ${error.message}</div>`;
-        }
-    }
-
-
- */
-
-/*
-obj.display_user_record_ = async function () {
-
-        try {
-
-            const profile = authModule.get_user_profile_data();
-            const record = await get_user_record();
-            const role = await get_user_role(profile.uid);
-            const user = record.pop();
-
-            // user data
-            if (role.role === 'Administrator' && parseInt(profile.uid) === parseInt(user.id)) {
-
-                const role = await get_user_role(user.id);
-                await userModule.list_roles(role);
-                document.querySelector('#first-name-input').value = user.first_name;
-                document.querySelector('#last-name-input').value = user.last_name;
-                document.querySelector('#email-input').value = user.email;
-                document.querySelector('#du-id-input').value = user.du_id;
-
-            } else if (role.role === 'Administrator' && parseInt(profile.uid) !== parseInt(user.id)) {
-
-                const role = await get_user_role(user.id);
-                await userModule.list_roles(role);
-                document.querySelector('#first-name-input').value = user.first_name;
-                document.querySelector('#last-name-input').value = user.last_name;
-                document.querySelector('#email-input').value = user.email;
-                document.querySelector('#du-id-input').value = user.du_id;
-
-            } else if (role.role !== 'Administrator' && parseInt(profile.uid) === parseInt(user.id)) {
-
-                await userModule.list_roles(role);
-                document.querySelector('#first-name-input').value = user.first_name;
-                document.querySelector('#last-name-input').value = user.last_name;
-                document.querySelector('#email-input').value = user.email;
-                document.querySelector('#du-id-input').value = user.du_id;
-                document.querySelector('#du-id-input').setAttribute('disabled', '');
-                document.querySelector('#user-roles').setAttribute('disabled', '');
-
-            } else {
-
-                document.querySelector('#user-form').style.display = 'none';
-                document.querySelector('#user-form-view-only').style.display = 'block'
-                document.querySelector('#save-user-btn').style.display = 'none';
-                document.querySelector('#first-name-disabled').value = user.first_name;
-                document.querySelector('#last-name-disabled').value = user.last_name;
-                document.querySelector('#email-disabled').value = user.email;
-                document.querySelector('#du-id-disabled').value = user.du_id;
-                document.querySelector('#role-disabled').value = role.role;
-            }
-
-            return false;
-
-        } catch (error) {
-            document.querySelector(MESSAGE_SELECTOR).innerHTML = `<div class="alert alert-danger" role="alert"><i class="fa fa-exclamation"></i> ${error.message}</div>`;
-        }
-    };
- */
-
-/*
-
-     */
-
-/*
-    function validate(div_id, value) {
-
-        if (value.length === 0) {
-            document.querySelector('#' + div_id + '-error').innerHTML = '<span style="color: red"><i class="fa fa-exclamation-circle"></i> Please enter a value</span>';
-            return false;
-        } else {
-            document.querySelector('#' + div_id + '-error').innerHTML = '';
-            return value;
-        }
-    }
-    */
-
-// TODO: cache ids
-/*
-function get_user_form_data_() {
-
-    return {
-        first_name: validate('first-name-input', document.querySelector('#first-name-input').value),
-        last_name: validate('last-name-input', document.querySelector('#last-name-input').value),
-        email: validate('email-input', document.querySelector('#email-input').value),
-        du_id: validate('du-id-input', document.querySelector('#du-id-input').value),
-        role_id: validate('user-roles', document.querySelector('#user-roles').value)
-    };
-}
-*/

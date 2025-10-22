@@ -27,7 +27,7 @@ const authModule = (function () {
     obj.get_user_token = function () {
 
         try {
-            // Check if sessionStorage is available (for cross-browser compatibility)
+
             if (typeof window.sessionStorage === 'undefined') {
                 console.warn('sessionStorage is not available');
                 return null;
@@ -147,6 +147,7 @@ const authModule = (function () {
 
             // Retrieve authentication token
             const token = authModule.get_user_token();
+
             if (!token) {
                 console.warn('Failed to retrieve authentication token');
                 authModule.redirect_to_auth();
@@ -816,7 +817,7 @@ const authModule = (function () {
     }
 
     obj.check_permissions = async function (permissions, record_type, parent_id, child_id, redirect) {
-        console.log(child_id);
+
         try {
 
             if (!authModule || !httpModule) {
@@ -852,8 +853,6 @@ const authModule = (function () {
                 }
             }
 
-            /* TODO child id is coming in like this - /items?exhibit_id=69a96c10-a37c-42e3-b31b-bc6c59ddea77&status=403
-            // TODO: check init code to fix this
             if (child_id !== null && child_id !== undefined) {
                 if (!is_valid_uuid(child_id)) {
                     console.warn(`Invalid child_id format (not a valid UUID): ${child_id}`);
@@ -861,7 +860,7 @@ const authModule = (function () {
                     return false;
                 }
             }
-            */
+
             // Retrieve and validate authentication token
             const token = authModule.get_user_token();
 

@@ -147,113 +147,261 @@ const Auth_tasks = class {
         }
     }
 
-    async get_auth_user_data__(id) {
-
-        try {
-
-            const data = await this.DB(this.TABLE.user_records)
-                .select('id', 'du_id', 'email', 'first_name', 'last_name')
-                .where({
-                    id: id,
-                    is_active: 1
-                });
-
-            if (data.length === 1) {
-
-                return {
-                    data: data
-                };
-
-            } else {
-                return false;
-            }
-
-        } catch (error) {
-            LOGGER.module().error('ERROR: [/auth/tasks (get_auth_user_data)] unable to get user data ' + error.message);
-        }
-    }
-
     /**
-     * Saves token
-     * @param user_id
-     * @param token
+     * Saves authentication token for user
+     * @param {number} user_id - User ID
+     * @param {string} token - Authentication token
+     * @returns {boolean} - True on success, false on failure
      */
     async save_token(user_id, token) {
 
         try {
 
-            await this.DB(this.TABLE.user_records)
-                .where({
-                    id: user_id
-                })
-                .update({
-                    token: token
-                });
+            if (user_id === null || user_id === undefined) {
+                LOGGER.module().warn('WARNING: [/auth/tasks (save_token)] missing user_id parameter');
+                return false;
+            }
 
-            LOGGER.module().info('INFO: [/auth/tasks (save_token)] Token saved.');
+            if (token === null || token === undefined || token === '') {
+                LOGGER.module().warn('WARNING: [/auth/tasks (save_token)] missing or empty token parameter');
+                return false;
+            }
+
+            // Validate user_id is numeric and positive
+            const parsed_user_id = Number(user_id);
+            if (!Number.isInteger(parsed_user_id) || parsed_user_id <= 0) {
+                LOGGER.module().warn(`WARNING: [/auth/tasks (save_token)] invalid user_id: ${user_id}`);
+                return false;
+            }
+
+            // Validate token is a string
+            if (typeof token !== 'string') {
+                LOGGER.module().warn(`WARNING: [/auth/tasks (save_token)] token is not a string: ${typeof token}`);
+                return false;
+            }
+
+            // Validate token length (JWT tokens are typically 100+ characters)
+            if (token.length < 20 || token.length > 2048) {
+                LOGGER.module().warn(`WARNING: [/auth/tasks (save_token)] invalid token length: ${token.length}`);
+                return false;
+            }
+
+            // Update user token in database
+            const result = await this.DB(this.TABLE.user_records)
+                .where({ id: parsed_user_id })
+                .update({ token: token });
+
+            // Check if update affected any rows
+            if (result === 0) {
+                LOGGER.module().warn(`WARNING: [/auth/tasks (save_token)] no user found with ID: ${parsed_user_id}`);
+                return false;
+            }
+
+            LOGGER.module().info(`INFO: [/auth/tasks (save_token)] token saved for user ID: ${parsed_user_id}`);
             return true;
 
         } catch (error) {
-            LOGGER.module().error('ERROR: [/auth/tasks (save_token)] unable to save token ' + error.message);
+            LOGGER.module().error(`ERROR: [/auth/tasks (save_token)] unable to save token: ${error.message}`);
             return false;
         }
     }
 
     /**
-     * Gets user id
-     * @param token
+     * Gets user ID by authentication token
+     * @param {string} token - Authentication token
+     * @returns {number|null} - User ID on success, null on failure
      */
     async get_user_id(token) {
 
         try {
 
+            if (token === null || token === undefined || token === '') {
+                LOGGER.module().warn('WARNING: [/auth/tasks (get_user_id)] missing or empty token parameter');
+                return null;
+            }
+
+            // Validate token is a string
+            if (typeof token !== 'string') {
+                LOGGER.module().warn(`WARNING: [/auth/tasks (get_user_id)] token is not a string: ${typeof token}`);
+                return null;
+            }
+
+            // Validate token length
+            if (token.length < 20 || token.length > 2048) {
+                LOGGER.module().warn(`WARNING: [/auth/tasks (get_user_id)] invalid token length: ${token.length}`);
+                return null;
+            }
+
+            // Query database for user with this token
             const data = await this.DB(this.TABLE.user_records)
                 .select('id')
-                .where({
-                    token: token
-                });
+                .where({ token: token })
+                .limit(1);
 
-            return data[0].id;
+            // Validate query result
+            if (!data || !Array.isArray(data) || data.length === 0) {
+                LOGGER.module().debug('DEBUG: [/auth/tasks (get_user_id)] no user found with provided token');
+                return null;
+            }
+
+            // Validate result structure
+            if (!data[0].id) {
+                LOGGER.module().error('ERROR: [/auth/tasks (get_user_id)] user record missing id field');
+                return null;
+            }
+
+            // Validate user_id is numeric
+            const user_id = Number(data[0].id);
+            if (!Number.isInteger(user_id) || user_id <= 0) {
+                LOGGER.module().error(`ERROR: [/auth/tasks (get_user_id)] invalid user_id format: ${data[0].id}`);
+                return null;
+            }
+
+            return user_id;
 
         } catch (error) {
-            LOGGER.module().error('ERROR: [/auth/tasks (get_user_id)] unable to get user id ' + error.message);
+            LOGGER.module().error(`ERROR: [/auth/tasks (get_user_id)] unable to get user id: ${error.message}`);
+            return null;
         }
     }
 
     /**
-     * Gets user permissions
-     * @param token
+     * Gets user permissions by authentication token
+     * @param {string} token - Authentication token
+     * @returns {Array|null} - Array of permission objects on success, null on failure
      */
     async get_user_permissions(token) {
 
         try {
 
-            return await this.DB.select(
-                'u.id',
-                'ur.role_id',
-                'rp.permission_id'
-            ).from('tbl_users AS u')
+            if (token === null || token === undefined || token === '') {
+                LOGGER.module().warn('WARNING: [/auth/tasks (get_user_permissions)] missing or empty token parameter');
+                return null;
+            }
+
+            // Validate token is a string
+            if (typeof token !== 'string') {
+                LOGGER.module().warn(`WARNING: [/auth/tasks (get_user_permissions)] token is not a string: ${typeof token}`);
+                return null;
+            }
+
+            // Validate token length
+            if (token.length < 20 || token.length > 2048) {
+                LOGGER.module().warn(`WARNING: [/auth/tasks (get_user_permissions)] invalid token length: ${token.length}`);
+                return null;
+            }
+
+            // Query database for user permissions
+            const permissions = await this.DB
+                .select(
+                    'u.id',
+                    'u.is_active',
+                    'ur.role_id',
+                    'rp.permission_id'
+                )
+                .from('tbl_users AS u')
                 .leftJoin('ctbl_user_roles AS ur', 'ur.user_id', 'u.id')
                 .leftJoin('ctbl_role_permissions AS rp', 'rp.role_id', 'ur.role_id')
-                .where('u.token', '=', token);
+                .where('u.token', '=', token)
+                .andWhere('u.is_active', '=', 1);
+
+            // Validate query result
+            if (!permissions || !Array.isArray(permissions)) {
+                LOGGER.module().error('ERROR: [/auth/tasks (get_user_permissions)] invalid query result format');
+                return null;
+            }
+
+            // Handle case where no user found with token
+            if (permissions.length === 0) {
+                LOGGER.module().debug('DEBUG: [/auth/tasks (get_user_permissions)] no user found with provided token or user inactive');
+                return [];
+            }
+
+            // Validate all permission objects have required fields
+            const valid_permissions = permissions.filter(perm => {
+                if (!perm || typeof perm !== 'object') {
+                    LOGGER.module().warn('WARNING: [/auth/tasks (get_user_permissions)] invalid permission object structure');
+                    return false;
+                }
+                return true;
+            });
+
+            // Filter out records without permission_id (user exists but has no permissions)
+            const permissions_with_id = valid_permissions.filter(perm => perm.permission_id !== null);
+
+            return permissions_with_id;
 
         } catch (error) {
-            LOGGER.module().error('ERROR: [/auth/tasks (get_user_permissions)] unable to get user permissions ' + error.message);
+            LOGGER.module().error(`ERROR: [/auth/tasks (get_user_permissions)] unable to get user permissions: ${error.message}`);
+            return null;
         }
     }
 
     /**
-      Gets all role permissions
+     * Gets all available permissions
+     * @returns {Array|null} - Array of permission objects on success, null on failure
      */
     async get_permissions() {
 
         try {
 
-            return await this.DB('tbl_user_permissions')
-                .select('id', 'permission');
+            const permissions = await this.DB('tbl_user_permissions')
+                .select('id', 'permission')
+                .orderBy('permission', 'asc');
+
+            // Validate query result
+            if (!permissions || !Array.isArray(permissions)) {
+                LOGGER.module().error('ERROR: [/auth/tasks (get_permissions)] invalid query result format');
+                return null;
+            }
+
+            // Handle case where no permissions exist
+            if (permissions.length === 0) {
+                LOGGER.module().warn('WARNING: [/auth/tasks (get_permissions)] no permissions found in database');
+                return [];
+            }
+
+            // Validate all permission objects have required fields
+            const valid_permissions = permissions.filter(perm => {
+                // Validate permission object structure
+                if (!perm || typeof perm !== 'object') {
+                    LOGGER.module().warn('WARNING: [/auth/tasks (get_permissions)] invalid permission object structure');
+                    return false;
+                }
+
+                // Validate required fields exist
+                if (!perm.id || !perm.permission) {
+                    LOGGER.module().warn(`WARNING: [/auth/tasks (get_permissions)] permission missing required fields: ${JSON.stringify(perm)}`);
+                    return false;
+                }
+
+                // Validate id is numeric
+                const perm_id = Number(perm.id);
+                if (!Number.isInteger(perm_id) || perm_id <= 0) {
+                    LOGGER.module().warn(`WARNING: [/auth/tasks (get_permissions)] invalid permission id: ${perm.id}`);
+                    return false;
+                }
+
+                // Validate permission is a non-empty string
+                if (typeof perm.permission !== 'string' || perm.permission.trim() === '') {
+                    LOGGER.module().warn(`WARNING: [/auth/tasks (get_permissions)] invalid permission name: ${perm.permission}`);
+                    return false;
+                }
+
+                return true;
+            });
+
+            // Log if any permissions were filtered out
+            if (valid_permissions.length !== permissions.length) {
+                const filtered_count = permissions.length - valid_permissions.length;
+                LOGGER.module().warn(`WARNING: [/auth/tasks (get_permissions)] filtered out ${filtered_count} invalid permissions`);
+            }
+
+            return valid_permissions;
 
         } catch (error) {
-            LOGGER.module().error('ERROR: [/auth/tasks (get_permissions)] unable to get permissions ' + error.message);
+            LOGGER.module().error(`ERROR: [/auth/tasks (get_permissions)] unable to get permissions: ${error.message}`);
+            return null;
         }
     }
 

@@ -121,7 +121,7 @@ exports.update_heading_record = async function (req, res) {
         let options = {};
         options.req = req;
         options.permissions = permissions;
-        options.record_type = 'heading_item';
+        options.record_type = 'heading';
         options.parent_id = is_member_of_exhibit;
         options.child_id = heading_id;
 
