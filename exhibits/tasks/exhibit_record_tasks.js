@@ -35,31 +35,206 @@ const Exhibit_record_tasks = class {
     }
 
     /**
-     * Creates exhibit record
-     * @param data
+     * Creates exhibit record in database with transaction support
+     * @param {Object} data - Exhibit record data to insert
+     * @returns {Object} - {status: number, message: string, data: Object|null}
      */
     async create_exhibit_record(data) {
 
         try {
 
-            const result = await this.DB.transaction((trx) => {
-                this.DB.insert(data)
-                .into(this.TABLE.exhibit_records)
-                .transacting(trx)
-                .then(trx.commit)
-                .catch(trx.rollback);
-            });
-
-            if (result.length !== 1) {
-                LOGGER.module().info('INFO: [/exhibits/exhibit_record_tasks (create_exhibit_record)] Unable to create exhibit record.');
-                return false;
-            } else {
-                LOGGER.module().info('INFO: [/exhibits/exhibit_record_tasks (create_exhibit_record)] ' + result.length + ' Exhibit record created.');
-                return true;
+            if (!data || typeof data !== 'object') {
+                LOGGER.module().warn('WARNING: [/exhibits/exhibit_record_tasks (create_exhibit_record)] invalid data parameter');
+                return {
+                    status: 400,
+                    message: 'Invalid exhibit record data provided.',
+                    data: null
+                };
             }
 
+            // Validate data is not an array
+            if (Array.isArray(data)) {
+                LOGGER.module().warn('WARNING: [/exhibits/exhibit_record_tasks (create_exhibit_record)] data parameter is an array');
+                return {
+                    status: 400,
+                    message: 'Invalid exhibit record data format.',
+                    data: null
+                };
+            }
+
+            // Check if data object has any properties
+            if (Object.keys(data).length === 0) {
+                LOGGER.module().warn('WARNING: [/exhibits/exhibit_record_tasks (create_exhibit_record)] data object is empty');
+                return {
+                    status: 400,
+                    message: 'No exhibit record data provided.',
+                    data: null
+                };
+            }
+
+            // Validate required dependencies
+            if (!this.DB) {
+                LOGGER.module().error('ERROR: [/exhibits/exhibit_record_tasks (create_exhibit_record)] DB is not defined');
+                return {
+                    status: 500,
+                    message: 'Database configuration error.',
+                    data: null
+                };
+            }
+
+            if (!this.TABLE) {
+                LOGGER.module().error('ERROR: [/exhibits/exhibit_record_tasks (create_exhibit_record)] TABLE is not defined');
+                return {
+                    status: 500,
+                    message: 'Database configuration error.',
+                    data: null
+                };
+            }
+
+            if (!this.TABLE.exhibit_records) {
+                LOGGER.module().error('ERROR: [/exhibits/exhibit_record_tasks (create_exhibit_record)] TABLE.exhibit_records is not defined');
+                return {
+                    status: 500,
+                    message: 'Database configuration error.',
+                    data: null
+                };
+            }
+
+            // Validate DB has transaction method
+            if (typeof this.DB.transaction !== 'function') {
+                LOGGER.module().error('ERROR: [/exhibits/exhibit_record_tasks (create_exhibit_record)] DB.transaction is not a function');
+                return {
+                    status: 500,
+                    message: 'Database configuration error.',
+                    data: null
+                };
+            }
+
+            // Create a copy of data to avoid mutation
+            const insert_data = { ...data };
+
+            // Perform insert with proper transaction handling
+            let result;
+
+            try {
+                result = await this.DB.transaction(async (trx) => {
+                    // Perform insert within transaction
+                    const insert_result = await trx(this.TABLE.exhibit_records).insert(insert_data);
+
+                    // Transaction automatically commits if no error is thrown
+                    return insert_result;
+                });
+            } catch (transaction_error) {
+                // Transaction automatically rolls back on error
+                LOGGER.module().error(`ERROR: [/exhibits/exhibit_record_tasks (create_exhibit_record)] transaction failed: ${transaction_error.message}`);
+
+                // Check for specific database errors
+                if (transaction_error.code === 'ER_DUP_ENTRY' || transaction_error.code === '23505') {
+                    return {
+                        status: 409,
+                        message: 'Duplicate exhibit record.',
+                        data: null
+                    };
+                }
+
+                if (transaction_error.code === 'ER_NO_REFERENCED_ROW' || transaction_error.code === '23503') {
+                    return {
+                        status: 400,
+                        message: 'Invalid foreign key reference.',
+                        data: null
+                    };
+                }
+
+                return {
+                    status: 500,
+                    message: 'Unable to create exhibit record.',
+                    data: null
+                };
+            }
+
+            // Validate result structure
+            if (!result) {
+                LOGGER.module().error('ERROR: [/exhibits/exhibit_record_tasks (create_exhibit_record)] result is null or undefined');
+                return {
+                    status: 500,
+                    message: 'Unable to create exhibit record.',
+                    data: null
+                };
+            }
+
+            // Validate result is an array (Knex insert returns array of IDs)
+            if (!Array.isArray(result)) {
+                LOGGER.module().error(`ERROR: [/exhibits/exhibit_record_tasks (create_exhibit_record)] result is not an array: ${typeof result}`);
+                return {
+                    status: 500,
+                    message: 'Unable to create exhibit record.',
+                    data: null
+                };
+            }
+
+            // Check if insert was successful (should have 1 element for single insert)
+            if (result.length === 0) {
+                LOGGER.module().error('ERROR: [/exhibits/exhibit_record_tasks (create_exhibit_record)] result array is empty');
+                return {
+                    status: 500,
+                    message: 'Unable to create exhibit record.',
+                    data: null
+                };
+            }
+
+            if (result.length !== 1) {
+                LOGGER.module().warn(`WARNING: [/exhibits/exhibit_record_tasks (create_exhibit_record)] unexpected result length: ${result.length}`);
+                // Continue anyway - might be valid for some databases
+            }
+
+            // Extract inserted ID
+            const inserted_id = result[0];
+
+            // Validate inserted ID
+            if (inserted_id === null || inserted_id === undefined) {
+                LOGGER.module().error('ERROR: [/exhibits/exhibit_record_tasks (create_exhibit_record)] inserted ID is null or undefined');
+                return {
+                    status: 500,
+                    message: 'Unable to create exhibit record.',
+                    data: null
+                };
+            }
+
+            // Validate ID is numeric (for databases that return numeric IDs)
+            const numeric_id = Number(inserted_id);
+            if (isNaN(numeric_id) || !Number.isInteger(numeric_id) || numeric_id <= 0) {
+                // Some databases might return non-numeric IDs (UUIDs, etc.)
+                // Log a warning but continue
+                LOGGER.module().debug(`DEBUG: [/exhibits/exhibit_record_tasks (create_exhibit_record)] non-standard ID format: ${inserted_id}`);
+            }
+
+            LOGGER.module().info(`INFO: [/exhibits/exhibit_record_tasks (create_exhibit_record)] exhibit record created with ID: ${inserted_id}`);
+
+            return {
+                status: 201,
+                message: 'Exhibit record created.',
+                data: {
+                    id: inserted_id,
+                    ...insert_data
+                }
+            };
+
         } catch (error) {
-            LOGGER.module().error('ERROR: [/exhibits/exhibit_record_tasks (create_exhibit_record)] unable to create exhibit record ' + error.message);
+            // Catch any unexpected errors not caught by inner try-catch
+            LOGGER.module().error(
+                `ERROR: [/exhibits/exhibit_record_tasks (create_exhibit_record)] unable to create exhibit record: ${error.message}`
+            );
+
+            // Log stack trace for debugging (only in development)
+            if (process.env.NODE_ENV !== 'production') {
+                LOGGER.module().debug(`DEBUG: [/exhibits/exhibit_record_tasks (create_exhibit_record)] stack trace: ${error.stack}`);
+            }
+
+            return {
+                status: 500,
+                message: 'Unable to create exhibit record.',
+                data: null
+            };
         }
     }
 

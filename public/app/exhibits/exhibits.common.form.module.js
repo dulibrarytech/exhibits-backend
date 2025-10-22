@@ -23,76 +23,143 @@ const exhibitsCommonFormModule = (function () {
     const EXHIBITS_ENDPOINTS = endpointsModule.get_exhibits_endpoints();
     let obj = {};
 
-    /**
-     * Gets common form fields
-     */
     obj.get_common_form_fields = function () {
 
+        // Cache all DOM selectors
+        const selectors = {
+            title: '#exhibit-title-input',
+            subtitle: '#exhibit-sub-title-input',
+            description: '#exhibit-description-input',
+            curators: '#exhibit-about-the-curators-input',
+            alertText: '#exhibit-alert-text-input',
+            isFeatured: '#is-featured',
+            isStudentCurated: '#is-student-curated',
+            isContentAdvisory: '#is-content-advisory',
+            owner: '#exhibit-owner',
+            isPublished: '#is-published',
+            heroImage: '#hero-image',
+            thumbnail: '#thumbnail-image',
+            pageLayout: '#exhibit-page-layout',
+            template: '#exhibit-template',
+            titleError: '#exhibit-title-error',
+            message: '#message'
+        };
+
+        // Helper function to safely get element value
+        const getElementValue = (selector, defaultValue = '') => {
+            const element = document.querySelector(selector);
+            return element?.value?.trim() || defaultValue;
+        };
+
+        // Helper function to safely get checkbox state
+        const getCheckboxValue = (selector) => {
+            const element = document.querySelector(selector);
+            return element?.checked ?? false;
+        };
+
+        // Helper function to convert boolean to binary integer
+        const boolToInt = (value) => value ? 1 : 0;
+
+        // Helper function to display error messages safely (prevents XSS)
+        const showError = (selector, message) => {
+            const element = document.querySelector(selector);
+            if (!element) {
+                console.error(`Error element ${selector} not found`);
+                return;
+            }
+
+            const alertDiv = document.createElement('div');
+            alertDiv.className = 'alert alert-danger';
+            alertDiv.setAttribute('role', 'alert');
+
+            const icon = document.createElement('i');
+            icon.className = 'fa fa-exclamation';
+
+            const text = document.createTextNode(` ${message}`);
+
+            alertDiv.appendChild(icon);
+            alertDiv.appendChild(text);
+
+            element.innerHTML = '';
+            element.appendChild(alertDiv);
+        };
+
         try {
+            // Get and clean text inputs
+            const title = helperModule.clean_html(getElementValue(selectors.title));
+            const subtitle = helperModule.clean_html(getElementValue(selectors.subtitle));
+            const description = helperModule.clean_html(getElementValue(selectors.description));
+            const aboutCurators = helperModule.clean_html(getElementValue(selectors.curators));
 
-            let exhibit = {};
-
-            // exhibit data
-            exhibit.title = helperModule.clean_html(document.querySelector('#exhibit-title-input').value);
-            exhibit.subtitle = helperModule.clean_html(document.querySelector('#exhibit-sub-title-input').value);
-            exhibit.description = helperModule.clean_html(document.querySelector('#exhibit-description-input').value);
-            exhibit.about_the_curators = helperModule.clean_html(document.querySelector('#exhibit-about-the-curators-input').value);
-            exhibit.is_featured = document.querySelector('#is-featured').checked;
-            exhibit.is_student_curated = document.querySelector('#is-student-curated').checked;
-
-            let exhibit_owner_id = document.querySelector('#exhibit-owner');
-
-            if (exhibit_owner_id !== null) {
-                exhibit.owner = exhibit_owner_id.value;
-            }
-
-            if (document.querySelector('#is-published') !== null) {
-                exhibit.is_published = document.querySelector('#is-published').value;
-            }
-
-            if (exhibit.is_featured === true) {
-                exhibit.is_featured = 1;
-            } else if (exhibit.is_featured === false) {
-                exhibit.is_featured = 0;
-            }
-
-            if (exhibit.is_student_curated === true) {
-                exhibit.is_student_curated = 1;
-            } else if (exhibit.is_student_curated === false) {
-                exhibit.is_student_curated = 0;
-            }
-
-            let is_content_advisory = document.querySelector('#is-content-advisory').checked;
-
-            if (is_content_advisory === true) {
-                exhibit.alert_text = helperModule.clean_html(document.querySelector('#exhibit-alert-text-input').value);
-            } else {
-                exhibit.alert_text = '';
-            }
-
-            // validate
-            if (exhibit.title.length === 0) {
-                document.querySelector('#exhibit-title-error').innerHTML = '<div class="alert alert-danger" role="alert"><i class="fa fa-exclamation"></i> Please enter an exhibit title</div>';
+            // Validate required field
+            if (!title) {
+                showError(selectors.titleError, 'Please enter an exhibit title');
                 return false;
             }
 
-            // exhibit media
-            exhibit.hero_image = document.querySelector('#hero-image').value;
-            exhibit.thumbnail = document.querySelector('#thumbnail-image').value;
+            // Get checkbox values
+            const isFeatured = getCheckboxValue(selectors.isFeatured);
+            const isStudentCurated = getCheckboxValue(selectors.isStudentCurated);
+            const isContentAdvisory = getCheckboxValue(selectors.isContentAdvisory);
 
-            // exhibit banner
-            exhibit.banner_template = helperModule.get_checked_radio_button(document.getElementsByName('banner_template'));
+            // Get conditional alert text
+            const alertText = isContentAdvisory
+                ? helperModule.clean_html(getElementValue(selectors.alertText))
+                : '';
 
-            // exhibit page layout
-            exhibit.page_layout = document.querySelector('#exhibit-page-layout').value;
+            // Get optional fields (may not exist in all forms)
+            const owner = getElementValue(selectors.owner);
+            const isPublished = getElementValue(selectors.isPublished);
 
-            // exhibit template layout - only one option set by default - hidden field in add/edit forms
-            exhibit.exhibit_template = document.querySelector('#exhibit-template').value;
+            // Get media fields
+            const heroImage = getElementValue(selectors.heroImage);
+            const thumbnail = getElementValue(selectors.thumbnail);
+
+            // Get banner template from radio buttons
+            const bannerElements = document.getElementsByName('banner_template');
+            const bannerTemplate = bannerElements.length > 0
+                ? helperModule.get_checked_radio_button(bannerElements)
+                : '';
+
+            // Get layout fields
+            const pageLayout = getElementValue(selectors.pageLayout);
+            const exhibitTemplate = getElementValue(selectors.template);
+
+            // Construct exhibit object
+            const exhibit = {
+                title,
+                subtitle,
+                description,
+                about_the_curators: aboutCurators,
+                is_featured: boolToInt(isFeatured),
+                is_student_curated: boolToInt(isStudentCurated),
+                alert_text: alertText,
+                hero_image: heroImage,
+                thumbnail: thumbnail,
+                banner_template: bannerTemplate,
+                page_layout: pageLayout,
+                exhibit_template: exhibitTemplate
+            };
+
+            // Add optional fields only if they have values
+            if (owner) {
+                exhibit.owner = owner;
+            }
+
+            if (isPublished) {
+                exhibit.is_published = isPublished;
+            }
 
             return exhibit;
 
         } catch (error) {
-            document.querySelector('#message').innerHTML = `<div class="alert alert-danger" role="alert"><i class="fa fa-exclamation"></i> ${error.message}</div>`;
+            // Log error for debugging
+            console.error('Error getting form fields:', error);
+
+            // Display safe error message
+            showError(selectors.message, 'An error occurred while processing form data');
+
+            return false;
         }
     };
 

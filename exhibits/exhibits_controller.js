@@ -23,42 +23,68 @@ const WEBSERVICES_CONFIG = require('../config/webservices_config')();
 const STORAGE_CONFIG = require('../config/storage_config')();
 const EXHIBITS_MODEL = require('../exhibits/exhibits_model');
 const AUTHORIZE = require('../auth/authorize');
-const LOGGER = require("../libs/log4");
+const LOGGER = require('../libs/log4');
 
-exports.create_exhibit_record = async function (req, res) {
+/**
+ * Creates a new exhibit record
+ * @param {Object} req - Express request object
+ * @param {Object} res - Express response object
+ * @returns {Promise<void>}
+ */
+exports.create_exhibit_record = async (req, res) => {
 
     try {
 
-        const data = req.body;
-
-        if (data === undefined) {
-            res.status(400).send('Bad request.');
-            return false;
+        if (!req.body || Object.keys(req.body).length === 0) {
+            return res.status(400).json({
+                success: false,
+                message: 'Request body is required'
+            });
         }
 
-        const permissions = ['add_exhibit'];
-        let options = {};
-        options.req = req;
-        options.permissions = permissions;
-        options.record_type = 'exhibit';
-        options.parent_id = null;
-        options.child_id = null;
+        // Check authorization with cleaner options object
+        const authOptions = {
+            req,
+            permissions: ['add_exhibit'],
+            record_type: 'exhibit',
+            parent_id: null,
+            child_id: null
+        };
 
-        const is_authorized = await AUTHORIZE.check_permission(options);
+        const isAuthorized = await AUTHORIZE.check_permission(authOptions);
 
-        if (is_authorized === false) {
-            res.status(403).send({
+        if (!isAuthorized) {
+            return res.status(403).json({
+                success: false,
                 message: 'Unauthorized request'
             });
-
-            return false;
         }
 
-        const result = await EXHIBITS_MODEL.create_exhibit_record(data);
-        res.status(result.status).send(result);
+        // Create exhibit record
+        const result = await EXHIBITS_MODEL.create_exhibit_record(req.body);
+
+        // Validate result structure before using
+        if (!result || typeof result.status !== 'number') {
+            throw new Error('Invalid response from model');
+        }
+
+        return res.status(result.status).json(result);
 
     } catch (error) {
-        res.status(500).send({message: `Unable to create exhibit record. ${error.message}`});
+        // Log detailed error internally
+        LOGGER.module().error('ERROR: [/exhibits/controller (create_exhibit_record)]', {
+            error: error.message,
+            stack: error.stack,
+            userId: req.user?.id // Log user context if available
+        });
+
+        // Send generic error to client (avoid exposing internal details)
+        if (!res.headersSent) {
+            return res.status(500).json({
+                success: false,
+                message: 'Unable to create exhibit record'
+            });
+        }
     }
 };
 

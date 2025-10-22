@@ -45,54 +45,120 @@ const exhibitsAddFormModule = (function () {
 
     obj.create_exhibit_record = async function () {
 
+        // Cache DOM element and constants
+        const messageEl = document.querySelector('#message');
+        const REDIRECT_DELAY = 900;
+        const TOKEN_ERROR_DELAY = 1000;
+
+        // Helper function to safely display messages (prevents XSS)
+        const showMessage = (type, message, icon = 'fa-info') => {
+            if (!messageEl) {
+                console.error('Message element not found');
+                return;
+            }
+
+            // Use textContent for security, create elements programmatically
+            const alertDiv = document.createElement('div');
+            alertDiv.className = `alert alert-${type}`;
+            alertDiv.setAttribute('role', 'alert');
+
+            const iconEl = document.createElement('i');
+            iconEl.className = `fa ${icon}`;
+
+            const textNode = document.createTextNode(` ${message}`);
+
+            alertDiv.appendChild(iconEl);
+            alertDiv.appendChild(textNode);
+
+            // Clear and append
+            messageEl.innerHTML = '';
+            messageEl.appendChild(alertDiv);
+        };
+
+        // Store timeout IDs for cleanup
+        let timeoutId = null;
+
         try {
+            // Cross-browser scroll to top
+            window.scrollTo({ top: 0, left: 0, behavior: 'instant' });
 
-            scrollTo(0, 0);
-            let token = authModule.get_user_token();
-            let response;
-            let data = get_exhibit_data();
+            // Validate token early
+            const token = authModule.get_user_token();
+            if (!token) {
+                showMessage('warning', 'Unable to get session token');
 
-            if (data === false || data === undefined) {
-                document.querySelector('#message').innerHTML = `<div class="alert alert-danger" role="alert"><i class="fa fa-info"></i> Exhibit data could not be created</div>`;
-                return false;
-            }
-
-            document.querySelector('#message').innerHTML = `<div class="alert alert-info" role="alert"><i class="fa fa-info"></i> Creating exhibit record...</div>`;
-
-            if (token === false) {
-
-                setTimeout(() => {
-                    document.querySelector('#message').innerHTML = `<div class="alert alert-info" role="alert"><i class="fa fa-info"></i> Unable to get session token</div>`;
+                timeoutId = setTimeout(() => {
                     authModule.logout();
-                }, 1000);
+                }, TOKEN_ERROR_DELAY);
 
                 return false;
             }
 
+            // Validate exhibit data
+            const data = get_exhibit_data();
+            console.log('DATA ', data);
+
+            if (!data) {
+                return false;
+            }
+
+            // Show loading state
+            showMessage('info', 'Creating exhibit record...');
+
+            // Add user metadata
             data.created_by = helperModule.get_user_name();
             data.owner = helperModule.get_owner();
 
-            response = await httpModule.req({
-                method: 'POST',
-                url: EXHIBITS_ENDPOINTS.exhibits.exhibit_records.endpoint,
-                data: data,
-                headers: {
-                    'Content-Type': 'application/json',
-                    'x-access-token': token
-                }
-            });
+            // Make API request with timeout
+            const response = await Promise.race([
+                httpModule.req({
+                    method: 'POST',
+                    url: EXHIBITS_ENDPOINTS.exhibits.exhibit_records.endpoint,
+                    data: data,
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'x-access-token': token
+                    }
+                }),
+                new Promise((_, reject) =>
+                    setTimeout(() => reject(new Error('Request timeout')), 30000)
+                )
+            ]);
 
-            if (response !== undefined && response.status === 201) {
-
-                document.querySelector('#message').innerHTML = `<div class="alert alert-success" role="alert"><i class="fa fa-info"></i> Exhibit record created</div>`;
-
-                setTimeout(() => {
-                    window.location.replace(APP_PATH + '/items?exhibit_id=' + response.data.data);
-                }, 900);
+            // Validate response structure
+            if (!response || response.status !== 201) {
+                throw new Error('Failed to create exhibit record');
             }
 
+            if (!response.data?.data) {
+                throw new Error('Invalid response from server');
+            }
+
+            // Show success message
+            showMessage('success', 'Exhibit record created');
+
+            // Redirect after delay
+            const exhibitId = encodeURIComponent(response.data.data);
+            timeoutId = setTimeout(() => {
+                window.location.href = `${APP_PATH}/items?exhibit_id=${exhibitId}`;
+            }, REDIRECT_DELAY);
+
+            return true;
+
         } catch (error) {
-            document.querySelector('#message').innerHTML = `<div class="alert alert-danger" role="alert"><i class="fa fa-exclamation"></i> ${error.message}</div>`;
+            // Clear any pending timeouts
+            if (timeoutId) {
+                clearTimeout(timeoutId);
+            }
+
+            // Log error for debugging
+            console.error('Create exhibit error:', error);
+
+            // Display user-friendly error message
+            const errorMessage = error.message || 'An unexpected error occurred';
+            showMessage('danger', errorMessage, 'fa-exclamation');
+
+            return false;
         }
     };
 
