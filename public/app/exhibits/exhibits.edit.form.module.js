@@ -292,6 +292,8 @@ const exhibitsEditFormModule = (function () {
 
     async function display_edit_record() {
 
+        // TODO: disable form fields if record is locked
+
         // Configuration for style mappings
         const style_selectors = {
             navigation: {

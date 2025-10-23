@@ -112,7 +112,7 @@ const construct_item_index_record = function (record) {
         pdf_open_to_page: record.pdf_open_to_page,
         date: record.date,
         styles: record.styles,
-        item_subjects: record.item_subjects,
+        subjects: record.item_subjects,
         order: record.order,
         is_published: record.is_published,
         is_embedded: record.is_embedded,
