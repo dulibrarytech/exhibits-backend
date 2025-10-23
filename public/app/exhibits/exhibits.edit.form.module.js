@@ -591,16 +591,6 @@ const exhibitsEditFormModule = (function () {
         // Helper function to setup automatic unlock on page navigation
         const setup_auto_unlock = (record) => {
 
-            // TODO
-            /*
-            console.log('is locked ', record.is_locked);
-            const is_locked_by_other = is_locked_by_other_user(record);
-            console.log('is locked by someone else:  ', is_locked_by_other);
-            if (is_locked_by_other === true) {
-                return;
-            }
-
-             */
             // Only setup auto-unlock if the current user has the record locked
             if (!record || record.is_locked !== 1) {
                 return;
