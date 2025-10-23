@@ -45,7 +45,7 @@ const exhibitsDetailsModule = (function () {
 
             document.querySelector('#exhibit-title').innerHTML = await exhibitsModule.get_exhibit_title(uuid);
 
-            const endpoint = EXHIBITS_ENDPOINTS.exhibits.exhibit_records.endpoints.get.endpoint.replace(':exhibit_id', uuid) + '?type=edit&uid=' + profile.uid;
+            const endpoint = EXHIBITS_ENDPOINTS.exhibits.exhibit_records.endpoints.get.endpoint.replace(':exhibit_id', uuid) + '?uid=' + profile.uid;
             const response = await httpModule.req({
                 method: 'GET',
                 url: endpoint,

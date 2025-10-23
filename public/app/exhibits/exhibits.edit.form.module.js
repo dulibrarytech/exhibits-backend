@@ -561,6 +561,7 @@ const exhibitsEditFormModule = (function () {
 
         // Helper function to check if record is locked by another user
         const is_locked_by_other_user = (record) => {
+
             // Check if record is locked
             if (!record || record.is_locked !== 1) {
                 return false;
@@ -589,6 +590,17 @@ const exhibitsEditFormModule = (function () {
 
         // Helper function to setup automatic unlock on page navigation
         const setup_auto_unlock = (record) => {
+
+            // TODO
+            /*
+            console.log('is locked ', record.is_locked);
+            const is_locked_by_other = is_locked_by_other_user(record);
+            console.log('is locked by someone else:  ', is_locked_by_other);
+            if (is_locked_by_other === true) {
+                return;
+            }
+
+             */
             // Only setup auto-unlock if the current user has the record locked
             if (!record || record.is_locked !== 1) {
                 return;
@@ -609,7 +621,9 @@ const exhibitsEditFormModule = (function () {
 
             // Handler to unlock record when leaving page
             const handle_page_unload = () => {
+
                 try {
+
                     // Call unlock function without awaiting
                     // The browser will attempt to complete the request before unload
                     if (helperModule && typeof helperModule.unlock_record === 'function') {

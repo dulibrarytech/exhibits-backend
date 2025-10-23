@@ -1187,6 +1187,22 @@ const helperModule = (function () {
             const encoded_uid = encodeURIComponent(profile.uid);
             const request_url = `${endpoint}?uid=${encoded_uid}`;
 
+            // prioritize beacon so unlock is more likely to occur
+            if (navigator.sendBeacon) {
+
+                // Beacon API only supports POST and sends as text/plain
+                // We need to send the auth token in the URL as a query parameter
+                const beacon_url = `${endpoint}&t=${encodeURIComponent(token)}`;
+                const sent = navigator.sendBeacon(beacon_url, '');
+
+                if (sent) {
+                    console.log('Unlock beacon sent successfully');
+                } else {
+                    console.warn('Beacon API failed to send unlock request');
+                }
+            }
+
+            // second request will trigger when unlock is clicked by an admin - success message is displayed
             // Make request with timeout
             const response = await Promise.race([
                 httpModule.req({

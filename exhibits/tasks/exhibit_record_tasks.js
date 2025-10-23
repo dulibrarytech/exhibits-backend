@@ -369,6 +369,7 @@ const Exhibit_record_tasks = class {
 
                     const HELPER_TASK = new HELPER();
                     await HELPER_TASK.lock_record(uid, uuid, this.DB, this.TABLE.exhibit_records);
+                    data[0].is_locked = 1;
                     return data;
 
                 } catch (error) {
