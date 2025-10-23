@@ -831,192 +831,469 @@ const helperModule = (function () {
         }
     };
 
-    /**
-     * Checks if a record is currently locked
-     * @param record
-     * @param card_id
-     */
-    obj.check_if_locked = function (record, card_id) {
+    obj.check_if_locked = async function (record, card_id) {
 
-        (async function () {
-
-            try {
-
-                const profile = authModule.get_user_profile_data();
-
-                if (record.is_locked === 1 && record.locked_by_user !== parseInt(profile.uid)) {
-
-                    document.querySelector(card_id).style.display = 'none';
-                    const user_role = await authModule.get_user_role(parseInt(profile.uid));
-                    let message_id = document.querySelector('#message');
-                    let unlock = '';
-
-                    if (message_id !== null) {
-
-                        if (user_role === 'Administrator') {
-                            unlock = `<br><span><div class="btn-group float-right">
-                        <button id="unlock-record" class="btn btn-xs btn-secondary"><i class="fa fa-unlock-alt"></i> Unlock</button>
-                        </div></span>`;
-                        }
-
-                        let message = `<i class="fa fa-lock"></i> This record is currently being worked on by another user.`;
-                        document.querySelector('#message').innerHTML = `<div class="alert alert-warning" role="alert">${message}  ${unlock}</div>`;
-
-                        if (document.querySelector('#unlock-record') !== null) {
-                            document.querySelector('#unlock-record').addEventListener('click', () => {
-                                helperModule.unlock_record();
-                            });
-                        }
-                    }
-                }
-
-            } catch (error) {
-                document.querySelector('#message').innerHTML = `<div class="alert alert-danger" role="alert"><i class="fa fa-exclamation"></i> ${error.message}</div>`;
+        // Helper function to safely display messages (prevents XSS)
+        const show_message = (type, message_content, additional_element = null) => {
+            const message_el = document.querySelector('#message');
+            if (!message_el) {
+                console.error('Message element not found');
+                return;
             }
 
-        })();
-    };
+            const alert_div = document.createElement('div');
+            alert_div.className = `alert alert-${type}`;
+            alert_div.setAttribute('role', 'alert');
 
-    /**
-     * Unlocks record
-     */
-    obj.unlock_record = async function () {
+            const icon = document.createElement('i');
+            icon.className = 'fa fa-lock';
+
+            const text = document.createTextNode(` ${message_content}`);
+
+            alert_div.appendChild(icon);
+            alert_div.appendChild(text);
+
+            // Add additional element if provided (like unlock button)
+            if (additional_element) {
+                alert_div.appendChild(document.createTextNode('  '));
+                alert_div.appendChild(additional_element);
+            }
+
+            message_el.innerHTML = '';
+            message_el.appendChild(alert_div);
+        };
+
+        // Helper function to create unlock button
+        const create_unlock_button = () => {
+
+            const btn_group = document.createElement('div');
+            btn_group.className = 'btn-group float-right';
+
+            const button = document.createElement('button');
+            button.id = 'unlock-record';
+            button.className = 'btn btn-xs btn-secondary';
+
+            const icon = document.createElement('i');
+            icon.className = 'fa fa-unlock-alt';
+
+            const text = document.createTextNode(' Unlock');
+
+            button.appendChild(icon);
+            button.appendChild(text);
+
+            // Add event listener
+            button.addEventListener('click', handle_unlock_click);
+
+            btn_group.appendChild(button);
+
+            const span = document.createElement('span');
+            const br = document.createElement('br');
+            span.appendChild(br);
+            span.appendChild(btn_group);
+
+            return span;
+        };
+
+        // Event handler for unlock button (separated for better cleanup)
+        const handle_unlock_click = () => {
+            if (helperModule && typeof helperModule.unlock_record === 'function') {
+                helperModule.unlock_record();
+            } else {
+                console.error('unlock_record function not available');
+            }
+        };
+
+        // Helper function to hide card
+        const hide_card = (selector) => {
+            const card = document.querySelector(selector);
+            if (card) {
+                card.style.display = 'none';
+            }
+        };
+
+        // Helper function to display error safely
+        const show_error = (message) => {
+            const message_el = document.querySelector('#message');
+            if (!message_el) {
+                console.error('Message element not found');
+                return;
+            }
+
+            const alert_div = document.createElement('div');
+            alert_div.className = 'alert alert-danger';
+            alert_div.setAttribute('role', 'alert');
+
+            const icon = document.createElement('i');
+            icon.className = 'fa fa-exclamation';
+
+            const text = document.createTextNode(` ${message}`);
+
+            alert_div.appendChild(icon);
+            alert_div.appendChild(text);
+
+            message_el.innerHTML = '';
+            message_el.appendChild(alert_div);
+        };
 
         try {
-
-            const exhibits_endpoints = endpointsModule.get_exhibits_endpoints();
-            const pathname = window.location.pathname;
-            const exhibit_id = helperModule.get_parameter_by_name('exhibit_id');
-
-            // Path to endpoint configuration map
-            const endpoint_config_map = [
-                {
-                    paths: ['exhibits/exhibit/edit'],
-                    endpoint_key: 'exhibits.exhibit_unlock_record.post.endpoint',
-                    params: { exhibit_id }
-                },
-                {
-                    paths: ['items/heading/edit'],
-                    endpoint_key: 'exhibits.heading_unlock_record.post.endpoint',
-                    params: () => ({
-                        exhibit_id,
-                        heading_id: helperModule.get_parameter_by_name('item_id')
-                    })
-                },
-                {
-                    paths: ['items/standard/text/edit', 'items/standard/media/edit'],
-                    endpoint_key: 'exhibits.item_unlock_record.post.endpoint',
-                    params: () => ({
-                        exhibit_id,
-                        item_id: helperModule.get_parameter_by_name('item_id')
-                    })
-                },
-                {
-                    paths: ['items/grid/item/media/edit', 'items/grid/item/text/edit'],
-                    endpoint_key: 'exhibits.grid_item_unlock_record.post.endpoint',
-                    params: () => ({
-                        exhibit_id,
-                        grid_id: helperModule.get_parameter_by_name('grid_id'),
-                        item_id: helperModule.get_parameter_by_name('item_id')
-                    })
-                },
-                {
-                    paths: ['items/vertical-timeline/item/media/edit', 'items/vertical-timeline/item/text/edit'],
-                    endpoint_key: 'exhibits.timeline_item_unlock_record.post.endpoint',
-                    params: () => ({
-                        exhibit_id,
-                        timeline_id: helperModule.get_parameter_by_name('timeline_id'),
-                        item_id: helperModule.get_parameter_by_name('item_id')
-                    })
-                }
-            ];
-
-            // Find matching endpoint configuration
-            let endpoint_template = null;
-            let endpoint_params = {};
-
-            for (const config of endpoint_config_map) {
-                const path_matches = config.paths.some(path => pathname.includes(path));
-                if (path_matches) {
-                    endpoint_template = get_nested_value(exhibits_endpoints, config.endpoint_key);
-                    endpoint_params = typeof config.params === 'function' ? config.params() : config.params;
-                    break;
-                }
-            }
-
-            if (!endpoint_template) {
-                console.error('No matching endpoint found for current path:', pathname);
-                show_message('An error occurred: unable to determine record type.', 'danger');
+            // Validate inputs
+            if (!record || typeof record !== 'object') {
+                console.error('Invalid record provided to check_if_locked');
                 return;
             }
 
-            // Replace all placeholders in endpoint
-            let endpoint = endpoint_template;
-            for (const [key, value] of Object.entries(endpoint_params)) {
-                endpoint = endpoint.replace(`:${key}`, value);
+            if (!card_id || typeof card_id !== 'string') {
+                console.error('Invalid card_id provided to check_if_locked');
+                return;
             }
 
-            // Get auth data and make request
+            // Get user profile
             const profile = authModule.get_user_profile_data();
-            const token = authModule.get_user_token();
-
-            if (!profile?.uid || !token) {
-                console.error('Missing authentication data');
-                show_message('Authentication error: unable to unlock record.', 'danger');
+            if (!profile || !profile.uid) {
+                console.error('Unable to get user profile data');
                 return;
             }
 
-            const response = await httpModule.req({
-                method: 'POST',
-                url: `${endpoint}?uid=${profile.uid}`,
-                headers: {
-                    'Content-Type': 'application/json',
-                    'x-access-token': token
-                }
-            });
+            // Parse user ID safely
+            const user_id = parseInt(profile.uid, 10);
+            if (isNaN(user_id)) {
+                console.error('Invalid user ID in profile');
+                return;
+            }
 
-            // Display result message
-            const message_el = document.querySelector('#message');
+            // Check if record is locked by another user
+            const is_locked = record.is_locked === 1 || record.is_locked === true;
+            const locked_by_other_user = record.locked_by_user && parseInt(record.locked_by_user, 10) !== user_id;
 
-            if (message_el) {
-                if (response.status === 200) {
-                    message_el.innerHTML = '<div class="alert alert-success" role="alert">Unlocked</div>';
-                } else {
-                    message_el.innerHTML = '<div class="alert alert-danger" role="alert"><i class="fa fa-exclamation"></i> An HTTP request error occurred unlocking record.</div>';
+            if (is_locked && locked_by_other_user) {
+                // Hide the card
+                hide_card(card_id);
+
+                // Check if message element exists
+                const message_el = document.querySelector('#message');
+                if (!message_el) {
+                    console.warn('Message element not found, cannot display lock warning');
+                    return;
                 }
+
+                // Get user role to determine if unlock button should be shown
+                const user_role = await authModule.get_user_role(user_id);
+
+                // Create unlock button for administrators
+                let unlock_button = null;
+                if (user_role === 'Administrator') {
+                    unlock_button = create_unlock_button();
+                }
+
+                // Display lock message
+                const lock_message = 'This record is currently being worked on by another user.';
+                show_message('warning', lock_message, unlock_button);
             }
 
         } catch (error) {
-            console.error('Error in unlock_record:', error.message);
-            const message_el = document.querySelector('#message');
-            if (message_el) {
-                message_el.innerHTML = '<div class="alert alert-danger" role="alert"><i class="fa fa-exclamation"></i> An error occurred unlocking record.</div>';
-            }
+            // Log error for debugging
+            console.error('Error checking if record is locked:', error);
+
+            // Display safe error message
+            const error_message = error.message || 'An error occurred while checking record lock status';
+            show_error(error_message);
         }
     };
 
-    // Helper function to safely get nested object values
-    function get_nested_value(obj, path) {
-        return path.split('.').reduce((current, prop) => current?.[prop], obj);
-    }
+    obj.unlock_record = async function () {
 
-    // Helper function to display messages
-    function show_message(message, type = 'danger') {
-        const message_el = document.querySelector('#message');
-        if (message_el) {
-            message_el.innerHTML = `<div class="alert alert-${type}" role="alert">${message}</div>`;
+        // Constants
+        const REQUEST_TIMEOUT = 30000; // 30 seconds
+
+        // Path to endpoint configuration map
+        const endpoint_config_map = [
+            {
+                paths: ['exhibits/exhibit/edit'],
+                endpoint_key: 'exhibits.exhibit_unlock_record.post.endpoint',
+                params: (exhibit_id) => ({ exhibit_id })
+            },
+            {
+                paths: ['items/heading/edit'],
+                endpoint_key: 'exhibits.heading_unlock_record.post.endpoint',
+                params: (exhibit_id) => ({
+                    exhibit_id,
+                    heading_id: helperModule.get_parameter_by_name('item_id')
+                })
+            },
+            {
+                paths: ['items/standard/text/edit', 'items/standard/media/edit'],
+                endpoint_key: 'exhibits.item_unlock_record.post.endpoint',
+                params: (exhibit_id) => ({
+                    exhibit_id,
+                    item_id: helperModule.get_parameter_by_name('item_id')
+                })
+            },
+            {
+                paths: ['items/grid/item/media/edit', 'items/grid/item/text/edit'],
+                endpoint_key: 'exhibits.grid_item_unlock_record.post.endpoint',
+                params: (exhibit_id) => ({
+                    exhibit_id,
+                    grid_id: helperModule.get_parameter_by_name('grid_id'),
+                    item_id: helperModule.get_parameter_by_name('item_id')
+                })
+            },
+            {
+                paths: ['items/vertical-timeline/item/media/edit', 'items/vertical-timeline/item/text/edit'],
+                endpoint_key: 'exhibits.timeline_item_unlock_record.post.endpoint',
+                params: (exhibit_id) => ({
+                    exhibit_id,
+                    timeline_id: helperModule.get_parameter_by_name('timeline_id'),
+                    item_id: helperModule.get_parameter_by_name('item_id')
+                })
+            }
+        ];
+
+        // Helper function to safely get nested object value by dot notation
+        const get_nested_value = (obj, path) => {
+            if (!obj || !path) return null;
+
+            const keys = path.split('.');
+            let result = obj;
+
+            for (const key of keys) {
+                if (result && typeof result === 'object' && key in result) {
+                    result = result[key];
+                } else {
+                    return null;
+                }
+            }
+
+            return result;
+        };
+
+        // Helper function to safely display messages (prevents XSS)
+        const show_message = (message, type = 'info', icon = 'fa-info') => {
+            const message_el = document.querySelector('#message');
+            if (!message_el) {
+                console.error('Message element not found');
+                return;
+            }
+
+            const alert_div = document.createElement('div');
+            alert_div.className = `alert alert-${type}`;
+            alert_div.setAttribute('role', 'alert');
+
+            if (icon) {
+                const icon_el = document.createElement('i');
+                icon_el.className = `fa ${icon}`;
+                alert_div.appendChild(icon_el);
+                alert_div.appendChild(document.createTextNode(' '));
+            }
+
+            const text_node = document.createTextNode(message);
+            alert_div.appendChild(text_node);
+
+            message_el.innerHTML = '';
+            message_el.appendChild(alert_div);
+        };
+
+        // Helper function to build endpoint URL with parameter replacement
+        const build_endpoint_url = (template, params) => {
+            if (!template || !params) return null;
+
+            let endpoint = template;
+
+            for (const [key, value] of Object.entries(params)) {
+                if (!value) {
+                    console.error(`Missing required parameter: ${key}`);
+                    return null;
+                }
+                // URL encode the parameter value
+                const encoded_value = encodeURIComponent(value);
+                endpoint = endpoint.replace(`:${key}`, encoded_value);
+            }
+
+            return endpoint;
+        };
+
+        // Helper function to find matching endpoint configuration
+        const find_endpoint_config = (pathname, config_map) => {
+            for (const config of config_map) {
+                const path_matches = config.paths.some(path => pathname.includes(path));
+                if (path_matches) {
+                    return config;
+                }
+            }
+            return null;
+        };
+
+        try {
+            // Get required data
+            const exhibits_endpoints = endpointsModule.get_exhibits_endpoints();
+            if (!exhibits_endpoints) {
+                throw new Error('Unable to retrieve endpoints configuration');
+            }
+
+            const pathname = window.location.pathname;
+            if (!pathname) {
+                throw new Error('Unable to determine current page path');
+            }
+
+            const exhibit_id = helperModule.get_parameter_by_name('exhibit_id');
+            if (!exhibit_id) {
+                throw new Error('Missing required parameter: exhibit_id');
+            }
+
+            // Find matching endpoint configuration
+            const config = find_endpoint_config(pathname, endpoint_config_map);
+            if (!config) {
+                console.error('No matching endpoint found for current path:', pathname);
+                show_message('Unable to determine record type.', 'danger', 'fa-exclamation');
+                return false;
+            }
+
+            // Get endpoint template
+            const endpoint_template = get_nested_value(exhibits_endpoints, config.endpoint_key);
+            if (!endpoint_template) {
+                throw new Error('Endpoint template not found in configuration');
+            }
+
+            // Get endpoint parameters
+            const endpoint_params = typeof config.params === 'function'
+                ? config.params(exhibit_id)
+                : config.params;
+
+            // Validate all required parameters exist
+            for (const [key, value] of Object.entries(endpoint_params)) {
+                if (!value) {
+                    throw new Error(`Missing required parameter: ${key}`);
+                }
+            }
+
+            // Build endpoint URL
+            const endpoint = build_endpoint_url(endpoint_template, endpoint_params);
+            if (!endpoint) {
+                throw new Error('Failed to build endpoint URL');
+            }
+
+            // Get authentication data
+            const profile = authModule.get_user_profile_data();
+            const token = authModule.get_user_token();
+
+            if (!profile || !profile.uid) {
+                throw new Error('User profile data not available');
+            }
+
+            if (!token) {
+                throw new Error('Authentication token not available');
+            }
+
+            // Build request URL with encoded UID
+            const encoded_uid = encodeURIComponent(profile.uid);
+            const request_url = `${endpoint}?uid=${encoded_uid}`;
+
+            // Make request with timeout
+            const response = await Promise.race([
+                httpModule.req({
+                    method: 'POST',
+                    url: request_url,
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'x-access-token': token
+                    }
+                }),
+                new Promise((_, reject) =>
+                    setTimeout(() => reject(new Error('Request timeout')), REQUEST_TIMEOUT)
+                )
+            ]);
+
+            // Validate response
+            if (!response) {
+                throw new Error('No response received from server');
+            }
+
+            // Display result
+            if (response.status === 200) {
+                show_message('Record unlocked successfully', 'success', 'fa-check');
+                return true;
+            } else {
+                show_message('Failed to unlock record. Please try again.', 'danger', 'fa-exclamation');
+                return false;
+            }
+
+        } catch (error) {
+            // Log error for debugging
+            console.error('Error unlocking record:', error);
+
+            // Display user-friendly error message
+            const error_message = error.message || 'An unexpected error occurred while unlocking the record';
+            show_message(error_message, 'danger', 'fa-exclamation');
+
+            return false;
         }
-    }
+    };
 
     obj.get_user_name = function () {
-        const profile = authModule.get_user_profile_data();
-        return profile.name;
-    }
+
+        try {
+
+            if (!authModule || typeof authModule.get_user_profile_data !== 'function') {
+                console.error('authModule or get_user_profile_data not available');
+                return null;
+            }
+
+            // Get user profile data
+            const profile = authModule.get_user_profile_data();
+
+            // Validate profile exists and has a name
+            if (!profile || typeof profile !== 'object') {
+                console.warn('User profile data not available');
+                return null;
+            }
+
+            // Return name if it exists, otherwise return null
+            return profile.name || null;
+
+        } catch (error) {
+            console.error('Error getting user name:', error);
+            return null;
+        }
+    };
 
     obj.get_owner = function () {
-        const profile = authModule.get_user_profile_data();
-        return parseInt(profile.uid);
-    }
+
+        try {
+
+            if (!authModule || typeof authModule.get_user_profile_data !== 'function') {
+                console.error('authModule or get_user_profile_data not available');
+                return null;
+            }
+
+            // Get user profile data
+            const profile = authModule.get_user_profile_data();
+
+            // Validate profile exists and has a uid
+            if (!profile || typeof profile !== 'object') {
+                console.warn('User profile data not available');
+                return null;
+            }
+
+            if (!profile.uid) {
+                console.warn('User UID not available in profile');
+                return null;
+            }
+
+            // Parse UID to integer with radix
+            const owner_id = parseInt(profile.uid, 10);
+
+            // Validate parsed value is a valid number
+            if (isNaN(owner_id)) {
+                console.error('Invalid UID value:', profile.uid);
+                return null;
+            }
+
+            return owner_id;
+
+        } catch (error) {
+            console.error('Error getting owner ID:', error);
+            return null;
+        }
+    };
 
     obj.create_subjects_menu = async function (subjects = []) {
 

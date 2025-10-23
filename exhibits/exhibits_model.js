@@ -220,7 +220,7 @@ exports.update_exhibit_record = async function (uuid, data) {
         const HELPER_TASK = new HELPER();
         const VALIDATE_TASK = new VALIDATOR(EXHIBITS_UPDATE_RECORD_SCHEMA);
         let is_valid = VALIDATE_TASK.validate(data);
-        let is_published = false;
+        let is_published = 0;
 
         if (is_valid !== true) {
 
@@ -263,7 +263,7 @@ exports.update_exhibit_record = async function (uuid, data) {
             };
         } else {
 
-            if (is_published === 'true') {
+            if (is_published === 1) {
 
                 const is_suppressed = await suppress_exhibit(uuid);
 

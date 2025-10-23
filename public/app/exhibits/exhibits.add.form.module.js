@@ -24,22 +24,109 @@ const exhibitsAddFormModule = (function () {
     const EXHIBITS_ENDPOINTS = endpointsModule.get_exhibits_endpoints();
     let obj = {};
 
-    function get_exhibit_data () {
+    function get_exhibit_data() {
 
-        try {
+        // Helper function to safely convert to number
+        const to_number = (value, default_value = null) => {
 
-            let exhibit = exhibitsCommonFormModule.get_common_form_fields();
+            if (value === null || value === undefined || value === '') {
+                return default_value;
+            }
+            const num = Number(value);
+            return isNaN(num) ? default_value : num;
+        };
 
-            if (exhibit === false) {
-                return exhibit;
+        // Helper function to safely display error messages (prevents XSS)
+        const show_error = (message) => {
+            const message_el = document.querySelector('#message');
+            if (!message_el) {
+                console.error('Message element not found');
+                return;
             }
 
-            exhibit.styles = exhibitsCommonFormModule.get_exhibit_styles();
+            const alert_div = document.createElement('div');
+            alert_div.className = 'alert alert-danger';
+            alert_div.setAttribute('role', 'alert');
+
+            const icon = document.createElement('i');
+            icon.className = 'fa fa-exclamation';
+
+            const text = document.createTextNode(` ${message}`);
+
+            alert_div.appendChild(icon);
+            alert_div.appendChild(text);
+
+            message_el.innerHTML = '';
+            message_el.appendChild(alert_div);
+        };
+
+        // Helper function to validate module exists and has required methods
+        const validate_module = (module, required_methods = []) => {
+            if (!module || typeof module !== 'object') {
+                return false;
+            }
+
+            for (const method of required_methods) {
+                if (typeof module[method] !== 'function') {
+                    console.error(`Required method '${method}' not found in module`);
+                    return false;
+                }
+            }
+
+            return true;
+        };
+
+        try {
+            // Validate exhibitsCommonFormModule exists and has required methods
+            if (!validate_module(exhibitsCommonFormModule, ['get_common_form_fields', 'get_exhibit_styles'])) {
+                throw new Error('exhibitsCommonFormModule is not properly configured');
+            }
+
+            // Get common form fields
+            const exhibit = exhibitsCommonFormModule.get_common_form_fields();
+
+            // Check if form fields retrieval failed
+            if (exhibit === false || !exhibit) {
+                // Error message should already be displayed by get_common_form_fields
+                return false;
+            }
+
+            // Validate that exhibit is an object
+            if (typeof exhibit !== 'object') {
+                throw new Error('Invalid exhibit data format');
+            }
+
+            // Get exhibit styles
+            const styles = exhibitsCommonFormModule.get_exhibit_styles();
+
+            // Validate styles were retrieved successfully
+            if (!styles || typeof styles !== 'object') {
+                throw new Error('Failed to retrieve exhibit styles');
+            }
+
+            exhibit.styles = styles;
+
+            // Convert is_published to Number if it exists
+            if ('is_published' in exhibit) {
+                exhibit.is_published = to_number(exhibit.is_published, 0);
+            }
+
+            // Convert owner to Number if it exists
+            if ('owner' in exhibit) {
+                exhibit.owner = to_number(exhibit.owner, null);
+            }
 
             return exhibit;
 
         } catch (error) {
-            document.querySelector('#message').innerHTML = `<div class="alert alert-danger" role="alert"><i class="fa fa-exclamation"></i> ${error.message}</div>`;
+            // Log error for debugging
+            console.error('Error getting exhibit data:', error);
+
+            // Display user-friendly error message
+            const error_message = error.message || 'An error occurred while processing exhibit data';
+            show_error(error_message);
+
+            return false;
         }
     }
 
@@ -96,7 +183,6 @@ const exhibitsAddFormModule = (function () {
 
             // Validate exhibit data
             const data = get_exhibit_data();
-            console.log('DATA ', data);
 
             if (!data) {
                 return false;
@@ -164,15 +250,127 @@ const exhibitsAddFormModule = (function () {
 
     obj.init = function () {
 
+        // Helper function to safely display error messages (prevents XSS)
+        const show_error = (message) => {
+            const message_el = document.querySelector('#message');
+            if (!message_el) {
+                console.error('Message element not found');
+                return;
+            }
+
+            const alert_div = document.createElement('div');
+            alert_div.className = 'alert alert-danger';
+            alert_div.setAttribute('role', 'alert');
+
+            const icon = document.createElement('i');
+            icon.className = 'fa fa-exclamation';
+
+            const text = document.createTextNode(` ${message}`);
+
+            alert_div.appendChild(icon);
+            alert_div.appendChild(text);
+
+            message_el.innerHTML = '';
+            message_el.appendChild(alert_div);
+        };
+
+        // Helper function to safely add event listener
+        const add_event_listener = (selector, event, handler, handler_name) => {
+            const element = document.querySelector(selector);
+
+            if (!element) {
+                console.warn(`Element not found: ${selector}`);
+                return false;
+            }
+
+            if (!handler || typeof handler !== 'function') {
+                console.error(`Invalid handler for ${selector}: ${handler_name}`);
+                return false;
+            }
+
+            element.addEventListener(event, handler);
+            return true;
+        };
+
+        // Helper function to safely clear element content
+        const clear_element = (selector) => {
+            const element = document.querySelector(selector);
+            if (element) {
+                element.innerHTML = '';
+            } else {
+                console.warn(`Element not found: ${selector}`);
+            }
+        };
+
         try {
 
-            document.querySelector('#save-exhibit-btn').addEventListener('click', exhibitsAddFormModule.create_exhibit_record);
-            document.querySelector('#hero-trash').addEventListener('click', exhibitsCommonFormModule.delete_hero_image);
-            document.querySelector('#thumbnail-trash').addEventListener('click', exhibitsCommonFormModule.delete_thumbnail_image);
-            document.querySelector('#item-list-nav').innerHTML = '';
+            // Validate required modules exist
+            if (!exhibitsAddFormModule || typeof exhibitsAddFormModule !== 'object') {
+                throw new Error('exhibitsAddFormModule is not available');
+            }
+
+            if (!exhibitsCommonFormModule || typeof exhibitsCommonFormModule !== 'object') {
+                throw new Error('exhibitsCommonFormModule is not available');
+            }
+
+            // Add event listeners with validation
+            const listeners = [
+                {
+                    selector: '#save-exhibit-btn',
+                    event: 'click',
+                    handler: exhibitsAddFormModule.create_exhibit_record,
+                    name: 'create_exhibit_record'
+                },
+                {
+                    selector: '#hero-trash',
+                    event: 'click',
+                    handler: exhibitsCommonFormModule.delete_hero_image,
+                    name: 'delete_hero_image'
+                },
+                {
+                    selector: '#thumbnail-trash',
+                    event: 'click',
+                    handler: exhibitsCommonFormModule.delete_thumbnail_image,
+                    name: 'delete_thumbnail_image'
+                }
+            ];
+
+            // Track successful and failed listener attachments
+            let attached_count = 0;
+            let failed_count = 0;
+
+            for (const listener of listeners) {
+                const success = add_event_listener(
+                    listener.selector,
+                    listener.event,
+                    listener.handler,
+                    listener.name
+                );
+
+                if (success) {
+                    attached_count++;
+                } else {
+                    failed_count++;
+                }
+            }
+
+            // Log initialization summary
+            console.log(`Initialization complete: ${attached_count} listeners attached, ${failed_count} failed`);
+
+            // Clear item list navigation
+            clear_element('#item-list-nav');
+
+            return true;
 
         } catch (error) {
-            document.querySelector('#message').innerHTML = `<div class="alert alert-danger" role="alert"><i class="fa fa-exclamation"></i> ${error.message}</div>`;
+            // Log error for debugging
+            console.error('Error initializing module:', error);
+
+            // Display user-friendly error message
+            const error_message = error.message || 'An error occurred during initialization';
+            show_error(error_message);
+
+            return false;
         }
     };
 

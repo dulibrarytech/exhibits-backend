@@ -137,41 +137,78 @@ exports.get_exhibit_record = async function (req, res) {
     }
 };
 
-exports.update_exhibit_record = async function (req, res) {
+/**
+ * Updates an existing exhibit record
+ * @param {Object} req - Express request object
+ * @param {Object} res - Express response object
+ * @returns {Promise<void>}
+ */
+exports.update_exhibit_record = async (req, res) => {
 
     try {
 
-        const uuid = req.params.exhibit_id;
-        const data = req.body;
+        const { exhibit_id: uuid } = req.params;
 
-        if (uuid === undefined || data === undefined) {
-            res.status(400).send('Bad request.');
-            return false;
+        // Validate UUID format (basic check - adjust regex as needed)
+        if (!uuid || typeof uuid !== 'string' || uuid.trim().length === 0) {
+            return res.status(400).json({
+                success: false,
+                message: 'Valid exhibit ID is required'
+            });
         }
 
-        const permissions = ['update_exhibit', 'update_any_exhibit'];
-        let options = {};
-        options.req = req;
-        options.permissions = permissions;
-        options.record_type = 'exhibit';
-        options.parent_id = uuid;
-        options.child_id = null;
+        // Validate request body exists and contains data
+        if (!req.body || Object.keys(req.body).length === 0) {
+            return res.status(400).json({
+                success: false,
+                message: 'Request body with update data is required'
+            });
+        }
 
-        const is_authorized = await AUTHORIZE.check_permission(options);
+        // Check authorization
+        const authOptions = {
+            req,
+            permissions: ['update_exhibit', 'update_any_exhibit'],
+            record_type: 'exhibit',
+            parent_id: uuid,
+            child_id: null
+        };
 
-        if (is_authorized === false) {
-            res.status(403).send({
+        const isAuthorized = await AUTHORIZE.check_permission(authOptions);
+
+        if (!isAuthorized) {
+            return res.status(403).json({
+                success: false,
                 message: 'Unauthorized request'
             });
-
-            return false;
         }
 
-        const result = await EXHIBITS_MODEL.update_exhibit_record(uuid, data);
-        res.status(result.status).send(result);
+        // Update exhibit record
+        const result = await EXHIBITS_MODEL.update_exhibit_record(uuid, req.body);
+
+        // Validate result structure
+        if (!result || typeof result.status !== 'number') {
+            throw new Error('Invalid response from model');
+        }
+
+        return res.status(result.status).json(result);
 
     } catch (error) {
-        res.status(500).send({message: `Unable to update exhibit record. ${error.message}`});
+        // Log detailed error internally
+        LOGGER.module().error('ERROR: [/exhibits/controller (update_exhibit_record)]', {
+            error: error.message,
+            stack: error.stack,
+            exhibitId: req.params.exhibit_id,
+            userId: req.user?.id
+        });
+
+        // Send generic error to client
+        if (!res.headersSent) {
+            return res.status(500).json({
+                success: false,
+                message: 'Unable to update exhibit record'
+            });
+        }
     }
 };
 
