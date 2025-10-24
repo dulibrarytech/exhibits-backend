@@ -248,7 +248,7 @@ const exhibitsAddFormModule = (function () {
         }
     };
 
-    obj.init = function () {
+    obj.init = async function () {
 
         // Helper function to safely display error messages (prevents XSS)
         const show_error = (message) => {
@@ -313,6 +313,10 @@ const exhibitsAddFormModule = (function () {
                 throw new Error('exhibitsCommonFormModule is not available');
             }
 
+            if (!helperModule || typeof helperModule !== 'object') {
+                throw new Error('helperModule is not available');
+            }
+
             // Add event listeners with validation
             const listeners = [
                 {
@@ -359,6 +363,14 @@ const exhibitsAddFormModule = (function () {
 
             // Clear item list navigation
             clear_element('#item-list-nav');
+
+            // Validate helperModule method exists
+            if (typeof helperModule.create_subjects_menu !== 'function') {
+                throw new Error('helperModule.create_subjects_menu is not available');
+            }
+
+            // Create subjects menu
+            await helperModule.create_subjects_menu();
 
             return true;
 

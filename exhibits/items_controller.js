@@ -519,7 +519,7 @@ exports.reorder_items = async function (req, res) {
 
             const data = await EXHIBITS_MODEL.get_exhibit_record(id);
 
-            if (data.data[0].is_published === 1) {
+            if (data.data.is_published === 1) {
 
                 let is_suppressed= await EXHIBITS_MODEL.suppress_exhibit(id);
 
@@ -548,6 +548,7 @@ exports.reorder_items = async function (req, res) {
         }
 
     } catch (error) {
+        console.log(error);
         res.status(500).send({message: `Unable to reorder items. ${error.message}`});
     }
 };
