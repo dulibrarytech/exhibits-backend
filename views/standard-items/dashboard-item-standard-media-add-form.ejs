@@ -87,6 +87,9 @@
                 <input type="hidden" id="is-repo-item" name="is_repo_item" value="0">
             </div>
         </div>
+
+        <%- include('../partials/item-media-subjects-card'); %>
+
         <div id="item-layout-card" class="card">
             <div class="card-header">
                 <strong class="card-title mb-3">Item Layout</strong>
@@ -176,7 +179,6 @@
             </div>
         </div>
 
-        <%- include('../partials/item-media-subjects-card'); %>
         <%- include('partials/standard-item-styles.ejs'); %>
 
         <div id="item-submit-card" class="card">
