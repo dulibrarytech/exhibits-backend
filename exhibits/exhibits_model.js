@@ -164,7 +164,7 @@ exports.get_exhibit_title = async function (uuid) {
 exports.get_exhibit_record = async function (uuid) {
 
     try {
-
+        console.log('get exhibit record ', uuid);
         const TASK = new EXHIBIT_RECORD_TASKS(DB, TABLES);
 
         return {
