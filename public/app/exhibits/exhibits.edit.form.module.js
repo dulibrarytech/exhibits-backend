@@ -63,6 +63,7 @@ const exhibitsEditFormModule = (function () {
 
             try {
                 const title = await exhibitsModule.get_exhibit_title(uuid);
+
                 if (title) {
                     title_el.textContent = title;
                 }
@@ -520,6 +521,7 @@ const exhibitsEditFormModule = (function () {
 
         // Helper function to disable all form fields
         const disable_form_fields = async (is_admin) => {
+
             // Get all form elements
             const form_elements = document.querySelectorAll(
                 'input:not([type="hidden"]), textarea, select, button[type="submit"], button[type="button"]'

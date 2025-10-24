@@ -228,7 +228,7 @@ const exhibitsModule = (function () {
             });
 
             if (response !== undefined && response.status === 200) {
-                return helperModule.strip_html(helperModule.unescape(response.data.data[0].title));
+                return helperModule.strip_html(helperModule.unescape(response.data.data.title));
             }
 
         } catch (error) {

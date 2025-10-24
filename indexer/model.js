@@ -194,7 +194,7 @@ exports.index_exhibit = async function (uuid, type) {
         const item_records = await ITEM_RECORD_TASK.get_item_records(uuid);
         const grid_records = await GRID_RECORD_TASK.get_grid_records(uuid);
         const timeline_records = await TIMELINE_RECORD_TASK.get_timeline_records(uuid);
-        const exhibit_index_record = construct_exhibit_index_record(exhibit_record.pop());
+        const exhibit_index_record = construct_exhibit_index_record(exhibit_record);
         const response = await INDEX_TASKS.index_record(exhibit_index_record);
 
         if (response === false) {

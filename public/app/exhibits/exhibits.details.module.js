@@ -83,19 +83,13 @@ const exhibitsDetailsModule = (function () {
             return query_params.toString();
         };
 
-        // Helper function to redirect to login
-        const redirect_to_login = () => {
-            setTimeout(() => {
-                window.location.href = `${APP_PATH}/dashboard/login`;
-            }, 1000);
-        };
-
         try {
+
             // Validate endpoints configuration
             if (!EXHIBITS_ENDPOINTS || typeof EXHIBITS_ENDPOINTS !== 'object') {
                 console.error('EXHIBITS_ENDPOINTS is not available');
                 show_message('Configuration error: API endpoints not available', 'danger', 'fa-exclamation');
-                redirect_to_login();
+                authModule.redirect_to_auth();
                 return null;
             }
 
@@ -111,7 +105,7 @@ const exhibitsDetailsModule = (function () {
             if (!token) {
                 console.error('Authentication token not available');
                 show_message('Authentication error: Please log in again', 'warning', 'fa-lock');
-                redirect_to_login();
+                authModule.redirect_to_auth();
                 return null;
             }
 
@@ -120,7 +114,7 @@ const exhibitsDetailsModule = (function () {
             if (!profile || !profile.uid) {
                 console.error('User profile not available');
                 show_message('User profile error: Please log in again', 'warning', 'fa-user');
-                redirect_to_login();
+                authModule.redirect_to_auth();
                 return null;
             }
 
@@ -167,7 +161,7 @@ const exhibitsDetailsModule = (function () {
                 throw new Error(`Server returned status ${response.status}`);
             }
 
-            if (!response.data || !response.data.data || !Array.isArray(response.data.data)) {
+            if (!response.data || !response.data.data) {  // || !Array.isArray(response.data.data)
                 throw new Error('Invalid response structure from server');
             }
 
@@ -176,7 +170,7 @@ const exhibitsDetailsModule = (function () {
             }
 
             // Return the first record
-            return response.data.data[0];
+            return response.data.data;
 
         } catch (error) {
             // Log error for debugging
