@@ -31,6 +31,7 @@ const exhibitsCommonFormModule = (function () {
             subtitle: '#exhibit-sub-title-input',
             description: '#exhibit-description-input',
             curators: '#exhibit-about-the-curators-input',
+            exhibit_subjects: '#selected-subjects',
             alert_text: '#exhibit-alert-text-input',
             is_featured: '#is-featured',
             is_student_curated: '#is-student-curated',
@@ -133,12 +134,14 @@ const exhibitsCommonFormModule = (function () {
             // Get layout fields
             const page_layout = get_element_value(selectors.page_layout);
             const exhibit_template = get_element_value(selectors.template);
+            const exhibit_subjects = get_element_value(selectors.exhibit_subjects);
 
             // Construct exhibit object
             const exhibit = {
                 title,
                 subtitle,
                 description,
+                exhibit_subjects: exhibit_subjects,
                 about_the_curators: about_curators,
                 is_featured: bool_to_int(is_featured),
                 is_student_curated: bool_to_int(is_student_curated),

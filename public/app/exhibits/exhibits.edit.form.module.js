@@ -687,7 +687,6 @@ const exhibitsEditFormModule = (function () {
                 set_element_value('#exhibit-alert-text-input', helperModule.unescape(record.alert_text));
             }
 
-            // TODO: subjects here
             if (record.exhibit_subjects !== null && record.exhibit_subjects?.length > 0) {
                 const subjects = record.exhibit_subjects.split('|');
                 await helperModule.create_subjects_menu(subjects);
