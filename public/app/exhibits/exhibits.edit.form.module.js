@@ -571,6 +571,7 @@ const exhibitsEditFormModule = (function () {
 
             // Get current user profile
             const profile = authModule.get_user_profile_data();
+
             if (!profile || !profile.uid) {
                 console.warn('Unable to get user profile data');
                 return false;
@@ -710,7 +711,7 @@ const exhibitsEditFormModule = (function () {
 
         // Cache DOM element and constants
         const message_el = document.querySelector('#message');
-        const RELOAD_DELAY = 900;
+        const MESSAGE_CLEAR_DELAY = 3000; // 3 seconds
         const TOKEN_ERROR_DELAY = 1000;
         const REQUEST_TIMEOUT = 30000; // 30 seconds
 
@@ -804,12 +805,24 @@ const exhibitsEditFormModule = (function () {
             }
 
             // Show success message
-            show_message('success', 'Exhibit record updated');
+            show_message('success', 'Exhibit record updated successfully', 'fa-check');
 
-            // Reload page after delay
+            // Re-render the form with updated data
+            try {
+                await display_edit_record();
+                console.log('Form re-rendered with updated data');
+            } catch (render_error) {
+                console.error('Error re-rendering form:', render_error);
+                // Don't fail the whole operation if re-render fails
+                show_message('warning', 'Record updated, but form refresh failed. Please reload the page.', 'fa-exclamation');
+            }
+
+            // Clear success message after delay
             timeout_id = setTimeout(() => {
-                window.location.reload();
-            }, RELOAD_DELAY);
+                if (message_el) {
+                    message_el.innerHTML = '';
+                }
+            }, MESSAGE_CLEAR_DELAY);
 
             return true;
 

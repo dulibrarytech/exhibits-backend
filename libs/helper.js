@@ -87,9 +87,7 @@ const Helper = class {
      * @param table
      */
     async unlock_record(uid, uuid, db, table) {
-        console.log('unlock_record(uid, uuid, db, table)');
-        console.log(uid);
-        console.log(uuid);
+
         try {
 
             await db(table)
