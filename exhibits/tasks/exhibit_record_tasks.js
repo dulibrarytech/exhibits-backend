@@ -500,6 +500,9 @@ const Exhibit_record_tasks = class {
     async get_exhibit_edit_record(uid, uuid) {
 
         try {
+            console.log('get_exhibit_edit_record');
+            console.log(uid);
+            console.log(uuid);
 
             let data = await this.DB(this.TABLE.exhibit_records)
             .select('uuid',
@@ -542,6 +545,7 @@ const Exhibit_record_tasks = class {
                     await HELPER_TASK.lock_record(uid, uuid, this.DB, this.TABLE.exhibit_records);
                     data[0].locked_by_user = uid;
                     data[0].is_locked = 1;
+                    console.log('locked record ', data);
                     return data;
 
                 } catch (error) {

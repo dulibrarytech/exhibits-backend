@@ -1000,7 +1000,7 @@ const helperModule = (function () {
         }
     };
 
-    obj.unlock_record = async function () {
+    obj.unlock_record = async function (use_beacon_only = false) {
 
         // Constants
         const REQUEST_TIMEOUT = 30000; // 30 seconds
@@ -1143,7 +1143,9 @@ const helperModule = (function () {
             const config = find_endpoint_config(pathname, endpoint_config_map);
             if (!config) {
                 console.error('No matching endpoint found for current path:', pathname);
-                show_message('Unable to determine record type.', 'danger', 'fa-exclamation');
+                if (!use_beacon_only) {
+                    show_message('Unable to determine record type.', 'danger', 'fa-exclamation');
+                }
                 return false;
             }
 
@@ -1183,26 +1185,36 @@ const helperModule = (function () {
                 throw new Error('Authentication token not available');
             }
 
-            // Build request URL with encoded UID
-            const encoded_uid = encodeURIComponent(profile.uid);
-            const request_url = `${endpoint}?uid=${encoded_uid}`;
+            // Build query parameters
+            const query_params = new URLSearchParams({
+                uid: profile.uid
+            });
 
-            // prioritize beacon so unlock is more likely to occur
-            if (navigator.sendBeacon) {
+            // If beacon-only mode (page unload scenario)
+            if (use_beacon_only) {
+                if (navigator.sendBeacon) {
+                    // Include auth token in query string for Beacon API
+                    query_params.append('t', token);
+                    const beacon_url = `${endpoint}?${query_params.toString()}`;
 
-                // Beacon API only supports POST and sends as text/plain
-                // We need to send the auth token in the URL as a query parameter
-                const beacon_url = `${endpoint}&t=${encodeURIComponent(token)}`;
-                const sent = navigator.sendBeacon(beacon_url, '');
+                    const sent = navigator.sendBeacon(beacon_url, '');
 
-                if (sent) {
-                    console.log('Unlock beacon sent successfully');
+                    if (sent) {
+                        console.log('Unlock beacon sent successfully');
+                        return true;
+                    } else {
+                        console.warn('Beacon API failed to send unlock request');
+                        return false;
+                    }
                 } else {
-                    console.warn('Beacon API failed to send unlock request');
+                    console.warn('Beacon API not available');
+                    return false;
                 }
             }
 
-            // second request will trigger when unlock is clicked by an admin - success message is displayed
+            // Regular mode (manual unlock via button click)
+            const request_url = `${endpoint}?${query_params.toString()}`;
+
             // Make request with timeout
             const response = await Promise.race([
                 httpModule.req({
@@ -1236,12 +1248,93 @@ const helperModule = (function () {
             // Log error for debugging
             console.error('Error unlocking record:', error);
 
-            // Display user-friendly error message
-            const error_message = error.message || 'An unexpected error occurred while unlocking the record';
-            show_message(error_message, 'danger', 'fa-exclamation');
+            // Display user-friendly error message (only if not beacon-only mode)
+            if (!use_beacon_only) {
+                const error_message = error.message || 'An unexpected error occurred while unlocking the record';
+                show_message(error_message, 'danger', 'fa-exclamation');
+            }
 
             return false;
         }
+    };
+
+// New function to setup automatic unlock on page unload
+    obj.setup_auto_unlock = function (record) {
+
+        // Only setup auto-unlock if the current user has the record locked
+        if (!record || record.is_locked !== 1) {
+            return;
+        }
+
+        const profile = authModule.get_user_profile_data();
+        if (!profile || !profile.uid) {
+            return;
+        }
+
+        const user_id = parseInt(profile.uid, 10);
+        const locked_by_user = parseInt(record.locked_by_user, 10);
+
+        // Only unlock if current user is the one who locked it
+        if (user_id !== locked_by_user) {
+            return;
+        }
+
+        // Track if unlock has been attempted
+        let unlock_attempted = false;
+
+        // Handler for visibility change (MOST RELIABLE - fires before page unload)
+        const handle_visibility_change = () => {
+            if (document.hidden && !unlock_attempted) {
+                unlock_attempted = true;
+                console.log('Tab hidden - attempting unlock via beacon');
+
+                // Use beacon-only mode for reliable unload
+                this.unlock_record(true).catch(error => {
+                    console.error('Visibility unlock failed:', error);
+                });
+            }
+        };
+
+        // Handler for page hide (reliable for mobile browsers)
+        const handle_page_hide = () => {
+            if (!unlock_attempted) {
+                unlock_attempted = true;
+                console.log('Page hiding - attempting unlock via beacon');
+
+                // Use beacon-only mode for reliable unload
+                this.unlock_record(true).catch(error => {
+                    console.error('Page hide unlock failed:', error);
+                });
+            }
+        };
+
+        // Handler for beforeunload (last resort for older browsers)
+        const handle_before_unload = () => {
+            if (!unlock_attempted) {
+                unlock_attempted = true;
+                console.log('Page unloading - attempting unlock via beacon');
+
+                // Use beacon-only mode for reliable unload
+                this.unlock_record(true).catch(error => {
+                    console.error('Before unload unlock failed:', error);
+                });
+            }
+        };
+
+        // Add event listeners with priority order:
+
+        // 1. visibilitychange - fires when tab is hidden (MOST RELIABLE)
+        //    Fires before actual page unload, giving beacon time to send
+        document.addEventListener('visibilitychange', handle_visibility_change);
+
+        // 2. pagehide - more reliable for mobile browsers and back/forward cache
+        window.addEventListener('pagehide', handle_page_hide);
+
+        // 3. beforeunload - fires when page is about to be unloaded (fallback)
+        window.addEventListener('beforeunload', handle_before_unload);
+
+        // Log that auto-unlock has been setup
+        console.log('Auto-unlock setup complete for record (using beacon on visibility/page events)');
     };
 
     obj.get_user_name = function () {

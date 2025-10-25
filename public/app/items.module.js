@@ -25,7 +25,6 @@ const itemsModule = (function () {
     let obj = {};
 
     obj.get_items = async function (uuid) {
-    //async function get_items(uuid) {
 
         try {
 

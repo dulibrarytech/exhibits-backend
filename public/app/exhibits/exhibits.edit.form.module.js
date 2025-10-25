@@ -590,55 +590,6 @@ const exhibitsEditFormModule = (function () {
             return user_id !== locked_by_user;
         };
 
-        // Helper function to setup automatic unlock on page navigation
-        const setup_auto_unlock = (record) => {
-
-            // Only setup auto-unlock if the current user has the record locked
-            if (!record || record.is_locked !== 1) {
-                return;
-            }
-
-            const profile = authModule.get_user_profile_data();
-            if (!profile || !profile.uid) {
-                return;
-            }
-
-            const user_id = parseInt(profile.uid, 10);
-            const locked_by_user = parseInt(record.locked_by_user, 10);
-
-            // Only unlock if current user is the one who locked it
-            if (user_id !== locked_by_user) {
-                return;
-            }
-
-            // Handler to unlock record when leaving page
-            const handle_page_unload = () => {
-
-                try {
-
-                    // Call unlock function without awaiting
-                    // The browser will attempt to complete the request before unload
-                    if (helperModule && typeof helperModule.unlock_record === 'function') {
-                        helperModule.unlock_record().catch(error => {
-                            console.error('Error unlocking record during page unload:', error);
-                        });
-                    }
-                } catch (error) {
-                    console.error('Error in page unload handler:', error);
-                }
-            };
-
-            // Add event listeners for various unload scenarios
-            // beforeunload - fires when page is about to be unloaded
-            window.addEventListener('beforeunload', handle_page_unload);
-
-            // pagehide - more reliable for mobile browsers
-            window.addEventListener('pagehide', handle_page_unload);
-
-            // Log that auto-unlock has been setup
-            console.log('Auto-unlock setup complete for record');
-        };
-
         try {
 
             // Get exhibit record
@@ -661,7 +612,8 @@ const exhibitsEditFormModule = (function () {
             }
 
             // Setup automatic unlock when user navigates away (only if current user has it locked)
-            setup_auto_unlock(record);
+            // setup_auto_unlock(record);
+            helperModule.setup_auto_unlock(record);
 
             // Set audit information
             set_audit_info(record.created_by, record.created, record.updated_by, record.updated);
