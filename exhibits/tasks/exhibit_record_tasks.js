@@ -550,7 +550,7 @@ const Exhibit_record_tasks = class {
             }
 
             // Check if locked by another user
-            if (record.is_locked === 1 && record.locked_by_user !== sanitized_uid) {
+            if (record.is_locked === 1 && record.locked_by_user !== Number(sanitized_uid)) {
                 LOGGER.module().warn('Record locked by another user', {
                     uuid: sanitized_uuid,
                     locked_by: record.locked_by_user,

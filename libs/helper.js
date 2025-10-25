@@ -47,35 +47,469 @@ const Helper = class {
     }
 
     /**
-     * Locks record
-     * @param uuid
-     * @param uid
-     * @param db
-     * @param table
+     * Locks a database record for a specific user with automatic unlock after timeout
+     * @param {string} uid - User ID acquiring the lock
+     * @param {string} uuid - Record UUID to lock
+     * @param {Object} db - Database connection object
+     * @param {string} table - Table name
+     * @param {Object} [options={}] - Lock options
+     * @param {number} [options.timeout_minutes=20] - Lock timeout in minutes
+     * @returns {Promise<Object>} Lock information with timer ID
+     * @throws {Error} If validation fails or lock fails
      */
-    async lock_record(uid, uuid, db, table) {
+    async lock_record(uid, uuid, db, table, options = {}) {
+
+        const { timeout_minutes = 20 } = options;
 
         try {
+            // ===== INPUT VALIDATION =====
 
-            await db(table)
-            .where({
-                uuid: uuid
-            })
-            .update({
+            if (!uid || typeof uid !== 'string' || !uid.trim()) {
+                throw new Error('Valid user ID is required');
+            }
+
+            if (!uuid || typeof uuid !== 'string' || !uuid.trim()) {
+                throw new Error('Valid UUID is required');
+            }
+
+            // Validate UUID format
+            const uuid_regex = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
+            if (!uuid_regex.test(uuid.trim())) {
+                throw new Error('Invalid UUID format');
+            }
+
+            // ===== DATABASE VALIDATION =====
+
+            if (!db || typeof db !== 'function') {
+                throw new Error('Valid database connection is required');
+            }
+
+            if (!table || typeof table !== 'string' || !table.trim()) {
+                throw new Error('Valid table name is required');
+            }
+
+            // Validate timeout
+            if (typeof timeout_minutes !== 'number' || timeout_minutes <= 0) {
+                throw new Error('Timeout must be a positive number');
+            }
+
+            // ===== CHECK RECORD EXISTS AND CURRENT LOCK STATUS =====
+
+            const record = await Promise.race([
+                db(table)
+                    .select('uuid', 'is_locked', 'locked_by_user')
+                    .where({ uuid: uuid.trim() })
+                    .first(),
+                new Promise((_, reject) =>
+                    setTimeout(() => reject(new Error('Query timeout')), 5000)
+                )
+            ]);
+
+            if (!record) {
+                throw new Error(`Record not found: ${uuid}`);
+            }
+
+            // Check if already locked by another user
+            if (record.is_locked === 1 && record.locked_by_user !== uid.trim()) {
+                throw new Error(
+                    `Record is locked by another user: ${record.locked_by_user}`
+                );
+            }
+
+            // Check if already locked by this user
+            if (record.is_locked === 1 && record.locked_by_user === uid.trim()) {
+                LOGGER.module().info('Record already locked by this user', {
+                    uuid: uuid.trim(),
+                    uid: uid.trim()
+                });
+
+                // Still set up auto-unlock for existing lock
+                const timeout_ms = timeout_minutes * 60 * 1000;
+                const timer_id = setTimeout(async () => {
+                    try {
+                        await this.unlock_record(uid.trim(), uuid.trim(), db, table);
+                    } catch (unlock_error) {
+                        LOGGER.module().error('Auto-unlock failed', {
+                            uuid: uuid.trim(),
+                            error: unlock_error.message
+                        });
+                    }
+                }, timeout_ms);
+
+                return {
+                    uuid: uuid.trim(),
+                    locked_by: uid.trim(),
+                    locked_at: new Date(),
+                    timeout_minutes,
+                    timer_id: timer_id,
+                    already_locked: true
+                };
+            }
+
+            // ===== PERFORM LOCK =====
+
+            const lock_data = {
                 is_locked: 1,
-                locked_by_user: uid
+                locked_by_user: uid.trim(),
+                locked_at: db.fn.now(),
+                updated: db.fn.now()
+            };
+
+            const update_count = await Promise.race([
+                db(table)
+                    .where({ uuid: uuid.trim() })
+                    .update(lock_data),
+                new Promise((_, reject) =>
+                    setTimeout(() => reject(new Error('Update timeout')), 10000)
+                )
+            ]);
+
+            // Verify lock succeeded
+            if (update_count === 0) {
+                throw new Error('Lock failed: No rows affected');
+            }
+
+            LOGGER.module().info('Record locked successfully', {
+                uuid: uuid.trim(),
+                uid: uid.trim(),
+                timeout_minutes,
+                timestamp: new Date().toISOString()
             });
 
-            LOGGER.module().info('INFO: [/exhibits/helper (lock_record)] record locked.');
+            // ===== SET UP AUTO-UNLOCK =====
 
-            setTimeout(async () => {
-                await this.unlock_record(uid, uuid, db, table);
-            }, 20 * 60 * 1000); // 20 min
+            const timeout_ms = timeout_minutes * 60 * 1000;
+            const timer_id = setTimeout(async () => {
+                try {
+                    await this.unlock_record(uid.trim(), uuid.trim(), db, table);
+                    LOGGER.module().info('Record auto-unlocked after timeout', {
+                        uuid: uuid.trim(),
+                        uid: uid.trim(),
+                        timeout_minutes
+                    });
+                } catch (unlock_error) {
+                    LOGGER.module().error('Auto-unlock failed', {
+                        uuid: uuid.trim(),
+                        uid: uid.trim(),
+                        error: unlock_error.message
+                    });
+                }
+            }, timeout_ms);
 
-            return true;
+            // Return lock information with timer reference
+            return {
+                uuid: uuid.trim(),
+                locked_by: uid.trim(),
+                locked_at: new Date(),
+                timeout_minutes,
+                timer_id: timer_id,
+                already_locked: false
+            };
 
         } catch (error) {
-            LOGGER.module().error('ERROR: [/libs/helper (lock_record)] unable to lock record ' + error.message);
+            const error_context = {
+                method: 'lock_record',
+                uid,
+                uuid,
+                table,
+                timestamp: new Date().toISOString(),
+                message: error.message,
+                stack: error.stack
+            };
+
+            LOGGER.module().error(
+                'Failed to lock record',
+                error_context
+            );
+
+            throw error;
+        }
+    }
+
+    /**
+     * Unlocks a database record
+     * @param {string|number} uid - User ID releasing the lock
+     * @param {string} uuid - Record UUID to unlock
+     * @param {Object} db - Database connection object
+     * @param {string} table - Table name
+     * @param {Object} [options={}] - Unlock options
+     * @param {boolean} [options.force=false] - Force unlock even if locked by another user
+     * @returns {Promise<Object>} Updated record
+     * @throws {Error} If validation fails or unlock fails
+     */
+    async unlock_record(uid, uuid, db, table, options = {}) {
+        const { force = false } = options;
+
+        try {
+            // ===== INPUT VALIDATION =====
+
+            if (uid === null || uid === undefined || uid === '') {
+                throw new Error('Valid user ID is required');
+            }
+
+            // Convert uid to number for comparison
+            const uid_number = Number(uid);
+            if (isNaN(uid_number)) {
+                throw new Error('User ID must be a valid number');
+            }
+
+            if (!uuid || typeof uuid !== 'string' || !uuid.trim()) {
+                throw new Error('Valid UUID is required');
+            }
+
+            // Validate UUID format
+            const uuid_regex = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
+            if (!uuid_regex.test(uuid.trim())) {
+                throw new Error('Invalid UUID format');
+            }
+
+            // ===== DATABASE VALIDATION =====
+
+            if (!db || typeof db !== 'function') {
+                throw new Error('Valid database connection is required');
+            }
+
+            if (!table || typeof table !== 'string' || !table.trim()) {
+                throw new Error('Valid table name is required');
+            }
+
+            // ===== CHECK RECORD EXISTS AND LOCK STATUS =====
+
+            const record = await Promise.race([
+                db(table)
+                    .select('uuid', 'is_locked', 'locked_by_user')
+                    .where({ uuid: uuid.trim() })
+                    .first(),
+                new Promise((_, reject) =>
+                    setTimeout(() => reject(new Error('Query timeout')), 5000)
+                )
+            ]);
+
+            if (!record) {
+                throw new Error(`Record not found: ${uuid}`);
+            }
+
+            // Check if already unlocked
+            if (record.is_locked === 0) {
+                LOGGER.module().info('Record already unlocked', {
+                    uuid: uuid.trim()
+                });
+                return record;
+            }
+
+            // Convert locked_by_user to number for comparison
+            const locked_by_number = Number(record.locked_by_user);
+
+            // Check if locked by another user (and not forcing)
+            if (!force && locked_by_number !== uid_number) {
+                throw new Error(
+                    `Record is locked by another user: ${record.locked_by_user}. ` +
+                    `Cannot unlock unless force=true`
+                );
+            }
+
+            // Warn if force unlocking another user's lock
+            if (force && locked_by_number !== uid_number) {
+                LOGGER.module().warn('Force unlocking record locked by another user', {
+                    uuid: uuid.trim(),
+                    locked_by: record.locked_by_user,
+                    unlocked_by: uid_number
+                });
+            }
+
+            // ===== PERFORM UNLOCK =====
+
+            const unlock_data = {
+                is_locked: 0,
+                locked_by_user: null,
+                locked_at: null,
+                updated: db.fn.now()
+            };
+
+            const update_count = await Promise.race([
+                db(table)
+                    .where({ uuid: uuid.trim() })
+                    .update(unlock_data),
+                new Promise((_, reject) =>
+                    setTimeout(() => reject(new Error('Update timeout')), 10000)
+                )
+            ]);
+
+            // Verify unlock succeeded
+            if (update_count === 0) {
+                throw new Error('Unlock failed: No rows affected');
+            }
+
+            LOGGER.module().info('Record unlocked successfully', {
+                uuid: uuid.trim(),
+                uid: uid_number,
+                forced: force,
+                timestamp: new Date().toISOString()
+            });
+
+            // Return updated record
+            return await db(table)
+                .where({ uuid: uuid.trim() })
+                .first();
+
+        } catch (error) {
+            const error_context = {
+                method: 'unlock_record',
+                uid,
+                uuid,
+                table,
+                force,
+                timestamp: new Date().toISOString(),
+                message: error.message,
+                stack: error.stack
+            };
+
+            LOGGER.module().error(
+                'Failed to unlock record',
+                error_context
+            );
+
+            throw error;
+        }
+    }
+
+    /**
+     * Unlocks a database record
+     * @param {string} uid - User ID releasing the lock
+     * @param {string} uuid - Record UUID to unlock
+     * @param {Object} db - Database connection object
+     * @param {string} table - Table name
+     * @param {Object} [options={}] - Unlock options
+     * @param {boolean} [options.force=false] - Force unlock even if locked by another user
+     * @returns {Promise<Object>} Updated record
+     * @throws {Error} If validation fails or unlock fails
+     */
+    async unlock_record___(uid, uuid, db, table, options = {}) {
+
+        const { force = false } = options;
+        console.log('UNLOCK');
+        try {
+            // ===== INPUT VALIDATION =====
+
+            if (!uid || typeof uid !== 'string' || !uid.trim()) {
+                throw new Error('Valid user ID is required');
+            }
+
+            if (!uuid || typeof uuid !== 'string' || !uuid.trim()) {
+                throw new Error('Valid UUID is required');
+            }
+
+            // Validate UUID format
+            const uuid_regex = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
+            if (!uuid_regex.test(uuid.trim())) {
+                throw new Error('Invalid UUID format');
+            }
+
+            // ===== DATABASE VALIDATION =====
+
+            if (!db || typeof db !== 'function') {
+                throw new Error('Valid database connection is required');
+            }
+
+            if (!table || typeof table !== 'string' || !table.trim()) {
+                throw new Error('Valid table name is required');
+            }
+
+            // ===== CHECK RECORD EXISTS AND LOCK STATUS =====
+
+            const record = await Promise.race([
+                db(table)
+                    .select('uuid', 'is_locked', 'locked_by_user')
+                    .where({ uuid: uuid.trim() })
+                    .first(),
+                new Promise((_, reject) =>
+                    setTimeout(() => reject(new Error('Query timeout')), 5000)
+                )
+            ]);
+
+            if (!record) {
+                throw new Error(`Record not found: ${uuid}`);
+            }
+
+            // Check if already unlocked
+            if (record.is_locked === 0) {
+                LOGGER.module().info('Record already unlocked', {
+                    uuid: uuid.trim()
+                });
+                return record;
+            }
+            console.log('UID ', uid.trim());
+            console.log('record ', record.locked_by_user);
+            // Check if locked by another user (and not forcing)
+            if (!force && record.locked_by_user !== uid.trim()) {
+                throw new Error(
+                    `Record is locked by another user: ${record.locked_by_user}. ` +
+                    `Cannot unlock unless force=true`
+                );
+            }
+
+            // Warn if force unlocking another user's lock
+            if (force && record.locked_by_user !== uid.trim()) {
+                LOGGER.module().warn('Force unlocking record locked by another user', {
+                    uuid: uuid.trim(),
+                    locked_by: record.locked_by_user,
+                    unlocked_by: uid.trim()
+                });
+            }
+
+            // ===== PERFORM UNLOCK =====
+
+            const unlock_data = {
+                is_locked: 0,
+                locked_by_user: null,  // Set to null, not uid
+                locked_at: null,
+                updated: db.fn.now()
+            };
+
+            const update_count = await Promise.race([
+                db(table)
+                    .where({ uuid: uuid.trim() })
+                    .update(unlock_data),
+                new Promise((_, reject) =>
+                    setTimeout(() => reject(new Error('Update timeout')), 10000)
+                )
+            ]);
+
+            // Verify unlock succeeded
+            if (update_count === 0) {
+                throw new Error('Unlock failed: No rows affected');
+            }
+
+            LOGGER.module().info('Record unlocked successfully', {
+                uuid: uuid.trim(),
+                uid: uid.trim(),
+                forced: force,
+                timestamp: new Date().toISOString()
+            });
+
+            // Return updated record
+            return await db(table)
+                .where({ uuid: uuid.trim() })
+                .first();
+
+        } catch (error) {
+            const error_context = {
+                method: 'unlock_record',
+                uid,
+                uuid,
+                table,
+                force,
+                timestamp: new Date().toISOString(),
+                message: error.message,
+                stack: error.stack
+            };
+
+            LOGGER.module().error(
+                'Failed to unlock record',
+                error_context
+            );
+
+            throw error;
         }
     }
 
@@ -86,7 +520,7 @@ const Helper = class {
      * @param db
      * @param table
      */
-    async unlock_record(uid, uuid, db, table) {
+    async unlock_record_(uid, uuid, db, table) {
 
         try {
 
