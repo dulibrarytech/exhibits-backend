@@ -374,210 +374,100 @@ const Helper = class {
     }
 
     /**
-     * Unlocks a database record
-     * @param {string} uid - User ID releasing the lock
-     * @param {string} uuid - Record UUID to unlock
-     * @param {Object} db - Database connection object
-     * @param {string} table - Table name
-     * @param {Object} [options={}] - Unlock options
-     * @param {boolean} [options.force=false] - Force unlock even if locked by another user
-     * @returns {Promise<Object>} Updated record
-     * @throws {Error} If validation fails or unlock fails
+     * Validates and sanitizes configuration object
+     * @param {Object} config - Configuration object to validate
+     * @returns {Object} Sanitized configuration object
+     * @throws {Error} If validation fails or required fields are missing
      */
-    async unlock_record___(uid, uuid, db, table, options = {}) {
-
-        const { force = false } = options;
-        console.log('UNLOCK');
+    check_config(config) {
         try {
             // ===== INPUT VALIDATION =====
 
-            if (!uid || typeof uid !== 'string' || !uid.trim()) {
-                throw new Error('Valid user ID is required');
+            if (!config || typeof config !== 'object' || Array.isArray(config)) {
+                throw new Error('Config must be a valid object');
             }
 
-            if (!uuid || typeof uuid !== 'string' || !uuid.trim()) {
-                throw new Error('Valid UUID is required');
+            if (Object.keys(config).length === 0) {
+                throw new Error('Config object cannot be empty');
             }
 
-            // Validate UUID format
-            const uuid_regex = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
-            if (!uuid_regex.test(uuid.trim())) {
-                throw new Error('Invalid UUID format');
+            // ===== SANITIZE AND VALIDATE =====
+
+            const sanitized_config = {};
+            const missing_fields = [];
+            const invalid_fields = [];
+
+            for (const [key, value] of Object.entries(config)) {
+                // Prevent prototype pollution
+                if (key === '__proto__' || key === 'constructor' || key === 'prototype') {
+                    LOGGER.module().warn('Skipping dangerous property', { key });
+                    continue;
+                }
+
+                // Handle string values
+                if (typeof value === 'string') {
+                    const trimmed_value = VALIDATOR.trim(value);
+
+                    // Check for empty strings
+                    if (trimmed_value.length === 0) {
+                        LOGGER.module().error(`Missing config value for: ${key}`);
+                        missing_fields.push(key);
+                        continue;
+                    }
+
+                    // Handle URLs - encode if valid URL
+                    if (VALIDATOR.isURL(trimmed_value)) {
+                        sanitized_config[key] = encodeURI(trimmed_value);
+                    } else {
+                        sanitized_config[key] = trimmed_value;
+                    }
+                }
+                // Handle non-string values
+                else if (value !== null && value !== undefined) {
+                    sanitized_config[key] = value;
+                }
+                // Handle null/undefined
+                else {
+                    LOGGER.module().warn(`Config value is null/undefined for: ${key}`);
+                    invalid_fields.push(key);
+                }
             }
 
-            // ===== DATABASE VALIDATION =====
+            // ===== VALIDATION RESULTS =====
 
-            if (!db || typeof db !== 'function') {
-                throw new Error('Valid database connection is required');
-            }
-
-            if (!table || typeof table !== 'string' || !table.trim()) {
-                throw new Error('Valid table name is required');
-            }
-
-            // ===== CHECK RECORD EXISTS AND LOCK STATUS =====
-
-            const record = await Promise.race([
-                db(table)
-                    .select('uuid', 'is_locked', 'locked_by_user')
-                    .where({ uuid: uuid.trim() })
-                    .first(),
-                new Promise((_, reject) =>
-                    setTimeout(() => reject(new Error('Query timeout')), 5000)
-                )
-            ]);
-
-            if (!record) {
-                throw new Error(`Record not found: ${uuid}`);
-            }
-
-            // Check if already unlocked
-            if (record.is_locked === 0) {
-                LOGGER.module().info('Record already unlocked', {
-                    uuid: uuid.trim()
-                });
-                return record;
-            }
-            console.log('UID ', uid.trim());
-            console.log('record ', record.locked_by_user);
-            // Check if locked by another user (and not forcing)
-            if (!force && record.locked_by_user !== uid.trim()) {
+            if (missing_fields.length > 0) {
                 throw new Error(
-                    `Record is locked by another user: ${record.locked_by_user}. ` +
-                    `Cannot unlock unless force=true`
+                    `Missing config values for: ${missing_fields.join(', ')}`
                 );
             }
 
-            // Warn if force unlocking another user's lock
-            if (force && record.locked_by_user !== uid.trim()) {
-                LOGGER.module().warn('Force unlocking record locked by another user', {
-                    uuid: uuid.trim(),
-                    locked_by: record.locked_by_user,
-                    unlocked_by: uid.trim()
+            if (invalid_fields.length > 0) {
+                LOGGER.module().warn('Config has null/undefined values', {
+                    fields: invalid_fields
                 });
             }
 
-            // ===== PERFORM UNLOCK =====
-
-            const unlock_data = {
-                is_locked: 0,
-                locked_by_user: null,  // Set to null, not uid
-                locked_at: null,
-                updated: db.fn.now()
-            };
-
-            const update_count = await Promise.race([
-                db(table)
-                    .where({ uuid: uuid.trim() })
-                    .update(unlock_data),
-                new Promise((_, reject) =>
-                    setTimeout(() => reject(new Error('Update timeout')), 10000)
-                )
-            ]);
-
-            // Verify unlock succeeded
-            if (update_count === 0) {
-                throw new Error('Unlock failed: No rows affected');
-            }
-
-            LOGGER.module().info('Record unlocked successfully', {
-                uuid: uuid.trim(),
-                uid: uid.trim(),
-                forced: force,
-                timestamp: new Date().toISOString()
+            LOGGER.module().info('Config validated successfully', {
+                fields_count: Object.keys(sanitized_config).length
             });
 
-            // Return updated record
-            return await db(table)
-                .where({ uuid: uuid.trim() })
-                .first();
+            return sanitized_config;
 
         } catch (error) {
             const error_context = {
-                method: 'unlock_record',
-                uid,
-                uuid,
-                table,
-                force,
+                method: 'check_config',
                 timestamp: new Date().toISOString(),
                 message: error.message,
                 stack: error.stack
             };
 
             LOGGER.module().error(
-                'Failed to unlock record',
+                'Config validation failed',
                 error_context
             );
 
             throw error;
         }
-    }
-
-    /**
-     * Unlocks record after a period of inactivity
-     * @param uid
-     * @param uuid
-     * @param db
-     * @param table
-     */
-    async unlock_record_(uid, uuid, db, table) {
-
-        try {
-
-            await db(table)
-                .where({
-                    uuid: uuid
-                })
-                .update({
-                    is_locked: 0,
-                    locked_by_user: uid
-                });
-
-            LOGGER.module().info('INFO: [/exhibits/helper (unlock_record)] record unlocked.');
-
-            return true;
-
-        } catch (error) {
-            LOGGER.module().error('ERROR: [/libs/helper (unlock_record)] unable to unlock record ' + error.message);
-        }
-    }
-
-    /**
-     * Checks if required env config values are set
-     * @param config
-     */
-    check_config(config) {
-
-        try {
-
-            let obj = {};
-            let keys = Object.keys(config);
-
-            keys.map((prop) => {
-
-                if (typeof config[prop] === 'string') {
-                    if (config[prop].length === 0) {
-                        LOGGER.module().error('ERROR: [/config/app_config] ' + prop + ' env is missing config value');
-                        return false;
-                    }
-
-                    if (VALIDATOR.isURL(config[prop]) === true) {
-                        obj[prop] = encodeURI(config[prop]);
-                    }
-
-                    obj[prop] = VALIDATOR.trim(config[prop]);
-                } else {
-                    obj[prop] = config[prop];
-                }
-            });
-
-            return obj;
-
-        } catch (error) {
-            LOGGER.module().error('ERROR: [/libs/helper (check_config)] unable to check config ' + error.message);
-            return false;
-        }
-
     }
 
     /**
