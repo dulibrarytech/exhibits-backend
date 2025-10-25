@@ -108,39 +108,6 @@ const Helper = class {
         }
     }
 
-    /** Deprecate
-     * Unlocks record after a period of inactivity
-     * @param uuid
-     * @param db
-     * @param table
-     */
-    /*
-    lock_timer(uuid, db, table) {
-
-        setTimeout(async () => {
-
-            try {
-
-                await db(table)
-                    .where({
-                        uuid: uuid
-                    })
-                    .update({
-                        is_locked: 0,
-                        locked_by_user: 0
-                    });
-
-                LOGGER.module().info('INFO: [/exhibits/helper (lock_record)] record unlocked.');
-
-            } catch (error) {
-                LOGGER.module().error('ERROR: [/libs/helper (lock_timer)] unable to unlock record ' + error.message);
-                return false;
-            }
-
-        }, 5 * 60 * 1000); // 5 min
-    }
-    */
-
     /**
      * Checks if required env config values are set
      * @param config

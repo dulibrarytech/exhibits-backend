@@ -170,7 +170,7 @@ const exhibitsEditFormModule = (function () {
                 throw new Error(`Server returned status ${response.status}`);
             }
 
-            if (!response.data || !response.data.data || !Array.isArray(response.data.data)) {
+            if (!response.data || !response.data.data) {
                 throw new Error('Invalid response structure from server');
             }
 
@@ -179,7 +179,7 @@ const exhibitsEditFormModule = (function () {
             }
 
             // Return the first record
-            return response.data.data[0];
+            return response.data.data;
 
         } catch (error) {
             // Log error for debugging

@@ -32,6 +32,33 @@ const Exhibit_record_tasks = class {
     constructor(DB, TABLE) {
         this.DB = DB;
         this.TABLE = TABLE;
+        this.FIELDS = [
+            'uuid',
+            'type',
+            'title',
+            'subtitle',
+            'banner_template',
+            'about_the_curators',
+            'alert_text',
+            'hero_image',
+            'thumbnail',
+            'description',
+            'page_layout',
+            'exhibit_template',
+            'styles',
+            'order',
+            'is_published',
+            'is_preview',
+            'is_featured',
+            'is_locked',
+            'locked_by_user',
+            'is_student_curated',
+            'owner',
+            'created',
+            'updated',
+            'created_by',
+            'updated_by'
+        ];
     }
 
     /**
@@ -244,33 +271,9 @@ const Exhibit_record_tasks = class {
      * @throws {Error} If database query fails
      */
     async get_exhibit_records() {
+
         // Define columns as a constant for maintainability
-        const EXHIBIT_COLUMNS = [
-            'uuid',
-            'type',
-            'title',
-            'subtitle',
-            'banner_template',
-            'about_the_curators',
-            'alert_text',
-            'hero_image',
-            'thumbnail',
-            'description',
-            'page_layout',
-            'exhibit_template',
-            'styles',
-            'order',
-            'is_published',
-            'is_preview',
-            'is_featured',
-            'is_locked',
-            'is_student_curated',
-            'owner',
-            'created',
-            'updated',
-            'created_by',
-            'updated_by'
-        ];
+        const EXHIBIT_COLUMNS = this.FIELDS;
 
         try {
             // Validate database connection exists
@@ -400,34 +403,7 @@ const Exhibit_record_tasks = class {
     async get_exhibit_record(uuid) {
 
         // Define explicit columns instead of SELECT *
-        const EXHIBIT_COLUMNS = [
-            'uuid',
-            'type',
-            'title',
-            'subtitle',
-            'banner_template',
-            'about_the_curators',
-            'alert_text',
-            'hero_image',
-            'thumbnail',
-            'description',
-            'page_layout',
-            'exhibit_template',
-            'exhibit_subjects',
-            'styles',
-            'order',
-            'is_published',
-            'is_preview',
-            'is_featured',
-            'is_locked',
-            'is_student_curated',
-            'owner',
-            'created',
-            'updated',
-            'created_by',
-            'updated_by',
-            'is_deleted'
-        ];
+        const EXHIBIT_COLUMNS = this.FIELDS;
 
         try {
             // Input validation
@@ -493,71 +469,117 @@ const Exhibit_record_tasks = class {
     }
 
     /**
-     * Gets exhibit record by uuid
-     * @param uuid
-     * @param uid
+     * Retrieves exhibit record with enhanced lock validation
      */
     async get_exhibit_edit_record(uid, uuid) {
 
+        const EXHIBIT_COLUMNS = this.FIELDS;
+
         try {
-            console.log('get_exhibit_edit_record');
-            console.log(uid);
-            console.log(uuid);
+            // ===== INPUT VALIDATION =====
 
-            let data = await this.DB(this.TABLE.exhibit_records)
-            .select('uuid',
-                'type',
-                'title',
-                'subtitle',
-                'banner_template',
-                'about_the_curators',
-                'alert_text',
-                'hero_image',
-                'thumbnail',
-                'description',
-                'page_layout',
-                'exhibit_template',
-                'exhibit_subjects',
-                'styles',
-                'order',
-                'is_published',
-                'is_preview',
-                'is_featured',
-                'is_student_curated',
-                'is_locked',
-                'locked_by_user',
-                'owner',
-                'created',
-                'updated',
-                'created_by',
-                'updated_by'
-            )
-            .where({
-                uuid: uuid,
-                is_deleted: 0
-            });
-
-            if (data.length !== 0 && data[0].is_locked === 0) {
-
-                try {
-
-                    const HELPER_TASK = new HELPER();
-                    await HELPER_TASK.lock_record(uid, uuid, this.DB, this.TABLE.exhibit_records);
-                    data[0].locked_by_user = uid;
-                    data[0].is_locked = 1;
-                    console.log('locked record ', data);
-                    return data;
-
-                } catch (error) {
-                    LOGGER.module().error('ERROR: [/exhibits/exhibit_record_tasks (get_exhibit_record)] unable to lock record ' + error.message);
-                }
-
-            } else {
-                return data;
+            if (!uid || typeof uid !== 'string' || !uid.trim()) {
+                throw new Error('Valid user ID is required');
             }
 
+            if (!uuid || typeof uuid !== 'string' || !uuid.trim()) {
+                throw new Error('Valid UUID is required');
+            }
+
+            const uuid_regex = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
+            if (!uuid_regex.test(uuid.trim())) {
+                throw new Error('Invalid UUID format');
+            }
+
+            // ===== DATABASE VALIDATION =====
+
+            if (!this.DB || typeof this.DB !== 'function') {
+                throw new Error('Database connection is not available');
+            }
+
+            if (!this.TABLE?.exhibit_records) {
+                throw new Error('Table name "exhibit_records" is not defined');
+            }
+
+            // ===== FETCH RECORD =====
+
+            const record = await this.DB(this.TABLE.exhibit_records)
+                .select(EXHIBIT_COLUMNS)
+                .where({ uuid: uuid.trim(), is_deleted: 0 })
+                .first()
+                .timeout(10000);
+
+            if (!record) {
+                return null;
+            }
+
+            // ===== LOCK HANDLING =====
+
+            const sanitized_uid = uid.trim();
+            const sanitized_uuid = uuid.trim();
+
+            // Check if already locked by this user
+            if (record.is_locked === 1 && record.locked_by_user === sanitized_uid) {
+                LOGGER.module().info('Record already locked by this user', {
+                    uuid: sanitized_uuid,
+                    uid: sanitized_uid
+                });
+                return record;
+            }
+
+            // Check if locked by another user
+            if (record.is_locked === 1 && record.locked_by_user !== sanitized_uid) {
+                LOGGER.module().warn('Record locked by another user', {
+                    uuid: sanitized_uuid,
+                    locked_by: record.locked_by_user,
+                    requested_by: sanitized_uid
+                });
+                return record;
+            }
+
+            // Record is not locked, attempt to lock it
+            if (record.is_locked === 0) {
+                try {
+                    const HELPER_TASK = new HELPER();
+                    await HELPER_TASK.lock_record(
+                        sanitized_uid,
+                        sanitized_uuid,
+                        this.DB,
+                        this.TABLE.exhibit_records
+                    );
+
+                    // Update record with lock info
+                    record.is_locked = 1;
+                    record.locked_by_user = sanitized_uid;
+                    record.locked_at = new Date();
+
+                    LOGGER.module().info('Record locked successfully', {
+                        uuid: sanitized_uuid,
+                        locked_by: sanitized_uid
+                    });
+
+                } catch (lock_error) {
+                    LOGGER.module().error('Lock acquisition failed', {
+                        uuid: sanitized_uuid,
+                        uid: sanitized_uid,
+                        error: lock_error.message
+                    });
+
+                    // Continue without lock - let caller handle
+                }
+            }
+
+            return record;
+
         } catch (error) {
-            LOGGER.module().error('ERROR: [/exhibits/exhibit_record_tasks (get_exhibit_record)] unable to get exhibit record ' + error.message);
+            LOGGER.module().error('Failed to get exhibit edit record', {
+                method: 'get_exhibit_edit_record',
+                uid,
+                uuid,
+                error: error.message,
+                stack: error.stack
+            });
+            throw error;
         }
     }
 
