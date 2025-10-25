@@ -59,6 +59,28 @@ const Exhibit_record_tasks = class {
             'created_by',
             'updated_by'
         ];
+        this.UPDATE_FIELDS = [
+            'type',
+            'title',
+            'subtitle',
+            'banner_template',
+            'about_the_curators',
+            'alert_text',
+            'hero_image',
+            'thumbnail',
+            'description',
+            'page_layout',
+            'exhibit_template',
+            'exhibit_subjects',
+            'styles',
+            'order',
+            'is_published',
+            'is_preview',
+            'is_featured',
+            'is_locked',
+            'is_student_curated',
+            'owner'
+        ];
     }
 
     /**
@@ -594,28 +616,7 @@ const Exhibit_record_tasks = class {
     async update_exhibit_record(uuid, data, updatedBy = null) {
 
         // Define whitelist of allowed updatable fields
-        const ALLOWED_UPDATE_FIELDS = [
-            'type',
-            'title',
-            'subtitle',
-            'banner_template',
-            'about_the_curators',
-            'alert_text',
-            'hero_image',
-            'thumbnail',
-            'description',
-            'page_layout',
-            'exhibit_template',
-            'exhibit_subjects',
-            'styles',
-            'order',
-            'is_published',
-            'is_preview',
-            'is_featured',
-            'is_locked',
-            'is_student_curated',
-            'owner'
-        ];
+        const ALLOWED_UPDATE_FIELDS = this.UPDATE_FIELDS;
 
         // Protected fields that should never be updated directly
         const PROTECTED_FIELDS = [
