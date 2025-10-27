@@ -480,7 +480,7 @@ const Helper = class {
 
         try {
 
-            let exhibit_order = await db(tables.exhibit_records).select('order'); // .where('uuid', uuid);
+            let exhibit_order = await db(tables.exhibit_records).select('order');
             return this.order_items(exhibit_order);
 
         } catch (error) {

@@ -415,7 +415,6 @@ const Auth_tasks = class {
     async check_ownership(user_id, parent_id, child_id, record_type) {
 
         try {
-            console.log('checking ownership...');
 
             // Validate user_id
             if (user_id === null || user_id === undefined) {

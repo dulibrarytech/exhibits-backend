@@ -102,7 +102,7 @@ exports.get_heading_record = async function (req, res) {
 exports.update_heading_record = async function (req, res) {
 
     try {
-
+        console.log('updating heading record');
         const is_member_of_exhibit = req.params.exhibit_id;
         const heading_id = req.params.heading_id;
         const data = req.body;
@@ -161,7 +161,8 @@ exports.unlock_heading_record = async function (req, res) {
             return false;
         }
 
-        const permissions = ['update_any_item'];
+        // TODO: add permissions for all to unlock
+        const permissions = ['update_item', 'update_any_item'];
         let options = {};
         options.req = req;
         options.permissions = permissions;

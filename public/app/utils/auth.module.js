@@ -918,7 +918,10 @@ const authModule = (function () {
                     'x-access-token': token
                 },
                 data: request_payload,
-                timeout: 10000
+                timeout: 10000,
+                validateStatus: function (status) {
+                    return status >= 200 && status < 600; // Accept any status code
+                }
             });
 
             // Validate response structure
@@ -958,6 +961,7 @@ const authModule = (function () {
             return false;
 
         } catch (error) {
+
             console.error('Error in check_permissions:', error.message);
 
             // Differentiate error types for better debugging and user feedback

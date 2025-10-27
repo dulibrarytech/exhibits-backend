@@ -1219,7 +1219,7 @@ const Exhibit_record_tasks = class {
         }
     }
 
-    /**
+    /** TODO: deprecate
      * Reorder exhibits
      * @param uuid
      * @param order

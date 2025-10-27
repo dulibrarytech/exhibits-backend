@@ -495,8 +495,8 @@ exports.unlock_exhibit_record = async function (req, res) {
         }
 
         // TODO: permission check
-        /*
-        const permissions = ['update_any_exhibit'];
+        // TODO: add permissions for all to unlock
+        const permissions = ['update_exhibit', 'update_any_exhibit'];
         let options = {};
         options.req = req;
         options.permissions = permissions;
@@ -513,7 +513,6 @@ exports.unlock_exhibit_record = async function (req, res) {
 
             return false;
         }
-        */
 
         const result = await EXHIBITS_MODEL.unlock_exhibit_record(uid, uuid);
 

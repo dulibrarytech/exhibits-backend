@@ -224,7 +224,7 @@ const exhibitsAddFormModule = (function () {
             showMessage('success', 'Exhibit record created');
 
             // Redirect after delay
-            const exhibitId = encodeURIComponent(response.data.data);
+            const exhibitId = encodeURIComponent(response.data.data); // .uuid
             timeoutId = setTimeout(() => {
                 window.location.href = `${APP_PATH}/items?exhibit_id=${exhibitId}`;
             }, REDIRECT_DELAY);

@@ -401,15 +401,17 @@ exports.check_permissions = async function (req, res) {
 
         // Handle authorization result
         if (is_authorized === true) {
+            console.log('auth controller ', is_authorized);
             return res.status(200).json({
                 message: 'Authorized'
             });
+        } else if (is_authorized === false) {
+            console.log('AUTHORIZE', is_authorized);
+            // Authorization failed
+            return res.status(403).json({
+                message: 'Unauthorized request'
+            });
         }
-
-        // Authorization failed
-        return res.status(403).json({
-            message: 'Unauthorized request'
-        });
 
     } catch (error) {
         LOGGER.module().error(

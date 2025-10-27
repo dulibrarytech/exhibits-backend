@@ -30,12 +30,6 @@ const INDEXER_ENDPOINTS = require('../indexer/endpoints')();
 const LOGGER = require('../libs/log4');
 const ROLE_TASKS = require("./tasks/roles_tasks");
 
-/**
- * Authentication Model - Optimized Version with Singleton Pattern
- * All functions refactored with defensive programming practices
- * Uses singleton pattern for better performance in production
- */
-
 // Module-level singleton instances
 let AUTH_TASKS_INSTANCE = null;
 let ROLES_TASKS_INSTANCE = null;
