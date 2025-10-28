@@ -469,7 +469,7 @@ const publish_grid_record = async function (exhibit_id, grid_id) {
         const GRID_TASKS = new EXHIBIT_GRID_RECORD_TASKS(DB, TABLES);
         const exhibit_record = await EXHIBIT_TASKS.get_exhibit_record(exhibit_id);
 
-        if (exhibit_record[0].is_published === 0) {
+        if (exhibit_record.is_published === 0) {
 
             LOGGER.module().error('ERROR: [/exhibits/items_model (publish_grid_record)] Unable to publish grid');
 
@@ -591,7 +591,7 @@ const publish_grid_item_record = async function (exhibit_id, grid_id, grid_item_
         const GRID_TASKS = new EXHIBIT_GRID_RECORD_TASKS(DB, TABLES);
         let grid_record = await GRID_TASKS.get_grid_record(exhibit_id, grid_id);
 
-        if (grid_record[0].is_published === 0) {
+        if (grid_record.is_published === 0) {
 
             LOGGER.module().error('ERROR: [/exhibits/items_model (publish_grid_item_record)] Unable to publish grid item');
 
