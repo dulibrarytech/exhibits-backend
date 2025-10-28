@@ -48,7 +48,19 @@ const itemsAddVerticalTimelineItemFormModule = (function () {
                 return false;
             }
 
-            data.created_by = helperModule.get_user_name();
+            // Add metadata
+            const user_name = helperModule.get_user_name();
+            const owner = helperModule.get_owner();
+
+            if (user_name) {
+                data.created_by = user_name;
+            }
+
+            if (owner) {
+                data.owner = owner;
+            }
+
+            data.created_by = user_name;
 
             let tmp = EXHIBITS_ENDPOINTS.exhibits.timeline_item_records.post.endpoint.replace(':exhibit_id', exhibit_id);
             let endpoint = tmp.replace(':timeline_id', timeline_id);
