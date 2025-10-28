@@ -446,7 +446,7 @@ exports.publish_timeline_record = async function (exhibit_id, timeline_id) {
         const TIMELINE_TASKS = new EXHIBIT_TIMELINE_RECORD_TASKS(DB, TABLES);
         const exhibit_record = await EXHIBIT_TASKS.get_exhibit_record(exhibit_id);
 
-        if (exhibit_record[0].is_published === 0) {
+        if (exhibit_record.is_published === 0) {
 
             LOGGER.module().error('ERROR: [/exhibits/timelines_model (publish_timeline_record)] Unable to publish timeline');
 
