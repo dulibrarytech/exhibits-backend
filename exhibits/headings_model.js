@@ -261,7 +261,7 @@ const publish_heading_record = async function (exhibit_id, heading_id) {
         const HEADING_TASKS = new EXHIBIT_HEADING_RECORD_TASKS(DB, TABLES);
         const exhibit_record = await EXHIBIT_TASKS.get_exhibit_record(exhibit_id);
 
-        if (exhibit_record[0].is_published === 0) {
+        if (exhibit_record.is_published === 0) {
 
             LOGGER.module().error('ERROR: [/exhibits/items_model (publish_item_record)] Unable to publish heading');
 

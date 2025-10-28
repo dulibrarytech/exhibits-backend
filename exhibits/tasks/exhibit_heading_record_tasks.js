@@ -313,7 +313,7 @@ const Exhibit_heading_record_tasks = class {
                 uuid: uuid.trim(),
                 is_member_of_exhibit: is_member_of_exhibit.trim()
             });
-            console.log(record);
+
             return record;
 
         } catch (error) {
