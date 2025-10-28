@@ -102,24 +102,114 @@ const Exhibit_grid_record_tasks = class {
     }
 
     /**
-     * Gets grid record by id
-     * @param is_member_of_exhibit
-     * @param grid_id
+     * Retrieves a single grid record by exhibit UUID and grid UUID
+     * @param {string} is_member_of_exhibit - The exhibit UUID this grid belongs to
+     * @param {string} grid_id - The grid record UUID
+     * @returns {Promise<Object|null>} Grid record or null if not found
+     * @throws {Error} If validation fails or query fails
      */
     async get_grid_record(is_member_of_exhibit, grid_id) {
 
+        // Define columns to select
+        const GRID_COLUMNS = [
+            'id',
+            'uuid',
+            'is_member_of_exhibit',
+            'type',
+            'columns',
+            'title',
+            'text',
+            'styles',
+            'order',
+            'is_deleted',
+            'is_published',
+            'created',
+            'updated',
+            'owner',
+            'created_by',
+            'updated_by'
+        ];
+
         try {
 
-            return await this.DB(this.TABLE.grid_records)
-                .select('*')
-                .where({
-                    is_member_of_exhibit: is_member_of_exhibit,
-                    uuid: grid_id,
-                    is_deleted: 0
+            // ===== INPUT VALIDATION =====
+
+            if (!is_member_of_exhibit || typeof is_member_of_exhibit !== 'string' || !is_member_of_exhibit.trim()) {
+                throw new Error('Valid exhibit UUID is required');
+            }
+
+            if (!grid_id || typeof grid_id !== 'string' || !grid_id.trim()) {
+                throw new Error('Valid grid UUID is required');
+            }
+
+            // Validate UUID formats
+            const uuid_regex = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
+
+            if (!uuid_regex.test(is_member_of_exhibit.trim())) {
+                throw new Error('Invalid exhibit UUID format');
+            }
+
+            if (!uuid_regex.test(grid_id.trim())) {
+                throw new Error('Invalid grid UUID format');
+            }
+
+            // ===== DATABASE VALIDATION =====
+
+            if (!this.DB || typeof this.DB !== 'function') {
+                throw new Error('Database connection is not available');
+            }
+
+            if (!this.TABLE?.grid_records) {
+                throw new Error('Table name "grid_records" is not defined');
+            }
+
+            // ===== FETCH GRID RECORD =====
+
+            const record = await Promise.race([
+                this.DB(this.TABLE.grid_records)
+                    .select(GRID_COLUMNS)
+                    .where({
+                        is_member_of_exhibit: is_member_of_exhibit.trim(),
+                        uuid: grid_id.trim(),
+                        is_deleted: 0
+                    })
+                    .first(),  // Returns single object instead of array
+                new Promise((_, reject) =>
+                    setTimeout(() => reject(new Error('Query timeout')), 10000)
+                )
+            ]);
+
+            if (!record) {
+                LOGGER.module().info('Grid record not found', {
+                    is_member_of_exhibit: is_member_of_exhibit.trim(),
+                    grid_id: grid_id.trim()
                 });
+                return null;
+            }
+
+            LOGGER.module().info('Grid record retrieved', {
+                uuid: grid_id.trim(),
+                is_member_of_exhibit: is_member_of_exhibit.trim()
+            });
+
+            return record;
 
         } catch (error) {
-            LOGGER.module().error('ERROR: [/exhibits/exhibit_grid_record_tasks (get_grid_record)] unable to get grid record ' + error.message);
+            const error_context = {
+                method: 'get_grid_record',
+                is_member_of_exhibit,
+                grid_id,
+                timestamp: new Date().toISOString(),
+                message: error.message,
+                stack: error.stack
+            };
+
+            LOGGER.module().error(
+                'Failed to get grid record',
+                error_context
+            );
+
+            throw error;
         }
     }
 
