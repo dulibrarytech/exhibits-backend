@@ -39,7 +39,7 @@ const itemsEditGridFormModule = (function () {
                 document.querySelector('#message').innerHTML = 'ERROR: Unable to get API endpoints';
 
                 setTimeout(() => {
-                    window.location.replace(APP_PATH + '/exhibits-dashboard/auth');
+                    authModule.redirect_to_auth();
                 }, 1000);
 
                 return false;
@@ -55,7 +55,7 @@ const itemsEditGridFormModule = (function () {
             });
 
             if (response !== undefined && response.status === 200) {
-                return response.data.data[0];
+                return response.data.data;
             }
 
         } catch (error) {
@@ -79,15 +79,7 @@ const itemsEditGridFormModule = (function () {
 
             document.querySelector('#message').innerHTML = `<div class="alert alert-info" role="alert"><i class="fa fa-info"></i> Updating grid record...</div>`;
 
-            /*
-            const user = JSON.parse(sessionStorage.getItem('exhibits_user'));
-
-            if (user.name === null) {
-                document.querySelector('#message').innerHTML = `<div class="alert alert-danger" role="alert"><i class="fa fa-exclamation"></i> Unable to retrieve your name</div>`;
-                return false;
-            }
-            */
-            data.updated_by = helperModule.get_user_name(); //user.name;
+            data.updated_by = helperModule.get_user_name();
 
             let tmp = EXHIBITS_ENDPOINTS.exhibits.grid_records.put.endpoint.replace(':exhibit_id', exhibit_id);
             let endpoint = tmp.replace(':grid_id', grid_id);

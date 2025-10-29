@@ -38,7 +38,170 @@ const Exhibit_grid_record_tasks = class {
      * Creates grid record
      * @param data
      */
-    async create_grid_record(data) {
+    /**
+     * Creates a new grid record in the database
+     * @param {Object} data - Grid record data
+     * @param {string} [created_by=null] - User ID creating the record
+     * @returns {Promise<Object>} Created grid record with ID
+     * @throws {Error} If validation fails or creation fails
+     */
+    async create_grid_record(data, created_by = null) {
+        // Define whitelist of allowed fields
+        const ALLOWED_FIELDS = [
+            'uuid',
+            'is_member_of_exhibit',
+            'type',
+            'columns',
+            'title',
+            'text',
+            'styles',
+            'order',
+            'is_published',
+            'owner',
+            'created_by'
+        ];
+
+        try {
+            // ===== INPUT VALIDATION =====
+
+            if (!data || typeof data !== 'object' || Array.isArray(data)) {
+                throw new Error('Data must be a valid object');
+            }
+
+            if (Object.keys(data).length === 0) {
+                throw new Error('Data object cannot be empty');
+            }
+
+            // ===== DATABASE VALIDATION =====
+
+            if (!this.DB || typeof this.DB !== 'function') {
+                throw new Error('Database connection is not available');
+            }
+
+            if (!this.TABLE?.grid_records) {
+                throw new Error('Table name "grid_records" is not defined');
+            }
+
+            // ===== SANITIZE AND VALIDATE DATA =====
+
+            const sanitized_data = {};
+            const invalid_fields = [];
+
+            for (const [key, value] of Object.entries(data)) {
+                // Security: prevent prototype pollution
+                if (key === '__proto__' || key === 'constructor' || key === 'prototype') {
+                    LOGGER.module().warn('Dangerous property skipped', { key });
+                    continue;
+                }
+
+                // Whitelist check
+                if (ALLOWED_FIELDS.includes(key)) {
+                    sanitized_data[key] = value;
+                } else {
+                    invalid_fields.push(key);
+                }
+            }
+
+            // Warn about invalid fields
+            if (invalid_fields.length > 0) {
+                LOGGER.module().warn('Invalid fields ignored', {
+                    fields: invalid_fields
+                });
+            }
+
+            // Check if we have any valid data
+            if (Object.keys(sanitized_data).length === 0) {
+                throw new Error('No valid fields provided for insert');
+            }
+
+            // ===== ADD METADATA =====
+
+            // Add timestamps
+            sanitized_data.created = this.DB.fn.now();
+            sanitized_data.updated = this.DB.fn.now();
+
+            // Add created_by if provided
+            if (created_by) {
+                sanitized_data.created_by = created_by;
+                sanitized_data.updated_by = created_by;
+            }
+
+            // Add default values if not provided
+            if (sanitized_data.type === undefined) {
+                sanitized_data.type = 'grid';
+            }
+            if (sanitized_data.columns === undefined) {
+                sanitized_data.columns = 4;
+            }
+            if (sanitized_data.order === undefined) {
+                sanitized_data.order = 0;
+            }
+            if (sanitized_data.is_published === undefined) {
+                sanitized_data.is_published = 0;
+            }
+            if (sanitized_data.is_deleted === undefined) {
+                sanitized_data.is_deleted = 0;
+            }
+            if (sanitized_data.owner === undefined) {
+                sanitized_data.owner = 0;
+            }
+
+            // ===== PERFORM INSERT IN TRANSACTION =====
+
+            const created_record = await this.DB.transaction(async (trx) => {
+                // Insert the record
+                const [insert_id] = await trx(this.TABLE.grid_records)
+                    .insert(sanitized_data)
+                    .timeout(10000);
+
+                // Verify insert succeeded
+                if (!insert_id) {
+                    throw new Error('Insert failed: No ID returned');
+                }
+
+                // Fetch and return the created record
+                const record = await trx(this.TABLE.grid_records)
+                    .where({ id: insert_id })
+                    .first();
+
+                if (!record) {
+                    throw new Error('Failed to retrieve created record');
+                }
+
+                LOGGER.module().info('Grid record created successfully', {
+                    id: insert_id,
+                    uuid: record.uuid,
+                    is_member_of_exhibit: record.is_member_of_exhibit,
+                    created_by,
+                    timestamp: new Date().toISOString()
+                });
+
+                return record;
+            });
+
+            return created_record;
+
+        } catch (error) {
+            const error_context = {
+                method: 'create_grid_record',
+                data_keys: Object.keys(data || {}),
+                created_by,
+                timestamp: new Date().toISOString(),
+                message: error.message,
+                stack: error.stack
+            };
+
+            LOGGER.module().error(
+                'Failed to create grid record',
+                error_context
+            );
+
+            throw error;
+        }
+    }
+
+    /*
+    async create_grid_record__(data) {
 
         try {
 
@@ -57,6 +220,8 @@ const Exhibit_grid_record_tasks = class {
             LOGGER.module().error('ERROR: [/exhibits/exhibit_grid_record_tasks (create_grid_record)] unable to create grid record ' + error.message);
         }
     }
+
+     */
 
     /**
      * Gets all grid records by exhibit

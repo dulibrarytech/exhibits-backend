@@ -1682,6 +1682,24 @@ const helperModule = (function () {
         }
     };
 
+    // TODO:
+    obj.clear_status_message = function (element) {
+
+        if (!element) {
+            return;
+        }
+
+        // Fade out effect
+        element.style.transition = 'opacity 0.3s ease-out';
+        element.style.opacity = '0';
+
+        setTimeout(() => {
+            element.textContent = '';
+            element.style.opacity = '1';
+        }, 300);
+
+    }
+
     obj.init = function () {
     };
 
