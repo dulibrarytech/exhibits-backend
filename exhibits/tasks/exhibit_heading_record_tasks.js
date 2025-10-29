@@ -178,32 +178,6 @@ const Exhibit_heading_record_tasks = class {
     }
 
     /**
-     * Creates exhibit heading record
-     * @param data
-     */
-    /*
-    async create_heading_record__(data) {
-
-        try {
-
-            const result = await this.DB.transaction((trx) => {
-                this.DB.insert(data)
-                .into(this.TABLE.heading_records)
-                .transacting(trx)
-                .then(trx.commit)
-                .catch(trx.rollback);
-            });
-
-            LOGGER.module().info('INFO: [/exhibits/exhibit_heading_record_tasks (create_heading_record)] ' + result.length + ' Heading record created.');
-            return true;
-
-        } catch (error) {
-            LOGGER.module().error('ERROR: [/exhibits/exhibit_heading_record_tasks (create_heading_record)] unable to create heading record ' + error.message);
-        }
-    }
-    */
-
-    /**
      * Gets all heading records by exhibit
      * @param is_member_of_exhibit
      */
@@ -231,6 +205,7 @@ const Exhibit_heading_record_tasks = class {
      * @throws {Error} If validation fails or query fails
      */
     async get_heading_record(is_member_of_exhibit, uuid) {
+
         // Define columns to select
         const HEADING_COLUMNS = [
             'id',
@@ -336,28 +311,6 @@ const Exhibit_heading_record_tasks = class {
     }
 
     /**
-     * Gets heading record
-     * @param is_member_of_exhibit
-     * @param uuid
-     */
-    async get_heading_record__(is_member_of_exhibit, uuid) {
-
-        try {
-
-            return await this.DB(this.TABLE.heading_records)
-            .select('*')
-            .where({
-                is_member_of_exhibit: is_member_of_exhibit,
-                uuid: uuid,
-                is_deleted: 0
-            });
-
-        } catch (error) {
-            LOGGER.module().error('ERROR: [/exhibits/exhibit_heading_record_tasks (get_heading_record)] unable to get heading records ' + error.message);
-        }
-    }
-
-    /**
      * Retrieves a heading record for editing and locks it for the user
      * @param {string|number} uid - User ID requesting to edit
      * @param {string} is_member_of_exhibit - The exhibit UUID this heading belongs to
@@ -366,7 +319,7 @@ const Exhibit_heading_record_tasks = class {
      * @throws {Error} If validation fails or retrieval fails
      */
     async get_heading_edit_record(uid, is_member_of_exhibit, uuid) {
-        // Define columns to select (avoid SELECT *)
+        // Define columns to select
         const HEADING_COLUMNS = [
             'id',
             'is_member_of_exhibit',
@@ -461,7 +414,7 @@ const Exhibit_heading_record_tasks = class {
             // If record is not locked, attempt to lock it for this user
             if (record.is_locked === 0) {
                 try {
-                    const HELPER_TASK = new HELPER(); // _number // TODO normalize
+                    const HELPER_TASK = new HELPER(); // _Number // TODO normalize - uid does not need to be cast here
                     await HELPER_TASK.lock_record(
                         uid,
                         uuid.trim(),
@@ -527,45 +480,6 @@ const Exhibit_heading_record_tasks = class {
             );
 
             throw error;
-        }
-    }
-
-    /**
-     * Gets heading edit record
-     * @param is_member_of_exhibit
-     * @param uuid
-     * @param uid
-     */
-    async get_heading_edit_record__(uid, is_member_of_exhibit, uuid) {
-
-        try {
-
-            const data = await this.DB(this.TABLE.heading_records)
-                .select('*')
-                .where({
-                    is_member_of_exhibit: is_member_of_exhibit,
-                    uuid: uuid,
-                    is_deleted: 0
-                });
-
-            if (data.length !== 0 && data[0].is_locked === 0) {
-
-                try {
-
-                    const HELPER_TASK = new HELPER();
-                    await HELPER_TASK.lock_record(uid, uuid, this.DB, this.TABLE.heading_records);
-                    return data;
-
-                } catch (error) {
-                    LOGGER.module().error('ERROR:[/exhibits/exhibit_heading_record_tasks (get_heading_record)] unable to lock record ' + error.message);
-                }
-
-            } else {
-                return data;
-            }
-
-        } catch (error) {
-            LOGGER.module().error('ERROR: [/exhibits/exhibit_heading_record_tasks (get_heading_record)] unable to get heading records ' + error.message);
         }
     }
 

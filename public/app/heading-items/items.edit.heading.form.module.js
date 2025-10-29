@@ -171,6 +171,7 @@ const itemsEditHeadingFormModule = (function () {
 
         // Helper function to check if current user is an administrator
         const is_user_administrator = async () => {
+
             try {
                 const profile = authModule.get_user_profile_data();
                 if (!profile || !profile.uid) {
@@ -189,6 +190,48 @@ const itemsEditHeadingFormModule = (function () {
                 console.error('Error checking user role:', error);
                 return false;
             }
+        };
+
+        // Helper function to disable all form fields
+        const disable_form_fields = async (is_admin) => {
+
+            // Get all form elements
+            const form_elements = document.querySelectorAll(
+                'input:not([type="hidden"]), textarea, select, button[type="submit"], button[type="button"]'
+            );
+
+            let disabled_count = 0;
+
+            form_elements.forEach(element => {
+                // Skip the unlock button if user is an administrator
+                if (is_admin && element.id === 'unlock-record') {
+                    console.log('Preserving unlock button for administrator');
+                    return;
+                }
+
+                // Don't disable already disabled elements or read-only elements
+                if (!element.disabled && !element.readOnly) {
+                    element.disabled = true;
+                    element.style.cursor = 'not-allowed';
+                    element.style.opacity = '0.6';
+                    disabled_count++;
+                }
+            });
+
+            // Also disable file upload areas and custom buttons (except unlock button for admins)
+            const custom_buttons = document.querySelectorAll('.btn:not([disabled])');
+            custom_buttons.forEach(button => {
+                // Skip the unlock button if user is an administrator
+                if (is_admin && button.id === 'unlock-record') {
+                    return;
+                }
+
+                button.disabled = true;
+                button.style.cursor = 'not-allowed';
+                button.style.opacity = '0.6';
+            });
+
+            console.log(`Disabled ${disabled_count} form elements (record locked by another user)`);
         };
 
         // Helper function to check if record is locked by another user
@@ -231,7 +274,7 @@ const itemsEditHeadingFormModule = (function () {
             }
 
             // Check if record is locked
-            await helperModule.check_if_locked(record, '#exhibit-submit-card');
+            await helperModule.check_if_locked(record, '#item-submit-card');
 
             // Disable form fields if locked by another user
             if (is_locked_by_other_user(record)) {
@@ -250,7 +293,7 @@ const itemsEditHeadingFormModule = (function () {
             const dom_elements = cache_dom_elements();
 
             // Validate and check record lock status
-            helperModule.check_if_locked(record, '#item-submit-card');
+            await helperModule.check_if_locked(record, '#item-submit-card');
 
             // Display metadata (creation/update info)
             display_metadata_info(record, dom_elements.created);

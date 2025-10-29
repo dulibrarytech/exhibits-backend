@@ -570,7 +570,7 @@ exports.unlock_item_record = async function (req, res) {
             res.status(400).send('Bad request.');
             return false;
         }
-
+        /*
         const permissions = ['update_any_item'];
         let options = {};
         options.req = req;
@@ -588,7 +588,7 @@ exports.unlock_item_record = async function (req, res) {
 
             return false;
         }
-
+        */
         const result = await ITEMS_MODEL.unlock_item_record(uid, item_id);
 
         if (result === true) {

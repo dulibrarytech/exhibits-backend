@@ -78,11 +78,112 @@ const Exhibit_item_record_tasks = class {
     }
 
     /**
+     * Gets item record for standard item details page
+     * @param is_member_of_exhibit
+     * @param uuid
+     * @returns {Promise<awaited Knex.QueryBuilder<TRecord, DeferredKeySelection.AddUnionMember<UnwrapArrayMember<TResult>, undefined>>|null>}
+     */
+    async get_item_record(is_member_of_exhibit, uuid) {
+
+        /**
+         * Validate UUID format (RFC 4122 compliant)
+         */
+        const is_valid_uuid = (uuid) => {
+            if (typeof uuid !== 'string') {
+                return false;
+            }
+
+            // UUID v4 regex pattern
+            const uuid_pattern = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
+            return uuid_pattern.test(uuid);
+        };
+
+        /**
+         * Validate exhibit ID format
+         */
+        const is_valid_exhibit_id = (exhibit_id) => {
+            if (typeof exhibit_id !== 'string' && typeof exhibit_id !== 'number') {
+                return false;
+            }
+
+            // If it's a UUID format
+            if (typeof exhibit_id === 'string' && exhibit_id.includes('-')) {
+                return is_valid_uuid(exhibit_id);
+            }
+
+            // If it's a numeric ID
+            if (typeof exhibit_id === 'number' || /^\d+$/.test(exhibit_id)) {
+                return true;
+            }
+
+            // For other string formats, ensure it's not empty and has reasonable length
+            const exhibit_id_str = String(exhibit_id).trim();
+            return exhibit_id_str.length > 0 && exhibit_id_str.length <= 255;
+        };
+
+        // Validate required parameters
+        if (!is_member_of_exhibit || !uuid) {
+            const error_msg = 'Missing required parameters: is_member_of_exhibit and uuid are required';
+            LOGGER.module().error(`ERROR: [/exhibits/exhibit_item_record_tasks (get_item_record)] ${error_msg}`);
+            return null;
+        }
+
+        // Validate UUID format (basic check)
+        if (!is_valid_uuid(uuid)) {
+            const error_msg = `Invalid UUID format: ${uuid}`;
+            LOGGER.module().error(`ERROR: [/exhibits/exhibit_item_record_tasks (get_item_record)] ${error_msg}`);
+            return null;
+        }
+
+        // Validate exhibit ID format
+        if (!is_valid_exhibit_id(is_member_of_exhibit)) {
+            const error_msg = `Invalid exhibit ID format: ${is_member_of_exhibit}`;
+            LOGGER.module().error(`ERROR: [/exhibits/exhibit_item_record_tasks (get_item_record)] ${error_msg}`);
+            return null;
+        }
+
+        try {
+            // Set query timeout to prevent long-running queries
+            const QUERY_TIMEOUT = 5000; // 5 seconds
+
+            const result = await this.DB(this.TABLE.item_records)
+                .select('*') // Consider selecting specific columns: .select('id', 'uuid', 'title', ...)
+                .where({
+                    is_member_of_exhibit: is_member_of_exhibit,
+                    uuid: uuid,
+                    is_deleted: 0
+                })
+                .first() // Get single record instead of array
+                .timeout(QUERY_TIMEOUT);
+
+            // Return result or null if not found
+            return result || null;
+
+        } catch (error) {
+            // Handle specific error types
+            if (error.name === 'TimeoutError') {
+                LOGGER.module().error(
+                    `ERROR: [/exhibits/exhibit_item_record_tasks (get_item_record)] ` +
+                    `Query timeout for exhibit: ${is_member_of_exhibit}, UUID: ${uuid}`
+                );
+            } else {
+                LOGGER.module().error(
+                    `ERROR: [/exhibits/exhibit_item_record_tasks (get_item_record)] ` +
+                    `Unable to get item record for exhibit: ${is_member_of_exhibit}, UUID: ${uuid} - ${error.message}`
+                );
+            }
+
+            // Return null instead of undefined on error
+            return null;
+        }
+    }
+
+    /**
      * Gets item record
      * @param is_member_of_exhibit
      * @param uuid
      */
-    async get_item_record(is_member_of_exhibit, uuid) {
+    async get_item_record__(is_member_of_exhibit, uuid) {
 
         try {
 

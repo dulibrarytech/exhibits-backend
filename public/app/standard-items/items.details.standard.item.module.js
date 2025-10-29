@@ -40,7 +40,7 @@ const itemsDetailsStandardItemModule = (function () {
                 document.querySelector('#message').innerHTML = 'ERROR: Unable to get API endpoints';
 
                 setTimeout(() => {
-                    window.location.replace(APP_PATH + '/exhibits-dashboard/auth');
+                    authModule.redirect_to_auth();
                 }, 1000);
 
                 return false;
@@ -48,7 +48,7 @@ const itemsDetailsStandardItemModule = (function () {
 
             let response = await httpModule.req({
                 method: 'GET',
-                url: endpoint + '?type=edit&uid=' + profile.uid,
+                url: endpoint + '?uid=' + profile.uid, // type=edit&
                 headers: {
                     'Content-Type': 'application/json',
                     'x-access-token': token
@@ -56,7 +56,7 @@ const itemsDetailsStandardItemModule = (function () {
             });
 
             if (response !== undefined && response.status === 200) {
-                return response.data.data[0];
+                return response.data.data;
             }
 
         } catch (error) {
@@ -64,7 +64,7 @@ const itemsDetailsStandardItemModule = (function () {
         }
     }
 
-    async function display_edit_record() {
+    async function display_details_record() {
 
         const record = await get_item_record();
         let is_published = record.is_published;
@@ -169,7 +169,7 @@ const itemsDetailsStandardItemModule = (function () {
 
             const exhibit_id = helperModule.get_parameter_by_name('exhibit_id');
             exhibitsModule.set_exhibit_title(exhibit_id);
-            await display_edit_record();
+            await display_details_record();
 
             if (window.location.pathname.indexOf('media') !== -1) {
                 helperMediaModule.media_edit_init();

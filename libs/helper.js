@@ -238,6 +238,7 @@ const Helper = class {
      * @throws {Error} If validation fails or unlock fails
      */
     async unlock_record(uid, uuid, db, table, options = {}) {
+
         const { force = false } = options;
 
         try {
@@ -296,7 +297,7 @@ const Helper = class {
                 });
                 return record;
             }
-
+            console.log('USER ', record.locked_by_user);
             // Convert locked_by_user to number for comparison
             const locked_by_number = Number(record.locked_by_user);
 

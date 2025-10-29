@@ -441,6 +441,7 @@ exports.unlock_timeline_item_record = async function (req, res) {
             return false;
         }
 
+        /*
         const permissions = ['update_any_item'];
         let options = {};
         options.req = req;
@@ -458,6 +459,7 @@ exports.unlock_timeline_item_record = async function (req, res) {
 
             return false;
         }
+        */
 
         const result = await TIMELINES_MODEL.unlock_timeline_item_record(uid, item_id);
 
