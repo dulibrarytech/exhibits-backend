@@ -169,13 +169,82 @@ const itemsEditHeadingFormModule = (function () {
 
     async function display_edit_record() {
 
+        // Helper function to check if current user is an administrator
+        const is_user_administrator = async () => {
+            try {
+                const profile = authModule.get_user_profile_data();
+                if (!profile || !profile.uid) {
+                    return false;
+                }
+
+                const user_id = parseInt(profile.uid, 10);
+                if (isNaN(user_id)) {
+                    return false;
+                }
+
+                const user_role = await authModule.get_user_role(user_id);
+                return user_role === 'Administrator';
+
+            } catch (error) {
+                console.error('Error checking user role:', error);
+                return false;
+            }
+        };
+
+        // Helper function to check if record is locked by another user
+        const is_locked_by_other_user = (record) => {
+
+            // Check if record is locked
+            if (!record || record.is_locked !== 1) {
+                return false;
+            }
+
+            // Get current user profile
+            const profile = authModule.get_user_profile_data();
+
+            if (!profile || !profile.uid) {
+                console.warn('Unable to get user profile data');
+                return false;
+            }
+
+            // Parse user IDs safely
+            const user_id = parseInt(profile.uid, 10);
+            const locked_by_user = parseInt(record.locked_by_user, 10);
+
+            // Check for valid numbers
+            if (isNaN(user_id) || isNaN(locked_by_user)) {
+                console.error('Invalid user ID values');
+                return false;
+            }
+
+            // Return true if locked by someone else
+            return user_id !== locked_by_user;
+        };
+
         try {
+
             // Fetch record data
             const record = await get_item_heading_record();
 
             if (!record) {
                 throw new Error('Failed to load record data');
             }
+
+            // Check if record is locked
+            await helperModule.check_if_locked(record, '#exhibit-submit-card');
+
+            // Disable form fields if locked by another user
+            if (is_locked_by_other_user(record)) {
+                // Check if current user is an administrator
+                const is_admin = await is_user_administrator();
+
+                // Disable form fields, but preserve unlock button for admins
+                await disable_form_fields(is_admin);
+            }
+
+            // Setup automatic unlock when user navigates away (only if current user has it locked)
+            // setup_auto_unlock(record);
+            helperModule.setup_auto_unlock(record);
 
             // Cache all DOM elements once
             const dom_elements = cache_dom_elements();

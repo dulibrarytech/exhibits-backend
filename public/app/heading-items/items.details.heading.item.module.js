@@ -56,7 +56,7 @@ const itemsDetailsHeadingModule = (function () {
             });
 
             if (response !== undefined && response.status === 200) {
-                return response.data.data[0];
+                return response.data.data;
             }
 
         } catch (error) {
