@@ -496,6 +496,7 @@ exports.unlock_exhibit_record = async function (req, res) {
 
         // TODO: permission check
         // TODO: add permissions for all to unlock
+        /*
         const permissions = ['update_exhibit', 'update_any_exhibit'];
         let options = {};
         options.req = req;
@@ -505,7 +506,7 @@ exports.unlock_exhibit_record = async function (req, res) {
         options.child_id = null;
 
         const is_authorized = await AUTHORIZE.check_permission(options);
-
+        console.log('unlock exhibit ', is_authorized);
         if (is_authorized === false) {
             res.status(403).send({
                 message: 'Unauthorized request'
@@ -513,6 +514,8 @@ exports.unlock_exhibit_record = async function (req, res) {
 
             return false;
         }
+
+         */
 
         const result = await EXHIBITS_MODEL.unlock_exhibit_record(uid, uuid);
 
