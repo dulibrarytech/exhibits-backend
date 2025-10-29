@@ -707,6 +707,7 @@ const exhibitsEditFormModule = (function () {
         }
     }
 
+    /*
     obj.update_exhibit_record = async function () {
 
         // Cache DOM element and constants
@@ -863,7 +864,10 @@ const exhibitsEditFormModule = (function () {
         }
     };
 
-    obj.update_exhibit_record__ = async function () {
+     */
+
+
+    obj.update_exhibit_record = async function () {
 
         // Cache DOM element and constants
         const message_el = document.querySelector('#message');
