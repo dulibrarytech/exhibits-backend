@@ -391,66 +391,6 @@ const itemsAddStandardItemFormModule = (function () {
         }
     };
 
-    obj.create_item_record__ = async function () {
-
-        try {
-
-            window.scrollTo(0, 0);
-            let uuid = helperModule.get_parameter_by_name('exhibit_id');
-
-            if (uuid === undefined) {
-                document.querySelector('#message').innerHTML = `<div class="alert alert-warning" role="alert"><i class="fa fa-info"></i> Unable to create item record.</div>`;
-                return false;
-            }
-
-            let data = itemsCommonStandardItemFormModule.get_common_standard_item_form_fields();
-
-            if (data === undefined) {
-                document.querySelector('#message').innerHTML = `<div class="alert alert-danger" role="alert"><i class="fa fa-exclamation"></i> Unable to get form field values</div>`;
-                return false;
-            } else if (data === false) {
-                return false;
-            }
-
-            document.querySelector('#message').innerHTML = `<div class="alert alert-info" role="alert"><i class="fa fa-info"></i> Creating item record...</div>`;
-
-            data.created_by = helperModule.get_user_name();
-            data.owner = helperModule.get_owner();
-
-            let token = authModule.get_user_token();
-            let response = await httpModule.req({
-                method: 'POST',
-                url: EXHIBITS_ENDPOINTS.exhibits.item_records.post.endpoint.replace(':exhibit_id', uuid),
-                data: data,
-                headers: {
-                    'Content-Type': 'application/json',
-                    'x-access-token': token
-                }
-            });
-
-            if (response !== undefined && response.status === 201) {
-
-                document.querySelector('#message').innerHTML = `<div class="alert alert-success" role="alert"><i class="fa fa-info"></i> Item record created</div>`;
-                const item_id = response.data.data;
-
-                setTimeout(() => {
-
-                    let item_form = 'text';
-
-                    if (window.location.pathname.indexOf('media') !== -1) {
-                        item_form = 'media';
-                    }
-
-                    window.location.replace(`${APP_PATH}/items/standard/${item_form}/edit?exhibit_id=${uuid}&item_id=${item_id}`);
-
-                }, 900);
-            }
-
-        } catch (error) {
-            document.querySelector('#message').innerHTML = `<div class="alert alert-danger" role="alert"><i class="fa fa-exclamation"></i> ${error.message}</div>`;
-        }
-    };
-
     obj.init = async function () {
 
         try {
