@@ -1187,34 +1187,6 @@ const Exhibit_grid_record_tasks = class {
         }
     }
 
-    /** TODO: unused - why?
-     * Deletes grid record
-     * @param is_member_of_exhibit
-     * @param uuid
-     */
-    /*
-    async delete_grid_record(is_member_of_exhibit, uuid) {
-
-        try {
-
-            await this.DB(this.TABLE.grid_records)
-                .where({
-                    is_member_of_exhibit: is_member_of_exhibit,
-                    uuid: uuid
-                })
-                .update({
-                    is_deleted: 1
-                });
-
-            LOGGER.module().info('INFO: [/exhibits/exhibit_grid_record_tasks (delete_grid_record)] Grid record deleted.');
-            return true;
-
-        } catch (error) {
-            LOGGER.module().error('ERROR: [/exhibits/exhibit_heading_record_tasks (delete_heading_record)] unable to delete grid record ' + error.message);
-        }
-    }
-    */
-
     /**
      * Soft deletes a grid item record (sets is_deleted flag)
      * @param {string} is_member_of_exhibit - The exhibit UUID
@@ -1567,33 +1539,6 @@ const Exhibit_grid_record_tasks = class {
     }
 
     /**
-     * Sets is_published flogs to true
-     * @param uuid
-     */
-    /*
-    async set_to_publish__(uuid) {
-
-        try {
-
-            await this.DB(this.TABLE.grid_records)
-                .where({
-                    is_member_of_exhibit: uuid
-                })
-                .update({
-                    is_published: 1
-                });
-
-            LOGGER.module().info('INFO: [/exhibits/exhibit_grid_record_tasks (set_to_publish)] Grid is_published set.');
-            return true;
-
-        } catch (error) {
-            LOGGER.module().error('ERROR: [/exhibits/exhibit_grid_record_tasks (set_to_publish)] unable to set grid is_published ' + error.message);
-            return false;
-        }
-    }
-    */
-
-    /**
      * Sets a single grid item record to published status
      * @param {string} uuid - The grid item UUID
      * @param {string} [published_by=null] - User ID performing the publish action
@@ -1715,33 +1660,6 @@ const Exhibit_grid_record_tasks = class {
     }
 
     /**
-     * Sets is_published flog to true for grid item record
-     * @param uuid
-     */
-    /*
-    async set_grid_item_to_publish__(uuid) {
-
-        try {
-
-            await this.DB(this.TABLE.grid_item_records)
-                .where({
-                    uuid: uuid
-                })
-                .update({
-                    is_published: 1
-                });
-
-            LOGGER.module().info('INFO: [/exhibits/exhibit_grid_record_tasks (set_grid_item_to_publish)] Grid item is_published set.');
-            return true;
-
-        } catch (error) {
-            LOGGER.module().error('ERROR: [/exhibits/exhibit_grid_record_tasks (set_grid_item_to_publish)] unable to set grid item is_published ' + error.message);
-            return false;
-        }
-    }
-    */
-
-    /**
      * Sets is_published flag to true for all grid items belonging to a specific grid
      * @param {string} uuid - The grid UUID
      * @param {string} [published_by=null] - User ID performing the publish action
@@ -1852,33 +1770,6 @@ const Exhibit_grid_record_tasks = class {
     }
 
     /**
-     * Sets is_published flogs to true for all grid items by grid id
-     * @param uuid
-     */
-    /*
-    async set_to_publish_grid_items__(uuid) {
-
-        try {
-
-            await this.DB(this.TABLE.grid_item_records)
-                .where({
-                    is_member_of_grid: uuid
-                })
-                .update({
-                    is_published: 1
-                });
-
-            LOGGER.module().info('INFO: [/exhibits/exhibit_grid_record_tasks (set_to_publish_grid_items)] Grid items is_published set.');
-            return true;
-
-        } catch (error) {
-            LOGGER.module().error('ERROR: [/exhibits/exhibit_grid_record_tasks (set_to_publish_grid_items)] unable to set grid items is_published. ' + error.message);
-            return false;
-        }
-    }
-    */
-
-    /**
      * Sets is_published flag to true for a single grid record
      * @param {string} uuid - The grid UUID
      * @param {string} [published_by=null] - User ID performing the publish action
@@ -1886,6 +1777,7 @@ const Exhibit_grid_record_tasks = class {
      * @throws {Error} If validation fails or publish fails
      */
     async set_grid_to_publish(uuid, published_by = null) {
+
         try {
             // ===== INPUT VALIDATION =====
 
@@ -2000,33 +1892,6 @@ const Exhibit_grid_record_tasks = class {
     }
 
     /**
-     * Sets is_published flog to true for grid record
-     * @param uuid
-     */
-    /*
-    async set_grid_to_publish__(uuid) {
-
-        try {
-
-            await this.DB(this.TABLE.grid_records)
-                .where({
-                    uuid: uuid
-                })
-                .update({
-                    is_published: 1
-                });
-
-            LOGGER.module().info('INFO: [/exhibits/exhibit_item_record_tasks (set_grid_to_publish)] Grid is_published set.');
-            return true;
-
-        } catch (error) {
-            LOGGER.module().error('ERROR: [/exhibits/exhibit_item_record_tasks (set_grid_to_publish)] unable to set grid is_published ' + error.message);
-            return false;
-        }
-    }
-    */
-
-    /**
      * Sets is_published flag to false for all grid records belonging to an exhibit (unpublish/suppress)
      * @param {string} uuid - The exhibit UUID
      * @param {string} [unpublished_by=null] - User ID performing the unpublish action
@@ -2137,33 +2002,6 @@ const Exhibit_grid_record_tasks = class {
             throw error;
         }
     }
-
-    /**
-     * Sets is_published flogs to false for all grid records by exhibit id
-     * @param uuid
-     */
-    /*
-    async set_to_suppress__(uuid) {
-
-        try {
-
-            await this.DB(this.TABLE.grid_records)
-                .where({
-                    is_member_of_exhibit: uuid
-                })
-                .update({
-                    is_published: 0
-                });
-
-            LOGGER.module().info('INFO: [/exhibits/exhibit_grid_record_tasks (set_to_suppress)] Grid is_published set.');
-            return true;
-
-        } catch (error) {
-            LOGGER.module().error('ERROR: [/exhibits/exhibit_grid_record_tasks (set_to_suppress)] unable to set grid is_published. ' + error.message);
-            return false;
-        }
-    }
-    */
 
     /**
      * Sets is_published flag to false for a single grid record (suppress/unpublish)
@@ -2287,33 +2125,6 @@ const Exhibit_grid_record_tasks = class {
     }
 
     /**
-     * Sets is_published flog to false for grid record
-     * @param uuid
-     */
-    /*
-    async set_grid_to_suppress__(uuid) {
-
-        try {
-
-            await this.DB(this.TABLE.grid_records)
-                .where({
-                    uuid: uuid
-                })
-                .update({
-                    is_published: 0
-                });
-
-            LOGGER.module().info('INFO: [/exhibits/exhibit_item_record_tasks (set_grid_to_suppress)] Grid is_published set.');
-            return true;
-
-        } catch (error) {
-            LOGGER.module().error('ERROR: [/exhibits/exhibit_item_record_tasks (set_grid_to_suppress)] unable to set grid is_published. ' + error.message);
-            return false;
-        }
-    }
-    */
-
-    /**
      * Sets is_published flag to false for all grid items belonging to a grid (suppress/unpublish)
      * @param {string} uuid - The grid UUID
      * @param {string} [unpublished_by=null] - User ID performing the suppress action
@@ -2422,31 +2233,6 @@ const Exhibit_grid_record_tasks = class {
             );
 
             throw error;
-        }
-    }
-
-    /**
-     * Sets is_published flogs to false for grid item records by grid id
-     * @param uuid
-     */
-    async set_to_suppressed_grid_items__(uuid) {
-
-        try {
-
-            await this.DB(this.TABLE.grid_item_records)
-                .where({
-                    is_member_of_grid: uuid
-                })
-                .update({
-                    is_published: 0
-                });
-
-            LOGGER.module().info('INFO: [/exhibits/exhibit_grid_record_tasks (set_to_suppressed_grid_items)] Grid items is_published set.');
-            return true;
-
-        } catch (error) {
-            LOGGER.module().error('ERROR: [/exhibits/exhibit_grid_record_tasks (set_to_suppressed_grid_items)] unable to set grid items is_published. ' + error.message);
-            return false;
         }
     }
 
