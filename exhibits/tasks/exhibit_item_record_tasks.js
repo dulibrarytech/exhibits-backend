@@ -35,25 +35,162 @@ const Exhibit_item_record_tasks = class {
     }
 
     /**
-     * Creates item record
-     * @param data
+     * Creates a new item record
+     * @param {Object} data - Item record data
+     * @param {string} data.uuid - Item UUID (required)
+     * @param {string} data.is_member_of_exhibit - The exhibit UUID (required)
+     * @param {string} data.title - Item title (required)
+     * @param {string} data.item_type - Item type (required)
+     * @param {string} data.mime_type - MIME type (required)
+     * @param {string} [created_by=null] - User ID creating the record
+     * @returns {Promise<Object>} Created item record with UUID and details
+     * @throws {Error} If validation fails or creation fails
      */
-    async create_item_record(data) {
-
+    async create_item_record(data, created_by = null) {
         try {
+            // ===== INPUT VALIDATION =====
 
-            await this.DB.transaction((trx) => {
-                this.DB.insert(data)
-                .into(this.TABLE.item_records)
-                .transacting(trx)
-                .then(trx.commit)
-                .catch(trx.rollback);
+            if (!data || typeof data !== 'object' || Array.isArray(data)) {
+                throw new Error('Valid item data object is required');
+            }
+
+            // Validate required fields
+            if (!data.uuid || typeof data.uuid !== 'string' || !data.uuid.trim()) {
+                throw new Error('Valid item UUID is required');
+            }
+
+            if (!data.is_member_of_exhibit || typeof data.is_member_of_exhibit !== 'string' || !data.is_member_of_exhibit.trim()) {
+                throw new Error('Valid exhibit UUID is required');
+            }
+
+            if (!data.title || typeof data.title !== 'string' || !data.title.trim()) {
+                throw new Error('Valid title is required');
+            }
+
+            if (!data.item_type || typeof data.item_type !== 'string' || !data.item_type.trim()) {
+                throw new Error('Valid item_type is required');
+            }
+
+            if (!data.mime_type || typeof data.mime_type !== 'string' || !data.mime_type.trim()) {
+                throw new Error('Valid mime_type is required');
+            }
+
+            // ===== UUID VALIDATION =====
+
+            const uuid_regex = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
+
+            if (!uuid_regex.test(data.uuid.trim())) {
+                throw new Error('Invalid item UUID format');
+            }
+
+            if (!uuid_regex.test(data.is_member_of_exhibit.trim())) {
+                throw new Error('Invalid exhibit UUID format');
+            }
+
+            // ===== DATABASE VALIDATION =====
+
+            if (!this.DB || typeof this.DB !== 'function') {
+                throw new Error('Database connection is not available');
+            }
+
+            if (!this.TABLE?.item_records) {
+                throw new Error('Table name "item_records" is not defined');
+            }
+
+            // ===== PREPARE RECORD DATA =====
+
+            const item_uuid = data.uuid.trim();
+
+            // Build the record with defaults
+            const record_data = {
+                uuid: item_uuid,
+                is_member_of_exhibit: data.is_member_of_exhibit.trim(),
+                title: data.title.trim(),
+                item_type: data.item_type.trim(),
+                mime_type: data.mime_type.trim(),
+
+                // Optional fields with defaults
+                thumbnail: data.thumbnail || null,
+                caption: data.caption || null,
+                media: data.media || null,
+                text: data.text || null,
+                wrap_text: data.wrap_text !== undefined ? data.wrap_text : 1,
+                description: data.description || null,
+                type: data.type || 'item',
+                layout: data.layout || 'media_right',
+                media_width: data.media_width !== undefined ? data.media_width : 50,
+                media_padding: data.media_padding !== undefined ? data.media_padding : 1,
+                alt_text: data.alt_text || null,
+                is_alt_text_decorative: data.is_alt_text_decorative || 0,
+                pdf_open_to_page: data.pdf_open_to_page || 1,
+                item_subjects: data.item_subjects || null,
+                styles: data.styles || null,
+                order: data.order !== undefined ? data.order : 0,
+                is_repo_item: data.is_repo_item || 0,
+                is_kaltura_item: data.is_kaltura_item || 0,
+                is_embedded: data.is_embedded || 0,
+                is_published: data.is_published || 0,
+                is_locked: 0,
+                locked_by_user: 0,
+                locked_at: null,
+                is_deleted: 0,
+                owner: data.owner || 0,
+                created_by: created_by || data.created_by || null,
+                updated_by: created_by || data.updated_by || null
+            };
+
+            // ===== CREATE RECORD IN TRANSACTION =====
+
+            const created_record = await this.DB.transaction(async (trx) => {
+                const [inserted_id] = await trx(this.TABLE.item_records)
+                    .insert(record_data)
+                    .timeout(10000);
+
+                // Fetch the created record
+                const created = await trx(this.TABLE.item_records)
+                    .select('*')
+                    .where({ id: inserted_id })
+                    .first();
+
+                return created;
             });
 
-            return true;
+            LOGGER.module().info('Item record created successfully', {
+                uuid: item_uuid,
+                title: data.title.trim(),
+                item_type: data.item_type.trim(),
+                is_member_of_exhibit: data.is_member_of_exhibit.trim(),
+                created_by,
+                timestamp: new Date().toISOString()
+            });
+
+            return {
+                success: true,
+                uuid: item_uuid,
+                id: created_record.id,
+                record: created_record,
+                message: 'Item record created successfully'
+            };
 
         } catch (error) {
-            LOGGER.module().error('ERROR: [/exhibits/exhibit_item_record_tasks (create_item_record)] unable to create item record ' + error.message);
+            const error_context = {
+                method: 'create_item_record',
+                uuid: data?.uuid,
+                exhibit_uuid: data?.is_member_of_exhibit,
+                title: data?.title,
+                item_type: data?.item_type,
+                created_by,
+                timestamp: new Date().toISOString(),
+                message: error.message,
+                stack: error.stack
+            };
+
+            LOGGER.module().error(
+                'Failed to create item record',
+                error_context
+            );
+
+            throw error;
         }
     }
 
