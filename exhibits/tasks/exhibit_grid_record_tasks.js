@@ -1362,36 +1362,6 @@ const Exhibit_grid_record_tasks = class {
     }
 
     /**
-     * Deletes grid item
-     * @param is_member_of_exhibit
-     * @param grid_id
-     * @param grid_item_id
-     */
-    /*
-    async delete_grid_item_record__(is_member_of_exhibit, grid_id, grid_item_id) {
-
-        try {
-
-            await this.DB(this.TABLE.grid_item_records)
-                .where({
-                    is_member_of_exhibit: is_member_of_exhibit,
-                    is_member_of_grid: grid_id,
-                    uuid: grid_item_id
-                })
-                .update({
-                    is_deleted: 1
-                });
-
-            LOGGER.module().info('INFO: [/exhibits/exhibit_grid_record_tasks (delete_grid_item_record)] Grid item record deleted.');
-            return true;
-
-        } catch (error) {
-            LOGGER.module().error('ERROR: [/exhibits/exhibit_heading_record_tasks (delete_grid_item_record)] unable to delete grid item record ' + error.message);
-        }
-    }
-    */
-
-    /**
      * Gets the count of grid records for a specific exhibit
      * @param {string} is_member_of_exhibit - The exhibit UUID
      * @param {Object} [options={}] - Count options
@@ -1400,7 +1370,8 @@ const Exhibit_grid_record_tasks = class {
      * @returns {Promise<number>} Count of grid records
      * @throws {Error} If validation fails or query fails
      */
-    async get_grid_record_count(is_member_of_exhibit, options = {}) {
+    async get_record_count(is_member_of_exhibit, options = {}) {
+
         const {
             include_deleted = false,
             include_unpublished = true
@@ -1485,22 +1456,113 @@ const Exhibit_grid_record_tasks = class {
     }
 
     /**
-     * Gets grid record count
-     * @param uuid
+     * Sets all grid records for a specific exhibit to published status
+     * @param {string} uuid - The exhibit UUID
+     * @param {string} [published_by=null] - User ID performing the publish action
+     * @returns {Promise<Object>} Publish result with count of affected records
+     * @throws {Error} If validation fails or publish fails
      */
-    async get_record_count__(uuid) {
+    async set_to_publish(uuid, published_by = null) {
 
         try {
+            // ===== INPUT VALIDATION =====
 
-            const count = await this.DB(this.TABLE.grid_records).count('id as count')
+            if (!uuid || typeof uuid !== 'string' || !uuid.trim()) {
+                throw new Error('Valid exhibit UUID is required');
+            }
+
+            // Validate UUID format
+            const uuid_regex = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
+            if (!uuid_regex.test(uuid.trim())) {
+                throw new Error('Invalid exhibit UUID format');
+            }
+
+            // ===== DATABASE VALIDATION =====
+
+            if (!this.DB || typeof this.DB !== 'function') {
+                throw new Error('Database connection is not available');
+            }
+
+            if (!this.TABLE?.grid_records) {
+                throw new Error('Table name "grid_records" is not defined');
+            }
+
+            // ===== CHECK IF RECORDS EXIST =====
+
+            const existing_count = await this.DB(this.TABLE.grid_records)
+                .count('id as count')
                 .where({
-                    is_member_of_exhibit: uuid
-                });
+                    is_member_of_exhibit: uuid.trim(),
+                    is_deleted: 0
+                })
+                .timeout(10000);
 
-            return count[0].count;
+            const total_grids = existing_count?.[0]?.count ? parseInt(existing_count[0].count, 10) : 0;
+
+            if (total_grids === 0) {
+                LOGGER.module().warn('No grid records found to publish', {
+                    is_member_of_exhibit: uuid.trim()
+                });
+                return {
+                    success: true,
+                    affected_rows: 0,
+                    message: 'No grid records found to publish'
+                };
+            }
+
+            // ===== PREPARE UPDATE DATA =====
+
+            const update_data = {
+                is_published: 1,
+                updated: this.DB.fn.now()
+            };
+
+            if (published_by) {
+                update_data.updated_by = published_by;
+            }
+
+            // ===== PERFORM PUBLISH =====
+
+            const affected_rows = await this.DB(this.TABLE.grid_records)
+                .where({
+                    is_member_of_exhibit: uuid.trim(),
+                    is_deleted: 0
+                })
+                .update(update_data)
+                .timeout(10000);
+
+            LOGGER.module().info('Grid records published successfully', {
+                is_member_of_exhibit: uuid.trim(),
+                affected_rows,
+                total_grids,
+                published_by,
+                timestamp: new Date().toISOString()
+            });
+
+            return {
+                success: true,
+                affected_rows,
+                total_grids,
+                published_by,
+                message: `${affected_rows} grid record(s) published successfully`
+            };
 
         } catch (error) {
-            LOGGER.module().error('ERROR: [/exhibits/exhibit_grid_record_tasks (get_record_count)] unable to get grid record count ' + error.message);
+            const error_context = {
+                method: 'set_to_publish',
+                uuid,
+                published_by,
+                timestamp: new Date().toISOString(),
+                message: error.message,
+                stack: error.stack
+            };
+
+            LOGGER.module().error(
+                'Failed to publish grid records',
+                error_context
+            );
+
+            throw error;
         }
     }
 
@@ -1508,7 +1570,8 @@ const Exhibit_grid_record_tasks = class {
      * Sets is_published flogs to true
      * @param uuid
      */
-    async set_to_publish(uuid) {
+    /*
+    async set_to_publish__(uuid) {
 
         try {
 
@@ -1528,12 +1591,134 @@ const Exhibit_grid_record_tasks = class {
             return false;
         }
     }
+    */
+
+    /**
+     * Sets a single grid item record to published status
+     * @param {string} uuid - The grid item UUID
+     * @param {string} [published_by=null] - User ID performing the publish action
+     * @returns {Promise<Object>} Publish result with affected rows
+     * @throws {Error} If validation fails or publish fails
+     */
+    async set_grid_item_to_publish(uuid, published_by = null) {
+        try {
+            // ===== INPUT VALIDATION =====
+
+            if (!uuid || typeof uuid !== 'string' || !uuid.trim()) {
+                throw new Error('Valid grid item UUID is required');
+            }
+
+            // Validate UUID format
+            const uuid_regex = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
+            if (!uuid_regex.test(uuid.trim())) {
+                throw new Error('Invalid grid item UUID format');
+            }
+
+            // ===== DATABASE VALIDATION =====
+
+            if (!this.DB || typeof this.DB !== 'function') {
+                throw new Error('Database connection is not available');
+            }
+
+            if (!this.TABLE?.grid_item_records) {
+                throw new Error('Table name "grid_item_records" is not defined');
+            }
+
+            // ===== CHECK IF RECORD EXISTS =====
+
+            const existing_record = await this.DB(this.TABLE.grid_item_records)
+                .select('id', 'uuid', 'title', 'is_published', 'is_deleted')
+                .where({
+                    uuid: uuid.trim()
+                })
+                .first()
+                .timeout(10000);
+
+            if (!existing_record) {
+                throw new Error('Grid item record not found');
+            }
+
+            if (existing_record.is_deleted === 1) {
+                throw new Error('Cannot publish deleted grid item record');
+            }
+
+            if (existing_record.is_published === 1) {
+                LOGGER.module().info('Grid item record already published', {
+                    uuid: uuid.trim()
+                });
+                return {
+                    success: true,
+                    already_published: true,
+                    uuid: uuid.trim(),
+                    message: 'Grid item was already published'
+                };
+            }
+
+            // ===== PREPARE UPDATE DATA =====
+
+            const update_data = {
+                is_published: 1,
+                updated: this.DB.fn.now()
+            };
+
+            if (published_by) {
+                update_data.updated_by = published_by;
+            }
+
+            // ===== PERFORM PUBLISH =====
+
+            const affected_rows = await this.DB(this.TABLE.grid_item_records)
+                .where({
+                    uuid: uuid.trim(),
+                    is_deleted: 0
+                })
+                .update(update_data)
+                .timeout(10000);
+
+            // Verify update succeeded
+            if (affected_rows === 0) {
+                throw new Error('Failed to publish grid item record: No rows affected');
+            }
+
+            LOGGER.module().info('Grid item record published successfully', {
+                uuid: uuid.trim(),
+                title: existing_record.title,
+                published_by,
+                timestamp: new Date().toISOString()
+            });
+
+            return {
+                success: true,
+                uuid: uuid.trim(),
+                affected_rows,
+                published_by,
+                message: 'Grid item record published successfully'
+            };
+
+        } catch (error) {
+            const error_context = {
+                method: 'set_grid_item_to_publish',
+                uuid,
+                published_by,
+                timestamp: new Date().toISOString(),
+                message: error.message,
+                stack: error.stack
+            };
+
+            LOGGER.module().error(
+                'Failed to publish grid item record',
+                error_context
+            );
+
+            throw error;
+        }
+    }
 
     /**
      * Sets is_published flog to true for grid item record
      * @param uuid
      */
-    async set_grid_item_to_publish(uuid) {
+    async set_grid_item_to_publish__(uuid) {
 
         try {
 

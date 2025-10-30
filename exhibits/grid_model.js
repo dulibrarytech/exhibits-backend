@@ -602,11 +602,11 @@ const publish_grid_item_record = async function (exhibit_id, grid_id, grid_item_
         }
 
         let grid_item_record = await GRID_TASKS.get_grid_item_record(exhibit_id, grid_id, grid_item_id);
-        const is_indexed = await INDEXER_MODEL.index_grid_item_record(grid_id, grid_item_id, grid_item_record.pop());
+        const is_indexed = await INDEXER_MODEL.index_grid_item_record(grid_id, grid_item_id, grid_item_record);
 
         if (is_indexed === false) {
 
-            LOGGER.module().error('ERROR: [/exhibits/model (publish_item_record)] Unable to publish grid item');
+            LOGGER.module().error('ERROR: [/exhibits/model (publish_grid_item_record)] Unable to publish grid item');
 
             return {
                 status: false,

@@ -41,7 +41,7 @@ const itemsDetailsGridItemModule = (function () {
                 document.querySelector('#message').innerHTML = 'ERROR: Unable to get API endpoints';
 
                 setTimeout(() => {
-                    window.location.replace(APP_PATH + '/exhibits-dashboard/auth');
+                    authModule.redirect_to_auth();
                 }, 1000);
 
                 return false;
@@ -57,7 +57,7 @@ const itemsDetailsGridItemModule = (function () {
             });
 
             if (response !== undefined && response.status === 200) {
-                return response.data.data[0];
+                return response.data.data;
             }
 
         } catch (error) {
