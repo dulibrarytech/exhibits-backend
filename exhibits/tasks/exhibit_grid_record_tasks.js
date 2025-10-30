@@ -1718,6 +1718,7 @@ const Exhibit_grid_record_tasks = class {
      * Sets is_published flog to true for grid item record
      * @param uuid
      */
+    /*
     async set_grid_item_to_publish__(uuid) {
 
         try {
@@ -1738,12 +1739,124 @@ const Exhibit_grid_record_tasks = class {
             return false;
         }
     }
+    */
+
+    /**
+     * Sets is_published flag to true for all grid items belonging to a specific grid
+     * @param {string} uuid - The grid UUID
+     * @param {string} [published_by=null] - User ID performing the publish action
+     * @returns {Promise<Object>} Publish result with count of affected records
+     * @throws {Error} If validation fails or publish fails
+     */
+    async set_to_publish_grid_items(uuid, published_by = null) {
+        try {
+            // ===== INPUT VALIDATION =====
+
+            if (!uuid || typeof uuid !== 'string' || !uuid.trim()) {
+                throw new Error('Valid grid UUID is required');
+            }
+
+            // Validate UUID format
+            const uuid_regex = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
+            if (!uuid_regex.test(uuid.trim())) {
+                throw new Error('Invalid grid UUID format');
+            }
+
+            // ===== DATABASE VALIDATION =====
+
+            if (!this.DB || typeof this.DB !== 'function') {
+                throw new Error('Database connection is not available');
+            }
+
+            if (!this.TABLE?.grid_item_records) {
+                throw new Error('Table name "grid_item_records" is not defined');
+            }
+
+            // ===== CHECK IF RECORDS EXIST =====
+
+            const existing_count = await this.DB(this.TABLE.grid_item_records)
+                .count('id as count')
+                .where({
+                    is_member_of_grid: uuid.trim(),
+                    is_deleted: 0
+                })
+                .timeout(10000);
+
+            const total_items = existing_count?.[0]?.count ? parseInt(existing_count[0].count, 10) : 0;
+
+            if (total_items === 0) {
+                LOGGER.module().warn('No grid item records found to publish', {
+                    is_member_of_grid: uuid.trim()
+                });
+                return {
+                    success: true,
+                    affected_rows: 0,
+                    message: 'No grid item records found to publish'
+                };
+            }
+
+            // ===== PREPARE UPDATE DATA =====
+
+            const update_data = {
+                is_published: 1,
+                updated: this.DB.fn.now()
+            };
+
+            if (published_by) {
+                update_data.updated_by = published_by;
+            }
+
+            // ===== PERFORM PUBLISH =====
+
+            const affected_rows = await this.DB(this.TABLE.grid_item_records)
+                .where({
+                    is_member_of_grid: uuid.trim(),
+                    is_deleted: 0
+                })
+                .update(update_data)
+                .timeout(10000);
+
+            LOGGER.module().info('Grid item records published successfully', {
+                is_member_of_grid: uuid.trim(),
+                affected_rows,
+                total_items,
+                published_by,
+                timestamp: new Date().toISOString()
+            });
+
+            return {
+                success: true,
+                affected_rows,
+                total_items,
+                published_by,
+                message: `${affected_rows} grid item record(s) published successfully`
+            };
+
+        } catch (error) {
+            const error_context = {
+                method: 'set_to_publish_grid_items',
+                uuid,
+                published_by,
+                timestamp: new Date().toISOString(),
+                message: error.message,
+                stack: error.stack
+            };
+
+            LOGGER.module().error(
+                'Failed to publish grid item records',
+                error_context
+            );
+
+            throw error;
+        }
+    }
 
     /**
      * Sets is_published flogs to true for all grid items by grid id
      * @param uuid
      */
-    async set_to_publish_grid_items(uuid) {
+    /*
+    async set_to_publish_grid_items__(uuid) {
 
         try {
 
@@ -1763,12 +1876,135 @@ const Exhibit_grid_record_tasks = class {
             return false;
         }
     }
+    */
+
+    /**
+     * Sets is_published flag to true for a single grid record
+     * @param {string} uuid - The grid UUID
+     * @param {string} [published_by=null] - User ID performing the publish action
+     * @returns {Promise<Object>} Publish result with affected rows
+     * @throws {Error} If validation fails or publish fails
+     */
+    async set_grid_to_publish(uuid, published_by = null) {
+        try {
+            // ===== INPUT VALIDATION =====
+
+            if (!uuid || typeof uuid !== 'string' || !uuid.trim()) {
+                throw new Error('Valid grid UUID is required');
+            }
+
+            // Validate UUID format
+            const uuid_regex = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
+            if (!uuid_regex.test(uuid.trim())) {
+                throw new Error('Invalid grid UUID format');
+            }
+
+            // ===== DATABASE VALIDATION =====
+
+            if (!this.DB || typeof this.DB !== 'function') {
+                throw new Error('Database connection is not available');
+            }
+
+            if (!this.TABLE?.grid_records) {
+                throw new Error('Table name "grid_records" is not defined');
+            }
+
+            // ===== CHECK IF RECORD EXISTS =====
+
+            const existing_record = await this.DB(this.TABLE.grid_records)
+                .select('id', 'uuid', 'title', 'is_published', 'is_deleted')
+                .where({
+                    uuid: uuid.trim()
+                })
+                .first()
+                .timeout(10000);
+
+            if (!existing_record) {
+                throw new Error('Grid record not found');
+            }
+
+            if (existing_record.is_deleted === 1) {
+                throw new Error('Cannot publish deleted grid record');
+            }
+
+            if (existing_record.is_published === 1) {
+                LOGGER.module().info('Grid record already published', {
+                    uuid: uuid.trim()
+                });
+                return {
+                    success: true,
+                    already_published: true,
+                    uuid: uuid.trim(),
+                    message: 'Grid was already published'
+                };
+            }
+
+            // ===== PREPARE UPDATE DATA =====
+
+            const update_data = {
+                is_published: 1,
+                updated: this.DB.fn.now()
+            };
+
+            if (published_by) {
+                update_data.updated_by = published_by;
+            }
+
+            // ===== PERFORM PUBLISH =====
+
+            const affected_rows = await this.DB(this.TABLE.grid_records)
+                .where({
+                    uuid: uuid.trim(),
+                    is_deleted: 0
+                })
+                .update(update_data)
+                .timeout(10000);
+
+            // Verify update succeeded
+            if (affected_rows === 0) {
+                throw new Error('Failed to publish grid record: No rows affected');
+            }
+
+            LOGGER.module().info('Grid record published successfully', {
+                uuid: uuid.trim(),
+                title: existing_record.title,
+                published_by,
+                timestamp: new Date().toISOString()
+            });
+
+            return {
+                success: true,
+                uuid: uuid.trim(),
+                affected_rows,
+                published_by,
+                message: 'Grid record published successfully'
+            };
+
+        } catch (error) {
+            const error_context = {
+                method: 'set_grid_to_publish',
+                uuid,
+                published_by,
+                timestamp: new Date().toISOString(),
+                message: error.message,
+                stack: error.stack
+            };
+
+            LOGGER.module().error(
+                'Failed to publish grid record',
+                error_context
+            );
+
+            throw error;
+        }
+    }
 
     /**
      * Sets is_published flog to true for grid record
      * @param uuid
      */
-    async set_grid_to_publish(uuid) {
+    /*
+    async set_grid_to_publish__(uuid) {
 
         try {
 
@@ -1788,12 +2024,126 @@ const Exhibit_grid_record_tasks = class {
             return false;
         }
     }
+    */
+
+    /**
+     * Sets is_published flag to false for all grid records belonging to an exhibit (unpublish/suppress)
+     * @param {string} uuid - The exhibit UUID
+     * @param {string} [unpublished_by=null] - User ID performing the unpublish action
+     * @returns {Promise<Object>} Unpublish result with count of affected records
+     * @throws {Error} If validation fails or unpublish fails
+     */
+    async set_to_suppress(uuid, unpublished_by = null) {
+        try {
+            // ===== INPUT VALIDATION =====
+
+            if (!uuid || typeof uuid !== 'string' || !uuid.trim()) {
+                throw new Error('Valid exhibit UUID is required');
+            }
+
+            // Validate UUID format
+            const uuid_regex = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
+            if (!uuid_regex.test(uuid.trim())) {
+                throw new Error('Invalid exhibit UUID format');
+            }
+
+            // ===== DATABASE VALIDATION =====
+
+            if (!this.DB || typeof this.DB !== 'function') {
+                throw new Error('Database connection is not available');
+            }
+
+            if (!this.TABLE?.grid_records) {
+                throw new Error('Table name "grid_records" is not defined');
+            }
+
+            // ===== CHECK IF RECORDS EXIST =====
+
+            const existing_count = await this.DB(this.TABLE.grid_records)
+                .count('id as count')
+                .where({
+                    is_member_of_exhibit: uuid.trim(),
+                    is_deleted: 0,
+                    is_published: 1  // Only count currently published grids
+                })
+                .timeout(10000);
+
+            const total_published_grids = existing_count?.[0]?.count ? parseInt(existing_count[0].count, 10) : 0;
+
+            if (total_published_grids === 0) {
+                LOGGER.module().warn('No published grid records found to suppress', {
+                    is_member_of_exhibit: uuid.trim()
+                });
+                return {
+                    success: true,
+                    affected_rows: 0,
+                    message: 'No published grid records found to suppress'
+                };
+            }
+
+            // ===== PREPARE UPDATE DATA =====
+
+            const update_data = {
+                is_published: 0,
+                updated: this.DB.fn.now()
+            };
+
+            if (unpublished_by) {
+                update_data.updated_by = unpublished_by;
+            }
+
+            // ===== PERFORM SUPPRESS/UNPUBLISH =====
+
+            const affected_rows = await this.DB(this.TABLE.grid_records)
+                .where({
+                    is_member_of_exhibit: uuid.trim(),
+                    is_deleted: 0,
+                    is_published: 1  // Only unpublish currently published grids
+                })
+                .update(update_data)
+                .timeout(10000);
+
+            LOGGER.module().info('Grid records suppressed successfully', {
+                is_member_of_exhibit: uuid.trim(),
+                affected_rows,
+                total_published_grids,
+                unpublished_by,
+                timestamp: new Date().toISOString()
+            });
+
+            return {
+                success: true,
+                affected_rows,
+                total_published_grids,
+                unpublished_by,
+                message: `${affected_rows} grid record(s) suppressed successfully`
+            };
+
+        } catch (error) {
+            const error_context = {
+                method: 'set_to_suppress',
+                uuid,
+                unpublished_by,
+                timestamp: new Date().toISOString(),
+                message: error.message,
+                stack: error.stack
+            };
+
+            LOGGER.module().error(
+                'Failed to suppress grid records',
+                error_context
+            );
+
+            throw error;
+        }
+    }
 
     /**
      * Sets is_published flogs to false for all grid records by exhibit id
      * @param uuid
      */
-    async set_to_suppress(uuid) {
+    /*
+    async set_to_suppress__(uuid) {
 
         try {
 
@@ -1813,12 +2163,135 @@ const Exhibit_grid_record_tasks = class {
             return false;
         }
     }
+    */
+
+    /**
+     * Sets is_published flag to false for a single grid record (suppress/unpublish)
+     * @param {string} uuid - The grid UUID
+     * @param {string} [unpublished_by=null] - User ID performing the suppress action
+     * @returns {Promise<Object>} Suppress result with affected rows
+     * @throws {Error} If validation fails or suppress fails
+     */
+    async set_grid_to_suppress(uuid, unpublished_by = null) {
+        try {
+            // ===== INPUT VALIDATION =====
+
+            if (!uuid || typeof uuid !== 'string' || !uuid.trim()) {
+                throw new Error('Valid grid UUID is required');
+            }
+
+            // Validate UUID format
+            const uuid_regex = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
+            if (!uuid_regex.test(uuid.trim())) {
+                throw new Error('Invalid grid UUID format');
+            }
+
+            // ===== DATABASE VALIDATION =====
+
+            if (!this.DB || typeof this.DB !== 'function') {
+                throw new Error('Database connection is not available');
+            }
+
+            if (!this.TABLE?.grid_records) {
+                throw new Error('Table name "grid_records" is not defined');
+            }
+
+            // ===== CHECK IF RECORD EXISTS =====
+
+            const existing_record = await this.DB(this.TABLE.grid_records)
+                .select('id', 'uuid', 'title', 'is_published', 'is_deleted')
+                .where({
+                    uuid: uuid.trim()
+                })
+                .first()
+                .timeout(10000);
+
+            if (!existing_record) {
+                throw new Error('Grid record not found');
+            }
+
+            if (existing_record.is_deleted === 1) {
+                throw new Error('Cannot suppress deleted grid record');
+            }
+
+            if (existing_record.is_published === 0) {
+                LOGGER.module().info('Grid record already suppressed', {
+                    uuid: uuid.trim()
+                });
+                return {
+                    success: true,
+                    already_suppressed: true,
+                    uuid: uuid.trim(),
+                    message: 'Grid was already suppressed'
+                };
+            }
+
+            // ===== PREPARE UPDATE DATA =====
+
+            const update_data = {
+                is_published: 0,
+                updated: this.DB.fn.now()
+            };
+
+            if (unpublished_by) {
+                update_data.updated_by = unpublished_by;
+            }
+
+            // ===== PERFORM SUPPRESS =====
+
+            const affected_rows = await this.DB(this.TABLE.grid_records)
+                .where({
+                    uuid: uuid.trim(),
+                    is_deleted: 0
+                })
+                .update(update_data)
+                .timeout(10000);
+
+            // Verify update succeeded
+            if (affected_rows === 0) {
+                throw new Error('Failed to suppress grid record: No rows affected');
+            }
+
+            LOGGER.module().info('Grid record suppressed successfully', {
+                uuid: uuid.trim(),
+                title: existing_record.title,
+                unpublished_by,
+                timestamp: new Date().toISOString()
+            });
+
+            return {
+                success: true,
+                uuid: uuid.trim(),
+                affected_rows,
+                unpublished_by,
+                message: 'Grid record suppressed successfully'
+            };
+
+        } catch (error) {
+            const error_context = {
+                method: 'set_grid_to_suppress',
+                uuid,
+                unpublished_by,
+                timestamp: new Date().toISOString(),
+                message: error.message,
+                stack: error.stack
+            };
+
+            LOGGER.module().error(
+                'Failed to suppress grid record',
+                error_context
+            );
+
+            throw error;
+        }
+    }
 
     /**
      * Sets is_published flog to false for grid record
      * @param uuid
      */
-    async set_grid_to_suppress(uuid) {
+    /*
+    async set_grid_to_suppress__(uuid) {
 
         try {
 
@@ -1838,12 +2311,125 @@ const Exhibit_grid_record_tasks = class {
             return false;
         }
     }
+    */
+
+    /**
+     * Sets is_published flag to false for all grid items belonging to a grid (suppress/unpublish)
+     * @param {string} uuid - The grid UUID
+     * @param {string} [unpublished_by=null] - User ID performing the suppress action
+     * @returns {Promise<Object>} Suppress result with count of affected records
+     * @throws {Error} If validation fails or suppress fails
+     */
+    async set_to_suppressed_grid_items(uuid, unpublished_by = null) {
+        try {
+            // ===== INPUT VALIDATION =====
+
+            if (!uuid || typeof uuid !== 'string' || !uuid.trim()) {
+                throw new Error('Valid grid UUID is required');
+            }
+
+            // Validate UUID format
+            const uuid_regex = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
+            if (!uuid_regex.test(uuid.trim())) {
+                throw new Error('Invalid grid UUID format');
+            }
+
+            // ===== DATABASE VALIDATION =====
+
+            if (!this.DB || typeof this.DB !== 'function') {
+                throw new Error('Database connection is not available');
+            }
+
+            if (!this.TABLE?.grid_item_records) {
+                throw new Error('Table name "grid_item_records" is not defined');
+            }
+
+            // ===== CHECK IF RECORDS EXIST =====
+
+            const existing_count = await this.DB(this.TABLE.grid_item_records)
+                .count('id as count')
+                .where({
+                    is_member_of_grid: uuid.trim(),
+                    is_deleted: 0,
+                    is_published: 1  // Only count currently published items
+                })
+                .timeout(10000);
+
+            const total_published_items = existing_count?.[0]?.count ? parseInt(existing_count[0].count, 10) : 0;
+
+            if (total_published_items === 0) {
+                LOGGER.module().warn('No published grid item records found to suppress', {
+                    is_member_of_grid: uuid.trim()
+                });
+                return {
+                    success: true,
+                    affected_rows: 0,
+                    message: 'No published grid item records found to suppress'
+                };
+            }
+
+            // ===== PREPARE UPDATE DATA =====
+
+            const update_data = {
+                is_published: 0,
+                updated: this.DB.fn.now()
+            };
+
+            if (unpublished_by) {
+                update_data.updated_by = unpublished_by;
+            }
+
+            // ===== PERFORM SUPPRESS =====
+
+            const affected_rows = await this.DB(this.TABLE.grid_item_records)
+                .where({
+                    is_member_of_grid: uuid.trim(),
+                    is_deleted: 0,
+                    is_published: 1  // Only suppress currently published items
+                })
+                .update(update_data)
+                .timeout(10000);
+
+            LOGGER.module().info('Grid item records suppressed successfully', {
+                is_member_of_grid: uuid.trim(),
+                affected_rows,
+                total_published_items,
+                unpublished_by,
+                timestamp: new Date().toISOString()
+            });
+
+            return {
+                success: true,
+                affected_rows,
+                total_published_items,
+                unpublished_by,
+                message: `${affected_rows} grid item record(s) suppressed successfully`
+            };
+
+        } catch (error) {
+            const error_context = {
+                method: 'set_to_suppressed_grid_items',
+                uuid,
+                unpublished_by,
+                timestamp: new Date().toISOString(),
+                message: error.message,
+                stack: error.stack
+            };
+
+            LOGGER.module().error(
+                'Failed to suppress grid item records',
+                error_context
+            );
+
+            throw error;
+        }
+    }
 
     /**
      * Sets is_published flogs to false for grid item records by grid id
      * @param uuid
      */
-    async set_to_suppressed_grid_items(uuid) {
+    async set_to_suppressed_grid_items__(uuid) {
 
         try {
 
@@ -1873,6 +2459,25 @@ const Exhibit_grid_record_tasks = class {
 
         try {
 
+            if (!is_member_of_exhibit || typeof is_member_of_exhibit !== 'string' || !is_member_of_exhibit.trim()) {
+                throw new Error('Valid exhibit UUID is required');
+            }
+
+            // Validate UUID formats
+            const uuid_regex = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
+
+            if (!uuid_regex.test(is_member_of_exhibit.trim())) {
+                throw new Error('Invalid exhibit UUID format');
+            }
+
+            if (!this.DB || typeof this.DB !== 'function') {
+                throw new Error('Database connection is not available');
+            }
+
+            if (!this.TABLE?.grid_records) {
+                throw new Error('Table name "grid_records" is not defined');
+            }
+
             await this.DB(this.TABLE.grid_records)
                 .where({
                     is_member_of_exhibit: is_member_of_exhibit,
@@ -1901,6 +2506,28 @@ const Exhibit_grid_record_tasks = class {
 
         try {
 
+            if (!is_member_of_grid || typeof is_member_of_grid !== 'string' || !is_member_of_grid.trim()) {
+                throw new Error('Valid grid UUID is required');
+            }
+
+            // Validate grid UUID format
+            const uuid_regex = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
+            if (!uuid_regex.test(is_member_of_grid.trim())) {
+                throw new Error('Invalid grid UUID format');
+            }
+
+            if (!grids || typeof grids !== 'object' || Array.isArray(grids)) {
+                throw new Error('Valid grid item object is required');
+            }
+
+            if (!this.DB || typeof this.DB !== 'function') {
+                throw new Error('Database connection is not available');
+            }
+
+            if (!this.TABLE?.grid_item_records) {
+                throw new Error('Table name "grid_item_records" is not defined');
+            }
+
             await this.DB(this.TABLE.grid_item_records)
                 .where({
                     is_member_of_grid: is_member_of_grid,
@@ -1912,7 +2539,6 @@ const Exhibit_grid_record_tasks = class {
 
             LOGGER.module().info('INFO: [/exhibits/exhibit_grid_record_tasks (reorder_grid_items)] Grid item reordered.');
             return true;
-
 
         } catch (error) {
             LOGGER.module().error('ERROR: [/exhibits/exhibit_grid_record_tasks (reorder_grid_items)] unable to reorder grid item ' + error.message);
