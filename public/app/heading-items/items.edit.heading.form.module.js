@@ -26,10 +26,12 @@ const itemsEditHeadingFormModule = (function () {
     let rich_text_data = {};
 
     async function get_item_heading_record() {
+
         // Cache DOM element reference
         const message_element = document.querySelector('#message');
 
         try {
+
             // Validate required parameters early
             const exhibit_id = helperModule.get_parameter_by_name('exhibit_id');
             const item_id = helperModule.get_parameter_by_name('item_id');
@@ -124,48 +126,6 @@ const itemsEditHeadingFormModule = (function () {
             return null;
         }
     }
-
-    /*
-    async function get_item_heading_record__ () {
-
-        try {
-
-            const exhibit_id = helperModule.get_parameter_by_name('exhibit_id');
-            const item_id = helperModule.get_parameter_by_name('item_id');
-            const token = authModule.get_user_token();
-            const profile = authModule.get_user_profile_data();
-            let tmp = EXHIBITS_ENDPOINTS.exhibits.heading_records.get.endpoint.replace(':exhibit_id', exhibit_id);
-            let endpoint = tmp.replace(':heading_id', item_id);
-
-            if (token === false) {
-
-                document.querySelector('#message').innerHTML = 'ERROR: Unable to get API endpoints';
-
-                setTimeout(() => {
-                    window.location.replace(APP_PATH + '/login');
-                }, 1000);
-
-                return false;
-            }
-
-            let response = await httpModule.req({
-                method: 'GET',
-                url: endpoint + '?type=edit&uid=' + profile.uid,
-                headers: {
-                    'Content-Type': 'application/json',
-                    'x-access-token': token
-                }
-            });
-
-            if (response !== undefined && response.status === 200) {
-                return response.data.data;
-            }
-
-        } catch (error) {
-            document.querySelector('#message').innerHTML = `<div class="alert alert-danger" role="alert"><i class="fa fa-exclamation"></i> ${error.message}</div>`;
-        }
-    }
-    */
 
     async function display_edit_record() {
 

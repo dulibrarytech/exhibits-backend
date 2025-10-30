@@ -40,7 +40,8 @@ const itemsEditVerticalTimelineFormModule = (function () {
                 document.querySelector('#message').innerHTML = 'ERROR: Unable to get API endpoints';
 
                 setTimeout(() => {
-                    window.location.replace(APP_PATH + '/exhibits-dashboard/auth');
+                    // window.location.replace(APP_PATH + '/exhibits-dashboard/auth');
+                    authModule.redirect_to_auth();
                 }, 3000);
 
                 return false;

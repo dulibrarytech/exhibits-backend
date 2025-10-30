@@ -56,7 +56,7 @@ const itemsEditStandardItemFormModule = (function () {
             });
 
             if (response !== undefined && response.status === 200) {
-                return response.data.data[0];
+                return response.data.data;
             }
 
         } catch (error) {
@@ -66,6 +66,101 @@ const itemsEditStandardItemFormModule = (function () {
 
     async function display_edit_record() {
 
+        // Helper function to check if current user is an administrator
+        const is_user_administrator = async () => {
+
+            try {
+                const profile = authModule.get_user_profile_data();
+                if (!profile || !profile.uid) {
+                    return false;
+                }
+
+                const user_id = parseInt(profile.uid, 10);
+                if (isNaN(user_id)) {
+                    return false;
+                }
+
+                const user_role = await authModule.get_user_role(user_id);
+                return user_role === 'Administrator';
+
+            } catch (error) {
+                console.error('Error checking user role:', error);
+                return false;
+            }
+        };
+
+        // Helper function to disable all form fields
+        const disable_form_fields = async (is_admin) => {
+
+            // Get all form elements
+            const form_elements = document.querySelectorAll(
+                'input:not([type="hidden"]), textarea, select, button[type="submit"], button[type="button"]'
+            );
+
+            let disabled_count = 0;
+
+            form_elements.forEach(element => {
+                // Skip the unlock button if user is an administrator
+                if (is_admin && element.id === 'unlock-record') {
+                    console.log('Preserving unlock button for administrator');
+                    return;
+                }
+
+                // Don't disable already disabled elements or read-only elements
+                if (!element.disabled && !element.readOnly) {
+                    element.disabled = true;
+                    element.style.cursor = 'not-allowed';
+                    element.style.opacity = '0.6';
+                    disabled_count++;
+                }
+            });
+
+            // Also disable file upload areas and custom buttons (except unlock button for admins)
+            const custom_buttons = document.querySelectorAll('.btn:not([disabled])');
+            custom_buttons.forEach(button => {
+                // Skip the unlock button if user is an administrator
+                if (is_admin && button.id === 'unlock-record') {
+                    return;
+                }
+
+                button.disabled = true;
+                button.style.cursor = 'not-allowed';
+                button.style.opacity = '0.6';
+            });
+
+            console.log(`Disabled ${disabled_count} form elements (record locked by another user)`);
+        };
+
+        // Helper function to check if record is locked by another user
+        const is_locked_by_other_user = (record) => {
+
+            // Check if record is locked
+            if (!record || record.is_locked !== 1) {
+                return false;
+            }
+
+            // Get current user profile
+            const profile = authModule.get_user_profile_data();
+
+            if (!profile || !profile.uid) {
+                console.warn('Unable to get user profile data');
+                return false;
+            }
+
+            // Parse user IDs safely
+            const user_id = parseInt(profile.uid, 10);
+            const locked_by_user = parseInt(record.locked_by_user, 10);
+
+            // Check for valid numbers
+            if (isNaN(user_id) || isNaN(locked_by_user)) {
+                console.error('Invalid user ID values');
+                return false;
+            }
+
+            // Return true if locked by someone else
+            return user_id !== locked_by_user;
+        };
+
         try {
 
             const record = await get_item_record();
@@ -74,6 +169,22 @@ const itemsEditStandardItemFormModule = (function () {
                 console.error('No record returned from get_item_record()');
                 return false;
             }
+
+            // Check if record is locked
+            await helperModule.check_if_locked(record, '#item-submit-card');
+
+            // Disable form fields if locked by another user
+            if (is_locked_by_other_user(record)) {
+                // Check if current user is an administrator
+                const is_admin = await is_user_administrator();
+
+                // Disable form fields, but preserve unlock button for admins
+                await disable_form_fields(is_admin);
+            }
+
+            // Setup automatic unlock when user navigates away (only if current user has it locked)
+            // setup_auto_unlock(record);
+            helperModule.setup_auto_unlock(record);
 
             const is_media_path = window.location.pathname.includes('media');
 
@@ -200,67 +311,244 @@ const itemsEditStandardItemFormModule = (function () {
         }
     }
 
-    obj.update_item_record = async function () {
+    obj.update_item_record = async function() {
+        // Prevent duplicate submissions
+        if (this._is_updating_item) {
+            return false;
+        }
+
+        this._is_updating_item = true;
+
+        // Cache DOM element and constants
+        const message_element = document.querySelector('#message');
+        const MESSAGE_CLEAR_DELAY = 3000;
+        const FADE_DURATION = 300;
+
+        /**
+         * Display status message to user (XSS-safe)
+         */
+        const display_message = (element, type, message) => {
+            if (!element) {
+                return;
+            }
+
+            const valid_types = ['info', 'success', 'danger', 'warning'];
+            const alert_type = valid_types.includes(type) ? type : 'danger';
+
+            const alert_div = document.createElement('div');
+            alert_div.className = `alert alert-${alert_type}`;
+            alert_div.setAttribute('role', 'alert');
+
+            const icon = document.createElement('i');
+            icon.className = get_icon_class(alert_type);
+            alert_div.appendChild(icon);
+
+            const text_node = document.createTextNode(` ${message}`);
+            alert_div.appendChild(text_node);
+
+            element.style.opacity = '1';
+            element.style.transition = '';
+            element.textContent = '';
+            element.appendChild(alert_div);
+        };
+
+        /**
+         * Clear message with smooth fade effect
+         */
+        const clear_message_smoothly = () => {
+            if (!message_element) {
+                return;
+            }
+
+            message_element.style.transition = `opacity ${FADE_DURATION}ms ease-out`;
+            message_element.style.opacity = '0';
+
+            setTimeout(() => {
+                message_element.textContent = '';
+                message_element.style.opacity = '1';
+                message_element.style.transition = '';
+            }, FADE_DURATION);
+        };
+
+        /**
+         * Get icon class for alert type
+         */
+        const get_icon_class = (alert_type) => {
+            const icon_map = {
+                'info': 'fa fa-info',
+                'success': 'fa fa-check',
+                'danger': 'fa fa-exclamation',
+                'warning': 'fa fa-exclamation-triangle'
+            };
+            return icon_map[alert_type] || 'fa fa-exclamation';
+        };
+
+        /**
+         * Validate parameters
+         */
+        const validate_parameters = (exhibit_id, item_id) => {
+            if (!exhibit_id || !item_id) {
+                return {
+                    valid: false,
+                    error: 'Missing required record identifiers'
+                };
+            }
+
+            if (exhibit_id.length > 255 || item_id.length > 255) {
+                return {
+                    valid: false,
+                    error: 'Invalid parameter length'
+                };
+            }
+
+            return { valid: true };
+        };
+
+        /**
+         * Refresh the record display without reloading
+         */
+        const refresh_record_display = async () => {
+            try {
+                if (typeof display_edit_record === 'function') {
+                    await display_edit_record();
+                }
+
+                reset_form_state();
+            } catch (error) {
+                console.error('Error refreshing display:', error);
+            }
+        };
+
+        /**
+         * Reset form state after update
+         */
+        const reset_form_state = () => {
+            // Mark form as clean if tracking dirty state
+            if (typeof rich_text_data !== 'undefined' && rich_text_data?.setDirty) {
+                rich_text_data.setDirty(false);
+            }
+
+            // Temporarily disable submit button
+            const submit_button = document.querySelector('#item-submit-card button[type="submit"], button[type="submit"]');
+            if (submit_button) {
+                submit_button.disabled = true;
+                setTimeout(() => {
+                    submit_button.disabled = false;
+                }, 1000);
+            }
+
+            // Clear unsaved changes warning
+            window.onbeforeunload = null;
+        };
+
+        // Store timeout ID for cleanup
+        let timeout_id = null;
 
         try {
+            // Scroll to top for user feedback
+            window.scrollTo({ top: 0, behavior: 'smooth' });
 
-            scrollTo(0, 0);
-            const EXHIBITS_ENDPOINTS = endpointsModule.get_exhibits_endpoints();
-            let exhibit_id = helperModule.get_parameter_by_name('exhibit_id');
-            let item_id = helperModule.get_parameter_by_name('item_id');
-            let data = itemsCommonStandardItemFormModule.get_common_standard_item_form_fields();
-            let token = authModule.get_user_token();
-            let response;
+            // Get and validate parameters
+            const exhibit_id = helperModule.get_parameter_by_name('exhibit_id');
+            const item_id = helperModule.get_parameter_by_name('item_id');
 
-            if (exhibit_id === undefined || item_id === undefined) {
-                document.querySelector('#message').innerHTML = `<div class="alert alert-danger" role="alert"><i class="fa fa-exclamation"></i> Unable to get record ID</div>`;
+            const validation = validate_parameters(exhibit_id, item_id);
+            if (!validation.valid) {
+                display_message(message_element, 'danger', validation.error);
                 return false;
             }
 
-            if (token === false) {
-                setTimeout(() => {
-                    document.querySelector('#message').innerHTML = `<div class="alert alert-danger" role="alert"><i class="fa fa-exclamation"></i> Unable to get session token</div>`;
+            // Validate authentication
+            const token = authModule.get_user_token();
+
+            if (!token || token === false) {
+                display_message(message_element, 'danger', 'Session expired. Please log in again.');
+
+                timeout_id = setTimeout(() => {
                     authModule.logout();
                 }, 1000);
 
                 return false;
             }
 
-            if (data === undefined) {
-                document.querySelector('#message').innerHTML = `<div class="alert alert-danger" role="alert"><i class="fa fa-exclamation"></i> Unable to get form field values</div>`;
-                return false;
-            } else if (data === false) {
+            // Get and validate form data
+            const form_data = itemsCommonStandardItemFormModule.get_common_standard_item_form_fields();
+
+            if (!form_data || form_data === false || form_data === undefined) {
+                display_message(message_element, 'danger', 'Unable to get form field values. Please check all required fields.');
                 return false;
             }
 
-            data.updated_by = helperModule.get_user_name();
+            // Add metadata
+            const user_name = helperModule.get_user_name();
+            if (user_name) {
+                form_data.updated_by = user_name;
+            }
 
-            document.querySelector('#message').innerHTML = `<div class="alert alert-info" role="alert"><i class="fa fa-info"></i> Updating item record...</div>`;
+            // Show loading state
+            display_message(message_element, 'info', 'Updating item record...');
 
-            let tmp = EXHIBITS_ENDPOINTS.exhibits.item_records.put.endpoint.replace(':exhibit_id', exhibit_id);
-            let endpoint = tmp.replace(':item_id', item_id);
+            // Get API endpoints
+            const EXHIBITS_ENDPOINTS = endpointsModule.get_exhibits_endpoints();
 
-            response = await httpModule.req({
+            if (!EXHIBITS_ENDPOINTS?.exhibits?.item_records?.put?.endpoint) {
+                display_message(message_element, 'danger', 'API endpoint configuration missing');
+                return false;
+            }
+
+            // Construct endpoint with URL encoding
+            const endpoint = EXHIBITS_ENDPOINTS.exhibits.item_records.put.endpoint
+                .replace(':exhibit_id', encodeURIComponent(exhibit_id))
+                .replace(':item_id', encodeURIComponent(item_id));
+
+            // Make API request
+            const response = await httpModule.req({
                 method: 'PUT',
                 url: endpoint,
-                data: data,
+                data: form_data,
                 headers: {
                     'Content-Type': 'application/json',
                     'x-access-token': token
-                }
+                },
+                timeout: 30000
             });
 
-            if (response !== undefined && response.status === 201) {
-
-                document.querySelector('#message').innerHTML = `<div class="alert alert-success" role="alert"><i class="fa fa-info"></i> Item record updated</div>`;
-
-                setTimeout(() => {
-                    window.location.reload();
-                }, 900);
+            // Validate response
+            if (!response || response.status !== 201) {
+                throw new Error('Failed to update item record');
             }
 
+            // Show success message
+            display_message(message_element, 'success', 'Item record updated successfully');
+
+            // Refresh the display with updated data
+            await refresh_record_display();
+
+            // Smoothly clear success message after delay
+            timeout_id = setTimeout(() => {
+                clear_message_smoothly();
+            }, MESSAGE_CLEAR_DELAY);
+
+            return true;
+
         } catch (error) {
-            document.querySelector('#message').innerHTML = `<div class="alert alert-danger" role="alert"><i class="fa fa-exclamation"></i> ${error.message}</div>`;
+            // Clear any pending timeouts
+            if (timeout_id) {
+                clearTimeout(timeout_id);
+            }
+
+            // Log error for debugging
+            console.error('Error updating item record:', error);
+
+            // Display error message (use user_message from Axios interceptor if available)
+            const error_message = error.user_message || error.message || 'Unable to update item record. Please try again.';
+            display_message(message_element, 'danger', error_message);
+
+            return false;
+
+        } finally {
+            // Reset submission flag
+            this._is_updating_item = false;
         }
     };
 

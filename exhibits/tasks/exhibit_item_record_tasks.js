@@ -86,7 +86,7 @@ const Exhibit_item_record_tasks = class {
     async get_item_record(is_member_of_exhibit, uuid) {
 
         /**
-         * Validate UUID format (RFC 4122 compliant)
+         * Validate UUID format
          */
         const is_valid_uuid = (uuid) => {
             if (typeof uuid !== 'string') {
@@ -179,24 +179,191 @@ const Exhibit_item_record_tasks = class {
     }
 
     /**
-     * Gets item record
-     * @param is_member_of_exhibit
-     * @param uuid
+     * Retrieves an item record for editing and locks it for the user
+     * @param {string|number} uid - User ID requesting to edit
+     * @param {string} is_member_of_exhibit - The exhibit UUID this item belongs to
+     * @param {string} uuid - The item record UUID
+     * @returns {Promise<Object|null>} Item record with lock status, or null if not found
+     * @throws {Error} If validation fails or retrieval fails
      */
-    async get_item_record__(is_member_of_exhibit, uuid) {
+    async get_item_edit_record(uid, is_member_of_exhibit, uuid) {
+        // Define columns to select (avoid SELECT *)
+        const ITEM_COLUMNS = [
+            'id',
+            'uuid',
+            'is_member_of_exhibit',
+            'thumbnail',
+            'title',
+            'caption',
+            'item_type',
+            'mime_type',
+            'media',
+            'text',
+            'wrap_text',
+            'description',
+            'type',
+            'layout',
+            'media_width',
+            'media_padding',
+            'alt_text',
+            'is_alt_text_decorative',
+            'pdf_open_to_page',
+            'item_subjects',
+            'styles',
+            'order',
+            'is_repo_item',
+            'is_kaltura_item',
+            'is_embedded',
+            'is_published',
+            'is_locked',
+            'locked_by_user',
+            'locked_at',
+            'is_deleted',
+            'owner',
+            'created',
+            'updated',
+            'created_by',
+            'updated_by'
+        ];
 
         try {
+            // ===== INPUT VALIDATION =====
 
-            return await this.DB(this.TABLE.item_records)
-            .select('*')
-            .where({
-                is_member_of_exhibit: is_member_of_exhibit,
-                uuid: uuid,
-                is_deleted: 0
-            });
+            if (uid === null || uid === undefined || uid === '') {
+                throw new Error('Valid user ID is required');
+            }
+
+            // Convert uid to number for comparison
+            const uid_number = Number(uid);
+            if (isNaN(uid_number)) {
+                throw new Error('User ID must be a valid number');
+            }
+
+            if (!is_member_of_exhibit || typeof is_member_of_exhibit !== 'string' || !is_member_of_exhibit.trim()) {
+                throw new Error('Valid exhibit UUID is required');
+            }
+
+            if (!uuid || typeof uuid !== 'string' || !uuid.trim()) {
+                throw new Error('Valid item UUID is required');
+            }
+
+            // Validate UUID formats
+            const uuid_regex = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
+
+            if (!uuid_regex.test(is_member_of_exhibit.trim())) {
+                throw new Error('Invalid exhibit UUID format');
+            }
+
+            if (!uuid_regex.test(uuid.trim())) {
+                throw new Error('Invalid item UUID format');
+            }
+
+            // ===== DATABASE VALIDATION =====
+
+            if (!this.DB || typeof this.DB !== 'function') {
+                throw new Error('Database connection is not available');
+            }
+
+            if (!this.TABLE?.item_records) {
+                throw new Error('Table name "item_records" is not defined');
+            }
+
+            // ===== FETCH ITEM RECORD =====
+
+            const record = await Promise.race([
+                this.DB(this.TABLE.item_records)
+                    .select(ITEM_COLUMNS)
+                    .where({
+                        is_member_of_exhibit: is_member_of_exhibit.trim(),
+                        uuid: uuid.trim(),
+                        is_deleted: 0
+                    })
+                    .first(),  // Returns single object instead of array
+                new Promise((_, reject) =>
+                    setTimeout(() => reject(new Error('Query timeout')), 10000)
+                )
+            ]);
+
+            if (!record) {
+                LOGGER.module().info('Item record not found', {
+                    is_member_of_exhibit: is_member_of_exhibit.trim(),
+                    uuid: uuid.trim()
+                });
+                return null;
+            }
+
+            // ===== HANDLE RECORD LOCKING =====
+
+            // If record is not locked, attempt to lock it for this user
+            if (record.is_locked === 0) {
+                try {
+                    const HELPER_TASK = new HELPER();
+                    await HELPER_TASK.lock_record(
+                        uid_number,
+                        uuid.trim(),
+                        this.DB,
+                        this.TABLE.item_records
+                    );
+
+                    // Update the record object with lock status
+                    record.is_locked = 1;
+                    record.locked_by_user = uid_number;
+                    record.locked_at = new Date();
+
+                    LOGGER.module().info('Item record locked for editing', {
+                        uuid: uuid.trim(),
+                        locked_by: uid_number
+                    });
+
+                } catch (lock_error) {
+                    LOGGER.module().error('Failed to lock item record', {
+                        uuid: uuid.trim(),
+                        uid: uid_number,
+                        error: lock_error.message
+                    });
+
+                    // Return record without lock if locking fails
+                    LOGGER.module().warn('Returning record without lock', {
+                        uuid: uuid.trim()
+                    });
+                }
+            } else {
+                // Record is already locked
+                const locked_by_number = Number(record.locked_by_user);
+
+                if (locked_by_number === uid_number) {
+                    LOGGER.module().info('Item record already locked by this user', {
+                        uuid: uuid.trim(),
+                        uid: uid_number
+                    });
+                } else {
+                    LOGGER.module().info('Item record already locked by another user', {
+                        uuid: uuid.trim(),
+                        locked_by: record.locked_by_user,
+                        requested_by: uid_number
+                    });
+                }
+            }
+
+            return record;
 
         } catch (error) {
-            LOGGER.module().error('ERROR: [/exhibits/exhibit_item_record_tasks (get_item_record)] unable to get item records ' + error.message);
+            const error_context = {
+                method: 'get_item_edit_record',
+                uid,
+                is_member_of_exhibit,
+                uuid,
+                timestamp: new Date().toISOString(),
+                message: error.message,
+                stack: error.stack
+            };
+
+            LOGGER.module().error(
+                'Failed to get item edit record',
+                error_context
+            );
+
+            throw error;
         }
     }
 
@@ -206,7 +373,7 @@ const Exhibit_item_record_tasks = class {
      * @param uuid
      * @param uid
      */
-    async get_item_edit_record(uid, is_member_of_exhibit, uuid) {
+    async get_item_edit_record__(uid, is_member_of_exhibit, uuid) {
 
         try {
 
