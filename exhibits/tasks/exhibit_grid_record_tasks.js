@@ -200,29 +200,6 @@ const Exhibit_grid_record_tasks = class {
         }
     }
 
-    /*
-    async create_grid_record__(data) {
-
-        try {
-
-            const result = await this.DB.transaction((trx) => {
-                this.DB.insert(data)
-                    .into(this.TABLE.grid_records)
-                    .transacting(trx)
-                    .then(trx.commit)
-                    .catch(trx.rollback);
-            });
-
-            LOGGER.module().info('INFO: [/exhibits/exhibit_grid_record_tasks (create_grid_record)] ' + result.length + ' Grid record created.');
-            return true;
-
-        } catch (error) {
-            LOGGER.module().error('ERROR: [/exhibits/exhibit_grid_record_tasks (create_grid_record)] unable to create grid record ' + error.message);
-        }
-    }
-
-     */
-
     /**
      * Gets all grid records by exhibit
      * @param is_member_of_exhibit
@@ -379,25 +356,122 @@ const Exhibit_grid_record_tasks = class {
     }
 
     /**
-     * Gets grid items - used for full exhibit indexing
-     * @param is_member_of_exhibit
-     * @param is_member_of_grid
+     * Retrieves all grid item records for a specific grid
+     * @param {string} is_member_of_exhibit - The exhibit UUID
+     * @param {string} is_member_of_grid - The grid UUID
+     * @returns {Promise<Array>} Array of grid item records ordered by order field
+     * @throws {Error} If validation fails or query fails
      */
     async get_grid_item_records(is_member_of_exhibit, is_member_of_grid) {
+        // Define columns to select (avoid SELECT *)
+        const GRID_ITEM_COLUMNS = [
+            'id',
+            'uuid',
+            'is_member_of_grid',
+            'is_member_of_exhibit',
+            'repo_uuid',
+            'thumbnail',
+            'title',
+            'caption',
+            'item_type',
+            'mime_type',
+            'media',
+            'text',
+            'wrap_text',
+            'description',
+            'type',
+            'layout',
+            'media_width',
+            'media_padding',
+            'alt_text',
+            'is_alt_text_decorative',
+            'pdf_open_to_page',
+            'styles',
+            'order',
+            'date',
+            'is_repo_item',
+            'is_kaltura_item',
+            'is_embedded',
+            'is_published',
+            'is_locked',
+            'locked_by_user',
+            'locked_at',
+            'is_deleted',
+            'owner',
+            'created',
+            'updated',
+            'created_by',
+            'updated_by'
+        ];
 
         try {
+            // ===== INPUT VALIDATION =====
 
-            return await this.DB(this.TABLE.grid_item_records)
-                .select('*')
+            if (!is_member_of_exhibit || typeof is_member_of_exhibit !== 'string' || !is_member_of_exhibit.trim()) {
+                throw new Error('Valid exhibit UUID is required');
+            }
+
+            if (!is_member_of_grid || typeof is_member_of_grid !== 'string' || !is_member_of_grid.trim()) {
+                throw new Error('Valid grid UUID is required');
+            }
+
+            // Validate UUID formats
+            const uuid_regex = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
+
+            if (!uuid_regex.test(is_member_of_exhibit.trim())) {
+                throw new Error('Invalid exhibit UUID format');
+            }
+
+            if (!uuid_regex.test(is_member_of_grid.trim())) {
+                throw new Error('Invalid grid UUID format');
+            }
+
+            // ===== DATABASE VALIDATION =====
+
+            if (!this.DB || typeof this.DB !== 'function') {
+                throw new Error('Database connection is not available');
+            }
+
+            if (!this.TABLE?.grid_item_records) {
+                throw new Error('Table name "grid_item_records" is not defined');
+            }
+
+            // ===== FETCH GRID ITEM RECORDS =====
+
+            const records = await this.DB(this.TABLE.grid_item_records)
+                .select(GRID_ITEM_COLUMNS)
                 .where({
-                    is_member_of_exhibit: is_member_of_exhibit,
-                    is_member_of_grid: is_member_of_grid,
+                    is_member_of_exhibit: is_member_of_exhibit.trim(),
+                    is_member_of_grid: is_member_of_grid.trim(),
                     is_deleted: 0
                 })
-                .orderBy('order');
+                .orderBy('order', 'asc')
+                .timeout(10000);
+
+            LOGGER.module().info('Grid item records retrieved', {
+                is_member_of_exhibit: is_member_of_exhibit.trim(),
+                is_member_of_grid: is_member_of_grid.trim(),
+                count: records.length
+            });
+
+            return records || [];
 
         } catch (error) {
-            LOGGER.module().error('ERROR: [/exhibits/exhibit_grid_record_tasks (get_grid_item_records)] unable to get grid item records ' + error.message);
+            const error_context = {
+                method: 'get_grid_item_records',
+                is_member_of_exhibit,
+                is_member_of_grid,
+                timestamp: new Date().toISOString(),
+                message: error.message,
+                stack: error.stack
+            };
+
+            LOGGER.module().error(
+                'Failed to get grid item records',
+                error_context
+            );
+
+            throw error;
         }
     }
 
@@ -426,67 +500,355 @@ const Exhibit_grid_record_tasks = class {
     }
 
     /**
-     * Gets grid item record
-     * @param is_member_of_exhibit
-     * @param grid_id
-     * @param item_id
+     * Retrieves a single grid item record by exhibit UUID, grid UUID, and item UUID
+     * @param {string} is_member_of_exhibit - The exhibit UUID this grid item belongs to
+     * @param {string} grid_id - The grid UUID this item belongs to
+     * @param {string} item_id - The grid item UUID
+     * @returns {Promise<Object|null>} Grid item record or null if not found
+     * @throws {Error} If validation fails or query fails
      */
     async get_grid_item_record(is_member_of_exhibit, grid_id, item_id) {
 
-        try {
+        // Define columns to select
+        const GRID_ITEM_COLUMNS = [
+            'id',
+            'uuid',
+            'is_member_of_grid',
+            'is_member_of_exhibit',
+            'repo_uuid',
+            'thumbnail',
+            'title',
+            'caption',
+            'item_type',
+            'mime_type',
+            'media',
+            'text',
+            'wrap_text',
+            'description',
+            'type',
+            'layout',
+            'media_width',
+            'media_padding',
+            'alt_text',
+            'is_alt_text_decorative',
+            'pdf_open_to_page',
+            'styles',
+            'order',
+            'date',
+            'is_repo_item',
+            'is_kaltura_item',
+            'is_embedded',
+            'is_published',
+            'is_locked',
+            'locked_by_user',
+            'locked_at',
+            'is_deleted',
+            'owner',
+            'created',
+            'updated',
+            'created_by',
+            'updated_by'
+        ];
 
-            return await this.DB(this.TABLE.grid_item_records)
-                .select('*')
-                .where({
-                    is_member_of_exhibit: is_member_of_exhibit,
-                    is_member_of_grid: grid_id,
-                    uuid: item_id,
-                    is_deleted: 0
+        try {
+            // ===== INPUT VALIDATION =====
+
+            if (!is_member_of_exhibit || typeof is_member_of_exhibit !== 'string' || !is_member_of_exhibit.trim()) {
+                throw new Error('Valid exhibit UUID is required');
+            }
+
+            if (!grid_id || typeof grid_id !== 'string' || !grid_id.trim()) {
+                throw new Error('Valid grid UUID is required');
+            }
+
+            if (!item_id || typeof item_id !== 'string' || !item_id.trim()) {
+                throw new Error('Valid item UUID is required');
+            }
+
+            // Validate UUID formats
+            const uuid_regex = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
+
+            if (!uuid_regex.test(is_member_of_exhibit.trim())) {
+                throw new Error('Invalid exhibit UUID format');
+            }
+
+            if (!uuid_regex.test(grid_id.trim())) {
+                throw new Error('Invalid grid UUID format');
+            }
+
+            if (!uuid_regex.test(item_id.trim())) {
+                throw new Error('Invalid item UUID format');
+            }
+
+            // ===== DATABASE VALIDATION =====
+
+            if (!this.DB || typeof this.DB !== 'function') {
+                throw new Error('Database connection is not available');
+            }
+
+            if (!this.TABLE?.grid_item_records) {
+                throw new Error('Table name "grid_item_records" is not defined');
+            }
+
+            // ===== FETCH GRID ITEM RECORD =====
+
+            const record = await Promise.race([
+                this.DB(this.TABLE.grid_item_records)
+                    .select(GRID_ITEM_COLUMNS)
+                    .where({
+                        is_member_of_exhibit: is_member_of_exhibit.trim(),
+                        is_member_of_grid: grid_id.trim(),
+                        uuid: item_id.trim(),
+                        is_deleted: 0
+                    })
+                    .first(),  // Returns single object instead of array
+                new Promise((_, reject) =>
+                    setTimeout(() => reject(new Error('Query timeout')), 10000)
+                )
+            ]);
+
+            if (!record) {
+                LOGGER.module().info('Grid item record not found', {
+                    is_member_of_exhibit: is_member_of_exhibit.trim(),
+                    grid_id: grid_id.trim(),
+                    item_id: item_id.trim()
                 });
+                return null;
+            }
+
+            LOGGER.module().info('Grid item record retrieved', {
+                uuid: item_id.trim(),
+                is_member_of_grid: grid_id.trim(),
+                is_member_of_exhibit: is_member_of_exhibit.trim()
+            });
+
+            return record;
 
         } catch (error) {
-            LOGGER.module().error('ERROR: [/exhibits/exhibit_grid_record_tasks (get_grid_item_record)] unable to get grid item record ' + error.message);
+            const error_context = {
+                method: 'get_grid_item_record',
+                is_member_of_exhibit,
+                grid_id,
+                item_id,
+                timestamp: new Date().toISOString(),
+                message: error.message,
+                stack: error.stack
+            };
+
+            LOGGER.module().error(
+                'Failed to get grid item record',
+                error_context
+            );
+
+            throw error;
         }
     }
 
     /**
-     * Gets grid item record
-     * @param is_member_of_exhibit
-     * @param grid_id
-     * @param item_id
-     * @param uid
+     * Retrieves a grid item record for editing and locks it for the user
+     * @param {string|number} uid - User ID requesting to edit
+     * @param {string} is_member_of_exhibit - The exhibit UUID this grid item belongs to
+     * @param {string} grid_id - The grid UUID this item belongs to
+     * @param {string} item_id - The grid item UUID
+     * @returns {Promise<Object|null>} Grid item record with lock status, or null if not found
+     * @throws {Error} If validation fails or retrieval fails
      */
     async get_grid_item_edit_record(uid, is_member_of_exhibit, grid_id, item_id) {
 
+        // Define columns to select
+        const GRID_ITEM_COLUMNS = [
+            'id',
+            'uuid',
+            'is_member_of_grid',
+            'is_member_of_exhibit',
+            'repo_uuid',
+            'thumbnail',
+            'title',
+            'caption',
+            'item_type',
+            'mime_type',
+            'media',
+            'text',
+            'wrap_text',
+            'description',
+            'type',
+            'layout',
+            'media_width',
+            'media_padding',
+            'alt_text',
+            'is_alt_text_decorative',
+            'pdf_open_to_page',
+            'styles',
+            'order',
+            'date',
+            'is_repo_item',
+            'is_kaltura_item',
+            'is_embedded',
+            'is_published',
+            'is_locked',
+            'locked_by_user',
+            'locked_at',
+            'is_deleted',
+            'owner',
+            'created',
+            'updated',
+            'created_by',
+            'updated_by'
+        ];
+
         try {
+            // ===== INPUT VALIDATION =====
 
-            const data = await this.DB(this.TABLE.grid_item_records)
-                .select('*')
-                .where({
-                    is_member_of_exhibit: is_member_of_exhibit,
-                    is_member_of_grid: grid_id,
-                    uuid: item_id,
-                    is_deleted: 0
-                });
-
-            if (data.length !== 0 && data[0].is_locked === 0) {
-
-                try {
-
-                    const HELPER_TASK = new HELPER();
-                    await HELPER_TASK.lock_record(uid, item_id, this.DB, this.TABLE.grid_item_records);
-                    return data;
-
-                } catch (error) {
-                    LOGGER.module().error('ERROR: [/exhibits/exhibit_item_record_tasks (get_item_edit_record)] unable to lock record ' + error.message);
-                }
-
-            } else {
-                return data;
+            if (uid === null || uid === undefined || uid === '') {
+                throw new Error('Valid user ID is required');
             }
 
+            // Convert uid to number for comparison
+            const uid_number = Number(uid);
+            if (isNaN(uid_number)) {
+                throw new Error('User ID must be a valid number');
+            }
+
+            if (!is_member_of_exhibit || typeof is_member_of_exhibit !== 'string' || !is_member_of_exhibit.trim()) {
+                throw new Error('Valid exhibit UUID is required');
+            }
+
+            if (!grid_id || typeof grid_id !== 'string' || !grid_id.trim()) {
+                throw new Error('Valid grid UUID is required');
+            }
+
+            if (!item_id || typeof item_id !== 'string' || !item_id.trim()) {
+                throw new Error('Valid item UUID is required');
+            }
+
+            // Validate UUID formats
+            const uuid_regex = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
+
+            if (!uuid_regex.test(is_member_of_exhibit.trim())) {
+                throw new Error('Invalid exhibit UUID format');
+            }
+
+            if (!uuid_regex.test(grid_id.trim())) {
+                throw new Error('Invalid grid UUID format');
+            }
+
+            if (!uuid_regex.test(item_id.trim())) {
+                throw new Error('Invalid item UUID format');
+            }
+
+            // ===== DATABASE VALIDATION =====
+
+            if (!this.DB || typeof this.DB !== 'function') {
+                throw new Error('Database connection is not available');
+            }
+
+            if (!this.TABLE?.grid_item_records) {
+                throw new Error('Table name "grid_item_records" is not defined');
+            }
+
+            // ===== FETCH GRID ITEM RECORD =====
+
+            const record = await Promise.race([
+                this.DB(this.TABLE.grid_item_records)
+                    .select(GRID_ITEM_COLUMNS)
+                    .where({
+                        is_member_of_exhibit: is_member_of_exhibit.trim(),
+                        is_member_of_grid: grid_id.trim(),
+                        uuid: item_id.trim(),
+                        is_deleted: 0
+                    })
+                    .first(),  // Returns single object instead of array
+                new Promise((_, reject) =>
+                    setTimeout(() => reject(new Error('Query timeout')), 10000)
+                )
+            ]);
+
+            if (!record) {
+                LOGGER.module().info('Grid item record not found', {
+                    is_member_of_exhibit: is_member_of_exhibit.trim(),
+                    grid_id: grid_id.trim(),
+                    item_id: item_id.trim()
+                });
+                return null;
+            }
+
+            // ===== HANDLE RECORD LOCKING =====
+
+            // If record is not locked, attempt to lock it for this user
+            if (record.is_locked === 0) {
+                try {
+                    const HELPER_TASK = new HELPER();
+                    await HELPER_TASK.lock_record(
+                        uid_number,
+                        item_id.trim(),
+                        this.DB,
+                        this.TABLE.grid_item_records
+                    );
+
+                    // Update the record object with lock status
+                    record.is_locked = 1;
+                    record.locked_by_user = uid_number;
+                    record.locked_at = new Date();
+
+                    LOGGER.module().info('Grid item record locked for editing', {
+                        item_id: item_id.trim(),
+                        grid_id: grid_id.trim(),
+                        locked_by: uid_number
+                    });
+
+                } catch (lock_error) {
+                    LOGGER.module().error('Failed to lock grid item record', {
+                        item_id: item_id.trim(),
+                        grid_id: grid_id.trim(),
+                        uid: uid_number,
+                        error: lock_error.message
+                    });
+
+                    // Return record without lock if locking fails
+                    LOGGER.module().warn('Returning record without lock', {
+                        item_id: item_id.trim()
+                    });
+                }
+            } else {
+                // Record is already locked
+                const locked_by_number = Number(record.locked_by_user);
+
+                if (locked_by_number === uid_number) {
+                    LOGGER.module().info('Grid item record already locked by this user', {
+                        item_id: item_id.trim(),
+                        grid_id: grid_id.trim(),
+                        uid: uid_number
+                    });
+                } else {
+                    LOGGER.module().info('Grid item record already locked by another user', {
+                        item_id: item_id.trim(),
+                        grid_id: grid_id.trim(),
+                        locked_by: record.locked_by_user,
+                        requested_by: uid_number
+                    });
+                }
+            }
+
+            return record;
+
         } catch (error) {
-            LOGGER.module().error('ERROR: [/exhibits/exhibit_grid_record_tasks (get_grid_item_edit_record)] unable to get grid item record ' + error.message);
+            const error_context = {
+                method: 'get_grid_item_edit_record',
+                uid,
+                is_member_of_exhibit,
+                grid_id,
+                item_id,
+                timestamp: new Date().toISOString(),
+                message: error.message,
+                stack: error.stack
+            };
+
+            LOGGER.module().error(
+                'Failed to get grid item edit record',
+                error_context
+            );
+
+            throw error;
         }
     }
 
