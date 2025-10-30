@@ -299,7 +299,7 @@ const Exhibit_item_record_tasks = class {
                 try {
                     const HELPER_TASK = new HELPER();
                     await HELPER_TASK.lock_record(
-                        uid_number,
+                        uid,
                         uuid.trim(),
                         this.DB,
                         this.TABLE.item_records

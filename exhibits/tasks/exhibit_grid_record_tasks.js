@@ -1187,11 +1187,12 @@ const Exhibit_grid_record_tasks = class {
         }
     }
 
-    /**
+    /** TODO: unused - why?
      * Deletes grid record
      * @param is_member_of_exhibit
      * @param uuid
      */
+    /*
     async delete_grid_record(is_member_of_exhibit, uuid) {
 
         try {
@@ -1212,6 +1213,153 @@ const Exhibit_grid_record_tasks = class {
             LOGGER.module().error('ERROR: [/exhibits/exhibit_heading_record_tasks (delete_heading_record)] unable to delete grid record ' + error.message);
         }
     }
+    */
+
+    /**
+     * Soft deletes a grid item record (sets is_deleted flag)
+     * @param {string} is_member_of_exhibit - The exhibit UUID
+     * @param {string} grid_id - The grid UUID
+     * @param {string} grid_item_id - The grid item UUID to delete
+     * @param {string} [deleted_by=null] - User ID performing the deletion
+     * @returns {Promise<Object>} Deletion result with success status
+     * @throws {Error} If validation fails or deletion fails
+     */
+    async delete_grid_item_record(is_member_of_exhibit, grid_id, grid_item_id, deleted_by = null) {
+
+        try {
+            // ===== INPUT VALIDATION =====
+
+            if (!is_member_of_exhibit || typeof is_member_of_exhibit !== 'string' || !is_member_of_exhibit.trim()) {
+                throw new Error('Valid exhibit UUID is required');
+            }
+
+            if (!grid_id || typeof grid_id !== 'string' || !grid_id.trim()) {
+                throw new Error('Valid grid UUID is required');
+            }
+
+            if (!grid_item_id || typeof grid_item_id !== 'string' || !grid_item_id.trim()) {
+                throw new Error('Valid grid item UUID is required');
+            }
+
+            // Validate UUID formats
+            const uuid_regex = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
+
+            if (!uuid_regex.test(is_member_of_exhibit.trim())) {
+                throw new Error('Invalid exhibit UUID format');
+            }
+
+            if (!uuid_regex.test(grid_id.trim())) {
+                throw new Error('Invalid grid UUID format');
+            }
+
+            if (!uuid_regex.test(grid_item_id.trim())) {
+                throw new Error('Invalid grid item UUID format');
+            }
+
+            // ===== DATABASE VALIDATION =====
+
+            if (!this.DB || typeof this.DB !== 'function') {
+                throw new Error('Database connection is not available');
+            }
+
+            if (!this.TABLE?.grid_item_records) {
+                throw new Error('Table name "grid_item_records" is not defined');
+            }
+
+            // ===== CHECK IF RECORD EXISTS =====
+
+            const existing_record = await this.DB(this.TABLE.grid_item_records)
+                .select('id', 'uuid', 'title', 'is_deleted')
+                .where({
+                    is_member_of_exhibit: is_member_of_exhibit.trim(),
+                    is_member_of_grid: grid_id.trim(),
+                    uuid: grid_item_id.trim()
+                })
+                .first()
+                .timeout(10000);
+
+            if (!existing_record) {
+                throw new Error('Grid item record not found');
+            }
+
+            if (existing_record.is_deleted === 1) {
+                LOGGER.module().warn('Grid item record already deleted', {
+                    grid_item_id: grid_item_id.trim()
+                });
+                return {
+                    success: true,
+                    already_deleted: true,
+                    grid_item_id: grid_item_id.trim(),
+                    message: 'Grid item was already deleted'
+                };
+            }
+
+            // ===== PREPARE UPDATE DATA =====
+
+            const update_data = {
+                is_deleted: 1,
+                updated: this.DB.fn.now()
+            };
+
+            if (deleted_by) {
+                update_data.updated_by = deleted_by;
+            }
+
+            // ===== PERFORM SOFT DELETE =====
+
+            const affected_rows = await this.DB(this.TABLE.grid_item_records)
+                .where({
+                    is_member_of_exhibit: is_member_of_exhibit.trim(),
+                    is_member_of_grid: grid_id.trim(),
+                    uuid: grid_item_id.trim(),
+                    is_deleted: 0  // Only delete if not already deleted
+                })
+                .update(update_data)
+                .timeout(10000);
+
+            // Verify deletion succeeded
+            if (affected_rows === 0) {
+                throw new Error('Failed to delete grid item record: No rows affected');
+            }
+
+            LOGGER.module().info('Grid item record deleted successfully', {
+                grid_item_id: grid_item_id.trim(),
+                grid_id: grid_id.trim(),
+                is_member_of_exhibit: is_member_of_exhibit.trim(),
+                deleted_by,
+                affected_rows,
+                timestamp: new Date().toISOString()
+            });
+
+            return {
+                success: true,
+                grid_item_id: grid_item_id.trim(),
+                grid_id: grid_id.trim(),
+                affected_rows,
+                deleted_by,
+                message: 'Grid item record deleted successfully'
+            };
+
+        } catch (error) {
+            const error_context = {
+                method: 'delete_grid_item_record',
+                is_member_of_exhibit,
+                grid_id,
+                grid_item_id,
+                deleted_by,
+                timestamp: new Date().toISOString(),
+                message: error.message,
+                stack: error.stack
+            };
+
+            LOGGER.module().error(
+                'Failed to delete grid item record',
+                error_context
+            );
+
+            throw error;
+        }
+    }
 
     /**
      * Deletes grid item
@@ -1219,7 +1367,8 @@ const Exhibit_grid_record_tasks = class {
      * @param grid_id
      * @param grid_item_id
      */
-    async delete_grid_item_record(is_member_of_exhibit, grid_id, grid_item_id) {
+    /*
+    async delete_grid_item_record__(is_member_of_exhibit, grid_id, grid_item_id) {
 
         try {
 
@@ -1240,12 +1389,106 @@ const Exhibit_grid_record_tasks = class {
             LOGGER.module().error('ERROR: [/exhibits/exhibit_heading_record_tasks (delete_grid_item_record)] unable to delete grid item record ' + error.message);
         }
     }
+    */
+
+    /**
+     * Gets the count of grid records for a specific exhibit
+     * @param {string} is_member_of_exhibit - The exhibit UUID
+     * @param {Object} [options={}] - Count options
+     * @param {boolean} [options.include_deleted=false] - Include deleted records in count
+     * @param {boolean} [options.include_unpublished=true] - Include unpublished records in count
+     * @returns {Promise<number>} Count of grid records
+     * @throws {Error} If validation fails or query fails
+     */
+    async get_grid_record_count(is_member_of_exhibit, options = {}) {
+        const {
+            include_deleted = false,
+            include_unpublished = true
+        } = options;
+
+        try {
+            // ===== INPUT VALIDATION =====
+
+            if (!is_member_of_exhibit || typeof is_member_of_exhibit !== 'string' || !is_member_of_exhibit.trim()) {
+                throw new Error('Valid exhibit UUID is required');
+            }
+
+            // Validate UUID format
+            const uuid_regex = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
+            if (!uuid_regex.test(is_member_of_exhibit.trim())) {
+                throw new Error('Invalid exhibit UUID format');
+            }
+
+            // ===== DATABASE VALIDATION =====
+
+            if (!this.DB || typeof this.DB !== 'function') {
+                throw new Error('Database connection is not available');
+            }
+
+            if (!this.TABLE?.grid_records) {
+                throw new Error('Table name "grid_records" is not defined');
+            }
+
+            // ===== BUILD QUERY =====
+
+            let query = this.DB(this.TABLE.grid_records)
+                .count('id as count')
+                .where({
+                    is_member_of_exhibit: is_member_of_exhibit.trim()
+                });
+
+            // Filter by deleted status
+            if (!include_deleted) {
+                query = query.where({ is_deleted: 0 });
+            }
+
+            // Filter by published status
+            if (!include_unpublished) {
+                query = query.where({ is_published: 1 });
+            }
+
+            // ===== EXECUTE QUERY =====
+
+            const result = await query.timeout(10000);
+
+            // Safely extract count
+            const count = result && result[0] && typeof result[0].count !== 'undefined'
+                ? parseInt(result[0].count, 10)
+                : 0;
+
+            LOGGER.module().info('Grid record count retrieved', {
+                is_member_of_exhibit: is_member_of_exhibit.trim(),
+                count,
+                include_deleted,
+                include_unpublished
+            });
+
+            return count;
+
+        } catch (error) {
+            const error_context = {
+                method: 'get_grid_record_count',
+                is_member_of_exhibit,
+                options,
+                timestamp: new Date().toISOString(),
+                message: error.message,
+                stack: error.stack
+            };
+
+            LOGGER.module().error(
+                'Failed to get grid record count',
+                error_context
+            );
+
+            throw error;
+        }
+    }
 
     /**
      * Gets grid record count
      * @param uuid
      */
-    async get_record_count(uuid) {
+    async get_record_count__(uuid) {
 
         try {
 
