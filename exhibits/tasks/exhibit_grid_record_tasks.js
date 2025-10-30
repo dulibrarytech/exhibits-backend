@@ -200,46 +200,323 @@ const Exhibit_grid_record_tasks = class {
         }
     }
 
-    /**
-     * Gets all grid records by exhibit
-     * @param is_member_of_exhibit
-     */
     async get_grid_records(is_member_of_exhibit) {
 
-        try {
+        /**
+         * Validate exhibit ID format
+         */
+        const is_valid_exhibit_id = (exhibit_id) => {
+            if (typeof exhibit_id !== 'string' && typeof exhibit_id !== 'number') {
+                return false;
+            }
 
-            return await this.DB(this.TABLE.grid_records)
-                .select('*')
+            // If it's a UUID format
+            if (typeof exhibit_id === 'string' && exhibit_id.includes('-')) {
+                const uuid_pattern = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
+                return uuid_pattern.test(exhibit_id);
+            }
+
+            // If it's a numeric ID
+            if (typeof exhibit_id === 'number' || /^\d+$/.test(exhibit_id)) {
+                return true;
+            }
+
+            // For other string formats, ensure it's not empty and has reasonable length
+            const exhibit_id_str = String(exhibit_id).trim();
+            return exhibit_id_str.length > 0 && exhibit_id_str.length <= 255;
+        };
+
+        // Validate required parameter
+        if (!is_member_of_exhibit) {
+            const error_msg = 'Missing required parameter: is_member_of_exhibit is required';
+            LOGGER.module().error(`ERROR: [/exhibits/exhibit_grid_record_tasks (get_grid_records)] ${error_msg}`);
+            return null;
+        }
+
+        // Validate exhibit ID format
+        if (!is_valid_exhibit_id(is_member_of_exhibit)) {
+            const error_msg = `Invalid exhibit ID format: ${is_member_of_exhibit}`;
+            LOGGER.module().error(`ERROR: [/exhibits/exhibit_grid_record_tasks (get_grid_records)] ${error_msg}`);
+            return null;
+        }
+
+        try {
+            // Set query timeout to prevent long-running queries
+            const QUERY_TIMEOUT = 10000; // 10 seconds
+
+            // Query with specific columns for better performance
+            // Selecting all columns based on schema
+            const results = await this.DB(this.TABLE.grid_records)
+                .select(
+                    'id',
+                    'uuid',
+                    'is_member_of_exhibit',
+                    'type',
+                    'columns',
+                    'title',
+                    'text',
+                    'styles',
+                    'order',
+                    'is_deleted',
+                    'is_published',
+                    'created',
+                    'updated',
+                    'owner',
+                    'created_by',
+                    'updated_by'
+                )
                 .where({
                     is_member_of_exhibit: is_member_of_exhibit,
                     is_deleted: 0
-                });
+                })
+                .orderBy('order', 'asc') // Order by the 'order' column
+                .timeout(QUERY_TIMEOUT);
+
+            // Return results array (empty array if no records found)
+            return results || [];
 
         } catch (error) {
-            LOGGER.module().error('ERROR: [/exhibits/exhibit_grid_record_tasks (get_grid_records)] unable to get grid records ' + error.message);
+            // Handle specific error types
+            if (error.name === 'TimeoutError') {
+                LOGGER.module().error(
+                    `ERROR: [/exhibits/exhibit_grid_record_tasks (get_grid_records)] ` +
+                    `Query timeout for exhibit: ${is_member_of_exhibit}`
+                );
+            } else if (error.code === 'ER_NO_SUCH_TABLE') {
+                LOGGER.module().error(
+                    `ERROR: [/exhibits/exhibit_grid_record_tasks (get_grid_records)] ` +
+                    `Table does not exist: ${this.TABLE.grid_records}`
+                );
+            } else if (error.code === 'ER_BAD_FIELD_ERROR') {
+                LOGGER.module().error(
+                    `ERROR: [/exhibits/exhibit_grid_record_tasks (get_grid_records)] ` +
+                    `Invalid column name in query`
+                );
+            } else {
+                LOGGER.module().error(
+                    `ERROR: [/exhibits/exhibit_grid_record_tasks (get_grid_records)] ` +
+                    `Unable to get grid records for exhibit: ${is_member_of_exhibit} - ${error.message}`
+                );
+            }
+
+            // Return empty array instead of null/undefined on error
+            return [];
         }
     }
 
-    /**
-     * Updates grid record
-     * @param data
-     */
     async update_grid_record(data) {
 
-        try {
+        /**
+         * Validate UUID format (RFC 4122 compliant)
+         */
+        const is_valid_uuid = (uuid) => {
+            if (typeof uuid !== 'string') {
+                return false;
+            }
+            const uuid_pattern = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
+            return uuid_pattern.test(uuid);
+        };
 
-            await this.DB(this.TABLE.grid_records)
+        /**
+         * Validate exhibit ID format
+         */
+        const is_valid_exhibit_id = (exhibit_id) => {
+            if (typeof exhibit_id !== 'string' && typeof exhibit_id !== 'number') {
+                return false;
+            }
+
+            if (typeof exhibit_id === 'string' && exhibit_id.includes('-')) {
+                return is_valid_uuid(exhibit_id);
+            }
+
+            if (typeof exhibit_id === 'number' || /^\d+$/.test(exhibit_id)) {
+                return true;
+            }
+
+            const exhibit_id_str = String(exhibit_id).trim();
+            return exhibit_id_str.length > 0 && exhibit_id_str.length <= 255;
+        };
+
+        /**
+         * Validate and sanitize update data based on schema
+         */
+        const prepare_update_data = (raw_data) => {
+            const update_data = {};
+
+            // Whitelist of allowed updateable columns (based on schema)
+            const allowed_columns = [
+                'type',
+                'columns',
+                'title',
+                'text',
+                'styles',
+                'order',
+                'is_deleted',
+                'is_published',
+                'updated_by'
+            ];
+
+            // Process each allowed column
+            allowed_columns.forEach(column => {
+                if (raw_data.hasOwnProperty(column)) {
+                    const value = raw_data[column];
+
+                    // Validate and sanitize based on column type
+                    switch (column) {
+                        case 'columns':
+                            // Integer validation (1-12 typical range)
+                            const col_num = parseInt(value, 10);
+                            if (!isNaN(col_num) && col_num >= 1 && col_num <= 12) {
+                                update_data[column] = col_num;
+                            }
+                            break;
+
+                        case 'order':
+                            // Integer validation
+                            const order_num = parseInt(value, 10);
+                            if (!isNaN(order_num) && order_num >= 0) {
+                                update_data[column] = order_num;
+                            }
+                            break;
+
+                        case 'is_deleted':
+                        case 'is_published':
+                            // Boolean to tinyint(1)
+                            update_data[column] = value ? 1 : 0;
+                            break;
+
+                        case 'type':
+                            // String validation (max 100 chars per schema)
+                            if (typeof value === 'string' && value.length <= 100) {
+                                update_data[column] = value.trim();
+                            }
+                            break;
+
+                        case 'title':
+                        case 'text':
+                        case 'styles':
+                            // Longtext fields - allow null or string
+                            if (value === null || value === undefined) {
+                                update_data[column] = null;
+                            } else if (typeof value === 'string') {
+                                update_data[column] = value;
+                            }
+                            break;
+
+                        case 'updated_by':
+                            // String validation (max 255 chars per schema)
+                            if (value === null || value === undefined) {
+                                update_data[column] = null;
+                            } else if (typeof value === 'string' && value.length <= 255) {
+                                update_data[column] = value.trim();
+                            }
+                            break;
+                    }
+                }
+            });
+
+            return update_data;
+        };
+
+        // Validate input data object
+        if (!data || typeof data !== 'object') {
+            const error_msg = 'Invalid data: data object is required';
+            LOGGER.module().error(`ERROR: [/exhibits/exhibit_grid_record_tasks (update_grid_record)] ${error_msg}`);
+            return null;
+        }
+
+        // Validate required fields
+        if (!data.is_member_of_exhibit || !data.uuid) {
+            const error_msg = 'Missing required fields: is_member_of_exhibit and uuid are required';
+            LOGGER.module().error(`ERROR: [/exhibits/exhibit_grid_record_tasks (update_grid_record)] ${error_msg}`);
+            return null;
+        }
+
+        // Validate UUID format
+        if (!is_valid_uuid(data.uuid)) {
+            const error_msg = `Invalid UUID format: ${data.uuid}`;
+            LOGGER.module().error(`ERROR: [/exhibits/exhibit_grid_record_tasks (update_grid_record)] ${error_msg}`);
+            return null;
+        }
+
+        // Validate exhibit ID format
+        if (!is_valid_exhibit_id(data.is_member_of_exhibit)) {
+            const error_msg = `Invalid exhibit ID format: ${data.is_member_of_exhibit}`;
+            LOGGER.module().error(`ERROR: [/exhibits/exhibit_grid_record_tasks (update_grid_record)] ${error_msg}`);
+            return null;
+        }
+
+        // Prepare sanitized update data
+        const update_data = prepare_update_data(data);
+
+        // Check if there's any data to update
+        if (Object.keys(update_data).length === 0) {
+            const error_msg = 'No valid fields to update';
+            LOGGER.module().error(`ERROR: [/exhibits/exhibit_grid_record_tasks (update_grid_record)] ${error_msg}`);
+            return null;
+        }
+
+        try {
+            // Set query timeout
+            const QUERY_TIMEOUT = 5000; // 5 seconds
+
+            // Perform update
+            const rows_affected = await this.DB(this.TABLE.grid_records)
                 .where({
                     is_member_of_exhibit: data.is_member_of_exhibit,
-                    uuid: data.uuid
+                    uuid: data.uuid,
+                    is_deleted: 0 // Only update non-deleted records
                 })
-                .update(data);
+                .update(update_data)
+                .timeout(QUERY_TIMEOUT);
 
-            LOGGER.module().info('INFO: [/exhibits/exhibit_grid_record_tasks (update_grid_record)] Grid record updated.');
+            // Check if record was found and updated
+            if (rows_affected === 0) {
+                LOGGER.module().warn(
+                    `WARN: [/exhibits/exhibit_grid_record_tasks (update_grid_record)] ` +
+                    `No grid record found or updated for exhibit: ${data.is_member_of_exhibit}, UUID: ${data.uuid}`
+                );
+                return false;
+            }
+
+            LOGGER.module().info(
+                `INFO: [/exhibits/exhibit_grid_record_tasks (update_grid_record)] ` +
+                `Grid record updated successfully for exhibit: ${data.is_member_of_exhibit}, UUID: ${data.uuid}`
+            );
+
             return true;
 
         } catch (error) {
-            LOGGER.module().error('ERROR: [/exhibits/exhibit_grid_record_tasks (update_grid_record)] unable to update grid record ' + error.message);
+            // Handle specific error types
+            if (error.name === 'TimeoutError') {
+                LOGGER.module().error(
+                    `ERROR: [/exhibits/exhibit_grid_record_tasks (update_grid_record)] ` +
+                    `Query timeout for exhibit: ${data.is_member_of_exhibit}, UUID: ${data.uuid}`
+                );
+            } else if (error.code === 'ER_NO_SUCH_TABLE') {
+                LOGGER.module().error(
+                    `ERROR: [/exhibits/exhibit_grid_record_tasks (update_grid_record)] ` +
+                    `Table does not exist: ${this.TABLE.grid_records}`
+                );
+            } else if (error.code === 'ER_BAD_FIELD_ERROR') {
+                LOGGER.module().error(
+                    `ERROR: [/exhibits/exhibit_grid_record_tasks (update_grid_record)] ` +
+                    `Invalid column name in update query`
+                );
+            } else if (error.code === 'ER_DUP_ENTRY') {
+                LOGGER.module().error(
+                    `ERROR: [/exhibits/exhibit_grid_record_tasks (update_grid_record)] ` +
+                    `Duplicate entry error for UUID: ${data.uuid}`
+                );
+            } else {
+                LOGGER.module().error(
+                    `ERROR: [/exhibits/exhibit_grid_record_tasks (update_grid_record)] ` +
+                    `Unable to update grid record for exhibit: ${data.is_member_of_exhibit}, UUID: ${data.uuid} - ${error.message}`
+                );
+            }
+
+            // Return false on error (operation failed)
+            return false;
         }
     }
 
@@ -779,7 +1056,7 @@ const Exhibit_grid_record_tasks = class {
                 try {
                     const HELPER_TASK = new HELPER();
                     await HELPER_TASK.lock_record(
-                        uid_number,
+                        uid,
                         item_id.trim(),
                         this.DB,
                         this.TABLE.grid_item_records

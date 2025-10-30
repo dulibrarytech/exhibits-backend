@@ -443,6 +443,7 @@ exports.unlock_grid_item_record = async function (req, res) {
             return false;
         }
 
+        /*
         const permissions = ['update_any_item'];
         let options = {};
         options.req = req;
@@ -460,6 +461,7 @@ exports.unlock_grid_item_record = async function (req, res) {
 
             return false;
         }
+        */
 
         const result = await GRIDS_MODEL.unlock_grid_item_record(uid, item_id);
 
