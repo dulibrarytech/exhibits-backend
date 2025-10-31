@@ -482,8 +482,8 @@ const Helper = class {
 
         try {
 
-            let exhibit_order = await db(tables.exhibit_records).select('order');
-            return this.order_items(exhibit_order);
+            let exhibit_order = await db(tables.exhibit_records).select('order').andWhere('is_deleted', 0);
+            return this.get_next_order_number(exhibit_order);
 
         } catch (error) {
             LOGGER.module().error('ERROR: [/libs/helper (order_exhibits)] unable to order exhibits ' + error.message);
@@ -500,20 +500,20 @@ const Helper = class {
     async order_exhibit_items(uuid, db, tables) {
 
         try {
-            console.log('EXHIBIT UUID ', uuid);
+
             let heading_order;
             let item_order;
             let grid_order;
             let timeline_order;
 
-            heading_order = await db(tables.heading_records).select('order').where('is_member_of_exhibit', uuid);
-            item_order = await db(tables.item_records).select('order').where('is_member_of_exhibit', uuid);
-            grid_order = await db(tables.grid_records).select('order').where('is_member_of_exhibit', uuid);
-            timeline_order = await db(tables.timeline_records).select('order').where('is_member_of_exhibit', uuid);
+            heading_order = await db(tables.heading_records).select('order').where('is_member_of_exhibit', uuid).andWhere('is_deleted', 0);
+            item_order = await db(tables.item_records).select('order').where('is_member_of_exhibit', uuid).andWhere('is_deleted', 0);
+            grid_order = await db(tables.grid_records).select('order').where('is_member_of_exhibit', uuid).andWhere('is_deleted', 0);
+            timeline_order = await db(tables.timeline_records).select('order').where('is_member_of_exhibit', uuid).andWhere('is_deleted', 0);
 
             const merged = [...heading_order, ...item_order, ...grid_order, ...timeline_order];
 
-            return this.order_items(merged);
+            return this.get_next_order_number(merged);
 
         } catch (error) {
             LOGGER.module().error('ERROR: [/libs/helper (order_exhibit_items)] unable to order items ' + error.message);
@@ -531,8 +531,8 @@ const Helper = class {
 
         try {
 
-            const item_order = await db(tables.grid_item_records).select('order').where('is_member_of_grid', uuid);
-            return this.order_items(item_order);
+            const item_order = await db(tables.grid_item_records).select('order').where('is_member_of_grid', uuid).andWhere('is_deleted', 0);
+            return this.get_next_order_number(item_order);
 
         } catch (error) {
             LOGGER.module().error('ERROR: [/libs/helper (order_grid_items)] unable to order items ' + error.message);
@@ -550,8 +550,8 @@ const Helper = class {
 
         try {
 
-            const item_order = await db(tables.timeline_item_records).select('order').where('is_member_of_timeline', uuid);
-            return this.order_items(item_order);
+            const item_order = await db(tables.timeline_item_records).select('order').where('is_member_of_timeline', uuid).andWhere('is_deleted', 0);
+            return this.get_next_order_number(item_order);
 
         } catch (error) {
             LOGGER.module().error('ERROR: [/libs/helper (order_timeline_items)] unable to order items ' + error.message);
@@ -559,11 +559,11 @@ const Helper = class {
         }
     }
 
-    /**
-     * order items
+    /** order_items
+     * order items - gets the next number
      * @param item_order
      */
-    order_items(item_order) {
+    get_next_order_number(item_order) {
 
         try {
 
