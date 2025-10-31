@@ -69,6 +69,25 @@ exports.get_item_records = async function (is_member_of_exhibit) {
             return a.order - b.order;
         });
 
+        // check item order
+        const HELPER_TASK = new HELPER();
+        let has_gaps = HELPER_TASK.has_order_gaps(records);
+
+        if (has_gaps) {
+
+            let new_order = await HELPER_TASK.reorder(is_member_of_exhibit, DB, TABLES);
+            let new_order_applied = await HELPER_TASK.apply_reorder(is_member_of_exhibit, new_order, DB, TABLES);
+
+            if (new_order_applied.success === false) {
+                LOGGER.module().error(
+                    'Failed to reorder records',
+                    new_order_applied
+                );
+            }
+
+            return await this.get_item_records(is_member_of_exhibit);
+        }
+
         return {
             status: 200,
             message: 'Exhibit item records',

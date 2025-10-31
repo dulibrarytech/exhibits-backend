@@ -57,8 +57,7 @@ exports.create_heading_record = async function (is_member_of_exhibit, data) {
         }
 
         data.order = await HELPER_TASK.order_exhibit_items(data.is_member_of_exhibit, DB, TABLES);
-        console.log('HELPER_TASK.order_exhibit_items', data.order);
-        console.log('CHECK OWNER ', data);
+
         if (data.styles === undefined || data.styles.length === 0) {
             data.styles = '{}';
         }
@@ -216,11 +215,12 @@ exports.update_heading_record = async function (is_member_of_exhibit, uuid, data
     }
 };
 
-/**
+/** TODO: not used?
  * Deletes heading record
  * @param is_member_of_exhibit
  * @param uuid
  */
+/*
 exports.delete_heading_record = async function (is_member_of_exhibit, uuid) {
 
     try {
@@ -229,15 +229,25 @@ exports.delete_heading_record = async function (is_member_of_exhibit, uuid) {
         const is_heading_deleted = await INDEXER_MODEL.delete_record(uuid);
 
         if (is_heading_deleted.status === 204) {
+
             console.log('Index record deleted');
+
         } else {
             console.log('Index record not deleted');
         }
 
+        let is_deleted = await TASK.delete_heading_record(is_member_of_exhibit, uuid);
+        console.log('is heading deleted ', is_deleted);
+
+        const HELPER_TASK = new HELPER();
+        let new_order = HELPER_TASK.reorder(is_member_of_exhibit, DB, DB_TABLES);
+
+        console.log('NEW ORDER ', new_order);
+
         return {
             status: 204,
             message: 'Record deleted',
-            data: await TASK.delete_heading_record(is_member_of_exhibit, uuid)
+            data: is_heading_deleted // await TASK.delete_heading_record(is_member_of_exhibit, uuid)
         };
 
     } catch (error) {
@@ -248,6 +258,7 @@ exports.delete_heading_record = async function (is_member_of_exhibit, uuid) {
         };
     }
 };
+*/
 
 /**
  * Publishes heading item

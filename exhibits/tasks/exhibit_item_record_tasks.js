@@ -922,6 +922,17 @@ const Exhibit_item_record_tasks = class {
                 timestamp: new Date().toISOString()
             });
 
+            const HELPER_TASK = new HELPER();
+            let new_order = await HELPER_TASK.reorder(is_member_of_exhibit, this.DB, this.TABLE);
+            let new_order_applied = await HELPER_TASK.apply_reorder(is_member_of_exhibit, new_order, this.DB, this.TABLE)
+
+            if (new_order_applied.success === false) {
+                LOGGER.module().error(
+                    'Failed to reorder records',
+                    new_order_applied
+                );
+            }
+
             return {
                 success: true,
                 uuid: item_id.trim(),
@@ -958,6 +969,7 @@ const Exhibit_item_record_tasks = class {
      * @param item_id
      * @param type
      */
+    /*
     async delete_item_record__(is_member_of_exhibit, item_id, type) {
 
         try {
@@ -993,6 +1005,7 @@ const Exhibit_item_record_tasks = class {
             LOGGER.module().error('ERROR: [/exhibits/exhibit_item_record_tasks (delete_item_record)] unable to delete record ' + error.message);
         }
     }
+    */
 
     /**
      * Gets item record count
