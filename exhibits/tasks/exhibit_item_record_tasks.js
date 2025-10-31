@@ -47,6 +47,7 @@ const Exhibit_item_record_tasks = class {
      * @throws {Error} If validation fails or creation fails
      */
     async create_item_record(data, created_by = null) {
+
         try {
             // ===== INPUT VALIDATION =====
 
@@ -61,10 +62,6 @@ const Exhibit_item_record_tasks = class {
 
             if (!data.is_member_of_exhibit || typeof data.is_member_of_exhibit !== 'string' || !data.is_member_of_exhibit.trim()) {
                 throw new Error('Valid exhibit UUID is required');
-            }
-
-            if (!data.title || typeof data.title !== 'string' || !data.title.trim()) {
-                throw new Error('Valid title is required');
             }
 
             if (!data.item_type || typeof data.item_type !== 'string' || !data.item_type.trim()) {
@@ -100,16 +97,16 @@ const Exhibit_item_record_tasks = class {
             // ===== PREPARE RECORD DATA =====
 
             const item_uuid = data.uuid.trim();
-
+            console.log('ITEM DATA ', data);
             // Build the record with defaults
             const record_data = {
                 uuid: item_uuid,
                 is_member_of_exhibit: data.is_member_of_exhibit.trim(),
-                title: data.title.trim(),
                 item_type: data.item_type.trim(),
                 mime_type: data.mime_type.trim(),
 
                 // Optional fields with defaults
+                title: data.title.trim(),
                 thumbnail: data.thumbnail || null,
                 caption: data.caption || null,
                 media: data.media || null,
@@ -157,7 +154,6 @@ const Exhibit_item_record_tasks = class {
 
             LOGGER.module().info('Item record created successfully', {
                 uuid: item_uuid,
-                title: data.title.trim(),
                 item_type: data.item_type.trim(),
                 is_member_of_exhibit: data.is_member_of_exhibit.trim(),
                 created_by,
@@ -196,21 +192,106 @@ const Exhibit_item_record_tasks = class {
 
     /**
      * Gets item records by exhibit
-     * @param is_member_of_exhibit
+     * @param {string} is_member_of_exhibit - The exhibit UUID
+     * @returns {Promise<Array>} Array of item records
+     * @throws {Error} If validation fails or query fails
      */
     async get_item_records(is_member_of_exhibit) {
 
         try {
+            // ===== INPUT VALIDATION =====
 
-            return await this.DB(this.TABLE.item_records)
-            .select('*')
-            .where({
-                is_member_of_exhibit: is_member_of_exhibit,
-                is_deleted: 0
+            if (!is_member_of_exhibit || typeof is_member_of_exhibit !== 'string' || !is_member_of_exhibit.trim()) {
+                throw new Error('Valid exhibit UUID is required');
+            }
+
+            // ===== UUID VALIDATION =====
+
+            const uuid_regex = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
+            if (!uuid_regex.test(is_member_of_exhibit.trim())) {
+                throw new Error('Invalid exhibit UUID format');
+            }
+
+            // ===== DATABASE VALIDATION =====
+
+            if (!this.DB || typeof this.DB !== 'function') {
+                throw new Error('Database connection is not available');
+            }
+
+            if (!this.TABLE?.item_records) {
+                throw new Error('Table name "item_records" is not defined');
+            }
+
+            // ===== QUERY ITEM RECORDS =====
+
+            const items = await this.DB(this.TABLE.item_records)
+                .select(
+                    'id',
+                    'uuid',
+                    'is_member_of_exhibit',
+                    'thumbnail',
+                    'title',
+                    'caption',
+                    'item_type',
+                    'mime_type',
+                    'media',
+                    'text',
+                    'wrap_text',
+                    'description',
+                    'type',
+                    'layout',
+                    'media_width',
+                    'media_padding',
+                    'alt_text',
+                    'is_alt_text_decorative',
+                    'pdf_open_to_page',
+                    'item_subjects',
+                    'styles',
+                    'order',
+                    'is_repo_item',
+                    'is_kaltura_item',
+                    'is_embedded',
+                    'is_published',
+                    'is_locked',
+                    'locked_by_user',
+                    'locked_at',
+                    'is_deleted',
+                    'owner',
+                    'created',
+                    'updated',
+                    'created_by',
+                    'updated_by'
+                )
+                .where({
+                    is_member_of_exhibit: is_member_of_exhibit.trim(),
+                    is_deleted: 0
+                })
+                .orderBy('order', 'asc')
+                .timeout(10000);
+
+            LOGGER.module().info('Item records retrieved successfully', {
+                is_member_of_exhibit: is_member_of_exhibit.trim(),
+                count: items.length,
+                timestamp: new Date().toISOString()
             });
 
+            return items;
+
         } catch (error) {
-            LOGGER.module().error('ERROR: [/exhibits/exhibit_item_record_tasks (get_item_records)] unable to get item records ' + error.message);
+            const error_context = {
+                method: 'get_item_records',
+                is_member_of_exhibit,
+                timestamp: new Date().toISOString(),
+                message: error.message,
+                stack: error.stack
+            };
+
+            LOGGER.module().error(
+                'Failed to get item records',
+                error_context
+            );
+
+            throw error;
         }
     }
 
@@ -505,64 +586,369 @@ const Exhibit_item_record_tasks = class {
     }
 
     /**
-     * Gets item record
-     * @param is_member_of_exhibit
-     * @param uuid
-     * @param uid
+     * Updates an item record
+     * @param {Object} data - Item data to update
+     * @param {string} data.uuid - Item UUID (required)
+     * @param {string} data.is_member_of_exhibit - Exhibit UUID (required)
+     * @param {string} [updated_by=null] - User ID performing the update
+     * @returns {Promise<Object>} Updated item record with details
+     * @throws {Error} If validation fails or update fails
      */
-    async get_item_edit_record__(uid, is_member_of_exhibit, uuid) {
+    async update_item_record(data, updated_by = null) {
 
         try {
+            // ===== INPUT VALIDATION =====
 
-            const data = await this.DB(this.TABLE.item_records)
-                .select('*')
-                .where({
-                    is_member_of_exhibit: is_member_of_exhibit,
-                    uuid: uuid,
-                    is_deleted: 0
-                });
-
-            if (data.length !== 0 && data[0].is_locked === 0) {
-
-                try {
-
-                    const HELPER_TASK = new HELPER();
-                    await HELPER_TASK.lock_record(uid, uuid, this.DB, this.TABLE.item_records);
-                    return data;
-
-                } catch (error) {
-                    LOGGER.module().error('ERROR: [/exhibits/exhibit_item_record_tasks (get_item_record)] unable to lock record ' + error.message);
-                }
-
-            } else {
-                return data;
+            if (!data || typeof data !== 'object' || Array.isArray(data)) {
+                throw new Error('Valid item data object is required');
             }
 
+            // Validate required fields for identifying the record
+            if (!data.uuid || typeof data.uuid !== 'string' || !data.uuid.trim()) {
+                throw new Error('Valid item UUID is required');
+            }
+
+            if (!data.is_member_of_exhibit || typeof data.is_member_of_exhibit !== 'string' || !data.is_member_of_exhibit.trim()) {
+                throw new Error('Valid exhibit UUID is required');
+            }
+
+            // ===== UUID VALIDATION =====
+
+            const uuid_regex = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
+
+            if (!uuid_regex.test(data.uuid.trim())) {
+                throw new Error('Invalid item UUID format');
+            }
+
+            if (!uuid_regex.test(data.is_member_of_exhibit.trim())) {
+                throw new Error('Invalid exhibit UUID format');
+            }
+
+            // ===== DATABASE VALIDATION =====
+
+            if (!this.DB || typeof this.DB !== 'function') {
+                throw new Error('Database connection is not available');
+            }
+
+            if (!this.TABLE?.item_records) {
+                throw new Error('Table name "item_records" is not defined');
+            }
+
+            // ===== CHECK IF RECORD EXISTS =====
+
+            const existing_record = await this.DB(this.TABLE.item_records)
+                .select('id', 'uuid', 'title', 'is_deleted')
+                .where({
+                    is_member_of_exhibit: data.is_member_of_exhibit.trim(),
+                    uuid: data.uuid.trim()
+                })
+                .first()
+                .timeout(10000);
+
+            if (!existing_record) {
+                throw new Error('Item record not found');
+            }
+
+            if (existing_record.is_deleted === 1) {
+                throw new Error('Cannot update deleted item record');
+            }
+
+            // ===== PREPARE UPDATE DATA =====
+
+            // Create a clean update object excluding immutable fields
+            const update_data = {};
+
+            // Fields that can be updated
+            const updatable_fields = [
+                'thumbnail',
+                'title',
+                'caption',
+                'item_type',
+                'mime_type',
+                'media',
+                'text',
+                'wrap_text',
+                'description',
+                'type',
+                'layout',
+                'media_width',
+                'media_padding',
+                'alt_text',
+                'is_alt_text_decorative',
+                'pdf_open_to_page',
+                'item_subjects',
+                'styles',
+                'order',
+                'is_repo_item',
+                'is_kaltura_item',
+                'is_embedded',
+                'is_published',
+                'is_locked',
+                'locked_by_user',
+                'locked_at',
+                'owner'
+            ];
+
+            // Copy only updatable fields from data
+            updatable_fields.forEach(field => {
+                if (data.hasOwnProperty(field)) {
+                    update_data[field] = data[field];
+                }
+            });
+
+            // Ensure there's something to update
+            if (Object.keys(update_data).length === 0) {
+                LOGGER.module().warn('No updatable fields provided', {
+                    uuid: data.uuid.trim()
+                });
+                return {
+                    success: true,
+                    no_change: true,
+                    uuid: data.uuid.trim(),
+                    message: 'No fields to update'
+                };
+            }
+
+            // Add updated timestamp and user
+            update_data.updated = this.DB.fn.now();
+            if (updated_by) {
+                update_data.updated_by = updated_by;
+            }
+
+            // ===== PERFORM UPDATE =====
+
+            const affected_rows = await this.DB(this.TABLE.item_records)
+                .where({
+                    is_member_of_exhibit: data.is_member_of_exhibit.trim(),
+                    uuid: data.uuid.trim(),
+                    is_deleted: 0
+                })
+                .update(update_data)
+                .timeout(10000);
+
+            if (affected_rows === 0) {
+                throw new Error('Failed to update item record: No rows affected');
+            }
+
+            // ===== FETCH UPDATED RECORD =====
+
+            const updated_record = await this.DB(this.TABLE.item_records)
+                .select('*')
+                .where({
+                    is_member_of_exhibit: data.is_member_of_exhibit.trim(),
+                    uuid: data.uuid.trim()
+                })
+                .first()
+                .timeout(10000);
+
+            LOGGER.module().info('Item record updated successfully', {
+                uuid: data.uuid.trim(),
+                title: updated_record.title,
+                fields_updated: Object.keys(update_data).filter(f => f !== 'updated' && f !== 'updated_by'),
+                is_member_of_exhibit: data.is_member_of_exhibit.trim(),
+                updated_by,
+                timestamp: new Date().toISOString()
+            });
+
+            return {
+                success: true,
+                uuid: data.uuid.trim(),
+                affected_rows,
+                updated_fields: Object.keys(update_data),
+                record: updated_record,
+                updated_by,
+                message: 'Item record updated successfully'
+            };
+
         } catch (error) {
-            LOGGER.module().error('ERROR: [/exhibits/exhibit_item_record_tasks (get_item_record)] unable to get item records ' + error.message);
+            const error_context = {
+                method: 'update_item_record',
+                uuid: data?.uuid,
+                exhibit_uuid: data?.is_member_of_exhibit,
+                updated_by,
+                timestamp: new Date().toISOString(),
+                message: error.message,
+                stack: error.stack
+            };
+
+            LOGGER.module().error(
+                'Failed to update item record',
+                error_context
+            );
+
+            throw error;
         }
     }
 
     /**
-     * Updates item record
-     * @param data
+     * Soft deletes an item record (sets is_deleted to 1)
+     * @param {string} is_member_of_exhibit - The exhibit UUID
+     * @param {string} item_id - The item UUID
+     * @param {string} type - The item type ('item', 'grid', 'heading', 'timeline')
+     * @param {string} [deleted_by=null] - User ID performing the deletion
+     * @returns {Promise<Object>} Deletion result with details
+     * @throws {Error} If validation fails or deletion fails
      */
-    async update_item_record(data) {
+    async delete_item_record(is_member_of_exhibit, item_id, type, deleted_by = null) {
 
         try {
+            // ===== INPUT VALIDATION =====
 
-            await this.DB(this.TABLE.item_records)
-            .where({
-                is_member_of_exhibit: data.is_member_of_exhibit,
-                uuid: data.uuid
-            })
-            .update(data);
+            if (!is_member_of_exhibit || typeof is_member_of_exhibit !== 'string' || !is_member_of_exhibit.trim()) {
+                throw new Error('Valid exhibit UUID is required');
+            }
 
-            LOGGER.module().info('INFO: [/exhibits/exhibit_item_record_tasks (update_item_record)] Item record updated.');
-            return true;
+            if (!item_id || typeof item_id !== 'string' || !item_id.trim()) {
+                throw new Error('Valid item UUID is required');
+            }
+
+            if (!type || typeof type !== 'string' || !type.trim()) {
+                throw new Error('Valid item type is required');
+            }
+
+            // ===== UUID VALIDATION =====
+
+            const uuid_regex = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
+
+            if (!uuid_regex.test(is_member_of_exhibit.trim())) {
+                throw new Error('Invalid exhibit UUID format');
+            }
+
+            if (!uuid_regex.test(item_id.trim())) {
+                throw new Error('Invalid item UUID format');
+            }
+
+            // ===== TYPE VALIDATION =====
+
+            const valid_types = ['item', 'grid', 'heading', 'timeline'];
+            const normalized_type = type.trim().toLowerCase();
+
+            if (!valid_types.includes(normalized_type)) {
+                throw new Error(`Invalid item type. Must be one of: ${valid_types.join(', ')}`);
+            }
+
+            // ===== DATABASE VALIDATION =====
+
+            if (!this.DB || typeof this.DB !== 'function') {
+                throw new Error('Database connection is not available');
+            }
+
+            // ===== DETERMINE TABLE =====
+
+            let table;
+
+            if (normalized_type === 'item') {
+                if (!this.TABLE?.item_records) {
+                    throw new Error('Table name "item_records" is not defined');
+                }
+                table = this.TABLE.item_records;
+            } else if (normalized_type === 'grid') {
+                if (!this.TABLE?.grid_records) {
+                    throw new Error('Table name "grid_records" is not defined');
+                }
+                table = this.TABLE.grid_records;
+            } else if (normalized_type === 'heading') {
+                if (!this.TABLE?.heading_records) {
+                    throw new Error('Table name "heading_records" is not defined');
+                }
+                table = this.TABLE.heading_records;
+            } else if (normalized_type === 'timeline') {
+                if (!this.TABLE?.timeline_records) {
+                    throw new Error('Table name "timeline_records" is not defined');
+                }
+                table = this.TABLE.timeline_records;
+            }
+
+            // ===== CHECK IF RECORD EXISTS =====
+
+            const existing_record = await this.DB(table)
+                .select('id', 'uuid', 'is_deleted')
+                .where({
+                    is_member_of_exhibit: is_member_of_exhibit.trim(),
+                    uuid: item_id.trim()
+                })
+                .first()
+                .timeout(10000);
+
+            if (!existing_record) {
+                throw new Error(`${normalized_type.charAt(0).toUpperCase() + normalized_type.slice(1)} record not found`);
+            }
+
+            if (existing_record.is_deleted === 1) {
+                LOGGER.module().warn('Record already deleted', {
+                    type: normalized_type,
+                    uuid: item_id.trim()
+                });
+                return {
+                    success: true,
+                    already_deleted: true,
+                    uuid: item_id.trim(),
+                    type: normalized_type,
+                    message: `${normalized_type.charAt(0).toUpperCase() + normalized_type.slice(1)} record was already deleted`
+                };
+            }
+
+            // ===== PREPARE DELETE DATA =====
+
+            const delete_data = {
+                is_deleted: 1,
+                updated: this.DB.fn.now()
+            };
+
+            if (deleted_by) {
+                delete_data.updated_by = deleted_by;
+            }
+
+            // ===== PERFORM SOFT DELETE =====
+
+            const affected_rows = await this.DB(table)
+                .where({
+                    is_member_of_exhibit: is_member_of_exhibit.trim(),
+                    uuid: item_id.trim(),
+                    is_deleted: 0
+                })
+                .update(delete_data)
+                .timeout(10000);
+
+            if (affected_rows === 0) {
+                throw new Error(`Failed to delete ${normalized_type} record: No rows affected`);
+            }
+
+            LOGGER.module().info('Record deleted successfully', {
+                type: normalized_type,
+                uuid: item_id.trim(),
+                is_member_of_exhibit: is_member_of_exhibit.trim(),
+                deleted_by,
+                timestamp: new Date().toISOString()
+            });
+
+            return {
+                success: true,
+                uuid: item_id.trim(),
+                type: normalized_type,
+                affected_rows,
+                deleted_by,
+                message: `${normalized_type.charAt(0).toUpperCase() + normalized_type.slice(1)} record deleted successfully`
+            };
 
         } catch (error) {
-            LOGGER.module().error('ERROR: [/exhibits/exhibit_item_record_tasks (update_item_record)] unable to update item record ' + error.message);
+            const error_context = {
+                method: 'delete_item_record',
+                is_member_of_exhibit,
+                item_id,
+                type,
+                deleted_by,
+                timestamp: new Date().toISOString(),
+                message: error.message,
+                stack: error.stack
+            };
+
+            LOGGER.module().error(
+                'Failed to delete record',
+                error_context
+            );
+
+            throw error;
         }
     }
 
@@ -572,7 +958,7 @@ const Exhibit_item_record_tasks = class {
      * @param item_id
      * @param type
      */
-    async delete_item_record(is_member_of_exhibit, item_id, type) {
+    async delete_item_record__(is_member_of_exhibit, item_id, type) {
 
         try {
 

@@ -381,6 +381,7 @@ const Helper = class {
      * @throws {Error} If validation fails or required fields are missing
      */
     check_config(config) {
+
         try {
             // ===== INPUT VALIDATION =====
 
@@ -471,7 +472,7 @@ const Helper = class {
         }
     }
 
-    /**
+    /** TODO: deprecate - exhibits are no longer reordered
      * order exhibits
      * @param uuid
      * @param db
@@ -499,7 +500,7 @@ const Helper = class {
     async order_exhibit_items(uuid, db, tables) {
 
         try {
-
+            console.log('EXHIBIT UUID ', uuid);
             let heading_order;
             let item_order;
             let grid_order;

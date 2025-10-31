@@ -37,18 +37,31 @@ const Exhibit_heading_record_tasks = class {
     /**
      * Creates a new heading record in the database
      * @param {Object} data - Heading record data
+     * @param {string} data.uuid - Heading UUID (required)
+     * @param {string} data.is_member_of_exhibit - Exhibit UUID (required)
+     * @param {string} data.text - Heading text content (required)
      * @param {string} [created_by=null] - User ID creating the record
      * @returns {Promise<Object>} Created heading record with ID
      * @throws {Error} If validation fails or creation fails
      */
     async create_heading_record(data, created_by = null) {
 
-        // Define whitelist of allowed fields
+        // Define whitelist of allowed fields based on schema
         const ALLOWED_FIELDS = [
             'is_member_of_exhibit',
             'uuid',
+            'type',
             'text',
+            'order',
             'styles',
+            'is_visible',
+            'is_anchor',
+            'is_published',
+            'is_locked',
+            'locked_by_user',
+            'locked_at',
+            'is_indexed',
+            'is_deleted',
             'owner'
         ];
 
@@ -61,6 +74,32 @@ const Exhibit_heading_record_tasks = class {
 
             if (Object.keys(data).length === 0) {
                 throw new Error('Data object cannot be empty');
+            }
+
+            // ===== VALIDATE REQUIRED FIELDS =====
+
+            if (!data.uuid || typeof data.uuid !== 'string' || !data.uuid.trim()) {
+                throw new Error('Valid heading UUID is required');
+            }
+
+            if (!data.is_member_of_exhibit || typeof data.is_member_of_exhibit !== 'string' || !data.is_member_of_exhibit.trim()) {
+                throw new Error('Valid exhibit UUID is required');
+            }
+
+            if (!data.text || typeof data.text !== 'string' || !data.text.trim()) {
+                throw new Error('Valid heading text is required');
+            }
+
+            // ===== UUID VALIDATION =====
+
+            const uuid_regex = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
+
+            if (!uuid_regex.test(data.uuid.trim())) {
+                throw new Error('Invalid heading UUID format');
+            }
+
+            if (!uuid_regex.test(data.is_member_of_exhibit.trim())) {
+                throw new Error('Invalid exhibit UUID format');
             }
 
             // ===== DATABASE VALIDATION =====
@@ -100,32 +139,58 @@ const Exhibit_heading_record_tasks = class {
                 });
             }
 
-            // Check if we have any valid data
-            if (Object.keys(sanitized_data).length === 0) {
-                throw new Error('No valid fields provided for insert');
+            // ===== ADD METADATA AND DEFAULTS =====
+
+            // Set default type if not provided
+            if (!sanitized_data.type) {
+                sanitized_data.type = 'heading';
             }
 
-            // ===== ADD METADATA =====
+            // Set default values based on schema defaults
+            if (sanitized_data.order === undefined) {
+                sanitized_data.order = 0;
+            }
 
-            // Add timestamps
-            sanitized_data.created = this.DB.fn.now();
-            sanitized_data.updated = this.DB.fn.now();
+            if (sanitized_data.is_visible === undefined) {
+                sanitized_data.is_visible = 1;
+            }
 
-            // Add created_by if provided
+            if (sanitized_data.is_anchor === undefined) {
+                sanitized_data.is_anchor = 1;
+            }
+
+            if (sanitized_data.is_published === undefined) {
+                sanitized_data.is_published = 0;
+            }
+
+            if (sanitized_data.is_locked === undefined) {
+                sanitized_data.is_locked = 0;
+            }
+
+            if (sanitized_data.locked_by_user === undefined) {
+                sanitized_data.locked_by_user = 0;
+            }
+
+            if (sanitized_data.is_indexed === undefined) {
+                sanitized_data.is_indexed = 0;
+            }
+
+            if (sanitized_data.is_deleted === undefined) {
+                sanitized_data.is_deleted = 0;
+            }
+
+            if (sanitized_data.owner === undefined) {
+                sanitized_data.owner = 0;
+            }
+
+            // Add created_by and updated_by
             if (created_by) {
                 sanitized_data.created_by = created_by;
                 sanitized_data.updated_by = created_by;
             }
 
-            // Add default values if not provided
-            if (!sanitized_data.is_published) {
-                sanitized_data.is_published = 0;
-            }
-            if (!sanitized_data.is_deleted) {
-                sanitized_data.is_deleted = 0;
-            }
-
             // ===== PERFORM INSERT IN TRANSACTION =====
+
             const created_record = await this.DB.transaction(async (trx) => {
                 // Insert the record
                 const [insert_id] = await trx(this.TABLE.heading_records)
@@ -139,6 +204,28 @@ const Exhibit_heading_record_tasks = class {
 
                 // Fetch and return the created record
                 const record = await trx(this.TABLE.heading_records)
+                    .select(
+                        'id',
+                        'is_member_of_exhibit',
+                        'uuid',
+                        'type',
+                        'text',
+                        'order',
+                        'styles',
+                        'is_visible',
+                        'is_anchor',
+                        'is_published',
+                        'is_locked',
+                        'locked_by_user',
+                        'locked_at',
+                        'is_indexed',
+                        'is_deleted',
+                        'owner',
+                        'created',
+                        'updated',
+                        'created_by',
+                        'updated_by'
+                    )
                     .where({ id: insert_id })
                     .first();
 
@@ -149,6 +236,8 @@ const Exhibit_heading_record_tasks = class {
                 LOGGER.module().info('Heading record created successfully', {
                     id: insert_id,
                     uuid: record.uuid,
+                    text: record.text.substring(0, 50), // Log first 50 chars
+                    is_member_of_exhibit: record.is_member_of_exhibit,
                     created_by,
                     timestamp: new Date().toISOString()
                 });
@@ -156,11 +245,19 @@ const Exhibit_heading_record_tasks = class {
                 return record;
             });
 
-            return created_record;
+            return {
+                success: true,
+                id: created_record.id,
+                uuid: created_record.uuid,
+                record: created_record,
+                message: 'Heading record created successfully'
+            };
 
         } catch (error) {
             const error_context = {
                 method: 'create_heading_record',
+                uuid: data?.uuid,
+                exhibit_uuid: data?.is_member_of_exhibit,
                 data_keys: Object.keys(data || {}),
                 created_by,
                 timestamp: new Date().toISOString(),

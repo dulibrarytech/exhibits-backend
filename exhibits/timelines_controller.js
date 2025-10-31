@@ -388,7 +388,7 @@ exports.delete_timeline_item_record = async function (req, res) {
             return false;
         }
 
-        const result = await TIMELINES_MODEL.delete_timeline_item_record(is_member_of_exhibit, timeline_id, timeline_item_id, type);
+        const result = await TIMELINES_MODEL.delete_timeline_item_record(is_member_of_exhibit, timeline_id, timeline_item_id, record_type);
         res.status(result.status).send(result);
 
     } catch (error) {

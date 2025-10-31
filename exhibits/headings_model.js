@@ -57,7 +57,8 @@ exports.create_heading_record = async function (is_member_of_exhibit, data) {
         }
 
         data.order = await HELPER_TASK.order_exhibit_items(data.is_member_of_exhibit, DB, TABLES);
-
+        console.log('HELPER_TASK.order_exhibit_items', data.order);
+        console.log('CHECK OWNER ', data);
         if (data.styles === undefined || data.styles.length === 0) {
             data.styles = '{}';
         }
@@ -370,8 +371,7 @@ exports.reorder_headings = async function (exhibit_id, heading) {
 exports.unlock_heading_record = async function (uid, uuid) {
 
     try {
-        console.log(uid);
-        console.log(uuid);
+
         const HELPER_TASK = new HELPER();
         return await HELPER_TASK.unlock_record(uid, uuid, DB, TABLES.heading_records);
 

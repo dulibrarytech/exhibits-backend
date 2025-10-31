@@ -49,7 +49,7 @@ const itemsTimelineModule = (function () {
         }
     }
 
-    obj.display_timeline_items = async function (event) {
+    obj.display_timeline_items = async function () {
 
         const exhibit_id = helperModule.get_parameter_by_name('exhibit_id');
         const timeline_id = helperModule.get_parameter_by_name('timeline_id');
