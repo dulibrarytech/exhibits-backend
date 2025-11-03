@@ -355,14 +355,269 @@ const helperMediaModule = (function () {
         return false;
     };
 
+    obj.delete_media_edit = async function() {
+
+        // Prevent duplicate submissions
+        if (this._is_deleting_media) {
+            return false;
+        }
+
+        this._is_deleting_media = true;
+
+        // Cache DOM elements and constants
+        const message_element = document.querySelector('#message');
+        const MESSAGE_CLEAR_DELAY = 3000;
+        const FADE_DURATION = 300;
+
+        /**
+         * Display status message to user (XSS-safe)
+         */
+        const display_message = (element, type, message) => {
+            if (!element) {
+                return;
+            }
+
+            const valid_types = ['info', 'success', 'danger', 'warning'];
+            const alert_type = valid_types.includes(type) ? type : 'danger';
+
+            const alert_div = document.createElement('div');
+            alert_div.className = `alert alert-${alert_type}`;
+            alert_div.setAttribute('role', 'alert');
+
+            const icon = document.createElement('i');
+            icon.className = get_icon_class(alert_type);
+            alert_div.appendChild(icon);
+
+            const text_node = document.createTextNode(` ${message}`);
+            alert_div.appendChild(text_node);
+
+            element.style.opacity = '1';
+            element.style.transition = '';
+            element.textContent = '';
+            element.appendChild(alert_div);
+        };
+
+        /**
+         * Clear message with smooth fade effect
+         */
+        const clear_message_smoothly = () => {
+            if (!message_element) {
+                return;
+            }
+
+            message_element.style.transition = `opacity ${FADE_DURATION}ms ease-out`;
+            message_element.style.opacity = '0';
+
+            setTimeout(() => {
+                message_element.textContent = '';
+                message_element.style.opacity = '1';
+                message_element.style.transition = '';
+            }, FADE_DURATION);
+        };
+
+        /**
+         * Get icon class for alert type
+         */
+        const get_icon_class = (alert_type) => {
+            const icon_map = {
+                'info': 'fa fa-info',
+                'success': 'fa fa-check',
+                'danger': 'fa fa-exclamation',
+                'warning': 'fa fa-exclamation-triangle'
+            };
+            return icon_map[alert_type] || 'fa fa-exclamation';
+        };
+
+        /**
+         * Determine item type from URL pathname
+         */
+        const get_item_type_from_pathname = () => {
+            const pathname = window.location.pathname;
+
+            // Check for specific media paths
+            if (pathname.indexOf('items/standard/media') !== -1) {
+                return 'standard_item';
+            } else if (pathname.indexOf('items/grid/item/media') !== -1) {
+                return 'grid_item';
+            } else if (pathname.indexOf('items/vertical-timeline/item/media') !== -1) {
+                return 'timeline_item';
+            }
+
+            // Default fallback
+            return 'standard_item';
+        };
+
+        /**
+         * Clear media display elements
+         */
+        const clear_media_display = () => {
+            const media_input = document.querySelector('#item-media');
+            const media_filename = document.querySelector('#item-media-filename-display');
+            const media_trash = document.querySelector('#item-media-trash');
+            const media_thumbnail = document.querySelector('#item-media-thumbnail-image-display');
+
+            if (media_input) {
+                media_input.value = '';
+            }
+
+            if (media_filename) {
+                media_filename.textContent = '';
+            }
+
+            if (media_trash) {
+                media_trash.style.display = 'none';
+            }
+
+            if (media_thumbnail) {
+                media_thumbnail.textContent = '';
+            }
+        };
+
+        /**
+         * Validate parameters
+         */
+        const validate_parameters = (exhibit_id, item_id, media) => {
+            if (!exhibit_id || !item_id || !media) {
+                return {
+                    valid: false,
+                    error: 'Missing required parameters: exhibit_id, item_id, or media filename'
+                };
+            }
+
+            if (exhibit_id.length > 255 || item_id.length > 255 || media.length > 255) {
+                return {
+                    valid: false,
+                    error: 'Invalid parameter length'
+                };
+            }
+
+            return { valid: true };
+        };
+
+        // Store timeout ID for cleanup
+        let timeout_id = null;
+
+        try {
+            // Get and validate parameters
+            const exhibit_id = helperModule.get_parameter_by_name('exhibit_id');
+            const item_id = helperModule.get_parameter_by_name('item_id');
+
+            const media_input = document.querySelector('#item-media');
+            if (!media_input) {
+                display_message(message_element, 'danger', 'Media input element not found');
+                return false;
+            }
+
+            const media = media_input.value;
+
+            const validation = validate_parameters(exhibit_id, item_id, media);
+            if (!validation.valid) {
+                display_message(message_element, 'danger', validation.error);
+                return false;
+            }
+
+            // Validate authentication
+            const token = authModule.get_user_token();
+
+            if (!token || token === false) {
+                display_message(message_element, 'danger', 'Session expired. Please log in again.');
+
+                timeout_id = setTimeout(() => {
+                    authModule.logout();
+                }, 1000);
+
+                return false;
+            }
+
+            // Get API endpoints
+            const EXHIBITS_ENDPOINTS = endpointsModule.get_exhibits_endpoints();
+
+            if (!EXHIBITS_ENDPOINTS?.exhibits?.item_media?.delete?.endpoint) {
+                display_message(message_element, 'danger', 'API endpoint configuration missing');
+                return false;
+            }
+
+            // Determine item type from URL pathname
+            const type = get_item_type_from_pathname();
+
+            console.log('Item type detected:', type);
+            console.log('Current pathname:', window.location.pathname);
+
+            // Construct endpoint with URL encoding
+            const endpoint = EXHIBITS_ENDPOINTS.exhibits.item_media.delete.endpoint
+                .replace(':exhibit_id', encodeURIComponent(exhibit_id))
+                .replace(':item_id', encodeURIComponent(item_id))
+                .replace(':media', encodeURIComponent(media));
+
+            // Append type to endpoint as query parameter
+            const params = new URLSearchParams({ type: type });
+            const full_url = `${endpoint}?${params.toString()}`;
+
+            // Make API request
+            const response = await httpModule.req({
+                method: 'DELETE',
+                url: full_url,
+                headers: {
+                    'Content-Type': 'application/json',
+                    'x-access-token': token
+                },
+                timeout: 30000
+            });
+
+            // Validate response
+            if (!response || response.status !== 204) {
+                throw new Error('Failed to delete media file');
+            }
+
+            // Clear media display elements
+            clear_media_display();
+
+            // Show success message
+            display_message(message_element, 'success', 'Media deleted successfully');
+
+            // Smoothly clear success message after delay
+            timeout_id = setTimeout(() => {
+                clear_message_smoothly();
+            }, MESSAGE_CLEAR_DELAY);
+
+            return true;
+
+        } catch (error) {
+            // Clear any pending timeouts
+            if (timeout_id) {
+                clearTimeout(timeout_id);
+            }
+
+            // Log error for debugging
+            console.error('Error deleting media:', error);
+
+            // Display error message
+            const error_message = error.user_message || error.message || 'Unable to delete media. Please try again.';
+            display_message(message_element, 'danger', error_message);
+
+            return false;
+
+        } finally {
+            // Reset submission flag
+            this._is_deleting_media = false;
+        }
+    };
+
     /**
      * Deletes saved media
      */
-    obj.delete_media_edit = function () {
+    /*
+    obj.delete_media_edit__ = function () {
 
         try {
 
             (async function () {
+
+                console.log(window.location.pathname);
+                // TODO:
+                // items/standard/media
+                // items/grid/item/media
+                // items/vertical-timeline/item/media
 
                 const EXHIBITS_ENDPOINTS = endpointsModule.get_exhibits_endpoints();
                 const exhibit_id = helperModule.get_parameter_by_name('exhibit_id');
@@ -391,7 +646,7 @@ const helperMediaModule = (function () {
 
                     setTimeout(() => {
                         document.querySelector('#message').innerHTML = '';
-                        window.location.reload();
+                        // window.location.reload();
                     }, 900);
                 }
 
@@ -401,12 +656,265 @@ const helperMediaModule = (function () {
             document.querySelector('#message').innerHTML = `<div class="alert alert-danger" role="alert"><i class="fa fa-exclamation"></i> ${error.message}</div>`;
         }
     }
+    */
+
+    obj.delete_thumbnail_image_edit = async function() {
+
+        // Prevent duplicate submissions
+        if (this._is_deleting_thumbnail) {
+            return false;
+        }
+
+        this._is_deleting_thumbnail = true;
+
+        console.log('DELETE MEDIA THUMBNAIL');
+
+        // Cache DOM elements and constants
+        const message_element = document.querySelector('#message');
+        const MESSAGE_CLEAR_DELAY = 3000;
+        const FADE_DURATION = 300;
+
+        /**
+         * Display status message to user (XSS-safe)
+         */
+        const display_message = (element, type, message) => {
+            if (!element) {
+                return;
+            }
+
+            const valid_types = ['info', 'success', 'danger', 'warning'];
+            const alert_type = valid_types.includes(type) ? type : 'danger';
+
+            const alert_div = document.createElement('div');
+            alert_div.className = `alert alert-${alert_type}`;
+            alert_div.setAttribute('role', 'alert');
+
+            const icon = document.createElement('i');
+            icon.className = get_icon_class(alert_type);
+            alert_div.appendChild(icon);
+
+            const text_node = document.createTextNode(` ${message}`);
+            alert_div.appendChild(text_node);
+
+            element.style.opacity = '1';
+            element.style.transition = '';
+            element.textContent = '';
+            element.appendChild(alert_div);
+        };
+
+        /**
+         * Clear message with smooth fade effect
+         */
+        const clear_message_smoothly = () => {
+            if (!message_element) {
+                return;
+            }
+
+            message_element.style.transition = `opacity ${FADE_DURATION}ms ease-out`;
+            message_element.style.opacity = '0';
+
+            setTimeout(() => {
+                message_element.textContent = '';
+                message_element.style.opacity = '1';
+                message_element.style.transition = '';
+            }, FADE_DURATION);
+        };
+
+        /**
+         * Get icon class for alert type
+         */
+        const get_icon_class = (alert_type) => {
+            const icon_map = {
+                'info': 'fa fa-info',
+                'success': 'fa fa-check',
+                'danger': 'fa fa-exclamation',
+                'warning': 'fa fa-exclamation-triangle'
+            };
+            return icon_map[alert_type] || 'fa fa-exclamation';
+        };
+
+        /**
+         * Determine item type from URL pathname
+         */
+        const get_item_type_from_pathname = () => {
+            const pathname = window.location.pathname;
+
+            // Check for specific media paths
+            if (pathname.indexOf('items/standard/media') !== -1) {
+                return 'standard_item';
+            } else if (pathname.indexOf('items/grid/item/media') !== -1) {
+                return 'grid_item';
+            } else if (pathname.indexOf('items/vertical-timeline/item/media') !== -1) {
+                return 'timeline_item';
+            }
+
+            // Default fallback
+            return 'standard_item';
+        };
+
+        /**
+         * Clear thumbnail display elements
+         */
+        const clear_thumbnail_display = () => {
+            const thumbnail_input = document.querySelector('#item-thumbnail');
+            const thumbnail_filename = document.querySelector('#item-thumbnail-filename-display');
+            const thumbnail_trash = document.querySelector('#item-thumbnail-trash');
+            const thumbnail_image = document.querySelector('#item-thumbnail-image-display');
+
+            if (thumbnail_input) {
+                thumbnail_input.value = '';
+            }
+
+            if (thumbnail_filename) {
+                thumbnail_filename.textContent = '';
+            }
+
+            if (thumbnail_trash) {
+                thumbnail_trash.style.display = 'none';
+            }
+
+            if (thumbnail_image) {
+                thumbnail_image.textContent = '';
+            }
+        };
+
+        /**
+         * Validate parameters
+         */
+        const validate_parameters = (exhibit_id, item_id, thumbnail) => {
+            if (!exhibit_id || !item_id || !thumbnail) {
+                return {
+                    valid: false,
+                    error: 'Missing required parameters: exhibit_id, item_id, or thumbnail filename'
+                };
+            }
+
+            if (exhibit_id.length > 255 || item_id.length > 255 || thumbnail.length > 255) {
+                return {
+                    valid: false,
+                    error: 'Invalid parameter length'
+                };
+            }
+
+            return { valid: true };
+        };
+
+        // Store timeout ID for cleanup
+        let timeout_id = null;
+
+        try {
+
+            // Get and validate parameters
+            const exhibit_id = helperModule.get_parameter_by_name('exhibit_id');
+            const item_id = helperModule.get_parameter_by_name('item_id');
+
+            const thumbnail_input = document.querySelector('#item-thumbnail');
+            if (!thumbnail_input) {
+                display_message(message_element, 'danger', 'Thumbnail input element not found');
+                return false;
+            }
+
+            const thumbnail = thumbnail_input.value;
+
+            const validation = validate_parameters(exhibit_id, item_id, thumbnail);
+            if (!validation.valid) {
+                display_message(message_element, 'danger', validation.error);
+                return false;
+            }
+
+            // Validate authentication
+            const token = authModule.get_user_token();
+
+            if (!token || token === false) {
+                display_message(message_element, 'danger', 'Session expired. Please log in again.');
+
+                timeout_id = setTimeout(() => {
+                    authModule.logout();
+                }, 1000);
+
+                return false;
+            }
+
+            // Get API endpoints
+            const EXHIBITS_ENDPOINTS = endpointsModule.get_exhibits_endpoints();
+
+            if (!EXHIBITS_ENDPOINTS?.exhibits?.item_media?.delete?.endpoint) {
+                display_message(message_element, 'danger', 'API endpoint configuration missing');
+                return false;
+            }
+
+            // Determine item type from URL pathname
+            const type = get_item_type_from_pathname();
+
+            console.log('Item type detected:', type);
+            console.log('Current pathname:', window.location.pathname);
+            console.log('Deleting thumbnail:', thumbnail);
+
+            // Construct endpoint with URL encoding
+            const endpoint = EXHIBITS_ENDPOINTS.exhibits.item_media.delete.endpoint
+                .replace(':exhibit_id', encodeURIComponent(exhibit_id))
+                .replace(':item_id', encodeURIComponent(item_id))
+                .replace(':media', encodeURIComponent(thumbnail));
+
+            // Append type to endpoint as query parameter
+            const params = new URLSearchParams({ type: type });
+            const full_url = `${endpoint}?${params.toString()}`;
+
+            // Make API request
+            const response = await httpModule.req({
+                method: 'DELETE',
+                url: full_url,
+                headers: {
+                    'Content-Type': 'application/json',
+                    'x-access-token': token
+                },
+                timeout: 30000
+            });
+
+            // Validate response
+            if (!response || response.status !== 204) {
+                throw new Error('Failed to delete thumbnail');
+            }
+
+            // Clear thumbnail display elements
+            clear_thumbnail_display();
+
+            // Show success message
+            display_message(message_element, 'success', 'Thumbnail deleted successfully');
+
+            // Smoothly clear success message after delay
+            timeout_id = setTimeout(() => {
+                clear_message_smoothly();
+            }, MESSAGE_CLEAR_DELAY);
+
+            return true;
+
+        } catch (error) {
+            // Clear any pending timeouts
+            if (timeout_id) {
+                clearTimeout(timeout_id);
+            }
+
+            // Log error for debugging
+            console.error('Error deleting thumbnail:', error);
+
+            // Display error message
+            const error_message = error.user_message || error.message || 'Unable to delete thumbnail. Please try again.';
+            display_message(message_element, 'danger', error_message);
+
+            return false;
+
+        } finally {
+            // Reset submission flag
+            this._is_deleting_thumbnail = false;
+        }
+    };
 
     /**
      * Deletes saved thumbnail
      */
-    obj.delete_thumbnail_image_edit = function () {
-
+    obj.delete_thumbnail_image_edit__ = function () {
+        console.log('DELETE MEDIA THUMBNAIL');
         try {
 
             (async function () {

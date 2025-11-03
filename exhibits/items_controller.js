@@ -208,11 +208,12 @@ exports.delete_item_media = function (req, res) {
         const exhibit_id = req.params.exhibit_id;
         const item_id = req.params.item_id;
         const media = req.params.media;
+        const type = req.query.type;
 
         if (media !== undefined && media.length !== 0) {
 
             (async function () {
-                await ITEMS_MODEL.delete_media_value(item_id, media);
+                await ITEMS_MODEL.delete_media_value(item_id, media, type);
             })();
 
             FS.unlinkSync(`${STORAGE_CONFIG.storage_path}/${exhibit_id}/${media}`);

@@ -20,7 +20,7 @@ const itemsEditGridItemFormModule = (function () {
 
     'use strict';
 
-    const APP_PATH = window.localStorage.getItem('exhibits_app_path');
+    // const APP_PATH = window.localStorage.getItem('exhibits_app_path');
     const EXHIBITS_ENDPOINTS = endpointsModule.get_exhibits_endpoints();
     let obj = {};
 
@@ -541,6 +541,7 @@ const itemsEditGridItemFormModule = (function () {
         };
 
         try {
+
             // Fetch record data
             const record = await get_grid_item_record();
 
@@ -972,7 +973,7 @@ const itemsEditGridItemFormModule = (function () {
             const form_data = itemsCommonGridItemFormModule.get_common_grid_item_form_fields();
 
             if (!form_data || form_data === false || form_data === undefined) {
-                display_message(message_element, 'danger', 'Unable to get form field values. Please check all required fields.');
+                // display_message(message_element, 'danger', 'Unable to get form field values. Please check all required fields.');
                 return false;
             }
 

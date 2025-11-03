@@ -312,6 +312,7 @@ const itemsEditStandardItemFormModule = (function () {
     }
 
     obj.update_item_record = async function() {
+
         // Prevent duplicate submissions
         if (this._is_updating_item) {
             return false;
@@ -445,6 +446,7 @@ const itemsEditStandardItemFormModule = (function () {
         let timeout_id = null;
 
         try {
+
             // Scroll to top for user feedback
             window.scrollTo({ top: 0, behavior: 'smooth' });
 
@@ -475,7 +477,7 @@ const itemsEditStandardItemFormModule = (function () {
             const form_data = itemsCommonStandardItemFormModule.get_common_standard_item_form_fields();
 
             if (!form_data || form_data === false || form_data === undefined) {
-                display_message(message_element, 'danger', 'Unable to get form field values. Please check all required fields.');
+                // display_message(message_element, 'danger', 'Unable to get form field values. Please check all required fields.');
                 return false;
             }
 

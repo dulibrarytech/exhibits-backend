@@ -407,7 +407,7 @@ exports.update_grid_item_record = async function (is_member_of_exhibit, is_membe
     }
 };
 
-/**
+/** TODO: remove
  * Clears out media value
  * @param uuid
  * @param media

@@ -318,14 +318,16 @@ exports.update_item_record = async function (is_member_of_exhibit, item_id, data
  * Clears out media value
  * @param uuid
  * @param media
+ * @param type
  */
-exports.delete_media_value = async function (uuid, media) {
+exports.delete_media_value = async function (uuid, media, type) {
 
     try {
 
         const TASK = new EXHIBIT_ITEM_RECORD_TASKS(DB, TABLES);
+        let result = await TASK.delete_media_value(uuid, media, type);
 
-        if (await TASK.delete_media_value(uuid, media) === true) {
+        if (result.success === true) {
             LOGGER.module().info('INFO: [/exhibits/items/model (delete_media_value)] Media value deleted');
         } else {
             LOGGER.module().error('ERROR: [/exhibits/items/model (delete_media_value)] Unable to delete media value');

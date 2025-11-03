@@ -49,10 +49,12 @@ const itemsCommonStandardItemFormModule = (function () {
             item.text = getElementValue('#item-text-input');
 
             // Validate text content for text paths
+            /*
             if (isTextPath && item.text.length === 0) {
                 showError('Please enter "Text" for this item');
                 return false;
             }
+            */
 
             // Get optional published status
             const publishedEl = document.querySelector('#is-published');

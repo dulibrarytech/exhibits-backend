@@ -1128,14 +1128,215 @@ const Exhibit_item_record_tasks = class {
     }
 
     /**
+     * Clears media or thumbnail value from an item record (supports multiple item types)
+     * Automatically determines which field to clear based on the media path
+     * @param {string} item_uuid - The item UUID
+     * @param {string} media_path - The media path to determine which field to clear
+     * @param {string} item_type - Item type: 'standard_item', 'grid_item', or 'timeline_item'
+     * @param {string} [updated_by=null] - User ID performing the operation
+     * @returns {Promise<Object>} Delete result
+     * @throws {Error} If validation fails or delete fails
+     */
+    async delete_media_value(item_uuid, media_path, item_type, updated_by = null) {
+
+        // Define valid item types and their corresponding tables
+        const ITEM_TYPE_TABLE_MAP = {
+            'standard_item': 'item_records',
+            'grid_item': 'grid_item_records',
+            'timeline_item': 'timeline_item_records'
+        };
+
+        try {
+            // ===== INPUT VALIDATION =====
+
+            if (!item_uuid || typeof item_uuid !== 'string' || !item_uuid.trim()) {
+                throw new Error('Valid item UUID is required');
+            }
+
+            if (!media_path || typeof media_path !== 'string' || !media_path.trim()) {
+                throw new Error('Valid media path is required');
+            }
+
+            if (!item_type || typeof item_type !== 'string') {
+                throw new Error('Valid item type is required');
+            }
+
+            // ===== DETERMINE FIELD FROM PATH =====
+
+            const path_lower = media_path.toLowerCase().trim();
+            let field_to_clear = null;
+
+            if (path_lower.includes('thumbnail')) {
+                field_to_clear = 'thumbnail';
+            } else if (path_lower.includes('media')) {
+                field_to_clear = 'media';
+            } else {
+                // Parse using underscore split (fallback logic)
+                const parts = media_path.split('_');
+                const last_part = parts[parts.length - 1] || '';
+
+                if (last_part.toLowerCase().includes('thumb')) {
+                    field_to_clear = 'thumbnail';
+                } else {
+                    field_to_clear = 'media';
+                }
+            }
+
+            if (!field_to_clear) {
+                // Default to 'media' if we couldn't determine
+                field_to_clear = 'media';
+                LOGGER.module().warn('Could not determine field from path, defaulting to media', {
+                    media_path
+                });
+            }
+
+            LOGGER.module().info('Determined field to clear from media path', {
+                media_path,
+                field_to_clear
+            });
+
+            // ===== VALIDATE ITEM TYPE AND GET TABLE =====
+
+            const normalized_type = item_type.toLowerCase().trim();
+
+            if (!ITEM_TYPE_TABLE_MAP.hasOwnProperty(normalized_type)) {
+                throw new Error(`Invalid item type. Must be 'standard_item', 'grid_item', or 'timeline_item', got: ${item_type}`);
+            }
+
+            const table_name = ITEM_TYPE_TABLE_MAP[normalized_type];
+
+            // ===== UUID VALIDATION =====
+
+            const uuid_regex = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
+
+            if (!uuid_regex.test(item_uuid.trim())) {
+                throw new Error('Invalid item UUID format');
+            }
+
+            // ===== DATABASE VALIDATION =====
+
+            if (!this.DB || typeof this.DB !== 'function') {
+                throw new Error('Database connection is not available');
+            }
+
+            if (!this.TABLE || !this.TABLE[table_name]) {
+                throw new Error(`Table "${table_name}" is not defined in TABLE configuration`);
+            }
+
+            // ===== CHECK RECORD EXISTS =====
+
+            const existing_record = await this.DB(this.TABLE[table_name])
+                .select('id', 'uuid', 'is_deleted', field_to_clear)
+                .where({
+                    uuid: item_uuid.trim()
+                })
+                .first()
+                .timeout(10000);
+
+            if (!existing_record) {
+                throw new Error(`${normalized_type} record not found`);
+            }
+
+            if (existing_record.is_deleted === 1) {
+                throw new Error(`Cannot update deleted ${normalized_type} record`);
+            }
+
+            // Check if field already empty
+            if (!existing_record[field_to_clear]) {
+                return {
+                    success: true,
+                    no_change: true,
+                    uuid: item_uuid.trim(),
+                    item_type: normalized_type,
+                    field: field_to_clear,
+                    media_path,
+                    message: `Field '${field_to_clear}' is already empty`
+                };
+            }
+
+            // ===== PREPARE UPDATE DATA =====
+
+            const update_data = {
+                [field_to_clear]: ''
+            };
+
+            if (updated_by) {
+                update_data.updated_by = updated_by;
+            }
+
+            // ===== PERFORM UPDATE =====
+
+            const affected_rows = await this.DB(this.TABLE[table_name])
+                .where({
+                    uuid: item_uuid.trim(),
+                    is_deleted: 0
+                })
+                .update(update_data)
+                .timeout(10000);
+
+            if (affected_rows === 0) {
+                throw new Error('Delete media value failed: No rows affected');
+            }
+
+            // ===== LOG SUCCESS =====
+
+            LOGGER.module().info('Media value deleted successfully', {
+                uuid: item_uuid.trim(),
+                item_type: normalized_type,
+                table: table_name,
+                field: field_to_clear,
+                media_path,
+                previous_value: existing_record[field_to_clear],
+                affected_rows,
+                updated_by,
+                timestamp: new Date().toISOString()
+            });
+
+            return {
+                success: true,
+                uuid: item_uuid.trim(),
+                item_type: normalized_type,
+                table: table_name,
+                field: field_to_clear,
+                media_path,
+                previous_value: existing_record[field_to_clear],
+                affected_rows,
+                message: `Media value '${field_to_clear}' deleted successfully from ${normalized_type}`
+            };
+
+        } catch (error) {
+            const error_context = {
+                method: 'delete_media_value',
+                item_uuid,
+                media_path,
+                item_type,
+                updated_by,
+                timestamp: new Date().toISOString(),
+                message: error.message,
+                stack: error.stack
+            };
+
+            LOGGER.module().error(
+                'Failed to delete media value',
+                error_context
+            );
+
+            throw error;
+        }
+    }
+
+    /**
      * Deletes item media value
      * @param uuid
      * @param media
+     * @param type
      */
-    async delete_media_value(uuid, media) {
+    async delete_media_value__(uuid, media, type) {
 
         try {
 
+            console.log(type);
+            // TODO: check type for standard_item, grid_item, and timeline_item values
             let update = {};
             let tmp = media.split('_');
             let image = tmp.pop();

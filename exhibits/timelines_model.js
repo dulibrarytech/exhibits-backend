@@ -384,12 +384,12 @@ exports.update_timeline_item_record = async function (is_member_of_exhibit, is_m
     }
 };
 
-/**
+/** TODO: remove
  * Clears out media value
  * @param uuid
  * @param media
  */
-exports.delete_media_value = async function (uuid, media) {
+exports.delete_media_value__ = async function (uuid, media) {
 
     try {
 

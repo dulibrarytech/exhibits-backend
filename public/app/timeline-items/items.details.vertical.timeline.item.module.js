@@ -24,123 +24,330 @@ const itemsDetailsTimelineItemModule = (function () {
     const EXHIBITS_ENDPOINTS = endpointsModule.get_exhibits_endpoints();
     let obj = {};
 
-    async function get_timeline_item_record () {
+    async function get_timeline_item_record() {
+        // Cache DOM element
+        const message_element = document.querySelector('#message');
+
+        /**
+         * Display status message to user (XSS-safe)
+         */
+        const display_message = (element, type, message) => {
+            if (!element) {
+                return;
+            }
+
+            const valid_types = ['info', 'success', 'danger', 'warning'];
+            const alert_type = valid_types.includes(type) ? type : 'danger';
+
+            const alert_div = document.createElement('div');
+            alert_div.className = `alert alert-${alert_type}`;
+            alert_div.setAttribute('role', 'alert');
+
+            const icon = document.createElement('i');
+            icon.className = get_icon_class(alert_type);
+            alert_div.appendChild(icon);
+
+            const text_node = document.createTextNode(` ${message}`);
+            alert_div.appendChild(text_node);
+
+            element.textContent = '';
+            element.appendChild(alert_div);
+        };
+
+        /**
+         * Get icon class for alert type
+         */
+        const get_icon_class = (alert_type) => {
+            const icon_map = {
+                'info': 'fa fa-info',
+                'success': 'fa fa-check',
+                'danger': 'fa fa-exclamation',
+                'warning': 'fa fa-exclamation-triangle'
+            };
+            return icon_map[alert_type] || 'fa fa-exclamation';
+        };
+
+        /**
+         * Validate required parameters
+         */
+        const validate_parameters = (exhibit_id, timeline_id, item_id) => {
+            if (!exhibit_id || !timeline_id || !item_id) {
+                return {
+                    valid: false,
+                    error: 'Missing required parameters: exhibit_id, timeline_id, or item_id'
+                };
+            }
+
+            // Validate reasonable string lengths
+            if (exhibit_id.length > 255 || timeline_id.length > 255 || item_id.length > 255) {
+                return {
+                    valid: false,
+                    error: 'Invalid parameter length'
+                };
+            }
+
+            return { valid: true };
+        };
 
         try {
-
+            // Get and validate required parameters
             const exhibit_id = helperModule.get_parameter_by_name('exhibit_id');
             const timeline_id = helperModule.get_parameter_by_name('timeline_id');
             const item_id = helperModule.get_parameter_by_name('item_id');
+
+            const validation = validate_parameters(exhibit_id, timeline_id, item_id);
+            if (!validation.valid) {
+                display_message(message_element, 'danger', validation.error);
+                return null;
+            }
+
+            // Get and validate authentication
             const token = authModule.get_user_token();
-            let etmp = EXHIBITS_ENDPOINTS.exhibits.timeline_item_record.get.endpoint.replace(':exhibit_id', exhibit_id);
-            let itmp = etmp.replace(':timeline_id', timeline_id);
-            let endpoint = itmp.replace(':item_id', item_id);
 
-            if (token === false) {
-
-                document.querySelector('#message').innerHTML = 'ERROR: Unable to get API endpoints';
+            if (!token || token === false) {
+                display_message(message_element, 'danger', 'Authentication required. Redirecting...');
 
                 setTimeout(() => {
                     authModule.redirect_to_auth();
                 }, 1000);
 
-                return false;
+                return null;
             }
 
-            let response = await httpModule.req({
+            // Validate endpoint configuration
+            if (!EXHIBITS_ENDPOINTS?.exhibits?.timeline_item_record?.get?.endpoint) {
+                display_message(message_element, 'danger', 'API endpoint configuration missing');
+                return null;
+            }
+
+            // Construct endpoint with URL encoding
+            const endpoint = EXHIBITS_ENDPOINTS.exhibits.timeline_item_record.get.endpoint
+                .replace(':exhibit_id', encodeURIComponent(exhibit_id))
+                .replace(':timeline_id', encodeURIComponent(timeline_id))
+                .replace(':item_id', encodeURIComponent(item_id));
+
+            // Make API request with timeout
+            const response = await httpModule.req({
                 method: 'GET',
                 url: endpoint,
                 headers: {
                     'Content-Type': 'application/json',
                     'x-access-token': token
-                }
+                },
+                timeout: 30000
             });
 
-            if (response !== undefined && response.status === 200) {
-                return response.data.data[0];
+            // Validate response structure
+            if (!response) {
+                throw new Error('No response received from server');
             }
 
+            if (response.status !== 200) {
+                throw new Error(`Server returned status ${response.status}`);
+            }
+
+            if (!response.data?.data) {
+                throw new Error('Invalid response structure');
+            }
+
+            return response.data.data;
+
         } catch (error) {
-            document.querySelector('#message').innerHTML = `<div class="alert alert-danger" role="alert"><i class="fa fa-exclamation"></i> ${error.message}</div>`;
+            // Log error for debugging
+            console.error('Error in get_timeline_item_record:', error);
+
+            // Display error message (use user_message from Axios interceptor if available)
+            const error_message = error.user_message || 'Unable to load the timeline item record. Please try again.';
+            display_message(message_element, 'danger', error_message);
+
+            return null;
         }
     }
 
-    async function display_edit_record () {
+    async function display_details_record() {
+
+        /**
+         * Cache all required DOM elements
+         */
+        const cache_dom_elements = () => {
+            return {
+                created: document.querySelector('#created'),
+                item_title: document.querySelector('#item-title-input'),
+                item_text: document.querySelector('#item-text-input'),
+                item_date: document.querySelector('#item-date-input')
+            };
+        };
+
+        /**
+         * Display creation and update metadata securely
+         */
+        const display_metadata_info = (record, created_element) => {
+            if (!created_element || !record) {
+                return;
+            }
+
+            const metadata_parts = [];
+
+            // Add creation info
+            if (record.created_by && record.created) {
+                const create_date = new Date(record.created);
+
+                if (is_valid_date(create_date)) {
+                    const create_date_time = helperModule.format_date(create_date);
+                    const created_em = document.createElement('em');
+                    created_em.textContent = `Created by ${record.created_by} on ${create_date_time}`;
+                    metadata_parts.push(created_em);
+                }
+            }
+
+            // Add update info
+            if (record.updated_by && record.updated) {
+                const update_date = new Date(record.updated);
+
+                if (is_valid_date(update_date)) {
+                    const update_date_time = helperModule.format_date(update_date);
+                    const updated_em = document.createElement('em');
+                    updated_em.textContent = `Last updated by ${record.updated_by} on ${update_date_time}`;
+                    metadata_parts.push(updated_em);
+                }
+            }
+
+            // Clear and append content safely
+            created_element.textContent = '';
+
+            metadata_parts.forEach((part, index) => {
+                if (index > 0) {
+                    created_element.appendChild(document.createTextNode(' | '));
+                }
+                created_element.appendChild(part);
+            });
+        };
+
+        /**
+         * Set item title input value
+         */
+        const set_item_title = (title, element) => {
+            if (!element) {
+                return;
+            }
+
+            const unescaped_title = title ? helperModule.unescape(title) : '';
+            element.value = unescaped_title;
+        };
+
+        /**
+         * Set item text input value
+         */
+        const set_item_text = (text, element) => {
+            if (!element) {
+                return;
+            }
+
+            const unescaped_text = text ? helperModule.unescape(text) : '';
+            element.value = unescaped_text;
+        };
+
+        /**
+         * Set item date input value (extract date from ISO string)
+         */
+        const set_item_date = (date_value, element) => {
+            if (!element) {
+                return;
+            }
+
+            if (!date_value) {
+                element.value = '';
+                return;
+            }
+
+            // Extract date portion from ISO date string (e.g., "2024-01-15T00:00:00Z" -> "2024-01-15")
+            const date_str = String(date_value);
+            const date_parts = date_str.split('T');
+
+            if (date_parts.length > 0 && date_parts[0]) {
+                element.value = date_parts[0];
+            } else {
+                element.value = '';
+            }
+        };
+
+        /**
+         * Display media fields if on media page
+         */
+        const display_media_fields = async (record) => {
+            if (window.location.pathname.indexOf('media') === -1) {
+                return;
+            }
+
+            if (typeof helperMediaModule?.display_media_fields_common === 'function') {
+                try {
+                    await helperMediaModule.display_media_fields_common(record);
+                } catch (error) {
+                    console.error('Error displaying media fields:', error);
+                }
+            }
+        };
+
+        /**
+         * Validate if a date is valid
+         */
+        const is_valid_date = (date) => {
+            return date instanceof Date && !isNaN(date.getTime());
+        };
+
+        /**
+         * Display error message
+         */
+        const display_error_message = (message) => {
+            const message_element = document.querySelector('#message');
+
+            if (!message_element) {
+                return;
+            }
+
+            const alert_div = document.createElement('div');
+            alert_div.className = 'alert alert-danger';
+            alert_div.setAttribute('role', 'alert');
+
+            const icon = document.createElement('i');
+            icon.className = 'fa fa-exclamation';
+            alert_div.appendChild(icon);
+
+            const text_node = document.createTextNode(` ${message}`);
+            alert_div.appendChild(text_node);
+
+            message_element.textContent = '';
+            message_element.appendChild(alert_div);
+        };
 
         try {
+            // Fetch record data
+            const record = await get_timeline_item_record();
 
-            let record = await get_timeline_item_record();
-            let created_by = record.created_by;
-            let created = record.created;
-            let create_date = new Date(created);
-            let updated_by = record.updated_by;
-            let updated = record.updated;
-            let update_date = new Date(updated);
-            let item_created = '';
-            let create_date_time = helperModule.format_date(create_date);
-            let update_date_time = helperModule.format_date(update_date);
-
-            if (created_by !== null) {
-                item_created += `<em>Created by ${created_by} on ${create_date_time}</em>`;
+            if (!record) {
+                throw new Error('Failed to load timeline item record data');
             }
 
-            if (updated_by !== null) {
-                item_created += ` | <em>Last updated by ${updated_by} on ${update_date_time}</em>`;
-            }
+            // Cache all DOM elements
+            const elements = cache_dom_elements();
 
-            document.querySelector('#created').innerHTML = item_created;
+            // Display metadata (creation/update info)
+            display_metadata_info(record, elements.created);
 
-            // item data
-            document.querySelector('#item-title-input').value = helperModule.unescape(record.title);
-            document.querySelector('#item-text-input').value = helperModule.unescape(record.text);
+            // Set basic form fields
+            set_item_title(record.title, elements.item_title);
+            set_item_text(record.text, elements.item_text);
+            set_item_date(record.date, elements.item_date);
 
-            if (window.location.pathname.indexOf('media') !== -1) {
-                helperMediaModule.display_media_fields_common(record);
-            }
-
-            let date_arr = record.date.split('T');
-            document.querySelector('#item-date-input').value = date_arr.shift();
-
-            /*
-            let styles = JSON.parse(record.styles);
-
-            if (Object.keys(styles).length !== 0) {
-
-                if (styles.backgroundColor !== undefined) {
-                    document.querySelector('#item-background-color').value = styles.backgroundColor;
-                    document.querySelector('#item-background-color-picker').value = styles.backgroundColor;
-                } else {
-                    document.querySelector('#item-background-color').value = '';
-                }
-
-                if (styles.color !== undefined) {
-                    document.querySelector('#item-font-color').value = styles.color;
-                    document.querySelector('#item-font-color-picker').value = styles.color;
-                } else {
-                    document.querySelector('#item-font-color').value = '';
-                }
-
-                let font_values = document.querySelector('#item-font');
-
-                for (let i=0;i<font_values.length;i++) {
-                    if (font_values[i].value === styles.fontFamily) {
-                        document.querySelector('#item-font').value = styles.fontFamily;
-                    }
-                }
-
-                if (styles.fontSize !== undefined) {
-                    document.querySelector('#item-font-size').value = styles.fontSize.replace('px', '');
-                } else {
-                    document.querySelector('#item-font-size').value = '';
-                }
-            }
-
-             */
+            // Display media fields if on media page
+            await display_media_fields(record);
 
             return false;
 
         } catch (error) {
-            document.querySelector('#message').innerHTML = `<div class="alert alert-danger" role="alert"><i class="fa fa-exclamation"></i> ${error.message}</div>`;
+            console.error('Error in display_details_record:', error);
+            display_error_message('Unable to display the timeline item record. Please try again.');
+            return false;
         }
     }
 
@@ -157,7 +364,7 @@ const itemsDetailsTimelineItemModule = (function () {
             const exhibit_id = helperModule.get_parameter_by_name('exhibit_id');
             exhibitsModule.set_exhibit_title(exhibit_id);
             navModule.set_timeline_item_nav_menu_links();
-            await display_edit_record();
+            await display_details_record();
 
             if (window.location.pathname.indexOf('media') !== -1) {
                 helperMediaModule.media_edit_init();
