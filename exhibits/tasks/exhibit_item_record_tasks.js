@@ -1326,43 +1326,6 @@ const Exhibit_item_record_tasks = class {
     }
 
     /**
-     * Deletes item media value
-     * @param uuid
-     * @param media
-     * @param type
-     */
-    async delete_media_value__(uuid, media, type) {
-
-        try {
-
-            console.log(type);
-            // TODO: check type for standard_item, grid_item, and timeline_item values
-            let update = {};
-            let tmp = media.split('_');
-            let image = tmp.pop();
-
-            if (image.indexOf('media') !== -1) {
-                update.media = '';
-            } else if (image.indexOf('thumbnail') !== -1) {
-                update.thumbnail = '';
-            }
-
-            await this.DB(this.TABLE.item_records)
-            .where({
-                uuid: uuid
-            })
-            .update(update);
-
-            LOGGER.module().info('INFO: [/exhibits/item_record_tasks (delete_media_value)] Media value deleted.');
-            return true;
-
-        } catch (error) {
-            LOGGER.module().error('ERROR: [/exhibits/item_record_tasks (delete_media_value)] unable to delete media value ' + error.message);
-            return false;
-        }
-    }
-
-    /**
      * Reorders items
      * @param is_member_of_exhibit
      * @param item

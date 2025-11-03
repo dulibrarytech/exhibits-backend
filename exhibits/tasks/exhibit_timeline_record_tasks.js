@@ -1770,62 +1770,6 @@ const Exhibit_timeline_record_tasks = class {
     }
 
     /**
-     * Clears out media value
-     * @param uuid
-     * @param media
-     */
-    async delete_media_value(uuid, media) {
-
-        if (!uuid || typeof uuid !== 'string' || !uuid.trim()) {
-            throw new Error('Valid timeline item UUID is required');
-        }
-
-        // ===== UUID VALIDATION =====
-
-        const uuid_regex = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
-
-        if (!uuid_regex.test(uuid.trim())) {
-            throw new Error('Invalid timeline item UUID format');
-        }
-
-        // ===== DATABASE VALIDATION =====
-
-        if (!this.DB || typeof this.DB !== 'function') {
-            throw new Error('Database connection is not available');
-        }
-
-        if (!this.TABLE?.timeline_item_records) {
-            throw new Error('Table name "timeline_item_records" is not defined');
-        }
-
-        try {
-
-            let update = {};
-            let tmp = media.split('_');
-            let image = tmp.pop();
-            console.log('IMAGE ', image);
-            if (image.indexOf('media') !== -1) {
-                update.media = '';
-            } else if (image.indexOf('thumbnail') !== -1) {
-                update.thumbnail = '';
-            }
-
-            await this.DB(this.TABLE.timeline_item_records)
-            .where({
-                uuid: uuid
-            })
-            .update(update);
-
-            LOGGER.module().info('INFO: [/exhibits/timeline_record_tasks (delete_media_value)] Media value deleted.');
-            return true;
-
-        } catch (error) {
-            LOGGER.module().error('ERROR: [/exhibits/timeline_record_tasks (delete_media_value)] unable to delete media value ' + error.message);
-            return false;
-        }
-    }
-
-    /**
      * Deletes timeline item
      * @param is_member_of_exhibit
      * @param timeline_id

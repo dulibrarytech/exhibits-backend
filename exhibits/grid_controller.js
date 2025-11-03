@@ -297,32 +297,6 @@ exports.delete_grid_item_record = async function (req, res) {
     }
 };
 
-exports.delete_grid_item_media = function (req, res) {
-
-    try {
-
-        const exhibit_id = req.params.exhibit_id;
-        const item_id = req.params.item_id;
-        const media = req.params.media;
-
-        if (media !== undefined && media.length !== 0) {
-
-            (async function () {
-                await GRIDS_MODEL.delete_media_value(item_id, media);
-            })();
-
-            FS.unlinkSync(`./storage/${exhibit_id}/${media}`);
-            res.status(204).send('Media deleted');
-
-        } else {
-            res.status(200).send('Unable to delete media file');
-        }
-
-    } catch(error) {
-        res.status(404).send({message: `Unable to delete exhibit media file. ${error.message}`});
-    }
-};
-
 exports.publish_grid_item_record = async function (req, res) {
 
     try {

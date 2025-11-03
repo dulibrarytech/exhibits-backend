@@ -407,28 +407,6 @@ exports.update_grid_item_record = async function (is_member_of_exhibit, is_membe
     }
 };
 
-/** TODO: remove
- * Clears out media value
- * @param uuid
- * @param media
- */
-exports.delete_media_value = async function (uuid, media) {
-
-    try {
-
-        const TASK = new EXHIBIT_GRID_RECORD_TASKS(DB, TABLES);
-
-        if (await TASK.delete_media_value(uuid, media) === true) {
-            LOGGER.module().info('INFO: [/exhibits/grids/model (delete_media_value)] Media value deleted');
-        } else {
-            LOGGER.module().error('ERROR: [/exhibits/grids/model (delete_media_value)] Unable to delete media value');
-        }
-
-    } catch (error) {
-        LOGGER.module().error('ERROR: [/exhibits/items/model (delete_media_value)] ' + error.message);
-    }
-};
-
 /**
  *
  * @param is_member_of_exhibit

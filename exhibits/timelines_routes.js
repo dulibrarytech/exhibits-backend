@@ -51,9 +51,6 @@ module.exports = function (app) {
     app.route(ENDPOINTS().exhibits.timeline_item_records.timeline_item_suppress.post.endpoint)
         .post(CONTROLLER.suppress_timeline_item_record);
 
-    app.route(ENDPOINTS().exhibits.timeline_item_media.delete.endpoint)
-        .delete(TOKEN.verify, CONTROLLER.delete_timeline_item_media);
-
     app.route(ENDPOINTS().exhibits.timeline_item_records.delete.endpoint)
         .delete(TOKEN.verify, CONTROLLER.delete_timeline_item_record);
 

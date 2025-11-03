@@ -603,61 +603,6 @@ const helperMediaModule = (function () {
         }
     };
 
-    /**
-     * Deletes saved media
-     */
-    /*
-    obj.delete_media_edit__ = function () {
-
-        try {
-
-            (async function () {
-
-                console.log(window.location.pathname);
-                // TODO:
-                // items/standard/media
-                // items/grid/item/media
-                // items/vertical-timeline/item/media
-
-                const EXHIBITS_ENDPOINTS = endpointsModule.get_exhibits_endpoints();
-                const exhibit_id = helperModule.get_parameter_by_name('exhibit_id');
-                const item_id = helperModule.get_parameter_by_name('item_id');
-                let media = document.querySelector('#item-media').value;
-                let etmp = EXHIBITS_ENDPOINTS.exhibits.item_media.delete.endpoint.replace(':exhibit_id', exhibit_id);
-                let itmp = etmp.replace(':item_id', item_id);
-                let endpoint = itmp.replace(':media', media);
-                let token = authModule.get_user_token();
-                let response = await httpModule.req({
-                    method: 'DELETE',
-                    url: endpoint,
-                    headers: {
-                        'Content-Type': 'application/json',
-                        'x-access-token': token
-                    }
-                });
-
-                if (response !== undefined && response.status === 204) {
-
-                    document.querySelector('#item-media').value = '';
-                    document.querySelector('#item-media-filename-display').innerHTML = '';
-                    document.querySelector('#item-media-trash').style.display = 'none';
-                    document.querySelector('#item-media-thumbnail-image-display').innerHTML = '';
-                    document.querySelector('#message').innerHTML = `<div class="alert alert-success" role="alert"><i class="fa fa-info"></i> Media deleted</div>`;
-
-                    setTimeout(() => {
-                        document.querySelector('#message').innerHTML = '';
-                        // window.location.reload();
-                    }, 900);
-                }
-
-            })();
-
-        } catch (error) {
-            document.querySelector('#message').innerHTML = `<div class="alert alert-danger" role="alert"><i class="fa fa-exclamation"></i> ${error.message}</div>`;
-        }
-    }
-    */
-
     obj.delete_thumbnail_image_edit = async function() {
 
         // Prevent duplicate submissions
@@ -909,55 +854,6 @@ const helperMediaModule = (function () {
             this._is_deleting_thumbnail = false;
         }
     };
-
-    /**
-     * Deletes saved thumbnail
-     */
-    obj.delete_thumbnail_image_edit__ = function () {
-        console.log('DELETE MEDIA THUMBNAIL');
-        try {
-
-            (async function () {
-
-                const EXHIBITS_ENDPOINTS = endpointsModule.get_exhibits_endpoints();
-                const exhibit_id = helperModule.get_parameter_by_name('exhibit_id');
-                const item_id = helperModule.get_parameter_by_name('item_id');
-                let thumbnail = document.querySelector('#item-thumbnail').value;
-                let etmp = EXHIBITS_ENDPOINTS.exhibits.item_media.delete.endpoint.replace(':exhibit_id', exhibit_id);
-                let itmp = etmp.replace(':item_id', item_id);
-                let endpoint = itmp.replace(':media', thumbnail);
-                let token = authModule.get_user_token();
-                let response = await httpModule.req({
-                    method: 'DELETE',
-                    url: endpoint,
-                    headers: {
-                        'Content-Type': 'application/json',
-                        'x-access-token': token
-                    }
-                });
-
-                if (response !== undefined && response.status === 204) {
-
-                    document.querySelector('#item-thumbnail').value = '';
-                    document.querySelector('#item-thumbnail-filename-display').innerHTML = '';
-                    document.querySelector('#item-thumbnail-trash').style.display = 'none';
-                    document.querySelector('#item-thumbnail-image-display').innerHTML = '';
-                    document.querySelector('#message').innerHTML = `<div class="alert alert-success" role="alert"><i class="fa fa-info"></i> Thumbnail deleted</div>`;
-
-                    setTimeout(() => {
-                        document.querySelector('#message').innerHTML = '';
-                        window.location.reload();
-                    }, 900);
-                }
-
-            })();
-
-        } catch (error) {
-            document.querySelector('#message').innerHTML = `<div class="alert alert-danger" role="alert"><i class="fa fa-exclamation"></i> ${error.message}</div>`;
-        }
-
-        return false;
-    }
 
     /**
      * Processes media specific fields
