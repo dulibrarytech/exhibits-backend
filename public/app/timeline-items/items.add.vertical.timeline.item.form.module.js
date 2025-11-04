@@ -114,6 +114,10 @@ const itemsAddVerticalTimelineItemFormModule = (function () {
             exhibitsModule.set_exhibit_title(exhibit_id);
             document.querySelector('#save-item-btn').addEventListener('click', itemsAddVerticalTimelineItemFormModule.create_timeline_item_record);
 
+            if (window.location.pathname.indexOf('media') !== -1) {
+                await helperModule.create_subjects_menu();
+            }
+
         } catch (error) {
             document.querySelector('#message').innerHTML = `<div class="alert alert-danger" role="alert"><i class="fa fa-exclamation"></i> ${error.message}</div>`;
         }

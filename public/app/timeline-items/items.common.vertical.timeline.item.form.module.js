@@ -47,6 +47,7 @@ const itemsCommonVerticalTimelineItemFormModule = (function () {
             item.title = get_element_value('#item-title-input');
             item.text = get_element_value('#item-text-input');
             item.date = get_element_value('input[type="date"]');
+            item.item_subjects = get_element_value('#selected-subjects');
 
             // Validate required date field
             if (!item.date || item.date.length === 0) {

@@ -187,6 +187,7 @@ const itemsEditGridItemFormModule = (function () {
          * Check if current user is an administrator
          */
         const is_user_administrator = async () => {
+
             try {
                 const profile = authModule.get_user_profile_data();
                 if (!profile?.uid) {
@@ -575,6 +576,7 @@ const itemsEditGridItemFormModule = (function () {
 
             // Display media fields if on media page
             if (window.location.pathname.indexOf('media') !== -1) {
+
                 if (typeof helperMediaModule?.display_media_fields_common === 'function') {
                     await helperMediaModule.display_media_fields_common(record);
                 }

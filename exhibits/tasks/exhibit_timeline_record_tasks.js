@@ -19,7 +19,6 @@
 'use strict';
 
 const LOGGER = require('../../libs/log4');
-const HELPER = require("../../libs/helper");
 
 /**
  * Object contains tasks used to manage exhibit timeline records
@@ -347,6 +346,7 @@ const Exhibit_timeline_record_tasks = class {
             'type',
             'title',
             'text',
+            'item_subjects',
             'styles',
             'order',
             'is_published',
@@ -634,6 +634,7 @@ const Exhibit_timeline_record_tasks = class {
      * @throws {Error} If validation fails or query fails
      */
     async get_timeline_item_records(is_member_of_exhibit, is_member_of_timeline) {
+
         try {
             // ===== INPUT VALIDATION =====
 
@@ -692,6 +693,7 @@ const Exhibit_timeline_record_tasks = class {
                     'alt_text',
                     'is_alt_text_decorative',
                     'pdf_open_to_page',
+                    'item_subjects',
                     'styles',
                     'order',
                     'date',
@@ -780,6 +782,7 @@ const Exhibit_timeline_record_tasks = class {
             'alt_text',
             'is_alt_text_decorative',
             'pdf_open_to_page',
+            'item_subjects',
             'styles',
             'order',
             'date',
@@ -1018,32 +1021,6 @@ const Exhibit_timeline_record_tasks = class {
     }
 
     /**
-     * Create timeline item records
-     * @param data
-     */
-    /*
-    async create_timeline_item_record__(data) {
-
-        try {
-
-            const result = await this.DB.transaction((trx) => {
-                this.DB.insert(data)
-                .into(this.TABLE.timeline_item_records)
-                .transacting(trx)
-                .then(trx.commit)
-                .catch(trx.rollback);
-            });
-
-            LOGGER.module().info('INFO: [/exhibits/exhibit_timeline_record_tasks (create_timeline_item_record)] ' + result.length + ' Timeline item record created.');
-            return true;
-
-        } catch (error) {
-            LOGGER.module().error('ERROR: [/exhibits/exhibit_timeline_record_tasks (create_timeline_item_record)] unable to create timeline item record ' + error.message);
-        }
-    }
-    */
-
-    /**
      * Gets a single timeline item record by exhibit, timeline, and item UUID
      * @param {string} is_member_of_exhibit - The exhibit UUID
      * @param {string} is_member_of_timeline - The timeline UUID
@@ -1052,6 +1029,7 @@ const Exhibit_timeline_record_tasks = class {
      * @throws {Error} If validation fails or query fails
      */
     async get_timeline_item_record(is_member_of_exhibit, is_member_of_timeline, item_uuid) {
+
         try {
             // ===== INPUT VALIDATION =====
 
@@ -1118,6 +1096,7 @@ const Exhibit_timeline_record_tasks = class {
                     'alt_text',
                     'is_alt_text_decorative',
                     'pdf_open_to_page',
+                    'item_subjects',
                     'styles',
                     'order',
                     'date',
@@ -1183,32 +1162,6 @@ const Exhibit_timeline_record_tasks = class {
             throw error;
         }
     }
-
-    /**
-     * Gets timeline item record
-     * @param is_member_of_exhibit
-     * @param timeline_id
-     * @param item_id
-     */
-    /*
-    async get_timeline_item_record__(is_member_of_exhibit, timeline_id, item_id) {
-
-        try {
-
-            return await this.DB(this.TABLE.timeline_item_records)
-            .select('*')
-            .where({
-                is_member_of_exhibit: is_member_of_exhibit,
-                is_member_of_timeline: timeline_id,
-                uuid: item_id,
-                is_deleted: 0
-            });
-
-        } catch (error) {
-            LOGGER.module().error('ERROR: [/exhibits/exhibit_timeline_record_tasks (get_timeline_item_record)] unable to get timeline item record ' + error.message);
-        }
-    }
-    */
 
     /**
      * Gets a timeline item record for editing and locks it for the user
@@ -1428,111 +1381,6 @@ const Exhibit_timeline_record_tasks = class {
     }
 
     /**
-     * Unlocks a timeline item record
-     * @param {string} item_uuid - The timeline item UUID
-     * @param {string} user_id - The user ID unlocking the record
-     * @returns {Promise<Object>} Unlock result
-     * @throws {Error} If unlock fails
-     */
-    /*
-    async unlock_timeline_item_record(item_uuid, user_id) {
-        try {
-            if (!item_uuid || !user_id) {
-                throw new Error('Valid item UUID and user ID are required');
-            }
-
-            if (!this.DB || !this.TABLE?.timeline_item_records) {
-                throw new Error('Database not configured');
-            }
-
-            const unlock_data = {
-                is_locked: 0,
-                locked_by_user: 0,
-                locked_at: null,
-                updated: this.DB.fn.now(),
-                updated_by: user_id.trim()
-            };
-
-            const affected_rows = await this.DB(this.TABLE.timeline_item_records)
-                .where({
-                    uuid: item_uuid.trim(),
-                    is_deleted: 0,
-                    locked_by_user: user_id.trim()  // Only unlock if locked by this user
-                })
-                .update(unlock_data)
-                .timeout(10000);
-
-            if (affected_rows === 0) {
-                LOGGER.module().warn('Failed to unlock record - not locked by this user', {
-                    item_uuid: item_uuid.trim(),
-                    user_id: user_id.trim()
-                });
-                return {
-                    success: false,
-                    message: 'Record not locked by this user'
-                };
-            }
-
-            LOGGER.module().info('Timeline item record unlocked', {
-                item_uuid: item_uuid.trim(),
-                user_id: user_id.trim()
-            });
-
-            return {
-                success: true,
-                item_uuid: item_uuid.trim(),
-                message: 'Record unlocked successfully'
-            };
-
-        } catch (error) {
-            LOGGER.module().error('Failed to unlock timeline item record', {
-                item_uuid,
-                user_id,
-                error: error.message
-            });
-            throw error;
-        }
-    }
-    */
-
-    /*
-    async get_timeline_item_edit_record__(uid, is_member_of_exhibit, timeline_id, item_id) {
-
-        try {
-
-            const data = await this.DB(this.TABLE.timeline_item_records)
-                .select('*')
-                .where({
-                    is_member_of_exhibit: is_member_of_exhibit,
-                    is_member_of_timeline: timeline_id,
-                    uuid: item_id,
-                    is_deleted: 0
-                });
-
-            if (data.length !== 0 && data[0].is_locked === 0) {
-
-                try {
-
-                    const HELPER_TASK = new HELPER();
-                    await HELPER_TASK.lock_record(uid, item_id, this.DB, this.TABLE.timeline_item_records);
-                    return data;
-
-                } catch (error) {
-                    LOGGER.module().error('ERROR: [/exhibits/exhibit_item_record_tasks (get_timeline_item_edit_record)] unable to lock record ' + error.message);
-                }
-
-            } else {
-                return data;
-            }
-
-        } catch (error) {
-            LOGGER.module().error('ERROR: [/exhibits/exhibit_timeline_record_tasks (get_timeline_item_edit_record)] unable to get grid item record ' + error.message);
-        }
-    }
-
-     */
-
-    /**
      * Updates a timeline item record in the database
      * @param {Object} data - Timeline item data to update
      * @param {string} data.uuid - Timeline item UUID (required)
@@ -1563,6 +1411,7 @@ const Exhibit_timeline_record_tasks = class {
             'alt_text',
             'is_alt_text_decorative',
             'pdf_open_to_page',
+            'item_subjects',
             'styles',
             'order',
             'date',
@@ -1770,30 +1619,162 @@ const Exhibit_timeline_record_tasks = class {
     }
 
     /**
-     * Deletes timeline item
-     * @param is_member_of_exhibit
-     * @param timeline_id
-     * @param timeline_item_id
+     * Soft deletes a timeline item record (sets is_deleted = 1)
+     * @param {string} is_member_of_exhibit - The exhibit UUID
+     * @param {string} is_member_of_timeline - The timeline UUID
+     * @param {string} item_uuid - The timeline item UUID
+     * @param {string} [deleted_by=null] - User ID performing the deletion
+     * @returns {Promise<Object>} Delete result with affected rows
+     * @throws {Error} If validation fails or deletion fails
      */
-    async delete_timeline_item_record(is_member_of_exhibit, timeline_id, timeline_item_id) {
-
+    async delete_timeline_item_record(is_member_of_exhibit, is_member_of_timeline, item_uuid, deleted_by = null) {
         try {
+            // ===== INPUT VALIDATION =====
 
-            await this.DB(this.TABLE.timeline_item_records)
-            .where({
-                is_member_of_exhibit: is_member_of_exhibit,
-                is_member_of_timeline: timeline_id,
-                uuid: timeline_item_id
-            })
-            .update({
+            if (!is_member_of_exhibit || typeof is_member_of_exhibit !== 'string' || !is_member_of_exhibit.trim()) {
+                throw new Error('Valid exhibit UUID is required');
+            }
+
+            if (!is_member_of_timeline || typeof is_member_of_timeline !== 'string' || !is_member_of_timeline.trim()) {
+                throw new Error('Valid timeline UUID is required');
+            }
+
+            if (!item_uuid || typeof item_uuid !== 'string' || !item_uuid.trim()) {
+                throw new Error('Valid timeline item UUID is required');
+            }
+
+            // ===== UUID VALIDATION =====
+
+            const uuid_regex = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
+
+            if (!uuid_regex.test(is_member_of_exhibit.trim())) {
+                throw new Error('Invalid exhibit UUID format');
+            }
+
+            if (!uuid_regex.test(is_member_of_timeline.trim())) {
+                throw new Error('Invalid timeline UUID format');
+            }
+
+            if (!uuid_regex.test(item_uuid.trim())) {
+                throw new Error('Invalid timeline item UUID format');
+            }
+
+            // ===== DATABASE VALIDATION =====
+
+            if (!this.DB || typeof this.DB !== 'function') {
+                throw new Error('Database connection is not available');
+            }
+
+            if (!this.TABLE?.timeline_item_records) {
+                throw new Error('Table name "timeline_item_records" is not defined');
+            }
+
+            // ===== CHECK RECORD EXISTS =====
+
+            const existing_record = await this.DB(this.TABLE.timeline_item_records)
+                .select('id', 'uuid', 'title', 'is_deleted', 'is_locked', 'locked_by_user')
+                .where({
+                    is_member_of_exhibit: is_member_of_exhibit.trim(),
+                    is_member_of_timeline: is_member_of_timeline.trim(),
+                    uuid: item_uuid.trim()
+                })
+                .first()
+                .timeout(10000);
+
+            if (!existing_record) {
+                throw new Error('Timeline item record not found');
+            }
+
+            if (existing_record.is_deleted === 1) {
+                return {
+                    success: true,
+                    already_deleted: true,
+                    uuid: item_uuid.trim(),
+                    affected_rows: 0,
+                    message: 'Timeline item record is already deleted'
+                };
+            }
+
+            // Optional: Check if locked by another user
+            if (existing_record.is_locked === 1 && deleted_by) {
+                if (String(existing_record.locked_by_user) !== String(deleted_by)) {
+                    LOGGER.module().warn('Attempting to delete locked record', {
+                        uuid: item_uuid.trim(),
+                        locked_by: existing_record.locked_by_user,
+                        attempted_by: deleted_by
+                    });
+                    // You can choose to throw an error here or just warn
+                    // throw new Error('Timeline item is locked by another user');
+                }
+            }
+
+            // ===== PREPARE UPDATE DATA =====
+
+            const update_data = {
                 is_deleted: 1
+            };
+
+            if (deleted_by) {
+                update_data.updated_by = deleted_by;
+            }
+
+            // Note: 'updated' timestamp is automatically set by database ON UPDATE CURRENT_TIMESTAMP
+
+            // ===== PERFORM SOFT DELETE =====
+
+            const affected_rows = await this.DB(this.TABLE.timeline_item_records)
+                .where({
+                    is_member_of_exhibit: is_member_of_exhibit.trim(),
+                    is_member_of_timeline: is_member_of_timeline.trim(),
+                    uuid: item_uuid.trim(),
+                    is_deleted: 0  // Only delete if not already deleted
+                })
+                .update(update_data)
+                .timeout(10000);
+
+            if (affected_rows === 0) {
+                throw new Error('Delete failed: No rows affected');
+            }
+
+            // ===== LOG SUCCESS =====
+
+            LOGGER.module().info('Timeline item record deleted successfully', {
+                uuid: item_uuid.trim(),
+                title: existing_record.title,
+                is_member_of_timeline: is_member_of_timeline.trim(),
+                is_member_of_exhibit: is_member_of_exhibit.trim(),
+                affected_rows,
+                deleted_by,
+                timestamp: new Date().toISOString()
             });
 
-            LOGGER.module().info('INFO: [/exhibits/exhibit_timeline_record_tasks (delete_timeline_item_record)] Timeline item record deleted.');
-            return true;
+            return {
+                success: true,
+                uuid: item_uuid.trim(),
+                title: existing_record.title,
+                affected_rows,
+                deleted_by,
+                message: 'Timeline item record deleted successfully'
+            };
 
         } catch (error) {
-            LOGGER.module().error('ERROR: [/exhibits/exhibit_timeline_record_tasks (delete_timeline_item_record)] unable to delete timeline item record ' + error.message);
+            const error_context = {
+                method: 'delete_timeline_item_record',
+                is_member_of_exhibit,
+                is_member_of_timeline,
+                item_uuid,
+                deleted_by,
+                timestamp: new Date().toISOString(),
+                message: error.message,
+                stack: error.stack
+            };
+
+            LOGGER.module().error(
+                'Failed to delete timeline item record',
+                error_context
+            );
+
+            throw error;
         }
     }
 
@@ -1804,6 +1785,30 @@ const Exhibit_timeline_record_tasks = class {
     async get_record_count(uuid) {
 
         try {
+
+            // ===== INPUT VALIDATION =====
+
+            if (!uuid || typeof uuid !== 'string' || !uuid.trim()) {
+                throw new Error('Valid timeline item UUID is required');
+            }
+
+            // ===== UUID VALIDATION =====
+
+            const uuid_regex = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
+
+            if (!uuid_regex.test(uuid.trim())) {
+                throw new Error('Invalid timeline UUID format');
+            }
+
+            // ===== DATABASE VALIDATION =====
+
+            if (!this.DB || typeof this.DB !== 'function') {
+                throw new Error('Database connection is not available');
+            }
+
+            if (!this.TABLE?.timeline_item_records) {
+                throw new Error('Table name "timeline_item_records" is not defined');
+            }
 
             const count = await this.DB(this.TABLE.timeline_records).count('id as count')
             .where({
@@ -1824,6 +1829,30 @@ const Exhibit_timeline_record_tasks = class {
     async set_to_publish(uuid) {
 
         try {
+
+            // ===== INPUT VALIDATION =====
+
+            if (!uuid || typeof uuid !== 'string' || !uuid.trim()) {
+                throw new Error('Valid timeline item UUID is required');
+            }
+
+            // ===== UUID VALIDATION =====
+
+            const uuid_regex = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
+
+            if (!uuid_regex.test(uuid.trim())) {
+                throw new Error('Invalid timeline UUID format');
+            }
+
+            // ===== DATABASE VALIDATION =====
+
+            if (!this.DB || typeof this.DB !== 'function') {
+                throw new Error('Database connection is not available');
+            }
+
+            if (!this.TABLE?.timeline_item_records) {
+                throw new Error('Table name "timeline_item_records" is not defined');
+            }
 
             await this.DB(this.TABLE.timeline_records)
             .where({
@@ -1850,6 +1879,30 @@ const Exhibit_timeline_record_tasks = class {
 
         try {
 
+            // ===== INPUT VALIDATION =====
+
+            if (!uuid || typeof uuid !== 'string' || !uuid.trim()) {
+                throw new Error('Valid timeline item UUID is required');
+            }
+
+            // ===== UUID VALIDATION =====
+
+            const uuid_regex = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
+
+            if (!uuid_regex.test(uuid.trim())) {
+                throw new Error('Invalid timeline UUID format');
+            }
+
+            // ===== DATABASE VALIDATION =====
+
+            if (!this.DB || typeof this.DB !== 'function') {
+                throw new Error('Database connection is not available');
+            }
+
+            if (!this.TABLE?.timeline_item_records) {
+                throw new Error('Table name "timeline_item_records" is not defined');
+            }
+
             await this.DB(this.TABLE.timeline_item_records)
             .where({
                 uuid: uuid
@@ -1874,6 +1927,30 @@ const Exhibit_timeline_record_tasks = class {
     async set_timeline_to_publish(uuid) {
 
         try {
+
+            // ===== INPUT VALIDATION =====
+
+            if (!uuid || typeof uuid !== 'string' || !uuid.trim()) {
+                throw new Error('Valid timeline item UUID is required');
+            }
+
+            // ===== UUID VALIDATION =====
+
+            const uuid_regex = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
+
+            if (!uuid_regex.test(uuid.trim())) {
+                throw new Error('Invalid timeline UUID format');
+            }
+
+            // ===== DATABASE VALIDATION =====
+
+            if (!this.DB || typeof this.DB !== 'function') {
+                throw new Error('Database connection is not available');
+            }
+
+            if (!this.TABLE?.timeline_item_records) {
+                throw new Error('Table name "timeline_item_records" is not defined');
+            }
 
             await this.DB(this.TABLE.timeline_records)
             .where({
@@ -1900,6 +1977,30 @@ const Exhibit_timeline_record_tasks = class {
 
         try {
 
+            // ===== INPUT VALIDATION =====
+
+            if (!uuid || typeof uuid !== 'string' || !uuid.trim()) {
+                throw new Error('Valid timeline item UUID is required');
+            }
+
+            // ===== UUID VALIDATION =====
+
+            const uuid_regex = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
+
+            if (!uuid_regex.test(uuid.trim())) {
+                throw new Error('Invalid timeline UUID format');
+            }
+
+            // ===== DATABASE VALIDATION =====
+
+            if (!this.DB || typeof this.DB !== 'function') {
+                throw new Error('Database connection is not available');
+            }
+
+            if (!this.TABLE?.timeline_item_records) {
+                throw new Error('Table name "timeline_item_records" is not defined');
+            }
+
             await this.DB(this.TABLE.timeline_item_records)
             .where({
                 is_member_of_timeline: uuid
@@ -1924,6 +2025,30 @@ const Exhibit_timeline_record_tasks = class {
     async set_to_suppress(uuid) {
 
         try {
+
+            // ===== INPUT VALIDATION =====
+
+            if (!uuid || typeof uuid !== 'string' || !uuid.trim()) {
+                throw new Error('Valid timeline item UUID is required');
+            }
+
+            // ===== UUID VALIDATION =====
+
+            const uuid_regex = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
+
+            if (!uuid_regex.test(uuid.trim())) {
+                throw new Error('Invalid timeline UUID format');
+            }
+
+            // ===== DATABASE VALIDATION =====
+
+            if (!this.DB || typeof this.DB !== 'function') {
+                throw new Error('Database connection is not available');
+            }
+
+            if (!this.TABLE?.timeline_item_records) {
+                throw new Error('Table name "timeline_item_records" is not defined');
+            }
 
             await this.DB(this.TABLE.timeline_records)
             .where({
@@ -1950,6 +2075,30 @@ const Exhibit_timeline_record_tasks = class {
 
         try {
 
+            // ===== INPUT VALIDATION =====
+
+            if (!uuid || typeof uuid !== 'string' || !uuid.trim()) {
+                throw new Error('Valid timeline item UUID is required');
+            }
+
+            // ===== UUID VALIDATION =====
+
+            const uuid_regex = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
+
+            if (!uuid_regex.test(uuid.trim())) {
+                throw new Error('Invalid timeline UUID format');
+            }
+
+            // ===== DATABASE VALIDATION =====
+
+            if (!this.DB || typeof this.DB !== 'function') {
+                throw new Error('Database connection is not available');
+            }
+
+            if (!this.TABLE?.timeline_item_records) {
+                throw new Error('Table name "timeline_item_records" is not defined');
+            }
+
             await this.DB(this.TABLE.timeline_records)
             .where({
                 uuid: uuid
@@ -1974,6 +2123,30 @@ const Exhibit_timeline_record_tasks = class {
     async set_to_suppressed_timeline_items(uuid) {
 
         try {
+
+            // ===== INPUT VALIDATION =====
+
+            if (!uuid || typeof uuid !== 'string' || !uuid.trim()) {
+                throw new Error('Valid timeline item UUID is required');
+            }
+
+            // ===== UUID VALIDATION =====
+
+            const uuid_regex = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
+
+            if (!uuid_regex.test(uuid.trim())) {
+                throw new Error('Invalid timeline UUID format');
+            }
+
+            // ===== DATABASE VALIDATION =====
+
+            if (!this.DB || typeof this.DB !== 'function') {
+                throw new Error('Database connection is not available');
+            }
+
+            if (!this.TABLE?.timeline_item_records) {
+                throw new Error('Table name "timeline_item_records" is not defined');
+            }
 
             await this.DB(this.TABLE.timeline_item_records)
             .where({
@@ -2001,6 +2174,34 @@ const Exhibit_timeline_record_tasks = class {
 
         try {
 
+            // ===== INPUT VALIDATION =====
+
+            if (!is_member_of_exhibit || typeof is_member_of_exhibit !== 'string' || !is_member_of_exhibit.trim()) {
+                throw new Error('Valid exhibit UUID is required');
+            }
+
+            // ===== UUID VALIDATION =====
+
+            const uuid_regex = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
+
+            if (!uuid_regex.test(is_member_of_exhibit.trim())) {
+                throw new Error('Invalid exhibit UUID format');
+            }
+
+            if (!timelines || typeof timelines !== 'object' || Array.isArray(timelines)) {
+                throw new Error('Valid timeline item object is required');
+            }
+
+            // ===== DATABASE VALIDATION =====
+
+            if (!this.DB || typeof this.DB !== 'function') {
+                throw new Error('Database connection is not available');
+            }
+
+            if (!this.TABLE?.timeline_item_records) {
+                throw new Error('Table name "timeline_item_records" is not defined');
+            }
+
             await this.DB(this.TABLE.timeline_records)
             .where({
                 is_member_of_exhibit: is_member_of_exhibit,
@@ -2027,6 +2228,34 @@ const Exhibit_timeline_record_tasks = class {
     async reorder_timeline_items(is_member_of_timeline, timelines) {
 
         try {
+
+            // ===== INPUT VALIDATION =====
+
+            if (!is_member_of_timeline || typeof is_member_of_timeline !== 'string' || !is_member_of_timeline.trim()) {
+                throw new Error('Valid timeline UUID is required');
+            }
+
+            // ===== UUID VALIDATION =====
+
+            const uuid_regex = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
+
+            if (!uuid_regex.test(is_member_of_timeline.trim())) {
+                throw new Error('Invalid timeline UUID format');
+            }
+
+            if (!timelines || typeof timelines !== 'object' || Array.isArray(timelines)) {
+                throw new Error('Valid timeline item object is required');
+            }
+
+            // ===== DATABASE VALIDATION =====
+
+            if (!this.DB || typeof this.DB !== 'function') {
+                throw new Error('Database connection is not available');
+            }
+
+            if (!this.TABLE?.timeline_item_records) {
+                throw new Error('Table name "timeline_item_records" is not defined');
+            }
 
             await this.DB(this.TABLE.timeline_item_records)
             .where({

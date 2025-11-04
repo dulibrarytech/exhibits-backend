@@ -753,26 +753,279 @@ const Exhibit_grid_record_tasks = class {
     }
 
     /**
-     * Create grid item records
-     * @param data
+     * Creates a new grid item record in the database
+     * @param {Object} data - Grid item record data
+     * @param {string} data.uuid - Grid item UUID (required)
+     * @param {string} data.is_member_of_grid - Grid UUID (required)
+     * @param {string} data.is_member_of_exhibit - Exhibit UUID (required)
+     * @param {string} data.title - Grid item title (required)
+     * @param {string} [created_by=null] - User ID creating the record
+     * @returns {Promise<Object>} Created grid item record with ID
+     * @throws {Error} If validation fails or creation fails
      */
-    async create_grid_item_record(data) {
+    async create_grid_item_record(data, created_by = null) {
+
+        // Define whitelist of allowed fields based on tbl_grid_items schema
+        const ALLOWED_FIELDS = [
+            'uuid',
+            'is_member_of_grid',
+            'is_member_of_exhibit',
+            'repo_uuid',
+            'thumbnail',
+            'title',
+            'caption',
+            'item_type',
+            'mime_type',
+            'media',
+            'text',
+            'wrap_text',
+            'description',
+            'type',
+            'layout',
+            'media_width',
+            'media_padding',
+            'alt_text',
+            'is_alt_text_decorative',
+            'pdf_open_to_page',
+            'item_subjects',
+            'styles',
+            'order',
+            'date',
+            'is_repo_item',
+            'is_kaltura_item',
+            'is_embedded',
+            'is_published',
+            'is_locked',
+            'locked_by_user',
+            'locked_at',
+            'is_deleted',
+            'owner'
+        ];
 
         try {
+            // ===== INPUT VALIDATION =====
 
-            const result = await this.DB.transaction((trx) => {
-                this.DB.insert(data)
-                    .into(this.TABLE.grid_item_records)
-                    .transacting(trx)
-                    .then(trx.commit)
-                    .catch(trx.rollback);
+            if (!data || typeof data !== 'object' || Array.isArray(data)) {
+                throw new Error('Data must be a valid object');
+            }
+
+            if (Object.keys(data).length === 0) {
+                throw new Error('Data object cannot be empty');
+            }
+
+            // ===== VALIDATE REQUIRED FIELDS =====
+
+            if (!data.uuid || typeof data.uuid !== 'string' || !data.uuid.trim()) {
+                throw new Error('Valid grid item UUID is required');
+            }
+
+            if (!data.is_member_of_grid || typeof data.is_member_of_grid !== 'string' || !data.is_member_of_grid.trim()) {
+                throw new Error('Valid grid UUID is required');
+            }
+
+            if (!data.is_member_of_exhibit || typeof data.is_member_of_exhibit !== 'string' || !data.is_member_of_exhibit.trim()) {
+                throw new Error('Valid exhibit UUID is required');
+            }
+
+            if (!data.title || typeof data.title !== 'string' || !data.title.trim()) {
+                throw new Error('Valid grid item title is required');
+            }
+
+            // ===== UUID VALIDATION =====
+
+            const uuid_regex = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
+
+            if (!uuid_regex.test(data.uuid.trim())) {
+                throw new Error('Invalid grid item UUID format');
+            }
+
+            if (!uuid_regex.test(data.is_member_of_grid.trim())) {
+                throw new Error('Invalid grid UUID format');
+            }
+
+            if (!uuid_regex.test(data.is_member_of_exhibit.trim())) {
+                throw new Error('Invalid exhibit UUID format');
+            }
+
+            // ===== DATABASE VALIDATION =====
+
+            if (!this.DB || typeof this.DB !== 'function') {
+                throw new Error('Database connection is not available');
+            }
+
+            if (!this.TABLE?.grid_item_records) {
+                throw new Error('Table name "grid_item_records" is not defined');
+            }
+
+            // ===== SANITIZE AND VALIDATE DATA =====
+
+            const sanitized_data = {};
+            const invalid_fields = [];
+
+            for (const [key, value] of Object.entries(data)) {
+                // Security: prevent prototype pollution
+                if (key === '__proto__' || key === 'constructor' || key === 'prototype') {
+                    LOGGER.module().warn('Dangerous property skipped', { key });
+                    continue;
+                }
+
+                // Whitelist check
+                if (ALLOWED_FIELDS.includes(key)) {
+                    sanitized_data[key] = value;
+                } else {
+                    invalid_fields.push(key);
+                }
+            }
+
+            // Warn about invalid fields
+            if (invalid_fields.length > 0) {
+                LOGGER.module().warn('Invalid fields ignored', {
+                    fields: invalid_fields
+                });
+            }
+
+            // ===== ADD METADATA AND DEFAULTS =====
+
+            // Set default values based on tbl_grid_items schema defaults
+            if (!sanitized_data.item_type) {
+                sanitized_data.item_type = 'image';
+            }
+
+            if (!sanitized_data.type) {
+                sanitized_data.type = 'item';
+            }
+
+            if (!sanitized_data.layout) {
+                sanitized_data.layout = 'media_top';
+            }
+
+            if (sanitized_data.wrap_text === undefined) {
+                sanitized_data.wrap_text = 1;
+            }
+
+            if (sanitized_data.media_width === undefined) {
+                sanitized_data.media_width = 50;
+            }
+
+            if (sanitized_data.media_padding === undefined) {
+                sanitized_data.media_padding = 1;
+            }
+
+            if (sanitized_data.is_alt_text_decorative === undefined) {
+                sanitized_data.is_alt_text_decorative = 0;
+            }
+
+            if (sanitized_data.pdf_open_to_page === undefined) {
+                sanitized_data.pdf_open_to_page = 1;
+            }
+
+            if (sanitized_data.order === undefined) {
+                sanitized_data.order = 0;
+            }
+
+            if (sanitized_data.is_repo_item === undefined) {
+                sanitized_data.is_repo_item = 0;
+            }
+
+            if (sanitized_data.is_kaltura_item === undefined) {
+                sanitized_data.is_kaltura_item = 0;
+            }
+
+            if (sanitized_data.is_embedded === undefined) {
+                sanitized_data.is_embedded = 0;
+            }
+
+            if (sanitized_data.is_published === undefined) {
+                sanitized_data.is_published = 0;
+            }
+
+            if (sanitized_data.is_locked === undefined) {
+                sanitized_data.is_locked = 0;
+            }
+
+            if (sanitized_data.locked_by_user === undefined) {
+                sanitized_data.locked_by_user = 0;
+            }
+
+            if (sanitized_data.is_deleted === undefined) {
+                sanitized_data.is_deleted = 0;
+            }
+
+            if (sanitized_data.owner === undefined) {
+                sanitized_data.owner = 0;
+            }
+
+            // Add created_by and updated_by
+            if (created_by) {
+                sanitized_data.created_by = created_by;
+                sanitized_data.updated_by = created_by;
+            }
+
+            // ===== PERFORM INSERT IN TRANSACTION =====
+
+            const created_record = await this.DB.transaction(async (trx) => {
+                // Insert the record
+                const [insert_id] = await trx(this.TABLE.grid_item_records)
+                    .insert(sanitized_data)
+                    .timeout(10000);
+
+                // Verify insert succeeded
+                if (!insert_id) {
+                    throw new Error('Insert failed: No ID returned');
+                }
+
+                // Fetch and return the created record
+                const record = await trx(this.TABLE.grid_item_records)
+                    .select('*')
+                    .where({ id: insert_id })
+                    .first();
+
+                if (!record) {
+                    throw new Error('Failed to retrieve created record');
+                }
+
+                LOGGER.module().info('Grid item record created successfully', {
+                    id: insert_id,
+                    uuid: record.uuid,
+                    title: record.title,
+                    is_member_of_grid: record.is_member_of_grid,
+                    is_member_of_exhibit: record.is_member_of_exhibit,
+                    item_type: record.item_type,
+                    created_by,
+                    timestamp: new Date().toISOString()
+                });
+
+                return record;
             });
 
-            LOGGER.module().info('INFO: [/exhibits/exhibit_grid_record_tasks (create_grid_item_record)] ' + result.length + ' Grid item record created.');
-            return true;
+            return {
+                success: true,
+                id: created_record.id,
+                uuid: created_record.uuid,
+                record: created_record,
+                message: 'Grid item record created successfully'
+            };
 
         } catch (error) {
-            LOGGER.module().error('ERROR: [/exhibits/exhibit_grid_record_tasks (create_grid_item_record)] unable to create grid item record ' + error.message);
+            const error_context = {
+                method: 'create_grid_item_record',
+                uuid: data?.uuid,
+                grid_uuid: data?.is_member_of_grid,
+                exhibit_uuid: data?.is_member_of_exhibit,
+                title: data?.title,
+                data_keys: Object.keys(data || {}),
+                created_by,
+                timestamp: new Date().toISOString(),
+                message: error.message,
+                stack: error.stack
+            };
+
+            LOGGER.module().error(
+                'Failed to create grid item record',
+                error_context
+            );
+
+            throw error;
         }
     }
 
@@ -1132,10 +1385,248 @@ const Exhibit_grid_record_tasks = class {
     }
 
     /**
+     * Updates a grid item record in the database
+     * @param {Object} data - Grid item data to update
+     * @param {string} data.uuid - Grid item UUID (required)
+     * @param {string} data.is_member_of_grid - Grid UUID (required)
+     * @param {string} data.is_member_of_exhibit - Exhibit UUID (required)
+     * @param {string} [updated_by=null] - User ID performing the update
+     * @returns {Promise<Object>} Update result with affected rows
+     * @throws {Error} If validation fails or update fails
+     */
+    async update_grid_item_record(data, updated_by = null) {
+
+        // Define whitelist of updatable fields based on tbl_grid_items schema
+        const UPDATABLE_FIELDS = [
+            'repo_uuid',
+            'thumbnail',
+            'title',
+            'caption',
+            'item_type',
+            'mime_type',
+            'media',
+            'text',
+            'wrap_text',
+            'description',
+            'type',
+            'layout',
+            'media_width',
+            'media_padding',
+            'alt_text',
+            'is_alt_text_decorative',
+            'pdf_open_to_page',
+            'item_subjects',
+            'styles',
+            'order',
+            'date',
+            'is_repo_item',
+            'is_kaltura_item',
+            'is_embedded',
+            'is_published',
+            'is_locked',
+            'locked_by_user',
+            'locked_at',
+            'owner'
+        ];
+
+        try {
+            // ===== INPUT VALIDATION =====
+
+            if (!data || typeof data !== 'object' || Array.isArray(data)) {
+                throw new Error('Data must be a valid object');
+            }
+
+            if (Object.keys(data).length === 0) {
+                throw new Error('Data object cannot be empty');
+            }
+
+            // ===== VALIDATE REQUIRED FIELDS =====
+
+            if (!data.uuid || typeof data.uuid !== 'string' || !data.uuid.trim()) {
+                throw new Error('Valid grid item UUID is required');
+            }
+
+            if (!data.is_member_of_grid || typeof data.is_member_of_grid !== 'string' || !data.is_member_of_grid.trim()) {
+                throw new Error('Valid grid UUID is required');
+            }
+
+            if (!data.is_member_of_exhibit || typeof data.is_member_of_exhibit !== 'string' || !data.is_member_of_exhibit.trim()) {
+                throw new Error('Valid exhibit UUID is required');
+            }
+
+            // ===== UUID VALIDATION =====
+
+            const uuid_regex = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
+
+            if (!uuid_regex.test(data.uuid.trim())) {
+                throw new Error('Invalid grid item UUID format');
+            }
+
+            if (!uuid_regex.test(data.is_member_of_grid.trim())) {
+                throw new Error('Invalid grid UUID format');
+            }
+
+            if (!uuid_regex.test(data.is_member_of_exhibit.trim())) {
+                throw new Error('Invalid exhibit UUID format');
+            }
+
+            // ===== DATABASE VALIDATION =====
+
+            if (!this.DB || typeof this.DB !== 'function') {
+                throw new Error('Database connection is not available');
+            }
+
+            if (!this.TABLE?.grid_item_records) {
+                throw new Error('Table name "grid_item_records" is not defined');
+            }
+
+            // ===== SANITIZE UPDATE DATA =====
+
+            const update_data = {};
+            const invalid_fields = [];
+
+            for (const [key, value] of Object.entries(data)) {
+                // Skip identifier fields
+                if (key === 'uuid' || key === 'is_member_of_grid' || key === 'is_member_of_exhibit') {
+                    continue;
+                }
+
+                // Security: prevent prototype pollution
+                if (key === '__proto__' || key === 'constructor' || key === 'prototype') {
+                    LOGGER.module().warn('Dangerous property skipped', { key });
+                    continue;
+                }
+
+                // Whitelist check
+                if (UPDATABLE_FIELDS.includes(key)) {
+                    update_data[key] = value;
+                } else {
+                    invalid_fields.push(key);
+                }
+            }
+
+            // Warn about invalid fields
+            if (invalid_fields.length > 0) {
+                LOGGER.module().warn('Invalid fields ignored in update', {
+                    fields: invalid_fields
+                });
+            }
+
+            // Check if we have any valid data to update
+            if (Object.keys(update_data).length === 0) {
+                return {
+                    success: true,
+                    no_change: true,
+                    uuid: data.uuid.trim(),
+                    affected_rows: 0,
+                    message: 'No fields to update'
+                };
+            }
+
+            // ===== ADD UPDATED_BY =====
+
+            if (updated_by) {
+                update_data.updated_by = updated_by;
+            }
+
+            // Note: 'updated' timestamp is automatically set by database ON UPDATE CURRENT_TIMESTAMP
+
+            // ===== CHECK RECORD EXISTS =====
+
+            const existing_record = await this.DB(this.TABLE.grid_item_records)
+                .select('id', 'uuid', 'title', 'is_deleted', 'is_locked', 'locked_by_user')
+                .where({
+                    is_member_of_exhibit: data.is_member_of_exhibit.trim(),
+                    is_member_of_grid: data.is_member_of_grid.trim(),
+                    uuid: data.uuid.trim()
+                })
+                .first()
+                .timeout(10000);
+
+            if (!existing_record) {
+                throw new Error('Grid item record not found');
+            }
+
+            if (existing_record.is_deleted === 1) {
+                throw new Error('Cannot update deleted grid item record');
+            }
+
+            // Optional: Check if locked by another user
+            if (existing_record.is_locked === 1 && updated_by) {
+                if (String(existing_record.locked_by_user) !== String(updated_by)) {
+                    LOGGER.module().warn('Attempting to update locked record', {
+                        uuid: data.uuid.trim(),
+                        locked_by: existing_record.locked_by_user,
+                        attempted_by: updated_by
+                    });
+                    // You can choose to throw an error here or just warn
+                    // throw new Error('Grid item is locked by another user');
+                }
+            }
+
+            // ===== PERFORM UPDATE =====
+
+            const affected_rows = await this.DB(this.TABLE.grid_item_records)
+                .where({
+                    is_member_of_exhibit: data.is_member_of_exhibit.trim(),
+                    is_member_of_grid: data.is_member_of_grid.trim(),
+                    uuid: data.uuid.trim(),
+                    is_deleted: 0
+                })
+                .update(update_data)
+                .timeout(10000);
+
+            if (affected_rows === 0) {
+                throw new Error('Update failed: No rows affected');
+            }
+
+            // ===== LOG SUCCESS =====
+
+            LOGGER.module().info('Grid item record updated successfully', {
+                uuid: data.uuid.trim(),
+                is_member_of_grid: data.is_member_of_grid.trim(),
+                is_member_of_exhibit: data.is_member_of_exhibit.trim(),
+                fields_updated: Object.keys(update_data),
+                affected_rows,
+                updated_by,
+                timestamp: new Date().toISOString()
+            });
+
+            return {
+                success: true,
+                uuid: data.uuid.trim(),
+                affected_rows,
+                fields_updated: Object.keys(update_data),
+                message: 'Grid item record updated successfully'
+            };
+
+        } catch (error) {
+            const error_context = {
+                method: 'update_grid_item_record',
+                uuid: data?.uuid,
+                grid_uuid: data?.is_member_of_grid,
+                exhibit_uuid: data?.is_member_of_exhibit,
+                data_keys: Object.keys(data || {}),
+                updated_by,
+                timestamp: new Date().toISOString(),
+                message: error.message,
+                stack: error.stack
+            };
+
+            LOGGER.module().error(
+                'Failed to update grid item record',
+                error_context
+            );
+
+            throw error;
+        }
+    }
+
+    /**
      * Update grid item record
      * @param data
      */
-    async update_grid_item_record(data) {
+    async update_grid_item_record__(data) {
 
         try {
 

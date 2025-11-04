@@ -185,6 +185,7 @@ const itemsEditTimelineItemFormModule = (function () {
          * Check if current user is an administrator
          */
         const is_user_administrator = async () => {
+
             try {
                 const profile = authModule.get_user_profile_data();
                 if (!profile?.uid) {
@@ -386,6 +387,7 @@ const itemsEditTimelineItemFormModule = (function () {
          * Display media fields if on media page
          */
         const display_media_fields = async (record) => {
+
             if (window.location.pathname.indexOf('media') === -1) {
                 return;
             }
@@ -396,6 +398,13 @@ const itemsEditTimelineItemFormModule = (function () {
                 } catch (error) {
                     console.error('Error displaying media fields:', error);
                 }
+            }
+            console.log('SUBJECTS ', record.item_subjects);
+            if (record.item_subjects !== null && record.item_subjects?.length > 0) {
+                const subjects = record.item_subjects.split('|');
+                await helperModule.create_subjects_menu(subjects);
+            } else {
+                await helperModule.create_subjects_menu();
             }
         };
 
