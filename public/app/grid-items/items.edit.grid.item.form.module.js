@@ -578,6 +578,13 @@ const itemsEditGridItemFormModule = (function () {
                 if (typeof helperMediaModule?.display_media_fields_common === 'function') {
                     await helperMediaModule.display_media_fields_common(record);
                 }
+
+                if (record.item_subjects !== null && record.item_subjects?.length > 0) {
+                    const subjects = record.item_subjects.split('|');
+                    await helperModule.create_subjects_menu(subjects);
+                } else {
+                    await helperModule.create_subjects_menu();
+                }
             }
 
             // Set layout selection

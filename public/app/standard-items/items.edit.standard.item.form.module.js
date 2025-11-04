@@ -221,7 +221,7 @@ const itemsEditStandardItemFormModule = (function () {
             }
 
             // Check if record is locked
-            helperModule.check_if_locked(record, '#exhibit-submit-card');
+            await helperModule.check_if_locked(record, '#exhibit-submit-card');
 
             // Set published status
             const published_el = document.querySelector('#is-published');
@@ -246,7 +246,7 @@ const itemsEditStandardItemFormModule = (function () {
                 }
             }
 
-            // Set radio button selections efficiently
+            // Set radio button selections
             const set_radio_value = (name, value) => {
                 const elements = document.getElementsByName(name);
                 for (const el of elements) {

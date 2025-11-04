@@ -54,6 +54,7 @@ const itemsCommonGridItemFormModule = (function () {
             // Get item metadata
             item.title = get_element_value('#item-title-input');
             item.text = get_element_value('#item-text-input');
+            item.item_subjects = get_element_value('#selected-subjects');
 
             // Validate text content for text paths
             if (is_text_path && item.text.length === 0) {
