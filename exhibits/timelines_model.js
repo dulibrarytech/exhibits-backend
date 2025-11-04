@@ -546,7 +546,7 @@ exports.publish_timeline_item_record = async function (exhibit_id, timeline_id, 
         const TIMELINE_TASKS = new EXHIBIT_TIMELINE_RECORD_TASKS(DB, TABLES);
         let timeline_record = await TIMELINE_TASKS.get_timeline_record(exhibit_id, timeline_id);
 
-        if (timeline_record[0].is_published === 0) {
+        if (timeline_record.is_published === 0) {
 
             LOGGER.module().error('ERROR: [/exhibits/timelines_model (publish_timeline_item_record)] Unable to publish timeline item');
 
@@ -557,11 +557,11 @@ exports.publish_timeline_item_record = async function (exhibit_id, timeline_id, 
         }
 
         let timeline_item_record = await TIMELINE_TASKS.get_timeline_item_record(exhibit_id, timeline_id, timeline_item_id);
-        const is_indexed = await INDEXER_MODEL.index_timeline_item_record(timeline_id, timeline_item_id, timeline_item_record.pop());
+        const is_indexed = await INDEXER_MODEL.index_timeline_item_record(timeline_id, timeline_item_id, timeline_item_record);
 
         if (is_indexed === false) {
 
-            LOGGER.module().error('ERROR: [/exhibits/model (publish_item_record)] Unable to publish timeline item');
+            LOGGER.module().error('ERROR: [/exhibits/model (publish_timeline_item_record)] Unable to publish timeline item');
 
             return {
                 status: false,
@@ -579,6 +579,7 @@ exports.publish_timeline_item_record = async function (exhibit_id, timeline_id, 
         }
 
     } catch (error) {
+        console.error(error);
         LOGGER.module().error('ERROR: [/exhibits/model (publish_timeline_item_record)] ' + error.message);
     }
 };

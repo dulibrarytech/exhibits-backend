@@ -76,7 +76,7 @@ exports.create_exhibit_record = async function (data) {
         }
 
         data.styles = JSON.stringify(data.styles);
-        data.order = await HELPER_TASK.order_exhibits(data.uuid, DB, TABLES);
+        // data.order = await HELPER_TASK.order_exhibits(data.uuid, DB, TABLES);
 
         const CREATE_RECORD_TASK = new EXHIBIT_RECORD_TASKS(DB, TABLES);
         let result = await CREATE_RECORD_TASK.create_exhibit_record(data);

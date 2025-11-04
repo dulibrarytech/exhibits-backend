@@ -19,7 +19,7 @@
 'use strict';
 
 const LOGGER = require('../../libs/log4');
-const HELPER = require("../../libs/helper");
+const HELPER = require('../../libs/helper');
 
 /**
  * Object contains tasks used to manage exhibit heading records
@@ -32,7 +32,319 @@ const Exhibit_heading_record_tasks = class {
     constructor(DB, TABLE) {
         this.DB = DB;
         this.TABLE = TABLE;
+        this.UUID_REGEX = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
+        this.QUERY_TIMEOUT = 10000;
     }
+
+    // ==================== VALIDATION HELPERS ====================
+
+    /**
+     * Validates that database connection is available
+     * @private
+     */
+    _validate_database() {
+        if (!this.DB || typeof this.DB !== 'function') {
+            throw new Error('Database connection is not available');
+        }
+    }
+
+    /**
+     * Validates that a specific table exists
+     * @param {string} table_name - Name of the table to validate
+     * @private
+     */
+    _validate_table(table_name) {
+        if (!this.TABLE?.[table_name]) {
+            throw new Error(`Table name "${table_name}" is not defined`);
+        }
+    }
+
+    /**
+     * Validates a UUID string
+     * @param {string} uuid - UUID to validate
+     * @param {string} field_name - Name of the field for error message
+     * @returns {string} Trimmed UUID
+     * @private
+     */
+    _validate_uuid(uuid, field_name = 'UUID') {
+        if (!uuid || typeof uuid !== 'string' || !uuid.trim()) {
+            throw new Error(`Valid ${field_name} is required`);
+        }
+
+        const trimmed_uuid = uuid.trim();
+
+        if (!this.UUID_REGEX.test(trimmed_uuid)) {
+            throw new Error(`Invalid ${field_name} format`);
+        }
+
+        return trimmed_uuid;
+    }
+
+    /**
+     * Validates multiple UUIDs at once
+     * @param {Object} uuid_map - Object with uuid_value: field_name pairs
+     * @returns {Object} Object with validated and trimmed UUIDs
+     * @private
+     */
+    _validate_uuids(uuid_map) {
+        const validated = {};
+        for (const [value, name] of Object.entries(uuid_map)) {
+            validated[name] = this._validate_uuid(value, name);
+        }
+        return validated;
+    }
+
+    /**
+     * Validates a required string field
+     * @param {string} value - Value to validate
+     * @param {string} field_name - Name of the field for error message
+     * @returns {string} Trimmed value
+     * @private
+     */
+    _validate_string(value, field_name) {
+        if (!value || typeof value !== 'string' || !value.trim()) {
+            throw new Error(`Valid ${field_name} is required`);
+        }
+        return value.trim();
+    }
+
+    /**
+     * Validates a data object
+     * @param {Object} data - Data object to validate
+     * @private
+     */
+    _validate_data_object(data) {
+        if (!data || typeof data !== 'object' || Array.isArray(data)) {
+            throw new Error('Data must be a valid object');
+        }
+
+        if (Object.keys(data).length === 0) {
+            throw new Error('Data object cannot be empty');
+        }
+    }
+
+    /**
+     * Sanitizes data against a whitelist of allowed fields
+     * @param {Object} data - Data to sanitize
+     * @param {Array<string>} allowed_fields - Whitelist of allowed fields
+     * @param {Array<string>} skip_fields - Fields to skip during sanitization
+     * @returns {Object} Sanitized data and invalid fields
+     * @private
+     */
+    _sanitize_data(data, allowed_fields, skip_fields = []) {
+        const sanitized_data = {};
+        const invalid_fields = [];
+
+        for (const [key, value] of Object.entries(data)) {
+            // Skip identifier fields
+            if (skip_fields.includes(key)) {
+                continue;
+            }
+
+            // Security: prevent prototype pollution
+            if (key === '__proto__' || key === 'constructor' || key === 'prototype') {
+                LOGGER.module().warn('Dangerous property skipped', {key});
+                continue;
+            }
+
+            // Whitelist check
+            if (allowed_fields.includes(key)) {
+                sanitized_data[key] = value;
+            } else {
+                invalid_fields.push(key);
+            }
+        }
+
+        // Warn about invalid fields
+        if (invalid_fields.length > 0) {
+            LOGGER.module().warn('Invalid fields ignored', {
+                fields: invalid_fields
+            });
+        }
+
+        return {sanitized_data, invalid_fields};
+    }
+
+    /**
+     * Handles error logging and re-throwing
+     * @param {Error} error - Error to handle
+     * @param {string} method_name - Name of the method where error occurred
+     * @param {Object} context - Additional context for logging
+     * @private
+     */
+    _handle_error(error, method_name, context = {}) {
+        const error_context = {
+            method: method_name,
+            ...context,
+            timestamp: new Date().toISOString(),
+            message: error.message,
+            stack: error.stack
+        };
+
+        LOGGER.module().error(
+            `Failed to ${method_name.replace(/_/g, ' ')}`,
+            error_context
+        );
+
+        throw error;
+    }
+
+    /**
+     * Logs successful operation
+     * @param {string} message - Success message
+     * @param {Object} context - Context for logging
+     * @private
+     */
+    _log_success(message, context = {}) {
+        LOGGER.module().info(message, {
+            ...context,
+            timestamp: new Date().toISOString()
+        });
+    }
+
+    /**
+     * Sets default values for heading fields
+     * @param {Object} data - Data object to set defaults on
+     * @private
+     */
+    _set_heading_defaults(data) {
+        const defaults = {
+            type: 'heading',
+            order: 0,
+            is_visible: 1,
+            is_anchor: 1,
+            is_published: 0,
+            is_locked: 0,
+            locked_by_user: 0,
+            is_indexed: 0,
+            is_deleted: 0,
+            owner: 0
+        };
+
+        for (const [key, default_value] of Object.entries(defaults)) {
+            if (data[key] === undefined) {
+                data[key] = default_value;
+            }
+        }
+    }
+
+    // ==================== COMMON OPERATIONS ====================
+
+    /**
+     * Generic update publish status for any table
+     * @param {string} table_name - Table name
+     * @param {Object} where_clause - Where conditions
+     * @param {number} status - 0 or 1
+     * @param {string} [updated_by=null] - User ID
+     * @returns {Promise<Object>} Update result
+     * @private
+     */
+    async _update_publish_status(table_name, where_clause, status, updated_by = null) {
+        this._validate_database();
+        this._validate_table(table_name);
+
+        if (![0, 1].includes(status)) {
+            throw new Error('Status must be 0 or 1');
+        }
+
+        const update_data = {is_published: status};
+        if (updated_by) {
+            update_data.updated_by = updated_by;
+        }
+
+        const affected_rows = await this.DB(this.TABLE[table_name])
+            .where(where_clause)
+            .update(update_data)
+            .timeout(this.QUERY_TIMEOUT);
+
+        return {
+            success: true,
+            affected_rows,
+            status: status === 1 ? 'published' : 'suppressed',
+            message: `Records ${status === 1 ? 'published' : 'suppressed'} successfully`
+        };
+    }
+
+    /**
+     * Generic update single record publish status
+     * @param {string} table_name - Table name
+     * @param {string} uuid - Record UUID
+     * @param {number} status - 0 or 1
+     * @param {string} [updated_by=null] - User ID
+     * @returns {Promise<Object>} Update result
+     * @private
+     */
+    async _update_single_publish_status(table_name, uuid, status, updated_by = null) {
+        this._validate_database();
+        this._validate_table(table_name);
+
+        const uuid_trimmed = this._validate_uuid(uuid, `${table_name} UUID`);
+
+        if (![0, 1].includes(status)) {
+            throw new Error('Status must be 0 or 1');
+        }
+
+        const update_data = {is_published: status};
+        if (updated_by) {
+            update_data.updated_by = updated_by;
+        }
+
+        const affected_rows = await this.DB(this.TABLE[table_name])
+            .where({uuid: uuid_trimmed})
+            .update(update_data)
+            .timeout(this.QUERY_TIMEOUT);
+
+        if (affected_rows === 0) {
+            throw new Error(`No ${table_name} record found or updated`);
+        }
+
+        return {
+            success: true,
+            uuid: uuid_trimmed,
+            affected_rows,
+            updated_by,
+            message: `${table_name} record ${status === 1 ? 'published' : 'suppressed'} successfully`
+        };
+    }
+
+    /**
+     * Generic reorder function
+     * @param {string} table_name - Table name
+     * @param {Object} where_clause - Where conditions
+     * @param {Object} item - Item with uuid and order
+     * @returns {Promise<Object>} Reorder result
+     * @private
+     */
+    async _reorder_items(table_name, where_clause, item) {
+        this._validate_database();
+        this._validate_table(table_name);
+
+        if (!item || typeof item !== 'object' || Array.isArray(item)) {
+            throw new Error('Valid item object is required');
+        }
+
+        if (!item.uuid || typeof item.order !== 'number') {
+            throw new Error('Item must have uuid and order properties');
+        }
+
+        const affected_rows = await this.DB(this.TABLE[table_name])
+            .where({
+                ...where_clause,
+                uuid: item.uuid
+            })
+            .update({order: item.order})
+            .timeout(this.QUERY_TIMEOUT);
+
+        return {
+            success: true,
+            affected_rows,
+            uuid: item.uuid,
+            order: item.order,
+            message: `${table_name} reordered successfully`
+        };
+    }
+
+    // ==================== HEADING RECORDS ====================
 
     /**
      * Creates a new heading record in the database
@@ -42,146 +354,33 @@ const Exhibit_heading_record_tasks = class {
      * @param {string} data.text - Heading text content (required)
      * @param {string} [created_by=null] - User ID creating the record
      * @returns {Promise<Object>} Created heading record with ID
-     * @throws {Error} If validation fails or creation fails
      */
     async create_heading_record(data, created_by = null) {
 
-        // Define whitelist of allowed fields based on schema
         const ALLOWED_FIELDS = [
-            'is_member_of_exhibit',
-            'uuid',
-            'type',
-            'text',
-            'order',
-            'styles',
-            'is_visible',
-            'is_anchor',
-            'is_published',
-            'is_locked',
-            'locked_by_user',
-            'locked_at',
-            'is_indexed',
-            'is_deleted',
-            'owner'
+            'is_member_of_exhibit', 'uuid', 'type', 'text', 'order', 'styles',
+            'is_visible', 'is_anchor', 'is_published', 'is_locked', 'locked_by_user',
+            'locked_at', 'is_indexed', 'is_deleted', 'owner'
         ];
 
         try {
-            // ===== INPUT VALIDATION =====
+            this._validate_data_object(data);
+            this._validate_database();
+            this._validate_table('heading_records');
 
-            if (!data || typeof data !== 'object' || Array.isArray(data)) {
-                throw new Error('Data must be a valid object');
-            }
+            // Validate required fields
+            const validated = this._validate_uuids({
+                [data.uuid]: 'heading UUID',
+                [data.is_member_of_exhibit]: 'exhibit UUID'
+            });
 
-            if (Object.keys(data).length === 0) {
-                throw new Error('Data object cannot be empty');
-            }
+            this._validate_string(data.text, 'heading text');
 
-            // ===== VALIDATE REQUIRED FIELDS =====
+            // Sanitize data
+            const {sanitized_data} = this._sanitize_data(data, ALLOWED_FIELDS);
 
-            if (!data.uuid || typeof data.uuid !== 'string' || !data.uuid.trim()) {
-                throw new Error('Valid heading UUID is required');
-            }
-
-            if (!data.is_member_of_exhibit || typeof data.is_member_of_exhibit !== 'string' || !data.is_member_of_exhibit.trim()) {
-                throw new Error('Valid exhibit UUID is required');
-            }
-
-            if (!data.text || typeof data.text !== 'string' || !data.text.trim()) {
-                throw new Error('Valid heading text is required');
-            }
-
-            // ===== UUID VALIDATION =====
-
-            const uuid_regex = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
-
-            if (!uuid_regex.test(data.uuid.trim())) {
-                throw new Error('Invalid heading UUID format');
-            }
-
-            if (!uuid_regex.test(data.is_member_of_exhibit.trim())) {
-                throw new Error('Invalid exhibit UUID format');
-            }
-
-            // ===== DATABASE VALIDATION =====
-
-            if (!this.DB || typeof this.DB !== 'function') {
-                throw new Error('Database connection is not available');
-            }
-
-            if (!this.TABLE?.heading_records) {
-                throw new Error('Table name "heading_records" is not defined');
-            }
-
-            // ===== SANITIZE AND VALIDATE DATA =====
-
-            const sanitized_data = {};
-            const invalid_fields = [];
-
-            for (const [key, value] of Object.entries(data)) {
-                // Security: prevent prototype pollution
-                if (key === '__proto__' || key === 'constructor' || key === 'prototype') {
-                    LOGGER.module().warn('Dangerous property skipped', { key });
-                    continue;
-                }
-
-                // Whitelist check
-                if (ALLOWED_FIELDS.includes(key)) {
-                    sanitized_data[key] = value;
-                } else {
-                    invalid_fields.push(key);
-                }
-            }
-
-            // Warn about invalid fields
-            if (invalid_fields.length > 0) {
-                LOGGER.module().warn('Invalid fields ignored', {
-                    fields: invalid_fields
-                });
-            }
-
-            // ===== ADD METADATA AND DEFAULTS =====
-
-            // Set default type if not provided
-            if (!sanitized_data.type) {
-                sanitized_data.type = 'heading';
-            }
-
-            // Set default values based on schema defaults
-            if (sanitized_data.order === undefined) {
-                sanitized_data.order = 0;
-            }
-
-            if (sanitized_data.is_visible === undefined) {
-                sanitized_data.is_visible = 1;
-            }
-
-            if (sanitized_data.is_anchor === undefined) {
-                sanitized_data.is_anchor = 1;
-            }
-
-            if (sanitized_data.is_published === undefined) {
-                sanitized_data.is_published = 0;
-            }
-
-            if (sanitized_data.is_locked === undefined) {
-                sanitized_data.is_locked = 0;
-            }
-
-            if (sanitized_data.locked_by_user === undefined) {
-                sanitized_data.locked_by_user = 0;
-            }
-
-            if (sanitized_data.is_indexed === undefined) {
-                sanitized_data.is_indexed = 0;
-            }
-
-            if (sanitized_data.is_deleted === undefined) {
-                sanitized_data.is_deleted = 0;
-            }
-
-            if (sanitized_data.owner === undefined) {
-                sanitized_data.owner = 0;
-            }
+            // Set defaults
+            this._set_heading_defaults(sanitized_data);
 
             // Add created_by and updated_by
             if (created_by) {
@@ -189,57 +388,30 @@ const Exhibit_heading_record_tasks = class {
                 sanitized_data.updated_by = created_by;
             }
 
-            // ===== PERFORM INSERT IN TRANSACTION =====
-
+            // Insert in transaction
             const created_record = await this.DB.transaction(async (trx) => {
-                // Insert the record
                 const [insert_id] = await trx(this.TABLE.heading_records)
                     .insert(sanitized_data)
-                    .timeout(10000);
+                    .timeout(this.QUERY_TIMEOUT);
 
-                // Verify insert succeeded
                 if (!insert_id) {
                     throw new Error('Insert failed: No ID returned');
                 }
 
-                // Fetch and return the created record
                 const record = await trx(this.TABLE.heading_records)
-                    .select(
-                        'id',
-                        'is_member_of_exhibit',
-                        'uuid',
-                        'type',
-                        'text',
-                        'order',
-                        'styles',
-                        'is_visible',
-                        'is_anchor',
-                        'is_published',
-                        'is_locked',
-                        'locked_by_user',
-                        'locked_at',
-                        'is_indexed',
-                        'is_deleted',
-                        'owner',
-                        'created',
-                        'updated',
-                        'created_by',
-                        'updated_by'
-                    )
-                    .where({ id: insert_id })
+                    .select('*')
+                    .where({id: insert_id})
                     .first();
 
                 if (!record) {
                     throw new Error('Failed to retrieve created record');
                 }
 
-                LOGGER.module().info('Heading record created successfully', {
+                this._log_success('Heading record created successfully', {
                     id: insert_id,
                     uuid: record.uuid,
-                    text: record.text.substring(0, 50), // Log first 50 chars
-                    is_member_of_exhibit: record.is_member_of_exhibit,
-                    created_by,
-                    timestamp: new Date().toISOString()
+                    text: record.text.substring(0, 50),
+                    created_by
                 });
 
                 return record;
@@ -254,524 +426,454 @@ const Exhibit_heading_record_tasks = class {
             };
 
         } catch (error) {
-            const error_context = {
-                method: 'create_heading_record',
+            this._handle_error(error, 'create_heading_record', {
                 uuid: data?.uuid,
                 exhibit_uuid: data?.is_member_of_exhibit,
-                data_keys: Object.keys(data || {}),
-                created_by,
-                timestamp: new Date().toISOString(),
-                message: error.message,
-                stack: error.stack
-            };
-
-            LOGGER.module().error(
-                'Failed to create heading record',
-                error_context
-            );
-
-            throw error;
+                created_by
+            });
         }
     }
 
     /**
      * Gets all heading records by exhibit
-     * @param is_member_of_exhibit
+     * @param {string} is_member_of_exhibit - The exhibit UUID
+     * @returns {Promise<Array>} Array of heading records
      */
     async get_heading_records(is_member_of_exhibit) {
-
         try {
+            this._validate_database();
+            this._validate_table('heading_records');
 
-            return await this.DB(this.TABLE.heading_records)
-            .select('*')
-            .where({
-                is_member_of_exhibit: is_member_of_exhibit,
-                is_deleted: 0
+            const exhibit_uuid = this._validate_uuid(is_member_of_exhibit, 'exhibit UUID');
+
+            const records = await this.DB(this.TABLE.heading_records)
+                .select('*')
+                .where({
+                    is_member_of_exhibit: exhibit_uuid,
+                    is_deleted: 0
+                })
+                .orderBy('order', 'asc')
+                .timeout(this.QUERY_TIMEOUT);
+
+            this._log_success('Heading records retrieved successfully', {
+                is_member_of_exhibit: exhibit_uuid,
+                count: records.length
             });
 
+            return records || [];
+
         } catch (error) {
-            LOGGER.module().error('ERROR: [/exhibits/exhibit_heading_record_tasks (get_heading_records)] unable to get heading records ' + error.message);
+            this._handle_error(error, 'get_heading_records', {
+                is_member_of_exhibit
+            });
         }
     }
 
     /**
-     * Retrieves a single heading record by exhibit UUID and heading UUID
-     * @param {string} is_member_of_exhibit - The exhibit UUID this heading belongs to
-     * @param {string} uuid - The heading record UUID
-     * @returns {Promise<Object|null>} Heading record or null if not found
-     * @throws {Error} If validation fails or query fails
+     * Gets a single heading record by exhibit and heading UUID
+     * @param {string} is_member_of_exhibit - The exhibit UUID
+     * @param {string} uuid - The heading UUID
+     * @returns {Promise<Object|null>} Heading record or null
      */
     async get_heading_record(is_member_of_exhibit, uuid) {
-
-        // Define columns to select
-        const HEADING_COLUMNS = [
-            'id',
-            'is_member_of_exhibit',
-            'uuid',
-            'type',
-            'text',
-            'order',
-            'styles',
-            'is_visible',
-            'is_anchor',
-            'is_published',
-            'is_locked',
-            'locked_by_user',
-            'is_deleted',
-            'owner',
-            'created',
-            'updated',
-            'created_by',
-            'updated_by'
-        ];
-
         try {
-            // ===== INPUT VALIDATION =====
+            this._validate_database();
+            this._validate_table('heading_records');
 
-            if (!is_member_of_exhibit || typeof is_member_of_exhibit !== 'string' || !is_member_of_exhibit.trim()) {
-                throw new Error('Valid exhibit UUID is required');
-            }
+            const validated = this._validate_uuids({
+                [is_member_of_exhibit]: 'exhibit UUID',
+                [uuid]: 'heading UUID'
+            });
 
-            if (!uuid || typeof uuid !== 'string' || !uuid.trim()) {
-                throw new Error('Valid heading UUID is required');
-            }
-
-            // Validate is_member_of_exhibit format
-            const uuid_regex = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
-            if (!uuid_regex.test(is_member_of_exhibit.trim())) {
-                throw new Error('Invalid exhibit UUID format');
-            }
-
-            // Validate uuid format
-            if (!uuid_regex.test(uuid.trim())) {
-                throw new Error('Invalid heading UUID format');
-            }
-
-            // ===== DATABASE VALIDATION =====
-
-            if (!this.DB || typeof this.DB !== 'function') {
-                throw new Error('Database connection is not available');
-            }
-
-            if (!this.TABLE?.heading_records) {
-                throw new Error('Table name "heading_records" is not defined');
-            }
-
-            // ===== FETCH HEADING RECORD =====
-
-            const record = await Promise.race([
-                this.DB(this.TABLE.heading_records)
-                    .select(HEADING_COLUMNS)
-                    .where({
-                        is_member_of_exhibit: is_member_of_exhibit.trim(),
-                        uuid: uuid.trim(),
-                        is_deleted: 0
-                    })
-                    .first(),  // Returns single object instead of array
-                new Promise((_, reject) =>
-                    setTimeout(() => reject(new Error('Query timeout')), 10000)
-                )
-            ]);
+            const record = await this.DB(this.TABLE.heading_records)
+                .select('*')
+                .where({
+                    is_member_of_exhibit: validated['exhibit UUID'],
+                    uuid: validated['heading UUID'],
+                    is_deleted: 0
+                })
+                .first()
+                .timeout(this.QUERY_TIMEOUT);
 
             if (!record) {
-                LOGGER.module().info('Heading record not found', {
-                    is_member_of_exhibit: is_member_of_exhibit.trim(),
-                    uuid: uuid.trim()
-                });
+                this._log_success('Heading record not found', validated);
                 return null;
             }
 
-            LOGGER.module().info('Heading record retrieved', {
-                uuid: uuid.trim(),
-                is_member_of_exhibit: is_member_of_exhibit.trim()
+            this._log_success('Heading record retrieved', {
+                uuid: validated['heading UUID']
             });
 
             return record;
 
         } catch (error) {
-            const error_context = {
-                method: 'get_heading_record',
+            this._handle_error(error, 'get_heading_record', {
                 is_member_of_exhibit,
-                uuid,
-                timestamp: new Date().toISOString(),
-                message: error.message,
-                stack: error.stack
-            };
-
-            LOGGER.module().error(
-                'Failed to get heading record',
-                error_context
-            );
-
-            throw error;
+                uuid
+            });
         }
     }
 
     /**
-     * Retrieves a heading record for editing and locks it for the user
-     * @param {string|number} uid - User ID requesting to edit
-     * @param {string} is_member_of_exhibit - The exhibit UUID this heading belongs to
-     * @param {string} uuid - The heading record UUID
-     * @returns {Promise<Object|null>} Heading record with lock status, or null if not found
-     * @throws {Error} If validation fails or retrieval fails
+     * Gets a heading record for editing and locks it
+     * @param {string|number} uid - User ID
+     * @param {string} is_member_of_exhibit - The exhibit UUID
+     * @param {string} uuid - The heading UUID
+     * @returns {Promise<Object|null>} Heading record with lock status
      */
     async get_heading_edit_record(uid, is_member_of_exhibit, uuid) {
-        // Define columns to select
-        const HEADING_COLUMNS = [
-            'id',
-            'is_member_of_exhibit',
-            'uuid',
-            'type',
-            'text',
-            'order',
-            'styles',
-            'is_visible',
-            'is_anchor',
-            'is_published',
-            'is_locked',
-            'locked_by_user',
-            'is_deleted',
-            'is_published',
-            'owner',
-            'created',
-            'updated',
-            'created_by',
-            'updated_by'
-        ];
-
         try {
-            // ===== INPUT VALIDATION =====
+            this._validate_database();
+            this._validate_table('heading_records');
 
             if (uid === null || uid === undefined || uid === '') {
                 throw new Error('Valid user ID is required');
             }
 
-            // Convert uid to number for comparison
             const uid_number = Number(uid);
-
             if (isNaN(uid_number)) {
                 throw new Error('User ID must be a valid number');
             }
 
-            if (!is_member_of_exhibit || typeof is_member_of_exhibit !== 'string' || !is_member_of_exhibit.trim()) {
-                throw new Error('Valid exhibit UUID is required');
-            }
+            const validated = this._validate_uuids({
+                [is_member_of_exhibit]: 'exhibit UUID',
+                [uuid]: 'heading UUID'
+            });
 
-            if (!uuid || typeof uuid !== 'string' || !uuid.trim()) {
-                throw new Error('Valid heading UUID is required');
-            }
-
-            // Validate UUID formats
-            const uuid_regex = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
-
-            if (!uuid_regex.test(is_member_of_exhibit.trim())) {
-                throw new Error('Invalid exhibit UUID format');
-            }
-
-            if (!uuid_regex.test(uuid.trim())) {
-                throw new Error('Invalid heading UUID format');
-            }
-
-            // ===== DATABASE VALIDATION =====
-
-            if (!this.DB || typeof this.DB !== 'function') {
-                throw new Error('Database connection is not available');
-            }
-
-            if (!this.TABLE?.heading_records) {
-                throw new Error('Table name "heading_records" is not defined');
-            }
-
-            // ===== FETCH HEADING RECORD =====
-
-            const record = await Promise.race([
-                this.DB(this.TABLE.heading_records)
-                    .select(HEADING_COLUMNS)
-                    .where({
-                        is_member_of_exhibit: is_member_of_exhibit.trim(),
-                        uuid: uuid.trim(),
-                        is_deleted: 0
-                    })
-                    .first(),  // Returns single object instead of array
-                new Promise((_, reject) =>
-                    setTimeout(() => reject(new Error('Query timeout')), 10000)
-                )
-            ]);
+            const record = await this.DB(this.TABLE.heading_records)
+                .select('*')
+                .where({
+                    is_member_of_exhibit: validated['exhibit UUID'],
+                    uuid: validated['heading UUID'],
+                    is_deleted: 0
+                })
+                .first()
+                .timeout(this.QUERY_TIMEOUT);
 
             if (!record) {
-                LOGGER.module().info('Heading record not found', {
-                    is_member_of_exhibit: is_member_of_exhibit.trim(),
-                    uuid: uuid.trim()
-                });
+                this._log_success('Heading record not found', validated);
                 return null;
             }
 
-            // ===== HANDLE RECORD LOCKING =====
-
-            // If record is not locked, attempt to lock it for this user
+            // Handle locking
             if (record.is_locked === 0) {
                 try {
-                    const HELPER_TASK = new HELPER(); // _Number // TODO normalize - uid does not need to be cast here
+                    const HELPER_TASK = new HELPER();
                     await HELPER_TASK.lock_record(
                         uid,
-                        uuid.trim(),
+                        validated['heading UUID'],
                         this.DB,
                         this.TABLE.heading_records
                     );
 
-                    // Update the record object with lock status
                     record.is_locked = 1;
                     record.locked_by_user = uid_number;
 
-                    LOGGER.module().info('Heading record locked for editing', {
-                        uuid: uuid.trim(),
+                    this._log_success('Heading record locked for editing', {
+                        uuid: validated['heading UUID'],
                         locked_by: uid_number
                     });
 
                 } catch (lock_error) {
-                    LOGGER.module().error('Failed to lock heading record', {
-                        uuid: uuid.trim(),
-                        uid: uid_number,
+                    LOGGER.module().warn('Failed to lock heading record', {
+                        uuid: validated['heading UUID'],
                         error: lock_error.message
-                    });
-
-                    // Return record without lock if locking fails
-                    LOGGER.module().warn('Returning record without lock', {
-                        uuid: uuid.trim()
                     });
                 }
             } else {
-                // Record is already locked
                 const locked_by_number = Number(record.locked_by_user);
-
-                if (locked_by_number === uid_number) {
-                    LOGGER.module().info('Heading record already locked by this user', {
-                        uuid: uuid.trim(),
-                        uid: uid_number
-                    });
-                } else {
-                    LOGGER.module().info('Heading record already locked by another user', {
-                        uuid: uuid.trim(),
-                        locked_by: record.locked_by_user,
-                        requested_by: uid_number
-                    });
-                }
+                const status = locked_by_number === uid_number ? 'by this user' : 'by another user';
+                this._log_success(`Heading record already locked ${status}`, {
+                    uuid: validated['heading UUID'],
+                    locked_by: record.locked_by_user
+                });
             }
 
             return record;
 
         } catch (error) {
-            const error_context = {
-                method: 'get_heading_edit_record',
+            this._handle_error(error, 'get_heading_edit_record', {
                 uid,
-                is_member_of_exhibit,
-                uuid,
-                timestamp: new Date().toISOString(),
-                message: error.message,
-                stack: error.stack
-            };
+                uuid
+            });
+        }
+    }
 
-            LOGGER.module().error(
-                'Failed to get heading edit record',
-                error_context
+    /**
+     * Updates a heading record
+     * @param {Object} data - Heading data to update
+     * @param {string} [updated_by=null] - User ID performing the update
+     * @returns {Promise<Object>} Update result
+     */
+    async update_heading_record(data, updated_by = null) {
+
+        const UPDATABLE_FIELDS = [
+            'type', 'text', 'order', 'styles', 'is_visible', 'is_anchor',
+            'is_published', 'is_locked', 'locked_by_user', 'locked_at',
+            'is_indexed', 'owner'
+        ];
+
+        try {
+            this._validate_data_object(data);
+            this._validate_database();
+            this._validate_table('heading_records');
+
+            const validated = this._validate_uuids({
+                [data.uuid]: 'heading UUID',
+                [data.is_member_of_exhibit]: 'exhibit UUID'
+            });
+
+            const {sanitized_data} = this._sanitize_data(
+                data,
+                UPDATABLE_FIELDS,
+                ['uuid', 'is_member_of_exhibit']
             );
 
-            throw error;
-        }
-    }
+            if (Object.keys(sanitized_data).length === 0) {
+                return {
+                    success: true,
+                    no_change: true,
+                    uuid: validated['heading UUID'],
+                    affected_rows: 0,
+                    message: 'No fields to update'
+                };
+            }
 
-    /**
-     * Updates item record
-     * @param data
-     */
-    async update_heading_record(data) {
+            if (updated_by) {
+                sanitized_data.updated_by = updated_by;
+            }
 
-        try {
+            // Check record exists
+            const existing = await this.DB(this.TABLE.heading_records)
+                .select('id', 'uuid', 'is_deleted')
+                .where({
+                    is_member_of_exhibit: validated['exhibit UUID'],
+                    uuid: validated['heading UUID']
+                })
+                .first()
+                .timeout(this.QUERY_TIMEOUT);
 
-            await this.DB(this.TABLE.heading_records)
-            .where({
-                is_member_of_exhibit: data.is_member_of_exhibit,
-                uuid: data.uuid
-            })
-            .update(data);
+            if (!existing) {
+                throw new Error('Heading record not found');
+            }
 
-            LOGGER.module().info('INFO: [/exhibits/exhibit_heading_record_tasks (update_heading_record)] Heading record updated.');
-            return true;
+            if (existing.is_deleted === 1) {
+                throw new Error('Cannot update deleted heading record');
+            }
 
-        } catch (error) {
-            LOGGER.module().error('ERROR: [/exhibits/exhibit_heading_record_tasks (update_heading_record)] unable to update heading record ' + error.message);
-        }
-    }
+            const affected_rows = await this.DB(this.TABLE.heading_records)
+                .where({
+                    is_member_of_exhibit: validated['exhibit UUID'],
+                    uuid: validated['heading UUID'],
+                    is_deleted: 0
+                })
+                .update(sanitized_data)
+                .timeout(this.QUERY_TIMEOUT);
 
-    /**
-     * Deletes heading record
-     * @param is_member_of_exhibit
-     * @param uuid
-     */
-    async delete_heading_record(is_member_of_exhibit, uuid) {
+            if (affected_rows === 0) {
+                throw new Error('Update failed: No rows affected');
+            }
 
-        try {
-
-            await this.DB(this.TABLE.heading_records)
-            .where({
-                is_member_of_exhibit: is_member_of_exhibit,
-                uuid: uuid
-            })
-            .update({
-                is_deleted: 1
+            this._log_success('Heading record updated successfully', {
+                uuid: validated['heading UUID'],
+                fields_updated: Object.keys(sanitized_data),
+                affected_rows,
+                updated_by
             });
 
-            LOGGER.module().info('INFO: [/exhibits/exhibit_heading_record_tasks (delete_heading_record)] Heading record deleted.');
-            return true;
+            return {
+                success: true,
+                uuid: validated['heading UUID'],
+                affected_rows,
+                fields_updated: Object.keys(sanitized_data),
+                message: 'Heading record updated successfully'
+            };
 
         } catch (error) {
-            LOGGER.module().error('ERROR: [/exhibits/exhibit_heading_record_tasks (delete_heading_record)] unable to delete heading record ' + error.message);
+            this._handle_error(error, 'update_heading_record', {
+                uuid: data?.uuid,
+                updated_by
+            });
         }
     }
 
     /**
-     * Gets heading record count
-     * @param uuid
+     * Gets the count of heading records for an exhibit
+     * @param {string} uuid - The exhibit UUID
+     * @returns {Promise<number>} Count of heading records
      */
     async get_record_count(uuid) {
-
         try {
+            this._validate_database();
+            this._validate_table('heading_records');
 
-            const count = await this.DB(this.TABLE.heading_records).count('id as count')
-            .where({
-                is_member_of_exhibit: uuid
+            const exhibit_uuid = this._validate_uuid(uuid, 'exhibit UUID');
+
+            const result = await this.DB(this.TABLE.heading_records)
+                .count('id as count')
+                .where({is_member_of_exhibit: exhibit_uuid})
+                .timeout(this.QUERY_TIMEOUT);
+
+            const count = result?.[0]?.count ? parseInt(result[0].count, 10) : 0;
+
+            this._log_success('Heading record count retrieved', {
+                is_member_of_exhibit: exhibit_uuid,
+                count
             });
 
-            return count[0].count;
+            return count;
 
         } catch (error) {
-            LOGGER.module().error('ERROR: [/exhibits/exhibit_heading_record_tasks (get_record_count)] unable to get heading record count ' + error.message);
+            this._handle_error(error, 'get_record_count', {uuid});
         }
     }
 
+    // ==================== PUBLISHING / SUPPRESSING ====================
+
     /**
-     * Sets is_published flogs to true for heading records
-     * @param uuid
+     * Publishes all headings for an exhibit
+     * @param {string} uuid - Exhibit UUID
+     * @param {string} [published_by=null] - User ID
+     * @returns {Promise<boolean>} Success status
      */
-    async set_to_publish(uuid) {
-
+    async set_to_publish(uuid, published_by = null) {
         try {
+            const exhibit_uuid = this._validate_uuid(uuid, 'exhibit UUID');
 
-            await this.DB(this.TABLE.heading_records)
-            .where({
-                is_member_of_exhibit: uuid
-            })
-            .update({
-                is_published: 1
+            const result = await this._update_publish_status(
+                'heading_records',
+                {is_member_of_exhibit: exhibit_uuid},
+                1,
+                published_by
+            );
+
+            this._log_success('Heading records published', {
+                exhibit_uuid,
+                affected_rows: result.affected_rows
             });
 
-            LOGGER.module().info('INFO: [/exhibits/exhibit_heading_record_tasks (set_to_publish)] Heading is_published set.');
             return true;
 
         } catch (error) {
-            LOGGER.module().error('ERROR: [/exhibits/exhibit_heading_record_tasks (set_to_publish)] unable to set heading is_published ' + error.message);
+            LOGGER.module().error('Failed to publish heading records: ' + error.message);
             return false;
         }
     }
 
     /**
-     * Sets is_published flog to true
-     * @param uuid
+     * Publishes a single heading
+     * @param {string} uuid - Heading UUID
+     * @param {string} [published_by=null] - User ID
+     * @returns {Promise<boolean>} Success status
      */
-    async set_heading_to_publish(uuid) {
-
+    async set_heading_to_publish(uuid, published_by = null) {
         try {
+            const result = await this._update_single_publish_status(
+                'heading_records',
+                uuid,
+                1,
+                published_by
+            );
 
-            await this.DB(this.TABLE.heading_records)
-            .where({
-                uuid: uuid
-            })
-            .update({
-                is_published: 1
+            this._log_success('Heading record published', {
+                uuid,
+                affected_rows: result.affected_rows
             });
 
-            LOGGER.module().info('INFO: [/exhibits/exhibit_item_record_tasks (set_heading_to_publish)] Heading is_published set.');
             return true;
 
         } catch (error) {
-            LOGGER.module().error('ERROR: [/exhibits/exhibit_item_record_tasks (set_heading_to_publish)] unable to set heading is_published ' + error.message);
+            LOGGER.module().error('Failed to publish heading record: ' + error.message);
             return false;
         }
     }
 
     /**
-     * Sets is_published flogs to false for heading records
-     * @param uuid
+     * Suppresses all headings for an exhibit
+     * @param {string} uuid - Exhibit UUID
+     * @param {string} [unpublished_by=null] - User ID
+     * @returns {Promise<boolean>} Success status
      */
-    async set_to_suppress(uuid) {
-
+    async set_to_suppress(uuid, unpublished_by = null) {
         try {
+            const exhibit_uuid = this._validate_uuid(uuid, 'exhibit UUID');
 
-            await this.DB(this.TABLE.heading_records)
-            .where({
-                is_member_of_exhibit: uuid
-            })
-            .update({
-                is_published: 0
+            const result = await this._update_publish_status(
+                'heading_records',
+                {is_member_of_exhibit: exhibit_uuid},
+                0,
+                unpublished_by
+            );
+
+            this._log_success('Heading records suppressed', {
+                exhibit_uuid,
+                affected_rows: result.affected_rows
             });
 
-            LOGGER.module().info('INFO: [/exhibits/exhibit_heading_record_tasks (set_to_suppress)] Heading is_published set.');
             return true;
 
         } catch (error) {
-            LOGGER.module().error('ERROR: [/exhibits/exhibit_heading_record_tasks (set_to_suppress)] unable to set heading is_published. ' + error.message);
+            LOGGER.module().error('Failed to suppress heading records: ' + error.message);
             return false;
         }
     }
 
     /**
-     * Sets is_published flog to false
-     * @param uuid
+     * Suppresses a single heading
+     * @param {string} uuid - Heading UUID
+     * @param {string} [unpublished_by=null] - User ID
+     * @returns {Promise<boolean>} Success status
      */
-    async set_heading_to_suppress(uuid) {
-
+    async set_heading_to_suppress(uuid, unpublished_by = null) {
         try {
+            const result = await this._update_single_publish_status(
+                'heading_records',
+                uuid,
+                0,
+                unpublished_by
+            );
 
-            await this.DB(this.TABLE.heading_records)
-            .where({
-                uuid: uuid
-            })
-            .update({
-                is_published: 0
+            this._log_success('Heading record suppressed', {
+                uuid,
+                affected_rows: result.affected_rows
             });
 
-            LOGGER.module().info('INFO: [/exhibits/exhibit_item_record_tasks (set_heading_to_suppress)] Heading is_published set.');
             return true;
 
         } catch (error) {
-            LOGGER.module().error('ERROR: [/exhibits/exhibit_item_record_tasks (set_heading_to_suppress)] unable to set heading is_published. ' + error.message);
+            LOGGER.module().error('Failed to suppress heading record: ' + error.message);
             return false;
         }
     }
+
+    // ==================== REORDERING ====================
 
     /**
      * Reorders headings
-     * @param is_member_of_exhibit
-     * @param heading
+     * @param {string} is_member_of_exhibit - Exhibit UUID
+     * @param {Object} heading - Heading object with uuid and order
+     * @returns {Promise<boolean>} Reorder success status
      */
     async reorder_headings(is_member_of_exhibit, heading) {
-
         try {
+            const exhibit_uuid = this._validate_uuid(is_member_of_exhibit, 'exhibit UUID');
 
-            await this.DB(this.TABLE.heading_records)
-            .where({
-                is_member_of_exhibit: is_member_of_exhibit,
-                uuid: heading.uuid
-            })
-            .update({
+            await this._reorder_items(
+                'heading_records',
+                {is_member_of_exhibit: exhibit_uuid},
+                heading
+            );
+
+            this._log_success('Heading reordered', {
+                exhibit_uuid,
+                uuid: heading.uuid,
                 order: heading.order
             });
 
-            LOGGER.module().info('INFO: [/exhibits/exhibit_heading_record_tasks (reorder_headings)] Heading reordered.');
             return true;
 
         } catch (error) {
-            LOGGER.module().error('ERROR: [/exhibits/exhibit_heading_record_tasks (reorder_headings)] unable to reorder heading ' + error.message);
+            LOGGER.module().error('Failed to reorder heading: ' + error.message);
             return false;
         }
     }
