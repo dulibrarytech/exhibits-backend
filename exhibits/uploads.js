@@ -18,54 +18,198 @@
 
 'use strict';
 
+const path = require('path');
+const crypto = require('crypto');
+const multer = require('multer');
+const fs = require('fs').promises;
+
+// Configuration
+const storage_config = require('../config/storage_config')();
 const APP_PATH = '/exhibits-dashboard';
-const MULTER = require('multer');
-const STORAGE_CONFIG = require('../config/storage_config')();
-const STORAGE = STORAGE_CONFIG.storage_path;
-const LIMIT = STORAGE_CONFIG.upload_max;
+const STORAGE_PATH = storage_config.storage_path;
+const MAX_FILE_SIZE = storage_config.upload_max;
+const MAX_FILES = 10;
 
-module.exports = function (app) {
+// Security: Define allowed file types
+const ALLOWED_MIME_TYPES = [
+    'image/jpeg',
+    'image/png',
+    'image/gif',
+    'image/webp',
+    'application/pdf'
+];
 
-    const FILTER = function(req, file, callback) {
+const ALLOWED_EXTENSIONS = ['.jpg', '.jpeg', '.png', '.gif', '.webp', '.pdf'];
 
-        /* TODO: set allowed mime types
-        if (!file.originalname.match(/\.(jpg)$/)) {
-            LOGGER.module().error('ERROR: Upload Failed. File is not .jpg');
-            callback(null, false);
+/**
+ * Sanitizes filename to prevent path traversal and ensure cross-platform compatibility
+ * @param {string} original_name - Original uploaded filename
+ * @returns {string} Sanitized, unique filename
+ */
+const sanitize_filename = (original_name) => {
+    const ext = path.extname(original_name).toLowerCase();
+    const base_name = path.basename(original_name, ext);
+
+    // Remove unsafe characters, limit length
+    const safe_name = base_name
+        .replace(/\s+/g, '_')
+        .replace(/[^a-z0-9_-]/gi, '')
+        .substring(0, 100)
+        .toLowerCase();
+
+    return `${safe_name}${ext}`;
+};
+
+/**
+ * Validates file type against whitelist
+ * @param {Object} file - Multer file object
+ * @returns {boolean} True if file type is allowed
+ */
+const is_valid_file_type = (file) => {
+    const ext = path.extname(file.originalname).toLowerCase();
+    return ALLOWED_MIME_TYPES.includes(file.mimetype) &&
+        ALLOWED_EXTENSIONS.includes(ext);
+};
+
+/**
+ * Multer file filter for validation
+ */
+const file_filter = (req, file, callback) => {
+    if (!is_valid_file_type(file)) {
+        const error = new Error(
+            `Invalid file type. Allowed: ${ALLOWED_EXTENSIONS.join(', ')}`
+        );
+        error.code = 'INVALID_FILE_TYPE';
+        return callback(error, false);
+    }
+    callback(null, true);
+};
+
+/**
+ * Multer storage configuration
+ */
+const storage = multer.diskStorage({
+    destination: async (req, file, callback) => {
+        try {
+            // Ensure directory exists
+            await fs.access(STORAGE_PATH);
+            callback(null, STORAGE_PATH);
+        } catch (error) {
+            callback(new Error('Storage directory not accessible'));
         }
-        */
-
-        callback(null, true);
-    };
-
-    let storage = MULTER.diskStorage({
-        destination: function (req, file, callback) {
-            callback(null, STORAGE);
-        },
-        filename: function (req, file, callback) {
-            let tmp = file.originalname.replace(/\s+/g, '').trim();
-            let filename = tmp.replace(/[/\\?%*:|"<>]/g, '-').toLowerCase();
-            callback(null, filename);
+    },
+    filename: (req, file, callback) => {
+        try {
+            const safe_filename = sanitize_filename(file.originalname);
+            callback(null, safe_filename);
+        } catch (error) {
+            callback(error);
         }
-    });
+    }
+});
 
-    let upload = MULTER({ storage: storage, fileFilter: FILTER, limits: { fileSize: LIMIT} });
+/**
+ * Multer instance with security constraints
+ */
+const upload = multer({
+    storage: storage,
+    fileFilter: file_filter,
+    limits: {
+        fileSize: MAX_FILE_SIZE,
+        files: MAX_FILES
+    }
+});
 
-    app.post(APP_PATH + '/uploads', upload.any(), function (req, res) {
+/**
+ * Upload request handler
+ */
+const handle_upload = async (req, res) => {
+    try {
+        const files = req.files;
 
-        let files = res.req.files;
-        let file_arr = [];
-        let file_obj = {};
-
-        for (let i=0;i<files.length;i++) {
-            file_obj.filename = files[i].filename;
-            file_obj.file_size = files[i].size;
-            file_arr.push(file_obj);
-            file_obj = {};
+        if (!files || files.length === 0) {
+            return res.status(400).json({
+                error: 'No files uploaded',
+                code: 'NO_FILES'
+            });
         }
 
-        res.status(201).send({
-            files: file_arr
+        // Transform file data for response
+        const uploaded_files = files.map(file => ({
+            filename: file.filename,
+            original_name: file.originalname,
+            file_size: file.size,
+            mime_type: file.mimetype,
+            path: path.join(STORAGE_PATH, file.filename),
+            uploaded_at: new Date().toISOString()
+        }));
+
+        return res.status(201).json({
+            success: true,
+            count: uploaded_files.length,
+            files: uploaded_files
         });
+
+    } catch (error) {
+        console.error('Upload processing error:', error);
+        return res.status(500).json({
+            error: 'Failed to process upload',
+            code: 'PROCESSING_ERROR'
+        });
+    }
+};
+
+/**
+ * Error handling middleware for multer errors
+ */
+const handle_upload_error = (error, req, res, next) => {
+    console.error('Upload error:', error);
+
+    // Handle specific multer errors
+    if (error.code === 'LIMIT_FILE_SIZE') {
+        return res.status(413).json({
+            error: `File exceeds maximum size of ${MAX_FILE_SIZE} bytes`,
+            code: 'FILE_TOO_LARGE'
+        });
+    }
+
+    if (error.code === 'LIMIT_FILE_COUNT') {
+        return res.status(400).json({
+            error: `Maximum ${MAX_FILES} files allowed`,
+            code: 'TOO_MANY_FILES'
+        });
+    }
+
+    if (error.code === 'INVALID_FILE_TYPE') {
+        return res.status(400).json({
+            error: error.message,
+            code: 'INVALID_FILE_TYPE'
+        });
+    }
+
+    if (error.code === 'LIMIT_UNEXPECTED_FILE') {
+        return res.status(400).json({
+            error: 'Unexpected field name',
+            code: 'INVALID_FIELD'
+        });
+    }
+
+    // Generic error
+    return res.status(500).json({
+        error: 'Upload failed',
+        code: 'UPLOAD_ERROR'
     });
+};
+
+/**
+ * Register upload routes
+ * @param {Object} app - Express application instance
+ */
+module.exports = (app) => {
+    app.post(
+        `${APP_PATH}/uploads`,
+        upload.array('files', MAX_FILES),
+        handle_upload,
+        handle_upload_error
+    );
 };
