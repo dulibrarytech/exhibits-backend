@@ -1,0 +1,304 @@
+<style>
+    /* Form labels and text */
+    .form-label {
+        font-size: 1.0625rem; /* 17px */
+        color: #6c757d;
+        display: block;
+        margin-bottom: 0.5rem;
+        font-weight: 500;
+    }
+
+    .required-indicator {
+        color: #dc3545;
+        font-weight: bold;
+        margin-right: 0.25rem;
+    }
+
+    .field-note {
+        font-size: 0.875rem;
+        font-style: italic;
+    }
+
+    /* Preview buttons */
+    .preview-btn {
+        margin-left: 0.5rem;
+        padding: 0.25rem 0.5rem;
+        vertical-align: middle;
+    }
+
+    .preview-btn .btn-text {
+        font-size: 0.875rem;
+    }
+
+    /* Created date */
+    .created-date {
+        text-align: right;
+        font-size: 0.75rem; /* 12px - minimum readable size */
+    }
+
+    /* Checkbox groups */
+    .checkbox-fieldset {
+        border: none;
+        padding: 1.25rem 0 0 0;
+        margin: 0;
+    }
+
+    .checkbox-description {
+        margin-bottom: 0.5rem;
+    }
+
+    .form-check {
+        padding-left: 0;
+    }
+
+    .form-check-input {
+        margin-right: 0.5rem;
+        cursor: pointer;
+    }
+
+    .form-check-label {
+        cursor: pointer;
+        font-weight: 500;
+    }
+
+    /* Error messages */
+    .is-error {
+        display: block;
+        color: #dc3545;
+        font-size: 0.875rem;
+        margin-top: 0.25rem;
+        margin-bottom: 0.5rem;
+    }
+
+    .is-error:empty {
+        display: none;
+    }
+
+    /* Screen reader only class */
+    .sr-only {
+        position: absolute;
+        width: 1px;
+        height: 1px;
+        padding: 0;
+        margin: -1px;
+        overflow: hidden;
+        clip: rect(0, 0, 0, 0);
+        white-space: nowrap;
+        border-width: 0;
+    }
+
+    /* Focus indicators */
+    .form-control:focus,
+    .form-check-input:focus {
+        outline: 2px solid #0056b3;
+        outline-offset: 2px;
+    }
+
+    button:focus {
+        outline: 2px solid #0056b3;
+        outline-offset: 2px;
+    }
+</style>
+<div id="exhibit-data-card" class="card">
+    <div class="card-header">
+        <h2 class="card-title mb-3">Exhibit Data</h2>
+        <div class="btn-group float-right">
+            <span id="created" class="created-date" aria-label="Creation date"></span>
+        </div>
+    </div>
+    <div class="card-body">
+        <div class="row">
+            <div class="col-12 col-md-12">
+                <div class="row form-group">
+                    <div class="col-12">
+                        <label for="exhibit-title-input" class="form-label">
+                            <span class="required-indicator" aria-label="required">*</span>
+                            Title
+                            <span class="field-note">(Required)</span>
+                        </label>
+                        <button type="button"
+                                class="btn btn-xs btn-light preview-btn"
+                                onclick="helperModule.preview_html('exhibit-title-input');return false;"
+                                data-toggle="modal"
+                                data-target=".preview-html"
+                                aria-label="Preview title field">
+                            <i class="fa fa-code" aria-hidden="true"></i>
+                            <span class="btn-text">Preview Field</span>
+                        </button>
+                        <span id="exhibit-title-error" class="is-error" role="alert" aria-live="polite"></span>
+                        <textarea id="exhibit-title-input"
+                                  class="form-control"
+                                  name="exhibit_title_input"
+                                  rows="4"
+                                  required
+                                  aria-required="true"
+                                  aria-describedby="exhibit-title-error"></textarea>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="row">
+            <div class="col-12 col-md-12">
+                <div class="row form-group">
+                    <div class="col-12">
+                        <label for="exhibit-sub-title-input" class="form-label">
+                            Sub Title
+                            <span class="field-note">(Optional)</span>
+                        </label>
+                        <button type="button"
+                                class="btn btn-xs btn-light preview-btn"
+                                onclick="helperModule.preview_html('exhibit-sub-title-input');return false;"
+                                data-toggle="modal"
+                                data-target=".preview-html"
+                                aria-label="Preview sub title field">
+                            <i class="fa fa-code" aria-hidden="true"></i>
+                            <span class="btn-text">Preview Field</span>
+                        </button>
+                        <textarea id="exhibit-sub-title-input"
+                                  class="form-control"
+                                  name="exhibit_sub_title_input"
+                                  rows="4"></textarea>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="row">
+            <div class="col-12 col-md-12">
+                <div class="row form-group">
+                    <div class="col-12">
+                        <label for="exhibit-description-input" class="form-label">
+                            Introduction
+                            <span class="field-note">(Optional)</span>
+                        </label>
+                        <button type="button"
+                                class="btn btn-xs btn-light preview-btn"
+                                onclick="helperModule.preview_html('exhibit-description-input');return false;"
+                                data-toggle="modal"
+                                data-target=".preview-html"
+                                aria-label="Preview introduction field">
+                            <i class="fa fa-code" aria-hidden="true"></i>
+                            <span class="btn-text">Preview Field</span>
+                        </button>
+                        <textarea id="exhibit-description-input"
+                                  class="form-control"
+                                  name="exhibit_description_input"
+                                  rows="4"></textarea>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="row">
+            <div class="col-12 col-md-12">
+                <div class="row form-group">
+                    <div class="col-12">
+                        <label for="exhibit-about-the-curators-input" class="form-label">
+                            About the curators
+                            <span class="field-note">(Optional)</span>
+                        </label>
+                        <button type="button"
+                                class="btn btn-xs btn-light preview-btn"
+                                onclick="helperModule.preview_html('exhibit-about-the-curators-input');return false;"
+                                data-toggle="modal"
+                                data-target=".preview-html"
+                                aria-label="Preview about the curators field">
+                            <i class="fa fa-code" aria-hidden="true"></i>
+                            <span class="btn-text">Preview Field</span>
+                        </button>
+                        <textarea id="exhibit-about-the-curators-input"
+                                  class="form-control"
+                                  name="exhibit_about_the_curators_input"
+                                  rows="4"></textarea>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="row">
+            <div class="col-6 col-md-6">
+                <div class="row form-group">
+                    <div class="col-12">
+                        <fieldset class="checkbox-fieldset">
+                            <legend class="sr-only">Content disclaimer options</legend>
+                            <p class="form-text text-muted checkbox-description">
+                                <i class="fa fa-exclamation-circle" aria-hidden="true"></i>
+                                Click to add content disclaimer
+                            </p>
+                            <div class="form-check">
+                                <input type="checkbox"
+                                       class="form-check-input"
+                                       id="is-content-advisory"
+                                       name="is_content_advisory"
+                                       aria-describedby="exhibit-content-advisory">
+                                <label class="form-check-label" for="is-content-advisory">
+                                    Harmful Content Disclaimer
+                                </label>
+                            </div>
+                            <small id="exhibit-content-advisory" class="form-text text-muted">
+                                "Content Advisory: This exhibit may include materials containing racist, colonialist, or otherwise harmful content. Some items may be upsetting or traumatizing. Please engage with care."
+                            </small>
+                            <input type="hidden"
+                                   id="exhibit-alert-text-input"
+                                   name="exhibit_alert_text_input"
+                                   value="Content Advisory: This exhibit may include materials containing racist, colonialist, or otherwise harmful content. Some items may be upsetting or traumatizing. Please engage with care.">
+                        </fieldset>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <hr>
+
+        <div class="row">
+            <div class="col-12 col-md-12">
+                <div class="row form-group">
+                    <div class="col-12">
+                        <fieldset class="checkbox-fieldset">
+                            <legend class="sr-only">Exhibit display options</legend>
+                            <p class="form-text text-muted checkbox-description">
+                                <i class="fa fa-exclamation-circle" aria-hidden="true"></i>
+                                Exhibit will be featured on the main page
+                            </p>
+                            <div class="form-check">
+                                <input type="checkbox"
+                                       class="form-check-input"
+                                       id="is-featured"
+                                       name="is_featured">
+                                <label class="form-check-label" for="is-featured">
+                                    Feature exhibit
+                                </label>
+                            </div>
+                        </fieldset>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="row">
+            <div class="col-12 col-md-12">
+                <div class="row form-group">
+                    <div class="col-12">
+                        <fieldset class="checkbox-fieldset">
+                            <legend class="sr-only">Curation type</legend>
+                            <p class="form-text text-muted checkbox-description">
+                                <i class="fa fa-exclamation-circle" aria-hidden="true"></i>
+                                Student curated exhibit
+                            </p>
+                            <div class="form-check">
+                                <input type="checkbox"
+                                       class="form-check-input"
+                                       id="is-student-curated"
+                                       name="is_student_curated">
+                                <label class="form-check-label" for="is-student-curated">
+                                    Student Curated
+                                </label>
+                            </div>
+                        </fieldset>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

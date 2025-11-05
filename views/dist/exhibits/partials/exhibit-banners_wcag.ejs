@@ -1,0 +1,23 @@
+<style>/* Add this to your stylesheet */
+    .banner-option-text {
+        font-size: 0.875rem; /* 14px, minimum recommended for body text */
+        line-height: 1.4;
+    }
+
+    .sr-only {
+        position: absolute;
+        width: 1px;
+        height: 1px;
+        padding: 0;
+        margin: -1px;
+        overflow: hidden;
+        clip: rect(0, 0, 0, 0);
+        white-space: nowrap;
+        border-width: 0;
+    }
+
+    /* Ensure focus indicators are visible */
+    .btn-check:focus + .btn {
+        outline: 2px solid #005fcc;
+        outline-offset: 2px;
+    }</style><div id="exhibit-banner-card" class="card"><div class="card-header"><h2 class="card-title mb-3">Exhibit Banner</h2></div><div class="card-body"><fieldset><legend class="sr-only">Select a banner template</legend><div class="row"><div class="col-4 col-md-4"><p><img src="/exhibits-dashboard/static/images/banner_1.png" alt="Banner template 1: Hero image positioned above description text with no title"></p><p><label class="btn btn-default" for="exhibit-banner-1"><input type="radio" class="btn-check" name="banner_template" id="exhibit-banner-1" value="banner_1" autocomplete="off" checked="checked"> <span class="banner-option-text">Hero image above description, no title</span></label></p></div><div class="col-4 col-md-4"><p><img src="/exhibits-dashboard/static/images/banner_2.png" alt="Banner template 2: Hero image positioned above title and description text"></p><p><label class="btn btn-default" for="exhibit-banner-2"><input type="radio" class="btn-check" name="banner_template" id="exhibit-banner-2" value="banner_2" autocomplete="off"> <span class="banner-option-text">Hero image above title and description</span></label></p></div><div class="col-4 col-md-4"><p><img src="/exhibits-dashboard/static/images/banner_3.png" alt="Banner template 3: Hero image with title text overlaid on image, positioned above description text"></p><p><label class="btn btn-default" for="exhibit-banner-3"><input type="radio" class="btn-check" name="banner_template" id="exhibit-banner-3" value="banner_3" autocomplete="off"> <span class="banner-option-text">Hero image above description, title text over image</span></label></p></div></div><div class="row"><div class="col-4 col-md-4"><p><img src="/exhibits-dashboard/static/images/banner_4.png" alt="Banner template 4: Hero image and title text positioned side by side above description text"></p><p><label class="btn btn-default" for="exhibit-banner-4"><input type="radio" class="btn-check" name="banner_template" id="exhibit-banner-4" value="banner_4" autocomplete="off"> <span class="banner-option-text">Hero image and title text above description</span></label></p></div></div></fieldset></div></div>

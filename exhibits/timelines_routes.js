@@ -19,7 +19,8 @@
 'use strict';
 
 const CONTROLLER = require('../exhibits/timelines_controller');
-const ENDPOINTS = require('../exhibits/endpoints');
+// const ENDPOINTS = require('../exhibits/endpoints');
+const ENDPOINTS = require('../exhibits/endpoints/index');
 const TOKEN = require('../libs/tokens');
 
 module.exports = function (app) {

@@ -1179,10 +1179,235 @@ const helperMediaModule = (function () {
     };
     */
 
+    obj.toggle_alt_text = function() {
+
+        /**
+         * Display error message (XSS-safe)
+         */
+        const display_error_message = (message) => {
+            const message_element = document.querySelector('#message');
+
+            if (!message_element) {
+                console.error('Message element not found:', message);
+                return;
+            }
+
+            const alert_div = document.createElement('div');
+            alert_div.className = 'alert alert-danger';
+            alert_div.setAttribute('role', 'alert');
+
+            const icon = document.createElement('i');
+            icon.className = 'fa fa-exclamation';
+            alert_div.appendChild(icon);
+
+            const text_node = document.createTextNode(` ${message}`);
+            alert_div.appendChild(text_node);
+
+            message_element.textContent = '';
+            message_element.appendChild(alert_div);
+        };
+
+        /**
+         * Update ARIA attributes for accessibility
+         */
+        const update_aria_attributes = (input_element, is_disabled) => {
+            if (!input_element) {
+                return;
+            }
+
+            if (is_disabled) {
+                input_element.setAttribute('aria-label', 'Alt text (decorative image - disabled)');
+                input_element.setAttribute('aria-disabled', 'true');
+            } else {
+                input_element.setAttribute('aria-label', 'Alt text for image');
+                input_element.setAttribute('aria-disabled', 'false');
+            }
+        };
+
+        /**
+         * Clear alt text when marking as decorative
+         */
+        const handle_decorative_state = (input_element, is_disabled) => {
+            if (!input_element) {
+                return;
+            }
+
+            if (is_disabled) {
+                // Store current value in case user wants to undo
+                input_element.setAttribute('data-previous-value', input_element.value);
+                input_element.value = '';
+                input_element.placeholder = 'Decorative image (no alt text needed)';
+            } else {
+                // Restore previous value if it exists
+                const previous_value = input_element.getAttribute('data-previous-value');
+                if (previous_value) {
+                    input_element.value = previous_value;
+                    input_element.removeAttribute('data-previous-value');
+                }
+                input_element.placeholder = 'Enter descriptive alt text for the image';
+            }
+        };
+
+        /**
+         * Update related checkbox if it exists
+         */
+        const update_decorative_checkbox = (is_disabled) => {
+            const decorative_checkbox = document.querySelector('#is-decorative-image, #image-is-decorative');
+
+            if (decorative_checkbox) {
+                decorative_checkbox.checked = is_disabled;
+            }
+        };
+
+        try {
+            // Get alt text input element
+            const alt_text_input = document.querySelector('#item-alt-text-input');
+
+            // Validate element exists
+            if (!alt_text_input) {
+                console.error('Alt text input element (#item-alt-text-input) not found');
+                display_error_message('Alt text input field not found');
+                return false;
+            }
+
+            // Get current disabled state
+            const is_currently_disabled = alt_text_input.disabled;
+
+            // Toggle the disabled state (simplified logic)
+            const new_disabled_state = !is_currently_disabled;
+            alt_text_input.disabled = new_disabled_state;
+
+            // Update ARIA attributes for accessibility
+            update_aria_attributes(alt_text_input, new_disabled_state);
+
+            // Handle decorative state (clear/restore value)
+            handle_decorative_state(alt_text_input, new_disabled_state);
+
+            // Update related checkbox if it exists
+            update_decorative_checkbox(new_disabled_state);
+
+            // Log state change for debugging
+            console.log(`Alt text input ${new_disabled_state ? 'disabled' : 'enabled'} (decorative: ${new_disabled_state})`);
+
+            // Return the new state
+            return {
+                disabled: new_disabled_state,
+                is_decorative: new_disabled_state
+            };
+
+        } catch (error) {
+            console.error('Error toggling alt text:', error);
+            display_error_message('Unable to toggle alt text field. Please try again.');
+            return false;
+        }
+    };
+
+    /**
+     * Set alt text for image (helper function)
+     */
+    obj.set_alt_text = function(record) {
+        try {
+            const alt_text_input = document.querySelector('#item-alt-text-input');
+            const decorative_checkbox = document.querySelector('#is-decorative-image, #image-is-decorative');
+
+            if (!alt_text_input) {
+                console.warn('Alt text input not found');
+                return false;
+            }
+
+            // Set alt text value
+            if (record.alt_text !== undefined && record.alt_text !== null) {
+                alt_text_input.value = helperModule.unescape(record.alt_text) || '';
+                alt_text_input.disabled = false;
+
+                // Update ARIA attributes
+                alt_text_input.setAttribute('aria-label', 'Alt text for image');
+                alt_text_input.setAttribute('aria-disabled', 'false');
+
+                // Uncheck decorative if there's alt text
+                if (decorative_checkbox) {
+                    decorative_checkbox.checked = false;
+                }
+            } else {
+                // No alt text - might be decorative
+                alt_text_input.value = '';
+
+                if (record.is_decorative === 1 || record.is_decorative === true) {
+                    alt_text_input.disabled = true;
+                    alt_text_input.placeholder = 'Decorative image (no alt text needed)';
+
+                    if (decorative_checkbox) {
+                        decorative_checkbox.checked = true;
+                    }
+                }
+            }
+
+            return true;
+
+        } catch (error) {
+            console.error('Error setting alt text:', error);
+            return false;
+        }
+    };
+
+    /**
+     * Validate alt text requirement
+     */
+    obj.validate_alt_text = function() {
+        try {
+            const alt_text_input = document.querySelector('#item-alt-text-input');
+            const item_type = document.querySelector('#item-type');
+
+            // Only validate for images
+            if (item_type && item_type.value !== 'image') {
+                return { valid: true };
+            }
+
+            if (!alt_text_input) {
+                return { valid: false, error: 'Alt text field not found' };
+            }
+
+            // If decorative (disabled), alt text not required
+            if (alt_text_input.disabled) {
+                return { valid: true, is_decorative: true };
+            }
+
+            // If not decorative, alt text is required
+            const alt_text_value = alt_text_input.value.trim();
+
+            if (alt_text_value.length === 0) {
+                return {
+                    valid: false,
+                    error: 'Alt text is required for non-decorative images'
+                };
+            }
+
+            // Check for meaningful alt text (not just whitespace or placeholder text)
+            const placeholder_phrases = ['image', 'picture', 'photo', 'alt text', 'description'];
+            const is_placeholder = placeholder_phrases.some(phrase =>
+                alt_text_value.toLowerCase() === phrase
+            );
+
+            if (is_placeholder) {
+                return {
+                    valid: false,
+                    error: 'Please provide descriptive alt text (avoid generic terms)'
+                };
+            }
+
+            return { valid: true, alt_text: alt_text_value };
+
+        } catch (error) {
+            console.error('Error validating alt text:', error);
+            return { valid: false, error: 'Validation error' };
+        }
+    };
+
     /**
      * Toggles alt text field based on whether it is decorative or not
      */
-    obj.toggle_alt_text = function () {
+    /*
+    obj.toggle_alt_text__ = function () {
 
         try {
 
@@ -1201,12 +1426,322 @@ const helperMediaModule = (function () {
             document.querySelector('#message').innerHTML = `<div class="alert alert-danger" role="alert"><i class="fa fa-exclamation"></i> ${error.message}</div>`;
         }
     };
+    */
+
+    obj.set_alt_text = function(record) {
+
+        /**
+         * Cache all required DOM elements
+         */
+        const cache_dom_elements = () => {
+            return {
+                image_alt_text_container: document.querySelector('#image-alt-text'),
+                is_alt_text_decorative: document.querySelector('#is-alt-text-decorative'),
+                alt_text_input: document.querySelector('#item-alt-text-input')
+            };
+        };
+
+        /**
+         * Update ARIA attributes for accessibility
+         */
+        const update_aria_attributes = (input_element, is_decorative) => {
+            if (!input_element) {
+                return;
+            }
+
+            if (is_decorative) {
+                input_element.setAttribute('aria-label', 'Alt text (decorative image - disabled)');
+                input_element.setAttribute('aria-disabled', 'true');
+                input_element.setAttribute('aria-required', 'false');
+            } else {
+                input_element.setAttribute('aria-label', 'Alt text for image');
+                input_element.setAttribute('aria-disabled', 'false');
+                input_element.setAttribute('aria-required', 'true');
+            }
+        };
+
+        /**
+         * Handle decorative image state
+         */
+        const handle_decorative_state = (elements) => {
+            if (!elements.alt_text_input) {
+                return;
+            }
+
+            // Disable input
+            elements.alt_text_input.disabled = true;
+
+            // Clear value
+            elements.alt_text_input.value = '';
+
+            // Set placeholder
+            elements.alt_text_input.placeholder = 'Decorative image (no alt text needed)';
+
+            // Update ARIA attributes
+            update_aria_attributes(elements.alt_text_input, true);
+
+            // Store that this is decorative (for form submission)
+            elements.alt_text_input.setAttribute('data-is-decorative', '1');
+        };
+
+        /**
+         * Handle non-decorative image state
+         */
+        const handle_non_decorative_state = (elements, alt_text_value) => {
+            if (!elements.alt_text_input) {
+                return;
+            }
+
+            // Enable input
+            elements.alt_text_input.disabled = false;
+
+            // Set value (unescape and validate)
+            const unescaped_alt_text = alt_text_value ? helperModule.unescape(alt_text_value) : '';
+            elements.alt_text_input.value = unescaped_alt_text;
+
+            // Set placeholder
+            elements.alt_text_input.placeholder = 'Enter descriptive alt text for the image';
+
+            // Update ARIA attributes
+            update_aria_attributes(elements.alt_text_input, false);
+
+            // Remove decorative flag
+            elements.alt_text_input.removeAttribute('data-is-decorative');
+        };
+
+        /**
+         * Show alt text container
+         */
+        const show_alt_text_container = (element) => {
+            if (!element) {
+                return;
+            }
+
+            element.style.display = 'block';
+
+            // Add fade-in effect if supported
+            if (element.style.opacity !== undefined) {
+                element.style.opacity = '0';
+                element.style.transition = 'opacity 0.3s ease-in';
+
+                // Trigger reflow
+                void element.offsetWidth;
+
+                element.style.opacity = '1';
+            }
+        };
+
+        /**
+         * Validate record structure
+         */
+        const validate_record = (record) => {
+            if (!record || typeof record !== 'object') {
+                return {
+                    valid: false,
+                    error: 'Invalid record: must be an object'
+                };
+            }
+
+            // Check if is_alt_text_decorative is a valid value
+            if (record.is_alt_text_decorative !== undefined &&
+                record.is_alt_text_decorative !== null) {
+                const decorative_value = record.is_alt_text_decorative;
+
+                // Allow 0, 1, true, false
+                if (decorative_value !== 0 && decorative_value !== 1 &&
+                    decorative_value !== true && decorative_value !== false) {
+                    console.warn('Unexpected is_alt_text_decorative value:', decorative_value);
+                }
+            }
+
+            return { valid: true };
+        };
+
+        try {
+            // Validate record
+            const validation = validate_record(record);
+            if (!validation.valid) {
+                console.error(validation.error);
+                return false;
+            }
+
+            // Cache DOM elements
+            const elements = cache_dom_elements();
+
+            // Validate critical elements exist
+            if (!elements.alt_text_input) {
+                console.error('Alt text input element (#item-alt-text-input) not found');
+                return false;
+            }
+
+            // Show alt text container
+            show_alt_text_container(elements.image_alt_text_container);
+
+            // Determine if image is decorative
+            const is_decorative = record.is_alt_text_decorative === 1 ||
+                record.is_alt_text_decorative === true;
+
+            // Update decorative checkbox if it exists
+            if (elements.is_alt_text_decorative) {
+                elements.is_alt_text_decorative.checked = is_decorative;
+            }
+
+            // Handle state based on decorative flag
+            if (is_decorative) {
+                handle_decorative_state(elements);
+                console.log('Alt text set: decorative image');
+            } else {
+                handle_non_decorative_state(elements, record.alt_text);
+                console.log('Alt text set:', record.alt_text || '(empty)');
+            }
+
+            return true;
+
+        } catch (error) {
+            console.error('Error setting alt text:', error);
+            return false;
+        }
+    };
+
+    /**
+     * Clear alt text field
+     */
+    obj.clear_alt_text = function() {
+        try {
+            const alt_text_input = document.querySelector('#item-alt-text-input');
+            const is_decorative_checkbox = document.querySelector('#is-alt-text-decorative');
+
+            if (alt_text_input) {
+                alt_text_input.value = '';
+                alt_text_input.disabled = false;
+                alt_text_input.placeholder = 'Enter descriptive alt text for the image';
+                alt_text_input.removeAttribute('data-is-decorative');
+            }
+
+            if (is_decorative_checkbox) {
+                is_decorative_checkbox.checked = false;
+            }
+
+            return true;
+
+        } catch (error) {
+            console.error('Error clearing alt text:', error);
+            return false;
+        }
+    };
+
+    /**
+     * Get alt text data for submission
+     */
+    obj.get_alt_text_data = function() {
+        try {
+            const alt_text_input = document.querySelector('#item-alt-text-input');
+            const is_decorative_checkbox = document.querySelector('#is-alt-text-decorative');
+
+            if (!alt_text_input) {
+                return null;
+            }
+
+            const is_decorative = alt_text_input.disabled ||
+                (is_decorative_checkbox && is_decorative_checkbox.checked);
+
+            return {
+                alt_text: is_decorative ? '' : alt_text_input.value.trim(),
+                is_alt_text_decorative: is_decorative ? 1 : 0
+            };
+
+        } catch (error) {
+            console.error('Error getting alt text data:', error);
+            return null;
+        }
+    };
+
+    /**
+     * Validate alt text before submission
+     */
+    obj.validate_alt_text_submission = function() {
+        try {
+            const alt_text_input = document.querySelector('#item-alt-text-input');
+            const item_type = document.querySelector('#item-type');
+
+            // Only validate for images
+            if (!item_type || item_type.value !== 'image') {
+                return { valid: true };
+            }
+
+            if (!alt_text_input) {
+                return {
+                    valid: false,
+                    error: 'Alt text field not found'
+                };
+            }
+
+            // If decorative (disabled), validation passes
+            if (alt_text_input.disabled) {
+                return {
+                    valid: true,
+                    is_decorative: true
+                };
+            }
+
+            // Non-decorative images require alt text
+            const alt_text_value = alt_text_input.value.trim();
+
+            if (alt_text_value.length === 0) {
+                return {
+                    valid: false,
+                    error: 'Alt text is required for non-decorative images',
+                    field: alt_text_input
+                };
+            }
+
+            // Check minimum length (at least 3 characters)
+            if (alt_text_value.length < 3) {
+                return {
+                    valid: false,
+                    error: 'Alt text must be at least 3 characters long',
+                    field: alt_text_input
+                };
+            }
+
+            // Check for generic/placeholder text
+            const generic_phrases = [
+                'image', 'picture', 'photo', 'img',
+                'alt text', 'description', 'graphic'
+            ];
+
+            const is_generic = generic_phrases.some(phrase =>
+                alt_text_value.toLowerCase() === phrase
+            );
+
+            if (is_generic) {
+                return {
+                    valid: false,
+                    error: 'Please provide descriptive alt text (avoid generic terms like "image" or "picture")',
+                    field: alt_text_input
+                };
+            }
+
+            return {
+                valid: true,
+                alt_text: alt_text_value
+            };
+
+        } catch (error) {
+            console.error('Error validating alt text:', error);
+            return {
+                valid: false,
+                error: 'Validation error occurred'
+            };
+        }
+    };
 
     /**
      * Set alt text
      * @param record
      */
-    obj.set_alt_text = function (record) {
+    /*
+    obj.set_alt_text__ = function (record) {
 
         document.querySelector('#image-alt-text').style.display = 'block';
 
@@ -1219,6 +1754,7 @@ const helperMediaModule = (function () {
             document.querySelector('#item-alt-text-input').value = helperModule.unescape(record.alt_text);
         }
     };
+    */
 
     obj.delete_thumbnail_image = function () {
 

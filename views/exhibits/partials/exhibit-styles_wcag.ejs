@@ -1,0 +1,473 @@
+<style>
+    /* Heading structure */
+    .section-heading {
+        font-size: 0.875rem; /* 14px */
+        font-weight: bold;
+        color: #6c757d;
+        margin-bottom: 1rem;
+        padding: 0;
+        border: none;
+    }
+
+    /* Form labels */
+    .form-label {
+        font-size: 0.8125rem; /* 13px */
+        color: #6c757d;
+        display: block;
+        margin-bottom: 0.25rem;
+        font-weight: 500;
+    }
+
+    /* Helper text */
+    .helper-text {
+        font-size: 0.75rem; /* 12px */
+        margin-bottom: 0.5rem;
+        margin-top: 0;
+    }
+
+    /* Fieldsets */
+    .style-fieldset {
+        border: none;
+        padding: 0;
+        margin: 0;
+    }
+
+    /* Color input groups */
+    .color-input-group {
+        margin-bottom: 1rem;
+    }
+
+    .color-text-input {
+        height: 40px;
+        font-family: monospace;
+    }
+
+    .color-picker {
+        height: 40px;
+        width: 50px;
+        padding: 2px;
+        border: 1px solid #ced4da;
+        cursor: pointer;
+    }
+
+    .color-picker:hover {
+        border-color: #80bdff;
+    }
+
+    .color-picker:focus {
+        outline: 2px solid #0056b3;
+        outline-offset: 2px;
+        border-color: #80bdff;
+    }
+
+    /* Size inputs */
+    .size-input {
+        height: 40px;
+    }
+
+    /* Select dropdowns */
+    .form-select {
+        height: 40px;
+    }
+
+    /* Input group text */
+    .input-group-text {
+        min-width: 40px;
+        justify-content: center;
+    }
+
+    /* Focus states */
+    .form-control:focus,
+    .form-select:focus {
+        border-color: #80bdff;
+        outline: 2px solid #0056b3;
+        outline-offset: 2px;
+        box-shadow: 0 0 0 0.2rem rgba(0, 123, 255, 0.25);
+    }
+
+    /* Screen reader only class */
+    .sr-only {
+        position: absolute;
+        width: 1px;
+        height: 1px;
+        padding: 0;
+        margin: -1px;
+        overflow: hidden;
+        clip: rect(0, 0, 0, 0);
+        white-space: nowrap;
+        border-width: 0;
+    }
+
+    /* Ensure adequate spacing */
+    .form-group {
+        margin-bottom: 1.5rem;
+    }
+
+    /* Disabled option styling */
+    option[disabled] {
+        color: #6c757d;
+        font-style: italic;
+    }
+</style>
+<div id="exhibit-styles-card" class="card">
+    <div class="card-header">
+        <h2 class="card-title mb-3">Exhibit Styles</h2>
+    </div>
+    <div class="card-body">
+        <div class="row">
+            <!-- Introduction Styles Section -->
+            <div class="col-4 col-md-4">
+                <fieldset class="style-fieldset">
+                    <legend class="section-heading">Apply Styles to Exhibit Introduction</legend>
+
+                    <!-- Introduction Background Color -->
+                    <div class="row form-group">
+                        <div class="col-12 col-md-12">
+                            <label for="introduction-background-color" class="form-label">
+                                Introduction Background Color
+                            </label>
+                            <p id="intro-bg-color-desc" class="form-text text-muted helper-text">
+                                Select a background color for the introduction section
+                            </p>
+                            <div class="input-group color-input-group">
+                                <div class="input-group-prepend">
+                                    <label for="introduction-background-color-picker" class="sr-only">
+                                        Introduction background color picker
+                                    </label>
+                                    <input class="color-picker btn btn-default"
+                                           type="color"
+                                           id="introduction-background-color-picker"
+                                           value="#ffffff"
+                                           aria-label="Introduction background color picker"
+                                           aria-describedby="intro-bg-color-desc">
+                                </div>
+                                <input type="text"
+                                       id="introduction-background-color"
+                                       name="introduction_background_color"
+                                       placeholder="e.g., #FFFFFF"
+                                       class="form-control color-text-input"
+                                       pattern="^#[0-9A-Fa-f]{6}$"
+                                       aria-describedby="intro-bg-color-desc"
+                                       maxlength="7">
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Introduction Font Color -->
+                    <div class="row form-group">
+                        <div class="col-12 col-md-12">
+                            <label for="introduction-font-color" class="form-label">
+                                Introduction Font Color
+                            </label>
+                            <p id="intro-font-color-desc" class="form-text text-muted helper-text">
+                                Select a font color for the introduction text
+                            </p>
+                            <div class="input-group color-input-group">
+                                <div class="input-group-prepend">
+                                    <label for="introduction-font-color-picker" class="sr-only">
+                                        Introduction font color picker
+                                    </label>
+                                    <input class="color-picker btn btn-default"
+                                           type="color"
+                                           id="introduction-font-color-picker"
+                                           value="#ffffff"
+                                           aria-label="Introduction font color picker"
+                                           aria-describedby="intro-font-color-desc">
+                                </div>
+                                <input type="text"
+                                       id="introduction-font-color"
+                                       name="introduction_font_color"
+                                       placeholder="e.g., #FFFFFF"
+                                       class="form-control color-text-input"
+                                       pattern="^#[0-9A-Fa-f]{6}$"
+                                       aria-describedby="intro-font-color-desc"
+                                       maxlength="7">
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Introduction Font Size -->
+                    <div class="row form-group">
+                        <div class="col-12 col-md-12">
+                            <label for="introduction-font-size" class="form-label">
+                                Introduction Font Size
+                            </label>
+                            <p id="intro-font-size-desc" class="form-text text-muted helper-text">
+                                Enter a font size between 1 and 50 pixels
+                            </p>
+                            <div class="input-group">
+                                <input type="number"
+                                       id="introduction-font-size"
+                                       name="introduction_font_size"
+                                       placeholder="Enter size"
+                                       class="form-control size-input"
+                                       min="1"
+                                       max="50"
+                                       aria-describedby="intro-font-size-desc intro-font-size-unit">
+                                <div class="input-group-append">
+                                    <span class="input-group-text" id="intro-font-size-unit">px</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Introduction Font -->
+                    <div class="row form-group">
+                        <div class="col-12 col-md-12">
+                            <label for="introduction-font" class="form-label">
+                                Introduction Font
+                            </label>
+                            <p id="intro-font-desc" class="form-text text-muted helper-text">
+                                Select a font family for the introduction text
+                            </p>
+                            <select name="introduction_font"
+                                    id="introduction-font"
+                                    class="form-control form-select text-muted"
+                                    aria-describedby="intro-font-desc">
+                                <option value="">Select a font from the menu</option>
+                                <option value="" disabled>----------</option>
+                                <%- include('exhibit-fonts-options-list.ejs'); %>
+                            </select>
+                        </div>
+                    </div>
+                </fieldset>
+            </div>
+
+            <!-- Navigation Styles Section -->
+            <div class="col-4 col-md-4">
+                <fieldset class="style-fieldset">
+                    <legend class="section-heading">Apply Styles to Navigation Menu</legend>
+
+                    <!-- Navigation Background Color -->
+                    <div class="row form-group">
+                        <div class="col-12 col-md-12">
+                            <label for="nav-background-color" class="form-label">
+                                Navigation Background Color
+                            </label>
+                            <p id="nav-bg-color-desc" class="form-text text-muted helper-text">
+                                Select a background color for the navigation menu
+                            </p>
+                            <div class="input-group color-input-group">
+                                <div class="input-group-prepend">
+                                    <label for="nav-background-color-picker" class="sr-only">
+                                        Navigation background color picker
+                                    </label>
+                                    <input class="color-picker btn btn-default"
+                                           type="color"
+                                           id="nav-background-color-picker"
+                                           value="#ffffff"
+                                           aria-label="Navigation background color picker"
+                                           aria-describedby="nav-bg-color-desc">
+                                </div>
+                                <input type="text"
+                                       id="nav-background-color"
+                                       name="nav_background_color"
+                                       placeholder="e.g., #FFFFFF"
+                                       class="form-control color-text-input"
+                                       pattern="^#[0-9A-Fa-f]{6}$"
+                                       aria-describedby="nav-bg-color-desc"
+                                       maxlength="7">
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Navigation Font Color -->
+                    <div class="row form-group">
+                        <div class="col-12 col-md-12">
+                            <label for="nav-font-color" class="form-label">
+                                Navigation Font Color
+                            </label>
+                            <p id="nav-font-color-desc" class="form-text text-muted helper-text">
+                                Select a font color for the navigation text
+                            </p>
+                            <div class="input-group color-input-group">
+                                <div class="input-group-prepend">
+                                    <label for="nav-font-color-picker" class="sr-only">
+                                        Navigation font color picker
+                                    </label>
+                                    <input class="color-picker btn btn-default"
+                                           type="color"
+                                           id="nav-font-color-picker"
+                                           value="#ffffff"
+                                           aria-label="Navigation font color picker"
+                                           aria-describedby="nav-font-color-desc">
+                                </div>
+                                <input type="text"
+                                       id="nav-font-color"
+                                       name="nav_font_color"
+                                       placeholder="e.g., #FFFFFF"
+                                       class="form-control color-text-input"
+                                       pattern="^#[0-9A-Fa-f]{6}$"
+                                       aria-describedby="nav-font-color-desc"
+                                       maxlength="7">
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Navigation Font Size -->
+                    <div class="row form-group">
+                        <div class="col-12 col-md-12">
+                            <label for="nav-font-size" class="form-label">
+                                Navigation Font Size
+                            </label>
+                            <p id="nav-font-size-desc" class="form-text text-muted helper-text">
+                                Enter a font size between 1 and 50 pixels
+                            </p>
+                            <div class="input-group">
+                                <input type="number"
+                                       id="nav-font-size"
+                                       name="nav_font_size"
+                                       placeholder="Enter size"
+                                       class="form-control size-input"
+                                       min="1"
+                                       max="50"
+                                       aria-describedby="nav-font-size-desc nav-font-size-unit">
+                                <div class="input-group-append">
+                                    <span class="input-group-text" id="nav-font-size-unit">px</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Navigation Font -->
+                    <div class="row form-group">
+                        <div class="col-12 col-md-12">
+                            <label for="nav-font" class="form-label">
+                                Navigation Font
+                            </label>
+                            <p id="nav-font-desc" class="form-text text-muted helper-text">
+                                Select a font family for the navigation text
+                            </p>
+                            <select name="nav_font"
+                                    id="nav-font"
+                                    class="form-control form-select text-muted"
+                                    aria-describedby="nav-font-desc">
+                                <option value="">Select a font from the menu</option>
+                                <option value="" disabled>----------</option>
+                                <%- include('exhibit-fonts-options-list.ejs'); %>
+                            </select>
+                        </div>
+                    </div>
+                </fieldset>
+            </div>
+
+            <!-- Exhibit Styles Section -->
+            <div class="col-4 col-md-4">
+                <fieldset class="style-fieldset">
+                    <legend class="section-heading">Apply Styles to Exhibit</legend>
+
+                    <!-- Exhibit Background Color -->
+                    <div class="row form-group">
+                        <div class="col-12 col-md-12">
+                            <label for="template-background-color" class="form-label">
+                                Exhibit Background Color
+                            </label>
+                            <p id="template-bg-color-desc" class="form-text text-muted helper-text">
+                                Select a background color for the exhibit
+                            </p>
+                            <div class="input-group color-input-group">
+                                <div class="input-group-prepend">
+                                    <label for="template-background-color-picker" class="sr-only">
+                                        Exhibit background color picker
+                                    </label>
+                                    <input class="color-picker btn btn-default"
+                                           type="color"
+                                           id="template-background-color-picker"
+                                           value="#ffffff"
+                                           aria-label="Exhibit background color picker"
+                                           aria-describedby="template-bg-color-desc">
+                                </div>
+                                <input type="text"
+                                       id="template-background-color"
+                                       name="template_background_color"
+                                       placeholder="e.g., #FFFFFF"
+                                       class="form-control color-text-input"
+                                       pattern="^#[0-9A-Fa-f]{6}$"
+                                       aria-describedby="template-bg-color-desc"
+                                       maxlength="7">
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Exhibit Font Color -->
+                    <div class="row form-group">
+                        <div class="col-12 col-md-12">
+                            <label for="template-font-color" class="form-label">
+                                Exhibit Font Color
+                            </label>
+                            <p id="template-font-color-desc" class="form-text text-muted helper-text">
+                                Select a font color for the exhibit text
+                            </p>
+                            <div class="input-group color-input-group">
+                                <div class="input-group-prepend">
+                                    <label for="template-font-color-picker" class="sr-only">
+                                        Exhibit font color picker
+                                    </label>
+                                    <input class="color-picker btn btn-default"
+                                           type="color"
+                                           id="template-font-color-picker"
+                                           value="#ffffff"
+                                           aria-label="Exhibit font color picker"
+                                           aria-describedby="template-font-color-desc">
+                                </div>
+                                <input type="text"
+                                       id="template-font-color"
+                                       name="template_font_color"
+                                       placeholder="e.g., #FFFFFF"
+                                       class="form-control color-text-input"
+                                       pattern="^#[0-9A-Fa-f]{6}$"
+                                       aria-describedby="template-font-color-desc"
+                                       maxlength="7">
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Exhibit Font Size -->
+                    <div class="row form-group">
+                        <div class="col-12 col-md-12">
+                            <label for="template-font-size" class="form-label">
+                                Exhibit Font Size
+                            </label>
+                            <p id="template-font-size-desc" class="form-text text-muted helper-text">
+                                Enter a font size between 1 and 50 pixels
+                            </p>
+                            <div class="input-group">
+                                <input type="number"
+                                       id="template-font-size"
+                                       name="template_font_size"
+                                       placeholder="Enter size"
+                                       class="form-control size-input"
+                                       min="1"
+                                       max="50"
+                                       aria-describedby="template-font-size-desc template-font-size-unit">
+                                <div class="input-group-append">
+                                    <span class="input-group-text" id="template-font-size-unit">px</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Exhibit Font -->
+                    <div class="row form-group">
+                        <div class="col-12 col-md-12">
+                            <label for="template-font" class="form-label">
+                                Exhibit Font
+                            </label>
+                            <p id="template-font-desc" class="form-text text-muted helper-text">
+                                Select a font family for the exhibit text
+                            </p>
+                            <select name="template_font"
+                                    id="template-font"
+                                    class="form-control form-select text-muted"
+                                    aria-describedby="template-font-desc">
+                                <option value="">Select a font from the menu</option>
+                                <option value="" disabled>----------</option>
+                                <%- include('exhibit-fonts-options-list.ejs'); %>
+                            </select>
+                        </div>
+                    </div>
+                </fieldset>
+            </div>
+        </div>
+    </div>
+</div>

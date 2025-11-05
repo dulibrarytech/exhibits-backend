@@ -1,0 +1,54 @@
+<style>
+    /* Prevent font options from displaying in their actual font face */
+    select option {
+        font-family: inherit;
+    }
+
+    /* Ensure optgroup labels are visually distinct */
+    select optgroup {
+        font-weight: bold;
+        font-style: normal;
+        color: #000;
+    }
+
+    /* Ensure options have adequate contrast */
+    select option {
+        color: #000;
+        background-color: #fff;
+    }
+
+    /* Focus and selected states */
+    select option:focus,
+    select option:checked {
+        background-color: #007bff;
+        color: #fff;
+    }
+</style>
+<optgroup label="System Fonts - Sans Serif">
+    <option value="Arial">Arial</option>
+    <option value="Tahoma">Tahoma</option>
+    <option value="Trebuchet MS">Trebuchet MS</option>
+    <option value="Verdana">Verdana</option>
+</optgroup>
+<optgroup label="System Fonts - Serif">
+    <option value="Garamond">Garamond</option>
+    <option value="Georgia">Georgia</option>
+    <option value="Times New Roman">Times New Roman</option>
+</optgroup>
+<optgroup label="System Fonts - Monospace">
+    <option value="Courier New">Courier New</option>
+</optgroup>
+<optgroup label="Custom Fonts - Sans Serif">
+    <option value="IBM Plex Sans">IBM Plex Sans</option>
+    <option value="Neue Haas Grotesk Text Pro">Neue Haas Grotesk Text Pro</option>
+    <option value="Neue Haas Unica W1G">Neue Haas Unica W1G</option>
+</optgroup>
+<optgroup label="Custom Fonts - Serif">
+    <option value="Nocturne Serif">Nocturne Serif</option>
+</optgroup>
+<optgroup label="Custom Fonts - Monospace">
+    <option value="IBM Plex Mono">IBM Plex Mono</option>
+</optgroup>
+<optgroup label="Custom Fonts - Decorative">
+    <option value="Brush Script MT">Brush Script MT</option>
+</optgroup>
