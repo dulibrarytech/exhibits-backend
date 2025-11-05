@@ -357,16 +357,14 @@ const Exhibit_item_record_tasks = class {
             });
 
             this._validate_string(data.item_type, 'item_type');
-            this._validate_string(data.mime_type, 'mime_type');
-
-            console.log('ITEM DATA ', data);
+            // this._validate_string(data.mime_type, 'mime_type');
 
             // Build record with defaults
             const record_data = {
                 uuid: validated['item UUID'],
                 is_member_of_exhibit: validated['exhibit UUID'],
                 item_type: data.item_type.trim(),
-                mime_type: data.mime_type.trim(),
+                mime_type: data.mime_type.trim() || null,
                 title: data.title?.trim() || '',
                 thumbnail: data.thumbnail || null,
                 caption: data.caption || null,

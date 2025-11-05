@@ -305,13 +305,14 @@ const itemsEditStandardItemFormModule = (function () {
             return false;
 
         } catch (error) {
+            console.log(error);
             console.error('Error in display_edit_record:', error.message);
             document.querySelector('#message').innerHTML = `<div class="alert alert-danger" role="alert"><i class="fa fa-exclamation"></i> ${error.message}</div>`;
             return false;
         }
     }
 
-    obj.update_item_record = async function() {
+    obj.update_item_record = async function () {
 
         // Prevent duplicate submissions
         if (this._is_updating_item) {
@@ -402,7 +403,7 @@ const itemsEditStandardItemFormModule = (function () {
                 };
             }
 
-            return { valid: true };
+            return {valid: true};
         };
 
         /**
@@ -448,7 +449,7 @@ const itemsEditStandardItemFormModule = (function () {
         try {
 
             // Scroll to top for user feedback
-            window.scrollTo({ top: 0, behavior: 'smooth' });
+            window.scrollTo({top: 0, behavior: 'smooth'});
 
             // Get and validate parameters
             const exhibit_id = helperModule.get_parameter_by_name('exhibit_id');
