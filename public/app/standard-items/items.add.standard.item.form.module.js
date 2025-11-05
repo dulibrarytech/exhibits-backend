@@ -25,6 +25,229 @@ const itemsAddStandardItemFormModule = (function () {
     let obj = {};
 
     obj.create_item_record = async function() {
+        // CRITICAL: Check if we're in edit mode first
+        const item_id = helperModule.get_parameter_by_name('item_id');
+        if (item_id) {
+            console.log('🔴 Item ID exists - already in edit mode, preventing duplicate creation');
+            console.log('Current URL:', window.location.href);
+            console.log('item_id:', item_id);
+
+            // Call update instead if it exists
+            if (obj.update_item_record && typeof obj.update_item_record === 'function') {
+                console.log('Redirecting to update function...');
+                return await obj.update_item_record();
+            }
+
+            const message_element = document.querySelector('#message');
+            display_status_message(message_element, 'warning', 'Already in edit mode. Update function not available.');
+            console.error('ERROR: update_item_record function not found!');
+            return false;
+        }
+
+        console.log('🟢 CREATE FUNCTION CALLED - No item_id, proceeding with creation');
+
+        // Prevent duplicate submissions
+        if (this._is_creating_item) {
+            console.log('Already creating, preventing duplicate submission');
+            return false;
+        }
+
+        this._is_creating_item = true;
+
+        try {
+            // Cache DOM element
+            const message_element = document.querySelector('#message');
+
+            // Scroll to top for user feedback
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+
+            // Validate required parameters
+            const exhibit_id = helperModule.get_parameter_by_name('exhibit_id');
+
+            if (!exhibit_id) {
+                display_status_message(message_element, 'warning', 'Missing exhibit ID. Cannot create item record.');
+                return false;
+            }
+
+            // Show loading state
+            display_status_message(message_element, 'info', 'Creating item record...');
+
+            // Validate authentication
+            const token = authModule.get_user_token();
+
+            if (!token || token === false) {
+                display_status_message(message_element, 'danger', 'Session expired. Please log in again.');
+
+                setTimeout(() => {
+                    authModule.logout();
+                }, 1000);
+
+                return false;
+            }
+
+            // Get and validate form data
+            const form_data = itemsCommonStandardItemFormModule.get_common_standard_item_form_fields();
+
+            if (!form_data || form_data === false || form_data === undefined) {
+                display_status_message(message_element, 'danger', 'Unable to get form field values. Please check all required fields.');
+                return false;
+            }
+
+            // Add metadata
+            const user_name = helperModule.get_user_name();
+            const owner = helperModule.get_owner();
+
+            if (user_name) {
+                form_data.created_by = user_name;
+            }
+
+            if (owner) {
+                form_data.owner = owner;
+            }
+
+            // Validate endpoint configuration
+            if (!EXHIBITS_ENDPOINTS?.exhibits?.item_records?.post?.endpoint) {
+                display_status_message(message_element, 'danger', 'API endpoint configuration missing');
+                return false;
+            }
+
+            // Construct endpoint with URL encoding
+            const endpoint = EXHIBITS_ENDPOINTS.exhibits.item_records.post.endpoint
+                .replace(':exhibit_id', encodeURIComponent(exhibit_id));
+
+            // Make API request
+            const response = await httpModule.req({
+                method: 'POST',
+                url: endpoint,
+                data: form_data,
+                headers: {
+                    'Content-Type': 'application/json',
+                    'x-access-token': token
+                },
+                timeout: 30000
+            });
+
+            // Validate response
+            if (!response || response.status !== 201) {
+                throw new Error('Failed to create item record');
+            }
+
+            const new_item_id = response.data?.data;
+
+            if (!new_item_id) {
+                throw new Error('Server did not return a valid item ID');
+            }
+
+            console.log('✅ Item record created successfully, ID:', new_item_id);
+
+            // Show success message
+            display_status_message(message_element, 'success', 'Item record created successfully. Redirecting to edit page...');
+
+            // Scroll to top to show success message
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+
+            // Gracefully redirect to edit page after showing success message
+            setTimeout(() => {
+                redirect_to_item_edit_page(exhibit_id, new_item_id);
+            }, 1200);
+
+            return true;
+
+        } catch (error) {
+            console.error('❌ Error creating item record:', error);
+
+            const message_element = document.querySelector('#message');
+            const error_message = error.user_message || error.message || 'Unable to create item record. Please try again.';
+            display_status_message(message_element, 'danger', error_message);
+
+            return false;
+
+        } finally {
+            // Reset submission flag
+            this._is_creating_item = false;
+        }
+    };
+
+    /**
+     * Gracefully redirect to item edit page (prevents back button to create page)
+     */
+    function redirect_to_item_edit_page(exhibit_id, item_id) {
+        console.log('=== REDIRECTING TO ITEM EDIT PAGE ===');
+        console.log('exhibit_id:', exhibit_id);
+        console.log('item_id:', item_id);
+
+        // Determine item form type based on current URL path
+        let item_form = 'text';
+
+        if (window.location.pathname.indexOf('media') !== -1) {
+            item_form = 'media';
+            console.log('Media form detected from URL path');
+        } else {
+            console.log('Text form detected (default)');
+        }
+
+        const params = new URLSearchParams({
+            exhibit_id: exhibit_id,
+            item_id: item_id
+        });
+
+        const edit_url = `${APP_PATH}/items/standard/${item_form}/edit?${params.toString()}`;
+
+        console.log('Item form type:', item_form);
+        console.log('Redirecting to:', edit_url);
+        console.log('Note: Back button will NOT return to create page');
+
+        // Use window.location.replace() to prevent back button to create page
+        // This replaces the current history entry instead of adding a new one
+        window.location.replace(edit_url);
+    }
+
+    /**
+     * Display status message to user (XSS-safe)
+     */
+    function display_status_message(element, type, message) {
+        if (!element) {
+            return;
+        }
+
+        // Validate message type
+        const valid_types = ['info', 'success', 'danger', 'warning'];
+        const alert_type = valid_types.includes(type) ? type : 'info';
+
+        // Create alert container
+        const alert_div = document.createElement('div');
+        alert_div.className = `alert alert-${alert_type}`;
+        alert_div.setAttribute('role', 'alert');
+
+        // Add icon based on type
+        const icon = document.createElement('i');
+        icon.className = get_icon_class(alert_type);
+        alert_div.appendChild(icon);
+
+        // Add message text
+        const text_node = document.createTextNode(` ${message}`);
+        alert_div.appendChild(text_node);
+
+        // Clear and set new content
+        element.textContent = '';
+        element.appendChild(alert_div);
+    }
+
+    /**
+     * Get appropriate icon class for alert type
+     */
+    function get_icon_class(alert_type) {
+        const icon_map = {
+            'info': 'fa fa-info',
+            'success': 'fa fa-check',
+            'danger': 'fa fa-exclamation',
+            'warning': 'fa fa-exclamation-triangle'
+        };
+
+        return icon_map[alert_type] || 'fa fa-info';
+    }
+
+    obj.create_item_record__ = async function() {
         // Prevent duplicate submissions
         if (this._is_creating_item) {
             return false;
