@@ -763,7 +763,7 @@ const Exhibit_grid_record_tasks = class {
                 [data.is_member_of_exhibit]: 'exhibit UUID'
             });
 
-            this._validate_string(data.title, 'grid item title');
+            // this._validate_string(data.title, 'grid item title');
 
             const {sanitized_data} = this._sanitize_data(data, ALLOWED_FIELDS);
 
