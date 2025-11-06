@@ -412,7 +412,7 @@ const Exhibit_grid_record_tasks = class {
             throw new Error('Valid item object is required');
         }
 
-        if (!item.uuid || typeof item.order !== 'number') {
+        if (!item.uuid || typeof item.order !== 'string') {
             throw new Error('Item must have uuid and order properties');
         }
 
@@ -1397,9 +1397,11 @@ const Exhibit_grid_record_tasks = class {
      * @returns {Promise<boolean>} Reorder success status
      */
     async reorder_grid_items(is_member_of_grid, grids) {
+        console.log('REORDER GRID ITEMS');
         try {
             const grid_uuid = this._validate_uuid(is_member_of_grid, 'grid UUID');
-
+            console.log('GRID UUID', grid_uuid);
+            console.log('GRIDS ', grids)
             await this._reorder_items(
                 'grid_item_records',
                 {is_member_of_grid: grid_uuid},

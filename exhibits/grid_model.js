@@ -559,6 +559,7 @@ const publish_grid_item_record = async function (exhibit_id, grid_id, grid_item_
 
     try {
 
+        console.log('PUBLISH GRID ITEM RECORD');
         const data = {
             is_member_of_exhibit: exhibit_id,
             is_member_of_grid: grid_id,
@@ -580,8 +581,9 @@ const publish_grid_item_record = async function (exhibit_id, grid_id, grid_item_
         }
 
         let grid_item_record = await GRID_TASKS.get_grid_item_record(exhibit_id, grid_id, grid_item_id);
-        const is_indexed = await INDEXER_MODEL.index_grid_item_record(grid_id, grid_item_id, grid_item_record);
 
+        const is_indexed = await INDEXER_MODEL.index_grid_item_record(grid_id, grid_item_id, grid_item_record);
+        console.log('IS INDEXED ', is_indexed);
         if (is_indexed === false) {
 
             LOGGER.module().error('ERROR: [/exhibits/model (publish_grid_item_record)] Unable to publish grid item');
@@ -592,7 +594,7 @@ const publish_grid_item_record = async function (exhibit_id, grid_id, grid_item_
             };
 
         } else {
-
+            console.log('YES');
             await GRID_TASKS.update_grid_item_record(data);
 
             return {
@@ -625,7 +627,13 @@ const suppress_grid_item_record = async function (exhibit_id, grid_id, grid_item
 
         const GRID_TASKS = new EXHIBIT_GRID_RECORD_TASKS(DB, TABLES);
         let indexed_record = await INDEXER_MODEL.get_indexed_record(grid_id);
-        let items = indexed_record.data._source.items;
+
+        if (indexed_record.status !== 200) {
+            console.log('ERROR'); // TODO: log
+            return false
+        }
+
+        let items = indexed_record.data.source.items;
         let updated_items = [];
 
         for (let i = 0; i < items.length; i++) {
@@ -634,7 +642,7 @@ const suppress_grid_item_record = async function (exhibit_id, grid_id, grid_item
             }
         }
 
-        indexed_record.data._source.items = updated_items;
+        indexed_record.data.source.items = updated_items;
 
         // remove original grid record
         const is_deleted = await INDEXER_MODEL.delete_record(grid_id);
@@ -650,7 +658,7 @@ const suppress_grid_item_record = async function (exhibit_id, grid_id, grid_item
         }
 
         await GRID_TASKS.update_grid_item_record(data);
-        const is_indexed = await INDEXER_MODEL.index_record(indexed_record.data._source);
+        const is_indexed = await INDEXER_MODEL.index_record(indexed_record.data.source);
 
         if (is_indexed === true) {
             return {

@@ -37,7 +37,7 @@ const Exhibit_record_tasks = class {
         this.FIELDS = [
             'uuid', 'type', 'title', 'subtitle', 'banner_template', 'about_the_curators',
             'alert_text', 'hero_image', 'thumbnail', 'description', 'page_layout',
-            'exhibit_template', 'styles', 'order', 'is_published', 'is_preview',
+            'exhibit_template', 'exhibit_subjects', 'styles', 'order', 'is_published', 'is_preview',
             'is_featured', 'is_locked', 'locked_by_user', 'is_student_curated',
             'owner', 'created', 'updated', 'created_by', 'updated_by'
         ];

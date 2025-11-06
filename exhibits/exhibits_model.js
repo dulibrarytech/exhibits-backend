@@ -37,421 +37,785 @@ const GRIDS_MODEL = require('../exhibits/grid_model');
 const TIMELINES_MODEL = require('../exhibits/timelines_model');
 const LOGGER = require('../libs/log4');
 
+// Constants
+const CONSTANTS = {
+    REPUBLISH_DELAY_MS: 5000,
+    DEFAULT_STYLES: {},
+    STATUS_CODES: {
+        OK: 200,
+        CREATED: 201,
+        NO_CONTENT: 204,
+        BAD_REQUEST: 400
+    },
+    RECORD_TYPES: {
+        GRID: 'grid',
+        VERTICAL_TIMELINE: 'vertical_timeline',
+        TIMELINE: 'timeline'
+    }
+};
+
+// Initialize task instances
+const helper_task = new HELPER();
+const validate_create_task = new VALIDATOR(EXHIBITS_CREATE_RECORD_SCHEMA);
+const validate_update_task = new VALIDATOR(EXHIBITS_UPDATE_RECORD_SCHEMA);
+const exhibit_record_task = new EXHIBIT_RECORD_TASKS(DB, TABLES);
+const item_record_task = new EXHIBIT_ITEM_RECORD_TASKS(DB, TABLES);
+const heading_record_task = new EXHIBIT_HEADING_RECORD_TASKS(DB, TABLES);
+const grid_record_task = new EXHIBIT_GRID_RECORD_TASKS(DB, TABLES);
+const timeline_record_task = new EXHIBIT_TIMELINE_RECORD_TASKS(DB, TABLES);
+
+/**
+ * Standardized response builder
+ * @param {number} status - HTTP status code
+ * @param {string} message - Response message
+ * @param {*} data - Optional response data
+ * @returns {Object} Standardized response object
+ */
+const build_response = (status, message, data = null) => {
+    const response = { status, message };
+    if (data !== null) {
+        response.data = data;
+    }
+    return response;
+};
+
+/**
+ * Validates and sanitizes input data
+ * @param {Object} data - Input data to validate
+ * @param {Object} validator - Validator instance
+ * @returns {Object|true} Validation result
+ */
+const validate_input = (data, validator) => {
+    if (!data || typeof data !== 'object') {
+        return [{ message: 'Invalid input data format' }];
+    }
+    return validator.validate(data);
+};
+
+/**
+ * Processes media files for exhibit
+ * @param {string} uuid - Exhibit UUID
+ * @param {Object} data - Data containing media fields
+ * @returns {Object} Processed data with updated media paths
+ */
+const process_exhibit_media = (uuid, data) => {
+    const processed_data = { ...data };
+
+    if (processed_data.hero_image && processed_data.hero_image.length > 0) {
+        processed_data.hero_image = helper_task.process_uploaded_media(
+            uuid,
+            null,
+            processed_data.hero_image,
+            STORAGE_CONFIG.storage_path
+        );
+    }
+
+    if (processed_data.thumbnail && processed_data.thumbnail.length > 0) {
+        processed_data.thumbnail = helper_task.process_uploaded_media(
+            uuid,
+            null,
+            processed_data.thumbnail,
+            STORAGE_CONFIG.storage_path
+        );
+    }
+
+    return processed_data;
+};
+
+/**
+ * Prepares styles data
+ * @param {Object|string} styles - Styles object or string
+ * @returns {string} JSON stringified styles
+ */
+const prepare_styles = (styles) => {
+    if (!styles || (typeof styles === 'object' && Object.keys(styles).length === 0)) {
+        return JSON.stringify(CONSTANTS.DEFAULT_STYLES);
+    }
+    return typeof styles === 'string' ? styles : JSON.stringify(styles);
+};
+
 /**
  * Creates exhibit record
- * @param data
+ * @param {Object} data - Exhibit data
+ * @returns {Promise<Object>} Response object
  */
-exports.create_exhibit_record = async function (data) {
-
+exports.create_exhibit_record = async (data) => {
     try {
+        // Generate UUID
+        data.uuid = helper_task.create_uuid();
 
-        const HELPER_TASK = new HELPER();
-        data.uuid = HELPER_TASK.create_uuid();
+        // Validate input
+        const validation_result = validate_input(data, validate_create_task);
 
-        const VALIDATE_TASK = new VALIDATOR(EXHIBITS_CREATE_RECORD_SCHEMA);
-        let is_valid = VALIDATE_TASK.validate(data);
+        if (validation_result !== true) {
+            const error_path = validation_result[0].dataPath || 'unknown';
+            const error_msg = validation_result[0].message || 'Validation failed';
+            LOGGER.module().error(`ERROR: [/exhibits/model (create_exhibit_record)] ${error_path} ${error_msg}`);
 
-        if (is_valid !== true) {
-
-            LOGGER.module().error('ERROR: [/exhibits/model (create_exhibit_record)] ' + is_valid[0].dataPath + ' ' + is_valid[0].message);
-
-            return {
-                status: 400,
-                message: is_valid
-            };
+            return build_response(
+                CONSTANTS.STATUS_CODES.BAD_REQUEST,
+                validation_result
+            );
         }
 
-        HELPER_TASK.check_storage_path(data.uuid, STORAGE_CONFIG.storage_path);
+        // Ensure storage path exists
+        helper_task.check_storage_path(data.uuid, STORAGE_CONFIG.storage_path);
 
-        if (data.hero_image.length > 0) {
-            data.hero_image = HELPER_TASK.process_uploaded_media(data.uuid, null, data.hero_image, STORAGE_CONFIG.storage_path);
+        // Process media files
+        data = process_exhibit_media(data.uuid, data);
+
+        // Prepare styles
+        data.styles = prepare_styles(data.styles);
+
+        // Create record
+        const result = await exhibit_record_task.create_exhibit_record(data);
+
+        if (!result) {
+            LOGGER.module().error('ERROR: [/exhibits/model (create_exhibit_record)] Database operation failed');
+            return build_response(
+                CONSTANTS.STATUS_CODES.OK,
+                'Unable to create exhibit record'
+            );
         }
 
-        if (data.thumbnail.length > 0) {
-            data.thumbnail = HELPER_TASK.process_uploaded_media(data.uuid, null, data.thumbnail, STORAGE_CONFIG.storage_path);
-        }
-
-        if (data.styles === undefined || data.styles.length === 0) {
-            data.styles = {};
-        }
-
-        data.styles = JSON.stringify(data.styles);
-        // data.order = await HELPER_TASK.order_exhibits(data.uuid, DB, TABLES);
-
-        const CREATE_RECORD_TASK = new EXHIBIT_RECORD_TASKS(DB, TABLES);
-        let result = await CREATE_RECORD_TASK.create_exhibit_record(data);
-
-        if (result === false) {
-
-            return {
-                status: 200,
-                message: 'Unable to create exhibit record'
-            };
-
-        } else {
-
-            return {
-                status: 201,
-                message: 'Exhibit record created',
-                data: data.uuid
-            };
-        }
+        return build_response(
+            CONSTANTS.STATUS_CODES.CREATED,
+            'Exhibit record created',
+            data.uuid
+        );
 
     } catch (error) {
+        LOGGER.module().error(`ERROR: [/exhibits/model (create_exhibit_record)] ${error.message}`, {
+            stack: error.stack
+        });
 
-        LOGGER.module().error('ERROR: [/exhibits/model (create_exhibit_record)] Unable to create exhibit record ' + error.message);
-
-        return {
-            status: 200,
-            message: 'Unable to create record ' + error.message
-        };
+        return build_response(
+            CONSTANTS.STATUS_CODES.OK,
+            `Unable to create record: ${error.message}`
+        );
     }
 };
 
 /**
  * Gets all exhibit records
+ * @returns {Promise<Object>} Response object with records
  */
-exports.get_exhibit_records = async function () {
-
+exports.get_exhibit_records = async () => {
     try {
+        const records = await exhibit_record_task.get_exhibit_records();
 
-        const TASK = new EXHIBIT_RECORD_TASKS(DB, TABLES);
-
-        return {
-            status: 200,
-            message: 'Exhibit records',
-            data: await TASK.get_exhibit_records()
-        };
+        return build_response(
+            CONSTANTS.STATUS_CODES.OK,
+            'Exhibit records',
+            records
+        );
 
     } catch (error) {
-        LOGGER.module().error('ERROR: [/exhibits/model (get_exhibit_records)] ' + error.message);
-        return {
-            status: 400,
-            message: error.message
-        };
+        LOGGER.module().error(`ERROR: [/exhibits/model (get_exhibit_records)] ${error.message}`, {
+            stack: error.stack
+        });
+
+        return build_response(
+            CONSTANTS.STATUS_CODES.BAD_REQUEST,
+            error.message
+        );
     }
 };
 
 /**
- * Gets exhibit title
- * @param uuid
+ * Gets exhibit title by UUID
+ * @param {string} uuid - Exhibit UUID
+ * @returns {Promise<Object>} Response object with title
  */
-exports.get_exhibit_title = async function (uuid) {
-
+exports.get_exhibit_title = async (uuid) => {
     try {
+        if (!uuid || typeof uuid !== 'string') {
+            return build_response(
+                CONSTANTS.STATUS_CODES.BAD_REQUEST,
+                'Invalid UUID provided'
+            );
+        }
 
-        const TASK = new EXHIBIT_RECORD_TASKS(DB, TABLES);
+        const title = await exhibit_record_task.get_exhibit_title(uuid);
 
-        return {
-            status: 200,
-            message: 'Exhibit records',
-            data: await TASK.get_exhibit_title(uuid)
-        };
+        return build_response(
+            CONSTANTS.STATUS_CODES.OK,
+            'Exhibit title',
+            title
+        );
 
     } catch (error) {
-        LOGGER.module().error('ERROR: [/exhibits/model (get_exhibit_title)] ' + error.message);
-        return {
-            status: 400,
-            message: error.message
-        };
+        LOGGER.module().error(`ERROR: [/exhibits/model (get_exhibit_title)] ${error.message}`, {
+            uuid,
+            stack: error.stack
+        });
+
+        return build_response(
+            CONSTANTS.STATUS_CODES.BAD_REQUEST,
+            error.message
+        );
     }
 };
 
 /**
- * Gets exhibit record by uuid
- * @param uuid
+ * Gets exhibit record by UUID
+ * @param {string} uuid - Exhibit UUID
+ * @returns {Promise<Object>} Response object with record
  */
-exports.get_exhibit_record = async function (uuid) {
-
+exports.get_exhibit_record = async (uuid) => {
     try {
-        console.log('get exhibit record ', uuid);
-        const TASK = new EXHIBIT_RECORD_TASKS(DB, TABLES);
+        if (!uuid || typeof uuid !== 'string') {
+            return build_response(
+                CONSTANTS.STATUS_CODES.BAD_REQUEST,
+                'Invalid UUID provided'
+            );
+        }
 
-        return {
-            status: 200,
-            message: 'Exhibit records',
-            data: await TASK.get_exhibit_record(uuid)
-        };
+        const record = await exhibit_record_task.get_exhibit_record(uuid);
+
+        return build_response(
+            CONSTANTS.STATUS_CODES.OK,
+            'Exhibit record',
+            record
+        );
 
     } catch (error) {
-        LOGGER.module().error('ERROR: [/exhibits/model (get_exhibit_record)] ' + error.message);
-        return {
-            status: 400,
-            message: error.message
-        };
+        LOGGER.module().error(`ERROR: [/exhibits/model (get_exhibit_record)] ${error.message}`, {
+            uuid,
+            stack: error.stack
+        });
+
+        return build_response(
+            CONSTANTS.STATUS_CODES.BAD_REQUEST,
+            error.message
+        );
     }
 };
 
 /**
- * Gets exhibit edit record by uuid
- * @param uuid
- * @param uid
+ * Gets exhibit edit record by UUID and user ID
+ * @param {string} uid - User ID
+ * @param {string} uuid - Exhibit UUID
+ * @returns {Promise<Object>} Response object with record
  */
-exports.get_exhibit_edit_record = async function (uid, uuid) {
-
+exports.get_exhibit_edit_record = async (uid, uuid) => {
     try {
+        if (!uid || !uuid || typeof uid !== 'string' || typeof uuid !== 'string') {
+            return build_response(
+                CONSTANTS.STATUS_CODES.BAD_REQUEST,
+                'Invalid UID or UUID provided'
+            );
+        }
 
-        const TASK = new EXHIBIT_RECORD_TASKS(DB, TABLES);
+        const record = await exhibit_record_task.get_exhibit_edit_record(uid, uuid);
 
-        return {
-            status: 200,
-            message: 'Exhibit records',
-            data: await TASK.get_exhibit_edit_record(uid, uuid)
-        };
+        return build_response(
+            CONSTANTS.STATUS_CODES.OK,
+            'Exhibit edit record',
+            record
+        );
 
     } catch (error) {
-        LOGGER.module().error('ERROR: [/exhibits/model (get_exhibit_record)] ' + error.message);
-        return {
-            status: 400,
-            message: error.message
-        };
+        LOGGER.module().error(`ERROR: [/exhibits/model (get_exhibit_edit_record)] ${error.message}`, {
+            uid,
+            uuid,
+            stack: error.stack
+        });
+
+        return build_response(
+            CONSTANTS.STATUS_CODES.BAD_REQUEST,
+            error.message
+        );
+    }
+};
+
+/**
+ * Processes media updates for exhibit
+ * @param {string} uuid - Exhibit UUID
+ * @param {Object} data - Data containing media fields
+ * @returns {Object} Processed data
+ */
+const process_media_updates = (uuid, data) => {
+    const processed_data = { ...data };
+
+    // Process hero image if changed
+    if (processed_data.hero_image &&
+        processed_data.hero_image.length > 0 &&
+        processed_data.hero_image !== processed_data.hero_image_prev) {
+        processed_data.hero_image = helper_task.process_uploaded_media(
+            uuid,
+            null,
+            processed_data.hero_image,
+            STORAGE_CONFIG.storage_path
+        );
+    }
+
+    // Process thumbnail if changed
+    if (processed_data.thumbnail &&
+        processed_data.thumbnail.length > 0 &&
+        processed_data.thumbnail !== processed_data.thumbnail_prev) {
+        processed_data.thumbnail = helper_task.process_uploaded_media(
+            uuid,
+            null,
+            processed_data.thumbnail,
+            STORAGE_CONFIG.storage_path
+        );
+    }
+
+    // Clean up temporary fields
+    delete processed_data.hero_image_prev;
+    delete processed_data.thumbnail_prev;
+
+    return processed_data;
+};
+
+/**
+ * Handles post-update republishing
+ * @param {string} uuid - Exhibit UUID
+ * @returns {Promise<void>}
+ */
+const handle_republish = async (uuid) => {
+    try {
+        const suppress_result = await suppress_exhibit(uuid);
+
+        if (suppress_result && suppress_result.status === true) {
+            setTimeout(async () => {
+                try {
+                    const publish_result = await publish_exhibit(uuid);
+
+                    if (publish_result && publish_result.status === true) {
+                        LOGGER.module().info('INFO: [/exhibits/model (handle_republish)] Exhibit re-published successfully.');
+                    } else {
+                        LOGGER.module().error('ERROR: [/exhibits/model (handle_republish)] Failed to re-publish exhibit');
+                    }
+                } catch (error) {
+                    LOGGER.module().error(`ERROR: [/exhibits/model (handle_republish)] ${error.message}`, {
+                        uuid,
+                        stack: error.stack
+                    });
+                }
+            }, CONSTANTS.REPUBLISH_DELAY_MS);
+        }
+    } catch (error) {
+        LOGGER.module().error(`ERROR: [/exhibits/model (handle_republish)] ${error.message}`, {
+            uuid,
+            stack: error.stack
+        });
     }
 };
 
 /**
  * Updates exhibit record
- * @param uuid
- * @param data
+ * @param {string} uuid - Exhibit UUID
+ * @param {Object} data - Update data
+ * @returns {Promise<Object>} Response object
  */
-exports.update_exhibit_record = async function (uuid, data) {
-
+exports.update_exhibit_record = async (uuid, data) => {
     try {
-
-        const HELPER_TASK = new HELPER();
-        const VALIDATE_TASK = new VALIDATOR(EXHIBITS_UPDATE_RECORD_SCHEMA);
-        let is_valid = VALIDATE_TASK.validate(data);
-        let is_published = 0;
-
-        if (is_valid !== true) {
-
-            LOGGER.module().error('ERROR: [/exhibits/model (update_exhibit_record)] ' + is_valid[0].message);
-
-            return {
-                status: 400,
-                message: is_valid
-            };
+        if (!uuid || typeof uuid !== 'string') {
+            return build_response(
+                CONSTANTS.STATUS_CODES.BAD_REQUEST,
+                'Invalid UUID provided'
+            );
         }
 
-        HELPER_TASK.check_storage_path(uuid, STORAGE_CONFIG.storage_path);
+        // Validate input
+        const validation_result = validate_input(data, validate_update_task);
 
-        if (data.hero_image.length > 0 && data.hero_image !== data.hero_image_prev) {
-            data.hero_image = HELPER_TASK.process_uploaded_media(uuid, null, data.hero_image, STORAGE_CONFIG.storage_path);
+        if (validation_result !== true) {
+            const error_msg = validation_result[0].message || 'Validation failed';
+            LOGGER.module().error(`ERROR: [/exhibits/model (update_exhibit_record)] ${error_msg}`);
+
+            return build_response(
+                CONSTANTS.STATUS_CODES.BAD_REQUEST,
+                validation_result
+            );
         }
 
-        if (data.thumbnail.length > 0 && data.thumbnail !== data.thumbnail_prev) {
-            data.thumbnail = HELPER_TASK.process_uploaded_media(uuid, null, data.thumbnail, STORAGE_CONFIG.storage_path);
-        }
+        // Ensure storage path exists
+        helper_task.check_storage_path(uuid, STORAGE_CONFIG.storage_path);
 
-        delete data.hero_image_prev;
-        delete data.thumbnail_prev;
+        // Process media updates
+        data = process_media_updates(uuid, data);
 
-        if (data.styles === undefined || data.styles.length === 0) {
-            data.styles = {};
-        }
+        // Prepare styles
+        data.styles = prepare_styles(data.styles);
 
-        data.styles = JSON.stringify(data.styles);
-        is_published = data.is_published;
+        // Extract and remove is_published flag
+        const is_published = data.is_published;
         delete data.is_published;
 
-        const UPDATE_RECORD_TASK = new EXHIBIT_RECORD_TASKS(DB, TABLES);
-        let result = await UPDATE_RECORD_TASK.update_exhibit_record(uuid, data);
+        // Update record
+        const result = await exhibit_record_task.update_exhibit_record(uuid, data);
 
         if (result !== true) {
-            return {
-                status: 400,
-                message: 'Unable to update exhibit record'
-            };
-        } else {
-
-            if (is_published === 1) {
-
-                const is_suppressed = await suppress_exhibit(uuid);
-
-                if (is_suppressed.status === true) {
-                    setTimeout(async () => {
-
-                        const is_published = await publish_exhibit(uuid);
-
-                        if (is_published.status === true) {
-                            LOGGER.module().info('INFO: [/exhibits/model (update_exhibit_record)] Exhibit re-published successfully.');
-                        }
-
-                    }, 5000);
-                }
-            }
-
-            return {
-                status: 201,
-                message: 'Exhibit record updated'
-            };
+            return build_response(
+                CONSTANTS.STATUS_CODES.BAD_REQUEST,
+                'Unable to update exhibit record'
+            );
         }
 
+        // Handle republishing if needed (non-blocking)
+        if (is_published === 1) {
+            setImmediate(() => handle_republish(uuid));
+        }
+
+        return build_response(
+            CONSTANTS.STATUS_CODES.CREATED,
+            'Exhibit record updated'
+        );
+
     } catch (error) {
-        LOGGER.module().error('ERROR: [/exhibits/model (update_exhibit_record)] ' + error.message);
-        return {
-            status: 400,
-            message: 'Unable to update record ' + error.message
-        };
+        LOGGER.module().error(`ERROR: [/exhibits/model (update_exhibit_record)] ${error.message}`, {
+            uuid,
+            stack: error.stack
+        });
+
+        return build_response(
+            CONSTANTS.STATUS_CODES.BAD_REQUEST,
+            `Unable to update record: ${error.message}`
+        );
     }
 };
 
 /**
- * Deletes exhibit record and its items
- * @param uuid
+ * Deletes grid items for an exhibit item
+ * @param {Object} item - Exhibit item
+ * @returns {Promise<void>}
  */
-exports.delete_exhibit_record = async function (uuid) {
-
+const delete_grid_items = async (item) => {
     try {
+        const grid_items = await GRIDS_MODEL.get_grid_item_records(
+            item.is_member_of_exhibit,
+            item.uuid
+        );
 
-        const TASK = new EXHIBIT_RECORD_TASKS(DB, TABLES);
-        const ITEM_TASK = new EXHIBIT_ITEM_RECORD_TASKS(DB, TABLES);
-        let results = await ITEM_TASK.get_item_records(uuid);
+        if (!grid_items.data || grid_items.data.length === 0) {
+            return;
+        }
 
-        if (results.length > 0) {
+        const delete_promises = grid_items.data.map(async (grid_item) => {
+            try {
+                const delete_result = await GRIDS_MODEL.delete_grid_item_record(
+                    grid_item.is_member_of_exhibit,
+                    grid_item.is_member_of_grid,
+                    grid_item.uuid
+                );
 
-            let result = await ITEMS_MODEL.get_item_records(uuid);
-
-            for (let i=0; i<result.data.length; i++) {
-
-                if (result.data[i].type === 'grid') {
-
-                    let grid_items = await GRIDS_MODEL.get_grid_item_records(uuid, result.data[i].uuid);
-
-                    if (grid_items.data.length > 0) {
-
-                        for (let i=0; i<grid_items.data.length; i++) {
-
-                            let is_deleted = await GRIDS_MODEL.delete_grid_item_record(grid_items.data[i].is_member_of_exhibit, grid_items.data[i].is_member_of_grid, grid_items.data[i].uuid);
-
-                            if (is_deleted.data !== true) {
-                                LOGGER.module().error('ERROR: [/exhibits/model (delete_exhibit_record)] Unable to delete grid item ' + grid_items.data[i].uuid);
-                            }
-                        }
-                    }
+                if (delete_result.data !== true) {
+                    LOGGER.module().error(
+                        `ERROR: [/exhibits/model (delete_grid_items)] Unable to delete grid item ${grid_item.uuid}`
+                    );
                 }
-
-                if (result.data[i].type === 'vertical_timeline') {
-
-                    let timeline_items = await TIMELINES_MODEL.get_timeline_item_records(uuid, result.data[i].uuid);
-
-                    if (timeline_items.data.length > 0) {
-
-                        for (let i=0; i<timeline_items.data.length; i++) {
-
-                            let is_deleted = await TIMELINES_MODEL.delete_timeline_item_record(timeline_items.data[i].is_member_of_exhibit, timeline_items.data[i].is_member_of_timeline, timeline_items.data[i].uuid);
-
-                            if (is_deleted.data !== true) {
-                                LOGGER.module().error('ERROR: [/exhibits/model (delete_exhibit_record)] Unable to delete timeline item ' + timeline_items.data[i].uuid);
-                            }
-                        }
-                    }
-
-                    result.data[i].type = 'timeline';
-                }
-
-                let is_deleted = await ITEM_TASK.delete_item_record(result.data[i].is_member_of_exhibit, result.data[i].uuid, result.data[i].type);
-
-                if (is_deleted === false) {
-                    LOGGER.module().error('ERROR: [/exhibits/model (delete_exhibit_record)] Unable to delete exhibit item ' + result.data[i].uuid + ' / ' + result.data[i].type);
-                }
+            } catch (error) {
+                LOGGER.module().error(
+                    `ERROR: [/exhibits/model (delete_grid_items)] ${error.message}`,
+                    { grid_item_uuid: grid_item.uuid, stack: error.stack }
+                );
             }
-        }
+        });
 
-        if (await TASK.delete_exhibit_record(uuid) === true) {
-            return {
-                status: 204,
-                message: 'Record deleted'
-            };
-        }
+        await Promise.allSettled(delete_promises);
 
     } catch (error) {
-        LOGGER.module().error('ERROR: [/exhibits/model (delete_exhibit_record)] ' + error.message);
-        return {
-            status: 400,
-            message: error.message
-        };
+        LOGGER.module().error(`ERROR: [/exhibits/model (delete_grid_items)] ${error.message}`, {
+            item_uuid: item.uuid,
+            stack: error.stack
+        });
     }
 };
 
 /**
- * Clears out media value
- * @param uuid
- * @param media
+ * Deletes timeline items for an exhibit item
+ * @param {Object} item - Exhibit item
+ * @returns {Promise<void>}
  */
-exports.delete_media_value = async function (uuid, media) {
-
+const delete_timeline_items = async (item) => {
     try {
+        const timeline_items = await TIMELINES_MODEL.get_timeline_item_records(
+            item.is_member_of_exhibit,
+            item.uuid
+        );
 
-        const TASK = new EXHIBIT_RECORD_TASKS(DB, TABLES);
+        if (!timeline_items.data || timeline_items.data.length === 0) {
+            return;
+        }
 
-        if (await TASK.delete_media_value(uuid, media) === true) {
+        const delete_promises = timeline_items.data.map(async (timeline_item) => {
+            try {
+                const delete_result = await TIMELINES_MODEL.delete_timeline_item_record(
+                    timeline_item.is_member_of_exhibit,
+                    timeline_item.is_member_of_timeline,
+                    timeline_item.uuid
+                );
+
+                if (delete_result.data !== true) {
+                    LOGGER.module().error(
+                        `ERROR: [/exhibits/model (delete_timeline_items)] Unable to delete timeline item ${timeline_item.uuid}`
+                    );
+                }
+            } catch (error) {
+                LOGGER.module().error(
+                    `ERROR: [/exhibits/model (delete_timeline_items)] ${error.message}`,
+                    { timeline_item_uuid: timeline_item.uuid, stack: error.stack }
+                );
+            }
+        });
+
+        await Promise.allSettled(delete_promises);
+
+    } catch (error) {
+        LOGGER.module().error(`ERROR: [/exhibits/model (delete_timeline_items)] ${error.message}`, {
+            item_uuid: item.uuid,
+            stack: error.stack
+        });
+    }
+};
+
+/**
+ * Deletes all exhibit items and their children
+ * @param {string} uuid - Exhibit UUID
+ * @returns {Promise<void>}
+ */
+const delete_all_exhibit_items = async (uuid) => {
+    try {
+        const item_records = await item_record_task.get_item_records(uuid);
+
+        if (!item_records || item_records.length === 0) {
+            return;
+        }
+
+        const items_result = await ITEMS_MODEL.get_item_records(uuid);
+
+        if (!items_result.data || items_result.data.length === 0) {
+            return;
+        }
+
+        // Process each item
+        for (const item of items_result.data) {
+            try {
+                // Handle grid items
+                if (item.type === CONSTANTS.RECORD_TYPES.GRID) {
+                    await delete_grid_items(item);
+                }
+
+                // Handle timeline items
+                if (item.type === CONSTANTS.RECORD_TYPES.VERTICAL_TIMELINE) {
+                    await delete_timeline_items(item);
+                    item.type = CONSTANTS.RECORD_TYPES.TIMELINE;
+                }
+
+                // Delete the item itself
+                const delete_result = await item_record_task.delete_item_record(
+                    item.is_member_of_exhibit,
+                    item.uuid,
+                    item.type
+                );
+
+                if (delete_result === false) {
+                    LOGGER.module().error(
+                        `ERROR: [/exhibits/model (delete_all_exhibit_items)] Unable to delete exhibit item ${item.uuid} / ${item.type}`
+                    );
+                }
+            } catch (error) {
+                LOGGER.module().error(
+                    `ERROR: [/exhibits/model (delete_all_exhibit_items)] ${error.message}`,
+                    { item_uuid: item.uuid, stack: error.stack }
+                );
+            }
+        }
+
+    } catch (error) {
+        LOGGER.module().error(`ERROR: [/exhibits/model (delete_all_exhibit_items)] ${error.message}`, {
+            uuid,
+            stack: error.stack
+        });
+        throw error;
+    }
+};
+
+/**
+ * Deletes exhibit record and all associated items
+ * @param {string} uuid - Exhibit UUID
+ * @returns {Promise<Object>} Response object
+ */
+exports.delete_exhibit_record = async (uuid) => {
+    try {
+        if (!uuid || typeof uuid !== 'string') {
+            return build_response(
+                CONSTANTS.STATUS_CODES.BAD_REQUEST,
+                'Invalid UUID provided'
+            );
+        }
+
+        // Delete all exhibit items
+        await delete_all_exhibit_items(uuid);
+
+        // Delete the exhibit record itself
+        const delete_result = await exhibit_record_task.delete_exhibit_record(uuid);
+
+        if (delete_result === true) {
+            return build_response(
+                CONSTANTS.STATUS_CODES.NO_CONTENT,
+                'Record deleted'
+            );
+        }
+
+        return build_response(
+            CONSTANTS.STATUS_CODES.BAD_REQUEST,
+            'Unable to delete exhibit record'
+        );
+
+    } catch (error) {
+        LOGGER.module().error(`ERROR: [/exhibits/model (delete_exhibit_record)] ${error.message}`, {
+            uuid,
+            stack: error.stack
+        });
+
+        return build_response(
+            CONSTANTS.STATUS_CODES.BAD_REQUEST,
+            error.message
+        );
+    }
+};
+
+/**
+ * Clears media value from exhibit
+ * @param {string} uuid - Exhibit UUID
+ * @param {string} media - Media field name
+ * @returns {Promise<void>}
+ */
+exports.delete_media_value = async (uuid, media) => {
+    try {
+        if (!uuid || !media || typeof uuid !== 'string' || typeof media !== 'string') {
+            LOGGER.module().error('ERROR: [/exhibits/model (delete_media_value)] Invalid parameters');
+            return;
+        }
+
+        const result = await exhibit_record_task.delete_media_value(uuid, media);
+
+        if (result === true) {
             LOGGER.module().info('INFO: [/exhibits/model (delete_media_value)] Media value deleted');
         } else {
             LOGGER.module().error('ERROR: [/exhibits/model (delete_media_value)] Unable to delete media value');
         }
 
     } catch (error) {
-        LOGGER.module().error('ERROR: [/exhibits/model (delete_media_value)] ' + error.message);
+        LOGGER.module().error(`ERROR: [/exhibits/model (delete_media_value)] ${error.message}`, {
+            uuid,
+            media,
+            stack: error.stack
+        });
     }
 };
 
 /**
  * Builds exhibit preview
- * @param uuid
+ * @param {string} uuid - Exhibit UUID
+ * @returns {Promise<Object>} Response object
  */
-exports.build_exhibit_preview = async function (uuid) {
-
+exports.build_exhibit_preview = async (uuid) => {
     try {
+        if (!uuid || typeof uuid !== 'string') {
+            return {
+                status: false,
+                message: 'Invalid UUID provided'
+            };
+        }
 
-        const SET_PREVIEW_RECORD_TASK = new EXHIBIT_RECORD_TASKS(DB, TABLES);
-        let result = await SET_PREVIEW_RECORD_TASK.set_preview(uuid);
+        const preview_result = await exhibit_record_task.set_preview(uuid);
 
-        if (result === false) {
-
+        if (preview_result === false) {
             return {
                 status: false,
                 message: 'Unable to preview exhibit'
             };
-
-        } else {
-
-            const is_indexed = await INDEXER_MODEL.index_exhibit(uuid, 'preview');
-
-            if (is_indexed.status === 201) {
-
-                return {
-                    status: true,
-                    message: 'Exhibit preview built'
-                };
-            }
         }
 
+        const index_result = await INDEXER_MODEL.index_exhibit(uuid, 'preview');
+
+        if (index_result.status === CONSTANTS.STATUS_CODES.CREATED) {
+            return {
+                status: true,
+                message: 'Exhibit preview built'
+            };
+        }
+
+        return {
+            status: false,
+            message: 'Unable to index exhibit preview'
+        };
+
     } catch (error) {
-        LOGGER.module().error('ERROR: [/exhibits/model (build_exhibit_preview)] ' + error.message);
+        LOGGER.module().error(`ERROR: [/exhibits/model (build_exhibit_preview)] ${error.message}`, {
+            uuid,
+            stack: error.stack
+        });
+
+        return {
+            status: false,
+            message: error.message
+        };
     }
 };
 
 /**
- * Publishes exhibit
- * @param uuid
+ * Gets record counts for all exhibit components
+ * @param {string} uuid - Exhibit UUID
+ * @returns {Promise<Object>} Object containing counts
  */
-const publish_exhibit = async function (uuid) {
+const get_exhibit_counts = async (uuid) => {
+    const [heading_count, item_count, grid_count, timeline_count] = await Promise.all([
+        heading_record_task.get_record_count(uuid),
+        item_record_task.get_record_count(uuid),
+        grid_record_task.get_record_count(uuid),
+        timeline_record_task.get_record_count(uuid)
+    ]);
 
+    return {
+        heading_count,
+        item_count,
+        grid_count,
+        timeline_count,
+        total_count: heading_count + item_count + grid_count + timeline_count
+    };
+};
+
+/**
+ * Sets all exhibit components to published state
+ * @param {string} uuid - Exhibit UUID
+ * @returns {Promise<Array>} Array of publish results
+ */
+const set_all_to_publish = async (uuid) => {
+    return await Promise.all([
+        exhibit_record_task.set_to_publish(uuid),
+        item_record_task.set_to_publish(uuid),
+        heading_record_task.set_to_publish(uuid),
+        grid_record_task.set_to_publish(uuid),
+        timeline_record_task.set_to_publish(uuid),
+        grid_record_task.set_to_publish_grid_items(uuid),
+        timeline_record_task.set_to_publish_timeline_items(uuid)
+    ]);
+};
+
+/**
+ * Publishes exhibit
+ * @param {string} uuid - Exhibit UUID
+ * @returns {Promise<Object>} Response object
+ */
+const publish_exhibit = async (uuid) => {
     try {
+        if (!uuid || typeof uuid !== 'string') {
+            return {
+                status: false,
+                message: 'Invalid UUID provided'
+            };
+        }
 
-        const EXHIBIT_TASKS = new EXHIBIT_RECORD_TASKS(DB, TABLES);
-        const ITEM_TASKS = new EXHIBIT_ITEM_RECORD_TASKS(DB, TABLES);
-        const HEADING_TASKS = new EXHIBIT_HEADING_RECORD_TASKS(DB, TABLES);
-        const GRID_TASKS = new EXHIBIT_GRID_RECORD_TASKS(DB, TABLES);
-        const TIMELINE_TASKS = new EXHIBIT_TIMELINE_RECORD_TASKS(DB, TABLES);
+        // Check if exhibit has content
+        const counts = await get_exhibit_counts(uuid);
 
-        const heading_count = await HEADING_TASKS.get_record_count(uuid);
-        const item_count = await ITEM_TASKS.get_record_count(uuid);
-        const grid_count = await GRID_TASKS.get_record_count(uuid);
-        const timeline_count = await TIMELINE_TASKS.get_record_count(uuid);
-        const total_count = heading_count + item_count + grid_count + timeline_count;
-
-        if (total_count === 0) {
+        if (counts.total_count === 0) {
             LOGGER.module().info('INFO: [/exhibits/model (publish_exhibit)] Exhibit does not have any items');
             return {
                 status: 'no_items',
@@ -459,359 +823,418 @@ const publish_exhibit = async function (uuid) {
             };
         }
 
-        const is_exhibit_published = await EXHIBIT_TASKS.set_to_publish(uuid);
-        const is_item_published = await ITEM_TASKS.set_to_publish(uuid);
-        const is_heading_published = await HEADING_TASKS.set_to_publish(uuid);
-        const is_grid_published = await GRID_TASKS.set_to_publish(uuid);
-        const is_timeline_published = await TIMELINE_TASKS.set_to_publish(uuid);
-        const is_grid_item_published = await GRID_TASKS.set_to_publish_grid_items(uuid);
-        const is_timeline_item_published =  await TIMELINE_TASKS.set_to_publish_timeline_items(uuid);
+        // Set all components to published
+        const publish_results = await set_all_to_publish(uuid);
 
-        let errors = [];
+        // Check for errors
+        const has_errors = publish_results.some(result => result === false);
 
-        if (is_exhibit_published === false) {
-            errors.push(-1);
-        }
-
-        if (is_item_published === false) {
-            errors.push(-1);
-        }
-
-        if (is_heading_published === false) {
-            errors.push(-1);
-        }
-
-        if (is_grid_published === false) {
-            errors.push(-1);
-        }
-
-        if (is_timeline_published === false) {
-            errors.push(-1);
-        }
-
-        if (is_grid_item_published === false) {
-            errors.push(-1);
-        }
-
-        if (is_timeline_item_published === false) {
-            errors.push(-1);
-        }
-
-        if (errors.length > 0) {
-            LOGGER.module().error('ERROR: [/exhibits/model (publish_exhibit)] Unable to publish exhibit');
+        if (has_errors) {
+            LOGGER.module().error('ERROR: [/exhibits/model (publish_exhibit)] Unable to publish exhibit components');
             return {
                 status: false,
-                message: 'Unable to publish Exhibit'
+                message: 'Unable to publish exhibit'
             };
         }
 
-        const is_indexed = await INDEXER_MODEL.index_exhibit(uuid, 'publish');
+        // Index the exhibit
+        const index_result = await INDEXER_MODEL.index_exhibit(uuid, 'publish');
 
-        if (is_indexed.status === 201) {
-
+        if (index_result.status === CONSTANTS.STATUS_CODES.CREATED) {
             return {
                 status: true,
                 message: 'Exhibit published'
             };
-
-        } else {
-
-            return {
-                status: false,
-                message: 'Unable to publish (index) exhibit'
-            };
         }
 
+        return {
+            status: false,
+            message: 'Unable to publish (index) exhibit'
+        };
+
     } catch (error) {
-        LOGGER.module().error('ERROR: [/exhibits/model (publish_exhibit)] ' + error.message);
+        LOGGER.module().error(`ERROR: [/exhibits/model (publish_exhibit)] ${error.message}`, {
+            uuid,
+            stack: error.stack
+        });
+
+        return {
+            status: false,
+            message: error.message
+        };
     }
 };
 
 /**
- * Suppresses exhibit
- * @param uuid
+ * Sets all exhibit components to suppressed state
+ * @param {string} uuid - Exhibit UUID
+ * @returns {Promise<Array>} Array of suppress results
  */
-const suppress_exhibit = async function (uuid) {
+const set_all_to_suppress = async (uuid) => {
+    return await Promise.all([
+        exhibit_record_task.set_to_suppress(uuid),
+        item_record_task.set_to_suppress(uuid),
+        heading_record_task.set_to_suppress(uuid),
+        grid_record_task.set_to_suppress(uuid),
+        timeline_record_task.set_to_suppress(uuid)
+    ]);
+};
 
+/**
+ * Gets all exhibit component records
+ * @param {string} uuid - Exhibit UUID
+ * @returns {Promise<Object>} Object containing all records
+ */
+const get_all_exhibit_records = async (uuid) => {
+    const [headings, items, grids, timelines] = await Promise.all([
+        heading_record_task.get_heading_records(uuid),
+        item_record_task.get_item_records(uuid),
+        grid_record_task.get_grid_records(uuid),
+        timeline_record_task.get_timeline_records(uuid)
+    ]);
+
+    return { headings, items, grids, timelines };
+};
+
+/**
+ * Deletes items from index
+ * @param {Array} items - Array of items to delete
+ * @returns {Promise<void>}
+ */
+const delete_items_from_index = async (items) => {
+    if (!items || items.length === 0) {
+        return;
+    }
+
+    const delete_promises = items.map(async (item) => {
+        try {
+            const delete_result = await INDEXER_MODEL.delete_record(item.uuid);
+
+            if (delete_result.status !== CONSTANTS.STATUS_CODES.NO_CONTENT) {
+                LOGGER.module().error(
+                    `ERROR: [/exhibits/model (delete_items_from_index)] Unable to delete item ${item.uuid} from index`
+                );
+            }
+        } catch (error) {
+            LOGGER.module().error(
+                `ERROR: [/exhibits/model (delete_items_from_index)] ${error.message}`,
+                { item_uuid: item.uuid, stack: error.stack }
+            );
+        }
+    });
+
+    await Promise.allSettled(delete_promises);
+};
+
+/**
+ * Deletes grids from index
+ * @param {Array} grids - Array of grids to delete
+ * @returns {Promise<void>}
+ */
+const delete_grids_from_index = async (grids) => {
+    if (!grids || grids.length === 0) {
+        return;
+    }
+
+    const delete_promises = grids.map(async (grid) => {
+        try {
+            await grid_record_task.set_to_suppressed_grid_items(grid.uuid);
+            const delete_result = await INDEXER_MODEL.delete_record(grid.uuid);
+
+            if (delete_result.status !== CONSTANTS.STATUS_CODES.NO_CONTENT) {
+                LOGGER.module().error(
+                    `ERROR: [/exhibits/model (delete_grids_from_index)] Unable to delete grid ${grid.uuid} from index`
+                );
+            }
+        } catch (error) {
+            LOGGER.module().error(
+                `ERROR: [/exhibits/model (delete_grids_from_index)] ${error.message}`,
+                { grid_uuid: grid.uuid, stack: error.stack }
+            );
+        }
+    });
+
+    await Promise.allSettled(delete_promises);
+};
+
+/**
+ * Deletes timelines from index
+ * @param {Array} timelines - Array of timelines to delete
+ * @returns {Promise<void>}
+ */
+const delete_timelines_from_index = async (timelines) => {
+    if (!timelines || timelines.length === 0) {
+        return;
+    }
+
+    const delete_promises = timelines.map(async (timeline) => {
+        try {
+            await timeline_record_task.set_to_suppressed_timeline_items(timeline.uuid);
+            const delete_result = await INDEXER_MODEL.delete_record(timeline.uuid);
+
+            if (delete_result.status !== CONSTANTS.STATUS_CODES.NO_CONTENT) {
+                LOGGER.module().error(
+                    `ERROR: [/exhibits/model (delete_timelines_from_index)] Unable to delete timeline ${timeline.uuid} from index`
+                );
+            }
+        } catch (error) {
+            LOGGER.module().error(
+                `ERROR: [/exhibits/model (delete_timelines_from_index)] ${error.message}`,
+                { timeline_uuid: timeline.uuid, stack: error.stack }
+            );
+        }
+    });
+
+    await Promise.allSettled(delete_promises);
+};
+
+/**
+ * Deletes headings from index
+ * @param {Array} headings - Array of headings to delete
+ * @returns {Promise<void>}
+ */
+const delete_headings_from_index = async (headings) => {
+    if (!headings || headings.length === 0) {
+        return;
+    }
+
+    const delete_promises = headings.map(async (heading) => {
+        try {
+            const delete_result = await INDEXER_MODEL.delete_record(heading.uuid);
+
+            if (delete_result.status !== CONSTANTS.STATUS_CODES.NO_CONTENT) {
+                LOGGER.module().error(
+                    `ERROR: [/exhibits/model (delete_headings_from_index)] Unable to delete heading ${heading.uuid} from index`
+                );
+            }
+        } catch (error) {
+            LOGGER.module().error(
+                `ERROR: [/exhibits/model (delete_headings_from_index)] ${error.message}`,
+                { heading_uuid: heading.uuid, stack: error.stack }
+            );
+        }
+    });
+
+    await Promise.allSettled(delete_promises);
+};
+
+/**
+ * Suppresses exhibit
+ * @param {string} uuid - Exhibit UUID
+ * @returns {Promise<Object>} Response object
+ */
+const suppress_exhibit = async (uuid) => {
     try {
-
-        const EXHIBIT_TASKS = new EXHIBIT_RECORD_TASKS(DB, TABLES);
-        const ITEM_TASKS = new EXHIBIT_ITEM_RECORD_TASKS(DB, TABLES);
-        const HEADING_TASKS = new EXHIBIT_HEADING_RECORD_TASKS(DB, TABLES);
-        const GRID_TASKS = new EXHIBIT_GRID_RECORD_TASKS(DB, TABLES);
-        const TIMELINE_TASKS = new EXHIBIT_TIMELINE_RECORD_TASKS(DB, TABLES);
-        const is_exhibit_suppressed = await EXHIBIT_TASKS.set_to_suppress(uuid);
-        const is_item_suppressed = await ITEM_TASKS.set_to_suppress(uuid);
-        const is_heading_suppressed = await HEADING_TASKS.set_to_suppress(uuid);
-        const is_grid_suppressed = await GRID_TASKS.set_to_suppress(uuid);
-        const is_timeline_suppressed = await TIMELINE_TASKS.set_to_suppress(uuid);
-        let errors = [];
-
-        if (is_exhibit_suppressed === false) {
-            errors.push(-1);
-        }
-
-        if (is_item_suppressed === false) {
-            errors.push(-1);
-        }
-
-        if (is_heading_suppressed === false) {
-            errors.push(-1);
-        }
-
-        if (is_grid_suppressed === false) {
-            errors.push(-1);
-        }
-
-        if (is_timeline_suppressed === false) {
-            errors.push(-1);
-        }
-
-        if (errors.length > 0) {
-            LOGGER.module().error('ERROR: [/exhibits/model (suppress_exhibit)] Unable to suppress exhibit');
-            return false;
-        }
-
-        const headings = await HEADING_TASKS.get_heading_records(uuid);
-        const items = await ITEM_TASKS.get_item_records(uuid);
-        const grids = await GRID_TASKS.get_grid_records(uuid);
-        const timelines = await TIMELINE_TASKS.get_timeline_records(uuid);
-
-        let is_exhibit_deleted = await INDEXER_MODEL.delete_record(uuid);
-
-        if (is_exhibit_deleted.status === 204) {
-
-            if (items.length > 0) {
-
-                for (let i=0;i<items.length;i++) {
-
-                    let is_deleted = await INDEXER_MODEL.delete_record(items[i].uuid);
-
-                    if (is_deleted.status !== 204) {
-                        LOGGER.module().error('ERROR: [/exhibits/model (suppress_exhibit)] Unable to delete item ' + items[i].uuid + ' from index');
-                    }
-                }
-            }
-
-            if (grids.length > 0) {
-
-                for (let g=0;g<grids.length;g++) {
-
-                    await GRID_TASKS.set_to_suppressed_grid_items(grids[g].uuid);
-                    let is_deleted = await INDEXER_MODEL.delete_record(grids[g].uuid);
-
-                    if (is_deleted.status !== 204) {
-                        LOGGER.module().error('ERROR: [/exhibits/model (suppress_exhibit)] Unable to delete grid ' + grids[g].uuid + ' from index');
-                    }
-                }
-            }
-
-            if (timelines.length > 0) {
-
-                for (let t=0;t<timelines.length;t++) {
-
-                    await TIMELINE_TASKS.set_to_suppressed_timeline_items(timelines[t].uuid);
-                    let is_deleted = await INDEXER_MODEL.delete_record(timelines[t].uuid);
-
-                    if (is_deleted.status !== 204) {
-                        LOGGER.module().error('ERROR: [/exhibits/model (suppress_exhibit)] Unable to delete timeline ' + timelines[t].uuid + ' from index');
-                    }
-                }
-            }
-
-            if (headings.length > 0) {
-
-                for (let h=0;h<headings.length;h++) {
-
-                    let is_deleted = await INDEXER_MODEL.delete_record(headings[h].uuid);
-
-                    if (is_deleted.status !== 204) {
-                        LOGGER.module().error('ERROR: [/exhibits/model (suppress_exhibit)] Unable to delete heading ' + headings[h].uuid + ' from index');
-                    }
-                }
-            }
-
-            return {
-                status: true,
-                message: 'Exhibit suppressed.'
-            };
-
-        } else {
-
+        if (!uuid || typeof uuid !== 'string') {
             return {
                 status: false,
-                message: 'Unable to suppress exhibit.'
+                message: 'Invalid UUID provided'
             };
         }
 
+        // Set all components to suppressed
+        const suppress_results = await set_all_to_suppress(uuid);
+
+        // Check for errors
+        const has_errors = suppress_results.some(result => result === false);
+
+        if (has_errors) {
+            LOGGER.module().error('ERROR: [/exhibits/model (suppress_exhibit)] Unable to suppress exhibit components');
+            return {
+                status: false,
+                message: 'Unable to suppress exhibit'
+            };
+        }
+
+        // Get all exhibit records
+        const records = await get_all_exhibit_records(uuid);
+
+        // Delete exhibit from index
+        const exhibit_delete_result = await INDEXER_MODEL.delete_record(uuid);
+
+        if (exhibit_delete_result.status !== CONSTANTS.STATUS_CODES.NO_CONTENT) {
+            LOGGER.module().error('ERROR: [/exhibits/model (suppress_exhibit)] Unable to delete exhibit from index');
+            return {
+                status: false,
+                message: 'Unable to suppress exhibit'
+            };
+        }
+
+        // Delete all components from index in parallel
+        await Promise.all([
+            delete_items_from_index(records.items),
+            delete_grids_from_index(records.grids),
+            delete_timelines_from_index(records.timelines),
+            delete_headings_from_index(records.headings)
+        ]);
+
+        return {
+            status: true,
+            message: 'Exhibit suppressed'
+        };
+
     } catch (error) {
-        LOGGER.module().error('ERROR: [/exhibits/model (suppress_exhibit)] ' + error.message);
+        LOGGER.module().error(`ERROR: [/exhibits/model (suppress_exhibit)] ${error.message}`, {
+            uuid,
+            stack: error.stack
+        });
+
+        return {
+            status: false,
+            message: error.message
+        };
     }
 };
 
 /**
  * Deletes exhibit preview instance
- * @param uuid
+ * @param {string} uuid - Exhibit UUID
+ * @returns {Promise<Object>} Response object
  */
-exports.delete_exhibit_preview = async function (uuid) {
-
+exports.delete_exhibit_preview = async (uuid) => {
     try {
-
-        const EXHIBIT_TASKS = new EXHIBIT_RECORD_TASKS(DB, TABLES);
-        const ITEM_TASKS = new EXHIBIT_ITEM_RECORD_TASKS(DB, TABLES);
-        const HEADING_TASKS = new EXHIBIT_HEADING_RECORD_TASKS(DB, TABLES);
-        const GRID_TASKS = new EXHIBIT_GRID_RECORD_TASKS(DB, TABLES);
-        const TIMELINE_TASKS = new EXHIBIT_TIMELINE_RECORD_TASKS(DB, TABLES);
-        const is_exhibit_preview_unset = await EXHIBIT_TASKS.unset_preview(uuid);
-        let errors = [];
-
-        if (is_exhibit_preview_unset === false) {
-            errors.push(-1);
-        }
-
-        if (errors.length > 0) {
-            LOGGER.module().error('ERROR: [/exhibits/model (delete_exhibit_preview)] Unable to unset exhibit preview');
-            return false;
-        }
-
-        const headings = await HEADING_TASKS.get_heading_records(uuid);
-        const items = await ITEM_TASKS.get_item_records(uuid);
-        const grids = await GRID_TASKS.get_grid_records(uuid);
-        const timelines = await TIMELINE_TASKS.get_timeline_records(uuid);
-
-        let is_exhibit_deleted = await INDEXER_MODEL.delete_record(uuid);
-
-        if (is_exhibit_deleted.status === 204) {
-
-            if (items.length > 0) {
-
-                for (let i=0;i<items.length;i++) {
-
-                    let is_deleted = await INDEXER_MODEL.delete_record(items[i].uuid);
-
-                    if (is_deleted.status !== 204) {
-                        LOGGER.module().error('ERROR: [/exhibits/model (delete_exhibit_preview)] Unable to unset item preview ' + items[i].uuid + ' from index');
-                    }
-                }
-            }
-
-            if (grids.length > 0) {
-
-                for (let g=0;g<grids.length;g++) {
-
-                    await GRID_TASKS.set_to_suppressed_grid_items(grids[g].uuid);
-                    let is_deleted = await INDEXER_MODEL.delete_record(grids[g].uuid);
-
-                    if (is_deleted.status !== 204) {
-                        LOGGER.module().error('ERROR: [/exhibits/model (delete_exhibit_preview)] Unable to unset grid preview ' + grids[g].uuid + ' from index');
-                    }
-                }
-            }
-
-            if (timelines.length > 0) {
-
-                for (let t=0;t<timelines.length;t++) {
-
-                    await TIMELINE_TASKS.set_to_suppressed_timeline_items(timelines[t].uuid);
-                    let is_deleted = await INDEXER_MODEL.delete_record(timelines[t].uuid);
-
-                    if (is_deleted.status !== 204) {
-                        LOGGER.module().error('ERROR: [/exhibits/model (delete_exhibit_preview)] Unable to unset timeline preview' + timelines[t].uuid + ' from index');
-                    }
-                }
-            }
-
-            if (headings.length > 0) {
-
-                for (let h=0;h<headings.length;h++) {
-
-                    let is_deleted = await INDEXER_MODEL.delete_record(headings[h].uuid);
-
-                    if (is_deleted.status !== 204) {
-                        LOGGER.module().error('ERROR: [/exhibits/model (delete_exhibit_preview)] Unable to unset heading preview ' + headings[h].uuid + ' from index');
-                    }
-                }
-            }
-
-            return {
-                status: true,
-                message: 'Exhibit preview unset.'
-            };
-
-        } else {
-
+        if (!uuid || typeof uuid !== 'string') {
             return {
                 status: false,
-                message: 'Unable to unset exhibit preview.'
+                message: 'Invalid UUID provided'
             };
         }
 
+        // Unset preview
+        const unset_result = await exhibit_record_task.unset_preview(uuid);
+
+        if (unset_result === false) {
+            LOGGER.module().error('ERROR: [/exhibits/model (delete_exhibit_preview)] Unable to unset exhibit preview');
+            return {
+                status: false,
+                message: 'Unable to unset exhibit preview'
+            };
+        }
+
+        // Get all exhibit records
+        const records = await get_all_exhibit_records(uuid);
+
+        // Delete exhibit from index
+        const exhibit_delete_result = await INDEXER_MODEL.delete_record(uuid);
+
+        if (exhibit_delete_result.status !== CONSTANTS.STATUS_CODES.NO_CONTENT) {
+            LOGGER.module().error('ERROR: [/exhibits/model (delete_exhibit_preview)] Unable to delete exhibit preview from index');
+            return {
+                status: false,
+                message: 'Unable to delete exhibit preview'
+            };
+        }
+
+        // Delete all components from index in parallel
+        await Promise.all([
+            delete_items_from_index(records.items),
+            delete_grids_from_index(records.grids),
+            delete_timelines_from_index(records.timelines),
+            delete_headings_from_index(records.headings)
+        ]);
+
+        return {
+            status: true,
+            message: 'Exhibit preview deleted'
+        };
+
     } catch (error) {
-        LOGGER.module().error('ERROR: [/exhibits/model (delete_exhibit_preview)] ' + error.message);
+        LOGGER.module().error(`ERROR: [/exhibits/model (delete_exhibit_preview)] ${error.message}`, {
+            uuid,
+            stack: error.stack
+        });
+
+        return {
+            status: false,
+            message: error.message
+        };
     }
 };
 
 /**
  * Checks if there is an existing exhibit preview instance
- * @param uuid
+ * @param {string} uuid - Exhibit UUID
+ * @returns {Promise<boolean>} True if preview exists
  */
-exports.check_preview = async function (uuid) {
-
+exports.check_preview = async (uuid) => {
     try {
-
-        const record = await INDEXER_MODEL.get_indexed_record(uuid);
-        return record.data.found;
-
-    } catch (error) {
-        LOGGER.module().error('ERROR: [/exhibits/model (check_preview)] ' + error.message);
-    }
-};
-
-// TODO: transfer exhibits
-
-/** TODO: deprecate
- * Updates exhibit order
- * @param data
- */
-exports.reorder_exhibits = async function (data) {
-
-    try {
-
-        const TASKS = new EXHIBIT_RECORD_TASKS(DB, TABLES);
-        let is_updated = '';
-        let errors = [];
-
-        for (let i=0;i<data.length;i++) {
-
-            is_updated = await TASKS.reorder_exhibits(data[i].type, data[i].order);
-
-            if (is_updated === false) {
-                errors.push(-1);
-            }
-        }
-
-        if (errors.length === 0) {
-            return true;
-        } else {
+        if (!uuid || typeof uuid !== 'string') {
+            LOGGER.module().error('ERROR: [/exhibits/model (check_preview)] Invalid UUID provided');
             return false;
         }
 
+        const record = await INDEXER_MODEL.get_indexed_record(uuid);
+        return record && record.data && record.data.found === true;
+
     } catch (error) {
-        LOGGER.module().error('ERROR: [/exhibits/model (reorder_exhibits)] ' + error.message);
+        LOGGER.module().error(`ERROR: [/exhibits/model (check_preview)] ${error.message}`, {
+            uuid,
+            stack: error.stack
+        });
+        return false;
     }
 };
 
-exports.unlock_exhibit_record = async function (uid, uuid) {
-
+/**
+ * Updates exhibit order
+ * @deprecated
+ * @param {Array} data - Array of order data
+ * @returns {Promise<boolean>} Success status
+ */
+exports.reorder_exhibits = async (data) => {
     try {
+        if (!Array.isArray(data) || data.length === 0) {
+            LOGGER.module().error('ERROR: [/exhibits/model (reorder_exhibits)] Invalid data format');
+            return false;
+        }
 
-        const HELPER_TASK = new HELPER();
-        return await HELPER_TASK.unlock_record(uid, uuid, DB, TABLES.exhibit_records);
+        const update_promises = data.map(item =>
+            exhibit_record_task.reorder_exhibits(item.type, item.order)
+        );
+
+        const results = await Promise.allSettled(update_promises);
+
+        // Check if any updates failed
+        const has_failures = results.some(result =>
+            result.status === 'rejected' || result.value === false
+        );
+
+        return !has_failures;
 
     } catch (error) {
-        LOGGER.module().error('ERROR: [/exhibits/model (unlock_exhibit_record)] ' + error.message);
+        LOGGER.module().error(`ERROR: [/exhibits/model (reorder_exhibits)] ${error.message}`, {
+            stack: error.stack
+        });
+        return false;
     }
-}
+};
 
+/**
+ * Unlocks exhibit record for editing
+ * @param {string} uid - User ID
+ * @param {string} uuid - Exhibit UUID
+ * @returns {Promise<*>} Unlock result
+ */
+exports.unlock_exhibit_record = async (uid, uuid) => {
+    try {
+        if (!uid || !uuid || typeof uid !== 'string' || typeof uuid !== 'string') {
+            LOGGER.module().error('ERROR: [/exhibits/model (unlock_exhibit_record)] Invalid parameters');
+            return false;
+        }
+
+        return await helper_task.unlock_record(uid, uuid, DB, TABLES.exhibit_records);
+
+    } catch (error) {
+        LOGGER.module().error(`ERROR: [/exhibits/model (unlock_exhibit_record)] ${error.message}`, {
+            uid,
+            uuid,
+            stack: error.stack
+        });
+        return false;
+    }
+};
+
+// Export helper functions for external use
 exports.publish_exhibit = publish_exhibit;
 exports.suppress_exhibit = suppress_exhibit;
+

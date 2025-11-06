@@ -20,72 +20,289 @@
 
 const MODEL = require('../indexer/model');
 const SERVICE = require('../indexer/service');
+const LOGGER = require('../libs/log4');
 
-exports.create_index = async function (req, res) {
+/**
+ * Validates UUID format (v4)
+ * @param {string} uuid - UUID to validate
+ * @returns {boolean}
+ */
+const is_valid_uuid = (uuid) => {
+    if (!uuid || typeof uuid !== 'string') {
+        return false;
+    }
+    const uuid_regex = /^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
+    return uuid_regex.test(uuid);
+};
+
+/**
+ * Validates record type
+ * @param {string} type - Record type to validate
+ * @returns {boolean}
+ */
+const is_valid_record_type = (type) => {
+    const valid_types = ['exhibit', 'collection', 'object', 'item']; // Adjust as needed
+    return type && typeof type === 'string' && valid_types.includes(type.toLowerCase());
+};
+
+/**
+ * Creates a new search index
+ * @param {Object} req - Express request object
+ * @param {Object} res - Express response object
+ * @returns {Promise<void>}
+ */
+exports.create_index = async (req, res) => {
 
     try {
+        // Note: Add authorization check here if needed
+        // Example: if (!await check_admin_permission(req)) { return res.status(403)... }
+
         const result = await SERVICE.create_index();
-        res.status(result.status).send(result);
+
+        // Validate result structure
+        if (!result || typeof result.status !== 'number') {
+            throw new Error('Invalid response from service');
+        }
+
+        return res.status(result.status).json(result);
+
     } catch (error) {
-        res.status(500).send({message: `Unable to create index. ${error.message}`});
+        LOGGER.module().error('ERROR: [/indexer/controller (create_index)]', {
+            error: error.message,
+            stack: error.stack,
+            userId: req.user?.id
+        });
+
+        if (!res.headersSent) {
+            return res.status(500).json({
+                success: false,
+                message: 'Unable to create index'
+            });
+        }
     }
 };
 
-exports.index_exhibit = async function (req, res) {
+/**
+ * Indexes a specific exhibit record
+ * @param {Object} req - Express request object
+ * @param {Object} res - Express response object
+ * @returns {Promise<void>}
+ */
+exports.index_exhibit = async (req, res) => {
 
     try {
-        const uuid = req.params.uuid;
+        const { uuid } = req.params;
+
+        // Validate UUID
+        if (!is_valid_uuid(uuid)) {
+            return res.status(400).json({
+                success: false,
+                message: 'Valid exhibit UUID is required',
+                code: 'INVALID_UUID'
+            });
+        }
+
+        // Note: Add authorization check here if needed
+        // Example: if (!await check_permission(req, 'index_exhibit', uuid)) { return res.status(403)... }
+
         const result = await MODEL.index_exhibit(uuid);
-        res.status(result.status).send(result);
+
+        // Validate result structure
+        if (!result || typeof result.status !== 'number') {
+            throw new Error('Invalid response from model');
+        }
+
+        return res.status(result.status).json(result);
+
     } catch (error) {
-        res.status(500).send({message: `Unable to index exhibit. ${error.message}`});
+        LOGGER.module().error('ERROR: [/indexer/controller (index_exhibit)]', {
+            error: error.message,
+            stack: error.stack,
+            uuid: req.params.uuid,
+            userId: req.user?.id
+        });
+
+        if (!res.headersSent) {
+            return res.status(500).json({
+                success: false,
+                message: 'Unable to index exhibit'
+            });
+        }
     }
 };
 
-exports.get_indexed_record = async function (req, res) {
+/**
+ * Retrieves an indexed record by UUID
+ * @param {Object} req - Express request object
+ * @param {Object} res - Express response object
+ * @returns {Promise<void>}
+ */
+exports.get_indexed_record = async (req, res) => {
 
     try {
-        const uuid = req.params.uuid;
+        const { uuid } = req.params;
+
+        // Validate UUID
+        if (!is_valid_uuid(uuid)) {
+            return res.status(400).json({
+                success: false,
+                message: 'Valid record UUID is required',
+                code: 'INVALID_UUID'
+            });
+        }
+
+        // Note: Add authorization check here if needed
+        // Example: if (!await check_permission(req, 'view_indexed_record', uuid)) { return res.status(403)... }
+
         const response = await MODEL.get_indexed_record(uuid);
-        res.status(response.status).send(response.data);
-    } catch (error) {
-        res.status(500).send({message: `Unable to get indexed record. ${error.message}`});
-    }
 
+        // Validate response structure
+        if (!response || typeof response.status !== 'number') {
+            throw new Error('Invalid response from model');
+        }
+
+        // Check if record was found
+        if (response.status === 404) {
+            return res.status(404).json({
+                success: false,
+                message: 'Record not found',
+                code: 'RECORD_NOT_FOUND'
+            });
+        }
+
+        return res.status(response.status).json(response.data);
+
+    } catch (error) {
+        LOGGER.module().error('ERROR: [/indexer/controller (get_indexed_record)]', {
+            error: error.message,
+            stack: error.stack,
+            uuid: req.params.uuid,
+            userId: req.user?.id
+        });
+
+        if (!res.headersSent) {
+            return res.status(500).json({
+                success: false,
+                message: 'Unable to retrieve indexed record'
+            });
+        }
+    }
 };
 
-exports.delete_record = async function (req, res) {
+/**
+ * Deletes a record from the index
+ * @param {Object} req - Express request object
+ * @param {Object} res - Express response object
+ * @returns {Promise<void>}
+ */
+exports.delete_record = async (req, res) => {
 
     try {
-        const uuid = req.params.uuid;
+        const { uuid } = req.params;
+
+        // Validate UUID
+        if (!is_valid_uuid(uuid)) {
+            return res.status(400).json({
+                success: false,
+                message: 'Valid record UUID is required',
+                code: 'INVALID_UUID'
+            });
+        }
+
+        // Note: IMPORTANT - Add authorization check here!
+        // Deletes should be heavily restricted
+        // Example: if (!await check_permission(req, 'delete_indexed_record', uuid)) { return res.status(403)... }
+
         const result = await MODEL.delete_record(uuid);
-        res.status(result.status).send(result);
+
+        // Validate result structure
+        if (!result || typeof result.status !== 'number') {
+            throw new Error('Invalid response from model');
+        }
+
+        return res.status(result.status).json(result);
+
     } catch (error) {
-        res.status(500).send({message: `Unable to delete record. ${error.message}`});
+        LOGGER.module().error('ERROR: [/indexer/controller (delete_record)]', {
+            error: error.message,
+            stack: error.stack,
+            uuid: req.params.uuid,
+            userId: req.user?.id
+        });
+
+        if (!res.headersSent) {
+            return res.status(500).json({
+                success: false,
+                message: 'Unable to delete record'
+            });
+        }
     }
 };
 
-exports.index_record = async function (req, res) {
-
+/**
+ * Indexes a record by UUID and type
+ * @param {Object} req - Express request object
+ * @param {Object} res - Express response object
+ * @returns {Promise<void>}
+ */
+exports.index_record = async (req, res) => {
     try {
+        const { uuid } = req.params;
+        const { type } = req.query;
 
-        const uuid = req.params.uuid;
-        const type = req.query.type;
-
-        if (uuid === undefined || uuid.length === 0) {
-            res.status(400).send('Bad request.');
-            return false;
+        // Validate UUID
+        if (!is_valid_uuid(uuid)) {
+            return res.status(400).json({
+                success: false,
+                message: 'Valid record UUID is required',
+                code: 'INVALID_UUID'
+            });
         }
 
-        if (type === undefined || type.length === 0) {
-            res.status(400).send('Bad request.');
-            return false;
+        // Validate type parameter
+        if (!type || typeof type !== 'string' || type.trim().length === 0) {
+            return res.status(400).json({
+                success: false,
+                message: 'Record type is required',
+                code: 'MISSING_TYPE'
+            });
         }
 
-        let result = await MODEL.index_record(uuid, type);
-        res.status(result.status).send(result);
+        // Optional: Validate against allowed types
+        if (!is_valid_record_type(type)) {
+            return res.status(400).json({
+                success: false,
+                message: 'Invalid record type',
+                code: 'INVALID_TYPE'
+            });
+        }
+
+        // Note: Add authorization check here if needed
+        // Example: if (!await check_permission(req, 'index_record', uuid)) { return res.status(403)... }
+
+        const result = await MODEL.index_record(uuid, type.toLowerCase());
+
+        // Validate result structure
+        if (!result || typeof result.status !== 'number') {
+            throw new Error('Invalid response from model');
+        }
+
+        return res.status(result.status).json(result);
 
     } catch (error) {
-        res.status(500).send({message: `Unable to index. ${error.message}`});
+        LOGGER.module().error('ERROR: [/indexer/controller (index_record)]', {
+            error: error.message,
+            stack: error.stack,
+            uuid: req.params.uuid,
+            type: req.query.type,
+            userId: req.user?.id
+        });
+
+        if (!res.headersSent) {
+            return res.status(500).json({
+                success: false,
+                message: 'Unable to index record'
+            });
+        }
     }
 };
