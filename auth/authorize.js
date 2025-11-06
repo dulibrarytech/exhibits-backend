@@ -21,16 +21,11 @@
 const VALIDATOR = require('validator');
 const DB = require('../config/db_config')();
 const DB_TABLES = require('../config/db_tables_config')();
-const TABLE = DB_TABLES.exhibits; // .user_records
+const TABLE = DB_TABLES.exhibits;
 const AUTH = require('../auth/tasks/auth_tasks');
 const AUTH_TASKS = new AUTH(DB, TABLE);
 const LOGGER = require('../libs/log4');
 
-/**
- * Checks user permission
- * @param options
- * req, permissions, record_type
- */
 exports.check_permission = async function (options) {
 
     try {
@@ -53,6 +48,7 @@ exports.check_permission = async function (options) {
             AUTH_TASKS.get_user_permissions(token),
             AUTH_TASKS.get_permissions()
         ]);
+        console.log('USER ID ', user_id);
 
         // Validate critical data
         if (!user_id || !Array.isArray(user_permissions) || !Array.isArray(all_permissions)) {
@@ -68,12 +64,17 @@ exports.check_permission = async function (options) {
         const user_permissions_found = all_permissions.filter(
             perm => user_permission_ids.has(perm.id)
         );
-
-        // Find matching action permissions
-        const actions_set = new Set(actions);
-        const matching_permissions = user_permissions_found.filter(
-            perm => actions_set.has(perm.permission)
+        console.log('MY PERMISSIONS ', user_permissions_found);
+        // Normalize actions for comparison
+        const actions_normalized = new Set(
+            actions.map(action => String(action).toLowerCase().trim())
         );
+
+        // Find matching action permissions with normalized comparison
+        const matching_permissions = user_permissions_found.filter(perm => {
+            const perm_normalized = String(perm.permission).toLowerCase().trim();
+            return actions_normalized.has(perm_normalized);
+        });
 
         // No permissions granted
         if (matching_permissions.length === 0) {
@@ -84,6 +85,9 @@ exports.check_permission = async function (options) {
         if (users_admin === true) {
             return true;
         }
+
+        console.log('MATCHING PERMISSIONS ', matching_permissions);
+        console.log('ACTIONS ', actions);
 
         // If user has all required permissions, authorization complete
         if (matching_permissions.length === actions.length) {

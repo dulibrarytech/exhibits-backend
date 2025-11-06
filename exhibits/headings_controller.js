@@ -63,7 +63,6 @@ exports.get_heading_record = async function (req, res) {
 
     try {
 
-        // TODO: type=edit,index,title
         const is_member_of_exhibit = req.params.exhibit_id;
         const uuid = req.params.heading_id;
         const uid = req.query.uid;
@@ -102,7 +101,7 @@ exports.get_heading_record = async function (req, res) {
 exports.update_heading_record = async function (req, res) {
 
     try {
-        console.log('updating heading record');
+
         const is_member_of_exhibit = req.params.exhibit_id;
         const heading_id = req.params.heading_id;
         const data = req.body;
@@ -146,7 +145,7 @@ exports.update_heading_record = async function (req, res) {
 exports.unlock_heading_record = async function (req, res) {
 
     try {
-        console.log('unlocking heading record');
+
         const exhibit_id = req.params.exhibit_id;
         const heading_id = req.params.heading_id;
         const uid = req.query.uid;

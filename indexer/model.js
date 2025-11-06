@@ -135,28 +135,6 @@ const construct_exhibit_index_record = (record) => {
         is_featured: record.is_featured,
         is_preview: record.is_preview,
         created: record.created
-        /*
-        uuid: record.uuid,
-        type: record.type,
-        title: record.title || '',
-        subtitle: record.subtitle || '',
-        banner_template: record.banner_template || '',
-        about_the_curators: record.about_the_curators || '',
-        alert_text: record.alert_text || '',
-        hero_image: record.hero_image || '',
-        thumbnail_image: record.thumbnail || '',
-        description: record.description || '',
-        page_layout: record.page_layout || '',
-        exhibit_template: record.exhibit_template || '',
-        subjects: record.exhibit_subjects || '',
-        styles: record.styles || '',
-        order: record.order || 0,
-        is_student_curated: record.is_student_curated || 0,
-        is_published: record.is_published || 0,
-        is_featured: record.is_featured || 0,
-        is_preview: record.is_preview || 0
-
-         */
     };
 
     // Only add created field if it has a value
@@ -191,18 +169,6 @@ const construct_heading_index_record = (record) => {
         is_anchor: record.is_anchor,
         is_published: record.is_published,
         created: record.created
-        /*
-        is_member_of_exhibit: record.is_member_of_exhibit,
-        uuid: record.uuid,
-        type: record.type,
-        text: record.text || '',
-        order: record.order || 0,
-        styles: record.styles || '',
-        is_visible: record.is_visible || 0,
-        is_anchor: record.is_anchor || 0,
-        is_published: record.is_published || 0
-
-         */
     };
 
     // Only add created field if it has a value
@@ -254,33 +220,6 @@ const construct_item_index_record = (record) => {
         is_repo_item: record.is_repo_item,
         is_kaltura_item: record.is_kaltura_item,
         created: record.created
-        /*
-        uuid: record.uuid,
-        is_member_of_exhibit: record.is_member_of_exhibit,
-        thumbnail: record.thumbnail || '',
-        title: record.title || '',
-        caption: record.caption || '',
-        item_type: record.item_type || '',
-        media: record.media || '',
-        text: record.text || '',
-        wrap_text: record.wrap_text || 0,
-        description: record.description || '',
-        type: record.type || '',
-        layout: record.layout || '',
-        media_width: record.media_width || 0,
-        media_padding: record.media_padding || 0,
-        alt_text: record.alt_text || '',
-        is_alt_text_decorative: record.is_alt_text_decorative || 0,
-        pdf_open_to_page: record.pdf_open_to_page || 0,
-        styles: record.styles || '',
-        subjects: process_subjects(record.item_subjects),
-        order: record.order || 0,
-        is_published: record.is_published || 0,
-        is_embedded: record.is_embedded || 0,
-        is_repo_item: record.is_repo_item || 0,
-        is_kaltura_item: record.is_kaltura_item || 0
-
-         */
     };
 
     // Only add date field if it has a value (Elasticsearch date fields can't be empty strings)
@@ -324,20 +263,6 @@ const construct_grid_index_record = (record) => {
         is_published: record.is_published,
         created: record.created,
         items: record.items
-        /*
-        is_member_of_exhibit: record.is_member_of_exhibit,
-        uuid: record.uuid,
-        type: record.type,
-        columns: record.columns || 0,
-        title: record.title || '',
-        text: record.text || '',
-        styles: record.styles || '',
-        subjects: record.item_subjects || '',
-        order: record.order || 0,
-        is_published: record.is_published || 0,
-        items: record.items || []
-
-         */
     };
 
     // Only add created field if it has a value
@@ -373,19 +298,6 @@ const construct_timeline_index_record = (record) => {
         is_published: record.is_published,
         created: record.created,
         items: record.items
-        /*
-        is_member_of_exhibit: record.is_member_of_exhibit,
-        uuid: record.uuid,
-        type: record.type,
-        title: record.title || '',
-        text: record.text || '',
-        styles: record.styles || '',
-        subjects: record.item_subjects || '',
-        order: record.order || 0,
-        is_published: record.is_published || 0,
-        items: record.items || []
-
-         */
     };
 
     // Only add created field if it has a value
@@ -827,7 +739,7 @@ exports.index_item_record = async (exhibit_id, item_id) => {
         const item_index_record = construct_item_index_record(item_record);
         const response = await index_tasks.index_record(item_index_record);
 
-        if (response === true) {
+        if (response.success === true) {
             LOGGER.module().info(
                 `INFO: [/indexer/model (index_item_record)] Item record ${item_index_record.uuid} indexed.`
             );
