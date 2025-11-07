@@ -178,7 +178,7 @@ const itemsModule = (function () {
                     break;
                 }
             }
-            console.log('REQUEST ', type);
+
             const EXHIBITS_ENDPOINTS = endpointsModule.get_exhibits_endpoints();
             const etmp = EXHIBITS_ENDPOINTS.exhibits.item_records.item_publish.post.endpoint.replace(':exhibit_id', exhibit_id);
             const endpoint = etmp.replace(':item_id', item_id);
@@ -224,21 +224,34 @@ const itemsModule = (function () {
                     let type = uuid_found.split('_');
                     let details_path;
                     let view_items = '';
-                    console.log('TYPE', type);
+
+                    if (type[1] === 'item') {
+
+                        let items = JSON.parse(window.localStorage.getItem('items'));
+                        let type;
+
+                        for (let i=0; i<items.length; i++) {
+                            if (items[i].uuid === uuid) {
+                                type = items[i].item_type;
+                                break;
+                            }
+                        }
+
+                        if (type === 'text') {
+                            details_path = `${APP_PATH}/items/standard/text/edit?exhibit_id=${exhibit_id}&item_id=${uuid}`;
+                        } else {
+                            details_path = `${APP_PATH}/items/standard/media/edit?exhibit_id=${exhibit_id}&item_id=${uuid}`;
+                        }
+                    }
+
                     if (type[1] === 'heading') {
                         details_path = `${APP_PATH}/items/heading/details?exhibit_id=${exhibit_id}&item_id=${uuid}`;
-                    } else if (type[1] === 'text') {
-                        details_path = `${APP_PATH}/items/standard/text/edit?exhibit_id=${exhibit_id}&item_id=${uuid}`;
-                    } else if (type[1] === 'image') {
-                        details_path = `${APP_PATH}/items/standard/media/edit?exhibit_id=${exhibit_id}&item_id=${uuid}`;
                     } else if (type[1] === 'grid') {
                         details_path = `${APP_PATH}/items/grid/edit?exhibit_id=${exhibit_id}&item_id=${uuid}`;
                         view_items = `<a href="${APP_PATH}/items/grid/items?exhibit_id=${exhibit_id}&grid_id=${uuid}" title="View grid Items" aria-label="view-grid-items"><i class="fa fa-list pr-1"></i></a>`;
                     } else if (type[1] === 'timeline') {
                         details_path = `${APP_PATH}/items/vertical-timeline/edit?exhibit_id=${exhibit_id}&item_id=${uuid}`;
                         view_items = `<a href="${APP_PATH}/items/timeline/items?exhibit_id=${exhibit_id}&timeline_id=${uuid}" title="View Timeline Items" aria-label="view-timeline-items"><i class="fa fa-list pr-1"></i></a>`;
-                    } else {
-                        details_path = `${APP_PATH}/items/standard/media/edit?exhibit_id=${exhibit_id}&item_id=${uuid}`;
                     }
 
                     let uuid_actions = `${uuid}-item-actions`;
@@ -297,7 +310,7 @@ const itemsModule = (function () {
                     break;
                 }
             }
-            console.log('REQUEST ', type);
+
             const EXHIBITS_ENDPOINTS = endpointsModule.get_exhibits_endpoints();
             const etmp = EXHIBITS_ENDPOINTS.exhibits.item_records.item_suppress.post.endpoint.replace(':exhibit_id', exhibit_id);
             const endpoint = etmp.replace(':item_id', item_id);
@@ -339,22 +352,36 @@ const itemsModule = (function () {
                             return false;
                         }
                     });
-                    console.log('TR ID ', uuid_found);
+
                     let type = uuid_found.split('_');
-                    console.log('TYPE ', type);
                     let edit_path;
                     let delete_path;
                     let item_type = 'item';
                     let view_items = '';
-                    console.log('TYPE ARR ', type[1]);
+
                     // edit paths
+                    // standard item media/text
+                    if (type[1] === 'item') {
+
+                        let items = JSON.parse(window.localStorage.getItem('items'));
+
+                        for (let i=0; i<items.length; i++) {
+                            if (items[i].uuid === uuid) {
+                                type = items[i].item_type;
+                                break;
+                            }
+                        }
+
+                        if (type === 'text') {
+                            edit_path = `${APP_PATH}/items/standard/text/edit?exhibit_id=${exhibit_id}&item_id=${uuid}`;
+                        } else {
+                            edit_path = `${APP_PATH}/items/standard/media/edit?exhibit_id=${exhibit_id}&item_id=${uuid}`;
+                        }
+                    }
+
                     if (type[1] === 'heading') {
                         edit_path = `${APP_PATH}/items/heading/edit?exhibit_id=${exhibit_id}&item_id=${uuid}`;
                         item_type = 'heading';
-                    } else if (type[1] === 'text') {
-                        edit_path = `${APP_PATH}/items/standard/text/edit?exhibit_id=${exhibit_id}&item_id=${uuid}`;
-                    } else if (type[1] === 'image') {
-                        edit_path = `${APP_PATH}/items/standard/media/edit?exhibit_id=${exhibit_id}&item_id=${uuid}`;
                     } else if (type[1] === 'grid') {
                         edit_path = `${APP_PATH}/items/grid/edit?exhibit_id=${exhibit_id}&item_id=${uuid}`;
                         item_type = 'grid';
@@ -363,10 +390,8 @@ const itemsModule = (function () {
                         edit_path = `${APP_PATH}/items/vertical-timeline/edit?exhibit_id=${exhibit_id}&item_id=${uuid}`;
                         item_type = 'timeline';
                         view_items = `<a href="${APP_PATH}/items/timeline/items?exhibit_id=${exhibit_id}&timeline_id=${uuid}" title="View Timeline Items" aria-label="view-timeline-items"><i class="fa fa-list pr-1"></i></a>`;
-                    } else {
-                        edit_path = `${APP_PATH}/items/standard/media/edit?exhibit_id=${exhibit_id}&item_id=${uuid}`;
                     }
-                    console.log('EDIT PATH ', edit_path);
+
                     delete_path = `${APP_PATH}/items/delete?exhibit_id=${exhibit_id}&item_id=${uuid}&type=${item_type}`;
 
                     let uuid_actions = `${uuid}-item-actions`;

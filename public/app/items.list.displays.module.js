@@ -34,7 +34,7 @@ const itemsListDisplayModule = (function () {
 
         if (item.is_published === 1) {
 
-            published_obj.draggable = `<tr id="${item.uuid}_${item.item_type}_${item.type}">`;
+            published_obj.draggable = `<tr id="${item.uuid}_${item.type}">`; // _${item.item_type}
             published_obj.item_order = `<td class="grabbable item-order"><i class="fa fa-reorder"></i><span style="padding-left: 4px;" aria-label="item-order">${item.order}</span></td>`;
             published_obj.status = `<a href="#" id="${item.uuid}" class="suppress-item" aria-label="item-status"><span id="suppress" title="published"><i class="fa fa-cloud" style="color: green"></i><br>Published</span></a>`;
 
@@ -50,7 +50,7 @@ const itemsListDisplayModule = (function () {
 
         } else if (item.is_published === 0) {
 
-            published_obj.draggable = `<tr id="${item.uuid}_${item.item_type}_${item.type}">`;
+            published_obj.draggable = `<tr id="${item.uuid}_${item.type}">`; // _${item.item_type}
             published_obj.item_order = `<td class="grabbable item-order"><i class="fa fa-reorder"></i><span style="padding-left: 4px;" aria-label="item-order">${item.order}</span></td>`;
             published_obj.status = `<a href="#" id="${item.uuid}" class="publish-item" aria-label="item-status"><span id="publish" title="suppressed"><i class="fa fa-cloud-upload" style="color: darkred"></i><br>Unpublished</span></a>`;
 

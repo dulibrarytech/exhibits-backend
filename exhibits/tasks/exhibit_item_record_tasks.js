@@ -315,7 +315,7 @@ const Exhibit_item_record_tasks = class {
             throw new Error('Valid item object is required');
         }
 
-        if (!item.uuid || typeof item.order !== 'number') {
+        if (!item.uuid || typeof item.order !== 'string') {
             throw new Error('Item must have uuid and order properties');
         }
 
