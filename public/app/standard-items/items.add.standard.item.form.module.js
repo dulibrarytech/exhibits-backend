@@ -89,7 +89,7 @@ const itemsAddStandardItemFormModule = (function () {
             const form_data = itemsCommonStandardItemFormModule.get_common_standard_item_form_fields();
 
             if (!form_data || form_data === false || form_data === undefined) {
-                display_status_message(message_element, 'danger', 'Unable to get form field values. Please check all required fields.');
+                // display_status_message(message_element, 'danger', 'Unable to get form field values. Please check all required fields.');
                 return false;
             }
 

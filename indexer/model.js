@@ -137,13 +137,6 @@ const construct_exhibit_index_record = (record) => {
         created: record.created
     };
 
-    // Only add created field if it has a value
-    if (record.created && record.created.length > 0) {
-        index_record.created = record.created;
-    } else {
-        index_record.created = null;
-    }
-
     return index_record;
 };
 
@@ -170,13 +163,6 @@ const construct_heading_index_record = (record) => {
         is_published: record.is_published,
         created: record.created
     };
-
-    // Only add created field if it has a value
-    if (record.created && record.created.length > 0) {
-        index_record.created = record.created;
-    } else {
-        index_record.created = null;
-    }
 
     return index_record;
 };
@@ -229,13 +215,6 @@ const construct_item_index_record = (record) => {
         index_record.date = null;
     }
 
-    // Only add created field if it has a value
-    if (record.created && record.created.length > 0) {
-        index_record.created = record.created;
-    } else {
-        index_record.created = null;
-    }
-
     return index_record;
 };
 
@@ -265,13 +244,6 @@ const construct_grid_index_record = (record) => {
         items: record.items
     };
 
-    // Only add created field if it has a value
-    if (record.created && record.created.length > 0) {
-        index_record.created = record.created;
-    } else {
-        index_record.created = null;
-    }
-
     return index_record;
 };
 
@@ -299,13 +271,6 @@ const construct_timeline_index_record = (record) => {
         created: record.created,
         items: record.items
     };
-
-    // Only add created field if it has a value
-    if (record.created && record.created.length > 0) {
-        index_record.created = record.created;
-    } else {
-        index_record.created = null;
-    }
 
     return index_record;
 };
@@ -539,7 +504,7 @@ exports.index_exhibit = async (uuid, type) => {
                 'Exhibit not found'
             );
         }
-
+        console.log('EXHIBIT RECORD ', exhibit_record);
         // Index main exhibit record
         const exhibit_index_record = construct_exhibit_index_record(exhibit_record);
         const exhibit_response = await index_tasks.index_record(exhibit_index_record);
