@@ -1,81 +1,231 @@
 /**
-
- Copyright 2023 University of Denver
-
- Licensed under the Apache License, Version 2.0 (the "License");
- you may not use this file except in compliance with the License.
- You may obtain a copy of the License at
-
- http://www.apache.org/licenses/LICENSE-2.0
-
- Unless required by applicable law or agreed to in writing, software
- distributed under the License is distributed on an "AS IS" BASIS,
- WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- See the License for the specific language governing permissions and
- limitations under the License.
-
+ * Copyright 2023 University of Denver
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ * http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
 
-const itemsModule = (function () {
+const itemsModule = (function() {
 
     'use strict';
 
-    const APP_PATH = window.localStorage.getItem('exhibits_app_path');
-    const EXHIBITS_ENDPOINTS = endpointsModule.get_exhibits_endpoints();
+    /**
+     * Get app path safely
+     */
+    const get_app_path = () => {
+        try {
+            const app_path = window.localStorage.getItem('exhibits_app_path');
+            if (!app_path) {
+                console.error('App path not found in localStorage');
+                return '';
+            }
+            return app_path;
+        } catch (error) {
+            console.error('Error accessing localStorage:', error);
+            return '';
+        }
+    };
+
+    /**
+     * Get exhibits endpoints safely
+     */
+    const get_exhibits_endpoints = () => {
+        try {
+            return endpointsModule.get_exhibits_endpoints();
+        } catch (error) {
+            console.error('Error getting exhibits endpoints:', error);
+            return null;
+        }
+    };
+
+    const APP_PATH = get_app_path();
+
     let obj = {};
 
-    obj.get_items = async function (uuid) {
+    /**
+     * Display message (XSS-safe)
+     */
+    const display_message = (element, type, message) => {
+        if (!element) {
+            console.error('Message element not found:', message);
+            return;
+        }
 
+        const valid_types = ['info', 'success', 'danger', 'warning'];
+        const alert_type = valid_types.includes(type) ? type : 'danger';
+
+        const alert_div = document.createElement('div');
+        alert_div.className = `alert alert-${alert_type}`;
+        alert_div.setAttribute('role', 'alert');
+
+        const icon = document.createElement('i');
+        icon.className = get_icon_class(alert_type);
+        icon.setAttribute('aria-hidden', 'true');
+        alert_div.appendChild(icon);
+
+        const text = document.createTextNode(` ${message}`);
+        alert_div.appendChild(text);
+
+        element.textContent = '';
+        element.appendChild(alert_div);
+    };
+
+    /**
+     * Get icon class for alert type
+     */
+    const get_icon_class = (alert_type) => {
+        const icon_map = {
+            'info': 'fa fa-info',
+            'success': 'fa fa-check',
+            'danger': 'fa fa-exclamation',
+            'warning': 'fa fa-exclamation-triangle'
+        };
+        return icon_map[alert_type] || 'fa fa-exclamation';
+    };
+
+    /**
+     * Safe localStorage operations
+     */
+    const safe_set_items = (items) => {
         try {
+            window.localStorage.removeItem('items');
+            window.localStorage.setItem('items', JSON.stringify(items));
+            return true;
+        } catch (error) {
+            console.error('Error saving items to localStorage:', error);
+            return false;
+        }
+    };
 
-            const token = authModule.get_user_token();
-            const response = await httpModule.req({
-                method: 'GET',
-                url: EXHIBITS_ENDPOINTS.exhibits.item_records.endpoint.replace(':exhibit_id', uuid),
-                headers: {
-                    'Content-Type': 'application/json',
-                    'x-access-token': token
-                }
-            });
-
-            if (response !== undefined && response.status === 200) {
-                window.localStorage.removeItem('items');
-                window.localStorage.setItem('items', JSON.stringify(response.data.data));
-                return response.data.data;
+    /**
+     * Get items from API
+     */
+    obj.get_items = async function(uuid) {
+        try {
+            // Validate UUID
+            if (!uuid || typeof uuid !== 'string') {
+                throw new Error('Invalid exhibit UUID');
             }
 
-        } catch (error) {
-            document.querySelector('#message').innerHTML = `<div class="alert alert-danger" role="alert"><i class="fa fa-exclamation"></i> ${error.message}</div>`;
-        }
-    }
+            // Get endpoints
+            const EXHIBITS_ENDPOINTS = get_exhibits_endpoints();
 
-    obj.display_items = async function () {
+            if (!EXHIBITS_ENDPOINTS?.exhibits?.item_records?.endpoint) {
+                throw new Error('Item records endpoint not configured');
+            }
 
-        try {
+            // Validate authentication
+            const token = authModule.get_user_token();
 
-            const exhibit_id = helperModule.get_parameter_by_name('exhibit_id');
-            const items = await itemsModule.get_items(exhibit_id);
-            let item_data = '';
-            let item_order = [];
-
-            if (items === false) {
-                document.querySelector('#item-card').innerHTML = '';
+            if (!token || token === false) {
+                const message_element = document.querySelector('#message');
+                display_message(message_element, 'danger', 'Session expired. Please log in again.');
                 return false;
             }
 
-            if (items.length === 0) {
-                document.querySelector('.card').innerHTML = '';
-                document.querySelector('#message').innerHTML = '<div class="alert alert-info" role="alert"><span id="exhibit-title"></span> exhibit is empty.</div>';
+            // Construct endpoint with URL encoding
+            const endpoint = EXHIBITS_ENDPOINTS.exhibits.item_records.endpoint
+                .replace(':exhibit_id', encodeURIComponent(uuid));
+
+            // Make API request
+            const response = await httpModule.req({
+                method: 'GET',
+                url: endpoint,
+                headers: {
+                    'Content-Type': 'application/json',
+                    'x-access-token': token
+                },
+                timeout: 30000
+            });
+
+            // Validate response
+            if (!response || response.status !== 200) {
+                throw new Error('Failed to retrieve items');
+            }
+
+            if (!response.data?.data) {
+                throw new Error('Invalid response structure');
+            }
+
+            // Save to localStorage
+            safe_set_items(response.data.data);
+
+            return response.data.data;
+
+        } catch (error) {
+            console.error('Error getting items:', error);
+            const message_element = document.querySelector('#message');
+            const error_message = error.user_message || error.message || 'Unable to retrieve items. Please try again.';
+            display_message(message_element, 'danger', error_message);
+            return false;
+        }
+    };
+
+    /**
+     * Display items list
+     */
+    obj.display_items = async function() {
+        try {
+            // Get exhibit ID
+            const exhibit_id = helperModule.get_parameter_by_name('exhibit_id');
+
+            if (!exhibit_id) {
+                const message_element = document.querySelector('#message');
+                display_message(message_element, 'warning', 'No exhibit ID provided');
+                return false;
+            }
+
+            // Get items
+            const items = await obj.get_items(exhibit_id);
+
+            if (items === false) {
+                const item_card = document.querySelector('#item-card');
+                if (item_card) {
+                    item_card.textContent = '';
+                }
+                return false;
+            }
+
+            // Handle empty exhibit
+            if (!items || items.length === 0) {
+                const card = document.querySelector('.card');
+                if (card) {
+                    card.textContent = '';
+                }
+
+                const message_element = document.querySelector('#message');
+                const info_div = document.createElement('div');
+                info_div.className = 'alert alert-info';
+                info_div.setAttribute('role', 'alert');
+
+                const span = document.createElement('span');
+                span.id = 'exhibit-title';
+                info_div.appendChild(span);
+
+                info_div.appendChild(document.createTextNode(' exhibit is empty.'));
+
+                message_element.textContent = '';
+                message_element.appendChild(info_div);
+
                 await exhibitsModule.set_exhibit_title(exhibit_id);
                 return false;
             }
 
-            for (let i = 0; i < items.length; i++) {
+            // Build item list HTML
+            let item_data = '';
 
+            for (let i = 0; i < items.length; i++) {
                 const type = items[i].type;
                 const record = items[i];
-
-                item_order.push(items[i].order);
 
                 switch(type) {
                     case 'heading':
@@ -91,12 +241,17 @@ const itemsModule = (function () {
                         item_data += await itemsListDisplayModule.display_timelines(record);
                         break;
                     default:
-                        console.log('Item type not available');
+                        console.warn(`Unknown item type: ${type}`);
                 }
             }
 
-            document.querySelector('#item-data').innerHTML = item_data;
+            // Display items
+            const item_data_element = document.querySelector('#item-data');
+            if (item_data_element) {
+                item_data_element.innerHTML = item_data;
+            }
 
+            // Initialize DataTable with row reordering
             const ITEM_LIST = new DataTable('#items', {
                 paging: false,
                 rowReorder: true
@@ -106,400 +261,617 @@ const itemsModule = (function () {
                 await helperModule.reorder_items(e, reordered_items);
             });
 
+            // Bind event handlers
             bind_publish_item_events();
             bind_suppress_item_events();
 
+            // Handle scroll to item from URL parameters
             const id = helperModule.get_parameter_by_name('id');
             const type = helperModule.get_parameter_by_name('type');
 
-            if (id !== null && type !== null) {
-                history.replaceState({}, '', APP_PATH + '/exhibits?exhibit_id=' + exhibit_id);
-                history.pushState({}, '', APP_PATH + '/exhibits?exhibit_id=' + exhibit_id);
-                location.href = '#' + id + '_' + type;
+            if (id && type) {
+                const clean_url = `${APP_PATH}/exhibits?exhibit_id=${encodeURIComponent(exhibit_id)}`;
+                window.history.replaceState({}, '', clean_url);
+                window.history.pushState({}, '', clean_url);
+                window.location.href = `#${id}_${type}`;
             }
 
+            return true;
+
         } catch (error) {
-            document.querySelector('#message').innerHTML = `<div class="alert alert-danger" role="alert"><i class="fa fa-exclamation"></i> ${error.message}</div>`;
+            console.error('Error displaying items:', error);
+            const message_element = document.querySelector('#message');
+            const error_message = error.user_message || error.message || 'Unable to display items. Please try again.';
+            display_message(message_element, 'danger', error_message);
+            return false;
         }
     };
 
-    obj.delete_item = async function () {
-
+    /**
+     * Delete item
+     */
+    obj.delete_item = async function() {
         try {
+            // Update status message
+            const delete_message = document.querySelector('#delete-message');
+            if (delete_message) {
+                delete_message.textContent = 'Deleting item...';
+            }
 
-            document.querySelector('#delete-message').innerHTML = 'Deleting item...';
-            const EXHIBITS_ENDPOINTS = endpointsModule.get_exhibits_endpoints();
+            // Get parameters
             const exhibit_id = helperModule.get_parameter_by_name('exhibit_id');
             const item_id = helperModule.get_parameter_by_name('item_id');
             const type = helperModule.get_parameter_by_name('type');
+
+            if (!exhibit_id || !item_id || !type) {
+                throw new Error('Missing required parameters for delete operation');
+            }
+
+            // Get endpoints
+            const EXHIBITS_ENDPOINTS = get_exhibits_endpoints();
+
+            if (!EXHIBITS_ENDPOINTS?.exhibits?.item_records?.delete?.endpoint) {
+                throw new Error('Delete endpoint not configured');
+            }
+
+            // Validate authentication
             const token = authModule.get_user_token();
-            let tmp = EXHIBITS_ENDPOINTS.exhibits.item_records.delete.endpoint.replace(':exhibit_id', exhibit_id);
-            let endpoint = tmp.replace(':item_id', item_id);
+
+            if (!token || token === false) {
+                const message_element = document.querySelector('#message');
+                display_message(message_element, 'danger', 'Session expired. Please log in again.');
+                return false;
+            }
+
+            // Construct endpoint
+            const endpoint = EXHIBITS_ENDPOINTS.exhibits.item_records.delete.endpoint
+                .replace(':exhibit_id', encodeURIComponent(exhibit_id))
+                .replace(':item_id', encodeURIComponent(item_id));
+
+            const url_with_type = `${endpoint}?type=${encodeURIComponent(type)}`;
+
+            // Make delete request
             const response = await httpModule.req({
                 method: 'DELETE',
-                url: endpoint + '?type=' + type,
+                url: url_with_type,
                 headers: {
                     'Content-Type': 'application/json',
                     'x-access-token': token
-                }
+                },
+                timeout: 30000
             });
 
-            if (response !== undefined && response.status === 204) {
-
+            // Handle response
+            if (response && response.status === 204) {
+                // Success - redirect after delay
                 setTimeout(() => {
-                    window.location.replace(APP_PATH + '/items?exhibit_id=' + exhibit_id);
+                    const redirect_url = `${APP_PATH}/items?exhibit_id=${encodeURIComponent(exhibit_id)}`;
+                    window.location.replace(redirect_url);
                 }, 900);
 
-            } else if (response === undefined) {
-                scrollTo(0, 0);
-                document.querySelector('#delete-card').innerHTML = '';
-                document.querySelector('#message').innerHTML = `<div class="alert alert-danger" role="alert"><i class="fa fa-exclamation"></i> You do not have permission to delete this record.</div>`;
+                return true;
+            } else {
+                // Permission denied
+                window.scrollTo({ top: 0, behavior: 'smooth' });
+
+                const delete_card = document.querySelector('#delete-card');
+                if (delete_card) {
+                    delete_card.textContent = '';
+                }
+
+                const message_element = document.querySelector('#message');
+                display_message(message_element, 'danger', 'You do not have permission to delete this record.');
+
+                return false;
             }
 
-
         } catch (error) {
-            document.querySelector('#message').innerHTML = `<div class="alert alert-danger" role="alert"><i class="fa fa-exclamation"></i> ${error.message}</div>`;
+            console.error('Error deleting item:', error);
+            const message_element = document.querySelector('#message');
+            const error_message = error.user_message || error.message || 'Unable to delete item. Please try again.';
+            display_message(message_element, 'danger', error_message);
+            return false;
         }
     };
 
+    /**
+     * Publish item
+     */
     async function publish_item(uuid) {
-
         try {
+            // Validate UUID
+            if (!uuid) {
+                throw new Error('Invalid item UUID');
+            }
 
+            // Get parameters
             const exhibit_id = helperModule.get_parameter_by_name('exhibit_id');
-            const item_id = uuid;
-            const elems = document.getElementsByTagName('tr');
-            let type;
 
-            for (let i = 0; i < elems.length; i++) {
-                if (elems[i].id.length !== 0 && elems[i].id.indexOf(uuid) !== -1) {
-                    let tmp = elems[i].id.split('_');
-                    type = tmp.pop();
+            if (!exhibit_id) {
+                throw new Error('Exhibit ID not found');
+            }
+
+            // Find item type from table row ID
+            const table_rows = document.getElementsByTagName('tr');
+            let item_type = null;
+
+            for (let i = 0; i < table_rows.length; i++) {
+                if (table_rows[i].id && table_rows[i].id.indexOf(uuid) !== -1) {
+                    const id_parts = table_rows[i].id.split('_');
+                    item_type = id_parts[id_parts.length - 1];
                     break;
                 }
             }
 
-            const EXHIBITS_ENDPOINTS = endpointsModule.get_exhibits_endpoints();
-            const etmp = EXHIBITS_ENDPOINTS.exhibits.item_records.item_publish.post.endpoint.replace(':exhibit_id', exhibit_id);
-            const endpoint = etmp.replace(':item_id', item_id);
+            if (!item_type) {
+                throw new Error('Could not determine item type');
+            }
+
+            console.log('Publishing item type:', item_type);
+
+            // Get endpoints
+            const EXHIBITS_ENDPOINTS = get_exhibits_endpoints();
+
+            if (!EXHIBITS_ENDPOINTS?.exhibits?.item_records?.item_publish?.post?.endpoint) {
+                throw new Error('Publish endpoint not configured');
+            }
+
+            // Construct endpoint
+            const endpoint = EXHIBITS_ENDPOINTS.exhibits.item_records.item_publish.post.endpoint
+                .replace(':exhibit_id', encodeURIComponent(exhibit_id))
+                .replace(':item_id', encodeURIComponent(uuid));
+
+            const url_with_type = `${endpoint}?type=${encodeURIComponent(item_type)}`;
+
+            // Validate authentication
             const token = authModule.get_user_token();
+
+            if (!token || token === false) {
+                const message_element = document.querySelector('#message');
+                display_message(message_element, 'danger', 'Session expired. Please log in again.');
+                return false;
+            }
+
+            // Make publish request
             const response = await httpModule.req({
                 method: 'POST',
-                url: endpoint + '?type=' + type,
+                url: url_with_type,
                 headers: {
                     'Content-Type': 'application/json',
                     'x-access-token': token
-                }
+                },
+                timeout: 30000
             });
 
-            if (response !== undefined && response.status === 200) {
-
-                setTimeout(() => {
-                    let elem = document.getElementById(uuid);
-                    document.getElementById(uuid).classList.remove('publish-item');
-                    document.getElementById(uuid).classList.add('suppress-item');
-                    document.getElementById(uuid).replaceWith(elem.cloneNode(true));
-                    document.getElementById(uuid).innerHTML = '<span id="suppress" title="published"><i class="fa fa-cloud" style="color: green"></i><br>Published</span>';
-                    document.getElementById(uuid).addEventListener('click', async (event) => {
-                        event.preventDefault();
-                        const uuid = elem.getAttribute('id');
-                        await suppress_item(uuid);
-                    }, false);
-                }, 0);
-
-                setTimeout(() => {
-
-                    const trIds = Array.from(document.querySelectorAll('tr')).map(tr => tr.id).filter(id => id);
-                    let uuid_found = trIds.find((arr_result) => {
-
-                        let uuid_arr = arr_result.split('_');
-
-                        if (uuid === uuid_arr[0]) {
-                            return true;
-                        } else {
-                            return false;
-                        }
-                    });
-
-                    let type = uuid_found.split('_');
-                    let details_path;
-                    let view_items = '';
-
-                    if (type[1] === 'item') {
-
-                        let items = JSON.parse(window.localStorage.getItem('items'));
-                        let type;
-
-                        for (let i=0; i<items.length; i++) {
-                            if (items[i].uuid === uuid) {
-                                type = items[i].item_type;
-                                break;
-                            }
-                        }
-
-                        if (type === 'text') {
-                            details_path = `${APP_PATH}/items/standard/text/edit?exhibit_id=${exhibit_id}&item_id=${uuid}`;
-                        } else {
-                            details_path = `${APP_PATH}/items/standard/media/edit?exhibit_id=${exhibit_id}&item_id=${uuid}`;
-                        }
-                    }
-
-                    if (type[1] === 'heading') {
-                        details_path = `${APP_PATH}/items/heading/details?exhibit_id=${exhibit_id}&item_id=${uuid}`;
-                    } else if (type[1] === 'grid') {
-                        details_path = `${APP_PATH}/items/grid/edit?exhibit_id=${exhibit_id}&item_id=${uuid}`;
-                        view_items = `<a href="${APP_PATH}/items/grid/items?exhibit_id=${exhibit_id}&grid_id=${uuid}" title="View grid Items" aria-label="view-grid-items"><i class="fa fa-list pr-1"></i></a>`;
-                    } else if (type[1] === 'timeline') {
-                        details_path = `${APP_PATH}/items/vertical-timeline/edit?exhibit_id=${exhibit_id}&item_id=${uuid}`;
-                        view_items = `<a href="${APP_PATH}/items/timeline/items?exhibit_id=${exhibit_id}&timeline_id=${uuid}" title="View Timeline Items" aria-label="view-timeline-items"><i class="fa fa-list pr-1"></i></a>`;
-                    }
-
-                    let uuid_actions = `${uuid}-item-actions`;
-                    let elem = document.getElementById(uuid_actions);
-                    let item_edit = `<a href="${details_path}" title="View details" aria-label="item-details"><i class="fa fa-folder-open pr-1"></i> </a>`;
-                    let trash = `<i title="Can only delete if unpublished" style="color: #d3d3d3" class="fa fa-trash pr-1" aria-label="delete-exhibit"></i>`;
-                    elem.innerHTML = `
-                        <div class="card-text text-sm-center">
-                        ${view_items}&nbsp;
-                        ${item_edit}&nbsp;
-                        ${trash}
-                        </div>`;
-                }, 0);
+            // Handle response
+            if (response && response.status === 200) {
+                // Update UI to show published state
+                update_item_status_to_published(uuid, item_type, exhibit_id);
+                return true;
+            } else {
+                // Permission denied
+                window.scrollTo({ top: 0, behavior: 'smooth' });
+                const message_element = document.querySelector('#message');
+                display_message(message_element, 'danger', 'You do not have permission to publish this record.');
+                return false;
             }
-
-            if (response !== undefined && response.status === 204) {
-                scrollTo(0, 0);
-                document.querySelector('#message').innerHTML = `<div class="alert alert-warning" role="alert"><i class="fa fa-warning"></i> Exhibit must be published in order to publish this item</div>`;
-
-                setTimeout(() => {
-                    document.querySelector('#message').innerHTML = '';
-                }, 5000);
-
-            } else if (response === undefined) {
-                scrollTo(0, 0);
-                document.querySelector('#message').innerHTML = `<div class="alert alert-danger" role="alert"><i class="fa fa-danger"></i> You do not have permission to publish this record.</div>`;
-
-                /*
-                setTimeout(() => {
-                    document.querySelector('#message').innerHTML = '';
-                }, 5000);
-
-                 */
-            }
-
-            return false;
 
         } catch (error) {
-            document.querySelector('#message').innerHTML = `<div class="alert alert-danger" role="alert"><i class="fa fa-exclamation"></i> ${error.message}</div>`;
+            console.error('Error publishing item:', error);
+            const message_element = document.querySelector('#message');
+            const error_message = error.user_message || error.message || 'Unable to publish item. Please try again.';
+            display_message(message_element, 'danger', error_message);
+            return false;
         }
     }
 
+    /**
+     * Suppress (unpublish) item
+     */
     async function suppress_item(uuid) {
-
         try {
+            // Validate UUID
+            if (!uuid) {
+                throw new Error('Invalid item UUID');
+            }
 
+            // Get parameters
             const exhibit_id = helperModule.get_parameter_by_name('exhibit_id');
-            const item_id = uuid;
-            const elems = document.getElementsByTagName('tr');
-            let type;
 
-            for (let i = 0; i < elems.length; i++) {
-                if (elems[i].id.length !== 0 && elems[i].id.indexOf(uuid) !== -1) {
-                    let tmp = elems[i].id.split('_');
-                    type = tmp.pop();
+            if (!exhibit_id) {
+                throw new Error('Exhibit ID not found');
+            }
+
+            // Find item type from table row ID
+            const table_rows = document.getElementsByTagName('tr');
+            let item_type = null;
+
+            for (let i = 0; i < table_rows.length; i++) {
+                if (table_rows[i].id && table_rows[i].id.indexOf(uuid) !== -1) {
+                    const id_parts = table_rows[i].id.split('_');
+                    item_type = id_parts[id_parts.length - 1];
                     break;
                 }
             }
 
-            const EXHIBITS_ENDPOINTS = endpointsModule.get_exhibits_endpoints();
-            const etmp = EXHIBITS_ENDPOINTS.exhibits.item_records.item_suppress.post.endpoint.replace(':exhibit_id', exhibit_id);
-            const endpoint = etmp.replace(':item_id', item_id);
+            if (!item_type) {
+                throw new Error('Could not determine item type');
+            }
+
+            console.log('Suppressing item type:', item_type);
+
+            // Get endpoints
+            const EXHIBITS_ENDPOINTS = get_exhibits_endpoints();
+
+            if (!EXHIBITS_ENDPOINTS?.exhibits?.item_records?.item_suppress?.post?.endpoint) {
+                throw new Error('Suppress endpoint not configured');
+            }
+
+            // Construct endpoint
+            const endpoint = EXHIBITS_ENDPOINTS.exhibits.item_records.item_suppress.post.endpoint
+                .replace(':exhibit_id', encodeURIComponent(exhibit_id))
+                .replace(':item_id', encodeURIComponent(uuid));
+
+            const url_with_type = `${endpoint}?type=${encodeURIComponent(item_type)}`;
+
+            // Validate authentication
             const token = authModule.get_user_token();
+
+            if (!token || token === false) {
+                const message_element = document.querySelector('#message');
+                display_message(message_element, 'danger', 'Session expired. Please log in again.');
+                return false;
+            }
+
+            // Make suppress request
             const response = await httpModule.req({
                 method: 'POST',
-                url: endpoint + '?type=' + type,
+                url: url_with_type,
                 headers: {
                     'Content-Type': 'application/json',
                     'x-access-token': token
-                }
+                },
+                timeout: 30000
             });
 
-            if (response !== undefined && response.status === 200) {
-
-                setTimeout(() => {
-                    let elem = document.getElementById(uuid);
-                    document.getElementById(uuid).classList.remove('suppress-item');
-                    document.getElementById(uuid).classList.add('publish-item');
-                    document.getElementById(uuid).replaceWith(elem.cloneNode(true));
-                    document.getElementById(uuid).innerHTML = '<span id="publish" title="suppressed"><i class="fa fa-cloud-upload" style="color: darkred"></i><br>Unpublished</span>';
-                    document.getElementById(uuid).addEventListener('click', async (event) => {
-                        event.preventDefault();
-                        const uuid = elem.getAttribute('id');
-                        await publish_item(uuid);
-                    }, false);
-                }, 0);
-
-                setTimeout(() => {
-
-                    const trIds = Array.from(document.querySelectorAll('tr')).map(tr => tr.id).filter(id => id);
-                    let uuid_found = trIds.find((arr_result) => {
-
-                        let uuid_arr = arr_result.split('_');
-
-                        if (uuid === uuid_arr[0]) {
-                            return true;
-                        } else {
-                            return false;
-                        }
-                    });
-
-                    let type = uuid_found.split('_');
-                    let edit_path;
-                    let delete_path;
-                    let item_type = 'item';
-                    let view_items = '';
-
-                    // edit paths
-                    // standard item media/text
-                    if (type[1] === 'item') {
-
-                        let items = JSON.parse(window.localStorage.getItem('items'));
-
-                        for (let i=0; i<items.length; i++) {
-                            if (items[i].uuid === uuid) {
-                                type = items[i].item_type;
-                                break;
-                            }
-                        }
-
-                        if (type === 'text') {
-                            edit_path = `${APP_PATH}/items/standard/text/edit?exhibit_id=${exhibit_id}&item_id=${uuid}`;
-                        } else {
-                            edit_path = `${APP_PATH}/items/standard/media/edit?exhibit_id=${exhibit_id}&item_id=${uuid}`;
-                        }
-                    }
-
-                    if (type[1] === 'heading') {
-                        edit_path = `${APP_PATH}/items/heading/edit?exhibit_id=${exhibit_id}&item_id=${uuid}`;
-                        item_type = 'heading';
-                    } else if (type[1] === 'grid') {
-                        edit_path = `${APP_PATH}/items/grid/edit?exhibit_id=${exhibit_id}&item_id=${uuid}`;
-                        item_type = 'grid';
-                        view_items = `<a href="${APP_PATH}/items/grid/items?exhibit_id=${exhibit_id}&grid_id=${uuid}" title="View grid Items" aria-label="view-grid-items"><i class="fa fa-list pr-1"></i></a>`;
-                    } else if (type[1] === 'timeline') {
-                        edit_path = `${APP_PATH}/items/vertical-timeline/edit?exhibit_id=${exhibit_id}&item_id=${uuid}`;
-                        item_type = 'timeline';
-                        view_items = `<a href="${APP_PATH}/items/timeline/items?exhibit_id=${exhibit_id}&timeline_id=${uuid}" title="View Timeline Items" aria-label="view-timeline-items"><i class="fa fa-list pr-1"></i></a>`;
-                    }
-
-                    delete_path = `${APP_PATH}/items/delete?exhibit_id=${exhibit_id}&item_id=${uuid}&type=${item_type}`;
-
-                    let uuid_actions = `${uuid}-item-actions`;
-                    let elem = document.getElementById(uuid_actions);
-                    let item_edit = `<a href="${edit_path}" title="Edit item" aria-label="edit-item"><i class="fa fa-edit pr-1"></i> </a>`;
-                    let trash = `<a href="${delete_path}" title="Delete item" aria-label="delete-item"><i class="fa fa-trash pr-1"></i></a>`;
-                    elem.innerHTML = `
-                        <div class="card-text text-sm-center">
-                        ${view_items}&nbsp;
-                        ${item_edit}&nbsp;
-                        ${trash}
-                        </div>`;
-                }, 0);
-
-            } else if (response === undefined) {
-                scrollTo(0, 0);
-                document.querySelector('#message').innerHTML = `<div class="alert alert-danger" role="alert"><i class="fa fa-danger"></i> You do not have permission to unpublish this record.</div>`;
-
-                /*
-                setTimeout(() => {
-                    document.querySelector('#message').innerHTML = '';
-                }, 5000);
-
-                 */
+            // Handle response
+            if (response && response.status === 200) {
+                // Update UI to show unpublished state
+                update_item_status_to_unpublished(uuid, item_type, exhibit_id);
+                return true;
+            } else {
+                // Permission denied
+                window.scrollTo({ top: 0, behavior: 'smooth' });
+                const message_element = document.querySelector('#message');
+                display_message(message_element, 'danger', 'You do not have permission to unpublish this record.');
+                return false;
             }
 
-            return false;
-
         } catch (error) {
-            document.querySelector('#message').innerHTML = `<div class="alert alert-danger" role="alert"><i class="fa fa-exclamation"></i> ${error.message}</div>`;
+            console.error('Error suppressing item:', error);
+            const message_element = document.querySelector('#message');
+            const error_message = error.user_message || error.message || 'Unable to unpublish item. Please try again.';
+            display_message(message_element, 'danger', error_message);
+            return false;
         }
     }
 
+    /**
+     * Update UI to show published status
+     */
+    function update_item_status_to_published(uuid, item_type, exhibit_id) {
+        setTimeout(() => {
+            const status_element = document.getElementById(uuid);
+
+            if (!status_element) {
+                return;
+            }
+
+            // Update button classes
+            status_element.classList.remove('publish-item');
+            status_element.classList.add('suppress-item');
+
+            // Create new status content
+            const span = document.createElement('span');
+            span.id = 'suppress';
+            span.setAttribute('title', 'Published - click to unpublish');
+
+            const icon = document.createElement('i');
+            icon.className = 'fa fa-cloud';
+            icon.style.color = 'green';
+            icon.setAttribute('aria-hidden', 'true');
+            span.appendChild(icon);
+
+            span.appendChild(document.createElement('br'));
+            span.appendChild(document.createTextNode('Published'));
+
+            status_element.textContent = '';
+            status_element.appendChild(span);
+
+            // Re-attach event listener
+            status_element.addEventListener('click', async (event) => {
+                event.preventDefault();
+                await suppress_item(uuid);
+            }, false);
+
+        }, 100);
+
+        // Update action buttons
+        setTimeout(() => {
+            update_action_buttons(uuid, item_type, exhibit_id, true);
+        }, 150);
+    }
+
+    /**
+     * Update UI to show unpublished status
+     */
+    function update_item_status_to_unpublished(uuid, item_type, exhibit_id) {
+        setTimeout(() => {
+            const status_element = document.getElementById(uuid);
+
+            if (!status_element) {
+                return;
+            }
+
+            // Update button classes
+            status_element.classList.remove('suppress-item');
+            status_element.classList.add('publish-item');
+
+            // Create new status content
+            const span = document.createElement('span');
+            span.id = 'publish';
+            span.setAttribute('title', 'Unpublished - click to publish');
+
+            const icon = document.createElement('i');
+            icon.className = 'fa fa-cloud-upload';
+            icon.style.color = 'darkred';
+            icon.setAttribute('aria-hidden', 'true');
+            span.appendChild(icon);
+
+            span.appendChild(document.createElement('br'));
+            span.appendChild(document.createTextNode('Unpublished'));
+
+            status_element.textContent = '';
+            status_element.appendChild(span);
+
+            // Re-attach event listener
+            status_element.addEventListener('click', async (event) => {
+                event.preventDefault();
+                await publish_item(uuid);
+            }, false);
+
+        }, 100);
+
+        // Update action buttons
+        setTimeout(() => {
+            update_action_buttons(uuid, item_type, exhibit_id, false);
+        }, 150);
+    }
+
+    /**
+     * Update action buttons based on publication status
+     */
+    function update_action_buttons(uuid, item_type, exhibit_id, is_published) {
+        const actions_element = document.getElementById(`${uuid}-item-actions`);
+
+        if (!actions_element) {
+            return;
+        }
+
+        // Create actions container
+        const actions_div = document.createElement('div');
+        actions_div.className = 'card-text text-sm-center';
+
+        // Determine paths based on item type
+        let edit_path = '';
+        let delete_path = '';
+        let view_items_link = null;
+        let item_category = 'item';
+
+        const encoded_exhibit_id = encodeURIComponent(exhibit_id);
+        const encoded_uuid = encodeURIComponent(uuid);
+
+        switch(item_type) {
+            case 'heading':
+                item_category = 'heading';
+                if (is_published) {
+                    edit_path = `${APP_PATH}/items/heading/details?exhibit_id=${encoded_exhibit_id}&item_id=${encoded_uuid}`;
+                } else {
+                    edit_path = `${APP_PATH}/items/heading/edit?exhibit_id=${encoded_exhibit_id}&item_id=${encoded_uuid}`;
+                }
+                break;
+
+            case 'text':
+                if (is_published) {
+                    edit_path = `${APP_PATH}/items/standard/text/details?exhibit_id=${encoded_exhibit_id}&item_id=${encoded_uuid}`;
+                } else {
+                    edit_path = `${APP_PATH}/items/standard/text/edit?exhibit_id=${encoded_exhibit_id}&item_id=${encoded_uuid}`;
+                }
+                break;
+
+            case 'grid':
+                item_category = 'grid';
+                if (is_published) {
+                    edit_path = `${APP_PATH}/items/grid/details?exhibit_id=${encoded_exhibit_id}&item_id=${encoded_uuid}`;
+                } else {
+                    edit_path = `${APP_PATH}/items/grid/edit?exhibit_id=${encoded_exhibit_id}&item_id=${encoded_uuid}`;
+                }
+
+                // Add view items link for grids
+                const view_grid_url = `${APP_PATH}/items/grid/items?exhibit_id=${encoded_exhibit_id}&grid_id=${encoded_uuid}`;
+                view_items_link = document.createElement('a');
+                view_items_link.href = view_grid_url;
+                view_items_link.setAttribute('title', 'View grid items');
+                view_items_link.setAttribute('aria-label', 'view-grid-items');
+
+                const grid_icon = document.createElement('i');
+                grid_icon.className = 'fa fa-list pr-1';
+                grid_icon.setAttribute('aria-hidden', 'true');
+                view_items_link.appendChild(grid_icon);
+                break;
+
+            case 'timeline':
+                item_category = 'timeline';
+                if (is_published) {
+                    edit_path = `${APP_PATH}/items/vertical-timeline/details?exhibit_id=${encoded_exhibit_id}&item_id=${encoded_uuid}`;
+                } else {
+                    edit_path = `${APP_PATH}/items/vertical-timeline/edit?exhibit_id=${encoded_exhibit_id}&item_id=${encoded_uuid}`;
+                }
+
+                // Add view items link for timelines
+                const view_timeline_url = `${APP_PATH}/items/timeline/items?exhibit_id=${encoded_exhibit_id}&timeline_id=${encoded_uuid}`;
+                view_items_link = document.createElement('a');
+                view_items_link.href = view_timeline_url;
+                view_items_link.setAttribute('title', 'View timeline items');
+                view_items_link.setAttribute('aria-label', 'view-timeline-items');
+
+                const timeline_icon = document.createElement('i');
+                timeline_icon.className = 'fa fa-list pr-1';
+                timeline_icon.setAttribute('aria-hidden', 'true');
+                view_items_link.appendChild(timeline_icon);
+                break;
+
+            default:
+                // Image and other media types
+                if (is_published) {
+                    edit_path = `${APP_PATH}/items/standard/media/details?exhibit_id=${encoded_exhibit_id}&item_id=${encoded_uuid}`;
+                } else {
+                    edit_path = `${APP_PATH}/items/standard/media/edit?exhibit_id=${encoded_exhibit_id}&item_id=${encoded_uuid}`;
+                }
+        }
+
+        delete_path = `${APP_PATH}/items/delete?exhibit_id=${encoded_exhibit_id}&item_id=${encoded_uuid}&type=${encodeURIComponent(item_category)}`;
+
+        // Add view items link if exists
+        if (view_items_link) {
+            actions_div.appendChild(view_items_link);
+            actions_div.appendChild(document.createTextNode('\u00A0'));
+        }
+
+        // Add edit/view link
+        const edit_link = document.createElement('a');
+        edit_link.href = edit_path;
+        edit_link.setAttribute('title', is_published ? 'View details' : 'Edit item');
+        edit_link.setAttribute('aria-label', is_published ? 'view-item-details' : 'edit-item');
+
+        const edit_icon = document.createElement('i');
+        edit_icon.className = is_published ? 'fa fa-folder-open pr-1' : 'fa fa-edit pr-1';
+        edit_icon.setAttribute('aria-hidden', 'true');
+        edit_link.appendChild(edit_icon);
+
+        actions_div.appendChild(edit_link);
+        actions_div.appendChild(document.createTextNode('\u00A0'));
+
+        // Add delete button (only if unpublished)
+        if (is_published) {
+            const delete_icon = document.createElement('i');
+            delete_icon.className = 'fa fa-trash pr-1';
+            delete_icon.setAttribute('title', 'Can only delete if unpublished');
+            delete_icon.setAttribute('aria-label', 'delete-disabled');
+            delete_icon.style.color = '#d3d3d3';
+            delete_icon.setAttribute('aria-hidden', 'true');
+            actions_div.appendChild(delete_icon);
+        } else {
+            const delete_link = document.createElement('a');
+            delete_link.href = delete_path;
+            delete_link.setAttribute('title', 'Delete item');
+            delete_link.setAttribute('aria-label', 'delete-item');
+
+            const delete_icon = document.createElement('i');
+            delete_icon.className = 'fa fa-trash pr-1';
+            delete_icon.setAttribute('aria-hidden', 'true');
+            delete_link.appendChild(delete_icon);
+
+            actions_div.appendChild(delete_link);
+        }
+
+        // Replace content
+        actions_element.textContent = '';
+        actions_element.appendChild(actions_div);
+    }
+
+    /**
+     * Bind publish item event handlers
+     */
     function bind_publish_item_events() {
-
         try {
+            const publish_buttons = Array.from(document.getElementsByClassName('publish-item'));
 
-            const exhibit_links = Array.from(document.getElementsByClassName('publish-item'));
-
-            exhibit_links.forEach(exhibit_link => {
-                exhibit_link.addEventListener('click', async (event) => {
+            publish_buttons.forEach(button => {
+                button.addEventListener('click', async (event) => {
                     event.preventDefault();
-                    const uuid = exhibit_link.getAttribute('id');
+                    const uuid = button.getAttribute('id');
                     await publish_item(uuid);
                 });
             });
 
         } catch (error) {
-            document.querySelector('#message').innerHTML = `<div class="alert alert-danger" role="alert"><i class="fa fa-exclamation"></i> ${error.message}</div>`;
+            console.error('Error binding publish events:', error);
         }
     }
 
+    /**
+     * Bind suppress item event handlers
+     */
     function bind_suppress_item_events() {
-
         try {
+            const suppress_buttons = Array.from(document.getElementsByClassName('suppress-item'));
 
-            const exhibit_links = Array.from(document.getElementsByClassName('suppress-item'));
-
-            exhibit_links.forEach(exhibit_link => {
-                exhibit_link.addEventListener('click', async (event) => {
+            suppress_buttons.forEach(button => {
+                button.addEventListener('click', async (event) => {
                     event.preventDefault();
-                    const uuid = exhibit_link.getAttribute('id');
+                    const uuid = button.getAttribute('id');
                     await suppress_item(uuid);
                 });
             });
 
         } catch (error) {
-            document.querySelector('#message').innerHTML = `<div class="alert alert-danger" role="alert"><i class="fa fa-exclamation"></i> ${error.message}</div>`;
+            console.error('Error binding suppress events:', error);
         }
     }
 
-    obj.init = function (event) {
-
+    /**
+     * Initialize module
+     */
+    obj.init = function() {
         try {
-
+            // Get parameters
             const exhibit_id = helperModule.get_parameter_by_name('exhibit_id');
             const status = helperModule.get_parameter_by_name('status');
 
-            if (status !== null && status === '403') {
+            // Handle 403 status from URL
+            if (status === '403') {
+                const message_element = document.querySelector('#message');
+                display_message(message_element, 'danger', 'You do not have permission to add item.');
 
-                document.querySelector('#message').innerHTML = `<div class="alert alert-danger" role="alert"><i class="fa fa-exclamation"></i> You do not have permission to add item.</div>`;
-
+                // Clean up URL
                 setTimeout(() => {
-                    window.history.replaceState({page: 'items'}, '', '/exhibits-dashboard/items?exhibit_id=' + exhibit_id);
+                    const clean_url = `${APP_PATH}/items?exhibit_id=${encodeURIComponent(exhibit_id)}`;
+                    window.history.replaceState({ page: 'items' }, '', clean_url);
                 }, 0);
-
-                /*
-                setTimeout(() => {
-                    document.querySelector('#message').innerHTML = '';
-                }, 3000);
-
-                 */
             }
 
-            (async function () {
+            // Check authentication
+            (async function() {
                 const token = authModule.get_user_token();
                 await authModule.check_auth(token);
             })();
 
+            // Initialize page
             exhibitsModule.set_exhibit_title(exhibit_id);
-            itemsModule.display_items();
+            obj.display_items();
             helperModule.show_form();
             navModule.set_preview_link();
             navModule.set_item_nav_menu_links();
             navModule.set_logout_link();
 
+            console.log('Items module initialized');
+
         } catch (error) {
-            document.querySelector('#message').innerHTML = `<div class="alert alert-danger" role="alert"><i class="fa fa-exclamation"></i> ${error.message}</div>`;
+            console.error('Error initializing items module:', error);
+            const message_element = document.querySelector('#message');
+            const error_message = error.message || 'Unable to initialize items module';
+            display_message(message_element, 'danger', error_message);
         }
     };
 

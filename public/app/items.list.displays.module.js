@@ -1,674 +1,1320 @@
 /**
-
- Copyright 2024 University of Denver
-
- Licensed under the Apache License, Version 2.0 (the "License");
- you may not use this file except in compliance with the License.
- You may obtain a copy of the License at
-
- http://www.apache.org/licenses/LICENSE-2.0
-
- Unless required by applicable law or agreed to in writing, software
- distributed under the License is distributed on an "AS IS" BASIS,
- WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- See the License for the specific language governing permissions and
- limitations under the License.
-
+ * Copyright 2024 University of Denver
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ * http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
 
-const itemsListDisplayModule = (function () {
+const itemsListDisplayModule = (function() {
 
     'use strict';
 
-    const APP_PATH = window.localStorage.getItem('exhibits_app_path');
-    const EXHIBITS_ENDPOINTS = endpointsModule.get_exhibits_endpoints();
+    /**
+     * Get app path safely
+     */
+    const get_app_path = () => {
+        try {
+            const app_path = window.localStorage.getItem('exhibits_app_path');
+            if (!app_path) {
+                console.error('App path not found in localStorage');
+                return '';
+            }
+            return app_path;
+        } catch (error) {
+            console.error('Error accessing localStorage:', error);
+            return '';
+        }
+    };
+
+    /**
+     * Get exhibits endpoints safely
+     */
+    const get_exhibits_endpoints = () => {
+        try {
+            return endpointsModule.get_exhibits_endpoints();
+        } catch (error) {
+            console.error('Error getting exhibits endpoints:', error);
+            return null;
+        }
+    };
+
+    const APP_PATH = get_app_path();
+    const EXHIBITS_ENDPOINTS = get_exhibits_endpoints();
+
     let obj = {};
 
-    function check_published_status(item, item_route) {
+    /**
+     * Display error message (XSS-safe)
+     */
+    const display_error_message = (error_message) => {
+        const message_element = document.querySelector('#message');
 
-        let published_obj = {};
-
-        if (item.item_type === undefined) {
-            console.log('heading');
+        if (!message_element) {
+            console.error('Message element not found:', error_message);
+            return;
         }
 
-        if (item.is_published === 1) {
+        const alert_div = document.createElement('div');
+        alert_div.className = 'alert alert-danger';
+        alert_div.setAttribute('role', 'alert');
 
-            published_obj.draggable = `<tr id="${item.uuid}_${item.type}">`; // _${item.item_type}
-            published_obj.item_order = `<td class="grabbable item-order"><i class="fa fa-reorder"></i><span style="padding-left: 4px;" aria-label="item-order">${item.order}</span></td>`;
-            published_obj.status = `<a href="#" id="${item.uuid}" class="suppress-item" aria-label="item-status"><span id="suppress" title="published"><i class="fa fa-cloud" style="color: green"></i><br>Published</span></a>`;
+        const icon = document.createElement('i');
+        icon.className = 'fa fa-exclamation';
+        icon.setAttribute('aria-hidden', 'true');
+        alert_div.appendChild(icon);
 
+        const text = document.createTextNode(` ${error_message}`);
+        alert_div.appendChild(text);
+
+        message_element.textContent = '';
+        message_element.appendChild(alert_div);
+    };
+
+    /**
+     * Create table cell element
+     */
+    const create_table_cell = (class_name = '', content = null) => {
+        const td = document.createElement('td');
+        if (class_name) {
+            td.className = class_name;
+        }
+        if (content) {
+            if (typeof content === 'string') {
+                td.textContent = content;
+            } else {
+                td.appendChild(content);
+            }
+        }
+        return td;
+    };
+
+    /**
+     * Create icon element
+     */
+    const create_icon = (icon_class, title = '', aria_label = '', color = '') => {
+        const icon = document.createElement('i');
+        icon.className = icon_class;
+        icon.setAttribute('aria-hidden', 'true');
+
+        if (title) {
+            icon.setAttribute('title', title);
+        }
+
+        if (aria_label) {
+            icon.setAttribute('aria-label', aria_label);
+        }
+
+        if (color) {
+            icon.style.color = color;
+        }
+
+        return icon;
+    };
+
+    /**
+     * Create link element
+     */
+    const create_link = (href, title, aria_label, icon_class, additional_content = '') => {
+        const link = document.createElement('a');
+        link.href = href;
+        link.setAttribute('title', title);
+        link.setAttribute('aria-label', aria_label);
+
+        const icon = create_icon(icon_class);
+        link.appendChild(icon);
+
+        if (additional_content) {
+            const text = document.createTextNode(additional_content);
+            link.appendChild(text);
+        }
+
+        return link;
+    };
+
+    /**
+     * Create publish/suppress status button
+     */
+    const create_status_button = (item_id, is_published) => {
+        const link = document.createElement('a');
+        link.href = '#';
+        link.id = item_id;
+        link.setAttribute('aria-label', 'Toggle publication status');
+
+        const span = document.createElement('span');
+
+        if (is_published === 1) {
+            link.className = 'suppress-item';
+            span.id = 'suppress';
+            span.setAttribute('title', 'Published - click to unpublish');
+
+            const icon = create_icon('fa fa-cloud', '', '', 'green');
+            span.appendChild(icon);
+            span.appendChild(document.createElement('br'));
+            span.appendChild(document.createTextNode('Published'));
+        } else {
+            link.className = 'publish-item';
+            span.id = 'publish';
+            span.setAttribute('title', 'Unpublished - click to publish');
+
+            const icon = create_icon('fa fa-cloud-upload', '', '', 'darkred');
+            span.appendChild(icon);
+            span.appendChild(document.createElement('br'));
+            span.appendChild(document.createTextNode('Unpublished'));
+        }
+
+        link.appendChild(span);
+        return link;
+    };
+
+    /**
+     * Create order cell with drag handle
+     */
+    const create_order_cell = (order_number) => {
+        const td = document.createElement('td');
+        td.className = 'grabbable item-order';
+
+        const icon = create_icon('fa fa-reorder');
+        td.appendChild(icon);
+
+        const span = document.createElement('span');
+        span.style.paddingLeft = '4px';
+        span.setAttribute('aria-label', `Item order ${order_number}`);
+        span.textContent = order_number.toString();
+        td.appendChild(span);
+
+        return td;
+    };
+
+    /**
+     * Create edit link based on item type
+     */
+    const create_edit_link = (item, item_route, is_published) => {
+        const exhibit_id = encodeURIComponent(item.is_member_of_exhibit);
+        const item_id = encodeURIComponent(item.uuid);
+        let url = '';
+        let title = '';
+        let icon_class = '';
+
+        if (is_published === 1) {
+            // Published items - view details
             if (item.item_type === 'text') {
-                published_obj.edit = `<a href="${APP_PATH}/items/${item_route}/text/details?exhibit_id=${item.is_member_of_exhibit}&item_id=${item.uuid}" title="View details" aria-label="view-item-details"><i class="fa fa-folder-open pr-1"></i></a>`;
+                url = `${APP_PATH}/items/${item_route}/text/details?exhibit_id=${exhibit_id}&item_id=${item_id}`;
             } else if (item.type === 'heading' || item.type === 'timeline') {
-                published_obj.edit = `<a href="${APP_PATH}/items/${item_route}/details?exhibit_id=${item.is_member_of_exhibit}&item_id=${item.uuid}" title="View details" aria-label="view-item-details"><i class="fa fa-folder-open pr-1"></i></a>`;
+                url = `${APP_PATH}/items/${item_route}/details?exhibit_id=${exhibit_id}&item_id=${item_id}`;
             } else {
-                published_obj.edit = `<a href="${APP_PATH}/items/${item_route}/media/details?exhibit_id=${item.is_member_of_exhibit}&item_id=${item.uuid}" title="View details" aria-label="view-item-details"><i class="fa fa-folder-open pr-1"></i></a>`;
+                url = `${APP_PATH}/items/${item_route}/media/details?exhibit_id=${exhibit_id}&item_id=${item_id}`;
             }
-
-            published_obj.delete_item = `<i title="Can only delete if unpublished" style="color: #d3d3d3" class="fa fa-trash pr-1" aria-label="delete-item"></i>`;
-
-        } else if (item.is_published === 0) {
-
-            published_obj.draggable = `<tr id="${item.uuid}_${item.type}">`; // _${item.item_type}
-            published_obj.item_order = `<td class="grabbable item-order"><i class="fa fa-reorder"></i><span style="padding-left: 4px;" aria-label="item-order">${item.order}</span></td>`;
-            published_obj.status = `<a href="#" id="${item.uuid}" class="publish-item" aria-label="item-status"><span id="publish" title="suppressed"><i class="fa fa-cloud-upload" style="color: darkred"></i><br>Unpublished</span></a>`;
-
+            title = 'View details';
+            icon_class = 'fa fa-folder-open pr-1';
+        } else {
+            // Unpublished items - edit
             if (item.item_type === 'text') {
-                published_obj.edit = `<a href="${APP_PATH}/items/${item_route}/text/edit?exhibit_id=${item.is_member_of_exhibit}&item_id=${item.uuid}" title="View details" aria-label="view-item-details"><i class="fa fa-edit pr-1"></i></a>`;
+                url = `${APP_PATH}/items/${item_route}/text/edit?exhibit_id=${exhibit_id}&item_id=${item_id}`;
             } else if (item.type === 'heading' || item.type === 'timeline') {
-                published_obj.edit = `<a href="${APP_PATH}/items/${item_route}/edit?exhibit_id=${item.is_member_of_exhibit}&item_id=${item.uuid}" title="View details" aria-label="view-item-details"><i class="fa fa-edit pr-1"></i></a>`;
+                url = `${APP_PATH}/items/${item_route}/edit?exhibit_id=${exhibit_id}&item_id=${item_id}`;
             } else {
-                published_obj.edit = `<a href="${APP_PATH}/items/${item_route}/media/edit?exhibit_id=${item.is_member_of_exhibit}&item_id=${item.uuid}" title="View details" aria-label="view-item-details"><i class="fa fa-edit pr-1"></i></a>`;
+                url = `${APP_PATH}/items/${item_route}/media/edit?exhibit_id=${exhibit_id}&item_id=${item_id}`;
             }
-
-            published_obj.delete_item = `<a href="${APP_PATH}/items/delete?exhibit_id=${item.is_member_of_exhibit}&item_id=${item.uuid}&type=${item.type}" title="Delete" aria-label="delete-item"><i class="fa fa-trash pr-1"></i></a>`;
+            title = 'Edit item';
+            icon_class = 'fa fa-edit pr-1';
         }
 
-        return published_obj;
-    }
+        return create_link(url, title, `${title.toLowerCase().replace(' ', '-')}`, icon_class);
+    };
 
-    function check_grid_published_status(item, item_route) {
+    /**
+     * Create delete button
+     */
+    const create_delete_button = (item, is_published) => {
+        if (is_published === 1) {
+            // Published items cannot be deleted
+            const icon = create_icon('fa fa-trash pr-1', 'Can only delete if unpublished', 'delete-disabled', '#d3d3d3');
+            return icon;
+        } else {
+            // Unpublished items can be deleted
+            const exhibit_id = encodeURIComponent(item.is_member_of_exhibit);
+            const item_id = encodeURIComponent(item.uuid);
+            const type = encodeURIComponent(item.type);
+            const url = `${APP_PATH}/items/delete?exhibit_id=${exhibit_id}&item_id=${item_id}&type=${type}`;
 
-        let published_obj = {};
-
-        if (item.is_published === 1) {
-            published_obj.draggable = `<tr id="${item.uuid}_${item.type}">`;
-            published_obj.item_order = `<td class="grabbable item-order"><i class="fa fa-reorder"></i><span style="padding-left: 4px;" aria-label="item-order">${item.order}</span></td>`;
-            published_obj.status = `<a href="#" id="${item.uuid}" class="suppress-item" aria-label="item-status"><span id="suppress" title="published"><i class="fa fa-cloud" style="color: green"></i><br>Published</span></a>`;
-            published_obj.edit = `<a href="${APP_PATH}/items/${item_route}/details?exhibit_id=${item.is_member_of_exhibit}&item_id=${item.uuid}" title="View details" aria-label="view-item-details"><i class="fa fa-folder-open pr-1"></i></a>`;
-            published_obj.delete_item = `<i title="Can only delete if unpublished" style="color: #d3d3d3" class="fa fa-trash pr-1" aria-label="delete-item"></i>`;
-        } else if (item.is_published === 0) {
-            published_obj.draggable = `<tr id="${item.uuid}_${item.type}">`;
-            published_obj.item_order = `<td class="grabbable item-order"><i class="fa fa-reorder"></i><span style="padding-left: 4px;" aria-label="item-order">${item.order}</span></td>`;
-            published_obj.status = `<a href="#" id="${item.uuid}" class="publish-item" aria-label="item-status"><span id="publish" title="suppressed"><i class="fa fa-cloud-upload" style="color: darkred"></i><br>Unpublished</span></a>`;
-            published_obj.edit = `<a href="${APP_PATH}/items/${item_route}/edit?exhibit_id=${item.is_member_of_exhibit}&item_id=${item.uuid}" title="Edit" aria-label="edit-item"><i class="fa fa-edit pr-1"></i></a>`;
-            published_obj.delete_item = `<a href="${APP_PATH}/items/delete?exhibit_id=${item.is_member_of_exhibit}&item_id=${item.uuid}&type=${item.type}" title="Delete" aria-label="delete-item"><i class="fa fa-trash pr-1"></i></a>`;
-        }
-
-        return published_obj;
-    }
-
-    function check_grid_item_published_status(item, item_route) {
-
-        let published_obj = {};
-
-        if (item.is_published === 1) {
-
-            published_obj.draggable = `<tr id="${item.uuid}_${item.type}_${item.item_type}">`;
-            published_obj.item_order = `<td class="grabbable item-order"><i class="fa fa-reorder"></i><span style="padding-left: 4px;" aria-label="item-order">${item.order}</span></td>`;
-            published_obj.status = `<a href="#" id="${item.uuid}" class="suppress-item" aria-label="item-status"><span id="suppress" title="published"><i class="fa fa-cloud" style="color: green"></i><br>Published</span></a>`;
-
-            if (item.item_type === 'text') {
-                published_obj.edit = `<a href="${APP_PATH}/items/${item_route}/text/details?exhibit_id=${item.is_member_of_exhibit}&grid_id=${item.is_member_of_grid}&item_id=${item.uuid}" title="View details" aria-label="view-item-details"><i class="fa fa-folder-open pr-1"></i></a>`;
-            } else {
-                published_obj.edit = `<a href="${APP_PATH}/items/${item_route}/media/details?exhibit_id=${item.is_member_of_exhibit}&grid_id=${item.is_member_of_grid}&item_id=${item.uuid}" title="View details" aria-label="view-item-details"><i class="fa fa-folder-open pr-1"></i></a>`;
-            }
-
-            published_obj.delete_item = `<i title="Can only delete if unpublished" style="color: #d3d3d3" class="fa fa-trash pr-1" aria-label="delete-item"></i>`;
-
-        } else if (item.is_published === 0) {
-
-            published_obj.draggable = `<tr id="${item.uuid}_${item.type}_${item.item_type}">`;
-            published_obj.item_order = `<td class="grabbable item-order"><i class="fa fa-reorder"></i><span style="padding-left: 4px;" aria-label="item-order">${item.order}</span></td>`;
-            published_obj.status = `<a href="#" id="${item.uuid}" class="publish-item" aria-label="item-status"><span id="publish" title="suppressed"><i class="fa fa-cloud-upload" style="color: darkred"></i><br>Unpublished</span></a>`;
-
-            if (item.item_type === 'text') {
-                published_obj.edit = `<a href="${APP_PATH}/items/${item_route}/text/edit?exhibit_id=${item.is_member_of_exhibit}&grid_id=${item.is_member_of_grid}&item_id=${item.uuid}" title="Edit" aria-label="edit-grid-item"><i class="fa fa-edit pr-1"></i></a>`;
-            } else {
-                published_obj.edit = `<a href="${APP_PATH}/items/${item_route}/media/edit?exhibit_id=${item.is_member_of_exhibit}&grid_id=${item.is_member_of_grid}&item_id=${item.uuid}" title="Edit" aria-label="edit-grid-item"><i class="fa fa-edit pr-1"></i></a>`;
-            }
-
-            published_obj.delete_item = `<a href="${APP_PATH}/items/${item_route}/delete?exhibit_id=${item.is_member_of_exhibit}&grid_id=${item.is_member_of_grid}&item_id=${item.uuid}" title="Delete" aria-label="delete-grid-item"><i class="fa fa-trash pr-1"></i></a>`;
-        }
-
-        return published_obj;
-    }
-
-    function check_timeline_item_published_status(item, item_route) {
-
-        let published_obj = {};
-
-        if (item.is_published === 1) {
-
-            published_obj.draggable = `<tr id="${item.uuid}_${item.type}_${item.item_type}">`;
-            published_obj.item_order = `<td class="item-order"><span style="padding-left: 4px;" aria-label="item-order">${item.order}</span></td>`;
-            published_obj.status = `<a href="#" id="${item.uuid}" class="suppress-item" aria-label="item-status"><span id="suppress" title="published"><i class="fa fa-cloud" style="color: green"></i><br>Published</span></a>`;
-
-            if (item.item_type === 'text') {
-                published_obj.edit = `<a href="${APP_PATH}/items/${item_route}/text/details?exhibit_id=${item.is_member_of_exhibit}&timeline_id=${item.is_member_of_timeline}&item_id=${item.uuid}" title="View details" aria-label="view-item-details"><i class="fa fa-folder-open pr-1"></i></a>`;
-            } else {
-                published_obj.edit = `<a href="${APP_PATH}/items/${item_route}/media/details?exhibit_id=${item.is_member_of_exhibit}&timeline_id=${item.is_member_of_timeline}&item_id=${item.uuid}" title="View details" aria-label="view-item-details"><i class="fa fa-folder-open pr-1"></i></a>`;
-            }
-
-            published_obj.delete_item = `<i title="Can only delete if unpublished" style="color: #d3d3d3" class="fa fa-trash pr-1" aria-label="delete-item"></i>`;
-
-        } else if (item.is_published === 0) {
-
-            published_obj.draggable = `<tr id="${item.uuid}_${item.type}_${item.item_type}">`;
-            published_obj.item_order = `<td class="grabbable item-order"><i class="fa fa-reorder"></i><span style="padding-left: 4px;" aria-label="item-order">${item.order}</span></td>`;
-            published_obj.status = `<a href="#" id="${item.uuid}" class="publish-item" aria-label="item-status"><span id="publish" title="suppressed"><i class="fa fa-cloud-upload" style="color: darkred"></i><br>Unpublished</span></a>`;
-
-            if (item.item_type === 'text') {
-                published_obj.edit = `<a href="${APP_PATH}/items/${item_route}/text/edit?exhibit_id=${item.is_member_of_exhibit}&timeline_id=${item.is_member_of_timeline}&item_id=${item.uuid}" title="Edit" aria-label="edit-timeline-item"><i class="fa fa-edit pr-1"></i></a>`;
-            } else {
-                published_obj.edit = `<a href="${APP_PATH}/items/${item_route}/media/edit?exhibit_id=${item.is_member_of_exhibit}&timeline_id=${item.is_member_of_timeline}&item_id=${item.uuid}" title="Edit" aria-label="edit-timeline-item"><i class="fa fa-edit pr-1"></i></a>`;
-            }
-
-            published_obj.delete_item = `<a href="${APP_PATH}/items/timeline/item/delete?exhibit_id=${item.is_member_of_exhibit}&timeline_id=${item.is_member_of_timeline}&item_id=${item.uuid}" title="Delete" aria-label="delete-timeline-item"><i class="fa fa-trash pr-1"></i></a>`;
-        }
-
-        return published_obj;
-    }
-
-    obj.display_heading_items = async function (item) {
-
-        try {
-
-            const type = item.type;
-            const text = helperModule.strip_html(helperModule.unescape(item.text));
-            let item_obj = check_published_status(item, 'heading');
-            let item_data = '';
-            let locked = '';
-
-            if (item.is_locked === 1) {
-                locked = '&nbsp;&nbsp;<i class="fa fa-lock" title="Record is currently locked" aria-label="exhibit-is-locked" style="color: #BA8E23"></i>';
-            }
-
-            // start row
-            item_data += item_obj.draggable;
-            item_data += item_obj.item_order;
-
-            item_data += `<td class="item-metadata">
-                    <p><button class="btn btn-default"><small>${type}</small></button> ${locked}</p>
-                    <p><strong>${text}</strong></p>
-                    </td>`;
-
-            item_data += `<td class="item-status"><small>${item_obj.status}</small></td>`;
-            item_data += `<td id="${item.uuid}-item-actions" style="width: 10%">
-                                <div class="card-text text-sm-center">
-                                    ${item_obj.edit}&nbsp;
-                                    ${item_obj.delete_item}
-                                </div>
-                            </td>`;
-            item_data += '</tr>';
-
-            return item_data;
-
-        } catch (error) {
-            document.querySelector('#message').innerHTML = `<div class="alert alert-danger" role="alert"><i class="fa fa-exclamation"></i> ${error.message}</div>`;
+            return create_link(url, 'Delete item', 'delete-item', 'fa fa-trash pr-1');
         }
     };
 
-    obj.display_standard_items = async function (item) {
+    /**
+     * Create table row for standard items
+     */
+    const create_standard_item_row = (item, item_route) => {
+        const tr = document.createElement('tr');
+        tr.id = `${item.uuid}_${item.item_type}_${item.type}`;
 
+        // Order cell
+        tr.appendChild(create_order_cell(item.order));
+
+        // Metadata cell
+        const metadata_td = create_item_metadata_cell(item);
+        tr.appendChild(metadata_td);
+
+        // Status cell
+        const status_td = create_table_cell('', '');
+        status_td.style.width = '5%';
+        status_td.style.textAlign = 'center';
+        const status_button = create_status_button(item.uuid, item.is_published);
+        status_td.appendChild(status_button);
+        tr.appendChild(status_td);
+
+        // Actions cell
+        const actions_td = document.createElement('td');
+        actions_td.id = `${item.uuid}-item-actions`;
+        actions_td.style.width = '10%';
+
+        const actions_div = document.createElement('div');
+        actions_div.className = 'card-text text-sm-center';
+
+        const edit_link = create_edit_link(item, item_route, item.is_published);
+        actions_div.appendChild(edit_link);
+        actions_div.appendChild(document.createTextNode('\u00A0'));
+
+        const delete_button = create_delete_button(item, item.is_published);
+        actions_div.appendChild(delete_button);
+
+        actions_td.appendChild(actions_div);
+        tr.appendChild(actions_td);
+
+        return tr;
+    };
+
+    /**
+     * Create metadata cell content
+     */
+    const create_item_metadata_cell = (item) => {
+        const td = document.createElement('td');
+        td.className = 'item-metadata';
+
+        // Type button
+        const type_para = document.createElement('p');
+        const type_button = document.createElement('button');
+        type_button.className = 'btn btn-default';
+        type_button.setAttribute('type', 'button');
+        type_button.setAttribute('aria-label', `${item.item_type || 'standard'} item`);
+
+        const type_icon = get_item_type_icon(item.item_type);
+        type_button.appendChild(type_icon);
+        type_button.appendChild(document.createTextNode(' '));
+
+        const type_small = document.createElement('small');
+        type_small.textContent = 'standard item';
+        type_button.appendChild(type_small);
+
+        type_para.appendChild(type_button);
+
+        // Lock icon if locked
+        if (item.is_locked === 1) {
+            type_para.appendChild(document.createTextNode('\u00A0\u00A0'));
+            const lock_icon = create_icon('fa fa-lock', 'Record is currently locked', 'exhibit-is-locked', '#BA8E23');
+            type_para.appendChild(lock_icon);
+        }
+
+        td.appendChild(type_para);
+
+        // Title
+        const title = helperModule.strip_html(helperModule.unescape(item.title || ''));
+        if (title) {
+            const title_para = document.createElement('p');
+            const title_strong = document.createElement('strong');
+            title_strong.textContent = title;
+            title_para.appendChild(title_strong);
+            td.appendChild(title_para);
+        }
+
+        return td;
+    };
+
+    /**
+     * Get icon for item type
+     */
+    const get_item_type_icon = (item_type) => {
+        const icon_map = {
+            'text': 'fa fa-file-text-o',
+            'image': 'fa fa-image',
+            'video': 'fa fa-file-video-o',
+            'audio': 'fa fa-file-audio-o',
+            'pdf': 'fa fa-file-pdf-o'
+        };
+
+        const icon_class = icon_map[item_type] || 'fa fa-file-o';
+        return create_icon(icon_class);
+    };
+
+    /**
+     * Get thumbnail URL for media type
+     */
+    const get_thumbnail_url = (media_type) => {
+        const thumbnail_map = {
+            'video': `${APP_PATH}/static/images/video-tn.png`,
+            'audio': `${APP_PATH}/static/images/audio-tn.png`,
+            'pdf': `${APP_PATH}/static/images/pdf-tn.png`,
+            'default': `${APP_PATH}/static/images/image-tn.png`
+        };
+
+        return thumbnail_map[media_type] || thumbnail_map['default'];
+    };
+
+    /**
+     * Create thumbnail image element
+     */
+    const create_thumbnail_image = (src, alt_text, width = 75, height = 75) => {
+        const para = document.createElement('p');
+        const img = document.createElement('img');
+        img.src = src;
+        img.alt = alt_text;
+        img.width = width;
+        img.height = height;
+        para.appendChild(img);
+        return para;
+    };
+
+    /**
+     * Display standard items
+     */
+    obj.display_standard_items = async function(item) {
         try {
-
-            const type = item.type;
-            const item_obj = check_published_status(item, 'standard');
-            let title = helperModule.strip_html(helperModule.unescape(item.title));
-            let item_data = '';
-            let thumbnail = '';
-            let img = '';
-            let item_type;
-            let media = item.media;
-            let locked = '';
-
-            if (item.is_locked === 1) {
-                locked = '&nbsp;&nbsp;<i class="fa fa-lock" title="Record is currently locked" aria-label="exhibit-is-locked" style="color: #BA8E23"></i>';
+            // Validate item
+            if (!item || !item.uuid) {
+                throw new Error('Invalid item data');
             }
 
-            if (item.mime_type.indexOf('image') !== -1 || item.item_type === 'image') {
-                item_type = '<i class="fa fa-image"></i>';
-            } else if (item.mime_type.indexOf('video') !== -1 || item.item_type === 'video') {
-                item_type = '<i class="fa fa-file-video-o"></i>';
-                thumbnail = `${APP_PATH}/static/images/video-tn.png`;
-                img = `<p><img src="${thumbnail}" height="75" width="75" alt="video-thumbnail"></p>`;
-            } else if (item.mime_type.indexOf('audio') !== -1 || item.item_type === 'audio') {
-                item_type = '<i class="fa fa-file-audio-o"></i>';
-                thumbnail = `${APP_PATH}/static/images/audio-tn.png`;
-                img = `<p><img src="${thumbnail}" height="75" width="75" alt="audio-thumbnail"></p>`;
-            } else if (item.mime_type.indexOf('pdf') !== -1 || item.item_type === 'pdf') {
-                item_type = '<i class="fa fa-file-pdf-o"></i>';
-                thumbnail = `${APP_PATH}/static/images/pdf-tn.png`;
-                img = `<p><img src="${thumbnail}" height="75" width="75" alt="pdf-thumbnail"></p>`;
-            } else if (item.item_type === 'text') {
-                item_type = '<i class="fa fa-file-text-o"></i>';
-                media = 'Text only';
+            const tr = document.createElement('tr');
+            tr.id = `${item.uuid}_${item.item_type}_${item.type}`;
+
+            // Order cell with drag handle
+            if (item.is_published === 0) {
+                tr.appendChild(create_order_cell(item.order));
             } else {
-                item_type = '<i class="fa fa-file-o"></i>';
+                // Published items - no drag handle
+                const order_td = document.createElement('td');
+                order_td.className = 'item-order';
+                const span = document.createElement('span');
+                span.style.paddingLeft = '4px';
+                span.setAttribute('aria-label', `Item order ${item.order}`);
+                span.textContent = item.order.toString();
+                order_td.appendChild(span);
+                tr.appendChild(order_td);
             }
+
+            // Metadata cell
+            const metadata_td = document.createElement('td');
+            metadata_td.className = 'item-metadata';
+
+            // Type button
+            const type_para = document.createElement('p');
+            const type_button = document.createElement('button');
+            type_button.className = 'btn btn-default';
+            type_button.setAttribute('type', 'button');
+            type_button.setAttribute('aria-label', `${item.item_type || 'standard'} item`);
+
+            const type_icon = get_item_type_icon(item.item_type);
+            type_button.appendChild(type_icon);
+            type_button.appendChild(document.createTextNode(' '));
+
+            const type_small = document.createElement('small');
+            type_small.textContent = 'item';
+            type_button.appendChild(type_small);
+
+            type_para.appendChild(type_button);
+
+            // Lock icon if locked
+            if (item.is_locked === 1) {
+                type_para.appendChild(document.createTextNode('\u00A0\u00A0'));
+                const lock_icon = create_icon('fa fa-lock', 'Record is currently locked', 'exhibit-is-locked', '#BA8E23');
+                type_para.appendChild(lock_icon);
+            }
+
+            metadata_td.appendChild(type_para);
+
+            // Title
+            let title = helperModule.strip_html(helperModule.unescape(item.title || ''));
+
+            // Handle thumbnails and media
+            let thumbnail_element = null;
+            let media_text = item.media || '';
 
             if (item.item_type !== 'text') {
-
-                if (item.is_repo_item === 1) {
-
+                // Handle repository items
+                if (item.is_repo_item === 1 && item.media) {
                     const repo_record = await helperMediaModule.get_repo_item_data(item.media);
-
-                    if (title.length === 0) {
-                        title = repo_record.title;
+                    if (repo_record) {
+                        if (!title || title.length === 0) {
+                            title = repo_record.title;
+                        }
+                        const thumbnail_url = helperMediaModule.render_repo_thumbnail(repo_record.thumbnail.data);
+                        thumbnail_element = create_thumbnail_image(thumbnail_url, item.uuid);
                     }
-
-                    thumbnail = helperMediaModule.render_repo_thumbnail(repo_record.thumbnail.data);
-                    img = `<p><img src="${thumbnail}" height="75" width="75" alt="${item.uuid}"></p>`;
-                }
-
-                if (item.is_kaltura_item === 1) {
-
-                    if (title.length === 0) {
+                } else if (item.is_kaltura_item === 1) {
+                    // Kaltura items
+                    if (!title || title.length === 0) {
                         title = 'Kaltura Item';
                     }
-                }
+                    const kaltura_thumbnail = get_thumbnail_url(item.item_type);
+                    thumbnail_element = create_thumbnail_image(kaltura_thumbnail, item.item_type + ' thumbnail');
+                } else {
+                    // Regular uploaded media
+                    let thumbnail_url = null;
 
-                if (img.length === 0) {
-
-                    if (item.thumbnail.length > 0) {
-                        thumbnail = EXHIBITS_ENDPOINTS.exhibits.exhibit_media.get.endpoint.replace(':exhibit_id', item.is_member_of_exhibit).replace(':media', item.thumbnail);
-                        img = `<p><img src="${thumbnail}" height="75" width="75" alt="${item.uuid}-thumbnail"></p>`;
-                    } else if (item.thumbnail.length === 0 && item.item_type === 'image' && item.media.length > 0) {
-                        thumbnail = EXHIBITS_ENDPOINTS.exhibits.exhibit_media.get.endpoint.replace(':exhibit_id', item.is_member_of_exhibit).replace(':media', item.media);
-                        img = `<p><img src="${thumbnail}" height="75" width="75" alt="${item.uuid}-media"></p>`;
-                    } else {
-                        thumbnail = `${APP_PATH}/static/images/image-tn.png`;
-                        img = `<p><img src="${thumbnail}" height="75" width="75" alt="no-thumbnail"></p>`;
+                    // Determine thumbnail based on media type
+                    if (item.item_type === 'video') {
+                        thumbnail_url = `${APP_PATH}/static/images/video-tn.png`;
+                        thumbnail_element = create_thumbnail_image(thumbnail_url, 'video-thumbnail');
+                    } else if (item.item_type === 'audio') {
+                        thumbnail_url = `${APP_PATH}/static/images/audio-tn.png`;
+                        thumbnail_element = create_thumbnail_image(thumbnail_url, 'audio-thumbnail');
+                    } else if (item.item_type === 'pdf') {
+                        thumbnail_url = `${APP_PATH}/static/images/pdf-tn.png`;
+                        thumbnail_element = create_thumbnail_image(thumbnail_url, 'pdf-thumbnail');
+                    } else if (item.item_type === 'image') {
+                        // Images - check for thumbnail or use media file
+                        if (!thumbnail_element) {
+                            if (item.thumbnail && item.thumbnail.length > 0) {
+                                thumbnail_url = EXHIBITS_ENDPOINTS.exhibits.exhibit_media.get.endpoint
+                                    .replace(':exhibit_id', encodeURIComponent(item.is_member_of_exhibit))
+                                    .replace(':media', encodeURIComponent(item.thumbnail));
+                                thumbnail_element = create_thumbnail_image(thumbnail_url, item.uuid + '-thumbnail');
+                            } else if (item.media && item.media.length > 0) {
+                                thumbnail_url = EXHIBITS_ENDPOINTS.exhibits.exhibit_media.get.endpoint
+                                    .replace(':exhibit_id', encodeURIComponent(item.is_member_of_exhibit))
+                                    .replace(':media', encodeURIComponent(item.media));
+                                thumbnail_element = create_thumbnail_image(thumbnail_url, item.uuid + '-media');
+                            } else {
+                                thumbnail_url = `${APP_PATH}/static/images/image-tn.png`;
+                                thumbnail_element = create_thumbnail_image(thumbnail_url, 'no-thumbnail');
+                            }
+                        }
                     }
                 }
+            } else {
+                // Text only items
+                media_text = 'Text only';
             }
 
-            if (title.length === 0 && item.text.length > 0) {
-
+            // Fallback title from text if needed
+            if ((!title || title.length === 0) && item.text && item.text.length > 0) {
                 title = helperModule.strip_html(helperModule.unescape(item.text));
-
                 if (title.length > 200) {
                     title = title.substring(0, 200) + '...';
                 }
             }
 
-            // start row
-            item_data += item_obj.draggable;
-            item_data += item_obj.item_order;
+            // Add title
+            if (title) {
+                const title_para = document.createElement('p');
+                const strong = document.createElement('strong');
+                strong.textContent = title;
+                title_para.appendChild(strong);
+                metadata_td.appendChild(title_para);
+            }
 
-            item_data += `<td class="item-metadata">
-                    <p><button class="btn btn-default">${item_type} <small>${type}</small></button> ${locked}</p>
-                    <p><strong>${title}</strong></p>
-                    ${img}                   
-                    <small><em>${media}</em></small>
-                    </td>`;
+            // Add thumbnail
+            if (thumbnail_element) {
+                metadata_td.appendChild(thumbnail_element);
+            }
 
-            item_data += `<td class="item-status"><small>${item_obj.status}</small></td>`;
-            item_data += `<td id="${item.uuid}-item-actions" style="width: 10%">
-                                <div class="card-text text-sm-center">
-                                    ${item_obj.edit}&nbsp;
-                                    ${item_obj.delete_item}
-                                </div>
-                            </td>`;
-            item_data += '</tr>';
+            // Add media filename
+            if (media_text) {
+                const media_small = document.createElement('small');
+                const media_em = document.createElement('em');
+                media_em.textContent = media_text;
+                media_small.appendChild(media_em);
+                metadata_td.appendChild(media_small);
+            }
 
-            return item_data;
+            tr.appendChild(metadata_td);
+
+            // Status cell
+            const status_td = create_table_cell('item-status', '');
+            const status_small = document.createElement('small');
+            const status_button = create_status_button(item.uuid, item.is_published);
+            status_small.appendChild(status_button);
+            status_td.appendChild(status_small);
+            tr.appendChild(status_td);
+
+            // Actions cell
+            const actions_td = document.createElement('td');
+            actions_td.id = `${item.uuid}-item-actions`;
+            actions_td.style.width = '10%';
+
+            const actions_div = document.createElement('div');
+            actions_div.className = 'card-text text-sm-center';
+
+            const edit_link = create_edit_link(item, 'standard', item.is_published);
+            actions_div.appendChild(edit_link);
+            actions_div.appendChild(document.createTextNode('\u00A0'));
+
+            const delete_button = create_delete_button(item, item.is_published);
+            actions_div.appendChild(delete_button);
+
+            actions_td.appendChild(actions_div);
+            tr.appendChild(actions_td);
+
+            const container = document.createElement('div');
+            container.appendChild(tr);
+
+            return container.innerHTML;
 
         } catch (error) {
-            document.querySelector('#message').innerHTML = `<div class="alert alert-danger" role="alert"><i class="fa fa-exclamation"></i> ${error.message}</div>`;
+            console.error('Error displaying standard item:', error);
+            display_error_message(error.message || 'Unable to display standard item');
+            return '';
         }
     };
 
-    obj.display_grids = async function (item) {
-
+    /**
+     * Display heading items
+     */
+    obj.display_heading_items = async function(item) {
         try {
+            const tr = document.createElement('tr');
+            tr.id = `${item.uuid}_${item.type}`;
 
-            const type = item.type;
-            const title = helperModule.strip_html(helperModule.unescape(item.title));
-            const item_obj = check_grid_published_status(item, 'grid');
-            let add_grid_items = `<a href="${APP_PATH}/items/grid/item?exhibit_id=${item.is_member_of_exhibit}&grid_id=${item.uuid}" title="Add Grid Item" aria-label="add-grid-items"><i class="fa fa-plus pr-1"></i></a>&nbsp;`;
-            let item_data = '';
-            let view_grid_items = '';
-            let grid_items_fragment = '';
-            let grid_item_count = '';
-            let locked = '';
+            // Order cell
+            tr.appendChild(create_order_cell(item.order));
 
+            // Metadata cell
+            const metadata_td = document.createElement('td');
+            metadata_td.className = 'item-metadata';
+
+            const type_para = document.createElement('p');
+            const type_button = document.createElement('button');
+            type_button.className = 'btn btn-default';
+            type_button.setAttribute('type', 'button');
+            type_button.setAttribute('aria-label', 'heading item');
+
+            const icon = create_icon('fa fa-header');
+            type_button.appendChild(icon);
+            type_button.appendChild(document.createTextNode(' '));
+
+            const small = document.createElement('small');
+            small.textContent = 'heading';
+            type_button.appendChild(small);
+
+            type_para.appendChild(type_button);
+
+            // Lock icon if locked
             if (item.is_locked === 1) {
-                locked = '&nbsp;&nbsp;<i class="fa fa-lock" title="Record is currently locked" aria-label="exhibit-is-locked" style="color: #BA8E23"></i>';
+                type_para.appendChild(document.createTextNode('\u00A0\u00A0'));
+                const lock_icon = create_icon('fa fa-lock', 'Record is currently locked', 'exhibit-is-locked', '#BA8E23');
+                type_para.appendChild(lock_icon);
             }
 
-            if (item.grid_items.length === 0) {
-                grid_items_fragment += '<p><strong>No items</strong></p>';
-            } else {
-                grid_item_count += `Contains ${item.grid_items.length} items`;
+            metadata_td.appendChild(type_para);
+
+            // Title
+            const text = helperModule.strip_html(helperModule.unescape(item.text || ''));
+            if (text) {
+                const text_para = document.createElement('p');
+                const strong = document.createElement('strong');
+                strong.textContent = text;
+                text_para.appendChild(strong);
+                metadata_td.appendChild(text_para);
             }
 
-            view_grid_items = `<a href="${APP_PATH}/items/grid/items?exhibit_id=${item.is_member_of_exhibit}&grid_id=${item.uuid}" title="View grid Items" aria-label="view-grid-items"><i class="fa fa-list pr-1"></i></a>`;
+            tr.appendChild(metadata_td);
 
-            // start row
-            item_data += item_obj.draggable;
-            item_data += item_obj.item_order;
+            // Status cell
+            const status_td = create_table_cell('', '');
+            status_td.style.width = '5%';
+            status_td.style.textAlign = 'center';
+            const status_button = create_status_button(item.uuid, item.is_published);
+            status_td.appendChild(status_button);
+            tr.appendChild(status_td);
 
-            item_data += `<td class="item-metadata">
-                    <p><button class="btn btn-default"><i class="fa fa-th"></i> <small>${type}</small></button> ${locked}</p>
-                    <p><strong>${title}</strong></p>
-                    <p><small>${item.columns} columns</small></p>
-                    <p><small>${grid_item_count}</small></p>
-                    <div id="grid-items-${item.is_member_of_exhibit}"><em>${grid_items_fragment}</em></div>
-                    </td>`;
+            // Actions cell
+            const actions_td = document.createElement('td');
+            actions_td.id = `${item.uuid}-item-actions`;
+            actions_td.style.width = '10%';
 
-            item_data += `<td class="item-status"><small>${item_obj.status}</small></td>`;
-            item_data += `<td id="${item.uuid}-item-actions" style="width: 10%"><!-- ${add_grid_items}&nbsp; -->
-                                <div class="card-text text-sm-center">
-                                    ${view_grid_items}&nbsp;
-                                    ${item_obj.edit}&nbsp;
-                                    ${item_obj.delete_item}
-                                </div>
-                            </td>`;
-            item_data += '</tr>';
+            const actions_div = document.createElement('div');
+            actions_div.className = 'card-text text-sm-center';
 
-            return item_data;
+            const edit_link = create_edit_link(item, 'heading', item.is_published);
+            actions_div.appendChild(edit_link);
+            actions_div.appendChild(document.createTextNode('\u00A0'));
+
+            const delete_button = create_delete_button(item, item.is_published);
+            actions_div.appendChild(delete_button);
+
+            actions_td.appendChild(actions_div);
+            tr.appendChild(actions_td);
+
+            const container = document.createElement('div');
+            container.appendChild(tr);
+
+            return container.innerHTML;
 
         } catch (error) {
-            document.querySelector('#message').innerHTML = `<div class="alert alert-danger" role="alert"><i class="fa fa-exclamation"></i> ${error.message}</div>`;
+            console.error('Error displaying heading item:', error);
+            display_error_message(error.message || 'Unable to display heading item');
+            return '';
         }
     };
 
-    obj.display_timelines = async function (item) {
-
+    /**
+     * Display grid items
+     */
+    obj.display_grids = async function(item) {
         try {
+            const tr = document.createElement('tr');
+            tr.id = `${item.uuid}_${item.type}`;
 
-            const type = item.type;
-            item.type = '';
-            item.type = 'timeline';
-            const title = helperModule.strip_html(helperModule.unescape(item.title));
-            const item_obj = check_published_status(item, 'vertical-timeline');
-            let item_data = '';
-            let view_timeline_items = '';
-            let timeline_items_fragment = '';
-            let timeline_item_count = '';
-            let locked = '';
+            // Order cell
+            tr.appendChild(create_order_cell(item.order));
 
+            // Metadata cell
+            const metadata_td = document.createElement('td');
+            metadata_td.className = 'item-metadata';
+
+            const type_para = document.createElement('p');
+            const type_button = document.createElement('button');
+            type_button.className = 'btn btn-default';
+            type_button.setAttribute('type', 'button');
+            type_button.setAttribute('aria-label', 'grid item');
+
+            const icon = create_icon('fa fa-th');
+            type_button.appendChild(icon);
+            type_button.appendChild(document.createTextNode(' '));
+
+            const small = document.createElement('small');
+            small.textContent = 'grid';
+            type_button.appendChild(small);
+
+            type_para.appendChild(type_button);
+
+            // Lock icon if locked
             if (item.is_locked === 1) {
-                locked = '&nbsp;&nbsp;<i class="fa fa-lock" title="Record is currently locked" aria-label="exhibit-is-locked" style="color: #BA8E23"></i>';
+                type_para.appendChild(document.createTextNode('\u00A0\u00A0'));
+                const lock_icon = create_icon('fa fa-lock', 'Record is currently locked', 'exhibit-is-locked', '#BA8E23');
+                type_para.appendChild(lock_icon);
             }
 
-            if (item.timeline_items.length === 0) {
-                timeline_items_fragment += '<p><strong>No items</strong></p>';
-            } else {
-                timeline_item_count += `Contains ${item.timeline_items.length} items`;
+            metadata_td.appendChild(type_para);
+
+            // Title
+            const title = helperModule.strip_html(helperModule.unescape(item.title || ''));
+            if (title) {
+                const title_para = document.createElement('p');
+                const strong = document.createElement('strong');
+                strong.textContent = title;
+                title_para.appendChild(strong);
+                metadata_td.appendChild(title_para);
             }
 
-            view_timeline_items = `<a href="${APP_PATH}/items/timeline/items?exhibit_id=${item.is_member_of_exhibit}&timeline_id=${item.uuid}" title="View Timeline Items" aria-label="view-timeline-items"><i class="fa fa-list pr-1"></i></a>`;
+            tr.appendChild(metadata_td);
 
-            // start row
-            item_data += item_obj.draggable;
-            item_data += item_obj.item_order;
+            // Status cell
+            const status_td = create_table_cell('', '');
+            status_td.style.width = '5%';
+            status_td.style.textAlign = 'center';
+            const status_button = create_status_button(item.uuid, item.is_published);
+            status_td.appendChild(status_button);
+            tr.appendChild(status_td);
 
-            item_data += `<td class="item-metadata">
-                    <p><button class="btn btn-default"><i class="fa fa-calendar"></i> <small>${type}</small></button> ${locked}</p>
-                    <p><strong>${title}</strong></p>
-                    <p><small>${timeline_item_count}</small></p>
-                    <div id="grid-items-${item.is_member_of_exhibit}"><em>${timeline_items_fragment}</em></div>
-                    </td>`;
+            // Actions cell
+            const actions_td = document.createElement('td');
+            actions_td.id = `${item.uuid}-item-actions`;
+            actions_td.style.width = '10%';
 
-            item_data += `<td class="item-status"><small>${item_obj.status}</small></td>`;
-            item_data += `<td id="${item.uuid}-item-actions" style="width: 10%">
-                                <div class="card-text text-sm-center">
-                                    ${view_timeline_items}&nbsp;
-                                    ${item_obj.edit}&nbsp;
-                                    ${item_obj.delete_item}
-                                </div>
-                            </td>`;
-            item_data += '</tr>';
+            const actions_div = document.createElement('div');
+            actions_div.className = 'card-text text-sm-center';
 
-            return item_data;
+            // View grid items link
+            const exhibit_id = encodeURIComponent(item.is_member_of_exhibit);
+            const grid_id = encodeURIComponent(item.uuid);
+            const view_url = `${APP_PATH}/items/grid/items?exhibit_id=${exhibit_id}&grid_id=${grid_id}`;
+            const view_link = create_link(view_url, 'View grid items', 'view-grid-items', 'fa fa-list pr-1');
+            actions_div.appendChild(view_link);
+            actions_div.appendChild(document.createTextNode('\u00A0'));
+
+            const edit_link = create_edit_link(item, 'grid', item.is_published);
+            actions_div.appendChild(edit_link);
+            actions_div.appendChild(document.createTextNode('\u00A0'));
+
+            const delete_button = create_delete_button(item, item.is_published);
+            actions_div.appendChild(delete_button);
+
+            actions_td.appendChild(actions_div);
+            tr.appendChild(actions_td);
+
+            const container = document.createElement('div');
+            container.appendChild(tr);
+
+            return container.innerHTML;
 
         } catch (error) {
-            document.querySelector('#message').innerHTML = `<div class="alert alert-danger" role="alert"><i class="fa fa-exclamation"></i> ${error.message}</div>`;
+            console.error('Error displaying grid:', error);
+            display_error_message(error.message || 'Unable to display grid');
+            return '';
         }
-    }
+    };
 
-    obj.display_grid_items = async function (item) {
-
+    /**
+     * Display grid items (items within a grid container)
+     */
+    obj.display_grid_items = async function(item) {
         try {
+            // Validate required data
+            if (!item || !item.uuid) {
+                throw new Error('Invalid grid item data');
+            }
 
-            item.type = '';
             item.type = 'griditem';
-            const item_obj = check_grid_item_published_status(item, 'grid/item');
-            let thumbnail;
-            let media = '';
-            let item_type;
-            let img = '';
-            let item_data = '';
-            let title = '';
-            let locked = '';
 
-            if (item.is_locked === 1) {
-                locked = '&nbsp;&nbsp;<i class="fa fa-lock" title="Record is currently locked" aria-label="exhibit-is-locked" style="color: #BA8E23"></i>';
-            }
+            const tr = document.createElement('tr');
+            tr.id = `${item.uuid}_${item.type}_${item.item_type}`;
 
-            if (item.mime_type.indexOf('image') !== -1 || item.item_type === 'image') {
-                item_type = '<i class="fa fa-image"></i>';
-            } else if (item.mime_type.indexOf('video') !== -1 || item.item_type === 'video') {
-                item_type = '<i class="fa fa-file-video-o"></i>';
-                thumbnail = `${APP_PATH}/static/images/video-tn.png`;
-                img = `<p><img src="${thumbnail}" height="75" width="75" alt="video-thumbnail"></p>`;
-            } else if (item.mime_type.indexOf('audio') !== -1 || item.item_type === 'audio') {
-                item_type = '<i class="fa fa-file-audio-o"></i>';
-                thumbnail = `${APP_PATH}/static/images/audio-tn.png`;
-                img = `<p><img src="${thumbnail}" height="75" width="75" alt="audio-thumbnail" ></p>`;
-            } else if (item.mime_type.indexOf('pdf') !== -1 || item.item_type === 'pdf') {
-                item_type = '<i class="fa fa-file-pdf-o"></i>';
-                thumbnail = `${APP_PATH}/static/images/pdf-tn.png`;
-                img = `<p><img src="${thumbnail}" height="75" width="75" alt="pdf-thumbnail"></p>`;
-            } else if (item.item_type === 'text') {
-                item_type = '<i class="fa fa-file-text-o"></i>';
-                media = 'Text only';
+            // Order cell with drag handle (for reordering within grid)
+            if (item.is_published === 0) {
+                tr.appendChild(create_order_cell(item.order));
             } else {
-                item_type = '<i class="fa fa-file-o"></i>';
+                // Published items - no drag handle
+                const order_td = document.createElement('td');
+                order_td.className = 'item-order';
+                const span = document.createElement('span');
+                span.style.paddingLeft = '4px';
+                span.setAttribute('aria-label', `Item order ${item.order}`);
+                span.textContent = item.order.toString();
+                order_td.appendChild(span);
+                tr.appendChild(order_td);
             }
+
+            // Metadata cell
+            const metadata_td = document.createElement('td');
+            metadata_td.className = 'item-metadata';
+
+            // Type button
+            const type_para = document.createElement('p');
+            const type_button = document.createElement('button');
+            type_button.className = 'btn btn-default';
+            type_button.setAttribute('type', 'button');
+            type_button.setAttribute('aria-label', `${item.item_type || 'grid'} item`);
+
+            const type_icon = get_item_type_icon(item.item_type);
+            type_button.appendChild(type_icon);
+            type_button.appendChild(document.createTextNode(' '));
+
+            const small = document.createElement('small');
+            small.textContent = 'grid item';
+            type_button.appendChild(small);
+
+            type_para.appendChild(type_button);
+
+            // Lock icon if locked
+            if (item.is_locked === 1) {
+                type_para.appendChild(document.createTextNode('\u00A0\u00A0'));
+                const lock_icon = create_icon('fa fa-lock', 'Record is currently locked', 'exhibit-is-locked', '#BA8E23');
+                type_para.appendChild(lock_icon);
+            }
+
+            metadata_td.appendChild(type_para);
+
+            // Title
+            let title = helperModule.unescape(item.title || '');
+
+            // Get thumbnail based on item type
+            let thumbnail_element = null;
+            let media_text = '';
 
             if (item.item_type !== 'text') {
-
+                // Handle repository items
                 if (item.is_repo_item === 1) {
-
                     const repo_record = await helperMediaModule.get_repo_item_data(item.media);
-
-                    if (title.length === 0) {
-                        title = repo_record.title;
+                    if (repo_record) {
+                        if (!title) {
+                            title = repo_record.title;
+                        }
+                        const thumbnail_url = helperMediaModule.render_repo_thumbnail(repo_record.thumbnail.data);
+                        thumbnail_element = create_thumbnail_image(thumbnail_url, 'Repository item thumbnail');
                     }
-
-                    thumbnail = helperMediaModule.render_repo_thumbnail(repo_record.thumbnail.data);
-                    img = `<p><img src="${thumbnail}" height="75" width="75" alt="repo-thumbnail"></p>`;
-                }
-
-                if (item.is_kaltura_item === 1) {
-
-                    if (title.length === 0) {
+                } else if (item.is_kaltura_item === 1) {
+                    if (!title) {
                         title = 'Kaltura Item';
                     }
-                }
-
-                if (item.media.length > 0) {
-                    media = item.media;
-                }
-
-                if (img.length === 0) {
-
-                    if (item.thumbnail.length > 0) {
-                        thumbnail = EXHIBITS_ENDPOINTS.exhibits.exhibit_media.get.endpoint.replace(':exhibit_id', item.is_member_of_exhibit).replace(':media', item.thumbnail);
-                        img = `<p><img src="${thumbnail}" height="75" width="75" alt="${item.uuid}-thumbnail"></p>`;
-                    } else if (item.thumbnail.length === 0 && item.item_type === 'image' && item.media.length > 0) {
-                        thumbnail = EXHIBITS_ENDPOINTS.exhibits.exhibit_media.get.endpoint.replace(':exhibit_id', item.is_member_of_exhibit).replace(':media', item.media);
-                        img = `<p><img src="${thumbnail}" height="75" width="75" alt="${item.uuid}-media"></p>`;
+                    const kaltura_thumbnail = get_thumbnail_url(item.item_type);
+                    thumbnail_element = create_thumbnail_image(kaltura_thumbnail, 'Kaltura item thumbnail');
+                } else if (item.item_type === 'image') {
+                    // Image items
+                    let image_src = '';
+                    if (item.thumbnail && item.thumbnail.length > 0) {
+                        image_src = EXHIBITS_ENDPOINTS.exhibits.exhibit_media.get.endpoint
+                            .replace(':exhibit_id', encodeURIComponent(item.is_member_of_exhibit))
+                            .replace(':media', encodeURIComponent(item.thumbnail));
+                    } else if (item.media && item.media.length > 0) {
+                        image_src = EXHIBITS_ENDPOINTS.exhibits.exhibit_media.get.endpoint
+                            .replace(':exhibit_id', encodeURIComponent(item.is_member_of_exhibit))
+                            .replace(':media', encodeURIComponent(item.media));
                     } else {
-                        thumbnail = `${APP_PATH}/static/images/image-tn.png`;
-                        img = `<p><img src="${thumbnail}" height="75" width="75" alt="no-thumbnail"></p>`;
+                        image_src = get_thumbnail_url('default');
                     }
+                    thumbnail_element = create_thumbnail_image(image_src, title || 'Item image');
+                } else {
+                    // Other media types (video, audio, pdf)
+                    const thumbnail_url = get_thumbnail_url(item.item_type);
+                    thumbnail_element = create_thumbnail_image(thumbnail_url, `${item.item_type} thumbnail`);
                 }
 
-                if (item.thumbnail.length > 0) {
-                    thumbnail = EXHIBITS_ENDPOINTS.exhibits.exhibit_media.get.endpoint.replace(':exhibit_id', item.is_member_of_exhibit).replace(':media', item.thumbnail);
-                    img = `<p><img src="${thumbnail}" height="75" width="75" alt="${item.uuid}-thumbnail"></p>`;
+                if (item.media && item.media.length > 0) {
+                    media_text = item.media;
                 }
+            } else {
+                // Text only items
+                media_text = 'Text only';
             }
 
-            if (title.length === 0 && item.text.length > 0) {
-
+            // Fallback title from text if needed
+            if (!title && item.text && item.text.length > 0) {
                 title = helperModule.unescape(item.text);
-
                 if (title.length > 200) {
                     title = title.substring(0, 200) + '...';
                 }
             }
 
-            // start row
-            item_data += item_obj.draggable;
-            item_data += item_obj.item_order;
-            item_data += `<td class="item-metadata">
-                    <p><button class="btn btn-default">${item_type} <small>grid item</small></button> ${locked}</p>
-                    <p><strong>${title}</strong></p>
-                    ${img}
-                    <small><em>${media}</em></small>
-                    </td>`;
-
-            item_data += `<td style="width: 5%;text-align: center"><small>${item_obj.status}</small></td>`;
-            item_data += `<td id="${item.uuid}-item-actions" style="width: 10%">
-                                <div class="card-text text-sm-center">
-                                    ${item_obj.edit}&nbsp;
-                                    ${item_obj.delete_item}
-                                </div>
-                            </td>`;
-            item_data += '</tr>';
-
-            return item_data;
-
-        } catch (error) {
-            document.querySelector('#message').innerHTML = `<div class="alert alert-danger" role="alert"><i class="fa fa-exclamation"></i> ${error.message}</div>`;
-        }
-    }
-
-    obj.display_timeline_items = async function (item) {
-
-        try {
-
-            item.type = '';
-            item.type = 'timelineitem';
-            let title = helperModule.strip_html(helperModule.unescape(item.title));
-            const item_obj = check_timeline_item_published_status(item, 'vertical-timeline/item');
-            let item_data = '';
-            let thumbnail;
-            let media = '';
-            let item_type;
-            let img = '';
-            let item_date = new Date(item.date);
-            let year = new Intl.DateTimeFormat('en', {year: 'numeric'}).format(item_date);
-            let month = new Intl.DateTimeFormat('en', {month: 'numeric'}).format(item_date);
-            let day = new Intl.DateTimeFormat('en', {day: '2-digit'}).format(item_date);
-            let sort_date = `${year}-${month}-${day}`;
-            let display_date = `${year}`;
-            let locked = '';
-
-            if (item.is_locked === 1) {
-                locked = '&nbsp;&nbsp;<i class="fa fa-lock" title="Record is currently locked" aria-label="exhibit-is-locked" style="color: #BA8E23"></i>';
+            // Add title
+            if (title) {
+                const title_para = document.createElement('p');
+                const strong = document.createElement('strong');
+                strong.textContent = title;
+                title_para.appendChild(strong);
+                metadata_td.appendChild(title_para);
             }
 
-            if (item.mime_type.indexOf('image') !== -1 || item.item_type === 'image') {
-                item_type = '<i class="fa fa-image"></i>';
-            } else if (item.mime_type.indexOf('video') !== -1 || item.item_type === 'video') {
-                item_type = '<i class="fa fa-file-video-o"></i>';
-                thumbnail = `${APP_PATH}/static/images/video-tn.png`;
-                img = `<p><img src="${thumbnail}" height="75" width="75" alt="video-thumbnail"></p>`;
-            } else if (item.mime_type.indexOf('audio') !== -1 || item.item_type === 'audio') {
-                item_type = '<i class="fa fa-file-audio-o"></i>';
-                thumbnail = `${APP_PATH}/static/images/audio-tn.png`;
-                img = `<p><img src="${thumbnail}" height="75" width="75" alt="audio-thumbnail"></p>`;
-            } else if (item.mime_type.indexOf('pdf') !== -1 || item.item_type === 'pdf') {
-                item_type = '<i class="fa fa-file-pdf-o"></i>';
-                thumbnail = `${APP_PATH}/static/images/pdf-tn.png`;
-                img = `<p><img src="${thumbnail}" height="75" width="75" alt="pdf-thumbnail"></p>`;
-            } else if (item.item_type === 'text') {
-                item_type = '<i class="fa fa-file-text-o"></i>';
-                media = 'Text only';
+            // Add thumbnail
+            if (thumbnail_element) {
+                metadata_td.appendChild(thumbnail_element);
+            }
+
+            // Add media filename
+            if (media_text) {
+                const media_small = document.createElement('small');
+                const media_em = document.createElement('em');
+                media_em.textContent = media_text;
+                media_small.appendChild(media_em);
+                metadata_td.appendChild(media_small);
+            }
+
+            tr.appendChild(metadata_td);
+
+            // Status cell
+            const status_td = create_table_cell('', '');
+            status_td.style.width = '5%';
+            status_td.style.textAlign = 'center';
+            const status_small = document.createElement('small');
+            const status_button = create_status_button(item.uuid, item.is_published);
+            status_small.appendChild(status_button);
+            status_td.appendChild(status_small);
+            tr.appendChild(status_td);
+
+            // Actions cell
+            const actions_td = document.createElement('td');
+            actions_td.id = `${item.uuid}-item-actions`;
+            actions_td.style.width = '10%';
+
+            const actions_div = document.createElement('div');
+            actions_div.className = 'card-text text-sm-center';
+
+            // Edit/view link for grid items
+            const exhibit_id = encodeURIComponent(item.is_member_of_exhibit);
+            const grid_id = encodeURIComponent(item.is_member_of_grid);
+            const item_id = encodeURIComponent(item.uuid);
+
+            let edit_url = '';
+            let edit_title = '';
+            let edit_icon = '';
+
+            if (item.is_published === 1) {
+                // Published - view details
+                if (item.item_type === 'text') {
+                    edit_url = `${APP_PATH}/items/grid/item/text/details?exhibit_id=${exhibit_id}&grid_id=${grid_id}&item_id=${item_id}`;
+                } else {
+                    edit_url = `${APP_PATH}/items/grid/item/media/details?exhibit_id=${exhibit_id}&grid_id=${grid_id}&item_id=${item_id}`;
+                }
+                edit_title = 'View details';
+                edit_icon = 'fa fa-folder-open pr-1';
             } else {
-                item_type = '<i class="fa fa-file-o"></i>';
+                // Unpublished - edit
+                if (item.item_type === 'text') {
+                    edit_url = `${APP_PATH}/items/grid/item/text/edit?exhibit_id=${exhibit_id}&grid_id=${grid_id}&item_id=${item_id}`;
+                } else {
+                    edit_url = `${APP_PATH}/items/grid/item/media/edit?exhibit_id=${exhibit_id}&grid_id=${grid_id}&item_id=${item_id}`;
+                }
+                edit_title = 'Edit grid item';
+                edit_icon = 'fa fa-edit pr-1';
             }
 
-            if (item.item_type !== 'text') {
+            const edit_link = create_link(edit_url, edit_title, edit_title.toLowerCase().replace(' ', '-'), edit_icon);
+            actions_div.appendChild(edit_link);
+            actions_div.appendChild(document.createTextNode('\u00A0'));
 
-                if (item.is_repo_item === 1) {
-
-                    const repo_record = await helperMediaModule.get_repo_item_data(item.media);
-
-                    if (title.length === 0) {
-                        title = repo_record.title;
-                    }
-
-                    thumbnail = helperMediaModule.render_repo_thumbnail(repo_record.thumbnail.data);
-                    img = `<p><img src="${thumbnail}" height="75" width="75" alt="repo-thumbnail"></p>`;
-                }
-
-                if (item.is_kaltura_item === 1) {
-
-                    if (title.length === 0) {
-                        title = 'Kaltura Item';
-                    }
-                }
-
-                if (item.media.length > 0) {
-                    media = item.media;
-                }
-
-                if (img.length === 0) {
-
-                    if (item.thumbnail.length > 0) {
-                        thumbnail = EXHIBITS_ENDPOINTS.exhibits.exhibit_media.get.endpoint.replace(':exhibit_id', item.is_member_of_exhibit).replace(':media', item.thumbnail);
-                        img = `<p><img src="${thumbnail}" height="75" width="75" alt="${item.uuid}-thumbnail"></p>`;
-                    } else if (item.thumbnail.length === 0 && item.item_type === 'image' && item.media.length > 0) {
-                        thumbnail = EXHIBITS_ENDPOINTS.exhibits.exhibit_media.get.endpoint.replace(':exhibit_id', item.is_member_of_exhibit).replace(':media', item.media);
-                        img = `<p><img src="${thumbnail}" height="75" width="75" alt="${item.uuid}-media"></p>`;
-                    } else {
-                        thumbnail = `${APP_PATH}/static/images/image-tn.png`;
-                        img = `<p><img src="${thumbnail}" height="75" width="75" alt="no-thumbnail"></p>`;
-                    }
-                }
-
-                if (item.thumbnail.length > 0) {
-                    thumbnail = EXHIBITS_ENDPOINTS.exhibits.exhibit_media.get.endpoint.replace(':exhibit_id', item.is_member_of_exhibit).replace(':media', item.thumbnail);
-                    img = `<p><img src="${thumbnail}" height="75" width="75" alt="${item.uuid}-thumbnail"></p>`;
-                }
+            // Delete button
+            if (item.is_published === 1) {
+                const delete_icon = create_icon('fa fa-trash pr-1', 'Can only delete if unpublished', 'delete-disabled', '#d3d3d3');
+                actions_div.appendChild(delete_icon);
+            } else {
+                const delete_url = `${APP_PATH}/items/grid/item/delete?exhibit_id=${exhibit_id}&grid_id=${grid_id}&item_id=${item_id}`;
+                const delete_link = create_link(delete_url, 'Delete grid item', 'delete-grid-item', 'fa fa-trash pr-1');
+                actions_div.appendChild(delete_link);
             }
 
-            if (title.length === 0 && item.text.length > 0) {
+            actions_td.appendChild(actions_div);
+            tr.appendChild(actions_td);
 
-                title = helperModule.unescape(item.text);
+            const container = document.createElement('div');
+            container.appendChild(tr);
 
-                if (title.length > 200) {
-                    title = title.substring(0, 200) + '...';
-                }
-            }
-
-            // start rows
-            item_data += `<tr id="${item.uuid}_${item.type}_${item.item_type}">`;
-            item_data += `<td class="item-metadata">
-                    <p><button class="btn btn-default">${item_type} <small>timeline item</small></button> ${locked}</p>
-                    <p><strong>${title}</strong></p>
-                    <!--<p><strong><small>${display_date}</small></strong></p>-->
-                    ${img}
-                    <small><em>${media}</em></small>
-                    </td>`;
-
-            item_data += `<td style="width: 5%;text-align: center"><small>${sort_date}</small></td>`;
-            item_data += `<td style="width: 5%;text-align: center"><small>${item_obj.status}</small></td>`;
-            item_data += `<td id="${item.uuid}-item-actions" style="width: 10%">
-                                <div class="card-text text-sm-center">
-                                    ${item_obj.edit}&nbsp;
-                                    ${item_obj.delete_item}
-                                </div>
-                            </td>`;
-            item_data += '</tr>';
-
-            return item_data;
+            return container.innerHTML;
 
         } catch (error) {
-            document.querySelector('#message').innerHTML = `<div class="alert alert-danger" role="alert"><i class="fa fa-exclamation"></i> ${error.message}</div>`;
+            console.error('Error displaying grid item:', error);
+            display_error_message(error.message || 'Unable to display grid item');
+            return '';
         }
     };
 
-    obj.init = function () {
+    /**
+     * Display timeline items
+     */
+    obj.display_timelines = async function(item) {
+        try {
+            const tr = document.createElement('tr');
+            tr.id = `${item.uuid}_${item.type}`;
+
+            // Order cell
+            tr.appendChild(create_order_cell(item.order));
+
+            // Metadata cell
+            const metadata_td = document.createElement('td');
+            metadata_td.className = 'item-metadata';
+
+            const type_para = document.createElement('p');
+            const type_button = document.createElement('button');
+            type_button.className = 'btn btn-default';
+            type_button.setAttribute('type', 'button');
+            type_button.setAttribute('aria-label', 'timeline item');
+
+            const icon = create_icon('fa fa-clock-o');
+            type_button.appendChild(icon);
+            type_button.appendChild(document.createTextNode(' '));
+
+            const small = document.createElement('small');
+            small.textContent = 'timeline';
+            type_button.appendChild(small);
+
+            type_para.appendChild(type_button);
+
+            // Lock icon if locked
+            if (item.is_locked === 1) {
+                type_para.appendChild(document.createTextNode('\u00A0\u00A0'));
+                const lock_icon = create_icon('fa fa-lock', 'Record is currently locked', 'exhibit-is-locked', '#BA8E23');
+                type_para.appendChild(lock_icon);
+            }
+
+            metadata_td.appendChild(type_para);
+
+            // Title
+            const title = helperModule.strip_html(helperModule.unescape(item.title || ''));
+            if (title) {
+                const title_para = document.createElement('p');
+                const strong = document.createElement('strong');
+                strong.textContent = title;
+                title_para.appendChild(strong);
+                metadata_td.appendChild(title_para);
+            }
+
+            tr.appendChild(metadata_td);
+
+            // Status cell
+            const status_td = create_table_cell('', '');
+            status_td.style.width = '5%';
+            status_td.style.textAlign = 'center';
+            const status_button = create_status_button(item.uuid, item.is_published);
+            status_td.appendChild(status_button);
+            tr.appendChild(status_td);
+
+            // Actions cell
+            const actions_td = document.createElement('td');
+            actions_td.id = `${item.uuid}-item-actions`;
+            actions_td.style.width = '10%';
+
+            const actions_div = document.createElement('div');
+            actions_div.className = 'card-text text-sm-center';
+
+            // View timeline items link
+            const exhibit_id = encodeURIComponent(item.is_member_of_exhibit);
+            const timeline_id = encodeURIComponent(item.uuid);
+            const view_url = `${APP_PATH}/items/timeline/items?exhibit_id=${exhibit_id}&timeline_id=${timeline_id}`;
+            const view_link = create_link(view_url, 'View timeline items', 'view-timeline-items', 'fa fa-list pr-1');
+            actions_div.appendChild(view_link);
+            actions_div.appendChild(document.createTextNode('\u00A0'));
+
+            const edit_link = create_edit_link(item, 'vertical-timeline', item.is_published);
+            actions_div.appendChild(edit_link);
+            actions_div.appendChild(document.createTextNode('\u00A0'));
+
+            const delete_button = create_delete_button(item, item.is_published);
+            actions_div.appendChild(delete_button);
+
+            actions_td.appendChild(actions_div);
+            tr.appendChild(actions_td);
+
+            const container = document.createElement('div');
+            container.appendChild(tr);
+
+            return container.innerHTML;
+
+        } catch (error) {
+            console.error('Error displaying timeline:', error);
+            display_error_message(error.message || 'Unable to display timeline');
+            return '';
+        }
+    };
+
+    /**
+     * Display timeline item events
+     */
+    obj.display_timeline_items = async function(item) {
+        try {
+            // Validate required data
+            if (!item || !item.uuid) {
+                throw new Error('Invalid timeline item data');
+            }
+
+            item.type = 'timelineitem';
+
+            const tr = document.createElement('tr');
+            tr.id = `${item.uuid}_${item.type}_${item.item_type}`;
+
+            // Metadata cell
+            const metadata_td = document.createElement('td');
+            metadata_td.className = 'item-metadata';
+
+            // Type button
+            const type_para = document.createElement('p');
+            const type_button = document.createElement('button');
+            type_button.className = 'btn btn-default';
+            type_button.setAttribute('type', 'button');
+
+            const type_icon = get_item_type_icon(item.item_type);
+            type_button.appendChild(type_icon);
+            type_button.appendChild(document.createTextNode(' '));
+
+            const small = document.createElement('small');
+            small.textContent = 'timeline item';
+            type_button.appendChild(small);
+
+            type_para.appendChild(type_button);
+
+            // Lock icon if locked
+            if (item.is_locked === 1) {
+                type_para.appendChild(document.createTextNode('\u00A0\u00A0'));
+                const lock_icon = create_icon('fa fa-lock', 'Record is currently locked', 'exhibit-is-locked', '#BA8E23');
+                type_para.appendChild(lock_icon);
+            }
+
+            metadata_td.appendChild(type_para);
+
+            // Title
+            let title = helperModule.strip_html(helperModule.unescape(item.title || ''));
+
+            // Get thumbnail based on item type
+            let thumbnail_element = null;
+            let media_text = '';
+
+            if (item.item_type !== 'text') {
+                // Handle repository items
+                if (item.is_repo_item === 1) {
+                    const repo_record = await helperMediaModule.get_repo_item_data(item.media);
+                    if (repo_record) {
+                        if (!title) {
+                            title = repo_record.title;
+                        }
+                        const thumbnail_url = helperMediaModule.render_repo_thumbnail(repo_record.thumbnail.data);
+                        thumbnail_element = create_thumbnail_image(thumbnail_url, 'Repository item thumbnail');
+                    }
+                } else if (item.is_kaltura_item === 1) {
+                    if (!title) {
+                        title = 'Kaltura Item';
+                    }
+                    const kaltura_thumbnail = get_thumbnail_url(item.item_type);
+                    thumbnail_element = create_thumbnail_image(kaltura_thumbnail, 'Kaltura item thumbnail');
+                } else if (item.item_type === 'image') {
+                    // Image items
+                    let image_src = '';
+                    if (item.thumbnail && item.thumbnail.length > 0) {
+                        image_src = EXHIBITS_ENDPOINTS.exhibits.exhibit_media.get.endpoint
+                            .replace(':exhibit_id', encodeURIComponent(item.is_member_of_exhibit))
+                            .replace(':media', encodeURIComponent(item.thumbnail));
+                    } else if (item.media && item.media.length > 0) {
+                        image_src = EXHIBITS_ENDPOINTS.exhibits.exhibit_media.get.endpoint
+                            .replace(':exhibit_id', encodeURIComponent(item.is_member_of_exhibit))
+                            .replace(':media', encodeURIComponent(item.media));
+                    } else {
+                        image_src = get_thumbnail_url('default');
+                    }
+                    thumbnail_element = create_thumbnail_image(image_src, title || 'Item image');
+                } else {
+                    // Other media types
+                    const thumbnail_url = get_thumbnail_url(item.item_type);
+                    thumbnail_element = create_thumbnail_image(thumbnail_url, `${item.item_type} thumbnail`);
+                }
+
+                if (item.media && item.media.length > 0) {
+                    media_text = item.media;
+                }
+            } else {
+                // Text only items
+                media_text = 'Text only';
+            }
+
+            // Fallback title from text if needed
+            if (!title && item.text && item.text.length > 0) {
+                title = helperModule.unescape(item.text);
+                if (title.length > 200) {
+                    title = title.substring(0, 200) + '...';
+                }
+            }
+
+            // Add title
+            if (title) {
+                const title_para = document.createElement('p');
+                const strong = document.createElement('strong');
+                strong.textContent = title;
+                title_para.appendChild(strong);
+                metadata_td.appendChild(title_para);
+            }
+
+            // Add thumbnail
+            if (thumbnail_element) {
+                metadata_td.appendChild(thumbnail_element);
+            }
+
+            // Add media filename
+            if (media_text) {
+                const media_small = document.createElement('small');
+                const media_em = document.createElement('em');
+                media_em.textContent = media_text;
+                media_small.appendChild(media_em);
+                metadata_td.appendChild(media_small);
+            }
+
+            tr.appendChild(metadata_td);
+
+            // Date cell
+            const date_td = create_table_cell('', '');
+            date_td.style.width = '5%';
+            date_td.style.textAlign = 'center';
+
+            if (item.date) {
+                const item_date = new Date(item.date);
+                const year = item_date.getFullYear();
+                const month = (item_date.getMonth() + 1).toString().padStart(2, '0');
+                const day = item_date.getDate().toString().padStart(2, '0');
+                const sort_date = `${year}-${month}-${day}`;
+
+                const date_small = document.createElement('small');
+                date_small.textContent = sort_date;
+                date_td.appendChild(date_small);
+            }
+
+            tr.appendChild(date_td);
+
+            // Status cell
+            const status_td = create_table_cell('', '');
+            status_td.style.width = '5%';
+            status_td.style.textAlign = 'center';
+            const status_small = document.createElement('small');
+            const status_button = create_status_button(item.uuid, item.is_published);
+            status_small.appendChild(status_button);
+            status_td.appendChild(status_small);
+            tr.appendChild(status_td);
+
+            // Actions cell
+            const actions_td = document.createElement('td');
+            actions_td.id = `${item.uuid}-item-actions`;
+            actions_td.style.width = '10%';
+
+            const actions_div = document.createElement('div');
+            actions_div.className = 'card-text text-sm-center';
+
+            // Edit/view link for timeline items
+            const exhibit_id = encodeURIComponent(item.is_member_of_exhibit);
+            const timeline_id = encodeURIComponent(item.is_member_of_timeline);
+            const item_id = encodeURIComponent(item.uuid);
+
+            let edit_url = '';
+            let edit_title = '';
+            let edit_icon = '';
+
+            if (item.is_published === 1) {
+                // Published - view details
+                if (item.item_type === 'text') {
+                    edit_url = `${APP_PATH}/items/vertical-timeline/item/text/details?exhibit_id=${exhibit_id}&timeline_id=${timeline_id}&item_id=${item_id}`;
+                } else {
+                    edit_url = `${APP_PATH}/items/vertical-timeline/item/media/details?exhibit_id=${exhibit_id}&timeline_id=${timeline_id}&item_id=${item_id}`;
+                }
+                edit_title = 'View details';
+                edit_icon = 'fa fa-folder-open pr-1';
+            } else {
+                // Unpublished - edit
+                if (item.item_type === 'text') {
+                    edit_url = `${APP_PATH}/items/vertical-timeline/item/text/edit?exhibit_id=${exhibit_id}&timeline_id=${timeline_id}&item_id=${item_id}`;
+                } else {
+                    edit_url = `${APP_PATH}/items/vertical-timeline/item/media/edit?exhibit_id=${exhibit_id}&timeline_id=${timeline_id}&item_id=${item_id}`;
+                }
+                edit_title = 'Edit timeline item';
+                edit_icon = 'fa fa-edit pr-1';
+            }
+
+            const edit_link = create_link(edit_url, edit_title, edit_title.toLowerCase().replace(' ', '-'), edit_icon);
+            actions_div.appendChild(edit_link);
+            actions_div.appendChild(document.createTextNode('\u00A0'));
+
+            // Delete button
+            if (item.is_published === 1) {
+                const delete_icon = create_icon('fa fa-trash pr-1', 'Can only delete if unpublished', 'delete-disabled', '#d3d3d3');
+                actions_div.appendChild(delete_icon);
+            } else {
+                const delete_url = `${APP_PATH}/items/vertical-timeline/item/delete?exhibit_id=${exhibit_id}&timeline_id=${timeline_id}&item_id=${item_id}`;
+                const delete_link = create_link(delete_url, 'Delete timeline item', 'delete-timeline-item', 'fa fa-trash pr-1');
+                actions_div.appendChild(delete_link);
+            }
+
+            actions_td.appendChild(actions_div);
+            tr.appendChild(actions_td);
+
+            const container = document.createElement('div');
+            container.appendChild(tr);
+
+            return container.innerHTML;
+
+        } catch (error) {
+            console.error('Error displaying timeline item:', error);
+            display_error_message(error.message || 'Unable to display timeline item');
+            return '';
+        }
+    };
+
+    /**
+     * Initialize module
+     */
+    obj.init = function() {
+        console.log('Items list displays module initialized');
+        return true;
     };
 
     return obj;
