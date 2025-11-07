@@ -370,15 +370,28 @@ const itemsListDisplayModule = (function() {
     };
 
     /**
-     * Create thumbnail image element
+     * Create thumbnail image element with error handling
      */
     const create_thumbnail_image = (src, alt_text, width = 75, height = 75) => {
         const para = document.createElement('p');
         const img = document.createElement('img');
+
+        // Determine default fallback image
+        const default_image_url = `${APP_PATH}/static/images/image-tn.png`;
+
         img.src = src;
         img.alt = alt_text;
         img.width = width;
         img.height = height;
+
+        // Handle broken images (404 errors)
+        img.addEventListener('error', function() {
+            if (this.src !== default_image_url) {
+                console.warn(`Thumbnail failed to load: ${src}, using default image`);
+                this.src = default_image_url;
+            }
+        });
+
         para.appendChild(img);
         return para;
     };
@@ -568,6 +581,7 @@ const itemsListDisplayModule = (function() {
      * Display heading items
      */
     obj.display_heading_items = async function(item) {
+
         try {
             const tr = document.createElement('tr');
             tr.id = `${item.uuid}_${item.type}`;
@@ -616,12 +630,14 @@ const itemsListDisplayModule = (function() {
 
             tr.appendChild(metadata_td);
 
-            // Status cell
+            // Status cell - FIXED: Added <small> wrapper for consistent font size
             const status_td = create_table_cell('', '');
             status_td.style.width = '5%';
             status_td.style.textAlign = 'center';
+            const status_small = document.createElement('small');
             const status_button = create_status_button(item.uuid, item.is_published);
-            status_td.appendChild(status_button);
+            status_small.appendChild(status_button);
+            status_td.appendChild(status_small);
             tr.appendChild(status_td);
 
             // Actions cell
@@ -706,12 +722,14 @@ const itemsListDisplayModule = (function() {
 
             tr.appendChild(metadata_td);
 
-            // Status cell
+            // Status cell - FIXED: Added <small> wrapper for consistent font size
             const status_td = create_table_cell('', '');
             status_td.style.width = '5%';
             status_td.style.textAlign = 'center';
+            const status_small = document.createElement('small');
             const status_button = create_status_button(item.uuid, item.is_published);
-            status_td.appendChild(status_button);
+            status_small.appendChild(status_button);
+            status_td.appendChild(status_small);
             tr.appendChild(status_td);
 
             // Actions cell
@@ -1014,12 +1032,14 @@ const itemsListDisplayModule = (function() {
 
             tr.appendChild(metadata_td);
 
-            // Status cell
+            // Status cell - FIXED: Added <small> wrapper for consistent font size
             const status_td = create_table_cell('', '');
             status_td.style.width = '5%';
             status_td.style.textAlign = 'center';
+            const status_small = document.createElement('small');
             const status_button = create_status_button(item.uuid, item.is_published);
-            status_td.appendChild(status_button);
+            status_small.appendChild(status_button);
+            status_td.appendChild(status_small);
             tr.appendChild(status_td);
 
             // Actions cell
