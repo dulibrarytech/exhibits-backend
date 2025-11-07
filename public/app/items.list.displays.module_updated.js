@@ -396,8 +396,20 @@ const itemsListDisplayModule = (function() {
             const tr = document.createElement('tr');
             tr.id = `${item.uuid}_${item.item_type}_${item.type}`;
 
-            // Order cell with drag handle (always show, even for published items)
-            tr.appendChild(create_order_cell(item.order));
+            // Order cell with drag handle
+            if (item.is_published === 0) {
+                tr.appendChild(create_order_cell(item.order));
+            } else {
+                // Published items - no drag handle
+                const order_td = document.createElement('td');
+                order_td.className = 'item-order';
+                const span = document.createElement('span');
+                span.style.paddingLeft = '4px';
+                span.setAttribute('aria-label', `Item order ${item.order}`);
+                span.textContent = item.order.toString();
+                order_td.appendChild(span);
+                tr.appendChild(order_td);
+            }
 
             // Metadata cell
             const metadata_td = document.createElement('td');
@@ -767,8 +779,20 @@ const itemsListDisplayModule = (function() {
             const tr = document.createElement('tr');
             tr.id = `${item.uuid}_${item.type}_${item.item_type}`;
 
-            // Order cell with drag handle (always show, even for published items)
-            tr.appendChild(create_order_cell(item.order));
+            // Order cell with drag handle (for reordering within grid)
+            if (item.is_published === 0) {
+                tr.appendChild(create_order_cell(item.order));
+            } else {
+                // Published items - no drag handle
+                const order_td = document.createElement('td');
+                order_td.className = 'item-order';
+                const span = document.createElement('span');
+                span.style.paddingLeft = '4px';
+                span.setAttribute('aria-label', `Item order ${item.order}`);
+                span.textContent = item.order.toString();
+                order_td.appendChild(span);
+                tr.appendChild(order_td);
+            }
 
             // Metadata cell
             const metadata_td = document.createElement('td');
