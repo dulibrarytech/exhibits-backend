@@ -20,7 +20,7 @@ const itemsDetailsTimelineItemModule = (function () {
 
     'use strict';
 
-    const APP_PATH = window.localStorage.getItem('exhibits_app_path');
+    // const APP_PATH = window.localStorage.getItem('exhibits_app_path');
     const EXHIBITS_ENDPOINTS = endpointsModule.get_exhibits_endpoints();
     let obj = {};
 
@@ -260,7 +260,7 @@ const itemsDetailsTimelineItemModule = (function () {
                 return;
             }
 
-            // Extract date portion from ISO date string (e.g., "2024-01-15T00:00:00Z" -> "2024-01-15")
+            // Extract date portion from ISO date string
             const date_str = String(date_value);
             const date_parts = date_str.split('T');
 
