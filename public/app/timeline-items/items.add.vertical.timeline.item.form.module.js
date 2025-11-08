@@ -90,7 +90,7 @@ const itemsAddVerticalTimelineItemFormModule = (function () {
             const form_data = itemsCommonVerticalTimelineItemFormModule.get_common_timeline_item_form_fields();
 
             if (!form_data || form_data === false || form_data === undefined) {
-                display_status_message(message_element, 'danger', 'Unable to get form field values. Please check all required fields.');
+                // display_status_message(message_element, 'danger', 'Unable to get form field values. Please check all required fields.');
                 return false;
             }
 
