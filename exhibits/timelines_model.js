@@ -603,7 +603,7 @@ exports.suppress_timeline_item_record = async function (exhibit_id, timeline_id,
 
         const TIMELINE_TASKS = new EXHIBIT_TIMELINE_RECORD_TASKS(DB, TABLES);
         let indexed_record = await INDEXER_MODEL.get_indexed_record(timeline_id);
-        let items = indexed_record.data._source.items;
+        let items = indexed_record.data.source.items;
         let updated_items = [];
 
         for (let i = 0; i < items.length; i++) {
@@ -612,7 +612,7 @@ exports.suppress_timeline_item_record = async function (exhibit_id, timeline_id,
             }
         }
 
-        indexed_record.data._source.items = updated_items;
+        indexed_record.data.source.items = updated_items;
 
         // remove original timeline record
         const is_deleted = await INDEXER_MODEL.delete_record(timeline_id);
@@ -628,7 +628,7 @@ exports.suppress_timeline_item_record = async function (exhibit_id, timeline_id,
         }
 
         await TIMELINE_TASKS.update_timeline_item_record(data);
-        const is_indexed = await INDEXER_MODEL.index_record(indexed_record.data._source);
+        const is_indexed = await INDEXER_MODEL.index_record(indexed_record.data.source);
 
         if (is_indexed === true) {
             return true;
