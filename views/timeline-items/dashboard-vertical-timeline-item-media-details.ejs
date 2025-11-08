@@ -166,10 +166,14 @@
                         </li>
                     </ul>
                     <div class="tab-content" id="mediaTabContent">
-                        <p>
-                        <div class="alert alert-warning">* Accepts only Images (png, jpg) and PDFs</div>
-                        <span class="upload-error"></span>
-                        </p>
+                        <!-- Upload Media Tab Pane -->
+                        <div class="tab-pane fade show active" id="upload-media" role="tabpanel"
+                             aria-labelledby="upload-media-tab">
+                            <p>
+                            <div class="alert alert-warning">* Accepts only Images (png, jpg) and PDFs</div>
+                            </p>
+                            <span class="upload-error"></span>
+
                         <div class="row">
                             <div class="col-6 col-md-6">
                                 <div class="col-12">
@@ -218,7 +222,8 @@
                                     to the page entered</em></small>
                             </p>
                         </div>
-                        <div class="tab-pane fade" id="import-audio-video" role="tabpanel"
+                        </div>
+                            <div class="tab-pane fade" id="import-audio-video" role="tabpanel"
                              aria-labelledby="import-audio-video-tab"><%- include('../partials/tab-import-audio-video.ejs'); %></div>
                         <div class="tab-pane fade" id="import-repo-media" role="tabpanel"
                              aria-labelledby="import-repo-media-tab"><%- include('../partials/tab-import-repo-media.ejs'); %></div>
