@@ -18,10 +18,8 @@
 
 'use strict';
 
-const FS = require('fs');
 const TIMELINES_MODEL = require('../exhibits/timelines_model');
 const AUTHORIZE = require('../auth/authorize');
-// const GRIDS_MODEL = require("./grid_model");
 
 exports.create_timeline_record = async function (req, res) {
 
