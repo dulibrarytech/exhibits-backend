@@ -937,14 +937,14 @@ exports.index_timeline_item_record = async (timeline_id, timeline_item_id, timel
         const timeline_item_index_record = construct_item_index_record(timeline_item_record);
         const indexed_record = await this.get_indexed_record(timeline_id);
 
-        if (!indexed_record.data || !indexed_record.data._source) {
+        if (!indexed_record.data || !indexed_record.data.source) {
             LOGGER.module().error(
                 `ERROR: [/indexer/model (index_timeline_item_record)] Timeline ${timeline_id} not found in index`
             );
             return false;
         }
 
-        const items = indexed_record.data._source.items || [];
+        const items = indexed_record.data.source.items || [];
         timeline_item_index_record.is_published = 1;
 
         // Add new item and sort by order
@@ -952,9 +952,9 @@ exports.index_timeline_item_record = async (timeline_id, timeline_item_id, timel
             return (a.order || 0) - (b.order || 0);
         });
 
-        indexed_record.data._source.items = updated_items;
+        indexed_record.data.source.items = updated_items;
 
-        const is_indexed = await this.index_record(indexed_record.data._source);
+        const is_indexed = await this.index_record(indexed_record.data.source);
 
         if (is_indexed === true) {
             LOGGER.module().info(

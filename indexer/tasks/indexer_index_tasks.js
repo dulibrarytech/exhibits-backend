@@ -404,6 +404,7 @@ const Indexer_index_tasks = class {
      * @returns {Promise<Object>} Result object with success status and details
      */
     async delete_record(uuid, options = {}) {
+
         try {
             // Validate UUID
             const uuid_trimmed = this._validate_uuid(uuid, 'record UUID');
@@ -422,8 +423,7 @@ const Indexer_index_tasks = class {
                 this.CLIENT.delete(delete_options),
                 this.INDEX_TIMEOUT
             );
-            console.log('UUID ', uuid_trimmed);
-            console.log('RESPONSE ', response);
+
             // Validate response
             if (!response) {
                 throw new Error('Empty response from Elasticsearch');

@@ -173,7 +173,8 @@ const itemsModule = (function() {
     /**
      * Display items list
      */
-    obj.display_items = async function() {
+    obj.display_items__ = async function() {
+        console.log('LOADING ITEMS...');
         try {
             // Get exhibit ID
             const exhibit_id = helperModule.get_parameter_by_name('exhibit_id');
@@ -251,6 +252,13 @@ const itemsModule = (function() {
                 item_data_element.innerHTML = item_data;
             }
 
+            // Destroy existing DataTable instance if it exists
+            const items_table = document.querySelector('#items');
+            if (items_table && DataTable.isDataTable('#items')) {
+                const existing_table = new DataTable('#items');
+                existing_table.destroy();
+            }
+
             // Initialize DataTable with row reordering
             const ITEM_LIST = new DataTable('#items', {
                 paging: false,
@@ -261,9 +269,212 @@ const itemsModule = (function() {
                 await helperModule.reorder_items(e, reordered_items);
             });
 
-            // Bind event handlers
-            bind_publish_item_events();
-            bind_suppress_item_events();
+            // Use event delegation for publish/suppress buttons (vanilla JS)
+            const items_tbody = document.querySelector('#items tbody');
+
+            if (items_tbody) {
+                // Remove existing listener if it exists
+                if (items_tbody._publishSuppressHandler) {
+                    items_tbody.removeEventListener('click', items_tbody._publishSuppressHandler);
+                }
+
+                // Create and store the event handler
+                const publishSuppressHandler = async (event) => {
+                    // Find the clicked button (might be the icon or text inside the link)
+                    const target = event.target.closest('.publish-item, .suppress-item');
+
+                    if (!target) {
+                        return;
+                    }
+
+                    event.preventDefault();
+
+                    const uuid = target.getAttribute('id');
+
+                    if (!uuid) {
+                        console.warn('Publish/suppress button missing ID');
+                        return;
+                    }
+
+                    // Determine which action to take based on class
+                    if (target.classList.contains('publish-item')) {
+                        await publish_item(uuid);
+                    } else if (target.classList.contains('suppress-item')) {
+                        await suppress_item(uuid);
+                    }
+                };
+
+                // Store reference for cleanup
+                items_tbody._publishSuppressHandler = publishSuppressHandler;
+
+                // Add the event listener
+                items_tbody.addEventListener('click', publishSuppressHandler);
+            }
+
+            // Handle scroll to item from URL parameters
+            const id = helperModule.get_parameter_by_name('id');
+            const type = helperModule.get_parameter_by_name('type');
+
+            if (id && type) {
+                const clean_url = `${APP_PATH}/exhibits?exhibit_id=${encodeURIComponent(exhibit_id)}`;
+                window.history.replaceState({}, '', clean_url);
+                window.history.pushState({}, '', clean_url);
+                window.location.href = `#${id}_${type}`;
+            }
+
+            return true;
+
+        } catch (error) {
+            console.error('Error displaying items:', error);
+            const message_element = document.querySelector('#message');
+            const error_message = error.user_message || error.message || 'Unable to display items. Please try again.';
+            display_message(message_element, 'danger', error_message);
+            return false;
+        }
+    };
+
+    /**
+     * Display items list
+     */
+    obj.display_items = async function() {
+
+        try {
+            // Get exhibit ID
+            const exhibit_id = helperModule.get_parameter_by_name('exhibit_id');
+
+            if (!exhibit_id) {
+                const message_element = document.querySelector('#message');
+                display_message(message_element, 'warning', 'No exhibit ID provided');
+                return false;
+            }
+
+            // Get items
+            const items = await obj.get_items(exhibit_id);
+
+            if (items === false) {
+                const item_card = document.querySelector('#item-card');
+                if (item_card) {
+                    item_card.textContent = '';
+                }
+                return false;
+            }
+
+            // Handle empty exhibit
+            if (!items || items.length === 0) {
+                const card = document.querySelector('.card');
+                if (card) {
+                    card.textContent = '';
+                }
+
+                const message_element = document.querySelector('#message');
+                const info_div = document.createElement('div');
+                info_div.className = 'alert alert-info';
+                info_div.setAttribute('role', 'alert');
+
+                const span = document.createElement('span');
+                span.id = 'exhibit-title';
+                info_div.appendChild(span);
+
+                info_div.appendChild(document.createTextNode(' exhibit is empty.'));
+
+                message_element.textContent = '';
+                message_element.appendChild(info_div);
+
+                await exhibitsModule.set_exhibit_title(exhibit_id);
+                return false;
+            }
+
+            // Build item list HTML
+            let item_data = '';
+
+            for (let i = 0; i < items.length; i++) {
+                const type = items[i].type;
+                const record = items[i];
+
+                switch(type) {
+                    case 'heading':
+                        item_data += await itemsListDisplayModule.display_heading_items(record);
+                        break;
+                    case 'item':
+                        item_data += await itemsListDisplayModule.display_standard_items(record);
+                        break;
+                    case 'grid':
+                        item_data += await itemsListDisplayModule.display_grids(record);
+                        break;
+                    case 'vertical_timeline':
+                        item_data += await itemsListDisplayModule.display_timelines(record);
+                        break;
+                    default:
+                        console.warn(`Unknown item type: ${type}`);
+                }
+            }
+
+            // Display items
+            const item_data_element = document.querySelector('#item-data');
+            if (item_data_element) {
+                item_data_element.innerHTML = item_data;
+            }
+
+            // Destroy existing DataTable instance if it exists
+            const items_table = document.querySelector('#items');
+            if (items_table && DataTable.isDataTable('#items')) {
+                const existing_table = new DataTable('#items');
+                existing_table.destroy();
+            }
+
+            // Initialize DataTable with row reordering
+            const ITEM_LIST = new DataTable('#items', {
+                paging: false,
+                rowReorder: true
+            });
+
+            // Handle row reordering
+            ITEM_LIST.on('row-reordered', async (e, reordered_items) => {
+                await helperModule.reorder_items(e, reordered_items);
+            });
+
+            // Use event delegation for publish/suppress buttons (vanilla JS)
+            // This is more efficient than binding individual event listeners to each button
+            const items_tbody = document.querySelector('#items tbody');
+
+            if (items_tbody) {
+                // Remove existing listener if it exists
+                if (items_tbody._publishSuppressHandler) {
+                    items_tbody.removeEventListener('click', items_tbody._publishSuppressHandler);
+                }
+
+                // Create and store the event handler
+                const publishSuppressHandler = async (event) => {
+                    // Find the clicked button (might be the icon or text inside the link)
+                    const target = event.target.closest('.publish-item, .suppress-item');
+
+                    if (!target) {
+                        return;
+                    }
+
+                    event.preventDefault();
+
+                    const uuid = target.getAttribute('id');
+
+                    if (!uuid) {
+                        console.warn('Publish/suppress button missing ID');
+                        return;
+                    }
+
+                    // Determine which action to take based on class
+                    if (target.classList.contains('publish-item')) {
+                        await publish_item(uuid);
+                    } else if (target.classList.contains('suppress-item')) {
+                        await suppress_item(uuid);
+                    }
+                };
+
+                // Store reference for cleanup
+                items_tbody._publishSuppressHandler = publishSuppressHandler;
+
+                // Add the event listener
+                items_tbody.addEventListener('click', publishSuppressHandler);
+            }
 
             // Handle scroll to item from URL parameters
             const id = helperModule.get_parameter_by_name('id');
@@ -378,6 +589,7 @@ const itemsModule = (function() {
      * Publish item
      */
     async function publish_item(uuid) {
+
         try {
             // Validate UUID
             if (!uuid) {
@@ -469,6 +681,7 @@ const itemsModule = (function() {
      * Suppress (unpublish) item
      */
     async function suppress_item(uuid) {
+
         try {
             // Validate UUID
             if (!uuid) {
@@ -560,6 +773,47 @@ const itemsModule = (function() {
      * Update UI to show published status
      */
     function update_item_status_to_published(uuid, item_type, exhibit_id) {
+
+        const status_element = document.getElementById(uuid);
+
+        if (!status_element) {
+            console.error(`Status element not found for UUID: ${uuid}`);
+            return;
+        }
+
+        // Update button classes
+        status_element.classList.remove('publish-item');
+        status_element.classList.add('suppress-item');
+
+        // Create new status content
+        const span = document.createElement('span');
+        span.id = `suppress-${uuid}`;
+        span.setAttribute('title', 'Published - click to unpublish');
+
+        const icon = document.createElement('i');
+        icon.className = 'fa fa-cloud';
+        icon.style.color = 'green';
+        icon.setAttribute('aria-hidden', 'true');
+        span.appendChild(icon);
+
+        span.appendChild(document.createElement('br'));
+        span.appendChild(document.createTextNode('Published'));
+
+        status_element.textContent = '';
+        status_element.appendChild(span);
+
+        // Note: Event delegation in display_items() handles click events
+        // No need to re-attach individual listeners here
+
+        // Update action buttons immediately
+        update_action_buttons(uuid, item_type, exhibit_id, true);
+    }
+
+    /**
+     * Update UI to show published status
+     */
+    function update_item_status_to_published__(uuid, item_type, exhibit_id) {
+
         setTimeout(() => {
             const status_element = document.getElementById(uuid);
 
@@ -606,6 +860,47 @@ const itemsModule = (function() {
      * Update UI to show unpublished status
      */
     function update_item_status_to_unpublished(uuid, item_type, exhibit_id) {
+
+        const status_element = document.getElementById(uuid);
+
+        if (!status_element) {
+            console.error(`Status element not found for UUID: ${uuid}`);
+            return;
+        }
+
+        // Update button classes
+        status_element.classList.remove('suppress-item');
+        status_element.classList.add('publish-item');
+
+        // Create new status content
+        const span = document.createElement('span');
+        span.id = `publish-${uuid}`;
+        span.setAttribute('title', 'Unpublished - click to publish');
+
+        const icon = document.createElement('i');
+        icon.className = 'fa fa-cloud-upload';
+        icon.style.color = 'darkred';
+        icon.setAttribute('aria-hidden', 'true');
+        span.appendChild(icon);
+
+        span.appendChild(document.createElement('br'));
+        span.appendChild(document.createTextNode('Unpublished'));
+
+        status_element.textContent = '';
+        status_element.appendChild(span);
+
+        // Note: Event delegation in display_items() handles click events
+        // No need to re-attach individual listeners here
+
+        // Update action buttons immediately
+        update_action_buttons(uuid, item_type, exhibit_id, false);
+    }
+
+    /**
+     * Update UI to show unpublished status
+     */
+    function update_item_status_to_unpublished__(uuid, item_type, exhibit_id) {
+
         setTimeout(() => {
             const status_element = document.getElementById(uuid);
 
@@ -652,6 +947,7 @@ const itemsModule = (function() {
      * Update action buttons based on publication status
      */
     function update_action_buttons(uuid, item_type, exhibit_id, is_published) {
+
         const actions_element = document.getElementById(`${uuid}-item-actions`);
 
         if (!actions_element) {
@@ -792,8 +1088,10 @@ const itemsModule = (function() {
 
     /**
      * Bind publish item event handlers
+     * @deprecated - This function is no longer used. Event delegation is now handled in display_items()
      */
     function bind_publish_item_events() {
+
         try {
             const publish_buttons = Array.from(document.getElementsByClassName('publish-item'));
 
@@ -812,8 +1110,10 @@ const itemsModule = (function() {
 
     /**
      * Bind suppress item event handlers
+     * @deprecated - This function is no longer used. Event delegation is now handled in display_items()
      */
     function bind_suppress_item_events() {
+
         try {
             const suppress_buttons = Array.from(document.getElementsByClassName('suppress-item'));
 
@@ -833,7 +1133,7 @@ const itemsModule = (function() {
     /**
      * Initialize module
      */
-    obj.init = function() {
+    obj.init = async function() {
         try {
             // Get parameters
             const exhibit_id = helperModule.get_parameter_by_name('exhibit_id');
@@ -852,14 +1152,14 @@ const itemsModule = (function() {
             }
 
             // Check authentication
-            (async function() {
-                const token = authModule.get_user_token();
-                await authModule.check_auth(token);
-            })();
+            // (async function() {
+            const token = authModule.get_user_token();
+            await authModule.check_auth(token);
+            // })();
 
             // Initialize page
             exhibitsModule.set_exhibit_title(exhibit_id);
-            obj.display_items();
+            await obj.display_items();
             helperModule.show_form();
             navModule.set_preview_link();
             navModule.set_item_nav_menu_links();
