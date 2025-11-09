@@ -54,8 +54,6 @@ const is_valid_record_type = (type) => {
 exports.create_index = async (req, res) => {
 
     try {
-        // Note: Add authorization check here if needed
-        // Example: if (!await check_admin_permission(req)) { return res.status(403)... }
 
         const result = await SERVICE.create_index();
 
@@ -102,9 +100,6 @@ exports.index_exhibit = async (req, res) => {
             });
         }
 
-        // Note: Add authorization check here if needed
-        // Example: if (!await check_permission(req, 'index_exhibit', uuid)) { return res.status(403)... }
-
         const result = await MODEL.index_exhibit(uuid);
 
         // Validate result structure
@@ -150,9 +145,6 @@ exports.get_indexed_record = async (req, res) => {
                 code: 'INVALID_UUID'
             });
         }
-
-        // Note: Add authorization check here if needed
-        // Example: if (!await check_permission(req, 'view_indexed_record', uuid)) { return res.status(403)... }
 
         const response = await MODEL.get_indexed_record(uuid);
 
@@ -209,10 +201,6 @@ exports.delete_record = async (req, res) => {
             });
         }
 
-        // Note: IMPORTANT - Add authorization check here!
-        // Deletes should be heavily restricted
-        // Example: if (!await check_permission(req, 'delete_indexed_record', uuid)) { return res.status(403)... }
-
         const result = await MODEL.delete_record(uuid);
 
         // Validate result structure
@@ -268,7 +256,7 @@ exports.index_record = async (req, res) => {
             });
         }
 
-        // Optional: Validate against allowed types
+        // Validate against allowed types
         if (!is_valid_record_type(type)) {
             return res.status(400).json({
                 success: false,
@@ -276,9 +264,6 @@ exports.index_record = async (req, res) => {
                 code: 'INVALID_TYPE'
             });
         }
-
-        // Note: Add authorization check here if needed
-        // Example: if (!await check_permission(req, 'index_record', uuid)) { return res.status(403)... }
 
         const result = await MODEL.index_record(uuid, type.toLowerCase());
 
