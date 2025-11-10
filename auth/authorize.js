@@ -64,7 +64,7 @@ exports.check_permission = async function (options) {
         const user_permissions_found = all_permissions.filter(
             perm => user_permission_ids.has(perm.id)
         );
-        console.log('MY PERMISSIONS ', user_permissions_found);
+
         // Normalize actions for comparison
         const actions_normalized = new Set(
             actions.map(action => String(action).toLowerCase().trim())
@@ -85,9 +85,6 @@ exports.check_permission = async function (options) {
         if (users_admin === true) {
             return true;
         }
-
-        console.log('MATCHING PERMISSIONS ', matching_permissions);
-        console.log('ACTIONS ', actions);
 
         // If user has all required permissions, authorization complete
         if (matching_permissions.length === actions.length) {
