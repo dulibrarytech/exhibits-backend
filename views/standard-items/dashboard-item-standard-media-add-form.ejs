@@ -53,9 +53,15 @@
             </div>
             <div class="card-body">
                 <div class="container">
+                    <!-- media tabs -->
                     <ul class="nav nav-tabs" id="mediaTab" role="tablist">
                         <li class="nav-item">
-                            <a class="nav-link active" id="upload-media-tab" data-toggle="tab" href="#upload-media"
+                            <a class="nav-link active" id="import-repo-media-tab" data-toggle="tab" href="#import-repo-media"
+                               role="tab" aria-controls="import-repo-media" aria-selected="false">Import Repository
+                                Media</a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" id="upload-media-tab" data-toggle="tab" href="#upload-media"
                                role="tab" aria-controls="upload-media" aria-selected="true">Upload Media</a>
                         </li>
                         <li class="nav-item">
@@ -63,20 +69,16 @@
                                role="tab" aria-controls="import-audio-video" aria-selected="false">Import
                                 Audio/Video</a>
                         </li>
-                        <li class="nav-item">
-                            <a class="nav-link" id="import-repo-media-tab" data-toggle="tab" href="#import-repo-media"
-                               role="tab" aria-controls="import-repo-media" aria-selected="false">Import Repository
-                                Media</a>
-                        </li>
                     </ul>
                     <div class="tab-content" id="mediaTabContent">
-                        <div class="tab-pane fade show active" id="upload-media" role="tabpanel"
+                        <div class="tab-pane fade show active" id="import-repo-media" role="tabpanel"
+                             aria-labelledby="import-repo-media-tab"><%- include('../partials/tab-import-repo-media.ejs'); %></div>
+                        <div class="tab-pane fade" id="upload-media" role="tabpanel"
                              aria-labelledby="upload-media-tab"><%- include('../partials/tab-upload-media.ejs'); %></div>
                         <div class="tab-pane fade" id="import-audio-video" role="tabpanel"
                              aria-labelledby="import-audio-video-tab"><%- include('../partials/tab-import-audio-video.ejs'); %></div>
-                        <div class="tab-pane fade" id="import-repo-media" role="tabpanel"
-                             aria-labelledby="import-repo-media-tab"><%- include('../partials/tab-import-repo-media.ejs'); %></div>
                     </div>
+
                 </div>
 
                 <%- include('partials/item-alt-text.ejs'); %>

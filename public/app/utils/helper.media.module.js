@@ -2648,7 +2648,6 @@ const helperMediaModule = (function () {
                 document.querySelector('#item-thumbnail-trash').addEventListener('click', helperMediaModule.delete_thumbnail_image_edit);
             }
 
-
         }, 1000);
     };
 

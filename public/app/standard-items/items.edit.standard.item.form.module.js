@@ -575,6 +575,20 @@ const itemsEditStandardItemFormModule = (function () {
             document.querySelector('#update-item-btn').addEventListener('click', itemsEditStandardItemFormModule.update_item_record);
 
             if (window.location.pathname.indexOf('media') !== -1) {
+
+                /*
+                // Remove 'active' class from all tab links
+                document.querySelectorAll('#mediaTab .nav-link').forEach(link => {
+                    link.classList.remove('active');
+                });
+
+                // Remove 'active' and 'show' classes from all tab panes
+                document.querySelectorAll('#mediaTabContent .tab-pane').forEach(pane => {
+                    pane.classList.remove('active', 'show');
+                });
+
+                 */
+
                 helperMediaModule.media_edit_init();
             }
 
