@@ -316,6 +316,7 @@ const Exhibit_heading_record_tasks = class {
      * @private
      */
     async _reorder_items(table_name, where_clause, item) {
+
         this._validate_database();
         this._validate_table(table_name);
 
@@ -323,7 +324,7 @@ const Exhibit_heading_record_tasks = class {
             throw new Error('Valid item object is required');
         }
 
-        if (!item.uuid || typeof item.order !== 'string') {
+        if (!item.uuid || typeof item.order !== 'number') {
             throw new Error('Item must have uuid and order properties');
         }
 
@@ -364,6 +365,7 @@ const Exhibit_heading_record_tasks = class {
         ];
 
         try {
+
             this._validate_data_object(data);
             this._validate_database();
             this._validate_table('heading_records');
@@ -476,6 +478,7 @@ const Exhibit_heading_record_tasks = class {
      * @returns {Promise<Object|null>} Heading record or null
      */
     async get_heading_record(is_member_of_exhibit, uuid) {
+
         try {
             this._validate_database();
             this._validate_table('heading_records');
@@ -522,6 +525,7 @@ const Exhibit_heading_record_tasks = class {
      * @returns {Promise<Object|null>} Heading record with lock status
      */
     async get_heading_edit_record(uid, is_member_of_exhibit, uuid) {
+
         try {
             this._validate_database();
             this._validate_table('heading_records');
@@ -703,6 +707,7 @@ const Exhibit_heading_record_tasks = class {
      * @returns {Promise<number>} Count of heading records
      */
     async get_record_count(uuid) {
+
         try {
             this._validate_database();
             this._validate_table('heading_records');
@@ -737,6 +742,7 @@ const Exhibit_heading_record_tasks = class {
      * @returns {Promise<boolean>} Success status
      */
     async set_to_publish(uuid, published_by = null) {
+
         try {
             const exhibit_uuid = this._validate_uuid(uuid, 'exhibit UUID');
 
@@ -795,6 +801,7 @@ const Exhibit_heading_record_tasks = class {
      * @returns {Promise<boolean>} Success status
      */
     async set_to_suppress(uuid, unpublished_by = null) {
+
         try {
             const exhibit_uuid = this._validate_uuid(uuid, 'exhibit UUID');
 
@@ -825,6 +832,7 @@ const Exhibit_heading_record_tasks = class {
      * @returns {Promise<boolean>} Success status
      */
     async set_heading_to_suppress(uuid, unpublished_by = null) {
+
         try {
             const result = await this._update_single_publish_status(
                 'heading_records',
@@ -855,7 +863,9 @@ const Exhibit_heading_record_tasks = class {
      * @returns {Promise<boolean>} Reorder success status
      */
     async reorder_headings(is_member_of_exhibit, heading) {
+
         try {
+
             const exhibit_uuid = this._validate_uuid(is_member_of_exhibit, 'exhibit UUID');
 
             await this._reorder_items(

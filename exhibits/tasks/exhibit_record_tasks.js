@@ -249,7 +249,9 @@ const Exhibit_record_tasks = class {
      * @private
      */
     async _update_flags(uuid, flags, operation_name, updated_by = null) {
+
         try {
+
             this._validate_database();
             this._validate_table('exhibit_records');
             const uuid_validated = this._validate_uuid(uuid, 'exhibit UUID');
@@ -312,7 +314,9 @@ const Exhibit_record_tasks = class {
      * @returns {Object} - {status: number, message: string, data: Object|null}
      */
     async create_exhibit_record(data) {
+
         try {
+
             this._validate_data_object(data);
             this._validate_database();
             this._validate_table('exhibit_records');
@@ -396,7 +400,9 @@ const Exhibit_record_tasks = class {
      * @returns {Promise<Array<Object>>} Array of exhibit records
      */
     async get_exhibit_records() {
+
         try {
+
             this._validate_database();
             this._validate_table('exhibit_records');
 
@@ -421,7 +427,9 @@ const Exhibit_record_tasks = class {
      * @returns {Promise<Object|null>} Exhibit object with uuid and title, or null
      */
     async get_exhibit_title(uuid) {
+
         try {
+
             this._validate_database();
             this._validate_table('exhibit_records');
             const uuid_validated = this._validate_uuid(uuid, 'exhibit UUID');
@@ -449,7 +457,9 @@ const Exhibit_record_tasks = class {
      * @returns {Promise<Object|null>} Complete exhibit record or null
      */
     async get_exhibit_record(uuid) {
+
         try {
+
             this._validate_database();
             this._validate_table('exhibit_records');
             const uuid_validated = this._validate_uuid(uuid, 'exhibit UUID');
@@ -478,7 +488,9 @@ const Exhibit_record_tasks = class {
      * @returns {Promise<Object|null>} Exhibit record with lock status
      */
     async get_exhibit_edit_record(uid, uuid) {
+
         try {
+
             this._validate_database();
             this._validate_table('exhibit_records');
 
@@ -562,7 +574,9 @@ const Exhibit_record_tasks = class {
      * @returns {Promise<boolean>} Success status
      */
     async update_exhibit_record(uuid, data, updated_by = null) {
+
         try {
+
             this._validate_database();
             this._validate_table('exhibit_records');
             const uuid_validated = this._validate_uuid(uuid, 'exhibit UUID');
@@ -613,7 +627,9 @@ const Exhibit_record_tasks = class {
      * @returns {Promise<boolean>} Success status
      */
     async delete_exhibit_record(uuid, deleted_by = null) {
+
         try {
+
             this._validate_database();
             this._validate_table('exhibit_records');
             const uuid_validated = this._validate_uuid(uuid, 'exhibit UUID');
@@ -660,7 +676,9 @@ const Exhibit_record_tasks = class {
      * @returns {Promise<boolean>} Success status
      */
     async delete_media_value(uuid, media, updated_by = null) {
+
         try {
+
             this._validate_database();
             this._validate_table('exhibit_records');
             const uuid_validated = this._validate_uuid(uuid, 'exhibit UUID');

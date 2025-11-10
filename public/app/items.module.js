@@ -48,11 +48,10 @@ const itemsModule = (function() {
     };
 
     const APP_PATH = get_app_path();
-
     let obj = {};
 
     /**
-     * Display message (XSS-safe)
+     * Display message
      */
     const display_message = (element, type, message) => {
         if (!element) {

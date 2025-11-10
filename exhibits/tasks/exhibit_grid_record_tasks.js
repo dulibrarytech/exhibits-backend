@@ -405,6 +405,7 @@ const Exhibit_grid_record_tasks = class {
      * @private
      */
     async _reorder_items(table_name, where_clause, item) {
+
         this._validate_database();
         this._validate_table(table_name);
 
@@ -412,7 +413,7 @@ const Exhibit_grid_record_tasks = class {
             throw new Error('Valid item object is required');
         }
 
-        if (!item.uuid || typeof item.order !== 'string') {
+        if (!item.uuid || typeof item.order !== 'number') {
             throw new Error('Item must have uuid and order properties');
         }
 
@@ -449,6 +450,7 @@ const Exhibit_grid_record_tasks = class {
         ];
 
         try {
+
             this._validate_data_object(data);
             this._validate_database();
             this._validate_table('grid_records');
@@ -514,7 +516,9 @@ const Exhibit_grid_record_tasks = class {
      * @returns {Promise<Array>} Array of grid records
      */
     async get_grid_records(is_member_of_exhibit) {
+
         try {
+
             this._validate_database();
             this._validate_table('grid_records');
 
@@ -545,7 +549,9 @@ const Exhibit_grid_record_tasks = class {
      * @returns {Promise<Object|null>} Grid record or null
      */
     async get_grid_record(is_member_of_exhibit, grid_id) {
+
         try {
+
             this._validate_database();
             this._validate_table('grid_records');
 
@@ -596,6 +602,7 @@ const Exhibit_grid_record_tasks = class {
         ];
 
         try {
+
             this._validate_data_object(data);
             this._validate_database();
             this._validate_table('grid_records');
@@ -657,6 +664,7 @@ const Exhibit_grid_record_tasks = class {
         } = options;
 
         try {
+
             this._validate_database();
             this._validate_table('grid_records');
 
@@ -700,7 +708,9 @@ const Exhibit_grid_record_tasks = class {
      * @returns {Promise<Array>} Array of grid item records
      */
     async get_grid_item_records(is_member_of_exhibit, is_member_of_grid) {
+
         try {
+
             this._validate_database();
             this._validate_table('grid_item_records');
 
@@ -753,6 +763,7 @@ const Exhibit_grid_record_tasks = class {
         ];
 
         try {
+
             this._validate_data_object(data);
             this._validate_database();
             this._validate_table('grid_item_records');
@@ -826,7 +837,9 @@ const Exhibit_grid_record_tasks = class {
      * @returns {Promise<Object|null>} Grid item record or null
      */
     async get_grid_item_record(is_member_of_exhibit, grid_id, item_id) {
+
         try {
+
             this._validate_database();
             this._validate_table('grid_item_records');
 
@@ -876,7 +889,9 @@ const Exhibit_grid_record_tasks = class {
      * @returns {Promise<Object|null>} Grid item record with lock status
      */
     async get_grid_item_edit_record(uid, is_member_of_exhibit, grid_id, item_id) {
+
         try {
+
             this._validate_database();
             this._validate_table('grid_item_records');
 
@@ -974,6 +989,7 @@ const Exhibit_grid_record_tasks = class {
         ];
 
         try {
+
             this._validate_data_object(data);
             this._validate_database();
             this._validate_table('grid_item_records');
@@ -1079,7 +1095,9 @@ const Exhibit_grid_record_tasks = class {
      * @returns {Promise<Object>} Delete result
      */
     async delete_grid_item_record(is_member_of_exhibit, grid_id, grid_item_id, deleted_by = null) {
+
         try {
+
             this._validate_database();
             this._validate_table('grid_item_records');
 
@@ -1168,7 +1186,9 @@ const Exhibit_grid_record_tasks = class {
      * @returns {Promise<Object>} Publish result
      */
     async set_to_publish(uuid, published_by = null) {
+
         try {
+
             const exhibit_uuid = this._validate_uuid(uuid, 'exhibit UUID');
 
             const result = await this._update_publish_status(
@@ -1197,7 +1217,9 @@ const Exhibit_grid_record_tasks = class {
      * @returns {Promise<Object>} Publish result
      */
     async set_grid_item_to_publish(uuid, published_by = null) {
+
         try {
+
             const result = await this._update_single_publish_status(
                 'grid_item_records',
                 uuid,
@@ -1224,7 +1246,9 @@ const Exhibit_grid_record_tasks = class {
      * @returns {Promise<Object>} Publish result
      */
     async set_to_publish_grid_items(uuid, published_by = null) {
+
         try {
+
             const grid_uuid = this._validate_uuid(uuid, 'grid UUID');
             const result = await this._update_publish_status(
                 'grid_item_records',
@@ -1252,7 +1276,9 @@ const Exhibit_grid_record_tasks = class {
      * @returns {Promise<Object>} Publish result
      */
     async set_grid_to_publish(uuid, published_by = null) {
+
         try {
+
             const result = await this._update_single_publish_status(
                 'grid_records',
                 uuid,
@@ -1279,7 +1305,9 @@ const Exhibit_grid_record_tasks = class {
      * @returns {Promise<Object>} Suppress result
      */
     async set_to_suppress(uuid, unpublished_by = null) {
+
         try {
+
             const exhibit_uuid = this._validate_uuid(uuid, 'exhibit UUID');
 
             const result = await this._update_publish_status(
@@ -1308,7 +1336,9 @@ const Exhibit_grid_record_tasks = class {
      * @returns {Promise<Object>} Suppress result
      */
     async set_grid_to_suppress(uuid, unpublished_by = null) {
+
         try {
+
             const result = await this._update_single_publish_status(
                 'grid_records',
                 uuid,
@@ -1335,7 +1365,9 @@ const Exhibit_grid_record_tasks = class {
      * @returns {Promise<Object>} Suppress result
      */
     async set_to_suppressed_grid_items(uuid, unpublished_by = null) {
+
         try {
+
             const grid_uuid = this._validate_uuid(uuid, 'grid UUID');
 
             const result = await this._update_publish_status(
@@ -1366,7 +1398,9 @@ const Exhibit_grid_record_tasks = class {
      * @returns {Promise<boolean>} Reorder success status
      */
     async reorder_grids(is_member_of_exhibit, grids) {
+
         try {
+
             const exhibit_uuid = this._validate_uuid(is_member_of_exhibit, 'exhibit UUID');
 
             await this._reorder_items(
@@ -1397,8 +1431,9 @@ const Exhibit_grid_record_tasks = class {
      * @returns {Promise<boolean>} Reorder success status
      */
     async reorder_grid_items(is_member_of_grid, grids) {
-        console.log('REORDER GRID ITEMS');
+
         try {
+
             const grid_uuid = this._validate_uuid(is_member_of_grid, 'grid UUID');
             console.log('GRID UUID', grid_uuid);
             console.log('GRIDS ', grids)

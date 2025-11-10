@@ -308,14 +308,17 @@ const Exhibit_item_record_tasks = class {
      * @private
      */
     async _reorder_items(table_name, where_clause, item) {
+
         this._validate_database();
         this._validate_table(table_name);
-
+        console.log(table_name);
+        console.log(where_clause);
+        console.log(item);
         if (!item || typeof item !== 'object' || Array.isArray(item)) {
             throw new Error('Valid item object is required');
         }
 
-        if (!item.uuid || typeof item.order !== 'string') {
+        if (!item.uuid || typeof item.order !== 'number') {
             throw new Error('Item must have uuid and order properties');
         }
 
@@ -345,7 +348,9 @@ const Exhibit_item_record_tasks = class {
      * @returns {Promise<Object>} Created item record
      */
     async create_item_record(data, created_by = null) {
+
         try {
+
             this._validate_data_object(data);
             this._validate_database();
             this._validate_table('item_records');
@@ -436,7 +441,9 @@ const Exhibit_item_record_tasks = class {
      * @returns {Promise<Array>} Array of item records
      */
     async get_item_records(is_member_of_exhibit) {
+
         try {
+
             this._validate_database();
             this._validate_table('item_records');
 
@@ -472,7 +479,9 @@ const Exhibit_item_record_tasks = class {
      * @returns {Promise<Object|null>} Item record or null
      */
     async get_item_record(is_member_of_exhibit, uuid) {
+
         try {
+
             this._validate_database();
             this._validate_table('item_records');
 
@@ -507,7 +516,9 @@ const Exhibit_item_record_tasks = class {
      * @returns {Promise<Object|null>} Item record with lock status
      */
     async get_item_edit_record(uid, is_member_of_exhibit, uuid) {
+
         try {
+
             this._validate_database();
             this._validate_table('item_records');
 
@@ -709,7 +720,9 @@ const Exhibit_item_record_tasks = class {
      * @returns {Promise<Object>} Delete result
      */
     async delete_item_record(is_member_of_exhibit, item_id, type, deleted_by = null) {
+
         try {
+
             this._validate_database();
 
             const validated = this._validate_uuids({
@@ -813,7 +826,9 @@ const Exhibit_item_record_tasks = class {
      * @returns {Promise<Object>} Delete result
      */
     async delete_media_value(item_uuid, media_path, item_type, updated_by = null) {
+
         try {
+
             this._validate_database();
 
             const item_uuid_validated = this._validate_uuid(item_uuid, 'item UUID');
@@ -939,7 +954,9 @@ const Exhibit_item_record_tasks = class {
      * @returns {Promise<number>} Count of item records
      */
     async get_record_count(uuid) {
+
         try {
+
             this._validate_database();
             this._validate_table('item_records');
 
@@ -967,7 +984,9 @@ const Exhibit_item_record_tasks = class {
      * @returns {Promise<boolean>} Success status
      */
     async set_to_publish(uuid, published_by = null) {
+
         try {
+
             const exhibit_uuid = this._validate_uuid(uuid, 'exhibit UUID');
 
             const result = await this._update_publish_status(
@@ -997,7 +1016,9 @@ const Exhibit_item_record_tasks = class {
      * @returns {Promise<boolean>} Success status
      */
     async set_item_to_publish(uuid, published_by = null) {
+
         try {
+
             const result = await this._update_single_publish_status(
                 'item_records',
                 uuid,
@@ -1025,7 +1046,9 @@ const Exhibit_item_record_tasks = class {
      * @returns {Promise<boolean>} Success status
      */
     async set_to_suppress(uuid, unpublished_by = null) {
+
         try {
+
             const exhibit_uuid = this._validate_uuid(uuid, 'exhibit UUID');
 
             const result = await this._update_publish_status(
@@ -1055,7 +1078,9 @@ const Exhibit_item_record_tasks = class {
      * @returns {Promise<boolean>} Success status
      */
     async set_item_to_suppress(uuid, unpublished_by = null) {
+
         try {
+
             const result = await this._update_single_publish_status(
                 'item_records',
                 uuid,
@@ -1085,7 +1110,9 @@ const Exhibit_item_record_tasks = class {
      * @returns {Promise<boolean>} Reorder success status
      */
     async reorder_items(is_member_of_exhibit, item) {
+
         try {
+
             const exhibit_uuid = this._validate_uuid(is_member_of_exhibit, 'exhibit UUID');
 
             await this._reorder_items(

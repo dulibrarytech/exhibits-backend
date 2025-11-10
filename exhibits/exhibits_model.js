@@ -140,6 +140,7 @@ const prepare_styles = (styles) => {
  * @returns {Promise<Object>} Response object
  */
 exports.create_exhibit_record = async (data) => {
+
     try {
         // Generate UUID
         data.uuid = helper_task.create_uuid();
@@ -201,6 +202,7 @@ exports.create_exhibit_record = async (data) => {
  * @returns {Promise<Object>} Response object with records
  */
 exports.get_exhibit_records = async () => {
+
     try {
         const records = await exhibit_record_task.get_exhibit_records();
 
@@ -228,7 +230,9 @@ exports.get_exhibit_records = async () => {
  * @returns {Promise<Object>} Response object with title
  */
 exports.get_exhibit_title = async (uuid) => {
+
     try {
+
         if (!uuid || typeof uuid !== 'string') {
             return build_response(
                 CONSTANTS.STATUS_CODES.BAD_REQUEST,
@@ -263,7 +267,9 @@ exports.get_exhibit_title = async (uuid) => {
  * @returns {Promise<Object>} Response object with record
  */
 exports.get_exhibit_record = async (uuid) => {
+
     try {
+
         if (!uuid || typeof uuid !== 'string') {
             return build_response(
                 CONSTANTS.STATUS_CODES.BAD_REQUEST,
@@ -299,7 +305,9 @@ exports.get_exhibit_record = async (uuid) => {
  * @returns {Promise<Object>} Response object with record
  */
 exports.get_exhibit_edit_record = async (uid, uuid) => {
+
     try {
+
         if (!uid || !uuid || typeof uid !== 'string' || typeof uuid !== 'string') {
             return build_response(
                 CONSTANTS.STATUS_CODES.BAD_REQUEST,
@@ -375,7 +383,9 @@ const process_media_updates = (uuid, data) => {
  * @returns {Promise<void>}
  */
 const handle_republish = async (uuid) => {
+
     try {
+
         const suppress_result = await suppress_exhibit(uuid);
 
         if (suppress_result && suppress_result.status === true) {
@@ -411,7 +421,9 @@ const handle_republish = async (uuid) => {
  * @returns {Promise<Object>} Response object
  */
 exports.update_exhibit_record = async (uuid, data) => {
+
     try {
+
         if (!uuid || typeof uuid !== 'string') {
             return build_response(
                 CONSTANTS.STATUS_CODES.BAD_REQUEST,
@@ -484,7 +496,9 @@ exports.update_exhibit_record = async (uuid, data) => {
  * @returns {Promise<void>}
  */
 const delete_grid_items = async (item) => {
+
     try {
+
         const grid_items = await GRIDS_MODEL.get_grid_item_records(
             item.is_member_of_exhibit,
             item.uuid
@@ -531,7 +545,9 @@ const delete_grid_items = async (item) => {
  * @returns {Promise<void>}
  */
 const delete_timeline_items = async (item) => {
+
     try {
+
         const timeline_items = await TIMELINES_MODEL.get_timeline_item_records(
             item.is_member_of_exhibit,
             item.uuid
@@ -542,7 +558,9 @@ const delete_timeline_items = async (item) => {
         }
 
         const delete_promises = timeline_items.data.map(async (timeline_item) => {
+
             try {
+
                 const delete_result = await TIMELINES_MODEL.delete_timeline_item_record(
                     timeline_item.is_member_of_exhibit,
                     timeline_item.is_member_of_timeline,
@@ -578,7 +596,9 @@ const delete_timeline_items = async (item) => {
  * @returns {Promise<void>}
  */
 const delete_all_exhibit_items = async (uuid) => {
+
     try {
+
         const item_records = await item_record_task.get_item_records(uuid);
 
         if (!item_records || item_records.length === 0) {
@@ -593,6 +613,7 @@ const delete_all_exhibit_items = async (uuid) => {
 
         // Process each item
         for (const item of items_result.data) {
+
             try {
                 // Handle grid items
                 if (item.type === CONSTANTS.RECORD_TYPES.GRID) {
@@ -640,7 +661,9 @@ const delete_all_exhibit_items = async (uuid) => {
  * @returns {Promise<Object>} Response object
  */
 exports.delete_exhibit_record = async (uuid) => {
+
     try {
+
         if (!uuid || typeof uuid !== 'string') {
             return build_response(
                 CONSTANTS.STATUS_CODES.BAD_REQUEST,
@@ -686,7 +709,9 @@ exports.delete_exhibit_record = async (uuid) => {
  * @returns {Promise<void>}
  */
 exports.delete_media_value = async (uuid, media) => {
+
     try {
+
         if (!uuid || !media || typeof uuid !== 'string' || typeof media !== 'string') {
             LOGGER.module().error('ERROR: [/exhibits/model (delete_media_value)] Invalid parameters');
             return;
@@ -715,7 +740,9 @@ exports.delete_media_value = async (uuid, media) => {
  * @returns {Promise<Object>} Response object
  */
 exports.build_exhibit_preview = async (uuid) => {
+
     try {
+
         if (!uuid || typeof uuid !== 'string') {
             return {
                 status: false,
@@ -804,7 +831,9 @@ const set_all_to_publish = async (uuid) => {
  * @returns {Promise<Object>} Response object
  */
 const publish_exhibit = async (uuid) => {
+
     try {
+
         if (!uuid || typeof uuid !== 'string') {
             return {
                 status: false,
@@ -902,12 +931,15 @@ const get_all_exhibit_records = async (uuid) => {
  * @returns {Promise<void>}
  */
 const delete_items_from_index = async (items) => {
+
     if (!items || items.length === 0) {
         return;
     }
 
     const delete_promises = items.map(async (item) => {
+
         try {
+
             const delete_result = await INDEXER_MODEL.delete_record(item.uuid);
 
             if (delete_result.status !== CONSTANTS.STATUS_CODES.NO_CONTENT) {
@@ -932,12 +964,15 @@ const delete_items_from_index = async (items) => {
  * @returns {Promise<void>}
  */
 const delete_grids_from_index = async (grids) => {
+
     if (!grids || grids.length === 0) {
         return;
     }
 
     const delete_promises = grids.map(async (grid) => {
+
         try {
+
             await grid_record_task.set_to_suppressed_grid_items(grid.uuid);
             const delete_result = await INDEXER_MODEL.delete_record(grid.uuid);
 
@@ -963,12 +998,15 @@ const delete_grids_from_index = async (grids) => {
  * @returns {Promise<void>}
  */
 const delete_timelines_from_index = async (timelines) => {
+
     if (!timelines || timelines.length === 0) {
         return;
     }
 
     const delete_promises = timelines.map(async (timeline) => {
+
         try {
+
             await timeline_record_task.set_to_suppressed_timeline_items(timeline.uuid);
             const delete_result = await INDEXER_MODEL.delete_record(timeline.uuid);
 
@@ -994,12 +1032,15 @@ const delete_timelines_from_index = async (timelines) => {
  * @returns {Promise<void>}
  */
 const delete_headings_from_index = async (headings) => {
+
     if (!headings || headings.length === 0) {
         return;
     }
 
     const delete_promises = headings.map(async (heading) => {
+
         try {
+
             const delete_result = await INDEXER_MODEL.delete_record(heading.uuid);
 
             if (delete_result.status !== CONSTANTS.STATUS_CODES.NO_CONTENT) {
@@ -1024,7 +1065,9 @@ const delete_headings_from_index = async (headings) => {
  * @returns {Promise<Object>} Response object
  */
 const suppress_exhibit = async (uuid) => {
+
     try {
+
         if (!uuid || typeof uuid !== 'string') {
             return {
                 status: false,
@@ -1092,7 +1135,9 @@ const suppress_exhibit = async (uuid) => {
  * @returns {Promise<Object>} Response object
  */
 exports.delete_exhibit_preview = async (uuid) => {
+
     try {
+
         if (!uuid || typeof uuid !== 'string') {
             return {
                 status: false,
@@ -1157,7 +1202,9 @@ exports.delete_exhibit_preview = async (uuid) => {
  * @returns {Promise<boolean>} True if preview exists
  */
 exports.check_preview = async (uuid) => {
+
     try {
+
         if (!uuid || typeof uuid !== 'string') {
             LOGGER.module().error('ERROR: [/exhibits/model (check_preview)] Invalid UUID provided');
             return false;
@@ -1182,7 +1229,9 @@ exports.check_preview = async (uuid) => {
  * @returns {Promise<boolean>} Success status
  */
 exports.reorder_exhibits = async (data) => {
+
     try {
+
         if (!Array.isArray(data) || data.length === 0) {
             LOGGER.module().error('ERROR: [/exhibits/model (reorder_exhibits)] Invalid data format');
             return false;
@@ -1216,7 +1265,9 @@ exports.reorder_exhibits = async (data) => {
  * @returns {Promise<*>} Unlock result
  */
 exports.unlock_exhibit_record = async (uid, uuid) => {
+
     try {
+
         if (!uid || !uuid || typeof uid !== 'string' || typeof uuid !== 'string') {
             LOGGER.module().error('ERROR: [/exhibits/model (unlock_exhibit_record)] Invalid parameters');
             return false;
@@ -1234,7 +1285,6 @@ exports.unlock_exhibit_record = async (uid, uuid) => {
     }
 };
 
-// Export helper functions for external use
 exports.publish_exhibit = publish_exhibit;
 exports.suppress_exhibit = suppress_exhibit;
 

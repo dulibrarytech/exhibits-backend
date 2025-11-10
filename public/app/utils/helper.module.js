@@ -68,7 +68,7 @@ const helperModule = (function () {
                 }
 
                 // Sanitize to prevent XSS attacks
-                const sanitized_value = DOMPurify.sanitize(param_value, { ALLOWED_TAGS: [] });
+                const sanitized_value = DOMPurify.sanitize(param_value, {ALLOWED_TAGS: []});
 
                 // Validate sanitization didn't remove content (indicates malicious input)
                 if (sanitized_value !== param_value) {
@@ -127,7 +127,7 @@ const helperModule = (function () {
             }
 
             // Sanitize to prevent XSS attacks
-            const sanitized_value = DOMPurify.sanitize(decoded_value, { ALLOWED_TAGS: [] });
+            const sanitized_value = DOMPurify.sanitize(decoded_value, {ALLOWED_TAGS: []});
 
             // Validate sanitization didn't remove content
             if (sanitized_value !== decoded_value) {
@@ -250,8 +250,6 @@ const helperModule = (function () {
                 return '';
             }
 
-            // Use DOMParser for safe, reliable HTML stripping
-            // This is more secure and standards-compliant than regex
             try {
                 const parser = new DOMParser();
                 const dom = parser.parseFromString(html, 'text/html');
@@ -573,8 +571,6 @@ const helperModule = (function () {
                 return false;
             }
 
-            // Set preview content using textContent first for safety, then innerHTML
-            // This two-step approach ensures proper rendering while maintaining security
             try {
                 preview_element.innerHTML = cleaned_html;
             } catch (preview_error) {
@@ -624,8 +620,6 @@ const helperModule = (function () {
                 return null;
             }
 
-            // Use find() method for cleaner, more efficient search
-            // Convert to Array if NodeList to use Array methods
             const buttons_array = Array.from(radio_buttons);
 
             const checked_button = buttons_array.find(button => {
@@ -695,9 +689,325 @@ const helperModule = (function () {
     };
 
     /**
+     * Show form cards by making them visible
+     *
+     * @param {number} delay - Delay in milliseconds before showing (default: 0)
+     * @param {string} selector - CSS selector for cards (default: '.card')
+     * @param {boolean} use_animation - Whether to use fade-in animation (default: false)
+     * @returns {boolean} True if successful, false otherwise
+     */
+    obj.show_form = function (delay = 0, selector = '.card', use_animation = false) {
+
+        try {
+            // Validate delay parameter
+            const show_delay = validate_delay(delay);
+
+            // Get form cards
+            const form_cards = get_form_cards(selector);
+
+            // Check if any cards found
+            if (!form_cards || form_cards.length === 0) {
+                console.warn(`No elements found with selector: ${selector}`);
+                return false;
+            }
+
+            // Show cards immediately if no delay
+            if (show_delay === 0) {
+                show_cards(form_cards, use_animation);
+                return true;
+            }
+
+            // Show cards after delay
+            setTimeout(() => {
+                show_cards(form_cards, use_animation);
+            }, show_delay);
+
+            return true;
+
+        } catch (error) {
+            console.error('Error showing form:', error);
+
+            // Display safe error message
+            const message_element = document.querySelector('#message');
+            if (message_element) {
+                display_error_message(
+                    message_element,
+                    error.message || 'Unable to show form'
+                );
+            }
+
+            return false;
+        }
+    };
+
+    /**
+     * Validate delay parameter
+     *
+     * @param {number} delay - Delay value to validate
+     * @returns {number} Valid delay (0 or positive integer)
+     */
+    function validate_delay(delay) {
+        // Convert to number if string
+        const delay_number = typeof delay === 'string' ? parseInt(delay, 10) : delay;
+
+        // Validate is number
+        if (typeof delay_number !== 'number' || isNaN(delay_number)) {
+            console.warn('Invalid delay, using 0');
+            return 0;
+        }
+
+        // Ensure non-negative
+        if (delay_number < 0) {
+            console.warn('Negative delay not allowed, using 0');
+            return 0;
+        }
+
+        // Cap at reasonable maximum (10 seconds)
+        if (delay_number > 10000) {
+            console.warn('Delay too large, capping at 10 seconds');
+            return 10000;
+        }
+
+        return Math.floor(delay_number);
+    }
+
+    /**
+     * Get form cards using selector
+     *
+     * @param {string} selector - CSS selector
+     * @returns {Array<HTMLElement>} Array of elements
+     */
+    function get_form_cards(selector) {
+        try {
+            // Validate selector
+            if (!selector || typeof selector !== 'string') {
+                console.error('Invalid selector');
+                return [];
+            }
+
+            // Try querySelectorAll (more flexible)
+            const elements = document.querySelectorAll(selector);
+
+            if (!elements) {
+                return [];
+            }
+
+            // Convert NodeList to Array
+            return Array.from(elements);
+
+        } catch (error) {
+            console.error('Error getting form cards:', error);
+            return [];
+        }
+    }
+
+    /**
+     * Show cards by making them visible
+     *
+     * @param {Array<HTMLElement>} cards - Array of card elements
+     * @param {boolean} use_animation - Whether to use fade-in animation
+     */
+    function show_cards(cards, use_animation = false) {
+        if (!cards || cards.length === 0) {
+            return;
+        }
+
+        // Use requestAnimationFrame for smooth rendering
+        requestAnimationFrame(() => {
+            cards.forEach(card => {
+                if (!card || !(card instanceof HTMLElement)) {
+                    console.warn('Invalid card element, skipping');
+                    return;
+                }
+
+                try {
+                    if (use_animation) {
+                        // Add fade-in animation class
+                        show_card_with_animation(card);
+                    } else {
+                        // Simple visibility change
+                        show_card_simple(card);
+                    }
+                } catch (error) {
+                    console.error('Error showing card:', error);
+                }
+            });
+        });
+    }
+
+    /**
+     * Show card with simple visibility change
+     *
+     * @param {HTMLElement} card - Card element
+     */
+    function show_card_simple(card) {
+        // Remove hidden class if present
+        if (card.classList.contains('hidden')) {
+            card.classList.remove('hidden');
+        }
+
+        // Set visibility to visible
+        card.style.visibility = 'visible';
+
+        // Also ensure display is not none
+        if (card.style.display === 'none') {
+            card.style.display = '';
+        }
+
+        // Set opacity to 1 if it was 0
+        if (card.style.opacity === '0') {
+            card.style.opacity = '1';
+        }
+    }
+
+    /**
+     * Show card with fade-in animation
+     *
+     * @param {HTMLElement} card - Card element
+     */
+    function show_card_with_animation(card) {
+        // Set initial state
+        card.style.visibility = 'visible';
+        card.style.opacity = '0';
+        card.style.transition = 'opacity 0.3s ease-in';
+
+        // Remove display none if present
+        if (card.style.display === 'none') {
+            card.style.display = '';
+        }
+
+        // Trigger reflow to ensure transition works
+        void card.offsetHeight;
+
+        // Fade in
+        requestAnimationFrame(() => {
+            card.style.opacity = '1';
+        });
+
+        // Remove hidden class if present
+        if (card.classList.contains('hidden')) {
+            card.classList.remove('hidden');
+        }
+    }
+
+    /**
+     * Hide form cards (opposite of show_form)
+     *
+     * @param {string} selector - CSS selector for cards (default: '.card')
+     * @param {boolean} use_animation - Whether to use fade-out animation (default: false)
+     * @returns {boolean} True if successful, false otherwise
+     */
+    obj.hide_form = function (selector = '.card', use_animation = false) {
+        try {
+            const form_cards = get_form_cards(selector);
+
+            if (!form_cards || form_cards.length === 0) {
+                console.warn(`No elements found with selector: ${selector}`);
+                return false;
+            }
+
+            hide_cards(form_cards, use_animation);
+            return true;
+
+        } catch (error) {
+            console.error('Error hiding form:', error);
+            return false;
+        }
+    };
+
+    /**
+     * Hide cards
+     *
+     * @param {Array<HTMLElement>} cards - Array of card elements
+     * @param {boolean} use_animation - Whether to use fade-out animation
+     */
+    function hide_cards(cards, use_animation = false) {
+        if (!cards || cards.length === 0) {
+            return;
+        }
+
+        requestAnimationFrame(() => {
+            cards.forEach(card => {
+                if (!card || !(card instanceof HTMLElement)) {
+                    return;
+                }
+
+                try {
+                    if (use_animation) {
+                        hide_card_with_animation(card);
+                    } else {
+                        hide_card_simple(card);
+                    }
+                } catch (error) {
+                    console.error('Error hiding card:', error);
+                }
+            });
+        });
+    }
+
+    /**
+     * Hide card with simple visibility change
+     *
+     * @param {HTMLElement} card - Card element
+     */
+    function hide_card_simple(card) {
+        card.style.visibility = 'hidden';
+    }
+
+    /**
+     * Hide card with fade-out animation
+     *
+     * @param {HTMLElement} card - Card element
+     */
+    function hide_card_with_animation(card) {
+        card.style.transition = 'opacity 0.3s ease-out';
+        card.style.opacity = '0';
+
+        // Set visibility hidden after animation completes
+        setTimeout(() => {
+            card.style.visibility = 'hidden';
+        }, 300);
+    }
+
+    /**
+     * Toggle form visibility
+     *
+     * @param {string} selector - CSS selector for cards (default: '.card')
+     * @param {boolean} use_animation - Whether to use animation (default: false)
+     * @returns {boolean} True if shown, false if hidden
+     */
+    obj.toggle_form = function (selector = '.card', use_animation = false) {
+        try {
+            const form_cards = get_form_cards(selector);
+
+            if (!form_cards || form_cards.length === 0) {
+                console.warn(`No elements found with selector: ${selector}`);
+                return false;
+            }
+
+            // Check if first card is visible to determine action
+            const first_card = form_cards[0];
+            const is_visible = first_card.style.visibility !== 'hidden' &&
+                getComputedStyle(first_card).visibility !== 'hidden';
+
+            if (is_visible) {
+                hide_cards(form_cards, use_animation);
+                return false;
+            } else {
+                show_cards(form_cards, use_animation);
+                return true;
+            }
+
+        } catch (error) {
+            console.error('Error toggling form:', error);
+            return false;
+        }
+    };
+
+    /**
      * Shows hidden forms
      */
-    obj.show_form = function () {
+    obj.show_form__ = function () {
 
         try {
 
@@ -718,118 +1028,501 @@ const helperModule = (function () {
 
     /**
      * Reorders item list via drag and drop
-     * @param e
-     * @param reordered_items
+     *
+     * @param {Event} event - The drag/drop event
+     * @param {Array} reordered_items - Array of reordered item objects from DataTables
+     * @returns {Promise<boolean>} True if successful, false otherwise
      */
-    obj.reorder_items = async function (e, reordered_items) {
+    obj.reorder_items = async function (event, reordered_items) {
 
         try {
-
-            if (reordered_items.length === 0) {
+            // Validate inputs
+            if (!reordered_items || !Array.isArray(reordered_items)) {
+                console.error('Invalid reordered_items parameter');
                 return false;
             }
 
+            if (reordered_items.length === 0) {
+                console.log('No items to reorder');
+                return false;
+            }
+
+            // Get required data
             const EXHIBITS_ENDPOINTS = endpointsModule.get_exhibits_endpoints();
+
+            if (!EXHIBITS_ENDPOINTS?.exhibits?.reorder_records?.post?.endpoint) {
+                throw new Error('Reorder endpoint not configured');
+            }
+
             const exhibit_id = helperModule.get_parameter_by_name('exhibit_id');
-            const grid_id = helperModule.get_parameter_by_name('grid_id');
-            let reorder_obj = {};
-            let updated_order = [];
 
-            for (let i = 0, ien = reordered_items.length; i < ien; i++) {
-
-                let node = reordered_items[i].node;
-                let id = node.getAttribute('id');
-                let id_arr = id.split('_');
-
-                reorder_obj.type = id_arr.pop();
-                reorder_obj.uuid = id_arr.pop();
-                reorder_obj.order = reordered_items[i].node.childNodes[0].childNodes[1].innerText;
-
-                if (grid_id !== null) {
-                    reorder_obj.grid_id = grid_id;
-                }
-
-                updated_order.push(reorder_obj);
-                reorder_obj = {};
+            if (!exhibit_id) {
+                throw new Error('Exhibit ID not found in URL');
             }
 
             const token = authModule.get_user_token();
+
+            if (!token || token === false) {
+                throw new Error('Not authenticated - please log in again');
+            }
+
+            // Build reorder array
+            const updated_order = build_reorder_array(reordered_items);
+
+            if (!updated_order || updated_order.length === 0) {
+                throw new Error('Failed to build reorder data');
+            }
+
+            // Send reorder request
+            const endpoint = EXHIBITS_ENDPOINTS.exhibits.reorder_records.post.endpoint
+                .replace(':exhibit_id', encodeURIComponent(exhibit_id));
+
             const response = await httpModule.req({
                 method: 'POST',
-                url: EXHIBITS_ENDPOINTS.exhibits.reorder_records.post.endpoint.replace(':exhibit_id', exhibit_id),
+                url: endpoint,
                 data: updated_order,
                 headers: {
                     'Content-Type': 'application/json',
                     'x-access-token': token
-                }
+                },
+                timeout: 30000
             });
 
-            if (response !== undefined && response.status === 201) {
-                console.log('items reordered');
+            // Handle response
+            if (response && response.status === 201) {
+                console.log('Items reordered successfully');
+
+                // Optional: Display success message
+                const message_element = document.querySelector('#message');
+                if (message_element) {
+                    display_success_message(message_element, 'Items reordered successfully');
+
+                    // Clear message after 3 seconds
+                    setTimeout(() => {
+                        message_element.textContent = '';
+                    }, 3000);
+                }
+
+                return true;
             } else {
-                document.querySelector('#message').innerHTML = `<div class="alert alert-danger" role="alert"><i class="fa fa-exclamation"></i> An HTTP request error occurred while reordering items.</div>`;
+                throw new Error('Failed to reorder items - server returned an error');
             }
 
         } catch (error) {
-            document.querySelector('#message').innerHTML = `<div class="alert alert-danger" role="alert"><i class="fa fa-exclamation"></i> ${error.message}</div>`;
+            console.error('Error reordering items:', error);
+
+            const message_element = document.querySelector('#message');
+            if (message_element) {
+                display_error_message(message_element, error.message || 'An error occurred while reordering items');
+            }
+
+            return false;
         }
     };
 
     /**
-     * Reorders grid item list via drag and drop
-     * @param e
-     * @param reordered_items
+     * Build reorder array from DataTables reordered items
+     *
+     * @param {Array} reordered_items - Array of reordered items
+     * @returns {Array} Array of objects with uuid, type, and order
      */
-    obj.reorder_grid_items = async function (e, reordered_items) {
+    function build_reorder_array(reordered_items) {
+        const updated_order = [];
+
+        for (let i = 0; i < reordered_items.length; i++) {
+            const item = reordered_items[i];
+
+            // Validate item structure
+            if (!item || !item.node) {
+                console.warn('Invalid item at index', i);
+                continue;
+            }
+
+            const node = item.node;
+            const id = node.getAttribute('id');
+
+            if (!id) {
+                console.warn('Item missing id attribute at index', i);
+                continue;
+            }
+
+            // Parse ID to extract UUID and type
+            const parsed_data = parse_item_id(id);
+
+            if (!parsed_data) {
+                console.warn('Could not parse item ID:', id);
+                continue;
+            }
+
+            // Get order number from DOM (more robust method)
+            const order_number = get_order_number(node);
+
+            if (order_number === null) {
+                console.warn('Could not find order number for item:', id);
+                continue;
+            }
+
+            // Build reorder object
+            updated_order.push({
+                uuid: parsed_data.uuid,
+                type: parsed_data.type,
+                order: order_number
+            });
+        }
+
+        return updated_order;
+    }
+
+    /**
+     * Parse item ID to extract UUID and type
+     *
+     * Expected formats:
+     * - "uuid_type" (e.g., "abc123_heading")
+     * - "uuid_itemtype_type" (e.g., "abc123_image_item")
+     *
+     * @param {string} id - The item ID
+     * @returns {Object|null} Object with uuid and type, or null if invalid
+     */
+    function parse_item_id(id) {
+
+        if (!id || typeof id !== 'string') {
+            return null;
+        }
+
+        const id_parts = id.split('_');
+
+        if (id_parts.length < 2) {
+            return null;
+        }
+
+        // Handle different ID formats
+        if (id_parts.length === 3) {
+            // Format: uuid_itemtype_type
+            // Remove middle element (itemtype like 'image', 'audio', etc.)
+            return {
+                uuid: id_parts[0],
+                type: id_parts[2]
+            };
+        } else if (id_parts.length === 2) {
+            // Format: uuid_type
+            return {
+                uuid: id_parts[0],
+                type: id_parts[1]
+            };
+        } else {
+            // For longer formats, assume first is UUID, last is type
+            return {
+                uuid: id_parts[0],
+                type: id_parts[id_parts.length - 1]
+            };
+        }
+    }
+
+    /**
+     * Get order number from DOM node
+     *
+     * @param {HTMLElement} node - The table row element
+     * @returns {number|null} The order number, or null if not found
+     */
+    function get_order_number(node) {
 
         try {
+            // Look for element with class 'item-order'
+            const order_cell = node.querySelector('.item-order');
 
-            if (reordered_items.length === 0) {
+            if (order_cell) {
+                // Try to find span with order number
+                const order_span = order_cell.querySelector('span');
+                if (order_span) {
+                    const order_text = order_span.textContent.trim();
+                    const order_number = parseInt(order_text, 10);
+
+                    if (!isNaN(order_number) && order_number > 0) {
+                        return order_number;
+                    }
+                }
+
+                // Fallback: try getting text directly from cell
+                const cell_text = order_cell.textContent.trim();
+                const cell_number = parseInt(cell_text, 10);
+
+                if (!isNaN(cell_number) && cell_number > 0) {
+                    return cell_number;
+                }
+            }
+
+            // Check first cell (td) in the row
+            const first_cell = node.querySelector('td');
+
+            if (first_cell && first_cell.classList.contains('item-order')) {
+                const order_text = first_cell.textContent.trim();
+                const order_number = parseInt(order_text, 10);
+
+                if (!isNaN(order_number) && order_number > 0) {
+                    return order_number;
+                }
+            }
+
+            // Fallback to data attribute if available
+            const order_attr = node.getAttribute('data-order');
+            if (order_attr) {
+                const order_number = parseInt(order_attr, 10);
+
+                if (!isNaN(order_number) && order_number > 0) {
+                    return order_number;
+                }
+            }
+
+            return null;
+
+        } catch (error) {
+            console.error('Error getting order number:', error);
+            return null;
+        }
+    }
+
+    /**
+     * Display success message
+     *
+     * @param {HTMLElement} element - The message container element
+     * @param {string} message - The message text
+     */
+    function display_success_message(element, message) {
+        if (!element) {
+            return;
+        }
+
+        element.textContent = '';
+
+        const alert_div = document.createElement('div');
+        alert_div.className = 'alert alert-success';
+        alert_div.setAttribute('role', 'alert');
+
+        const icon = document.createElement('i');
+        icon.className = 'fa fa-check';
+        icon.setAttribute('aria-hidden', 'true');
+        alert_div.appendChild(icon);
+
+        const text = document.createTextNode(` ${message}`);
+        alert_div.appendChild(text);
+
+        element.appendChild(alert_div);
+    }
+
+    /**
+     * Display error message
+     *
+     * @param {HTMLElement} element - The message container element
+     * @param {string} message - The message text
+     */
+    function display_error_message(element, message) {
+        if (!element) {
+            return;
+        }
+
+        element.textContent = '';
+
+        const alert_div = document.createElement('div');
+        alert_div.className = 'alert alert-danger';
+        alert_div.setAttribute('role', 'alert');
+
+        const icon = document.createElement('i');
+        icon.className = 'fa fa-exclamation';
+        icon.setAttribute('aria-hidden', 'true');
+        alert_div.appendChild(icon);
+
+        const text = document.createTextNode(` ${message}`);
+        alert_div.appendChild(text);
+
+        element.appendChild(alert_div);
+    }
+
+    /**
+     * Reorders grid items via drag and drop
+     *
+     * @param {Event} event - The drag/drop event
+     * @param {Array} reordered_items - Array of reordered grid item objects from DataTables
+     * @returns {Promise<boolean>} True if successful, false otherwise
+     */
+    obj.reorder_grid_items = async function (event, reordered_items) {
+
+        try {
+            // Validate inputs
+            if (!reordered_items || !Array.isArray(reordered_items)) {
+                console.error('Invalid reordered_items parameter');
                 return false;
             }
 
+            if (reordered_items.length === 0) {
+                console.log('No grid items to reorder');
+                return false;
+            }
+
+            // Get required data
             const EXHIBITS_ENDPOINTS = endpointsModule.get_exhibits_endpoints();
+
+            if (!EXHIBITS_ENDPOINTS?.exhibits?.reorder_records?.post?.endpoint) {
+                throw new Error('Reorder endpoint not configured');
+            }
+
             const exhibit_id = helperModule.get_parameter_by_name('exhibit_id');
+
+            if (!exhibit_id) {
+                throw new Error('Exhibit ID not found in URL');
+            }
+
             const grid_id = helperModule.get_parameter_by_name('grid_id');
-            let reorder_obj = {};
-            let updated_order = [];
 
-            for (let i = 0, ien = reordered_items.length; i < ien; i++) {
-
-                let node = reordered_items[i].node;
-                let id = node.getAttribute('id');
-                let id_arr = id.split('_');
-
-                reorder_obj.grid_id = grid_id;
-                reorder_obj.uuid = id_arr[0];
-                reorder_obj.type = 'griditem';
-                reorder_obj.order = reordered_items[i].node.childNodes[0].childNodes[1].innerText;
-
-                updated_order.push(reorder_obj);
-                reorder_obj = {};
+            if (!grid_id) {
+                throw new Error('Grid ID not found in URL');
             }
 
             const token = authModule.get_user_token();
+
+            if (!token || token === false) {
+                throw new Error('Not authenticated - please log in again');
+            }
+
+            // Build reorder array for grid items
+            const updated_order = build_grid_reorder_array(reordered_items, grid_id);
+
+            if (!updated_order || updated_order.length === 0) {
+                throw new Error('Failed to build grid reorder data');
+            }
+
+            // Send reorder request
+            const endpoint = EXHIBITS_ENDPOINTS.exhibits.reorder_records.post.endpoint
+                .replace(':exhibit_id', encodeURIComponent(exhibit_id));
+
             const response = await httpModule.req({
                 method: 'POST',
-                url: EXHIBITS_ENDPOINTS.exhibits.reorder_records.post.endpoint.replace(':exhibit_id', exhibit_id),
+                url: endpoint,
                 data: updated_order,
                 headers: {
                     'Content-Type': 'application/json',
                     'x-access-token': token
-                }
+                },
+                timeout: 30000
             });
 
-            if (response !== undefined && response.status === 201) {
-                console.log('items reordered');
+            // Handle response
+            if (response && response.status === 201) {
+                console.log('Grid items reordered successfully');
+
+                // Optional: Display success message
+                const message_element = document.querySelector('#message');
+                if (message_element) {
+                    display_success_message(message_element, 'Grid items reordered successfully');
+
+                    // Clear message after 3 seconds
+                    setTimeout(() => {
+                        message_element.textContent = '';
+                    }, 3000);
+                }
+
+                return true;
             } else {
-                document.querySelector('#message').innerHTML = `<div class="alert alert-danger" role="alert"><i class="fa fa-exclamation"></i> An HTTP request error occurred while reordering items.</div>`;
+                throw new Error('Failed to reorder grid items - server returned an error');
             }
 
         } catch (error) {
-            document.querySelector('#message').innerHTML = `<div class="alert alert-danger" role="alert"><i class="fa fa-exclamation"></i> ${error.message}</div>`;
+            console.error('Error reordering grid items:', error);
+
+            const message_element = document.querySelector('#message');
+            if (message_element) {
+                display_error_message(message_element, error.message || 'An error occurred while reordering grid items');
+            }
+
+            return false;
         }
     };
+
+    /**
+     * Build reorder array from DataTables reordered grid items
+     *
+     * @param {Array} reordered_items - Array of reordered grid items
+     * @param {string} grid_id - The grid ID
+     * @returns {Array} Array of objects with uuid, type, order, and grid_id
+     */
+    function build_grid_reorder_array(reordered_items, grid_id) {
+        const updated_order = [];
+
+        for (let i = 0; i < reordered_items.length; i++) {
+            const item = reordered_items[i];
+
+            // Validate item structure
+            if (!item || !item.node) {
+                console.warn('Invalid grid item at index', i);
+                continue;
+            }
+
+            const node = item.node;
+            const id = node.getAttribute('id');
+
+            if (!id) {
+                console.warn('Grid item missing id attribute at index', i);
+                continue;
+            }
+
+            // Parse ID to extract UUID
+            const uuid = parse_grid_item_id(id);
+
+            if (!uuid) {
+                console.warn('Could not parse grid item ID:', id);
+                continue;
+            }
+
+            // Get order number from DOM (robust method)
+            const order_number = get_order_number(node);
+
+            if (order_number === null) {
+                console.warn('Could not find order number for grid item:', id);
+                continue;
+            }
+
+            // Build reorder object for grid items
+            updated_order.push({
+                grid_id: grid_id,
+                uuid: uuid,
+                type: 'griditem',
+                order: order_number
+            });
+        }
+
+        return updated_order;
+    }
+
+    /**
+     * Parse grid item ID to extract UUID
+     *
+     * Grid item IDs typically have format: "uuid_griditem" or "uuid_itemtype_griditem"
+     * We only need the UUID (first part)
+     *
+     * @param {string} id - The grid item ID
+     * @returns {string|null} UUID, or null if invalid
+     */
+    function parse_grid_item_id(id) {
+
+        if (!id || typeof id !== 'string') {
+            return null;
+        }
+
+        const id_parts = id.split('_');
+
+        if (id_parts.length < 1) {
+            return null;
+        }
+
+        // First part is always the UUID
+        const uuid = id_parts[0];
+
+        // Validate UUID format (basic check)
+        if (uuid && uuid.length > 0) {
+            return uuid;
+        }
+
+        return null;
+    }
 
     obj.check_if_locked = async function (record, card_id) {
 
@@ -1010,7 +1703,7 @@ const helperModule = (function () {
             {
                 paths: ['exhibits/exhibit/edit'],
                 endpoint_key: 'exhibits.exhibit_unlock_record.post.endpoint',
-                params: (exhibit_id) => ({ exhibit_id })
+                params: (exhibit_id) => ({exhibit_id})
             },
             {
                 paths: ['items/heading/edit'],
@@ -1644,29 +2337,82 @@ const helperModule = (function () {
         }
     };
 
+    /**
+     * Get item subjects from API
+     *
+     * @returns {Promise<Array|null>} Array of subjects on success, null on error
+     */
     obj.get_item_subjects = async function () {
 
         try {
-
+            // Get endpoints configuration
             const EXHIBITS_ENDPOINTS = endpointsModule.get_exhibits_endpoints();
+
+            // Validate endpoint configuration
+            if (!EXHIBITS_ENDPOINTS?.exhibits?.item_subjects?.endpoint) {
+                throw new Error('Item subjects endpoint not configured');
+            }
+
+            // Get authentication token
             const token = authModule.get_user_token();
+
+            // Validate token
+            if (!token || token === false) {
+                console.error('No authentication token available');
+                authModule.redirect_to_auth();
+                return null;
+            }
+
+            // Make API request
             const response = await httpModule.req({
                 method: 'GET',
                 url: EXHIBITS_ENDPOINTS.exhibits.item_subjects.endpoint,
                 headers: {
                     'Content-Type': 'application/json',
                     'x-access-token': token
-                }
+                },
+                timeout: 30000
             });
 
-            if (response !== undefined && response.status === 200) {
-                return response.data.data;
+            // Validate response
+            if (!response) {
+                throw new Error('No response received from server');
             }
 
+            if (response.status !== 200) {
+                throw new Error(`Server returned status ${response.status}`);
+            }
+
+            // Validate response data structure
+            if (!response.data || typeof response.data !== 'object') {
+                throw new Error('Invalid response data structure');
+            }
+
+            if (!response.data.data) {
+                console.warn('Response data.data is missing or empty');
+                return [];
+            }
+
+            // Validate that data is an array
+            if (!Array.isArray(response.data.data)) {
+                console.error('Response data.data is not an array');
+                return [];
+            }
+
+            return response.data.data;
+
         } catch (error) {
-            document.querySelector('#message').innerHTML = `<div class="alert alert-danger" role="alert"><i class="fa fa-exclamation"></i> ${error.message}</div>`;
+            console.error('Error getting item subjects:', error);
+
+            // Display user-friendly error message
+            const message_element = document.querySelector('#message');
+            if (message_element) {
+                display_error_message(message_element, error.message || 'Unable to retrieve item subjects');
+            }
+
+            return null;
         }
-    }
+    };
 
     obj.check_app_env = function () {
 
@@ -1708,4 +2454,3 @@ const helperModule = (function () {
 }());
 
 helperModule.init();
-

@@ -247,6 +247,7 @@ const Exhibit_timeline_record_tasks = class {
      * @private
      */
     async _reorder_items(table_name, where_clause, item) {
+
         this._validate_database();
         this._validate_table(table_name);
 
@@ -303,6 +304,7 @@ const Exhibit_timeline_record_tasks = class {
         ];
 
         try {
+
             this._validate_data_object(data);
             this._validate_database();
             this._validate_table('timeline_records');
@@ -390,7 +392,9 @@ const Exhibit_timeline_record_tasks = class {
      * @returns {Promise<Array>} Array of timeline records
      */
     async get_timeline_records(is_member_of_exhibit) {
+
         try {
+
             this._validate_database();
             this._validate_table('timeline_records');
 
@@ -426,7 +430,9 @@ const Exhibit_timeline_record_tasks = class {
      * @returns {Promise<Object|null>} Timeline record or null if not found
      */
     async get_timeline_record(is_member_of_exhibit, timeline_uuid) {
+
         try {
+
             this._validate_database();
             this._validate_table('timeline_records');
 
@@ -484,6 +490,7 @@ const Exhibit_timeline_record_tasks = class {
         ];
 
         try {
+
             this._validate_data_object(data);
             this._validate_database();
             this._validate_table('timeline_records');
@@ -578,7 +585,9 @@ const Exhibit_timeline_record_tasks = class {
      * @returns {Promise<Array>} Array of timeline item records
      */
     async get_timeline_item_records(is_member_of_exhibit, is_member_of_timeline) {
+
         try {
+
             this._validate_database();
             this._validate_table('timeline_item_records');
 
@@ -631,6 +640,7 @@ const Exhibit_timeline_record_tasks = class {
         ];
 
         try {
+
             this._validate_data_object(data);
             this._validate_database();
             this._validate_table('timeline_item_records');
@@ -727,7 +737,9 @@ const Exhibit_timeline_record_tasks = class {
      * @returns {Promise<Object|null>} Timeline item record or null
      */
     async get_timeline_item_record(is_member_of_exhibit, is_member_of_timeline, item_uuid) {
+
         try {
+
             this._validate_database();
             this._validate_table('timeline_item_records');
 
@@ -778,7 +790,9 @@ const Exhibit_timeline_record_tasks = class {
      * @returns {Promise<Object>} Timeline item record with lock information
      */
     async get_timeline_item_edit_record(user_id, is_member_of_exhibit, is_member_of_timeline, item_uuid) {
+
         try {
+
             this._validate_database();
             this._validate_table('timeline_item_records');
 
@@ -860,7 +874,9 @@ const Exhibit_timeline_record_tasks = class {
      * @returns {Promise<Object>} Lock result
      */
     async lock_timeline_item_record(item_uuid, user_id) {
+
         try {
+
             this._validate_database();
             this._validate_table('timeline_item_records');
 
@@ -923,6 +939,7 @@ const Exhibit_timeline_record_tasks = class {
         ];
 
         try {
+
             this._validate_data_object(data);
             this._validate_database();
             this._validate_table('timeline_item_records');
@@ -1028,7 +1045,9 @@ const Exhibit_timeline_record_tasks = class {
      * @returns {Promise<Object>} Delete result
      */
     async delete_timeline_item_record(is_member_of_exhibit, is_member_of_timeline, item_uuid, deleted_by = null) {
+
         try {
+
             this._validate_database();
             this._validate_table('timeline_item_records');
 
@@ -1125,7 +1144,9 @@ const Exhibit_timeline_record_tasks = class {
      * @returns {Promise<number>} Count of timeline records
      */
     async get_record_count(uuid) {
+
         try {
+
             this._validate_database();
             this._validate_table('timeline_records');
 
@@ -1150,7 +1171,9 @@ const Exhibit_timeline_record_tasks = class {
      * @returns {Promise<Object>} Update result
      */
     async set_to_publish(uuid, updated_by = null) {
+
         try {
+
             const exhibit_uuid = this._validate_uuid(uuid, 'exhibit UUID');
 
             const result = await this._update_publish_status(
@@ -1179,8 +1202,9 @@ const Exhibit_timeline_record_tasks = class {
      * @returns {Promise<Object>} Update result
      */
     async set_timeline_item_to_publish(uuid, updated_by = null) {
+
         try {
-            console.log('set_timeline_item_to_publish');
+
             const item_uuid = this._validate_uuid(uuid, 'timeline item UUID');
 
             const result = await this._update_publish_status(
@@ -1189,8 +1213,7 @@ const Exhibit_timeline_record_tasks = class {
                 1,
                 updated_by
             );
-            console.log(item_uuid);
-            console.log(result);
+
             this._log_success('Timeline item is_published set', {
                 item_uuid,
                 affected_rows: result.affected_rows
@@ -1210,7 +1233,9 @@ const Exhibit_timeline_record_tasks = class {
      * @returns {Promise<Object>} Update result
      */
     async set_timeline_to_publish(uuid, updated_by = null) {
+
         try {
+
             const timeline_uuid = this._validate_uuid(uuid, 'timeline UUID');
 
             const result = await this._update_publish_status(
@@ -1239,7 +1264,9 @@ const Exhibit_timeline_record_tasks = class {
      * @returns {Promise<Object>} Update result
      */
     async set_to_publish_timeline_items(uuid, updated_by = null) {
+
         try {
+
             const timeline_uuid = this._validate_uuid(uuid, 'timeline UUID');
 
             const result = await this._update_publish_status(
@@ -1268,7 +1295,9 @@ const Exhibit_timeline_record_tasks = class {
      * @returns {Promise<Object>} Update result
      */
     async set_to_suppress(uuid, updated_by = null) {
+
         try {
+
             const exhibit_uuid = this._validate_uuid(uuid, 'exhibit UUID');
 
             const result = await this._update_publish_status(
@@ -1297,7 +1326,9 @@ const Exhibit_timeline_record_tasks = class {
      * @returns {Promise<Object>} Update result
      */
     async set_timeline_to_suppress(uuid, updated_by = null) {
+
         try {
+
             const timeline_uuid = this._validate_uuid(uuid, 'timeline UUID');
 
             const result = await this._update_publish_status(
@@ -1326,7 +1357,9 @@ const Exhibit_timeline_record_tasks = class {
      * @returns {Promise<Object>} Update result
      */
     async set_to_suppressed_timeline_items(uuid, updated_by = null) {
+
         try {
+
             const timeline_uuid = this._validate_uuid(uuid, 'timeline UUID');
 
             const result = await this._update_publish_status(
@@ -1358,7 +1391,9 @@ const Exhibit_timeline_record_tasks = class {
      * @returns {Promise<Object>} Reorder result
      */
     async reorder_timelines(is_member_of_exhibit, timelines, updated_by = null) {
+
         try {
+
             const exhibit_uuid = this._validate_uuid(is_member_of_exhibit, 'exhibit UUID');
 
             const result = await this._reorder_items(
@@ -1390,7 +1425,9 @@ const Exhibit_timeline_record_tasks = class {
      * @returns {Promise<Object>} Reorder result
      */
     async reorder_timeline_items(is_member_of_timeline, timelines, updated_by = null) {
+
         try {
+
             const timeline_uuid = this._validate_uuid(is_member_of_timeline, 'timeline UUID');
 
             const result = await this._reorder_items(

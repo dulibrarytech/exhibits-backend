@@ -76,7 +76,7 @@ const is_valid_uuid = (uuid) => {
  * @returns {Object} Response object
  */
 const build_response = (status, message, data = null) => {
-    const response = { status, message };
+    const response = {status, message};
     if (data !== null) {
         response.data = data;
     }
@@ -93,7 +93,7 @@ const build_response = (status, message, data = null) => {
 const validate_input = (data, validator, context) => {
     if (!data || typeof data !== 'object') {
         LOGGER.module().error(`ERROR: [/exhibits/timelines_model (${context})] Invalid input data format`);
-        return [{ message: 'Invalid input data format' }];
+        return [{message: 'Invalid input data format'}];
     }
 
     const validation_result = validator.validate(data);
@@ -124,7 +124,7 @@ const prepare_styles = (styles) => {
  * @returns {Object} Processed data
  */
 const process_timeline_item_media = (data) => {
-    const processed_data = { ...data };
+    const processed_data = {...data};
 
     // Only process media if item type is not text
     if (processed_data.item_type === CONSTANTS.ITEM_TYPES.TEXT) {
@@ -182,6 +182,7 @@ const process_timeline_item_media = (data) => {
  * @returns {Promise<Object>} Response object
  */
 exports.create_timeline_record = async (is_member_of_exhibit, data) => {
+
     try {
         // Validate inputs
         if (!is_valid_uuid(is_member_of_exhibit)) {
@@ -254,6 +255,7 @@ exports.create_timeline_record = async (is_member_of_exhibit, data) => {
  * @returns {Promise<Object>} Response object
  */
 exports.update_timeline_record = async (is_member_of_exhibit, timeline_id, data) => {
+
     try {
         // Validate inputs
         if (!is_valid_uuid(is_member_of_exhibit) || !is_valid_uuid(timeline_id)) {
@@ -322,7 +324,9 @@ exports.update_timeline_record = async (is_member_of_exhibit, timeline_id, data)
  * @returns {Promise<Object>} Response object
  */
 exports.get_timeline_record = async (is_member_of_exhibit, timeline_id) => {
+
     try {
+
         if (!is_valid_uuid(is_member_of_exhibit) || !is_valid_uuid(timeline_id)) {
             return build_response(
                 CONSTANTS.STATUS_CODES.BAD_REQUEST,
@@ -360,6 +364,7 @@ exports.get_timeline_record = async (is_member_of_exhibit, timeline_id) => {
  * @returns {Promise<Object>} Response object
  */
 exports.create_timeline_item_record = async (is_member_of_exhibit, timeline_id, data) => {
+
     try {
         // Validate inputs
         if (!is_valid_uuid(is_member_of_exhibit) || !is_valid_uuid(timeline_id)) {
@@ -435,7 +440,9 @@ exports.create_timeline_item_record = async (is_member_of_exhibit, timeline_id, 
  * @returns {Promise<Object>} Response object
  */
 exports.get_timeline_item_records = async (is_member_of_exhibit, is_member_of_timeline) => {
+
     try {
+
         if (!is_valid_uuid(is_member_of_exhibit) || !is_valid_uuid(is_member_of_timeline)) {
             return build_response(
                 CONSTANTS.STATUS_CODES.BAD_REQUEST,
@@ -476,7 +483,9 @@ exports.get_timeline_item_records = async (is_member_of_exhibit, is_member_of_ti
  * @returns {Promise<Object>} Response object
  */
 exports.get_timeline_item_record = async (is_member_of_exhibit, is_member_of_timeline, item_id) => {
+
     try {
+
         if (!is_valid_uuid(is_member_of_exhibit) ||
             !is_valid_uuid(is_member_of_timeline) ||
             !is_valid_uuid(item_id)) {
@@ -524,6 +533,7 @@ exports.get_timeline_item_record = async (is_member_of_exhibit, is_member_of_tim
 exports.get_timeline_item_edit_record = async (uid, is_member_of_exhibit, is_member_of_timeline, item_id) => {
 
     try {
+
         if (!is_valid_uuid(uid) ||
             !is_valid_uuid(is_member_of_exhibit) ||
             !is_valid_uuid(is_member_of_timeline) ||
@@ -572,6 +582,7 @@ exports.get_timeline_item_edit_record = async (uid, is_member_of_exhibit, is_mem
  * @returns {Promise<Object>} Response object
  */
 exports.update_timeline_item_record = async (is_member_of_exhibit, is_member_of_timeline, item_id, data) => {
+
     try {
         // Validate inputs
         if (!is_valid_uuid(is_member_of_exhibit) ||
@@ -651,7 +662,9 @@ exports.update_timeline_item_record = async (is_member_of_exhibit, is_member_of_
  * @returns {Promise<Object>} Response object
  */
 exports.delete_timeline_item_record = async (is_member_of_exhibit, timeline_id, timeline_item_id) => {
+
     try {
+
         if (!is_valid_uuid(is_member_of_exhibit) ||
             !is_valid_uuid(timeline_id) ||
             !is_valid_uuid(timeline_item_id)) {
@@ -697,6 +710,7 @@ exports.delete_timeline_item_record = async (is_member_of_exhibit, timeline_id, 
 exports.publish_timeline_record = async (exhibit_id, timeline_id) => {
 
     try {
+
         if (!is_valid_uuid(exhibit_id) || !is_valid_uuid(timeline_id)) {
             return {
                 status: false,
@@ -771,7 +785,9 @@ const suppress_timeline_items_parallel = async (timeline_records) => {
     }
 
     const suppress_promises = timeline_records.map(async (timeline_record) => {
+
         try {
+
             await timeline_record_task.set_to_suppressed_timeline_items(timeline_record.is_member_of_exhibit);
 
             const items = await timeline_record_task.get_timeline_item_records(
@@ -788,7 +804,7 @@ const suppress_timeline_items_parallel = async (timeline_records) => {
         } catch (error) {
             LOGGER.module().error(
                 `ERROR: [/exhibits/timelines_model (suppress_timeline_items_parallel)] ${error.message}`,
-                { timeline_uuid: timeline_record.uuid, stack: error.stack }
+                {timeline_uuid: timeline_record.uuid, stack: error.stack}
             );
         }
     });
@@ -805,6 +821,7 @@ const suppress_timeline_items_parallel = async (timeline_records) => {
 exports.suppress_timeline_record = async (exhibit_id, item_id) => {
 
     try {
+
         if (!is_valid_uuid(exhibit_id) || !is_valid_uuid(item_id)) {
             return {
                 status: false,
@@ -869,6 +886,7 @@ exports.suppress_timeline_record = async (exhibit_id, item_id) => {
 exports.publish_timeline_item_record = async (exhibit_id, timeline_id, timeline_item_id) => {
 
     try {
+
         if (!is_valid_uuid(exhibit_id) ||
             !is_valid_uuid(timeline_id) ||
             !is_valid_uuid(timeline_item_id)) {
@@ -962,6 +980,7 @@ exports.publish_timeline_item_record = async (exhibit_id, timeline_id, timeline_
 exports.suppress_timeline_item_record = async (exhibit_id, timeline_id, timeline_item_id) => {
 
     try {
+
         if (!is_valid_uuid(exhibit_id) ||
             !is_valid_uuid(timeline_id) ||
             !is_valid_uuid(timeline_item_id)) {
@@ -1025,7 +1044,9 @@ exports.suppress_timeline_item_record = async (exhibit_id, timeline_id, timeline
  * @returns {Promise<*>} Result from task
  */
 exports.reorder_timelines = async (exhibit_id, timeline) => {
+
     try {
+
         if (!is_valid_uuid(exhibit_id)) {
             LOGGER.module().error('ERROR: [/exhibits/timelines_model (reorder_timelines)] Invalid exhibit UUID provided');
             return false;
@@ -1055,7 +1076,9 @@ exports.reorder_timelines = async (exhibit_id, timeline) => {
  * @returns {Promise<*>} Result from task
  */
 exports.reorder_timeline_items = async (timeline_id, timeline) => {
+
     try {
+
         if (!is_valid_uuid(timeline_id)) {
             LOGGER.module().error('ERROR: [/exhibits/timelines_model (reorder_timeline_items)] Invalid timeline UUID provided');
             return false;
@@ -1085,7 +1108,9 @@ exports.reorder_timeline_items = async (timeline_id, timeline) => {
  * @returns {Promise<*>} Unlock result
  */
 exports.unlock_timeline_item_record = async (uid, uuid) => {
+
     try {
+
         if (!is_valid_uuid(uid) || !is_valid_uuid(uuid)) {
             LOGGER.module().error('ERROR: [/exhibits/timelines_model (unlock_timeline_item_record)] Invalid UUID provided');
             return false;
