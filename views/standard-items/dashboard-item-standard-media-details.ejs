@@ -146,6 +146,11 @@
                 <div class="container">
                     <ul class="nav nav-tabs" id="mediaTab" role="tablist">
                         <li class="nav-item">
+                            <a class="nav-link" id="import-repo-media-tab" data-toggle="tab" href="#import-repo-media"
+                               role="tab" aria-controls="import-repo-media" aria-selected="false">Import Repository
+                                Media</a>
+                        </li>
+                        <li class="nav-item">
                             <a class="nav-link active" id="upload-media-tab" data-toggle="tab" href="#upload-media"
                                role="tab" aria-controls="upload-media" aria-selected="true">Upload Media</a>
                         </li>
@@ -153,11 +158,6 @@
                             <a class="nav-link" id="import-audio-video-tab" data-toggle="tab" href="#import-audio-video"
                                role="tab" aria-controls="import-audio-video" aria-selected="false">Import
                                 Audio/Video</a>
-                        </li>
-                        <li class="nav-item">
-                            <a class="nav-link" id="import-repo-media-tab" data-toggle="tab" href="#import-repo-media"
-                               role="tab" aria-controls="import-repo-media" aria-selected="false">Import Repository
-                                Media</a>
                         </li>
                     </ul>
                     <div class="tab-content" id="mediaTabContent">
@@ -234,41 +234,6 @@
                                 <div id="kaltura-item-data"></div>
                                 <input type="hidden" name="item_type" id="kaltura-item-type">
                             </div>
-                            <!--
-                            <div class="col-12 col-md-12">
-                                <p>
-                                <form class="row form-group">
-                                    <input disabled type="text" id="audio-video" name="audio_video"
-                                           placeholder="Kaltura ID" class="form-control">
-
-                                    <br><br>
-                                    <div class="form-text text-muted" style="font-size: 17px">
-                                        <p>
-                                            <span style="color: darkred">*</span>
-                                            <small><em>Please choose an item type</em></small>
-                                        </p>
-                                    </div>
-                                    <p>
-                                        <label class="btn btn-default" for="item-type-audio" style="font-size: 15px">Audio
-                                            <input disabled type="radio"
-                                                   name="item_type"
-                                                   id="item-type-audio"
-                                                   value="audio" checked/>
-                                        </label>
-                                    </p>
-                                    <p>
-                                        <label class="btn btn-default" for="item-type-video" style="font-size: 15px">Video
-                                            <input disabled type="radio"
-                                                   name="item_type"
-                                                   id="item-type-video"
-                                                   value="video"/>
-                                        </label>
-                                    </p>
-                                    <input type="hidden" id="is-kaltura-item" name="is_kaltura_item" value="0">
-                                </form>
-                                </p>
-                            </div>
-                            -->
                         </div>
 
                         <div class="tab-pane fade" id="import-repo-media" role="tabpanel"
