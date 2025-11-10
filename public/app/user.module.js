@@ -251,8 +251,9 @@ const userModule = (function () {
          * Generate action buttons HTML
          */
         function generate_actions_html(user, is_current_user, is_admin) {
-
-            const can_edit = is_admin && user.is_active === 0;
+            console.log(user);
+            console.log(is_current_user);
+            const can_edit = is_admin && user.is_active === 0 || is_current_user === true;
             const can_delete = is_admin && user.is_active === 0;
 
             const edit_button = can_edit

@@ -24,29 +24,172 @@ const itemsTimelineModule = (function () {
     const EXHIBITS_ENDPOINTS = endpointsModule.get_exhibits_endpoints();
     let obj = {};
 
+    /**
+     * Get timeline items from API
+     *
+     * @param {string} exhibit_id - The exhibit ID
+     * @param {string} timeline_id - The timeline ID
+     * @returns {Promise<Array|null>} Array of timeline items on success, null on error
+     */
     async function get_timeline_items(exhibit_id, timeline_id) {
 
         try {
+            // Validate input parameters
+            if (!exhibit_id) {
+                throw new Error('Exhibit ID is required');
+            }
 
+            if (!timeline_id) {
+                throw new Error('Timeline ID is required');
+            }
+
+            // Validate parameter types
+            if (typeof exhibit_id !== 'string' && typeof exhibit_id !== 'number') {
+                throw new Error('Exhibit ID must be a string or number');
+            }
+
+            if (typeof timeline_id !== 'string' && typeof timeline_id !== 'number') {
+                throw new Error('Timeline ID must be a string or number');
+            }
+
+            // Get endpoints configuration
+            const EXHIBITS_ENDPOINTS = endpointsModule.get_exhibits_endpoints();
+
+            // Validate endpoint configuration exists
+            if (!EXHIBITS_ENDPOINTS?.exhibits?.timeline_item_records?.get?.endpoint) {
+                throw new Error('Timeline item records endpoint not configured');
+            }
+
+            // Get authentication token
             const token = authModule.get_user_token();
-            let tmp = EXHIBITS_ENDPOINTS.exhibits.timeline_item_records.get.endpoint.replace(':exhibit_id', exhibit_id);
-            const endpoint = tmp.replace(':timeline_id', timeline_id);
+
+            // Validate token
+            if (!token || token === false) {
+                console.error('No authentication token available');
+                authModule.redirect_to_auth();
+                return null;
+            }
+
+            // Build endpoint URL with proper encoding
+            const endpoint = build_timeline_endpoint(
+                EXHIBITS_ENDPOINTS.exhibits.timeline_item_records.get.endpoint,
+                exhibit_id,
+                timeline_id
+            );
+
+            // Make API request with timeout
             const response = await httpModule.req({
                 method: 'GET',
                 url: endpoint,
                 headers: {
                     'Content-Type': 'application/json',
                     'x-access-token': token
-                }
+                },
+                timeout: 30000
             });
 
-            if (response !== undefined && response.status === 200) {
-                return response.data.data;
+            // Validate response exists
+            if (!response) {
+                throw new Error('No response received from server');
             }
 
+            // Validate status code
+            if (response.status !== 200) {
+                throw new Error(`Server returned status ${response.status}`);
+            }
+
+            // Validate response structure
+            if (!response.data || typeof response.data !== 'object') {
+                throw new Error('Invalid response data structure');
+            }
+
+            // Check if data exists
+            if (!response.data.data) {
+                console.warn('Response data.data is missing or empty');
+                return [];
+            }
+
+            // Validate data is an array
+            if (!Array.isArray(response.data.data)) {
+                console.error('Response data.data is not an array');
+                return [];
+            }
+
+            // Log success
+            console.log(`Retrieved ${response.data.data.length} timeline items`);
+
+            return response.data.data;
+
         } catch (error) {
-            document.querySelector('#message').innerHTML = `<div class="alert alert-danger" role="alert"><i class="fa fa-exclamation"></i> ${error.message}</div>`;
+            console.error('Error getting timeline items:', error);
+
+            // Display safe error message
+            const message_element = document.querySelector('#message');
+            if (message_element) {
+                display_error_message(
+                    message_element,
+                    error.message || 'Unable to retrieve timeline items'
+                );
+            }
+
+            return null;
         }
+    }
+
+    /**
+     * Build timeline endpoint URL with proper parameter encoding
+     *
+     * @param {string} endpoint_template - Endpoint template with placeholders
+     * @param {string|number} exhibit_id - Exhibit ID
+     * @param {string|number} timeline_id - Timeline ID
+     * @returns {string} Complete endpoint URL
+     */
+    function build_timeline_endpoint(endpoint_template, exhibit_id, timeline_id) {
+        // Convert IDs to strings
+        const exhibit_id_str = String(exhibit_id);
+        const timeline_id_str = String(timeline_id);
+
+        // Replace placeholders with encoded values
+        let endpoint = endpoint_template
+            .replace(':exhibit_id', encodeURIComponent(exhibit_id_str))
+            .replace(':timeline_id', encodeURIComponent(timeline_id_str));
+
+        return endpoint;
+    }
+
+    /**
+     * Display error message
+     *
+     * @param {HTMLElement} element - The message container element
+     * @param {string} message - The message text
+     */
+    function display_error_message(element, message) {
+
+        if (!element) {
+            console.error('Message element not found');
+            return;
+        }
+
+        // Clear existing content safely
+        element.textContent = '';
+
+        // Create alert container
+        const alert_div = document.createElement('div');
+        alert_div.className = 'alert alert-danger';
+        alert_div.setAttribute('role', 'alert');
+
+        // Create icon
+        const icon = document.createElement('i');
+        icon.className = 'fa fa-exclamation';
+        icon.setAttribute('aria-hidden', 'true');
+        alert_div.appendChild(icon);
+
+        // Add message text safely
+        const text = document.createTextNode(` ${message}`);
+        alert_div.appendChild(text);
+
+        // Append to container
+        element.appendChild(alert_div);
     }
 
     obj.display_timeline_items = async function () {
