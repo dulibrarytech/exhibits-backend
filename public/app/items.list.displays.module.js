@@ -1089,6 +1089,7 @@ const itemsListDisplayModule = (function() {
      * Display timeline item events
      */
     obj.display_timeline_items = async function(item) {
+
         try {
             // Validate required data
             if (!item || !item.uuid) {
@@ -1290,7 +1291,7 @@ const itemsListDisplayModule = (function() {
                 const delete_icon = create_icon('fa fa-trash pr-1', 'Can only delete if unpublished', 'delete-disabled', '#d3d3d3');
                 actions_div.appendChild(delete_icon);
             } else {
-                const delete_url = `${APP_PATH}/items/vertical-timeline/item/delete?exhibit_id=${exhibit_id}&timeline_id=${timeline_id}&item_id=${item_id}`;
+                const delete_url = `${APP_PATH}/items/timeline/item/delete?exhibit_id=${exhibit_id}&timeline_id=${timeline_id}&item_id=${item_id}`;
                 const delete_link = create_link(delete_url, 'Delete timeline item', 'delete-timeline-item', 'fa fa-trash pr-1');
                 actions_div.appendChild(delete_link);
             }
