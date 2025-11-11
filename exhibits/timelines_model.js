@@ -991,16 +991,16 @@ exports.suppress_timeline_item_record = async (exhibit_id, timeline_id, timeline
         // Get indexed record
         const indexed_record = await INDEXER_MODEL.get_indexed_record(timeline_id);
 
-        if (!indexed_record.data || !indexed_record.data._source) {
+        if (!indexed_record.data || !indexed_record.data.source) {
             LOGGER.module().error('ERROR: [/exhibits/timelines_model (suppress_timeline_item_record)] Timeline not found in index');
             return false;
         }
 
         // Filter out the timeline item being suppressed
-        const items = indexed_record.data._source.items || [];
+        const items = indexed_record.data.source.items || [];
         const updated_items = items.filter(item => item.uuid !== timeline_item_id);
 
-        indexed_record.data._source.items = updated_items;
+        indexed_record.data.source.items = updated_items;
 
         // Delete original timeline record from index
         const delete_result = await INDEXER_MODEL.delete_record(timeline_id);
@@ -1021,7 +1021,7 @@ exports.suppress_timeline_item_record = async (exhibit_id, timeline_id, timeline
         await timeline_record_task.update_timeline_item_record(update_data);
 
         // Re-index timeline with updated items
-        const is_indexed = await INDEXER_MODEL.index_record(indexed_record.data._source);
+        const is_indexed = await INDEXER_MODEL.index_record(indexed_record.data.source);
 
         return is_indexed === true;
 
