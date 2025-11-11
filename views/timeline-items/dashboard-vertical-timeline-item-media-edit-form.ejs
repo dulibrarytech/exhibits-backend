@@ -8,6 +8,9 @@
         width: 50px;
         cursor: pointer;
     }
+    #cancel-exhibit-btn {
+        min-width: 100px;
+    }
 </style>
 <body>
 <aside id="left-panel" class="left-panel">
@@ -83,6 +86,9 @@
                 <button class="btn btn-primary" type="button" id="save-item-btn">
                     <i class="fa fa-save"></i>&nbsp;&nbsp;Save
                 </button>
+                <button class="btn btn-outline-secondary ms-2" type="button" id="cancel-exhibit-btn">
+                    <i class="fa fa-times"></i>&nbsp;&nbsp;Cancel
+                </button>
             </div>
             <div class="card-footer text-muted"><small>Vertical Timeline Item</small></div>
         </div>
@@ -105,6 +111,27 @@
 <script>
     itemsCommonVerticalTimelineItemFormModule.init();
     itemsEditTimelineItemFormModule.init();
+
+    const exhibit_id = helperModule.get_parameter_by_name('exhibit_id');
+    const timeline_id = helperModule.get_parameter_by_name('timeline_id');
+    const cancel_exhibit_btn = document.getElementById('cancel-exhibit-btn');
+
+    cancel_exhibit_btn.addEventListener('click', function () {
+        const has_unsaved_changes = check_for_unsaved_changes();
+        if (has_unsaved_changes) {
+            const confirm_cancel = confirm('Discard unsaved changes and return to the exhibit timeline item list?');
+            if (!confirm_cancel) return;
+        }
+        // Redirect
+        window.location.href = `/exhibits-dashboard/items/timeline/items?exhibit_id=${exhibit_id}&timeline_id=${timeline_id}`;
+    });
+
+    function check_for_unsaved_changes() {
+        const inputs = document.querySelectorAll('input, textarea, select');
+        return Array.from(inputs).some(input => input.defaultValue !== input.value);
+    }
+
+
 </script>
 </body>
 </html>
