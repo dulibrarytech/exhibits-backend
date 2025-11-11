@@ -390,7 +390,7 @@ const itemsTimelineModule = (function () {
                         edit_path = `${APP_PATH}/items/vertical-timeline/item/media/edit?exhibit_id=${exhibit_id}&timeline_id=${timeline_id}&item_id=${uuid}`;
                     }
 
-                    delete_path = `${APP_PATH}/items/vertical-timeline/item/delete?exhibit_id=${exhibit_id}&timeline_id=${timeline_id}&item_id=${uuid}`;
+                    delete_path = `${APP_PATH}/items/timeline/item/delete?exhibit_id=${exhibit_id}&timeline_id=${timeline_id}&item_id=${uuid}`;
 
                     let uuid_actions = `${uuid}-item-actions`;
                     let elem = document.getElementById(uuid_actions);

@@ -888,9 +888,6 @@ const itemsModule = (function() {
         status_element.textContent = '';
         status_element.appendChild(span);
 
-        // Note: Event delegation in display_items() handles click events
-        // No need to re-attach individual listeners here
-
         // Update action buttons immediately
         update_action_buttons(uuid, item_type, exhibit_id, false);
     }
