@@ -561,6 +561,8 @@ exports.unlock_item_record = async function (req, res) {
         const exhibit_id = req.params.exhibit_id;
         const item_id = req.params.item_id;
         const uid = req.query.uid;
+        const force = req.query.force;
+        let options = {};
 
         if (item_id === undefined || item_id.length === 0) {
             res.status(400).send('Bad request.');
@@ -571,6 +573,13 @@ exports.unlock_item_record = async function (req, res) {
             res.status(400).send('Bad request.');
             return false;
         }
+
+        if (force !== undefined && force === 'true') {
+            options.force = true;
+        } else {
+            options.force = false;
+        }
+
         /*
         const permissions = ['update_any_item'];
         let options = {};
@@ -590,9 +599,10 @@ exports.unlock_item_record = async function (req, res) {
             return false;
         }
         */
-        const result = await ITEMS_MODEL.unlock_item_record(uid, item_id);
 
-        if (result === true) {
+        const result = await ITEMS_MODEL.unlock_item_record(uid, item_id, options);
+
+        if (typeof result === 'object') {
             res.status(200).send({
                 message: 'Item record unlocked.'
             });

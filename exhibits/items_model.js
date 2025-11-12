@@ -1095,9 +1095,10 @@ exports.get_repo_tn = async (uuid) => {
  * Unlocks item record for editing
  * @param {string} uid - User ID
  * @param {string} uuid - Item UUID
+ * @param {object} options - {force: true/false}
  * @returns {Promise<*>} Unlock result
  */
-exports.unlock_item_record = async (uid, uuid) => {
+exports.unlock_item_record = async (uid, uuid, options) => {
 
     try {
 
@@ -1106,7 +1107,7 @@ exports.unlock_item_record = async (uid, uuid) => {
             return false;
         }
 
-        return await helper_task.unlock_record(uid, uuid, DB, TABLES.item_records);
+        return await helper_task.unlock_record(uid, uuid, DB, TABLES.item_records, options);
 
     } catch (error) {
         LOGGER.module().error(`ERROR: [/exhibits/items_model (unlock_item_record)] ${error.message}`, {

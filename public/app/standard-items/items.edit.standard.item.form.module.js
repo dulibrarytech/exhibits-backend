@@ -70,6 +70,7 @@ const itemsEditStandardItemFormModule = (function () {
         const is_user_administrator = async () => {
 
             try {
+
                 const profile = authModule.get_user_profile_data();
                 if (!profile || !profile.uid) {
                     return false;

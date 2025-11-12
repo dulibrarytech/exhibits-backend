@@ -1262,9 +1262,10 @@ exports.reorder_exhibits = async (data) => {
  * Unlocks exhibit record for editing
  * @param {string} uid - User ID
  * @param {string} uuid - Exhibit UUID
+ * @param {object} options - {force: true/false}
  * @returns {Promise<*>} Unlock result
  */
-exports.unlock_exhibit_record = async (uid, uuid) => {
+exports.unlock_exhibit_record = async (uid, uuid, options) => {
 
     try {
 
@@ -1273,7 +1274,7 @@ exports.unlock_exhibit_record = async (uid, uuid) => {
             return false;
         }
 
-        return await helper_task.unlock_record(uid, uuid, DB, TABLES.exhibit_records);
+        return await helper_task.unlock_record(uid, uuid, DB, TABLES.exhibit_records, options);
 
     } catch (error) {
         LOGGER.module().error(`ERROR: [/exhibits/model (unlock_exhibit_record)] ${error.message}`, {

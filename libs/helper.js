@@ -127,7 +127,7 @@ const Helper = class {
                 const timeout_ms = timeout_minutes * 60 * 1000;
                 const timer_id = setTimeout(async () => {
                     try {
-                        await this.unlock_record(uid.trim(), uuid.trim(), db, table);
+                        await this.unlock_record(uid.trim(), uuid.trim(), db, table, {force: false});
                     } catch (unlock_error) {
                         LOGGER.module().error('Auto-unlock failed', {
                             uuid: uuid.trim(),
@@ -181,7 +181,7 @@ const Helper = class {
             const timeout_ms = timeout_minutes * 60 * 1000;
             const timer_id = setTimeout(async () => {
                 try {
-                    await this.unlock_record(uid.trim(), uuid.trim(), db, table);
+                    await this.unlock_record(uid.trim(), uuid.trim(), db, table, {force: false});
                     LOGGER.module().info('Record auto-unlocked after timeout', {
                         uuid: uuid.trim(),
                         uid: uid.trim(),
@@ -237,7 +237,7 @@ const Helper = class {
      * @returns {Promise<Object>} Updated record
      * @throws {Error} If validation fails or unlock fails
      */
-    async unlock_record(uid, uuid, db, table, options = {}) {
+    async unlock_record(uid, uuid, db, table, options) {
 
         const { force = false } = options;
 
@@ -297,7 +297,7 @@ const Helper = class {
                 });
                 return record;
             }
-            console.log('USER ', record.locked_by_user);
+
             // Convert locked_by_user to number for comparison
             const locked_by_number = Number(record.locked_by_user);
 

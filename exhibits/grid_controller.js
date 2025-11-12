@@ -406,6 +406,8 @@ exports.unlock_grid_item_record = async function (req, res) {
         const grid_id = req.params.grid_id;
         const item_id = req.params.item_id;
         const uid = req.query.uid;
+        const force = req.query.force;
+        let options = {};
 
         if (item_id === undefined || item_id.length === 0) {
             res.status(400).send('Bad request.');
@@ -415,6 +417,12 @@ exports.unlock_grid_item_record = async function (req, res) {
         if (uid === undefined || uid.length === 0) {
             res.status(400).send('Bad request.');
             return false;
+        }
+
+        if (force !== undefined && force === 'true') {
+            options.force = true;
+        } else {
+            options.force = false;
         }
 
         /*
@@ -437,7 +445,7 @@ exports.unlock_grid_item_record = async function (req, res) {
         }
         */
 
-        const result = await GRIDS_MODEL.unlock_grid_item_record(uid, item_id);
+        const result = await GRIDS_MODEL.unlock_grid_item_record(uid, item_id, options);
 
         if (result === true) {
             res.status(200).send({

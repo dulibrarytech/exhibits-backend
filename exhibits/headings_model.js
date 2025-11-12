@@ -549,9 +549,10 @@ exports.reorder_headings = async (exhibit_id, heading) => {
  * Unlocks heading record for editing
  * @param {string} uid - User ID
  * @param {string} uuid - Heading UUID
+ * @param {object} options - {force: true/false}
  * @returns {Promise<*>} Unlock result
  */
-exports.unlock_heading_record = async (uid, uuid) => {
+exports.unlock_heading_record = async (uid, uuid, options) => {
 
     try {
 
@@ -560,7 +561,7 @@ exports.unlock_heading_record = async (uid, uuid) => {
             return false;
         }
 
-        return await helper_task.unlock_record(uid, uuid, DB, TABLES.heading_records);
+        return await helper_task.unlock_record(uid, uuid, DB, TABLES.heading_records, options);
 
     } catch (error) {
         LOGGER.module().error(`ERROR: [/exhibits/headings_model (unlock_heading_record)] ${error.message}`, {

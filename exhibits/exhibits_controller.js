@@ -483,6 +483,8 @@ exports.unlock_exhibit_record = async function (req, res) {
 
         const uuid = req.params.exhibit_id;
         const uid = req.query.uid;
+        const force = req.query.force;
+        let options = {};
 
         if (uuid === undefined || uuid.length === 0) {
             res.status(400).send('Bad request.');
@@ -492,6 +494,12 @@ exports.unlock_exhibit_record = async function (req, res) {
         if (uid === undefined || uid.length === 0) {
             res.status(400).send('Bad request.');
             return false;
+        }
+
+        if (force !== undefined && force === 'true') {
+            options.force = true;
+        } else {
+            options.force = false;
         }
 
         // TODO: permission check
@@ -517,9 +525,9 @@ exports.unlock_exhibit_record = async function (req, res) {
 
          */
 
-        const result = await EXHIBITS_MODEL.unlock_exhibit_record(uid, uuid);
+        const result = await EXHIBITS_MODEL.unlock_exhibit_record(uid, uuid, options);
 
-        if (result === true) {
+        if (typeof result === 'object') {
             res.status(200).send({
                 message: 'Exhibit record unlocked.'
             });

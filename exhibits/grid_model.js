@@ -1204,9 +1204,10 @@ exports.reorder_grid_items = async (grid_id, grid) => {
  * Unlocks grid item record for editing
  * @param {string} uid - User ID
  * @param {string} uuid - Grid item UUID
+ * @param {object} options - {force: true/false}
  * @returns {Promise<*>} Unlock result
  */
-exports.unlock_grid_item_record = async (uid, uuid) => {
+exports.unlock_grid_item_record = async (uid, uuid, options) => {
 
     try {
 
@@ -1215,7 +1216,7 @@ exports.unlock_grid_item_record = async (uid, uuid) => {
             return false;
         }
 
-        return await helper_task.unlock_record(uid, uuid, DB, TABLES.grid_item_records);
+        return await helper_task.unlock_record(uid, uuid, DB, TABLES.grid_item_records, options);
 
     } catch (error) {
         LOGGER.module().error(`ERROR: [/exhibits/grid_model (unlock_grid_item_record)] ${error.message}`, {

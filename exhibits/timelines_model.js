@@ -1105,9 +1105,10 @@ exports.reorder_timeline_items = async (timeline_id, timeline) => {
  * Unlocks timeline item record for editing
  * @param {string} uid - User ID
  * @param {string} uuid - Timeline item UUID
+ * @param {object} options - {force: true/false}
  * @returns {Promise<*>} Unlock result
  */
-exports.unlock_timeline_item_record = async (uid, uuid) => {
+exports.unlock_timeline_item_record = async (uid, uuid, options) => {
 
     try {
 
@@ -1116,7 +1117,7 @@ exports.unlock_timeline_item_record = async (uid, uuid) => {
             return false;
         }
 
-        return await helper_task.unlock_record(uid, uuid, DB, TABLES.timeline_item_records);
+        return await helper_task.unlock_record(uid, uuid, DB, TABLES.timeline_item_records, options);
 
     } catch (error) {
         LOGGER.module().error(`ERROR: [/exhibits/timelines_model (unlock_timeline_item_record)] ${error.message}`, {

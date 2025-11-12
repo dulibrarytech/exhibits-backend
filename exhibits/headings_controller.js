@@ -149,6 +149,8 @@ exports.unlock_heading_record = async function (req, res) {
         const exhibit_id = req.params.exhibit_id;
         const heading_id = req.params.heading_id;
         const uid = req.query.uid;
+        const force = req.query.force;
+        let options = {};
 
         if (heading_id === undefined || heading_id.length === 0) {
             res.status(400).send('Bad request.');
@@ -158,6 +160,12 @@ exports.unlock_heading_record = async function (req, res) {
         if (uid === undefined || uid.length === 0) {
             res.status(400).send('Bad request.');
             return false;
+        }
+
+        if (force !== undefined && force === 'true') {
+            options.force = true;
+        } else {
+            options.force = false;
         }
 
         // TODO: add permissions for all to unlock
@@ -181,7 +189,7 @@ exports.unlock_heading_record = async function (req, res) {
         }
         */
 
-        const result = await HEADINGS_MODEL.unlock_heading_record(uid, heading_id);
+        const result = await HEADINGS_MODEL.unlock_heading_record(uid, heading_id, options);
 
         if (result === true) {
             res.status(200).send({
