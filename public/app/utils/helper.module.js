@@ -1569,15 +1569,9 @@ const helperModule = (function () {
         const handle_unlock_click = () => {
             if (helperModule && typeof helperModule.unlock_record === 'function') {
 
-                // TODO: force_unlock
-
                 helperModule.unlock_record(false, {
                     force: true
                 });
-
-
-
-                // helperModule.unlock_record();
 
             } else {
                 console.error('unlock_record function not available');
@@ -1684,8 +1678,6 @@ const helperModule = (function () {
     obj.unlock_record = async function (use_beacon_only = false, options = {}) {
 
         const { force = false } = options;
-        // console.log(use_beacon_only);
-        // console.log(options.force);
 
         // Constants
         const REQUEST_TIMEOUT = 30000; // 30 seconds
@@ -1904,8 +1896,6 @@ const helperModule = (function () {
                 request_url = `${request_url}&force=${options.force}`;
             }
 
-            // const request_url = `${endpoint}?${query_params.toString()}`;
-            console.log('UNLOCK VIA BUTTON ', request_url);
             // Make request with timeout
             const response = await Promise.race([
                 httpModule.req({
@@ -1949,265 +1939,7 @@ const helperModule = (function () {
         }
     };
 
-    obj.unlock_record__orig = async function (use_beacon_only = false) {
-
-        // Constants
-        const REQUEST_TIMEOUT = 30000; // 30 seconds
-
-        // Path to endpoint configuration map
-        const endpoint_config_map = [
-            {
-                paths: ['exhibits/exhibit/edit'],
-                endpoint_key: 'exhibits.exhibit_unlock_record.post.endpoint',
-                params: (exhibit_id) => ({exhibit_id})
-            },
-            {
-                paths: ['items/heading/edit'],
-                endpoint_key: 'exhibits.heading_unlock_record.post.endpoint',
-                params: (exhibit_id) => ({
-                    exhibit_id,
-                    heading_id: helperModule.get_parameter_by_name('item_id')
-                })
-            },
-            {
-                paths: ['items/standard/text/edit', 'items/standard/media/edit'],
-                endpoint_key: 'exhibits.item_unlock_record.post.endpoint',
-                params: (exhibit_id) => ({
-                    exhibit_id,
-                    item_id: helperModule.get_parameter_by_name('item_id')
-                })
-            },
-            {
-                paths: ['items/grid/item/media/edit', 'items/grid/item/text/edit'],
-                endpoint_key: 'exhibits.grid_item_unlock_record.post.endpoint',
-                params: (exhibit_id) => ({
-                    exhibit_id,
-                    grid_id: helperModule.get_parameter_by_name('grid_id'),
-                    item_id: helperModule.get_parameter_by_name('item_id')
-                })
-            },
-            {
-                paths: ['items/vertical-timeline/item/media/edit', 'items/vertical-timeline/item/text/edit'],
-                endpoint_key: 'exhibits.timeline_item_unlock_record.post.endpoint',
-                params: (exhibit_id) => ({
-                    exhibit_id,
-                    timeline_id: helperModule.get_parameter_by_name('timeline_id'),
-                    item_id: helperModule.get_parameter_by_name('item_id')
-                })
-            }
-        ];
-
-        // Helper function to safely get nested object value by dot notation
-        const get_nested_value = (obj, path) => {
-            if (!obj || !path) return null;
-
-            const keys = path.split('.');
-            let result = obj;
-
-            for (const key of keys) {
-                if (result && typeof result === 'object' && key in result) {
-                    result = result[key];
-                } else {
-                    return null;
-                }
-            }
-
-            return result;
-        };
-
-        // Helper function to safely display messages
-        const show_message = (message, type = 'info', icon = 'fa-info') => {
-            const message_el = document.querySelector('#message');
-            if (!message_el) {
-                console.error('Message element not found');
-                return;
-            }
-
-            const alert_div = document.createElement('div');
-            alert_div.className = `alert alert-${type}`;
-            alert_div.setAttribute('role', 'alert');
-
-            if (icon) {
-                const icon_el = document.createElement('i');
-                icon_el.className = `fa ${icon}`;
-                alert_div.appendChild(icon_el);
-                alert_div.appendChild(document.createTextNode(' '));
-            }
-
-            const text_node = document.createTextNode(message);
-            alert_div.appendChild(text_node);
-
-            message_el.innerHTML = '';
-            message_el.appendChild(alert_div);
-        };
-
-        // Helper function to build endpoint URL with parameter replacement
-        const build_endpoint_url = (template, params) => {
-            if (!template || !params) return null;
-
-            let endpoint = template;
-
-            for (const [key, value] of Object.entries(params)) {
-                if (!value) {
-                    console.error(`Missing required parameter: ${key}`);
-                    return null;
-                }
-                // URL encode the parameter value
-                const encoded_value = encodeURIComponent(value);
-                endpoint = endpoint.replace(`:${key}`, encoded_value);
-            }
-
-            return endpoint;
-        };
-
-        // Helper function to find matching endpoint configuration
-        const find_endpoint_config = (pathname, config_map) => {
-            for (const config of config_map) {
-                const path_matches = config.paths.some(path => pathname.includes(path));
-                if (path_matches) {
-                    return config;
-                }
-            }
-            return null;
-        };
-
-        try {
-            // Get required data
-            const exhibits_endpoints = endpointsModule.get_exhibits_endpoints();
-            if (!exhibits_endpoints) {
-                throw new Error('Unable to retrieve endpoints configuration');
-            }
-
-            const pathname = window.location.pathname;
-            if (!pathname) {
-                throw new Error('Unable to determine current page path');
-            }
-
-            const exhibit_id = helperModule.get_parameter_by_name('exhibit_id');
-            if (!exhibit_id) {
-                throw new Error('Missing required parameter: exhibit_id');
-            }
-
-            // Find matching endpoint configuration
-            const config = find_endpoint_config(pathname, endpoint_config_map);
-            if (!config) {
-                console.error('No matching endpoint found for current path:', pathname);
-                if (!use_beacon_only) {
-                    show_message('Unable to determine record type.', 'danger', 'fa-exclamation');
-                }
-                return false;
-            }
-
-            // Get endpoint template
-            const endpoint_template = get_nested_value(exhibits_endpoints, config.endpoint_key);
-            if (!endpoint_template) {
-                throw new Error('Endpoint template not found in configuration');
-            }
-
-            // Get endpoint parameters
-            const endpoint_params = typeof config.params === 'function'
-                ? config.params(exhibit_id)
-                : config.params;
-
-            // Validate all required parameters exist
-            for (const [key, value] of Object.entries(endpoint_params)) {
-                if (!value) {
-                    throw new Error(`Missing required parameter: ${key}`);
-                }
-            }
-
-            // Build endpoint URL
-            const endpoint = build_endpoint_url(endpoint_template, endpoint_params);
-            if (!endpoint) {
-                throw new Error('Failed to build endpoint URL');
-            }
-
-            // Get authentication data
-            const profile = authModule.get_user_profile_data();
-            const token = authModule.get_user_token();
-
-            if (!profile || !profile.uid) {
-                throw new Error('User profile data not available');
-            }
-
-            if (!token) {
-                throw new Error('Authentication token not available');
-            }
-
-            // Build query parameters
-            const query_params = new URLSearchParams({
-                uid: profile.uid
-            });
-
-            // If beacon-only mode (page unload scenario)
-            if (use_beacon_only) {
-                if (navigator.sendBeacon) {
-                    // Include auth token in query string for Beacon API
-                    query_params.append('t', token);
-                    const beacon_url = `${endpoint}?${query_params.toString()}`;
-
-                    const sent = navigator.sendBeacon(beacon_url, '');
-
-                    if (sent) {
-                        console.log('Unlock beacon sent successfully');
-                        return true;
-                    } else {
-                        console.warn('Beacon API failed to send unlock request');
-                        return false;
-                    }
-                } else {
-                    console.warn('Beacon API not available');
-                    return false;
-                }
-            }
-
-            // Regular mode (manual unlock via button click)
-            const request_url = `${endpoint}?${query_params.toString()}`;
-
-            // Make request with timeout
-            const response = await Promise.race([
-                httpModule.req({
-                    method: 'POST',
-                    url: request_url,
-                    headers: {
-                        'Content-Type': 'application/json',
-                        'x-access-token': token
-                    }
-                }),
-                new Promise((_, reject) =>
-                    setTimeout(() => reject(new Error('Request timeout')), REQUEST_TIMEOUT)
-                )
-            ]);
-
-            // Validate response
-            if (!response) {
-                throw new Error('No response received from server');
-            }
-
-            // Display result
-            if (response.status === 200) {
-                show_message('Record unlocked successfully', 'success', 'fa-check');
-                return true;
-            } else {
-                show_message('Failed to unlock record. Please try again.', 'danger', 'fa-exclamation');
-                return false;
-            }
-
-        } catch (error) {
-            // Log error for debugging
-            console.error('Error unlocking record:', error);
-
-            // Display user-friendly error message (only if not beacon-only mode)
-            if (!use_beacon_only) {
-                const error_message = error.message || 'An unexpected error occurred while unlocking the record';
-                show_message(error_message, 'danger', 'fa-exclamation');
-            }
-
-            return false;
-        }
-    };
-
-// New function to setup automatic unlock on page unload
+    // New function to setup automatic unlock on page unload
     obj.setup_auto_unlock = function (record) {
 
         // Only setup auto-unlock if the current user has the record locked
