@@ -1,6 +1,6 @@
 /**
 
- Copyright 2023 University of Denver
+ Copyright 2025 University of Denver
 
  Licensed under the Apache License, Version 2.0 (the "License");
  you may not use this file except in compliance with the License.
@@ -18,12 +18,14 @@
 
 'use strict';
 
-module.exports = () => {
+const CONTROLLER = require('../exhibits/share_controller');
+const ENDPOINTS = require('../exhibits/endpoints/index');
+const TOKEN = require('../libs/tokens');
 
-    return {
-        is_member_of_exhibit: {type: 'string'},
-        uuid: {type: 'string'},
-        columns: {type: 'number'},
-        styles: {type: 'string'}
-    };
+module.exports = function (app) {
+    app.route(ENDPOINTS().exhibits.exhibit_shared.get.endpoint)
+    .get(TOKEN.verify_shared, CONTROLLER.share_exhibit_preview);
+
+    app.route(ENDPOINTS().exhibits.exhibit_shared.get.endpoint)
+    .post(TOKEN.verify, CONTROLLER.create_shared_exhibit_preview_url);
 };

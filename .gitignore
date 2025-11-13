@@ -60,3 +60,4 @@ logs/*.log
 logs/*.gz
 test
 *.sql
+trash

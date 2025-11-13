@@ -108,10 +108,14 @@ const itemsGridModule = (function () {
                 headers: {
                     'Content-Type': 'application/json',
                     'x-access-token': token
+                },
+                timeout: 10000,
+                validateStatus: function (status) {
+                    return status >= 200 && status < 600; // Accept any status code
                 }
             });
-
-            if (response !== undefined && response.status === 200) {
+            console.log(response);
+            if (response.status === 200) { // response !== undefined &&
 
                 setTimeout(() => {
                     let elem = document.getElementById(uuid);
@@ -160,7 +164,7 @@ const itemsGridModule = (function () {
                         </div>`;
                 }, 0);
 
-            } else if (response === undefined) {
+            } else if (response.status === 403) {
                 scrollTo(0, 0);
                 document.querySelector('#message').innerHTML = `<div class="alert alert-danger" role="alert"><i class="fa fa-danger"></i> You do not have permission to publish this record.</div>`;
 
@@ -169,12 +173,12 @@ const itemsGridModule = (function () {
                 }, 5000);
             }
 
-            if (response !== undefined && response.status === 204) {
+            if (response.status === 500) {
                 scrollTo(0, 0);
-                document.querySelector('#message').innerHTML = `<div class="alert alert-danger" role="alert"><i class="fa fa-exclamation"></i> Unable to publish grid item</div>`;
+                document.querySelector('#message').innerHTML = `<div class="alert alert-danger" role="alert"><i class="fa fa-exclamation"></i> ${response.data.message}</div>`;
 
                 setTimeout(() => {
-                    document.querySelector('#message').innerHTML = '';
+                    // document.querySelector('#message').innerHTML = '';
                 }, 5000);
             }
 

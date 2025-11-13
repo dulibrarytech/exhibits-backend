@@ -252,6 +252,7 @@ exports.create_grid_record = async (is_member_of_exhibit, data) => {
         );
 
     } catch (error) {
+
         LOGGER.module().error(`ERROR: [/exhibits/grid_model (create_grid_record)] ${error.message}`, {
             is_member_of_exhibit,
             stack: error.stack

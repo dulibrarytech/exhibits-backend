@@ -19,27 +19,117 @@
 'use strict';
 
 const CONTROLLER = require('../exhibits/headings_controller');
-// const ENDPOINTS = require('../exhibits/endpoints');
 const ENDPOINTS = require('../exhibits/endpoints/index');
 const TOKEN = require('../libs/tokens');
-// const AUTHORIZE = require('../auth/authorize');
+const LOGGER = require('../libs/log4');
+const {rate_limits} = require('../config/rate_limits_loader');
+
+// Security headers middleware
+const security_headers = (req, res, next) => {
+    res.set({
+        'X-Content-Type-Options': 'nosniff',
+        'X-Frame-Options': 'SAMEORIGIN',
+        'X-XSS-Protection': '1; mode=block',
+        'Strict-Transport-Security': 'max-age=31536000; includeSubDomains',
+        'Content-Security-Policy': "default-src 'self'"
+    });
+    next();
+};
+
+// Request logging middleware
+const log_request = (req, res, next) => {
+    const start_time = Date.now();
+
+    res.on('finish', () => {
+        const duration = Date.now() - start_time;
+        LOGGER.module().info`INFO: [${req.method}] ${req.path} - Status: ${res.statusCode} - Duration: ${duration}ms - IP: ${req.ip}`;
+    });
+
+    next();
+};
+
+// Error handling middleware for async routes
+const async_handler = (fn) => {
+    return (req, res, next) => {
+        Promise.resolve(fn(req, res, next)).catch(next);
+    };
+};
 
 module.exports = function (app) {
+    // Apply global middleware for all heading routes
+    app.use('/api/headings', security_headers);
+    app.use('/api/headings', log_request);
 
-    app.route(ENDPOINTS().exhibits.heading_records.post.endpoint)
-    .post(TOKEN.verify, CONTROLLER.create_heading_record);
+    // Get endpoints
+    const endpoints = ENDPOINTS();
 
-    app.route(ENDPOINTS().exhibits.heading_records.get.endpoint)
-    .get(TOKEN.verify, CONTROLLER.get_heading_record);
+    // ========================================
+    // HEADING CRUD OPERATIONS
+    // ========================================
 
-    app.route(ENDPOINTS().exhibits.heading_records.put.endpoint)
-    .put(TOKEN.verify, CONTROLLER.update_heading_record);
+    // Create heading record
+    app.route(endpoints.exhibits.heading_records.post.endpoint)
+        .post(
+            rate_limits.write_operations,
+            TOKEN.verify,
+            async_handler(CONTROLLER.create_heading_record)
+        );
 
-    app.route(ENDPOINTS().exhibits.heading_unlock_record.post.endpoint)
-        .post(TOKEN.verify, CONTROLLER.unlock_heading_record);
+    // Get heading record
+    app.route(endpoints.exhibits.heading_records.get.endpoint)
+        .get(
+            rate_limits.read_operations,
+            TOKEN.verify,
+            async_handler(CONTROLLER.get_heading_record)
+        );
 
-    /*
-    app.route(ENDPOINTS().exhibits.heading_records.delete.endpoint)
-    .delete(TOKEN.verify, CONTROLLER.delete_heading_record);
-     */
+    // Update heading record
+    app.route(endpoints.exhibits.heading_records.put.endpoint)
+        .put(
+            rate_limits.write_operations,
+            TOKEN.verify,
+            async_handler(CONTROLLER.update_heading_record)
+        );
+
+    // ========================================
+    // HEADING LOCK MANAGEMENT
+    // ========================================
+
+    // Unlock heading record
+    app.route(endpoints.exhibits.heading_unlock_record.post.endpoint)
+        .post(
+            rate_limits.write_operations,
+            TOKEN.verify,
+            async_handler(CONTROLLER.unlock_heading_record)
+        );
+
+    // ========================================
+    // ERROR HANDLING
+    // ========================================
+
+    // 404 handler for heading routes
+    app.use('/api/headings/*', (req, res) => {
+        LOGGER.module().warn`WARNING: [404] Route not found: ${req.method} ${req.path}`;
+        res.status(404).json({
+            success: false,
+            message: 'Endpoint not found',
+            data: null
+        });
+    });
+
+    // Global error handler for heading routes
+    app.use('/api/headings', (err, req, res, next) => {
+        LOGGER.module().error`ERROR: [Global Error Handler] ${err.message} - Path: ${req.path}`;
+
+        // Don't expose error details in production
+        const error_message = process.env.NODE_ENV === 'production'
+            ? 'Internal server error'
+            : err.message;
+
+        res.status(err.status || 500).json({
+            success: false,
+            message: error_message,
+            data: null
+        });
+    });
 };
