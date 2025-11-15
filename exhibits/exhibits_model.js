@@ -1067,7 +1067,7 @@ const delete_headings_from_index = async (headings) => {
 const suppress_exhibit = async (uuid) => {
 
     try {
-
+        console.log('SUPPRESS EXHIBIT CALL ', uuid);
         if (!uuid || typeof uuid !== 'string') {
             return {
                 status: false,

@@ -388,7 +388,7 @@ const exhibitsModule = (function () {
         img.width = 100;
 
         // Handle broken image (404 error)
-        img.addEventListener('error', function () {
+        img.addEventListener('error', function() {
             if (this.src !== default_image_url) {
                 console.warn(`Thumbnail failed to load for exhibit ${exhibit.uuid}, using default image`);
                 this.src = default_image_url;
@@ -847,7 +847,7 @@ const exhibitsModule = (function () {
                 // Scroll to exhibit
                 const target_element = document.getElementById(exhibit_id);
                 if (target_element) {
-                    target_element.scrollIntoView({behavior: 'smooth', block: 'center'});
+                    target_element.scrollIntoView({ behavior: 'smooth', block: 'center' });
 
                     // Optional: Add highlight effect
                     target_element.style.backgroundColor = '#fffacd';
@@ -983,19 +983,9 @@ const exhibitsModule = (function () {
             css_class_to_remove: 'publish-exhibit',
             click_handler: suppress_exhibit,
             actions: (app_path, encoded_uuid) => [
-                {
-                    href: `${app_path}/items?exhibit_id=${encoded_uuid}`,
-                    title: 'View Exhibit Items',
-                    icon: 'fa fa-list pr-1',
-                    label: 'view-items'
-                },
-                {
-                    href: `${app_path}/exhibits/exhibit/details?exhibit_id=${encoded_uuid}`,
-                    title: 'View details',
-                    icon: 'fa fa-folder-open pr-1',
-                    label: 'exhibit-details'
-                },
-                {type: 'disabled-trash'}
+                { href: `${app_path}/items?exhibit_id=${encoded_uuid}`, title: 'View Exhibit Items', icon: 'fa fa-list pr-1', label: 'view-items' },
+                { href: `${app_path}/exhibits/exhibit/details?exhibit_id=${encoded_uuid}`, title: 'View details', icon: 'fa fa-folder-open pr-1', label: 'exhibit-details' },
+                { type: 'disabled-trash' }
             ]
         },
         SUPPRESSED: {
@@ -1008,24 +998,9 @@ const exhibitsModule = (function () {
             css_class_to_remove: 'suppress-exhibit',
             click_handler: publish_exhibit,
             actions: (app_path, encoded_uuid) => [
-                {
-                    href: `${app_path}/items?exhibit_id=${encoded_uuid}`,
-                    title: 'View Exhibit Items',
-                    icon: 'fa fa-list pr-1',
-                    label: 'view-items'
-                },
-                {
-                    href: `${app_path}/exhibits/exhibit/edit?exhibit_id=${encoded_uuid}`,
-                    title: 'Edit',
-                    icon: 'fa fa-edit pr-1',
-                    label: 'edit-exhibit'
-                },
-                {
-                    href: `${app_path}/exhibits/exhibit/delete?exhibit_id=${encoded_uuid}`,
-                    title: 'Delete exhibit',
-                    icon: 'fa fa-trash pr-1',
-                    label: 'delete-exhibit'
-                }
+                { href: `${app_path}/items?exhibit_id=${encoded_uuid}`, title: 'View Exhibit Items', icon: 'fa fa-list pr-1', label: 'view-items' },
+                { href: `${app_path}/exhibits/exhibit/edit?exhibit_id=${encoded_uuid}`, title: 'Edit', icon: 'fa fa-edit pr-1', label: 'edit-exhibit' },
+                { href: `${app_path}/exhibits/exhibit/delete?exhibit_id=${encoded_uuid}`, title: 'Delete exhibit', icon: 'fa fa-trash pr-1', label: 'delete-exhibit' }
             ]
         }
     };
@@ -1093,14 +1068,12 @@ const exhibitsModule = (function () {
             return;
         }
 
-        // Update classes (DataTable event delegation will handle clicks)
-        status_element.classList.remove(state_config.css_class_to_remove);
-        status_element.classList.add(state_config.css_class_to_add);
+        // Clone the element to remove all existing event listeners
+        const new_element = status_element.cloneNode(false);
 
-        // Clear existing content safely
-        while (status_element.firstChild) {
-            status_element.removeChild(status_element.firstChild);
-        }
+        // Update classes
+        new_element.classList.remove(state_config.css_class_to_remove);
+        new_element.classList.add(state_config.css_class_to_add);
 
         // Create new content using safe DOM methods
         const span = document.createElement('span');
@@ -1118,10 +1091,16 @@ const exhibitsModule = (function () {
         span.appendChild(icon);
         span.appendChild(br);
         span.appendChild(text);
-        status_element.appendChild(span);
+        new_element.appendChild(span);
 
-        // No event listener needed - DataTable event delegation handles it
-        // See bind_datatable_events() function
+        // Add event listener to the new element
+        new_element.addEventListener('click', async (event) => {
+            event.preventDefault();
+            await state_config.click_handler(uuid);
+        }, { once: false, passive: false });
+
+        // Replace the old element with the new one
+        status_element.replaceWith(new_element);
     }
 
     /**
@@ -1217,6 +1196,7 @@ const exhibitsModule = (function () {
      * @returns {Promise<boolean>} - Always returns false to prevent default form behavior
      */
     async function suppress_exhibit(uuid) {
+        console.log('SUPPRESS EXHIBIT CALL ', uuid);
         try {
 
             // Validate and clean UUID
@@ -1303,7 +1283,7 @@ const exhibitsModule = (function () {
         }
 
         // Scroll to top for visibility
-        window.scrollTo({top: 0, behavior: 'smooth'});
+        window.scrollTo({ top: 0, behavior: 'smooth' });
 
         // Clear existing content
         while (message_container.firstChild) {
