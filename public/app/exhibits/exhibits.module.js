@@ -1103,50 +1103,6 @@ const exhibitsModule = (function () {
         status_element.replaceWith(new_element);
     }
 
-    /*
-    function update_exhibit_status_ui_generic(uuid, state_config) {
-        const status_element = document.getElementById(uuid);
-
-        if (!status_element) {
-            console.warn(`Status element not found: ${uuid}`);
-            return;
-        }
-
-        // Update classes
-        status_element.classList.remove(state_config.css_class_to_remove);
-        status_element.classList.add(state_config.css_class_to_add);
-
-        // Clear existing content safely
-        while (status_element.firstChild) {
-            status_element.removeChild(status_element.firstChild);
-        }
-
-        // Create new content using safe DOM methods
-        const span = document.createElement('span');
-        span.id = state_config.span_id;
-        span.title = state_config.title;
-
-        const icon = document.createElement('i');
-        icon.className = state_config.icon_class;
-        icon.style.color = state_config.icon_color;
-        icon.setAttribute('aria-hidden', 'true');
-
-        const br = document.createElement('br');
-        const text = document.createTextNode(state_config.text);
-
-        span.appendChild(icon);
-        span.appendChild(br);
-        span.appendChild(text);
-        status_element.appendChild(span);
-
-        // Add event listener with the appropriate handler
-        status_element.addEventListener('click', async (event) => {
-            event.preventDefault();
-            await state_config.click_handler(uuid);
-        }, { once: false, passive: false });
-    }
-    */
-
     /**
      * Updates the exhibit actions UI based on state configuration
      * @param {string} clean_uuid - UUID without suffix
