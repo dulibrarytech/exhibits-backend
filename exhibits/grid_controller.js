@@ -708,7 +708,9 @@ exports.get_grid_item_record__ = async function (req, res) {
 */
 
 exports.update_grid_item_record = async function (req, res) {
+
     try {
+
         const exhibit_id = req.params.exhibit_id;
         const grid_id = req.params.grid_id;
         const item_id = req.params.item_id;

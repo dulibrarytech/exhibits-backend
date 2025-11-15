@@ -864,172 +864,6 @@ const exhibitsModule = (function () {
         }
     }
 
-    /*
-    obj.display_exhibits__ = async function () {
-
-        const exhibits = await get_exhibits();
-        let exhibit_data = '';
-
-        if (exhibits === false) {
-            document.querySelector('#exhibit-card').innerHTML = '';
-            return false;
-        }
-
-        if (exhibits === undefined) {
-            authModule.redirect_to_auth();
-        }
-
-        if (exhibits.length === 0) {
-            document.querySelector('.card').innerHTML = '';
-            document.querySelector('#message').innerHTML = '<div class="alert alert-info" role="alert">No Exhibits found.</div>';
-            return false;
-        }
-
-        for (let i = 0; i < exhibits.length; i++) {
-
-            let uuid = exhibits[i].uuid;
-            let is_published = exhibits[i].is_published;
-            let is_featured = exhibits[i].is_featured;
-            let is_locked = exhibits[i].is_locked;
-            let preview_link = `${APP_PATH}/preview?uuid=${uuid}`;
-            let exhibit_items = `<a href="${APP_PATH}/items?exhibit_id=${uuid}" title="View Exhibit Items"><i class="fa fa-list pr-1"></i></a>&nbsp;`;
-            let created = new Date(exhibits[i].created);
-            let updated = new Date(exhibits[i].updated);
-            let created_sort_date = helperModule.format_date(created);
-            let updated_sort_date = helperModule.format_date(updated);
-            let created_by = `Exhibit created by ${exhibits[i].created_by}`;
-            let thumbnail_url = '';
-            let thumbnail_fragment = '';
-            let status;
-            let title;
-            let featured = '';
-            let locked = '';
-            let exhibit_edit = '';
-            let trash = '';
-
-            if (is_published === 1) {
-                // order = `<td style="width: 4%" class="item-order" aria-label="exhibit-order"><span style="padding-left: 4px;">${order}</span></td>`;
-                status = `<a href="#" id="${uuid}-status" class="suppress-exhibit" aria-label="exhibit-status"><span id="suppress" title="published"><i class="fa fa-cloud" style="color: green"></i><br>Published</span></a>`;
-                // details view
-                exhibit_edit = `<a href="${APP_PATH}/exhibits/exhibit/details?exhibit_id=${uuid}" title="View details" aria-label="exhibit-details"><i class="fa fa-folder-open pr-1"></i> </a>`;
-                trash = `<i title="Can only delete if unpublished" style="color: #d3d3d3" class="fa fa-trash pr-1" aria-label="delete-exhibit"></i>`;
-            } else if (is_published === 0) {
-                // order = `<td style="width: 4%;" class="grabbable item-order" aria-label="exhibit-order"><i class="fa fa-reorder"></i><span style="padding-left: 4px;">${order}</span></td>`;
-                status = `<a href="#" id="${uuid}-status" class="publish-exhibit" aria-label="exhibit-status"><span id="publish" title="suppressed"><i class="fa fa-cloud-upload" style="color: darkred"></i><br>Unpublished</span></a>`;
-                exhibit_edit = `<a href="${APP_PATH}/exhibits/exhibit/edit?exhibit_id=${uuid}" title="Edit" aria-label="edit-exhibit"><i class="fa fa-edit pr-1"></i> </a>`;
-                trash = `<a href="${APP_PATH}/exhibits/exhibit/delete?exhibit_id=${uuid}" title="Delete exhibit" aria-label="delete-exhibit"><i class="fa fa-trash pr-1"></i></a>`;
-            }
-
-            if (is_featured === 1) {
-                featured = '&nbsp;&nbsp;<i class="fa fa-star" title="Featured" aria-label="featured exhibit" style="color: #BA8E23"></i>';
-            }
-
-            if (is_locked === 1) {
-                locked = '&nbsp;&nbsp;<i class="fa fa-lock" title="Record is currently locked" aria-label="exhibit-is-locked" style="color: #BA8E23"></i>';
-            }
-
-            if (exhibits[i].thumbnail.length > 0) {
-                thumbnail_url = `${APP_PATH}/api/v1/exhibits/${uuid}/media/${exhibits[i].thumbnail}`;
-                thumbnail_fragment = `<p><img src="${thumbnail_url}" alt="${uuid}-thumbnail" height="100" width="100"></p>`;
-            } else {
-                thumbnail_url = `${APP_PATH}/static/images/image-tn.png`;
-                thumbnail_fragment = `<p><img src="${thumbnail_url}" alt="${uuid}-thumbnail" height="100" width="100"></p>`;
-            }
-
-            title = helperModule.strip_html(helperModule.unescape(exhibits[i].title));
-
-            exhibit_data += `<tr id="${uuid}">`;
-            // exhibit_data += order;
-
-            exhibit_data += `<td style="width: 35%">
-                    <p><strong>${title}</strong> ${featured} ${locked}</p>
-                    ${thumbnail_fragment}
-                    <div class="d-flex justify-content-between align-items-center">
-                                <div class="btn-group">
-                                     <span id="preview-link">
-                                    <button type="button" class="btn btn-sm btn-outline-secondary" onclick="exhibitsModule.open_preview('${preview_link}');">
-                                        <i class=" menu-icon fa fa-eye"></i>
-                                        <small>Preview</small>
-                                    </button>
-                                    </span>
-                                    &nbsp;&nbsp;
-                                    <span id="share-link">
-                                    <button type="button" class="btn btn-sm btn-outline-secondary" data-toggle="modal" data-target=".shared-url-modal" onclick="exhibitsModule.create_shared_preview_url('${uuid}');">
-                                        <i class="fa fa-share-alt"></i>
-                                        <small>Share</small>
-                                    </button>
-                                    </span>
-                                </div>
-                            </div>
-                            <p>
-                                <span style="font-size: x-small"><em>${created_by}</em></span>
-                            </p>
-                    </td>`;
-
-            exhibit_data += `<td style="width: 5%;text-align: center"><small>${status}</small></td>`;
-            exhibit_data += `<td style="width: 10%">
-                                <div class="card-text text-sm-center" id="${uuid}-actions">
-                                    ${exhibit_items}&nbsp;
-                                    <!--<a href="${APP_PATH}/items/standard?exhibit_id=${uuid}" title="Add Items" aria-label="add-items"><i class="fa fa-plus pr-1"></i> </a>-->
-                                    &nbsp;
-                                    ${exhibit_edit}
-                                    &nbsp;
-                                    ${trash}
-                                </div>
-                            </td>`;
-
-            exhibit_data += `<td style="width: 4%" class="item-order" aria-label="exhibit-created"><span style="padding-left: 4px;">${created_sort_date}</span></td>`;
-            exhibit_data += `<td style="width: 4%" class="item-order" aria-label="exhibit-updated"><span style="padding-left: 4px;">${updated_sort_date}</span></td>`;
-
-            exhibit_data += '</tr>';
-        }
-
-        document.querySelector('#exhibits-data').innerHTML = exhibit_data;
-
-        const EXHIBIT_LIST = new DataTable('#exhibits', {
-            paging: true,
-            order: [[4, 'desc']],
-            rowReorder: false,
-            language: {
-                bottomEnd: {
-                    paging: {
-                        firstLast: false
-                    }
-                }
-            }
-        });
-
-        EXHIBIT_LIST.on('click', 'tbody tr .publish-exhibit', async (event) => {
-            event.preventDefault();
-            const uuid = event.currentTarget.getAttribute('id');
-            await publish_exhibit(uuid);
-        });
-
-        EXHIBIT_LIST.on('click', 'tbody tr .suppress-exhibit', async (event) => {
-            event.preventDefault();
-            const uuid = event.currentTarget.getAttribute('id');
-            await suppress_exhibit(uuid);
-        });
-
-        /*
-        EXHIBIT_LIST.on('row-reordered', async (e, reordered_exhibits) => {
-            await helperModule.reorder_exhibits(e, reordered_exhibits);
-        });
-         *
-
-        // bind_publish_exhibit_events();
-        // bind_suppress_exhibit_events();
-
-        const exhibit_id = helperModule.get_parameter_by_name('exhibit_id');
-
-        if (exhibit_id !== null) {
-            history.replaceState({}, '', APP_PATH + '/exhibits');
-            history.pushState({}, '', APP_PATH + '/exhibits');
-            location.href = "#" + exhibit_id;
-        }
-    };
-    */
-
     obj.get_exhibit_title = async function (uuid) {
 
         try {
@@ -1127,179 +961,399 @@ const exhibitsModule = (function () {
         return false;
     };
 
+    // Module-level constants
+    const EXHIBIT_CONSTANTS = {
+        STATUS_SUFFIX: '-status',
+        ACTIONS_SUFFIX: '-actions',
+        MESSAGE_DURATION: 5000,
+        HTTP_OK: 200,
+        HTTP_NO_CONTENT: 204,
+        UUID_PATTERN: /^[a-f0-9-]+$/i
+    };
+
+// Exhibit state configurations
+    const EXHIBIT_STATES = {
+        PUBLISHED: {
+            span_id: 'suppress',
+            title: 'published',
+            icon_class: 'fa fa-cloud',
+            icon_color: 'green',
+            text: 'Published',
+            css_class_to_add: 'suppress-exhibit',
+            css_class_to_remove: 'publish-exhibit',
+            click_handler: suppress_exhibit,
+            actions: (app_path, encoded_uuid) => [
+                { href: `${app_path}/items?exhibit_id=${encoded_uuid}`, title: 'View Exhibit Items', icon: 'fa fa-list pr-1', label: 'view-items' },
+                { href: `${app_path}/exhibits/exhibit/details?exhibit_id=${encoded_uuid}`, title: 'View details', icon: 'fa fa-folder-open pr-1', label: 'exhibit-details' },
+                { type: 'disabled-trash' }
+            ]
+        },
+        SUPPRESSED: {
+            span_id: 'publish',
+            title: 'suppressed',
+            icon_class: 'fa fa-cloud-upload',
+            icon_color: 'darkred',
+            text: 'Unpublished',
+            css_class_to_add: 'publish-exhibit',
+            css_class_to_remove: 'suppress-exhibit',
+            click_handler: publish_exhibit,
+            actions: (app_path, encoded_uuid) => [
+                { href: `${app_path}/items?exhibit_id=${encoded_uuid}`, title: 'View Exhibit Items', icon: 'fa fa-list pr-1', label: 'view-items' },
+                { href: `${app_path}/exhibits/exhibit/edit?exhibit_id=${encoded_uuid}`, title: 'Edit', icon: 'fa fa-edit pr-1', label: 'edit-exhibit' },
+                { href: `${app_path}/exhibits/exhibit/delete?exhibit_id=${encoded_uuid}`, title: 'Delete exhibit', icon: 'fa fa-trash pr-1', label: 'delete-exhibit' }
+            ]
+        }
+    };
+
+    /**
+     * Validates and cleans an exhibit UUID
+     * @param {string} uuid - The UUID to validate
+     * @returns {string} - Cleaned UUID without suffix
+     * @throws {Error} - If UUID is invalid
+     */
+    function validate_and_clean_uuid(uuid) {
+        if (!uuid || typeof uuid !== 'string') {
+            throw new Error('Invalid exhibit UUID provided');
+        }
+
+        const clean_uuid = uuid.replace(EXHIBIT_CONSTANTS.STATUS_SUFFIX, '');
+
+        if (!EXHIBIT_CONSTANTS.UUID_PATTERN.test(clean_uuid)) {
+            throw new Error('Invalid UUID format');
+        }
+
+        return clean_uuid;
+    }
+
+    /**
+     * Validates authentication token
+     * @param {string} token - The token to validate
+     * @throws {Error} - If token is not available
+     */
+    function validate_token(token) {
+        if (!token) {
+            throw new Error('Authentication token not available');
+        }
+    }
+
+    /**
+     * Makes an API request to change exhibit state
+     * @param {string} endpoint - The API endpoint
+     * @param {string} clean_uuid - The cleaned exhibit UUID
+     * @param {string} token - Authentication token
+     * @returns {Promise<Object>} - API response
+     */
+    async function make_exhibit_state_request(endpoint, clean_uuid, token) {
+        return await httpModule.req({
+            method: 'POST',
+            url: endpoint.replace(':exhibit_id', clean_uuid),
+            headers: {
+                'Content-Type': 'application/json',
+                'x-access-token': token
+            },
+            validateStatus: (status) => status >= 200 && status < 600
+        });
+    }
+
+    /**
+     * Updates the exhibit status UI based on state configuration
+     * @param {string} uuid - Original UUID with suffix
+     * @param {Object} state_config - State configuration object
+     */
+    function update_exhibit_status_ui_generic(uuid, state_config) {
+        const status_element = document.getElementById(uuid);
+
+        if (!status_element) {
+            console.warn(`Status element not found: ${uuid}`);
+            return;
+        }
+
+        // Clone the element to remove all existing event listeners
+        const new_element = status_element.cloneNode(false);
+
+        // Update classes
+        new_element.classList.remove(state_config.css_class_to_remove);
+        new_element.classList.add(state_config.css_class_to_add);
+
+        // Create new content using safe DOM methods
+        const span = document.createElement('span');
+        span.id = state_config.span_id;
+        span.title = state_config.title;
+
+        const icon = document.createElement('i');
+        icon.className = state_config.icon_class;
+        icon.style.color = state_config.icon_color;
+        icon.setAttribute('aria-hidden', 'true');
+
+        const br = document.createElement('br');
+        const text = document.createTextNode(state_config.text);
+
+        span.appendChild(icon);
+        span.appendChild(br);
+        span.appendChild(text);
+        new_element.appendChild(span);
+
+        // Add event listener to the new element
+        new_element.addEventListener('click', async (event) => {
+            event.preventDefault();
+            await state_config.click_handler(uuid);
+        }, { once: false, passive: false });
+
+        // Replace the old element with the new one
+        status_element.replaceWith(new_element);
+    }
+
+    /*
+    function update_exhibit_status_ui_generic(uuid, state_config) {
+        const status_element = document.getElementById(uuid);
+
+        if (!status_element) {
+            console.warn(`Status element not found: ${uuid}`);
+            return;
+        }
+
+        // Update classes
+        status_element.classList.remove(state_config.css_class_to_remove);
+        status_element.classList.add(state_config.css_class_to_add);
+
+        // Clear existing content safely
+        while (status_element.firstChild) {
+            status_element.removeChild(status_element.firstChild);
+        }
+
+        // Create new content using safe DOM methods
+        const span = document.createElement('span');
+        span.id = state_config.span_id;
+        span.title = state_config.title;
+
+        const icon = document.createElement('i');
+        icon.className = state_config.icon_class;
+        icon.style.color = state_config.icon_color;
+        icon.setAttribute('aria-hidden', 'true');
+
+        const br = document.createElement('br');
+        const text = document.createTextNode(state_config.text);
+
+        span.appendChild(icon);
+        span.appendChild(br);
+        span.appendChild(text);
+        status_element.appendChild(span);
+
+        // Add event listener with the appropriate handler
+        status_element.addEventListener('click', async (event) => {
+            event.preventDefault();
+            await state_config.click_handler(uuid);
+        }, { once: false, passive: false });
+    }
+    */
+
+    /**
+     * Updates the exhibit actions UI based on state configuration
+     * @param {string} clean_uuid - UUID without suffix
+     * @param {Object} state_config - State configuration object
+     */
+    function update_exhibit_actions_ui_generic(clean_uuid, state_config) {
+        const actions_id = `${clean_uuid}${EXHIBIT_CONSTANTS.ACTIONS_SUFFIX}`;
+        const actions_element = document.getElementById(actions_id);
+
+        if (!actions_element) {
+            console.warn(`Actions element not found: ${actions_id}`);
+            return;
+        }
+
+        // Clear existing content safely
+        while (actions_element.firstChild) {
+            actions_element.removeChild(actions_element.firstChild);
+        }
+
+        // Safely encode UUID for URL
+        const encoded_uuid = encodeURIComponent(clean_uuid);
+
+        // Validate APP_PATH is defined
+        const app_path = typeof APP_PATH !== 'undefined' ? APP_PATH : '';
+
+        // Get action configurations for this state
+        const action_configs = state_config.actions(app_path, encoded_uuid);
+
+        // Create action elements
+        const actions = [];
+        action_configs.forEach((config, index) => {
+            if (config.type === 'disabled-trash') {
+                actions.push(create_disabled_trash_icon());
+            } else {
+                actions.push(create_action_link(config.href, config.title, config.icon, config.label));
+            }
+
+            // Add spacing between actions (except after last action)
+            if (index < action_configs.length - 1) {
+                actions.push(document.createTextNode('\u00A0'));
+            }
+        });
+
+        actions.forEach(action => actions_element.appendChild(action));
+    }
+
+    /**
+     * Publishes an exhibit and updates the UI accordingly
+     * @param {string} uuid - The exhibit UUID (may include '-status' suffix)
+     * @returns {Promise<boolean>} - Always returns false to prevent default form behavior
+     */
     async function publish_exhibit(uuid) {
-
         try {
+            // Validate and clean UUID
+            const clean_uuid = validate_and_clean_uuid(uuid);
 
-            const EXHIBITS_ENDPOINTS = endpointsModule.get_exhibits_endpoints();
+            // Get endpoints and token
+            const exhibits_endpoints = endpointsModule.get_exhibits_endpoints();
             const token = authModule.get_user_token();
-            const response = await httpModule.req({
-                method: 'POST',
-                url: EXHIBITS_ENDPOINTS.exhibits.exhibit_publish.post.endpoint.replace(':exhibit_id', uuid.replace('-status', '')),
-                headers: {
-                    'Content-Type': 'application/json',
-                    'x-access-token': token
-                }
-            });
+            validate_token(token);
 
-            if (response !== undefined && response.status === 200) {
+            // Make API request
+            const response = await make_exhibit_state_request(
+                exhibits_endpoints.exhibits.exhibit_publish.post.endpoint,
+                clean_uuid,
+                token
+            );
 
-                setTimeout(() => {
-                    let elem = document.getElementById(uuid);
-                    document.getElementById(uuid).classList.remove('publish-exhibit');
-                    document.getElementById(uuid).classList.add('suppress-exhibit');
-                    document.getElementById(uuid).replaceWith(elem.cloneNode(true));
-                    document.getElementById(uuid).innerHTML = '<span id="suppress" title="published"><i class="fa fa-cloud" style="color: green"></i><br>Published</span>';
-                    document.getElementById(uuid).addEventListener('click', async (event) => {
-                        event.preventDefault();
-                        const uuid = elem.getAttribute('id');
-                        await suppress_exhibit(uuid);
-                    }, false);
-                }, 0);
-
-                setTimeout(() => {
-                    uuid = uuid.replace('-status', '');
-                    let exhibit_items = `<a href="${APP_PATH}/items?exhibit_id=${uuid}" title="View Exhibit Items"><i class="fa fa-list pr-1"></i></a>&nbsp;`;
-                    let uuid_actions = uuid + '-actions';
-                    let elem = document.getElementById(uuid_actions);
-                    let exhibit_edit = `<a href="${APP_PATH}/exhibits/exhibit/details?exhibit_id=${uuid}" title="View details" aria-label="exhibit-details"><i class="fa fa-folder-open pr-1"></i> </a>`;
-                    let add_item = `<a href="${APP_PATH}/items/standard?exhibit_id=${uuid}" title="Add Items" aria-label="add-items"><i class="fa fa-plus pr-1"></i> </a>`;
-                    let trash = `<i title="Can only delete if unpublished" style="color: #d3d3d3" class="fa fa-trash pr-1" aria-label="delete-exhibit"></i>`;
-                    elem.innerHTML = `
-                        ${exhibit_items}&nbsp;
-                        ${exhibit_edit}&nbsp;
-                        ${trash}`;
-                }, 0);
-            }
-
-            if (response !== undefined && response.status === 204) {
-
-                scrollTo(0, 0);
-                document.querySelector('#message').innerHTML = `<div class="alert alert-warning" role="alert"><i class="fa fa-warning"></i> Exhibit must contain at least one item to publish</div>`;
-
-                setTimeout(() => {
-                    document.querySelector('#message').innerHTML = '';
-                }, 5000);
-
-            } else if (response === undefined) {
-                scrollTo(0, 0);
-                document.querySelector('#message').innerHTML = `<div class="alert alert-danger" role="alert"><i class="fa fa-danger"></i> You do not have permission to publish this record.</div>`;
-
-                setTimeout(() => {
-                    document.querySelector('#message').innerHTML = '';
-                }, 5000);
+            // Handle responses
+            if (response?.status === EXHIBIT_CONSTANTS.HTTP_OK) {
+                update_exhibit_status_ui_generic(uuid, EXHIBIT_STATES.PUBLISHED);
+                update_exhibit_actions_ui_generic(clean_uuid, EXHIBIT_STATES.PUBLISHED);
+            } else if (response?.status === EXHIBIT_CONSTANTS.HTTP_NO_CONTENT) {
+                show_message('warning', 'Exhibit must contain at least one item to publish');
+            } else if (!response) {
+                show_message('danger', 'You do not have permission to publish this record');
             }
 
             return false;
 
         } catch (error) {
-            document.querySelector('#message').innerHTML = `<div class="alert alert-danger" role="alert"><i class="fa fa-exclamation"></i> ${error.message}</div>`;
+            console.error('Error publishing exhibit:', error);
+            show_message('danger', error.message || 'An unexpected error occurred while publishing the exhibit');
+            return false;
         }
     }
 
+    /**
+     * Suppresses (unpublishes) an exhibit and updates the UI accordingly
+     * @param {string} uuid - The exhibit UUID (may include '-status' suffix)
+     * @returns {Promise<boolean>} - Always returns false to prevent default form behavior
+     */
     async function suppress_exhibit(uuid) {
-
         try {
+            // Validate and clean UUID
+            const clean_uuid = validate_and_clean_uuid(uuid);
 
-            const EXHIBITS_ENDPOINTS = endpointsModule.get_exhibits_endpoints();
+            // Get endpoints and token
+            const exhibits_endpoints = endpointsModule.get_exhibits_endpoints();
             const token = authModule.get_user_token();
-            const response = await httpModule.req({
-                method: 'POST',
-                url: EXHIBITS_ENDPOINTS.exhibits.exhibit_suppress.post.endpoint.replace(':exhibit_id', uuid.replace('-status', '')),
-                headers: {
-                    'Content-Type': 'application/json',
-                    'x-access-token': token
-                }
-            });
+            validate_token(token);
 
-            if (response !== undefined && response.status === 200) {
+            // Make API request
+            const response = await make_exhibit_state_request(
+                exhibits_endpoints.exhibits.exhibit_suppress.post.endpoint,
+                clean_uuid,
+                token
+            );
 
-                setTimeout(() => {
-                    let elem = document.getElementById(uuid);
-                    document.getElementById(uuid).classList.remove('suppress-exhibit');
-                    document.getElementById(uuid).classList.add('publish-exhibit');
-                    document.getElementById(uuid).replaceWith(elem.cloneNode(true));
-                    document.getElementById(uuid).innerHTML = '<span id="publish" title="suppressed"><i class="fa fa-cloud-upload" style="color: darkred"></i><br>Unpublished</span>';
-                    document.getElementById(uuid).addEventListener('click', async (event) => {
-                        event.preventDefault();
-                        const uuid = elem.getAttribute('id');
-                        await publish_exhibit(uuid);
-                    }, false);
-                }, 0);
-
-                setTimeout(() => { // ${add_item}&nbsp;
-                    uuid = uuid.replace('-status', '');
-                    let exhibit_items = `<a href="${APP_PATH}/items?exhibit_id=${uuid}" title="View Exhibit Items"><i class="fa fa-list pr-1"></i></a>&nbsp;`;
-                    let uuid_actions = uuid + '-actions';
-                    let elem = document.getElementById(uuid_actions);
-                    let add_item = `<a href="${APP_PATH}/items/standard?exhibit_id=${uuid}" title="Add Items" aria-label="add-items"><i class="fa fa-plus pr-1"></i> </a>`;
-                    let exhibit_edit = `<a href="${APP_PATH}/exhibits/exhibit/edit?exhibit_id=${uuid}" title="Edit" aria-label="edit-exhibit"><i class="fa fa-edit pr-1"></i> </a>`;
-                    let trash = `<a href="${APP_PATH}/exhibits/exhibit/delete?exhibit_id=${uuid}" title="Delete exhibit" aria-label="delete-exhibit"><i class="fa fa-trash pr-1"></i></a>`;
-                    elem.innerHTML = `
-                        ${exhibit_items}&nbsp;
-                        ${exhibit_edit}&nbsp;
-                        ${trash}`;
-                }, 0);
-
-            } else if (response === undefined) {
-                scrollTo(0, 0);
-                document.querySelector('#message').innerHTML = `<div class="alert alert-danger" role="alert"><i class="fa fa-danger"></i> You do not have permission to unplublish this record.</div>`;
-
-                setTimeout(() => {
-                    // document.querySelector('#message').innerHTML = '';
-                }, 3000)
+            // Handle responses
+            if (response?.status === EXHIBIT_CONSTANTS.HTTP_OK) {
+                update_exhibit_status_ui_generic(uuid, EXHIBIT_STATES.SUPPRESSED);
+                update_exhibit_actions_ui_generic(clean_uuid, EXHIBIT_STATES.SUPPRESSED);
+            } else if (!response) {
+                show_message('danger', 'You do not have permission to unpublish this record');
             }
 
             return false;
 
         } catch (error) {
-            document.querySelector('#message').innerHTML = `<div class="alert alert-danger" role="alert"><i class="fa fa-exclamation"></i> An error occurred while suppressing exhibit</div>`;
+            console.error('Error suppressing exhibit:', error);
+            show_message('danger', error.message || 'An error occurred while suppressing exhibit');
+            return false;
         }
     }
 
-    // TODO: deprecate
-    /*
-    function bind_publish_exhibit_events() {
+    /**
+     * Creates an action link element safely
+     * @param {string} href - Link URL
+     * @param {string} title - Link title
+     * @param {string} icon_class - Icon class names
+     * @param {string} aria_label - Aria label for accessibility
+     * @returns {HTMLAnchorElement}
+     */
+    function create_action_link(href, title, icon_class, aria_label) {
+        const link = document.createElement('a');
+        link.href = href;
+        link.title = title;
+        link.setAttribute('aria-label', aria_label);
 
-        try {
+        const icon = document.createElement('i');
+        icon.className = icon_class;
+        icon.setAttribute('aria-hidden', 'true');
 
-            const exhibit_links = Array.from(document.getElementsByClassName('publish-exhibit'));
-
-            exhibit_links.forEach(exhibit_link => {
-                exhibit_link.addEventListener('click', async (event) => {
-                    event.preventDefault();
-                    const uuid = exhibit_link.getAttribute('id');
-                    await publish_exhibit(uuid);
-                });
-            });
-
-        } catch (error) {
-            document.querySelector('#message').innerHTML = `<div class="alert alert-danger" role="alert"><i class="fa fa-exclamation"></i> ${error.message}</div>`;
-        }
+        link.appendChild(icon);
+        return link;
     }
-    */
 
-    // TODO: deprecate
-    /*
-    function bind_suppress_exhibit_events() {
-
-        try {
-
-            const exhibit_links = Array.from(document.getElementsByClassName('suppress-exhibit'));
-
-            exhibit_links.forEach(exhibit_link => {
-                exhibit_link.addEventListener('click', async (event) => {
-                    event.preventDefault();
-                    const uuid = exhibit_link.getAttribute('id');
-                    await suppress_exhibit(uuid);
-                });
-            });
-
-        } catch (error) {
-            document.querySelector('#message').innerHTML = `<div class="alert alert-danger" role="alert"><i class="fa fa-exclamation"></i> ${error.message}</div>`;
-        }
+    /**
+     * Creates a disabled trash icon element
+     * @returns {HTMLElement}
+     */
+    function create_disabled_trash_icon() {
+        const icon = document.createElement('i');
+        icon.className = 'fa fa-trash pr-1';
+        icon.title = 'Can only delete if unpublished';
+        icon.style.color = '#d3d3d3';
+        icon.setAttribute('aria-label', 'delete-exhibit');
+        icon.setAttribute('aria-disabled', 'true');
+        icon.setAttribute('aria-hidden', 'true');
+        return icon;
     }
-    */
+
+    /**
+     * Displays a message to the user
+     * @param {string} type - Message type ('warning', 'danger', 'success', 'info')
+     * @param {string} message - Message text to display
+     * @param {number} duration - How long to display message in milliseconds
+     */
+    function show_message(type, message, duration = EXHIBIT_CONSTANTS.MESSAGE_DURATION) {
+        const message_container = document.querySelector('#message');
+
+        if (!message_container) {
+            console.error('Message container not found');
+            return;
+        }
+
+        // Scroll to top for visibility
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+
+        // Clear existing content
+        while (message_container.firstChild) {
+            message_container.removeChild(message_container.firstChild);
+        }
+
+        // Create alert element safely
+        const alert_div = document.createElement('div');
+        alert_div.className = `alert alert-${type}`;
+        alert_div.setAttribute('role', 'alert');
+
+        const icon = document.createElement('i');
+        icon.className = type === 'warning' ? 'fa fa-warning' : 'fa fa-exclamation-circle';
+        icon.setAttribute('aria-hidden', 'true');
+
+        const message_text = document.createTextNode(` ${message}`);
+
+        alert_div.appendChild(icon);
+        alert_div.appendChild(message_text);
+        message_container.appendChild(alert_div);
+
+        // Auto-clear message after delay
+        setTimeout(() => {
+            if (message_container.firstChild === alert_div) {
+                message_container.removeChild(alert_div);
+            }
+        }, duration);
+    }
 
     obj.create_shared_preview_url = function (uuid) {
 
