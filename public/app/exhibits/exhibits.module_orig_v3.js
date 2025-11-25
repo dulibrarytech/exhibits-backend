@@ -192,7 +192,7 @@ const exhibitsModule = (function () {
 
             const message_elem = document.querySelector('#message');
             if (message_elem) {
-                display_message(message_elem, 'danger', get_user_friendly_error_message(error));
+                display_message(message_elem, 'danger', 'Error displaying exhibits: ' + error.message);
             }
 
             return false;
@@ -210,7 +210,7 @@ const exhibitsModule = (function () {
     }
 
     /**
-     * Display "no exhibits found" message
+     * Display "no exhibits found" message with WCAG compliance
      */
     function display_no_exhibits_message() {
 
@@ -1122,6 +1122,9 @@ const exhibitsModule = (function () {
         span.appendChild(br);
         span.appendChild(text);
         status_element.appendChild(span);
+
+        // No event listener needed - DataTable event delegation handles it
+        // See bind_datatable_events() function
     }
 
     /**
@@ -1208,6 +1211,8 @@ const exhibitsModule = (function () {
             if (response?.status === EXHIBIT_CONSTANTS.HTTP_OK) {
                 update_exhibit_status_ui_generic(uuid, EXHIBIT_STATES.PUBLISHED);
                 update_exhibit_actions_ui_generic(clean_uuid, EXHIBIT_STATES.PUBLISHED);
+            } else if (response?.status === EXHIBIT_CONSTANTS.HTTP_NO_CONTENT) {
+                show_message('warning', 'Exhibit must contain at least one item to publish');
             } else if (!response) {
                 show_message('danger', 'Unable to publish exhibit. Please check your connection and try again.');
             }
@@ -1216,7 +1221,7 @@ const exhibitsModule = (function () {
 
         } catch (error) {
             console.error('Error publishing exhibit:', error);
-            show_message('danger', get_user_friendly_error_message(error));
+            show_message('danger', error.message || 'An unexpected error occurred while publishing the exhibit');
             return false;
         }
     }
@@ -1262,7 +1267,7 @@ const exhibitsModule = (function () {
 
         } catch (error) {
             console.error('Error suppressing exhibit:', error);
-            show_message('danger', get_user_friendly_error_message(error));
+            show_message('danger', error.message || 'An error occurred while suppressing exhibit');
             return false;
         }
     }
@@ -1611,7 +1616,7 @@ const exhibitsModule = (function () {
 
         } catch (error) {
             console.error('Error copying to clipboard:', error);
-            show_copy_error_message(COPY_MESSAGE_SELECTOR, get_user_friendly_error_message(error));
+            show_copy_error_message(COPY_MESSAGE_SELECTOR, error.message);
         }
     };
 
@@ -1880,10 +1885,7 @@ const exhibitsModule = (function () {
             'token': 'Session expired. Please log in again.',
             'auth': 'Authentication failed. Please log in again.',
             'permission': 'You do not have permission to access this resource.',
-            'not found': 'The requested resource was not found.',
-            'clipboard': 'Unable to copy to clipboard. Please try again.',
-            'copy': 'Unable to copy to clipboard. Please try again.',
-            'url': 'Invalid URL. Please try again.'
+            'not found': 'The requested resource was not found.'
         };
 
         if (!error || !error.message) {
@@ -1899,7 +1901,7 @@ const exhibitsModule = (function () {
             }
         }
 
-        return 'An error occurred. Please try again.';
+        return 'An error occurred while initializing the page. Please refresh and try again.';
     }
 
     return obj;
