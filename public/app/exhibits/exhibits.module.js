@@ -24,66 +24,75 @@ const exhibitsModule = (function () {
     let obj = {};
     let link;
 
+    // Module-level constants
+    const EXHIBIT_CONSTANTS = {
+        STATUS_SUFFIX: '-status',
+        ACTIONS_SUFFIX: '-actions',
+        MESSAGE_DURATION: 5000,
+        HTTP_OK: 200,
+        HTTP_NO_CONTENT: 204,
+        HTTP_FORBIDDEN: 403,
+        HTTP_UNPROCESSABLE_ENTITY: 422,
+        UUID_PATTERN: /^[a-f0-9-]+$/i
+    };
+
     async function get_exhibits() {
 
-        try {
-            // Get endpoints configuration
-            const EXHIBITS_ENDPOINTS = endpointsModule.get_exhibits_endpoints();
+        // Get endpoints configuration
+        const EXHIBITS_ENDPOINTS = endpointsModule.get_exhibits_endpoints();
 
-            // Validate endpoints exist
-            if (!EXHIBITS_ENDPOINTS?.exhibits?.exhibit_records?.endpoint) {
-                throw new Error('Exhibits endpoint configuration not available');
-            }
+        // Validate endpoints exist
+        if (!EXHIBITS_ENDPOINTS?.exhibits?.exhibit_records?.endpoint) {
+            throw new Error('Exhibits endpoint configuration not available');
+        }
 
-            // Get authentication token
-            const token = authModule.get_user_token();
+        // Get authentication token
+        const token = authModule.get_user_token();
 
-            // Validate token before making request
-            if (!token || typeof token !== 'string') {
-                throw new Error('Authentication token not available');
-            }
+        // Validate token before making request
+        if (!token || typeof token !== 'string') {
+            throw new Error('Authentication token not available');
+        }
 
-            // Make API request with timeout
-            const response = await httpModule.req({
-                method: 'GET',
-                url: EXHIBITS_ENDPOINTS.exhibits.exhibit_records.endpoint,
-                headers: {
-                    'Content-Type': 'application/json',
-                    'x-access-token': token
-                },
-                timeout: 30000  // 30 second timeout
-            });
+        // Make API request with timeout and validateStatus
+        const response = await httpModule.req({
+            method: 'GET',
+            url: EXHIBITS_ENDPOINTS.exhibits.exhibit_records.endpoint,
+            headers: {
+                'Content-Type': 'application/json',
+                'x-access-token': token
+            },
+            timeout: 30000,
+            validateStatus: (status) => status >= 200 && status < 600
+        });
 
-            // Validate response structure
-            if (response && response.status === 200) {
-                // Validate response data structure
-                if (response.data && Array.isArray(response.data.data)) {
-                    return response.data.data;
-                }
-
-                // Response successful but data structure unexpected
-                console.warn('Unexpected response data structure:', response.data);
-                return [];
-            }
-
-            // Response exists but status is not 200
-            if (response) {
-                throw new Error(`Request failed with status ${response.status}`);
-            }
-
-            // Response is undefined - likely authentication issue
-            return undefined;
-
-        } catch (error) {
-            // Log error for debugging
-            console.error('Error fetching exhibits:', error);
-
-            // Display user-friendly error message safely
-            display_exhibits_error_message(error.message);
-
-            // Return undefined to indicate failure
+        // Handle 403 Forbidden
+        if (response?.status === 403) {
+            display_exhibits_error_message('You do not have permission to view exhibits');
             return undefined;
         }
+
+        // Validate response structure
+        if (response && response.status === 200) {
+            // Validate response data structure
+            if (response.data && Array.isArray(response.data.data)) {
+                return response.data.data;
+            }
+
+            // Response successful but data structure unexpected
+            console.warn('Unexpected response data structure:', response.data);
+            return [];
+        }
+
+        // Response exists but status is not 200
+        if (response) {
+            display_exhibits_error_message(`Request failed with status ${response.status}`);
+            return undefined;
+        }
+
+        // Response is undefined - network or server error
+        display_exhibits_error_message('Unable to load exhibits. Please check your connection and try again.');
+        return undefined;
     }
 
     /**
@@ -130,32 +139,6 @@ const exhibitsModule = (function () {
         // Append to message container
         message_elem.appendChild(alert_div);
     }
-
-    /*
-    async function get_exhibits__() {
-
-        try {
-
-            const EXHIBITS_ENDPOINTS = endpointsModule.get_exhibits_endpoints();
-            const token = authModule.get_user_token();
-            const response = await httpModule.req({
-                method: 'GET',
-                url: EXHIBITS_ENDPOINTS.exhibits.exhibit_records.endpoint,
-                headers: {
-                    'Content-Type': 'application/json',
-                    'x-access-token': token
-                }
-            });
-
-            if (response !== undefined && response.status === 200) {
-                return response.data.data;
-            }
-
-        } catch (error) {
-            document.querySelector('#message').innerHTML = `<div class="alert alert-danger" role="alert"><i class="fa fa-exclamation"></i> ${error.message}</div>`;
-        }
-    }
-    */
 
     obj.display_exhibits = async function () {
 
@@ -866,26 +849,41 @@ const exhibitsModule = (function () {
 
     obj.get_exhibit_title = async function (uuid) {
 
-        try {
+        const EXHIBITS_ENDPOINTS = endpointsModule.get_exhibits_endpoints();
+        const token = authModule.get_user_token();
 
-            const EXHIBITS_ENDPOINTS = endpointsModule.get_exhibits_endpoints();
-            const token = authModule.get_user_token();
-            const response = await httpModule.req({
-                method: 'GET',
-                url: EXHIBITS_ENDPOINTS.exhibits.exhibit_records.endpoints.get.endpoint.replace(':exhibit_id', uuid),
-                headers: {
-                    'Content-Type': 'application/json',
-                    'x-access-token': token
-                }
-            });
+        const response = await httpModule.req({
+            method: 'GET',
+            url: EXHIBITS_ENDPOINTS.exhibits.exhibit_records.endpoints.get.endpoint.replace(':exhibit_id', uuid),
+            headers: {
+                'Content-Type': 'application/json',
+                'x-access-token': token
+            },
+            validateStatus: (status) => status >= 200 && status < 600
+        });
 
-            if (response !== undefined && response.status === 200) {
-                return helperModule.strip_html(helperModule.unescape(response.data.data.title));
+        // Handle 403 Forbidden
+        if (response?.status === 403) {
+            const message_elem = document.querySelector('#message');
+            if (message_elem) {
+                display_message(message_elem, 'danger', 'You do not have permission to view this exhibit');
             }
-
-        } catch (error) {
-            document.querySelector('#message').innerHTML = `<div class="alert alert-danger" role="alert"><i class="fa fa-exclamation"></i> ${error.message}</div>`;
+            return undefined;
         }
+
+        if (response !== undefined && response.status === 200) {
+            return helperModule.strip_html(helperModule.unescape(response.data.data.title));
+        }
+
+        // Response is undefined - network or server error
+        if (response === undefined) {
+            const message_elem = document.querySelector('#message');
+            if (message_elem) {
+                display_message(message_elem, 'danger', 'Unable to load exhibit title. Please check your connection and try again.');
+            }
+        }
+
+        return undefined;
     };
 
     obj.set_exhibit_title = async function (uuid) {
@@ -915,60 +913,65 @@ const exhibitsModule = (function () {
         link.close();
     };
 
-    obj.delete_exhibit = function () {
+    obj.delete_exhibit = async function () {
 
-        try {
+        const message_elem = document.querySelector('#message');
+        const delete_message_elem = document.querySelector('#delete-message');
+        const delete_card_elem = document.querySelector('#delete-card');
 
-            (async function () {
+        if (delete_message_elem) {
+            delete_message_elem.textContent = 'Deleting exhibit...';
+        }
 
-                document.querySelector('#delete-message').innerHTML = 'Deleting exhibit...';
-                const EXHIBITS_ENDPOINTS = endpointsModule.get_exhibits_endpoints();
-                const uuid = helperModule.get_parameter_by_name('exhibit_id');
-                const token = authModule.get_user_token();
-                const response = await httpModule.req({
-                    method: 'DELETE',
-                    url: EXHIBITS_ENDPOINTS.exhibits.exhibit_records.endpoints.delete.endpoint.replace(':exhibit_id', uuid),
-                    headers: {
-                        'Content-Type': 'application/json',
-                        'x-access-token': token
-                    }
-                });
+        const EXHIBITS_ENDPOINTS = endpointsModule.get_exhibits_endpoints();
+        const uuid = helperModule.get_parameter_by_name('exhibit_id');
+        const token = authModule.get_user_token();
 
-                if (response !== undefined && response.status === 204) {
+        const response = await httpModule.req({
+            method: 'DELETE',
+            url: EXHIBITS_ENDPOINTS.exhibits.exhibit_records.endpoints.delete.endpoint.replace(':exhibit_id', uuid),
+            headers: {
+                'Content-Type': 'application/json',
+                'x-access-token': token
+            },
+            validateStatus: (status) => status >= 200 && status < 600
+        });
 
-                    setTimeout(() => {
-                        window.location.replace(APP_PATH + '/exhibits');
-                    }, 900);
+        // Handle 403 Forbidden
+        if (response?.status === 403) {
+            scrollTo(0, 0);
+            if (delete_card_elem) {
+                delete_card_elem.textContent = '';
+            }
+            if (message_elem) {
+                display_message(message_elem, 'danger', 'You do not have permission to delete this record');
+            }
+            return false;
+        }
 
-                } else if (response !== undefined && response.status === 200) {
-
-                    scrollTo(0, 0);
-                    document.querySelector('#delete-card').innerHTML = '';
-                    document.querySelector('#message').innerHTML = `<div class="alert alert-warning" role="alert"><i class="fa fa-warning"></i> Cannot delete an exhibit that contains items.</div>`;
-
-                } else if (response === undefined) {
-                    scrollTo(0, 0);
-                    document.querySelector('#delete-card').innerHTML = '';
-                    document.querySelector('#message').innerHTML = `<div class="alert alert-danger" role="alert"><i class="fa fa-exclamation"></i> You do not have permission to delete this record.</div>`;
-                }
-
-            })();
-
-        } catch (error) {
-            document.querySelector('#message').innerHTML = `<div class="alert alert-danger" role="alert"><i class="fa fa-exclamation"></i> ${error.message}</div>`;
+        if (response !== undefined && response.status === 204) {
+            setTimeout(() => {
+                window.location.replace(APP_PATH + '/exhibits');
+            }, 900);
+        } else if (response !== undefined && response.status === 200) {
+            scrollTo(0, 0);
+            if (delete_card_elem) {
+                delete_card_elem.textContent = '';
+            }
+            if (message_elem) {
+                display_message(message_elem, 'warning', 'Cannot delete an exhibit that contains items');
+            }
+        } else if (response === undefined) {
+            scrollTo(0, 0);
+            if (delete_card_elem) {
+                delete_card_elem.textContent = '';
+            }
+            if (message_elem) {
+                display_message(message_elem, 'danger', 'Unable to delete exhibit. Please check your connection and try again.');
+            }
         }
 
         return false;
-    };
-
-    // Module-level constants
-    const EXHIBIT_CONSTANTS = {
-        STATUS_SUFFIX: '-status',
-        ACTIONS_SUFFIX: '-actions',
-        MESSAGE_DURATION: 5000,
-        HTTP_OK: 200,
-        HTTP_NO_CONTENT: 204,
-        UUID_PATTERN: /^[a-f0-9-]+$/i
     };
 
 // Exhibit state configurations
@@ -1119,9 +1122,6 @@ const exhibitsModule = (function () {
         span.appendChild(br);
         span.appendChild(text);
         status_element.appendChild(span);
-
-        // No event listener needed - DataTable event delegation handles it
-        // See bind_datatable_events() function
     }
 
     /**
@@ -1192,6 +1192,18 @@ const exhibitsModule = (function () {
                 token
             );
 
+            // Handle 403 Forbidden
+            if (response?.status === EXHIBIT_CONSTANTS.HTTP_FORBIDDEN) {
+                show_message('danger', 'You do not have permission to publish this record');
+                return false;
+            }
+
+            // Handle 422 Unprocessable Entity - exhibit must contain at least one item
+            if (response?.status === EXHIBIT_CONSTANTS.HTTP_UNPROCESSABLE_ENTITY) {
+                show_message('warning', 'Exhibit must contain at least one item to publish');
+                return false;
+            }
+
             // Handle responses
             if (response?.status === EXHIBIT_CONSTANTS.HTTP_OK) {
                 update_exhibit_status_ui_generic(uuid, EXHIBIT_STATES.PUBLISHED);
@@ -1199,7 +1211,7 @@ const exhibitsModule = (function () {
             } else if (response?.status === EXHIBIT_CONSTANTS.HTTP_NO_CONTENT) {
                 show_message('warning', 'Exhibit must contain at least one item to publish');
             } else if (!response) {
-                show_message('danger', 'You do not have permission to publish this record');
+                show_message('danger', 'Unable to publish exhibit. Please check your connection and try again.');
             }
 
             return false;
@@ -1234,12 +1246,18 @@ const exhibitsModule = (function () {
                 token
             );
 
+            // Handle 403 Forbidden
+            if (response?.status === EXHIBIT_CONSTANTS.HTTP_FORBIDDEN) {
+                show_message('danger', 'You do not have permission to unpublish this record');
+                return false;
+            }
+
             // Handle responses
             if (response?.status === EXHIBIT_CONSTANTS.HTTP_OK) {
                 update_exhibit_status_ui_generic(uuid, EXHIBIT_STATES.SUPPRESSED);
                 update_exhibit_actions_ui_generic(clean_uuid, EXHIBIT_STATES.SUPPRESSED);
             } else if (!response) {
-                show_message('danger', 'You do not have permission to unpublish this record');
+                show_message('danger', 'Unable to unpublish exhibit. Please check your connection and try again.');
             }
 
             return false;
@@ -1345,79 +1363,79 @@ const exhibitsModule = (function () {
         const SHARED_URL_EXPIRY_DAYS = 7;
         const HTTP_CREATED = 201;
 
-        try {
-            // Input validation
-            if (!uuid || typeof uuid !== 'string') {
-                show_info_message('#shared-url', 'Invalid exhibit UUID provided');
-                return false;
-            }
-
-            // Validate UUID format
-            if (!/^[a-f0-9-]+$/i.test(uuid)) {
-                show_info_message('#shared-url', 'Invalid UUID format');
-                return false;
-            }
-
-            // Show loading state
-            show_info_message('#shared-url', 'Generating Shared URL...');
-
-            // Get endpoints and token
-            const exhibits_endpoints = endpointsModule.get_exhibits_endpoints();
-            const token = authModule.get_user_token();
-
-            // Validate token
-            if (!token || token === false) {
-                setTimeout(() => {
-                    show_info_message('#message', 'Unable to get session token');
-                    authModule.logout();
-                }, TOKEN_ERROR_DELAY);
-                return false;
-            }
-
-            // Encode UUID for URL safety
-            const encoded_uuid = encodeURIComponent(uuid);
-
-            // Make API request
-            const response = await httpModule.req({
-                method: 'POST',
-                url: `${exhibits_endpoints.exhibits.exhibit_shared.get.endpoint}?uuid=${encoded_uuid}`,
-                headers: {
-                    'Content-Type': 'application/json',
-                    'x-access-token': token
-                },
-                validateStatus: (status) => status >= 200 && status < 600
-            });
-
-            // Handle successful response
-            if (response?.status === HTTP_CREATED && response.data?.shared_url) {
-                // Validate the shared URL
-                if (!is_valid_url(response.data.shared_url)) {
-                    throw new Error('Invalid shared URL received from server');
-                }
-
-                // Store the URL for copying
-                const copy_target = document.querySelector('#shared-url-copy');
-                if (copy_target) {
-                    copy_target.textContent = response.data.shared_url;
-                }
-
-                // Display success message with slight delay for UX
-                setTimeout(() => {
-                    display_shared_url_success(SHARED_URL_EXPIRY_DAYS);
-                }, SUCCESS_DISPLAY_DELAY);
-            } else {
-                // Handle unexpected response
-                const error_message = response?.data?.message || 'Failed to create shared URL';
-                show_info_message('#shared-url', error_message);
-            }
-
-            return false;
-
-        } catch (error) {
-            console.error('Error creating shared preview URL:', error);
-            show_error_message('#shared-url', error.message || 'An error occurred while creating the shared URL');
+        // Input validation
+        if (!uuid || typeof uuid !== 'string') {
+            show_info_message('#shared-url', 'Invalid exhibit UUID provided');
             return false;
         }
+
+        // Validate UUID format
+        if (!/^[a-f0-9-]+$/i.test(uuid)) {
+            show_info_message('#shared-url', 'Invalid UUID format');
+            return false;
+        }
+
+        // Show loading state
+        show_info_message('#shared-url', 'Generating Shared URL...');
+
+        // Get endpoints and token
+        const exhibits_endpoints = endpointsModule.get_exhibits_endpoints();
+        const token = authModule.get_user_token();
+
+        // Validate token
+        if (!token || token === false) {
+            setTimeout(() => {
+                show_info_message('#message', 'Unable to get session token');
+                authModule.logout();
+            }, TOKEN_ERROR_DELAY);
+            return false;
+        }
+
+        // Encode UUID for URL safety
+        const encoded_uuid = encodeURIComponent(uuid);
+
+        // Make API request
+        const response = await httpModule.req({
+            method: 'POST',
+            url: `${exhibits_endpoints.exhibits.exhibit_shared.get.endpoint}?uuid=${encoded_uuid}`,
+            headers: {
+                'Content-Type': 'application/json',
+                'x-access-token': token
+            },
+            validateStatus: (status) => status >= 200 && status < 600
+        });
+
+        // Handle 403 Forbidden
+        if (response?.status === EXHIBIT_CONSTANTS.HTTP_FORBIDDEN) {
+            show_error_message('#shared-url', 'You do not have permission to create a shared URL for this exhibit');
+            return false;
+        }
+
+        // Handle successful response
+        if (response?.status === HTTP_CREATED && response.data?.shared_url) {
+            // Validate the shared URL
+            if (!is_valid_url(response.data.shared_url)) {
+                show_error_message('#shared-url', 'Invalid shared URL received from server');
+                return false;
+            }
+
+            // Store the URL for copying
+            const copy_target = document.querySelector('#shared-url-copy');
+            if (copy_target) {
+                copy_target.textContent = response.data.shared_url;
+            }
+
+            // Display success message with slight delay for UX
+            setTimeout(() => {
+                display_shared_url_success(SHARED_URL_EXPIRY_DAYS);
+            }, SUCCESS_DISPLAY_DELAY);
+        } else {
+            // Handle unexpected response
+            const error_message = response?.data?.message || 'Failed to create shared URL';
+            show_info_message('#shared-url', error_message);
+        }
+
+        return false;
     };
 
     /**
@@ -1606,7 +1624,7 @@ const exhibitsModule = (function () {
      * @throws {Error} - If copy operation fails
      */
     async function copy_to_clipboard(text) {
-        // Try modern Clipboard API first (requires HTTPS)
+        // Try modern Clipboard API first
         if (navigator.clipboard && navigator.clipboard.writeText) {
             try {
                 await navigator.clipboard.writeText(text);
@@ -1655,20 +1673,6 @@ const exhibitsModule = (function () {
         } finally {
             // Always remove the temporary element
             document.body.removeChild(textarea);
-        }
-    }
-
-    /**
-     * Validates if a string is a valid URL
-     * @param {string} url_string - The URL to validate
-     * @returns {boolean} - True if valid URL
-     */
-    function is_valid_url(url_string) {
-        try {
-            const url = new URL(url_string);
-            return url.protocol === 'http:' || url.protocol === 'https:';
-        } catch (error) {
-            return false;
         }
     }
 
@@ -1780,7 +1784,7 @@ const exhibitsModule = (function () {
                 return;
             }
 
-            // Initialize UI components in parallel (if they don't depend on each other)
+            // Initialize UI components in parallel
             await Promise.all([
                 display_exhibits_safely(),
                 initialize_ui_components()
