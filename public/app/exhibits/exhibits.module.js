@@ -24,18 +24,6 @@ const exhibitsModule = (function () {
     let obj = {};
     let link;
 
-    // Module-level constants
-    const EXHIBIT_CONSTANTS = {
-        STATUS_SUFFIX: '-status',
-        ACTIONS_SUFFIX: '-actions',
-        MESSAGE_DURATION: 5000,
-        HTTP_OK: 200,
-        HTTP_NO_CONTENT: 204,
-        HTTP_FORBIDDEN: 403,
-        HTTP_UNPROCESSABLE_ENTITY: 422,
-        UUID_PATTERN: /^[a-f0-9-]+$/i
-    };
-
     async function get_exhibits() {
 
         // Get endpoints configuration
@@ -974,6 +962,18 @@ const exhibitsModule = (function () {
         return false;
     };
 
+    // Module-level constants
+    const EXHIBIT_CONSTANTS = {
+        STATUS_SUFFIX: '-status',
+        ACTIONS_SUFFIX: '-actions',
+        MESSAGE_DURATION: 5000,
+        HTTP_OK: 200,
+        HTTP_NO_CONTENT: 204,
+        HTTP_FORBIDDEN: 403,
+        HTTP_UNPROCESSABLE_ENTITY: 422,
+        UUID_PATTERN: /^[a-f0-9-]+$/i
+    };
+
 // Exhibit state configurations
     const EXHIBIT_STATES = {
         PUBLISHED: {
@@ -1122,6 +1122,9 @@ const exhibitsModule = (function () {
         span.appendChild(br);
         span.appendChild(text);
         status_element.appendChild(span);
+
+        // No event listener needed - DataTable event delegation handles it
+        // See bind_datatable_events() function
     }
 
     /**
@@ -1624,7 +1627,7 @@ const exhibitsModule = (function () {
      * @throws {Error} - If copy operation fails
      */
     async function copy_to_clipboard(text) {
-        // Try modern Clipboard API first
+        // Try modern Clipboard API first (requires HTTPS)
         if (navigator.clipboard && navigator.clipboard.writeText) {
             try {
                 await navigator.clipboard.writeText(text);
@@ -1784,11 +1787,11 @@ const exhibitsModule = (function () {
                 return;
             }
 
-            // Initialize UI components in parallel
-            await Promise.all([
-                display_exhibits_safely(),
-                initialize_ui_components()
-            ]);
+            // Load and display exhibits first
+            await display_exhibits_safely();
+
+            // Then initialize UI components after exhibits are rendered
+            initialize_ui_components();
 
         } catch (error) {
             console.error('Error initializing exhibits module:', error);
@@ -1811,12 +1814,10 @@ const exhibitsModule = (function () {
 
     /**
      * Initializes UI components (form and navigation)
-     * @returns {Promise<void>}
      */
-    async function initialize_ui_components() {
+    function initialize_ui_components() {
 
         try {
-            // These operations are likely synchronous but wrapped for consistency
             if (typeof helperModule !== 'undefined' && typeof helperModule.show_form === 'function') {
                 helperModule.show_form();
             } else {
