@@ -18,8 +18,15 @@ const itemsModule = (function() {
 
     'use strict';
 
+    // HTTP status constants
+    const HTTP_STATUS = {
+        OK: 200,
+        NO_CONTENT: 204,
+        FORBIDDEN: 403
+    };
+
     /**
-     * Get app path safely
+     * Get app path
      */
     const get_app_path = () => {
         try {
@@ -49,6 +56,40 @@ const itemsModule = (function() {
 
     const APP_PATH = get_app_path();
     let obj = {};
+
+    /**
+     * Converts technical errors to user-friendly messages
+     * @param {Error} error - The error object
+     * @returns {string} - User-friendly error message
+     */
+    function get_user_friendly_error_message(error) {
+        // Map of error patterns to user-friendly messages
+        const error_patterns = {
+            'network': 'Network error. Please check your connection and try again.',
+            'timeout': 'Request timed out. Please try again.',
+            'token': 'Session expired. Please log in again.',
+            'auth': 'Authentication failed. Please log in again.',
+            'permission': 'You do not have permission to access this resource.',
+            'not found': 'The requested resource was not found.',
+            'invalid': 'Invalid request. Please try again.',
+            'uuid': 'Invalid identifier provided.'
+        };
+
+        if (!error || !error.message) {
+            return 'An unexpected error occurred. Please try again.';
+        }
+
+        const error_message_lower = error.message.toLowerCase();
+
+        // Check for known error patterns
+        for (const [pattern, friendly_message] of Object.entries(error_patterns)) {
+            if (error_message_lower.includes(pattern)) {
+                return friendly_message;
+            }
+        }
+
+        return 'An error occurred. Please try again.';
+    }
 
     /**
      * Display message
@@ -110,64 +151,72 @@ const itemsModule = (function() {
      */
     obj.get_items = async function(uuid) {
 
-        try {
-            // Validate UUID
-            if (!uuid || typeof uuid !== 'string') {
-                throw new Error('Invalid exhibit UUID');
-            }
-
-            // Get endpoints
-            const EXHIBITS_ENDPOINTS = get_exhibits_endpoints();
-
-            if (!EXHIBITS_ENDPOINTS?.exhibits?.item_records?.endpoint) {
-                throw new Error('Item records endpoint not configured');
-            }
-
-            // Validate authentication
-            const token = authModule.get_user_token();
-
-            if (!token || token === false) {
-                const message_element = document.querySelector('#message');
-                display_message(message_element, 'danger', 'Session expired. Please log in again.');
-                return false;
-            }
-
-            // Construct endpoint with URL encoding
-            const endpoint = EXHIBITS_ENDPOINTS.exhibits.item_records.endpoint
-                .replace(':exhibit_id', encodeURIComponent(uuid));
-
-            // Make API request
-            const response = await httpModule.req({
-                method: 'GET',
-                url: endpoint,
-                headers: {
-                    'Content-Type': 'application/json',
-                    'x-access-token': token
-                },
-                timeout: 30000
-            });
-
-            // Validate response
-            if (!response || response.status !== 200) {
-                throw new Error('Failed to retrieve items');
-            }
-
-            if (!response.data?.data) {
-                throw new Error('Invalid response structure');
-            }
-
-            // Save to localStorage
-            safe_set_items(response.data.data);
-
-            return response.data.data;
-
-        } catch (error) {
-            console.error('Error getting items:', error);
+        // Validate UUID
+        if (!uuid || typeof uuid !== 'string') {
             const message_element = document.querySelector('#message');
-            const error_message = error.user_message || error.message || 'Unable to retrieve items. Please try again.';
-            display_message(message_element, 'danger', error_message);
+            display_message(message_element, 'danger', 'Invalid exhibit UUID');
             return false;
         }
+
+        // Get endpoints
+        const EXHIBITS_ENDPOINTS = get_exhibits_endpoints();
+
+        if (!EXHIBITS_ENDPOINTS?.exhibits?.item_records?.endpoint) {
+            const message_element = document.querySelector('#message');
+            display_message(message_element, 'danger', 'Item records endpoint not configured');
+            return false;
+        }
+
+        // Validate authentication
+        const token = authModule.get_user_token();
+
+        if (!token || token === false) {
+            const message_element = document.querySelector('#message');
+            display_message(message_element, 'danger', 'Session expired. Please log in again.');
+            return false;
+        }
+
+        // Construct endpoint with URL encoding
+        const endpoint = EXHIBITS_ENDPOINTS.exhibits.item_records.endpoint
+            .replace(':exhibit_id', encodeURIComponent(uuid));
+
+        // Make API request
+        const response = await httpModule.req({
+            method: 'GET',
+            url: endpoint,
+            headers: {
+                'Content-Type': 'application/json',
+                'x-access-token': token
+            },
+            timeout: 30000,
+            validateStatus: (status) => status >= 200 && status < 600
+        });
+
+        // Handle 403 Forbidden
+        if (response?.status === HTTP_STATUS.FORBIDDEN) {
+            const message_element = document.querySelector('#message');
+            display_message(message_element, 'danger', 'You do not have permission to view items for this exhibit');
+            return false;
+        }
+
+        // Validate response
+        if (response?.status === HTTP_STATUS.OK && response.data?.data) {
+            // Save to localStorage
+            safe_set_items(response.data.data);
+            return response.data.data;
+        }
+
+        // Handle undefined response (network/server error)
+        if (!response) {
+            const message_element = document.querySelector('#message');
+            display_message(message_element, 'danger', 'Unable to retrieve items. Please check your connection and try again.');
+            return false;
+        }
+
+        // Handle other error responses
+        const message_element = document.querySelector('#message');
+        display_message(message_element, 'danger', 'Failed to retrieve items. Please try again.');
+        return false;
     };
 
     /**
@@ -329,8 +378,7 @@ const itemsModule = (function() {
         } catch (error) {
             console.error('Error displaying items:', error);
             const message_element = document.querySelector('#message');
-            const error_message = error.user_message || error.message || 'Unable to display items. Please try again.';
-            display_message(message_element, 'danger', error_message);
+            display_message(message_element, 'danger', get_user_friendly_error_message(error));
             return false;
         }
     };
@@ -339,87 +387,111 @@ const itemsModule = (function() {
      * Delete item
      */
     obj.delete_item = async function() {
-        try {
-            // Update status message
-            const delete_message = document.querySelector('#delete-message');
-            if (delete_message) {
-                delete_message.textContent = 'Deleting item...';
-            }
 
-            // Get parameters
-            const exhibit_id = helperModule.get_parameter_by_name('exhibit_id');
-            const item_id = helperModule.get_parameter_by_name('item_id');
-            const type = helperModule.get_parameter_by_name('type');
+        // Update status message
+        const delete_message = document.querySelector('#delete-message');
+        if (delete_message) {
+            delete_message.textContent = 'Deleting item...';
+        }
 
-            if (!exhibit_id || !item_id || !type) {
-                throw new Error('Missing required parameters for delete operation');
-            }
+        // Get parameters
+        const exhibit_id = helperModule.get_parameter_by_name('exhibit_id');
+        const item_id = helperModule.get_parameter_by_name('item_id');
+        const type = helperModule.get_parameter_by_name('type');
 
-            // Get endpoints
-            const EXHIBITS_ENDPOINTS = get_exhibits_endpoints();
-
-            if (!EXHIBITS_ENDPOINTS?.exhibits?.item_records?.delete?.endpoint) {
-                throw new Error('Delete endpoint not configured');
-            }
-
-            // Validate authentication
-            const token = authModule.get_user_token();
-
-            if (!token || token === false) {
-                const message_element = document.querySelector('#message');
-                display_message(message_element, 'danger', 'Session expired. Please log in again.');
-                return false;
-            }
-
-            // Construct endpoint
-            const endpoint = EXHIBITS_ENDPOINTS.exhibits.item_records.delete.endpoint
-                .replace(':exhibit_id', encodeURIComponent(exhibit_id))
-                .replace(':item_id', encodeURIComponent(item_id));
-
-            const url_with_type = `${endpoint}?type=${encodeURIComponent(type)}`;
-
-            // Make delete request
-            const response = await httpModule.req({
-                method: 'DELETE',
-                url: url_with_type,
-                headers: {
-                    'Content-Type': 'application/json',
-                    'x-access-token': token
-                },
-                timeout: 30000
-            });
-
-            // Handle response
-            if (response && response.status === 204) {
-                // Success - redirect after delay
-                setTimeout(() => {
-                    const redirect_url = `${APP_PATH}/items?exhibit_id=${encodeURIComponent(exhibit_id)}`;
-                    window.location.replace(redirect_url);
-                }, 900);
-
-                return true;
-            } else {
-                // Permission denied
-                window.scrollTo({ top: 0, behavior: 'smooth' });
-
-                const delete_card = document.querySelector('#delete-card');
-                if (delete_card) {
-                    delete_card.textContent = '';
-                }
-
-                const message_element = document.querySelector('#message');
-                display_message(message_element, 'danger', 'You do not have permission to delete this record.');
-
-                return false;
-            }
-
-        } catch (error) {
-            console.error('Error deleting item:', error);
+        if (!exhibit_id || !item_id || !type) {
             const message_element = document.querySelector('#message');
-            const error_message = error.user_message || error.message || 'Unable to delete item. Please try again.';
-            display_message(message_element, 'danger', error_message);
+            display_message(message_element, 'danger', 'Missing required parameters for delete operation');
             return false;
         }
+
+        // Get endpoints
+        const EXHIBITS_ENDPOINTS = get_exhibits_endpoints();
+
+        if (!EXHIBITS_ENDPOINTS?.exhibits?.item_records?.delete?.endpoint) {
+            const message_element = document.querySelector('#message');
+            display_message(message_element, 'danger', 'Delete endpoint not configured');
+            return false;
+        }
+
+        // Validate authentication
+        const token = authModule.get_user_token();
+
+        if (!token || token === false) {
+            const message_element = document.querySelector('#message');
+            display_message(message_element, 'danger', 'Session expired. Please log in again.');
+            return false;
+        }
+
+        // Construct endpoint
+        const endpoint = EXHIBITS_ENDPOINTS.exhibits.item_records.delete.endpoint
+            .replace(':exhibit_id', encodeURIComponent(exhibit_id))
+            .replace(':item_id', encodeURIComponent(item_id));
+
+        const url_with_type = `${endpoint}?type=${encodeURIComponent(type)}`;
+
+        // Make delete request
+        const response = await httpModule.req({
+            method: 'DELETE',
+            url: url_with_type,
+            headers: {
+                'Content-Type': 'application/json',
+                'x-access-token': token
+            },
+            timeout: 30000,
+            validateStatus: (status) => status >= 200 && status < 600
+        });
+
+        // Handle 403 Forbidden
+        if (response?.status === HTTP_STATUS.FORBIDDEN) {
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+
+            const delete_card = document.querySelector('#delete-card');
+            if (delete_card) {
+                delete_card.textContent = '';
+            }
+
+            const message_element = document.querySelector('#message');
+            display_message(message_element, 'danger', 'You do not have permission to delete this record');
+            return false;
+        }
+
+        // Handle success
+        if (response?.status === HTTP_STATUS.NO_CONTENT) {
+            // Success - redirect after delay
+            setTimeout(() => {
+                const redirect_url = `${APP_PATH}/items?exhibit_id=${encodeURIComponent(exhibit_id)}`;
+                window.location.replace(redirect_url);
+            }, 900);
+
+            return true;
+        }
+
+        // Handle undefined response (network/server error)
+        if (!response) {
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+
+            const delete_card = document.querySelector('#delete-card');
+            if (delete_card) {
+                delete_card.textContent = '';
+            }
+
+            const message_element = document.querySelector('#message');
+            display_message(message_element, 'danger', 'Unable to delete item. Please check your connection and try again.');
+            return false;
+        }
+
+        // Handle other error responses
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+
+        const delete_card = document.querySelector('#delete-card');
+        if (delete_card) {
+            delete_card.textContent = '';
+        }
+
+        const message_element = document.querySelector('#message');
+        display_message(message_element, 'danger', 'Failed to delete item. Please try again.');
+        return false;
     };
 
     /**
@@ -427,91 +499,107 @@ const itemsModule = (function() {
      */
     async function publish_item(uuid) {
 
-        try {
-            // Validate UUID
-            if (!uuid) {
-                throw new Error('Invalid item UUID');
-            }
-
-            // Get parameters
-            const exhibit_id = helperModule.get_parameter_by_name('exhibit_id');
-
-            if (!exhibit_id) {
-                throw new Error('Exhibit ID not found');
-            }
-
-            // Find item type from table row ID
-            const table_rows = document.getElementsByTagName('tr');
-            let item_type = null;
-
-            for (let i = 0; i < table_rows.length; i++) {
-                if (table_rows[i].id && table_rows[i].id.indexOf(uuid) !== -1) {
-                    const id_parts = table_rows[i].id.split('_');
-                    item_type = id_parts[id_parts.length - 1];
-                    break;
-                }
-            }
-
-            if (!item_type) {
-                throw new Error('Could not determine item type');
-            }
-
-            console.log('Publishing item type:', item_type);
-
-            // Get endpoints
-            const EXHIBITS_ENDPOINTS = get_exhibits_endpoints();
-
-            if (!EXHIBITS_ENDPOINTS?.exhibits?.item_records?.item_publish?.post?.endpoint) {
-                throw new Error('Publish endpoint not configured');
-            }
-
-            // Construct endpoint
-            const endpoint = EXHIBITS_ENDPOINTS.exhibits.item_records.item_publish.post.endpoint
-                .replace(':exhibit_id', encodeURIComponent(exhibit_id))
-                .replace(':item_id', encodeURIComponent(uuid));
-
-            const url_with_type = `${endpoint}?type=${encodeURIComponent(item_type)}`;
-
-            // Validate authentication
-            const token = authModule.get_user_token();
-
-            if (!token || token === false) {
-                const message_element = document.querySelector('#message');
-                display_message(message_element, 'danger', 'Session expired. Please log in again.');
-                return false;
-            }
-
-            // Make publish request
-            const response = await httpModule.req({
-                method: 'POST',
-                url: url_with_type,
-                headers: {
-                    'Content-Type': 'application/json',
-                    'x-access-token': token
-                },
-                timeout: 30000
-            });
-
-            // Handle response
-            if (response && response.status === 200) {
-                // Update UI to show published state
-                update_item_status_to_published(uuid, item_type, exhibit_id);
-                return true;
-            } else {
-                // Permission denied
-                window.scrollTo({ top: 0, behavior: 'smooth' });
-                const message_element = document.querySelector('#message');
-                display_message(message_element, 'danger', 'You do not have permission to publish this record.');
-                return false;
-            }
-
-        } catch (error) {
-            console.error('Error publishing item:', error);
+        // Validate UUID
+        if (!uuid) {
             const message_element = document.querySelector('#message');
-            const error_message = error.user_message || error.message || 'Unable to publish item. Please try again.';
-            display_message(message_element, 'danger', error_message);
+            display_message(message_element, 'danger', 'Invalid item UUID');
             return false;
         }
+
+        // Get parameters
+        const exhibit_id = helperModule.get_parameter_by_name('exhibit_id');
+
+        if (!exhibit_id) {
+            const message_element = document.querySelector('#message');
+            display_message(message_element, 'danger', 'Exhibit ID not found');
+            return false;
+        }
+
+        // Find item type from table row ID
+        const table_rows = document.getElementsByTagName('tr');
+        let item_type = null;
+
+        for (let i = 0; i < table_rows.length; i++) {
+            if (table_rows[i].id && table_rows[i].id.indexOf(uuid) !== -1) {
+                const id_parts = table_rows[i].id.split('_');
+                item_type = id_parts[id_parts.length - 1];
+                break;
+            }
+        }
+
+        if (!item_type) {
+            const message_element = document.querySelector('#message');
+            display_message(message_element, 'danger', 'Could not determine item type');
+            return false;
+        }
+
+        console.log('Publishing item type:', item_type);
+
+        // Get endpoints
+        const EXHIBITS_ENDPOINTS = get_exhibits_endpoints();
+
+        if (!EXHIBITS_ENDPOINTS?.exhibits?.item_records?.item_publish?.post?.endpoint) {
+            const message_element = document.querySelector('#message');
+            display_message(message_element, 'danger', 'Publish endpoint not configured');
+            return false;
+        }
+
+        // Construct endpoint
+        const endpoint = EXHIBITS_ENDPOINTS.exhibits.item_records.item_publish.post.endpoint
+            .replace(':exhibit_id', encodeURIComponent(exhibit_id))
+            .replace(':item_id', encodeURIComponent(uuid));
+
+        const url_with_type = `${endpoint}?type=${encodeURIComponent(item_type)}`;
+
+        // Validate authentication
+        const token = authModule.get_user_token();
+
+        if (!token || token === false) {
+            const message_element = document.querySelector('#message');
+            display_message(message_element, 'danger', 'Session expired. Please log in again.');
+            return false;
+        }
+
+        // Make publish request
+        const response = await httpModule.req({
+            method: 'POST',
+            url: url_with_type,
+            headers: {
+                'Content-Type': 'application/json',
+                'x-access-token': token
+            },
+            timeout: 30000,
+            validateStatus: (status) => status >= 200 && status < 600
+        });
+
+        // Handle 403 Forbidden
+        if (response?.status === HTTP_STATUS.FORBIDDEN) {
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+            const message_element = document.querySelector('#message');
+            display_message(message_element, 'danger', 'You do not have permission to publish this record');
+            return false;
+        }
+
+        // Handle success
+        if (response?.status === HTTP_STATUS.OK) {
+            // Update UI to show published state
+            update_item_status_to_published(uuid, item_type, exhibit_id);
+            return true;
+        }
+
+        // Handle undefined response (network/server error)
+        if (!response) {
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+            const message_element = document.querySelector('#message');
+            display_message(message_element, 'danger', 'Unable to publish item. Please check your connection and try again.');
+            return false;
+        }
+
+        // Handle other error responses
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+        const message_element = document.querySelector('#message');
+        display_message(message_element, 'danger', 'Failed to publish item. Please try again.');
+        return false;
     }
 
     /**
@@ -519,91 +607,107 @@ const itemsModule = (function() {
      */
     async function suppress_item(uuid) {
 
-        try {
-            // Validate UUID
-            if (!uuid) {
-                throw new Error('Invalid item UUID');
-            }
-
-            // Get parameters
-            const exhibit_id = helperModule.get_parameter_by_name('exhibit_id');
-
-            if (!exhibit_id) {
-                throw new Error('Exhibit ID not found');
-            }
-
-            // Find item type from table row ID
-            const table_rows = document.getElementsByTagName('tr');
-            let item_type = null;
-
-            for (let i = 0; i < table_rows.length; i++) {
-                if (table_rows[i].id && table_rows[i].id.indexOf(uuid) !== -1) {
-                    const id_parts = table_rows[i].id.split('_');
-                    item_type = id_parts[id_parts.length - 1];
-                    break;
-                }
-            }
-
-            if (!item_type) {
-                throw new Error('Could not determine item type');
-            }
-
-            console.log('Suppressing item type:', item_type);
-
-            // Get endpoints
-            const EXHIBITS_ENDPOINTS = get_exhibits_endpoints();
-
-            if (!EXHIBITS_ENDPOINTS?.exhibits?.item_records?.item_suppress?.post?.endpoint) {
-                throw new Error('Suppress endpoint not configured');
-            }
-
-            // Construct endpoint
-            const endpoint = EXHIBITS_ENDPOINTS.exhibits.item_records.item_suppress.post.endpoint
-                .replace(':exhibit_id', encodeURIComponent(exhibit_id))
-                .replace(':item_id', encodeURIComponent(uuid));
-
-            const url_with_type = `${endpoint}?type=${encodeURIComponent(item_type)}`;
-
-            // Validate authentication
-            const token = authModule.get_user_token();
-
-            if (!token || token === false) {
-                const message_element = document.querySelector('#message');
-                display_message(message_element, 'danger', 'Session expired. Please log in again.');
-                return false;
-            }
-
-            // Make suppress request
-            const response = await httpModule.req({
-                method: 'POST',
-                url: url_with_type,
-                headers: {
-                    'Content-Type': 'application/json',
-                    'x-access-token': token
-                },
-                timeout: 30000
-            });
-
-            // Handle response
-            if (response && response.status === 200) {
-                // Update UI to show unpublished state
-                update_item_status_to_unpublished(uuid, item_type, exhibit_id);
-                return true;
-            } else {
-                // Permission denied
-                window.scrollTo({ top: 0, behavior: 'smooth' });
-                const message_element = document.querySelector('#message');
-                display_message(message_element, 'danger', 'You do not have permission to unpublish this record.');
-                return false;
-            }
-
-        } catch (error) {
-            console.error('Error suppressing item:', error);
+        // Validate UUID
+        if (!uuid) {
             const message_element = document.querySelector('#message');
-            const error_message = error.user_message || error.message || 'Unable to unpublish item. Please try again.';
-            display_message(message_element, 'danger', error_message);
+            display_message(message_element, 'danger', 'Invalid item UUID');
             return false;
         }
+
+        // Get parameters
+        const exhibit_id = helperModule.get_parameter_by_name('exhibit_id');
+
+        if (!exhibit_id) {
+            const message_element = document.querySelector('#message');
+            display_message(message_element, 'danger', 'Exhibit ID not found');
+            return false;
+        }
+
+        // Find item type from table row ID
+        const table_rows = document.getElementsByTagName('tr');
+        let item_type = null;
+
+        for (let i = 0; i < table_rows.length; i++) {
+            if (table_rows[i].id && table_rows[i].id.indexOf(uuid) !== -1) {
+                const id_parts = table_rows[i].id.split('_');
+                item_type = id_parts[id_parts.length - 1];
+                break;
+            }
+        }
+
+        if (!item_type) {
+            const message_element = document.querySelector('#message');
+            display_message(message_element, 'danger', 'Could not determine item type');
+            return false;
+        }
+
+        console.log('Suppressing item type:', item_type);
+
+        // Get endpoints
+        const EXHIBITS_ENDPOINTS = get_exhibits_endpoints();
+
+        if (!EXHIBITS_ENDPOINTS?.exhibits?.item_records?.item_suppress?.post?.endpoint) {
+            const message_element = document.querySelector('#message');
+            display_message(message_element, 'danger', 'Suppress endpoint not configured');
+            return false;
+        }
+
+        // Construct endpoint
+        const endpoint = EXHIBITS_ENDPOINTS.exhibits.item_records.item_suppress.post.endpoint
+            .replace(':exhibit_id', encodeURIComponent(exhibit_id))
+            .replace(':item_id', encodeURIComponent(uuid));
+
+        const url_with_type = `${endpoint}?type=${encodeURIComponent(item_type)}`;
+
+        // Validate authentication
+        const token = authModule.get_user_token();
+
+        if (!token || token === false) {
+            const message_element = document.querySelector('#message');
+            display_message(message_element, 'danger', 'Session expired. Please log in again.');
+            return false;
+        }
+
+        // Make suppress request
+        const response = await httpModule.req({
+            method: 'POST',
+            url: url_with_type,
+            headers: {
+                'Content-Type': 'application/json',
+                'x-access-token': token
+            },
+            timeout: 30000,
+            validateStatus: (status) => status >= 200 && status < 600
+        });
+
+        // Handle 403 Forbidden
+        if (response?.status === HTTP_STATUS.FORBIDDEN) {
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+            const message_element = document.querySelector('#message');
+            display_message(message_element, 'danger', 'You do not have permission to unpublish this record');
+            return false;
+        }
+
+        // Handle success
+        if (response?.status === HTTP_STATUS.OK) {
+            // Update UI to show unpublished state
+            update_item_status_to_unpublished(uuid, item_type, exhibit_id);
+            return true;
+        }
+
+        // Handle undefined response (network/server error)
+        if (!response) {
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+            const message_element = document.querySelector('#message');
+            display_message(message_element, 'danger', 'Unable to unpublish item. Please check your connection and try again.');
+            return false;
+        }
+
+        // Handle other error responses
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+        const message_element = document.querySelector('#message');
+        display_message(message_element, 'danger', 'Failed to unpublish item. Please try again.');
+        return false;
     }
 
     /**
@@ -647,53 +751,6 @@ const itemsModule = (function() {
     }
 
     /**
-     * Update UI to show published status
-     */
-    function update_item_status_to_published__(uuid, item_type, exhibit_id) {
-
-        setTimeout(() => {
-            const status_element = document.getElementById(uuid);
-
-            if (!status_element) {
-                return;
-            }
-
-            // Update button classes
-            status_element.classList.remove('publish-item');
-            status_element.classList.add('suppress-item');
-
-            // Create new status content
-            const span = document.createElement('span');
-            span.id = 'suppress';
-            span.setAttribute('title', 'Published - click to unpublish');
-
-            const icon = document.createElement('i');
-            icon.className = 'fa fa-cloud';
-            icon.style.color = 'green';
-            icon.setAttribute('aria-hidden', 'true');
-            span.appendChild(icon);
-
-            span.appendChild(document.createElement('br'));
-            span.appendChild(document.createTextNode('Published'));
-
-            status_element.textContent = '';
-            status_element.appendChild(span);
-
-            // Re-attach event listener
-            status_element.addEventListener('click', async (event) => {
-                event.preventDefault();
-                await suppress_item(uuid);
-            }, false);
-
-        }, 100);
-
-        // Update action buttons
-        setTimeout(() => {
-            update_action_buttons(uuid, item_type, exhibit_id, true);
-        }, 150);
-    }
-
-    /**
      * Update UI to show unpublished status
      */
     function update_item_status_to_unpublished(uuid, item_type, exhibit_id) {
@@ -728,53 +785,6 @@ const itemsModule = (function() {
 
         // Update action buttons immediately
         update_action_buttons(uuid, item_type, exhibit_id, false);
-    }
-
-    /**
-     * Update UI to show unpublished status
-     */
-    function update_item_status_to_unpublished__(uuid, item_type, exhibit_id) {
-
-        setTimeout(() => {
-            const status_element = document.getElementById(uuid);
-
-            if (!status_element) {
-                return;
-            }
-
-            // Update button classes
-            status_element.classList.remove('suppress-item');
-            status_element.classList.add('publish-item');
-
-            // Create new status content
-            const span = document.createElement('span');
-            span.id = 'publish';
-            span.setAttribute('title', 'Unpublished - click to publish');
-
-            const icon = document.createElement('i');
-            icon.className = 'fa fa-cloud-upload';
-            icon.style.color = 'darkred';
-            icon.setAttribute('aria-hidden', 'true');
-            span.appendChild(icon);
-
-            span.appendChild(document.createElement('br'));
-            span.appendChild(document.createTextNode('Unpublished'));
-
-            status_element.textContent = '';
-            status_element.appendChild(span);
-
-            // Re-attach event listener
-            status_element.addEventListener('click', async (event) => {
-                event.preventDefault();
-                await publish_item(uuid);
-            }, false);
-
-        }, 100);
-
-        // Update action buttons
-        setTimeout(() => {
-            update_action_buttons(uuid, item_type, exhibit_id, false);
-        }, 150);
     }
 
     /**
@@ -921,50 +931,6 @@ const itemsModule = (function() {
     }
 
     /**
-     * Bind publish item event handlers
-     * @deprecated - This function is no longer used. Event delegation is now handled in display_items()
-     */
-    function bind_publish_item_events() {
-
-        try {
-            const publish_buttons = Array.from(document.getElementsByClassName('publish-item'));
-
-            publish_buttons.forEach(button => {
-                button.addEventListener('click', async (event) => {
-                    event.preventDefault();
-                    const uuid = button.getAttribute('id');
-                    await publish_item(uuid);
-                });
-            });
-
-        } catch (error) {
-            console.error('Error binding publish events:', error);
-        }
-    }
-
-    /**
-     * Bind suppress item event handlers
-     * @deprecated - This function is no longer used. Event delegation is now handled in display_items()
-     */
-    function bind_suppress_item_events() {
-
-        try {
-            const suppress_buttons = Array.from(document.getElementsByClassName('suppress-item'));
-
-            suppress_buttons.forEach(button => {
-                button.addEventListener('click', async (event) => {
-                    event.preventDefault();
-                    const uuid = button.getAttribute('id');
-                    await suppress_item(uuid);
-                });
-            });
-
-        } catch (error) {
-            console.error('Error binding suppress events:', error);
-        }
-    }
-
-    /**
      * Initialize module
      */
     obj.init = async function() {
@@ -986,10 +952,8 @@ const itemsModule = (function() {
             }
 
             // Check authentication
-            // (async function() {
             const token = authModule.get_user_token();
             await authModule.check_auth(token);
-            // })();
 
             // Initialize page
             exhibitsModule.set_exhibit_title(exhibit_id);
@@ -1004,8 +968,7 @@ const itemsModule = (function() {
         } catch (error) {
             console.error('Error initializing items module:', error);
             const message_element = document.querySelector('#message');
-            const error_message = error.message || 'Unable to initialize items module';
-            display_message(message_element, 'danger', error_message);
+            display_message(message_element, 'danger', get_user_friendly_error_message(error));
         }
     };
 
