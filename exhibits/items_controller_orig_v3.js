@@ -73,7 +73,7 @@ exports.create_item_record = async function (req, res) {
         res.status(result.status).send(result);
 
     } catch (error) {
-        LOGGER.module().error('ERROR: [/items/controller (create_item_record)] Unable to create item record for exhibit ' + req.params.exhibit_id + ': ' + error.message);
+        // Do not expose internal error details to client
         res.status(500).send({
             message: 'Unable to create item record.'
         });
@@ -98,7 +98,7 @@ exports.get_item_records = async function (req, res) {
         res.status(data.status).send(data);
 
     } catch (error) {
-        LOGGER.module().error('ERROR: [/items/controller (get_item_records)] Unable to get item records for exhibit ' + req.params.exhibit_id + ': ' + error.message);
+        LOGGER.module().error('ERROR: Unable to get item records for exhibit ' + req.params.exhibit_id + ': ' + error.message);
         res.status(500).send({
             message: 'Unable to get item records.'
         });
@@ -157,7 +157,6 @@ exports.get_item_record = async function (req, res) {
         });
 
     } catch (error) {
-        LOGGER.module().error('ERROR: [/items/controller (get_item_record)] Unable to get item record ' + req.params.item_id + ' for exhibit ' + req.params.exhibit_id + ': ' + error.message);
         res.status(500).send({
             message: 'Unable to get item record.'
         });
@@ -217,7 +216,6 @@ exports.update_item_record = async function (req, res) {
         res.status(result.status).send(result);
 
     } catch (error) {
-        LOGGER.module().error('ERROR: [/items/controller (update_item_record)] Unable to update item record ' + req.params.item_id + ' for exhibit ' + req.params.exhibit_id + ': ' + error.message);
         res.status(500).send({
             message: 'Unable to update item record.'
         });
@@ -279,7 +277,6 @@ exports.delete_item_record = async function (req, res) {
         res.status(result.status).send(result);
 
     } catch (error) {
-        LOGGER.module().error('ERROR: [/items/controller (delete_item_record)] Unable to delete item record ' + req.params.item_id + ' for exhibit ' + req.params.exhibit_id + ': ' + error.message);
         res.status(500).send({
             message: 'Unable to delete item record.'
         });
@@ -349,14 +346,12 @@ exports.delete_item_media = async function (req, res) {
     } catch (error) {
         // Handle file not found gracefully
         if (error.code === 'ENOENT') {
-            LOGGER.module().warn('WARN: [/items/controller (delete_item_media)] Media file not found: ' + req.params.media + ' for item ' + req.params.item_id);
             res.status(404).send({
                 message: 'Media file not found.'
             });
             return;
         }
 
-        LOGGER.module().error('ERROR: [/items/controller (delete_item_media)] Unable to delete media ' + req.params.media + ' for item ' + req.params.item_id + ': ' + error.message);
         res.status(500).send({
             message: 'Unable to delete item media file.'
         });
@@ -422,7 +417,7 @@ exports.publish_item_record = async function (req, res) {
 
         // Execute the appropriate publish handler
         const result = await publish_handlers[type](exhibit_id, item_id);
-
+        console.log('RESULT ', result);
         if (result.status === true) {
             res.status(200).send({
                 message: 'Item published.'
@@ -434,7 +429,6 @@ exports.publish_item_record = async function (req, res) {
         }
 
     } catch (error) {
-        LOGGER.module().error('ERROR: [/items/controller (publish_item_record)] Unable to publish item ' + req.params.item_id + ' for exhibit ' + req.params.exhibit_id + ': ' + error.message);
         res.status(500).send({
             message: 'Unable to publish item record.'
         });
@@ -512,7 +506,6 @@ exports.suppress_item_record = async function (req, res) {
         }
 
     } catch (error) {
-        LOGGER.module().error('ERROR: [/items/controller (suppress_item_record)] Unable to suppress item ' + req.params.item_id + ' for exhibit ' + req.params.exhibit_id + ': ' + error.message);
         res.status(500).send({
             message: 'Unable to suppress item record.'
         });
@@ -562,7 +555,6 @@ exports.get_repo_item_record = async function (req, res) {
         }
 
     } catch (error) {
-        LOGGER.module().error('ERROR: [/items/controller (get_repo_item_record)] Unable to get repo item record ' + req.params.uuid + ': ' + error.message);
         res.status(500).send({
             message: 'Unable to get repo item record.'
         });
@@ -631,7 +623,6 @@ exports.get_kaltura_item_record = async function (req, res) {
         });
 
     } catch (error) {
-        LOGGER.module().error('ERROR: [/items/controller (get_kaltura_item_record)] Unable to get Kaltura item record ' + req.params.entry_id + ': ' + error.message);
         res.status(500).send({
             message: 'Unable to get Kaltura item record.'
         });
@@ -639,7 +630,7 @@ exports.get_kaltura_item_record = async function (req, res) {
 };
 
 exports.reorder_items = async function (req, res) {
-
+    console.log('Reordering items...');
     try {
 
         const exhibit_id = req.params.exhibit_id;
@@ -668,15 +659,19 @@ exports.reorder_items = async function (req, res) {
             heading: (item) => HEADINGS_MODEL.reorder_headings(exhibit_id, item),
             timeline: (item) => TIMELINES_MODEL.reorder_timelines(exhibit_id, item),
             griditem: (item) => {
-                const {grid_id, ...item_data} = item;
+                const { grid_id, ...item_data } = item;
                 return GRIDS_MODEL.reorder_grid_items(grid_id, item_data);
             }
         };
 
         const valid_types = Object.keys(reorder_handlers);
-
+        console.log('VALID TYPES ', valid_types);
+        console.log('UPDATED ORDER ', updated_order);
         // Validate all items before processing
         for (const item of updated_order) {
+
+            console.log('ITEM ', item);
+            console.log('ITEM TYPE ', item.type);
 
             if (!item || typeof item !== 'object' || Array.isArray(item)) {
                 res.status(400).send({
@@ -743,12 +738,12 @@ exports.reorder_items = async function (req, res) {
             }
         }
 
-        res.status(200).send({
+        res.status(201).send({
             message: 'Exhibit items reordered.'
         });
 
     } catch (error) {
-        LOGGER.module().error('ERROR: [/items/controller (reorder_items)] Unable to reorder items for exhibit ' + req.params.exhibit_id + ': ' + error.message);
+        console.error('ERROR ', error);
         res.status(500).send({
             message: 'Unable to reorder items.'
         });
@@ -756,9 +751,7 @@ exports.reorder_items = async function (req, res) {
 };
 
 exports.unlock_item_record = async function (req, res) {
-
     try {
-
         const exhibit_id = req.params.exhibit_id;
         const item_id = req.params.item_id;
         const uid = req.query.uid;
@@ -805,7 +798,6 @@ exports.unlock_item_record = async function (req, res) {
         }
 
     } catch (error) {
-        LOGGER.module().error('ERROR: [/items/controller (unlock_item_record)] Unable to unlock item ' + req.params.item_id + ' for user ' + req.query.uid + ': ' + error.message);
         res.status(500).send({
             message: 'Unable to unlock item record.'
         });
@@ -831,7 +823,6 @@ exports.get_item_subjects = async function (req, res) {
         });
 
     } catch (error) {
-        LOGGER.module().error('ERROR: [/items/controller (get_item_subjects)] Unable to get item subjects: ' + error.message);
         res.status(500).send({
             message: 'Unable to get item subjects.'
         });

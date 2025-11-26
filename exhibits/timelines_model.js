@@ -1044,7 +1044,7 @@ exports.suppress_timeline_item_record = async (exhibit_id, timeline_id, timeline
  * @returns {Promise<*>} Result from task
  */
 exports.reorder_timelines = async (exhibit_id, timeline) => {
-
+    console.log('TIMELINE ', timeline);
     try {
 
         if (!is_valid_uuid(exhibit_id)) {
