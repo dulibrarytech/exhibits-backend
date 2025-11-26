@@ -164,7 +164,9 @@ exports.get_item_record = async function (req, res) {
 };
 
 exports.update_item_record = async function (req, res) {
+
     try {
+
         const exhibit_id = req.params.exhibit_id;
         const item_id = req.params.item_id;
         const data = req.body;
@@ -221,7 +223,9 @@ exports.update_item_record = async function (req, res) {
 };
 
 exports.delete_item_record = async function (req, res) {
+
     try {
+
         const exhibit_id = req.params.exhibit_id;
         const item_id = req.params.item_id;
         const record_type = req.query.type;
@@ -432,7 +436,9 @@ exports.publish_item_record = async function (req, res) {
 };
 
 exports.suppress_item_record = async function (req, res) {
+
     try {
+
         const exhibit_id = req.params.exhibit_id;
         const item_id = req.params.item_id;
         const type = req.query.type;
@@ -507,7 +513,9 @@ exports.suppress_item_record = async function (req, res) {
 };
 
 exports.get_repo_item_record = async function (req, res) {
+
     try {
+
         const uuid = req.params.uuid;
 
         // Validate required path parameter
@@ -553,45 +561,10 @@ exports.get_repo_item_record = async function (req, res) {
     }
 };
 
-/*
-exports.get_repo_item_record__ = async function (req, res) {
-
-    try {
-
-        const uuid = req.params.uuid;
-
-        if (uuid.length === 0) {
-            res.status(400).send('Bad request.');
-            return false;
-        }
-
-        let response = await ITEMS_MODEL.get_repo_item_record(uuid);
-        const tn = await ITEMS_MODEL.get_repo_tn(uuid);
-        delete response.data.thumbnail;
-        response.data.thumbnail = tn;
-
-        if (response.status === 200) {
-
-            res.status(200).send({
-                message: 'Repo item metadata retrieved.',
-                data: response.data
-            });
-
-        } else {
-            res.status(204).send({
-                message: 'Unable to get repo item metadata.',
-                data: response.data
-            });
-        }
-
-    } catch (error) {
-        res.status(404).send({message: `Unable to get repo item record. ${error.message}`});
-    }
-};
-*/
-
 exports.get_kaltura_item_record = async function (req, res) {
+
     try {
+
         const entry_id = req.params.entry_id;
 
         // Validate required path parameter
@@ -655,68 +628,6 @@ exports.get_kaltura_item_record = async function (req, res) {
         });
     }
 };
-
-/*
-exports.get_kaltura_item_record__ = function (req, res) {
-
-    try {
-
-        const entry_id = req.params.entry_id;
-
-        if (entry_id.length === 0) {
-            res.status(400).send('Bad request.');
-            return false;
-        }
-
-        ITEMS_MODEL.get_kaltura_item_record(entry_id, (response) => {
-
-            if (response.mediaType === undefined || response.mediaType.length === 0) {
-                res.status(200).send({
-                    message: 'Unable to get Kaltura item metadata.',
-                    data: {
-                        message: response
-                    }
-                });
-                return false;
-            }
-
-            // https://developer.kaltura.com/api-docs/service/media/action/get
-            // Enum: VIDEO [1], IMAGE [2], AUDIO [5],
-            // LIVE_STREAM_FLASH [201], LIVE_STREAM_WINDOWS_MEDIA [202],
-            // LIVE_STREAM_REAL_MEDIA [203], LIVE_STREAM_QUICKTIME [204]
-
-            let item_type;
-            let title = response.name;
-            let description = response.description;
-            let thumbnail = response.thumbnailUrl;
-
-            if (response.mediaType === 1) {
-                item_type = 'video';
-            }
-
-            if (response.mediaType === 5) {
-                item_type = 'audio';
-            }
-
-            res.status(200).send({
-                message: 'Kaltura item metadata retrieved.',
-                data: {
-                    entry_id: response.id,
-                    item_type: item_type,
-                    title: title,
-                    description: description,
-                    thumbnail: thumbnail
-                }
-            });
-
-            return false;
-        });
-
-    } catch (error) {
-        res.status(404).send({message: `Unable to get kaltura item record. ${error.message}`});
-    }
-};
-*/
 
 exports.reorder_items = async function (req, res) {
     try {
@@ -831,109 +742,6 @@ exports.reorder_items = async function (req, res) {
     }
 };
 
-/*
-exports.reorder_items__ = async function (req, res) {
-
-    try {
-
-        const id = req.params.exhibit_id;
-        const updated_order = req.body;
-        let ordered_errors = [];
-
-        if (id.length === 0 || updated_order.length === 0) {
-            res.status(400).send('Bad request.');
-            return false;
-        }
-
-        for (let i=0;i<updated_order.length;i++) {
-
-            if (updated_order[i].type === 'item') {
-
-                let is_reordered = await ITEMS_MODEL.reorder_items(id, updated_order[i]);
-
-                if (is_reordered === false) {
-                    ordered_errors.push('-1');
-                }
-            }
-
-            if (updated_order[i].type === 'grid') {
-
-                let is_reordered = await GRIDS_MODEL.reorder_grids(id, updated_order[i]);
-
-                if (is_reordered === false) {
-                    ordered_errors.push('-1');
-                }
-            }
-
-            if (updated_order[i].type === 'heading') {
-
-                let is_reordered = await HEADINGS_MODEL.reorder_headings(id, updated_order[i]);
-
-                if (is_reordered === false) {
-                    ordered_errors.push('-1');
-                }
-            }
-
-            if (updated_order[i].type === 'timeline') {
-
-                let is_reordered = await TIMELINES_MODEL.reorder_timelines(id, updated_order[i]);
-
-                if (is_reordered === false) {
-                    ordered_errors.push('-1');
-                }
-            }
-
-            if (updated_order[i].type === 'griditem') {
-
-                let grid_id = updated_order[i].grid_id;
-                delete updated_order[i].grid_id;
-                let is_reordered = await GRIDS_MODEL.reorder_grid_items(grid_id, updated_order[i]);
-
-                if (is_reordered === false) {
-                    ordered_errors.push('-1');
-                }
-            }
-        }
-
-        if (ordered_errors.length === 0) {
-
-            const data = await EXHIBITS_MODEL.get_exhibit_record(id);
-
-            if (data.data.is_published === 1) {
-
-                let is_suppressed= await EXHIBITS_MODEL.suppress_exhibit(id);
-
-                if (is_suppressed.status === true) {
-
-                    setTimeout(async () => {
-
-                        const is_published = await EXHIBITS_MODEL.publish_exhibit(id);
-
-                        if (is_published.status === true) {
-                            LOGGER.module().info('INFO: [/exhibits/model (update_item_record)] Item re-published successfully.');
-                        }
-
-                    }, 5000);
-                }
-            }
-
-            res.status(201).send({
-                message: 'Exhibit items reordered.'
-            });
-
-        } else {
-            res.status(204).send({
-                message: 'Unable to reorder exhibit items.'
-            });
-        }
-
-    } catch (error) {
-        console.log(error);
-        res.status(500).send({message: `Unable to reorder items. ${error.message}`});
-    }
-};
-*/
-
 exports.unlock_item_record = async function (req, res) {
     try {
         const exhibit_id = req.params.exhibit_id;
@@ -988,71 +796,6 @@ exports.unlock_item_record = async function (req, res) {
     }
 };
 
-/*
-exports.unlock_item_record__ = async function (req, res) {
-
-    try {
-
-        const exhibit_id = req.params.exhibit_id;
-        const item_id = req.params.item_id;
-        const uid = req.query.uid;
-        const force = req.query.force;
-        let options = {};
-
-        if (item_id === undefined || item_id.length === 0) {
-            res.status(400).send('Bad request.');
-            return false;
-        }
-
-        if (uid === undefined || uid.length === 0) {
-            res.status(400).send('Bad request.');
-            return false;
-        }
-
-        if (force !== undefined && force === 'true') {
-            options.force = true;
-        } else {
-            options.force = false;
-        }
-
-        /*
-        const permissions = ['update_any_item'];
-        let options = {};
-        options.req = req;
-        options.permissions = permissions;
-        options.record_type = 'item';
-        options.parent_id = exhibit_id;
-        options.child_id = item_id;
-
-        const is_authorized = await AUTHORIZE.check_permission(options);
-
-        if (is_authorized === false) {
-            res.status(403).send({
-                message: 'Unauthorized request'
-            });
-
-            return false;
-        }
-        *
-
-        const result = await ITEMS_MODEL.unlock_item_record(uid, item_id, options);
-
-        if (typeof result === 'object') {
-            res.status(200).send({
-                message: 'Item record unlocked.'
-            });
-        } else {
-            res.status(400).send({
-                message: 'Unable to unlock item record'
-            });
-        }
-
-    } catch (error) {
-        res.status(500).send({message: `Unable to unlock item record. ${error.message}`});
-    }
-};
-*/
-
 exports.get_item_subjects = async function (req, res) {
 
     try {
@@ -1077,21 +820,3 @@ exports.get_item_subjects = async function (req, res) {
         });
     }
 };
-
-/*
-exports.get_item_subjects__ = async function (req, res) {
-
-    try {
-
-        const subjects = await ITEMS_MODEL.get_item_subjects();
-
-        res.status(200).send({
-            data: subjects
-        });
-
-    } catch (error) {
-        res.status(500).send({message: `Unable to get item subjects. ${error.message}`});
-    }
-};
-
- */
