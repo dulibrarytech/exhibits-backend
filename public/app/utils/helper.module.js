@@ -2143,7 +2143,7 @@ const helperModule = (function () {
                 search_timeout = setTimeout(() => {
                     const query = e.target.value.toLowerCase().trim();
                     state.filtered_items = query
-                        ? all_items.filter(item => item.toLowerCase().includes(query))
+                        ? all_items.filter(item => item.toLowerCase().startsWith(query))
                         : [...all_items];
                     render_virtual_list();
                 }, 150);

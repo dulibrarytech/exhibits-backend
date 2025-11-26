@@ -666,47 +666,6 @@ exports.get_grid_item_record = async function (req, res) {
     }
 };
 
-/*
-exports.get_grid_item_record__ = async function (req, res) {
-
-    try {
-
-        const is_member_of_exhibit = req.params.exhibit_id;
-        const is_member_of_grid = req.params.grid_id;
-        const item_id = req.params.item_id;
-        const type = req.query.type;
-
-        if (is_member_of_exhibit === undefined || is_member_of_grid === undefined || item_id === undefined) {
-            res.status(400).send('Bad request.');
-            return false;
-        }
-
-        if (type === undefined) {
-            const result = await GRIDS_MODEL.get_grid_item_record(is_member_of_exhibit, is_member_of_grid, item_id);
-            res.status(result.status).send(result);
-            return false;
-        }
-
-        if (type === 'edit') {
-
-            const uid = req.query.uid;
-
-            if (uid === undefined || uid.length === 0) {
-                res.status(400).send('Bad request.');
-                return false;
-            }
-
-            const result = await GRIDS_MODEL.get_grid_item_edit_record(uid, is_member_of_exhibit, is_member_of_grid, item_id);
-            res.status(result.status).send(result);
-            return false;
-        }
-
-    } catch (error) {
-        res.status(500).send({message: `Unable to get grid item. ${error.message}`});
-    }
-};
-*/
-
 exports.update_grid_item_record = async function (req, res) {
 
     try {
@@ -1035,6 +994,7 @@ exports.delete_grid_item_record__ = async function (req, res) {
 */
 
 exports.publish_grid_item_record = async function (req, res) {
+
     try {
         const exhibit_id = req.params.exhibit_id;
         const grid_id = req.params.grid_id;
@@ -1108,7 +1068,7 @@ exports.publish_grid_item_record = async function (req, res) {
         const result = await GRIDS_MODEL.publish_grid_item_record(exhibit_id, grid_id, grid_item_id);
 
         // Validate result from model
-        if (!result) { //  || typeof result.status !== 'number'
+        if (!result.status) {
             LOGGER.module().error(`publish_grid_item_record: ${result.message}`, { // Invalid response from database model
                 exhibit_id,
                 grid_id,

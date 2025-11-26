@@ -587,6 +587,14 @@ const itemsModule = (function() {
             return true;
         }
 
+        // Handle 422 Unprocessable Entity - exhibit must contain at least one item
+        if (response?.status === 422) {
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+            const message_element = document.querySelector('#message');
+            display_message(message_element, 'warning', 'Cannot publish item. Exhibit must be published.');
+            return false;
+        }
+
         // Handle undefined response (network/server error)
         if (!response) {
             window.scrollTo({ top: 0, behavior: 'smooth' });

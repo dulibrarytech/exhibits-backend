@@ -53,32 +53,13 @@ const itemsGridModule = (function () {
 
         const exhibit_id = helperModule.get_parameter_by_name('exhibit_id');
         const grid_id = helperModule.get_parameter_by_name('grid_id');
-
-        // Hide table and show loading indicator before fetching data
-        const grid_items_table = document.querySelector('#grid-items');
-        const card_element = document.querySelector('.card');
-
-        if (grid_items_table !== null) {
-            grid_items_table.style.visibility = 'hidden';
-        }
-
-        if (card_element !== null) {
-            card_element.style.minHeight = '200px';
-        }
-
-        document.querySelector('#message').innerHTML = '<div class="alert alert-info" role="alert"><i class="fa fa-spinner fa-spin"></i> Loading grid items...</div>';
-
         await exhibitsModule.set_exhibit_title(exhibit_id);
         const items = await get_grid_items(exhibit_id, grid_id);
-
-        // Clear loading message
-        document.querySelector('#message').innerHTML = '';
+        let item_data = '';
+        let item_order = [];
 
         if (items === false) {
             document.querySelector('#item-card').innerHTML = '';
-            if (grid_items_table !== null) {
-                grid_items_table.style.visibility = 'visible';
-            }
             return false;
         }
 
@@ -88,19 +69,13 @@ const itemsGridModule = (function () {
             return false;
         }
 
-        let item_data = '';
-        let item_order = [];
-
-        // Build all item HTML before inserting into DOM
         for (let i = 0; i < items.length; i++) {
             item_order.push(items[i].order);
             item_data += await itemsListDisplayModule.display_grid_items(items[i]);
         }
 
-        // Insert all items at once
         document.querySelector('#grid-item-list').innerHTML = item_data;
 
-        // Initialize DataTable
         const GRID_ITEM_LIST = new DataTable('#grid-items', {
             paging: false,
             rowReorder: true
@@ -110,40 +85,8 @@ const itemsGridModule = (function () {
             await helperModule.reorder_grid_items(e, reordered_items);
         });
 
-        // Use delegated events on table body for publish/suppress actions
-        const table_body = document.querySelector('#grid-items tbody');
-
-        if (table_body !== null) {
-            table_body.addEventListener('click', async function (event) {
-                const target = event.target.closest('.publish-item, .suppress-item');
-
-                if (target === null) {
-                    return;
-                }
-
-                event.preventDefault();
-                const uuid = target.getAttribute('id');
-
-                if (uuid === null) {
-                    return;
-                }
-
-                if (target.classList.contains('publish-item')) {
-                    await publish_grid_item(uuid);
-                } else if (target.classList.contains('suppress-item')) {
-                    await suppress_grid_item(uuid);
-                }
-            });
-        }
-
-        // Show table after DataTable is initialized and content is ready
-        if (grid_items_table !== null) {
-            grid_items_table.style.visibility = 'visible';
-        }
-
-        if (card_element !== null) {
-            card_element.style.minHeight = '';
-        }
+        bind_publish_grid_item_events();
+        bind_suppress_grid_item_events();
     };
 
     async function publish_grid_item(uuid) {
@@ -172,43 +115,54 @@ const itemsGridModule = (function () {
                 }
             });
 
-            if (response.status === 200) {
+            if (response.status === 200) { // response !== undefined &&
 
-                let elem = document.getElementById(uuid);
-                elem.classList.remove('publish-item');
-                elem.classList.add('suppress-item');
-                elem.innerHTML = '<span id="suppress" title="published"><i class="fa fa-cloud" style="color: green"></i><br>Published</span>';
+                setTimeout(() => {
+                    let elem = document.getElementById(uuid);
+                    document.getElementById(uuid).classList.remove('publish-item');
+                    document.getElementById(uuid).classList.add('suppress-item');
+                    document.getElementById(uuid).replaceWith(elem.cloneNode(true));
+                    document.getElementById(uuid).innerHTML = '<span id="suppress" title="published"><i class="fa fa-cloud" style="color: green"></i><br>Published</span>';
+                    document.getElementById(uuid).addEventListener('click', async (event) => {
+                        event.preventDefault();
+                        const uuid = elem.getAttribute('id');
+                        await suppress_grid_item(uuid);
+                    }, false);
+                }, 0);
 
-                const trIds = Array.from(document.querySelectorAll('tr')).map(tr => tr.id).filter(id => id);
-                let uuid_found = trIds.find((arr_result) => {
+                setTimeout(() => {
 
-                    let uuid_arr = arr_result.split('_');
+                    const trIds = Array.from(document.querySelectorAll('tr')).map(tr => tr.id).filter(id => id);
+                    let uuid_found = trIds.find((arr_result) => {
 
-                    if (uuid === uuid_arr[0]) {
-                        return true;
+                        let uuid_arr = arr_result.split('_');
+
+                        if (uuid === uuid_arr[0]) {
+                            return true;
+                        } else {
+                            return false;
+                        }
+                    });
+
+                    let type = uuid_found.split('_');
+                    let details_path;
+
+                    if (type[1] === 'griditem' && type[2] === 'text') {
+                        details_path = `${APP_PATH}/items/grid/item/text/details?exhibit_id=${exhibit_id}&grid_id=${grid_id}&item_id=${uuid}`;
                     } else {
-                        return false;
+                        details_path = `${APP_PATH}/items/grid/item/media/details?exhibit_id=${exhibit_id}&grid_id=${grid_id}&item_id=${uuid}`;
                     }
-                });
 
-                let type = uuid_found.split('_');
-                let details_path;
-
-                if (type[1] === 'griditem' && type[2] === 'text') {
-                    details_path = `${APP_PATH}/items/grid/item/text/details?exhibit_id=${exhibit_id}&grid_id=${grid_id}&item_id=${uuid}`;
-                } else {
-                    details_path = `${APP_PATH}/items/grid/item/media/details?exhibit_id=${exhibit_id}&grid_id=${grid_id}&item_id=${uuid}`;
-                }
-
-                let uuid_actions = `${uuid}-item-actions`;
-                let actions_elem = document.getElementById(uuid_actions);
-                let item_details = `<a href="${details_path}" title="View details" aria-label="item-details"><i class="fa fa-folder-open pr-1"></i> </a>`;
-                let trash = `<i title="Can only delete if unpublished" style="color: #d3d3d3" class="fa fa-trash pr-1" aria-label="delete-grid-item"></i>`;
-                actions_elem.innerHTML = `
-                    <div class="card-text text-sm-center">
-                    ${item_details}&nbsp;
-                    ${trash}
-                    </div>`;
+                    let uuid_actions = `${uuid}-item-actions`;
+                    let elem = document.getElementById(uuid_actions);
+                    let item_details = `<a href="${details_path}" title="View details" aria-label="item-details"><i class="fa fa-folder-open pr-1"></i> </a>`;
+                    let trash = `<i title="Can only delete if unpublished" style="color: #d3d3d3" class="fa fa-trash pr-1" aria-label="delete-grid-item"></i>`;
+                    elem.innerHTML = `
+                        <div class="card-text text-sm-center">
+                        ${item_details}&nbsp;
+                        ${trash}
+                        </div>`;
+                }, 0);
 
             } else if (response.status === 403) {
                 scrollTo(0, 0);
@@ -260,47 +214,57 @@ const itemsGridModule = (function () {
 
             if (response !== undefined && response.status === 200) {
 
-                let elem = document.getElementById(uuid);
-                elem.classList.remove('suppress-item');
-                elem.classList.add('publish-item');
-                elem.innerHTML = '<span id="publish" title="suppressed"><i class="fa fa-cloud-upload" style="color: darkred"></i><br>Suppressed</span>';
+                setTimeout(() => {
+                    let elem = document.getElementById(uuid);
+                    document.getElementById(uuid).classList.remove('suppress-item');
+                    document.getElementById(uuid).classList.add('publish-item');
+                    document.getElementById(uuid).replaceWith(elem.cloneNode(true));
+                    document.getElementById(uuid).innerHTML = '<span id="publish" title="suppressed"><i class="fa fa-cloud-upload" style="color: darkred"></i><br>Suppressed</span>';
+                    document.getElementById(uuid).addEventListener('click', async (event) => {
+                        event.preventDefault();
+                        const uuid = elem.getAttribute('id');
+                        await publish_grid_item(uuid);
+                    }, false);
+                }, 0);
 
-                const trIds = Array.from(document.querySelectorAll('tr')).map(tr => tr.id).filter(id => id);
-                let uuid_found = trIds.find((arr_result) => {
+                setTimeout(() => {
 
-                    let uuid_arr = arr_result.split('_');
+                    const trIds = Array.from(document.querySelectorAll('tr')).map(tr => tr.id).filter(id => id);
+                    let uuid_found = trIds.find((arr_result) => {
 
-                    if (uuid === uuid_arr[0]) {
-                        return true;
+                        let uuid_arr = arr_result.split('_');
+
+                        if (uuid === uuid_arr[0]) {
+                            return true;
+                        } else {
+                            return false;
+                        }
+                    });
+
+                    let type = uuid_found.split('_');
+                    let edit_path;
+                    let delete_path;
+                    let view_items = '';
+
+                    if (type[1] === 'griditem' && type[2] === 'text') {
+                        edit_path = `${APP_PATH}/items/grid/item/text/edit?exhibit_id=${exhibit_id}&grid_id=${grid_id}&item_id=${uuid}`;
                     } else {
-                        return false;
+                        edit_path = `${APP_PATH}/items/grid/item/media/edit?exhibit_id=${exhibit_id}&grid_id=${grid_id}&item_id=${uuid}`;
                     }
-                });
 
-                let type = uuid_found.split('_');
-                let edit_path;
-                let delete_path;
-                let view_items = '';
+                    delete_path = `${APP_PATH}/items/grid/item/delete?exhibit_id=${exhibit_id}&grid_id=${grid_id}&item_id=${uuid}`;
 
-                if (type[1] === 'griditem' && type[2] === 'text') {
-                    edit_path = `${APP_PATH}/items/grid/item/text/edit?exhibit_id=${exhibit_id}&grid_id=${grid_id}&item_id=${uuid}`;
-                } else {
-                    edit_path = `${APP_PATH}/items/grid/item/media/edit?exhibit_id=${exhibit_id}&grid_id=${grid_id}&item_id=${uuid}`;
-                }
-
-                delete_path = `${APP_PATH}/items/grid/item/delete?exhibit_id=${exhibit_id}&grid_id=${grid_id}&item_id=${uuid}`;
-
-                let uuid_actions = `${uuid}-item-actions`;
-                let actions_elem = document.getElementById(uuid_actions);
-                let item_edit = `<a href="${edit_path}" title="Edit item" aria-label="edit-item"><i class="fa fa-edit pr-1"></i> </a>`;
-                let trash = `<a href="${delete_path}" title="Delete item" aria-label="delete-item"><i class="fa fa-trash pr-1"></i></a>`;
-                actions_elem.innerHTML = `
-                    <div class="card-text text-sm-center">
-                    ${view_items}&nbsp;
-                    ${item_edit}&nbsp;
-                    ${trash}
-                    </div>`;
-
+                    let uuid_actions = `${uuid}-item-actions`;
+                    let elem = document.getElementById(uuid_actions);
+                    let item_edit = `<a href="${edit_path}" title="Edit item" aria-label="edit-item"><i class="fa fa-edit pr-1"></i> </a>`;
+                    let trash = `<a href="${delete_path}" title="Delete item" aria-label="delete-item"><i class="fa fa-trash pr-1"></i></a>`;
+                    elem.innerHTML = `
+                        <div class="card-text text-sm-center">
+                        ${view_items}&nbsp;
+                        ${item_edit}&nbsp;
+                        ${trash}
+                        </div>`;
+                }, 0);
             } else if (response === undefined) {
                 scrollTo(0, 0);
                 document.querySelector('#message').innerHTML = `<div class="alert alert-danger" role="alert"><i class="fa fa-danger"></i> You do not have permission to unpublish this record.</div>`;
@@ -320,6 +284,44 @@ const itemsGridModule = (function () {
             }
 
             return false;
+
+        } catch (error) {
+            document.querySelector('#message').innerHTML = `<div class="alert alert-danger" role="alert"><i class="fa fa-exclamation"></i> ${error.message}</div>`;
+        }
+    }
+
+    function bind_publish_grid_item_events() {
+
+        try {
+
+            const exhibit_links = Array.from(document.getElementsByClassName('publish-item'));
+
+            exhibit_links.forEach(exhibit_link => {
+                exhibit_link.addEventListener('click', async (event) => {
+                    event.preventDefault();
+                    const uuid = exhibit_link.getAttribute('id');
+                    await publish_grid_item(uuid);
+                });
+            });
+
+        } catch (error) {
+            document.querySelector('#message').innerHTML = `<div class="alert alert-danger" role="alert"><i class="fa fa-exclamation"></i> ${error.message}</div>`;
+        }
+    }
+
+    function bind_suppress_grid_item_events() {
+
+        try {
+
+            const exhibit_links = Array.from(document.getElementsByClassName('suppress-item'));
+
+            exhibit_links.forEach(exhibit_link => {
+                exhibit_link.addEventListener('click', async (event) => {
+                    event.preventDefault();
+                    const uuid = exhibit_link.getAttribute('id');
+                    await suppress_grid_item(uuid);
+                });
+            });
 
         } catch (error) {
             document.querySelector('#message').innerHTML = `<div class="alert alert-danger" role="alert"><i class="fa fa-exclamation"></i> ${error.message}</div>`;
