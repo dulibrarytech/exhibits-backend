@@ -29,38 +29,85 @@
 <script src="/exhibits-dashboard/static/app/dist/exhibits.module.min.js?<%=build_version%>"></script>
 <script src="/exhibits-dashboard/static/app/dist/items.module.min.js?<%=build_version%>"></script>
 <script>
-    (async function() {
 
-        try {
+    (async function () {
 
-            const status = helperModule.get_parameter_by_name('status');
-            const exhibit_id = helperModule.get_parameter_by_name('exhibit_id');
-            const item_id = helperModule.get_parameter_by_name('item_id');
+        'use strict';
 
-            if (status !== null && status === '403') {
+        /**
+         * Displays a message safely in the message container
+         * @param {string} message - Message text to display
+         * @param {string} type - Alert type: 'danger', 'warning', 'info', 'success'
+         */
+        function display_message(message, type = 'danger') {
+            const message_el = document.querySelector('#message');
 
-                document.querySelector('#message').innerHTML = `<div class="alert alert-danger" role="alert"><i class="fa fa-exclamation"></i> You do not have permission to delete this item.</div>`;
-
-                setTimeout(() => {
-                    window.history.replaceState({page: 'items'}, '', '/exhibits-dashboard/items/delete?exhibit_id=' + exhibit_id);
-                }, 0);
-
-            } else {
-
-                const redirect = '/items/delete?exhibit_id=' + exhibit_id + '&status=403';
-                await authModule.check_permissions(['delete_item', 'delete_any_item'], 'item', exhibit_id, item_id, redirect);
-                await exhibitsModule.set_exhibit_title(exhibit_id);
-                document.querySelector('#delete-item-btn').addEventListener('click', itemsModule.delete_item);
-                helperModule.show_form();
+            if (message_el === null) {
+                return;
             }
 
-            navModule.set_item_list_link();
+            const alert_div = document.createElement('div');
+            alert_div.className = `alert alert-${type}`;
+            alert_div.setAttribute('role', 'alert');
 
-        } catch (error) {
-            document.querySelector('#message').innerHTML = `<div class="alert alert-danger" role="alert"><i class="fa fa-exclamation"></i> ${error.message}</div>`;
+            const icon = document.createElement('i');
+            icon.className = 'fa fa-exclamation';
+            icon.setAttribute('aria-hidden', 'true');
+
+            alert_div.appendChild(icon);
+            alert_div.appendChild(document.createTextNode(` ${message}`));
+
+            message_el.innerHTML = '';
+            message_el.appendChild(alert_div);
         }
 
+        /**
+         * Initializes the delete item page
+         */
+        async function init_delete_item() {
+
+            try {
+
+                const status = helperModule.get_parameter_by_name('status');
+                const exhibit_id = helperModule.get_parameter_by_name('exhibit_id');
+                const item_id = helperModule.get_parameter_by_name('item_id');
+
+                if (status === '403') {
+
+                    display_message('You do not have permission to delete this item.');
+
+                    window.history.replaceState(
+                        { page: 'items' },
+                        '',
+                        `/exhibits-dashboard/items/delete?exhibit_id=${encodeURIComponent(exhibit_id)}`
+                    );
+
+                } else {
+
+                    const redirect = `/items/delete?exhibit_id=${encodeURIComponent(exhibit_id)}&status=403`;
+                    await authModule.check_permissions(['delete_item', 'delete_any_item'], 'item', exhibit_id, item_id, redirect);
+                    await exhibitsModule.set_exhibit_title(exhibit_id);
+
+                    const delete_btn = document.querySelector('#delete-item-btn');
+
+                    if (delete_btn !== null) {
+                        delete_btn.addEventListener('click', itemsModule.delete_item);
+                    }
+
+                    helperModule.show_form();
+                }
+
+                navModule.set_item_list_link();
+
+            } catch (error) {
+                display_message(error.message);
+            }
+        }
+
+        await init_delete_item();
+
     })();
+
 </script>
 </body>
 </html>

@@ -248,7 +248,8 @@ exports.delete_item_record = async function (req, res) {
         }
 
         // Validate record type if provided
-        const valid_record_types = ['item', 'grid', 'media'];
+        /* TODO: determine record types
+        const valid_record_types = ['item', 'grid', 'heading'];
 
         if (record_type !== undefined && (typeof record_type !== 'string' || !valid_record_types.includes(record_type))) {
             res.status(400).send({
@@ -256,6 +257,8 @@ exports.delete_item_record = async function (req, res) {
             });
             return;
         }
+
+         */
 
         // Check authorization
         const auth_options = {
