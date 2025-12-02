@@ -46,21 +46,21 @@ const rate_limit_configs = {
     // Strict rate limit for write operations (create, update, delete)
     write_operations: {
         window_ms: 15 * 60 * 1000, // 15 minutes
-        max_requests: 50,
+        max_requests: 100,
         message: 'Too many write requests'
     },
 
     // Moderate rate limit for read operations
     read_operations: {
         window_ms: 15 * 60 * 1000, // 15 minutes
-        max_requests: 200,
+        max_requests: 250,
         message: 'Too many read requests'
     },
 
     // Very strict rate limit for publish/suppress operations
     state_change_operations: {
         window_ms: 60 * 60 * 1000, // 1 hour
-        max_requests: 20,
+        max_requests: 250,
         message: 'Too many state change requests'
     },
 
@@ -74,7 +74,7 @@ const rate_limit_configs = {
     // Moderate rate limit for preview building (resource intensive)
     preview_operations: {
         window_ms: 60 * 60 * 1000, // 1 hour
-        max_requests: 10,
+        max_requests: 150,
         message: 'Too many preview requests'
     },
 
@@ -95,7 +95,7 @@ const rate_limit_configs = {
     // General API operations
     general_operations: {
         window_ms: 15 * 60 * 1000, // 15 minutes
-        max_requests: 100,
+        max_requests: 250,
         message: 'Too many requests'
     }
 };
