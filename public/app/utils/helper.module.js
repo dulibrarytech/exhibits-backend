@@ -1067,10 +1067,10 @@ const helperModule = (function () {
             });
 
             // Handle response
-            if (response && response.status === 201) {
+            if (response && response.status === 200) {
                 console.log('Items reordered successfully');
 
-                // Optional: Display success message
+                /*
                 const message_element = document.querySelector('#message');
                 if (message_element) {
                     display_success_message(message_element, 'Items reordered successfully');
@@ -1080,6 +1080,8 @@ const helperModule = (function () {
                         message_element.textContent = '';
                     }, 3000);
                 }
+
+                 */
 
                 return true;
             } else {
