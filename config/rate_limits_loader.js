@@ -46,7 +46,7 @@ const rate_limit_configs = {
     // Strict rate limit for write operations (create, update, delete)
     write_operations: {
         window_ms: 15 * 60 * 1000, // 15 minutes
-        max_requests: 100,
+        max_requests: 150,
         message: 'Too many write requests'
     },
 
@@ -60,14 +60,14 @@ const rate_limit_configs = {
     // Very strict rate limit for publish/suppress operations
     state_change_operations: {
         window_ms: 60 * 60 * 1000, // 1 hour
-        max_requests: 250,
+        max_requests: 150,
         message: 'Too many state change requests'
     },
 
     // Strict rate limit for media upload/delete operations
     media_operations: {
         window_ms: 15 * 60 * 1000, // 15 minutes
-        max_requests: 30,
+        max_requests: 150,
         message: 'Too many media operations'
     },
 

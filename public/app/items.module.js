@@ -595,6 +595,14 @@ const itemsModule = (function() {
             return false;
         }
 
+        if (response?.status === 429) {
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+            const message = response.data.message;
+            const message_element = document.querySelector('#message');
+            display_message(message_element, 'warning', message);
+            return false;
+        }
+
         // Handle undefined response (network/server error)
         if (!response) {
             window.scrollTo({ top: 0, behavior: 'smooth' });
@@ -649,8 +657,6 @@ const itemsModule = (function() {
             return false;
         }
 
-        console.log('Suppressing item type:', item_type);
-
         // Get endpoints
         const EXHIBITS_ENDPOINTS = get_exhibits_endpoints();
 
@@ -701,6 +707,14 @@ const itemsModule = (function() {
             // Update UI to show unpublished state
             update_item_status_to_unpublished(uuid, item_type, exhibit_id);
             return true;
+        }
+
+        if (response?.status === 429) {
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+            const message = response.data.message;
+            const message_element = document.querySelector('#message');
+            display_message(message_element, 'warning', message);
+            return false;
         }
 
         // Handle undefined response (network/server error)
