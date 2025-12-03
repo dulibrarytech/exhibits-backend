@@ -245,6 +245,12 @@ exports.create_grid_record = async (is_member_of_exhibit, data) => {
             );
         }
 
+        const is_updated = await exhibit_tasks.update_exhibit_timestamp(is_member_of_exhibit);
+
+        if (is_updated === true) {
+            LOGGER.module().info('INFO: [/exhibits/items_model - Exhibit timestamp updated successfully.');
+        }
+
         return build_response(
             CONSTANTS.STATUS_CODES.CREATED,
             'Grid record created',
@@ -314,6 +320,12 @@ exports.update_grid_record = async (is_member_of_exhibit, grid_id, data) => {
                 CONSTANTS.STATUS_CODES.OK,
                 'Unable to update grid record'
             );
+        }
+
+        const is_updated = await exhibit_tasks.update_exhibit_timestamp(is_member_of_exhibit);
+
+        if (is_updated === true) {
+            LOGGER.module().info('INFO: [/exhibits/items_model - Exhibit timestamp updated successfully.');
         }
 
         return build_response(
@@ -430,6 +442,12 @@ exports.create_grid_item_record = async (is_member_of_exhibit, grid_id, data) =>
                 CONSTANTS.STATUS_CODES.OK,
                 'Unable to create grid item record'
             );
+        }
+
+        const is_updated = await exhibit_tasks.update_exhibit_timestamp(is_member_of_exhibit);
+
+        if (is_updated === true) {
+            LOGGER.module().info('INFO: [/exhibits/items_model - Exhibit timestamp updated successfully.');
         }
 
         return build_response(
@@ -701,6 +719,12 @@ exports.update_grid_item_record = async (is_member_of_exhibit, is_member_of_grid
             setImmediate(() => handle_grid_item_republish(is_member_of_exhibit, is_member_of_grid, item_id));
         }
 
+        const is_updated = await exhibit_tasks.update_exhibit_timestamp(is_member_of_exhibit);
+
+        if (is_updated === true) {
+            LOGGER.module().info('INFO: [/exhibits/items_model - Exhibit timestamp updated successfully.');
+        }
+
         return build_response(
             CONSTANTS.STATUS_CODES.CREATED,
             'Grid item record updated',
@@ -747,6 +771,12 @@ exports.delete_grid_item_record = async (is_member_of_exhibit, grid_id, grid_ite
             grid_id,
             grid_item_id
         );
+
+        const is_updated = await exhibit_tasks.update_exhibit_timestamp(is_member_of_exhibit);
+
+        if (is_updated === true) {
+            LOGGER.module().info('INFO: [/exhibits/items_model - Exhibit timestamp updated successfully.');
+        }
 
         return build_response(
             CONSTANTS.STATUS_CODES.NO_CONTENT,
