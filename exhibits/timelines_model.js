@@ -228,6 +228,12 @@ exports.create_timeline_record = async (is_member_of_exhibit, data) => {
             );
         }
 
+        const is_updated = await exhibit_tasks.update_exhibit_timestamp(is_member_of_exhibit);
+
+        if (is_updated === true) {
+            LOGGER.module().info('INFO: [/exhibits/items_model - Exhibit timestamp updated successfully.');
+        }
+
         return build_response(
             CONSTANTS.STATUS_CODES.CREATED,
             'Timeline record created',
@@ -295,6 +301,12 @@ exports.update_timeline_record = async (is_member_of_exhibit, timeline_id, data)
                 CONSTANTS.STATUS_CODES.OK,
                 'Unable to update timeline record'
             );
+        }
+
+        const is_updated = await exhibit_tasks.update_exhibit_timestamp(is_member_of_exhibit);
+
+        if (is_updated === true) {
+            LOGGER.module().info('INFO: [/exhibits/items_model - Exhibit timestamp updated successfully.');
         }
 
         return build_response(
@@ -411,6 +423,12 @@ exports.create_timeline_item_record = async (is_member_of_exhibit, timeline_id, 
                 CONSTANTS.STATUS_CODES.OK,
                 'Unable to create timeline item record'
             );
+        }
+
+        const is_updated = await exhibit_tasks.update_exhibit_timestamp(is_member_of_exhibit);
+
+        if (is_updated === true) {
+            LOGGER.module().info('INFO: [/exhibits/items_model - Exhibit timestamp updated successfully.');
         }
 
         return build_response(
@@ -633,6 +651,12 @@ exports.update_timeline_item_record = async (is_member_of_exhibit, is_member_of_
             );
         }
 
+        const is_updated = await exhibit_tasks.update_exhibit_timestamp(is_member_of_exhibit);
+
+        if (is_updated === true) {
+            LOGGER.module().info('INFO: [/exhibits/items_model - Exhibit timestamp updated successfully.');
+        }
+
         return build_response(
             CONSTANTS.STATUS_CODES.CREATED,
             'Timeline item record updated',
@@ -679,6 +703,12 @@ exports.delete_timeline_item_record = async (is_member_of_exhibit, timeline_id, 
             timeline_id,
             timeline_item_id
         );
+
+        const is_updated = await exhibit_tasks.update_exhibit_timestamp(is_member_of_exhibit);
+
+        if (is_updated === true) {
+            LOGGER.module().info('INFO: [/exhibits/items_model - Exhibit timestamp updated successfully.');
+        }
 
         return build_response(
             CONSTANTS.STATUS_CODES.NO_CONTENT,
@@ -1044,7 +1074,7 @@ exports.suppress_timeline_item_record = async (exhibit_id, timeline_id, timeline
  * @returns {Promise<*>} Result from task
  */
 exports.reorder_timelines = async (exhibit_id, timeline) => {
-    console.log('TIMELINE ', timeline);
+
     try {
 
         if (!is_valid_uuid(exhibit_id)) {
