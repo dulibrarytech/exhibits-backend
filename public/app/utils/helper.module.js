@@ -778,7 +778,9 @@ const helperModule = (function () {
      * @returns {Array<HTMLElement>} Array of elements
      */
     function get_form_cards(selector) {
+
         try {
+
             // Validate selector
             if (!selector || typeof selector !== 'string') {
                 console.error('Invalid selector');
@@ -898,7 +900,9 @@ const helperModule = (function () {
      * @returns {boolean} True if successful, false otherwise
      */
     obj.hide_form = function (selector = '.card', use_animation = false) {
+
         try {
+
             const form_cards = get_form_cards(selector);
 
             if (!form_cards || form_cards.length === 0) {
@@ -977,7 +981,9 @@ const helperModule = (function () {
      * @returns {boolean} True if shown, false if hidden
      */
     obj.toggle_form = function (selector = '.card', use_animation = false) {
+
         try {
+
             const form_cards = get_form_cards(selector);
 
             if (!form_cards || form_cards.length === 0) {
@@ -1069,20 +1075,6 @@ const helperModule = (function () {
             // Handle response
             if (response && response.status === 200) {
                 console.log('Items reordered successfully');
-
-                /*
-                const message_element = document.querySelector('#message');
-                if (message_element) {
-                    display_success_message(message_element, 'Items reordered successfully');
-
-                    // Clear message after 3 seconds
-                    setTimeout(() => {
-                        message_element.textContent = '';
-                    }, 3000);
-                }
-
-                 */
-
                 return true;
             } else {
                 throw new Error('Failed to reorder items - server returned an error');

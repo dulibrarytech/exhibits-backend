@@ -29,13 +29,18 @@ const itemsModule = (function() {
      * Get app path
      */
     const get_app_path = () => {
+
         try {
+
             const app_path = window.localStorage.getItem('exhibits_app_path');
+
             if (!app_path) {
                 console.error('App path not found in localStorage');
                 return '';
             }
+
             return app_path;
+
         } catch (error) {
             console.error('Error accessing localStorage:', error);
             return '';
@@ -467,6 +472,14 @@ const itemsModule = (function() {
             return true;
         }
 
+        if (response?.status === 429) {
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+            const message = response.data.message;
+            const message_element = document.querySelector('#message');
+            display_message(message_element, 'warning', message);
+            return false;
+        }
+
         // Handle undefined response (network/server error)
         if (!response) {
             window.scrollTo({ top: 0, behavior: 'smooth' });
@@ -532,8 +545,6 @@ const itemsModule = (function() {
             display_message(message_element, 'danger', 'Could not determine item type');
             return false;
         }
-
-        console.log('Publishing item type:', item_type);
 
         // Get endpoints
         const EXHIBITS_ENDPOINTS = get_exhibits_endpoints();
@@ -764,9 +775,6 @@ const itemsModule = (function() {
 
         status_element.textContent = '';
         status_element.appendChild(span);
-
-        // Note: Event delegation in display_items() handles click events
-        // No need to re-attach individual listeners here
 
         // Update action buttons immediately
         update_action_buttons(uuid, item_type, exhibit_id, true);
