@@ -763,7 +763,6 @@ exports.delete_item_record = async (is_member_of_exhibit, item_id, type) => {
 
         // Delete from database
         const result = await item_task.delete_item_record(is_member_of_exhibit, item_id, type);
-
         const is_updated = await exhibit_tasks.update_exhibit_timestamp(is_member_of_exhibit);
 
         if (is_updated === true) {
