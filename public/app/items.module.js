@@ -964,6 +964,7 @@ const itemsModule = (function() {
      * Initialize module
      */
     obj.init = async function() {
+
         try {
             // Get parameters
             const exhibit_id = helperModule.get_parameter_by_name('exhibit_id');

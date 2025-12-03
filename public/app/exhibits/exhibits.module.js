@@ -60,6 +60,14 @@ const exhibitsModule = (function () {
             return undefined;
         }
 
+        if (response?.status === 429) {
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+            const message = response.data.message;
+            const message_element = document.querySelector('#message');
+            display_message(message_element, 'warning', message);
+            return false;
+        }
+
         // Validate response structure
         if (response && response.status === 200) {
             // Validate response data structure
@@ -937,6 +945,14 @@ const exhibitsModule = (function () {
             return false;
         }
 
+        if (response?.status === 429) {
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+            const message = response.data.message;
+            const message_element = document.querySelector('#message');
+            display_message(message_element, 'warning', message);
+            return false;
+        }
+
         if (response !== undefined && response.status === 204) {
             setTimeout(() => {
                 window.location.replace(APP_PATH + '/exhibits');
@@ -1176,7 +1192,9 @@ const exhibitsModule = (function () {
      * @returns {Promise<boolean>} - Always returns false to prevent default form behavior
      */
     async function publish_exhibit(uuid) {
+
         try {
+
             // Validate and clean UUID
             const clean_uuid = validate_and_clean_uuid(uuid);
 
@@ -1204,6 +1222,14 @@ const exhibitsModule = (function () {
                 return false;
             }
 
+            if (response?.status === 429) {
+                window.scrollTo({ top: 0, behavior: 'smooth' });
+                const message = response.data.message;
+                const message_element = document.querySelector('#message');
+                display_message(message_element, 'warning', message);
+                return false;
+            }
+
             // Handle responses
             if (response?.status === EXHIBIT_CONSTANTS.HTTP_OK) {
                 update_exhibit_status_ui_generic(uuid, EXHIBIT_STATES.PUBLISHED);
@@ -1227,6 +1253,7 @@ const exhibitsModule = (function () {
      * @returns {Promise<boolean>} - Always returns false to prevent default form behavior
      */
     async function suppress_exhibit(uuid) {
+
         try {
 
             // Validate and clean UUID
@@ -1247,6 +1274,14 @@ const exhibitsModule = (function () {
             // Handle 403 Forbidden
             if (response?.status === EXHIBIT_CONSTANTS.HTTP_FORBIDDEN) {
                 show_message('danger', 'You do not have permission to unpublish this record');
+                return false;
+            }
+
+            if (response?.status === 429) {
+                window.scrollTo({ top: 0, behavior: 'smooth' });
+                const message = response.data.message;
+                const message_element = document.querySelector('#message');
+                display_message(message_element, 'warning', message);
                 return false;
             }
 
