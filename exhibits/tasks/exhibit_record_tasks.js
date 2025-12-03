@@ -621,6 +621,46 @@ const Exhibit_record_tasks = class {
     }
 
     /**
+     * Update exhibit timestamp - exhibit record is re-sorted to the top of list
+     * @param uuid
+     * @returns {Promise<void>}
+     */
+    async update_exhibit_timestamp(uuid) {
+
+        try {
+
+            this._validate_database();
+            this._validate_table('exhibit_records');
+            const uuid_validated = this._validate_uuid(uuid, 'exhibit UUID');
+
+            // Validate record exists
+            await this._validate_record_exists(uuid_validated);
+
+            const update_count = await this._perform_update(
+                uuid_validated,
+                {},
+            );
+
+            if (update_count === 0) {
+                throw new Error('Update failed: No rows affected');
+            }
+
+            this._log_success('Exhibit record updated successfully', {
+                uuid: uuid_validated,
+                fields_updated: 'timestamp'
+            });
+
+            return true;
+
+        } catch (error) {
+            this._handle_error(error, 'update_exhibit_timestamp', {
+                uuid,
+                data_keys: Object.keys(data || {})
+            });
+        }
+    }
+
+    /**
      * Soft deletes an exhibit record
      * @param {string} uuid - The exhibit UUID to delete
      * @param {string} [deleted_by=null] - User ID performing the deletion

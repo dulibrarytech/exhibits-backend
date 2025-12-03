@@ -462,6 +462,12 @@ exports.create_item_record = async (is_member_of_exhibit, data) => {
             );
         }
 
+        const is_updated = await exhibit_tasks.update_exhibit_timestamp(is_member_of_exhibit);
+
+        if (is_updated === true) {
+            LOGGER.module().info('INFO: [/exhibits/items_model - Exhibit timestamp updated successfully.');
+        }
+
         return build_response(
             CONSTANTS.STATUS_CODES.CREATED,
             'Item record created',
@@ -583,6 +589,12 @@ exports.update_item_record = async (is_member_of_exhibit, item_id, data) => {
         // Handle republishing if needed (check for truthy values)
         if (is_published === 'true' || is_published === true || is_published === 1) {
             setImmediate(() => handle_item_republish(is_member_of_exhibit, item_id));
+        }
+
+        const is_updated = await exhibit_tasks.update_exhibit_timestamp(is_member_of_exhibit);
+
+        if (is_updated === true) {
+            LOGGER.module().info('INFO: [/exhibits/items_model - Exhibit timestamp updated successfully.');
         }
 
         return build_response(
@@ -751,6 +763,12 @@ exports.delete_item_record = async (is_member_of_exhibit, item_id, type) => {
 
         // Delete from database
         const result = await item_task.delete_item_record(is_member_of_exhibit, item_id, type);
+
+        const is_updated = await exhibit_tasks.update_exhibit_timestamp(is_member_of_exhibit);
+
+        if (is_updated === true) {
+            LOGGER.module().info('INFO: [/exhibits/items_model - Exhibit timestamp updated successfully.');
+        }
 
         return build_response(
             CONSTANTS.STATUS_CODES.NO_CONTENT,
