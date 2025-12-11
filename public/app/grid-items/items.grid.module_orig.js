@@ -83,17 +83,7 @@ const itemsGridModule = (function () {
         }
 
         if (items.length === 0) {
-            const item_card = document.querySelector('#item-card');
-            const exhibit_title = document.querySelector('#exhibit-title');
-
-            if (item_card !== null) {
-                item_card.style.display = 'none';
-            }
-
-            if (exhibit_title !== null && exhibit_title.parentElement !== null) {
-                exhibit_title.parentElement.style.display = 'none';
-            }
-
+            document.querySelector('.card').innerHTML = '';
             document.querySelector('#message').innerHTML = '<div class="alert alert-info" role="alert">Grid is empty.</div>';
             return false;
         }
