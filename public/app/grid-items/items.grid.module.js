@@ -24,32 +24,101 @@ const itemsGridModule = (function () {
     const EXHIBITS_ENDPOINTS = endpointsModule.get_exhibits_endpoints();
     let obj = {};
 
+    /**
+     * Fetches grid items for a specific exhibit and grid
+     * @param {string} exhibit_id - The exhibit identifier
+     * @param {string} grid_id - The grid identifier
+     * @returns {Promise<Array|null>} Grid items array or null on failure
+     */
     async function get_grid_items(exhibit_id, grid_id) {
+
+        const message_element = document.querySelector('#message');
+
+        if (!is_valid_uuid(exhibit_id) || !is_valid_uuid(grid_id)) {
+            display_error_message(message_element, 'Invalid exhibit or grid identifier');
+            return null;
+        }
 
         try {
 
-            let tmp = EXHIBITS_ENDPOINTS.exhibits.grid_item_records.get.endpoint.replace(':exhibit_id', exhibit_id);
             const token = authModule.get_user_token();
-            const endpoint = tmp.replace(':grid_id', grid_id);
+
+            if (token === null || token.length === 0) {
+                display_error_message(message_element, 'Authentication required');
+                return null;
+            }
+
+            const endpoint = EXHIBITS_ENDPOINTS.exhibits.grid_item_records.get.endpoint
+                .replace(':exhibit_id', encodeURIComponent(exhibit_id))
+                .replace(':grid_id', encodeURIComponent(grid_id));
+
             const response = await httpModule.req({
                 method: 'GET',
                 url: endpoint,
                 headers: {
                     'Content-Type': 'application/json',
                     'x-access-token': token
-                }
+                },
+                timeout: 30000
             });
 
-            if (response !== undefined && response.status === 200) {
-                return response.data.data;
+            if (response === null || response === undefined) {
+                display_error_message(message_element, 'No response received from server');
+                return null;
             }
 
+            if (response.status === 200) {
+                return response.data?.data ?? [];
+            }
+
+            if (response.status === 401 || response.status === 403) {
+                display_error_message(message_element, 'You do not have permission to view these grid items');
+                return null;
+            }
+
+            if (response.status === 404) {
+                display_error_message(message_element, 'Grid items not found');
+                return null;
+            }
+
+            display_error_message(message_element, `Unexpected server response: ${response.status}`);
+            return null;
+
         } catch (error) {
-            document.querySelector('#message').innerHTML = `<div class="alert alert-danger" role="alert"><i class="fa fa-exclamation"></i> ${error.message}</div>`;
+            const safe_message = error instanceof Error ? error.message : 'An unexpected error occurred';
+            display_error_message(message_element, safe_message);
+            return null;
         }
     }
 
-    obj.display_grid_items = async function (event) {
+    /**
+     * Displays sanitized error message
+     * @param {Element|null} element - Target DOM element
+     * @param {string} message - Error message to display
+     */
+    function display_error_message(element, message) {
+
+        if (element === null) {
+            return;
+        }
+
+        const sanitized_message = sanitize_html(message);
+        element.innerHTML = `<div class="alert alert-danger" role="alert"><i class="fa fa-exclamation"></i> ${sanitized_message}</div>`;
+    }
+
+    /**
+     * Sanitizes string for safe HTML insertion
+     * @param {string} text - Text to sanitize
+     * @returns {string} Sanitized text
+     */
+    function sanitize_html(text) {
+
+        const div = document.createElement('div');
+        div.textContent = String(text);
+        return div.innerHTML;
+    }
+
+    obj.display_grid_items = async function () {
 
         const exhibit_id = helperModule.get_parameter_by_name('exhibit_id');
         const grid_id = helperModule.get_parameter_by_name('grid_id');
@@ -336,7 +405,154 @@ const itemsGridModule = (function () {
         }
     }
 
+    /**
+     * Validates UUID format
+     * @param {string} value - Value to validate
+     * @returns {boolean} True if valid UUID format
+     */
+    function is_valid_uuid(value) {
+
+        if (typeof value !== 'string' || value.length === 0) {
+            return false;
+        }
+
+        const uuid_pattern = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
+        return uuid_pattern.test(value);
+    }
+
+    /**
+     * Deletes a grid item and redirects to the grid items list
+     * @returns {Promise<boolean>} Success status
+     */
     obj.delete_grid_item = async function () {
+
+        // Cache DOM elements
+        const elements = {
+            message: document.querySelector('#message'),
+            delete_card: document.querySelector('#delete-card')
+        };
+
+        const exhibit_id = helperModule.get_parameter_by_name('exhibit_id');
+        const grid_id = helperModule.get_parameter_by_name('grid_id');
+        const grid_item_id = helperModule.get_parameter_by_name('item_id');
+
+        // Validate required parameters
+        if (!is_valid_uuid(exhibit_id) || !is_valid_uuid(grid_id) || !is_valid_uuid(grid_item_id)) {
+            display_error_message(elements.message, 'Invalid exhibit, grid, or item identifier');
+            return false;
+        }
+
+        // Hide delete card and show deleting message
+        if (elements.delete_card !== null) {
+            elements.delete_card.style.display = 'none';
+        }
+
+        if (elements.message !== null) {
+            elements.message.innerHTML = '<div class="alert alert-info" role="alert"><i class="fa fa-spinner fa-spin"></i> Deleting grid item...</div>';
+        }
+
+        try {
+
+            const token = authModule.get_user_token();
+
+            if (token === null || token.length === 0) {
+                display_error_message(elements.message, 'Authentication required');
+                restore_delete_card(elements);
+                return false;
+            }
+
+            const endpoint = EXHIBITS_ENDPOINTS.exhibits.grid_item_records.delete.endpoint
+                .replace(':exhibit_id', encodeURIComponent(exhibit_id))
+                .replace(':grid_id', encodeURIComponent(grid_id))
+                .replace(':item_id', encodeURIComponent(grid_item_id));
+
+            const response = await httpModule.req({
+                method: 'DELETE',
+                url: `${endpoint}?type=grid_item`,
+                headers: {
+                    'Content-Type': 'application/json',
+                    'x-access-token': token
+                },
+                timeout: 10000,
+                validateStatus: function (status) {
+                    return status >= 200 && status < 600;
+                }
+            });
+
+            if (response === null || response === undefined) {
+                display_error_message(elements.message, 'No response received from server');
+                restore_delete_card(elements);
+                return false;
+            }
+
+            if (response.status === 204) {
+                redirect_to_grid_items(exhibit_id, grid_id);
+                return true;
+            }
+
+            if (response.status === 403) {
+                display_error_message(elements.message, 'You do not have permission to delete this item.');
+                restore_delete_card(elements);
+                return false;
+            }
+
+            if (response.status === 404) {
+                display_error_message(elements.message, 'Grid item not found.');
+                restore_delete_card(elements);
+                return false;
+            }
+
+            if (response.status === 500) {
+                const error_text = response.data?.message ?? 'Internal server error';
+                display_error_message(elements.message, error_text);
+                restore_delete_card(elements);
+                return false;
+            }
+
+            display_error_message(elements.message, `Unexpected server response: ${response.status}`);
+            restore_delete_card(elements);
+            return false;
+
+        } catch (error) {
+            const safe_message = error instanceof Error ? error.message : 'An unexpected error occurred';
+            display_error_message(elements.message, safe_message);
+            restore_delete_card(elements);
+            return false;
+        }
+    };
+
+    /**
+     * Restores the delete card visibility after an error
+     * @param {Object} elements - Cached DOM elements
+     */
+    function restore_delete_card(elements) {
+
+        if (elements.delete_card !== null) {
+            elements.delete_card.style.display = '';
+        }
+
+        if (elements.message !== null) {
+            elements.message.innerHTML = '';
+        }
+    }
+
+    /**
+     * Redirects to the grid items list page
+     * @param {string} exhibit_id - The exhibit identifier
+     * @param {string} grid_id - The grid identifier
+     */
+    function redirect_to_grid_items(exhibit_id, grid_id) {
+
+        const encoded_exhibit_id = encodeURIComponent(exhibit_id);
+        const encoded_grid_id = encodeURIComponent(grid_id);
+        const redirect_url = `${APP_PATH}/items/grid/items?exhibit_id=${encoded_exhibit_id}&grid_id=${encoded_grid_id}`;
+
+        setTimeout(() => {
+            window.location.replace(redirect_url);
+        }, 900);
+    }
+
+    obj.delete_grid_item__ = async function () {
 
         try {
 
