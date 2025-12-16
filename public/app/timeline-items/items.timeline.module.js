@@ -192,45 +192,185 @@ const itemsTimelineModule = (function () {
         element.appendChild(alert_div);
     }
 
+    /**
+     * Validates UUID format
+     * @param {string} value - Value to validate
+     * @returns {boolean} True if valid UUID format
+     */
+    function is_valid_uuid(value) {
+
+        if (typeof value !== 'string' || value.length === 0) {
+            return false;
+        }
+
+        const uuid_pattern = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
+        return uuid_pattern.test(value);
+    }
+
+    /**
+     * Clears the loading message
+     * @param {Element|null} message_element - Message container element
+     */
+    function clear_loading_message(message_element) {
+
+        if (message_element !== null) {
+            message_element.innerHTML = '';
+        }
+    }
+
+    /**
+     * Shows loading state for timeline items
+     * @param {Object} elements - Cached DOM elements
+     */
+    function show_loading_state(elements) {
+
+        if (elements.timeline_items_table !== null) {
+            elements.timeline_items_table.style.visibility = 'hidden';
+        }
+
+        if (elements.card !== null) {
+            elements.card.style.minHeight = '200px';
+        }
+
+        if (elements.message !== null) {
+            elements.message.innerHTML = '<div class="alert alert-info" role="alert"><i class="fa fa-spinner fa-spin"></i> Loading timeline items...</div>';
+        }
+    }
+
+    /**
+     * Hides loading state and restores table visibility
+     * @param {Object} elements - Cached DOM elements
+     */
+    function hide_loading_state(elements) {
+
+        if (elements.timeline_items_table !== null) {
+            elements.timeline_items_table.style.visibility = 'visible';
+        }
+
+        if (elements.card !== null) {
+            elements.card.style.minHeight = '';
+        }
+    }
+
+    /**
+     * Handles empty card state when items fetch fails
+     * @param {Object} elements - Cached DOM elements
+     */
+    function handle_empty_card(elements) {
+
+        if (elements.card !== null) {
+            elements.card.innerHTML = '';
+        }
+
+        if (elements.timeline_items_table !== null) {
+            elements.timeline_items_table.style.visibility = 'visible';
+        }
+    }
+
+    /**
+     * Handles empty timeline state when no items exist
+     * @param {Object} elements - Cached DOM elements
+     */
+    function handle_empty_timeline(elements) {
+
+        if (elements.card !== null) {
+            elements.card.style.display = 'none';
+        }
+
+        if (elements.title_heading !== null) {
+            elements.title_heading.style.display = 'none';
+        }
+
+        if (elements.message !== null) {
+            elements.message.innerHTML = '<div class="alert alert-info" role="alert">Timeline is empty.</div>';
+        }
+    }
+
+    /**
+     * Displays timeline items for the current exhibit and timeline
+     * @returns {Promise<boolean>} Success status
+     */
     obj.display_timeline_items = async function () {
 
         const exhibit_id = helperModule.get_parameter_by_name('exhibit_id');
         const timeline_id = helperModule.get_parameter_by_name('timeline_id');
-        await exhibitsModule.set_exhibit_title(exhibit_id);
-        const items = await get_timeline_items(exhibit_id, timeline_id);
-        let item_data = '';
 
-        if (items === false) {
-            document.querySelector('#item-card').innerHTML = '';
+        // Cache DOM elements
+        const elements = {
+            message: document.querySelector('#message'),
+            timeline_items_table: document.querySelector('#timeline-items'),
+            card: document.querySelector('#item-card'),
+            timeline_item_list: document.querySelector('#timeline-item-list'),
+            title_heading: document.querySelector('#exhibit-title')?.parentElement ?? null
+        };
+
+        // Validate required parameters
+        if (!is_valid_uuid(exhibit_id) || !is_valid_uuid(timeline_id)) {
+            display_error_message(elements.message, 'Invalid exhibit or timeline identifier');
             return false;
         }
 
-        if (items.length === 0) {
-            document.querySelector('.card').innerHTML = '';
-            document.querySelector('#message').innerHTML = '<div class="alert alert-info" role="alert">Timeline is empty.</div>';
+        // Validate required DOM elements
+        if (elements.message === null || elements.timeline_item_list === null) {
+            console.error('Required DOM elements not found');
             return false;
         }
 
-        for (let i = 0; i < items.length; i++) {
-            item_data += await itemsListDisplayModule.display_timeline_items(items[i]);
+        show_loading_state(elements);
+
+        try {
+
+            await exhibitsModule.set_exhibit_title(exhibit_id);
+            const items = await get_timeline_items(exhibit_id, timeline_id);
+
+            clear_loading_message(elements.message);
+
+            if (items === null || items === false) {
+                handle_empty_card(elements);
+                return false;
+            }
+
+            if (Array.isArray(items) && items.length === 0) {
+                handle_empty_timeline(elements);
+                return false;
+            }
+
+            // Build item HTML using Promise.all for better performance
+            const item_html_array = await Promise.all(
+                items.map(item => itemsListDisplayModule.display_timeline_items(item))
+            );
+
+            // Insert all items at once
+            elements.timeline_item_list.innerHTML = item_html_array.join('');
+
+            // Initialize DataTable
+            new DataTable('#timeline-items', {
+                paging: false,
+                order: [[1, 'asc']],
+                columnDefs: [
+                    {
+                        target: 1,
+                        visible: false,
+                        searchable: true
+                    }
+                ]
+            });
+
+            // Bind event listeners
+            bind_publish_timeline_item_events();
+            bind_suppress_timeline_item_events();
+
+            // Show table after initialization
+            hide_loading_state(elements);
+
+            return true;
+
+        } catch (error) {
+            const safe_message = error instanceof Error ? error.message : 'Failed to load timeline items';
+            display_error_message(elements.message, safe_message);
+            hide_loading_state(elements);
+            return false;
         }
-
-        document.querySelector('#timeline-item-list').innerHTML = item_data;
-
-        new DataTable('#timeline-items', {
-            paging: false,
-            order: [[1, 'asc']],
-            columnDefs: [
-                {
-                    target: 1,
-                    visible: false,
-                    searchable: true
-                },
-            ]
-        });
-
-        bind_publish_timeline_item_events();
-        bind_suppress_timeline_item_events();
     };
 
     async function publish_timeline_item(uuid) {

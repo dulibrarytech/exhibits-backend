@@ -399,7 +399,7 @@ const itemsEditTimelineItemFormModule = (function () {
                     console.error('Error displaying media fields:', error);
                 }
             }
-            console.log('SUBJECTS ', record.item_subjects);
+
             if (record.item_subjects !== null && record.item_subjects?.length > 0) {
                 const subjects = record.item_subjects.split('|');
                 await helperModule.create_subjects_menu(subjects);

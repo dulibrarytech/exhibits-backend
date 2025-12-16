@@ -989,7 +989,9 @@ const itemsListDisplayModule = (function() {
      * Display timeline items
      */
     obj.display_timelines = async function(item) {
+
         try {
+
             const tr = document.createElement('tr');
             tr.id = `${item.uuid}_${item.type}`;
 

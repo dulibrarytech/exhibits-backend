@@ -1961,7 +1961,7 @@ const helperModule = (function () {
         const handle_visibility_change = () => {
             if (document.hidden && !unlock_attempted) {
                 unlock_attempted = true;
-                console.log('Tab hidden - attempting unlock via beacon');
+                console.log('Attempting unlock via beacon');
 
                 // Use beacon-only mode for reliable unload
                 this.unlock_record(true).catch(error => {

@@ -1091,7 +1091,9 @@ const helperMediaModule = (function () {
      * Set alt text for image (helper function)
      */
     obj.set_alt_text = function(record) {
+
         try {
+
             const alt_text_input = document.querySelector('#item-alt-text-input');
             const decorative_checkbox = document.querySelector('#is-decorative-image, #image-is-decorative');
 
@@ -2018,10 +2020,6 @@ const helperMediaModule = (function () {
 
             // Determine item type from URL pathname
             const type = get_item_type_from_pathname();
-
-            console.log('Item type detected:', type);
-            console.log('Current pathname:', window.location.pathname);
-            console.log('Deleting thumbnail:', thumbnail);
 
             // Construct endpoint with URL encoding
             const endpoint = EXHIBITS_ENDPOINTS.exhibits.item_media.delete.endpoint
