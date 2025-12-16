@@ -304,6 +304,15 @@ const itemsTimelineModule = (function () {
             title_heading: document.querySelector('#exhibit-title')?.parentElement ?? null
         };
 
+        // Hide card and title immediately to prevent flash of content
+        if (elements.card !== null) {
+            elements.card.style.visibility = 'hidden';
+        }
+
+        if (elements.title_heading !== null) {
+            elements.title_heading.style.visibility = 'hidden';
+        }
+
         // Validate required parameters
         if (!is_valid_uuid(exhibit_id) || !is_valid_uuid(timeline_id)) {
             display_error_message(elements.message, 'Invalid exhibit or timeline identifier');
@@ -360,18 +369,37 @@ const itemsTimelineModule = (function () {
             bind_publish_timeline_item_events();
             bind_suppress_timeline_item_events();
 
-            // Show table after initialization
-            hide_loading_state(elements);
+            // Show card and title after initialization
+            show_timeline_content(elements);
 
             return true;
 
         } catch (error) {
             const safe_message = error instanceof Error ? error.message : 'Failed to load timeline items';
             display_error_message(elements.message, safe_message);
-            hide_loading_state(elements);
             return false;
         }
     };
+
+    /**
+     * Shows timeline content after successful load
+     * @param {Object} elements - Cached DOM elements
+     */
+    function show_timeline_content(elements) {
+
+        if (elements.card !== null) {
+            elements.card.style.visibility = 'visible';
+            elements.card.style.minHeight = '';
+        }
+
+        if (elements.title_heading !== null) {
+            elements.title_heading.style.visibility = 'visible';
+        }
+
+        if (elements.timeline_items_table !== null) {
+            elements.timeline_items_table.style.visibility = 'visible';
+        }
+    }
 
     async function publish_timeline_item(uuid) {
 
