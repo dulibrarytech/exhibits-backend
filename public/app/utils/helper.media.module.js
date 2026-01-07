@@ -97,9 +97,10 @@ const helperMediaModule = (function () {
         };
 
         /**
-         * Display repository item metadata (XSS-safe)
+         * Display repository item metadata
          */
         const display_repo_metadata = (element, title, mime_type) => {
+
             if (!element) {
                 return;
             }
@@ -179,6 +180,7 @@ const helperMediaModule = (function () {
          * Update UI with repository item data
          */
         const update_ui_with_repo_data = (repo_data, elements) => {
+
             const mime_type = repo_data.mime_type;
             const item_type = determine_item_type(mime_type);
 
@@ -211,6 +213,12 @@ const helperMediaModule = (function () {
             // Show alt text field for images
             if (item_type === 'image' && elements.image_alt_text) {
                 elements.image_alt_text.style.display = 'block';
+            }
+
+            const subjects = repo_data.f_subjects;
+
+            if (subjects !== undefined || subjects.length !== 0) {
+                helperModule.create_subjects_menu(subjects);
             }
         };
 

@@ -25,10 +25,10 @@ const itemsAddStandardItemFormModule = (function () {
     let obj = {};
 
     obj.create_item_record = async function() {
-        // CRITICAL: Check if we're in edit mode first
+        // Check if we're in edit mode first
         const item_id = helperModule.get_parameter_by_name('item_id');
         if (item_id) {
-            console.log('🔴 Item ID exists - already in edit mode, preventing duplicate creation');
+            console.log('Item ID exists - already in edit mode, preventing duplicate creation');
             console.log('Current URL:', window.location.href);
             console.log('item_id:', item_id);
 
@@ -44,7 +44,7 @@ const itemsAddStandardItemFormModule = (function () {
             return false;
         }
 
-        console.log('🟢 CREATE FUNCTION CALLED - No item_id, proceeding with creation');
+        console.log('CREATE FUNCTION CALLED - No item_id, proceeding with creation');
 
         // Prevent duplicate submissions
         if (this._is_creating_item) {
