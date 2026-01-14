@@ -411,7 +411,7 @@ class SubjectsMenu {
 
     /**
      * Create a dropdown item element
-     * @param {string} item - The subject text
+     * @param {string} item - The subject text (may contain HTML entities)
      * @param {boolean} is_checked - Whether the item is selected
      * @returns {HTMLElement} - The dropdown item element
      * @private
@@ -427,7 +427,7 @@ class SubjectsMenu {
 
         const checkbox = document.createElement('input');
         checkbox.type = 'checkbox';
-        checkbox.value = item;
+        checkbox.value = item; // Keep original value for data operations
         checkbox.className = 'form-check-input';
         checkbox.checked = is_checked;
 
@@ -435,8 +435,10 @@ class SubjectsMenu {
         label.className = 'ms-2';
         label.style.cursor = 'pointer';
         label.style.marginBottom = '0';
-        label.textContent = item;
         label.style.paddingLeft = '30px';
+
+        // Decode HTML entities for display (e.g., &#x2F; -> /)
+        label.textContent = this._decode_html_entities(item);
 
         // Checkbox change handler
         checkbox.addEventListener('change', (e) => {
@@ -490,25 +492,35 @@ class SubjectsMenu {
             result_list.innerHTML = '<li style="color: #999;">None selected</li>';
             selected_subjects_input.value = '';
         } else {
-            // Update header display
+            // Update header display - decode entities for display
+            const decoded_for_display = selected_array.map(item => this._decode_html_entities(item));
             const display = count <= 2
-                ? selected_array.join(', ')
-                : `${selected_array[0]}, ${selected_array[1]}...`;
+                ? decoded_for_display.join(', ')
+                : `${decoded_for_display[0]}, ${decoded_for_display[1]}...`;
 
-            selected_text.innerHTML = `${display} <span class="selected-count">${count}</span>`;
+            // Escape the display text for HTML context
+            const escaped_display = document.createElement('div');
+            escaped_display.textContent = display;
+            selected_text.innerHTML = `${escaped_display.innerHTML} <span class="selected-count">${count}</span>`;
 
             // Update result list
             result_list.innerHTML = selected_array
                 .sort()
                 .map(item => {
-                    // Escape HTML to prevent XSS
-                    const escaped_item = document.createElement('div');
-                    escaped_item.textContent = item;
-                    const safe_item = escaped_item.innerHTML;
+                    // Decode HTML entities for display (e.g., &#x2F; -> /)
+                    const decoded_item = this._decode_html_entities(item);
+
+                    // Escape decoded text for safe HTML display
+                    const display_span = document.createElement('div');
+                    display_span.textContent = decoded_item;
+                    const safe_display = display_span.innerHTML;
+
+                    // Encode original item value for data attribute (preserves original for data operations)
+                    const safe_attr = this._encode_for_attribute(item);
 
                     return `<li>
-                        <span>${safe_item}</span>
-                        <button class="uncheck-btn" title="Remove subject" data-item="${safe_item}" 
+                        <span>${safe_display}</span>
+                        <button class="uncheck-btn" title="Remove subject" data-item="${safe_attr}" 
                             style="background: none; border: none; cursor: pointer; color: #999; padding: 0 5px; font-size: 18px; line-height: 1;">×</button>
                     </li>`;
                 })
@@ -517,7 +529,7 @@ class SubjectsMenu {
             // Add event listeners to remove buttons
             this._attach_remove_buttons();
 
-            // Update hidden input with pipe-separated values
+            // Update hidden input with pipe-separated values (keep original encoding)
             selected_subjects_input.value = selected_array.join('|');
         }
     }
@@ -564,6 +576,44 @@ class SubjectsMenu {
         if (typeof this.on_change === 'function') {
             this.on_change(this.get_selected());
         }
+    }
+
+    /**
+     * Decode HTML entities in a string
+     * Handles common entities like &#x2F; (/) &#x27; (') &amp; (&) etc.
+     * @param {string} str - String potentially containing HTML entities
+     * @returns {string} - Decoded string
+     * @private
+     */
+    _decode_html_entities(str) {
+        if (!str || typeof str !== 'string') {
+            return str;
+        }
+
+        // Use a textarea element to decode HTML entities
+        // This is the safest way to decode all HTML entities
+        const textarea = document.createElement('textarea');
+        textarea.innerHTML = str;
+        return textarea.value;
+    }
+
+    /**
+     * Encode string for safe use in HTML attributes
+     * @param {string} str - String to encode
+     * @returns {string} - Safely encoded string
+     * @private
+     */
+    _encode_for_attribute(str) {
+        if (!str || typeof str !== 'string') {
+            return str;
+        }
+
+        return str
+            .replace(/&/g, '&amp;')
+            .replace(/"/g, '&quot;')
+            .replace(/'/g, '&#x27;')
+            .replace(/</g, '&lt;')
+            .replace(/>/g, '&gt;');
     }
 }
 

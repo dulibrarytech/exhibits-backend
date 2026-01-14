@@ -136,10 +136,15 @@ class SubjectsMenu {
     /**
      * Update the selected subjects without full re-initialization
      * Use this when receiving a new payload after the page has loaded
+     * Subjects provided via update() are locked and cannot be removed by the user
      * @param {string[]} [subjects=[]] - Array of subject strings to select
+     * @param {Object} [options={}] - Update options
+     * @param {boolean} [options.lock=true] - Whether to lock these subjects (prevent user deletion)
      * @returns {Promise<boolean>} - True if update succeeded
      */
-    async update(subjects = []) {
+    async update(subjects = [], options = {}) {
+        const { lock = true } = options;
+
         // If not initialized, do full init
         if (!this.initialized) {
             return this.init(subjects);
@@ -152,8 +157,18 @@ class SubjectsMenu {
                 subjects = [];
             }
 
+            const filtered_subjects = subjects.filter(s => s && s.trim());
+
             // Update state with new subjects
-            this.state.selected = new Set(subjects.filter(s => s && s.trim()));
+            this.state.selected = new Set(filtered_subjects);
+
+            // Lock these subjects if specified (default: true)
+            // Locked subjects cannot be removed via the UI
+            if (lock) {
+                this.state.locked = new Set(filtered_subjects);
+            } else {
+                this.state.locked = new Set();
+            }
 
             // Reset filtered items to show all
             this.state.filtered_items = [...this.all_items];
@@ -188,6 +203,42 @@ class SubjectsMenu {
             return [];
         }
         return Array.from(this.state.selected).filter(item => item && item.trim());
+    }
+
+    /**
+     * Get the locked subjects (from payload, cannot be removed)
+     * @returns {string[]} - Array of locked subject strings
+     */
+    get_locked() {
+        if (!this.state) {
+            return [];
+        }
+        return Array.from(this.state.locked).filter(item => item && item.trim());
+    }
+
+    /**
+     * Get only the user-added subjects (not locked)
+     * @returns {string[]} - Array of user-added subject strings
+     */
+    get_user_added() {
+        if (!this.state) {
+            return [];
+        }
+        const selected = this.get_selected();
+        const locked = this.get_locked();
+        return selected.filter(item => !locked.includes(item));
+    }
+
+    /**
+     * Unlock all subjects, allowing them to be removed
+     */
+    unlock_all() {
+        if (!this.state) {
+            return;
+        }
+        this.state.locked.clear();
+        this._render_virtual_list();
+        this._update_selected();
     }
 
     /**
@@ -262,11 +313,14 @@ class SubjectsMenu {
     /**
      * Initialize the state object
      * @param {string[]} subjects - Pre-selected subjects
+     * @param {boolean} [lock_subjects=false] - Whether to lock these subjects (prevent deletion)
      * @private
      */
-    _setup_state(subjects) {
+    _setup_state(subjects, lock_subjects = false) {
+        const filtered_subjects = subjects.filter(s => s && s.trim());
         this.state = {
-            selected: new Set(subjects.filter(s => s && s.trim())),
+            selected: new Set(filtered_subjects),
+            locked: new Set(lock_subjects ? filtered_subjects : []), // Subjects that cannot be removed
             filtered_items: [...this.all_items],
             item_map: new Map(),
             is_open: false,
@@ -418,6 +472,7 @@ class SubjectsMenu {
      */
     _create_dropdown_item(item, is_checked) {
         const index = this.state.filtered_items.indexOf(item);
+        const is_locked = this.state.locked.has(item);
 
         const div = document.createElement('div');
         div.className = 'dropdown-item';
@@ -431,14 +486,26 @@ class SubjectsMenu {
         checkbox.className = 'form-check-input';
         checkbox.checked = is_checked;
 
+        // Disable checkbox for locked subjects (from payload) - they cannot be unchecked
+        if (is_locked && is_checked) {
+            checkbox.disabled = true;
+            checkbox.style.cursor = 'not-allowed';
+            checkbox.title = 'This subject cannot be removed';
+        }
+
         const label = document.createElement('label');
         label.className = 'ms-2';
-        label.style.cursor = 'pointer';
+        label.style.cursor = is_locked && is_checked ? 'not-allowed' : 'pointer';
         label.style.marginBottom = '0';
         label.style.paddingLeft = '30px';
 
         // Decode HTML entities for display (e.g., &#x2F; -> /)
         label.textContent = this._decode_html_entities(item);
+
+        // Add visual indicator for locked items
+        if (is_locked && is_checked) {
+            label.style.color = '#666';
+        }
 
         // Checkbox change handler
         checkbox.addEventListener('change', (e) => {
@@ -451,9 +518,15 @@ class SubjectsMenu {
             this._notify_change();
         });
 
-        // Label click handler
+        // Label click handler - don't allow toggling locked items
         label.addEventListener('click', (e) => {
             e.stopPropagation();
+
+            // Don't allow unchecking locked items
+            if (is_locked && checkbox.checked) {
+                return;
+            }
+
             checkbox.checked = !checkbox.checked;
             checkbox.dispatchEvent(new Event('change'));
         });
@@ -477,7 +550,7 @@ class SubjectsMenu {
         }
 
         const { selected_text, result_list, selected_subjects_input } = this.elements;
-        const { selected, item_map, is_open } = this.state;
+        const { selected, locked, item_map, is_open } = this.state;
 
         // Convert Set to Array and filter out empty strings
         const selected_array = Array.from(selected).filter(item => item && item.trim());
@@ -518,10 +591,18 @@ class SubjectsMenu {
                     // Encode original item value for data attribute (preserves original for data operations)
                     const safe_attr = this._encode_for_attribute(item);
 
+                    // Check if this subject is locked (from payload) - if so, no remove button
+                    const is_locked = locked.has(item);
+
+                    // Only show remove button for user-added (non-locked) subjects
+                    const remove_button = is_locked
+                        ? ''
+                        : `<button class="uncheck-btn" title="Remove subject" data-item="${safe_attr}" 
+                            style="background: none; border: none; cursor: pointer; color: #999; padding: 0 5px; font-size: 18px; line-height: 1;">×</button>`;
+
                     return `<li>
                         <span>${safe_display}</span>
-                        <button class="uncheck-btn" title="Remove subject" data-item="${safe_attr}" 
-                            style="background: none; border: none; cursor: pointer; color: #999; padding: 0 5px; font-size: 18px; line-height: 1;">×</button>
+                        ${remove_button}
                     </li>`;
                 })
                 .join('');
