@@ -2079,7 +2079,82 @@ const helperModule = (function () {
         }
     };
 
-    obj.create_subjects_menu = async function (subjects = []) {
+    /**
+     * Initialize the subjects menu instance on your app object
+     * Call this once when your application initializes
+     */
+    obj.init_subjects_menu = function() {
+        // Create the SubjectsMenu instance with your existing methods
+        obj.subjects_menu = new SubjectsMenu({
+            // Pass your existing method for fetching subjects
+            get_item_subjects: obj.get_item_subjects.bind(obj),
+
+            // Pass your existing error display function
+            show_error_message: show_error_message,
+
+            // Optional: callback when selection changes
+            on_change: (selected) => {
+                console.log('Subjects changed:', selected);
+                // Trigger any additional logic here
+            }
+        });
+    };
+
+    /**
+     * Wrapper method that maintains backward compatibility
+     * with your existing create_subjects_menu calls
+     *
+     * @param {string[]} subjects - Array of pre-selected subjects
+     */
+    obj.create_subjects_menu = async function(subjects = []) {
+        // Initialize if not already done
+        if (!obj.subjects_menu) {
+            obj.init_subjects_menu();
+        }
+
+        // Initialize or update based on state
+        if (!obj.subjects_menu.is_initialized()) {
+            await obj.subjects_menu.init(subjects);
+        } else {
+            // Widget already initialized, just update with new subjects
+            await obj.subjects_menu.update(subjects);
+        }
+    };
+
+    /**
+     * Force a full re-initialization (useful if the available subjects list changes)
+     *
+     * @param {string[]} subjects - Array of pre-selected subjects
+     */
+    obj.reinit_subjects_menu = async function(subjects = []) {
+        if (!obj.subjects_menu) {
+            obj.init_subjects_menu();
+        }
+        await obj.subjects_menu.init(subjects);
+    };
+
+    /**
+     * Get currently selected subjects
+     * @returns {string[]}
+     */
+    obj.get_selected_subjects = function() {
+        if (!obj.subjects_menu) {
+            return [];
+        }
+        return obj.subjects_menu.get_selected();
+    };
+
+    /**
+     * Clear all subject selections
+     */
+    obj.clear_subjects = function() {
+        if (obj.subjects_menu) {
+            obj.subjects_menu.clear();
+        }
+    };
+
+    /* TODO: deprecate
+    obj.create_subjects_menu_ = async function (subjects = []) {
 
         try {
 
@@ -2318,6 +2393,8 @@ const helperModule = (function () {
             show_error_message(`An error occurred: ${error.message}`);
         }
     };
+
+     */
 
     /**
      * Get item subjects from API
