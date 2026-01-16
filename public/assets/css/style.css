@@ -944,14 +944,13 @@ header .form-inline {
 footer.site-footer {
   padding: 0 1.875em; }
   footer.site-footer .footer-inner {
-    /*color: #78909c;*/
     color: #5A5A5A;
     font-family: 'Open Sans';
     font-size: 14px;
     line-height: 1.5;
     padding: 2.45em 1.125em; }
     footer.site-footer .footer-inner a {
-      color: #6a7074; }
+      color: #7c0a02; }
 
 @media (max-width: 1024px) {
   .open aside.left-panel {
