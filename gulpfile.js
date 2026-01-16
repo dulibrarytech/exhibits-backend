@@ -104,7 +104,8 @@ gulp.task('minify-utils-modules', function () {
         'public/app/utils/helper.module.js',
         'public/app/utils/helper.media.module.js',
         'public/app/utils/http.module.js',
-        'public/app/utils/uploads.module.js'
+        'public/app/utils/uploads.module.js',
+        'public/app/utils/helper.subjects.menu.class.js'
     ])
         .pipe(uglify())
         .on('error', function (err) {
