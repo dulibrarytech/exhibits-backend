@@ -1508,12 +1508,8 @@ exports.build_exhibit_preview = async function (req, res) {
             });
         }
 
-        // Generate time-limited preview token
-        const preview_token = await generate_preview_token(sanitized_uuid, req.user?.id);
-
         // Build preview URL
-        const preview_url = `${WEBSERVICES_CONFIG.exhibit_preview_url}${sanitized_uuid}?token=${preview_token}`;
-
+        const preview_url = `${WEBSERVICES_CONFIG.exhibit_preview_url}${sanitized_uuid}?key=${WEBSERVICES_CONFIG.exhibit_preview_api_key}`;
         LOGGER.module().info`INFO: [/exhibits/controller (build_exhibit_preview)] Successfully built preview for exhibit: ${sanitized_uuid} by user: ${req.user?.id || 'unknown'}`;
 
         // Render preview page

@@ -233,7 +233,7 @@ const Indexer_index_tasks = class {
                 index: this.INDEX,
                 id: uuid_trimmed,
                 body: sanitized_record,
-                // Default refresh to false for better performance (10-100x faster)
+                // Default refresh to false for better performance
                 refresh: options.refresh === true ? 'true' : 'false',
                 timeout: options.timeout || '30s'
                 // retry_on_conflict: options.retry_on_conflict !== undefined ? options.retry_on_conflict : 3

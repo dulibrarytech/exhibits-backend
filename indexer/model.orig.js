@@ -301,7 +301,7 @@ const batch_index_records = async (records, record_type) => {
             try {
                 const response = await index_tasks.index_record(record);
 
-                if (response && typeof response === 'object' && response.success === true) {
+                if (!response || typeof response !== 'object' || response.success === true) {
                     results.success++;
                     LOGGER.module().info(
                         `INFO: [/indexer/model (batch_index_records)] ${record_type} record ${record.uuid} indexed.`
@@ -504,12 +504,12 @@ exports.index_exhibit = async (uuid, type) => {
                 'Exhibit not found'
             );
         }
-
+        console.log('EXHIBIT RECORD ', exhibit_record);
         // Index main exhibit record
         const exhibit_index_record = construct_exhibit_index_record(exhibit_record);
         const exhibit_response = await index_tasks.index_record(exhibit_index_record);
 
-        if (exhibit_response.success === false) {
+        if (exhibit_response === false) {
             LOGGER.module().error(`ERROR: [/indexer/model (index_exhibit)] Failed to index exhibit ${uuid}`);
             return build_response(
                 CONSTANTS.STATUS_CODES.OK,
