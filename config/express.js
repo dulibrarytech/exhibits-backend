@@ -63,6 +63,7 @@ module.exports = function() {
     require('../users/routes')(APP);
     require('../exhibits/recycle_routes')(APP);
     require('../exhibits/uploads')(APP);
+    require('../media-library/uploads')(APP);
 
     if (!FS.existsSync(`./storage`)){
         FS.mkdirSync(`./storage`);

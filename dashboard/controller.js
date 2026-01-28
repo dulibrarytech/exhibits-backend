@@ -239,3 +239,8 @@ exports.get_dashboard_access_denied = function (req, res) {
 exports.get_dashboard_recycle = function (req, res) {
     res.render('dist/dashboard-recycle', template_config);
 };
+
+//======================== Media Library ========================//
+exports.get_dashboard_media = function (req, res) {
+    res.render('media-library/dashboard-media-home.ejs', template_config);
+};

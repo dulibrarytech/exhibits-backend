@@ -1,0 +1,166 @@
+<%- include('../partials/header.ejs'); %>
+
+<body>
+<aside id="left-panel" class="left-panel" aria-label="Main navigation">
+    <nav class="navbar navbar-expand-sm navbar-default">
+        <div id="main-menu" class="main-menu">
+            <ul class="nav navbar-nav">
+                <li class="menu-title">Menu</li>
+            </ul>
+            <ul id="items-menu" class="nav navbar-nav" aria-label="Items navigation"></ul>
+            <ul class="nav navbar-nav" aria-label="Account actions">
+                <li>
+                    <a href="#" id="logout" data-keyboard="false">
+                        <i class="menu-icon fa fa-sign-out" aria-hidden="true"></i>
+                        <span>Logout</span>
+                    </a>
+                </li>
+            </ul>
+        </div>
+    </nav>
+</aside>
+
+<div id="right-panel" class="right-panel">
+    <%- include('../partials/main-header.ejs'); %>
+    
+    <main class="content" id="main-content">
+        <div id="message" role="status" aria-live="polite"></div>
+
+        <h1 id="media-library-title">Media Library</h1>
+
+        <section id="media-card" class="card" aria-labelledby="import-upload-heading">
+            <div class="card-header">
+                <strong class="card-title mb-3" id="import-upload-heading">Import/Upload Media</strong>
+            </div>
+            <div class="card-body">
+                <div class="container">
+                    <!-- Media tabs -->
+                    <ul class="nav nav-tabs" id="mediaTab" role="tablist">
+                        <li class="nav-item" role="presentation">
+                            <button class="nav-link active" 
+                                    id="import-repo-media-tab" 
+                                    data-toggle="tab" 
+                                    data-target="#import-repo-media"
+                                    type="button"
+                                    role="tab" 
+                                    aria-controls="import-repo-media" 
+                                    aria-selected="true">
+                                Import Repository Media
+                            </button>
+                        </li>
+                        <li class="nav-item" role="presentation">
+                            <button class="nav-link" 
+                                    id="upload-media-tab" 
+                                    data-toggle="tab" 
+                                    data-target="#upload-media"
+                                    type="button"
+                                    role="tab" 
+                                    aria-controls="upload-media" 
+                                    aria-selected="false">
+                                Upload Media
+                            </button>
+                        </li>
+                        <li class="nav-item" role="presentation">
+                            <button class="nav-link" 
+                                    id="import-audio-video-tab" 
+                                    data-toggle="tab" 
+                                    data-target="#import-audio-video"
+                                    type="button"
+                                    role="tab" 
+                                    aria-controls="import-audio-video" 
+                                    aria-selected="false">
+                                Import Audio/Video
+                            </button>
+                        </li>
+                    </ul>
+                    <div class="tab-content" id="mediaTabContent">
+                        <div class="tab-pane fade show active pt-4" 
+                             id="import-repo-media" 
+                             role="tabpanel"
+                             aria-labelledby="import-repo-media-tab"
+                             tabindex="0">
+                            <%- include('partials/tab-import-repo-media.ejs'); %>
+                        </div>
+                        <div class="tab-pane fade pt-4" 
+                             id="upload-media" 
+                             role="tabpanel"
+                             aria-labelledby="upload-media-tab"
+                             tabindex="0">
+                            <%- include('partials/tab-upload-media.ejs'); %>
+                        </div>
+                        <div class="tab-pane fade pt-4" 
+                             id="import-audio-video" 
+                             role="tabpanel"
+                             aria-labelledby="import-audio-video-tab"
+                             tabindex="0">
+                            <%- include('partials/tab-import-audio-video.ejs'); %>
+                        </div>
+                    </div>
+                </div>
+
+                <input type="hidden" id="is-repo-item" name="is_repo_item" value="0">
+            </div>
+        </section>
+
+        <section id="item-card" class="card" aria-labelledby="media-list-heading">
+            <div class="card-header">
+                <strong class="card-title mb-3" id="media-list-heading">Media List</strong>
+            </div>
+            <div class="card-body">
+                <table id="items" class="display">
+                    <caption class="sr-only">List of media files in the library</caption>
+                    <thead>
+                        <tr>
+                            <th scope="col">File Name</th>
+                            <th scope="col">File Size</th>
+                            <th scope="col">Type</th>
+                            <th scope="col">Date Added</th>
+                            <th scope="col">Added By</th>
+                        </tr>
+                    </thead>
+                    <tbody id="media-data"></tbody>
+                </table>
+            </div>
+        </section>
+    </main>
+
+    <div class="clearfix"></div>
+    <%- include('../partials/footer.ejs'); %>
+</div>
+
+<!-- Uploaded Media Modal -->
+<%- include('partials/modal-uploaded-media-forms.ejs'); %>
+
+<!-- External Libraries -->
+<%- include('../partials/exhibits-libs-common.ejs'); %>
+<script src="/exhibits-dashboard/static/libs/data_tables/datatables.min.js"></script>
+
+<!-- Dropzone.js Library -->
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/dropzone/5.9.3/dropzone.min.css"
+      crossorigin="anonymous" 
+      referrerpolicy="no-referrer" />
+<script src="https://cdnjs.cloudflare.com/ajax/libs/dropzone/5.9.3/dropzone.min.js" 
+        crossorigin="anonymous"
+        referrerpolicy="no-referrer"></script>
+
+<!-- Application Scripts -->
+<%- include('../partials/exhibits-app-common.ejs'); %>
+<script src="/exhibits-dashboard/static/app/dist/helper.media.module.min.js?<%=build_version%>"></script>
+
+<!-- Modals Module -->
+<script src="/exhibits-dashboard/static/app/media-library/modals.module.js?<%=build_version%>"></script>
+
+<!-- Uploads Module -->
+<script src="/exhibits-dashboard/static/app/media-library/uploads.module.js?<%=build_version%>"></script>
+
+<!-- Media Library Module -->
+<script src="/exhibits-dashboard/static/app/media-library/media.library.module.js?<%=build_version%>"></script>
+
+<script>
+    // Initialize media library module when DOM is ready
+    document.addEventListener('DOMContentLoaded', function() {
+        mediaLibraryModule.init();
+    });
+</script>
+</body>
+</html>

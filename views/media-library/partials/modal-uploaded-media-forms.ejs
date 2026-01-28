@@ -1,0 +1,250 @@
+<!-- Uploaded Media Modal -->
+<!-- This modal opens after successful file uploads and cannot be closed by the user -->
+<!-- Each uploaded file gets its own form with individual save button -->
+<div class="modal fade" 
+     id="uploaded-media-modal" 
+     data-bs-backdrop="static" 
+     data-bs-keyboard="false"
+     data-backdrop="static"
+     data-keyboard="false"
+     tabindex="-1" 
+     aria-labelledby="uploaded-media-modal-title" 
+     aria-hidden="true"
+     role="dialog">
+    <div class="modal-dialog modal-xl modal-dialog-centered modal-dialog-scrollable">
+        <div class="modal-content">
+            <div class="modal-header"><!-- text-white bg-primary -->
+                <strong class="modal-title" id="uploaded-media-modal-title">
+                    <i class="fa fa-check-circle" style="margin-right: 8px;" aria-hidden="true"></i>
+                    Media Uploaded Successfully
+                </strong>
+                <!-- No close button - modal cannot be dismissed -->
+            </div>
+            <div class="modal-body">
+                <!-- Upload Summary -->
+                <div class="alert alert-success mb-4" role="alert">
+                    <div class="d-flex align-items-center">
+                        <i class="fa fa-info-circle fa-lg" style="margin-right: 12px;" aria-hidden="true"></i>
+                        <div>
+                            <strong>Upload Complete!</strong>
+                            <p class="mb-0" id="upload-summary-text">Your files have been uploaded to the media library.</p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Instructions -->
+                <div class="mb-4">
+                    <p class="text-muted">
+                        <i class="fa fa-pencil" style="margin-right: 6px;" aria-hidden="true"></i>
+                        Please provide details for each uploaded file below. 
+                        Fields marked with <span class="text-danger">*</span> are required.
+                        Click <strong>Save</strong> on each file when done.
+                    </p>
+                </div>
+
+                <!-- Uploaded Files Forms Container -->
+                <div id="uploaded-files-forms-container" class="uploaded-files-forms">
+                    <!-- Individual file forms will be dynamically inserted here by JavaScript -->
+                </div>
+
+                <!-- Hidden field for tracking all files -->
+                <input type="hidden" id="modal-all-files" name="all_files">
+            </div>
+            <div class="modal-footer justify-content-between">
+                <div class="text-muted">
+                    <small>
+                        <i class="fa fa-info-circle" style="margin-right: 6px;" aria-hidden="true"></i>
+                        <span id="modal-validation-message">0 of 0 files saved</span>
+                    </small>
+                </div>
+                <div>
+                    <button type="button" 
+                            class="btn btn-outline-secondary" 
+                            id="uploaded-media-done-btn">
+                        <i class="fa fa-check" style="margin-right: 6px;" aria-hidden="true"></i>
+                        Done
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+/* Modal Styles */
+#uploaded-media-modal .modal-content {
+    border: none;
+    box-shadow: 0 10px 40px rgba(0, 0, 0, 0.3);
+}
+
+#uploaded-media-modal .modal-header {
+    border-bottom: none;
+    padding: 1.25rem 1.5rem;
+}
+
+#uploaded-media-modal .modal-body {
+    padding: 1.5rem;
+    max-height: 70vh;
+    overflow-y: auto;
+}
+
+#uploaded-media-modal .modal-footer {
+    border-top: 1px solid #dee2e6;
+    padding: 1rem 1.5rem;
+}
+
+/* File Form Cards */
+.file-form-card {
+    border: 1px solid #dee2e6;
+    border-radius: 8px;
+    overflow: hidden;
+    transition: all 0.3s ease;
+}
+
+.file-form-card:hover {
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+.file-form-card .card-header {
+    padding: 0.75rem 1rem;
+    border-bottom: 1px solid #dee2e6;
+    transition: all 0.3s ease;
+}
+
+.file-form-card .card-body {
+    padding: 1.25rem;
+}
+
+/* Saved state for cards */
+.file-form-card.saved {
+    border-color: #198754;
+}
+
+.file-form-card.saved .card-header {
+    background-color: #198754 !important;
+    color: #fff !important;
+}
+
+.file-form-card.saved .file-type-badge {
+    background-color: rgba(255,255,255,0.2) !important;
+}
+
+/* File Number Badge */
+.file-number {
+    width: 28px;
+    height: 28px;
+    border-radius: 50%;
+    background: #0d6efd;
+    color: #fff;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 0.85rem;
+    font-weight: 600;
+    flex-shrink: 0;
+    transition: all 0.3s ease;
+}
+
+/* File Preview */
+.file-preview-container {
+    padding: 1rem;
+    background: #f8f9fa;
+    border-radius: 8px;
+}
+
+.file-preview {
+    width: 120px;
+    height: 120px;
+    margin: 0 auto;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: #fff;
+    border: 1px solid #ddd;
+    border-radius: 8px;
+    overflow: hidden;
+}
+
+.file-preview img {
+    max-width: 100%;
+    max-height: 100%;
+    object-fit: cover;
+}
+
+.file-preview .file-icon {
+    font-size: 48px;
+    color: #6c757d;
+}
+
+.file-name-display {
+    max-width: 150px;
+    margin: 0 auto;
+    font-weight: 500;
+}
+
+/* File type badge colors */
+.file-type-badge.type-image {
+    background-color: #0d6efd !important;
+}
+
+.file-type-badge.type-pdf {
+    background-color: #dc3545 !important;
+}
+
+.file-type-badge.type-video {
+    background-color: #6f42c1 !important;
+}
+
+.file-type-badge.type-audio {
+    background-color: #fd7e14 !important;
+}
+
+/* Form validation states */
+.file-details-form.was-validated .form-control:invalid {
+    border-color: #dc3545;
+}
+
+.file-details-form.was-validated .form-control:valid {
+    border-color: #198754;
+}
+
+/* Save button in each form */
+.btn-save-file {
+    min-width: 100px;
+}
+
+/* Modal backdrop - make it darker for emphasis */
+.modal-backdrop.show {
+    opacity: 0.7;
+}
+
+/* Prevent body scroll when modal is open */
+body.modal-open {
+    overflow: hidden;
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+    .file-preview-container {
+        margin-bottom: 1rem;
+    }
+    
+    .file-preview {
+        width: 80px;
+        height: 80px;
+    }
+    
+    .file-preview .file-icon {
+        font-size: 32px;
+    }
+    
+    .file-form-card .card-header {
+        flex-wrap: wrap;
+        gap: 0.5rem;
+    }
+    
+    .file-form-title {
+        font-size: 0.9rem;
+    }
+}
+</style>

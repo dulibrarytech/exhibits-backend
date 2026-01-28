@@ -18,7 +18,7 @@
 
 'use strict';
 
-const HELPER = require("../libs/helper");
+const HELPER = require('../libs/helper');
 const STORAGE_CONFIG = {
     storage_path: process.env.STORAGE_PATH,
     upload_max: process.env.UPLOAD_MAX

@@ -1,0 +1,55 @@
+<div class="import-kaltura-container">
+    <div class="alert alert-info" role="alert">
+        <i class="fa fa-info-circle" aria-hidden="true"></i>
+        Import audio or video content from Kaltura. Enter the media entry ID to retrieve and link the content.
+    </div>
+</div>
+
+<div class="col-12">
+    <form class="row g-3 align-items-end" aria-label="Import Kaltura audio/video">
+        <div class="col-12 col-md-7">
+            <label for="audio-video" class="form-label">Kaltura Entry ID</label>
+            <input type="text" 
+                   class="form-control" 
+                   id="audio-video" 
+                   name="audio_video" 
+                   placeholder="e.g., 0_abc123xy"
+                   aria-describedby="kaltura-help">
+            <small id="kaltura-help" class="form-text text-muted">
+                <i class="fa fa-info-circle" aria-hidden="true"></i>
+                Enter the Kaltura media entry ID (found in the Kaltura management console)
+            </small>
+            <input type="hidden" id="is-kaltura-item" name="is_kaltura_item" value="0">
+        </div>
+        <div class="col-auto">
+            <button type="button" 
+                    id="kaltura-btn" 
+                    class="btn btn-primary">
+                <i class="fa fa-play-circle" aria-hidden="true"></i>
+                Get Item Data
+            </button>
+        </div>
+    </form>
+    
+    <figure id="kaltura-thumbnail-container" class="mt-4" style="display: none;">
+        <img id="kaltura-thumbnail" 
+             src="" 
+             alt="" 
+             width="150" 
+             height="150"
+             class="kaltura-thumbnail-img border rounded"
+             style="object-fit: cover;">
+        <figcaption class="mt-2 text-muted" id="kaltura-thumbnail-caption">
+            Kaltura media thumbnail
+        </figcaption>
+    </figure>
+    
+    <div id="kaltura-item-data" 
+         class="mt-4"
+         role="region" 
+         aria-live="polite" 
+         aria-label="Kaltura item data results">
+    </div>
+    
+    <input type="hidden" name="item_type" id="kaltura-item-type">
+</div>

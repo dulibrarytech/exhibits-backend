@@ -172,4 +172,9 @@ module.exports = function (app) {
 
     app.route(APP_PATH + '/recycle')
         .get(CONTROLLER.get_dashboard_recycle);
+
+    //============Media============//
+    app.route(APP_PATH + '/media/library')
+        .get(CONTROLLER.get_dashboard_media);
+
 };

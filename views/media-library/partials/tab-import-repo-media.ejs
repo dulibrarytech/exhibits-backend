@@ -1,0 +1,31 @@
+<div class="col-12">
+    <form class="row form-group" aria-label="Import repository media">
+        <div class="col-12 col-md-7 mb-3 mb-md-0">
+            <label for="repo-uuid" class="sr-only">Repository record UUID</label>
+            <input type="text" 
+                   class="form-control" 
+                   id="repo-uuid" 
+                   name="repo_uuid" 
+                   placeholder="Repository record UUID"
+                   aria-describedby="repo-uuid-help">
+            <small id="repo-uuid-help" class="form-text text-muted">
+                Enter the unique identifier from the repository
+            </small>
+        </div>
+        <div class="col-auto">
+            <button type="button" 
+                    id="repo-uuid-btn" 
+                    class="btn btn-secondary">
+                Get item metadata
+            </button>
+        </div>
+    </form>
+    
+    <div id="repo-item-metadata" 
+         role="region" 
+         aria-live="polite" 
+         aria-label="Repository item metadata results">
+    </div>
+    
+    <div id="tn" aria-live="polite"></div>
+</div>

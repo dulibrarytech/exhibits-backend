@@ -46,7 +46,7 @@ CREATE TABLE `ctbl_user_roles` (
   PRIMARY KEY (`id`),
   KEY `user_id_index` (`user_id`) USING BTREE,
   KEY `role_id_index` (`role_id`) USING BTREE
-) ENGINE=InnoDB AUTO_INCREMENT=12 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=11 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -65,7 +65,7 @@ CREATE TABLE `tbl_exhibits` (
   `banner_template` varchar(100) DEFAULT 'banner_1' COMMENT '{''banner_1'' | ''banner_2''} (default: banner_1) ',
   `about_the_curators` longtext DEFAULT NULL COMMENT '{text | html} content for the "About the Curators" page ',
   `alert_text` longtext DEFAULT NULL COMMENT '{string | html} alert banner displayed below hero section (default: null, alert banner not displayed)',
-  `hero_image` varchar(255) NOT NULL COMMENT '{filename.extension} filename or path to file (default: null, hero image not displayed. image section will be displayed with a gray background if the banner template has a hero image section)',
+  `hero_image` varchar(255) DEFAULT NULL COMMENT '{filename.extension} filename or path to file (default: null, hero image not displayed. image section will be displayed with a gray background if the banner template has a hero image section)',
   `thumbnail` varchar(255) DEFAULT NULL COMMENT '{filename.extension} filename. exhibit thumbnail image. (default: null, thumbnail image will be derived from the ''hero_image'' if present.)',
   `description` longtext DEFAULT NULL COMMENT '{string | html} the exhibit banner text',
   `page_layout` varchar(50) NOT NULL DEFAULT 'top_nav' COMMENT '{''top_nav'', ''side_nav} (default: top_nav)',
@@ -79,11 +79,11 @@ CREATE TABLE `tbl_exhibits` (
   `is_embedded` tinyint(1) NOT NULL DEFAULT 0,
   `is_preview` tinyint(1) NOT NULL DEFAULT 0,
   `is_locked` tinyint(1) NOT NULL DEFAULT 0,
-  `locked_by_user` int(11) NOT NULL DEFAULT 0,
+  `locked_by_user` int(11) DEFAULT 0,
+  `locked_at` timestamp NULL DEFAULT NULL,
   `is_deleted` tinyint(1) NOT NULL DEFAULT 0,
   `is_indexed` tinyint(1) NOT NULL DEFAULT 0,
   `owner` int(11) NOT NULL DEFAULT 0,
-  `exhibit_owner` int(11) NOT NULL DEFAULT 0,
   `created` timestamp NOT NULL DEFAULT current_timestamp(),
   `updated` timestamp NOT NULL DEFAULT current_timestamp() ON UPDATE current_timestamp(),
   `created_by` varchar(255) DEFAULT NULL,
@@ -92,7 +92,7 @@ CREATE TABLE `tbl_exhibits` (
   KEY `uuid_index` (`uuid`),
   KEY `is_published_index` (`is_published`),
   KEY `is_deleted_index` (`is_deleted`) USING BTREE
-) ENGINE=InnoDB AUTO_INCREMENT=57 DEFAULT CHARSET=utf8 COLLATE=utf8_general_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=90 DEFAULT CHARSET=utf8 COLLATE=utf8_general_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -133,9 +133,10 @@ CREATE TABLE `tbl_grid_items` (
   `is_embedded` tinyint(1) NOT NULL DEFAULT 0,
   `is_published` tinyint(1) NOT NULL DEFAULT 0,
   `is_locked` tinyint(1) NOT NULL DEFAULT 0,
-  `locked_by_user` int(11) NOT NULL DEFAULT 0,
+  `locked_by_user` int(11) DEFAULT 0,
+  `locked_at` timestamp NULL DEFAULT NULL,
   `is_deleted` tinyint(1) NOT NULL DEFAULT 0,
-  `owner` int(11) NOT NULL DEFAULT 8,
+  `owner` int(11) NOT NULL DEFAULT 0,
   `created` timestamp NOT NULL DEFAULT current_timestamp(),
   `updated` timestamp NOT NULL DEFAULT current_timestamp() ON UPDATE current_timestamp(),
   `created_by` varchar(255) DEFAULT NULL,
@@ -146,7 +147,7 @@ CREATE TABLE `tbl_grid_items` (
   KEY `is_member_of_exhibit_index` (`is_member_of_exhibit`) USING BTREE,
   KEY `is_published_index` (`is_published`) USING BTREE,
   KEY `is_deleted_index` (`is_deleted`) USING BTREE
-) ENGINE=InnoDB AUTO_INCREMENT=407 DEFAULT CHARSET=utf8 COLLATE=utf8_general_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=356 DEFAULT CHARSET=utf8 COLLATE=utf8_general_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -170,7 +171,7 @@ CREATE TABLE `tbl_grids` (
   `is_published` tinyint(1) NOT NULL DEFAULT 0,
   `created` timestamp NOT NULL DEFAULT current_timestamp(),
   `updated` timestamp NOT NULL DEFAULT current_timestamp() ON UPDATE current_timestamp(),
-  `owner` int(11) NOT NULL DEFAULT 8,
+  `owner` int(11) NOT NULL DEFAULT 0,
   `created_by` varchar(255) DEFAULT NULL,
   `updated_by` varchar(255) DEFAULT NULL,
   PRIMARY KEY (`id`),
@@ -178,7 +179,7 @@ CREATE TABLE `tbl_grids` (
   KEY `is_member_of_exhibit_index` (`is_member_of_exhibit`) USING BTREE,
   KEY `is_deleted_index` (`is_deleted`) USING BTREE,
   KEY `is_published_index` (`is_published`) USING BTREE
-) ENGINE=InnoDB AUTO_INCREMENT=91 DEFAULT CHARSET=utf8 COLLATE=utf8_general_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=86 DEFAULT CHARSET=utf8 COLLATE=utf8_general_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -200,20 +201,59 @@ CREATE TABLE `tbl_heading_items` (
   `is_anchor` tinyint(1) NOT NULL DEFAULT 1,
   `is_published` tinyint(1) NOT NULL DEFAULT 0,
   `is_locked` tinyint(1) NOT NULL DEFAULT 0,
-  `locked_by_user` int(11) NOT NULL DEFAULT 0,
+  `locked_by_user` int(11) DEFAULT 0,
   `is_indexed` tinyint(1) NOT NULL DEFAULT 0,
   `is_deleted` tinyint(1) NOT NULL DEFAULT 0,
-  `owner` int(11) NOT NULL DEFAULT 8,
+  `owner` int(11) NOT NULL DEFAULT 0,
   `created` timestamp NOT NULL DEFAULT current_timestamp(),
   `updated` timestamp NOT NULL DEFAULT current_timestamp() ON UPDATE current_timestamp(),
   `created_by` varchar(255) DEFAULT NULL,
   `updated_by` varchar(255) DEFAULT NULL,
+  `locked_at` timestamp NULL DEFAULT NULL,
   PRIMARY KEY (`id`),
   UNIQUE KEY `uuid_index` (`uuid`) USING BTREE,
   KEY `is_member_of_exhibit_index` (`is_member_of_exhibit`) USING BTREE,
   KEY `is_published_index` (`is_published`) USING BTREE,
   KEY `is_deleted_index` (`is_deleted`) USING BTREE
-) ENGINE=InnoDB AUTO_INCREMENT=146 DEFAULT CHARSET=utf8 COLLATE=utf8_general_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=149 DEFAULT CHARSET=utf8 COLLATE=utf8_general_ci;
+/*!40101 SET character_set_client = @saved_cs_client */;
+
+--
+-- Table structure for table `tbl_media_library`
+--
+
+DROP TABLE IF EXISTS `tbl_media_library`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!40101 SET character_set_client = utf8 */;
+CREATE TABLE `tbl_media_library` (
+  `id` int(11) unsigned NOT NULL AUTO_INCREMENT,
+  `name` varchar(255) NOT NULL,
+  `description` text DEFAULT NULL,
+  `alt_text` varchar(255) DEFAULT NULL,
+  `is_alt_text_decorative` tinyint(1) DEFAULT 0,
+  `topics_subjects` longtext DEFAULT NULL,
+  `genre_form_subjects` longtext DEFAULT NULL,
+  `places_subjects` longtext DEFAULT NULL,
+  `item_type` varchar(50) NOT NULL,
+  `mime_type` varchar(100) DEFAULT NULL,
+  `call_number` varchar(255) DEFAULT NULL,
+  `original_filename` varchar(500) NOT NULL DEFAULT '',
+  `ingest_method` varchar(255) NOT NULL,
+  `upload_uuid` varchar(255) NOT NULL DEFAULT '',
+  `repo_uuid` varchar(255) DEFAULT NULL,
+  `kaltura_entry_id` varchar(100) DEFAULT NULL,
+  `exhibits` longtext DEFAULT NULL,
+  `size` bigint(20) NOT NULL,
+  `is_deleted` tinyint(1) NOT NULL DEFAULT 0,
+  `created` timestamp NOT NULL DEFAULT current_timestamp(),
+  `updated` timestamp NOT NULL DEFAULT current_timestamp() ON UPDATE current_timestamp(),
+  `created_by` varchar(255) DEFAULT NULL,
+  `updated_by` varchar(255) DEFAULT NULL,
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `uuid_index` (`upload_uuid`) USING BTREE,
+  KEY `is_deleted_index` (`is_deleted`) USING BTREE,
+  KEY `original_filename_index` (`original_filename`) USING BTREE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_general_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -231,7 +271,7 @@ CREATE TABLE `tbl_standard_items` (
   `title` longtext NOT NULL,
   `caption` text DEFAULT NULL,
   `item_type` varchar(100) NOT NULL DEFAULT '',
-  `mime_type` varchar(100) NOT NULL,
+  `mime_type` varchar(100) DEFAULT NULL,
   `media` varchar(255) DEFAULT NULL,
   `text` longtext DEFAULT NULL,
   `wrap_text` tinyint(1) NOT NULL DEFAULT 1,
@@ -251,9 +291,10 @@ CREATE TABLE `tbl_standard_items` (
   `is_embedded` tinyint(1) NOT NULL DEFAULT 0 COMMENT 'for audio and video',
   `is_published` tinyint(1) NOT NULL DEFAULT 0,
   `is_locked` tinyint(1) NOT NULL DEFAULT 0,
-  `locked_by_user` int(11) NOT NULL DEFAULT 0,
+  `locked_by_user` int(11) DEFAULT 0,
+  `locked_at` timestamp NULL DEFAULT NULL,
   `is_deleted` tinyint(1) NOT NULL DEFAULT 0,
-  `owner` int(11) NOT NULL DEFAULT 8,
+  `owner` int(11) NOT NULL DEFAULT 0,
   `created` timestamp NOT NULL DEFAULT current_timestamp(),
   `updated` timestamp NOT NULL DEFAULT current_timestamp() ON UPDATE current_timestamp(),
   `created_by` varchar(255) DEFAULT NULL,
@@ -263,7 +304,7 @@ CREATE TABLE `tbl_standard_items` (
   KEY `is_member_of_exhibit_index` (`is_member_of_exhibit`) USING BTREE,
   KEY `is_published_index` (`is_published`) USING BTREE,
   KEY `is_deleted_index` (`is_deleted`) USING BTREE
-) ENGINE=InnoDB AUTO_INCREMENT=450 DEFAULT CHARSET=utf8 COLLATE=utf8_general_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=328 DEFAULT CHARSET=utf8 COLLATE=utf8_general_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -304,9 +345,10 @@ CREATE TABLE `tbl_timeline_items` (
   `is_embedded` tinyint(1) NOT NULL DEFAULT 0,
   `is_published` tinyint(1) NOT NULL DEFAULT 0,
   `is_locked` tinyint(1) NOT NULL DEFAULT 0,
-  `locked_by_user` int(11) NOT NULL DEFAULT 0,
+  `locked_by_user` int(11) DEFAULT 0,
+  `locked_at` timestamp NULL DEFAULT NULL,
   `is_deleted` tinyint(1) NOT NULL DEFAULT 0,
-  `owner` int(11) NOT NULL DEFAULT 8,
+  `owner` int(11) NOT NULL DEFAULT 0,
   `created` timestamp NOT NULL DEFAULT current_timestamp(),
   `updated` timestamp NOT NULL DEFAULT current_timestamp() ON UPDATE current_timestamp(),
   `created_by` varchar(255) DEFAULT NULL,
@@ -317,7 +359,7 @@ CREATE TABLE `tbl_timeline_items` (
   KEY `is_member_of_exhibit_index` (`is_member_of_exhibit`) USING BTREE,
   KEY `is_published_index` (`is_published`) USING BTREE,
   KEY `is_deleted_index` (`is_deleted`) USING BTREE
-) ENGINE=InnoDB AUTO_INCREMENT=122 DEFAULT CHARSET=utf8 COLLATE=utf8_general_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=126 DEFAULT CHARSET=utf8 COLLATE=utf8_general_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -340,7 +382,7 @@ CREATE TABLE `tbl_timelines` (
   `is_published` tinyint(1) NOT NULL DEFAULT 0,
   `created` timestamp NOT NULL DEFAULT current_timestamp(),
   `updated` timestamp NOT NULL DEFAULT current_timestamp() ON UPDATE current_timestamp(),
-  `owner` int(11) NOT NULL DEFAULT 8,
+  `owner` int(11) NOT NULL DEFAULT 0,
   `created_by` varchar(255) DEFAULT NULL,
   `updated_by` varchar(255) DEFAULT NULL,
   PRIMARY KEY (`id`),
@@ -348,7 +390,7 @@ CREATE TABLE `tbl_timelines` (
   KEY `is_member_of_exhibit_index` (`is_member_of_exhibit`) USING BTREE,
   KEY `is_deleted_index` (`is_deleted`) USING BTREE,
   KEY `is_published_index` (`is_published`) USING BTREE
-) ENGINE=InnoDB AUTO_INCREMENT=19 DEFAULT CHARSET=utf8 COLLATE=utf8_general_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=22 DEFAULT CHARSET=utf8 COLLATE=utf8_general_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -396,8 +438,8 @@ CREATE TABLE `tbl_users` (
   `first_name` varchar(255) NOT NULL DEFAULT '',
   `last_name` varchar(255) NOT NULL DEFAULT '',
   `is_active` tinyint(1) NOT NULL DEFAULT 1,
-  `token__` text NOT NULL DEFAULT '',
   `token` varchar(500) DEFAULT NULL,
+  `token_` varchar(255) NOT NULL DEFAULT '0',
   `created` timestamp NULL DEFAULT current_timestamp(),
   `last_login` timestamp NOT NULL DEFAULT current_timestamp() ON UPDATE current_timestamp(),
   PRIMARY KEY (`id`),
@@ -421,4 +463,4 @@ CREATE TABLE `tbl_users` (
 /*!40101 SET COLLATION_CONNECTION=@OLD_COLLATION_CONNECTION */;
 /*!40111 SET SQL_NOTES=@OLD_SQL_NOTES */;
 
--- Dump completed on 2026-01-15 18:50:18
+-- Dump completed on 2026-01-28 16:15:10
