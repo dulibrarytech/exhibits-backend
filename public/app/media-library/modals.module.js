@@ -121,7 +121,7 @@ const mediaModalsModule = (function() {
         }
     };
 
-    /**
+    /** TODO
      * Update modal footer status
      */
     const update_modal_status = () => {
