@@ -16,36 +16,51 @@
 
 'use strict';
 
-const { APP_PATH, PREFIX, VERSION, ENDPOINT } = require('./endpoints_config');
-
-module.exports = {
+const APP_PATH = '/exhibits-dashboard';
+const PREFIX = '/api/';
+const VERSION = 'v1';
+const ENDPOINT = '/media/library';
+const ENDPOINTS = {
     media_records: {
-        endpoint: {
-            description: 'Uploads media',
-            endpoint: `${APP_PATH}${PREFIX}${VERSION}${ENDPOINT}/media/library/upload`,
-            params: 'token or api_key',
-        },
         get: {
             description: 'Retrieves all media records',
-            endpoint: `${APP_PATH}${PREFIX}${VERSION}${ENDPOINT}/media/library`,
+            endpoint: `${APP_PATH}${PREFIX}${VERSION}${ENDPOINT}`,
             params: 'token or api_key, gets all media records'
         },
         post: {
             description: 'Creates media record',
-            endpoint: `${APP_PATH}${PREFIX}${VERSION}${ENDPOINT}/media/library`,
+            endpoint: `${APP_PATH}${PREFIX}${VERSION}${ENDPOINT}`,
             params: 'token or api_key',
             body: 'media data'
         },
         put: {
             description: 'Updates media record',
-            endpoint: `${APP_PATH}${PREFIX}${VERSION}${ENDPOINT}/media/library`,
-            params: 'token or api_key',
+            endpoint: `${APP_PATH}${PREFIX}${VERSION}${ENDPOINT}/:media_id`,
+            params: 'token or api_key, media_id',
             body: 'media data'
         },
         delete: {
             description: 'Deletes media record',
-            endpoint: `${APP_PATH}${PREFIX}${VERSION}${ENDPOINT}/media/library`,
-            params: 'token or api_key, uuid'
+            endpoint: `${APP_PATH}${PREFIX}${VERSION}${ENDPOINT}/:media_id`,
+            params: 'token or api_key, media_id'
+        }
+    },
+    media_record: {
+        get: {
+            description: 'Retrieves a single media record by UUID',
+            endpoint: `${APP_PATH}${PREFIX}${VERSION}${ENDPOINT}/:media_id`,
+            params: 'token or api_key, media_id (UUID)'
+        }
+    },
+    media_file: {
+        get: {
+            description: 'Retrieves media file by filename',
+            endpoint: `${APP_PATH}${PREFIX}${VERSION}${ENDPOINT}/file/:filename`,
+            params: 'token or api_key, filename'
         }
     }
+};
+
+module.exports = () => {
+    return ENDPOINTS;
 };

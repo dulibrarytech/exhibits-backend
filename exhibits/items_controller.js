@@ -51,7 +51,6 @@ exports.create_item_record = async function (req, res) {
             return;
         }
 
-        // Use object literal for efficiency
         const auth_options = {
             req,
             permissions: ['add_item', 'add_item_to_any_exhibit'],

@@ -40,6 +40,7 @@ const MAX_UUID_LENGTH = 36; // Standard UUID length
  * @private
  */
 function validate_username(username) {
+
     if (!username || typeof username !== 'string') {
         return false;
     }
@@ -62,6 +63,7 @@ function validate_username(username) {
  * @private
  */
 function validate_uuid(uuid) {
+
     if (!uuid || typeof uuid !== 'string') {
         return false;
     }
@@ -233,6 +235,7 @@ exports.refresh_token = function (username) {
  * @private
  */
 function verify_jwt_token(token, callback) {
+
     if (!token || !VALIDATOR.isJWT(token)) {
         return callback(new Error('Invalid token format'), null);
     }
@@ -294,13 +297,18 @@ function validate_api_key(key) {
 
 /**
  * Verifies session token
+ * Supports token from:
+ *   - Header: x-access-token
+ *   - Query parameter: t
+ *   - Query parameter: token (for img src URLs)
+ *   - API key: api_key query parameter
  * @param {Object} req - Express request object
  * @param {Object} res - Express response object
  * @param {Function} next - Express next middleware function
  */
 exports.verify = function (req, res, next) {
 
-    const token = req.headers['x-access-token'] || req.query.t;
+    const token = req.headers['x-access-token'] || req.query.t || req.query.token;
     const api_key = req.query.api_key;
 
     // Verify JWT token
@@ -351,12 +359,83 @@ exports.verify = function (req, res, next) {
 };
 
 /**
+ * Verifies session token with query parameter support
+ * Does NOT redirect to SSO - returns 401 instead (for API/resource endpoints)
+ * 
+ * Supports token from:
+ *   - Header: x-access-token
+ *   - Query parameter: token (for img src URLs that cannot set headers)
+ *   - Query parameter: t
+ *   - API key: api_key query parameter
+ * 
+ * @param {Object} req - Express request object
+ * @param {Object} res - Express response object
+ * @param {Function} next - Express next middleware function
+ */
+exports.verify_with_query = function (req, res, next) {
+
+    const token = req.headers['x-access-token'] || req.query.token || req.query.t;
+    const api_key = req.query.api_key;
+
+    // Verify JWT token
+    if (token) {
+        verify_jwt_token(token, function (error, decoded) {
+            if (error) {
+                const sanitized_error = sanitize_for_logging(error.message);
+                LOGGER.module().error('ERROR: [/libs/tokens lib (verify_with_query)] token verification failed: ' + sanitized_error);
+
+                return res.status(401).json({
+                    success: false,
+                    message: 'Unauthorized request',
+                    data: null
+                });
+            }
+
+            req.decoded = decoded;
+            return next();
+        });
+        return;
+    }
+
+    // Verify API key
+    if (api_key) {
+
+        if (!validate_api_key(api_key)) {
+            LOGGER.module().error('ERROR: [/libs/tokens lib (verify_with_query)] invalid API key format or value');
+
+            return res.status(401).json({
+                success: false,
+                message: 'Unauthorized request',
+                data: null
+            });
+        }
+
+        // Normalize API key if it was an array
+        if (Array.isArray(api_key)) {
+            req.query.api_key = api_key[api_key.length - 1];
+        }
+
+        return next();
+    }
+
+    // No valid authentication provided - return 401 (no SSO redirect for API endpoints)
+    LOGGER.module().warn('WARNING: [/libs/tokens lib (verify_with_query)] no valid authentication provided');
+
+    return res.status(401).json({
+        success: false,
+        message: 'No token provided',
+        data: null
+    });
+};
+
+/**
  * Verifies token for shared preview URL
  * @param {Object} req - Express request object
  * @param {Object} res - Express response object
  * @param {Function} next - Express next middleware function
  */
 exports.verify_shared = function (req, res, next) {
+
     const token = req.query.t;
 
     if (!token) {
@@ -368,6 +447,7 @@ exports.verify_shared = function (req, res, next) {
     }
 
     verify_jwt_token(token, function (error, decoded) {
+
         if (error) {
             const sanitized_error = sanitize_for_logging(error.message);
             LOGGER.module().error('ERROR: [/libs/tokens lib (verify_shared)] shared token verification failed: ' + sanitized_error);

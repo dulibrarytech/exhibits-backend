@@ -115,7 +115,6 @@
                             <th scope="col">File Name</th>
                             <th scope="col">Import Type</th>
                             <th scope="col">Date Added</th>
-                            <th scope="col">Actions</th>
                         </tr>
                     </thead>
                     <tbody id="media-data"></tbody>
@@ -131,62 +130,6 @@
 <!-- Uploaded Media Modal -->
 <%- include('partials/modal-uploaded-media-forms.ejs'); %>
 
-<!-- Edit Media Modal -->
-<div class="modal fade" 
-     id="edit-media-modal" 
-     tabindex="-1" 
-     role="dialog" 
-     aria-labelledby="edit-media-modal-title" 
-     aria-hidden="true"
-     data-backdrop="static"
-     data-keyboard="false">
-    <div class="modal-dialog modal-lg modal-dialog-centered" role="document">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h5 class="modal-title" id="edit-media-modal-title">
-                    <i class="fa fa-pencil" style="margin-right: 8px;" aria-hidden="true"></i>
-                    Edit Media Record
-                </h5>
-                <button type="button" 
-                        class="close" 
-                        data-dismiss="modal" 
-                        aria-label="Close"
-                        id="edit-media-close-btn">
-                    <span aria-hidden="true">&times;</span>
-                </button>
-            </div>
-            <div class="modal-body">
-                <!-- Message container -->
-                <div id="edit-media-message" role="status" aria-live="polite"></div>
-                
-                <!-- Loading indicator -->
-                <div id="edit-media-loading" class="text-center py-5" style="display: none;">
-                    <i class="fa fa-spinner fa-spin fa-3x" aria-hidden="true"></i>
-                    <p class="mt-3 text-muted">Loading media record...</p>
-                </div>
-                
-                <!-- Form container -->
-                <div id="edit-media-form-container"></div>
-            </div>
-            <div class="modal-footer">
-                <button type="button" 
-                        class="btn btn-secondary" 
-                        id="edit-media-cancel-btn"
-                        data-dismiss="modal">
-                    <i class="fa fa-times" style="margin-right: 6px;" aria-hidden="true"></i>
-                    Cancel
-                </button>
-                <button type="button" 
-                        class="btn btn-primary" 
-                        id="edit-media-save-btn">
-                    <i class="fa fa-save" style="margin-right: 6px;" aria-hidden="true"></i>
-                    Save Changes
-                </button>
-            </div>
-        </div>
-    </div>
-</div>
-<%- include('partials/modal-delete-media-confirm') %>
 <!-- External Libraries -->
 <%- include('../partials/exhibits-libs-common.ejs'); %>
 <script src="/exhibits-dashboard/static/libs/data_tables/datatables.min.js"></script>

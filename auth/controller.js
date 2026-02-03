@@ -22,7 +22,7 @@ const CONFIG = require('../config/webservices_config')();
 const TOKEN = require('../libs/tokens');
 const MODEL = require('../auth/model');
 const LOGGER = require('../libs/log4');
-const AUTHORIZE = require("./authorize");
+const AUTHORIZE = require('./authorize');
 const APP_PATH = '/exhibits-dashboard';
 
 exports.get_auth_landing = function (req, res) {

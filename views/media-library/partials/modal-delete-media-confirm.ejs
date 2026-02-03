@@ -1,0 +1,72 @@
+<!-- Delete Media Confirmation Modal -->
+<div class="modal fade" 
+     id="delete-media-modal" 
+     tabindex="-1" 
+     role="dialog" 
+     aria-labelledby="delete-media-modal-title" 
+     aria-hidden="true"
+     data-backdrop="static"
+     data-keyboard="false">
+    <div class="modal-dialog modal-dialog-centered" role="document" style="display: flex; align-items: center; min-height: calc(100% - 1rem);">
+        <div class="modal-content">
+            <div class="modal-header bg-danger py-2" style="display: flex; align-items: center; justify-content: space-between;">
+                <h5 class="modal-title mb-0" id="delete-media-modal-title" style="color: #fff;">
+                    <i class="fa fa-exclamation-triangle" style="margin-right: 8px;" aria-hidden="true"></i>
+                    Confirm Delete
+                </h5>
+                <button type="button" 
+                        class="close ml-auto" 
+                        data-dismiss="modal" 
+                        aria-label="Close"
+                        id="delete-media-close-btn"
+                        style="color: #fff; opacity: 1; margin: 0; padding: 0;">
+                    <span aria-hidden="true" style="font-size: 1.5rem;">&times;</span>
+                </button>
+            </div>
+            <div class="modal-body">
+                <!-- Message container for errors -->
+                <div id="delete-media-message" role="status" aria-live="polite"></div>
+                
+                <!-- Confirmation content -->
+                <div id="delete-media-content">
+                    <p class="mb-3">Are you sure you want to delete the following media record?</p>
+                    
+                    <div class="card bg-light mb-3">
+                        <div class="card-body py-2">
+                            <div class="d-flex align-items-center">
+                                <i class="fa fa-file-o fa-2x text-muted" id="delete-media-icon" style="margin-right: 12px;" aria-hidden="true"></i>
+                                <div>
+                                    <strong id="delete-media-name" class="d-block">Media Name</strong>
+                                    <small id="delete-media-filename" class="text-muted">filename.jpg</small>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="alert alert-warning mb-0" role="alert">
+                        <i class="fa fa-warning" style="margin-right: 6px;" aria-hidden="true"></i>
+                        <strong>Warning:</strong> This action cannot be undone.
+                    </div>
+                </div>
+                
+                <!-- Hidden fields to store delete data -->
+                <input type="hidden" id="delete-media-uuid" value="">
+            </div>
+            <div class="modal-footer">
+                <button type="button" 
+                        class="btn btn-secondary" 
+                        id="delete-media-cancel-btn"
+                        data-dismiss="modal">
+                    <i class="fa fa-times" style="margin-right: 6px;" aria-hidden="true"></i>
+                    Cancel
+                </button>
+                <button type="button" 
+                        class="btn btn-danger" 
+                        id="delete-media-confirm-btn">
+                    <i class="fa fa-trash" style="margin-right: 6px;" aria-hidden="true"></i>
+                    Delete
+                </button>
+            </div>
+        </div>
+    </div>
+</div>

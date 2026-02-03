@@ -27,6 +27,7 @@ const ROLES_TASKS = require('../auth/tasks/roles_tasks');
 const EXHIBITS_ENDPOINTS = require('../exhibits/endpoints/index')();
 const USERS_ENDPOINTS = require('../users/endpoints')();
 const INDEXER_ENDPOINTS = require('../indexer/endpoints')();
+const MEDIA_LIBRARY_ENDPOINTS = require('../media-library/endpoints')();
 const LOGGER = require('../libs/log4');
 const ROLE_TASKS = require("./tasks/roles_tasks");
 
@@ -229,11 +230,11 @@ exports.get_auth_user_data = async function (id) {
         const endpoints = {
             exhibits: (typeof EXHIBITS_ENDPOINTS !== 'undefined') ? EXHIBITS_ENDPOINTS : {},
             users: (typeof USERS_ENDPOINTS !== 'undefined') ? USERS_ENDPOINTS : {},
-            indexer: (typeof INDEXER_ENDPOINTS !== 'undefined') ? INDEXER_ENDPOINTS : {}
+            indexer: (typeof INDEXER_ENDPOINTS !== 'undefined') ? INDEXER_ENDPOINTS : {},
+            media_library: (typeof MEDIA_LIBRARY_ENDPOINTS !== 'undefined') ? MEDIA_LIBRARY_ENDPOINTS : {}
         };
 
         const auth_data = {user_data: data, endpoints: endpoints};
-
         LOGGER.module().debug(`DEBUG: [/auth/model (get_auth_user_data)] user data retrieved successfully for id: ${numeric_id}`);
 
         return {status: 200, message: 'User data retrieved.', data: auth_data};

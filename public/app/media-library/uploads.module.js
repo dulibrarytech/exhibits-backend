@@ -31,6 +31,7 @@ const mediaUploadsModule = (function() {
      * Get application path safely
      */
     const get_app_path = () => {
+
         try {
             const app_path = window.localStorage.getItem('exhibits_app_path');
             if (!app_path) {
@@ -278,6 +279,7 @@ const mediaUploadsModule = (function() {
             dropzone_instance.removeAllFiles(true);
         }
 
+        // TODO:
         // Refresh media list
         if (typeof mediaLibraryModule !== 'undefined' && 
             typeof mediaLibraryModule.display_media_items === 'function') {
@@ -398,7 +400,8 @@ const mediaUploadsModule = (function() {
     /**
      * Initialize Dropzone for item media uploads
      */
-    obj.upload_item_media = function() {
+    obj.upload_media = function() {
+
         if (typeof Dropzone === 'undefined') {
             console.error('Dropzone library not loaded');
             return;
@@ -428,12 +431,12 @@ const mediaUploadsModule = (function() {
             parallel_uploads: MAX_FILES,
             accepted_files: accepted_files,
             dict_message: '<i class="fa fa-cloud-upload fa-3x text-muted mb-3" aria-hidden="true"></i><br><small><em>Drag and Drop up to ' + MAX_FILES + ' files here or Click to Upload</em></small>',
-            file_type: 'item_media',
+            file_type: 'media',
             
             success_handler: function(file, response) {
                 const elements = {
                     error: document.querySelector('.upload-error'),
-                    item_type: document.getElementById('item-type'),
+                    media_type: document.getElementById('media-type'),
                     item_mime_type: document.getElementById('item-mime-type'),
                     item_media: document.getElementById('item-media'),
                     filename_display: document.getElementById('item-media-filename-display'),
@@ -462,8 +465,8 @@ const mediaUploadsModule = (function() {
 
                 uploaded_files_data.push({
                     filename: filename,
-                    original_name: uploaded_file.original_name || file.name,
-                    file_size: uploaded_file.file_size || file.size,
+                    original_name: file.name,
+                    file_size: file.size,
                     mime_type: mime_type,
                     media_type: media_type,
                     uploaded_at: uploaded_file.uploaded_at || new Date().toISOString()
@@ -476,8 +479,8 @@ const mediaUploadsModule = (function() {
 
                 clear_message(elements.error);
 
-                if (elements.item_type) {
-                    elements.item_type.value = media_type;
+                if (elements.media_type) {
+                    elements.media_type.value = media_type;
                 }
 
                 if (elements.item_mime_type) {
@@ -511,6 +514,11 @@ const mediaUploadsModule = (function() {
 
                 const success_count = uploaded_files_data.length;
                 display_upload_success(elements.error, success_count + ' file(s) uploaded successfully');
+
+                // Remove success message after 4 seconds
+                setTimeout(function() {
+                    clear_message(elements.error);
+                }, 4000);
 
                 console.log('Item media uploaded: ' + filename + ' (' + media_type + ')');
             }
@@ -579,7 +587,7 @@ const mediaUploadsModule = (function() {
         Dropzone.autoDiscover = false;
 
         setup_trash_handler();
-        obj.upload_item_media();
+        obj.upload_media();
 
         initialized = true;
         console.log('Uploads module initialized successfully');

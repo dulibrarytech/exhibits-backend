@@ -48,7 +48,7 @@ const itemsModule = (function() {
     };
 
     /**
-     * Get exhibits endpoints safely
+     * Get exhibits endpoints
      */
     const get_exhibits_endpoints = () => {
         try {

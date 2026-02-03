@@ -190,6 +190,7 @@ const endpointsModule = (function() {
      * Save exhibits endpoints to localStorage
      */
     obj.save_exhibits_endpoints = function(data) {
+
         try {
             // Validate input data
             const validation = validate_endpoint_data(data);
@@ -214,8 +215,13 @@ const endpointsModule = (function() {
                 data.endpoints.indexer
             );
 
+            const media_library_saved = safe_set_local_storage(
+                'exhibits_endpoints_media_library',
+                data.endpoints.media_library
+            );
+
             // Check if all saves were successful
-            if (users_saved && exhibits_saved && indexer_saved) {
+            if (users_saved && exhibits_saved && indexer_saved && media_library_saved) {
                 // Clear cache to force reload
                 clear_cache();
                 console.log('Endpoints saved successfully');
@@ -256,6 +262,18 @@ const endpointsModule = (function() {
     };
 
     /**
+     * Get media library endpoints
+     */
+    obj.get_media_library_endpoints = function() {
+        try {
+            return get_cached_endpoints('media_library', 'exhibits_endpoints_media_library');
+        } catch (error) {
+            console.error('Error getting media library endpoints:', error);
+            return null;
+        }
+    };
+
+    /**
      * Get exhibits endpoints
      */
     obj.get_exhibits_endpoints = function() {
@@ -271,7 +289,9 @@ const endpointsModule = (function() {
      * Clear all endpoints from localStorage
      */
     obj.clear_exhibits_endpoints = function() {
+
         try {
+
             if (!is_local_storage_available()) {
                 return false;
             }
@@ -279,6 +299,7 @@ const endpointsModule = (function() {
             window.localStorage.removeItem('exhibits_endpoints_users');
             window.localStorage.removeItem('exhibits_endpoints');
             window.localStorage.removeItem('exhibits_endpoints_indexer');
+            window.localStorage.removeItem('exhibits_endpoints_media_library');
 
             clear_cache();
             console.log('Endpoints cleared successfully');
@@ -294,12 +315,14 @@ const endpointsModule = (function() {
      * Check if endpoints are configured
      */
     obj.are_endpoints_configured = function() {
+
         try {
             const users = obj.get_users_endpoints();
             const exhibits = obj.get_exhibits_endpoints();
             const indexer = obj.get_indexer_endpoints();
+            const media_library = obj.get_media_library_endpoints();
 
-            return !!(users && exhibits && indexer);
+            return !!(users && exhibits && indexer && media_library);
 
         } catch (error) {
             console.error('Error checking endpoints configuration:', error);
@@ -315,7 +338,8 @@ const endpointsModule = (function() {
             return {
                 users: obj.get_users_endpoints(),
                 exhibits: obj.get_exhibits_endpoints(),
-                indexer: obj.get_indexer_endpoints()
+                indexer: obj.get_indexer_endpoints(),
+                media_library: obj.get_media_library_endpoints()
             };
         } catch (error) {
             console.error('Error getting all endpoints:', error);
