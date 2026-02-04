@@ -516,13 +516,16 @@ const mediaModalsModule = (function() {
             if (result.success) {
                 display_edit_modal_message('success', result.message || 'Media record updated successfully');
 
+                // Store callback reference before closing modal (close_edit_modal nullifies it)
+                const callback = edit_modal_callback;
+
                 // Close modal after short delay
                 setTimeout(() => {
                     close_edit_modal();
 
-                    // Execute callback if provided
-                    if (typeof edit_modal_callback === 'function') {
-                        edit_modal_callback();
+                    // Execute callback if provided (to refresh table)
+                    if (typeof callback === 'function') {
+                        callback();
                     }
                 }, 1500);
 
