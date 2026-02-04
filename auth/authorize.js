@@ -48,7 +48,6 @@ exports.check_permission = async function (options) {
             AUTH_TASKS.get_user_permissions(token),
             AUTH_TASKS.get_permissions()
         ]);
-        console.log('USER ID ', user_id);
 
         // Validate critical data
         if (!user_id || !Array.isArray(user_permissions) || !Array.isArray(all_permissions)) {

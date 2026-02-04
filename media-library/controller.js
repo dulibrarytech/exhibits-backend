@@ -24,6 +24,7 @@ const STORAGE_CONFIG = require('../config/storage_config')();
 const MEDIA_MODEL = require('../media-library/model');
 const AUTHORIZE = require('../auth/authorize');
 const LOGGER = require('../libs/log4');
+const VALIDATOR = require("validator");
 
 // Allowed MIME types for media files
 const ALLOWED_MIME_TYPES = {
@@ -203,11 +204,13 @@ exports.create_media_record = async function (req, res) {
             return;
         }
 
-        // TODO: get user and add to created by field - via token?
-        // Extract user info from token if available
-        if (req.user && req.user.uid) {
-            data.created_by = req.user.uid;
+        // Extract token if available
+        const token = req.headers?.['x-access-token'];
+        if (!token || !VALIDATOR.isJWT(token)) {
+            return false;
         }
+
+        data.token = token;
 
         // TODO: figure out permissions
         /*

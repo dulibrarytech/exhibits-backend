@@ -535,67 +535,6 @@ const Media_record_tasks = class {
             this._handle_error(error, 'search_media_records', {keyword, options});
         }
     }
-
-    /**
-     * Gets user's full name by token
-     * @param {string} token - User authentication token
-     * @returns {Promise<Object>} Result object with user's full name
-     */
-    async get_user(token) {
-
-        try {
-
-            this._validate_database();
-            this._validate_table('user_records');
-
-            if (!token || typeof token !== 'string' || token.trim() === '') {
-                return {
-                    success: false,
-                    full_name: null,
-                    message: 'Invalid token provided'
-                };
-            }
-
-            const user = await this.DB(this.TABLE.user_records)
-                .select('first_name', 'last_name')
-                .where({token: token.trim()})
-                .first()
-                .timeout(this.QUERY_TIMEOUT);
-
-            if (!user) {
-                return {
-                    success: false,
-                    full_name: null,
-                    message: 'User not found'
-                };
-            }
-
-            // Concatenate first and last name
-            const first_name = user.first_name || '';
-            const last_name = user.last_name || '';
-            const full_name = `${first_name} ${last_name}`.trim();
-
-            this._log_success('User retrieved successfully', {
-                full_name: full_name
-            });
-
-            return {
-                success: true,
-                full_name: full_name || null,
-                first_name: first_name,
-                last_name: last_name,
-                message: 'User retrieved successfully'
-            };
-
-        } catch (error) {
-            LOGGER.module().error(`ERROR: [/media-library/tasks/media_record_tasks (get_user)] ${error.message}`);
-            return {
-                success: false,
-                full_name: null,
-                message: 'Error retrieving user: ' + error.message
-            };
-        }
-    }
 };
 
 module.exports = Media_record_tasks;

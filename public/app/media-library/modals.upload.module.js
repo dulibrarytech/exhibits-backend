@@ -1654,8 +1654,9 @@ const mediaModalsModule = (function() {
      * @param {string} size - Formatted file size
      * @param {string} media_type - Media type (image, pdf, etc.)
      * @param {string} storage_filename - Storage filename for URL building
+     * @param {string} ingest_method - Ingest method (upload, kaltura, etc.)
      */
-    obj.open_view_media_modal = function(uuid, name, filename, size, media_type, storage_filename) {
+    obj.open_view_media_modal = function(uuid, name, filename, size, media_type, storage_filename, ingest_method) {
         const modal_element = document.getElementById('view-media-modal');
         
         if (!modal_element) {
@@ -1677,11 +1678,15 @@ const mediaModalsModule = (function() {
         // Update file info
         const filename_el = document.getElementById('view-media-filename');
         const filesize_el = document.getElementById('view-media-filesize');
+        const ingest_method_el = document.getElementById('view-media-ingest-method');
         if (filename_el) {
             filename_el.textContent = filename || '-';
         }
         if (filesize_el) {
             filesize_el.textContent = size || '-';
+        }
+        if (ingest_method_el) {
+            ingest_method_el.textContent = ingest_method || '-';
         }
 
         // Get elements

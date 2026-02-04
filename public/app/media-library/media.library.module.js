@@ -409,8 +409,9 @@ const mediaLibraryModule = (function() {
      * @param {string} size - Formatted file size
      * @param {string} media_type - Media type (image, pdf, etc.)
      * @param {string} storage_filename - Storage filename for URL building
+     * @param {string} ingest_method - Ingest method (upload, kaltura, etc.)
      */
-    const handle_view_click = (uuid, name, filename, size, media_type, storage_filename) => {
+    const handle_view_click = (uuid, name, filename, size, media_type, storage_filename, ingest_method) => {
         if (!uuid) {
             console.error('No UUID provided for view');
             return;
@@ -418,7 +419,7 @@ const mediaLibraryModule = (function() {
 
         // Open view modal via modals module
         if (typeof mediaModalsModule !== 'undefined' && typeof mediaModalsModule.open_view_media_modal === 'function') {
-            mediaModalsModule.open_view_media_modal(uuid, name, filename, size, media_type, storage_filename);
+            mediaModalsModule.open_view_media_modal(uuid, name, filename, size, media_type, storage_filename, ingest_method);
         } else {
             console.error('mediaModalsModule.open_view_media_modal not available');
         }
@@ -623,7 +624,8 @@ const mediaLibraryModule = (function() {
                 const size = this.getAttribute('data-size');
                 const media_type = this.getAttribute('data-media-type');
                 const storage_filename = this.getAttribute('data-storage-filename');
-                handle_view_click(uuid, name, filename, size, media_type, storage_filename);
+                const ingest_method = this.getAttribute('data-ingest-method');
+                handle_view_click(uuid, name, filename, size, media_type, storage_filename, ingest_method);
             });
         });
 
@@ -736,6 +738,7 @@ const mediaLibraryModule = (function() {
                     ingest_method: sanitize_html(record.ingest_method) || 'N/A',
                     created: record.created || null,
                     created_display: format_date(record.created),
+                    created_by: sanitize_html(record.created_by) || null,
                     upload_uuid: record.upload_uuid || null,
                     size: record.size || 0,
                     size_display: format_file_size(record.size)
@@ -767,7 +770,7 @@ const mediaLibraryModule = (function() {
                                              class="media-thumbnail ${clickable_class}"
                                              style="width: ${THUMBNAIL_SIZE.width}px; height: ${THUMBNAIL_SIZE.height}px; object-fit: cover; border-radius: 4px; margin-right: 10px; vertical-align: middle; ${cursor_style}"
                                              loading="lazy"
-                                             ${is_viewable ? `data-uuid="${row.uuid}" data-name="${sanitize_html(row.name)}" data-filename="${sanitize_html(row.filename)}" data-size="${row.size_display}" data-media-type="${row.media_type}" data-storage-filename="${row.storage_filename}" title="Click to view"` : ''}
+                                             ${is_viewable ? `data-uuid="${row.uuid}" data-name="${sanitize_html(row.name)}" data-filename="${sanitize_html(row.filename)}" data-size="${row.size_display}" data-media-type="${row.media_type}" data-storage-filename="${row.storage_filename}" data-ingest-method="${row.ingest_method}" title="Click to view"` : ''}
                                              onerror="this.onerror=null; this.src='${PLACEHOLDER_IMAGE}';">`;
                                 } else {
                                     // Placeholder image for non-images (check if it's a viewable PDF)
@@ -779,7 +782,7 @@ const mediaLibraryModule = (function() {
                                              alt="Placeholder for ${display_name}"
                                              class="media-thumbnail-placeholder ${pdf_clickable_class}"
                                              style="width: ${THUMBNAIL_SIZE.width}px; height: ${THUMBNAIL_SIZE.height}px; object-fit: cover; border-radius: 4px; margin-right: 10px; vertical-align: middle; ${pdf_cursor_style}"
-                                             ${is_pdf_viewable ? `data-uuid="${row.uuid}" data-name="${sanitize_html(row.name)}" data-filename="${sanitize_html(row.filename)}" data-size="${row.size_display}" data-media-type="${row.media_type}" data-storage-filename="${row.storage_filename}" title="Click to view"` : ''}>`;
+                                             ${is_pdf_viewable ? `data-uuid="${row.uuid}" data-name="${sanitize_html(row.name)}" data-filename="${sanitize_html(row.filename)}" data-size="${row.size_display}" data-media-type="${row.media_type}" data-storage-filename="${row.storage_filename}" data-ingest-method="${row.ingest_method}" title="Click to view"` : ''}>`;
                                 }
 
                                 // Combine thumbnail and name
@@ -810,16 +813,6 @@ const mediaLibraryModule = (function() {
                         }
                     },
                     {
-                        data: 'ingest_method',
-                        title: 'Import Type',
-                        render: function(data, type, row) {
-                            if (type === 'display') {
-                                return `<small>${data || 'N/A'}</small>`;
-                            }
-                            return data;
-                        }
-                    },
-                    {
                         data: 'created',
                         title: 'Date Added',
                         render: function(data, type, row) {
@@ -828,6 +821,17 @@ const mediaLibraryModule = (function() {
                                 return data ? new Date(data).getTime() : 0;
                             }
                             return `<small>${row.created_display}</small>`;
+                        }
+                    },
+                    {
+                        data: 'created_by',
+                        title: 'Added By',
+                        defaultContent: '<small>N/A</small>',
+                        render: function(data, type, row) {
+                            if (type === 'display') {
+                                return `<small>${data || 'N/A'}</small>`;
+                            }
+                            return data || '';
                         }
                     },
                     {
@@ -844,7 +848,7 @@ const mediaLibraryModule = (function() {
                         }
                     }
                 ],
-                order: [[3, 'desc']], // Sort by created date descending (newest first)
+                order: [[2, 'desc']], // Sort by created date descending (newest first)
                 pageLength: 25,
                 lengthMenu: [[10, 25, 50, 100, -1], [10, 25, 50, 100, 'All']],
                 responsive: true,

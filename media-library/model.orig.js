@@ -29,6 +29,7 @@ const TABLES = DB_TABLES.exhibits;
 const HELPER = require('../libs/helper');
 const MEDIA_TASKS = require('./tasks/media_record_tasks');
 const LOGGER = require('../libs/log4');
+
 // Initialize task instances
 const helper_task = new HELPER();
 const media_task = new MEDIA_TASKS(DB, TABLES);
@@ -93,20 +94,16 @@ exports.create_media_record = async (data) => {
         data.created = now;
         data.updated = now;
 
-        // Get user's full name from token and assign to created_by
-        if (data.token) {
-            const user_result = await media_task.get_user(data.token);
-            console.log('USER ', user_result);
-            if (user_result.success && user_result.full_name) {
-                data.created_by = user_result.full_name;
-            }
-        }
+        // TODO: media_task.get_user(token);
+        // TODO: get created by first name and last name from user table
+        // TODO: assign first and last name to data.created_by.  data.created_by
 
         delete data.token;
 
+
         // Create the record via task
         const result = await media_task.create_media_record(data);
-        console.log('MODEL ', result);
+
         if (!result || !result.success) {
             LOGGER.module().error('ERROR: [/media-library/model (create_media_record)] Task returned unsuccessful result');
             return build_response(false, result?.message || 'Failed to create media record');
