@@ -1398,12 +1398,15 @@ const mediaModalsModule = (function() {
 
             // Handle response
             if (response && response.status === HTTP_STATUS.OK && response.data?.success) {
+                // Store callback reference before closing modal (close_delete_modal nullifies it)
+                const callback = delete_modal_callback;
+
                 // Close modal
                 close_delete_modal();
 
                 // Execute callback if provided (to refresh table and show success message)
-                if (typeof delete_modal_callback === 'function') {
-                    delete_modal_callback(true, 'Media record deleted successfully.');
+                if (typeof callback === 'function') {
+                    callback(true, 'Media record deleted successfully.');
                 }
 
             } else {
@@ -1541,6 +1544,243 @@ const mediaModalsModule = (function() {
      */
     obj.close_delete_media_modal = function() {
         close_delete_modal();
+    };
+
+    // ============================================
+    // VIEW MEDIA MODAL FUNCTIONS
+    // ============================================
+
+    /**
+     * Close the view media modal
+     */
+    const close_view_modal = () => {
+        const modal_element = document.getElementById('view-media-modal');
+        
+        if (!modal_element) {
+            return;
+        }
+
+        // Try Bootstrap 5 first (check for getInstance method)
+        if (typeof bootstrap !== 'undefined' && bootstrap.Modal && typeof bootstrap.Modal.getInstance === 'function') {
+            const modal_instance = bootstrap.Modal.getInstance(modal_element);
+            if (modal_instance) {
+                modal_instance.hide();
+            }
+        }
+        // Try Bootstrap 4/jQuery
+        else if (typeof $ !== 'undefined' && typeof $.fn.modal !== 'undefined') {
+            $(modal_element).modal('hide');
+        }
+        
+        // Manual cleanup
+        setTimeout(() => {
+            modal_element.classList.remove('show');
+            modal_element.style.display = 'none';
+            modal_element.setAttribute('aria-hidden', 'true');
+            modal_element.removeAttribute('aria-modal');
+            document.body.classList.remove('modal-open');
+            document.body.style.removeProperty('padding-right');
+            document.body.style.removeProperty('overflow');
+            
+            // Remove backdrops
+            const backdrops = document.querySelectorAll('.modal-backdrop');
+            backdrops.forEach(backdrop => backdrop.remove());
+
+            // Reset media elements
+            const image_el = document.getElementById('view-media-image');
+            const pdf_el = document.getElementById('view-media-pdf');
+            if (image_el) {
+                image_el.src = '';
+                image_el.style.display = 'none';
+            }
+            if (pdf_el) {
+                pdf_el.src = '';
+            }
+        }, 150);
+    };
+
+    /**
+     * Setup view modal event handlers
+     */
+    const setup_view_modal_handlers = () => {
+        // Close button (X) handler
+        const close_btn = document.getElementById('view-media-close-btn');
+        if (close_btn) {
+            const new_close_btn = close_btn.cloneNode(true);
+            close_btn.parentNode.replaceChild(new_close_btn, close_btn);
+            new_close_btn.addEventListener('click', close_view_modal);
+        }
+
+        // Cancel button handler
+        const cancel_btn = document.getElementById('view-media-cancel-btn');
+        if (cancel_btn) {
+            const new_cancel_btn = cancel_btn.cloneNode(true);
+            cancel_btn.parentNode.replaceChild(new_cancel_btn, cancel_btn);
+            new_cancel_btn.addEventListener('click', close_view_modal);
+        }
+    };
+
+    /**
+     * Determine media type from filename extension
+     * @param {string} filename - Filename to check
+     * @returns {string} Media type ('image', 'pdf', or 'unknown')
+     */
+    const get_media_type_from_filename = (filename) => {
+        if (!filename || typeof filename !== 'string') {
+            return 'unknown';
+        }
+        
+        const ext = filename.toLowerCase().substring(filename.lastIndexOf('.'));
+        const image_extensions = ['.jpg', '.jpeg', '.png', '.gif', '.webp', '.svg'];
+        const pdf_extensions = ['.pdf'];
+        
+        if (image_extensions.includes(ext)) {
+            return 'image';
+        }
+        if (pdf_extensions.includes(ext)) {
+            return 'pdf';
+        }
+        return 'unknown';
+    };
+
+    /**
+     * Open the view media modal
+     * @param {string} uuid - Media record UUID
+     * @param {string} name - Media record name for header
+     * @param {string} filename - Original filename for display
+     * @param {string} size - Formatted file size
+     * @param {string} media_type - Media type (image, pdf, etc.)
+     * @param {string} storage_filename - Storage filename for URL building
+     */
+    obj.open_view_media_modal = function(uuid, name, filename, size, media_type, storage_filename) {
+        const modal_element = document.getElementById('view-media-modal');
+        
+        if (!modal_element) {
+            console.error('View media modal not found');
+            return;
+        }
+
+        // Determine display type - use passed media_type, fallback to filename detection
+        const display_type = (media_type && media_type !== 'N/A') 
+            ? media_type.toLowerCase() 
+            : get_media_type_from_filename(filename);
+
+        // Update modal title
+        const title_el = document.getElementById('view-media-modal-title');
+        if (title_el) {
+            title_el.textContent = name || 'View Media';
+        }
+
+        // Update file info
+        const filename_el = document.getElementById('view-media-filename');
+        const filesize_el = document.getElementById('view-media-filesize');
+        if (filename_el) {
+            filename_el.textContent = filename || '-';
+        }
+        if (filesize_el) {
+            filesize_el.textContent = size || '-';
+        }
+
+        // Get elements
+        const image_el = document.getElementById('view-media-image');
+        const pdf_container = document.getElementById('view-media-pdf-container');
+        const pdf_el = document.getElementById('view-media-pdf');
+        const loading_el = document.getElementById('view-media-loading');
+        const error_el = document.getElementById('view-media-error');
+
+        // Reset display states
+        if (image_el) image_el.style.display = 'none';
+        if (pdf_container) pdf_container.style.display = 'none';
+        if (loading_el) loading_el.style.display = 'block';
+        if (error_el) error_el.style.display = 'none';
+
+        // Build media URL
+        const media_url = build_media_url(storage_filename);
+        
+        if (!media_url) {
+            if (loading_el) loading_el.style.display = 'none';
+            if (error_el) {
+                error_el.style.display = 'block';
+                const error_text = document.getElementById('view-media-error-text');
+                if (error_text) error_text.textContent = 'Unable to build media URL.';
+            }
+            return;
+        }
+
+        // Add token for authentication
+        const token = authModule.get_user_token();
+        const authenticated_url = media_url + (media_url.includes('?') ? '&' : '?') + 'token=' + encodeURIComponent(token || '');
+
+        // Setup event handlers
+        setup_view_modal_handlers();
+
+        // Show modal first
+        if (typeof bootstrap !== 'undefined' && bootstrap.Modal) {
+            const modal = new bootstrap.Modal(modal_element, {
+                backdrop: true,
+                keyboard: true
+            });
+            modal.show();
+        } else if (typeof $ !== 'undefined' && typeof $.fn.modal !== 'undefined') {
+            $(modal_element).modal({
+                backdrop: true,
+                keyboard: true
+            });
+            $(modal_element).modal('show');
+        } else {
+            modal_element.classList.add('show');
+            modal_element.style.display = 'block';
+            document.body.classList.add('modal-open');
+            
+            const backdrop = document.createElement('div');
+            backdrop.className = 'modal-backdrop fade show';
+            document.body.appendChild(backdrop);
+        }
+
+        // Load media based on detected type
+        if (display_type === 'image') {
+            // Load image
+            if (image_el) {
+                image_el.onload = function() {
+                    if (loading_el) loading_el.style.display = 'none';
+                    image_el.style.display = 'block';
+                };
+                image_el.onerror = function() {
+                    if (loading_el) loading_el.style.display = 'none';
+                    if (error_el) {
+                        error_el.style.display = 'block';
+                        const error_text = document.getElementById('view-media-error-text');
+                        if (error_text) error_text.textContent = 'Unable to load image.';
+                    }
+                };
+                image_el.src = authenticated_url;
+                image_el.alt = 'Preview of ' + (name || filename);
+            }
+        } else if (display_type === 'pdf') {
+            // Load PDF in iframe
+            if (pdf_el && pdf_container) {
+                if (loading_el) loading_el.style.display = 'none';
+                pdf_container.style.display = 'block';
+                pdf_el.src = authenticated_url;
+            }
+        } else {
+            // Unsupported type
+            if (loading_el) loading_el.style.display = 'none';
+            if (error_el) {
+                error_el.style.display = 'block';
+                const error_text = document.getElementById('view-media-error-text');
+                if (error_text) error_text.textContent = 'This media type cannot be previewed.';
+            }
+        }
+
+        console.log('View media modal opened for: ' + name);
+    };
+
+    /**
+     * Close the view media modal (public method)
+     */
+    obj.close_view_media_modal = function() {
+        close_view_modal();
     };
 
     /**

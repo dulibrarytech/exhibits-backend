@@ -1,0 +1,72 @@
+<!-- View Media Modal -->
+<div class="modal fade" 
+     id="view-media-modal" 
+     tabindex="-1" 
+     role="dialog" 
+     aria-labelledby="view-media-modal-title" 
+     aria-hidden="true">
+    <div class="modal-dialog modal-lg modal-dialog-centered" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h4 class="modal-title" id="view-media-modal-title" style="font-size: 1.5rem; font-weight: 500;">View Media</h4>
+                <button type="button" 
+                        class="close" 
+                        id="view-media-close-btn"
+                        aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <div class="modal-body">
+                <!-- Media container -->
+                <div id="view-media-container" class="mb-3 d-flex justify-content-center align-items-center">
+                    <!-- Image display -->
+                    <img id="view-media-image" 
+                         src="" 
+                         alt="Media preview" 
+                         class="img-fluid" 
+                         style="max-height: 500px; display: none;">
+                    
+                    <!-- PDF display -->
+                    <div id="view-media-pdf-container" style="display: none; width: 100%;">
+                        <iframe id="view-media-pdf" 
+                                src="" 
+                                title="PDF preview"
+                                style="width: 100%; height: 500px; border: 1px solid #dee2e6; border-radius: 4px;">
+                        </iframe>
+                    </div>
+                    
+                    <!-- Loading spinner -->
+                    <div id="view-media-loading" style="display: none; padding: 50px;">
+                        <i class="fa fa-spinner fa-spin fa-3x text-muted" aria-hidden="true"></i>
+                        <p class="mt-3 text-muted">Loading media...</p>
+                    </div>
+                    
+                    <!-- Error message -->
+                    <div id="view-media-error" class="alert alert-danger" style="display: none;" role="alert">
+                        <i class="fa fa-exclamation-circle" aria-hidden="true"></i>
+                        <span id="view-media-error-text">Unable to load media.</span>
+                    </div>
+                </div>
+                
+                <!-- File information -->
+                <div id="view-media-info" class="text-muted small border-top pt-3 text-center">
+                    <p class="mb-1">
+                        <strong>File:</strong> 
+                        <span id="view-media-filename">-</span>
+                    </p>
+                    <p class="mb-0">
+                        <strong>Size:</strong> 
+                        <span id="view-media-filesize">-</span>
+                    </p>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" 
+                        class="btn btn-secondary" 
+                        id="view-media-cancel-btn">
+                    Close
+                </button>
+            </div>
+        </div>
+    </div>
+</div>

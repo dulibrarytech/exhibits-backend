@@ -402,6 +402,29 @@ const mediaLibraryModule = (function() {
     };
 
     /**
+     * Handle thumbnail click to view media
+     * @param {string} uuid - Media record UUID
+     * @param {string} name - Media record name
+     * @param {string} filename - Original filename for display
+     * @param {string} size - Formatted file size
+     * @param {string} media_type - Media type (image, pdf, etc.)
+     * @param {string} storage_filename - Storage filename for URL building
+     */
+    const handle_view_click = (uuid, name, filename, size, media_type, storage_filename) => {
+        if (!uuid) {
+            console.error('No UUID provided for view');
+            return;
+        }
+
+        // Open view modal via modals module
+        if (typeof mediaModalsModule !== 'undefined' && typeof mediaModalsModule.open_view_media_modal === 'function') {
+            mediaModalsModule.open_view_media_modal(uuid, name, filename, size, media_type, storage_filename);
+        } else {
+            console.error('mediaModalsModule.open_view_media_modal not available');
+        }
+    };
+
+    /**
      * Handle delete button click
      * @param {string} uuid - Media record UUID
      * @param {string} name - Media record name for confirmation
@@ -496,7 +519,7 @@ const mediaLibraryModule = (function() {
     };
 
     /**
-     * Build actions column HTML
+     * Build actions column HTML with vertical ellipsis dropdown
      * @param {Object} row - DataTable row data
      * @returns {string} HTML string for actions column
      */
@@ -509,47 +532,118 @@ const mediaLibraryModule = (function() {
         const escaped_filename = sanitize_html(filename).replace(/'/g, "\\'").replace(/"/g, '&quot;');
 
         return `
-            <div class="d-flex justify-content-center" role="group" aria-label="Actions for ${escaped_name}">
+            <div class="dropdown" style="display: inline-block; position: relative;">
                 <button type="button" 
-                        class="btn btn-link btn-edit-media p-1" 
-                        style="color: #6c757d; font-size: 1.1rem;"
-                        data-uuid="${uuid}"
-                        title="Edit ${escaped_name}"
-                        aria-label="Edit ${escaped_name}">
-                    <i class="fa fa-edit pr-1" aria-hidden="true"></i>
+                        class="btn btn-link p-0 border-0 media-actions-toggle" 
+                        style="color: #6c757d; font-size: 1.25rem; line-height: 1; background: none;"
+                        data-toggle="dropdown"
+                        data-bs-toggle="dropdown"
+                        aria-haspopup="true"
+                        aria-expanded="false"
+                        aria-label="Actions for ${escaped_name}"
+                        title="Actions">
+                    <i class="fa fa-ellipsis-v" aria-hidden="true"></i>
                 </button>
-                <button type="button" 
-                        class="btn btn-link btn-delete-media p-1" 
-                        style="color: #6c757d; font-size: 1.1rem;"
-                        data-uuid="${uuid}"
-                        data-name="${escaped_name}"
-                        data-filename="${escaped_filename}"
-                        data-item-type="${item_type}"
-                        title="Delete ${escaped_name}"
-                        aria-label="Delete ${escaped_name}">
-                    <i class="fa fa-trash" aria-hidden="true"></i>
-                </button>
+                <div class="dropdown-menu media-actions-menu" aria-label="Actions menu for ${escaped_name}">
+                    <a class="dropdown-item btn-edit-media" 
+                       href="#" 
+                       data-uuid="${uuid}"
+                       style="font-size: 0.875rem;">
+                        <i class="fa fa-edit mr-2" aria-hidden="true" style="width: 16px;"></i>
+                        Edit
+                    </a>
+                    <a class="dropdown-item btn-delete-media text-danger" 
+                       href="#" 
+                       data-uuid="${uuid}"
+                       data-name="${escaped_name}"
+                       data-filename="${escaped_filename}"
+                       data-item-type="${item_type}"
+                       style="font-size: 0.875rem;">
+                        <i class="fa fa-trash mr-2" aria-hidden="true" style="width: 16px;"></i>
+                        Delete
+                    </a>
+                </div>
             </div>
         `;
     };
 
     /**
-     * Setup action button event handlers
+     * Setup action button event handlers and initialize dropdowns
      */
     const setup_action_handlers = () => {
-        // Edit button handlers
+        // Inject CSS for dropdown positioning and thumbnail hover (only once)
+        if (!document.getElementById('media-actions-dropdown-styles')) {
+            const style = document.createElement('style');
+            style.id = 'media-actions-dropdown-styles';
+            style.textContent = `
+                .media-actions-menu.dropdown-menu {
+                    right: 0 !important;
+                    left: auto !important;
+                    transform: none !important;
+                    margin-top: 0;
+                }
+                .media-actions-menu.dropdown-menu.show {
+                    right: 0 !important;
+                    left: auto !important;
+                    transform: none !important;
+                }
+                .media-thumbnail-clickable:hover {
+                    opacity: 0.8;
+                    box-shadow: 0 0 5px rgba(0, 123, 255, 0.5);
+                    transition: opacity 0.2s, box-shadow 0.2s;
+                }
+            `;
+            document.head.appendChild(style);
+        }
+
+        // Initialize Bootstrap dropdowns (support both Bootstrap 4 and 5)
+        document.querySelectorAll('.media-actions-toggle').forEach(toggle => {
+            // Bootstrap 5
+            if (typeof bootstrap !== 'undefined' && bootstrap.Dropdown) {
+                new bootstrap.Dropdown(toggle);
+            }
+            // Bootstrap 4 - uses jQuery
+            else if (typeof $ !== 'undefined' && typeof $.fn.dropdown !== 'undefined') {
+                $(toggle).dropdown();
+            }
+        });
+
+        // Close dropdowns when clicking outside (works for both Bootstrap 4 and 5)
+        document.removeEventListener('click', close_open_dropdowns);
+        document.addEventListener('click', close_open_dropdowns);
+
+        // Thumbnail click handlers for viewing media
+        document.querySelectorAll('.media-thumbnail-clickable').forEach(thumbnail => {
+            thumbnail.addEventListener('click', function(e) {
+                e.preventDefault();
+                e.stopPropagation();
+                const uuid = this.getAttribute('data-uuid');
+                const name = this.getAttribute('data-name');
+                const filename = this.getAttribute('data-filename');
+                const size = this.getAttribute('data-size');
+                const media_type = this.getAttribute('data-media-type');
+                const storage_filename = this.getAttribute('data-storage-filename');
+                handle_view_click(uuid, name, filename, size, media_type, storage_filename);
+            });
+        });
+
+        // Edit button handlers (dropdown items)
         document.querySelectorAll('.btn-edit-media').forEach(btn => {
             btn.addEventListener('click', function(e) {
                 e.preventDefault();
+                e.stopPropagation();
+                close_open_dropdowns();
                 const uuid = this.getAttribute('data-uuid');
                 handle_edit_click(uuid);
             });
         });
 
-        // Delete button handlers
+        // Delete button handlers (dropdown items)
         document.querySelectorAll('.btn-delete-media').forEach(btn => {
             btn.addEventListener('click', function(e) {
                 e.preventDefault();
+                e.stopPropagation();
+                close_open_dropdowns();
                 const uuid = this.getAttribute('data-uuid');
                 const name = this.getAttribute('data-name');
                 const filename = this.getAttribute('data-filename');
@@ -557,6 +651,32 @@ const mediaLibraryModule = (function() {
                 handle_delete_click(uuid, name, filename, item_type);
             });
         });
+    };
+
+    /**
+     * Close all open dropdown menus
+     * @param {Event} [e] - Optional click event
+     */
+    const close_open_dropdowns = (e) => {
+        // If event provided, check if click was inside a dropdown
+        if (e && e.target.closest('.dropdown')) {
+            return;
+        }
+
+        // Close all open dropdowns
+        document.querySelectorAll('.dropdown-menu.show').forEach(menu => {
+            menu.classList.remove('show');
+            const toggle = menu.previousElementSibling;
+            if (toggle) {
+                toggle.setAttribute('aria-expanded', 'false');
+            }
+        });
+
+        // Also handle Bootstrap 4 jQuery dropdowns
+        if (typeof $ !== 'undefined' && typeof $.fn.dropdown !== 'undefined') {
+            $('.dropdown-menu.show').removeClass('show');
+            $('.media-actions-toggle[aria-expanded="true"]').attr('aria-expanded', 'false');
+        }
     };
 
     /**
@@ -611,12 +731,14 @@ const mediaLibraryModule = (function() {
                     storage_filename: storage_filename || null,
                     thumbnail_url: storage_filename ? build_media_url(storage_filename) : null,
                     is_image: is_image_file(record.original_filename),
-                    item_type: sanitize_html(record.item_type) || 'N/A',
+                    media_type: sanitize_html(record.media_type) || 'N/A',
                     mime_type: record.mime_type || null,
                     ingest_method: sanitize_html(record.ingest_method) || 'N/A',
                     created: record.created || null,
                     created_display: format_date(record.created),
-                    upload_uuid: record.upload_uuid || null
+                    upload_uuid: record.upload_uuid || null,
+                    size: record.size || 0,
+                    size_display: format_file_size(record.size)
                 };
             });
 
@@ -631,6 +753,9 @@ const mediaLibraryModule = (function() {
                             if (type === 'display') {
                                 const display_name = data || 'Untitled';
                                 let thumbnail_html = '';
+                                const is_viewable = row.ingest_method === 'upload' && (row.is_image || row.media_type === 'pdf');
+                                const cursor_style = is_viewable ? 'cursor: pointer;' : '';
+                                const clickable_class = is_viewable ? 'media-thumbnail-clickable' : '';
 
                                 // Build thumbnail or icon
                                 if (row.is_image && row.thumbnail_url) {
@@ -639,17 +764,22 @@ const mediaLibraryModule = (function() {
                                     thumbnail_html = `
                                         <img src="${img_url}" 
                                              alt="Thumbnail for ${display_name}"
-                                             class="media-thumbnail"
-                                             style="width: ${THUMBNAIL_SIZE.width}px; height: ${THUMBNAIL_SIZE.height}px; object-fit: cover; border-radius: 4px; margin-right: 10px; vertical-align: middle;"
+                                             class="media-thumbnail ${clickable_class}"
+                                             style="width: ${THUMBNAIL_SIZE.width}px; height: ${THUMBNAIL_SIZE.height}px; object-fit: cover; border-radius: 4px; margin-right: 10px; vertical-align: middle; ${cursor_style}"
                                              loading="lazy"
+                                             ${is_viewable ? `data-uuid="${row.uuid}" data-name="${sanitize_html(row.name)}" data-filename="${sanitize_html(row.filename)}" data-size="${row.size_display}" data-media-type="${row.media_type}" data-storage-filename="${row.storage_filename}" title="Click to view"` : ''}
                                              onerror="this.onerror=null; this.src='${PLACEHOLDER_IMAGE}';">`;
                                 } else {
-                                    // Placeholder image for non-images
+                                    // Placeholder image for non-images (check if it's a viewable PDF)
+                                    const is_pdf_viewable = row.ingest_method === 'upload' && row.media_type === 'pdf';
+                                    const pdf_clickable_class = is_pdf_viewable ? 'media-thumbnail-clickable' : '';
+                                    const pdf_cursor_style = is_pdf_viewable ? 'cursor: pointer;' : '';
                                     thumbnail_html = `
                                         <img src="${PLACEHOLDER_IMAGE}" 
                                              alt="Placeholder for ${display_name}"
-                                             class="media-thumbnail-placeholder"
-                                             style="width: ${THUMBNAIL_SIZE.width}px; height: ${THUMBNAIL_SIZE.height}px; object-fit: cover; border-radius: 4px; margin-right: 10px; vertical-align: middle;">`;
+                                             class="media-thumbnail-placeholder ${pdf_clickable_class}"
+                                             style="width: ${THUMBNAIL_SIZE.width}px; height: ${THUMBNAIL_SIZE.height}px; object-fit: cover; border-radius: 4px; margin-right: 10px; vertical-align: middle; ${pdf_cursor_style}"
+                                             ${is_pdf_viewable ? `data-uuid="${row.uuid}" data-name="${sanitize_html(row.name)}" data-filename="${sanitize_html(row.filename)}" data-size="${row.size_display}" data-media-type="${row.media_type}" data-storage-filename="${row.storage_filename}" title="Click to view"` : ''}>`;
                                 }
 
                                 // Combine thumbnail and name
@@ -669,10 +799,12 @@ const mediaLibraryModule = (function() {
                             if (type === 'display') {
                                 // Truncate long filenames with tooltip
                                 const max_length = 40;
+                                let filename_display = data || 'N/A';
                                 if (data && data.length > max_length) {
-                                    return `<small title="${data}">${data.substring(0, max_length)}...</small>`;
+                                    filename_display = `<span title="${data}">${data.substring(0, max_length)}...</span>`;
                                 }
-                                return `<small>${data || 'N/A'}</small>`;
+                                // Return filename with file size below it
+                                return `<small>${filename_display}</small><br><small><em>${row.size_display}</em></small>`;
                             }
                             return data;
                         }
