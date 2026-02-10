@@ -132,6 +132,43 @@ module.exports = function (app) {
         );
 
     // ========================================
+    // REPOSITORY SEARCH AND THUMBNAILS
+    // ========================================
+
+    // Search digital repository records
+    app.route(ENDPOINTS.repo_media_search.get.endpoint)
+        .get(
+            rate_limits.read_operations,
+            TOKEN.verify,
+            async_handler(CONTROLLER.search_repository)
+        );
+
+    // Get repository thumbnail by UUID
+    // Note: Uses TOKEN.verify_with_query to support token in query string for img src URLs
+    app.route(ENDPOINTS.repo_thumbnail.get.endpoint)
+        .get(
+            rate_limits.read_operations,
+            TOKEN.verify_with_query || TOKEN.verify,
+            async_handler(CONTROLLER.get_repo_tn)
+        );
+
+    // Get subjects from digital repository (all types or filtered by ?type=)
+    app.route(ENDPOINTS.repo_subjects.get.endpoint)
+        .get(
+            rate_limits.read_operations,
+            TOKEN.verify,
+            async_handler(CONTROLLER.get_subjects)
+        );
+
+    // Get resource types from digital repository
+    app.route(ENDPOINTS.repo_resource_types.get.endpoint)
+        .get(
+            rate_limits.read_operations,
+            TOKEN.verify,
+            async_handler(CONTROLLER.get_resource_types)
+        );
+
+    // ========================================
     // ERROR HANDLING
     // ========================================
 

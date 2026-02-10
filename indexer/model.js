@@ -52,7 +52,7 @@ const CLIENT = new Client({
 });
 
 // Initialize task instances
-const index_tasks = new INDEXER_INDEX_TASKS(CLIENT, ES_CONFIG.elasticsearch_index); // DB, TABLES,
+const index_tasks = new INDEXER_INDEX_TASKS(CLIENT, ES_CONFIG.elasticsearch_index);
 const exhibit_record_task = new EXHIBIT_RECORD_TASKS(DB, TABLES);
 const heading_record_task = new EXHIBIT_HEADING_RECORD_TASKS(DB, TABLES);
 const item_record_task = new EXHIBIT_ITEM_RECORD_TASKS(DB, TABLES);

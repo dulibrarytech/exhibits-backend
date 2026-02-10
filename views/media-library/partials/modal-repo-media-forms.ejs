@@ -1,33 +1,33 @@
-<!-- Uploaded Media Modal -->
-<!-- This modal opens after successful file uploads and cannot be closed by the user -->
-<!-- Each uploaded file gets its own form with individual save button -->
+<!-- Repository Media Import Modal -->
+<!-- This modal opens when importing selected repository items and cannot be closed by the user -->
+<!-- Each selected item gets its own form with individual save button -->
 <div class="modal fade" 
-     id="uploaded-media-modal" 
+     id="repo-media-modal" 
      data-bs-backdrop="static" 
      data-bs-keyboard="false"
      data-backdrop="static"
      data-keyboard="false"
      tabindex="-1" 
-     aria-labelledby="uploaded-media-modal-title" 
+     aria-labelledby="repo-media-modal-title" 
      aria-hidden="true"
      role="dialog">
     <div class="modal-dialog modal-xl modal-dialog-centered modal-dialog-scrollable">
         <div class="modal-content">
-            <div class="modal-header"><!-- text-white bg-primary -->
-                <strong class="modal-title" id="uploaded-media-modal-title">
-                    <i class="fa fa-check-circle" style="margin-right: 8px;" aria-hidden="true"></i>
-                    Media Uploaded Successfully
+            <div class="modal-header">
+                <strong class="modal-title" id="repo-media-modal-title">
+                    <i class="fa fa-database" style="margin-right: 8px;" aria-hidden="true"></i>
+                    Import Repository Media
                 </strong>
-                <!-- No close button - modal cannot be dismissed -->
+                <!-- No close button - modal cannot be dismissed until all items are saved -->
             </div>
             <div class="modal-body">
-                <!-- Upload Summary -->
+                <!-- Import Summary -->
                 <div class="alert alert-info mb-4" role="alert">
                     <div class="d-flex align-items-center">
                         <i class="fa fa-info-circle fa-lg" style="margin-right: 12px;" aria-hidden="true"></i>
                         <div>
-                            <strong>Upload Complete!</strong>
-                            <p class="mb-0" id="upload-summary-text">Your files have been uploaded to the media library.</p>
+                            <strong>Repository Items Selected</strong>
+                            <p class="mb-0" id="repo-import-summary-text">Your selected items are ready for import to the media library.</p>
                         </div>
                     </div>
                 </div>
@@ -36,31 +36,28 @@
                 <div class="mb-4">
                     <p class="text-muted">
                         <i class="fa fa-pencil" style="margin-right: 6px;" aria-hidden="true"></i>
-                        Please provide details for each uploaded file below. 
+                        Please review and provide details for each repository item below. 
                         Fields marked with <span class="text-danger">*</span> are required.
-                        Click <strong>Save</strong> on each file when done.
+                        Click <strong>Save</strong> on each item when done.
                     </p>
                 </div>
 
-                <!-- Uploaded Files Forms Container -->
-                <div id="uploaded-files-forms-container" class="uploaded-files-forms">
-                    <!-- Individual file forms will be dynamically inserted here by JavaScript -->
+                <!-- Repository Items Forms Container -->
+                <div id="repo-items-forms-container" class="repo-items-forms">
+                    <!-- Individual item forms will be dynamically inserted here by JavaScript -->
                 </div>
-
-                <!-- Hidden field for tracking all files -->
-                <input type="hidden" id="modal-all-files" name="all_files">
             </div>
             <div class="modal-footer justify-content-between">
                 <div class="text-muted">
                     <small>
                         <i class="fa fa-info-circle" style="margin-right: 6px;" aria-hidden="true"></i>
-                        <span id="modal-validation-message">0 of 0 files saved</span>
+                        <span id="repo-modal-validation-message">0 of 0 items saved</span>
                     </small>
                 </div>
                 <div>
                     <button type="button" 
                             class="btn btn-success" 
-                            id="uploaded-media-done-btn"
+                            id="repo-media-done-btn"
                             style="display: none;">
                         <i class="fa fa-check" style="margin-right: 6px;" aria-hidden="true"></i>
                         Done
@@ -72,67 +69,67 @@
 </div>
 
 <style>
-/* Modal Styles */
-#uploaded-media-modal .modal-content {
+/* Repository Import Modal Styles */
+#repo-media-modal .modal-content {
     border: none;
     box-shadow: 0 10px 40px rgba(0, 0, 0, 0.3);
 }
 
-#uploaded-media-modal .modal-header {
+#repo-media-modal .modal-header {
     border-bottom: none;
     padding: 1.25rem 1.5rem;
     background-color: #f8f9fa;
 }
 
-#uploaded-media-modal .modal-body {
+#repo-media-modal .modal-body {
     padding: 1.5rem;
     max-height: 70vh;
     overflow-y: auto;
 }
 
-#uploaded-media-modal .modal-footer {
+#repo-media-modal .modal-footer {
     border-top: 1px solid #dee2e6;
     padding: 1rem 1.5rem;
 }
 
-/* File Form Cards */
-.file-form-card {
+/* Repository Form Cards */
+.repo-form-card {
     border: 1px solid #dee2e6;
     border-radius: 8px;
     overflow: hidden;
     transition: all 0.3s ease;
 }
 
-.file-form-card:hover {
+.repo-form-card:hover {
     box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
 }
 
-.file-form-card .card-header {
+.repo-form-card .card-header {
     padding: 0.75rem 1rem;
     border-bottom: 1px solid #dee2e6;
     transition: all 0.3s ease;
 }
 
-.file-form-card .card-body {
+.repo-form-card .card-body {
     padding: 1.25rem;
 }
 
 /* Saved state for cards */
-.file-form-card.saved {
+.repo-form-card.saved {
     border-color: #198754;
 }
 
-.file-form-card.saved .card-header {
+.repo-form-card.saved .card-header {
     background-color: #198754 !important;
     color: #fff !important;
 }
 
-.file-form-card.saved .file-type-badge {
+.repo-form-card.saved .item-type-badge {
     background-color: rgba(255,255,255,0.2) !important;
 }
 
-/* File Number Badge */
-.file-number {
+/* Item Number Badge */
+.item-number {
     width: 28px;
     height: 28px;
     border-radius: 50%;
@@ -147,14 +144,14 @@
     transition: all 0.3s ease;
 }
 
-/* File Preview */
-.file-preview-container {
+/* Item Preview */
+.item-preview-container {
     padding: 1rem;
     background: #f8f9fa;
     border-radius: 8px;
 }
 
-.file-preview {
+.item-preview {
     width: 120px;
     height: 120px;
     margin: 0 auto;
@@ -167,51 +164,61 @@
     overflow: hidden;
 }
 
-.file-preview img {
+.item-preview img {
     max-width: 100%;
     max-height: 100%;
     object-fit: cover;
 }
 
-.file-preview .file-icon {
+.item-preview .file-icon {
     font-size: 48px;
     color: #6c757d;
 }
 
-.file-name-display {
+.item-pid-display,
+.item-creator-display {
     max-width: 150px;
     margin: 0 auto;
-    font-weight: 500;
+    font-size: 0.75rem;
 }
 
-/* File type badge colors */
-.file-type-badge.type-image {
+/* Item type badge colors */
+.item-type-badge.type-image,
+.item-type-badge.type-object {
     background-color: #0d6efd !important;
 }
 
-.file-type-badge.type-pdf {
+.item-type-badge.type-pdf {
     background-color: #dc3545 !important;
 }
 
-.file-type-badge.type-video {
+.item-type-badge.type-video {
     background-color: #6f42c1 !important;
 }
 
-.file-type-badge.type-audio {
+.item-type-badge.type-audio {
     background-color: #fd7e14 !important;
 }
 
+.item-type-badge.type-collection {
+    background-color: #20c997 !important;
+}
+
+.item-type-badge.type-compound {
+    background-color: #6c757d !important;
+}
+
 /* Form validation states */
-.file-details-form.was-validated .form-control:invalid {
+.repo-details-form.was-validated .form-control:invalid {
     border-color: #dc3545;
 }
 
-.file-details-form.was-validated .form-control:valid {
+.repo-details-form.was-validated .form-control:valid {
     border-color: #198754;
 }
 
 /* Save button in each form */
-.btn-save-file {
+.btn-save-repo-item {
     min-width: 100px;
 }
 
@@ -225,35 +232,44 @@ body.modal-open {
     overflow: hidden;
 }
 
-/* Alert styling */
-#uploaded-media-modal .alert-info {
-    background-color: #e7f3ff;
-    border-color: #b6d4fe;
-    color: #084298;
+/* Form title styling */
+.item-form-title {
+    max-width: 400px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
 }
 
 /* Responsive adjustments */
 @media (max-width: 768px) {
-    .file-preview-container {
+    .item-preview-container {
         margin-bottom: 1rem;
     }
     
-    .file-preview {
+    .item-preview {
         width: 80px;
         height: 80px;
     }
     
-    .file-preview .file-icon {
+    .item-preview .file-icon {
         font-size: 32px;
     }
     
-    .file-form-card .card-header {
+    .repo-form-card .card-header {
         flex-wrap: wrap;
         gap: 0.5rem;
     }
     
-    .file-form-title {
+    .item-form-title {
         font-size: 0.9rem;
+        max-width: 200px;
     }
+}
+
+/* Alert styling */
+#repo-media-modal .alert-info {
+    background-color: #e7f3ff;
+    border-color: #b6d4fe;
+    color: #084298;
 }
 </style>

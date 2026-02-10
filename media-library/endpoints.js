@@ -58,6 +58,34 @@ const ENDPOINTS = {
             endpoint: `${APP_PATH}${PREFIX}${VERSION}${ENDPOINT}/file/:filename`,
             params: 'token or api_key, filename'
         }
+    },
+    repo_media_search: {
+        get: {
+            description: 'Searches digital repository records',
+            endpoint: `${APP_PATH}${PREFIX}${VERSION}${ENDPOINT}/repo/search`,
+            params: 'token or api_key, search term'
+        }
+    },
+    repo_thumbnail: {
+        get: {
+            description: 'Gets digital repository thumbnail',
+            endpoint: `${APP_PATH}${PREFIX}${VERSION}${ENDPOINT}/repo/thumbnail`,
+            params: 'token or api_key, uuid'
+        }
+    },
+    repo_subjects: {
+        get: {
+            description: 'Gets digital repository subjects grouped by type',
+            endpoint: `${APP_PATH}${PREFIX}${VERSION}${ENDPOINT}/repo/subjects`,
+            params: 'token or api_key, optional type query parameter (topical, geographic, genre_form)'
+        }
+    },
+    repo_resource_types: {
+        get: {
+            description: 'Gets digital repository resource types',
+            endpoint: `${APP_PATH}${PREFIX}${VERSION}${ENDPOINT}/repo/resource-types`,
+            params: 'token or api_key, optional type query parameter'
+        }
     }
 };
 

@@ -82,6 +82,35 @@ const mediaLibraryModule = (function() {
     };
 
     /**
+     * Get repository thumbnail URL for repo-ingested media
+     * Follows the same pattern as repoModalsModule.get_repo_thumbnail_url
+     * @param {string} uuid - Repository item UUID (repo_uuid)
+     * @returns {string} Thumbnail URL or empty string
+     */
+    const get_repo_thumbnail_url = (uuid) => {
+        if (!uuid) return '';
+
+        // Use repoServiceModule's get_repo_tn_url if available
+        if (typeof repoServiceModule !== 'undefined' && typeof repoServiceModule.get_repo_tn_url === 'function') {
+            return repoServiceModule.get_repo_tn_url(uuid);
+        }
+
+        // Fallback: build the URL directly
+        const token = authModule.get_user_token();
+        if (!token) return '';
+
+        const MEDIA_ENDPOINTS = get_media_library_endpoints();
+
+        if (!MEDIA_ENDPOINTS?.repo_thumbnail?.get?.endpoint) {
+            console.warn('Repo thumbnail endpoint not configured');
+            return '';
+        }
+
+        const endpoint = MEDIA_ENDPOINTS.repo_thumbnail.get.endpoint;
+        return endpoint + '?uuid=' + encodeURIComponent(uuid) + '&token=' + encodeURIComponent(token);
+    };
+
+    /**
      * Check if filename is an image type
      * @param {string} filename - Filename to check
      * @returns {boolean} True if file is an image
@@ -409,17 +438,24 @@ const mediaLibraryModule = (function() {
      * @param {string} size - Formatted file size
      * @param {string} media_type - Media type (image, pdf, etc.)
      * @param {string} storage_filename - Storage filename for URL building
-     * @param {string} ingest_method - Ingest method (upload, kaltura, etc.)
+     * @param {string} ingest_method - Ingest method (upload, repository, etc.)
+     * @param {string} repo_uuid - Repository item UUID (for repo items)
      */
-    const handle_view_click = (uuid, name, filename, size, media_type, storage_filename, ingest_method) => {
+    const handle_view_click = (uuid, name, filename, size, media_type, storage_filename, ingest_method, repo_uuid) => {
         if (!uuid) {
             console.error('No UUID provided for view');
             return;
         }
 
-        // Open view modal via modals module
+        // Repository items: use repoModalsModule which handles repo thumbnail URLs
+        if (ingest_method === 'repository' && typeof repoModalsModule !== 'undefined' && typeof repoModalsModule.open_view_media_modal === 'function') {
+            repoModalsModule.open_view_media_modal(uuid, name, filename, size, media_type, storage_filename, ingest_method, repo_uuid);
+            return;
+        }
+
+        // Uploaded items: use mediaModalsModule
         if (typeof mediaModalsModule !== 'undefined' && typeof mediaModalsModule.open_view_media_modal === 'function') {
-            mediaModalsModule.open_view_media_modal(uuid, name, filename, size, media_type, storage_filename, ingest_method);
+            mediaModalsModule.open_view_media_modal(uuid, name, filename, size, media_type, storage_filename, ingest_method, repo_uuid);
         } else {
             console.error('mediaModalsModule.open_view_media_modal not available');
         }
@@ -625,7 +661,8 @@ const mediaLibraryModule = (function() {
                 const media_type = this.getAttribute('data-media-type');
                 const storage_filename = this.getAttribute('data-storage-filename');
                 const ingest_method = this.getAttribute('data-ingest-method');
-                handle_view_click(uuid, name, filename, size, media_type, storage_filename, ingest_method);
+                const repo_uuid = this.getAttribute('data-repo-uuid');
+                handle_view_click(uuid, name, filename, size, media_type, storage_filename, ingest_method, repo_uuid);
             });
         });
 
@@ -740,6 +777,7 @@ const mediaLibraryModule = (function() {
                     created_display: format_date(record.created),
                     created_by: sanitize_html(record.created_by) || null,
                     upload_uuid: record.upload_uuid || null,
+                    repo_uuid: record.repo_uuid || null,
                     size: record.size || 0,
                     size_display: format_file_size(record.size)
                 };
@@ -756,12 +794,32 @@ const mediaLibraryModule = (function() {
                             if (type === 'display') {
                                 const display_name = data || 'Untitled';
                                 let thumbnail_html = '';
+                                const is_repo = row.ingest_method === 'repository';
                                 const is_viewable = row.ingest_method === 'upload' && (row.is_image || row.media_type === 'pdf');
                                 const cursor_style = is_viewable ? 'cursor: pointer;' : '';
                                 const clickable_class = is_viewable ? 'media-thumbnail-clickable' : '';
 
-                                // Build thumbnail or icon
-                                if (row.is_image && row.thumbnail_url) {
+                                if (is_repo && row.repo_uuid) {
+                                    // Repository item: use repo thumbnail endpoint
+                                    const repo_tn_url = get_repo_thumbnail_url(row.repo_uuid);
+                                    if (repo_tn_url) {
+                                        thumbnail_html = `
+                                            <img src="${repo_tn_url}" 
+                                                 alt="Thumbnail for ${display_name}"
+                                                 class="media-thumbnail media-thumbnail-clickable"
+                                                 style="width: ${THUMBNAIL_SIZE.width}px; height: ${THUMBNAIL_SIZE.height}px; object-fit: cover; border-radius: 4px; margin-right: 10px; vertical-align: middle; cursor: pointer;"
+                                                 loading="lazy"
+                                                 data-uuid="${row.uuid}" data-name="${sanitize_html(row.name)}" data-filename="${sanitize_html(row.filename)}" data-size="${row.size_display}" data-media-type="${row.media_type}" data-storage-filename="${row.storage_filename}" data-ingest-method="${row.ingest_method}" data-repo-uuid="${row.repo_uuid}" title="Click to view"
+                                                 onerror="this.onerror=null; this.src='${PLACEHOLDER_IMAGE}';">`;
+                                    } else {
+                                        thumbnail_html = `
+                                            <img src="${PLACEHOLDER_IMAGE}" 
+                                                 alt="Placeholder for ${display_name}"
+                                                 class="media-thumbnail-placeholder media-thumbnail-clickable"
+                                                 style="width: ${THUMBNAIL_SIZE.width}px; height: ${THUMBNAIL_SIZE.height}px; object-fit: cover; border-radius: 4px; margin-right: 10px; vertical-align: middle; cursor: pointer;"
+                                                 data-uuid="${row.uuid}" data-name="${sanitize_html(row.name)}" data-filename="${sanitize_html(row.filename)}" data-size="${row.size_display}" data-media-type="${row.media_type}" data-storage-filename="${row.storage_filename}" data-ingest-method="${row.ingest_method}" data-repo-uuid="${row.repo_uuid}" title="Click to view">`;
+                                    }
+                                } else if (row.is_image && row.thumbnail_url) {
                                     // Image thumbnail with token for authentication
                                     const img_url = row.thumbnail_url + (row.thumbnail_url.includes('?') ? '&' : '?') + 'token=' + encodeURIComponent(token || '');
                                     thumbnail_html = `
@@ -800,13 +858,17 @@ const mediaLibraryModule = (function() {
                         title: 'File Name',
                         render: function(data, type, row) {
                             if (type === 'display') {
-                                // Truncate long filenames with tooltip
+                                // Repository items: show "Repository media" instead of filename/size
+                                if (row.ingest_method === 'repository') {
+                                    return '<small><i class="fa fa-database" style="margin-right: 4px;" aria-hidden="true"></i>Repository media</small>';
+                                }
+
+                                // Uploaded items: show filename with file size below it
                                 const max_length = 40;
                                 let filename_display = data || 'N/A';
                                 if (data && data.length > max_length) {
                                     filename_display = `<span title="${data}">${data.substring(0, max_length)}...</span>`;
                                 }
-                                // Return filename with file size below it
                                 return `<small>${filename_display}</small><br><small><em>${row.size_display}</em></small>`;
                             }
                             return data;
@@ -856,16 +918,16 @@ const mediaLibraryModule = (function() {
                 language: {
                     emptyTable: 'No media files found in the library',
                     zeroRecords: 'No matching media files found',
-                    info: 'Showing _START_ to _END_ of _TOTAL_ media files',
+                    info: 'Showing _START_ - _END_ of _TOTAL_ results',
                     infoEmpty: 'No media files available',
                     infoFiltered: '(filtered from _MAX_ total files)',
                     search: 'Search media:',
                     lengthMenu: 'Show _MENU_ files per page',
                     paginate: {
-                        first: 'First',
-                        last: 'Last',
-                        next: 'Next',
-                        previous: 'Previous'
+                        first: '<i class="fa fa-angle-double-left" aria-hidden="true"></i><span class="sr-only">First</span>',
+                        last: '<i class="fa fa-angle-double-right" aria-hidden="true"></i><span class="sr-only">Last</span>',
+                        next: '<i class="fa fa-chevron-right" aria-hidden="true"></i><span class="sr-only">Next</span>',
+                        previous: '<i class="fa fa-chevron-left" aria-hidden="true"></i><span class="sr-only">Previous</span>'
                     }
                 },
                 dom: '<"row"<"col-sm-12 col-md-6"l><"col-sm-12 col-md-6"f>>' +

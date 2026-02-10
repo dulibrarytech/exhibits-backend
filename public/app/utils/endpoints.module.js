@@ -9,6 +9,7 @@ const endpointsModule = (function() {
         users: null,
         exhibits: null,
         indexer: null,
+        media_library: null,
         last_updated: null
     };
 
@@ -111,7 +112,7 @@ const endpointsModule = (function() {
         }
 
         // Check required endpoint types exist
-        const required_types = ['users', 'exhibits', 'indexer'];
+        const required_types = ['users', 'exhibits', 'indexer', 'media_library'];
         const missing_types = required_types.filter(type => !data.endpoints[type]);
 
         if (missing_types.length > 0) {
@@ -152,6 +153,7 @@ const endpointsModule = (function() {
             users: null,
             exhibits: null,
             indexer: null,
+            media_library: null,
             last_updated: null
         };
     };

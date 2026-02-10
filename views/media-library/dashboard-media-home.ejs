@@ -128,8 +128,158 @@
     <%- include('../partials/footer.ejs'); %>
 </div>
 
+<!-- DataTables Pagination Styles - Match Repository Pagination -->
+<style>
+    /* ========================================
+       DataTables Pagination - Repo Style Match
+       (DataTables 2.x uses .dt-paging / .dt-paging-button)
+       ======================================== */
+
+    /* Hide First/Last buttons to match repo pagination (prev + numbers + next only) */
+    #items_wrapper .dt-paging .dt-paging-button.first,
+    #items_wrapper .dt-paging .dt-paging-button.last {
+        display: none !important;
+    }
+
+    /* Paging container layout */
+    #items_wrapper .dt-paging {
+        text-align: right;
+        white-space: nowrap;
+        padding-top: 15px;
+    }
+
+    /* Paging nav - use inline-flex for connected button group */
+    #items_wrapper .dt-paging nav {
+        display: inline-flex;
+    }
+
+    /* Base button styling - match repo .page-link */
+    #items_wrapper .dt-paging .dt-paging-button {
+        display: inline-block;
+        box-sizing: border-box;
+        min-width: 1.5em;
+        padding: 0.4rem 0.75rem !important;
+        margin-left: -1px !important;
+        font-size: 0.875rem !important;
+        line-height: 1.5 !important;
+        text-align: center;
+        text-decoration: none !important;
+        cursor: pointer;
+        color: #7f7f7f !important;
+        background: #fff !important;
+        background-color: #fff !important;
+        border: 1px solid #7f7f7f !important;
+        border-radius: 0 !important;
+        transition: all 0.15s ease-in-out;
+        box-shadow: none !important;
+    }
+
+    /* First visible button (Previous) - rounded left corners */
+    #items_wrapper .dt-paging .dt-paging-button.previous {
+        margin-left: 0 !important;
+        border-top-left-radius: 0.2rem !important;
+        border-bottom-left-radius: 0.2rem !important;
+    }
+
+    /* Last visible button (Next) - rounded right corners */
+    #items_wrapper .dt-paging .dt-paging-button.next {
+        border-top-right-radius: 0.2rem !important;
+        border-bottom-right-radius: 0.2rem !important;
+    }
+
+    /* Hover state - match repo .page-link:hover */
+    #items_wrapper .dt-paging .dt-paging-button:hover {
+        z-index: 2;
+        color: #5f5f5f !important;
+        text-decoration: none !important;
+        background-color: #f0f0f0 !important;
+        background: #f0f0f0 !important;
+        border-color: #7f7f7f !important;
+    }
+
+    /* Active/current page - match repo .page-item.active .page-link */
+    #items_wrapper .dt-paging .dt-paging-button.current,
+    #items_wrapper .dt-paging .dt-paging-button.current:hover {
+        z-index: 3;
+        color: #fff !important;
+        background-color: #7f7f7f !important;
+        background: #7f7f7f !important;
+        border-color: #7f7f7f !important;
+    }
+
+    /* Disabled state - match repo .page-item.disabled .page-link */
+    #items_wrapper .dt-paging .dt-paging-button.disabled,
+    #items_wrapper .dt-paging .dt-paging-button.disabled:hover,
+    #items_wrapper .dt-paging .dt-paging-button.disabled:active {
+        color: #b0b0b0 !important;
+        pointer-events: none;
+        cursor: default;
+        background-color: #fff !important;
+        background: #fff !important;
+        border-color: #b0b0b0 !important;
+        box-shadow: none !important;
+    }
+
+    /* Focus state - match repo .page-link:focus */
+    #items_wrapper .dt-paging .dt-paging-button:focus {
+        z-index: 3;
+        outline: 0;
+        box-shadow: 0 0 0 0.2rem rgba(127, 127, 127, 0.25) !important;
+    }
+
+    /* Ellipsis styling */
+    #items_wrapper .dt-paging .ellipsis {
+        display: inline-block;
+        padding: 0.4rem 0.75rem;
+        font-size: 0.875rem;
+        line-height: 1.5;
+        color: #b0b0b0;
+        background-color: #fff;
+        border: 1px solid #b0b0b0;
+        margin-left: -1px;
+    }
+
+    /* Info row - add separator and match repo pagination-info */
+    #items_wrapper .row:last-child {
+        border-top: 1px solid #e9ecef;
+        margin-top: 10px;
+    }
+
+    #items_wrapper .dt-info {
+        font-size: 0.85rem;
+        color: #6c757d;
+        padding-top: 15px;
+    }
+
+    /* Length menu and search styling consistency */
+    #items_wrapper .dt-length {
+        font-size: 0.85rem;
+        color: #6c757d;
+    }
+
+    #items_wrapper .dt-search {
+        font-size: 0.85rem;
+        color: #6c757d;
+    }
+
+    /* Responsive pagination adjustments */
+    @media (max-width: 768px) {
+        #items_wrapper .dt-paging .dt-paging-button {
+            padding: 0.3rem 0.6rem !important;
+            font-size: 0.8rem !important;
+        }
+
+        #items_wrapper .dt-paging .ellipsis {
+            padding: 0.3rem 0.6rem;
+            font-size: 0.8rem;
+        }
+    }
+</style>
+
 <!-- Uploaded Media Modal -->
 <%- include('partials/modal-uploaded-media-forms.ejs'); %>
+<!-- Repo Media Modal -->
+<%- include('partials/modal-repo-media-forms.ejs'); %>
 <!-- Edit Media Modal -->
 <%- include('partials/modal-edit-media-form.ejs'); %>
 <%- include('partials/modal-delete-media-confirm') %>
@@ -151,19 +301,42 @@
 <%- include('../partials/exhibits-app-common.ejs'); %>
 <script src="/exhibits-dashboard/static/app/dist/helper.media.module.min.js?<%=build_version%>"></script>
 
+<!-- Repo Subjects Helper Module (must load before modal modules) -->
+<script src="/exhibits-dashboard/static/app/media-library/helper.repo.subjects.module.js?<%=build_version%>"></script>
+
 <!-- Modals Module -->
 <script src="/exhibits-dashboard/static/app/media-library/modals.upload.module.js?<%=build_version%>"></script>
+
+<script src="/exhibits-dashboard/static/app/media-library/modals.repo.module.js?<%=build_version%>"></script>
 
 <!-- Uploads Module -->
 <script src="/exhibits-dashboard/static/app/media-library/uploads.module.js?<%=build_version%>"></script>
 
+<!-- Repository Pagination Module (must load before repo.service.module) -->
+<script src="/exhibits-dashboard/static/app/media-library/repo.pagination.module.js?<%=build_version%>"></script>
+
+<!-- Repository Service Module -->
+<script src="/exhibits-dashboard/static/app/media-library/repo.service.module.js?<%=build_version%>"></script>
+
 <!-- Media Library Module -->
 <script src="/exhibits-dashboard/static/app/media-library/media.library.module.js?<%=build_version%>"></script>
+
 
 <script>
     // Initialize media library module when DOM is ready
     document.addEventListener('DOMContentLoaded', function() {
+
+        // Pre-fetch and cache subjects/resource types for dropdown population
+        if (typeof repoSubjectsModule !== 'undefined') {
+            repoSubjectsModule.init();
+        }
+
         mediaLibraryModule.init();
+        
+        // Initialize repo service module (will also init pagination module)
+        if (typeof repoServiceModule !== 'undefined') {
+            repoServiceModule.init();
+        }
     });
 </script>
 </body>

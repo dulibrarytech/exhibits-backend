@@ -23,7 +23,8 @@ const ELASTICSEARCH_CONFIG = {
     elasticsearch_host: process.env.ELASTICSEARCH_HOST,
     elasticsearch_index: process.env.ELASTICSEARCH_INDEX,
     elasticsearch_shards: process.env.ELASTICSEARCH_SHARDS,
-    elasticsearch_replicas: process.env.ELASTICSEARCH_REPLICAS
+    elasticsearch_replicas: process.env.ELASTICSEARCH_REPLICAS,
+    repo_elasticsearch_index: process.env.REPO_ELASTICSEARCH_INDEX
 };
 
 module.exports = function () {

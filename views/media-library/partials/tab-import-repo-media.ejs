@@ -1,32 +1,232 @@
 <div class="col-12">
-    <form class="row form-group" aria-label="Import repository media">
+    <!-- Search Form -->
+    <form class="row form-group" aria-label="Import repository media" id="repo-search-form">
         <div class="col-12 col-md-7 mb-3 mb-md-0">
-            <label for="repo-uuid" class="sr-only">Repository record UUID</label>
-            <input type="text" 
-                   class="form-control" 
-                   id="repo-uuid" 
-                   name="repo_uuid" 
-                   placeholder="Repository record UUID"
-                   aria-describedby="repo-uuid-help">
+            <label for="repo-uuid" class="sr-only">Search Repository</label>
+            <input type="text"
+                   class="form-control"
+                   id="repo-uuid"
+                   name="repo_uuid"
+                   placeholder="Search Repository"
+                   aria-describedby="repo-uuid-help"
+                   autocomplete="off">
             <small id="repo-uuid-help" class="form-text text-muted">
-                Enter the unique identifier from the repository
+                Enter a search term (e.g., title, creator, subject, identifier)
             </small>
         </div>
         <div class="col-auto">
-            <button type="button" 
-                    id="repo-uuid-btn" 
+            <button type="button"
+                    id="repo-uuid-btn"
                     class="btn btn-primary">
+                <i class="fa fa-search" aria-hidden="true"></i>
+                Search
+            </button>
+        </div>
+        <div class="col-auto">
+            <button type="button"
+                    id="repo-import-btn"
+                    class="btn btn-success"
+                    style="display: none;">
                 <i class="fa fa-download" aria-hidden="true"></i>
-                Get item metadata
+                Import Selected (<span id="repo-selected-count">0</span>)
             </button>
         </div>
     </form>
-    
-    <div id="repo-item-metadata" 
-         role="region" 
-         aria-live="polite" 
-         aria-label="Repository item metadata results">
+
+    <!-- Message Area -->
+    <div id="repo-search-message"
+         role="status"
+         aria-live="polite"
+         class="mt-3">
     </div>
-    
+
+    <!-- Search Results Container -->
+    <div id="repo-search-results"
+         role="region"
+         aria-live="polite"
+         aria-label="Repository search results"
+         class="mt-3">
+        <!-- Results will be rendered here -->
+        <div class="text-center py-4 text-muted">
+            <i class="fa fa-search fa-3x mb-3" aria-hidden="true"></i>
+            <p>Enter a search term above to find repository items</p>
+        </div>
+    </div>
+
+    <!-- Legacy container for backward compatibility -->
+    <div id="repo-item-metadata"
+         role="region"
+         aria-live="polite"
+         aria-label="Repository item metadata results"
+         style="display: none;">
+    </div>
+
     <div id="tn" aria-live="polite"></div>
 </div>
+
+<style>
+    /* Repository Search Results Styles - Bootstrap 4 Compatible */
+    .repo-results-list {
+        display: block;
+    }
+
+    .repo-result-item {
+        transition: all 0.2s ease;
+        background-color: #fff;
+    }
+
+    .repo-result-item:hover {
+        border-color: #5f5f5f !important;
+        box-shadow: 0 2px 8px rgba(95, 95, 95, 0.15);
+    }
+
+    .repo-result-item.selected {
+        background-color: #e7f1ff !important;
+        border-color: #007bff !important;
+    }
+
+    .repo-result-item.selected .card-body {
+        background-color: #e7f1ff;
+    }
+
+    .repo-result-item .form-check-input:checked {
+        background-color: #007bff;
+        border-color: #007bff;
+    }
+
+    .repo-result-item h6 {
+        color: #333;
+        font-weight: 600;
+        font-size: 1rem;
+        margin-bottom: 5px;
+    }
+
+    .repo-result-item .badge {
+        font-size: 0.8em;
+        padding: 4px 8px;
+    }
+
+    #repo-import-btn {
+        transition: all 0.3s ease;
+    }
+
+    /* Loading spinner */
+    #repo-search-results .fa-spinner {
+        color: #007bff;
+    }
+
+    /* ========================================
+       Pagination Styles
+       ======================================== */
+    .repo-pagination {
+        border-top: 1px solid #e9ecef;
+        padding-top: 15px;
+    }
+
+    .repo-pagination .pagination {
+        margin-bottom: 0;
+    }
+
+    .repo-pagination .page-link {
+        padding: 0.4rem 0.75rem;
+        font-size: 0.875rem;
+        line-height: 1.5;
+        color: #7f7f7f;
+        background-color: #fff;
+        border: 1px solid #7f7f7f;
+        transition: all 0.15s ease-in-out;
+    }
+
+    .repo-pagination .page-link:hover {
+        z-index: 2;
+        color: #5f5f5f;
+        text-decoration: none;
+        background-color: #f0f0f0;
+        border-color: #7f7f7f;
+    }
+
+    .repo-pagination .page-item.active .page-link {
+        z-index: 3;
+        color: #fff;
+        background-color: #7f7f7f;
+        border-color: #7f7f7f;
+    }
+
+    .repo-pagination .page-item.disabled .page-link {
+        color: #b0b0b0;
+        pointer-events: none;
+        cursor: auto;
+        background-color: #fff;
+        border-color: #b0b0b0;
+    }
+
+    .repo-pagination .page-link:focus {
+        z-index: 3;
+        outline: 0;
+        box-shadow: 0 0 0 0.2rem rgba(127, 127, 127, 0.25);
+    }
+
+    .repo-pagination .pagination-info {
+        font-size: 0.85rem;
+        color: #6c757d;
+    }
+
+    /* Responsive pagination adjustments */
+    @media (max-width: 768px) {
+        .repo-result-item .row {
+            flex-wrap: wrap;
+        }
+
+        .repo-result-item .col {
+            flex: 0 0 100%;
+            max-width: 100%;
+            margin-top: 10px;
+        }
+
+        .repo-pagination .d-flex {
+            flex-direction: column;
+            align-items: flex-start !important;
+        }
+
+        .repo-pagination .pagination {
+            margin-top: 10px;
+        }
+
+        .repo-pagination .page-link {
+            padding: 0.3rem 0.6rem;
+            font-size: 0.8rem;
+        }
+    }
+
+    @media (max-width: 576px) {
+        /* Simplify pagination on very small screens */
+        .repo-pagination .page-item {
+            display: none;
+        }
+
+        /* Always show: first, last, active, prev, next */
+        .repo-pagination .page-item:first-child,
+        .repo-pagination .page-item:last-child,
+        .repo-pagination .page-item.active {
+            display: block;
+        }
+
+        /* Show prev/next which are first and last li elements */
+        .repo-pagination .page-item:nth-child(1),
+        .repo-pagination .page-item:nth-last-child(1) {
+            display: block;
+        }
+    }
+
+    /* Results header responsive */
+    .repo-results-header {
+        gap: 10px;
+    }
+
+    @media (max-width: 576px) {
+        .repo-results-header {
+            flex-direction: column;
+            align-items: flex-start !important;
+        }
+    }
+</style>

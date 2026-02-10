@@ -159,6 +159,32 @@ const mediaModalsModule = (function() {
     };
 
     /**
+     * Get repository thumbnail URL for repo-ingested media
+     * @param {string} uuid - Repository item UUID (repo_uuid)
+     * @returns {string} Thumbnail URL or empty string
+     */
+    const get_repo_thumbnail_url = (uuid) => {
+        if (!uuid) return '';
+
+        // Use repoServiceModule's get_repo_tn_url if available
+        if (typeof repoServiceModule !== 'undefined' && typeof repoServiceModule.get_repo_tn_url === 'function') {
+            return repoServiceModule.get_repo_tn_url(uuid);
+        }
+
+        // Fallback: build the URL directly
+        const token = authModule.get_user_token();
+        if (!token) return '';
+
+        if (!EXHIBITS_ENDPOINTS?.repo_thumbnail?.get?.endpoint) {
+            console.warn('Repo thumbnail endpoint not configured');
+            return '';
+        }
+
+        const endpoint = EXHIBITS_ENDPOINTS.repo_thumbnail.get.endpoint;
+        return endpoint + '?uuid=' + encodeURIComponent(uuid) + '&token=' + encodeURIComponent(token);
+    };
+
+    /**
      * Update modal footer status
      */
     const update_modal_status = () => {
@@ -337,6 +363,7 @@ const mediaModalsModule = (function() {
         const media_type = record.media_type || 'unknown';
         const is_image = media_type === 'image';
         const is_pdf = media_type === 'pdf';
+        const is_repo = record.ingest_method === 'repository';
         const type_label = get_media_type_label(media_type);
         const type_icon = get_media_type_icon(media_type);
         const file_size = format_file_size(record.size || 0);
@@ -347,7 +374,16 @@ const mediaModalsModule = (function() {
 
         // Build preview HTML
         let preview_html;
-        if (is_image && record.filename) {
+        if (is_repo && record.repo_uuid) {
+            // Repository item: use repo thumbnail endpoint
+            const repo_tn_url = get_repo_thumbnail_url(record.repo_uuid);
+            if (repo_tn_url) {
+                preview_html = '<img src="' + repo_tn_url + '" alt="' + escape_html(record.name || 'Repository media') + '" class="img-fluid" style="max-width:100%;max-height:300px;object-fit:contain;" onerror="this.onerror=null; this.style.display=\'none\'; this.nextElementSibling.style.display=\'block\';">' +
+                    '<i class="fa ' + type_icon + '" style="font-size: 80px; color: #6c757d; display: none;" aria-hidden="true"></i>';
+            } else {
+                preview_html = '<i class="fa ' + type_icon + '" style="font-size: 80px; color: #6c757d;" aria-hidden="true"></i>';
+            }
+        } else if (is_image && record.filename) {
             const media_url = build_media_url(record.filename);
             const img_url = media_url + (media_url.includes('?') ? '&' : '?') + 'token=' + encodeURIComponent(token || '');
             preview_html = '<img src="' + img_url + '" alt="' + display_name + '" class="img-fluid" style="max-width:100%;max-height:300px;object-fit:contain;">';
@@ -391,9 +427,16 @@ const mediaModalsModule = (function() {
         html += '<div class="edit-preview-container text-center p-3 bg-light rounded">';
         html += '<div class="edit-preview mb-3">' + preview_html + '</div>';
         html += '<div class="file-meta small text-muted">';
-        html += '<div class="file-name-display text-truncate mb-1" title="' + display_name + '">' + display_name + '</div>';
-        html += '<div class="file-size-display mb-1">' + file_size + '</div>';
-        html += '<span class="badge bg-secondary">' + type_label + '</span>';
+        if (is_repo) {
+            // Repository item: show "Repository media" with icon, no filename/size
+            html += '<div class="mb-1"><i class="fa fa-database" style="margin-right: 4px;" aria-hidden="true"></i>Repository media</div>';
+            html += '<span class="badge bg-secondary">' + type_label + '</span>';
+        } else {
+            // Uploaded item: show filename, size, and type badge
+            html += '<div class="file-name-display text-truncate mb-1" title="' + display_name + '">' + display_name + '</div>';
+            html += '<div class="file-size-display mb-1">' + file_size + '</div>';
+            html += '<span class="badge bg-secondary">' + type_label + '</span>';
+        }
         html += '</div></div></div>';
         
         // Form column
@@ -421,16 +464,14 @@ const mediaModalsModule = (function() {
         html += '<div class="row">';
         html += '<div class="col-md-6 mb-3">';
         html += '<label class="form-label" for="edit-file-topics">Topics</label>';
-        html += '<select class="form-control form-select custom-select" id="edit-file-topics" name="topics_subjects">';
+        html += '<select class="form-control form-select custom-select" id="edit-file-topics" name="topics_subjects" data-selected="' + escape_html(record.topics_subjects || '') + '">';
         html += '<option value="">Select a topic...</option>';
-        // Options would be populated dynamically
         html += '</select>';
         html += '</div>';
         html += '<div class="col-md-6 mb-3">';
-        html += '<label class="form-label" for="edit-file-genre-form">Genre/Form</label>';
-        html += '<select class="form-control form-select custom-select" id="edit-file-genre-form" name="genre_form_subjects">';
+        html += '<label class="form-label" for="edit-file-genre-form">Genre/Form <span class="text-danger">*</span></label>';
+        html += '<select class="form-control form-select custom-select" id="edit-file-genre-form" name="genre_form_subjects" data-selected="' + escape_html(record.genre_form_subjects || '') + '">';
         html += '<option value="">Select genre/form...</option>';
-        // Options would be populated dynamically
         html += '</select>';
         html += '</div></div>';
         
@@ -438,16 +479,14 @@ const mediaModalsModule = (function() {
         html += '<div class="row">';
         html += '<div class="col-md-6 mb-3">';
         html += '<label class="form-label" for="edit-file-places">Places</label>';
-        html += '<select class="form-control form-select custom-select" id="edit-file-places" name="places_subjects">';
+        html += '<select class="form-control form-select custom-select" id="edit-file-places" name="places_subjects" data-selected="' + escape_html(record.places_subjects || '') + '">';
         html += '<option value="">Select a place...</option>';
-        // Options would be populated dynamically
         html += '</select>';
         html += '</div>';
         html += '<div class="col-md-6 mb-3">';
-        html += '<label class="form-label" for="edit-file-item-type">Item Type</label>';
-        html += '<select class="form-control form-select custom-select" id="edit-file-item-type" name="item_type">';
+        html += '<label class="form-label" for="edit-file-item-type">Item Type <span class="text-danger">*</span></label>';
+        html += '<select class="form-control form-select custom-select" id="edit-file-item-type" name="item_type" required data-selected="' + escape_html(record.item_type || '') + '">';
         html += '<option value="">Select item type...</option>';
-        // Options would be populated dynamically
         html += '</select>';
         html += '</div></div>';
         
@@ -477,7 +516,16 @@ const mediaModalsModule = (function() {
 
         // Validate form
         form.classList.add('was-validated');
-        if (!form.checkValidity()) {
+
+        // Validate required subject fields (Genre/Form multi-select, Item Type)
+        let subjects_valid = true;
+        const edit_form_container = document.getElementById('edit-media-form-container');
+
+        if (typeof repoSubjectsModule !== 'undefined' && typeof repoSubjectsModule.validate_required_fields === 'function') {
+            subjects_valid = repoSubjectsModule.validate_required_fields(edit_form_container || form);
+        }
+
+        if (!form.checkValidity() || !subjects_valid) {
             return;
         }
 
@@ -694,6 +742,11 @@ const mediaModalsModule = (function() {
         // Build and display edit form
         form_container.innerHTML = build_edit_form_html(record);
 
+        // Populate subject and resource type dropdowns (upgrades selects to multi-select widgets)
+        if (typeof repoSubjectsModule !== 'undefined') {
+            await repoSubjectsModule.populate_subjects_dropdowns(form_container);
+        }
+
         // Setup event handlers
         setup_edit_modal_handlers();
 
@@ -732,7 +785,15 @@ const mediaModalsModule = (function() {
         if (!form) return;
 
         form.classList.add('was-validated');
-        if (!form.checkValidity()) return;
+
+        // Validate required subject fields (Genre/Form multi-select, Item Type)
+        let subjects_valid = true;
+
+        if (typeof repoSubjectsModule !== 'undefined' && typeof repoSubjectsModule.validate_required_fields === 'function') {
+            subjects_valid = repoSubjectsModule.validate_required_fields(card);
+        }
+
+        if (!form.checkValidity() || !subjects_valid) return;
 
         const form_data = new FormData(form);
         
@@ -978,7 +1039,7 @@ const mediaModalsModule = (function() {
         html += '</select>';
         html += '</div>';
         html += '<div class="col-md-6 mb-3">';
-        html += '<label class="form-label" for="file-genre-form-' + index + '">Genre/Form</label>';
+        html += '<label class="form-label" for="file-genre-form-' + index + '">Genre/Form <span class="text-danger">*</span></label>';
         html += '<select class="form-control form-select custom-select file-genre-form" id="file-genre-form-' + index + '" name="genre_form_subjects">';
         html += '<option value="">Select genre/form...</option>';
         html += '</select>';
@@ -993,8 +1054,8 @@ const mediaModalsModule = (function() {
         html += '</select>';
         html += '</div>';
         html += '<div class="col-md-6 mb-3">';
-        html += '<label class="form-label" for="file-item-type-' + index + '">Item Type</label>';
-        html += '<select class="form-control form-select custom-select file-item-type" id="file-item-type-' + index + '" name="item_type">';
+        html += '<label class="form-label" for="file-item-type-' + index + '">Item Type <span class="text-danger">*</span></label>';
+        html += '<select class="form-control form-select custom-select file-item-type" id="file-item-type-' + index + '" name="item_type" required>';
         html += '<option value="">Select item type...</option>';
         html += '</select>';
         html += '</div></div>';
@@ -1071,6 +1132,11 @@ const mediaModalsModule = (function() {
 
         // Setup individual save handlers
         setup_individual_save_handlers();
+
+        // Populate subject and resource type dropdowns (upgrades selects to multi-select widgets)
+        if (typeof repoSubjectsModule !== 'undefined') {
+            repoSubjectsModule.populate_subjects_dropdowns(forms_container);
+        }
 
         // Update summary text
         if (summary_text) {

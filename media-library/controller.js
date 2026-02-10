@@ -22,6 +22,8 @@ const FS = require('fs');
 const PATH = require('path');
 const STORAGE_CONFIG = require('../config/storage_config')();
 const MEDIA_MODEL = require('../media-library/model');
+const ITEM_MODEL = require('../exhibits/items_model');
+const REPO_SERVICE = require('../media-library/repo-service');
 const AUTHORIZE = require('../auth/authorize');
 const LOGGER = require('../libs/log4');
 const VALIDATOR = require("validator");
@@ -75,6 +77,19 @@ const is_valid_filename = (filename) => {
     }
 
     return true;
+};
+
+/**
+ * Validates if a string is a valid UUID format
+ * @param {string} uuid - String to validate
+ * @returns {boolean} Whether string is valid UUID
+ */
+const is_valid_uuid = (uuid) => {
+    if (!uuid || typeof uuid !== 'string') {
+        return false;
+    }
+    const uuid_regex = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
+    return uuid_regex.test(uuid);
 };
 
 /**
@@ -458,6 +473,311 @@ exports.delete_media_record = async function (req, res) {
             success: false,
             message: 'Unable to delete media record.',
             data: null
+        });
+    }
+};
+
+/**
+ * Searches the digital repository for records matching the search term
+ * GET /api/v1/media/library/repo/search?q=search_term
+ *
+ * Query Parameters:
+ * - q: Search term (required) - also accepts 'term' or 'search'
+ * - size: Number of results to return (optional, default: 25, max: 100)
+ * - from: Starting offset for pagination (optional, default: 0)
+ *
+ * @param {Object} req - Express request object
+ * @param {Object} res - Express response object
+ * @returns {Promise<void>}
+ */
+exports.search_repository = async function (req, res) {
+
+    try {
+
+        // Extract search term from query parameter
+        const term = req.query.q || req.query.term || req.query.search;
+
+        // Validate search term is provided
+        if (!term) {
+            LOGGER.module().warn('WARNING: [/media-library/controller (search_repository)] Missing search term');
+            return res.status(400).json({
+                success: false,
+                message: 'Search term is required. Use ?q=your_search_term',
+                data: {
+                    records: [],
+                    total: 0
+                }
+            });
+        }
+
+        // Extract pagination options
+        const options = {
+            size: parseInt(req.query.size, 10) || 25,
+            from: parseInt(req.query.from, 10) || 0
+        };
+
+        // Validate size parameter
+        if (options.size < 1 || options.size > 100) {
+            return res.status(400).json({
+                success: false,
+                message: 'Size must be between 1 and 100',
+                data: {
+                    records: [],
+                    total: 0
+                }
+            });
+        }
+
+        // Validate from parameter
+        if (options.from < 0) {
+            return res.status(400).json({
+                success: false,
+                message: 'From offset cannot be negative',
+                data: {
+                    records: [],
+                    total: 0
+                }
+            });
+        }
+
+        LOGGER.module().info(`INFO: [/media-library/controller (search_repository)] Searching for: ${term}`);
+
+        // Call repo service to perform search
+        const result = await REPO_SERVICE.search(term, options);
+
+        if (!result.success) {
+            LOGGER.module().warn(`WARNING: [/media-library/controller (search_repository)] Search failed: ${result.message}`);
+            return res.status(200).json({
+                success: false,
+                message: result.message,
+                data: {
+                    records: [],
+                    total: 0
+                }
+            });
+        }
+
+        // Return successful response with 200 status
+        return res.status(200).json({
+            success: true,
+            message: result.message,
+            data: {
+                records: result.records,
+                total: result.total
+            }
+        });
+
+    } catch (error) {
+        LOGGER.module().error(`ERROR: [/media-library/controller (search_repository)] ${error.message}`);
+
+        return res.status(500).json({
+            success: false,
+            message: 'Internal server error during search',
+            data: {
+                records: [],
+                total: 0
+            }
+        });
+    }
+};
+
+/**
+ * Gets a repository thumbnail by UUID
+ * GET /api/v1/media/library/repo/thumbnail?uuid=xxx
+ *
+ * Query Parameters:
+ * - uuid: Repository item UUID (required)
+ *
+ * Returns the binary image data with appropriate Content-Type header
+ * for direct use in <img> src attributes
+ *
+ * @param {Object} req - Express request object
+ * @param {Object} res - Express response object
+ * @returns {Promise<void>}
+ */
+exports.get_repo_tn = async function (req, res) {
+
+    try {
+
+        // Extract UUID from query parameter
+        const uuid = req.query.uuid;
+
+        // Validate UUID is provided
+        if (!uuid) {
+            LOGGER.module().warn('WARNING: [/media-library/controller (get_repo_tn)] Missing UUID');
+            return res.status(400).json({
+                success: false,
+                message: 'UUID is required. Use ?uuid=your_uuid',
+                data: null
+            });
+        }
+
+        // Validate UUID format
+        if (!is_valid_uuid(uuid)) {
+            LOGGER.module().warn(`WARNING: [/media-library/controller (get_repo_tn)] Invalid UUID format: ${uuid}`);
+            return res.status(400).json({
+                success: false,
+                message: 'Invalid UUID format',
+                data: null
+            });
+        }
+
+        LOGGER.module().info(`INFO: [/media-library/controller (get_repo_tn)] Fetching thumbnail for UUID: ${uuid}`);
+
+        // Call repo service to get thumbnail
+        const result = await REPO_SERVICE.get_repo_tn(uuid);
+
+        if (!result || !result.success || !result.thumbnail) {
+            LOGGER.module().warn(`WARNING: [/media-library/controller (get_repo_tn)] Thumbnail not found for UUID: ${uuid}`);
+            return res.status(404).json({
+                success: false,
+                message: result?.message || 'Thumbnail not found',
+                data: null
+            });
+        }
+
+        // Set response headers for binary image data
+        res.set({
+            'Content-Type': result.mime_type || 'image/jpeg',
+            'Content-Length': result.thumbnail.length,
+            'Cache-Control': 'public, max-age=86400', // Cache for 24 hours
+            'X-Content-Type-Options': 'nosniff'
+        });
+
+        // Send the binary image data
+        return res.status(200).send(result.thumbnail);
+
+    } catch (error) {
+        LOGGER.module().error(`ERROR: [/media-library/controller (get_repo_tn)] ${error.message}`);
+
+        return res.status(500).json({
+            success: false,
+            message: 'Internal server error retrieving thumbnail',
+            data: null
+        });
+    }
+};
+
+/**
+ * Gets all unique subjects from the digital repository, grouped by type
+ * Optionally filters to a single type via query parameter
+ * GET /api/v1/media/library/repo/subjects
+ * GET /api/v1/media/library/repo/subjects?type=geographic
+ *
+ * Query Parameters:
+ * - type: Subject type to filter by (optional, e.g., 'geographic', 'topical', 'genre_form')
+ *
+ * @param {Object} req - Express request object
+ * @param {Object} res - Express response object
+ * @returns {Promise<void>}
+ */
+exports.get_subjects = async function (req, res) {
+
+    try {
+
+        LOGGER.module().info('INFO: [/media-library/controller (get_subjects)] Fetching subjects');
+
+        const result = await REPO_SERVICE.get_subjects();
+
+        if (!result || !result.success) {
+            LOGGER.module().warn(`WARNING: [/media-library/controller (get_subjects)] Failed: ${result?.message}`);
+            return res.status(200).json({
+                success: false,
+                message: result?.message || 'Failed to retrieve subjects',
+                data: {
+                    subjects: {},
+                    total: 0
+                }
+            });
+        }
+
+        // If a type filter is provided, return only that type
+        const type_filter = req.query.type ? req.query.type.trim().toLowerCase() : null;
+
+        if (type_filter) {
+
+            const filtered_subjects = result.subjects[type_filter] || [];
+
+            return res.status(200).json({
+                success: true,
+                message: `Found ${filtered_subjects.length} unique ${type_filter} subject(s)`,
+                data: {
+                    subjects: { [type_filter]: filtered_subjects },
+                    total: filtered_subjects.length
+                }
+            });
+        }
+
+        return res.status(200).json({
+            success: true,
+            message: result.message,
+            data: {
+                subjects: result.subjects,
+                total: result.total
+            }
+        });
+
+    } catch (error) {
+        LOGGER.module().error(`ERROR: [/media-library/controller (get_subjects)] ${error.message}`);
+
+        return res.status(500).json({
+            success: false,
+            message: 'Internal server error retrieving subjects',
+            data: {
+                subjects: {},
+                total: 0
+            }
+        });
+    }
+};
+
+/**
+ * Gets all unique resource types from the digital repository
+ * GET /api/v1/media/library/repo/resource-types
+ *
+ * @param {Object} req - Express request object
+ * @param {Object} res - Express response object
+ * @returns {Promise<void>}
+ */
+exports.get_resource_types = async function (req, res) {
+
+    try {
+
+        LOGGER.module().info('INFO: [/media-library/controller (get_resource_types)] Fetching resource types');
+
+        const result = await REPO_SERVICE.get_resource_types();
+
+        if (!result || !result.success) {
+            LOGGER.module().warn(`WARNING: [/media-library/controller (get_resource_types)] Failed: ${result?.message}`);
+            return res.status(200).json({
+                success: false,
+                message: result?.message || 'Failed to retrieve resource types',
+                data: {
+                    resource_types: [],
+                    total: 0
+                }
+            });
+        }
+
+        return res.status(200).json({
+            success: true,
+            message: result.message,
+            data: {
+                resource_types: result.resource_types,
+                total: result.total
+            }
+        });
+
+    } catch (error) {
+        LOGGER.module().error(`ERROR: [/media-library/controller (get_resource_types)] ${error.message}`);
+
+        return res.status(500).json({
+            success: false,
+            message: 'Internal server error retrieving resource types',
+            data: {
+                resource_types: [],
+                total: 0
+            }
         });
     }
 };
