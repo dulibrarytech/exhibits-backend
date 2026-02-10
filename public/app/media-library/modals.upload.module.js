@@ -1661,9 +1661,21 @@ const mediaModalsModule = (function() {
             if (image_el) {
                 image_el.src = '';
                 image_el.style.display = 'none';
+                image_el.style.cursor = '';
+                image_el.title = '';
+                image_el.onclick = null;
             }
             if (pdf_el) {
                 pdf_el.src = '';
+            }
+
+            // Remove repo handle hint if present
+            const container = document.getElementById('view-media-container');
+            if (container && container.parentNode) {
+                const hint = container.parentNode.querySelector('.repo-handle-hint');
+                if (hint) {
+                    hint.remove();
+                }
             }
         }, 150);
     };
@@ -1741,7 +1753,24 @@ const mediaModalsModule = (function() {
             title_el.textContent = name || 'View Media';
         }
 
-        // Update file info
+        // Update file info - rebuild info section to ensure correct structure
+        // (handles case where repo modal may have replaced the info HTML)
+        const info_el = document.getElementById('view-media-info');
+        if (info_el) {
+            info_el.innerHTML = '<p class="mb-1">' +
+                '<strong>File:</strong> ' +
+                '<span id="view-media-filename">-</span>' +
+                '</p>' +
+                '<p class="mb-1">' +
+                '<strong>Size:</strong> ' +
+                '<span id="view-media-filesize">-</span>' +
+                '</p>' +
+                '<p class="mb-0">' +
+                '<strong>Ingest Method:</strong> ' +
+                '<span id="view-media-ingest-method">-</span>' +
+                '</p>';
+        }
+
         const filename_el = document.getElementById('view-media-filename');
         const filesize_el = document.getElementById('view-media-filesize');
         const ingest_method_el = document.getElementById('view-media-ingest-method');

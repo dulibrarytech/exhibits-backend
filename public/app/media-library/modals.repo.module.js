@@ -860,12 +860,13 @@ const repoModalsModule = (function() {
     };
 
     // ========================================
-    // ORIGINAL MODAL FUNCTIONALITY (preserved)
+    // ORIGINAL MODAL FUNCTIONALITY
     // ========================================
-
+  // TODO: remove unused functionality
     /**
      * Update modal footer status
      */
+    /*
     const update_modal_status = () => {
 
         const validation_message = document.getElementById('modal-validation-message');
@@ -888,6 +889,7 @@ const repoModalsModule = (function() {
             }
         }
     };
+    */
 
     /**
      * Display status message in card
@@ -895,6 +897,7 @@ const repoModalsModule = (function() {
      * @param {string} type - Message type ('success', 'danger', 'warning')
      * @param {string} message - Message text
      */
+    /*
     const display_card_message = (card, type, message) => {
         // Find or create message container
         let message_container = card.querySelector('.card-message');
@@ -922,12 +925,13 @@ const repoModalsModule = (function() {
             }, 3000);
         }
     };
-
+    */
     /**
      * Display message in edit modal
      * @param {string} type - Message type ('success', 'danger', 'warning')
      * @param {string} message - Message text
      */
+    /*
     const display_edit_modal_message = (type, message) => {
         const message_container = document.getElementById('edit-media-message');
 
@@ -947,16 +951,19 @@ const repoModalsModule = (function() {
             }, 3000);
         }
     };
+    */
 
     /**
      * Clear edit modal message
      */
+    /*
     const clear_edit_modal_message = () => {
         const message_container = document.getElementById('edit-media-message');
         if (message_container) {
             message_container.innerHTML = '';
         }
     };
+    */
 
     /**
      * Update a media record
@@ -1076,9 +1083,21 @@ const repoModalsModule = (function() {
             if (image_el) {
                 image_el.src = '';
                 image_el.style.display = 'none';
+                image_el.style.cursor = '';
+                image_el.title = '';
+                image_el.onclick = null;
             }
             if (pdf_el) {
                 pdf_el.src = '';
+            }
+
+            // Remove repo handle hint if present
+            const container = document.getElementById('view-media-container');
+            if (container && container.parentNode) {
+                const hint = container.parentNode.querySelector('.repo-handle-hint');
+                if (hint) {
+                    hint.remove();
+                }
             }
 
             // Restore original info section HTML structure
@@ -1155,8 +1174,9 @@ const repoModalsModule = (function() {
      * @param {string} storage_filename - Storage filename for URL building
      * @param {string} ingest_method - Ingest method (upload, repository, etc.)
      * @param {string} repo_uuid - Repository item UUID (for repo items)
+     * @param {string} repo_handle - Repository handle URL (for repo items)
      */
-    obj.open_view_media_modal = function(uuid, name, filename, size, media_type, storage_filename, ingest_method, repo_uuid) {
+    obj.open_view_media_modal = function(uuid, name, filename, size, media_type, storage_filename, ingest_method, repo_uuid, repo_handle) {
         const modal_element = document.getElementById('view-media-modal');
 
         if (!modal_element) {
@@ -1226,6 +1246,7 @@ const repoModalsModule = (function() {
 
         // Build media URL based on ingest method
         let authenticated_url = null;
+        const is_repo_non_image = is_repo && (display_type === 'audio' || display_type === 'video' || display_type === 'pdf');
 
         if (is_repo && repo_uuid) {
             // Repository item: use repo thumbnail endpoint
@@ -1239,6 +1260,18 @@ const repoModalsModule = (function() {
             if (media_url) {
                 const token = authModule.get_user_token();
                 authenticated_url = media_url + (media_url.includes('?') ? '&' : '?') + 'token=' + encodeURIComponent(token || '');
+            }
+        }
+
+        // For repo audio/video/pdf without a thumbnail URL, use a static placeholder
+        if (is_repo_non_image && !authenticated_url) {
+            const static_path = '/exhibits-dashboard/static/images';
+            if (display_type === 'audio') {
+                authenticated_url = static_path + '/audio-tn.png';
+            } else if (display_type === 'video') {
+                authenticated_url = static_path + '/video-tn.png';
+            } else {
+                authenticated_url = static_path + '/pdf-tn.png';
             }
         }
 
@@ -1279,7 +1312,61 @@ const repoModalsModule = (function() {
         }
 
         // Load media based on detected type
-        if (display_type === 'image') {
+        if (is_repo_non_image) {
+            // Repository audio/video/pdf: show thumbnail with link to repo handle
+            if (image_el) {
+                const container = document.getElementById('view-media-container');
+                image_el.onload = function() {
+                    if (loading_el) loading_el.style.display = 'none';
+                    image_el.style.display = 'block';
+
+                    // Wrap image in a clickable link to repo handle
+                    if (repo_handle && container) {
+                        image_el.style.cursor = 'pointer';
+                        image_el.title = 'Click to open in repository';
+                        image_el.onclick = function(e) {
+                            e.preventDefault();
+                            window.open(repo_handle, '_blank', 'noopener,noreferrer');
+                        };
+
+                        // Add helper text below the image
+                        let link_hint = container.parentNode.querySelector('.repo-handle-hint');
+                        if (!link_hint) {
+                            link_hint = document.createElement('p');
+                            link_hint.className = 'repo-handle-hint text-muted small mt-2 text-center';
+                            link_hint.innerHTML = '<i class="fa fa-external-link" style="margin-right: 4px;" aria-hidden="true"></i>' +
+                                '<a href="' + escape_html(repo_handle) + '" target="_blank" rel="noopener noreferrer">View in repository</a>';
+                            // Insert after the container (which is a flex div) so the link appears below
+                            container.parentNode.insertBefore(link_hint, container.nextSibling);
+                        }
+                    }
+                };
+                image_el.onerror = function() {
+                    // Fallback to static placeholder on error
+                    const static_path = '/exhibits-dashboard/static/images';
+                    let fallback;
+                    if (display_type === 'audio') {
+                        fallback = static_path + '/audio-tn.png';
+                    } else if (display_type === 'video') {
+                        fallback = static_path + '/video-tn.png';
+                    } else {
+                        fallback = static_path + '/pdf-tn.png';
+                    }
+                    if (this.src !== fallback) {
+                        this.src = fallback;
+                    } else {
+                        if (loading_el) loading_el.style.display = 'none';
+                        if (error_el) {
+                            error_el.style.display = 'block';
+                            const error_text = document.getElementById('view-media-error-text');
+                            if (error_text) error_text.textContent = 'Unable to load thumbnail.';
+                        }
+                    }
+                };
+                image_el.src = authenticated_url;
+                image_el.alt = 'Thumbnail for ' + (name || 'media');
+            }
+        } else if (display_type === 'image') {
             // Load image
             if (image_el) {
                 image_el.onload = function() {

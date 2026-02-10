@@ -647,7 +647,17 @@ const repoServiceModule = (function() {
                     display_message('info', 'No results found for "' + escape_html(query) + '"');
                 }
 
-                render_search_results(results, total);
+                // Filter out collection records - only show object records
+                results = results.filter(item => {
+                    const object_type = (item.object_type || item.type || '').toLowerCase();
+                    return object_type !== 'collection';
+                });
+
+                if (results.length === 0 && total > 0) {
+                    display_message('info', 'No importable object records found for "' + escape_html(query) + '"');
+                }
+
+                render_search_results(results, results.length);
                 return { success: true, results: results, total: total };
             }
 
@@ -729,17 +739,15 @@ const repoServiceModule = (function() {
             // Open the repo import modal with selected items
             // The modal will handle individual saves and show the Done button when complete
             repoModalsModule.open_repo_media_modal(items, (saved_count) => {
-                // Callback when modal is closed
+                // Callback when modal is closed via Done button
                 if (saved_count > 0) {
-                    display_message('success', 'Successfully imported ' + saved_count + ' item(s) to media library');
-                    
+                    // Show a single success message in the search message area
+                    display_message('success', 'Import complete! ' + saved_count + ' item(s) added to your media library.');
+
                     // Clear search results after successful import
                     const results_container = document.getElementById('repo-search-results');
                     if (results_container) {
-                        results_container.innerHTML = '<div class="alert alert-success" role="alert">' +
-                            '<i class="fa fa-check-circle" style="margin-right: 8px;" aria-hidden="true"></i>' +
-                            'Import complete! ' + saved_count + ' item(s) added to your media library.' +
-                            '</div>';
+                        results_container.innerHTML = '';
                     }
 
                     // Refresh media library table if available

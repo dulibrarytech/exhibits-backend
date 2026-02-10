@@ -440,8 +440,9 @@ const mediaLibraryModule = (function() {
      * @param {string} storage_filename - Storage filename for URL building
      * @param {string} ingest_method - Ingest method (upload, repository, etc.)
      * @param {string} repo_uuid - Repository item UUID (for repo items)
+     * @param {string} repo_handle - Repository handle URL (for repo items)
      */
-    const handle_view_click = (uuid, name, filename, size, media_type, storage_filename, ingest_method, repo_uuid) => {
+    const handle_view_click = (uuid, name, filename, size, media_type, storage_filename, ingest_method, repo_uuid, repo_handle) => {
         if (!uuid) {
             console.error('No UUID provided for view');
             return;
@@ -449,13 +450,13 @@ const mediaLibraryModule = (function() {
 
         // Repository items: use repoModalsModule which handles repo thumbnail URLs
         if (ingest_method === 'repository' && typeof repoModalsModule !== 'undefined' && typeof repoModalsModule.open_view_media_modal === 'function') {
-            repoModalsModule.open_view_media_modal(uuid, name, filename, size, media_type, storage_filename, ingest_method, repo_uuid);
+            repoModalsModule.open_view_media_modal(uuid, name, filename, size, media_type, storage_filename, ingest_method, repo_uuid, repo_handle);
             return;
         }
 
         // Uploaded items: use mediaModalsModule
         if (typeof mediaModalsModule !== 'undefined' && typeof mediaModalsModule.open_view_media_modal === 'function') {
-            mediaModalsModule.open_view_media_modal(uuid, name, filename, size, media_type, storage_filename, ingest_method, repo_uuid);
+            mediaModalsModule.open_view_media_modal(uuid, name, filename, size, media_type, storage_filename, ingest_method, repo_uuid, repo_handle);
         } else {
             console.error('mediaModalsModule.open_view_media_modal not available');
         }
@@ -662,7 +663,8 @@ const mediaLibraryModule = (function() {
                 const storage_filename = this.getAttribute('data-storage-filename');
                 const ingest_method = this.getAttribute('data-ingest-method');
                 const repo_uuid = this.getAttribute('data-repo-uuid');
-                handle_view_click(uuid, name, filename, size, media_type, storage_filename, ingest_method, repo_uuid);
+                const repo_handle = this.getAttribute('data-repo-handle');
+                handle_view_click(uuid, name, filename, size, media_type, storage_filename, ingest_method, repo_uuid, repo_handle);
             });
         });
 
@@ -778,6 +780,7 @@ const mediaLibraryModule = (function() {
                     created_by: sanitize_html(record.created_by) || null,
                     upload_uuid: record.upload_uuid || null,
                     repo_uuid: record.repo_uuid || null,
+                    repo_handle: record.repo_handle || null,
                     size: record.size || 0,
                     size_display: format_file_size(record.size)
                 };
@@ -809,7 +812,7 @@ const mediaLibraryModule = (function() {
                                                  class="media-thumbnail media-thumbnail-clickable"
                                                  style="width: ${THUMBNAIL_SIZE.width}px; height: ${THUMBNAIL_SIZE.height}px; object-fit: cover; border-radius: 4px; margin-right: 10px; vertical-align: middle; cursor: pointer;"
                                                  loading="lazy"
-                                                 data-uuid="${row.uuid}" data-name="${sanitize_html(row.name)}" data-filename="${sanitize_html(row.filename)}" data-size="${row.size_display}" data-media-type="${row.media_type}" data-storage-filename="${row.storage_filename}" data-ingest-method="${row.ingest_method}" data-repo-uuid="${row.repo_uuid}" title="Click to view"
+                                                 data-uuid="${row.uuid}" data-name="${sanitize_html(row.name)}" data-filename="${sanitize_html(row.filename)}" data-size="${row.size_display}" data-media-type="${row.media_type}" data-storage-filename="${row.storage_filename}" data-ingest-method="${row.ingest_method}" data-repo-uuid="${row.repo_uuid}" data-repo-handle="${row.repo_handle || ''}" title="Click to view"
                                                  onerror="this.onerror=null; this.src='${PLACEHOLDER_IMAGE}';">`;
                                     } else {
                                         thumbnail_html = `
@@ -817,7 +820,7 @@ const mediaLibraryModule = (function() {
                                                  alt="Placeholder for ${display_name}"
                                                  class="media-thumbnail-placeholder media-thumbnail-clickable"
                                                  style="width: ${THUMBNAIL_SIZE.width}px; height: ${THUMBNAIL_SIZE.height}px; object-fit: cover; border-radius: 4px; margin-right: 10px; vertical-align: middle; cursor: pointer;"
-                                                 data-uuid="${row.uuid}" data-name="${sanitize_html(row.name)}" data-filename="${sanitize_html(row.filename)}" data-size="${row.size_display}" data-media-type="${row.media_type}" data-storage-filename="${row.storage_filename}" data-ingest-method="${row.ingest_method}" data-repo-uuid="${row.repo_uuid}" title="Click to view">`;
+                                                 data-uuid="${row.uuid}" data-name="${sanitize_html(row.name)}" data-filename="${sanitize_html(row.filename)}" data-size="${row.size_display}" data-media-type="${row.media_type}" data-storage-filename="${row.storage_filename}" data-ingest-method="${row.ingest_method}" data-repo-uuid="${row.repo_uuid}" data-repo-handle="${row.repo_handle || ''}" title="Click to view">`;
                                     }
                                 } else if (row.is_image && row.thumbnail_url) {
                                     // Image thumbnail with token for authentication
