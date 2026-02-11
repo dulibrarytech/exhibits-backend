@@ -27,7 +27,7 @@ const STORAGE_PATH = storage_config.storage_path;
 const MAX_FILE_SIZE = storage_config.upload_max;
 const MAX_FILES = 10;
 
-// Security: Define allowed file types (images and PDFs only)
+// Define allowed file types (images and PDFs only)
 // Note: Audio/video are imported from Kaltura, not uploaded directly
 const ALLOWED_MIME_TYPES = [
     'image/jpeg',
@@ -176,7 +176,7 @@ const handle_upload = async (req, res) => {
             path: path.join(STORAGE_PATH, file.filename),
             uploaded_at: new Date().toISOString()
         }));
-        // TODO: store data in DB / Queue?
+
         return res.status(201).json({
             success: true,
             count: uploaded_files.length,

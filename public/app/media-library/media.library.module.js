@@ -609,7 +609,7 @@ const mediaLibraryModule = (function() {
      * Setup action button event handlers and initialize dropdowns
      */
     const setup_action_handlers = () => {
-        // Inject CSS for dropdown positioning and thumbnail hover (only once)
+        // Inject CSS for dropdown positioning and thumbnail hover
         if (!document.getElementById('media-actions-dropdown-styles')) {
             const style = document.createElement('style');
             style.id = 'media-actions-dropdown-styles';
@@ -646,7 +646,7 @@ const mediaLibraryModule = (function() {
             }
         });
 
-        // Close dropdowns when clicking outside (works for both Bootstrap 4 and 5)
+        // Close dropdowns when clicking outside
         document.removeEventListener('click', close_open_dropdowns);
         document.addEventListener('click', close_open_dropdowns);
 
@@ -913,7 +913,7 @@ const mediaLibraryModule = (function() {
                         }
                     }
                 ],
-                order: [[2, 'desc']], // Sort by created date descending (newest first)
+                order: [[2, 'desc']], // Sort by created date descending
                 pageLength: 25,
                 lengthMenu: [[10, 25, 50, 100, -1], [10, 25, 50, 100, 'All']],
                 responsive: true,

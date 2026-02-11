@@ -211,7 +211,7 @@ const repoSubjectsModule = (function() {
     // ========================================
 
     /**
-     * Inject multi-select widget CSS (runs once)
+     * Inject multi-select widget CSS
      */
     const inject_styles = () => {
 
@@ -221,7 +221,6 @@ const repoSubjectsModule = (function() {
 
         const css = '' +
             '.ms-widget { position: relative; }' +
-
             '.ms-trigger {' +
             '  display: flex;' +
             '  align-items: center;' +
@@ -731,7 +730,7 @@ const repoSubjectsModule = (function() {
     };
 
     // ========================================
-    // SELECT → MULTI-SELECT UPGRADE
+    // MULTI-SELECT
     // ========================================
 
     /**
@@ -972,7 +971,7 @@ const repoSubjectsModule = (function() {
     };
 
     // ========================================
-    // BUILD HTML (for future refactored modals)
+    // BUILD HTML
     // ========================================
 
     /**

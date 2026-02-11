@@ -1,8 +1,4 @@
 /**
- * @fileoverview Repository Pagination Module
- * @module repo.pagination.module
- * @description Provides client-side pagination for repository search results
- * 
  * Copyright 2026 University of Denver
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -371,8 +367,3 @@ const repoPaginationModule = (function() {
     return obj;
 
 }());
-
-// Export for testing if in Node environment
-if (typeof module !== 'undefined' && module.exports) {
-    module.exports = repoPaginationModule;
-}

@@ -279,13 +279,6 @@ const mediaUploadsModule = (function() {
             dropzone_instance.removeAllFiles(true);
         }
 
-        // TODO:
-        // Refresh media list
-        if (typeof mediaLibraryModule !== 'undefined' && 
-            typeof mediaLibraryModule.display_media_items === 'function') {
-            mediaLibraryModule.display_media_items();
-        }
-
         // Show success message if any files were saved
         if (saved_count > 0) {
             const message_element = document.getElementById('message');

@@ -18,11 +18,12 @@
 
 'use strict';
 
-const STORAGE_CONFIG = require('../config/storage_config')();
-const HTTP = require('axios');
+// const STORAGE_CONFIG = require('../config/storage_config')();
+// const HTTP = require('axios');
 const KALTURA = require('kaltura-client');
-const CONFIG = require('../config/webservices_config')();
+// const CONFIG = require('../config/webservices_config')();
 const KALTURA_CONFIG = require('../config/kaltura_config')();
+
 const DB = require('../config/db_config')();
 const DB_TABLES = require('../config/db_tables_config')();
 const TABLES = DB_TABLES.exhibits;

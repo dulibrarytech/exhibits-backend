@@ -671,7 +671,7 @@ const repoModalsModule = (function() {
         // Setup individual save handlers
         setup_repo_individual_save_handlers();
 
-        // Populate subject and resource type dropdowns (upgrades selects to multi-select widgets)
+        // Populate subject and resource type dropdowns
         if (typeof repoSubjectsModule !== 'undefined') {
             repoSubjectsModule.populate_subjects_dropdowns(forms_container);
         }
@@ -697,7 +697,7 @@ const repoModalsModule = (function() {
 
         if (!modal_element) return;
 
-        // Try Bootstrap 5 first (check for getInstance method specifically)
+        // Try Bootstrap 5 first
         if (typeof bootstrap !== 'undefined' &&
             bootstrap.Modal &&
             typeof bootstrap.Modal.getInstance === 'function') {
@@ -836,7 +836,7 @@ const repoModalsModule = (function() {
     };
 
     /**
-     * Close the repo import modal (public method)
+     * Close the repo import modal
      */
     obj.close_repo_media_modal = function() {
         close_repo_modal();
@@ -858,112 +858,6 @@ const repoModalsModule = (function() {
     obj.get_items_data = function() {
         return imported_items_data;
     };
-
-    // ========================================
-    // ORIGINAL MODAL FUNCTIONALITY
-    // ========================================
-  // TODO: remove unused functionality
-    /**
-     * Update modal footer status
-     */
-    /*
-    const update_modal_status = () => {
-
-        const validation_message = document.getElementById('modal-validation-message');
-        const done_btn = document.getElementById('uploaded-media-done-btn');
-        const total = imported_items_data.length;
-
-        if (validation_message) {
-            if (saved_items_count === total) {
-                validation_message.innerHTML = '<i class="fa fa-check-circle text-success" style="margin-right: 6px;"></i>All files saved!';
-            } else {
-                validation_message.textContent = saved_items_count + ' of ' + total + ' files saved';
-            }
-        }
-
-        if (done_btn) {
-            if (saved_items_count === total && total > 0) {
-                done_btn.style.display = 'inline-block';
-            } else {
-                done_btn.style.display = 'none';
-            }
-        }
-    };
-    */
-
-    /**
-     * Display status message in card
-     * @param {HTMLElement} card - The card element
-     * @param {string} type - Message type ('success', 'danger', 'warning')
-     * @param {string} message - Message text
-     */
-    /*
-    const display_card_message = (card, type, message) => {
-        // Find or create message container
-        let message_container = card.querySelector('.card-message');
-
-        if (!message_container) {
-            message_container = document.createElement('div');
-            message_container.className = 'card-message mt-2';
-            const card_body = card.querySelector('.card-body');
-            if (card_body) {
-                card_body.appendChild(message_container);
-            }
-        }
-
-        message_container.innerHTML = '<div class="alert alert-' + type + ' mb-0" role="alert">' +
-            '<i class="fa fa-' + (type === 'success' ? 'check' : type === 'danger' ? 'exclamation-circle' : 'warning') + '" style="margin-right: 6px;"></i>' +
-            escape_html(message) +
-            '</div>';
-
-        // Auto-hide success messages
-        if (type === 'success') {
-            setTimeout(() => {
-                if (message_container.parentNode) {
-                    message_container.innerHTML = '';
-                }
-            }, 3000);
-        }
-    };
-    */
-    /**
-     * Display message in edit modal
-     * @param {string} type - Message type ('success', 'danger', 'warning')
-     * @param {string} message - Message text
-     */
-    /*
-    const display_edit_modal_message = (type, message) => {
-        const message_container = document.getElementById('edit-media-message');
-
-        if (!message_container) return;
-
-        message_container.innerHTML = '<div class="alert alert-' + type + ' mb-0" role="alert">' +
-            '<i class="fa fa-' + (type === 'success' ? 'check' : type === 'danger' ? 'exclamation-circle' : 'warning') + '" style="margin-right: 6px;"></i>' +
-            escape_html(message) +
-            '</div>';
-
-        // Auto-hide success messages
-        if (type === 'success') {
-            setTimeout(() => {
-                if (message_container) {
-                    message_container.innerHTML = '';
-                }
-            }, 3000);
-        }
-    };
-    */
-
-    /**
-     * Clear edit modal message
-     */
-    /*
-    const clear_edit_modal_message = () => {
-        const message_container = document.getElementById('edit-media-message');
-        if (message_container) {
-            message_container.innerHTML = '';
-        }
-    };
-    */
 
     /**
      * Update a media record

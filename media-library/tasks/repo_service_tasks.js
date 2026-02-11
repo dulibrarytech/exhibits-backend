@@ -484,7 +484,7 @@ const Repo_service_tasks = class {
         }
     }
 
-    /**
+    /** TODO
      * Retrieves a single record by UUID from the index
      * @param {string} uuid - Record UUID
      * @param {Object} [options={}] - Get options
@@ -598,8 +598,6 @@ const Repo_service_tasks = class {
             const SCROLL_SIZE = 1000;
 
             // Initial search - get all documents that have subjects with terms
-            // Note: display_record.subjects is not mapped as nested, so we fetch source
-            // and filter/group in application code for accurate term-type correlation
             const initial_response = await this._with_timeout(
                 this.CLIENT.search({
                     index: this.INDEX,

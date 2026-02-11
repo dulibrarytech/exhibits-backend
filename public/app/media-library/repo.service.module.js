@@ -573,7 +573,9 @@ const repoServiceModule = (function() {
      * @returns {Promise<Object>} Search result
      */
     obj.search = async function(query) {
+
         try {
+
             if (!query || query.trim().length === 0) {
                 display_message('warning', 'Please enter a search term');
                 return { success: false, message: 'No search term' };

@@ -102,10 +102,6 @@ exports.get_media = async function (req, res) {
     try {
 
         const filename = req.params.filename;
-        console.log(filename);
-        // Note: Token verification is handled by TOKEN.verify middleware in routes.js
-        // The token can be passed via header (x-access-token) or query parameter (token)
-        // This allows img src URLs to include ?token=xxx for authentication
 
         // Validate filename
         if (!is_valid_filename(filename)) {
@@ -495,7 +491,7 @@ exports.search_repository = async function (req, res) {
     try {
 
         // Extract search term from query parameter
-        const term = req.query.q || req.query.term || req.query.search;
+        const term = req.query.q; // TODO || req.query.term || req.query.search;
 
         // Validate search term is provided
         if (!term) {
