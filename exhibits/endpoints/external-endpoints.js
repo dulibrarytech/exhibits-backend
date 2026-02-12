@@ -3,17 +3,17 @@
 const { APP_PATH } = require('./endpoints_config');
 
 module.exports = {
-    repo_items: {
+    repo_items: { // TODO: moved to media library
         description: 'Retrieves repository item metadata',
         endpoint: `${APP_PATH}/repo/:uuid`,
         params: 'token or api_key, gets repository item metadata'
     },
-    kaltura_items: {
+    kaltura_items: { // TODO: move to media-endpoints
         description: 'Retrieves Kaltura item metadata',
         endpoint: `${APP_PATH}/kaltura/:entry_id`,
         params: 'token or api_key, gets Kaltura item metadata'
     },
-    item_subjects: {
+    item_subjects: { // TODO: moved to media library
         description: 'Retrieves Subject terms',
         endpoint: `${APP_PATH}/subjects`,
         params: 'token or api_key, gets subject terms from specialcollections.du.edu'

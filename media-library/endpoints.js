@@ -35,20 +35,20 @@ const ENDPOINTS = {
         },
         put: {
             description: 'Updates media record',
-            endpoint: `${APP_PATH}${PREFIX}${VERSION}${ENDPOINT}/:media_id`,
+            endpoint: `${APP_PATH}${PREFIX}${VERSION}${ENDPOINT}/record/:media_id`,
             params: 'token or api_key, media_id',
             body: 'media data'
         },
         delete: {
             description: 'Deletes media record',
-            endpoint: `${APP_PATH}${PREFIX}${VERSION}${ENDPOINT}/:media_id`,
+            endpoint: `${APP_PATH}${PREFIX}${VERSION}${ENDPOINT}/record/:media_id`,
             params: 'token or api_key, media_id'
         }
     },
     media_record: {
         get: {
             description: 'Retrieves a single media record by UUID',
-            endpoint: `${APP_PATH}${PREFIX}${VERSION}${ENDPOINT}/:media_id`,
+            endpoint: `${APP_PATH}${PREFIX}${VERSION}${ENDPOINT}/record/:media_id`,
             params: 'token or api_key, media_id (UUID)'
         }
     },
@@ -86,7 +86,14 @@ const ENDPOINTS = {
             endpoint: `${APP_PATH}${PREFIX}${VERSION}${ENDPOINT}/repo/resource-types`,
             params: 'token or api_key, optional type query parameter'
         }
-    }
+    },
+    kaltura_media: {
+        get: {
+            description: 'Gets Kaltura media metadata by entry ID',
+            endpoint: `${APP_PATH}${PREFIX}${VERSION}${ENDPOINT}/kaltura/:entry_id`,
+            params: 'token or api_key, entry_id (path parameter)'
+        }
+    },
 };
 
 module.exports = () => {

@@ -20,13 +20,15 @@
 
 const FS = require('fs');
 const PATH = require('path');
-const STORAGE_CONFIG = require('../config/storage_config')();
+// const STORAGE_CONFIG = require('../config/storage_config')();
 const MEDIA_MODEL = require('../media-library/model');
-const ITEM_MODEL = require('../exhibits/items_model');
+// const ITEM_MODEL = require('../exhibits/items_model');
 const REPO_SERVICE = require('../media-library/repo-service');
+const KALTURA_SERVICE = require('../media-library/kaltura-service');
 const AUTHORIZE = require('../auth/authorize');
 const LOGGER = require('../libs/log4');
 const VALIDATOR = require("validator");
+
 
 // Allowed MIME types for media files
 const ALLOWED_MIME_TYPES = {
@@ -774,6 +776,71 @@ exports.get_resource_types = async function (req, res) {
                 resource_types: [],
                 total: 0
             }
+        });
+    }
+};
+
+/**
+ * Gets Kaltura media metadata by entry ID
+ * GET /api/v1/media/library/kaltura/:entry_id
+ *
+ * Path Parameters:
+ * - entry_id: Kaltura entry ID (required)
+ *
+ * @param {Object} req - Express request object
+ * @param {Object} res - Express response object
+ * @returns {Promise<void>}
+ */
+exports.get_kaltura_media = async function (req, res) {
+
+    try {
+
+        // Extract entry_id from path parameter
+        const entry_id = req.params.entry_id;
+
+        // Validate entry_id is provided
+        if (!entry_id) {
+            LOGGER.module().warn('WARNING: [/media-library/controller (get_kaltura_media)] Missing entry ID');
+            return res.status(400).json({
+                success: false,
+                message: 'Entry ID is required',
+                data: null
+            });
+        }
+
+        LOGGER.module().info(`INFO: [/media-library/controller (get_kaltura_media)] Fetching Kaltura media for entry ID: ${entry_id}`);
+
+        // Call Kaltura service to get media metadata
+        const result = await KALTURA_SERVICE.get_kaltura_media(entry_id);
+
+        if (!result || !result.success) {
+            LOGGER.module().warn(`WARNING: [/media-library/controller (get_kaltura_media)] Failed: ${result?.message}`);
+
+            // Determine appropriate status code based on failure reason
+            const status_code = result?.message?.includes('Unsupported media type') ? 422
+                : result?.message?.includes('not found') ? 404
+                : 200;
+
+            return res.status(status_code).json({
+                success: false,
+                message: result?.message || 'Failed to retrieve Kaltura media metadata',
+                data: null
+            });
+        }
+
+        return res.status(200).json({
+            success: true,
+            message: result.message,
+            data: result.media
+        });
+
+    } catch (error) {
+        LOGGER.module().error(`ERROR: [/media-library/controller (get_kaltura_media)] ${error.message}`);
+
+        return res.status(500).json({
+            success: false,
+            message: 'Internal server error retrieving Kaltura media',
+            data: null
         });
     }
 };

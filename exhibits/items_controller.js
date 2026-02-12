@@ -521,6 +521,7 @@ exports.suppress_item_record = async function (req, res) {
     }
 };
 
+// TODO: deprecate - moved to media library module
 exports.get_repo_item_record = async function (req, res) {
 
     try {
@@ -571,6 +572,7 @@ exports.get_repo_item_record = async function (req, res) {
     }
 };
 
+// TODO: Deprecate - move to media library module
 exports.get_kaltura_item_record = async function (req, res) {
 
     try {

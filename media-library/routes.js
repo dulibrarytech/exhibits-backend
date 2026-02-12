@@ -169,6 +169,19 @@ module.exports = function (app) {
         );
 
     // ========================================
+    // KALTURA MEDIA
+    // ========================================
+
+    // Get Kaltura media metadata by entry ID
+    // GET /api/v1/media/library/kaltura/:entry_id
+    app.route(ENDPOINTS.kaltura_media.get.endpoint)
+        .get(
+            rate_limits.read_operations,
+            TOKEN.verify,
+            async_handler(CONTROLLER.get_kaltura_media)
+        );
+
+    // ========================================
     // ERROR HANDLING
     // ========================================
 

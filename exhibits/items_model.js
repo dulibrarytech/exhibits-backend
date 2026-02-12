@@ -922,7 +922,7 @@ const suppress_item_record = async (exhibit_id, item_id) => {
     }
 };
 
-/**
+/** TODO: deprecate - moved to media library module
  * Gets repository item metadata
  * @param {string} uuid - Repository item UUID
  * @returns {Promise<*>} HTTP response
@@ -956,7 +956,7 @@ exports.get_repo_item_record = async (uuid) => {
     }
 };
 
-/**
+/** TODO: move to media library module
  * Gets Kaltura session (promisified)
  * @param {Object} config - Kaltura configuration
  * @param {Object} client - Kaltura client

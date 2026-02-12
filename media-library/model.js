@@ -20,9 +20,6 @@
 
 // const STORAGE_CONFIG = require('../config/storage_config')();
 // const HTTP = require('axios');
-const KALTURA = require('kaltura-client');
-// const CONFIG = require('../config/webservices_config')();
-const KALTURA_CONFIG = require('../config/kaltura_config')();
 
 const DB = require('../config/db_config')();
 const DB_TABLES = require('../config/db_tables_config')();
@@ -320,7 +317,7 @@ exports.delete_media_record = async (media_id, deleted_by = null) => {
     }
 };
 
-/**
+/** TODO: move to repo-service
  * Searches the digital repository for records matching the search term
  * @param {string} term - Search term
  * @param {Object} [options={}] - Search options
