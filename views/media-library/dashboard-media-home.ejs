@@ -280,6 +280,8 @@
 <%- include('partials/modal-uploaded-media-forms.ejs'); %>
 <!-- Repo Media Modal -->
 <%- include('partials/modal-repo-media-forms.ejs'); %>
+<!-- Kaltura Media Modal -->
+<%- include('partials/modal-kaltura-media-forms.ejs'); %>
 <!-- Edit Media Modal -->
 <%- include('partials/modal-edit-media-form.ejs'); %>
 <%- include('partials/modal-delete-media-confirm') %>
@@ -318,6 +320,12 @@
 <!-- Repository Service Module -->
 <script src="/exhibits-dashboard/static/app/media-library/repo.service.module.js?<%=build_version%>"></script>
 
+<!-- Kaltura Modals Module -->
+<script src="/exhibits-dashboard/static/app/media-library/modals.kaltura.module.js?<%=build_version%>"></script>
+
+<!-- Kaltura Service Module -->
+<script src="/exhibits-dashboard/static/app/media-library/kaltura.service.module.js?<%=build_version%>"></script>
+
 <!-- Media Library Module -->
 <script src="/exhibits-dashboard/static/app/media-library/media.library.module.js?<%=build_version%>"></script>
 
@@ -336,6 +344,15 @@
         // Initialize repo service module (will also init pagination module)
         if (typeof repoServiceModule !== 'undefined') {
             repoServiceModule.init();
+        }
+
+        // Initialize Kaltura modules
+        if (typeof kalturaModalsModule !== 'undefined') {
+            kalturaModalsModule.init();
+        }
+
+        if (typeof kalturaServiceModule !== 'undefined') {
+            kalturaServiceModule.init();
         }
     });
 </script>

@@ -278,7 +278,7 @@ const Media_record_tasks = class {
             'media_type', 'mime_type', 'filename', 'original_filename',
             'file_size', 'size', 'topics', 'genre_form', 'places', 'item_type',
             'topics_subjects', 'genre_form_subjects', 'places_subjects',
-            'pdf_open_to_page', 'is_published', 'metadata', 'tags', 'updated_by'
+            'is_published', 'metadata', 'tags', 'updated_by'
         ];
 
         try {

@@ -247,7 +247,6 @@ const mediaUploadsModule = (function() {
         });
 
         hide_element(document.getElementById('item-media-trash'));
-        hide_element(document.getElementById('toggle-open-to-page'));
         uploaded_files_data = [];
     };
 
@@ -434,8 +433,7 @@ const mediaUploadsModule = (function() {
                     item_media: document.getElementById('item-media'),
                     filename_display: document.getElementById('item-media-filename-display'),
                     media_trash: document.getElementById('item-media-trash'),
-                    thumbnail_display: document.getElementById('item-media-thumbnail-image-display'),
-                    toggle_open_to_page: document.getElementById('toggle-open-to-page')
+                    thumbnail_display: document.getElementById('item-media-thumbnail-image-display')
                 };
 
                 if (!response || !response.success || !response.files || response.files.length === 0) {
@@ -495,10 +493,6 @@ const mediaUploadsModule = (function() {
                 }
                 
                 show_element(elements.media_trash);
-
-                if (media_type === 'pdf' && elements.toggle_open_to_page) {
-                    show_element(elements.toggle_open_to_page, 'block');
-                }
 
                 setTimeout(function() {
                     const thumbnail_url = get_thumbnail_url_for_media(media_type, filename);

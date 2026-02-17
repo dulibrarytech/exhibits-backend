@@ -402,23 +402,6 @@ const mediaModalsModule = (function() {
                 '</div>';
         }
 
-        // PDF open to page field HTML (only for PDFs)
-        let pdf_page_html = '';
-        if (is_pdf) {
-            pdf_page_html = '<div class="col-12 mb-3">' +
-                '<div class="col-sm-4 my-1">' +
-                '<label class="sr-only" for="edit-pdf-open-to-page">Open PDF to page</label>' +
-                '<div class="input-group">' +
-                '<div class="input-group-prepend">' +
-                '<div class="input-group-text">Open PDF to page</div>' +
-                '</div>' +
-                '<input type="number" class="form-control" id="edit-pdf-open-to-page" name="pdf_open_to_page" min="1" value="' + (record.pdf_open_to_page || 1) + '">' +
-                '</div>' +
-                '</div>' +
-                '<small class="form-text text-muted"><i class="fa fa-exclamation-circle"></i> <em>The viewer will automatically open to the page entered</em></small>' +
-                '</div>';
-        }
-
         // Build the form HTML
         let html = '<div class="row">';
         
@@ -489,13 +472,6 @@ const mediaModalsModule = (function() {
         html += '<option value="">Select item type...</option>';
         html += '</select>';
         html += '</div></div>';
-        
-        // PDF open to page field (PDFs only)
-        if (is_pdf) {
-            html += '<div class="row">';
-            html += pdf_page_html;
-            html += '</div>';
-        }
 
         // Hidden fields
         html += '<input type="hidden" id="edit-file-uuid" name="uuid" value="' + escape_html(record.uuid || '') + '">';
@@ -540,9 +516,7 @@ const mediaModalsModule = (function() {
         const data = {};
 
         for (const [key, value] of form_data.entries()) {
-            if (key === 'pdf_open_to_page') {
-                data[key] = value ? parseInt(value, 10) : null;
-            } else if (key !== 'uuid') {
+            if (key !== 'uuid') {
                 data[key] = value;
             }
         }
@@ -801,7 +775,7 @@ const mediaModalsModule = (function() {
         const data = {};
         for (const [key, value] of form_data.entries()) {
             // Handle numeric fields
-            if (key === 'size' || key === 'pdf_open_to_page') {
+            if (key === 'size') {
                 data[key] = value ? parseInt(value, 10) : null;
             } else {
                 data[key] = value;
@@ -967,23 +941,6 @@ const mediaModalsModule = (function() {
                 '</div>';
         }
 
-        // PDF open to page field HTML (only for PDFs)
-        let pdf_page_html = '';
-        if (is_pdf) {
-            pdf_page_html = '<div class="col-12 mb-3">' +
-                '<div class="col-sm-4 my-1">' +
-                '<label class="sr-only" for="pdf-open-to-page-' + index + '">Open PDF to page</label>' +
-                '<div class="input-group">' +
-                '<div class="input-group-prepend">' +
-                '<div class="input-group-text">Open PDF to page</div>' +
-                '</div>' +
-                '<input type="number" class="form-control" id="pdf-open-to-page-' + index + '" name="pdf_open_to_page" min="1" value="1">' +
-                '</div>' +
-                '</div>' +
-                '<small class="form-text text-muted"><i class="fa fa-exclamation-circle"></i> <em>The viewer will automatically open to the page entered</em></small>' +
-                '</div>';
-        }
-
         // Build the complete card HTML
         let html = '<div class="file-form-card card mb-4" data-file-index="' + index + '">';
         
@@ -1059,13 +1016,6 @@ const mediaModalsModule = (function() {
         html += '<option value="">Select item type...</option>';
         html += '</select>';
         html += '</div></div>';
-        
-        // PDF open to page field (PDFs only)
-        if (is_pdf) {
-            html += '<div class="row">';
-            html += pdf_page_html;
-            html += '</div>';
-        }
         
         // Hidden fields
         html += '<input type="hidden" class="file-filename" name="filename" value="' + escaped_filename + '">';
