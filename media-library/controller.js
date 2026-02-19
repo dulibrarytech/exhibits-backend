@@ -25,6 +25,7 @@ const MEDIA_MODEL = require('../media-library/model');
 // const ITEM_MODEL = require('../exhibits/items_model');
 const REPO_SERVICE = require('../media-library/repo-service');
 const KALTURA_SERVICE = require('../media-library/kaltura-service');
+const KALTURA_CONFIG = require('../config/kaltura_config')();
 const AUTHORIZE = require('../auth/authorize');
 const LOGGER = require('../libs/log4');
 const VALIDATOR = require("validator");
@@ -840,6 +841,53 @@ exports.get_kaltura_media = async function (req, res) {
         return res.status(500).json({
             success: false,
             message: 'Internal server error retrieving Kaltura media',
+            data: null
+        });
+    }
+};
+
+/**
+ * Gets Kaltura player configuration (non-secret values for iframe embed)
+ * GET /api/v1/media/library/kaltura/config/player
+ *
+ * Returns partner_id and uiconf_id needed to construct the Kaltura player iframe URL.
+ * These are non-secret values safe for client-side use.
+ *
+ * @param {Object} req - Express request object
+ * @param {Object} res - Express response object
+ * @returns {Promise<void>}
+ */
+exports.get_kaltura_config = async function (req, res) {
+
+    try {
+
+        const partner_id = KALTURA_CONFIG.kaltura_partner_id || '';
+        const uiconf_id = KALTURA_CONFIG.kaltura_conf_ui_id || '';
+
+        if (!partner_id || !uiconf_id) {
+            LOGGER.module().warn('WARNING: [/media-library/controller (get_kaltura_config)] Kaltura player config incomplete');
+            return res.status(200).json({
+                success: false,
+                message: 'Kaltura player configuration is incomplete',
+                data: null
+            });
+        }
+
+        return res.status(200).json({
+            success: true,
+            message: 'Kaltura player configuration retrieved',
+            data: {
+                partner_id: partner_id,
+                uiconf_id: uiconf_id
+            }
+        });
+
+    } catch (error) {
+        LOGGER.module().error(`ERROR: [/media-library/controller (get_kaltura_config)] ${error.message}`);
+
+        return res.status(500).json({
+            success: false,
+            message: 'Internal server error retrieving Kaltura configuration',
             data: null
         });
     }

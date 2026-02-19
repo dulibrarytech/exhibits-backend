@@ -36,6 +36,96 @@ const kalturaModalsModule = (function() {
         INTERNAL_ERROR: 500
     };
 
+    // Kaltura player configuration (fetched from API and cached)
+    let kaltura_player_config = null;
+
+    /**
+     * Fetch Kaltura player configuration from the API
+     * Caches the result so subsequent calls return immediately
+     * @returns {Promise<Object|null>} Config object with partner_id and uiconf_id, or null on failure
+     */
+    const fetch_kaltura_player_config = async () => {
+
+        // Return cached config if already fetched
+        if (kaltura_player_config) {
+            return kaltura_player_config;
+        }
+
+        try {
+
+            const token = authModule.get_user_token();
+
+            if (!token || token === false) {
+                console.error('Cannot fetch Kaltura config: no auth token');
+                return null;
+            }
+
+            // Build endpoint URL
+            let config_endpoint = '';
+
+            if (EXHIBITS_ENDPOINTS?.kaltura_config?.get?.endpoint) {
+                config_endpoint = EXHIBITS_ENDPOINTS.kaltura_config.get.endpoint;
+            } else {
+                // Fallback: construct URL directly
+                config_endpoint = APP_PATH + '/api/v1/media/library/kaltura/config/player';
+            }
+
+            const response = await httpModule.req({
+                method: 'GET',
+                url: config_endpoint,
+                headers: {
+                    'Content-Type': 'application/json',
+                    'x-access-token': token
+                },
+                timeout: 15000,
+                validateStatus: (status) => status >= 200 && status < 600
+            });
+
+            if (response && response.status === HTTP_STATUS.OK && response.data?.success && response.data?.data) {
+                kaltura_player_config = {
+                    partner_id: response.data.data.partner_id || '',
+                    uiconf_id: response.data.data.uiconf_id || ''
+                };
+                return kaltura_player_config;
+            }
+
+            console.error('Failed to fetch Kaltura player config:', response?.data?.message || 'Unknown error');
+            return null;
+
+        } catch (error) {
+            console.error('Error fetching Kaltura player config:', error);
+            return null;
+        }
+    };
+
+    /**
+     * Build the Kaltura iframe embed URL for a given entry ID
+     * Uses the v2 (kWidget/Universal Studio) embed path
+     * @param {string} entry_id - Kaltura entry ID
+     * @param {Object} config - Player config with partner_id and uiconf_id
+     * @returns {string|null} Embed URL or null if config is missing
+     */
+    const build_player_embed_url = (entry_id, config) => {
+
+        const partner_id = config?.partner_id || '';
+        const uiconf_id = config?.uiconf_id || '';
+
+        if (!partner_id || !uiconf_id || !entry_id) {
+            console.error('Missing Kaltura player config', { partner_id, uiconf_id, entry_id });
+            return null;
+        }
+
+        const encoded_pid = encodeURIComponent(partner_id);
+        const encoded_uiconf = encodeURIComponent(uiconf_id);
+        const encoded_entry = encodeURIComponent(entry_id);
+
+        return 'https://cdnapisec.kaltura.com/p/' + encoded_pid +
+            '/sp/' + encoded_pid + '00' +
+            '/embedIframeJs/uiconf_id/' + encoded_uiconf +
+            '/partner_id/' + encoded_pid +
+            '?iframeembed=true&entry_id=' + encoded_entry;
+    };
+
     /**
      * Get application path safely
      */
@@ -61,6 +151,18 @@ const kalturaModalsModule = (function() {
         const div = document.createElement('div');
         div.textContent = str;
         return div.innerHTML;
+    };
+
+    /**
+     * Strip HTML tags from a string, returning only the text content
+     * @param {string} str - String potentially containing HTML
+     * @returns {string} Plain text with all HTML tags removed
+     */
+    const strip_html = (str) => {
+        if (!str) return '';
+        const div = document.createElement('div');
+        div.innerHTML = str;
+        return div.textContent || div.innerText || '';
     };
 
     /**
@@ -108,8 +210,8 @@ const kalturaModalsModule = (function() {
         if (!media_data) return '';
 
         const entry_id = escape_html(media_data.entry_id || '');
-        const title = escape_html(media_data.title || '');
-        const description = escape_html(media_data.description || '');
+        const title = escape_html(strip_html(media_data.title || ''));
+        const description = escape_html(strip_html(media_data.description || ''));
         const item_type = media_data.item_type || '';
         const type_icon = get_item_type_icon(item_type);
         const type_label = get_item_type_label(item_type);
@@ -304,7 +406,7 @@ const kalturaModalsModule = (function() {
             const record_data = {
                 name: name,
                 description: description,
-                entry_id: entry_id,
+                kaltura_entry_id: entry_id,
                 media_type: media_type,
                 mime_type: mime_type,
                 item_type: item_type,
@@ -617,6 +719,257 @@ const kalturaModalsModule = (function() {
         console.log('Kaltura media modal opened');
     };
 
+    // ========================================
+    // KALTURA PLAYER MODAL
+    // ========================================
+
+    // Stores the record currently displayed in the view modal (for Play button bridging)
+    let current_view_record = null;
+
+    /**
+     * Set the record data for the view modal's Play button
+     * Call this when opening the view modal for a Kaltura record
+     * @param {Object} record - Media record with kaltura_entry_id, name, item_type
+     */
+    obj.set_view_modal_record = function(record) {
+
+        current_view_record = record || null;
+
+        const play_btn = document.getElementById('view-kaltura-media-play-btn');
+
+        if (play_btn) {
+            // Show the Play button only when the record has a kaltura_entry_id
+            if (record && record.kaltura_entry_id) {
+                play_btn.style.display = 'inline-block';
+            } else {
+                play_btn.style.display = 'none';
+            }
+        }
+    };
+
+    /**
+     * Open the Kaltura player modal to play audio/video
+     * @param {Object} record - Media record object containing kaltura_entry_id, name, item_type/media_type
+     */
+    obj.open_kaltura_player_modal = async function(record) {
+
+        if (!record) {
+            console.error('No record provided for Kaltura player modal');
+            return;
+        }
+
+        const entry_id = record.kaltura_entry_id || '';
+        const name = record.name || 'Kaltura Media';
+        const item_type = record.item_type || record.media_type || '';
+
+        if (!entry_id) {
+            console.error('No kaltura_entry_id found in record');
+            return;
+        }
+
+        // Fetch player config from API (uses cache after first call)
+        const config = await fetch_kaltura_player_config();
+
+        if (!config) {
+            console.error('Could not retrieve Kaltura player config from API.');
+            return;
+        }
+
+        // Build embed URL
+        const embed_url = build_player_embed_url(entry_id, config);
+
+        if (!embed_url) {
+            console.error('Could not build Kaltura player embed URL. Check Kaltura config API response.');
+            return;
+        }
+
+        const modal_element = document.getElementById('kaltura-player-modal');
+
+        if (!modal_element) {
+            console.error('Kaltura player modal element not found');
+            return;
+        }
+
+        // Set modal content
+        const iframe = document.getElementById('kaltura-player-iframe');
+        const name_el = document.getElementById('kaltura-player-media-name');
+        const entry_id_el = document.getElementById('kaltura-player-entry-id');
+        const type_el = document.getElementById('kaltura-player-media-type');
+        const header_text = document.getElementById('kaltura-player-header-text');
+        const type_icon = document.getElementById('kaltura-player-type-icon');
+        const responsive_container = document.getElementById('kaltura-player-responsive');
+        const loading_el = document.getElementById('kaltura-player-loading');
+        const error_el = document.getElementById('kaltura-player-error');
+
+        // Populate info fields
+        if (name_el) name_el.textContent = escape_html(name);
+        if (entry_id_el) entry_id_el.textContent = escape_html(entry_id);
+
+        // Configure based on media type (audio vs video)
+        const is_audio = item_type === 'audio';
+
+        if (type_el) {
+            type_el.textContent = is_audio ? 'Audio' : 'Video';
+        }
+
+        if (header_text) {
+            header_text.textContent = escape_html(name);
+        }
+
+        if (type_icon) {
+            type_icon.className = is_audio
+                ? 'fa fa-music'
+                : 'fa fa-play-circle';
+            type_icon.style.marginRight = '8px';
+        }
+
+        // Toggle audio/video mode classes and aspect ratio
+        if (is_audio) {
+            modal_element.classList.add('kaltura-audio-mode');
+            if (responsive_container) {
+                responsive_container.classList.remove('embed-responsive-16by9');
+                responsive_container.classList.add('embed-responsive-audio');
+            }
+        } else {
+            modal_element.classList.remove('kaltura-audio-mode');
+            if (responsive_container) {
+                responsive_container.classList.remove('embed-responsive-audio');
+                responsive_container.classList.add('embed-responsive-16by9');
+            }
+        }
+
+        // Show loading, hide error
+        if (loading_el) loading_el.style.display = 'block';
+        if (error_el) {
+            error_el.style.display = 'none';
+            error_el.innerHTML = '';
+        }
+
+        // Set iframe src to load the player
+        if (iframe) {
+            iframe.src = '';
+            iframe.title = 'Kaltura media player - ' + escape_html(name);
+
+            // Listen for iframe load to hide loading indicator
+            iframe.onload = function() {
+                if (loading_el) loading_el.style.display = 'none';
+            };
+
+            iframe.onerror = function() {
+                if (loading_el) loading_el.style.display = 'none';
+                if (error_el) {
+                    error_el.style.display = 'block';
+                    error_el.innerHTML = '<div class="alert alert-danger mb-0" role="alert">' +
+                        '<i class="fa fa-exclamation-circle" style="margin-right: 8px;" aria-hidden="true"></i>' +
+                        'Unable to load the media player. Please try again.' +
+                        '</div>';
+                }
+            };
+
+            // Set src after attaching handlers
+            iframe.src = embed_url;
+        }
+
+        // Open modal
+        if (typeof bootstrap !== 'undefined' && bootstrap.Modal) {
+            const modal = new bootstrap.Modal(modal_element, {
+                backdrop: true,
+                keyboard: true
+            });
+            modal.show();
+        } else if (typeof $ !== 'undefined' && typeof $.fn.modal !== 'undefined') {
+            $(modal_element).modal({
+                backdrop: true,
+                keyboard: true
+            });
+            $(modal_element).modal('show');
+        } else {
+            // Manual fallback
+            modal_element.classList.add('show');
+            modal_element.style.display = 'block';
+            modal_element.setAttribute('aria-hidden', 'false');
+            modal_element.setAttribute('aria-modal', 'true');
+            document.body.classList.add('modal-open');
+
+            const backdrop = document.createElement('div');
+            backdrop.className = 'modal-backdrop fade show';
+            backdrop.id = 'kaltura-player-modal-backdrop';
+            document.body.appendChild(backdrop);
+        }
+
+        console.log('Kaltura player modal opened for entry:', entry_id);
+    };
+
+    /**
+     * Close the Kaltura player modal and stop playback
+     */
+    obj.close_kaltura_player_modal = function() {
+
+        const modal_element = document.getElementById('kaltura-player-modal');
+        if (!modal_element) return;
+
+        // CRITICAL: Clear iframe src to stop playback immediately
+        const iframe = document.getElementById('kaltura-player-iframe');
+        if (iframe) {
+            iframe.src = '';
+            iframe.onload = null;
+            iframe.onerror = null;
+        }
+
+        // Hide loading/error
+        const loading_el = document.getElementById('kaltura-player-loading');
+        const error_el = document.getElementById('kaltura-player-error');
+        if (loading_el) loading_el.style.display = 'none';
+        if (error_el) {
+            error_el.style.display = 'none';
+            error_el.innerHTML = '';
+        }
+
+        // Reset mode classes
+        modal_element.classList.remove('kaltura-audio-mode');
+
+        // Reset aspect ratio container
+        const responsive_container = document.getElementById('kaltura-player-responsive');
+        if (responsive_container) {
+            responsive_container.classList.remove('embed-responsive-audio');
+            responsive_container.classList.add('embed-responsive-16by9');
+        }
+
+        // Close via Bootstrap 5
+        if (typeof bootstrap !== 'undefined' && bootstrap.Modal &&
+            typeof bootstrap.Modal.getInstance === 'function') {
+            const modal = bootstrap.Modal.getInstance(modal_element);
+            if (modal) {
+                modal.hide();
+            }
+        }
+        // Close via Bootstrap 4 / jQuery
+        else if (typeof $ !== 'undefined' && typeof $.fn.modal !== 'undefined') {
+            $(modal_element).modal('hide');
+        }
+
+        // Manual cleanup after animation
+        setTimeout(() => {
+            modal_element.classList.remove('show');
+            modal_element.style.display = 'none';
+            modal_element.setAttribute('aria-hidden', 'true');
+            modal_element.removeAttribute('aria-modal');
+            document.body.classList.remove('modal-open');
+            document.body.style.removeProperty('padding-right');
+            document.body.style.removeProperty('overflow');
+
+            // Remove backdrop
+            const backdrops = document.querySelectorAll('.modal-backdrop');
+            backdrops.forEach(backdrop => backdrop.remove());
+        }, 150);
+
+        console.log('Kaltura player modal closed');
+    };
+
+    // ========================================
+    // KALTURA IMPORT MODAL
+    // ========================================
+
     /**
      * Close the Kaltura import modal (public method)
      */
@@ -631,6 +984,10 @@ const kalturaModalsModule = (function() {
      */
     const init_modal_events = () => {
 
+        // ========================================
+        // Import modal events
+        // ========================================
+
         // Done button
         const done_btn = document.getElementById('kaltura-media-done-btn');
         if (done_btn) {
@@ -643,6 +1000,102 @@ const kalturaModalsModule = (function() {
                 if (typeof callback === 'function') {
                     callback(true);
                 }
+            });
+        }
+
+        // ========================================
+        // Player modal events
+        // ========================================
+
+        // Close button (X) in header
+        const player_close_btn = document.getElementById('kaltura-player-close-btn');
+        if (player_close_btn) {
+            player_close_btn.addEventListener('click', function() {
+                obj.close_kaltura_player_modal();
+            });
+        }
+
+        // Cancel/Close button in footer
+        const player_cancel_btn = document.getElementById('kaltura-player-cancel-btn');
+        if (player_cancel_btn) {
+            player_cancel_btn.addEventListener('click', function() {
+                obj.close_kaltura_player_modal();
+            });
+        }
+
+        // Handle modal hidden event to ensure playback stops
+        // (covers Escape key, backdrop click, and programmatic close)
+        const player_modal = document.getElementById('kaltura-player-modal');
+        if (player_modal) {
+
+            // Bootstrap 4 jQuery event
+            if (typeof $ !== 'undefined' && typeof $.fn.modal !== 'undefined') {
+                $(player_modal).on('hidden.bs.modal', function() {
+                    const iframe = document.getElementById('kaltura-player-iframe');
+                    if (iframe && iframe.src) {
+                        iframe.src = '';
+                    }
+                });
+            }
+
+            // Bootstrap 5 native event
+            player_modal.addEventListener('hidden.bs.modal', function() {
+                const iframe = document.getElementById('kaltura-player-iframe');
+                if (iframe && iframe.src) {
+                    iframe.src = '';
+                }
+            });
+        }
+
+        // ========================================
+        // View modal Play button → opens player modal
+        // ========================================
+
+        const view_play_btn = document.getElementById('view-kaltura-media-play-btn');
+        if (view_play_btn) {
+            view_play_btn.addEventListener('click', function() {
+
+                if (!current_view_record || !current_view_record.kaltura_entry_id) {
+                    console.warn('No Kaltura record available for playback');
+                    return;
+                }
+
+                // Close the view modal first
+                const view_modal_el = document.getElementById('view-kaltura-media-modal');
+
+                if (typeof bootstrap !== 'undefined' && bootstrap.Modal &&
+                    typeof bootstrap.Modal.getInstance === 'function') {
+                    const view_modal = bootstrap.Modal.getInstance(view_modal_el);
+                    if (view_modal) view_modal.hide();
+                } else if (typeof $ !== 'undefined' && typeof $.fn.modal !== 'undefined') {
+                    $(view_modal_el).modal('hide');
+                }
+
+                // Open player modal after a brief delay for view modal to close
+                setTimeout(async () => {
+                    await obj.open_kaltura_player_modal(current_view_record);
+                }, 200);
+            });
+        }
+
+        // View modal close/cancel — reset the stored record
+        const view_close_btn = document.getElementById('view-kaltura-media-close-btn');
+        if (view_close_btn) {
+            view_close_btn.addEventListener('click', function() {
+                current_view_record = null;
+
+                const play_btn = document.getElementById('view-kaltura-media-play-btn');
+                if (play_btn) play_btn.style.display = 'none';
+            });
+        }
+
+        const view_cancel_btn = document.getElementById('view-kaltura-media-cancel-btn');
+        if (view_cancel_btn) {
+            view_cancel_btn.addEventListener('click', function() {
+                current_view_record = null;
+
+                const play_btn = document.getElementById('view-kaltura-media-play-btn');
+                if (play_btn) play_btn.style.display = 'none';
             });
         }
     };

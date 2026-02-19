@@ -240,8 +240,8 @@ const kalturaServiceModule = (function() {
                             if (kaltura_flag) kaltura_flag.value = '0';
 
                             // Refresh media library table
-                            if (typeof mediaLibraryModule !== 'undefined' && mediaLibraryModule.refresh_media_table) {
-                                mediaLibraryModule.refresh_media_table();
+                            if (typeof mediaLibraryModule !== 'undefined' && typeof mediaLibraryModule.refresh_media_records === 'function') {
+                                mediaLibraryModule.refresh_media_records();
                             }
                         }
                     });

@@ -94,6 +94,13 @@ const ENDPOINTS = {
             params: 'token or api_key, entry_id (path parameter)'
         }
     },
+    kaltura_config: {
+        get: {
+            description: 'Gets Kaltura player configuration (partner_id, uiconf_id)',
+            endpoint: `${APP_PATH}${PREFIX}${VERSION}${ENDPOINT}/kaltura/config/player`,
+            params: 'token or api_key'
+        }
+    },
 };
 
 module.exports = () => {

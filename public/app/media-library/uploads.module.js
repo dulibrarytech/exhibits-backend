@@ -144,8 +144,9 @@ const mediaUploadsModule = (function() {
         alert_div.className = 'alert alert-success d-flex align-items-center';
         alert_div.setAttribute('role', 'alert');
         const icon = document.createElement('i');
-        icon.className = 'fa fa-check-circle me-2';
+        icon.className = 'fa fa-check-circle mr-2';
         icon.setAttribute('aria-hidden', 'true');
+        icon.style.marginRight = '8px';
         alert_div.appendChild(icon);
         const text = document.createTextNode(message);
         alert_div.appendChild(text);
@@ -280,7 +281,7 @@ const mediaUploadsModule = (function() {
 
         // Show success message if any files were saved
         if (saved_count > 0) {
-            const message_element = document.getElementById('message');
+            const message_element = document.getElementById('upload-media-message');
             if (message_element) {
                 const file_word = saved_count === 1 ? 'file' : 'files';
                 display_upload_success(message_element, 'Media details saved successfully for ' + saved_count + ' ' + file_word);

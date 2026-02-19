@@ -25,13 +25,15 @@ const LOGGER = require('../libs/log4');
 const { rate_limits } = require('../config/rate_limits_loader');
 
 // Security headers middleware
+// NOTE: Content-Security-Policy is handled globally by Helmet (see helmet_config.js)
+// which includes frame-src directives for Kaltura player iframe embedding.
+// Do NOT set CSP here as it would override the global Helmet policy.
 const security_headers = (req, res, next) => {
     res.set({
         'X-Content-Type-Options': 'nosniff',
         'X-Frame-Options': 'SAMEORIGIN',
         'X-XSS-Protection': '1; mode=block',
-        'Strict-Transport-Security': 'max-age=31536000; includeSubDomains',
-        'Content-Security-Policy': "default-src 'self'"
+        'Strict-Transport-Security': 'max-age=31536000; includeSubDomains'
     });
     next();
 };
@@ -171,6 +173,17 @@ module.exports = function (app) {
     // ========================================
     // KALTURA MEDIA
     // ========================================
+
+    // Get Kaltura player configuration (partner_id, uiconf_id)
+    // GET /api/v1/media/library/kaltura/config/player
+    // NOTE: This route MUST be registered before /kaltura/:entry_id
+    // to prevent Express from matching "config" as an entry_id parameter
+    app.route(ENDPOINTS.kaltura_config.get.endpoint)
+        .get(
+            rate_limits.read_operations,
+            TOKEN.verify,
+            async_handler(CONTROLLER.get_kaltura_config)
+        );
 
     // Get Kaltura media metadata by entry ID
     // GET /api/v1/media/library/kaltura/:entry_id

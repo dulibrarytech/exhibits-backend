@@ -1,0 +1,68 @@
+<!-- View Kaltura Media Modal -->
+<div class="modal fade" 
+     id="view-kaltura-media-modal" 
+     tabindex="-1" 
+     role="dialog" 
+     aria-labelledby="view-kaltura-media-modal-title" 
+     aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered" role="document">
+        <div class="modal-content">
+            <div class="modal-header" style="display: flex; align-items: center; justify-content: space-between;">
+                <h4 class="modal-title mb-0" id="view-kaltura-media-modal-title" style="font-size: 1.5rem; font-weight: 500;">View Kaltura Media</h4>
+                <button type="button" 
+                        class="close ml-auto" 
+                        id="view-kaltura-media-close-btn"
+                        aria-label="Close"
+                        style="margin: 0; padding: 0;">
+                    <span aria-hidden="true" style="font-size: 1.5rem;">&times;</span>
+                </button>
+            </div>
+            <div class="modal-body">
+                <!-- Kaltura thumbnail container -->
+                <div id="view-kaltura-media-container" class="mb-3 d-flex justify-content-center align-items-center">
+                    <img id="view-kaltura-media-image" 
+                         src="" 
+                         alt="Kaltura media thumbnail" 
+                         class="img-fluid" 
+                         style="max-height: 280px; max-width: 360px; display: none; border-radius: 4px;">
+
+                    <!-- Placeholder when no thumbnail is available -->
+                    <div id="view-kaltura-media-placeholder" class="text-center text-muted" style="display: none; padding: 30px;">
+                        <i class="fa fa-film fa-3x" aria-hidden="true"></i>
+                        <p class="mt-3">No thumbnail available</p>
+                    </div>
+                </div>
+                
+                <!-- Kaltura media information -->
+                <div id="view-kaltura-media-info" class="text-muted small border-top pt-3 text-center">
+                    <p class="mb-1">
+                        <strong>Name:</strong> 
+                        <span id="view-kaltura-media-name">-</span>
+                    </p>
+                    <p class="mb-1">
+                        <strong>Entry ID:</strong> 
+                        <span id="view-kaltura-media-entry-id">-</span>
+                    </p>
+                    <p class="mb-0">
+                        <strong>Ingest Method:</strong> 
+                        <span id="view-kaltura-media-ingest-method">-</span>
+                    </p>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" 
+                        class="btn btn-primary" 
+                        id="view-kaltura-media-play-btn"
+                        style="display: none;">
+                    <i class="fa fa-play-circle" style="margin-right: 6px;" aria-hidden="true"></i>
+                    Play
+                </button>
+                <button type="button" 
+                        class="btn btn-secondary" 
+                        id="view-kaltura-media-cancel-btn">
+                    Close
+                </button>
+            </div>
+        </div>
+    </div>
+</div>

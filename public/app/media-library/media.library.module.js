@@ -431,6 +431,93 @@ const mediaLibraryModule = (function() {
     };
 
     /**
+     * Open the Kaltura view media modal
+     * @param {string} name - Media record name
+     * @param {string} kaltura_entry_id - Kaltura entry ID
+     * @param {string} ingest_method - Ingest method label
+     * @param {string} kaltura_thumbnail_url - Kaltura thumbnail URL
+     * @param {string} media_type - Media type (audio or video)
+     */
+    const open_kaltura_view_modal = (name, kaltura_entry_id, ingest_method, kaltura_thumbnail_url, media_type) => {
+
+        const modal = document.getElementById('view-kaltura-media-modal');
+
+        if (!modal) {
+            console.error('Kaltura view media modal not found');
+            return;
+        }
+
+        // Set the record data for the player Play button bridge
+        if (typeof kalturaModalsModule !== 'undefined' && typeof kalturaModalsModule.set_view_modal_record === 'function') {
+            kalturaModalsModule.set_view_modal_record({
+                kaltura_entry_id: kaltura_entry_id || '',
+                name: name || '',
+                item_type: media_type || ''
+            });
+        }
+
+        // Populate modal fields
+        const name_el = document.getElementById('view-kaltura-media-name');
+        const entry_id_el = document.getElementById('view-kaltura-media-entry-id');
+        const ingest_method_el = document.getElementById('view-kaltura-media-ingest-method');
+        const image_el = document.getElementById('view-kaltura-media-image');
+        const placeholder_el = document.getElementById('view-kaltura-media-placeholder');
+
+        if (name_el) name_el.textContent = name || '-';
+        if (entry_id_el) entry_id_el.textContent = kaltura_entry_id || '-';
+        if (ingest_method_el) ingest_method_el.textContent = ingest_method || 'Kaltura';
+
+        // Show thumbnail or placeholder
+        if (kaltura_thumbnail_url && image_el) {
+            image_el.src = kaltura_thumbnail_url;
+            image_el.alt = 'Thumbnail for ' + (name || 'Kaltura media');
+            image_el.style.display = 'block';
+            if (placeholder_el) placeholder_el.style.display = 'none';
+
+            image_el.onerror = function() {
+                this.style.display = 'none';
+                if (placeholder_el) placeholder_el.style.display = 'block';
+            };
+        } else {
+            if (image_el) image_el.style.display = 'none';
+            if (placeholder_el) placeholder_el.style.display = 'block';
+        }
+
+        // Show modal (Bootstrap 4)
+        if (typeof $ !== 'undefined' && typeof $.fn.modal !== 'undefined') {
+            $(modal).modal('show');
+        } else if (typeof bootstrap !== 'undefined' && bootstrap.Modal) {
+            const bs_modal = new bootstrap.Modal(modal);
+            bs_modal.show();
+        }
+    };
+
+    /**
+     * Initialize Kaltura view modal close handlers
+     */
+    const init_kaltura_view_modal = () => {
+
+        const modal = document.getElementById('view-kaltura-media-modal');
+
+        if (!modal) return;
+
+        const close_btn = document.getElementById('view-kaltura-media-close-btn');
+        const cancel_btn = document.getElementById('view-kaltura-media-cancel-btn');
+
+        const close_modal = () => {
+            if (typeof $ !== 'undefined' && typeof $.fn.modal !== 'undefined') {
+                $(modal).modal('hide');
+            } else if (typeof bootstrap !== 'undefined' && bootstrap.Modal) {
+                const bs_modal = bootstrap.Modal.getInstance(modal);
+                if (bs_modal) bs_modal.hide();
+            }
+        };
+
+        if (close_btn) close_btn.addEventListener('click', close_modal);
+        if (cancel_btn) cancel_btn.addEventListener('click', close_modal);
+    };
+
+    /**
      * Handle thumbnail click to view media
      * @param {string} uuid - Media record UUID
      * @param {string} name - Media record name
@@ -438,13 +525,31 @@ const mediaLibraryModule = (function() {
      * @param {string} size - Formatted file size
      * @param {string} media_type - Media type (image, pdf, etc.)
      * @param {string} storage_filename - Storage filename for URL building
-     * @param {string} ingest_method - Ingest method (upload, repository, etc.)
+     * @param {string} ingest_method - Ingest method (upload, repository, kaltura)
      * @param {string} repo_uuid - Repository item UUID (for repo items)
      * @param {string} repo_handle - Repository handle URL (for repo items)
+     * @param {string} kaltura_thumbnail_url - Kaltura thumbnail URL (for kaltura items)
+     * @param {string} kaltura_entry_id - Kaltura entry ID (for kaltura items)
      */
-    const handle_view_click = (uuid, name, filename, size, media_type, storage_filename, ingest_method, repo_uuid, repo_handle) => {
+    const handle_view_click = (uuid, name, filename, size, media_type, storage_filename, ingest_method, repo_uuid, repo_handle, kaltura_thumbnail_url, kaltura_entry_id) => {
         if (!uuid) {
             console.error('No UUID provided for view');
+            return;
+        }
+
+        // Kaltura items: open player modal directly
+        if (ingest_method === 'kaltura') {
+
+            if (typeof kalturaModalsModule !== 'undefined' && typeof kalturaModalsModule.open_kaltura_player_modal === 'function') {
+                kalturaModalsModule.open_kaltura_player_modal({
+                    kaltura_entry_id: kaltura_entry_id || '',
+                    name: name || '',
+                    item_type: media_type || ''
+                });
+            } else {
+                console.error('kalturaModalsModule.open_kaltura_player_modal not available');
+            }
+
             return;
         }
 
@@ -569,6 +674,24 @@ const mediaLibraryModule = (function() {
         const escaped_name = sanitize_html(name).replace(/'/g, "\\'").replace(/"/g, '&quot;');
         const escaped_filename = sanitize_html(filename).replace(/'/g, "\\'").replace(/"/g, '&quot;');
 
+        // Build Play action for Kaltura items
+        let play_action_html = '';
+
+        if (row.ingest_method === 'kaltura' && row.kaltura_entry_id) {
+            play_action_html = `
+                    <a class="dropdown-item btn-play-kaltura" 
+                       href="#" 
+                       data-uuid="${uuid}"
+                       data-name="${escaped_name}"
+                       data-kaltura-entry-id="${sanitize_html(row.kaltura_entry_id)}"
+                       data-media-type="${sanitize_html(row.media_type || '')}"
+                       style="font-size: 0.875rem;">
+                        <i class="fa fa-play-circle mr-2" aria-hidden="true" style="width: 16px;"></i>
+                        Play
+                    </a>
+                    <div class="dropdown-divider"></div>`;
+        }
+
         return `
             <div class="dropdown" style="display: inline-block; position: relative;">
                 <button type="button" 
@@ -583,6 +706,7 @@ const mediaLibraryModule = (function() {
                     <i class="fa fa-ellipsis-v" aria-hidden="true"></i>
                 </button>
                 <div class="dropdown-menu media-actions-menu" aria-label="Actions menu for ${escaped_name}">
+                    ${play_action_html}
                     <a class="dropdown-item btn-edit-media" 
                        href="#" 
                        data-uuid="${uuid}"
@@ -664,7 +788,9 @@ const mediaLibraryModule = (function() {
                 const ingest_method = this.getAttribute('data-ingest-method');
                 const repo_uuid = this.getAttribute('data-repo-uuid');
                 const repo_handle = this.getAttribute('data-repo-handle');
-                handle_view_click(uuid, name, filename, size, media_type, storage_filename, ingest_method, repo_uuid, repo_handle);
+                const kaltura_thumbnail_url = this.getAttribute('data-kaltura-thumbnail-url');
+                const kaltura_entry_id = this.getAttribute('data-kaltura-entry-id');
+                handle_view_click(uuid, name, filename, size, media_type, storage_filename, ingest_method, repo_uuid, repo_handle, kaltura_thumbnail_url, kaltura_entry_id);
             });
         });
 
@@ -676,6 +802,27 @@ const mediaLibraryModule = (function() {
                 close_open_dropdowns();
                 const uuid = this.getAttribute('data-uuid');
                 handle_edit_click(uuid);
+            });
+        });
+
+        // Play button handlers for Kaltura items (dropdown items)
+        document.querySelectorAll('.btn-play-kaltura').forEach(btn => {
+            btn.addEventListener('click', function(e) {
+                e.preventDefault();
+                e.stopPropagation();
+                close_open_dropdowns();
+
+                const record = {
+                    kaltura_entry_id: this.getAttribute('data-kaltura-entry-id'),
+                    name: this.getAttribute('data-name'),
+                    item_type: this.getAttribute('data-media-type') || ''
+                };
+
+                if (typeof kalturaModalsModule !== 'undefined' && typeof kalturaModalsModule.open_kaltura_player_modal === 'function') {
+                    kalturaModalsModule.open_kaltura_player_modal(record);
+                } else {
+                    console.error('kalturaModalsModule.open_kaltura_player_modal not available');
+                }
             });
         });
 
@@ -767,8 +914,8 @@ const mediaLibraryModule = (function() {
 
                 return {
                     uuid: record.uuid || null,
-                    name: sanitize_html(record.name) || 'Untitled',
-                    filename: sanitize_html(record.original_filename) || 'N/A',
+                    name: record.name || 'Untitled',
+                    filename: record.original_filename || 'N/A',
                     storage_filename: storage_filename || null,
                     thumbnail_url: storage_filename ? build_media_url(storage_filename) : null,
                     is_image: is_image_file(record.original_filename),
@@ -781,10 +928,14 @@ const mediaLibraryModule = (function() {
                     upload_uuid: record.upload_uuid || null,
                     repo_uuid: record.repo_uuid || null,
                     repo_handle: record.repo_handle || null,
+                    kaltura_thumbnail_url: record.kaltura_thumbnail_url || null,
+                    kaltura_entry_id: record.kaltura_entry_id || null,
                     size: record.size || 0,
                     size_display: format_file_size(record.size)
                 };
             });
+
+            console.log('DATA: ', table_data);
 
             // Initialize DataTable with configuration
             media_data_table = new DataTable('#items', {
@@ -822,6 +973,24 @@ const mediaLibraryModule = (function() {
                                                  style="width: ${THUMBNAIL_SIZE.width}px; height: ${THUMBNAIL_SIZE.height}px; object-fit: cover; border-radius: 4px; margin-right: 10px; vertical-align: middle; cursor: pointer;"
                                                  data-uuid="${row.uuid}" data-name="${sanitize_html(row.name)}" data-filename="${sanitize_html(row.filename)}" data-size="${row.size_display}" data-media-type="${row.media_type}" data-storage-filename="${row.storage_filename}" data-ingest-method="${row.ingest_method}" data-repo-uuid="${row.repo_uuid}" data-repo-handle="${row.repo_handle || ''}" title="Click to view">`;
                                     }
+                                } else if (row.ingest_method === 'kaltura' && row.kaltura_thumbnail_url) {
+                                    // Kaltura item: use kaltura thumbnail URL from database
+                                    thumbnail_html = `
+                                        <img src="${row.kaltura_thumbnail_url}" 
+                                             alt="Thumbnail for ${display_name}"
+                                             class="media-thumbnail media-thumbnail-clickable"
+                                             style="width: ${THUMBNAIL_SIZE.width}px; height: ${THUMBNAIL_SIZE.height}px; object-fit: cover; border-radius: 4px; margin-right: 10px; vertical-align: middle; cursor: pointer;"
+                                             loading="lazy"
+                                             data-uuid="${row.uuid}" data-name="${sanitize_html(row.name)}" data-ingest-method="${row.ingest_method}" data-media-type="${row.media_type || ''}" data-kaltura-thumbnail-url="${row.kaltura_thumbnail_url}" data-kaltura-entry-id="${row.kaltura_entry_id || ''}" title="Click to view"
+                                             onerror="this.onerror=null; this.src='${PLACEHOLDER_IMAGE}';">`;
+                                } else if (row.ingest_method === 'kaltura') {
+                                    // Kaltura item without thumbnail: show place
+                                    thumbnail_html = `
+                                        <img src="${PLACEHOLDER_IMAGE}" 
+                                             alt="Placeholder for ${display_name}"
+                                             class="media-thumbnail-placeholder media-thumbnail-clickable"
+                                             style="width: ${THUMBNAIL_SIZE.width}px; height: ${THUMBNAIL_SIZE.height}px; object-fit: cover; border-radius: 4px; margin-right: 10px; vertical-align: middle; cursor: pointer;"
+                                             data-uuid="${row.uuid}" data-name="${sanitize_html(row.name)}" data-ingest-method="${row.ingest_method}" data-media-type="${row.media_type || ''}" data-kaltura-thumbnail-url="" data-kaltura-entry-id="${row.kaltura_entry_id || ''}" title="Click to view">`;
                                 } else if (row.is_image && row.thumbnail_url) {
                                     // Image thumbnail with token for authentication
                                     const img_url = row.thumbnail_url + (row.thumbnail_url.includes('?') ? '&' : '?') + 'token=' + encodeURIComponent(token || '');
@@ -864,6 +1033,12 @@ const mediaLibraryModule = (function() {
                                 // Repository items: show "Repository media" instead of filename/size
                                 if (row.ingest_method === 'repository') {
                                     return '<small><i class="fa fa-database" style="margin-right: 4px;" aria-hidden="true"></i>Repository media</small>';
+                                }
+
+                                // Kaltura items: show "Kaltura Media" with audio/video icon based on mime type
+                                if (row.ingest_method === 'kaltura') {
+                                    const kaltura_icon = (row.mime_type && row.mime_type.startsWith('audio')) ? 'fa-volume-up' : 'fa-film';
+                                    return '<small><i class="fa ' + kaltura_icon + '" style="margin-right: 4px;" aria-hidden="true"></i>Kaltura media</small>';
                                 }
 
                                 // Uploaded items: show filename with file size below it
@@ -1083,6 +1258,9 @@ const mediaLibraryModule = (function() {
             if (typeof mediaModalsModule !== 'undefined' && typeof mediaModalsModule.init === 'function') {
                 mediaModalsModule.init();
             }
+
+            // Initialize Kaltura view modal close handlers
+            init_kaltura_view_modal();
 
             // Initialize page - display media records in DataTable
             await obj.display_media_records();

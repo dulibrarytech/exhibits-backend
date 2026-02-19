@@ -364,6 +364,7 @@ const mediaModalsModule = (function() {
         const is_image = media_type === 'image';
         const is_pdf = media_type === 'pdf';
         const is_repo = record.ingest_method === 'repository';
+        const is_kaltura = record.ingest_method === 'kaltura';
         const type_label = get_media_type_label(media_type);
         const type_icon = get_media_type_icon(media_type);
         const file_size = format_file_size(record.size || 0);
@@ -374,7 +375,14 @@ const mediaModalsModule = (function() {
 
         // Build preview HTML
         let preview_html;
-        if (is_repo && record.repo_uuid) {
+        if (is_kaltura && record.kaltura_thumbnail_url) {
+            // Kaltura item: use kaltura thumbnail URL from database
+            preview_html = '<img src="' + escape_html(record.kaltura_thumbnail_url) + '" alt="' + escape_html(record.name || 'Kaltura media') + '" class="img-fluid" style="max-width:100%;max-height:300px;object-fit:contain;" onerror="this.onerror=null; this.style.display=\'none\'; this.nextElementSibling.style.display=\'block\';">' +
+                '<i class="fa ' + type_icon + '" style="font-size: 80px; color: #6c757d; display: none;" aria-hidden="true"></i>';
+        } else if (is_kaltura) {
+            // Kaltura item without thumbnail: show type icon
+            preview_html = '<i class="fa ' + type_icon + '" style="font-size: 80px; color: #6c757d;" aria-hidden="true"></i>';
+        } else if (is_repo && record.repo_uuid) {
             // Repository item: use repo thumbnail endpoint
             const repo_tn_url = get_repo_thumbnail_url(record.repo_uuid);
             if (repo_tn_url) {
@@ -402,6 +410,9 @@ const mediaModalsModule = (function() {
                 '</div>';
         }
 
+        // Name field column width: full width unless image (which has alt text beside it)
+        const name_col_class = is_image ? 'col-md-6' : 'col-12';
+
         // Build the form HTML
         let html = '<div class="row">';
         
@@ -410,7 +421,15 @@ const mediaModalsModule = (function() {
         html += '<div class="edit-preview-container text-center p-3 bg-light rounded">';
         html += '<div class="edit-preview mb-3">' + preview_html + '</div>';
         html += '<div class="file-meta small text-muted">';
-        if (is_repo) {
+        if (is_kaltura) {
+            // Kaltura item: show "Kaltura media" with icon and entry ID
+            const kaltura_icon = (record.mime_type && record.mime_type.startsWith('audio')) ? 'fa-volume-up' : 'fa-film';
+            html += '<div class="mb-1"><i class="fa ' + kaltura_icon + '" style="margin-right: 4px;" aria-hidden="true"></i>Kaltura media</div>';
+            if (record.kaltura_entry_id) {
+                html += '<div class="text-truncate mb-1" title="Entry ID: ' + escape_html(record.kaltura_entry_id) + '"><small>ID: ' + escape_html(record.kaltura_entry_id) + '</small></div>';
+            }
+            html += '<span class="badge bg-secondary">' + type_label + '</span>';
+        } else if (is_repo) {
             // Repository item: show "Repository media" with icon, no filename/size
             html += '<div class="mb-1"><i class="fa fa-database" style="margin-right: 4px;" aria-hidden="true"></i>Repository media</div>';
             html += '<span class="badge bg-secondary">' + type_label + '</span>';
@@ -428,7 +447,7 @@ const mediaModalsModule = (function() {
         
         // Row 1: Name (required) and Alt Text (images only - required)
         html += '<div class="row">';
-        html += '<div class="col-md-6 mb-3">';
+        html += '<div class="' + name_col_class + ' mb-3">';
         html += '<label class="form-label" for="edit-file-name">Name <span class="text-danger">*</span></label>';
         html += '<input type="text" class="form-control" id="edit-file-name" name="name" value="' + escape_html(record.name || '') + '" placeholder="Enter a name" required aria-required="true">';
         html += '<div class="invalid-feedback">Please provide a name.</div>';

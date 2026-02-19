@@ -1266,6 +1266,29 @@ const repoModalsModule = (function() {
                 image_el.onload = function() {
                     if (loading_el) loading_el.style.display = 'none';
                     image_el.style.display = 'block';
+
+                    // Repository image items: make thumbnail clickable to open in repo viewer
+                    if (is_repo && repo_handle) {
+                        const container = document.getElementById('view-media-container');
+                        image_el.style.cursor = 'pointer';
+                        image_el.title = 'Click to open in repository';
+                        image_el.onclick = function(e) {
+                            e.preventDefault();
+                            window.open(repo_handle, '_blank', 'noopener,noreferrer');
+                        };
+
+                        // Add helper text below the image
+                        if (container) {
+                            let link_hint = container.parentNode.querySelector('.repo-handle-hint');
+                            if (!link_hint) {
+                                link_hint = document.createElement('p');
+                                link_hint.className = 'repo-handle-hint text-muted small mt-2 text-center';
+                                link_hint.innerHTML = '<i class="fa fa-external-link" style="margin-right: 4px;" aria-hidden="true"></i>' +
+                                    '<a href="' + escape_html(repo_handle) + '" target="_blank" rel="noopener noreferrer">View in repository</a>';
+                                container.parentNode.insertBefore(link_hint, container.nextSibling);
+                            }
+                        }
+                    }
                 };
                 image_el.onerror = function() {
                     if (loading_el) loading_el.style.display = 'none';

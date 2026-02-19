@@ -24,6 +24,7 @@ const COMPRESS = require('compression');
 const BODYPARSER = require('body-parser');
 const METHODOVERRIDE = require('method-override');
 const HELMET = require('helmet');
+const HELMET_CONFIG = require('../config/helmet_config')();
 const XSS = require('../libs/dom');
 const FS = require('fs');
 
@@ -43,7 +44,7 @@ module.exports = function() {
     }));
     APP.use(BODYPARSER.json());
     APP.use(METHODOVERRIDE());
-    APP.use(HELMET());
+    APP.use(HELMET(HELMET_CONFIG));
     APP.use('/exhibits-dashboard/static', EXPRESS.static('./public'));
     APP.use(XSS.sanitize_req_query);
     APP.use(XSS.sanitize_req_body);
