@@ -154,6 +154,16 @@ const kalturaModalsModule = (function() {
     };
 
     /**
+     * Decode HTML entities (e.g., &#x27; -> ')
+     */
+    const decode_html_entities = (str) => {
+        if (!str) return '';
+        const div = document.createElement('div');
+        div.innerHTML = str;
+        return div.textContent;
+    };
+
+    /**
      * Strip HTML tags from a string, returning only the text content
      * @param {string} str - String potentially containing HTML
      * @returns {string} Plain text with all HTML tags removed
@@ -759,7 +769,7 @@ const kalturaModalsModule = (function() {
         }
 
         const entry_id = record.kaltura_entry_id || '';
-        const name = record.name || 'Kaltura Media';
+        const name = decode_html_entities(record.name || 'Kaltura Media');
         const item_type = record.item_type || record.media_type || '';
 
         if (!entry_id) {
@@ -802,8 +812,8 @@ const kalturaModalsModule = (function() {
         const error_el = document.getElementById('kaltura-player-error');
 
         // Populate info fields
-        if (name_el) name_el.textContent = escape_html(name);
-        if (entry_id_el) entry_id_el.textContent = escape_html(entry_id);
+        if (name_el) name_el.textContent = name;
+        if (entry_id_el) entry_id_el.textContent = entry_id;
 
         // Configure based on media type (audio vs video)
         const is_audio = item_type === 'audio';
@@ -813,7 +823,7 @@ const kalturaModalsModule = (function() {
         }
 
         if (header_text) {
-            header_text.textContent = escape_html(name);
+            header_text.textContent = name;
         }
 
         if (type_icon) {

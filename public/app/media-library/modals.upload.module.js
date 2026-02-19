@@ -73,6 +73,16 @@ const mediaModalsModule = (function() {
     };
 
     /**
+     * Decode HTML entities (e.g., &#x27; -> ')
+     */
+    const decode_html_entities = (str) => {
+        if (!str) return '';
+        const div = document.createElement('div');
+        div.innerHTML = str;
+        return div.textContent;
+    };
+
+    /**
      * Clean filename for use as default title
      */
     const clean_filename_for_title = (filename) => {
@@ -1705,6 +1715,9 @@ const mediaModalsModule = (function() {
      */
     obj.open_view_media_modal = function(uuid, name, filename, size, media_type, storage_filename, ingest_method) {
         const modal_element = document.getElementById('view-media-modal');
+
+        // Decode HTML entities in name to prevent double-encoding
+        name = decode_html_entities(name);
         
         if (!modal_element) {
             console.error('View media modal not found');

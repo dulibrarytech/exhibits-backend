@@ -25,7 +25,7 @@ const mediaUploadsModule = (function() {
 
     // Configuration
     const MAX_FILES = 10;
-    const MAX_FILE_SIZE_MB = 100;
+    const MAX_FILE_SIZE_MB = 50;
 
     /**
      * Get application path safely
