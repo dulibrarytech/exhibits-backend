@@ -20,9 +20,7 @@
 
 const FS = require('fs');
 const PATH = require('path');
-// const STORAGE_CONFIG = require('../config/storage_config')();
 const MEDIA_MODEL = require('../media-library/model');
-// const ITEM_MODEL = require('../exhibits/items_model');
 const REPO_SERVICE = require('../media-library/repo-service');
 const KALTURA_SERVICE = require('../media-library/kaltura-service');
 const KALTURA_CONFIG = require('../config/kaltura_config')();
@@ -542,7 +540,7 @@ exports.search_repository = async function (req, res) {
         LOGGER.module().info(`INFO: [/media-library/controller (search_repository)] Searching for: ${term}`);
 
         // Call repo service to perform search
-        const result = await REPO_SERVICE.search(term, options);
+        const result = await REPO_SERVICE.search_repository(term, options);
 
         if (!result.success) {
             LOGGER.module().warn(`WARNING: [/media-library/controller (search_repository)] Search failed: ${result.message}`);

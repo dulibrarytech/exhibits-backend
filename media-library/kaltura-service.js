@@ -205,3 +205,76 @@ exports.get_kaltura_media = async function (entry_id) {
         });
     }
 };
+
+/**
+ * Adds a Kaltura media entry to the exhibits gallery category
+ * Uses Kaltura categoryEntry.add API to associate an entry with the exhibits category
+ * https://developer.kaltura.com/api-docs/service/categoryEntry/action/add
+ * @param {string} entry_id - Kaltura entry ID to add to the exhibits gallery
+ * @returns {Promise<Object>} Result object with category entry data
+ */
+exports.add_to_exhibits_gallery = async function (entry_id) {
+
+    try {
+
+        // Validate entry ID
+        const validation = validate_entry_id(entry_id);
+
+        if (!validation.valid) {
+            LOGGER.module().warn(`WARNING: [/media-library/kaltura-service (add_to_exhibits_gallery)] ${validation.message}`);
+            return build_response(false, validation.message, {
+                category_entry: null
+            });
+        }
+
+        LOGGER.module().info(`INFO: [/media-library/kaltura-service (add_to_exhibits_gallery)] Adding entry ID: ${validation.entry_id} to exhibits gallery`);
+
+        // Get authenticated Kaltura client
+        const { client } = await get_kaltura_session();
+
+        // Build category entry object for Kaltura API
+        const category_entry = new KALTURA.objects.CategoryEntry();
+        category_entry.categoryId = KALTURA_CONFIG.kaltura_exhibit_category_id;
+        category_entry.entryId = validation.entry_id;
+
+        // Add entry to exhibits gallery category
+        const response = await KALTURA.services.categoryEntry.add(category_entry)
+            .execute(client);
+
+        // Check for Kaltura API exceptions
+        if (response && response.objectType === 'KalturaAPIException') {
+            LOGGER.module().warn(`WARNING: [/media-library/kaltura-service (add_to_exhibits_gallery)] Kaltura API exception for entry ID: ${validation.entry_id} - ${response.message}`);
+            return build_response(false, response.message || 'Kaltura API error', {
+                category_entry: null
+            });
+        }
+
+        // Validate response
+        if (!response || !response.entryId) {
+            LOGGER.module().warn(`WARNING: [/media-library/kaltura-service (add_to_exhibits_gallery)] Unexpected response when adding entry ID: ${validation.entry_id} to exhibits gallery`);
+            return build_response(false, 'Failed to add entry to exhibits gallery', {
+                category_entry: null
+            });
+        }
+
+        LOGGER.module().info(`INFO: [/media-library/kaltura-service (add_to_exhibits_gallery)] Entry ID: ${validation.entry_id} added to exhibits gallery successfully`);
+
+        return build_response(true, 'Entry added to exhibits gallery successfully', {
+            category_entry: {
+                entry_id: response.entryId,
+                category_id: response.categoryId,
+                status: response.status,
+                created_at: response.createdAt
+            }
+        });
+
+    } catch (error) {
+        LOGGER.module().error(`ERROR: [/media-library/kaltura-service (add_to_exhibits_gallery)] ${error.message}`, {
+            entry_id,
+            stack: error.stack
+        });
+        return build_response(false, 'Error adding entry to exhibits gallery: ' + error.message, {
+            category_entry: null
+        });
+    }
+};

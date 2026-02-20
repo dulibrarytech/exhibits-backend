@@ -23,7 +23,8 @@ const KALTURA_CONFIG = {
     kaltura_secret_key: process.env.KALTURA_SECRET_KEY,
     kaltura_partner_id: process.env.KALTURA_PARTNER_ID,
     kaltura_user_id: process.env.KALTURA_USER_ID,
-    kaltura_conf_ui_id: process.env.KALTURA_CONF_UI_ID
+    kaltura_conf_ui_id: process.env.KALTURA_CONF_UI_ID,
+    kaltura_exhibit_category_id: process.env.KALTURA_EXHIBIT_CATEGORY_ID
 };
 
 module.exports = function () {

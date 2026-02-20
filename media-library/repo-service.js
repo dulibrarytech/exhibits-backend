@@ -23,7 +23,6 @@ const ES_CONFIG = require('../config/elasticsearch_config')();
 const LOGGER = require('../libs/log4');
 const REPO_SERVICE_TASKS = require("../media-library/tasks/repo_service_tasks");
 const ITEM_MODEL = require('../exhibits/items_model');
-
 const CLIENT = new Client({
     node: ES_CONFIG.elasticsearch_host
 });
@@ -108,7 +107,7 @@ const is_valid_uuid = (uuid) => {
  * @param {number} [options.from=0] - Starting offset for pagination
  * @returns {Promise<Object>} Search results with success status
  */
-exports.search = async function (term, options = {}) {
+exports.search_repository = async function (term, options = {}) {
 
     try {
 
@@ -116,24 +115,24 @@ exports.search = async function (term, options = {}) {
         const validation = validate_search_term(term);
 
         if (!validation.valid) {
-            LOGGER.module().warn(`WARNING: [/media-library/repo-service (search)] ${validation.message}`);
+            LOGGER.module().warn(`WARNING: [/media-library/repo-service (search_repository)] ${validation.message}`);
             return build_response(false, validation.message);
         }
 
-        LOGGER.module().info(`INFO: [/media-library/repo-service (search)] Searching repository for: ${validation.term}`);
+        LOGGER.module().info(`INFO: [/media-library/repo-service (search_repository)] Searching repository for: ${validation.term}`);
 
         // Perform search via repo_tasks
         const response = await repo_tasks.search(validation.term, options);
 
         if (!response || !response.success) {
-            LOGGER.module().warn(`WARNING: [/media-library/repo-service (search)] Search returned no results or failed`);
+            LOGGER.module().warn(`WARNING: [/media-library/repo-service (search_repository)] Search returned no results or failed`);
             return build_response(false, response?.message || 'Search failed', {
                 records: [],
                 total: 0
             });
         }
 
-        LOGGER.module().info(`INFO: [/media-library/repo-service (search)] Search completed successfully. Found ${response.total} results`);
+        LOGGER.module().info(`INFO: [/media-library/repo-service (search_repository)] Search completed successfully. Found ${response.total} results`);
 
         return build_response(true, 'Search completed successfully', {
             records: response.records,
@@ -141,7 +140,7 @@ exports.search = async function (term, options = {}) {
         });
 
     } catch (error) {
-        LOGGER.module().error(`ERROR: [/media-library/repo-service (search)] ${error.message}`);
+        LOGGER.module().error(`ERROR: [/media-library/repo-service (search_repository)] ${error.message}`);
         return build_response(false, 'Error searching repository: ' + error.message, {
             records: [],
             total: 0

@@ -19,7 +19,8 @@
 const path = require('path');
 const multer = require('multer');
 const fs = require('fs').promises;
-const { exiftool } = require('exiftool-vendored');
+const exiftool = require('exiftool-vendored');
+// import { exiftool } from 'exiftool-vendored';
 
 // Configuration
 const storage_config = require('../config/storage_config')();
@@ -154,81 +155,7 @@ const get_media_type = (mime_type) => {
 };
 
 /**
- * EXIF metadata fields to extract from uploaded files
- * Organized by category for clarity
- */
-const EXIF_FIELDS = {
-    // Camera/device info
-    camera: ['Make', 'Model', 'LensModel', 'Software'],
-    // Image dimensions and format
-    format: ['ImageWidth', 'ImageHeight', 'MIMEType', 'FileType', 'FileSize', 'ColorSpace', 'BitsPerSample'],
-    // Capture settings
-    capture: ['ExposureTime', 'FNumber', 'ISO', 'FocalLength', 'Flash', 'WhiteBalance', 'ExposureProgram', 'MeteringMode'],
-    // Date/time
-    dates: ['DateTimeOriginal', 'CreateDate', 'ModifyDate'],
-    // GPS/location
-    gps: ['GPSLatitude', 'GPSLongitude', 'GPSAltitude'],
-    // Descriptive metadata
-    descriptive: ['Title', 'Description', 'Subject', 'Keywords', 'Artist', 'Creator', 'Copyright'],
-    // PDF-specific
-    pdf: ['PageCount', 'PDFVersion', 'Author', 'Producer', 'CreatorTool']
-};
-
-/**
- * Extracts relevant EXIF/metadata from an uploaded file
- * @param {string} file_path - Full path to the uploaded file
- * @param {string} media_type - Media type category ('image' or 'pdf')
- * @returns {Promise<Object>} Extracted metadata or empty object on failure
- */
-const extract_metadata = async (file_path, media_type) => {
-    try {
-        const tags = await exiftool.read(file_path);
-        const metadata = {};
-
-        // Select relevant field categories based on media type
-        let categories;
-
-        if (media_type === 'pdf') {
-            categories = ['format', 'dates', 'descriptive', 'pdf'];
-        } else if (media_type === 'image') {
-            categories = ['camera', 'format', 'capture', 'dates', 'gps', 'descriptive'];
-        } else {
-            return metadata;
-        }
-
-        // Extract fields from selected categories
-        for (const category of categories) {
-            const fields = EXIF_FIELDS[category];
-
-            if (fields) {
-                for (const field of fields) {
-
-                    if (tags[field] !== undefined && tags[field] !== null) {
-                        const value = tags[field];
-
-                        // Convert complex exiftool objects to simple values
-                        if (typeof value === 'object' && value !== null && typeof value.toString === 'function' && value.constructor.name !== 'Array') {
-                            metadata[field] = value.toString();
-                        } else {
-                            metadata[field] = value;
-                        }
-                    }
-                }
-            }
-        }
-
-        console.log('EXIF METADATA ', metadata);
-
-        return metadata;
-
-    } catch (error) {
-        console.error(`Metadata extraction failed for ${file_path}:`, error.message);
-        return {};
-    }
-};
-
-/**
- * Upload request handler - processes uploaded files and extracts EXIF metadata
+ * Upload request handler
  */
 const handle_upload = async (req, res) => {
     try {
@@ -241,23 +168,23 @@ const handle_upload = async (req, res) => {
             });
         }
 
-        // Process each file: build response data and extract metadata
-        const uploaded_files = await Promise.all(files.map(async (file) => {
-            const media_type = get_media_type(file.mimetype);
-            const file_path = path.join(STORAGE_PATH, file.filename);
-            const metadata = await extract_metadata(file_path, media_type);
-
-            return {
-                filename: file.filename,
-                original_name: file.originalname,
-                file_size: file.size,
-                mime_type: file.mimetype,
-                media_type: media_type,
-                path: file_path,
-                metadata: metadata,
-                uploaded_at: new Date().toISOString()
-            };
+        // Transform file data for response
+        const uploaded_files = files.map(file => ({
+            filename: file.filename,
+            original_name: file.originalname,
+            file_size: file.size,
+            mime_type: file.mimetype,
+            media_type: get_media_type(file.mimetype),
+            path: path.join(STORAGE_PATH, file.filename),
+            uploaded_at: new Date().toISOString()
         }));
+
+        // TODO: exif tool
+        const tags = await exiftool.read('photo.jpg');
+        console.log('TAGS ', tags);
+        console.log(`Camera: ${tags.Make} ${tags.Model}`);
+        console.log(`Taken: ${tags.DateTimeOriginal}`);
+        await exiftool.end();
 
         return res.status(201).json({
             success: true,
@@ -318,20 +245,6 @@ const handle_upload_error = (error, req, res, next) => {
 };
 
 /**
- * Gracefully shuts down the exiftool child process
- * Call during application shutdown to prevent orphaned processes
- * @returns {Promise<void>}
- */
-const shutdown_exiftool = async () => {
-    try {
-        await exiftool.end();
-        console.log('ExifTool process terminated');
-    } catch (error) {
-        console.error('ExifTool shutdown error:', error.message);
-    }
-};
-
-/**
  * Register upload routes
  * @param {Object} app - Express application instance
  */
@@ -343,5 +256,3 @@ module.exports = (app) => {
         handle_upload_error
     );
 };
-
-module.exports.shutdown_exiftool = shutdown_exiftool;

@@ -18,15 +18,11 @@
 
 'use strict';
 
-// const STORAGE_CONFIG = require('../config/storage_config')();
-// const HTTP = require('axios');
-
 const DB = require('../config/db_config')();
 const DB_TABLES = require('../config/db_tables_config')();
 const TABLES = DB_TABLES.exhibits;
 const HELPER = require('../libs/helper');
 const MEDIA_TASKS = require('./tasks/media_record_tasks');
-const REPO_SERVICE = require('./repo-service');
 const LOGGER = require('../libs/log4');
 // Initialize task instances
 const helper_task = new HELPER();
@@ -314,62 +310,5 @@ exports.delete_media_record = async (media_id, deleted_by = null) => {
     } catch (error) {
         LOGGER.module().error('ERROR: [/media-library/model (delete_media_record)] ' + error.message);
         return build_response(false, 'Error deleting media record: ' + error.message);
-    }
-};
-
-/** TODO: move to repo-service
- * Searches the digital repository for records matching the search term
- * @param {string} term - Search term
- * @param {Object} [options={}] - Search options
- * @param {number} [options.size] - Number of results to return
- * @param {number} [options.from] - Starting offset for pagination
- * @returns {Promise<Object>} Result object with search results
- */
-exports.search_repository = async (term, options = {}) => {
-
-    try {
-
-        // Validate search term
-        if (!term || typeof term !== 'string') {
-            return build_response(false, 'Search term is required', {
-                records: [],
-                total: 0
-            });
-        }
-
-        const trimmed_term = term.trim();
-
-        if (trimmed_term.length === 0) {
-            return build_response(false, 'Search term cannot be empty', {
-                records: [],
-                total: 0
-            });
-        }
-
-        LOGGER.module().info('INFO: [/media-library/model (search_repository)] Searching repository for: ' + trimmed_term);
-
-        // Perform search via repo service
-        const result = await REPO_SERVICE.search(trimmed_term, options);
-
-        if (!result || !result.success) {
-            return build_response(false, result?.message || 'Search failed', {
-                records: [],
-                total: 0
-            });
-        }
-
-        LOGGER.module().info('INFO: [/media-library/model (search_repository)] Search completed. Found ' + result.total + ' results');
-
-        return build_response(true, 'Search completed successfully', {
-            records: result.records,
-            total: result.total
-        });
-
-    } catch (error) {
-        LOGGER.module().error('ERROR: [/media-library/model (search_repository)] ' + error.message);
-        return build_response(false, 'Error searching repository: ' + error.message, {
-            records: [],
-            total: 0
-        });
     }
 };
