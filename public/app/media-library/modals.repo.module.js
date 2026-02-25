@@ -216,11 +216,22 @@ const repoModalsModule = (function() {
     /**
      * Get thumbnail URL for media type
      */
-    const get_thumbnail_url_for_media = (media_type, filename) => {
+    const get_thumbnail_url_for_media = (media_type, uuid) => {
         const static_path = '/exhibits-dashboard/static/images';
+
+        // For uploaded images/PDFs with uuid, use thumbnail endpoint
+        if ((media_type === 'image' || media_type === 'pdf') && uuid) {
+            const token = authModule.get_user_token();
+            if (!EXHIBITS_ENDPOINTS?.media_thumbnail?.get?.endpoint) {
+                return static_path + '/image-tn.png';
+            }
+            const endpoint = EXHIBITS_ENDPOINTS.media_thumbnail.get.endpoint.replace(':media_id', encodeURIComponent(uuid));
+            return endpoint + '?token=' + encodeURIComponent(token || '');
+        }
+
         switch (media_type) {
             case 'image':
-                return APP_PATH + '/media?media=' + encodeURIComponent(filename);
+                return static_path + '/image-tn.png';
             case 'video':
                 return static_path + '/video-tn.png';
             case 'audio':
@@ -233,19 +244,19 @@ const repoModalsModule = (function() {
     };
 
     /**
-     * Build media file URL for image display
-     * @param {string} filename - The filename to build URL for
+     * Build media file URL for file display
+     * @param {string} media_id - The media UUID to build URL for
      * @returns {string|null} URL to media file
      */
-    const build_media_url = (filename) => {
-        if (!filename) return null;
+    const build_media_url = (media_id) => {
+        if (!media_id) return null;
 
         if (!EXHIBITS_ENDPOINTS?.media_file?.get?.endpoint) {
             console.warn('Media file endpoint not configured');
             return null;
         }
 
-        const endpoint = EXHIBITS_ENDPOINTS.media_file.get.endpoint.replace(':filename', encodeURIComponent(filename));
+        const endpoint = EXHIBITS_ENDPOINTS.media_file.get.endpoint.replace(':media_id', encodeURIComponent(media_id));
         return endpoint;
     };
 
@@ -1075,12 +1086,12 @@ const repoModalsModule = (function() {
      * @param {string} filename - Original filename for display
      * @param {string} size - Formatted file size
      * @param {string} media_type - Media type (image, pdf, etc.)
-     * @param {string} storage_filename - Storage filename for URL building
+     * @param {string} storage_filename - (deprecated, unused) Kept for backward compatibility
      * @param {string} ingest_method - Ingest method (upload, repository, etc.)
      * @param {string} repo_uuid - Repository item UUID (for repo items)
      * @param {string} repo_handle - Repository handle URL (for repo items)
      */
-    obj.open_view_media_modal = function(uuid, name, filename, size, media_type, storage_filename, ingest_method, repo_uuid, repo_handle) {
+    obj.open_view_media_modal = function(uuid, name, filename, size, media_type, ingest_method, repo_uuid, repo_handle) {
         const modal_element = document.getElementById('view-media-modal');
 
         // Decode HTML entities in name to prevent double-encoding
@@ -1162,8 +1173,8 @@ const repoModalsModule = (function() {
                 authenticated_url = repo_tn_url;
             }
         } else {
-            // Uploaded item: use storage filename endpoint
-            const media_url = build_media_url(storage_filename);
+            // Uploaded item: use UUID-based file endpoint
+            const media_url = build_media_url(uuid);
             if (media_url) {
                 const token = authModule.get_user_token();
                 authenticated_url = media_url + (media_url.includes('?') ? '&' : '?') + 'token=' + encodeURIComponent(token || '');

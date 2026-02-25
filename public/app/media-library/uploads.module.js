@@ -182,16 +182,6 @@ const mediaUploadsModule = (function() {
     };
 
     /**
-     * Generate timestamped filename
-     */
-    const generate_filename = (original_filename, file_type) => {
-        const extension = original_filename.split('.').pop().toLowerCase();
-        const timestamp = Date.now();
-        const random_suffix = Math.random().toString(36).substring(2, 8);
-        return `${timestamp}_${random_suffix}_${file_type}.${extension}`;
-    };
-
-    /**
      * Validate file extension against allowed types
      */
     const validate_file_extension = (filename, allowed_extensions) => {
@@ -213,13 +203,49 @@ const mediaUploadsModule = (function() {
     };
 
     /**
-     * Get thumbnail URL for media type
+     * Build thumbnail URL using the media thumbnail endpoint
+     * @param {string} media_id - Media UUID
+     * @returns {string|null} Thumbnail URL with token or null
      */
-    const get_thumbnail_url_for_media = (media_type, filename) => {
+    const build_thumbnail_url = (media_id) => {
+        if (!media_id) return null;
+
+        try {
+            const MEDIA_ENDPOINTS = endpointsModule.get_media_library_endpoints();
+
+            if (!MEDIA_ENDPOINTS?.media_thumbnail?.get?.endpoint) {
+                console.warn('Media thumbnail endpoint not configured');
+                return null;
+            }
+
+            const token = authModule.get_user_token();
+            const endpoint = MEDIA_ENDPOINTS.media_thumbnail.get.endpoint.replace(':media_id', encodeURIComponent(media_id));
+            return endpoint + '?token=' + encodeURIComponent(token || '');
+        } catch (error) {
+            console.warn('Error building thumbnail URL:', error);
+            return null;
+        }
+    };
+
+    /**
+     * Get thumbnail URL for media type
+     * Uses server-generated thumbnails for images and PDFs when uuid is available
+     * @param {string} media_type - Media type (image, pdf, video, audio)
+     * @param {string} uuid - File UUID (for server-generated thumbnails)
+     * @returns {string} Thumbnail URL
+     */
+    const get_thumbnail_url_for_media = (media_type, uuid) => {
         const static_path = '/exhibits-dashboard/static/images';
+
+        // Use server-generated thumbnails for images and PDFs
+        if ((media_type === 'image' || media_type === 'pdf') && uuid) {
+            const thumbnail_url = build_thumbnail_url(uuid);
+            if (thumbnail_url) return thumbnail_url;
+        }
+
         switch (media_type) {
             case 'image':
-                return APP_PATH + '/media?media=' + encodeURIComponent(filename);
+                return static_path + '/image-tn.png';
             case 'video':
                 return static_path + '/video-tn.png';
             case 'audio':
@@ -370,10 +396,6 @@ const mediaUploadsModule = (function() {
                 });
             },
 
-            renameFile: function(file) {
-                return generate_filename(file.name, options.file_type || 'media');
-            },
-
             success: options.success_handler || function(file, response) {
                 console.log('Upload successful:', response);
                 this.removeFile(file);
@@ -444,23 +466,28 @@ const mediaUploadsModule = (function() {
                 }
 
                 const uploaded_file = response.files[0];
-                const filename = uploaded_file.filename;
+                const uuid = uploaded_file.uuid;
                 const mime_type = uploaded_file.mime_type;
+                const media_type = uploaded_file.media_type;
+                const storage_path = uploaded_file.storage_path;
+                const thumbnail_path = uploaded_file.thumbnail_path;
 
-                if (!validate_file_extension(filename, allowed_extensions)) {
-                    display_upload_error(elements.error, 'Invalid file type');
+                if (!uuid || !storage_path) {
+                    display_upload_error(elements.error, 'Upload failed - missing file identifiers');
                     this.removeFile(file);
                     return;
                 }
 
-                const media_type = get_media_type_from_mime(mime_type);
-
                 uploaded_files_data.push({
-                    filename: filename,
+                    uuid: uuid,
+                    filename: uploaded_file.filename,
                     original_name: file.name,
-                    file_size: file.size,
+                    file_size: uploaded_file.file_size || file.size,
                     mime_type: mime_type,
                     media_type: media_type,
+                    storage_path: storage_path,
+                    thumbnail_path: thumbnail_path || '',
+                    metadata: uploaded_file.metadata || null,
                     uploaded_at: uploaded_file.uploaded_at || new Date().toISOString()
                 });
 
@@ -482,22 +509,24 @@ const mediaUploadsModule = (function() {
                 if (elements.item_media) {
                     const current_value = elements.item_media.value;
                     if (current_value) {
-                        elements.item_media.value = current_value + ',' + filename;
+                        elements.item_media.value = current_value + ',' + uuid;
                     } else {
-                        elements.item_media.value = filename;
+                        elements.item_media.value = uuid;
                     }
                 }
 
                 if (elements.item_media && elements.item_media.value) {
-                    const filenames = elements.item_media.value.split(',');
-                    display_multiple_filenames(elements.filename_display, filenames);
+                    const uuids = elements.item_media.value.split(',');
+                    // Display original filenames for user clarity
+                    const display_names = uploaded_files_data.map(f => f.original_name);
+                    display_multiple_filenames(elements.filename_display, display_names);
                 }
                 
                 show_element(elements.media_trash);
 
                 setTimeout(function() {
-                    const thumbnail_url = get_thumbnail_url_for_media(media_type, filename);
-                    display_thumbnail_image(elements.thumbnail_display, thumbnail_url, filename);
+                    const thumbnail_url = get_thumbnail_url_for_media(media_type, uuid);
+                    display_thumbnail_image(elements.thumbnail_display, thumbnail_url, file.name);
                 }, 500);
 
                 const success_count = uploaded_files_data.length;
@@ -508,7 +537,7 @@ const mediaUploadsModule = (function() {
                     clear_message(elements.error);
                 }, 4000);
 
-                console.log('Item media uploaded: ' + filename + ' (' + media_type + ')');
+                console.log('Item media uploaded: ' + uuid + ' (' + media_type + ')');
             }
         });
 

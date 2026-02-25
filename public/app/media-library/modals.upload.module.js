@@ -133,13 +133,44 @@ const mediaModalsModule = (function() {
     };
 
     /**
-     * Get thumbnail URL for media type
+     * Build media thumbnail URL using the dedicated thumbnail endpoint
+     * @param {string} media_id - Media UUID
+     * @returns {string|null} Thumbnail URL or null
      */
-    const get_thumbnail_url_for_media = (media_type, filename) => {
+    const build_thumbnail_url = (media_id) => {
+        if (!media_id) return null;
+
+        if (!EXHIBITS_ENDPOINTS?.media_thumbnail?.get?.endpoint) {
+            console.warn('Media thumbnail endpoint not configured');
+            return null;
+        }
+
+        const endpoint = EXHIBITS_ENDPOINTS.media_thumbnail.get.endpoint.replace(':media_id', encodeURIComponent(media_id));
+        return endpoint;
+    };
+
+    /**
+     * Get thumbnail URL for media type
+     * Uses server-generated thumbnails for images and PDFs when uuid is available
+     * @param {string} media_type - Media type
+     * @param {string} uuid - File UUID for server-generated thumbnails
+     * @returns {string} Thumbnail URL
+     */
+    const get_thumbnail_url_for_media = (media_type, uuid) => {
         const static_path = '/exhibits-dashboard/static/images';
+
+        // Use server-generated thumbnails for images and PDFs
+        if ((media_type === 'image' || media_type === 'pdf') && uuid) {
+            const token = authModule.get_user_token();
+            const thumbnail_url = build_thumbnail_url(uuid);
+            if (thumbnail_url) {
+                return thumbnail_url + '?token=' + encodeURIComponent(token || '');
+            }
+        }
+
         switch (media_type) {
             case 'image':
-                return APP_PATH + '/media?media=' + encodeURIComponent(filename);
+                return static_path + '/image-tn.png';
             case 'video':
                 return static_path + '/video-tn.png';
             case 'audio':
@@ -152,19 +183,19 @@ const mediaModalsModule = (function() {
     };
 
     /**
-     * Build media file URL for image display
-     * @param {string} filename - The filename to build URL for
+     * Build media file URL for full-size file display
+     * @param {string} media_id - The media UUID to build URL for
      * @returns {string|null} URL to media file
      */
-    const build_media_url = (filename) => {
-        if (!filename) return null;
+    const build_media_url = (media_id) => {
+        if (!media_id) return null;
 
         if (!EXHIBITS_ENDPOINTS?.media_file?.get?.endpoint) {
             console.warn('Media file endpoint not configured');
             return null;
         }
 
-        const endpoint = EXHIBITS_ENDPOINTS.media_file.get.endpoint.replace(':filename', encodeURIComponent(filename));
+        const endpoint = EXHIBITS_ENDPOINTS.media_file.get.endpoint.replace(':media_id', encodeURIComponent(media_id));
         return endpoint;
     };
 
@@ -401,10 +432,16 @@ const mediaModalsModule = (function() {
             } else {
                 preview_html = '<i class="fa ' + type_icon + '" style="font-size: 80px; color: #6c757d;" aria-hidden="true"></i>';
             }
-        } else if (is_image && record.filename) {
-            const media_url = build_media_url(record.filename);
+        } else if (is_image && record.uuid) {
+            const media_url = build_media_url(record.uuid);
             const img_url = media_url + (media_url.includes('?') ? '&' : '?') + 'token=' + encodeURIComponent(token || '');
             preview_html = '<img src="' + img_url + '" alt="' + display_name + '" class="img-fluid" style="max-width:100%;max-height:300px;object-fit:contain;">';
+        } else if (is_pdf && record.uuid && record.thumbnail_path) {
+            // PDF with server-generated thumbnail
+            const tn_url = build_thumbnail_url(record.uuid);
+            const tn_img_url = tn_url + (tn_url.includes('?') ? '&' : '?') + 'token=' + encodeURIComponent(token || '');
+            preview_html = '<img src="' + tn_img_url + '" alt="' + display_name + '" class="img-fluid" style="max-width:100%;max-height:300px;object-fit:contain;" onerror="this.onerror=null; this.style.display=\'none\'; this.nextElementSibling.style.display=\'block\';">' +
+                '<i class="fa ' + type_icon + '" style="font-size: 80px; color: #6c757d; display: none;" aria-hidden="true"></i>';
         } else {
             preview_html = '<i class="fa ' + type_icon + '" style="font-size: 80px; color: #6c757d;" aria-hidden="true"></i>';
         }
@@ -811,6 +848,11 @@ const mediaModalsModule = (function() {
             }
         }
 
+        // Attach EXIF metadata from the upload response (not in form fields)
+        if (uploaded_files_data[index] && uploaded_files_data[index].metadata) {
+            data.exif_data = JSON.stringify(uploaded_files_data[index].metadata);
+        }
+
         const save_btn = card.querySelector('.btn-save-file');
 
         // Show loading state
@@ -943,7 +985,7 @@ const mediaModalsModule = (function() {
         const file_size = format_file_size(file_data.file_size);
         const is_image = media_type === 'image';
         const is_pdf = media_type === 'pdf';
-        const escaped_filename = escape_html(file_data.filename);
+        const escaped_original_name = escape_html(file_data.original_name || file_data.filename);
         const escaped_mime = escape_html(file_data.mime_type);
 
         // Default name from filename
@@ -951,9 +993,10 @@ const mediaModalsModule = (function() {
 
         // Preview HTML
         let preview_html;
-        if (is_image) {
-            const thumb_url = get_thumbnail_url_for_media(media_type, file_data.filename);
-            preview_html = '<img src="' + thumb_url + '" alt="' + display_name + '" style="max-width:100%;max-height:100%;object-fit:cover;">';
+        if (is_image || is_pdf) {
+            // Use server-generated thumbnail for images and PDFs
+            const thumb_url = get_thumbnail_url_for_media(media_type, file_data.uuid);
+            preview_html = '<img src="' + thumb_url + '" alt="' + display_name + '" style="max-width:100%;max-height:100%;object-fit:cover;" onerror="this.onerror=null; this.parentNode.innerHTML=\'<i class=\\\'fa ' + type_icon + ' file-icon\\\' aria-hidden=\\\'true\\\'></i>\';">';
         } else {
             preview_html = '<i class="fa ' + type_icon + ' file-icon" aria-hidden="true"></i>';
         }
@@ -991,7 +1034,7 @@ const mediaModalsModule = (function() {
         html += '<div class="file-preview-container text-center">';
         html += '<div class="file-preview mb-2">' + preview_html + '</div>';
         html += '<div class="file-meta small text-muted">';
-        html += '<div class="file-name-display text-truncate" title="' + escaped_filename + '">' + display_name + '</div>';
+        html += '<div class="file-name-display text-truncate" title="' + escaped_original_name + '">' + display_name + '</div>';
         html += '<div class="file-size-display">' + file_size + '</div>';
         html += '</div></div></div>';
         
@@ -1047,7 +1090,8 @@ const mediaModalsModule = (function() {
         html += '</div></div>';
         
         // Hidden fields
-        html += '<input type="hidden" class="file-filename" name="filename" value="' + escaped_filename + '">';
+        html += '<input type="hidden" class="file-storage-path" name="storage_path" value="' + escape_html(file_data.storage_path || '') + '">';
+        html += '<input type="hidden" class="file-thumbnail-path" name="thumbnail_path" value="' + escape_html(file_data.thumbnail_path || '') + '">';
         html += '<input type="hidden" class="file-original-filename" name="original_filename" value="' + display_name + '">';
         html += '<input type="hidden" class="file-size" name="size" value="' + (file_data.file_size || 0) + '">';
         html += '<input type="hidden" class="file-media-type" name="media_type" value="' + media_type + '">';
@@ -1710,10 +1754,9 @@ const mediaModalsModule = (function() {
      * @param {string} filename - Original filename for display
      * @param {string} size - Formatted file size
      * @param {string} media_type - Media type (image, pdf, etc.)
-     * @param {string} storage_filename - Storage filename for URL building
      * @param {string} ingest_method - Ingest method (upload, kaltura, etc.)
      */
-    obj.open_view_media_modal = function(uuid, name, filename, size, media_type, storage_filename, ingest_method) {
+    obj.open_view_media_modal = function(uuid, name, filename, size, media_type, ingest_method) {
         const modal_element = document.getElementById('view-media-modal');
 
         // Decode HTML entities in name to prevent double-encoding
@@ -1779,8 +1822,8 @@ const mediaModalsModule = (function() {
         if (loading_el) loading_el.style.display = 'block';
         if (error_el) error_el.style.display = 'none';
 
-        // Build media URL
-        const media_url = build_media_url(storage_filename);
+        // Build media URL using UUID
+        const media_url = build_media_url(uuid);
         
         if (!media_url) {
             if (loading_el) loading_el.style.display = 'none';

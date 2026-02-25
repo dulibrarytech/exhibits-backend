@@ -54,9 +54,16 @@ const ENDPOINTS = {
     },
     media_file: {
         get: {
-            description: 'Retrieves media file by filename',
-            endpoint: `${APP_PATH}${PREFIX}${VERSION}${ENDPOINT}/file/:filename`,
-            params: 'token or api_key, filename'
+            description: 'Retrieves media file by UUID from hash-bucketed storage',
+            endpoint: `${APP_PATH}${PREFIX}${VERSION}${ENDPOINT}/file/:media_id`,
+            params: 'token or api_key, media_id (UUID)'
+        }
+    },
+    media_thumbnail: {
+        get: {
+            description: 'Retrieves media thumbnail by UUID from hash-bucketed storage',
+            endpoint: `${APP_PATH}${PREFIX}${VERSION}${ENDPOINT}/thumbnail/:media_id`,
+            params: 'token or api_key, media_id (UUID)'
         }
     },
     repo_media_search: {
@@ -99,6 +106,13 @@ const ENDPOINTS = {
             description: 'Gets Kaltura player configuration (partner_id, uiconf_id)',
             endpoint: `${APP_PATH}${PREFIX}${VERSION}${ENDPOINT}/kaltura/config/player`,
             params: 'token or api_key'
+        }
+    },
+    kaltura_category: {
+        post: {
+            description: 'Assigns Kaltura media entry to exhibits category by entry ID',
+            endpoint: `${APP_PATH}${PREFIX}${VERSION}${ENDPOINT}/kaltura/:entry_id/category`,
+            params: 'token or api_key, entry_id (path parameter)'
         }
     },
 };

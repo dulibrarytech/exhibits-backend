@@ -417,9 +417,9 @@ const repoSubjectsModule = (function() {
 
         const term = (search_term || '').toLowerCase().trim();
 
-        // Filter by search term
+        // Filter by search term (match from the beginning of the label)
         const filtered = term
-            ? all_items.filter(item => item.label.toLowerCase().indexOf(term) !== -1)
+            ? all_items.filter(item => item.label.toLowerCase().startsWith(term))
             : all_items;
 
         // Split into selected and unselected

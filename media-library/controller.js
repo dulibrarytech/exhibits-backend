@@ -24,6 +24,7 @@ const MEDIA_MODEL = require('../media-library/model');
 const REPO_SERVICE = require('../media-library/repo-service');
 const KALTURA_SERVICE = require('../media-library/kaltura-service');
 const KALTURA_CONFIG = require('../config/kaltura_config')();
+const UPLOADS = require('../media-library/uploads');
 const AUTHORIZE = require('../auth/authorize');
 const LOGGER = require('../libs/log4');
 const VALIDATOR = require("validator");
@@ -42,44 +43,6 @@ const ALLOWED_MIME_TYPES = {
     '.tiff': 'image/tiff'
 };
 
-// Storage path for media files
-const STORAGE_PATH = PATH.join(__dirname, 'storage');
-
-/**
- * Validates filename to prevent directory traversal attacks
- * @param {string} filename - Filename to validate
- * @returns {boolean} True if filename is valid
- */
-const is_valid_filename = (filename) => {
-    if (!filename || typeof filename !== 'string') {
-        return false;
-    }
-
-    // Check for directory traversal attempts
-    if (filename.includes('..') || filename.includes('/') || filename.includes('\\')) {
-        return false;
-    }
-
-    // Check for null bytes
-    if (filename.includes('\0')) {
-        return false;
-    }
-
-    // Validate filename format (alphanumeric, hyphens, underscores, periods)
-    const valid_pattern = /^[a-zA-Z0-9._-]+$/;
-    if (!valid_pattern.test(filename)) {
-        return false;
-    }
-
-    // Check for valid extension
-    const ext = PATH.extname(filename).toLowerCase();
-    if (!ALLOWED_MIME_TYPES[ext]) {
-        return false;
-    }
-
-    return true;
-};
-
 /**
  * Validates if a string is a valid UUID format
  * @param {string} uuid - String to validate
@@ -94,7 +57,30 @@ const is_valid_uuid = (uuid) => {
 };
 
 /**
- * Gets a media file from storage by filename
+ * Decodes HTML entities in a string
+ * Handles common entities that may be injected by XSS sanitization middleware
+ * (e.g., &#x2F; → /, &amp; → &, &#x27; → ', &lt; → <, &gt; → >, &quot; → ")
+ * @param {string} str - String to decode
+ * @returns {string} Decoded string
+ */
+const decode_html_entities = (str) => {
+    if (!str || typeof str !== 'string') {
+        return str;
+    }
+    return str
+        .replace(/&#x2F;/gi, '/')
+        .replace(/&#x27;/gi, "'")
+        .replace(/&quot;/gi, '"')
+        .replace(/&lt;/gi, '<')
+        .replace(/&gt;/gi, '>')
+        .replace(/&amp;/gi, '&');
+};
+
+/**
+ * Gets a media file from storage by UUID
+ * Looks up the storage_path in the database and resolves through the
+ * hash-bucketed directory structure
+ *
  * @param {Object} req - Express request object
  * @param {Object} res - Express response object
  */
@@ -102,40 +88,52 @@ exports.get_media = async function (req, res) {
 
     try {
 
-        const filename = req.params.filename;
+        const media_id = req.params.media_id;
 
-        // Validate filename
-        if (!is_valid_filename(filename)) {
-            LOGGER.module().warn(`WARNING: [/media-library/controller (get_media)] Invalid filename requested: ${filename}`);
+        // Validate UUID format
+        if (!is_valid_uuid(media_id)) {
+            LOGGER.module().warn(`WARNING: [/media-library/controller (get_media)] Invalid media ID: ${media_id}`);
             res.status(400).json({
                 success: false,
-                message: 'Invalid filename',
+                message: 'Invalid media ID',
                 data: null
             });
             return;
         }
 
-        // Construct file path
-        const file_path = PATH.join(STORAGE_PATH, filename);
+        // Look up the media record to get storage_path
+        const result = await MEDIA_MODEL.get_media_record(media_id);
 
-        // Resolve to prevent any remaining traversal attempts
-        const resolved_path = PATH.resolve(file_path);
-        const resolved_storage = PATH.resolve(STORAGE_PATH);
-
-        // Ensure resolved path is within storage directory
-        if (!resolved_path.startsWith(resolved_storage)) {
-            LOGGER.module().warn(`WARNING: [/media-library/controller (get_media)] Path traversal attempt: ${filename}`);
-            res.status(403).json({
+        if (!result || !result.success || !result.record) {
+            LOGGER.module().warn(`WARNING: [/media-library/controller (get_media)] Media record not found: ${media_id}`);
+            res.status(404).json({
                 success: false,
-                message: 'Access denied',
+                message: 'Media not found',
                 data: null
             });
             return;
         }
 
-        // Check if file exists
-        if (!FS.existsSync(resolved_path)) {
-            LOGGER.module().warn(`WARNING: [/media-library/controller (get_media)] File not found: ${filename}`);
+        const record = result.record;
+
+        // Ensure record has a storage path
+        if (!record.storage_path) {
+            LOGGER.module().warn(`WARNING: [/media-library/controller (get_media)] No storage path for media: ${media_id}`);
+            res.status(404).json({
+                success: false,
+                message: 'File not found',
+                data: null
+            });
+            return;
+        }
+
+        // Resolve relative path to absolute path with traversal protection
+        let resolved_path;
+
+        try {
+            resolved_path = await UPLOADS.resolve_storage_path(decode_html_entities(record.storage_path));
+        } catch (error) {
+            LOGGER.module().warn(`WARNING: [/media-library/controller (get_media)] File not found on disk: ${record.storage_path}`);
             res.status(404).json({
                 success: false,
                 message: 'File not found',
@@ -147,7 +145,6 @@ exports.get_media = async function (req, res) {
         // Get file stats
         const stats = FS.statSync(resolved_path);
 
-        // Ensure it's a file, not a directory
         if (!stats.isFile()) {
             res.status(400).json({
                 success: false,
@@ -157,15 +154,18 @@ exports.get_media = async function (req, res) {
             return;
         }
 
-        // Get MIME type from extension
-        const ext = PATH.extname(filename).toLowerCase();
-        const mime_type = ALLOWED_MIME_TYPES[ext] || 'application/octet-stream';
+        // Determine MIME type — decode in case XSS middleware encoded the stored value
+        // Prefer extension-based lookup for known types as it's always clean
+        const extension_mime = ALLOWED_MIME_TYPES[PATH.extname(resolved_path).toLowerCase()];
+        const stored_mime = record.mime_type ? decode_html_entities(record.mime_type) : null;
+        const mime_type = extension_mime || stored_mime || 'application/octet-stream';
 
         // Set response headers
         res.set({
             'Content-Type': mime_type,
             'Content-Length': stats.size,
-            'Cache-Control': 'public, max-age=86400', // Cache for 24 hours
+            'Content-Disposition': `inline; filename="${decode_html_entities(record.original_filename || record.filename || 'download')}"`,
+            'Cache-Control': 'public, max-age=86400',
             'X-Content-Type-Options': 'nosniff'
         });
 
@@ -190,6 +190,109 @@ exports.get_media = async function (req, res) {
         res.status(500).json({
             success: false,
             message: 'Unable to retrieve media file',
+            data: null
+        });
+    }
+};
+
+/**
+ * Gets a thumbnail image for a media record by UUID
+ * Resolves the thumbnail_path from the database and serves the file
+ * Supports query param token for <img> src URLs
+ *
+ * GET /api/v1/media/library/thumbnail/:media_id
+ *
+ * @param {Object} req - Express request object
+ * @param {Object} res - Express response object
+ */
+exports.get_thumbnail = async function (req, res) {
+
+    try {
+
+        const media_id = req.params.media_id;
+
+        // Validate UUID format
+        if (!is_valid_uuid(media_id)) {
+            LOGGER.module().warn(`WARNING: [/media-library/controller (get_thumbnail)] Invalid media ID: ${media_id}`);
+            res.status(400).json({
+                success: false,
+                message: 'Invalid media ID',
+                data: null
+            });
+            return;
+        }
+
+        // Look up the media record to get thumbnail_path
+        const result = await MEDIA_MODEL.get_media_record(media_id);
+
+        if (!result || !result.success || !result.record) {
+            res.status(404).json({
+                success: false,
+                message: 'Media not found',
+                data: null
+            });
+            return;
+        }
+
+        const record = result.record;
+
+        // Check for thumbnail path
+        if (!record.thumbnail_path) {
+            LOGGER.module().warn(`WARNING: [/media-library/controller (get_thumbnail)] No thumbnail for media: ${media_id}`);
+            res.status(404).json({
+                success: false,
+                message: 'Thumbnail not found',
+                data: null
+            });
+            return;
+        }
+
+        // Resolve relative path to absolute path with traversal protection
+        let resolved_path;
+
+        try {
+            resolved_path = await UPLOADS.resolve_storage_path(decode_html_entities(record.thumbnail_path));
+        } catch (error) {
+            LOGGER.module().warn(`WARNING: [/media-library/controller (get_thumbnail)] Thumbnail file not found on disk: ${record.thumbnail_path}`);
+            res.status(404).json({
+                success: false,
+                message: 'Thumbnail not found',
+                data: null
+            });
+            return;
+        }
+
+        // Set response headers — thumbnails are always JPEG
+        const stats = FS.statSync(resolved_path);
+
+        res.set({
+            'Content-Type': 'image/jpeg',
+            'Content-Length': stats.size,
+            'Cache-Control': 'public, max-age=86400',
+            'X-Content-Type-Options': 'nosniff'
+        });
+
+        // Stream thumbnail to response
+        const read_stream = FS.createReadStream(resolved_path);
+
+        read_stream.on('error', (error) => {
+            LOGGER.module().error(`ERROR: [/media-library/controller (get_thumbnail)] Stream error: ${error.message}`);
+            if (!res.headersSent) {
+                res.status(500).json({
+                    success: false,
+                    message: 'Error reading thumbnail',
+                    data: null
+                });
+            }
+        });
+
+        read_stream.pipe(res);
+
+    } catch (error) {
+        LOGGER.module().error(`ERROR: [/media-library/controller (get_thumbnail)] ${error.message}`);
+        res.status(500).json({
+            success: false,
+            message: 'Unable to retrieve thumbnail',
             data: null
         });
     }
@@ -223,6 +326,20 @@ exports.create_media_record = async function (req, res) {
         }
 
         data.token = token;
+
+        // Decode fields that may have been HTML-encoded by XSS sanitization middleware
+        if (data.storage_path) {
+            data.storage_path = decode_html_entities(data.storage_path);
+        }
+        if (data.thumbnail_path) {
+            data.thumbnail_path = decode_html_entities(data.thumbnail_path);
+        }
+        if (data.mime_type) {
+            data.mime_type = decode_html_entities(data.mime_type);
+        }
+        if (data.original_filename) {
+            data.original_filename = decode_html_entities(data.original_filename);
+        }
 
         // TODO: figure out permissions
         /*
@@ -886,6 +1003,69 @@ exports.get_kaltura_config = async function (req, res) {
         return res.status(500).json({
             success: false,
             message: 'Internal server error retrieving Kaltura configuration',
+            data: null
+        });
+    }
+};
+
+/**
+ * Assigns a Kaltura media entry to the exhibits category
+ * POST /api/v1/media/library/kaltura/:entry_id/category
+ *
+ * Path Parameters:
+ * - entry_id: Kaltura entry ID (required)
+ *
+ * @param {Object} req - Express request object
+ * @param {Object} res - Express response object
+ * @returns {Promise<void>}
+ */
+exports.assign_kaltura_category = async function (req, res) {
+
+    try {
+
+        // Extract entry_id from path parameter
+        const entry_id = req.params.entry_id;
+
+        // Validate entry_id is provided
+        if (!entry_id) {
+            LOGGER.module().warn('WARNING: [/media-library/controller (assign_kaltura_category)] Missing entry ID');
+            return res.status(400).json({
+                success: false,
+                message: 'Entry ID is required',
+                data: null
+            });
+        }
+
+        LOGGER.module().info(`INFO: [/media-library/controller (assign_kaltura_category)] Assigning entry ID: ${entry_id} to exhibits category`);
+
+        // Call Kaltura service to assign entry to exhibits category
+        const result = await KALTURA_SERVICE.assign_kaltura_category(entry_id);
+
+        if (!result || !result.success) {
+            LOGGER.module().warn(`WARNING: [/media-library/controller (assign_kaltura_category)] Failed: ${result?.message}`);
+
+            // Determine appropriate status code based on failure reason
+            const status_code = result?.message?.includes('not found') ? 404 : 200;
+
+            return res.status(status_code).json({
+                success: false,
+                message: result?.message || 'Failed to assign entry to exhibits category',
+                data: null
+            });
+        }
+
+        return res.status(201).json({
+            success: true,
+            message: result.message,
+            data: result.category_entry
+        });
+
+    } catch (error) {
+        LOGGER.module().error(`ERROR: [/media-library/controller (assign_kaltura_category)] ${error.message}`);
+
+        return res.status(500).json({
+            success: false,
+            message: 'Internal server error assigning entry to exhibits category',
             data: null
         });
     }

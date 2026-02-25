@@ -121,16 +121,25 @@ module.exports = function (app) {
         );
 
     // ========================================
-    // MEDIA FILE RETRIEVAL
+    // MEDIA FILE AND THUMBNAIL RETRIEVAL
     // ========================================
 
-    // Get media file by filename
+    // Get media file by UUID (hash-bucketed storage)
     // Note: Uses TOKEN.verify_with_query to support token in query string for img src URLs
     app.route(ENDPOINTS.media_file.get.endpoint)
         .get(
             rate_limits.read_operations,
             TOKEN.verify_with_query || TOKEN.verify,
             async_handler(CONTROLLER.get_media)
+        );
+
+    // Get media thumbnail by UUID (hash-bucketed storage)
+    // Note: Uses TOKEN.verify_with_query to support token in query string for img src URLs
+    app.route(ENDPOINTS.media_thumbnail.get.endpoint)
+        .get(
+            rate_limits.read_operations,
+            TOKEN.verify_with_query || TOKEN.verify,
+            async_handler(CONTROLLER.get_thumbnail)
         );
 
     // ========================================
@@ -192,6 +201,15 @@ module.exports = function (app) {
             rate_limits.read_operations,
             TOKEN.verify,
             async_handler(CONTROLLER.get_kaltura_media)
+        );
+
+    // Assign Kaltura media entry to exhibits category
+    // POST /api/v1/media/library/kaltura/:entry_id/category
+    app.route(ENDPOINTS.kaltura_category.post.endpoint)
+        .post(
+            rate_limits.write_operations,
+            TOKEN.verify,
+            async_handler(CONTROLLER.assign_kaltura_category)
         );
 
     // ========================================

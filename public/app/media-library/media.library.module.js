@@ -60,12 +60,12 @@ const mediaLibraryModule = (function() {
     };
 
     /**
-     * Build media file URL for thumbnail display
-     * @param {string} filename - The filename to build URL for
+     * Build media file URL for full-size file retrieval
+     * @param {string} media_id - The media UUID to build URL for
      * @returns {string|null} URL to media file or null if not available
      */
-    const build_media_url = (filename) => {
-        if (!filename) {
+    const build_media_url = (media_id) => {
+        if (!media_id) {
             return null;
         }
 
@@ -76,8 +76,31 @@ const mediaLibraryModule = (function() {
             return null;
         }
 
-        // Replace :filename placeholder with actual filename
-        const endpoint = MEDIA_ENDPOINTS.media_file.get.endpoint.replace(':filename', encodeURIComponent(filename));
+        // Replace :media_id placeholder with actual UUID
+        const endpoint = MEDIA_ENDPOINTS.media_file.get.endpoint.replace(':media_id', encodeURIComponent(media_id));
+        return endpoint;
+    };
+
+    /**
+     * Build media thumbnail URL for thumbnail display
+     * Uses the dedicated thumbnail endpoint for server-generated thumbnails
+     * @param {string} media_id - The media UUID to build thumbnail URL for
+     * @returns {string|null} URL to thumbnail or null if not available
+     */
+    const build_thumbnail_url = (media_id) => {
+        if (!media_id) {
+            return null;
+        }
+
+        const MEDIA_ENDPOINTS = get_media_library_endpoints();
+
+        if (!MEDIA_ENDPOINTS?.media_thumbnail?.get?.endpoint) {
+            console.warn('Media thumbnail endpoint not configured');
+            return null;
+        }
+
+        // Replace :media_id placeholder with actual UUID
+        const endpoint = MEDIA_ENDPOINTS.media_thumbnail.get.endpoint.replace(':media_id', encodeURIComponent(media_id));
         return endpoint;
     };
 
@@ -524,14 +547,13 @@ const mediaLibraryModule = (function() {
      * @param {string} filename - Original filename for display
      * @param {string} size - Formatted file size
      * @param {string} media_type - Media type (image, pdf, etc.)
-     * @param {string} storage_filename - Storage filename for URL building
      * @param {string} ingest_method - Ingest method (upload, repository, kaltura)
      * @param {string} repo_uuid - Repository item UUID (for repo items)
      * @param {string} repo_handle - Repository handle URL (for repo items)
      * @param {string} kaltura_thumbnail_url - Kaltura thumbnail URL (for kaltura items)
      * @param {string} kaltura_entry_id - Kaltura entry ID (for kaltura items)
      */
-    const handle_view_click = (uuid, name, filename, size, media_type, storage_filename, ingest_method, repo_uuid, repo_handle, kaltura_thumbnail_url, kaltura_entry_id) => {
+    const handle_view_click = (uuid, name, filename, size, media_type, ingest_method, repo_uuid, repo_handle, kaltura_thumbnail_url, kaltura_entry_id) => {
         if (!uuid) {
             console.error('No UUID provided for view');
             return;
@@ -555,13 +577,13 @@ const mediaLibraryModule = (function() {
 
         // Repository items: use repoModalsModule which handles repo thumbnail URLs
         if (ingest_method === 'repository' && typeof repoModalsModule !== 'undefined' && typeof repoModalsModule.open_view_media_modal === 'function') {
-            repoModalsModule.open_view_media_modal(uuid, name, filename, size, media_type, storage_filename, ingest_method, repo_uuid, repo_handle);
+            repoModalsModule.open_view_media_modal(uuid, name, filename, size, media_type, ingest_method, repo_uuid, repo_handle);
             return;
         }
 
         // Uploaded items: use mediaModalsModule
         if (typeof mediaModalsModule !== 'undefined' && typeof mediaModalsModule.open_view_media_modal === 'function') {
-            mediaModalsModule.open_view_media_modal(uuid, name, filename, size, media_type, storage_filename, ingest_method, repo_uuid, repo_handle);
+            mediaModalsModule.open_view_media_modal(uuid, name, filename, size, media_type, ingest_method);
         } else {
             console.error('mediaModalsModule.open_view_media_modal not available');
         }
@@ -784,13 +806,12 @@ const mediaLibraryModule = (function() {
                 const filename = this.getAttribute('data-filename');
                 const size = this.getAttribute('data-size');
                 const media_type = this.getAttribute('data-media-type');
-                const storage_filename = this.getAttribute('data-storage-filename');
                 const ingest_method = this.getAttribute('data-ingest-method');
                 const repo_uuid = this.getAttribute('data-repo-uuid');
                 const repo_handle = this.getAttribute('data-repo-handle');
                 const kaltura_thumbnail_url = this.getAttribute('data-kaltura-thumbnail-url');
                 const kaltura_entry_id = this.getAttribute('data-kaltura-entry-id');
-                handle_view_click(uuid, name, filename, size, media_type, storage_filename, ingest_method, repo_uuid, repo_handle, kaltura_thumbnail_url, kaltura_entry_id);
+                handle_view_click(uuid, name, filename, size, media_type, ingest_method, repo_uuid, repo_handle, kaltura_thumbnail_url, kaltura_entry_id);
             });
         });
 
@@ -909,15 +930,16 @@ const mediaLibraryModule = (function() {
             // Prepare data for DataTable
             const table_data = records.map(record => {
 
-                // Get storage filename from upload_uuid + extension or original_filename
-                const storage_filename = record.filename;
+                // Determine if this item has a server-generated thumbnail
+                const has_thumbnail = !!record.thumbnail_path;
 
                 return {
                     uuid: record.uuid || null,
                     name: record.name || 'Untitled',
                     filename: record.original_filename || 'N/A',
-                    storage_filename: storage_filename || null,
-                    thumbnail_url: storage_filename ? build_media_url(storage_filename) : null,
+                    thumbnail_url: has_thumbnail ? build_thumbnail_url(record.uuid) : null,
+                    media_url: record.uuid ? build_media_url(record.uuid) : null,
+                    has_thumbnail: has_thumbnail,
                     is_image: is_image_file(record.original_filename),
                     media_type: sanitize_html(record.media_type) || 'N/A',
                     mime_type: record.mime_type || null,
@@ -935,8 +957,6 @@ const mediaLibraryModule = (function() {
                 };
             });
 
-            console.log('DATA: ', table_data);
-
             // Initialize DataTable with configuration
             media_data_table = new DataTable('#items', {
                 data: table_data,
@@ -949,9 +969,6 @@ const mediaLibraryModule = (function() {
                                 const display_name = data || 'Untitled';
                                 let thumbnail_html = '';
                                 const is_repo = row.ingest_method === 'repository';
-                                const is_viewable = row.ingest_method === 'upload' && (row.is_image || row.media_type === 'pdf');
-                                const cursor_style = is_viewable ? 'cursor: pointer;' : '';
-                                const clickable_class = is_viewable ? 'media-thumbnail-clickable' : '';
 
                                 if (is_repo && row.repo_uuid) {
                                     // Repository item: use repo thumbnail endpoint
@@ -963,7 +980,7 @@ const mediaLibraryModule = (function() {
                                                  class="media-thumbnail media-thumbnail-clickable"
                                                  style="width: ${THUMBNAIL_SIZE.width}px; height: ${THUMBNAIL_SIZE.height}px; object-fit: cover; border-radius: 4px; margin-right: 10px; vertical-align: middle; cursor: pointer;"
                                                  loading="lazy"
-                                                 data-uuid="${row.uuid}" data-name="${sanitize_html(row.name)}" data-filename="${sanitize_html(row.filename)}" data-size="${row.size_display}" data-media-type="${row.media_type}" data-storage-filename="${row.storage_filename}" data-ingest-method="${row.ingest_method}" data-repo-uuid="${row.repo_uuid}" data-repo-handle="${row.repo_handle || ''}" title="Click to view"
+                                                 data-uuid="${row.uuid}" data-name="${sanitize_html(row.name)}" data-filename="${sanitize_html(row.filename)}" data-size="${row.size_display}" data-media-type="${row.media_type}" data-ingest-method="${row.ingest_method}" data-repo-uuid="${row.repo_uuid}" data-repo-handle="${row.repo_handle || ''}" title="Click to view"
                                                  onerror="this.onerror=null; this.src='${PLACEHOLDER_IMAGE}';">`;
                                     } else {
                                         thumbnail_html = `
@@ -971,7 +988,7 @@ const mediaLibraryModule = (function() {
                                                  alt="Placeholder for ${display_name}"
                                                  class="media-thumbnail-placeholder media-thumbnail-clickable"
                                                  style="width: ${THUMBNAIL_SIZE.width}px; height: ${THUMBNAIL_SIZE.height}px; object-fit: cover; border-radius: 4px; margin-right: 10px; vertical-align: middle; cursor: pointer;"
-                                                 data-uuid="${row.uuid}" data-name="${sanitize_html(row.name)}" data-filename="${sanitize_html(row.filename)}" data-size="${row.size_display}" data-media-type="${row.media_type}" data-storage-filename="${row.storage_filename}" data-ingest-method="${row.ingest_method}" data-repo-uuid="${row.repo_uuid}" data-repo-handle="${row.repo_handle || ''}" title="Click to view">`;
+                                                 data-uuid="${row.uuid}" data-name="${sanitize_html(row.name)}" data-filename="${sanitize_html(row.filename)}" data-size="${row.size_display}" data-media-type="${row.media_type}" data-ingest-method="${row.ingest_method}" data-repo-uuid="${row.repo_uuid}" data-repo-handle="${row.repo_handle || ''}" title="Click to view">`;
                                     }
                                 } else if (row.ingest_method === 'kaltura' && row.kaltura_thumbnail_url) {
                                     // Kaltura item: use kaltura thumbnail URL from database
@@ -991,28 +1008,31 @@ const mediaLibraryModule = (function() {
                                              class="media-thumbnail-placeholder media-thumbnail-clickable"
                                              style="width: ${THUMBNAIL_SIZE.width}px; height: ${THUMBNAIL_SIZE.height}px; object-fit: cover; border-radius: 4px; margin-right: 10px; vertical-align: middle; cursor: pointer;"
                                              data-uuid="${row.uuid}" data-name="${sanitize_html(row.name)}" data-ingest-method="${row.ingest_method}" data-media-type="${row.media_type || ''}" data-kaltura-thumbnail-url="" data-kaltura-entry-id="${row.kaltura_entry_id || ''}" title="Click to view">`;
-                                } else if (row.is_image && row.thumbnail_url) {
-                                    // Image thumbnail with token for authentication
+                                } else if (row.has_thumbnail && row.thumbnail_url) {
+                                    // Uploaded item with server-generated thumbnail (images and PDFs)
+                                    const is_viewable = row.ingest_method === 'upload' && (row.is_image || row.media_type === 'pdf');
+                                    const tn_cursor_style = is_viewable ? 'cursor: pointer;' : '';
+                                    const tn_clickable_class = is_viewable ? 'media-thumbnail-clickable' : '';
                                     const img_url = row.thumbnail_url + (row.thumbnail_url.includes('?') ? '&' : '?') + 'token=' + encodeURIComponent(token || '');
                                     thumbnail_html = `
                                         <img src="${img_url}" 
                                              alt="Thumbnail for ${display_name}"
-                                             class="media-thumbnail ${clickable_class}"
-                                             style="width: ${THUMBNAIL_SIZE.width}px; height: ${THUMBNAIL_SIZE.height}px; object-fit: cover; border-radius: 4px; margin-right: 10px; vertical-align: middle; ${cursor_style}"
+                                             class="media-thumbnail ${tn_clickable_class}"
+                                             style="width: ${THUMBNAIL_SIZE.width}px; height: ${THUMBNAIL_SIZE.height}px; object-fit: cover; border-radius: 4px; margin-right: 10px; vertical-align: middle; ${tn_cursor_style}"
                                              loading="lazy"
-                                             ${is_viewable ? `data-uuid="${row.uuid}" data-name="${sanitize_html(row.name)}" data-filename="${sanitize_html(row.filename)}" data-size="${row.size_display}" data-media-type="${row.media_type}" data-storage-filename="${row.storage_filename}" data-ingest-method="${row.ingest_method}" title="Click to view"` : ''}
+                                             ${is_viewable ? `data-uuid="${row.uuid}" data-name="${sanitize_html(row.name)}" data-filename="${sanitize_html(row.filename)}" data-size="${row.size_display}" data-media-type="${row.media_type}" data-ingest-method="${row.ingest_method}" title="Click to view"` : ''}
                                              onerror="this.onerror=null; this.src='${PLACEHOLDER_IMAGE}';">`;
                                 } else {
-                                    // Placeholder image for non-images (check if it's a viewable PDF)
-                                    const is_pdf_viewable = row.ingest_method === 'upload' && row.media_type === 'pdf';
-                                    const pdf_clickable_class = is_pdf_viewable ? 'media-thumbnail-clickable' : '';
-                                    const pdf_cursor_style = is_pdf_viewable ? 'cursor: pointer;' : '';
+                                    // Placeholder image for items without thumbnails
+                                    const is_upload_viewable = row.ingest_method === 'upload' && (row.is_image || row.media_type === 'pdf');
+                                    const placeholder_clickable_class = is_upload_viewable ? 'media-thumbnail-clickable' : '';
+                                    const placeholder_cursor_style = is_upload_viewable ? 'cursor: pointer;' : '';
                                     thumbnail_html = `
                                         <img src="${PLACEHOLDER_IMAGE}" 
                                              alt="Placeholder for ${display_name}"
-                                             class="media-thumbnail-placeholder ${pdf_clickable_class}"
-                                             style="width: ${THUMBNAIL_SIZE.width}px; height: ${THUMBNAIL_SIZE.height}px; object-fit: cover; border-radius: 4px; margin-right: 10px; vertical-align: middle; ${pdf_cursor_style}"
-                                             ${is_pdf_viewable ? `data-uuid="${row.uuid}" data-name="${sanitize_html(row.name)}" data-filename="${sanitize_html(row.filename)}" data-size="${row.size_display}" data-media-type="${row.media_type}" data-storage-filename="${row.storage_filename}" data-ingest-method="${row.ingest_method}" title="Click to view"` : ''}>`;
+                                             class="media-thumbnail-placeholder ${placeholder_clickable_class}"
+                                             style="width: ${THUMBNAIL_SIZE.width}px; height: ${THUMBNAIL_SIZE.height}px; object-fit: cover; border-radius: 4px; margin-right: 10px; vertical-align: middle; ${placeholder_cursor_style}"
+                                             ${is_upload_viewable ? `data-uuid="${row.uuid}" data-name="${sanitize_html(row.name)}" data-filename="${sanitize_html(row.filename)}" data-size="${row.size_display}" data-media-type="${row.media_type}" data-ingest-method="${row.ingest_method}" title="Click to view"` : ''}>`;
                                 }
 
                                 // Combine thumbnail and name

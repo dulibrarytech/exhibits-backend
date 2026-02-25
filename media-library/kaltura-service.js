@@ -210,10 +210,10 @@ exports.get_kaltura_media = async function (entry_id) {
  * Adds a Kaltura media entry to the exhibits gallery category
  * Uses Kaltura categoryEntry.add API to associate an entry with the exhibits category
  * https://developer.kaltura.com/api-docs/service/categoryEntry/action/add
- * @param {string} entry_id - Kaltura entry ID to add to the exhibits gallery
+ * @param {string} entry_id - Kaltura entry ID to add to the exhibits category
  * @returns {Promise<Object>} Result object with category entry data
  */
-exports.add_to_exhibits_gallery = async function (entry_id) {
+exports.assign_kaltura_category = async function (entry_id) {
 
     try {
 
@@ -221,13 +221,13 @@ exports.add_to_exhibits_gallery = async function (entry_id) {
         const validation = validate_entry_id(entry_id);
 
         if (!validation.valid) {
-            LOGGER.module().warn(`WARNING: [/media-library/kaltura-service (add_to_exhibits_gallery)] ${validation.message}`);
+            LOGGER.module().warn(`WARNING: [/media-library/kaltura-service (assign_kaltura_category)] ${validation.message}`);
             return build_response(false, validation.message, {
                 category_entry: null
             });
         }
 
-        LOGGER.module().info(`INFO: [/media-library/kaltura-service (add_to_exhibits_gallery)] Adding entry ID: ${validation.entry_id} to exhibits gallery`);
+        LOGGER.module().info(`INFO: [/media-library/kaltura-service (assign_kaltura_category)] Adding entry ID: ${validation.entry_id} to exhibits category`);
 
         // Get authenticated Kaltura client
         const { client } = await get_kaltura_session();
@@ -243,7 +243,7 @@ exports.add_to_exhibits_gallery = async function (entry_id) {
 
         // Check for Kaltura API exceptions
         if (response && response.objectType === 'KalturaAPIException') {
-            LOGGER.module().warn(`WARNING: [/media-library/kaltura-service (add_to_exhibits_gallery)] Kaltura API exception for entry ID: ${validation.entry_id} - ${response.message}`);
+            LOGGER.module().warn(`WARNING: [/media-library/kaltura-service (assign_kaltura_category)] Kaltura API exception for entry ID: ${validation.entry_id} - ${response.message}`);
             return build_response(false, response.message || 'Kaltura API error', {
                 category_entry: null
             });
@@ -251,15 +251,15 @@ exports.add_to_exhibits_gallery = async function (entry_id) {
 
         // Validate response
         if (!response || !response.entryId) {
-            LOGGER.module().warn(`WARNING: [/media-library/kaltura-service (add_to_exhibits_gallery)] Unexpected response when adding entry ID: ${validation.entry_id} to exhibits gallery`);
+            LOGGER.module().warn(`WARNING: [/media-library/kaltura-service (assign_kaltura_category)] Unexpected response when adding entry ID: ${validation.entry_id} to exhibits category`);
             return build_response(false, 'Failed to add entry to exhibits gallery', {
                 category_entry: null
             });
         }
 
-        LOGGER.module().info(`INFO: [/media-library/kaltura-service (add_to_exhibits_gallery)] Entry ID: ${validation.entry_id} added to exhibits gallery successfully`);
+        LOGGER.module().info(`INFO: [/media-library/kaltura-service (assign_kaltura_category)] Entry ID: ${validation.entry_id} assigned to exhibits category successfully`);
 
-        return build_response(true, 'Entry added to exhibits gallery successfully', {
+        return build_response(true, 'Entry assigned to exhibits category successfully', {
             category_entry: {
                 entry_id: response.entryId,
                 category_id: response.categoryId,
@@ -269,11 +269,11 @@ exports.add_to_exhibits_gallery = async function (entry_id) {
         });
 
     } catch (error) {
-        LOGGER.module().error(`ERROR: [/media-library/kaltura-service (add_to_exhibits_gallery)] ${error.message}`, {
+        LOGGER.module().error(`ERROR: [/media-library/kaltura-service (assign_kaltura_category)] ${error.message}`, {
             entry_id,
             stack: error.stack
         });
-        return build_response(false, 'Error adding entry to exhibits gallery: ' + error.message, {
+        return build_response(false, 'Error assigning entry to exhibits category: ' + error.message, {
             category_entry: null
         });
     }

@@ -26,6 +26,8 @@ const CREATEDOMPURIFY = require('dompurify'),
 
 /**
  * Middleware function used to sanitize body (form) inputs
+ * Uses DOMPurify to strip malicious HTML/scripts from string values.
+ *
  * @param req
  * @param res
  * @param next
@@ -34,16 +36,17 @@ exports.sanitize_req_body = function(req, res, next) {
 
     if (req.body === undefined) {
         next();
+        return;
     }
 
-    let keys = Object.keys(req.body);
+    const keys = Object.keys(req.body);
 
-    keys.map(function (prop) {
+    keys.forEach(function (prop) {
 
         if (req.body.hasOwnProperty(prop)) {
 
             if (prop !== 'is_active' && typeof req.body[prop] === 'string') {
-                req.body[prop] = VALIDATOR.escape(VALIDATOR.trim(req.body[prop]));
+                req.body[prop] = DOMPURIFY.sanitize(VALIDATOR.trim(req.body[prop]));
             }
         }
     });
@@ -53,6 +56,8 @@ exports.sanitize_req_body = function(req, res, next) {
 
 /**
  * Middleware function used to sanitize param string inputs
+ * Trims and sanitizes URL parameters with DOMPurify.
+ *
  * @param req
  * @param res
  * @param next
@@ -61,14 +66,15 @@ exports.sanitize_req_params = function(req, res, next) {
 
     if (req.params === undefined) {
         next();
+        return;
     }
 
-    let keys = Object.keys(req.params);
+    const keys = Object.keys(req.params);
 
-    keys.map(function (prop) {
+    keys.forEach(function (prop) {
 
         if (req.params.hasOwnProperty(prop) && typeof req.params[prop] === 'string') {
-            req.params[prop] = VALIDATOR.isUUID(VALIDATOR.escape(DOMPURIFY.sanitize(VALIDATOR.trim(req.params[prop]))));
+            req.params[prop] = DOMPURIFY.sanitize(VALIDATOR.trim(req.params[prop]));
         }
     });
 
@@ -77,6 +83,8 @@ exports.sanitize_req_params = function(req, res, next) {
 
 /**
  * Middleware function used to sanitize query string inputs
+ * Trims and sanitizes query string parameters with DOMPurify.
+ *
  * @param req
  * @param res
  * @param next
@@ -85,14 +93,15 @@ exports.sanitize_req_query = function(req, res, next) {
 
     if (req.query === undefined) {
         next();
+        return;
     }
 
-    let keys = Object.keys(req.query);
+    const keys = Object.keys(req.query);
 
-    keys.map(function (prop) {
+    keys.forEach(function (prop) {
 
         if (req.query.hasOwnProperty(prop) && typeof req.query[prop] === 'string') {
-            req.query[prop] = VALIDATOR.escape(DOMPURIFY.sanitize(VALIDATOR.trim(req.query[prop])));
+            req.query[prop] = DOMPURIFY.sanitize(VALIDATOR.trim(req.query[prop]));
         }
     });
 
