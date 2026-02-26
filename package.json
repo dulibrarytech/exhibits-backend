@@ -5,7 +5,13 @@
   "main": "exhibits.js",
   "scripts": {
     "test": "NODE_OPTIONS=--max-old-space-size=4096 vitest --run --reporter verbose",
-    "test:integration": "mocha -r dotenv/config exhibits/tests/exhibits.test.js"
+    "test:integration": "mocha -r dotenv/config exhibits/tests/exhibits.test.js",
+    "start": "node exhibits-backend.js",
+    "migrate:latest": "knex migrate:latest",
+    "migrate:up": "knex migrate:up",
+    "migrate:down": "knex migrate:down",
+    "migrate:rollback": "knex migrate:rollback",
+    "migrate:make": "knex migrate:make"
   },
   "author": "fernando.reyes@du.edu",
   "license": "Apache",
