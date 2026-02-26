@@ -1,4 +1,4 @@
-/* This css file is to over write bootstarp css
+/* This css file is to overwrite bootstrap css
 --------------------------------------------------------- /
 * Theme Name: Ela Admin Template
 * Theme URI: http://demos.jeweltheme.com/
@@ -8,10 +8,8 @@
 * Version: 1.0.0
 * License: GNU General Public License v2 or later
 * License URI: http://www.gnu.org/licenses/gpl-2.0.html
-* Tags: html, themplate, Ela Admin
+* Tags: html, template, Ela Admin
 --------------------------------------------------------- */
-
-@import url("https://fonts.googleapis.com/css?family=Open+Sans:400,600,700");
 
 .bg-transparent {
   background-color: transparent; }
@@ -78,14 +76,13 @@
   transition: all 0.3s ease; }
 
 body {
-  /*display: table;*/
   font-family: "Open Sans", sans-serif;
   font-size: 16px;
   width: 100%; }
 
 p {
   font-size: 16px;
-  font-family: "Open Sans", sans-serif;
+  font-family: 'Open Sans', sans-serif;
   font-weight: 400;
   line-height: 24px;
   color: #5A5A5A; }
@@ -213,7 +210,7 @@ aside.left-panel {
     color: #41434d;
     clear: both;
     display: block;
-    font-family: 'Open Sans';
+    font-family: 'Open Sans', sans-serif;
     font-size: 14px;
     font-weight: 700;
     line-height: 50px;
@@ -723,7 +720,7 @@ header .form-inline {
     background: #d9534f;
     border-radius: 50%;
     color: #fff;
-    font-family: 'Open Sans';
+    font-family: 'Open Sans', sans-serif;
     font-size: 9px;
     font-weight: 700;
     float: right;
@@ -945,7 +942,7 @@ footer.site-footer {
   padding: 0 1.875em; }
   footer.site-footer .footer-inner {
     color: #5A5A5A;
-    font-family: 'Open Sans';
+    font-family: 'Open Sans', sans-serif;
     font-size: 14px;
     line-height: 1.5;
     padding: 2.45em 1.125em; }

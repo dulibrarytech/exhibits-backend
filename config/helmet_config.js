@@ -69,6 +69,9 @@ const JQUERY_CDN = 'https://code.jquery.com';
 const IMGUR = 'https://i.imgur.com';
 const DU_LIBRARY = 'https://library.du.edu';
 
+const GOOGLE_FONTS_CSS = 'https://fonts.googleapis.com';
+const GOOGLE_FONTS_FILES = 'https://fonts.gstatic.com';
+
 module.exports = function () {
 
     return {
@@ -99,7 +102,8 @@ module.exports = function () {
                     JSDELIVR,
                     UNPKG,
                     CLOUDFLARE_CDN,
-                    KALTURA_CDN
+                    KALTURA_CDN,
+                    GOOGLE_FONTS_CSS
                 ],
 
                 // Images: self + Kaltura thumbnails + favicon sources + data URIs
@@ -132,6 +136,7 @@ module.exports = function () {
                     "'self'",
                     JSDELIVR,
                     CLOUDFLARE_CDN,
+                    GOOGLE_FONTS_FILES,
                     'data:'
                 ],
 
