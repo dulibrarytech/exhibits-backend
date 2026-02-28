@@ -595,8 +595,9 @@ const mediaLibraryModule = (function() {
      * @param {string} name - Media record name for confirmation
      * @param {string} filename - Original filename for display
      * @param {string} item_type - Item type for icon display
+     * @param {string} thumbnail_url - Thumbnail URL for preview display
      */
-    const handle_delete_click = async (uuid, name, filename, item_type) => {
+    const handle_delete_click = async (uuid, name, filename, item_type, thumbnail_url) => {
         if (!uuid) {
             console.error('No UUID provided for delete');
             return;
@@ -605,8 +606,8 @@ const mediaLibraryModule = (function() {
         const message_element = document.querySelector('#message');
 
         // Open delete confirmation modal via modals module
-        if (typeof mediaModalsModule !== 'undefined' && typeof mediaModalsModule.open_delete_media_modal === 'function') {
-            mediaModalsModule.open_delete_media_modal(uuid, name, filename, item_type, async (success, message) => {
+        if (typeof mediaDeleteModalModule !== 'undefined' && typeof mediaDeleteModalModule.open_delete_media_modal === 'function') {
+            mediaDeleteModalModule.open_delete_media_modal(uuid, name, filename, item_type, thumbnail_url, async (success, message) => {
                 if (success) {
                     // Show success message
                     display_message(message_element, 'success', message || 'Media record deleted successfully.');
@@ -742,6 +743,7 @@ const mediaLibraryModule = (function() {
                        data-name="${escaped_name}"
                        data-filename="${escaped_filename}"
                        data-item-type="${item_type}"
+                       data-thumbnail-url="${row.delete_thumbnail_url || ''}"
                        style="font-size: 0.875rem;">
                         <i class="fa fa-trash mr-2" aria-hidden="true" style="width: 16px;"></i>
                         Delete
@@ -857,7 +859,8 @@ const mediaLibraryModule = (function() {
                 const name = this.getAttribute('data-name');
                 const filename = this.getAttribute('data-filename');
                 const item_type = this.getAttribute('data-item-type');
-                handle_delete_click(uuid, name, filename, item_type);
+                const thumbnail_url = this.getAttribute('data-thumbnail-url');
+                handle_delete_click(uuid, name, filename, item_type, thumbnail_url);
             });
         });
     };
@@ -953,7 +956,22 @@ const mediaLibraryModule = (function() {
                     kaltura_thumbnail_url: record.kaltura_thumbnail_url || null,
                     kaltura_entry_id: record.kaltura_entry_id || null,
                     size: record.size || 0,
-                    size_display: format_file_size(record.size)
+                    size_display: format_file_size(record.size),
+                    delete_thumbnail_url: (() => {
+                        if (record.ingest_method === 'repository' && record.repo_uuid) {
+                            return get_repo_thumbnail_url(record.repo_uuid);
+                        }
+                        if (record.ingest_method === 'kaltura' && record.kaltura_thumbnail_url) {
+                            return record.kaltura_thumbnail_url;
+                        }
+                        if (has_thumbnail && record.uuid) {
+                            const tn_url = build_thumbnail_url(record.uuid);
+                            if (tn_url) {
+                                return tn_url + (tn_url.includes('?') ? '&' : '?') + 'token=' + encodeURIComponent(token || '');
+                            }
+                        }
+                        return '';
+                    })()
                 };
             });
 
