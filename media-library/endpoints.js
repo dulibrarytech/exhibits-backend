@@ -113,6 +113,46 @@ const ENDPOINTS = {
             description: 'Assigns Kaltura media entry to exhibits category by entry ID',
             endpoint: `${APP_PATH}${PREFIX}${VERSION}${ENDPOINT}/kaltura/:entry_id/category`,
             params: 'token or api_key, entry_id (path parameter)'
+        },
+        delete: {
+            description: 'Removes Kaltura media entry from exhibits category by entry ID',
+            endpoint: `${APP_PATH}${PREFIX}${VERSION}${ENDPOINT}/kaltura/:entry_id/category`,
+            params: 'token or api_key, entry_id (path parameter)'
+        }
+    },
+    iiif_manifest: {
+        get: {
+            description: 'Gets IIIF Presentation 3.0 manifest for a media record',
+            endpoint: `${APP_PATH}${PREFIX}${VERSION}${ENDPOINT}/iiif/:media_id/manifest`,
+            params: 'token or api_key, media_id (UUID)'
+        }
+    },
+    iiif_manifest_generate: {
+        post: {
+            description: 'Regenerates IIIF manifest for a specific media record',
+            endpoint: `${APP_PATH}${PREFIX}${VERSION}${ENDPOINT}/iiif/:media_id/manifest/generate`,
+            params: 'token or api_key, media_id (UUID)'
+        }
+    },
+    iiif_manifests_batch: {
+        post: {
+            description: 'Batch generates IIIF manifests for all uploaded records without manifests',
+            endpoint: `${APP_PATH}${PREFIX}${VERSION}${ENDPOINT}/iiif/manifests/generate`,
+            params: 'token or api_key'
+        }
+    },
+    iiif_info: {
+        get: {
+            description: 'Gets IIIF Image API 3.0 info.json for a media record',
+            endpoint: `${APP_PATH}${PREFIX}${VERSION}${ENDPOINT}/iiif/:media_id/info.json`,
+            params: 'token or api_key, media_id (UUID)'
+        }
+    },
+    iiif_image: {
+        get: {
+            description: 'Serves image via IIIF Image API 3.0 (region/size/rotation/quality.format)',
+            endpoint: `${APP_PATH}${PREFIX}${VERSION}${ENDPOINT}/iiif/:media_id/:region/:size/:rotation/:quality_format`,
+            params: 'token or api_key, media_id (UUID), region, size, rotation, quality_format'
         }
     },
 };

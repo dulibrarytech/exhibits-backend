@@ -32,7 +32,6 @@ const MAX_FILE_SIZE = storage_config.upload_max;
 const MAX_FILES = 10;
 
 // Thumbnail, permissions, and media type directory settings with fallback defaults
-// (allows uploads.js to work even if storage_config.js has not been updated yet)
 const THUMBNAIL_CONFIG = storage_config.thumbnail || { width: 400, height: 400, quality: 80 };
 const PERMISSIONS = storage_config.permissions || { file: 0o640, directory: 0o750 };
 const MEDIA_TYPE_DIRS = storage_config.media_type_dirs || {
@@ -203,8 +202,6 @@ const get_media_type = (mime_type) => {
     const mime_lower = mime_type.toLowerCase();
 
     if (mime_lower.startsWith('image/')) return 'image';
-    if (mime_lower.startsWith('video/')) return 'video';
-    if (mime_lower.startsWith('audio/')) return 'audio';
     if (mime_lower.includes('pdf')) return 'pdf';
 
     return 'unknown';
@@ -212,7 +209,7 @@ const get_media_type = (mime_type) => {
 
 /**
  * Resolves the storage directory name for a given media type
- * @param {string} media_type - Media type (image, pdf, video, audio)
+ * @param {string} media_type - Media type (image, pdf)
  * @returns {string} Directory name
  */
 const resolve_media_type_dir = (media_type) => {
@@ -274,10 +271,10 @@ const generate_pdf_thumbnail = async (pdf_buffer, uuid, source_path) => {
 
         await ensure_directory(thumbnail_dir);
 
-        // Import pdfjs-dist legacy build for Node.js compatibility (v5+ is ESM-only)
+        // Import pdfjs-dist legacy build for Node.js compatibility
         const { createCanvas, DOMMatrix } = require('@napi-rs/canvas');
 
-        // pdfjs-dist renderer expects DOMMatrix as a global (browser API not available in Node.js)
+        // pdfjs-dist renderer expects DOMMatrix as a global
         if (typeof globalThis.DOMMatrix === 'undefined') {
             globalThis.DOMMatrix = DOMMatrix;
         }
@@ -378,7 +375,9 @@ const store_file = async (file_buffer, original_name, mime_type) => {
         mime_type: mime_type,
         original_name: original_name,
         extension: extension,
-        file_size: file_size
+        file_size: file_size,
+        media_width: null,
+        media_height: null
     };
 
     // Generate thumbnail for images
@@ -389,6 +388,16 @@ const store_file = async (file_buffer, original_name, mime_type) => {
         if (abs_thumbnail) {
             result.thumbnail_path = to_relative_path(abs_thumbnail);
         }
+
+        // Extract pixel dimensions via Sharp
+        // works on PNG, GIF, WebP that may lack EXIF headers)
+        try {
+            const img_metadata = await sharp(file_buffer).metadata();
+            result.media_width = img_metadata.width || null;
+            result.media_height = img_metadata.height || null;
+        } catch (dim_error) {
+            LOGGER.module().warn(`WARN: [/media-library/uploads (store_file)] Dimension extraction failed for ${uuid}: ${dim_error.message}`);
+        }
     }
 
     // Generate thumbnail for PDFs (first page)
@@ -398,6 +407,17 @@ const store_file = async (file_buffer, original_name, mime_type) => {
 
         if (abs_thumbnail) {
             result.thumbnail_path = to_relative_path(abs_thumbnail);
+
+            // Extract dimensions from the generated thumbnail
+            // (represents the first page at rendered resolution)
+            try {
+                const thumb_buffer = await fs.readFile(abs_thumbnail);
+                const thumb_metadata = await sharp(thumb_buffer).metadata();
+                result.media_width = thumb_metadata.width || null;
+                result.media_height = thumb_metadata.height || null;
+            } catch (dim_error) {
+                LOGGER.module().warn(`WARN: [/media-library/uploads (store_file)] PDF dimension extraction failed for ${uuid}: ${dim_error.message}`);
+            }
         }
     }
 
@@ -488,7 +508,7 @@ const extract_metadata = async (file_path, media_type) => {
 
 /**
  * Upload request handler - stores files in hash-bucketed directories,
- * generates thumbnails, and extracts EXIF metadata
+ * generates thumbnails and extracts EXIF metadata
  */
 const handle_upload = async (req, res) => {
 
@@ -528,6 +548,8 @@ const handle_upload = async (req, res) => {
                 media_type: storage_result.media_type,
                 storage_path: storage_result.storage_path,
                 thumbnail_path: storage_result.thumbnail_path,
+                media_width: storage_result.media_width,
+                media_height: storage_result.media_height,
                 metadata: metadata,
                 uploaded_at: new Date().toISOString()
             };

@@ -487,6 +487,8 @@ const mediaUploadsModule = (function() {
                     media_type: media_type,
                     storage_path: storage_path,
                     thumbnail_path: thumbnail_path || '',
+                    media_width: uploaded_file.media_width || null,
+                    media_height: uploaded_file.media_height || null,
                     metadata: uploaded_file.metadata || null,
                     uploaded_at: uploaded_file.uploaded_at || new Date().toISOString()
                 });

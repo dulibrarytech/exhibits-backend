@@ -151,7 +151,6 @@ const Media_record_tasks = class {
                 throw new Error('Invalid media data: must be an object');
             }
 
-            // Create in transaction
             const created_record = await this.DB.transaction(async (trx) => {
                 const [inserted_id] = await trx(this.TABLE.media_library_records)
                     .insert(data)
@@ -278,7 +277,8 @@ const Media_record_tasks = class {
             'media_type', 'mime_type', 'filename', 'original_filename',
             'file_size', 'size', 'topics', 'genre_form', 'places', 'item_type',
             'topics_subjects', 'genre_form_subjects', 'places_subjects',
-            'is_published', 'metadata', 'tags', 'updated_by'
+            'is_published', 'metadata', 'tags', 'updated_by',
+            'iiif_manifest', 'media_width', 'media_height'
         ];
 
         try {
@@ -589,6 +589,70 @@ const Media_record_tasks = class {
 
         } catch (error) {
             LOGGER.module().error(`ERROR: [/media-library/tasks/media_record_tasks (get_user)] ${error.message}`);
+            return {
+                success: false,
+                full_name: null,
+                message: 'Error retrieving user: ' + error.message
+            };
+        }
+    }
+
+    /**
+     * Gets user's full name by username (decoded from JWT sub claim)
+     * @param {string} username - Username from decoded JWT (req.decoded.sub)
+     * @returns {Promise<Object>} Result object with user's full name
+     */
+    async get_user_by_username(username) {
+
+        try {
+
+            this._validate_database();
+            this._validate_table('user_records');
+
+            if (!username || typeof username !== 'string' || username.trim() === '') {
+                return {
+                    success: false,
+                    full_name: null,
+                    message: 'Invalid username provided'
+                };
+            }
+
+            // Query user_records by du_id (the SSO username stored as JWT sub claim)
+            const user = await this.DB(this.TABLE.user_records)
+                .select('first_name', 'last_name')
+                .where({du_id: username.trim()})
+                .first()
+                .timeout(this.QUERY_TIMEOUT);
+
+            if (!user) {
+                LOGGER.module().warn(`WARNING: [/media-library/tasks/media_record_tasks (get_user_by_username)] User not found for username: ${username}`);
+                return {
+                    success: false,
+                    full_name: null,
+                    message: 'User not found'
+                };
+            }
+
+            // Concatenate first and last name
+            const first_name = user.first_name || '';
+            const last_name = user.last_name || '';
+            const full_name = `${first_name} ${last_name}`.trim();
+
+            this._log_success('User retrieved by username successfully', {
+                username: username,
+                full_name: full_name
+            });
+
+            return {
+                success: true,
+                full_name: full_name || null,
+                first_name: first_name,
+                last_name: last_name,
+                message: 'User retrieved successfully'
+            };
+
+        } catch (error) {
+            LOGGER.module().error(`ERROR: [/media-library/tasks/media_record_tasks (get_user_by_username)] ${error.message}`);
             return {
                 success: false,
                 full_name: null,

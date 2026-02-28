@@ -72,17 +72,19 @@ exports.sso = async function (req, res) {
             return res.status(401).json({ message: 'Authentication failed.' });
         }
 
-        // Create and encode token
+        // Create token
         const token = TOKEN.create(sanitized_username);
         if (!token) {
             LOGGER.module().error('Failed to create authentication token');
             return res.status(500).json({ message: 'Authentication failed.' });
         }
 
-        const encoded_token = encodeURIComponent(token);
+        // Save raw token to database (not URL-encoded)
+        // URL encoding is only needed for the redirect URL query parameter
+        const is_token_saved = await MODEL.save_token(auth_result.data, token);
 
-        // Save token to database
-        const is_token_saved = await MODEL.save_token(auth_result.data, encoded_token);
+        // URL-encode for safe use in redirect URL
+        const encoded_token = encodeURIComponent(token);
 
         if (!is_token_saved) {
             LOGGER.module().error(

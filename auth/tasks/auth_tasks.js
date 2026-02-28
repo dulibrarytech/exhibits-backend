@@ -593,6 +593,122 @@ const Auth_tasks = class {
             return 0;
         }
     }
+
+    /**
+     * Gets user ID by username (du_id from decoded JWT sub claim)
+     * Replaces token-based lookup to avoid encoding mismatch and token rotation issues
+     * @param {string} username - Username from decoded JWT (req.decoded.sub)
+     * @returns {number|null} - User ID on success, null on failure
+     */
+    async get_user_id_by_username(username) {
+
+        try {
+
+            if (!username || typeof username !== 'string' || username.trim() === '') {
+                LOGGER.module().warn('WARNING: [/auth/tasks (get_user_id_by_username)] missing or empty username parameter');
+                return null;
+            }
+
+            const trimmed_username = username.trim();
+
+            // Query database for user by du_id (SSO username)
+            const data = await this.DB(this.TABLE.user_records)
+                .select('id')
+                .where({
+                    du_id: trimmed_username,
+                    is_active: 1
+                })
+                .limit(1);
+
+            // Validate query result
+            if (!data || !Array.isArray(data) || data.length === 0) {
+                LOGGER.module().debug(`DEBUG: [/auth/tasks (get_user_id_by_username)] no active user found for username: ${trimmed_username}`);
+                return null;
+            }
+
+            // Validate result structure
+            if (!data[0].id) {
+                LOGGER.module().error('ERROR: [/auth/tasks (get_user_id_by_username)] user record missing id field');
+                return null;
+            }
+
+            // Validate user_id is numeric
+            const user_id = Number(data[0].id);
+            if (!Number.isInteger(user_id) || user_id <= 0) {
+                LOGGER.module().error(`ERROR: [/auth/tasks (get_user_id_by_username)] invalid user_id format: ${data[0].id}`);
+                return null;
+            }
+
+            return user_id;
+
+        } catch (error) {
+            LOGGER.module().error(`ERROR: [/auth/tasks (get_user_id_by_username)] unable to get user id: ${error.message}`);
+            return null;
+        }
+    }
+
+    /**
+     * Gets user permissions by username (du_id from decoded JWT sub claim)
+     * Replaces token-based lookup to avoid encoding mismatch and token rotation issues
+     * @param {string} username - Username from decoded JWT (req.decoded.sub)
+     * @returns {Array|null} - Array of permission objects on success, null on failure
+     */
+    async get_user_permissions_by_username(username) {
+
+        try {
+
+            if (!username || typeof username !== 'string' || username.trim() === '') {
+                LOGGER.module().warn('WARNING: [/auth/tasks (get_user_permissions_by_username)] missing or empty username parameter');
+                return null;
+            }
+
+            const trimmed_username = username.trim();
+
+            // Query database for user permissions by du_id
+            const permissions = await this.DB
+                .select(
+                    'u.id',
+                    'u.is_active',
+                    'ur.role_id',
+                    'rp.permission_id'
+                )
+                .from('tbl_users AS u')
+                .leftJoin('ctbl_user_roles AS ur', 'ur.user_id', 'u.id')
+                .leftJoin('ctbl_role_permissions AS rp', 'rp.role_id', 'ur.role_id')
+                .where('u.du_id', '=', trimmed_username)
+                .andWhere('u.is_active', '=', 1);
+
+            // Validate query result
+            if (!permissions || !Array.isArray(permissions)) {
+                LOGGER.module().error('ERROR: [/auth/tasks (get_user_permissions_by_username)] invalid query result format');
+                return null;
+            }
+
+            // Handle case where no user found
+            if (permissions.length === 0) {
+                LOGGER.module().debug(`DEBUG: [/auth/tasks (get_user_permissions_by_username)] no active user found for username: ${trimmed_username}`);
+                return [];
+            }
+
+            // Validate all permission objects have required fields
+            const valid_permissions = permissions.filter(perm => {
+                if (!perm || typeof perm !== 'object') {
+                    LOGGER.module().warn('WARNING: [/auth/tasks (get_user_permissions_by_username)] invalid permission object structure');
+                    return false;
+                }
+                return true;
+            });
+
+            // Filter out records without permission_id (user exists but has no permissions)
+            const permissions_with_id = valid_permissions.filter(perm => perm.permission_id !== null);
+
+            return permissions_with_id;
+
+        } catch (error) {
+            LOGGER.module().error(`ERROR: [/auth/tasks (get_user_permissions_by_username)] unable to get user permissions: ${error.message}`);
+            return null;
+        }
+    }
 };
 
 module.exports = Auth_tasks;

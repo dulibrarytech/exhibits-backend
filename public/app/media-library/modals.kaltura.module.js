@@ -318,6 +318,9 @@ const kalturaModalsModule = (function() {
         html += '<input type="hidden" class="kaltura-item-type" name="media_type" value="' + escape_html(item_type) + '">';
         html += '<input type="hidden" class="kaltura-mime-type" name="mime_type" value="' + escape_html(get_mime_type(item_type)) + '">';
         html += '<input type="hidden" class="kaltura-thumbnail-url" name="kaltura_thumbnail_url" value="' + escape_html(thumbnail_url) + '">';
+        html += '<input type="hidden" class="kaltura-media-width" name="media_width" value="' + escape_html(String(media_data.media_width || '')) + '">';
+        html += '<input type="hidden" class="kaltura-media-height" name="media_height" value="' + escape_html(String(media_data.media_height || '')) + '">';
+        html += '<input type="hidden" class="kaltura-ms-duration" name="ms_duration" value="' + escape_html(String(media_data.ms_duration || '')) + '">';
 
         // Save button row
         html += '<div class="row">';
@@ -377,6 +380,9 @@ const kalturaModalsModule = (function() {
             const media_type = form.querySelector('.kaltura-item-type')?.value || '';
             const thumbnail_url = form.querySelector('.kaltura-thumbnail-url')?.value || '';
             const mime_type = form.querySelector('.kaltura-mime-type')?.value || '';
+            const media_width = form.querySelector('.kaltura-media-width')?.value || '';
+            const media_height = form.querySelector('.kaltura-media-height')?.value || '';
+            const ms_duration = form.querySelector('.kaltura-ms-duration')?.value || '';
 
             // Collect dropdown values
             const item_type_select = form.querySelector('select[name="item_type"]');
@@ -424,7 +430,10 @@ const kalturaModalsModule = (function() {
                 topics_subjects: topics_subjects,
                 genre_form_subjects: genre_form_subjects,
                 places_subjects: places_subjects,
-                ingest_method: 'kaltura'
+                ingest_method: 'kaltura',
+                media_width: media_width ? parseInt(media_width, 10) : null,
+                media_height: media_height ? parseInt(media_height, 10) : null,
+                media_duration: ms_duration ? (parseFloat(ms_duration) / 1000) : null
             };
 
             // Make API request to create media record

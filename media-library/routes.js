@@ -212,6 +212,67 @@ module.exports = function (app) {
             async_handler(CONTROLLER.assign_kaltura_category)
         );
 
+    // Remove Kaltura media entry from exhibits category
+    // DELETE /api/v1/media/library/kaltura/:entry_id/category
+    app.route(ENDPOINTS.kaltura_category.delete.endpoint)
+        .delete(
+            rate_limits.write_operations,
+            TOKEN.verify,
+            async_handler(CONTROLLER.remove_kaltura_category)
+        );
+
+    // ========================================
+    // IIIF MANIFEST AND IMAGE API
+    // ========================================
+
+    // Batch generate IIIF manifests for all uploaded records
+    // POST /api/v1/media/library/iiif/manifests/generate
+    // NOTE: Must be registered BEFORE routes with :media_id parameter
+    // to prevent Express from matching "manifests" as a UUID
+    app.route(ENDPOINTS.iiif_manifests_batch.post.endpoint)
+        .post(
+            rate_limits.write_operations,
+            TOKEN.verify,
+            async_handler(CONTROLLER.batch_generate_iiif_manifests)
+        );
+
+    // Regenerate IIIF manifest for a specific media record
+    // POST /api/v1/media/library/iiif/:media_id/manifest/generate
+    app.route(ENDPOINTS.iiif_manifest_generate.post.endpoint)
+        .post(
+            rate_limits.write_operations,
+            TOKEN.verify,
+            async_handler(CONTROLLER.generate_iiif_manifest)
+        );
+
+    // Get IIIF manifest for a media record
+    // GET /api/v1/media/library/iiif/:media_id/manifest
+    app.route(ENDPOINTS.iiif_manifest.get.endpoint)
+        .get(
+            rate_limits.read_operations,
+            // TOKEN.verify,
+            async_handler(CONTROLLER.get_iiif_manifest)
+        );
+
+    // Get IIIF Image API info.json
+    // GET /api/v1/media/library/iiif/:media_id/info.json
+    app.route(ENDPOINTS.iiif_info.get.endpoint)
+        .get(
+            rate_limits.read_operations,
+            TOKEN.verify,
+            async_handler(CONTROLLER.get_iiif_info)
+        );
+
+    // Serve image via IIIF Image API 3.0
+    // GET /api/v1/media/library/iiif/:media_id/:region/:size/:rotation/:quality_format
+    // NOTE: Must be registered LAST among IIIF routes due to multi-param path capture
+    app.route(ENDPOINTS.iiif_image.get.endpoint)
+        .get(
+            rate_limits.read_operations,
+            TOKEN.verify_with_query || TOKEN.verify,
+            async_handler(CONTROLLER.get_iiif_image)
+        );
+
     // ========================================
     // ERROR HANDLING
     // ========================================

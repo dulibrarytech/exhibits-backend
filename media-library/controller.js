@@ -23,11 +23,12 @@ const PATH = require('path');
 const MEDIA_MODEL = require('../media-library/model');
 const REPO_SERVICE = require('../media-library/repo-service');
 const KALTURA_SERVICE = require('../media-library/kaltura-service');
+const IIIF_SERVICE = require('../media-library/iiif-service');
 const KALTURA_CONFIG = require('../config/kaltura_config')();
 const UPLOADS = require('../media-library/uploads');
 const AUTHORIZE = require('../auth/authorize');
 const LOGGER = require('../libs/log4');
-const VALIDATOR = require("validator");
+// const VALIDATOR = require("validator");
 
 
 // Allowed MIME types for media files
@@ -74,6 +75,35 @@ const decode_html_entities = (str) => {
         .replace(/&lt;/gi, '<')
         .replace(/&gt;/gi, '>')
         .replace(/&amp;/gi, '&');
+};
+
+/**
+ * Builds a safe Content-Disposition header value for file serving
+ * Handles filenames with spaces, Unicode, and special characters (e.g., macOS screenshots)
+ * Uses RFC 5987 filename*= parameter for Unicode support with ASCII fallback
+ * @param {string} filename - Original filename (may contain spaces, Unicode, etc.)
+ * @param {string} [disposition='inline'] - Disposition type ('inline' or 'attachment')
+ * @returns {string} Safe Content-Disposition header value
+ */
+const build_content_disposition = (filename, disposition = 'inline') => {
+
+    if (!filename || typeof filename !== 'string') {
+        return `${disposition}; filename="download"`;
+    }
+
+    // Decode any HTML entities first
+    const decoded = decode_html_entities(filename);
+
+    // Create ASCII-safe fallback: replace non-ASCII and problematic characters
+    const ascii_safe = decoded
+        .replace(/[^\x20-\x7E]/g, '_')  // Replace non-printable/non-ASCII with underscore
+        .replace(/["\\]/g, '_');          // Replace quotes and backslashes
+
+    // RFC 5987 encoded version for full Unicode support
+    const encoded = encodeURIComponent(decoded);
+
+    // Provide both: ASCII fallback for older clients, filename* for modern ones
+    return `${disposition}; filename="${ascii_safe}"; filename*=UTF-8''${encoded}`;
 };
 
 /**
@@ -164,7 +194,7 @@ exports.get_media = async function (req, res) {
         res.set({
             'Content-Type': mime_type,
             'Content-Length': stats.size,
-            'Content-Disposition': `inline; filename="${decode_html_entities(record.original_filename || record.filename || 'download')}"`,
+            'Content-Disposition': build_content_disposition(record.original_filename || record.filename || 'download'),
             'Cache-Control': 'public, max-age=86400',
             'X-Content-Type-Options': 'nosniff'
         });
@@ -319,13 +349,11 @@ exports.create_media_record = async function (req, res) {
             return;
         }
 
-        // Extract token if available
-        const token = req.headers?.['x-access-token'];
-        if (!token || !VALIDATOR.isJWT(token)) {
-            return false;
+        // Pass username from verified token for created_by lookup
+        // (req.decoded is set by TOKEN.verify middleware with decoded JWT payload)
+        if (req.decoded && req.decoded.sub) {
+            data.username = req.decoded.sub;
         }
-
-        data.token = token;
 
         // Decode fields that may have been HTML-encoded by XSS sanitization middleware
         if (data.storage_path) {
@@ -381,6 +409,13 @@ exports.create_media_record = async function (req, res) {
             message: result.message || 'Media record created successfully.',
             data: result.id
         });
+
+        // Auto-generate IIIF manifest for uploaded items (fire-and-forget)
+        if (data.ingest_method === 'upload') {
+            IIIF_SERVICE.generate_manifest(data.uuid).catch(err => {
+                LOGGER.module().warn(`WARNING: [/media-library/controller (create_media_record)] IIIF manifest generation failed: ${err.message}`);
+            });
+        }
 
     } catch (error) {
         LOGGER.module().error('ERROR: [/media-library/controller (create_media_record)] Unable to create media record ' + error.message);
@@ -508,9 +543,10 @@ exports.update_media_record = async function (req, res) {
             return;
         }
 
-        // Add updated_by if user info available
-        if (req.user && req.user.uid) {
-            data.updated_by = req.user.uid;
+        // Pass username from verified token for updated_by name lookup
+        // (req.decoded is set by TOKEN.verify middleware)
+        if (req.decoded && req.decoded.sub) {
+            data.username = req.decoded.sub;
         }
 
         const result = await MEDIA_MODEL.update_media_record(media_id, data);
@@ -528,6 +564,11 @@ exports.update_media_record = async function (req, res) {
             success: true,
             message: result.message,
             data: result.record
+        });
+
+        // Regenerate IIIF manifest when metadata changes (fire-and-forget)
+        IIIF_SERVICE.generate_manifest(media_id).catch(err => {
+            LOGGER.module().warn(`WARNING: [/media-library/controller (update_media_record)] IIIF manifest regeneration failed: ${err.message}`);
         });
 
     } catch (error) {
@@ -561,10 +602,11 @@ exports.delete_media_record = async function (req, res) {
             return;
         }
 
-        // Get user ID for audit trail
-        const deleted_by = req.user?.uid || null;
+        // Get username from verified token for deleted_by name lookup
+        // (req.decoded is set by TOKEN.verify middleware)
+        const username = req.decoded?.sub || null;
 
-        const result = await MEDIA_MODEL.delete_media_record(media_id, deleted_by);
+        const result = await MEDIA_MODEL.delete_media_record(media_id, username);
 
         if (!result || !result.success) {
             res.status(400).json({
@@ -1066,6 +1108,375 @@ exports.assign_kaltura_category = async function (req, res) {
         return res.status(500).json({
             success: false,
             message: 'Internal server error assigning entry to exhibits category',
+            data: null
+        });
+    }
+};
+
+/**
+ * Removes a Kaltura media entry from the exhibits category
+ * DELETE /api/v1/media/library/kaltura/:entry_id/category
+ *
+ * Path Parameters:
+ * - entry_id: Kaltura entry ID (required)
+ *
+ * @param {Object} req - Express request object
+ * @param {Object} res - Express response object
+ * @returns {Promise<void>}
+ */
+exports.remove_kaltura_category = async function (req, res) {
+
+    try {
+
+        // Extract entry_id from path parameter
+        const entry_id = req.params.entry_id;
+
+        // Validate entry_id is provided
+        if (!entry_id) {
+            LOGGER.module().warn('WARNING: [/media-library/controller (remove_kaltura_category)] Missing entry ID');
+            return res.status(400).json({
+                success: false,
+                message: 'Entry ID is required',
+                data: null
+            });
+        }
+
+        LOGGER.module().info(`INFO: [/media-library/controller (remove_kaltura_category)] Removing entry ID: ${entry_id} from exhibits category`);
+
+        // Call Kaltura service to remove entry from exhibits category
+        const result = await KALTURA_SERVICE.remove_kaltura_category(entry_id);
+
+        if (!result || !result.success) {
+            LOGGER.module().warn(`WARNING: [/media-library/controller (remove_kaltura_category)] Failed: ${result?.message}`);
+
+            // Determine appropriate status code based on failure reason
+            const status_code = result?.message?.includes('not found') ? 404 : 200;
+
+            return res.status(status_code).json({
+                success: false,
+                message: result?.message || 'Failed to remove entry from exhibits category',
+                data: null
+            });
+        }
+
+        return res.status(200).json({
+            success: true,
+            message: result.message,
+            data: result.category_entry
+        });
+
+    } catch (error) {
+        LOGGER.module().error(`ERROR: [/media-library/controller (remove_kaltura_category)] ${error.message}`);
+
+        return res.status(500).json({
+            success: false,
+            message: 'Internal server error removing entry from exhibits category',
+            data: null
+        });
+    }
+};
+
+// ========================================
+// IIIF MANIFEST AND IMAGE API
+// ========================================
+
+/**
+ * Gets the IIIF Presentation 3.0 manifest for a media record
+ * Returns stored manifest or generates on-the-fly if not cached
+ *
+ * GET /api/v1/media/library/iiif/:media_id/manifest
+ *
+ * @param {Object} req - Express request object
+ * @param {Object} res - Express response object
+ * @returns {Promise<void>}
+ */
+exports.get_iiif_manifest = async function (req, res) {
+
+    try {
+
+        const media_id = req.params.media_id;
+
+        // Validate UUID format
+        if (!is_valid_uuid(media_id)) {
+            LOGGER.module().warn(`WARNING: [/media-library/controller (get_iiif_manifest)] Invalid media ID: ${media_id}`);
+            return res.status(400).json({
+                success: false,
+                message: 'Invalid media ID',
+                data: null
+            });
+        }
+
+        LOGGER.module().info(`INFO: [/media-library/controller (get_iiif_manifest)] Fetching manifest for: ${media_id}`);
+
+        const result = await IIIF_SERVICE.get_manifest(media_id);
+
+        if (!result || !result.success) {
+            LOGGER.module().warn(`WARNING: [/media-library/controller (get_iiif_manifest)] Failed: ${result?.message}`);
+
+            const status_code = result?.message?.includes('not found') ? 404 : 200;
+
+            return res.status(status_code).json({
+                success: false,
+                message: result?.message || 'Failed to retrieve manifest',
+                data: null
+            });
+        }
+
+        // Serve manifest with IIIF-compliant content type and CORS headers
+        res.set({
+            'Content-Type': 'application/ld+json;profile="http://iiif.io/api/presentation/3/context.json"',
+            'Access-Control-Allow-Origin': '*',
+            'Access-Control-Allow-Methods': 'GET, OPTIONS',
+            'Access-Control-Allow-Headers': 'Origin, Content-Type, Accept',
+            'Cache-Control': 'public, max-age=3600'
+        });
+
+        return res.status(200).json(result.manifest);
+
+    } catch (error) {
+        LOGGER.module().error(`ERROR: [/media-library/controller (get_iiif_manifest)] ${error.message}`);
+
+        return res.status(500).json({
+            success: false,
+            message: 'Internal server error retrieving manifest',
+            data: null
+        });
+    }
+};
+
+/**
+ * Regenerates the IIIF manifest for a specific media record
+ * Forces a fresh build from current metadata and stores it
+ *
+ * POST /api/v1/media/library/iiif/:media_id/manifest/generate
+ *
+ * @param {Object} req - Express request object
+ * @param {Object} res - Express response object
+ * @returns {Promise<void>}
+ */
+exports.generate_iiif_manifest = async function (req, res) {
+
+    try {
+
+        const media_id = req.params.media_id;
+
+        if (!is_valid_uuid(media_id)) {
+            LOGGER.module().warn(`WARNING: [/media-library/controller (generate_iiif_manifest)] Invalid media ID: ${media_id}`);
+            return res.status(400).json({
+                success: false,
+                message: 'Invalid media ID',
+                data: null
+            });
+        }
+
+        LOGGER.module().info(`INFO: [/media-library/controller (generate_iiif_manifest)] Regenerating manifest for: ${media_id}`);
+
+        const result = await IIIF_SERVICE.generate_manifest(media_id);
+
+        if (!result || !result.success) {
+            LOGGER.module().warn(`WARNING: [/media-library/controller (generate_iiif_manifest)] Failed: ${result?.message}`);
+
+            return res.status(200).json({
+                success: false,
+                message: result?.message || 'Failed to generate manifest',
+                data: null
+            });
+        }
+
+        return res.status(201).json({
+            success: true,
+            message: result.message,
+            data: result.manifest
+        });
+
+    } catch (error) {
+        LOGGER.module().error(`ERROR: [/media-library/controller (generate_iiif_manifest)] ${error.message}`);
+
+        return res.status(500).json({
+            success: false,
+            message: 'Internal server error generating manifest',
+            data: null
+        });
+    }
+};
+
+/**
+ * Batch generates IIIF manifests for all uploaded media records
+ * that do not already have a stored manifest
+ *
+ * POST /api/v1/media/library/iiif/manifests/generate
+ *
+ * @param {Object} req - Express request object
+ * @param {Object} res - Express response object
+ * @returns {Promise<void>}
+ */
+exports.batch_generate_iiif_manifests = async function (req, res) {
+
+    try {
+
+        LOGGER.module().info('INFO: [/media-library/controller (batch_generate_iiif_manifests)] Starting batch generation');
+
+        const result = await IIIF_SERVICE.batch_generate_manifests();
+
+        if (!result || !result.success) {
+            return res.status(200).json({
+                success: false,
+                message: result?.message || 'Batch generation failed',
+                data: result?.stats || null
+            });
+        }
+
+        return res.status(200).json({
+            success: true,
+            message: result.message,
+            data: result.stats
+        });
+
+    } catch (error) {
+        LOGGER.module().error(`ERROR: [/media-library/controller (batch_generate_iiif_manifests)] ${error.message}`);
+
+        return res.status(500).json({
+            success: false,
+            message: 'Internal server error during batch manifest generation',
+            data: null
+        });
+    }
+};
+
+/**
+ * Gets the IIIF Image API 3.0 info.json for a media record
+ *
+ * GET /api/v1/media/library/iiif/:media_id/info.json
+ *
+ * @param {Object} req - Express request object
+ * @param {Object} res - Express response object
+ * @returns {Promise<void>}
+ */
+exports.get_iiif_info = async function (req, res) {
+
+    try {
+
+        const media_id = req.params.media_id;
+
+        if (!is_valid_uuid(media_id)) {
+            LOGGER.module().warn(`WARNING: [/media-library/controller (get_iiif_info)] Invalid media ID: ${media_id}`);
+            return res.status(400).json({
+                success: false,
+                message: 'Invalid media ID',
+                data: null
+            });
+        }
+
+        LOGGER.module().info(`INFO: [/media-library/controller (get_iiif_info)] Fetching info.json for: ${media_id}`);
+
+        const result = await IIIF_SERVICE.get_info(media_id);
+
+        if (!result || !result.success) {
+            const status_code = result?.message?.includes('not found') ? 404 : 200;
+
+            return res.status(status_code).json({
+                success: false,
+                message: result?.message || 'Failed to retrieve image info',
+                data: null
+            });
+        }
+
+        // Serve info.json with IIIF-compliant content type and CORS headers
+        res.set({
+            'Content-Type': 'application/ld+json;profile="http://iiif.io/api/image/3/context.json"',
+            'Access-Control-Allow-Origin': '*',
+            'Access-Control-Allow-Methods': 'GET, OPTIONS',
+            'Access-Control-Allow-Headers': 'Origin, Content-Type, Accept',
+            'Cache-Control': 'public, max-age=86400'
+        });
+
+        return res.status(200).json(result.info);
+
+    } catch (error) {
+        LOGGER.module().error(`ERROR: [/media-library/controller (get_iiif_info)] ${error.message}`);
+
+        return res.status(500).json({
+            success: false,
+            message: 'Internal server error retrieving image info',
+            data: null
+        });
+    }
+};
+
+/**
+ * Serves an image via IIIF Image API 3.0
+ * Parses IIIF URL parameters and applies image transformations via Sharp
+ *
+ * GET /api/v1/media/library/iiif/:media_id/:region/:size/:rotation/:quality_format
+ *
+ * Examples:
+ *   .../iiif/{uuid}/full/max/0/default.jpg          full image as JPEG
+ *   .../iiif/{uuid}/full/!400,400/0/default.jpg     best fit within 400x400
+ *   .../iiif/{uuid}/square/200,200/0/default.jpg    square crop, 200x200
+ *   .../iiif/{uuid}/0,0,500,500/max/0/gray.png      top-left 500x500, grayscale PNG
+ *
+ * @param {Object} req - Express request object
+ * @param {Object} res - Express response object
+ * @returns {Promise<void>}
+ */
+exports.get_iiif_image = async function (req, res) {
+
+    try {
+
+        const media_id = req.params.media_id;
+        const region = req.params.region;
+        const size = req.params.size;
+        const rotation = req.params.rotation;
+        const quality_format = req.params.quality_format;
+
+        // Validate UUID format
+        if (!is_valid_uuid(media_id)) {
+            LOGGER.module().warn(`WARNING: [/media-library/controller (get_iiif_image)] Invalid media ID: ${media_id}`);
+            return res.status(400).json({
+                success: false,
+                message: 'Invalid media ID',
+                data: null
+            });
+        }
+
+        LOGGER.module().info(`INFO: [/media-library/controller (get_iiif_image)] IIIF image request: ${media_id}/${region}/${size}/${rotation}/${quality_format}`);
+
+        const result = await IIIF_SERVICE.get_image(media_id, region, size, rotation, quality_format);
+
+        if (!result || !result.success) {
+            LOGGER.module().warn(`WARNING: [/media-library/controller (get_iiif_image)] Failed: ${result?.message}`);
+
+            const status_code = result?.message?.includes('not found') ? 404
+                : result?.message?.includes('Unsupported') ? 400
+                : result?.message?.includes('rotation') ? 400
+                : 200;
+
+            return res.status(status_code).json({
+                success: false,
+                message: result?.message || 'Failed to process image',
+                data: null
+            });
+        }
+
+        // Stream the processed image with CORS headers
+        res.set({
+            'Content-Type': result.content_type,
+            'Content-Length': result.image.length,
+            'Access-Control-Allow-Origin': '*',
+            'Access-Control-Allow-Methods': 'GET, OPTIONS',
+            'Access-Control-Allow-Headers': 'Origin, Content-Type, Accept',
+            'Cache-Control': 'public, max-age=86400',
+            'X-Content-Type-Options': 'nosniff'
+        });
+
+        return res.status(200).send(result.image);
+
+    } catch (error) {
+        LOGGER.module().error(`ERROR: [/media-library/controller (get_iiif_image)] ${error.message}`);
+
+        return res.status(500).json({
+            success: false,
+            message: 'Internal server error processing image',
             data: null
         });
     }

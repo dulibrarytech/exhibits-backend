@@ -18,7 +18,6 @@
 
 'use strict';
 
-const VALIDATOR = require('validator');
 const DB = require('../config/db_config')();
 const DB_TABLES = require('../config/db_tables_config')();
 const TABLE = DB_TABLES.exhibits;
@@ -36,16 +35,18 @@ exports.check_permission = async function (options) {
             return false;
         }
 
-        // Extract and validate token
-        const token = req.headers?.['x-access-token'];
-        if (!token || !VALIDATOR.isJWT(token)) {
+        // Use decoded JWT payload set by TOKEN.verify middleware
+        // req.decoded.sub contains the username (du_id) from the JWT
+        const username = req.decoded?.sub;
+        if (!username || typeof username !== 'string') {
+            LOGGER.module().warn('WARNING: [/auth/authorize lib (check_permission)] missing or invalid req.decoded.sub');
             return false;
         }
 
-        // Fetch all required data in parallel
+        // Fetch all required data in parallel using username-based lookups
         const [user_id, user_permissions, all_permissions] = await Promise.all([
-            AUTH_TASKS.get_user_id(token),
-            AUTH_TASKS.get_user_permissions(token),
+            AUTH_TASKS.get_user_id_by_username(username),
+            AUTH_TASKS.get_user_permissions_by_username(username),
             AUTH_TASKS.get_permissions()
         ]);
 

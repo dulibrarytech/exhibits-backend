@@ -136,15 +136,15 @@ exports.create_media_record = async (data) => {
         // Convert subject delimiters from comma to pipe for storage
         format_subjects_for_storage(data);
 
-        // Get user's full name from token and assign to created_by
-        if (data.token) {
-            const user_result = await media_task.get_user(data.token);
+        // Get user's full name from username and assign to created_by
+        if (data.username) {
+            const user_result = await media_task.get_user_by_username(data.username);
 
             if (user_result.success && user_result.full_name) {
                 data.created_by = user_result.full_name;
             }
 
-            delete data.token;
+            delete data.username;
         }
 
         // Create the record via task
@@ -255,6 +255,17 @@ exports.update_media_record = async (media_id, data) => {
         // Set updated timestamp
         data.updated = new Date();
 
+        // Resolve username to full name for updated_by
+        if (data.username) {
+            const user_result = await media_task.get_user_by_username(data.username);
+
+            if (user_result.success && user_result.full_name) {
+                data.updated_by = user_result.full_name;
+            }
+
+            delete data.username;
+        }
+
         // Convert subject delimiters from comma to pipe for storage
         format_subjects_for_storage(data);
 
@@ -284,15 +295,26 @@ exports.update_media_record = async (media_id, data) => {
 /**
  * Deletes a media record (soft delete)
  * @param {string} media_id - Media record UUID
- * @param {string|number} deleted_by - User ID performing deletion
+ * @param {string|null} username - Username (du_id) of user performing deletion
  * @returns {Promise<Object>} Result object
  */
-exports.delete_media_record = async (media_id, deleted_by = null) => {
+exports.delete_media_record = async (media_id, username = null) => {
 
     try {
 
         if (!is_valid_uuid(media_id)) {
             return build_response(false, 'Invalid media ID format');
+        }
+
+        // Resolve username to full name for audit trail
+        let deleted_by = null;
+
+        if (username) {
+            const user_result = await media_task.get_user_by_username(username);
+
+            if (user_result.success && user_result.full_name) {
+                deleted_by = user_result.full_name;
+            }
         }
 
         const result = await media_task.delete_media_record(media_id, deleted_by);

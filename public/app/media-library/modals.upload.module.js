@@ -841,7 +841,7 @@ const mediaModalsModule = (function() {
         const data = {};
         for (const [key, value] of form_data.entries()) {
             // Handle numeric fields
-            if (key === 'size') {
+            if (key === 'size' || key === 'media_width' || key === 'media_height') {
                 data[key] = value ? parseInt(value, 10) : null;
             } else {
                 data[key] = value;
@@ -1097,6 +1097,8 @@ const mediaModalsModule = (function() {
         html += '<input type="hidden" class="file-media-type" name="media_type" value="' + media_type + '">';
         html += '<input type="hidden" class="file-mime-type" name="mime_type" value="' + escaped_mime + '">';
         html += '<input type="hidden" class="file-ingest-method" name="ingest_method" value="upload">';
+        html += '<input type="hidden" class="file-media-width" name="media_width" value="' + (file_data.media_width || '') + '">';
+        html += '<input type="hidden" class="file-media-height" name="media_height" value="' + (file_data.media_height || '') + '">';
 
         // Save button row
         html += '<div class="row">';

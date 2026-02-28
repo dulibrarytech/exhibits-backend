@@ -1,4 +1,4 @@
-# DU Exhibits Backend
+# DU Exhibits Builder
 
 ## Table of Contents
 

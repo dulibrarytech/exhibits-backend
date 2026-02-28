@@ -191,7 +191,10 @@ exports.get_kaltura_media = async function (entry_id) {
                 item_type: item_type,
                 title: response.name || '',
                 description: response.description || '',
-                thumbnail: response.thumbnailUrl || ''
+                thumbnail: response.thumbnailUrl || '',
+                media_width: response.width || '',
+                media_height: response.height || '',
+                ms_duration: response.msDuration || ''
             }
         });
 
@@ -274,6 +277,66 @@ exports.assign_kaltura_category = async function (entry_id) {
             stack: error.stack
         });
         return build_response(false, 'Error assigning entry to exhibits category: ' + error.message, {
+            category_entry: null
+        });
+    }
+};
+
+/**
+ * Removes a Kaltura media entry from the exhibits gallery category
+ * Uses Kaltura categoryEntry.delete API to disassociate an entry from the exhibits category
+ * https://developer.kaltura.com/api-docs/service/categoryEntry/action/delete
+ * @param {string} entry_id - Kaltura entry ID to remove from the exhibits category
+ * @returns {Promise<Object>} Result object with removal confirmation
+ */
+exports.remove_kaltura_category = async function (entry_id) {
+
+    try {
+
+        // Validate entry ID
+        const validation = validate_entry_id(entry_id);
+
+        if (!validation.valid) {
+            LOGGER.module().warn(`WARNING: [/media-library/kaltura-service (remove_kaltura_category)] ${validation.message}`);
+            return build_response(false, validation.message, {
+                category_entry: null
+            });
+        }
+
+        LOGGER.module().info(`INFO: [/media-library/kaltura-service (remove_kaltura_category)] Removing entry ID: ${validation.entry_id} from exhibits category`);
+
+        // Get authenticated Kaltura client
+        const { client } = await get_kaltura_session();
+
+        // Remove entry from exhibits gallery category
+        // categoryEntry.deleteAction takes entryId and categoryId as separate parameters
+        const category_id = KALTURA_CONFIG.kaltura_exhibit_category_id;
+        const response = await KALTURA.services.categoryEntry.deleteAction(validation.entry_id, category_id)
+            .execute(client);
+
+        // Check for Kaltura API exceptions
+        if (response && response.objectType === 'KalturaAPIException') {
+            LOGGER.module().warn(`WARNING: [/media-library/kaltura-service (remove_kaltura_category)] Kaltura API exception for entry ID: ${validation.entry_id} - ${response.message}`);
+            return build_response(false, response.message || 'Kaltura API error', {
+                category_entry: null
+            });
+        }
+
+        LOGGER.module().info(`INFO: [/media-library/kaltura-service (remove_kaltura_category)] Entry ID: ${validation.entry_id} removed from exhibits category successfully`);
+
+        return build_response(true, 'Entry removed from exhibits category successfully', {
+            category_entry: {
+                entry_id: validation.entry_id,
+                category_id: category_id
+            }
+        });
+
+    } catch (error) {
+        LOGGER.module().error(`ERROR: [/media-library/kaltura-service (remove_kaltura_category)] ${error.message}`, {
+            entry_id,
+            stack: error.stack
+        });
+        return build_response(false, 'Error removing entry from exhibits category: ' + error.message, {
             category_entry: null
         });
     }
