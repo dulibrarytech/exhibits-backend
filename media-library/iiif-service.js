@@ -24,6 +24,7 @@ const SHARP = require('sharp');
 const MEDIA_MODEL = require('../media-library/model');
 const UPLOADS = require('../media-library/uploads');
 const APP_CONFIG = require('../config/app_config')();
+const KALTURA_CONFIG = require('../config/kaltura_config')();
 const LOGGER = require('../libs/log4');
 
 // ---------------------------------------------------------------------------
@@ -32,7 +33,7 @@ const LOGGER = require('../libs/log4');
 
 // Base URL for constructing IIIF identifiers
 const APP_BASE_URL = APP_CONFIG.api_url || '';
-const IIIF_BASE = `${APP_BASE_URL}/exhibits-dashboard/api/v1/media/library/iiif`;
+const IIIF_BASE = `${APP_BASE_URL}/exhibits-dashboard/iiif`;
 
 // IIIF Presentation API 3.0 context
 const IIIF_PRESENTATION_CONTEXT = 'http://iiif.io/api/presentation/3/context.json';
@@ -120,6 +121,36 @@ const parse_delimited = (value) => {
     return value.split(delimiter).map(s => s.trim()).filter(Boolean);
 };
 
+/**
+ * Normalizes media_type values to canonical types used throughout the IIIF service
+ * Handles variations from different ingest sources (e.g., Kaltura returns 'moving image'
+ * for video and 'sound' for audio)
+ * @param {string} media_type - Raw media_type value from the database
+ * @returns {string} Normalized media type ('image', 'pdf', 'video', 'audio', or original value)
+ */
+const normalize_media_type = (media_type) => {
+
+    if (!media_type || typeof media_type !== 'string') {
+        return media_type;
+    }
+
+    const type = media_type.trim().toLowerCase();
+
+    const MEDIA_TYPE_MAP = {
+        'image': 'image',
+        'pdf': 'pdf',
+        'video': 'video',
+        'audio': 'audio',
+        'moving image': 'video',
+        'sound': 'audio'
+    };
+
+    return MEDIA_TYPE_MAP[type] || media_type;
+};
+
+// Canonical media types supported for IIIF manifest generation
+const SUPPORTED_MEDIA_TYPES = ['image', 'pdf', 'video', 'audio'];
+
 // ---------------------------------------------------------------------------
 // IIIF Presentation API 3.0 — Manifest Generation (Uploaded Items)
 // ---------------------------------------------------------------------------
@@ -156,6 +187,25 @@ const build_metadata_pairs = (record) => {
     add_pair('Format', record.item_type);
     add_pair('Media Type', record.media_type);
     add_pair('Call Number', record.call_number);
+
+    // AV metadata
+    if (record.media_duration) {
+        const duration_sec = parseFloat(record.media_duration);
+
+        if (duration_sec > 0) {
+            const hours = Math.floor(duration_sec / 3600);
+            const minutes = Math.floor((duration_sec % 3600) / 60);
+            const seconds = Math.floor(duration_sec % 60);
+            const formatted = hours > 0
+                ? `${hours}:${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}`
+                : `${minutes}:${String(seconds).padStart(2, '0')}`;
+            add_pair('Duration', formatted);
+        }
+    }
+
+    if (record.kaltura_entry_id) {
+        add_pair('Kaltura Entry ID', record.kaltura_entry_id);
+    }
 
     // Subject metadata (pipe-delimited in DB, comma-delimited after model formatting)
     const topics = parse_delimited(record.topics_subjects);
@@ -253,7 +303,16 @@ const build_manifest_thumbnail = (record) => {
         return null;
     }
 
-    // Thumbnail served through IIIF Image API at a constrained size
+    // Kaltura items: use the external Kaltura thumbnail URL directly
+    if (record.kaltura_thumbnail_url) {
+        return {
+            id: record.kaltura_thumbnail_url,
+            type: 'Image',
+            format: 'image/jpeg'
+        };
+    }
+
+    // Uploaded items: thumbnail served through IIIF Image API at a constrained size
     return {
         id: `${IIIF_BASE}/${record.uuid}/full/!400,400/0/default.jpg`,
         type: 'Image',
@@ -356,8 +415,152 @@ const build_pdf_canvas = (record, canvas_id) => {
 };
 
 /**
+ * Builds a Kaltura HLS streaming URL for a given entry ID
+ * Uses the Kaltura playManifest endpoint for adaptive bitrate streaming
+ * @param {string} entry_id - Kaltura entry ID
+ * @returns {string|null} HLS streaming URL or null if config is missing
+ */
+const build_kaltura_streaming_url = (entry_id) => {
+
+    const partner_id = KALTURA_CONFIG.kaltura_partner_id;
+
+    if (!partner_id || !entry_id) {
+        return null;
+    }
+
+    return `https://cdnapisec.kaltura.com/p/${partner_id}/sp/${partner_id}00/playManifest/entryId/${entry_id}/format/applehttp/protocol/https`;
+};
+
+/**
+ * Builds a Kaltura iframe embed URL for a given entry ID
+ * Used as a fallback rendering resource in the manifest
+ * @param {string} entry_id - Kaltura entry ID
+ * @returns {string|null} Embed URL or null if config is missing
+ */
+const build_kaltura_embed_url = (entry_id) => {
+
+    const partner_id = KALTURA_CONFIG.kaltura_partner_id;
+    const uiconf_id = KALTURA_CONFIG.kaltura_conf_ui_id;
+
+    if (!partner_id || !uiconf_id || !entry_id) {
+        return null;
+    }
+
+    return `https://cdnapisec.kaltura.com/p/${partner_id}/sp/${partner_id}00/embedIframeJs/uiconf_id/${uiconf_id}/partner_id/${partner_id}?iframeembed=true&entry_id=${entry_id}`;
+};
+
+/**
+ * Builds a IIIF canvas for a Kaltura video
+ * The painting annotation body references the Kaltura HLS streaming endpoint
+ * with duration, width, and height for the canvas
+ * @param {Object} record - Media library DB record
+ * @param {string} canvas_id - Canvas URI
+ * @returns {Object} IIIF canvas object
+ */
+const build_video_canvas = (record, canvas_id) => {
+
+    const width = record.media_width || 1920;
+    const height = record.media_height || 1080;
+    const duration = record.media_duration ? parseFloat(record.media_duration) : 0;
+    const streaming_url = build_kaltura_streaming_url(record.kaltura_entry_id);
+
+    const canvas = {
+        id: canvas_id,
+        type: 'Canvas',
+        width: width,
+        height: height,
+        duration: duration,
+        label: { en: [record.name || 'Video'] },
+        items: [{
+            id: `${canvas_id}/page`,
+            type: 'AnnotationPage',
+            items: [{
+                id: `${canvas_id}/page/annotation`,
+                type: 'Annotation',
+                motivation: 'painting',
+                body: {
+                    id: streaming_url || '',
+                    type: 'Video',
+                    format: record.mime_type || 'video/mp4',
+                    width: width,
+                    height: height,
+                    duration: duration
+                },
+                target: canvas_id
+            }]
+        }]
+    };
+
+    // Add Kaltura player embed as a rendering (alternative playback)
+    const embed_url = build_kaltura_embed_url(record.kaltura_entry_id);
+
+    if (embed_url) {
+        canvas.rendering = [{
+            id: embed_url,
+            type: 'Video',
+            label: { en: ['Kaltura Player'] },
+            format: 'text/html'
+        }];
+    }
+
+    return canvas;
+};
+
+/**
+ * Builds a IIIF canvas for a Kaltura audio track
+ * Audio canvases have duration but no width/height
+ * The painting annotation body references the Kaltura HLS streaming endpoint
+ * @param {Object} record - Media library DB record
+ * @param {string} canvas_id - Canvas URI
+ * @returns {Object} IIIF canvas object
+ */
+const build_audio_canvas = (record, canvas_id) => {
+
+    const duration = record.media_duration ? parseFloat(record.media_duration) : 0;
+    const streaming_url = build_kaltura_streaming_url(record.kaltura_entry_id);
+
+    const canvas = {
+        id: canvas_id,
+        type: 'Canvas',
+        duration: duration,
+        label: { en: [record.name || 'Audio'] },
+        items: [{
+            id: `${canvas_id}/page`,
+            type: 'AnnotationPage',
+            items: [{
+                id: `${canvas_id}/page/annotation`,
+                type: 'Annotation',
+                motivation: 'painting',
+                body: {
+                    id: streaming_url || '',
+                    type: 'Sound',
+                    format: record.mime_type || 'audio/mpeg',
+                    duration: duration
+                },
+                target: canvas_id
+            }]
+        }]
+    };
+
+    // Add Kaltura player embed as a rendering (alternative playback)
+    const embed_url = build_kaltura_embed_url(record.kaltura_entry_id);
+
+    if (embed_url) {
+        canvas.rendering = [{
+            id: embed_url,
+            type: 'Sound',
+            label: { en: ['Kaltura Player'] },
+            format: 'text/html'
+        }];
+    }
+
+    return canvas;
+};
+
+/**
  * Builds a IIIF Presentation 3.0 manifest from a media library record
  * Handles uploaded images and PDFs (ingest_method = 'upload')
+ * and Kaltura video/audio (ingest_method = 'kaltura')
  * @param {Object} record - Full media library DB record
  * @returns {Object} IIIF manifest JSON-LD
  */
@@ -385,11 +588,17 @@ const build_manifest = (record) => {
         manifest.summary = { en: [record.description.trim()] };
     }
 
-    // Build canvas based on media type
-    if (record.media_type === 'image') {
+    // Build canvas based on media type (normalized to handle variants like 'moving image')
+    const canvas_type = normalize_media_type(record.media_type);
+
+    if (canvas_type === 'image') {
         manifest.items = [build_image_canvas(record, canvas_id)];
-    } else if (record.media_type === 'pdf') {
+    } else if (canvas_type === 'pdf') {
         manifest.items = [build_pdf_canvas(record, canvas_id)];
+    } else if (canvas_type === 'video') {
+        manifest.items = [build_video_canvas(record, canvas_id)];
+    } else if (canvas_type === 'audio') {
+        manifest.items = [build_audio_canvas(record, canvas_id)];
     }
 
     // Manifest-level thumbnail
@@ -432,15 +641,15 @@ exports.generate_manifest = async function (uuid) {
 
         const record = result.record;
 
-        // Only generate manifests for uploaded items (images and PDFs)
-        if (record.ingest_method !== 'upload') {
+        // Only generate manifests for uploaded and Kaltura items
+        if (record.ingest_method !== 'upload' && record.ingest_method !== 'kaltura') {
             LOGGER.module().info(`INFO: [/media-library/iiif-service (generate_manifest)] Skipping non-upload record: ${uuid} (${record.ingest_method})`);
             return build_response(false, `Manifest generation not supported for ingest method: ${record.ingest_method}`, {
                 manifest: null
             });
         }
 
-        if (record.media_type !== 'image' && record.media_type !== 'pdf') {
+        if (!SUPPORTED_MEDIA_TYPES.includes(normalize_media_type(record.media_type))) {
             LOGGER.module().info(`INFO: [/media-library/iiif-service (generate_manifest)] Skipping unsupported media type: ${uuid} (${record.media_type})`);
             return build_response(false, `Manifest generation not supported for media type: ${record.media_type}`, {
                 manifest: null
@@ -556,13 +765,13 @@ exports.batch_generate_manifests = async function () {
 
             stats.total++;
 
-            // Only process uploaded images and PDFs
-            if (record.ingest_method !== 'upload') {
+            // Only process uploaded and Kaltura items
+            if (record.ingest_method !== 'upload' && record.ingest_method !== 'kaltura') {
                 stats.skipped++;
                 continue;
             }
 
-            if (record.media_type !== 'image' && record.media_type !== 'pdf') {
+            if (!SUPPORTED_MEDIA_TYPES.includes(normalize_media_type(record.media_type))) {
                 stats.skipped++;
                 continue;
             }

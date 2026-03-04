@@ -18,6 +18,17 @@ const kalturaModalsModule = (function() {
 
     'use strict';
 
+    // Shared helpers
+    const escape_html = helperMediaLibraryModule.escape_html;
+    const decode_html_entities = helperMediaLibraryModule.decode_html_entities;
+    const strip_html = helperMediaLibraryModule.strip_html;
+    const get_app_path = helperMediaLibraryModule.get_app_path;
+    const HTTP_STATUS = helperMediaLibraryModule.HTTP_STATUS;
+    const get_item_type_icon = helperMediaLibraryModule.get_media_type_icon;
+    const get_item_type_label = helperMediaLibraryModule.get_media_type_label;
+
+    const APP_PATH = get_app_path();
+
     const EXHIBITS_ENDPOINTS = endpointsModule.get_media_library_endpoints();
 
     // Module state
@@ -25,16 +36,6 @@ const kalturaModalsModule = (function() {
     let on_complete_callback = null;
 
     let obj = {};
-
-    // HTTP status constants
-    const HTTP_STATUS = {
-        OK: 200,
-        CREATED: 201,
-        BAD_REQUEST: 400,
-        FORBIDDEN: 403,
-        NOT_FOUND: 404,
-        INTERNAL_ERROR: 500
-    };
 
     // Kaltura player configuration (fetched from API and cached)
     let kaltura_player_config = null;
@@ -124,77 +125,6 @@ const kalturaModalsModule = (function() {
             '/embedIframeJs/uiconf_id/' + encoded_uiconf +
             '/partner_id/' + encoded_pid +
             '?iframeembed=true&entry_id=' + encoded_entry;
-    };
-
-    /**
-     * Get application path safely
-     */
-    const get_app_path = () => {
-        try {
-            const app_path = window.localStorage.getItem('exhibits_app_path');
-            if (!app_path) {
-                return '/exhibits-dashboard';
-            }
-            return app_path;
-        } catch (error) {
-            return '/exhibits-dashboard';
-        }
-    };
-
-    const APP_PATH = get_app_path();
-
-    /**
-     * Escape HTML to prevent XSS
-     */
-    const escape_html = (str) => {
-        if (!str) return '';
-        const div = document.createElement('div');
-        div.textContent = str;
-        return div.innerHTML;
-    };
-
-    /**
-     * Decode HTML entities (e.g., &#x27; -> ')
-     */
-    const decode_html_entities = (str) => {
-        if (!str) return '';
-        const div = document.createElement('div');
-        div.innerHTML = str;
-        return div.textContent;
-    };
-
-    /**
-     * Strip HTML tags from a string, returning only the text content
-     * @param {string} str - String potentially containing HTML
-     * @returns {string} Plain text with all HTML tags removed
-     */
-    const strip_html = (str) => {
-        if (!str) return '';
-        const div = document.createElement('div');
-        div.innerHTML = str;
-        return div.textContent || div.innerText || '';
-    };
-
-    /**
-     * Get item type icon class
-     */
-    const get_item_type_icon = (item_type) => {
-        const icons = {
-            'video': 'fa-file-video-o',
-            'audio': 'fa-file-audio-o'
-        };
-        return icons[item_type] || 'fa-file-o';
-    };
-
-    /**
-     * Get item type label
-     */
-    const get_item_type_label = (item_type) => {
-        const labels = {
-            'video': 'Video',
-            'audio': 'Audio'
-        };
-        return labels[item_type] || 'Unknown';
     };
 
     /**
@@ -592,33 +522,7 @@ const kalturaModalsModule = (function() {
         const modal_element = document.getElementById('kaltura-media-modal');
         if (!modal_element) return;
 
-        // Try Bootstrap 5 first
-        if (typeof bootstrap !== 'undefined' && bootstrap.Modal &&
-            typeof bootstrap.Modal.getInstance === 'function') {
-            const modal = bootstrap.Modal.getInstance(modal_element);
-            if (modal) {
-                modal.hide();
-            }
-        }
-        // Try Bootstrap 4 / jQuery
-        else if (typeof $ !== 'undefined' && typeof $.fn.modal !== 'undefined') {
-            $(modal_element).modal('hide');
-        }
-
-        // Manual cleanup after short delay to ensure Bootstrap animations complete
-        setTimeout(() => {
-            modal_element.classList.remove('show');
-            modal_element.style.display = 'none';
-            modal_element.setAttribute('aria-hidden', 'true');
-            modal_element.removeAttribute('aria-modal');
-            document.body.classList.remove('modal-open');
-            document.body.style.removeProperty('padding-right');
-            document.body.style.removeProperty('overflow');
-
-            // Remove all backdrops
-            const backdrops = document.querySelectorAll('.modal-backdrop');
-            backdrops.forEach(backdrop => backdrop.remove());
-        }, 150);
+        helperMediaLibraryModule.hide_bootstrap_modal(modal_element);
     };
 
     /**
@@ -686,54 +590,8 @@ const kalturaModalsModule = (function() {
         // Populate the modal with form
         populate_kaltura_modal();
 
-        // Open modal using Bootstrap 5
-        if (typeof bootstrap !== 'undefined' && bootstrap.Modal) {
-            const modal = new bootstrap.Modal(modal_element, {
-                backdrop: 'static',
-                keyboard: false
-            });
-            modal.show();
-        }
-        // Fallback to Bootstrap 4 / jQuery
-        else if (typeof $ !== 'undefined' && typeof $.fn.modal !== 'undefined') {
-            $(modal_element).modal({
-                backdrop: 'static',
-                keyboard: false
-            });
-            $(modal_element).modal('show');
-        }
-        // Fallback to manual display
-        else {
-            modal_element.classList.add('show');
-            modal_element.style.display = 'block';
-            document.body.classList.add('modal-open');
-
-            const backdrop = document.createElement('div');
-            backdrop.className = 'modal-backdrop fade show';
-            backdrop.id = 'kaltura-media-modal-backdrop';
-            document.body.appendChild(backdrop);
-
-            // Manual bounce for fallback only
-            backdrop.addEventListener('click', function() {
-                const modal_content = modal_element.querySelector('.modal-content');
-                if (modal_content) {
-                    modal_content.classList.remove('bounce');
-                    void modal_content.offsetWidth;
-                    modal_content.classList.add('bounce');
-                }
-            });
-
-            modal_element.addEventListener('click', function(e) {
-                if (e.target === modal_element) {
-                    const modal_content = modal_element.querySelector('.modal-content');
-                    if (modal_content) {
-                        modal_content.classList.remove('bounce');
-                        void modal_content.offsetWidth;
-                        modal_content.classList.add('bounce');
-                    }
-                }
-            });
-        }
+        // Open modal
+        helperMediaLibraryModule.show_bootstrap_modal(modal_element);
 
         console.log('Kaltura media modal opened');
     };
@@ -889,32 +747,8 @@ const kalturaModalsModule = (function() {
             iframe.src = embed_url;
         }
 
-        // Open modal
-        if (typeof bootstrap !== 'undefined' && bootstrap.Modal) {
-            const modal = new bootstrap.Modal(modal_element, {
-                backdrop: true,
-                keyboard: true
-            });
-            modal.show();
-        } else if (typeof $ !== 'undefined' && typeof $.fn.modal !== 'undefined') {
-            $(modal_element).modal({
-                backdrop: true,
-                keyboard: true
-            });
-            $(modal_element).modal('show');
-        } else {
-            // Manual fallback
-            modal_element.classList.add('show');
-            modal_element.style.display = 'block';
-            modal_element.setAttribute('aria-hidden', 'false');
-            modal_element.setAttribute('aria-modal', 'true');
-            document.body.classList.add('modal-open');
-
-            const backdrop = document.createElement('div');
-            backdrop.className = 'modal-backdrop fade show';
-            backdrop.id = 'kaltura-player-modal-backdrop';
-            document.body.appendChild(backdrop);
-        }
+        // Open modal (dismissible)
+        helperMediaLibraryModule.show_bootstrap_modal(modal_element, { backdrop: true, keyboard: true });
 
         console.log('Kaltura player modal opened for entry:', entry_id);
     };
@@ -954,35 +788,8 @@ const kalturaModalsModule = (function() {
             responsive_container.classList.add('embed-responsive-16by9');
         }
 
-        // Close via Bootstrap 5
-        if (typeof bootstrap !== 'undefined' && bootstrap.Modal &&
-            typeof bootstrap.Modal.getInstance === 'function') {
-            const modal = bootstrap.Modal.getInstance(modal_element);
-            if (modal) {
-                modal.hide();
-            }
-        }
-        // Close via Bootstrap 4 / jQuery
-        else if (typeof $ !== 'undefined' && typeof $.fn.modal !== 'undefined') {
-            $(modal_element).modal('hide');
-        }
-
-        // Manual cleanup after animation
-        setTimeout(() => {
-            modal_element.classList.remove('show');
-            modal_element.style.display = 'none';
-            modal_element.setAttribute('aria-hidden', 'true');
-            modal_element.removeAttribute('aria-modal');
-            document.body.classList.remove('modal-open');
-            document.body.style.removeProperty('padding-right');
-            document.body.style.removeProperty('overflow');
-
-            // Remove backdrop
-            const backdrops = document.querySelectorAll('.modal-backdrop');
-            backdrops.forEach(backdrop => backdrop.remove());
-        }, 150);
-
-        console.log('Kaltura player modal closed');
+        // Close modal
+        helperMediaLibraryModule.hide_bootstrap_modal(modal_element);
     };
 
     // ========================================

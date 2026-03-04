@@ -18,51 +18,25 @@ const repoServiceModule = (function() {
 
     'use strict';
 
+    // Dependency guard — fail fast if shared helper is not loaded
+    if (typeof helperMediaLibraryModule === 'undefined') {
+        console.error('FATAL: helperMediaLibraryModule must be loaded before repo.service.module.js. Check script order in dashboard-media-home.ejs.');
+        return {};
+    }
+
     const EXHIBITS_ENDPOINTS = endpointsModule.get_media_library_endpoints();
 
     // Module state
     let selected_items = new Map();
     let current_search_results = [];
-    let current_total = 0;
 
     let obj = {};
 
-    // HTTP status constants
-    const HTTP_STATUS = {
-        OK: 200,
-        CREATED: 201,
-        BAD_REQUEST: 400,
-        FORBIDDEN: 403,
-        NOT_FOUND: 404,
-        INTERNAL_ERROR: 500
-    };
-
-    /**
-     * Get application path safely
-     */
-    const get_app_path = () => {
-        try {
-            const app_path = window.localStorage.getItem('exhibits_app_path');
-            if (!app_path) {
-                return '/exhibits-dashboard';
-            }
-            return app_path;
-        } catch (error) {
-            return '/exhibits-dashboard';
-        }
-    };
-
-    const APP_PATH = get_app_path();
-
-    /**
-     * Escape HTML to prevent XSS
-     */
-    const escape_html = (str) => {
-        if (!str) return '';
-        const div = document.createElement('div');
-        div.textContent = str;
-        return div.innerHTML;
-    };
+    // Shared helpers scoped to the repo search message container
+    const { display_message, clear_message, escape_html } = helperMediaLibraryModule.create_message_helper('repo-search-message');
+    const HTTP_STATUS = helperMediaLibraryModule.HTTP_STATUS;
+    const get_object_type_icon = helperMediaLibraryModule.get_media_type_icon;
+    const get_object_type_label = helperMediaLibraryModule.get_media_type_label;
 
     /**
      * Truncate text to specified length
@@ -71,38 +45,6 @@ const repoServiceModule = (function() {
         if (!text) return '';
         if (text.length <= max_length) return text;
         return text.substring(0, max_length) + '...';
-    };
-
-    /**
-     * Get object type icon class
-     */
-    const get_object_type_icon = (object_type) => {
-        const icons = {
-            'image': 'fa-file-image-o',
-            'object': 'fa-file-image-o',
-            'pdf': 'fa-file-pdf-o',
-            'video': 'fa-file-video-o',
-            'audio': 'fa-file-audio-o',
-            'collection': 'fa-folder-o',
-            'compound': 'fa-files-o'
-        };
-        return icons[object_type] || 'fa-file-o';
-    };
-
-    /**
-     * Get object type label
-     */
-    const get_object_type_label = (object_type) => {
-        const labels = {
-            'image': 'Image',
-            'object': 'Object',
-            'pdf': 'PDF',
-            'video': 'Video',
-            'audio': 'Audio',
-            'collection': 'Collection',
-            'compound': 'Compound Object'
-        };
-        return labels[object_type] || 'Unknown';
     };
 
     /**
@@ -146,51 +88,6 @@ const repoServiceModule = (function() {
             return '';
         }
         return build_thumbnail_url(uuid.trim());
-    };
-
-    /**
-     * Display message in the repo search message area
-     * @param {string} type - Message type ('success', 'danger', 'warning', 'info')
-     * @param {string} message - Message text
-     */
-    const display_message = (type, message) => {
-        const message_container = document.getElementById('repo-search-message');
-
-        if (!message_container) return;
-
-        const icon_map = {
-            'success': 'fa-check-circle',
-            'danger': 'fa-exclamation-circle',
-            'warning': 'fa-exclamation-triangle',
-            'info': 'fa-info-circle'
-        };
-
-        const icon = icon_map[type] || 'fa-info-circle';
-
-        message_container.innerHTML = '<div class="alert alert-' + type + ' alert-dismissible fade show" role="alert">' +
-            '<i class="fa ' + icon + '" style="margin-right: 8px;" aria-hidden="true"></i>' +
-            escape_html(message) +
-            '<button type="button" class="close" data-dismiss="alert" aria-label="Close">' +
-            '<span aria-hidden="true">&times;</span>' +
-            '</button>' +
-            '</div>';
-
-        // Auto-hide success messages
-        if (type === 'success') {
-            setTimeout(() => {
-                clear_message();
-            }, 5000);
-        }
-    };
-
-    /**
-     * Clear message area
-     */
-    const clear_message = () => {
-        const message_container = document.getElementById('repo-search-message');
-        if (message_container) {
-            message_container.innerHTML = '';
-        }
     };
 
     /**
@@ -247,20 +144,88 @@ const repoServiceModule = (function() {
 
     /**
      * Handle checkbox change for item selection
+     * Checks for duplicates when an item is selected
      * @param {Event} event - Change event
      * @param {Object} item - The search result item
      */
-    const handle_item_selection = (event, item) => {
+    const handle_item_selection = async (event, item) => {
         const checkbox = event.target;
         const uuid = item.uuid;
         const card = checkbox.closest('.repo-result-item');
 
         if (checkbox.checked) {
+
+            // Check for duplicate before allowing selection
+            if (EXHIBITS_ENDPOINTS?.media_duplicate_check?.get?.endpoint && uuid) {
+                try {
+                    const token = authModule.get_user_token();
+
+                    if (token) {
+                        const dup_endpoint = EXHIBITS_ENDPOINTS.media_duplicate_check.get.endpoint +
+                            '?field=repo_uuid&value=' + encodeURIComponent(uuid);
+
+                        const dup_response = await httpModule.req({
+                            method: 'GET',
+                            url: dup_endpoint,
+                            headers: {
+                                'Content-Type': 'application/json',
+                                'x-access-token': token
+                            },
+                            timeout: 10000,
+                            validateStatus: (status) => status >= 200 && status < 600
+                        });
+
+                        if (dup_response && dup_response.status === 200 &&
+                            dup_response.data?.success && dup_response.data?.data?.exists) {
+
+                            // Duplicate found — uncheck and show warning
+                            checkbox.checked = false;
+                            if (card) {
+                                card.classList.remove('selected');
+
+                                // Remove any existing duplicate badge first
+                                const existing_badge = card.querySelector('.duplicate-warning-badge');
+                                if (existing_badge) existing_badge.remove();
+
+                                // Add a warning badge to the card
+                                const badge = document.createElement('div');
+                                badge.className = 'duplicate-warning-badge alert alert-warning mb-0 mt-2';
+                                badge.style.cssText = 'padding: 6px 12px; font-size: 0.85rem;';
+                                const existing = dup_response.data.data.record;
+                                const display_name = existing?.name ? ' (' + escape_html(existing.name) + ')' : '';
+                                badge.innerHTML = '<i class="fa fa-exclamation-triangle" style="margin-right: 6px;" aria-hidden="true"></i>' +
+                                    'This item already exists in the media library' + display_name + '.';
+                                const card_body = card.querySelector('.card-body');
+                                if (card_body) card_body.appendChild(badge);
+
+                                // Auto-hide after 8 seconds
+                                setTimeout(() => {
+                                    if (badge.parentNode) badge.remove();
+                                }, 8000);
+                            }
+
+                            update_import_button();
+                            update_select_all_checkbox();
+                            return;
+                        }
+                    }
+                } catch (dup_error) {
+                    // Log but don't block — allow the selection if the check itself fails
+                    console.warn('Duplicate check failed, allowing selection:', dup_error);
+                }
+            }
+
             selected_items.set(uuid, item);
             if (card) card.classList.add('selected');
         } else {
             selected_items.delete(uuid);
             if (card) card.classList.remove('selected');
+
+            // Remove duplicate warning badge if present
+            if (card) {
+                const badge = card.querySelector('.duplicate-warning-badge');
+                if (badge) badge.remove();
+            }
         }
 
         update_import_button();
@@ -435,9 +400,8 @@ const repoServiceModule = (function() {
     /**
      * Render search results with pagination
      * @param {Array} results - Array of search result items
-     * @param {number} total - Total number of results from API
      */
-    const render_search_results = (results, total) => {
+    const render_search_results = (results) => {
         const results_container = document.getElementById('repo-search-results');
 
         if (!results_container) {
@@ -450,7 +414,6 @@ const repoServiceModule = (function() {
         
         // Store all results
         current_search_results = results_array;
-        current_total = total || results_array.length;
 
         if (results_array.length === 0) {
             // Clear the results container - message is shown via display_message
@@ -621,7 +584,7 @@ const repoServiceModule = (function() {
 
             if (!response) {
                 display_message('danger', 'No response from server');
-                render_search_results([], 0);
+                render_search_results([]);
                 return { success: false, message: 'No response' };
             }
 
@@ -659,20 +622,20 @@ const repoServiceModule = (function() {
                     display_message('info', 'No importable object records found for "' + escape_html(query) + '"');
                 }
 
-                render_search_results(results, results.length);
+                render_search_results(results);
                 return { success: true, results: results, total: total };
             }
 
             const error_message = response.data?.message || 'Search failed';
             display_message('danger', error_message);
-            render_search_results([], 0);
+            render_search_results([]);
             return { success: false, message: error_message };
 
         } catch (error) {
             console.error('Error searching repository:', error);
             hide_loading();
             display_message('danger', 'An unexpected error occurred while searching.');
-            render_search_results([], 0);
+            render_search_results([]);
             return { success: false, message: error.message };
         }
     };

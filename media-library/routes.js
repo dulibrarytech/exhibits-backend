@@ -76,6 +76,10 @@ module.exports = function (app) {
     app.use('/api/media', log_request);
     app.use('/api/media', json_error_handler);
 
+    // Apply middleware for public-facing IIIF routes
+    app.use('/exhibits-dashboard/iiif', security_headers);
+    app.use('/exhibits-dashboard/iiif', log_request);
+
     // ========================================
     // MEDIA LIBRARY CRUD OPERATIONS
     // ========================================
@@ -86,6 +90,16 @@ module.exports = function (app) {
             rate_limits.read_operations,
             TOKEN.verify,
             async_handler(CONTROLLER.get_media_records)
+        );
+
+    // Check for duplicate media records (by repo_uuid or kaltura_entry_id)
+    // GET /api/v1/media/library/duplicate-check?field=repo_uuid&value=xxx
+    // NOTE: Must be registered before routes with :media_id parameter
+    app.route(ENDPOINTS.media_duplicate_check.get.endpoint)
+        .get(
+            rate_limits.read_operations,
+            TOKEN.verify,
+            async_handler(CONTROLLER.check_duplicate)
         );
 
     // Create media record
@@ -224,6 +238,8 @@ module.exports = function (app) {
     // ========================================
     // IIIF MANIFEST AND IMAGE API
     // ========================================
+    // Public-facing IIIF routes use /exhibits-dashboard/iiif/...
+    // Administrative routes (generate/batch) remain on /api/v1/...
 
     // Batch generate IIIF manifests for all uploaded records
     // POST /api/v1/media/library/iiif/manifests/generate
@@ -245,8 +261,8 @@ module.exports = function (app) {
             async_handler(CONTROLLER.generate_iiif_manifest)
         );
 
-    // Get IIIF manifest for a media record
-    // GET /api/v1/media/library/iiif/:media_id/manifest
+    // Get IIIF manifest for a media record (public-facing)
+    // GET /exhibits-dashboard/iiif/:media_id/manifest
     app.route(ENDPOINTS.iiif_manifest.get.endpoint)
         .get(
             rate_limits.read_operations,
@@ -254,22 +270,36 @@ module.exports = function (app) {
             async_handler(CONTROLLER.get_iiif_manifest)
         );
 
-    // Get IIIF Image API info.json
-    // GET /api/v1/media/library/iiif/:media_id/info.json
+    // Handle manifest sub-resource identifier URIs (canvas, annotation page, annotation)
+    // These are IIIF identifiers embedded in the manifest, not dereferenceable endpoints.
+    // Without this route, the greedy iiif_image multi-param route catches them
+    // and returns misleading quality/format errors.
+    // Redirect to the parent manifest so IIIF clients can locate the resource within it.
+    app.route(ENDPOINTS.iiif_manifest.get.endpoint + '/*')
+        .get(
+            rate_limits.read_operations,
+            (req, res) => {
+                const manifest_url = `${req.protocol}://${req.get('host')}${ENDPOINTS.iiif_manifest.get.endpoint.replace(':media_id', req.params.media_id)}`;
+                res.redirect(303, manifest_url);
+            }
+        );
+
+    // Get IIIF Image API info.json (public-facing)
+    // GET /exhibits-dashboard/iiif/:media_id/info.json
     app.route(ENDPOINTS.iiif_info.get.endpoint)
         .get(
             rate_limits.read_operations,
-            TOKEN.verify,
+            // TOKEN.verify,
             async_handler(CONTROLLER.get_iiif_info)
         );
 
-    // Serve image via IIIF Image API 3.0
-    // GET /api/v1/media/library/iiif/:media_id/:region/:size/:rotation/:quality_format
+    // Serve image via IIIF Image API 3.0 (public-facing)
+    // GET /exhibits-dashboard/iiif/:media_id/:region/:size/:rotation/:quality_format
     // NOTE: Must be registered LAST among IIIF routes due to multi-param path capture
     app.route(ENDPOINTS.iiif_image.get.endpoint)
         .get(
             rate_limits.read_operations,
-            TOKEN.verify_with_query || TOKEN.verify,
+            // TOKEN.verify_with_query || TOKEN.verify,
             async_handler(CONTROLLER.get_iiif_image)
         );
 

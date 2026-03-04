@@ -112,6 +112,45 @@ const is_valid_uuid = (uuid) => {
 };
 
 /**
+ * Checks if a media record already exists with the given field value
+ * Used to prevent duplicate imports for repo_uuid and kaltura_entry_id
+ * @param {string} field_name - Field to check ('repo_uuid' or 'kaltura_entry_id')
+ * @param {string} field_value - Value to search for
+ * @returns {Promise<Object>} Result with exists flag and matching record info
+ */
+exports.check_duplicate = async (field_name, field_value) => {
+
+    try {
+
+        // Validate inputs
+        const allowed_fields = ['repo_uuid', 'kaltura_entry_id'];
+
+        if (!allowed_fields.includes(field_name)) {
+            return build_response(false, 'Invalid field name');
+        }
+
+        if (!field_value || typeof field_value !== 'string' || field_value.trim().length === 0) {
+            return build_response(false, 'Field value is required');
+        }
+
+        const result = await media_task.check_duplicate_by_field(field_name, field_value.trim());
+
+        if (!result || !result.success) {
+            return build_response(false, result?.message || 'Duplicate check failed');
+        }
+
+        return build_response(true, result.message, {
+            exists: result.exists,
+            record: result.record
+        });
+
+    } catch (error) {
+        LOGGER.module().error('ERROR: [/media-library/model (check_duplicate)] ' + error.message);
+        return build_response(false, 'Error checking for duplicates: ' + error.message);
+    }
+};
+
+/**
  * Creates a new media record
  * @param {Object} data - Media record data
  * @returns {Promise<Object>} Result object with success status

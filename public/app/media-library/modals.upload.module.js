@@ -18,6 +18,19 @@ const mediaModalsModule = (function() {
 
     'use strict';
 
+    // Shared helpers
+    const escape_html = helperMediaLibraryModule.escape_html;
+    const decode_html_entities = helperMediaLibraryModule.decode_html_entities;
+    const HTTP_STATUS = helperMediaLibraryModule.HTTP_STATUS;
+    const get_media_type_icon = helperMediaLibraryModule.get_media_type_icon;
+    const get_media_type_label = helperMediaLibraryModule.get_media_type_label;
+    const format_file_size = helperMediaLibraryModule.format_file_size;
+    const clean_filename_for_title = helperMediaLibraryModule.clean_filename_for_title;
+    const build_thumbnail_url = helperMediaLibraryModule.build_thumbnail_url;
+    const build_media_url = helperMediaLibraryModule.build_media_url;
+    const get_repo_thumbnail_url = helperMediaLibraryModule.get_repo_thumbnail_url;
+    const get_thumbnail_url_for_media = helperMediaLibraryModule.get_thumbnail_url_for_media;
+
     const EXHIBITS_ENDPOINTS = endpointsModule.get_media_library_endpoints();
 
     // Module state
@@ -30,195 +43,6 @@ const mediaModalsModule = (function() {
     let current_edit_uuid = null;
 
     let obj = {};
-
-    // HTTP status constants
-    const HTTP_STATUS = {
-        OK: 200,
-        CREATED: 201,
-        BAD_REQUEST: 400,
-        NOT_FOUND: 404,
-        INTERNAL_ERROR: 500
-    };
-
-    /**
-     * Get application path safely
-     */
-    const get_app_path = () => {
-        try {
-            const app_path = window.localStorage.getItem('exhibits_app_path');
-            if (!app_path) {
-                return '/exhibits-dashboard';
-            }
-            return app_path;
-        } catch (error) {
-            return '/exhibits-dashboard';
-        }
-    };
-
-    const APP_PATH = get_app_path();
-
-    /**
-     * Escape HTML to prevent XSS
-     */
-    const escape_html = (str) => {
-        if (!str) return '';
-        const div = document.createElement('div');
-        div.textContent = str;
-        return div.innerHTML;
-    };
-
-    /**
-     * Decode HTML entities (e.g., &#x27; -> ')
-     */
-    const decode_html_entities = (str) => {
-        if (!str) return '';
-        const div = document.createElement('div');
-        div.innerHTML = str;
-        return div.textContent;
-    };
-
-    /**
-     * Clean filename for use as default title
-     */
-    const clean_filename_for_title = (filename) => {
-        return filename
-            .replace(/\.[^/.]+$/, '')
-            .replace(/[_-]/g, ' ')
-            .replace(/\s+/g, ' ')
-            .trim();
-    };
-
-    /**
-     * Format file size for display
-     */
-    const format_file_size = (bytes) => {
-        if (bytes === 0) return '0 Bytes';
-        const k = 1024;
-        const sizes = ['Bytes', 'KB', 'MB', 'GB'];
-        const i = Math.floor(Math.log(bytes) / Math.log(k));
-        return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
-    };
-
-    /**
-     * Get human-readable media type label
-     */
-    const get_media_type_label = (media_type) => {
-        const labels = {
-            'image': 'Image',
-            'pdf': 'PDF Document',
-            'video': 'Video',
-            'audio': 'Audio',
-            'unknown': 'Unknown'
-        };
-        return labels[media_type] || 'Unknown';
-    };
-
-    /**
-     * Get Font Awesome icon class for media type
-     */
-    const get_media_type_icon = (media_type) => {
-        const icons = {
-            'image': 'fa-file-image-o',
-            'pdf': 'fa-file-pdf-o',
-            'video': 'fa-file-video-o',
-            'audio': 'fa-file-audio-o',
-            'unknown': 'fa-file-o'
-        };
-        return icons[media_type] || 'fa-file-o';
-    };
-
-    /**
-     * Build media thumbnail URL using the dedicated thumbnail endpoint
-     * @param {string} media_id - Media UUID
-     * @returns {string|null} Thumbnail URL or null
-     */
-    const build_thumbnail_url = (media_id) => {
-        if (!media_id) return null;
-
-        if (!EXHIBITS_ENDPOINTS?.media_thumbnail?.get?.endpoint) {
-            console.warn('Media thumbnail endpoint not configured');
-            return null;
-        }
-
-        const endpoint = EXHIBITS_ENDPOINTS.media_thumbnail.get.endpoint.replace(':media_id', encodeURIComponent(media_id));
-        return endpoint;
-    };
-
-    /**
-     * Get thumbnail URL for media type
-     * Uses server-generated thumbnails for images and PDFs when uuid is available
-     * @param {string} media_type - Media type
-     * @param {string} uuid - File UUID for server-generated thumbnails
-     * @returns {string} Thumbnail URL
-     */
-    const get_thumbnail_url_for_media = (media_type, uuid) => {
-        const static_path = '/exhibits-dashboard/static/images';
-
-        // Use server-generated thumbnails for images and PDFs
-        if ((media_type === 'image' || media_type === 'pdf') && uuid) {
-            const token = authModule.get_user_token();
-            const thumbnail_url = build_thumbnail_url(uuid);
-            if (thumbnail_url) {
-                return thumbnail_url + '?token=' + encodeURIComponent(token || '');
-            }
-        }
-
-        switch (media_type) {
-            case 'image':
-                return static_path + '/image-tn.png';
-            case 'video':
-                return static_path + '/video-tn.png';
-            case 'audio':
-                return static_path + '/audio-tn.png';
-            case 'pdf':
-                return static_path + '/pdf-tn.png';
-            default:
-                return static_path + '/default-tn.png';
-        }
-    };
-
-    /**
-     * Build media file URL for full-size file display
-     * @param {string} media_id - The media UUID to build URL for
-     * @returns {string|null} URL to media file
-     */
-    const build_media_url = (media_id) => {
-        if (!media_id) return null;
-
-        if (!EXHIBITS_ENDPOINTS?.media_file?.get?.endpoint) {
-            console.warn('Media file endpoint not configured');
-            return null;
-        }
-
-        const endpoint = EXHIBITS_ENDPOINTS.media_file.get.endpoint.replace(':media_id', encodeURIComponent(media_id));
-        return endpoint;
-    };
-
-    /**
-     * Get repository thumbnail URL for repo-ingested media
-     * @param {string} uuid - Repository item UUID (repo_uuid)
-     * @returns {string} Thumbnail URL or empty string
-     */
-    const get_repo_thumbnail_url = (uuid) => {
-        if (!uuid) return '';
-
-        // Use repoServiceModule's get_repo_tn_url if available
-        if (typeof repoServiceModule !== 'undefined' && typeof repoServiceModule.get_repo_tn_url === 'function') {
-            return repoServiceModule.get_repo_tn_url(uuid);
-        }
-
-        // Fallback: build the URL directly
-        const token = authModule.get_user_token();
-        if (!token) return '';
-
-        if (!EXHIBITS_ENDPOINTS?.repo_thumbnail?.get?.endpoint) {
-            console.warn('Repo thumbnail endpoint not configured');
-            return '';
-        }
-
-        const endpoint = EXHIBITS_ENDPOINTS.repo_thumbnail.get.endpoint;
-        return endpoint + '?uuid=' + encodeURIComponent(uuid) + '&token=' + encodeURIComponent(token);
-    };
 
     /**
      * Update modal footer status
@@ -661,43 +485,9 @@ const mediaModalsModule = (function() {
      */
     const close_edit_modal = () => {
         const modal_element = document.getElementById('edit-media-modal');
-        
         if (!modal_element) return;
 
-        // Try Bootstrap 5 first
-        if (typeof bootstrap !== 'undefined' && 
-            bootstrap.Modal && 
-            typeof bootstrap.Modal.getInstance === 'function') {
-            const modal = bootstrap.Modal.getInstance(modal_element);
-            if (modal) {
-                modal.hide();
-                console.log('Edit media modal closed (Bootstrap 5)');
-                return;
-            }
-        }
-        
-        // Try Bootstrap 4 / jQuery
-        if (typeof $ !== 'undefined' && typeof $.fn.modal !== 'undefined') {
-            $(modal_element).modal('hide');
-            console.log('Edit media modal closed (Bootstrap 4/jQuery)');
-        }
-        
-        // Always perform manual cleanup
-        setTimeout(() => {
-            modal_element.classList.remove('show');
-            modal_element.style.display = 'none';
-            modal_element.setAttribute('aria-hidden', 'true');
-            modal_element.removeAttribute('aria-modal');
-            document.body.classList.remove('modal-open');
-            document.body.style.removeProperty('padding-right');
-            document.body.style.removeProperty('overflow');
-            
-            // Remove all backdrops
-            const backdrops = document.querySelectorAll('.modal-backdrop');
-            backdrops.forEach(backdrop => backdrop.remove());
-            
-            console.log('Edit modal cleanup complete');
-        }, 150);
+        helperMediaLibraryModule.hide_bootstrap_modal(modal_element);
 
         // Reset state
         current_edit_uuid = null;
@@ -738,28 +528,7 @@ const mediaModalsModule = (function() {
         }
 
         // Show modal
-        if (typeof bootstrap !== 'undefined' && bootstrap.Modal) {
-            const modal = new bootstrap.Modal(modal_element, {
-                backdrop: 'static',
-                keyboard: false
-            });
-            modal.show();
-        } else if (typeof $ !== 'undefined' && typeof $.fn.modal !== 'undefined') {
-            $(modal_element).modal({
-                backdrop: 'static',
-                keyboard: false
-            });
-            $(modal_element).modal('show');
-        } else {
-            modal_element.classList.add('show');
-            modal_element.style.display = 'block';
-            document.body.classList.add('modal-open');
-            
-            const backdrop = document.createElement('div');
-            backdrop.className = 'modal-backdrop fade show';
-            backdrop.id = 'edit-media-modal-backdrop';
-            document.body.appendChild(backdrop);
-        }
+        helperMediaLibraryModule.show_bootstrap_modal(modal_element);
 
         // Fetch media record data
         const record = await mediaLibraryModule.get_media_record(uuid);
@@ -1182,44 +951,9 @@ const mediaModalsModule = (function() {
      */
     const close_modal = () => {
         const modal_element = document.getElementById('uploaded-media-modal');
-        
         if (!modal_element) return;
 
-        // Try Bootstrap 5 first (check for getInstance method specifically)
-        if (typeof bootstrap !== 'undefined' && 
-            bootstrap.Modal && 
-            typeof bootstrap.Modal.getInstance === 'function') {
-            const modal = bootstrap.Modal.getInstance(modal_element);
-            if (modal) {
-                modal.hide();
-                console.log('Uploaded media modal closed (Bootstrap 5)');
-                return;
-            }
-        }
-        
-        // Try Bootstrap 4 / jQuery
-        if (typeof $ !== 'undefined' && typeof $.fn.modal !== 'undefined') {
-            $(modal_element).modal('hide');
-            console.log('Uploaded media modal closed (Bootstrap 4/jQuery)');
-        }
-        
-        // Always perform manual cleanup to ensure modal is fully closed
-        // This handles cases where Bootstrap's hide doesn't complete properly
-        setTimeout(() => {
-            modal_element.classList.remove('show');
-            modal_element.style.display = 'none';
-            modal_element.setAttribute('aria-hidden', 'true');
-            modal_element.removeAttribute('aria-modal');
-            document.body.classList.remove('modal-open');
-            document.body.style.removeProperty('padding-right');
-            document.body.style.removeProperty('overflow');
-            
-            // Remove all backdrops
-            const backdrops = document.querySelectorAll('.modal-backdrop');
-            backdrops.forEach(backdrop => backdrop.remove());
-            
-            console.log('Modal cleanup complete');
-        }, 150);
+        helperMediaLibraryModule.hide_bootstrap_modal(modal_element);
     };
 
     /**
@@ -1288,33 +1022,8 @@ const mediaModalsModule = (function() {
             helperModule.show_form();
         }
 
-        // Open modal using Bootstrap 5
-        if (typeof bootstrap !== 'undefined' && bootstrap.Modal) {
-            const modal = new bootstrap.Modal(modal_element, {
-                backdrop: 'static',
-                keyboard: false
-            });
-            modal.show();
-        } 
-        // Fallback to Bootstrap 4 / jQuery
-        else if (typeof $ !== 'undefined' && typeof $.fn.modal !== 'undefined') {
-            $(modal_element).modal({
-                backdrop: 'static',
-                keyboard: false
-            });
-            $(modal_element).modal('show');
-        }
-        // Fallback to manual display
-        else {
-            modal_element.classList.add('show');
-            modal_element.style.display = 'block';
-            document.body.classList.add('modal-open');
-            
-            const backdrop = document.createElement('div');
-            backdrop.className = 'modal-backdrop fade show';
-            backdrop.id = 'uploaded-media-modal-backdrop';
-            document.body.appendChild(backdrop);
-        }
+        // Open modal
+        helperMediaLibraryModule.show_bootstrap_modal(modal_element);
 
         console.log('Uploaded media modal opened with ' + uploaded_files_data.length + ' files');
     };
@@ -1352,37 +1061,9 @@ const mediaModalsModule = (function() {
      */
     const close_view_modal = () => {
         const modal_element = document.getElementById('view-media-modal');
-        
-        if (!modal_element) {
-            return;
-        }
+        if (!modal_element) return;
 
-        // Try Bootstrap 5 first (check for getInstance method)
-        if (typeof bootstrap !== 'undefined' && bootstrap.Modal && typeof bootstrap.Modal.getInstance === 'function') {
-            const modal_instance = bootstrap.Modal.getInstance(modal_element);
-            if (modal_instance) {
-                modal_instance.hide();
-            }
-        }
-        // Try Bootstrap 4/jQuery
-        else if (typeof $ !== 'undefined' && typeof $.fn.modal !== 'undefined') {
-            $(modal_element).modal('hide');
-        }
-        
-        // Manual cleanup
-        setTimeout(() => {
-            modal_element.classList.remove('show');
-            modal_element.style.display = 'none';
-            modal_element.setAttribute('aria-hidden', 'true');
-            modal_element.removeAttribute('aria-modal');
-            document.body.classList.remove('modal-open');
-            document.body.style.removeProperty('padding-right');
-            document.body.style.removeProperty('overflow');
-            
-            // Remove backdrops
-            const backdrops = document.querySelectorAll('.modal-backdrop');
-            backdrops.forEach(backdrop => backdrop.remove());
-
+        helperMediaLibraryModule.hide_bootstrap_modal(modal_element, () => {
             // Reset media elements
             const image_el = document.getElementById('view-media-image');
             const pdf_el = document.getElementById('view-media-pdf');
@@ -1405,7 +1086,7 @@ const mediaModalsModule = (function() {
                     hint.remove();
                 }
             }
-        }, 150);
+        });
     };
 
     /**
@@ -1547,28 +1228,8 @@ const mediaModalsModule = (function() {
         // Setup event handlers
         setup_view_modal_handlers();
 
-        // Show modal first
-        if (typeof bootstrap !== 'undefined' && bootstrap.Modal) {
-            const modal = new bootstrap.Modal(modal_element, {
-                backdrop: true,
-                keyboard: true
-            });
-            modal.show();
-        } else if (typeof $ !== 'undefined' && typeof $.fn.modal !== 'undefined') {
-            $(modal_element).modal({
-                backdrop: true,
-                keyboard: true
-            });
-            $(modal_element).modal('show');
-        } else {
-            modal_element.classList.add('show');
-            modal_element.style.display = 'block';
-            document.body.classList.add('modal-open');
-            
-            const backdrop = document.createElement('div');
-            backdrop.className = 'modal-backdrop fade show';
-            document.body.appendChild(backdrop);
-        }
+        // Show modal (dismissible)
+        helperMediaLibraryModule.show_bootstrap_modal(modal_element, { backdrop: true, keyboard: true });
 
         // Load media based on detected type
         if (display_type === 'image') {

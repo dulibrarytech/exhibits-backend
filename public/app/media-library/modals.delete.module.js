@@ -18,6 +18,12 @@ const mediaDeleteModalModule = (function() {
 
     'use strict';
 
+    // Shared helpers
+    const escape_html = helperMediaLibraryModule.escape_html;
+    const decode_html_entities = helperMediaLibraryModule.decode_html_entities;
+    const HTTP_STATUS = helperMediaLibraryModule.HTTP_STATUS;
+    const get_delete_icon_class = helperMediaLibraryModule.get_media_type_icon;
+
     const EXHIBITS_ENDPOINTS = endpointsModule.get_media_library_endpoints();
 
     // Delete modal state
@@ -27,57 +33,9 @@ const mediaDeleteModalModule = (function() {
 
     let obj = {};
 
-    // HTTP status constants
-    const HTTP_STATUS = {
-        OK: 200,
-        CREATED: 201,
-        BAD_REQUEST: 400,
-        NOT_FOUND: 404,
-        INTERNAL_ERROR: 500
-    };
-
-    /**
-     * Escape HTML to prevent XSS
-     * @param {string} str - String to escape
-     * @returns {string} Escaped string
-     */
-    const escape_html = (str) => {
-        if (!str) return '';
-        const div = document.createElement('div');
-        div.textContent = str;
-        return div.innerHTML;
-    };
-
-    /**
-     * Decode HTML entities (e.g., &#x27; -> ')
-     * @param {string} str - String to decode
-     * @returns {string} Decoded string
-     */
-    const decode_html_entities = (str) => {
-        if (!str) return '';
-        const div = document.createElement('div');
-        div.innerHTML = str;
-        return div.textContent;
-    };
-
     // ========================================
     // DELETE MODAL FUNCTIONS
     // ========================================
-
-    /**
-     * Get Font Awesome icon class for item type
-     * @param {string} item_type - The item type
-     * @returns {string} Font Awesome icon class
-     */
-    const get_delete_icon_class = (item_type) => {
-        const icons = {
-            'image': 'fa-file-image-o',
-            'pdf': 'fa-file-pdf-o',
-            'video': 'fa-file-video-o',
-            'audio': 'fa-file-audio-o'
-        };
-        return icons[item_type] || 'fa-file-o';
-    };
 
     /**
      * Display message in delete modal
@@ -110,43 +68,9 @@ const mediaDeleteModalModule = (function() {
      */
     const close_delete_modal = () => {
         const modal_element = document.getElementById('delete-media-modal');
-        
         if (!modal_element) return;
 
-        // Try Bootstrap 5 first
-        if (typeof bootstrap !== 'undefined' && 
-            bootstrap.Modal && 
-            typeof bootstrap.Modal.getInstance === 'function') {
-            const modal = bootstrap.Modal.getInstance(modal_element);
-            if (modal) {
-                modal.hide();
-                console.log('Delete media modal closed (Bootstrap 5)');
-                return;
-            }
-        }
-        
-        // Try Bootstrap 4 / jQuery
-        if (typeof $ !== 'undefined' && typeof $.fn.modal !== 'undefined') {
-            $(modal_element).modal('hide');
-            console.log('Delete media modal closed (Bootstrap 4/jQuery)');
-        }
-        
-        // Always perform manual cleanup
-        setTimeout(() => {
-            modal_element.classList.remove('show');
-            modal_element.style.display = 'none';
-            modal_element.setAttribute('aria-hidden', 'true');
-            modal_element.removeAttribute('aria-modal');
-            document.body.classList.remove('modal-open');
-            document.body.style.removeProperty('padding-right');
-            document.body.style.removeProperty('overflow');
-            
-            // Remove all backdrops
-            const backdrops = document.querySelectorAll('.modal-backdrop');
-            backdrops.forEach(backdrop => backdrop.remove());
-            
-            console.log('Delete modal cleanup complete');
-        }, 150);
+        helperMediaLibraryModule.hide_bootstrap_modal(modal_element);
 
         // Reset state
         current_delete_uuid = null;
@@ -359,28 +283,7 @@ const mediaDeleteModalModule = (function() {
         setup_delete_modal_handlers();
 
         // Show modal
-        if (typeof bootstrap !== 'undefined' && bootstrap.Modal) {
-            const modal = new bootstrap.Modal(modal_element, {
-                backdrop: 'static',
-                keyboard: false
-            });
-            modal.show();
-        } else if (typeof $ !== 'undefined' && typeof $.fn.modal !== 'undefined') {
-            $(modal_element).modal({
-                backdrop: 'static',
-                keyboard: false
-            });
-            $(modal_element).modal('show');
-        } else {
-            modal_element.classList.add('show');
-            modal_element.style.display = 'block';
-            document.body.classList.add('modal-open');
-            
-            const backdrop = document.createElement('div');
-            backdrop.className = 'modal-backdrop fade show';
-            backdrop.id = 'delete-media-modal-backdrop';
-            document.body.appendChild(backdrop);
-        }
+        helperMediaLibraryModule.show_bootstrap_modal(modal_element);
 
         console.log('Delete media modal opened for: ' + name);
     };

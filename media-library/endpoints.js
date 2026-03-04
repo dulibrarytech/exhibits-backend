@@ -20,6 +20,7 @@ const APP_PATH = '/exhibits-dashboard';
 const PREFIX = '/api/';
 const VERSION = 'v1';
 const ENDPOINT = '/media/library';
+const IIIF_PATH = `${APP_PATH}/iiif`;
 const ENDPOINTS = {
     media_records: {
         get: {
@@ -64,6 +65,13 @@ const ENDPOINTS = {
             description: 'Retrieves media thumbnail by UUID from hash-bucketed storage',
             endpoint: `${APP_PATH}${PREFIX}${VERSION}${ENDPOINT}/thumbnail/:media_id`,
             params: 'token or api_key, media_id (UUID)'
+        }
+    },
+    media_duplicate_check: {
+        get: {
+            description: 'Checks if a media record already exists with the given identifier',
+            endpoint: `${APP_PATH}${PREFIX}${VERSION}${ENDPOINT}/duplicate-check`,
+            params: 'token or api_key, field (repo_uuid or kaltura_entry_id), value'
         }
     },
     repo_media_search: {
@@ -123,7 +131,7 @@ const ENDPOINTS = {
     iiif_manifest: {
         get: {
             description: 'Gets IIIF Presentation 3.0 manifest for a media record',
-            endpoint: `${APP_PATH}${PREFIX}${VERSION}${ENDPOINT}/iiif/:media_id/manifest`,
+            endpoint: `${IIIF_PATH}/:media_id/manifest`,
             params: 'token or api_key, media_id (UUID)'
         }
     },
@@ -144,14 +152,14 @@ const ENDPOINTS = {
     iiif_info: {
         get: {
             description: 'Gets IIIF Image API 3.0 info.json for a media record',
-            endpoint: `${APP_PATH}${PREFIX}${VERSION}${ENDPOINT}/iiif/:media_id/info.json`,
+            endpoint: `${IIIF_PATH}/:media_id/info.json`,
             params: 'token or api_key, media_id (UUID)'
         }
     },
     iiif_image: {
         get: {
             description: 'Serves image via IIIF Image API 3.0 (region/size/rotation/quality.format)',
-            endpoint: `${APP_PATH}${PREFIX}${VERSION}${ENDPOINT}/iiif/:media_id/:region/:size/:rotation/:quality_format`,
+            endpoint: `${IIIF_PATH}/:media_id/:region/:size/:rotation/:quality_format`,
             params: 'token or api_key, media_id (UUID), region, size, rotation, quality_format'
         }
     },

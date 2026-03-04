@@ -191,7 +191,7 @@ exports.get_kaltura_media = async function (entry_id) {
                 item_type: item_type,
                 title: response.name || '',
                 description: response.description || '',
-                thumbnail: response.thumbnailUrl || '',
+                thumbnail: (response.thumbnailUrl || '').replace(/^http:\/\//i, 'https://'),
                 media_width: response.width || '',
                 media_height: response.height || '',
                 ms_duration: response.msDuration || ''

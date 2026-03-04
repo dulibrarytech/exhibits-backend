@@ -98,7 +98,7 @@ gulp.task('minify-timeline-items-modules', function () {
 gulp.task('minify-utils-modules', function () {
     return gulp.src([
         'public/app/utils/auth.module.js',
-        'public/app/utils/config.module.js',
+        // TODO 'public/app/utils/config.module.js',
         'public/app/utils/dom.module.js',
         'public/app/utils/endpoints.module.js',
         'public/app/utils/helper.module.js',
@@ -127,6 +127,29 @@ gulp.task('minify-modules', function () {
         .pipe(uglify())
         .on('error', function (err) {
             console.error('Error in minify-modules task:', err.toString());
+            this.emit('end'); // End the task to prevent Gulp from crashing
+        })
+        .pipe(rename({suffix: '.min'}))
+        .pipe(gulp.dest('public/app/dist'));
+});
+
+gulp.task('minify-media-library-modules', function () {
+    return gulp.src([
+        'public/app/media-library/helper.media.library.module.js',
+        'public/app/media-library/helper.repo.subjects.module.js',
+        'public/app/media-library/kaltura.service.module.js',
+        'public/app/media-library/media.library.module.js',
+        'public/app/media-library/modals.delete.module.js',
+        'public/app/media-library/modals.kaltura.module.js',
+        'public/app/media-library/modals.repo.module.js',
+        'public/app/media-library/modals.upload.module.js',
+        'public/app/media-library/repo.pagination.module.js',
+        'public/app/media-library/repo.service.module.js',
+        'public/app/media-library/uploads.module.js'
+    ])
+        .pipe(uglify())
+        .on('error', function (err) {
+            console.error('Error in minify-media-library-modules task:', err.toString());
             this.emit('end'); // End the task to prevent Gulp from crashing
         })
         .pipe(rename({suffix: '.min'}))
@@ -245,6 +268,22 @@ gulp.task('minify-views', function () {
         .pipe(gulp.dest('views/dist/'));
 });
 
+gulp.task('minify-media-library-views', function () {
+    return gulp.src([
+        'views/media-library/*.ejs'
+    ])
+        .pipe(htmlmin({collapseWhitespace: true}))
+        .pipe(gulp.dest('views/dist/media-library'));
+});
+
+gulp.task('minify-media-library-partial-views', function () {
+    return gulp.src([
+        'views/media-library/partials/*.ejs',
+    ])
+        .pipe(htmlmin({collapseWhitespace: true}))
+        .pipe(gulp.dest('views/dist/media-library/partials'));
+});
+
 gulp.task('default', gulp.parallel(
     'minify-exhibit-modules',
     'minify-grid-items-modules',
@@ -253,6 +292,7 @@ gulp.task('default', gulp.parallel(
     'minify-timeline-items-modules',
     'minify-utils-modules',
     'minify-modules',
+    'minify-media-library-modules',
     'minify-exhibit-views',
     'minify-exhibit-partial-views',
     'minify-grid-item-views',
@@ -266,5 +306,7 @@ gulp.task('default', gulp.parallel(
     'minify-users-views',
     'minify-users-partial-views',
     'minify-partial-views',
-    'minify-views'
+    'minify-views',
+    'minify-media-library-views',
+    'minify-media-library-partial-views'
 ));

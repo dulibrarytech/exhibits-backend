@@ -18,21 +18,19 @@ const mediaLibraryModule = (function() {
 
     'use strict';
 
+    // Shared helpers
+    const sanitize_html = helperMediaLibraryModule.escape_html;
+    const HTTP_STATUS = helperMediaLibraryModule.HTTP_STATUS;
+    const format_file_size = helperMediaLibraryModule.format_file_size;
+    const build_thumbnail_url = helperMediaLibraryModule.build_thumbnail_url;
+    const build_media_url = helperMediaLibraryModule.build_media_url;
+    const get_repo_thumbnail_url = helperMediaLibraryModule.get_repo_thumbnail_url;
+    const get_media_library_endpoints = endpointsModule.get_media_library_endpoints;
+
     let obj = {};
 
     // DataTable instance reference
     let media_data_table = null;
-
-    // HTTP status constants
-    const HTTP_STATUS = {
-        OK: 200,
-        CREATED: 201,
-        NO_CONTENT: 204,
-        BAD_REQUEST: 400,
-        FORBIDDEN: 403,
-        NOT_FOUND: 404,
-        INTERNAL_ERROR: 500
-    };
 
     // Image file extensions for thumbnail display
     const IMAGE_EXTENSIONS = ['.jpg', '.jpeg', '.png', '.gif', '.webp', '.svg'];
@@ -47,93 +45,6 @@ const mediaLibraryModule = (function() {
     const PLACEHOLDER_IMAGE = '/exhibits-dashboard/static/images/image-tn.png';
 
     /**
-     * Get media library endpoints
-     * @returns {Object|null} Endpoints configuration object
-     */
-    const get_media_library_endpoints = () => {
-        try {
-            return endpointsModule.get_media_library_endpoints();
-        } catch (error) {
-            console.error('Error getting media library endpoints:', error);
-            return null;
-        }
-    };
-
-    /**
-     * Build media file URL for full-size file retrieval
-     * @param {string} media_id - The media UUID to build URL for
-     * @returns {string|null} URL to media file or null if not available
-     */
-    const build_media_url = (media_id) => {
-        if (!media_id) {
-            return null;
-        }
-
-        const MEDIA_ENDPOINTS = get_media_library_endpoints();
-
-        if (!MEDIA_ENDPOINTS?.media_file?.get?.endpoint) {
-            console.warn('Media file endpoint not configured');
-            return null;
-        }
-
-        // Replace :media_id placeholder with actual UUID
-        const endpoint = MEDIA_ENDPOINTS.media_file.get.endpoint.replace(':media_id', encodeURIComponent(media_id));
-        return endpoint;
-    };
-
-    /**
-     * Build media thumbnail URL for thumbnail display
-     * Uses the dedicated thumbnail endpoint for server-generated thumbnails
-     * @param {string} media_id - The media UUID to build thumbnail URL for
-     * @returns {string|null} URL to thumbnail or null if not available
-     */
-    const build_thumbnail_url = (media_id) => {
-        if (!media_id) {
-            return null;
-        }
-
-        const MEDIA_ENDPOINTS = get_media_library_endpoints();
-
-        if (!MEDIA_ENDPOINTS?.media_thumbnail?.get?.endpoint) {
-            console.warn('Media thumbnail endpoint not configured');
-            return null;
-        }
-
-        // Replace :media_id placeholder with actual UUID
-        const endpoint = MEDIA_ENDPOINTS.media_thumbnail.get.endpoint.replace(':media_id', encodeURIComponent(media_id));
-        return endpoint;
-    };
-
-    /**
-     * Get repository thumbnail URL for repo-ingested media
-     * Follows the same pattern as repoModalsModule.get_repo_thumbnail_url
-     * @param {string} uuid - Repository item UUID (repo_uuid)
-     * @returns {string} Thumbnail URL or empty string
-     */
-    const get_repo_thumbnail_url = (uuid) => {
-        if (!uuid) return '';
-
-        // Use repoServiceModule's get_repo_tn_url if available
-        if (typeof repoServiceModule !== 'undefined' && typeof repoServiceModule.get_repo_tn_url === 'function') {
-            return repoServiceModule.get_repo_tn_url(uuid);
-        }
-
-        // Fallback: build the URL directly
-        const token = authModule.get_user_token();
-        if (!token) return '';
-
-        const MEDIA_ENDPOINTS = get_media_library_endpoints();
-
-        if (!MEDIA_ENDPOINTS?.repo_thumbnail?.get?.endpoint) {
-            console.warn('Repo thumbnail endpoint not configured');
-            return '';
-        }
-
-        const endpoint = MEDIA_ENDPOINTS.repo_thumbnail.get.endpoint;
-        return endpoint + '?uuid=' + encodeURIComponent(uuid) + '&token=' + encodeURIComponent(token);
-    };
-
-    /**
      * Check if filename is an image type
      * @param {string} filename - Filename to check
      * @returns {boolean} True if file is an image
@@ -145,48 +56,6 @@ const mediaLibraryModule = (function() {
 
         const ext = filename.toLowerCase().substring(filename.lastIndexOf('.'));
         return IMAGE_EXTENSIONS.includes(ext);
-    };
-
-    /**
-     * Get file type icon class based on mime type or extension
-     * @param {string} item_type - The item type (image, pdf, etc.)
-     * @param {string} mime_type - The MIME type
-     * @returns {string} Font Awesome icon class
-     */
-    const get_file_type_icon = (item_type, mime_type) => {
-        if (item_type === 'image' || (mime_type && mime_type.startsWith('image/'))) {
-            return 'fa fa-file-image-o';
-        }
-        if (item_type === 'pdf' || mime_type === 'application/pdf') {
-            return 'fa fa-file-pdf-o';
-        }
-        if (item_type === 'audio' || (mime_type && mime_type.startsWith('audio/'))) {
-            return 'fa fa-file-audio-o';
-        }
-        if (item_type === 'video' || (mime_type && mime_type.startsWith('video/'))) {
-            return 'fa fa-file-video-o';
-        }
-        return 'fa fa-file-o';
-    };
-
-    /**
-     * Convert bytes to megabytes with formatting
-     * @param {number} bytes - File size in bytes
-     * @param {number} decimals - Number of decimal places (default: 2)
-     * @returns {string} Formatted file size string
-     */
-    const format_file_size = (bytes, decimals = 2) => {
-        if (!bytes || bytes === 0) {
-            return '0 MB';
-        }
-
-        const mb = bytes / (1024 * 1024);
-
-        if (mb < 0.01) {
-            return '< 0.01 MB';
-        }
-
-        return mb.toFixed(decimals) + ' MB';
     };
 
     /**
@@ -218,21 +87,6 @@ const mediaLibraryModule = (function() {
             console.error('Error formatting date:', error);
             return 'N/A';
         }
-    };
-
-    /**
-     * Sanitize string for safe HTML display
-     * @param {string} str - String to sanitize
-     * @returns {string} Sanitized string
-     */
-    const sanitize_html = (str) => {
-        if (!str || typeof str !== 'string') {
-            return '';
-        }
-
-        const div = document.createElement('div');
-        div.textContent = str;
-        return div.innerHTML;
     };
 
     /**

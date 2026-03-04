@@ -329,6 +329,78 @@ exports.get_thumbnail = async function (req, res) {
 };
 
 /**
+ * Checks if a media record already exists with the given identifier
+ * Used to prevent duplicate imports from repository and Kaltura
+ *
+ * GET /api/v1/media/library/duplicate-check?field=repo_uuid&value=xxx
+ * GET /api/v1/media/library/duplicate-check?field=kaltura_entry_id&value=xxx
+ *
+ * Query Parameters:
+ * - field: Field to check ('repo_uuid' or 'kaltura_entry_id')
+ * - value: Value to search for
+ *
+ * @param {Object} req - Express request object
+ * @param {Object} res - Express response object
+ */
+exports.check_duplicate = async function (req, res) {
+
+    try {
+
+        const field = req.query.field;
+        const value = req.query.value;
+
+        // Validate field parameter
+        const allowed_fields = ['repo_uuid', 'kaltura_entry_id'];
+
+        if (!field || !allowed_fields.includes(field)) {
+            return res.status(400).json({
+                success: false,
+                message: 'Invalid or missing field parameter. Allowed: repo_uuid, kaltura_entry_id',
+                data: null
+            });
+        }
+
+        // Validate value parameter
+        if (!value || typeof value !== 'string' || value.trim().length === 0) {
+            return res.status(400).json({
+                success: false,
+                message: 'Value parameter is required',
+                data: null
+            });
+        }
+
+        LOGGER.module().info(`INFO: [/media-library/controller (check_duplicate)] Checking ${field} = ${value}`);
+
+        const result = await MEDIA_MODEL.check_duplicate(field, value.trim());
+
+        if (!result || !result.success) {
+            return res.status(200).json({
+                success: false,
+                message: result?.message || 'Duplicate check failed',
+                data: null
+            });
+        }
+
+        return res.status(200).json({
+            success: true,
+            message: result.message,
+            data: {
+                exists: result.exists,
+                record: result.record
+            }
+        });
+
+    } catch (error) {
+        LOGGER.module().error('ERROR: [/media-library/controller (check_duplicate)] ' + error.message);
+        return res.status(500).json({
+            success: false,
+            message: 'Internal server error checking for duplicates',
+            data: null
+        });
+    }
+};
+
+/**
  * Creates a new media record
  * @param {Object} req - Express request object
  * @param {Object} res - Express response object
@@ -410,9 +482,13 @@ exports.create_media_record = async function (req, res) {
             data: result.id
         });
 
-        // Auto-generate IIIF manifest for uploaded items (fire-and-forget)
-        if (data.ingest_method === 'upload') {
-            IIIF_SERVICE.generate_manifest(data.uuid).catch(err => {
+        // Auto-generate IIIF manifest for uploaded and Kaltura items (fire-and-forget)
+        if (data.ingest_method === 'upload' || data.ingest_method === 'kaltura') {
+            IIIF_SERVICE.generate_manifest(result.uuid).then(manifest_result => {
+                if (!manifest_result || !manifest_result.success) {
+                    LOGGER.module().warn(`WARNING: [/media-library/controller (create_media_record)] IIIF manifest generation returned failure: ${manifest_result?.message}`);
+                }
+            }).catch(err => {
                 LOGGER.module().warn(`WARNING: [/media-library/controller (create_media_record)] IIIF manifest generation failed: ${err.message}`);
             });
         }
@@ -567,7 +643,11 @@ exports.update_media_record = async function (req, res) {
         });
 
         // Regenerate IIIF manifest when metadata changes (fire-and-forget)
-        IIIF_SERVICE.generate_manifest(media_id).catch(err => {
+        IIIF_SERVICE.generate_manifest(media_id).then(manifest_result => {
+            if (!manifest_result || !manifest_result.success) {
+                LOGGER.module().warn(`WARNING: [/media-library/controller (update_media_record)] IIIF manifest regeneration returned failure: ${manifest_result?.message}`);
+            }
+        }).catch(err => {
             LOGGER.module().warn(`WARNING: [/media-library/controller (update_media_record)] IIIF manifest regeneration failed: ${err.message}`);
         });
 

@@ -18,6 +18,12 @@ const mediaUploadsModule = (function() {
 
     'use strict';
 
+    // Shared helpers
+    const get_app_path = helperMediaLibraryModule.get_app_path;
+    const get_thumbnail_url_for_media = helperMediaLibraryModule.get_thumbnail_url_for_media;
+
+    const APP_PATH = get_app_path();
+
     // Module state
     let dropzone_instance = null;
     let initialized = false;
@@ -27,25 +33,6 @@ const mediaUploadsModule = (function() {
     const MAX_FILES = 10;
     const MAX_FILE_SIZE_MB = 50;
 
-    /**
-     * Get application path safely
-     */
-    const get_app_path = () => {
-
-        try {
-            const app_path = window.localStorage.getItem('exhibits_app_path');
-            if (!app_path) {
-                console.warn('Application path not found in localStorage, using default');
-                return '/exhibits-dashboard';
-            }
-            return app_path;
-        } catch (error) {
-            console.error('Error accessing localStorage:', error);
-            return '/exhibits-dashboard';
-        }
-    };
-
-    const APP_PATH = get_app_path();
     const UPLOAD_ENDPOINT = `${location.protocol}//${location.host}${APP_PATH}/media/library/uploads`;
 
     // Allowed file types configuration (images and PDFs only)
@@ -200,61 +187,6 @@ const mediaUploadsModule = (function() {
         if (mime_lower.startsWith('audio/')) return 'audio';
         if (mime_lower.includes('pdf')) return 'pdf';
         return 'unknown';
-    };
-
-    /**
-     * Build thumbnail URL using the media thumbnail endpoint
-     * @param {string} media_id - Media UUID
-     * @returns {string|null} Thumbnail URL with token or null
-     */
-    const build_thumbnail_url = (media_id) => {
-        if (!media_id) return null;
-
-        try {
-            const MEDIA_ENDPOINTS = endpointsModule.get_media_library_endpoints();
-
-            if (!MEDIA_ENDPOINTS?.media_thumbnail?.get?.endpoint) {
-                console.warn('Media thumbnail endpoint not configured');
-                return null;
-            }
-
-            const token = authModule.get_user_token();
-            const endpoint = MEDIA_ENDPOINTS.media_thumbnail.get.endpoint.replace(':media_id', encodeURIComponent(media_id));
-            return endpoint + '?token=' + encodeURIComponent(token || '');
-        } catch (error) {
-            console.warn('Error building thumbnail URL:', error);
-            return null;
-        }
-    };
-
-    /**
-     * Get thumbnail URL for media type
-     * Uses server-generated thumbnails for images and PDFs when uuid is available
-     * @param {string} media_type - Media type (image, pdf, video, audio)
-     * @param {string} uuid - File UUID (for server-generated thumbnails)
-     * @returns {string} Thumbnail URL
-     */
-    const get_thumbnail_url_for_media = (media_type, uuid) => {
-        const static_path = '/exhibits-dashboard/static/images';
-
-        // Use server-generated thumbnails for images and PDFs
-        if ((media_type === 'image' || media_type === 'pdf') && uuid) {
-            const thumbnail_url = build_thumbnail_url(uuid);
-            if (thumbnail_url) return thumbnail_url;
-        }
-
-        switch (media_type) {
-            case 'image':
-                return static_path + '/image-tn.png';
-            case 'video':
-                return static_path + '/video-tn.png';
-            case 'audio':
-                return static_path + '/audio-tn.png';
-            case 'pdf':
-                return static_path + '/pdf-tn.png';
-            default:
-                return static_path + '/default-tn.png';
-        }
     };
 
     /**

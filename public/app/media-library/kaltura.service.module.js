@@ -18,73 +18,19 @@ const kalturaServiceModule = (function() {
 
     'use strict';
 
+    // Dependency guard — fail fast if shared helper is not loaded
+    if (typeof helperMediaLibraryModule === 'undefined') {
+        console.error('FATAL: helperMediaLibraryModule must be loaded before kaltura.service.module.js. Check script order in dashboard-media-home.ejs.');
+        return {};
+    }
+
     const EXHIBITS_ENDPOINTS = endpointsModule.get_media_library_endpoints();
 
     let obj = {};
 
-    // HTTP status constants
-    const HTTP_STATUS = {
-        OK: 200,
-        BAD_REQUEST: 400,
-        FORBIDDEN: 403,
-        NOT_FOUND: 404,
-        INTERNAL_ERROR: 500
-    };
-
-    /**
-     * Escape HTML to prevent XSS
-     */
-    const escape_html = (str) => {
-        if (!str) return '';
-        const div = document.createElement('div');
-        div.textContent = str;
-        return div.innerHTML;
-    };
-
-    /**
-     * Display message in the Kaltura tab message area
-     * @param {string} type - Message type ('success', 'danger', 'warning', 'info')
-     * @param {string} message - Message text
-     */
-    const display_message = (type, message) => {
-        const message_container = document.getElementById('kaltura-item-data');
-
-        if (!message_container) return;
-
-        const icon_map = {
-            'success': 'fa-check-circle',
-            'danger': 'fa-exclamation-circle',
-            'warning': 'fa-exclamation-triangle',
-            'info': 'fa-info-circle'
-        };
-
-        const icon = icon_map[type] || 'fa-info-circle';
-
-        message_container.innerHTML = '<div class="alert alert-' + type + ' alert-dismissible fade show" role="alert">' +
-            '<i class="fa ' + icon + '" style="margin-right: 8px;" aria-hidden="true"></i>' +
-            escape_html(message) +
-            '<button type="button" class="close" data-dismiss="alert" aria-label="Close">' +
-            '<span aria-hidden="true">&times;</span>' +
-            '</button>' +
-            '</div>';
-
-        // Auto-hide success messages
-        if (type === 'success') {
-            setTimeout(() => {
-                clear_message();
-            }, 5000);
-        }
-    };
-
-    /**
-     * Clear message area
-     */
-    const clear_message = () => {
-        const message_container = document.getElementById('kaltura-item-data');
-        if (message_container) {
-            message_container.innerHTML = '';
-        }
-    };
+    // Shared helpers scoped to the Kaltura tab message container
+    const { display_message, clear_message, escape_html } = helperMediaLibraryModule.create_message_helper('kaltura-item-data');
+    const HTTP_STATUS = helperMediaLibraryModule.HTTP_STATUS;
 
     /**
      * Show loading indicator
@@ -175,6 +121,40 @@ const kalturaServiceModule = (function() {
             show_loading();
             clear_message();
             hide_thumbnail();
+
+            // Check for duplicate before fetching from Kaltura API
+            if (EXHIBITS_ENDPOINTS?.media_duplicate_check?.get?.endpoint) {
+                try {
+                    const dup_endpoint = EXHIBITS_ENDPOINTS.media_duplicate_check.get.endpoint +
+                        '?field=kaltura_entry_id&value=' + encodeURIComponent(trimmed_id);
+
+                    const dup_response = await httpModule.req({
+                        method: 'GET',
+                        url: dup_endpoint,
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'x-access-token': token
+                        },
+                        timeout: 10000,
+                        validateStatus: (status) => status >= 200 && status < 600
+                    });
+
+                    if (dup_response && dup_response.status === HTTP_STATUS.OK &&
+                        dup_response.data?.success && dup_response.data?.data?.exists) {
+
+                        hide_loading();
+                        const existing = dup_response.data.data.record;
+                        const display_name = existing?.name ? ' (' + escape_html(existing.name) + ')' : '';
+                        display_message('warning',
+                            'This item already exists in the media library' + display_name +
+                            '.');
+                        return { success: false, message: 'Duplicate entry' };
+                    }
+                } catch (dup_error) {
+                    // Log but don't block — allow the import to proceed if the check itself fails
+                    console.warn('Duplicate check failed, proceeding with import:', dup_error);
+                }
+            }
 
             // Build endpoint URL - replace :entry_id placeholder with actual entry ID
             const endpoint = EXHIBITS_ENDPOINTS.kaltura_media.get.endpoint.replace(':entry_id', encodeURIComponent(trimmed_id));

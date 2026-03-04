@@ -18,14 +18,11 @@ const repoSubjectsModule = (function() {
 
     'use strict';
 
-    let obj = {};
+    // Shared helpers
+    const escape_html = helperMediaLibraryModule.escape_html;
+    const HTTP_STATUS = helperMediaLibraryModule.HTTP_STATUS;
 
-    // HTTP status constants
-    const HTTP_STATUS = {
-        OK: 200,
-        FORBIDDEN: 403,
-        NOT_FOUND: 404
-    };
+    let obj = {};
 
     // Cached subject and resource type data
     let subjects_cache = null;
@@ -40,18 +37,6 @@ const repoSubjectsModule = (function() {
     // ========================================
     // UTILITIES
     // ========================================
-
-    /**
-     * Escape HTML to prevent XSS
-     * @param {string} str - String to escape
-     * @returns {string} Escaped string
-     */
-    const escape_html = (str) => {
-        if (!str) return '';
-        const div = document.createElement('div');
-        div.textContent = str;
-        return div.innerHTML;
-    };
 
     /**
      * Extract value and label from an API item

@@ -307,34 +307,37 @@
 <%- include('../partials/exhibits-app-common.ejs'); %>
 <script src="/exhibits-dashboard/static/app/dist/helper.media.module.min.js?<%=build_version%>"></script>
 
+<!-- Media Library Helper Module (must load before all other media-library modules) -->
+<script src="/exhibits-dashboard/static/app/dist/helper.media.library.module.min.js?<%=build_version%>"></script>
+
 <!-- Repo Subjects Helper Module (must load before modal modules) -->
-<script src="/exhibits-dashboard/static/app/media-library/helper.repo.subjects.module.js?<%=build_version%>"></script>
+<script src="/exhibits-dashboard/static/app/dist/helper.repo.subjects.module.min.js?<%=build_version%>"></script>
 
 <!-- Modals Module -->
-<script src="/exhibits-dashboard/static/app/media-library/modals.upload.module.js?<%=build_version%>"></script>
+<script src="/exhibits-dashboard/static/app/dist/modals.upload.module.min.js?<%=build_version%>"></script>
 
-<script src="/exhibits-dashboard/static/app/media-library/modals.repo.module.js?<%=build_version%>"></script>
+<script src="/exhibits-dashboard/static/app/dist/modals.repo.module.min.js?<%=build_version%>"></script>
 
 <!-- Delete Confirmation Modal Module -->
-<script src="/exhibits-dashboard/static/app/media-library/modals.delete.module.js?<%=build_version%>"></script>
+<script src="/exhibits-dashboard/static/app/dist/modals.delete.module.min.js?<%=build_version%>"></script>
 
 <!-- Uploads Module -->
-<script src="/exhibits-dashboard/static/app/media-library/uploads.module.js?<%=build_version%>"></script>
+<script src="/exhibits-dashboard/static/app/dist/uploads.module.min.js?<%=build_version%>"></script>
 
 <!-- Repository Pagination Module (must load before repo.service.module) -->
-<script src="/exhibits-dashboard/static/app/media-library/repo.pagination.module.js?<%=build_version%>"></script>
+<script src="/exhibits-dashboard/static/app/dist/repo.pagination.module.min.js?<%=build_version%>"></script>
 
 <!-- Repository Service Module -->
-<script src="/exhibits-dashboard/static/app/media-library/repo.service.module.js?<%=build_version%>"></script>
+<script src="/exhibits-dashboard/static/app/dist/repo.service.module.min.js?<%=build_version%>"></script>
 
 <!-- Kaltura Modals Module -->
-<script src="/exhibits-dashboard/static/app/media-library/modals.kaltura.module.js?<%=build_version%>"></script>
+<script src="/exhibits-dashboard/static/app/dist/modals.kaltura.module.min.js?<%=build_version%>"></script>
 
 <!-- Kaltura Service Module -->
-<script src="/exhibits-dashboard/static/app/media-library/kaltura.service.module.js?<%=build_version%>"></script>
+<script src="/exhibits-dashboard/static/app/dist/kaltura.service.module.min.js?<%=build_version%>"></script>
 
 <!-- Media Library Module -->
-<script src="/exhibits-dashboard/static/app/media-library/media.library.module.js?<%=build_version%>"></script>
+<script src="/exhibits-dashboard/static/app/dist/media.library.module.min.js?<%=build_version%>"></script>
 
 
 <script>

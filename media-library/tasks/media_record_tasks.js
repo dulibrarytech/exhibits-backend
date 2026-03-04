@@ -278,7 +278,7 @@ const Media_record_tasks = class {
             'file_size', 'size', 'topics', 'genre_form', 'places', 'item_type',
             'topics_subjects', 'genre_form_subjects', 'places_subjects',
             'is_published', 'metadata', 'tags', 'updated_by',
-            'iiif_manifest', 'media_width', 'media_height'
+            'iiif_manifest', 'media_width', 'media_height', 'media_duration'
         ];
 
         try {
@@ -452,6 +452,72 @@ const Media_record_tasks = class {
 
         } catch (error) {
             this._handle_error(error, 'delete_media_record', {uuid, deleted_by});
+        }
+    }
+
+    /**
+     * Checks if a non-deleted media record already exists with the given field value
+     * Used to detect duplicate imports for repo_uuid and kaltura_entry_id
+     * @param {string} field_name - Column name to check ('repo_uuid' or 'kaltura_entry_id')
+     * @param {string} field_value - Value to search for
+     * @returns {Promise<Object>} Result with exists flag and matching record summary
+     */
+    async check_duplicate_by_field(field_name, field_value) {
+
+        try {
+
+            this._validate_database();
+            this._validate_table('media_library_records');
+
+            // Whitelist allowed fields to prevent SQL injection
+            const ALLOWED_FIELDS = ['repo_uuid', 'kaltura_entry_id'];
+
+            if (!ALLOWED_FIELDS.includes(field_name)) {
+                throw new Error('Invalid field name for duplicate check: ' + field_name);
+            }
+
+            if (!field_value || typeof field_value !== 'string' || field_value.trim() === '') {
+                throw new Error('Field value is required for duplicate check');
+            }
+
+            const trimmed_value = field_value.trim();
+
+            const record = await this.DB(this.TABLE.media_library_records)
+                .select('id', 'uuid', 'name', 'created', 'created_by')
+                .where(field_name, trimmed_value)
+                .andWhere({is_deleted: 0})
+                .first()
+                .timeout(this.QUERY_TIMEOUT);
+
+            if (record) {
+                this._log_success('Duplicate found', {
+                    field: field_name,
+                    value: trimmed_value,
+                    existing_uuid: record.uuid
+                });
+
+                return {
+                    success: true,
+                    exists: true,
+                    record: {
+                        uuid: record.uuid,
+                        name: record.name,
+                        created: record.created,
+                        created_by: record.created_by
+                    },
+                    message: 'A media record with this ' + field_name + ' already exists'
+                };
+            }
+
+            return {
+                success: true,
+                exists: false,
+                record: null,
+                message: 'No duplicate found'
+            };
+
+        } catch (error) {
+            this._handle_error(error, 'check_duplicate_by_field', {field_name, field_value});
         }
     }
 

@@ -55,7 +55,7 @@
 
 // Kaltura domains
 const KALTURA_CDN = 'https://cdnapisec.kaltura.com';
-const KALTURA_VOD = 'http://cfvod.kaltura.com';
+const KALTURA_VOD = 'https://cfvod.kaltura.com';
 const KALTURA_STATS = 'https://stats.kaltura.com';
 const KALTURA_ANALYTICS = 'https://analytics.kaltura.com';
 
@@ -127,7 +127,8 @@ module.exports = function () {
                     "'self'",
                     KALTURA_CDN,
                     KALTURA_STATS,
-                    KALTURA_ANALYTICS
+                    KALTURA_ANALYTICS,
+                    JSDELIVR
                 ],
 
                 // Fonts: CDN-hosted webfonts (Font Awesome, Themify Icons, Pixeden)
