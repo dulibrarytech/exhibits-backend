@@ -512,6 +512,42 @@ exports.get_media_records = async function (req, res) {
 
     try {
 
+        const { page, limit, q, media_type } = req.query;
+
+        // If pagination params are present, use the browse method with filtering
+        if (page || limit || q || media_type) {
+
+            const options = {
+                page: page || 1,
+                limit: limit || 20,
+                q: q || null,
+                media_type: media_type || null
+            };
+
+            const result = await MEDIA_MODEL.get_media_records_browse(options);
+
+            if (!result || !result.success) {
+                res.status(404).json({
+                    success: false,
+                    message: 'No media records found.',
+                    data: null,
+                    total: 0
+                });
+                return;
+            }
+
+            res.status(200).json({
+                success: true,
+                message: result.message,
+                data: result.records,
+                total: result.total,
+                page: result.page,
+                limit: result.limit
+            });
+            return;
+        }
+
+        // Default: return all records (existing behavior for DataTable)
         const result = await MEDIA_MODEL.get_media_records();
 
         if (!result || !result.success) {

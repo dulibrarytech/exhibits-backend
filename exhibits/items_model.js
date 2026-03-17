@@ -37,6 +37,14 @@ const VALIDATOR = require('../libs/validate');
 const EXHIBIT_RECORD_TASKS = require('./tasks/exhibit_record_tasks');
 const INDEXER_MODEL = require('../indexer/model');
 const LOGGER = require('../libs/log4');
+const {
+    is_valid_uuid,
+    build_response,
+    validate_input,
+    prepare_styles,
+    process_media_files,
+    clean_media_fields
+} = require('../exhibits/common_helper');
 
 // Constants
 const CONSTANTS = {
@@ -74,64 +82,13 @@ const heading_task = new EXHIBIT_HEADING_RECORD_TASKS(DB, TABLES);
 const grid_task = new EXHIBIT_GRID_RECORD_TASKS(DB, TABLES);
 const timeline_task = new EXHIBIT_TIMELINE_RECORD_TASKS(DB, TABLES);
 
-/**
- * Validates UUID format
- * @param {string} uuid - UUID to validate
- * @returns {boolean} True if valid
- */
-const is_valid_uuid = (uuid) => {
-    return uuid && typeof uuid === 'string' && uuid.length > 0;
-};
+// is_valid_uuid imported from common_helper
 
-/**
- * Builds standardized response object
- * @param {number} status - HTTP status code
- * @param {string} message - Response message
- * @param {*} data - Optional response data
- * @returns {Object} Response object
- */
-const build_response = (status, message, data = null) => {
-    const response = {status, message};
-    if (data !== null) {
-        response.data = data;
-    }
-    return response;
-};
+// build_response imported from common_helper
 
-/**
- * Validates input data
- * @param {Object} data - Data to validate
- * @param {Object} validator - Validator instance
- * @param {string} context - Context for error logging
- * @returns {Object|true} Validation result
- */
-const validate_input = (data, validator, context) => {
-    if (!data || typeof data !== 'object') {
-        LOGGER.module().error(`ERROR: [/exhibits/items_model (${context})] Invalid input data format`);
-        return [{message: 'Invalid input data format'}];
-    }
+// validate_input imported from common_helper
 
-    const validation_result = validator.validate(data);
-
-    if (validation_result !== true) {
-        const error_msg = validation_result[0].message || 'Validation failed';
-        LOGGER.module().error(`ERROR: [/exhibits/items_model (${context})] ${error_msg}`);
-    }
-
-    return validation_result;
-};
-
-/**
- * Prepares styles data for storage
- * @param {Object|string|undefined} styles - Styles object or string
- * @returns {string} JSON stringified styles
- */
-const prepare_styles = (styles) => {
-    if (!styles || (typeof styles === 'object' && Object.keys(styles).length === 0)) {
-        return JSON.stringify({});
-    }
-    return typeof styles === 'string' ? styles : JSON.stringify(styles);
-};
+// prepare_styles imported from common_helper
 
 /**
  * Processes media files for items
@@ -147,32 +104,8 @@ const process_item_media = (data) => {
         return processed_data;
     }
 
-    // Ensure storage path exists
-    helper_task.check_storage_path(processed_data.is_member_of_exhibit, STORAGE_CONFIG.storage_path);
-
-    // Process main media
-    if (processed_data.media &&
-        processed_data.media.length > 0 &&
-        processed_data.media !== processed_data.media_prev) {
-        processed_data.media = helper_task.process_uploaded_media(
-            processed_data.is_member_of_exhibit,
-            processed_data.uuid,
-            processed_data.media,
-            STORAGE_CONFIG.storage_path
-        );
-    }
-
-    // Process thumbnail
-    if (processed_data.thumbnail &&
-        processed_data.thumbnail.length > 0 &&
-        processed_data.thumbnail !== processed_data.thumbnail_prev) {
-        processed_data.thumbnail = helper_task.process_uploaded_media(
-            processed_data.is_member_of_exhibit,
-            processed_data.uuid,
-            processed_data.thumbnail,
-            STORAGE_CONFIG.storage_path
-        );
-    }
+    // Process uploaded media and thumbnail files
+    process_media_files(processed_data, helper_task, STORAGE_CONFIG.storage_path);
 
     // Handle Kaltura items
     if (processed_data.kaltura && processed_data.kaltura.length > 0) {
@@ -186,10 +119,7 @@ const process_item_media = (data) => {
     }
 
     // Clean up temporary fields
-    delete processed_data.kaltura;
-    delete processed_data.repo_uuid;
-    delete processed_data.media_prev;
-    delete processed_data.thumbnail_prev;
+    clean_media_fields(processed_data);
 
     return processed_data;
 };
@@ -207,32 +137,8 @@ const process_item_update_media = (data) => {
         return processed_data;
     }
 
-    // Ensure storage path exists
-    helper_task.check_storage_path(processed_data.is_member_of_exhibit, STORAGE_CONFIG.storage_path);
-
-    // Process main media
-    if (processed_data.media &&
-        processed_data.media.length > 0 &&
-        processed_data.media !== processed_data.media_prev) {
-        processed_data.media = helper_task.process_uploaded_media(
-            processed_data.is_member_of_exhibit,
-            processed_data.uuid,
-            processed_data.media,
-            STORAGE_CONFIG.storage_path
-        );
-    }
-
-    // Process thumbnail
-    if (processed_data.thumbnail &&
-        processed_data.thumbnail.length > 0 &&
-        processed_data.thumbnail !== processed_data.thumbnail_prev) {
-        processed_data.thumbnail = helper_task.process_uploaded_media(
-            processed_data.is_member_of_exhibit,
-            processed_data.uuid,
-            processed_data.thumbnail,
-            STORAGE_CONFIG.storage_path
-        );
-    }
+    // Process uploaded media and thumbnail files
+    process_media_files(processed_data, helper_task, STORAGE_CONFIG.storage_path);
 
     // Handle Kaltura items - complex logic for audio/video
     if (processed_data.kaltura && processed_data.kaltura.length > 0) {
@@ -260,10 +166,7 @@ const process_item_update_media = (data) => {
     }
 
     // Clean up temporary fields
-    delete processed_data.kaltura;
-    delete processed_data.repo_uuid;
-    delete processed_data.media_prev;
-    delete processed_data.thumbnail_prev;
+    clean_media_fields(processed_data);
 
     return processed_data;
 };
@@ -435,7 +338,7 @@ exports.create_item_record = async (is_member_of_exhibit, data) => {
         data.is_member_of_exhibit = is_member_of_exhibit;
 
         // Validate
-        const validation_result = validate_input(data, validate_create_item_task, 'create_item_record');
+        const validation_result = validate_input(data, validate_create_item_task, 'items_model (create_item_record)');
 
         if (validation_result !== true) {
             return build_response(
@@ -561,7 +464,7 @@ exports.update_item_record = async (is_member_of_exhibit, item_id, data) => {
         delete data.is_published;
 
         // Validate
-        const validation_result = validate_input(data, validate_update_item_task, 'update_item_record');
+        const validation_result = validate_input(data, validate_update_item_task, 'items_model (update_item_record)');
 
         if (validation_result !== true) {
             return build_response(

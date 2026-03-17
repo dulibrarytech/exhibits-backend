@@ -223,8 +223,50 @@ const exhibitsAddFormModule = (function () {
             // Show success message
             showMessage('success', 'Exhibit record created');
 
+            // Bind media library assets if selected
+            const exhibitUuid = response.data.data; // the new exhibit UUID
+            const heroMediaUuid = document.querySelector('#hero-image-media-uuid')?.value?.trim();
+            const thumbnailMediaUuid = document.querySelector('#thumbnail-media-uuid')?.value?.trim();
+
+            if (heroMediaUuid || thumbnailMediaUuid) {
+                try {
+                    const bindEndpoint = EXHIBITS_ENDPOINTS.exhibits?.exhibit_media_library?.post?.endpoint;
+
+                    if (bindEndpoint) {
+                        const bindUrl = bindEndpoint.replace(':exhibit_id', encodeURIComponent(exhibitUuid));
+
+                        if (heroMediaUuid) {
+                            await httpModule.req({
+                                method: 'POST',
+                                url: bindUrl,
+                                data: { media_uuid: heroMediaUuid, media_role: 'hero_image' },
+                                headers: {
+                                    'Content-Type': 'application/json',
+                                    'x-access-token': token
+                                }
+                            });
+                        }
+
+                        if (thumbnailMediaUuid) {
+                            await httpModule.req({
+                                method: 'POST',
+                                url: bindUrl,
+                                data: { media_uuid: thumbnailMediaUuid, media_role: 'thumbnail' },
+                                headers: {
+                                    'Content-Type': 'application/json',
+                                    'x-access-token': token
+                                }
+                            });
+                        }
+                    }
+                } catch (bindError) {
+                    console.error('Error binding media to new exhibit:', bindError);
+                    // Continue to redirect — the exhibit was created successfully
+                }
+            }
+
             // Redirect after delay
-            const exhibitId = encodeURIComponent(response.data.data); // .uuid
+            const exhibitId = encodeURIComponent(exhibitUuid);
             timeoutId = setTimeout(() => {
                 window.location.href = `${APP_PATH}/items?exhibit_id=${exhibitId}`;
             }, REDIRECT_DELAY);
@@ -302,6 +344,102 @@ const exhibitsAddFormModule = (function () {
             }
         };
 
+        // Helper function to render a media preview thumbnail from a media library asset
+        const render_media_preview = (selector, media) => {
+            const container = document.querySelector(selector);
+            if (!container) return;
+
+            container.innerHTML = '';
+
+            const token = authModule.get_user_token();
+            let thumb_url = '';
+
+            if (media.ingest_method === 'kaltura' && media.kaltura_thumbnail_url) {
+                thumb_url = media.kaltura_thumbnail_url;
+            } else if (media.ingest_method === 'repository' && media.repo_uuid) {
+                thumb_url = `${APP_PATH}/api/v1/media/library/repo/thumbnail?uuid=${encodeURIComponent(media.repo_uuid)}&token=${encodeURIComponent(token)}`;
+            } else if (media.uuid && media.thumbnail_path) {
+                thumb_url = `${APP_PATH}/api/v1/media/library/thumbnail/${media.uuid}?token=${encodeURIComponent(token)}`;
+            }
+
+            if (thumb_url) {
+                const img = document.createElement('img');
+                img.src = thumb_url;
+                img.alt = media.alt_text || media.name || '';
+                container.appendChild(img);
+            }
+        };
+
+        // Helper function to render filename display
+        const render_filename = (selector, name) => {
+            const el = document.querySelector(selector);
+            if (!el) return;
+            el.textContent = name || '';
+        };
+
+        // Helper function to show an element
+        const show_element = (selector) => {
+            const el = document.querySelector(selector);
+            if (el) el.style.display = 'inline';
+        };
+
+        // Helper function to restore placeholder inside a media preview area
+        const restore_placeholder = (display_selector) => {
+            const display_el = document.querySelector(display_selector);
+            if (!display_el) return;
+
+            display_el.innerHTML = '';
+
+            const placeholder = document.createElement('div');
+            placeholder.className = 'media-placeholder';
+
+            const icon = document.createElement('i');
+            icon.className = 'fa fa-picture-o';
+            placeholder.appendChild(icon);
+
+            const span = document.createElement('span');
+            span.textContent = 'No image selected';
+            placeholder.appendChild(span);
+
+            display_el.appendChild(placeholder);
+        };
+
+        // Client-side clear for hero image slot (no API call on add form)
+        const clear_hero_image = function (e) {
+            e.preventDefault();
+            restore_placeholder('#hero-image-display');
+
+            const hero_input = document.querySelector('#hero-image');
+            if (hero_input) hero_input.value = '';
+
+            const hero_uuid = document.querySelector('#hero-image-media-uuid');
+            if (hero_uuid) hero_uuid.value = '';
+
+            const filename_el = document.querySelector('#hero-image-filename-display');
+            if (filename_el) filename_el.textContent = '';
+
+            const trash_el = document.querySelector('#hero-trash');
+            if (trash_el) trash_el.style.display = 'none';
+        };
+
+        // Client-side clear for thumbnail slot (no API call on add form)
+        const clear_thumbnail = function (e) {
+            e.preventDefault();
+            restore_placeholder('#thumbnail-image-display');
+
+            const thumb_input = document.querySelector('#thumbnail-image');
+            if (thumb_input) thumb_input.value = '';
+
+            const thumb_uuid = document.querySelector('#thumbnail-media-uuid');
+            if (thumb_uuid) thumb_uuid.value = '';
+
+            const filename_el = document.querySelector('#thumbnail-filename-display');
+            if (filename_el) filename_el.textContent = '';
+
+            const trash_el = document.querySelector('#thumbnail-trash');
+            if (trash_el) trash_el.style.display = 'none';
+        };
+
         try {
 
             // Validate required modules exist
@@ -328,14 +466,14 @@ const exhibitsAddFormModule = (function () {
                 {
                     selector: '#hero-trash',
                     event: 'click',
-                    handler: exhibitsCommonFormModule.delete_hero_image,
-                    name: 'delete_hero_image'
+                    handler: clear_hero_image,
+                    name: 'clear_hero_image'
                 },
                 {
                     selector: '#thumbnail-trash',
                     event: 'click',
-                    handler: exhibitsCommonFormModule.delete_thumbnail_image,
-                    name: 'delete_thumbnail_image'
+                    handler: clear_thumbnail,
+                    name: 'clear_thumbnail'
                 }
             ];
 
@@ -358,6 +496,43 @@ const exhibitsAddFormModule = (function () {
                 }
             }
 
+            // Wire media picker buttons
+            const pick_hero_btn = document.querySelector('#pick-hero-image-btn');
+            if (pick_hero_btn) {
+                pick_hero_btn.addEventListener('click', function () {
+                    mediaPickerModule.open({
+                        role: 'hero_image',
+                        exhibit_uuid: null, // null on add form — binding created after exhibit create
+                        media_type_filter: 'image',
+                        on_select: function (media) {
+                            document.querySelector('#hero-image-media-uuid').value = media.uuid;
+                            render_media_preview('#hero-image-display', media);
+                            render_filename('#hero-image-filename-display', media.name || media.original_filename);
+                            show_element('#hero-trash');
+                        }
+                    });
+                });
+                attached_count++;
+            }
+
+            const pick_thumbnail_btn = document.querySelector('#pick-thumbnail-btn');
+            if (pick_thumbnail_btn) {
+                pick_thumbnail_btn.addEventListener('click', function () {
+                    mediaPickerModule.open({
+                        role: 'thumbnail',
+                        exhibit_uuid: null,
+                        media_type_filter: 'image',
+                        on_select: function (media) {
+                            document.querySelector('#thumbnail-media-uuid').value = media.uuid;
+                            render_media_preview('#thumbnail-image-display', media);
+                            render_filename('#thumbnail-filename-display', media.name || media.original_filename);
+                            show_element('#thumbnail-trash');
+                        }
+                    });
+                });
+                attached_count++;
+            }
+
             // Log initialization summary
             console.log(`Initialization complete: ${attached_count} listeners attached, ${failed_count} failed`);
 
@@ -365,12 +540,14 @@ const exhibitsAddFormModule = (function () {
             clear_element('#item-list-nav');
 
             // Validate helperModule method exists
+            /*
             if (typeof helperModule.create_subjects_menu !== 'function') {
                 throw new Error('helperModule.create_subjects_menu is not available');
             }
 
             // Create subjects menu
             await helperModule.create_subjects_menu();
+            */
 
             return true;
 

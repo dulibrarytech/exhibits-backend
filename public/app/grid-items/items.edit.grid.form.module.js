@@ -181,7 +181,7 @@ const itemsEditGridFormModule = (function () {
         const item_id = helperModule.get_parameter_by_name('item_id');
         const redirect = '/items/grid/details?exhibit_id=' + exhibit_id + '&item_id=' + item_id + '&status=403';
         await authModule.check_permissions(['update_item', 'update_any_item'], 'grid', exhibit_id, item_id, redirect);
-
+        navModule.edit_grid_back_to_items();
         exhibitsModule.set_exhibit_title(exhibit_id);
         document.querySelector('#save-item-btn').addEventListener('click', itemsEditGridFormModule.update_grid_record);
         await display_edit_record();

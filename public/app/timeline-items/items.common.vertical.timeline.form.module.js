@@ -74,7 +74,6 @@ const itemsCommonVerticalTimelineFormModule = (function () {
 
             navModule.init();
             navModule.back_to_items();
-            navModule.set_preview_link();
 
             let timeline_background_color_picker =  document.querySelector('#timeline-background-color-picker');
 

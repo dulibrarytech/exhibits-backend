@@ -317,6 +317,10 @@ aside.left-panel {
           opacity: 1;
           position: static !important; }
 
+.navbar .navbar-nav li > a > .menu-icon.bi {
+  margin-top: 3px;
+}
+
 .navbar .navbar-nav > .active > a,
 .navbar .navbar-nav > .active > a:focus,
 .navbar .navbar-nav > .active > a:hover {

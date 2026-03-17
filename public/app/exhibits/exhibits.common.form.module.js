@@ -31,7 +31,6 @@ const exhibitsCommonFormModule = (function () {
             subtitle: '#exhibit-sub-title-input',
             description: '#exhibit-description-input',
             curators: '#exhibit-about-the-curators-input',
-            exhibit_subjects: '#selected-subjects',
             alert_text: '#exhibit-alert-text-input',
             is_featured: '#is-featured',
             is_student_curated: '#is-student-curated',
@@ -125,6 +124,10 @@ const exhibitsCommonFormModule = (function () {
             const hero_image = get_element_value(selectors.hero_image);
             const thumbnail = get_element_value(selectors.thumbnail);
 
+            // Get media library UUIDs (from picker flow)
+            const hero_image_media_uuid = get_element_value('#hero-image-media-uuid');
+            const thumbnail_media_uuid = get_element_value('#thumbnail-media-uuid');
+
             // Get banner template from radio buttons
             const banner_elements = document.getElementsByName('banner_template');
             const banner_template = banner_elements.length > 0
@@ -134,14 +137,12 @@ const exhibitsCommonFormModule = (function () {
             // Get layout fields
             const page_layout = get_element_value(selectors.page_layout);
             const exhibit_template = get_element_value(selectors.template);
-            const exhibit_subjects = get_element_value(selectors.exhibit_subjects);
 
             // Construct exhibit object
             const exhibit = {
                 title,
                 subtitle,
                 description,
-                exhibit_subjects: exhibit_subjects,
                 about_the_curators: about_curators,
                 is_featured: bool_to_int(is_featured),
                 is_student_curated: bool_to_int(is_student_curated),
@@ -152,6 +153,15 @@ const exhibitsCommonFormModule = (function () {
                 page_layout: page_layout,
                 exhibit_template: exhibit_template
             };
+
+            // Add media library UUIDs if present (from media picker flow)
+            if (hero_image_media_uuid) {
+                exhibit.hero_image_media_uuid = hero_image_media_uuid;
+            }
+
+            if (thumbnail_media_uuid) {
+                exhibit.thumbnail_media_uuid = thumbnail_media_uuid;
+            }
 
             // Add optional fields only if they have values, converted to Number
             if (owner_value) {
@@ -334,6 +344,7 @@ const exhibitsCommonFormModule = (function () {
             clear_element('#hero-image');
             clear_element('#hero-image-filename-display');
             clear_element('#hero-image-display');
+            clear_element('#hero-image-media-uuid');
             set_element_display('#hero-trash', 'none');
         };
 
@@ -498,6 +509,7 @@ const exhibitsCommonFormModule = (function () {
             clear_element('#thumbnail-image');
             clear_element('#thumbnail-filename-display');
             clear_element('#thumbnail-image-display');
+            clear_element('#thumbnail-media-uuid');
             set_element_display('#thumbnail-trash', 'none');
         };
 
@@ -704,12 +716,14 @@ const exhibitsCommonFormModule = (function () {
         try {
 
             // Initialize upload modules
+            /*
             if (uploadsModule) {
                 uploadsModule.upload_exhibit_hero_image();
                 uploadsModule.upload_exhibit_thumbnail_image();
             } else {
                 console.warn('uploadsModule not available');
             }
+            */
 
             // Check authentication
             const token = authModule.get_user_token();

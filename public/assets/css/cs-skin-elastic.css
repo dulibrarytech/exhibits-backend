@@ -88,31 +88,6 @@ div.cs-skin-elastic {
   	animation: bounce 0.6s ease-out;
 }
 
-/* Optional delays (problematic in IE 11/Win) */
-/*
-.cs-skin-elastic.cs-active .cs-options ul li:first-child {
-	-webkit-animation-delay: 0.1s;
-	animation-delay: 0.1s;
-}
-
-.cs-skin-elastic.cs-active .cs-options ul li:nth-child(2) {
-	-webkit-animation-delay: 0.15s;
-	animation-delay: 0.15s;
-}
-
-.cs-skin-elastic.cs-active .cs-options ul li:nth-child(3) {
-	-webkit-animation-delay: 0.2s;
-	animation-delay: 0.2s;
-}
-
-.cs-skin-elastic.cs-active .cs-options ul li:nth-child(4) {
-	-webkit-animation-delay: 0.25s;
-	animation-delay: 0.25s;
-} 
-
-/* with more items, more delays declarations are needed */
-
-
 .cs-skin-elastic .cs-options span {
 	background-repeat: no-repeat;
 	background-position: 1.5em 50%;
@@ -129,23 +104,7 @@ div.cs-skin-elastic {
 .cs-skin-elastic .cs-options .cs-selected span::after {
 	content: '';
 }
-/*
-.cs-skin-elastic .cs-options li.flag-france span {
-	background-image: url(../img/france.svg);
-}
 
-.cs-skin-elastic .cs-options li.flag-brazil span {
-	background-image: url(../img/brazil.svg);
-}
-
-.cs-skin-elastic .cs-options li.flag-safrica span {
-	background-image: url(../img/south-africa.svg);
-}
-
-.cs-skin-elastic .cs-options li.flag-argentina span {
-	background-image: url(../img/argentina.svg);
-}
-*/
 @-webkit-keyframes expand { 
 	0% { -webkit-transform: scale3d(1,0,1); }
 	25% { -webkit-transform: scale3d(1,1.2,1); }

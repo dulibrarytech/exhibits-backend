@@ -40,7 +40,7 @@
  * Output:
  *   Logs all actions via the application logger and prints a summary to stdout.
  *
- * Recommended schedule:
+ * Schedule:
  *   Run weekly via cron during off-hours:
  *   0 3 * * 0  node /path/to/exhibits-backend/media-library/tasks/cleanup_orphaned_files.js --delete >> /path/to/exhibits-backend/logs/cleanup.log
  */

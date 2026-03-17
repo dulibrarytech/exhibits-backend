@@ -1,6 +1,7 @@
 <%- include('../partials/header.ejs'); %>
 
 <body>
+<!-- Move nav to partial -->
 <aside id="left-panel" class="left-panel" aria-label="Main navigation">
     <nav class="navbar navbar-expand-sm navbar-default">
         <div id="main-menu" class="main-menu">
@@ -9,6 +10,10 @@
             </ul>
             <ul id="items-menu" class="nav navbar-nav" aria-label="Items navigation"></ul>
             <ul class="nav navbar-nav" aria-label="Account actions">
+                <li>
+                    <a href="/exhibits-dashboard/exhibits" data-keyboard="false">
+                        <i class="menu-icon fa fa-arrow-left"></i>Back to Exhibit Builder</a>
+                </li>
                 <li>
                     <a href="#" id="logout" data-keyboard="false">
                         <i class="menu-icon fa fa-sign-out" aria-hidden="true"></i>
@@ -127,15 +132,9 @@
     <div class="clearfix"></div>
     <%- include('../partials/footer.ejs'); %>
 </div>
-
-<!-- DataTables Pagination Styles - Match Repository Pagination -->
 <style>
-    /* ========================================
-       DataTables Pagination - Repo Style Match
-       (DataTables 2.x uses .dt-paging / .dt-paging-button)
-       ======================================== */
 
-    /* Hide First/Last buttons to match repo pagination (prev + numbers + next only) */
+    /* Hide First/Last buttons (prev + numbers + next only) */
     #items_wrapper .dt-paging .dt-paging-button.first,
     #items_wrapper .dt-paging .dt-paging-button.last {
         display: none !important;
@@ -153,7 +152,7 @@
         display: inline-flex;
     }
 
-    /* Base button styling - match repo .page-link */
+    /* Base button styling - .page-link */
     #items_wrapper .dt-paging .dt-paging-button {
         display: inline-block;
         box-sizing: border-box;
@@ -197,7 +196,7 @@
         border-color: #7f7f7f !important;
     }
 
-    /* Active/current page - match repo .page-item.active .page-link */
+    /* Active/current page - .page-item.active .page-link */
     #items_wrapper .dt-paging .dt-paging-button.current,
     #items_wrapper .dt-paging .dt-paging-button.current:hover {
         z-index: 3;
@@ -220,7 +219,7 @@
         box-shadow: none !important;
     }
 
-    /* Focus state - match repo .page-link:focus */
+    /* Focus state - .page-link:focus */
     #items_wrapper .dt-paging .dt-paging-button:focus {
         z-index: 3;
         outline: 0;
@@ -239,7 +238,7 @@
         margin-left: -1px;
     }
 
-    /* Info row - add separator and match repo pagination-info */
+    /* Info row - add separator and pagination-info */
     #items_wrapper .row:last-child {
         border-top: 1px solid #e9ecef;
         margin-top: 10px;
@@ -338,7 +337,6 @@
 
 <!-- Media Library Module -->
 <script src="/exhibits-dashboard/static/app/dist/media.library.module.min.js?<%=build_version%>"></script>
-
 
 <script>
     // Initialize media library module when DOM is ready

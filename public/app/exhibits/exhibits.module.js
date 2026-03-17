@@ -344,6 +344,7 @@ const exhibitsModule = (function () {
 
     /**
      * Create thumbnail element
+     * Prefers media library binding thumbnail; falls back to legacy exhibit thumbnail field
      * @param {Object} exhibit - Exhibit data
      * @returns {HTMLElement} Paragraph with image
      */
@@ -355,7 +356,19 @@ const exhibitsModule = (function () {
         const default_image_url = `${APP_PATH}/static/images/image-tn.png`;
 
         let thumbnail_url;
-        if (exhibit.thumbnail && exhibit.thumbnail.length > 0) {
+
+        if (exhibit.media_library_thumbnail_uuid) {
+            // Media library binding exists for this exhibit's thumbnail role
+            if (exhibit.media_library_thumbnail_ingest_method === 'kaltura' && exhibit.media_library_thumbnail_kaltura_url) {
+                // Kaltura thumbnails are external URLs (no auth required)
+                thumbnail_url = exhibit.media_library_thumbnail_kaltura_url;
+            } else {
+                // Uploaded/repo thumbnails served via media library endpoint (auth via query param)
+                const token = authModule.get_user_token();
+                thumbnail_url = `${APP_PATH}/api/v1/media/library/thumbnail/${encodeURIComponent(exhibit.media_library_thumbnail_uuid)}?token=${encodeURIComponent(token)}`;
+            }
+        } else if (exhibit.thumbnail && exhibit.thumbnail.length > 0) {
+            // Legacy direct-upload thumbnail on the exhibit record
             thumbnail_url = `${APP_PATH}/api/v1/exhibits/${encodeURIComponent(exhibit.uuid)}/media/${encodeURIComponent(exhibit.thumbnail)}`;
         } else {
             thumbnail_url = default_image_url;
@@ -751,12 +764,36 @@ const exhibitsModule = (function () {
                 paging: true,
                 order: [[4, 'desc']], // Sort by updated date descending
                 rowReorder: false,
+                pageLength: 25,
+                lengthMenu: [[10, 25, 50, 100, -1], [10, 25, 50, 100, 'All']],
+                responsive: true,
+                autoWidth: false,
                 language: {
-                    bottomEnd: {
-                        paging: {
-                            firstLast: false
-                        }
+                    emptyTable: 'No exhibits found',
+                    zeroRecords: 'No matching exhibits found',
+                    info: 'Showing _START_ - _END_ of _TOTAL_ results',
+                    infoEmpty: 'No exhibits available',
+                    infoFiltered: '(filtered from _MAX_ total exhibits)',
+                    search: 'Search exhibits:',
+                    lengthMenu: 'Show _MENU_ exhibits per page',
+                    paginate: {
+                        first: '<i class="fa fa-angle-double-left" aria-hidden="true"></i><span class="sr-only">First</span>',
+                        last: '<i class="fa fa-angle-double-right" aria-hidden="true"></i><span class="sr-only">Last</span>',
+                        next: '<i class="fa fa-chevron-right" aria-hidden="true"></i><span class="sr-only">Next</span>',
+                        previous: '<i class="fa fa-chevron-left" aria-hidden="true"></i><span class="sr-only">Previous</span>'
                     }
+                },
+                dom: '<"row"<"col-sm-12 col-md-6"l><"col-sm-12 col-md-6"f>>' +
+                     '<"row"<"col-sm-12"tr>>' +
+                     '<"row"<"col-sm-12 col-md-5"i><"col-sm-12 col-md-7"p>>',
+                drawCallback: function() {
+                    // Accessibility improvements after each draw
+                    const table = this.api().table().node();
+
+                    // Add scope attributes to header cells
+                    table.querySelectorAll('thead th').forEach(th => {
+                        th.setAttribute('scope', 'col');
+                    });
                 }
             });
 

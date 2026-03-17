@@ -316,7 +316,15 @@ const itemsModule = (function() {
             // Initialize DataTable with row reordering
             const ITEM_LIST = new DataTable('#items', {
                 paging: false,
-                rowReorder: true
+                rowReorder: true,
+                language: {
+                    emptyTable: 'No items found',
+                    zeroRecords: 'No matching items found',
+                    info: 'Showing _START_ - _END_ of _TOTAL_ results',
+                    infoEmpty: 'No items available',
+                    infoFiltered: '(filtered from _MAX_ total items)',
+                    search: 'Search items:'
+                }
             });
 
             // Handle row reordering
@@ -990,9 +998,9 @@ const itemsModule = (function() {
             exhibitsModule.set_exhibit_title(exhibit_id);
             await obj.display_items();
             helperModule.show_form();
-            navModule.set_preview_link();
+            // navModule.set_preview_link();
             navModule.set_item_nav_menu_links();
-            navModule.set_logout_link();
+            // navModule.set_logout_link();
 
             console.log('Items module initialized');
 

@@ -211,14 +211,11 @@ const exhibitsDetailsModule = (function () {
         };
 
         // Helper function to safely create image element
-        const create_image_element = (alt_text, src, height = 200) => {
-            const p = document.createElement('p');
+        const create_image_element = (alt_text, src) => {
             const img = document.createElement('img');
             img.alt = alt_text || '';
             img.src = src;
-            img.height = height;
-            p.appendChild(img);
-            return p;
+            return img;
         };
 
         // Helper function to safely set element content
@@ -294,20 +291,86 @@ const exhibitsDetailsModule = (function () {
             fragments.forEach(fragment => created_el.appendChild(fragment));
         };
 
-        // Helper function to set media display
-        const set_media_display = (record, field_name, display_selector, filename_selector, input_selector, prev_selector, trash_selector) => {
+        // Helper function to set media display (legacy filename-based)
+        const set_media_display = (record, field_name, display_selector, filename_selector, input_selector, prev_selector) => {
             const media_value = record[field_name];
             if (!media_value || media_value.length === 0) return;
 
             const media_url = `${APP_PATH}/api/v1/exhibits/${record.uuid}/media/${media_value}`;
-            const image_element = create_image_element(media_value, media_url, 200);
+            const image_element = create_image_element(media_value, media_url);
             const filename_element = create_filename_display(media_value);
 
             set_element_content(display_selector, image_element);
             set_element_content(filename_selector, filename_element);
             set_element_value(input_selector, media_value);
             set_element_value(prev_selector, media_value);
-            set_element_display(trash_selector, 'inline');
+        };
+
+        // Helper function to display media from a media library binding
+        const set_media_binding_display = (binding, display_selector, filename_selector, uuid_input_selector) => {
+
+            if (!binding) return;
+
+            // Build thumbnail URL based on ingest method
+            const token = authModule.get_user_token();
+            let thumb_url = '';
+
+            if (binding.ingest_method === 'kaltura' && binding.kaltura_thumbnail_url) {
+                thumb_url = binding.kaltura_thumbnail_url;
+            } else if (binding.ingest_method === 'repository' && binding.repo_uuid) {
+                thumb_url = `${APP_PATH}/api/v1/media/library/repo/thumbnail?uuid=${encodeURIComponent(binding.repo_uuid)}&token=${encodeURIComponent(token)}`;
+            } else if (binding.media_uuid && binding.thumbnail_path) {
+                thumb_url = `${APP_PATH}/api/v1/media/library/thumbnail/${binding.media_uuid}?token=${encodeURIComponent(token)}`;
+            }
+
+            if (thumb_url) {
+                const image_element = create_image_element(binding.alt_text || binding.name, thumb_url);
+                set_element_content(display_selector, image_element);
+            }
+
+            const filename_element = create_filename_display(binding.name || binding.original_filename || '');
+            set_element_content(filename_selector, filename_element);
+
+            // Set the media UUID hidden input
+            const uuid_el = document.querySelector(uuid_input_selector);
+            if (uuid_el) uuid_el.value = binding.media_uuid;
+        };
+
+        // Helper function to load media library bindings for the exhibit
+        const load_media_bindings = async (exhibit_uuid) => {
+
+            try {
+
+                const token = authModule.get_user_token();
+                if (!token) return null;
+
+                const endpoint_base = EXHIBITS_ENDPOINTS.exhibits?.exhibit_media_library?.get?.endpoint;
+                if (!endpoint_base) {
+                    console.warn('exhibit_media_library GET endpoint not configured');
+                    return null;
+                }
+
+                const endpoint = endpoint_base.replace(':exhibit_id', encodeURIComponent(exhibit_uuid));
+
+                const response = await httpModule.req({
+                    method: 'GET',
+                    url: endpoint,
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'x-access-token': token
+                    }
+                });
+
+                if (response && response.data && Array.isArray(response.data.data)) {
+                    return response.data.data;
+                }
+
+                return [];
+
+            } catch (error) {
+                console.error('Error loading media bindings:', error);
+                return null;
+            }
         };
 
         // Helper function to set radio button selection
@@ -389,6 +452,9 @@ const exhibitsDetailsModule = (function () {
             set_element_value('#exhibit-description-input', helperModule.unescape(record.description || ''));
             set_element_value('#exhibit-about-the-curators-input', helperModule.unescape(record.about_the_curators || ''));
 
+            // Set owner
+            set_element_value('#exhibit-owner', record.owner);
+
             // Set checkboxes
             set_checkbox_state('#is-featured', record.is_featured === 1);
             set_checkbox_state('#is-student-curated', record.is_student_curated === 1);
@@ -399,28 +465,46 @@ const exhibitsDetailsModule = (function () {
                 set_element_value('#exhibit-alert-text-input', helperModule.unescape(record.alert_text));
             }
 
-            // Set media displays
-            if (record.hero_image) {
+            // Load media library bindings first, fall back to legacy filename display
+            const bindings = await load_media_bindings(record.uuid);
+            const hero_binding = bindings ? bindings.find(function (b) { return b.media_role === 'hero_image'; }) : null;
+            const thumbnail_binding = bindings ? bindings.find(function (b) { return b.media_role === 'thumbnail'; }) : null;
+
+            // Set hero image display
+            if (hero_binding) {
+                set_media_binding_display(
+                    hero_binding,
+                    '#hero-image-display',
+                    '#hero-image-filename-display',
+                    '#hero-image-media-uuid'
+                );
+            } else if (record.hero_image) {
                 set_media_display(
                     record,
                     'hero_image',
                     '#hero-image-display',
                     '#hero-image-filename-display',
                     '#hero-image',
-                    '#hero-image-prev',
-                    '#hero-trash'
+                    '#hero-image-prev'
                 );
             }
 
-            if (record.thumbnail) {
+            // Set thumbnail display
+            if (thumbnail_binding) {
+                set_media_binding_display(
+                    thumbnail_binding,
+                    '#thumbnail-image-display',
+                    '#thumbnail-filename-display',
+                    '#thumbnail-media-uuid'
+                );
+            } else if (record.thumbnail) {
                 set_media_display(
                     record,
                     'thumbnail',
                     '#thumbnail-image-display',
                     '#thumbnail-filename-display',
                     '#thumbnail-image',
-                    '#thumbnail-image-prev',
-                    '#thumbnail-trash'
+                    '#thumbnail-image-prev'
                 );
             }
 
@@ -536,6 +620,17 @@ const exhibitsDetailsModule = (function () {
 
             // Display the record details
             await display_details_record();
+
+            // Disable all visible form fields (details page is read-only).
+            // Shared partials (data card, banners, styles) render inputs without
+            // the disabled attribute so the edit form can use them interactively.
+            // This sweep ensures they are disabled on the read-only details page.
+            const form_elements = document.querySelectorAll(
+                'input:not([type="hidden"]):not([disabled]), textarea:not([disabled]), select:not([disabled])'
+            );
+            form_elements.forEach(element => {
+                element.disabled = true;
+            });
 
             console.log('Module initialized successfully');
             return true;

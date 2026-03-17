@@ -64,6 +64,37 @@ module.exports = function (app) {
     const endpoints = ENDPOINTS();
 
     // ========================================
+    // EXHIBIT MEDIA LIBRARY BINDINGS
+    // ========================================
+    // NOTE: These routes MUST be registered BEFORE the parameterized
+    // /:exhibit_id routes to prevent Express from matching "media-library"
+    // as an exhibit_id value.
+
+    // Get media library bindings for an exhibit
+    app.route(endpoints.exhibits.exhibit_media_library.get.endpoint)
+        .get(
+            rate_limits.read_operations,
+            TOKEN.verify,
+            async_handler(CONTROLLER.get_exhibit_media_bindings)
+        );
+
+    // Bind a media library asset to an exhibit
+    app.route(endpoints.exhibits.exhibit_media_library.post.endpoint)
+        .post(
+            rate_limits.write_operations,
+            TOKEN.verify,
+            async_handler(CONTROLLER.bind_exhibit_media)
+        );
+
+    // Unbind a media library asset from an exhibit by role
+    app.route(endpoints.exhibits.exhibit_media_library.delete.endpoint)
+        .delete(
+            rate_limits.write_operations,
+            TOKEN.verify,
+            async_handler(CONTROLLER.unbind_exhibit_media)
+        );
+
+    // ========================================
     // EXHIBIT CRUD OPERATIONS
     // ========================================
 

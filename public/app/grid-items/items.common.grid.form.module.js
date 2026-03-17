@@ -81,8 +81,8 @@ const itemsCommonStandardGridFormModule = (function () {
             await authModule.check_auth(token);
 
             navModule.init();
-            navModule.back_to_items();
-            navModule.set_preview_link();
+            // navModule.back_to_items();
+            // navModule.set_preview_link();
 
             let grid_background_color_picker = document.querySelector('#grid-background-color-picker');
 

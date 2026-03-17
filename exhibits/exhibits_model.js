@@ -29,6 +29,7 @@ const EXHIBIT_ITEM_RECORD_TASKS = require('./tasks/exhibit_item_record_tasks');
 const EXHIBIT_HEADING_RECORD_TASKS = require('./tasks/exhibit_heading_record_tasks');
 const EXHIBIT_GRID_RECORD_TASKS = require('./tasks/exhibit_grid_record_tasks');
 const EXHIBIT_TIMELINE_RECORD_TASKS = require('./tasks/exhibit_timeline_record_tasks');
+const EXHIBIT_MEDIA_LIBRARY_TASKS = require('./tasks/exhibit_media_library_tasks');
 const HELPER = require('../libs/helper');
 const VALIDATOR = require('../libs/validate');
 const INDEXER_MODEL = require('../indexer/model');
@@ -36,6 +37,8 @@ const ITEMS_MODEL = require('../exhibits/items_model');
 const GRIDS_MODEL = require('../exhibits/grid_model');
 const TIMELINES_MODEL = require('../exhibits/timelines_model');
 const LOGGER = require('../libs/log4');
+const { validate_string_param } = require('../exhibits/exhibits_helper');
+const { build_response, validate_input, prepare_styles } = require('../exhibits/common_helper');
 
 // Constants
 const CONSTANTS = {
@@ -63,34 +66,9 @@ const item_record_task = new EXHIBIT_ITEM_RECORD_TASKS(DB, TABLES);
 const heading_record_task = new EXHIBIT_HEADING_RECORD_TASKS(DB, TABLES);
 const grid_record_task = new EXHIBIT_GRID_RECORD_TASKS(DB, TABLES);
 const timeline_record_task = new EXHIBIT_TIMELINE_RECORD_TASKS(DB, TABLES);
+const exhibit_media_library_task = new EXHIBIT_MEDIA_LIBRARY_TASKS(DB, TABLES);
 
-/**
- * Standardized response builder
- * @param {number} status - HTTP status code
- * @param {string} message - Response message
- * @param {*} data - Optional response data
- * @returns {Object} Standardized response object
- */
-const build_response = (status, message, data = null) => {
-    const response = { status, message };
-    if (data !== null) {
-        response.data = data;
-    }
-    return response;
-};
-
-/**
- * Validates and sanitizes input data
- * @param {Object} data - Input data to validate
- * @param {Object} validator - Validator instance
- * @returns {Object|true} Validation result
- */
-const validate_input = (data, validator) => {
-    if (!data || typeof data !== 'object') {
-        return [{ message: 'Invalid input data format' }];
-    }
-    return validator.validate(data);
-};
+// build_response, validate_input, prepare_styles imported from common_helper
 
 /**
  * Processes media files for exhibit
@@ -122,17 +100,7 @@ const process_exhibit_media = (uuid, data) => {
     return processed_data;
 };
 
-/**
- * Prepares styles data
- * @param {Object|string} styles - Styles object or string
- * @returns {string} JSON stringified styles
- */
-const prepare_styles = (styles) => {
-    if (!styles || (typeof styles === 'object' && Object.keys(styles).length === 0)) {
-        return JSON.stringify(CONSTANTS.DEFAULT_STYLES);
-    }
-    return typeof styles === 'string' ? styles : JSON.stringify(styles);
-};
+// prepare_styles imported from common_helper
 
 /**
  * Creates exhibit record
@@ -145,8 +113,14 @@ exports.create_exhibit_record = async (data) => {
         // Generate UUID
         data.uuid = helper_task.create_uuid();
 
+        // Extract media library UUIDs before validation (not columns in exhibit table)
+        const hero_image_media_uuid = data.hero_image_media_uuid || null;
+        const thumbnail_media_uuid = data.thumbnail_media_uuid || null;
+        delete data.hero_image_media_uuid;
+        delete data.thumbnail_media_uuid;
+
         // Validate input
-        const validation_result = validate_input(data, validate_create_task);
+        const validation_result = validate_input(data, validate_create_task, 'exhibits_model (create_exhibit_record)');
 
         if (validation_result !== true) {
             const error_path = validation_result[0].dataPath || 'unknown';
@@ -159,8 +133,13 @@ exports.create_exhibit_record = async (data) => {
             );
         }
 
-        // Ensure storage path exists
-        helper_task.check_storage_path(data.uuid, STORAGE_CONFIG.storage_path);
+        // Ensure storage path exists only when direct-upload media is present
+        const has_direct_media = (data.hero_image && data.hero_image.length > 0) ||
+                                 (data.thumbnail && data.thumbnail.length > 0);
+
+        if (has_direct_media) {
+            helper_task.check_storage_path(data.uuid, STORAGE_CONFIG.storage_path);
+        }
 
         // Process media files
         data = process_exhibit_media(data.uuid, data);
@@ -177,6 +156,25 @@ exports.create_exhibit_record = async (data) => {
                 CONSTANTS.STATUS_CODES.OK,
                 'Unable to create exhibit record'
             );
+        }
+
+        // Create media library bindings for any selected media assets
+        const created_by = data.created_by || null;
+
+        if (hero_image_media_uuid) {
+            try {
+                await exhibit_media_library_task.bind_media(data.uuid, hero_image_media_uuid, 'hero_image', created_by);
+            } catch (bind_error) {
+                LOGGER.module().error(`ERROR: [/exhibits/model (create_exhibit_record)] Failed to bind hero_image: ${bind_error.message}`);
+            }
+        }
+
+        if (thumbnail_media_uuid) {
+            try {
+                await exhibit_media_library_task.bind_media(data.uuid, thumbnail_media_uuid, 'thumbnail', created_by);
+            } catch (bind_error) {
+                LOGGER.module().error(`ERROR: [/exhibits/model (create_exhibit_record)] Failed to bind thumbnail: ${bind_error.message}`);
+            }
         }
 
         return build_response(
@@ -233,10 +231,11 @@ exports.get_exhibit_title = async (uuid) => {
 
     try {
 
-        if (!uuid || typeof uuid !== 'string') {
+        const uuid_check = validate_string_param(uuid, 'UUID');
+        if (!uuid_check.valid) {
             return build_response(
                 CONSTANTS.STATUS_CODES.BAD_REQUEST,
-                'Invalid UUID provided'
+                uuid_check.error_message
             );
         }
 
@@ -270,10 +269,11 @@ exports.get_exhibit_record = async (uuid) => {
 
     try {
 
-        if (!uuid || typeof uuid !== 'string') {
+        const uuid_check = validate_string_param(uuid, 'UUID');
+        if (!uuid_check.valid) {
             return build_response(
                 CONSTANTS.STATUS_CODES.BAD_REQUEST,
-                'Invalid UUID provided'
+                uuid_check.error_message
             );
         }
 
@@ -308,7 +308,10 @@ exports.get_exhibit_edit_record = async (uid, uuid) => {
 
     try {
 
-        if (!uid || !uuid || typeof uid !== 'string' || typeof uuid !== 'string') {
+        const uid_check = validate_string_param(uid, 'UID');
+        const uuid_check = validate_string_param(uuid, 'UUID');
+
+        if (!uid_check.valid || !uuid_check.valid) {
             return build_response(
                 CONSTANTS.STATUS_CODES.BAD_REQUEST,
                 'Invalid UID or UUID provided'
@@ -424,15 +427,22 @@ exports.update_exhibit_record = async (uuid, data) => {
 
     try {
 
-        if (!uuid || typeof uuid !== 'string') {
+        const uuid_check = validate_string_param(uuid, 'UUID');
+        if (!uuid_check.valid) {
             return build_response(
                 CONSTANTS.STATUS_CODES.BAD_REQUEST,
-                'Invalid UUID provided'
+                uuid_check.error_message
             );
         }
 
+        // Extract media library UUIDs before validation (not columns in exhibit table)
+        const hero_image_media_uuid = data.hero_image_media_uuid || null;
+        const thumbnail_media_uuid = data.thumbnail_media_uuid || null;
+        delete data.hero_image_media_uuid;
+        delete data.thumbnail_media_uuid;
+
         // Validate input
-        const validation_result = validate_input(data, validate_update_task);
+        const validation_result = validate_input(data, validate_update_task, 'exhibits_model (update_exhibit_record)');
 
         if (validation_result !== true) {
             const error_msg = validation_result[0].message || 'Validation failed';
@@ -444,8 +454,15 @@ exports.update_exhibit_record = async (uuid, data) => {
             );
         }
 
-        // Ensure storage path exists
-        helper_task.check_storage_path(uuid, STORAGE_CONFIG.storage_path);
+        // Ensure storage path exists only when direct-upload media has changed
+        const has_direct_media = (data.hero_image && data.hero_image.length > 0 &&
+                                  data.hero_image !== data.hero_image_prev) ||
+                                 (data.thumbnail && data.thumbnail.length > 0 &&
+                                  data.thumbnail !== data.thumbnail_prev);
+
+        if (has_direct_media) {
+            helper_task.check_storage_path(uuid, STORAGE_CONFIG.storage_path);
+        }
 
         // Process media updates
         data = process_media_updates(uuid, data);
@@ -465,6 +482,25 @@ exports.update_exhibit_record = async (uuid, data) => {
                 CONSTANTS.STATUS_CODES.BAD_REQUEST,
                 'Unable to update exhibit record'
             );
+        }
+
+        // Create/update media library bindings for any selected media assets
+        const updated_by = data.updated_by || null;
+
+        if (hero_image_media_uuid) {
+            try {
+                await exhibit_media_library_task.bind_media(uuid, hero_image_media_uuid, 'hero_image', updated_by);
+            } catch (bind_error) {
+                LOGGER.module().error(`ERROR: [/exhibits/model (update_exhibit_record)] Failed to bind hero_image: ${bind_error.message}`);
+            }
+        }
+
+        if (thumbnail_media_uuid) {
+            try {
+                await exhibit_media_library_task.bind_media(uuid, thumbnail_media_uuid, 'thumbnail', updated_by);
+            } catch (bind_error) {
+                LOGGER.module().error(`ERROR: [/exhibits/model (update_exhibit_record)] Failed to bind thumbnail: ${bind_error.message}`);
+            }
         }
 
         // Handle republishing if needed (non-blocking)
@@ -664,10 +700,11 @@ exports.delete_exhibit_record = async (uuid) => {
 
     try {
 
-        if (!uuid || typeof uuid !== 'string') {
+        const uuid_check = validate_string_param(uuid, 'UUID');
+        if (!uuid_check.valid) {
             return build_response(
                 CONSTANTS.STATUS_CODES.BAD_REQUEST,
-                'Invalid UUID provided'
+                uuid_check.error_message
             );
         }
 
@@ -712,7 +749,10 @@ exports.delete_media_value = async (uuid, media) => {
 
     try {
 
-        if (!uuid || !media || typeof uuid !== 'string' || typeof media !== 'string') {
+        const uuid_check = validate_string_param(uuid, 'UUID');
+        const media_check = validate_string_param(media, 'media');
+
+        if (!uuid_check.valid || !media_check.valid) {
             LOGGER.module().error('ERROR: [/exhibits/model (delete_media_value)] Invalid parameters');
             return;
         }
@@ -743,10 +783,11 @@ exports.build_exhibit_preview = async (uuid) => {
 
     try {
 
-        if (!uuid || typeof uuid !== 'string') {
+        const uuid_check = validate_string_param(uuid, 'UUID');
+        if (!uuid_check.valid) {
             return {
                 status: false,
-                message: 'Invalid UUID provided'
+                message: uuid_check.error_message
             };
         }
 
@@ -834,10 +875,11 @@ const publish_exhibit = async (uuid) => {
 
     try {
 
-        if (!uuid || typeof uuid !== 'string') {
+        const uuid_check = validate_string_param(uuid, 'UUID');
+        if (!uuid_check.valid) {
             return {
                 status: false,
-                message: 'Invalid UUID provided'
+                message: uuid_check.error_message
             };
         }
 
@@ -1068,10 +1110,11 @@ const suppress_exhibit = async (uuid) => {
 
     try {
 
-        if (!uuid || typeof uuid !== 'string') {
+        const uuid_check = validate_string_param(uuid, 'UUID');
+        if (!uuid_check.valid) {
             return {
                 status: false,
-                message: 'Invalid UUID provided'
+                message: uuid_check.error_message
             };
         }
 
@@ -1138,10 +1181,11 @@ exports.delete_exhibit_preview = async (uuid) => {
 
     try {
 
-        if (!uuid || typeof uuid !== 'string') {
+        const uuid_check = validate_string_param(uuid, 'UUID');
+        if (!uuid_check.valid) {
             return {
                 status: false,
-                message: 'Invalid UUID provided'
+                message: uuid_check.error_message
             };
         }
 
@@ -1205,7 +1249,8 @@ exports.check_preview = async (uuid) => {
 
     try {
 
-        if (!uuid || typeof uuid !== 'string') {
+        const uuid_check = validate_string_param(uuid, 'UUID');
+        if (!uuid_check.valid) {
             LOGGER.module().error('ERROR: [/exhibits/model (check_preview)] Invalid UUID provided');
             return false;
         }
@@ -1269,7 +1314,10 @@ exports.unlock_exhibit_record = async (uid, uuid, options) => {
 
     try {
 
-        if (!uid || !uuid || typeof uid !== 'string' || typeof uuid !== 'string') {
+        const uid_check = validate_string_param(uid, 'UID');
+        const uuid_check = validate_string_param(uuid, 'UUID');
+
+        if (!uid_check.valid || !uuid_check.valid) {
             LOGGER.module().error('ERROR: [/exhibits/model (unlock_exhibit_record)] Invalid parameters');
             return false;
         }
@@ -1289,3 +1337,131 @@ exports.unlock_exhibit_record = async (uid, uuid, options) => {
 exports.publish_exhibit = publish_exhibit;
 exports.suppress_exhibit = suppress_exhibit;
 
+// ==================== EXHIBIT MEDIA LIBRARY BINDINGS ====================
+
+/**
+ * Binds a media library asset to an exhibit in a given role
+ * @param {string} exhibit_uuid - Exhibit UUID
+ * @param {string} media_uuid - Media library asset UUID
+ * @param {string} media_role - 'hero_image' | 'thumbnail'
+ * @param {string} created_by - Username performing the action
+ * @returns {Promise<Object>} Response object with binding data
+ */
+exports.bind_exhibit_media = async (exhibit_uuid, media_uuid, media_role, created_by) => {
+
+    try {
+
+        const exhibit_check = validate_string_param(exhibit_uuid, 'exhibit UUID');
+        if (!exhibit_check.valid) {
+            return build_response(CONSTANTS.STATUS_CODES.BAD_REQUEST, exhibit_check.error_message);
+        }
+
+        const media_check = validate_string_param(media_uuid, 'media UUID');
+        if (!media_check.valid) {
+            return build_response(CONSTANTS.STATUS_CODES.BAD_REQUEST, media_check.error_message);
+        }
+
+        const role_check = validate_string_param(media_role, 'media role');
+        if (!role_check.valid) {
+            return build_response(CONSTANTS.STATUS_CODES.BAD_REQUEST, role_check.error_message);
+        }
+
+        const result = await exhibit_media_library_task.bind_media(
+            exhibit_uuid,
+            media_uuid,
+            media_role,
+            created_by
+        );
+
+        if (!result) {
+            return build_response(CONSTANTS.STATUS_CODES.BAD_REQUEST, 'Unable to bind media to exhibit');
+        }
+
+        return build_response(
+            CONSTANTS.STATUS_CODES.CREATED,
+            'Media bound to exhibit',
+            result
+        );
+
+    } catch (error) {
+        LOGGER.module().error(`ERROR: [/exhibits/model (bind_exhibit_media)] ${error.message}`, {
+            exhibit_uuid,
+            media_uuid,
+            media_role,
+            stack: error.stack
+        });
+
+        return build_response(CONSTANTS.STATUS_CODES.BAD_REQUEST, `Unable to bind media: ${error.message}`);
+    }
+};
+
+/**
+ * Gets all active media library bindings for an exhibit
+ * @param {string} exhibit_uuid - Exhibit UUID
+ * @returns {Promise<Object>} Response object with bindings array
+ */
+exports.get_exhibit_media_bindings = async (exhibit_uuid) => {
+
+    try {
+
+        const uuid_check = validate_string_param(exhibit_uuid, 'exhibit UUID');
+        if (!uuid_check.valid) {
+            return build_response(CONSTANTS.STATUS_CODES.BAD_REQUEST, uuid_check.error_message);
+        }
+
+        const bindings = await exhibit_media_library_task.get_exhibit_media_bindings(exhibit_uuid);
+
+        return build_response(
+            CONSTANTS.STATUS_CODES.OK,
+            'Exhibit media bindings',
+            bindings
+        );
+
+    } catch (error) {
+        LOGGER.module().error(`ERROR: [/exhibits/model (get_exhibit_media_bindings)] ${error.message}`, {
+            exhibit_uuid,
+            stack: error.stack
+        });
+
+        return build_response(CONSTANTS.STATUS_CODES.BAD_REQUEST, error.message);
+    }
+};
+
+/**
+ * Removes (soft-deletes) a media binding from an exhibit by role
+ * @param {string} exhibit_uuid - Exhibit UUID
+ * @param {string} media_role - 'hero_image' | 'thumbnail'
+ * @returns {Promise<Object>} Response object
+ */
+exports.unbind_exhibit_media = async (exhibit_uuid, media_role) => {
+
+    try {
+
+        const uuid_check = validate_string_param(exhibit_uuid, 'exhibit UUID');
+        if (!uuid_check.valid) {
+            return build_response(CONSTANTS.STATUS_CODES.BAD_REQUEST, uuid_check.error_message);
+        }
+
+        const role_check = validate_string_param(media_role, 'media role');
+        if (!role_check.valid) {
+            return build_response(CONSTANTS.STATUS_CODES.BAD_REQUEST, role_check.error_message);
+        }
+
+        const result = await exhibit_media_library_task.unbind_media(exhibit_uuid, media_role);
+
+        if (result === true) {
+            return build_response(CONSTANTS.STATUS_CODES.NO_CONTENT, 'Media binding removed');
+        }
+
+        return build_response(CONSTANTS.STATUS_CODES.OK, 'No active binding found for this role');
+
+    } catch (error) {
+        LOGGER.module().error(`ERROR: [/exhibits/model (unbind_exhibit_media)] ${error.message}`, {
+            exhibit_uuid,
+            media_role,
+            stack: error.stack
+        });
+
+        return build_response(CONSTANTS.STATUS_CODES.BAD_REQUEST, error.message);
+    }
+};

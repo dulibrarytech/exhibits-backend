@@ -68,6 +68,7 @@ const JQUERY_CDN = 'https://code.jquery.com';
 // Image domains (from header.ejs favicons)
 const IMGUR = 'https://i.imgur.com';
 const DU_LIBRARY = 'https://library.du.edu';
+const DU_EXHIBITS_PUBLIC = 'https://exhibits.library.du.edu';
 
 const GOOGLE_FONTS_CSS = 'https://fonts.googleapis.com';
 const GOOGLE_FONTS_FILES = 'https://fonts.gstatic.com';
@@ -91,7 +92,8 @@ module.exports = function () {
                     JQUERY_CDN,
                     JSDELIVR,
                     CLOUDFLARE_CDN,
-                    KALTURA_CDN
+                    KALTURA_CDN,
+                    UNPKG
                 ],
 
                 // Styles: self + all CDN origins serving CSS
@@ -119,6 +121,7 @@ module.exports = function () {
                 // Frames: Kaltura player iframe embeds only
                 frameSrc: [
                     KALTURA_CDN,
+                    DU_EXHIBITS_PUBLIC,
                     "'self'"
                 ],
 
@@ -128,7 +131,8 @@ module.exports = function () {
                     KALTURA_CDN,
                     KALTURA_STATS,
                     KALTURA_ANALYTICS,
-                    JSDELIVR
+                    JSDELIVR,
+                    DU_EXHIBITS_PUBLIC
                 ],
 
                 // Fonts: CDN-hosted webfonts (Font Awesome, Themify Icons, Pixeden)

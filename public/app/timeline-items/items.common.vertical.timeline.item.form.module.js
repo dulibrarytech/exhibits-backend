@@ -20,7 +20,477 @@ const itemsCommonVerticalTimelineItemFormModule = (function () {
 
     'use strict';
 
+    const APP_PATH = window.localStorage.getItem('exhibits_app_path');
+
     let obj = {};
+
+    // ==================== MEDIA PICKER HELPERS ====================
+
+    const MEDIA_TYPE_ICONS = {
+        'image': 'fa-file-image-o',
+        'video': 'fa-file-video-o',
+        'audio': 'fa-file-audio-o',
+        'pdf': 'fa-file-pdf-o',
+        'moving image': 'fa-file-video-o',
+        'sound': 'fa-file-audio-o'
+    };
+
+    /**
+     * Decodes HTML entities in a string (XSS middleware encodes at input time)
+     */
+    function decode_html_entities(str) {
+        if (!str || typeof str !== 'string') return str;
+        const textarea = document.createElement('textarea');
+        textarea.innerHTML = str;
+        return textarea.value;
+    }
+
+    /**
+     * Builds a thumbnail URL for a media library asset based on its ingest method
+     * @param {Object} media - Object with uuid, ingest_method, kaltura_thumbnail_url, repo_uuid, thumbnail_path
+     * @returns {string} Thumbnail URL or empty string
+     */
+    function build_thumbnail_url(media) {
+
+        if (!media || !media.uuid) return '';
+
+        const token = authModule.get_user_token();
+
+        // Kaltura assets use their own thumbnail URL
+        if (media.ingest_method === 'kaltura' && media.kaltura_thumbnail_url) {
+            let url = decode_html_entities(media.kaltura_thumbnail_url);
+            if (url.startsWith('http://')) {
+                url = url.replace('http://', 'https://');
+            }
+            return url;
+        }
+
+        // Repository imports: repo thumbnail endpoint
+        if (media.ingest_method === 'repository' && media.repo_uuid) {
+            return `${APP_PATH}/api/v1/media/library/repo/thumbnail?uuid=${encodeURIComponent(media.repo_uuid)}&token=${encodeURIComponent(token)}`;
+        }
+
+        // Uploaded files: media library thumbnail endpoint
+        if (media.thumbnail_path) {
+            return `${APP_PATH}/api/v1/media/library/thumbnail/${encodeURIComponent(media.uuid)}?token=${encodeURIComponent(token)}`;
+        }
+
+        return '';
+    }
+
+    /**
+     * Updates a preview area with media thumbnail or type icon
+     */
+    function update_media_preview(display_selector, filename_selector, trash_selector, media) {
+        const display_el = document.querySelector(display_selector);
+        const filename_el = document.querySelector(filename_selector);
+        const trash_el = document.querySelector(trash_selector);
+
+        if (!display_el) return;
+
+        const thumb_url = build_thumbnail_url(media);
+        const display_name = media.name || media.original_filename || media.uuid || '';
+
+        display_el.innerHTML = '';
+
+        if (thumb_url) {
+            const img = document.createElement('img');
+            img.src = thumb_url;
+            img.alt = display_name;
+            img.onerror = function () {
+                this.style.display = 'none';
+                const placeholder = document.createElement('div');
+                placeholder.className = 'media-placeholder';
+                const icon = document.createElement('i');
+                const icon_class = MEDIA_TYPE_ICONS[media.media_type] || 'fa-file-o';
+                icon.className = `fa ${icon_class}`;
+                const label = document.createElement('span');
+                label.textContent = display_name;
+                placeholder.appendChild(icon);
+                placeholder.appendChild(label);
+                display_el.appendChild(placeholder);
+            };
+            display_el.appendChild(img);
+        } else {
+            const placeholder = document.createElement('div');
+            placeholder.className = 'media-placeholder';
+            const icon = document.createElement('i');
+            const icon_class = MEDIA_TYPE_ICONS[media.media_type] || 'fa-file-o';
+            icon.className = `fa ${icon_class}`;
+            const label = document.createElement('span');
+            label.textContent = display_name;
+            placeholder.appendChild(icon);
+            placeholder.appendChild(label);
+            display_el.appendChild(placeholder);
+        }
+
+        if (filename_el) {
+            filename_el.textContent = display_name;
+        }
+
+        if (trash_el) {
+            trash_el.style.display = 'inline';
+        }
+    }
+
+    /**
+     * Resets a preview area back to its default empty state
+     */
+    function reset_media_preview(display_selector, filename_selector, trash_selector, placeholder_icon, placeholder_text) {
+        const display_el = document.querySelector(display_selector);
+        const filename_el = document.querySelector(filename_selector);
+        const trash_el = document.querySelector(trash_selector);
+
+        if (display_el) {
+            display_el.innerHTML = '';
+            const placeholder = document.createElement('div');
+            placeholder.className = 'media-placeholder';
+            const icon = document.createElement('i');
+            icon.className = `fa ${placeholder_icon}`;
+            const label = document.createElement('span');
+            label.textContent = placeholder_text;
+            placeholder.appendChild(icon);
+            placeholder.appendChild(label);
+            display_el.appendChild(placeholder);
+        }
+
+        if (filename_el) {
+            filename_el.textContent = '';
+        }
+
+        if (trash_el) {
+            trash_el.style.display = 'none';
+        }
+    }
+
+    // ==================== MEDIA SUBJECTS HELPERS ====================
+
+    /**
+     * Parses a subject field value into an array of trimmed, non-empty strings.
+     * Handles JSON arrays, comma-separated strings, and semicolon-separated strings.
+     * @param {string|null|undefined} raw - Raw subject value from the database
+     * @returns {string[]} Parsed subject array
+     */
+    function parse_subject_field(raw) {
+        if (!raw || typeof raw !== 'string') return [];
+
+        const trimmed = raw.trim();
+        if (trimmed.length === 0) return [];
+
+        if (trimmed.startsWith('[')) {
+            try {
+                const parsed = JSON.parse(trimmed);
+                if (Array.isArray(parsed)) {
+                    return parsed
+                        .map(s => (typeof s === 'string' ? s.trim() : String(s).trim()))
+                        .filter(s => s.length > 0);
+                }
+            } catch (_) {
+                // Fall through to string splitting
+            }
+        }
+
+        const delimiter = trimmed.includes(';') ? ';' : ',';
+        return trimmed
+            .split(delimiter)
+            .map(s => s.trim())
+            .filter(s => s.length > 0);
+    }
+
+    /**
+     * Renders badges into a container element
+     */
+    function render_subject_badges(container_id, group_id, subjects, badge_modifier) {
+        const container = document.getElementById(container_id);
+        const group = document.getElementById(group_id);
+        if (!container || !group) return false;
+
+        container.innerHTML = '';
+
+        if (!subjects || subjects.length === 0) {
+            group.style.display = 'none';
+            return false;
+        }
+
+        subjects.forEach(subject => {
+            const badge = document.createElement('span');
+            badge.className = `media-subject-badge media-subject-badge--${badge_modifier}`;
+            badge.textContent = subject;
+            container.appendChild(badge);
+        });
+
+        group.style.display = '';
+        return true;
+    }
+
+    /**
+     * Renders the media subjects card for a selected media asset.
+     * @param {Object|null} media - Media object with subject fields (null to hide)
+     */
+    function render_media_subjects(media) {
+        const card = document.getElementById('media-subjects-card');
+        if (!card) return;
+
+        if (!media) {
+            card.style.display = 'none';
+            return;
+        }
+
+        const topics = parse_subject_field(media.topics_subjects);
+        const genres = parse_subject_field(media.genre_form_subjects);
+        const places = parse_subject_field(media.places_subjects);
+
+        const has_any = topics.length > 0 || genres.length > 0 || places.length > 0;
+
+        if (!has_any) {
+            card.style.display = 'none';
+            return;
+        }
+
+        render_subject_badges('media-subjects-topics', 'media-subjects-topics-group', topics, 'topic');
+        render_subject_badges('media-subjects-genre', 'media-subjects-genre-group', genres, 'genre');
+        render_subject_badges('media-subjects-places', 'media-subjects-places-group', places, 'place');
+
+        const empty_el = document.getElementById('media-subjects-empty');
+        if (empty_el) empty_el.style.display = 'none';
+
+        // Explicit 'flex' to match Bootstrap .card display
+        card.style.display = 'flex';
+    }
+
+    /**
+     * Hides and resets the media subjects card
+     */
+    function hide_media_subjects() {
+        const card = document.getElementById('media-subjects-card');
+        if (!card) return;
+        card.style.display = 'none';
+
+        ['media-subjects-topics', 'media-subjects-genre', 'media-subjects-places'].forEach(id => {
+            const el = document.getElementById(id);
+            if (el) el.innerHTML = '';
+        });
+
+        ['media-subjects-topics-group', 'media-subjects-genre-group', 'media-subjects-places-group'].forEach(id => {
+            const el = document.getElementById(id);
+            if (el) el.style.display = 'none';
+        });
+    }
+
+    // ==================== MEDIA SELECTION HANDLERS ====================
+
+    /**
+     * Handles media asset selection from the picker for Item Media
+     */
+    function handle_item_media_selected(media) {
+        const set_val = (sel, val) => {
+            const el = document.querySelector(sel);
+            if (el) el.value = val;
+        };
+
+        set_val('#item-media-uuid', media.uuid || '');
+        set_val('#item-media-type', media.media_type || '');
+        set_val('#item-mime-type', media.mime_type || '');
+
+        update_media_preview(
+            '#item-media-display',
+            '#item-media-filename-display',
+            '#item-media-trash',
+            media
+        );
+
+        render_media_subjects(media);
+    }
+
+    /**
+     * Handles media asset selection from the picker for Thumbnail
+     */
+    function handle_thumbnail_selected(media) {
+        const set_val = (sel, val) => {
+            const el = document.querySelector(sel);
+            if (el) el.value = val;
+        };
+
+        set_val('#thumbnail-media-uuid', media.uuid || '');
+
+        update_media_preview(
+            '#thumbnail-image-display',
+            '#thumbnail-filename-display',
+            '#thumbnail-trash',
+            media
+        );
+    }
+
+    /**
+     * Clears the Item Media selection
+     */
+    function clear_item_media() {
+        const set_val = (sel, val) => {
+            const el = document.querySelector(sel);
+            if (el) el.value = val;
+        };
+
+        set_val('#item-media-uuid', '');
+        set_val('#item-media-type', '');
+        set_val('#item-mime-type', '');
+
+        reset_media_preview(
+            '#item-media-display',
+            '#item-media-filename-display',
+            '#item-media-trash',
+            'fa-file-o',
+            'No media selected'
+        );
+
+        hide_media_subjects();
+    }
+
+    /**
+     * Clears the Thumbnail selection
+     */
+    function clear_thumbnail() {
+        const el = document.querySelector('#thumbnail-media-uuid');
+        if (el) el.value = '';
+
+        reset_media_preview(
+            '#thumbnail-image-display',
+            '#thumbnail-filename-display',
+            '#thumbnail-trash',
+            'fa-picture-o',
+            'No image selected'
+        );
+    }
+
+    /**
+     * Wires up media picker button handlers and trash links
+     */
+    function init_media_picker_buttons() {
+
+        if (typeof mediaPickerModule === 'undefined') {
+            console.error('FATAL: init_media_picker_buttons requires mediaPickerModule to be loaded');
+            return;
+        }
+
+        // Select Media button — no type filter (all asset types)
+        const pick_media_btn = document.querySelector('#pick-item-media-btn');
+        if (pick_media_btn) {
+            pick_media_btn.addEventListener('click', function () {
+                mediaPickerModule.open({
+                    role: 'item_media',
+                    exhibit_uuid: null,
+                    media_type_filter: null,
+                    on_select: handle_item_media_selected
+                });
+            });
+        }
+
+        // Select Thumbnail button — filtered to images
+        const pick_thumb_btn = document.querySelector('#pick-thumbnail-btn');
+        if (pick_thumb_btn) {
+            pick_thumb_btn.addEventListener('click', function () {
+                mediaPickerModule.open({
+                    role: 'thumbnail',
+                    exhibit_uuid: null,
+                    media_type_filter: 'image',
+                    on_select: handle_thumbnail_selected
+                });
+            });
+        }
+
+        // Trash handlers
+        const media_trash = document.querySelector('#item-media-trash');
+        if (media_trash) {
+            media_trash.addEventListener('click', function (e) {
+                e.preventDefault();
+                clear_item_media();
+            });
+        }
+
+        const thumb_trash = document.querySelector('#thumbnail-trash');
+        if (thumb_trash) {
+            thumb_trash.addEventListener('click', function (e) {
+                e.preventDefault();
+                clear_thumbnail();
+            });
+        }
+    }
+
+    // ==================== PUBLIC API ====================
+
+    /**
+     * Populates the media preview areas from an existing timeline item record (used by edit module)
+     * @param {Object} record - Timeline item record from the API (with joined media library metadata)
+     */
+    obj.populate_media_previews = function (record) {
+
+        if (!record) return;
+
+        // Item Media preview
+        if (record.media_uuid) {
+            const set_val = (sel, val) => {
+                const el = document.querySelector(sel);
+                if (el) el.value = val;
+            };
+
+            set_val('#item-media-uuid', record.media_uuid);
+            set_val('#item-media-uuid-prev', record.media_uuid);
+            set_val('#item-media-type', record.item_type || '');
+            set_val('#item-mime-type', record.mime_type || '');
+
+            // Build a minimal media object for the preview renderer
+            const media_obj = {
+                uuid: record.media_uuid,
+                media_type: record.item_type || '',
+                mime_type: record.mime_type || '',
+                name: record.media_name || record.media_filename || record.title || '',
+                ingest_method: record.media_ingest_method || null,
+                kaltura_thumbnail_url: record.media_kaltura_thumbnail_url || null,
+                repo_uuid: record.media_repo_uuid || null,
+                thumbnail_path: record.media_thumbnail_path || null,
+                topics_subjects: record.media_topics_subjects || null,
+                genre_form_subjects: record.media_genre_form_subjects || null,
+                places_subjects: record.media_places_subjects || null
+            };
+
+            update_media_preview(
+                '#item-media-display',
+                '#item-media-filename-display',
+                '#item-media-trash',
+                media_obj
+            );
+
+            // Show media subjects from the media library asset
+            render_media_subjects(media_obj);
+        }
+
+        // Thumbnail preview
+        if (record.thumbnail_media_uuid) {
+            const set_val = (sel, val) => {
+                const el = document.querySelector(sel);
+                if (el) el.value = val;
+            };
+
+            set_val('#thumbnail-media-uuid', record.thumbnail_media_uuid);
+            set_val('#thumbnail-media-uuid-prev', record.thumbnail_media_uuid);
+
+            const thumb_obj = {
+                uuid: record.thumbnail_media_uuid,
+                media_type: 'image',
+                name: record.thumbnail_media_name || record.thumbnail_filename || 'Thumbnail',
+                ingest_method: record.thumb_ingest_method || record.thumbnail_ingest_method || null,
+                kaltura_thumbnail_url: record.thumb_kaltura_thumbnail_url || null,
+                repo_uuid: record.thumbnail_repo_uuid || null,
+                thumbnail_path: record.thumb_thumbnail_path || record.thumbnail_media_thumbnail_path || null
+            };
+
+            update_media_preview(
+                '#thumbnail-image-display',
+                '#thumbnail-filename-display',
+                '#thumbnail-trash',
+                thumb_obj
+            );
+        }
+    };
 
     obj.get_common_timeline_item_form_fields = function () {
 
@@ -47,7 +517,6 @@ const itemsCommonVerticalTimelineItemFormModule = (function () {
             item.title = get_element_value('#item-title-input');
             item.text = get_element_value('#item-text-input');
             item.date = get_element_value('input[type="date"]');
-            item.item_subjects = get_element_value('#selected-subjects');
 
             // Validate required date field
             if (!item.date || item.date.length === 0) {
@@ -71,49 +540,40 @@ const itemsCommonVerticalTimelineItemFormModule = (function () {
 
             // Handle media-specific logic
             if (is_media_path) {
-                // Validate required module exists
-                if (!helperMediaModule) {
-                    console.error('helperMediaModule is not available');
-                    show_error('System configuration error.');
+
+                // Read media fields from hidden inputs (media picker pattern)
+                const media_uuid = get_element_value('#item-media-uuid');
+                const media_type = get_element_value('#item-media-type');
+                const mime_type = get_element_value('#item-mime-type');
+                const thumbnail_media_uuid = get_element_value('#thumbnail-media-uuid');
+
+                // Validate that a media item has been selected
+                if (!media_uuid || media_uuid.length === 0) {
+                    show_error('Please select a media item');
                     return false;
                 }
 
-                helperMediaModule.process_media_fields_common(item);
+                item.media_uuid = media_uuid;
+                item.thumbnail_media_uuid = thumbnail_media_uuid || '';
 
-                // Validate media content exists
-                const has_media = (
-                    (item.media?.length > 0) ||
-                    (item.kaltura?.length > 0) ||
-                    (item.repo_uuid?.length > 0)
-                );
-
-                if (!has_media) {
-                    show_error('Please upload or import a media item');
-                    return false;
+                if (media_type) {
+                    item.item_type = media_type;
                 }
 
-                // Handle image alt text validation
-                if (item.item_type === 'image') {
-                    const alt_text_input = document.querySelector('#item-alt-text-input');
-                    const alt_text = alt_text_input?.value?.trim() ?? '';
-
-                    if (item.is_alt_text_decorative === true) {
-                        item.is_alt_text_decorative = 1;
-                        item.alt_text = '';
-                    } else if (item.is_alt_text_decorative === false) {
-                        item.is_alt_text_decorative = 0;
-                        item.alt_text = alt_text;
-
-                        if (alt_text.length === 0) {
-                            show_error('Please enter "alt text" for this item');
-                            return false;
-                        }
-                    }
+                if (mime_type) {
+                    item.mime_type = mime_type;
                 }
+
             } else {
                 // Default to text type for non-media paths
                 item.item_type = 'text';
                 item.mime_type = 'text/plain';
+            }
+
+            // Get embed item checkbox value
+            const embed_item_el = document.getElementById('embed-item');
+            if (embed_item_el) {
+                item.is_embedded = embed_item_el.checked ? 1 : 0;
             }
 
             return item;
@@ -132,10 +592,6 @@ const itemsCommonVerticalTimelineItemFormModule = (function () {
 
         try {
 
-            if (window.location.pathname.indexOf('media') !== -1) {
-                helperMediaModule.media_common_init();
-            }
-
             const token = authModule.get_user_token();
             await authModule.check_auth(token);
 
@@ -143,6 +599,12 @@ const itemsCommonVerticalTimelineItemFormModule = (function () {
             navModule.back_to_timeline_items();
             navModule.set_preview_link();
             helperModule.show_form();
+
+            // Wire up media picker buttons if on a media form
+            const path = window.location.pathname;
+            if (path.includes('media')) {
+                init_media_picker_buttons();
+            }
 
         } catch (error) {
             document.querySelector('#message').innerHTML = `<div class="alert alert-danger" role="alert"><i class="fa fa-exclamation"></i> ${error.message}</div>`;

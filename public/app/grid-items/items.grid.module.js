@@ -143,7 +143,7 @@ const itemsGridModule = (function () {
         // Clear loading message
         document.querySelector('#message').innerHTML = '';
 
-        if (items === false) {
+        if (items === null) {
             document.querySelector('#item-card').innerHTML = '';
             if (grid_items_table !== null) {
                 grid_items_table.style.visibility = 'visible';
@@ -182,7 +182,15 @@ const itemsGridModule = (function () {
         // Initialize DataTable
         const GRID_ITEM_LIST = new DataTable('#grid-items', {
             paging: false,
-            rowReorder: true
+            rowReorder: true,
+            language: {
+                emptyTable: 'No grid items found',
+                zeroRecords: 'No matching grid items found',
+                info: 'Showing _START_ - _END_ of _TOTAL_ results',
+                infoEmpty: 'No grid items available',
+                infoFiltered: '(filtered from _MAX_ total grid items)',
+                search: 'Search grid items:'
+            }
         });
 
         GRID_ITEM_LIST.on('row-reordered', async (e, reordered_items) => {
@@ -612,11 +620,8 @@ const itemsGridModule = (function () {
             const token = authModule.get_user_token();
             await authModule.check_auth(token);
 
-            navModule.init();
-            navModule.back_to_items();
-            navModule.set_preview_link();
+            // navModule.init();
             navModule.set_grid_item_nav_menu_links();
-            navModule.set_logout_link();
             helperModule.show_form();
 
         } catch (error) {

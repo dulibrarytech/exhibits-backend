@@ -9,8 +9,7 @@ gulp.task('minify-exhibit-modules', function () {
         'public/app/exhibits/exhibits.common.form.module.js',
         'public/app/exhibits/exhibits.details.module.js',
         'public/app/exhibits/exhibits.edit.form.module.js',
-        'public/app/exhibits/exhibits.module.js',
-        'public/app/exhibits/nav.module.js'
+        'public/app/exhibits/exhibits.module.js'
     ])
         .pipe(uglify())
         .on('error', function (err) {
@@ -105,7 +104,9 @@ gulp.task('minify-utils-modules', function () {
         'public/app/utils/helper.media.module.js',
         'public/app/utils/http.module.js',
         'public/app/utils/uploads.module.js',
-        'public/app/utils/helper.subjects.menu.class.js'
+        'public/app/utils/helper.subjects.menu.class.js',
+        'public/app/utils/media.picker.module.js',
+        'public/app/utils/nav.module.js'
     ])
         .pipe(uglify())
         .on('error', function (err) {

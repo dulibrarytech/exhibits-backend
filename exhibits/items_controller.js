@@ -27,7 +27,12 @@ const GRIDS_MODEL = require('../exhibits/grid_model');
 const TIMELINES_MODEL = require('../exhibits/timelines_model');
 const EXHIBITS_MODEL = require('./exhibits_model');
 const LOGGER = require('../libs/log4');
-const AUTHORIZE = require('../auth/authorize');
+const {
+    validate_param,
+    validate_body,
+    check_authorization,
+    handle_error
+} = require('../exhibits/items_helper');
 
 exports.create_item_record = async function (req, res) {
 
@@ -36,46 +41,23 @@ exports.create_item_record = async function (req, res) {
         const exhibit_id = req.params.exhibit_id;
         const data = req.body;
 
-        // Validate required inputs with comprehensive checks
-        if (!exhibit_id || typeof exhibit_id !== 'string' || exhibit_id.trim() === '') {
-            res.status(400).send({
-                message: 'Bad request. Missing or invalid exhibit ID.'
-            });
-            return;
-        }
+        if (!validate_param(res, exhibit_id, 'exhibit ID')) return;
+        if (!validate_body(res, data, 'item data')) return;
 
-        if (!data || typeof data !== 'object' || Array.isArray(data) || Object.keys(data).length === 0) {
-            res.status(400).send({
-                message: 'Bad request. Missing or invalid item data.'
-            });
-            return;
-        }
-
-        const auth_options = {
-            req,
-            permissions: ['add_item', 'add_item_to_any_exhibit'],
-            record_type: 'item',
-            parent_id: exhibit_id,
-            child_id: null
-        };
-
-        const is_authorized = await AUTHORIZE.check_permission(auth_options);
-
-        if (is_authorized !== true) {
-            res.status(403).send({
-                message: 'Unauthorized request'
-            });
-            return;
-        }
+        const is_authorized = await check_authorization(
+            req, res,
+            ['add_item', 'add_item_to_any_exhibit'],
+            'item', exhibit_id, null
+        );
+        if (!is_authorized) return;
 
         const result = await ITEMS_MODEL.create_item_record(exhibit_id, data);
         res.status(result.status).send(result);
 
     } catch (error) {
-        LOGGER.module().error('ERROR: [/items/controller (create_item_record)] Unable to create item record for exhibit ' + req.params.exhibit_id + ': ' + error.message);
-        res.status(500).send({
-            message: 'Unable to create item record.'
-        });
+        handle_error(res, 'create_item_record', error,
+            'Unable to create item record.',
+            'for exhibit ' + req.params.exhibit_id);
     }
 };
 
@@ -85,22 +67,15 @@ exports.get_item_records = async function (req, res) {
 
         const exhibit_id = req.params.exhibit_id;
 
-        // Validate required path parameter
-        if (!exhibit_id || typeof exhibit_id !== 'string' || exhibit_id.trim() === '') {
-            res.status(400).send({
-                message: 'Bad request. Missing or invalid exhibit ID.'
-            });
-            return;
-        }
+        if (!validate_param(res, exhibit_id, 'exhibit ID')) return;
 
         const data = await ITEMS_MODEL.get_item_records(exhibit_id);
         res.status(data.status).send(data);
 
     } catch (error) {
-        LOGGER.module().error('ERROR: [/items/controller (get_item_records)] Unable to get item records for exhibit ' + req.params.exhibit_id + ': ' + error.message);
-        res.status(500).send({
-            message: 'Unable to get item records.'
-        });
+        handle_error(res, 'get_item_records', error,
+            'Unable to get item records.',
+            'for exhibit ' + req.params.exhibit_id);
     }
 };
 
@@ -112,20 +87,8 @@ exports.get_item_record = async function (req, res) {
         const item_id = req.params.item_id;
         const type = req.query.type;
 
-        // Validate required path parameters
-        if (!exhibit_id || typeof exhibit_id !== 'string' || exhibit_id.trim() === '') {
-            res.status(400).send({
-                message: 'Bad request. Missing or invalid exhibit ID.'
-            });
-            return;
-        }
-
-        if (!item_id || typeof item_id !== 'string' || item_id.trim() === '') {
-            res.status(400).send({
-                message: 'Bad request. Missing or invalid item ID.'
-            });
-            return;
-        }
+        if (!validate_param(res, exhibit_id, 'exhibit ID')) return;
+        if (!validate_param(res, item_id, 'item ID')) return;
 
         // Default: return standard item record
         if (type === undefined || type === null) {
@@ -138,12 +101,7 @@ exports.get_item_record = async function (req, res) {
         if (type === 'edit') {
             const uid = req.query.uid;
 
-            if (!uid || typeof uid !== 'string' || uid.trim() === '') {
-                res.status(400).send({
-                    message: 'Bad request. Missing or invalid user ID for edit mode.'
-                });
-                return;
-            }
+            if (!validate_param(res, uid, 'user ID for edit mode')) return;
 
             const data = await ITEMS_MODEL.get_item_edit_record(uid, exhibit_id, item_id);
             res.status(data.status).send(data);
@@ -156,10 +114,9 @@ exports.get_item_record = async function (req, res) {
         });
 
     } catch (error) {
-        LOGGER.module().error('ERROR: [/items/controller (get_item_record)] Unable to get item record ' + req.params.item_id + ' for exhibit ' + req.params.exhibit_id + ': ' + error.message);
-        res.status(500).send({
-            message: 'Unable to get item record.'
-        });
+        handle_error(res, 'get_item_record', error,
+            'Unable to get item record.',
+            req.params.item_id + ' for exhibit ' + req.params.exhibit_id);
     }
 };
 
@@ -171,55 +128,24 @@ exports.update_item_record = async function (req, res) {
         const item_id = req.params.item_id;
         const data = req.body;
 
-        // Validate required path parameters
-        if (!exhibit_id || typeof exhibit_id !== 'string' || exhibit_id.trim() === '') {
-            res.status(400).send({
-                message: 'Bad request. Missing or invalid exhibit ID.'
-            });
-            return;
-        }
+        if (!validate_param(res, exhibit_id, 'exhibit ID')) return;
+        if (!validate_param(res, item_id, 'item ID')) return;
+        if (!validate_body(res, data, 'item data')) return;
 
-        if (!item_id || typeof item_id !== 'string' || item_id.trim() === '') {
-            res.status(400).send({
-                message: 'Bad request. Missing or invalid item ID.'
-            });
-            return;
-        }
-
-        // Validate request body
-        if (!data || typeof data !== 'object' || Array.isArray(data) || Object.keys(data).length === 0) {
-            res.status(400).send({
-                message: 'Bad request. Missing or invalid item data.'
-            });
-            return;
-        }
-
-        // Check authorization
-        const auth_options = {
-            req,
-            permissions: ['update_item', 'update_any_item'],
-            record_type: 'item',
-            parent_id: exhibit_id,
-            child_id: item_id
-        };
-
-        const is_authorized = await AUTHORIZE.check_permission(auth_options);
-
-        if (is_authorized !== true) {
-            res.status(403).send({
-                message: 'Unauthorized request'
-            });
-            return;
-        }
+        const is_authorized = await check_authorization(
+            req, res,
+            ['update_item', 'update_any_item'],
+            'item', exhibit_id, item_id
+        );
+        if (!is_authorized) return;
 
         const result = await ITEMS_MODEL.update_item_record(exhibit_id, item_id, data);
         res.status(result.status).send(result);
 
     } catch (error) {
-        LOGGER.module().error('ERROR: [/items/controller (update_item_record)] Unable to update item record ' + req.params.item_id + ' for exhibit ' + req.params.exhibit_id + ': ' + error.message);
-        res.status(500).send({
-            message: 'Unable to update item record.'
-        });
+        handle_error(res, 'update_item_record', error,
+            'Unable to update item record.',
+            req.params.item_id + ' for exhibit ' + req.params.exhibit_id);
     }
 };
 
@@ -231,20 +157,8 @@ exports.delete_item_record = async function (req, res) {
         const item_id = req.params.item_id;
         const record_type = req.query.type;
 
-        // Validate required path parameters
-        if (!exhibit_id || typeof exhibit_id !== 'string' || exhibit_id.trim() === '') {
-            res.status(400).send({
-                message: 'Bad request. Missing or invalid exhibit ID.'
-            });
-            return;
-        }
-
-        if (!item_id || typeof item_id !== 'string' || item_id.trim() === '') {
-            res.status(400).send({
-                message: 'Bad request. Missing or invalid item ID.'
-            });
-            return;
-        }
+        if (!validate_param(res, exhibit_id, 'exhibit ID')) return;
+        if (!validate_param(res, item_id, 'item ID')) return;
 
         // Validate record type if provided
         /* TODO: determine record types
@@ -259,32 +173,20 @@ exports.delete_item_record = async function (req, res) {
 
          */
 
-        // Check authorization
-        const auth_options = {
-            req,
-            permissions: ['delete_item', 'delete_any_item'],
-            record_type: record_type || 'item',
-            parent_id: exhibit_id,
-            child_id: item_id
-        };
-
-        const is_authorized = await AUTHORIZE.check_permission(auth_options);
-
-        if (is_authorized !== true) {
-            res.status(403).send({
-                message: 'Unauthorized request'
-            });
-            return;
-        }
+        const is_authorized = await check_authorization(
+            req, res,
+            ['delete_item', 'delete_any_item'],
+            record_type || 'item', exhibit_id, item_id
+        );
+        if (!is_authorized) return;
 
         const result = await ITEMS_MODEL.delete_item_record(exhibit_id, item_id, record_type);
         res.status(result.status).send(result);
 
     } catch (error) {
-        LOGGER.module().error('ERROR: [/items/controller (delete_item_record)] Unable to delete item record ' + req.params.item_id + ' for exhibit ' + req.params.exhibit_id + ': ' + error.message);
-        res.status(500).send({
-            message: 'Unable to delete item record.'
-        });
+        handle_error(res, 'delete_item_record', error,
+            'Unable to delete item record.',
+            req.params.item_id + ' for exhibit ' + req.params.exhibit_id);
     }
 };
 
@@ -297,27 +199,9 @@ exports.delete_item_media = async function (req, res) {
         const media = req.params.media;
         const type = req.query.type;
 
-        // Validate required path parameters
-        if (!exhibit_id || typeof exhibit_id !== 'string' || exhibit_id.trim() === '') {
-            res.status(400).send({
-                message: 'Bad request. Missing or invalid exhibit ID.'
-            });
-            return;
-        }
-
-        if (!item_id || typeof item_id !== 'string' || item_id.trim() === '') {
-            res.status(400).send({
-                message: 'Bad request. Missing or invalid item ID.'
-            });
-            return;
-        }
-
-        if (!media || typeof media !== 'string' || media.trim() === '') {
-            res.status(400).send({
-                message: 'Bad request. Missing or invalid media filename.'
-            });
-            return;
-        }
+        if (!validate_param(res, exhibit_id, 'exhibit ID')) return;
+        if (!validate_param(res, item_id, 'item ID')) return;
+        if (!validate_param(res, media, 'media filename')) return;
 
         // Prevent path traversal attacks
         const safe_exhibit_id = PATH.basename(exhibit_id);
@@ -358,10 +242,9 @@ exports.delete_item_media = async function (req, res) {
             return;
         }
 
-        LOGGER.module().error('ERROR: [/items/controller (delete_item_media)] Unable to delete media ' + req.params.media + ' for item ' + req.params.item_id + ': ' + error.message);
-        res.status(500).send({
-            message: 'Unable to delete item media file.'
-        });
+        handle_error(res, 'delete_item_media', error,
+            'Unable to delete item media file.',
+            req.params.media + ' for item ' + req.params.item_id);
     }
 };
 
@@ -373,20 +256,8 @@ exports.publish_item_record = async function (req, res) {
         const item_id = req.params.item_id;
         const type = req.query.type;
 
-        // Validate required path parameters
-        if (!exhibit_id || typeof exhibit_id !== 'string' || exhibit_id.trim() === '') {
-            res.status(400).send({
-                message: 'Bad request. Missing or invalid exhibit ID.'
-            });
-            return;
-        }
-
-        if (!item_id || typeof item_id !== 'string' || item_id.trim() === '') {
-            res.status(400).send({
-                message: 'Bad request. Missing or invalid item ID.'
-            });
-            return;
-        }
+        if (!validate_param(res, exhibit_id, 'exhibit ID')) return;
+        if (!validate_param(res, item_id, 'item ID')) return;
 
         // Define publish handlers map
         const publish_handlers = {
@@ -404,23 +275,12 @@ exports.publish_item_record = async function (req, res) {
             return;
         }
 
-        // Check authorization
-        const auth_options = {
-            req,
-            permissions: ['publish_item', 'publish_any_item'],
-            record_type: type,
-            parent_id: exhibit_id,
-            child_id: item_id
-        };
-
-        const is_authorized = await AUTHORIZE.check_permission(auth_options);
-
-        if (is_authorized !== true) {
-            res.status(403).send({
-                message: 'Unauthorized request'
-            });
-            return;
-        }
+        const is_authorized = await check_authorization(
+            req, res,
+            ['publish_item', 'publish_any_item'],
+            type, exhibit_id, item_id
+        );
+        if (!is_authorized) return;
 
         // Execute the appropriate publish handler
         const result = await publish_handlers[type](exhibit_id, item_id);
@@ -436,10 +296,9 @@ exports.publish_item_record = async function (req, res) {
         }
 
     } catch (error) {
-        LOGGER.module().error('ERROR: [/items/controller (publish_item_record)] Unable to publish item ' + req.params.item_id + ' for exhibit ' + req.params.exhibit_id + ': ' + error.message);
-        res.status(500).send({
-            message: 'Unable to publish item record.'
-        });
+        handle_error(res, 'publish_item_record', error,
+            'Unable to publish item record.',
+            req.params.item_id + ' for exhibit ' + req.params.exhibit_id);
     }
 };
 
@@ -451,20 +310,8 @@ exports.suppress_item_record = async function (req, res) {
         const item_id = req.params.item_id;
         const type = req.query.type;
 
-        // Validate required path parameters
-        if (!exhibit_id || typeof exhibit_id !== 'string' || exhibit_id.trim() === '') {
-            res.status(400).send({
-                message: 'Bad request. Missing or invalid exhibit ID.'
-            });
-            return;
-        }
-
-        if (!item_id || typeof item_id !== 'string' || item_id.trim() === '') {
-            res.status(400).send({
-                message: 'Bad request. Missing or invalid item ID.'
-            });
-            return;
-        }
+        if (!validate_param(res, exhibit_id, 'exhibit ID')) return;
+        if (!validate_param(res, item_id, 'item ID')) return;
 
         // Define suppress handlers map
         const suppress_handlers = {
@@ -482,23 +329,12 @@ exports.suppress_item_record = async function (req, res) {
             return;
         }
 
-        // Check authorization
-        const auth_options = {
-            req,
-            permissions: ['suppress_item', 'suppress_any_item'],
-            record_type: type,
-            parent_id: exhibit_id,
-            child_id: item_id
-        };
-
-        const is_authorized = await AUTHORIZE.check_permission(auth_options);
-
-        if (is_authorized !== true) {
-            res.status(403).send({
-                message: 'Unauthorized request'
-            });
-            return;
-        }
+        const is_authorized = await check_authorization(
+            req, res,
+            ['suppress_item', 'suppress_any_item'],
+            type, exhibit_id, item_id
+        );
+        if (!is_authorized) return;
 
         // Execute the appropriate suppress handler
         const result = await suppress_handlers[type](exhibit_id, item_id);
@@ -514,10 +350,9 @@ exports.suppress_item_record = async function (req, res) {
         }
 
     } catch (error) {
-        LOGGER.module().error('ERROR: [/items/controller (suppress_item_record)] Unable to suppress item ' + req.params.item_id + ' for exhibit ' + req.params.exhibit_id + ': ' + error.message);
-        res.status(500).send({
-            message: 'Unable to suppress item record.'
-        });
+        handle_error(res, 'suppress_item_record', error,
+            'Unable to suppress item record.',
+            req.params.item_id + ' for exhibit ' + req.params.exhibit_id);
     }
 };
 
@@ -528,13 +363,7 @@ exports.get_repo_item_record = async function (req, res) {
 
         const uuid = req.params.uuid;
 
-        // Validate required path parameter
-        if (!uuid || typeof uuid !== 'string' || uuid.trim() === '') {
-            res.status(400).send({
-                message: 'Bad request. Missing or invalid UUID.'
-            });
-            return;
-        }
+        if (!validate_param(res, uuid, 'UUID')) return;
 
         // Fetch item record and thumbnail in parallel
         const [response, thumbnail] = await Promise.all([
@@ -565,10 +394,9 @@ exports.get_repo_item_record = async function (req, res) {
         }
 
     } catch (error) {
-        LOGGER.module().error('ERROR: [/items/controller (get_repo_item_record)] Unable to get repo item record ' + req.params.uuid + ': ' + error.message);
-        res.status(500).send({
-            message: 'Unable to get repo item record.'
-        });
+        handle_error(res, 'get_repo_item_record', error,
+            'Unable to get repo item record.',
+            req.params.uuid);
     }
 };
 
@@ -579,13 +407,7 @@ exports.get_kaltura_item_record = async function (req, res) {
 
         const entry_id = req.params.entry_id;
 
-        // Validate required path parameter
-        if (!entry_id || typeof entry_id !== 'string' || entry_id.trim() === '') {
-            res.status(400).send({
-                message: 'Bad request. Missing or invalid entry ID.'
-            });
-            return;
-        }
+        if (!validate_param(res, entry_id, 'entry ID')) return;
 
         // Kaltura media type mapping (video and audio only)
         // https://developer.kaltura.com/api-docs/service/media/action/get
@@ -635,10 +457,9 @@ exports.get_kaltura_item_record = async function (req, res) {
         });
 
     } catch (error) {
-        LOGGER.module().error('ERROR: [/items/controller (get_kaltura_item_record)] Unable to get Kaltura item record ' + req.params.entry_id + ': ' + error.message);
-        res.status(500).send({
-            message: 'Unable to get Kaltura item record.'
-        });
+        handle_error(res, 'get_kaltura_item_record', error,
+            'Unable to get Kaltura item record.',
+            req.params.entry_id);
     }
 };
 
@@ -649,13 +470,7 @@ exports.reorder_items = async function (req, res) {
         const exhibit_id = req.params.exhibit_id;
         const updated_order = req.body;
 
-        // Validate required path parameter
-        if (!exhibit_id || typeof exhibit_id !== 'string' || exhibit_id.trim() === '') {
-            res.status(400).send({
-                message: 'Bad request. Missing or invalid exhibit ID.'
-            });
-            return;
-        }
+        if (!validate_param(res, exhibit_id, 'exhibit ID')) return;
 
         // Validate request body is a non-empty array
         if (!Array.isArray(updated_order) || updated_order.length === 0) {
@@ -752,10 +567,9 @@ exports.reorder_items = async function (req, res) {
         });
 
     } catch (error) {
-        LOGGER.module().error('ERROR: [/items/controller (reorder_items)] Unable to reorder items for exhibit ' + req.params.exhibit_id + ': ' + error.message);
-        res.status(500).send({
-            message: 'Unable to reorder items.'
-        });
+        handle_error(res, 'reorder_items', error,
+            'Unable to reorder items.',
+            'for exhibit ' + req.params.exhibit_id);
     }
 };
 
@@ -768,28 +582,9 @@ exports.unlock_item_record = async function (req, res) {
         const uid = req.query.uid;
         const force = req.query.force;
 
-        // Validate required path parameters
-        if (!exhibit_id || typeof exhibit_id !== 'string' || exhibit_id.trim() === '') {
-            res.status(400).send({
-                message: 'Bad request. Missing or invalid exhibit ID.'
-            });
-            return;
-        }
-
-        if (!item_id || typeof item_id !== 'string' || item_id.trim() === '') {
-            res.status(400).send({
-                message: 'Bad request. Missing or invalid item ID.'
-            });
-            return;
-        }
-
-        // Validate required query parameter
-        if (!uid || typeof uid !== 'string' || uid.trim() === '') {
-            res.status(400).send({
-                message: 'Bad request. Missing or invalid user ID.'
-            });
-            return;
-        }
+        if (!validate_param(res, exhibit_id, 'exhibit ID')) return;
+        if (!validate_param(res, item_id, 'item ID')) return;
+        if (!validate_param(res, uid, 'user ID')) return;
 
         // Build unlock options
         const unlock_options = {
@@ -809,10 +604,9 @@ exports.unlock_item_record = async function (req, res) {
         }
 
     } catch (error) {
-        LOGGER.module().error('ERROR: [/items/controller (unlock_item_record)] Unable to unlock item ' + req.params.item_id + ' for user ' + req.query.uid + ': ' + error.message);
-        res.status(500).send({
-            message: 'Unable to unlock item record.'
-        });
+        handle_error(res, 'unlock_item_record', error,
+            'Unable to unlock item record.',
+            req.params.item_id + ' for user ' + req.query.uid);
     }
 };
 
@@ -835,9 +629,7 @@ exports.get_item_subjects = async function (req, res) {
         });
 
     } catch (error) {
-        LOGGER.module().error('ERROR: [/items/controller (get_item_subjects)] Unable to get item subjects: ' + error.message);
-        res.status(500).send({
-            message: 'Unable to get item subjects.'
-        });
+        handle_error(res, 'get_item_subjects', error,
+            'Unable to get item subjects.');
     }
 };

@@ -242,6 +242,38 @@ exports.get_media_records = async () => {
 };
 
 /**
+ * Gets media records with pagination, search, and media type filtering
+ * Used by the media picker modal browse grid
+ * @param {Object} options - { page, limit, q, media_type }
+ * @returns {Promise<Object>} Result object with records and total
+ */
+exports.get_media_records_browse = async (options = {}) => {
+
+    try {
+
+        const result = await media_task.get_media_records_browse(options);
+
+        if (!result || !result.success) {
+            return build_response(false, 'Failed to retrieve media records');
+        }
+
+        // Convert subject delimiters from pipe to comma for display
+        const formatted_records = (result.records || []).map(format_subjects_for_display);
+
+        return build_response(true, 'Media records retrieved successfully', {
+            records: formatted_records,
+            total: result.total,
+            page: result.page,
+            limit: result.limit
+        });
+
+    } catch (error) {
+        LOGGER.module().error('ERROR: [/media-library/model (get_media_records_browse)] ' + error.message);
+        return build_response(false, 'Error retrieving media records: ' + error.message);
+    }
+};
+
+/**
  * Gets a single media record by ID
  * @param {string} media_id - Media record UUID
  * @returns {Promise<Object>} Result object with record

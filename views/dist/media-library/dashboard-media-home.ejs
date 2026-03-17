@@ -1,9 +1,4 @@
-<%- include('../partials/header.ejs'); %> <body><aside id="left-panel" class="left-panel" aria-label="Main navigation"><nav class="navbar navbar-expand-sm navbar-default"><div id="main-menu" class="main-menu"><ul class="nav navbar-nav"><li class="menu-title">Menu</li></ul><ul id="items-menu" class="nav navbar-nav" aria-label="Items navigation"></ul><ul class="nav navbar-nav" aria-label="Account actions"><li><a href="#" id="logout" data-keyboard="false"><i class="menu-icon fa fa-sign-out" aria-hidden="true"></i> <span>Logout</span></a></li></ul></div></nav></aside><div id="right-panel" class="right-panel"> <%- include('../partials/main-header.ejs'); %> <main class="content" id="main-content"><div id="message" role="status" aria-live="polite"></div><h1 id="media-library-title">Media Library</h1><section id="media-card" class="card" aria-labelledby="import-upload-heading"><div class="card-header"><strong class="card-title mb-3" id="import-upload-heading">Import/Upload Media</strong></div><div class="card-body"><div class="container"><!-- Media tabs --><ul class="nav nav-tabs" id="mediaTab" role="tablist"><li class="nav-item" role="presentation"><button class="nav-link active" id="import-repo-media-tab" data-toggle="tab" data-target="#import-repo-media" type="button" role="tab" aria-controls="import-repo-media" aria-selected="true">Import Repository Media</button></li><li class="nav-item" role="presentation"><button class="nav-link" id="upload-media-tab" data-toggle="tab" data-target="#upload-media" type="button" role="tab" aria-controls="upload-media" aria-selected="false">Upload Media</button></li><li class="nav-item" role="presentation"><button class="nav-link" id="import-audio-video-tab" data-toggle="tab" data-target="#import-audio-video" type="button" role="tab" aria-controls="import-audio-video" aria-selected="false">Import Kaltura Audio/Video</button></li></ul><div class="tab-content" id="mediaTabContent"><div class="tab-pane fade show active pt-4" id="import-repo-media" role="tabpanel" aria-labelledby="import-repo-media-tab" tabindex="0"> <%- include('partials/tab-import-repo-media.ejs'); %> </div><div class="tab-pane fade pt-4" id="upload-media" role="tabpanel" aria-labelledby="upload-media-tab" tabindex="0"> <%- include('partials/tab-upload-media.ejs'); %> </div><div class="tab-pane fade pt-4" id="import-audio-video" role="tabpanel" aria-labelledby="import-audio-video-tab" tabindex="0"> <%- include('partials/tab-import-audio-video.ejs'); %> </div></div></div><input type="hidden" id="is-repo-item" name="is_repo_item" value="0"></div></section><section id="item-card" class="card" aria-labelledby="media-list-heading"><div class="card-header"><strong class="card-title mb-3" id="media-list-heading">Media List</strong></div><div class="card-body"><table id="items" class="display" style="width:100%"><caption class="sr-only">List of media files in the library</caption><thead><tr><th scope="col">Name</th><th scope="col">File Name</th><th scope="col">Import Type</th><th scope="col">Date Added</th><th scope="col">Actions</th></tr></thead><tbody id="media-data"></tbody></table></div></section></main><div class="clearfix"></div> <%- include('../partials/footer.ejs'); %> </div><!-- DataTables Pagination Styles - Match Repository Pagination --><style>/* ========================================
-       DataTables Pagination - Repo Style Match
-       (DataTables 2.x uses .dt-paging / .dt-paging-button)
-       ======================================== */
-
-    /* Hide First/Last buttons to match repo pagination (prev + numbers + next only) */
+<%- include('../partials/header.ejs'); %> <body><!-- Move nav to partial --><aside id="left-panel" class="left-panel" aria-label="Main navigation"><nav class="navbar navbar-expand-sm navbar-default"><div id="main-menu" class="main-menu"><ul class="nav navbar-nav"><li class="menu-title">Menu</li></ul><ul id="items-menu" class="nav navbar-nav" aria-label="Items navigation"></ul><ul class="nav navbar-nav" aria-label="Account actions"><li><a href="/exhibits-dashboard/exhibits" data-keyboard="false"><i class="menu-icon fa fa-arrow-left"></i>Back to Exhibit Builder</a></li><li><a href="#" id="logout" data-keyboard="false"><i class="menu-icon fa fa-sign-out" aria-hidden="true"></i> <span>Logout</span></a></li></ul></div></nav></aside><div id="right-panel" class="right-panel"> <%- include('../partials/main-header.ejs'); %> <main class="content" id="main-content"><div id="message" role="status" aria-live="polite"></div><h1 id="media-library-title">Media Library</h1><section id="media-card" class="card" aria-labelledby="import-upload-heading"><div class="card-header"><strong class="card-title mb-3" id="import-upload-heading">Import/Upload Media</strong></div><div class="card-body"><div class="container"><!-- Media tabs --><ul class="nav nav-tabs" id="mediaTab" role="tablist"><li class="nav-item" role="presentation"><button class="nav-link active" id="import-repo-media-tab" data-toggle="tab" data-target="#import-repo-media" type="button" role="tab" aria-controls="import-repo-media" aria-selected="true">Import Repository Media</button></li><li class="nav-item" role="presentation"><button class="nav-link" id="upload-media-tab" data-toggle="tab" data-target="#upload-media" type="button" role="tab" aria-controls="upload-media" aria-selected="false">Upload Media</button></li><li class="nav-item" role="presentation"><button class="nav-link" id="import-audio-video-tab" data-toggle="tab" data-target="#import-audio-video" type="button" role="tab" aria-controls="import-audio-video" aria-selected="false">Import Kaltura Audio/Video</button></li></ul><div class="tab-content" id="mediaTabContent"><div class="tab-pane fade show active pt-4" id="import-repo-media" role="tabpanel" aria-labelledby="import-repo-media-tab" tabindex="0"> <%- include('partials/tab-import-repo-media.ejs'); %> </div><div class="tab-pane fade pt-4" id="upload-media" role="tabpanel" aria-labelledby="upload-media-tab" tabindex="0"> <%- include('partials/tab-upload-media.ejs'); %> </div><div class="tab-pane fade pt-4" id="import-audio-video" role="tabpanel" aria-labelledby="import-audio-video-tab" tabindex="0"> <%- include('partials/tab-import-audio-video.ejs'); %> </div></div></div><input type="hidden" id="is-repo-item" name="is_repo_item" value="0"></div></section><section id="item-card" class="card" aria-labelledby="media-list-heading"><div class="card-header"><strong class="card-title mb-3" id="media-list-heading">Media List</strong></div><div class="card-body"><table id="items" class="display" style="width:100%"><caption class="sr-only">List of media files in the library</caption><thead><tr><th scope="col">Name</th><th scope="col">File Name</th><th scope="col">Import Type</th><th scope="col">Date Added</th><th scope="col">Actions</th></tr></thead><tbody id="media-data"></tbody></table></div></section></main><div class="clearfix"></div> <%- include('../partials/footer.ejs'); %> </div><style>/* Hide First/Last buttons (prev + numbers + next only) */
     #items_wrapper .dt-paging .dt-paging-button.first,
     #items_wrapper .dt-paging .dt-paging-button.last {
         display: none !important;
@@ -21,7 +16,7 @@
         display: inline-flex;
     }
 
-    /* Base button styling - match repo .page-link */
+    /* Base button styling - .page-link */
     #items_wrapper .dt-paging .dt-paging-button {
         display: inline-block;
         box-sizing: border-box;
@@ -65,7 +60,7 @@
         border-color: #7f7f7f !important;
     }
 
-    /* Active/current page - match repo .page-item.active .page-link */
+    /* Active/current page - .page-item.active .page-link */
     #items_wrapper .dt-paging .dt-paging-button.current,
     #items_wrapper .dt-paging .dt-paging-button.current:hover {
         z-index: 3;
@@ -88,7 +83,7 @@
         box-shadow: none !important;
     }
 
-    /* Focus state - match repo .page-link:focus */
+    /* Focus state - .page-link:focus */
     #items_wrapper .dt-paging .dt-paging-button:focus {
         z-index: 3;
         outline: 0;
@@ -107,7 +102,7 @@
         margin-left: -1px;
     }
 
-    /* Info row - add separator and match repo pagination-info */
+    /* Info row - add separator and pagination-info */
     #items_wrapper .row:last-child {
         border-top: 1px solid #e9ecef;
         margin-top: 10px;

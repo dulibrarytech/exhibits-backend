@@ -340,14 +340,11 @@ const exhibitsEditFormModule = (function () {
         };
 
         // Helper function to safely create image element
-        const create_image_element = (alt_text, src, height = 200) => {
-            const p = document.createElement('p');
+        const create_image_element = (alt_text, src) => {
             const img = document.createElement('img');
             img.alt = alt_text || '';
             img.src = src;
-            img.height = height;
-            p.appendChild(img);
-            return p;
+            return img;
         };
 
         // Helper function to safely set innerHTML with created element
@@ -425,13 +422,13 @@ const exhibitsEditFormModule = (function () {
             fragments.forEach(fragment => created_el.appendChild(fragment));
         };
 
-        // Helper function to set media display
+        // Helper function to set media display (legacy filename-based)
         const set_media_display = (record, field_name, display_selector, filename_selector, input_selector, prev_selector, trash_selector) => {
             const media_value = record[field_name];
             if (!media_value) return;
 
             const media_url = `${APP_PATH}/api/v1/exhibits/${record.uuid}/media/${media_value}`;
-            const image_element = create_image_element(media_value, media_url, 200);
+            const image_element = create_image_element(media_value, media_url);
             const filename_element = create_filename_display(media_value);
 
             set_element_content(display_selector, image_element);
@@ -439,6 +436,75 @@ const exhibitsEditFormModule = (function () {
             set_element_value(input_selector, media_value);
             set_element_value(prev_selector, media_value);
             set_element_display(trash_selector, 'inline');
+        };
+
+        // Helper function to display media from a media library binding
+        const set_media_binding_display = (binding, display_selector, filename_selector, uuid_input_selector, trash_selector) => {
+
+            if (!binding) return;
+
+            // Build thumbnail URL based on ingest method
+            const token = authModule.get_user_token();
+            let thumb_url = '';
+
+            if (binding.ingest_method === 'kaltura' && binding.kaltura_thumbnail_url) {
+                thumb_url = binding.kaltura_thumbnail_url;
+            } else if (binding.ingest_method === 'repository' && binding.repo_uuid) {
+                thumb_url = `${APP_PATH}/api/v1/media/library/repo/thumbnail?uuid=${encodeURIComponent(binding.repo_uuid)}&token=${encodeURIComponent(token)}`;
+            } else if (binding.media_uuid && binding.thumbnail_path) {
+                thumb_url = `${APP_PATH}/api/v1/media/library/thumbnail/${binding.media_uuid}?token=${encodeURIComponent(token)}`;
+            }
+
+            if (thumb_url) {
+                const image_element = create_image_element(binding.alt_text || binding.name, thumb_url);
+                set_element_content(display_selector, image_element);
+            }
+
+            const filename_element = create_filename_display(binding.name || binding.original_filename || '');
+            set_element_content(filename_selector, filename_element);
+
+            // Set the media UUID hidden input
+            const uuid_el = document.querySelector(uuid_input_selector);
+            if (uuid_el) uuid_el.value = binding.media_uuid;
+
+            set_element_display(trash_selector, 'inline');
+        };
+
+        // Helper function to load media library bindings for the exhibit
+        const load_media_bindings = async (exhibit_uuid) => {
+
+            try {
+
+                const token = authModule.get_user_token();
+                if (!token) return null;
+
+                const endpoint_base = EXHIBITS_ENDPOINTS.exhibits?.exhibit_media_library?.get?.endpoint;
+                if (!endpoint_base) {
+                    console.warn('exhibit_media_library GET endpoint not configured');
+                    return null;
+                }
+
+                const endpoint = endpoint_base.replace(':exhibit_id', encodeURIComponent(exhibit_uuid));
+
+                const response = await httpModule.req({
+                    method: 'GET',
+                    url: endpoint,
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'x-access-token': token
+                    }
+                });
+
+                if (response && response.data && Array.isArray(response.data.data)) {
+                    return response.data.data;
+                }
+
+                return [];
+
+            } catch (error) {
+                console.error('Error loading media bindings:', error);
+                return null;
+            }
         };
 
         // Helper function to set radio button selection
@@ -640,15 +706,21 @@ const exhibitsEditFormModule = (function () {
                 set_element_value('#exhibit-alert-text-input', helperModule.unescape(record.alert_text));
             }
 
-            if (record.exhibit_subjects !== null && record.exhibit_subjects?.length > 0) {
-                const subjects = record.exhibit_subjects.split('|');
-                await helperModule.create_subjects_menu(subjects);
-            } else {
-                await helperModule.create_subjects_menu();
-            }
+            // Load media library bindings first, fall back to legacy filename display
+            const bindings = await load_media_bindings(record.uuid);
+            const hero_binding = bindings ? bindings.find(function (b) { return b.media_role === 'hero_image'; }) : null;
+            const thumbnail_binding = bindings ? bindings.find(function (b) { return b.media_role === 'thumbnail'; }) : null;
 
-            // Set media displays
-            if (record.hero_image) {
+            // Set hero image display
+            if (hero_binding) {
+                set_media_binding_display(
+                    hero_binding,
+                    '#hero-image-display',
+                    '#hero-image-filename-display',
+                    '#hero-image-media-uuid',
+                    '#hero-trash'
+                );
+            } else if (record.hero_image) {
                 set_media_display(
                     record,
                     'hero_image',
@@ -658,9 +730,20 @@ const exhibitsEditFormModule = (function () {
                     '#hero-image-prev',
                     '#hero-trash'
                 );
+                // Show legacy migration hint
+                set_element_display('#hero-legacy-migrate', 'block');
             }
 
-            if (record.thumbnail) {
+            // Set thumbnail display
+            if (thumbnail_binding) {
+                set_media_binding_display(
+                    thumbnail_binding,
+                    '#thumbnail-image-display',
+                    '#thumbnail-filename-display',
+                    '#thumbnail-media-uuid',
+                    '#thumbnail-trash'
+                );
+            } else if (record.thumbnail) {
                 set_media_display(
                     record,
                     'thumbnail',
@@ -670,6 +753,8 @@ const exhibitsEditFormModule = (function () {
                     '#thumbnail-image-prev',
                     '#thumbnail-trash'
                 );
+                // Show legacy migration hint
+                set_element_display('#thumbnail-legacy-migrate', 'block');
             }
 
             // Set banner template selection
@@ -898,7 +983,9 @@ const exhibitsEditFormModule = (function () {
             clear_element('#hero-image');
             clear_element('#hero-image-filename-display');
             clear_element('#hero-image-display');
+            clear_element('#hero-image-media-uuid');
             set_element_display('#hero-trash', 'none');
+            set_element_display('#hero-legacy-migrate', 'none');
         };
 
         // Store timeout ID for cleanup
@@ -1061,7 +1148,9 @@ const exhibitsEditFormModule = (function () {
             clear_element('#thumbnail-image');
             clear_element('#thumbnail-filename-display');
             clear_element('#thumbnail-image-display');
+            clear_element('#thumbnail-media-uuid');
             set_element_display('#thumbnail-trash', 'none');
+            set_element_display('#thumbnail-legacy-migrate', 'none');
         };
 
         // Store timeout ID for cleanup
@@ -1206,8 +1295,53 @@ const exhibitsEditFormModule = (function () {
             return false;
         };
 
+        // Helper function to restore placeholder inside a media preview area
+        const restore_placeholder = (display_selector) => {
+            const display_el = document.querySelector(display_selector);
+            if (!display_el) return;
+
+            display_el.innerHTML = '';
+
+            const placeholder = document.createElement('div');
+            placeholder.className = 'media-placeholder';
+
+            const icon = document.createElement('i');
+            icon.className = 'fa fa-picture-o';
+            placeholder.appendChild(icon);
+
+            const span = document.createElement('span');
+            span.textContent = 'No image selected';
+            placeholder.appendChild(span);
+
+            display_el.appendChild(placeholder);
+        };
+
+        // Helper function to clear a media slot entirely (client-side only)
+        const clear_media_slot = (display_selector, input_selector, uuid_selector, filename_selector, trash_selector, legacy_migrate_selector) => {
+            restore_placeholder(display_selector);
+
+            const input_el = document.querySelector(input_selector);
+            if (input_el) input_el.value = '';
+
+            const uuid_el = document.querySelector(uuid_selector);
+            if (uuid_el) uuid_el.value = '';
+
+            const filename_el = document.querySelector(filename_selector);
+            if (filename_el) filename_el.textContent = '';
+
+            const trash_el = document.querySelector(trash_selector);
+            if (trash_el) trash_el.style.display = 'none';
+
+            if (legacy_migrate_selector) {
+                const migrate_el = document.querySelector(legacy_migrate_selector);
+                if (migrate_el) migrate_el.style.display = 'none';
+            }
+        };
+
         // Helper function to setup image delete handler
-        const setup_image_delete_handler = (image_selector, trash_selector, local_handler, module_handler) => {
+        // Uses legacy API delete when a filename-based image exists,
+        // otherwise calls the unbind API for media library assets
+        const setup_image_delete_handler = (image_selector, trash_selector, local_handler, display_selector, uuid_selector, filename_selector, legacy_migrate_selector, media_role) => {
             const image_el = document.querySelector(image_selector);
             const trash_el = document.querySelector(trash_selector);
 
@@ -1216,18 +1350,66 @@ const exhibitsEditFormModule = (function () {
                 return;
             }
 
-            // Determine which handler to use based on whether image exists
-            const has_image = image_el.value && image_el.value.trim().length > 0;
-            const handler = has_image ? local_handler : module_handler;
-
             // Remove any existing listeners by cloning the element
             const new_trash_el = trash_el.cloneNode(true);
             trash_el.parentNode.replaceChild(new_trash_el, trash_el);
 
-            // Add the appropriate event listener
-            if (handler && typeof handler === 'function') {
-                new_trash_el.addEventListener('click', handler);
-            }
+            new_trash_el.addEventListener('click', async function (e) {
+                e.preventDefault();
+
+                const has_legacy_image = image_el.value && image_el.value.trim().length > 0;
+
+                if (has_legacy_image && local_handler && typeof local_handler === 'function') {
+                    // Legacy filename-based image — use API delete, then restore placeholder
+                    const result = await local_handler();
+
+                    if (result) {
+                        restore_placeholder(display_selector);
+                    }
+                } else {
+                    // Media library asset — unbind via API, then clear UI
+                    const uuid_el = document.querySelector(uuid_selector);
+                    const media_uuid = uuid_el ? uuid_el.value.trim() : '';
+
+                    if (media_uuid && media_role) {
+                        try {
+                            const exhibit_uuid = helperModule.get_parameter_by_name('exhibit_id');
+                            const token = authModule.get_user_token();
+
+                            if (exhibit_uuid && token) {
+                                const endpoint_base = EXHIBITS_ENDPOINTS.exhibits?.exhibit_media_library?.delete?.endpoint;
+
+                                if (endpoint_base) {
+                                    const endpoint = endpoint_base
+                                        .replace(':exhibit_id', encodeURIComponent(exhibit_uuid))
+                                        .replace(':media_role', encodeURIComponent(media_role));
+
+                                    const response = await httpModule.req({
+                                        method: 'DELETE',
+                                        url: endpoint,
+                                        headers: {
+                                            'Content-Type': 'application/json',
+                                            'x-access-token': token
+                                        }
+                                    });
+
+                                    if (response && (response.status === 204 || response.status === 200)) {
+                                        console.log(`Media library binding unbound for role: ${media_role}`);
+                                    } else {
+                                        console.warn(`Unexpected response unbinding media role ${media_role}:`, response?.status);
+                                    }
+                                } else {
+                                    console.warn('exhibit_media_library DELETE endpoint not configured');
+                                }
+                            }
+                        } catch (unbind_error) {
+                            console.error(`Error unbinding media role ${media_role}:`, unbind_error);
+                        }
+                    }
+
+                    clear_media_slot(display_selector, image_selector, uuid_selector, filename_selector, trash_selector, legacy_migrate_selector);
+                }
+            });
         };
 
         // Helper function to build redirect URL safely
@@ -1268,19 +1450,138 @@ const exhibitsEditFormModule = (function () {
             // Load and display edit record
             await display_edit_record();
 
+            // Wire media picker buttons
+            const exhibit_uuid = helperModule.get_parameter_by_name('exhibit_id');
+
+            const pick_hero_btn = document.querySelector('#pick-hero-image-btn');
+            if (pick_hero_btn) {
+                pick_hero_btn.addEventListener('click', function () {
+                    mediaPickerModule.open({
+                        role: 'hero_image',
+                        exhibit_uuid: exhibit_uuid,
+                        media_type_filter: 'image',
+                        on_select: function (media) {
+                            // Update media UUID hidden input
+                            const uuid_el = document.querySelector('#hero-image-media-uuid');
+                            if (uuid_el) uuid_el.value = media.uuid;
+
+                            // Show preview thumbnail
+                            const display_el = document.querySelector('#hero-image-display');
+                            if (display_el) {
+                                display_el.innerHTML = '';
+                                const token = authModule.get_user_token();
+                                let thumb_url = '';
+
+                                if (media.ingest_method === 'kaltura' && media.kaltura_thumbnail_url) {
+                                    thumb_url = media.kaltura_thumbnail_url;
+                                } else if (media.ingest_method === 'repository' && media.repo_uuid) {
+                                    thumb_url = APP_PATH + '/api/v1/media/library/repo/thumbnail?uuid=' + encodeURIComponent(media.repo_uuid) + '&token=' + encodeURIComponent(token);
+                                } else if (media.uuid && media.thumbnail_path) {
+                                    thumb_url = APP_PATH + '/api/v1/media/library/thumbnail/' + media.uuid + '?token=' + encodeURIComponent(token);
+                                }
+
+                                if (thumb_url) {
+                                    const img = document.createElement('img');
+                                    img.src = thumb_url;
+                                    img.alt = media.alt_text || media.name || '';
+                                    display_el.appendChild(img);
+                                }
+                            }
+
+                            // Show filename + trash icon
+                            const filename_el = document.querySelector('#hero-image-filename-display');
+                            if (filename_el) {
+                                filename_el.innerHTML = '';
+                                const span = document.createElement('span');
+                                span.style.fontSize = '11px';
+                                span.textContent = media.name || media.original_filename || '';
+                                filename_el.appendChild(span);
+                            }
+
+                            const trash_el = document.querySelector('#hero-trash');
+                            if (trash_el) trash_el.style.display = 'inline';
+
+                            // Hide legacy migration hint
+                            const migrate_el = document.querySelector('#hero-legacy-migrate');
+                            if (migrate_el) migrate_el.style.display = 'none';
+                        }
+                    });
+                });
+            }
+
+            const pick_thumbnail_btn = document.querySelector('#pick-thumbnail-btn');
+            if (pick_thumbnail_btn) {
+                pick_thumbnail_btn.addEventListener('click', function () {
+                    mediaPickerModule.open({
+                        role: 'thumbnail',
+                        exhibit_uuid: exhibit_uuid,
+                        media_type_filter: 'image',
+                        on_select: function (media) {
+                            const uuid_el = document.querySelector('#thumbnail-media-uuid');
+                            if (uuid_el) uuid_el.value = media.uuid;
+
+                            const display_el = document.querySelector('#thumbnail-image-display');
+                            if (display_el) {
+                                display_el.innerHTML = '';
+                                const token = authModule.get_user_token();
+                                let thumb_url = '';
+
+                                if (media.ingest_method === 'kaltura' && media.kaltura_thumbnail_url) {
+                                    thumb_url = media.kaltura_thumbnail_url;
+                                } else if (media.ingest_method === 'repository' && media.repo_uuid) {
+                                    thumb_url = APP_PATH + '/api/v1/media/library/repo/thumbnail?uuid=' + encodeURIComponent(media.repo_uuid) + '&token=' + encodeURIComponent(token);
+                                } else if (media.uuid && media.thumbnail_path) {
+                                    thumb_url = APP_PATH + '/api/v1/media/library/thumbnail/' + media.uuid + '?token=' + encodeURIComponent(token);
+                                }
+
+                                if (thumb_url) {
+                                    const img = document.createElement('img');
+                                    img.src = thumb_url;
+                                    img.alt = media.alt_text || media.name || '';
+                                    display_el.appendChild(img);
+                                }
+                            }
+
+                            const filename_el = document.querySelector('#thumbnail-filename-display');
+                            if (filename_el) {
+                                filename_el.innerHTML = '';
+                                const span = document.createElement('span');
+                                span.style.fontSize = '11px';
+                                span.textContent = media.name || media.original_filename || '';
+                                filename_el.appendChild(span);
+                            }
+
+                            const trash_el = document.querySelector('#thumbnail-trash');
+                            if (trash_el) trash_el.style.display = 'inline';
+
+                            const migrate_el = document.querySelector('#thumbnail-legacy-migrate');
+                            if (migrate_el) migrate_el.style.display = 'none';
+                        }
+                    });
+                });
+            }
+
             // Setup image delete handlers after record is loaded
             setup_image_delete_handler(
                 '#hero-image',
                 '#hero-trash',
                 delete_hero_image,
-                exhibitsCommonFormModule?.delete_hero_image
+                '#hero-image-display',
+                '#hero-image-media-uuid',
+                '#hero-image-filename-display',
+                '#hero-legacy-migrate',
+                'hero_image'
             );
 
             setup_image_delete_handler(
                 '#thumbnail-image',
                 '#thumbnail-trash',
                 delete_thumbnail_image,
-                exhibitsCommonFormModule?.delete_thumbnail_image
+                '#thumbnail-image-display',
+                '#thumbnail-media-uuid',
+                '#thumbnail-filename-display',
+                '#thumbnail-legacy-migrate',
+                'thumbnail'
             );
 
             console.log('Module initialized successfully');

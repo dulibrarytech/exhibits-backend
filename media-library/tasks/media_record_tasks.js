@@ -220,6 +220,98 @@ const Media_record_tasks = class {
     }
 
     /**
+     * Gets media records with optional pagination, search, and media type filtering.
+     * Used by the media picker modal browse grid.
+     *
+     * @param {Object} options - Query options
+     * @param {number} [options.page=1] - Page number (1-based)
+     * @param {number} [options.limit=20] - Records per page
+     * @param {string} [options.q=null] - Search term (matches name, original_filename, description)
+     * @param {string} [options.media_type=null] - Media type filter (image, video, audio, pdf)
+     * @returns {Promise<Object>} { success, records, total, page, limit, message }
+     */
+    async get_media_records_browse(options = {}) {
+
+        try {
+
+            this._validate_database();
+            this._validate_table('media_library_records');
+
+            const page = Math.max(1, parseInt(options.page, 10) || 1);
+            const limit = Math.min(100, Math.max(1, parseInt(options.limit, 10) || 20));
+            const offset = (page - 1) * limit;
+            const search_term = options.q && typeof options.q === 'string' ? options.q.trim() : null;
+            const media_type = options.media_type && typeof options.media_type === 'string' ? options.media_type.trim().toLowerCase() : null;
+
+            // Map picker filter values to database media_type values
+            const MEDIA_TYPE_MAP = {
+                'image': ['image'],
+                'video': ['moving image', 'video'],
+                'audio': ['sound recording', 'sound', 'audio'],
+                'pdf': ['pdf']
+            };
+
+            // Build base query conditions
+            const build_where = (query) => {
+                query.where({is_deleted: 0});
+
+                // Apply media type filter
+                if (media_type && MEDIA_TYPE_MAP[media_type]) {
+                    query.whereIn('media_type', MEDIA_TYPE_MAP[media_type]);
+                }
+
+                // Apply search filter
+                if (search_term) {
+                    const like_term = `%${search_term}%`;
+                    query.where(function () {
+                        this.where('name', 'like', like_term)
+                            .orWhere('original_filename', 'like', like_term)
+                            .orWhere('description', 'like', like_term);
+                    });
+                }
+            };
+
+            // Get total count (for pagination)
+            const count_query = this.DB(this.TABLE.media_library_records).count('id as total');
+            build_where(count_query);
+            const count_result = await count_query.first().timeout(this.QUERY_TIMEOUT);
+            const total = count_result ? parseInt(count_result.total, 10) : 0;
+
+            // Get paginated records
+            const records_query = this.DB(this.TABLE.media_library_records)
+                .select('*')
+                .orderBy('created', 'desc')
+                .limit(limit)
+                .offset(offset);
+            build_where(records_query);
+            const records = await records_query.timeout(this.QUERY_TIMEOUT);
+
+            this._log_success('Media records browse query completed', {
+                page,
+                limit,
+                total,
+                returned: records.length,
+                search_term,
+                media_type
+            });
+
+            return {
+                success: true,
+                records: records || [],
+                total: total,
+                page: page,
+                limit: limit,
+                message: 'Media records retrieved successfully'
+            };
+
+        } catch (error) {
+            this._handle_error(error, 'get_media_records_browse', {
+                options
+            });
+        }
+    }
+
+    /**
      * Gets a single media record by UUID
      * @param {string} uuid - The media record UUID
      * @returns {Promise<Object>} Media record or null

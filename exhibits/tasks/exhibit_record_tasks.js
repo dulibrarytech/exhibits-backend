@@ -20,6 +20,7 @@
 
 const HELPER = require('../../libs/helper');
 const LOGGER = require('../../libs/log4');
+const Base_tasks = require('./tasks_helper');
 
 /**
  * Object contains tasks used to manage exhibit records
@@ -27,13 +28,10 @@ const LOGGER = require('../../libs/log4');
  * @param TABLE
  * @type {Exhibit_record_tasks}
  */
-const Exhibit_record_tasks = class {
+const Exhibit_record_tasks = class extends Base_tasks {
 
     constructor(DB, TABLE) {
-        this.DB = DB;
-        this.TABLE = TABLE;
-        this.UUID_REGEX = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
-        this.QUERY_TIMEOUT = 10000;
+        super(DB, TABLE);
         this.FIELDS = [
             'uuid', 'type', 'title', 'subtitle', 'banner_template', 'about_the_curators',
             'alert_text', 'hero_image', 'thumbnail', 'description', 'page_layout',
@@ -50,67 +48,11 @@ const Exhibit_record_tasks = class {
         this.PROTECTED_FIELDS = ['uuid', 'created', 'created_by', 'is_deleted'];
     }
 
-    // ==================== VALIDATION HELPERS ====================
+    // _validate_database, _validate_table, _validate_uuid, _validate_data_object,
+    // _log_success, _with_timeout inherited from Base_tasks
 
     /**
-     * Validates that database connection is available
-     * @private
-     */
-    _validate_database() {
-        if (!this.DB || typeof this.DB !== 'function') {
-            throw new Error('Database connection is not available');
-        }
-    }
-
-    /**
-     * Validates that a specific table exists
-     * @param {string} table_name - Name of the table to validate
-     * @private
-     */
-    _validate_table(table_name) {
-        if (!this.TABLE?.[table_name]) {
-            throw new Error(`Table name "${table_name}" is not defined`);
-        }
-    }
-
-    /**
-     * Validates a UUID string
-     * @param {string} uuid - UUID to validate
-     * @param {string} field_name - Name of the field for error message
-     * @returns {string} Trimmed UUID
-     * @private
-     */
-    _validate_uuid(uuid, field_name = 'UUID') {
-        if (!uuid || typeof uuid !== 'string' || !uuid.trim()) {
-            throw new Error(`Valid ${field_name} is required`);
-        }
-
-        const trimmed_uuid = uuid.trim();
-
-        if (!this.UUID_REGEX.test(trimmed_uuid)) {
-            throw new Error(`Invalid ${field_name} format`);
-        }
-
-        return trimmed_uuid;
-    }
-
-    /**
-     * Validates a data object
-     * @param {Object} data - Data object to validate
-     * @private
-     */
-    _validate_data_object(data) {
-        if (!data || typeof data !== 'object' || Array.isArray(data)) {
-            throw new Error('Data must be a valid object');
-        }
-
-        if (Object.keys(data).length === 0) {
-            throw new Error('Data object cannot be empty');
-        }
-    }
-
-    /**
-     * Handles error logging and re-throwing
+     * Handles error logging and re-throwing (override: includes table context)
      * @param {Error} error - Error to handle
      * @param {string} method_name - Name of the method where error occurred
      * @param {Object} context - Additional context for logging
@@ -134,34 +76,6 @@ const Exhibit_record_tasks = class {
         throw error;
     }
 
-    /**
-     * Logs successful operation
-     * @param {string} message - Success message
-     * @param {Object} context - Context for logging
-     * @private
-     */
-    _log_success(message, context = {}) {
-        LOGGER.module().info(message, {
-            ...context,
-            timestamp: new Date().toISOString()
-        });
-    }
-
-    /**
-     * Wraps a query with timeout protection
-     * @param {Promise} query_promise - The query promise
-     * @param {number} timeout - Timeout in milliseconds
-     * @returns {Promise} Query result or timeout error
-     * @private
-     */
-    async _with_timeout(query_promise, timeout = this.QUERY_TIMEOUT) {
-        return Promise.race([
-            query_promise,
-            new Promise((_, reject) =>
-                setTimeout(() => reject(new Error('Query timeout')), timeout)
-            )
-        ]);
-    }
 
     /**
      * Checks if a record exists and is not deleted
@@ -396,7 +310,9 @@ const Exhibit_record_tasks = class {
     }
 
     /**
-     * Retrieves non-deleted exhibit records from the database
+     * Retrieves non-deleted exhibit records from the database.
+     * LEFT JOINs tbl_exhibit_media and tbl_media_library to include
+     * media library thumbnail metadata for each exhibit when available.
      * @returns {Promise<Array<Object>>} Array of exhibit records
      */
     async get_exhibit_records() {
@@ -406,8 +322,45 @@ const Exhibit_record_tasks = class {
             this._validate_database();
             this._validate_table('exhibit_records');
 
+            const exhibit_table = this.TABLE.exhibit_records;
+            const binding_table = this.TABLE.exhibit_media_records;
+            const media_table = this.TABLE.media_library_records;
+            const db = this.DB;
+
+            // Build qualified field list from exhibit_records to avoid ambiguity after joins
+            const qualified_fields = this.FIELDS.map(f => `${exhibit_table}.${f}`);
+
+            // If media library tables are configured, join to get thumbnail binding metadata
+            if (binding_table && media_table) {
+
+                const records = await this._with_timeout(
+                    db(exhibit_table)
+                        .select(
+                            ...qualified_fields,
+                            `${binding_table}.media_uuid as media_library_thumbnail_uuid`,
+                            `${media_table}.ingest_method as media_library_thumbnail_ingest_method`,
+                            `${media_table}.kaltura_thumbnail_url as media_library_thumbnail_kaltura_url`
+                        )
+                        .leftJoin(binding_table, function () {
+                            this.on(`${exhibit_table}.uuid`, '=', `${binding_table}.exhibit_uuid`)
+                                .andOn(`${binding_table}.media_role`, '=', db.raw('?', ['thumbnail']))
+                                .andOn(`${binding_table}.is_deleted`, '=', db.raw('?', [0]));
+                        })
+                        .leftJoin(media_table, function () {
+                            this.on(`${binding_table}.media_uuid`, '=', `${media_table}.uuid`)
+                                .andOn(`${media_table}.is_deleted`, '=', db.raw('?', [0]));
+                        })
+                        .where({[`${exhibit_table}.is_deleted`]: 0})
+                        .orderBy(`${exhibit_table}.order`, 'asc'),
+                    30000
+                );
+
+                return Array.isArray(records) ? records : [];
+            }
+
+            // Fallback: no media library tables configured — query exhibit records only
             const records = await this._with_timeout(
-                this.DB(this.TABLE.exhibit_records)
+                db(exhibit_table)
                     .select(this.FIELDS)
                     .where({is_deleted: 0})
                     .orderBy('order', 'asc'),

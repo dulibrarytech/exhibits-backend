@@ -375,6 +375,55 @@ const itemsListDisplayModule = (function() {
     };
 
     /**
+     * Decodes HTML entities in a string (XSS middleware encodes at input time)
+     */
+    const decode_html_entities = (str) => {
+        if (!str || typeof str !== 'string') return str;
+        const textarea = document.createElement('textarea');
+        textarea.innerHTML = str;
+        return textarea.value;
+    };
+
+    /**
+     * Build a thumbnail URL for a media library asset based on its ingest method.
+     * Mirrors the routing logic in build_thumbnail_url from the common module.
+     * @param {Object} opts
+     * @param {string} opts.uuid - Media library asset UUID
+     * @param {string} opts.ingest_method - 'upload' | 'repository' | 'kaltura'
+     * @param {string} opts.kaltura_thumbnail_url - Kaltura thumbnail URL (if any)
+     * @param {string} opts.repo_uuid - Repository UUID (if any)
+     * @param {string} opts.thumbnail_path - Physical thumbnail path (if any)
+     * @returns {string|null} Thumbnail URL or null
+     */
+    const build_media_library_thumbnail_url = (opts) => {
+        if (!opts || !opts.uuid) return null;
+
+        const token = authModule.get_user_token();
+        if (!token) return null;
+
+        // Kaltura assets use their own thumbnail URL
+        if (opts.ingest_method === 'kaltura' && opts.kaltura_thumbnail_url) {
+            let url = decode_html_entities(opts.kaltura_thumbnail_url);
+            if (url.startsWith('http://')) {
+                url = url.replace('http://', 'https://');
+            }
+            return url;
+        }
+
+        // Repository imports: repo thumbnail endpoint
+        if (opts.ingest_method === 'repository' && opts.repo_uuid) {
+            return `${APP_PATH}/api/v1/media/library/repo/thumbnail?uuid=${encodeURIComponent(opts.repo_uuid)}&token=${encodeURIComponent(token)}`;
+        }
+
+        // Uploaded files: media library thumbnail endpoint
+        if (opts.thumbnail_path) {
+            return `${APP_PATH}/api/v1/media/library/thumbnail/${encodeURIComponent(opts.uuid)}?token=${encodeURIComponent(token)}`;
+        }
+
+        return null;
+    };
+
+    /**
      * Create thumbnail image element with error handling
      */
     const create_thumbnail_image = (src, alt_text, width = 75, height = 75) => {
@@ -452,11 +501,54 @@ const itemsListDisplayModule = (function() {
 
             // Handle thumbnails and media
             let thumbnail_element = null;
-            let media_text = item.media || '';
+            let media_text = '';
 
             if (item.item_type !== 'text') {
-                // Handle repository items
-                if (item.is_repo_item === 1 && item.media) {
+
+                // ── Media library asset path (preferred) ──
+                // Items created via the media picker have media_uuid and
+                // optionally thumbnail_media_uuid. The joined media library
+                // metadata (ingest_method, repo_uuid, kaltura_thumbnail_url,
+                // thumbnail_path) drives correct URL routing.
+                if (item.thumbnail_media_uuid || item.media_uuid) {
+
+                    // Prefer a dedicated thumbnail asset when present
+                    if (item.thumbnail_media_uuid) {
+                        const thumb_url = build_media_library_thumbnail_url({
+                            uuid: item.thumbnail_media_uuid,
+                            ingest_method: item.thumbnail_ingest_method,
+                            kaltura_thumbnail_url: item.thumbnail_media_kaltura_thumbnail_url,
+                            repo_uuid: item.thumbnail_media_repo_uuid,
+                            thumbnail_path: item.thumbnail_media_thumbnail_path
+                        });
+
+                        if (thumb_url) {
+                            thumbnail_element = create_thumbnail_image(thumb_url, title || 'Item thumbnail');
+                        } else {
+                            thumbnail_element = create_thumbnail_image(get_thumbnail_url(item.item_type), `${item.item_type} thumbnail`);
+                        }
+                    } else if (item.item_type === 'image' && item.media_uuid) {
+                        // Image assets without a separate thumbnail: use the media's own thumbnail
+                        const media_thumb_url = build_media_library_thumbnail_url({
+                            uuid: item.media_uuid,
+                            ingest_method: item.media_ingest_method,
+                            kaltura_thumbnail_url: item.media_kaltura_thumbnail_url,
+                            repo_uuid: item.media_repo_uuid,
+                            thumbnail_path: item.media_thumbnail_path
+                        });
+
+                        if (media_thumb_url) {
+                            thumbnail_element = create_thumbnail_image(media_thumb_url, title || 'Item image');
+                        } else {
+                            thumbnail_element = create_thumbnail_image(get_thumbnail_url('default'), 'Item image');
+                        }
+                    } else {
+                        // Non-image types (video, audio, pdf): static type icon
+                        thumbnail_element = create_thumbnail_image(get_thumbnail_url(item.item_type), `${item.item_type} thumbnail`);
+                    }
+                }
+                // ── Legacy: repository items ──
+                else if (item.is_repo_item === 1 && item.media) {
                     const repo_record = await helperMediaModule.get_repo_item_data(item.media);
                     if (repo_record) {
                         if (!title || title.length === 0) {
@@ -465,18 +557,19 @@ const itemsListDisplayModule = (function() {
                         const thumbnail_url = helperMediaModule.render_repo_thumbnail(repo_record.thumbnail.data);
                         thumbnail_element = create_thumbnail_image(thumbnail_url, item.uuid);
                     }
-                } else if (item.is_kaltura_item === 1) {
-                    // Kaltura items
+                }
+                // ── Legacy: Kaltura items ──
+                else if (item.is_kaltura_item === 1) {
                     if (!title || title.length === 0) {
                         title = 'Kaltura Item';
                     }
                     const kaltura_thumbnail = get_thumbnail_url(item.item_type);
                     thumbnail_element = create_thumbnail_image(kaltura_thumbnail, item.item_type + ' thumbnail');
-                } else {
-                    // Regular uploaded media
+                }
+                // ── Legacy: uploaded media with file paths ──
+                else {
                     let thumbnail_url = null;
 
-                    // Determine thumbnail based on media type
                     if (item.item_type === 'video') {
                         thumbnail_url = `${APP_PATH}/static/images/video-tn.png`;
                         thumbnail_element = create_thumbnail_image(thumbnail_url, 'video-thumbnail');
@@ -487,24 +580,26 @@ const itemsListDisplayModule = (function() {
                         thumbnail_url = `${APP_PATH}/static/images/pdf-tn.png`;
                         thumbnail_element = create_thumbnail_image(thumbnail_url, 'pdf-thumbnail');
                     } else if (item.item_type === 'image') {
-                        // Images - check for thumbnail or use media file
-                        if (!thumbnail_element) {
-                            if (item.thumbnail && item.thumbnail.length > 0) {
-                                thumbnail_url = EXHIBITS_ENDPOINTS.exhibits.exhibit_media.get.endpoint
-                                    .replace(':exhibit_id', encodeURIComponent(item.is_member_of_exhibit))
-                                    .replace(':media', encodeURIComponent(item.thumbnail));
-                                thumbnail_element = create_thumbnail_image(thumbnail_url, item.uuid + '-thumbnail');
-                            } else if (item.media && item.media.length > 0) {
-                                thumbnail_url = EXHIBITS_ENDPOINTS.exhibits.exhibit_media.get.endpoint
-                                    .replace(':exhibit_id', encodeURIComponent(item.is_member_of_exhibit))
-                                    .replace(':media', encodeURIComponent(item.media));
-                                thumbnail_element = create_thumbnail_image(thumbnail_url, item.uuid + '-media');
-                            } else {
-                                thumbnail_url = `${APP_PATH}/static/images/image-tn.png`;
-                                thumbnail_element = create_thumbnail_image(thumbnail_url, 'no-thumbnail');
-                            }
+                        if (item.thumbnail && item.thumbnail.length > 0) {
+                            thumbnail_url = EXHIBITS_ENDPOINTS.exhibits.exhibit_media.get.endpoint
+                                .replace(':exhibit_id', encodeURIComponent(item.is_member_of_exhibit))
+                                .replace(':media', encodeURIComponent(item.thumbnail));
+                            thumbnail_element = create_thumbnail_image(thumbnail_url, item.uuid + '-thumbnail');
+                        } else if (item.media && item.media.length > 0) {
+                            thumbnail_url = EXHIBITS_ENDPOINTS.exhibits.exhibit_media.get.endpoint
+                                .replace(':exhibit_id', encodeURIComponent(item.is_member_of_exhibit))
+                                .replace(':media', encodeURIComponent(item.media));
+                            thumbnail_element = create_thumbnail_image(thumbnail_url, item.uuid + '-media');
+                        } else {
+                            thumbnail_url = `${APP_PATH}/static/images/image-tn.png`;
+                            thumbnail_element = create_thumbnail_image(thumbnail_url, 'no-thumbnail');
                         }
                     }
+                }
+
+                // Display media identifier
+                if (item.media && item.media.length > 0) {
+                    media_text = item.media;
                 }
             } else {
                 // Text only items
@@ -1039,7 +1134,6 @@ const itemsListDisplayModule = (function() {
 
             tr.appendChild(metadata_td);
 
-            // Status cell - FIXED: Added <small> wrapper for consistent font size
             const status_td = create_table_cell('', '');
             status_td.style.width = '5%';
             status_td.style.textAlign = 'center';

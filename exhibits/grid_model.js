@@ -32,6 +32,13 @@ const VALIDATOR = require('../libs/validate');
 const EXHIBIT_RECORD_TASKS = require('./tasks/exhibit_record_tasks');
 const INDEXER_MODEL = require('../indexer/model');
 const LOGGER = require('../libs/log4');
+const {
+    is_valid_uuid,
+    build_response,
+    validate_input,
+    prepare_styles,
+    clean_media_fields
+} = require('../exhibits/common_helper');
 
 // Constants
 const CONSTANTS = {
@@ -63,64 +70,13 @@ const validate_update_grid_item_task = new VALIDATOR(EXHIBITS_UPDATE_GRID_ITEM_S
 const grid_record_task = new EXHIBIT_GRID_RECORD_TASKS(DB, TABLES);
 const exhibit_tasks = new EXHIBIT_RECORD_TASKS(DB, TABLES);
 
-/**
- * Validates UUID format
- * @param {string} uuid - UUID to validate
- * @returns {boolean} True if valid
- */
-const is_valid_uuid = (uuid) => {
-    return uuid && typeof uuid === 'string' && uuid.length > 0;
-};
+// is_valid_uuid imported from common_helper
 
-/**
- * Builds standardized response object
- * @param {number} status - HTTP status code
- * @param {string} message - Response message
- * @param {*} data - Optional response data
- * @returns {Object} Response object
- */
-const build_response = (status, message, data = null) => {
-    const response = {status, message};
-    if (data !== null) {
-        response.data = data;
-    }
-    return response;
-};
+// build_response imported from common_helper
 
-/**
- * Validates input data
- * @param {Object} data - Data to validate
- * @param {Object} validator - Validator instance
- * @param {string} context - Context for error logging
- * @returns {Object|true} Validation result
- */
-const validate_input = (data, validator, context) => {
-    if (!data || typeof data !== 'object') {
-        LOGGER.module().error(`ERROR: [/exhibits/grid_model (${context})] Invalid input data format`);
-        return [{message: 'Invalid input data format'}];
-    }
+// validate_input imported from common_helper
 
-    const validation_result = validator.validate(data);
-
-    if (validation_result !== true) {
-        const error_msg = validation_result[0].message || 'Validation failed';
-        LOGGER.module().error(`ERROR: [/exhibits/grid_model (${context})] ${error_msg}`);
-    }
-
-    return validation_result;
-};
-
-/**
- * Prepares styles data for storage
- * @param {Object|string|undefined} styles - Styles object or string
- * @returns {string} JSON stringified styles
- */
-const prepare_styles = (styles) => {
-    if (!styles || (typeof styles === 'object' && Object.keys(styles).length === 0)) {
-        return JSON.stringify({});
-    }
-    return typeof styles === 'string' ? styles : JSON.stringify(styles);
-};
+// prepare_styles imported from common_helper
 
 /**
  * Safely parses integer value
@@ -183,10 +139,7 @@ const process_grid_item_media = (data) => {
     }
 
     // Clean up temporary fields
-    delete processed_data.kaltura;
-    delete processed_data.repo_uuid;
-    delete processed_data.media_prev;
-    delete processed_data.thumbnail_prev;
+    clean_media_fields(processed_data);
 
     return processed_data;
 };
@@ -222,7 +175,7 @@ exports.create_grid_record = async (is_member_of_exhibit, data) => {
         data.columns = safe_parse_int(data.columns, 1);
 
         // Validate
-        const validation_result = validate_input(data, validate_create_grid_task, 'create_grid_record');
+        const validation_result = validate_input(data, validate_create_grid_task, 'grid_model (create_grid_record)');
 
         if (validation_result !== true) {
             return build_response(
@@ -303,7 +256,7 @@ exports.update_grid_record = async (is_member_of_exhibit, grid_id, data) => {
         data.columns = safe_parse_int(data.columns, 1);
 
         // Validate
-        const validation_result = validate_input(data, validate_update_grid_task, 'update_grid_record');
+        const validation_result = validate_input(data, validate_update_grid_task, 'grid_model (update_grid_record)');
 
         if (validation_result !== true) {
             return build_response(
@@ -418,7 +371,7 @@ exports.create_grid_item_record = async (is_member_of_exhibit, grid_id, data) =>
         data.is_member_of_grid = grid_id;
 
         // Validate
-        const validation_result = validate_input(data, validate_create_grid_item_task, 'create_grid_item_record');
+        const validation_result = validate_input(data, validate_create_grid_item_task, 'grid_model (create_grid_item_record)');
 
         if (validation_result !== true) {
             return build_response(
@@ -692,7 +645,7 @@ exports.update_grid_item_record = async (is_member_of_exhibit, is_member_of_grid
 
         // Validate
         data.styles = prepare_styles(data.styles);
-        const validation_result = validate_input(data, validate_update_grid_item_task, 'update_grid_item_record');
+        const validation_result = validate_input(data, validate_update_grid_item_task, 'grid_model (update_grid_item_record)');
 
         if (validation_result !== true) {
             return build_response(

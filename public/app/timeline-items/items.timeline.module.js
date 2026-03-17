@@ -693,10 +693,10 @@ const itemsTimelineModule = (function () {
             await authModule.check_auth(token);
 
             navModule.init();
-            navModule.set_preview_link();
-            navModule.back_to_items();
+            // navModule.set_preview_link();
+            // navModule.back_to_items();
             navModule.set_timeline_item_nav_menu_links();
-            navModule.set_logout_link();
+            // navModule.set_logout_link();
             helperModule.show_form();
 
         } catch (error) {

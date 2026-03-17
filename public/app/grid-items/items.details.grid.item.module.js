@@ -24,7 +24,7 @@ const itemsDetailsGridItemModule = (function () {
     const EXHIBITS_ENDPOINTS = endpointsModule.get_exhibits_endpoints();
     let obj = {};
 
-    async function get_grid_item_record() {
+    async function get_item_record() {
 
         try {
 
@@ -32,9 +32,10 @@ const itemsDetailsGridItemModule = (function () {
             const grid_id = helperModule.get_parameter_by_name('grid_id');
             const item_id = helperModule.get_parameter_by_name('item_id');
             const token = authModule.get_user_token();
-            let etmp = EXHIBITS_ENDPOINTS.exhibits.grid_item_record.get.endpoint.replace(':exhibit_id', exhibit_id);
-            let itmp = etmp.replace(':grid_id', grid_id);
-            let endpoint = itmp.replace(':item_id', item_id);
+            const profile = authModule.get_user_profile_data();
+            let tmp = EXHIBITS_ENDPOINTS.exhibits.grid_item_record.get.endpoint.replace(':exhibit_id', exhibit_id);
+            tmp = tmp.replace(':grid_id', grid_id);
+            let endpoint = tmp.replace(':item_id', item_id);
 
             if (token === false) {
 
@@ -49,7 +50,7 @@ const itemsDetailsGridItemModule = (function () {
 
             let response = await httpModule.req({
                 method: 'GET',
-                url: endpoint,
+                url: endpoint + '?type=edit&uid=' + profile.uid,
                 headers: {
                     'Content-Type': 'application/json',
                     'x-access-token': token
@@ -65,94 +66,101 @@ const itemsDetailsGridItemModule = (function () {
         }
     }
 
+    /**
+     * Disables all interactive form fields on the page.
+     * Called after record data is populated so the details page is read-only.
+     */
+    function disable_all_fields() {
+
+        const form_elements = document.querySelectorAll(
+            'input:not([type="hidden"]), textarea, select, button[type="button"]:not(#edit-item-btn)'
+        );
+
+        form_elements.forEach(element => {
+            if (!element.disabled && !element.readOnly) {
+                element.disabled = true;
+            }
+        });
+
+        // Hide media picker buttons and trash links (not applicable on details view)
+        const picker_buttons = document.querySelectorAll('#pick-item-media-btn, #pick-thumbnail-btn');
+        picker_buttons.forEach(btn => {
+            btn.style.display = 'none';
+        });
+
+        const trash_links = document.querySelectorAll('#item-media-trash, #thumbnail-trash');
+        trash_links.forEach(link => {
+            link.style.display = 'none';
+        });
+    }
+
     async function display_details_record() {
 
-        let record = await get_grid_item_record();
-        let is_published = record.is_published;
-        let created_by = record.created_by;
-        let created = record.created;
-        let create_date = new Date(created);
-        let updated_by = record.updated_by;
-        let updated = record.updated;
-        let update_date = new Date(updated);
-        let item_created = '';
-        let create_date_time = helperModule.format_date(create_date);
-        let update_date_time = helperModule.format_date(update_date);
+        const record = await get_item_record();
 
-        if (created_by !== null) {
-            item_created += `<em>Created by ${created_by} on ${create_date_time}</em>`;
+        if (!record) {
+            console.error('No record returned from get_item_record()');
+            return false;
         }
 
-        if (updated_by !== null) {
-            item_created += ` | <em>Last updated by ${updated_by} on ${update_date_time}</em>`;
+        // Helper for safe DOM value setting
+        const set_element_value = (selector, value) => {
+            const el = document.querySelector(selector);
+            if (el) el.value = value;
+        };
+
+        // Check lock status
+        helperModule.check_if_locked(record, '#item-submit-card');
+
+        // Format and display creation/update metadata
+        const create_datetime = helperModule.format_date(new Date(record.created));
+        const update_datetime = helperModule.format_date(new Date(record.updated));
+        const metadata_parts = [];
+
+        if (record.created_by) {
+            metadata_parts.push(`<em>Created by ${record.created_by} on ${create_datetime}</em>`);
+        }
+        if (record.updated_by) {
+            metadata_parts.push(`<em>Last updated by ${record.updated_by} on ${update_datetime}</em>`);
         }
 
-        document.querySelector('#created').innerHTML = item_created;
-
-        if (document.querySelector('#is-published') !== null && is_published === 1) {
-            document.querySelector('#is-published').value = true;
-        } else if (document.querySelector('#is-published') !== null && is_published === 0) {
-            document.querySelector('#is-published').value = false;
+        const created_el = document.querySelector('#created');
+        if (created_el) {
+            created_el.innerHTML = metadata_parts.join(' | ');
         }
 
-        // item data
-        document.querySelector('#item-title-input').value = helperModule.unescape(record.title);
-        document.querySelector('#item-text-input').value = helperModule.unescape(record.text);
+        // Set published status
+        const published_el = document.querySelector('#is-published');
+        if (published_el) {
+            published_el.value = record.is_published === 1;
+        }
 
+        // Set basic item data
+        set_element_value('#item-title-input', helperModule.unescape(record.title));
+        set_element_value('#item-text-input', helperModule.unescape(record.text));
+
+        // Populate media previews using the shared common module
         if (window.location.pathname.indexOf('media') !== -1) {
-            helperMediaModule.display_media_fields_common(record);
+            itemsCommonGridItemFormModule.populate_media_previews(record);
         }
 
-        let layouts = document.getElementsByName('layout');
-
-        for (let j = 0; j < layouts.length; j++) {
-            if (layouts[j].value === record.layout) {
-                document.querySelector('#' + layouts[j].id).checked = true;
-            }
-        }
-
-        let media_width = document.getElementsByName('media_width');
-
-        for (let j = 0; j < media_width.length; j++) {
-            if (parseInt(media_width[j].value) === parseInt(record.media_width)) {
-                document.querySelector('#' + media_width[j].id).checked = true;
-            }
-        }
-
-        /*
-        let styles = JSON.parse(record.styles);
-
-        if (Object.keys(styles).length !== 0) {
-
-            if (styles.backgroundColor !== undefined) {
-                document.querySelector('#item-background-color').value = styles.backgroundColor;
-                document.querySelector('#item-background-color-picker').value = styles.backgroundColor;
-            } else {
-                document.querySelector('#item-background-color').value = '';
-            }
-
-            if (styles.color !== undefined) {
-                document.querySelector('#item-font-color').value = styles.color;
-                document.querySelector('#item-font-color-picker').value = styles.color;
-            } else {
-                document.querySelector('#item-font-color').value = '';
-            }
-
-            let font_values = document.querySelector('#item-font');
-
-            for (let i = 0; i < font_values.length; i++) {
-                if (font_values[i].value === styles.fontFamily) {
-                    document.querySelector('#item-font').value = styles.fontFamily;
+        // Set radio button selections
+        const set_radio_value = (name, value) => {
+            const elements = document.getElementsByName(name);
+            for (const el of elements) {
+                if (el.value === value) {
+                    const target = document.querySelector('#' + el.id);
+                    if (target) target.checked = true;
+                    break;
                 }
             }
+        };
 
-            if (styles.fontSize !== undefined) {
-                document.querySelector('#item-font-size').value = styles.fontSize.replace('px', '');
-            } else {
-                document.querySelector('#item-font-size').value = '';
-            }
-        }
-        */
+        set_radio_value('layout', record.layout);
+        set_radio_value('media_width', String(record.media_width));
+
+        // Disable all form fields after population (details view is read-only)
+        disable_all_fields();
 
         return false;
     }
@@ -161,9 +169,15 @@ const itemsDetailsGridItemModule = (function () {
 
         try {
 
+            const status = helperModule.get_parameter_by_name('status');
+
+            if (status !== null && status === '403') {
+                window.scrollTo(0, 0);
+                document.querySelector('#message').innerHTML = `<div class="alert alert-danger" role="alert"><i class="fa fa-exclamation"></i> You do not have permission to edit this record.</div>`;
+            }
+
             const exhibit_id = helperModule.get_parameter_by_name('exhibit_id');
             exhibitsModule.set_exhibit_title(exhibit_id);
-            navModule.back_to_grid_items();
             await display_details_record();
 
         } catch (error) {

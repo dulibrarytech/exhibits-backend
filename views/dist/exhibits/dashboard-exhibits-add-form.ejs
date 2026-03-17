@@ -5,5 +5,62 @@
         height: 38px;
         width: 50px;
         cursor: pointer;
-    }</style><body> <%- include('../partials/nav.ejs'); %> <div id="right-panel" class="right-panel"> <%- include('../partials/main-header.ejs'); %> <div class="content" style="min-height: 875px;"><div id="message"></div><!-- exhibit data card --> <%- include('partials/exhibit-data-card.ejs'); %> <%- include('../partials/item-media-subjects-card'); %> <div id="exhibit-media-card" class="card"><div class="card-header"><strong class="card-title mb-3">Exhibit Media</strong></div><div class="card-body"><div class="row"><span class="upload-error"></span><div class="col-6 col-md-6"><form class="form-horizontal dropzone" id="hero-dropzone" action="/exhibits-dashboard/uploads" method="post" enctype="multipart/form-data"></form><br><div class="col-12"><span id="hero-image-display"></span><p><span id="hero-image-filename-display"></span>&nbsp;&nbsp; <span><a id="hero-trash" title="Delete hero image" href="#"><i class="fa fa-trash"></i></a></span></p><input type="hidden" id="hero-image" name="hero_image"></div></div><div class="col-6 col-md-6"><form class="form-horizontal dropzone" id="thumbnail-dropzone" action="/exhibits-dashboard/uploads" method="post" enctype="multipart/form-data"></form><br><div class="col-12"><span id="thumbnail-image-display"></span><p><span id="thumbnail-filename-display"></span>&nbsp;&nbsp; <span><a id="thumbnail-trash" title="Delete thumbnail" href="#"><i class="fa fa-trash"></i></a></span></p><input type="hidden" id="thumbnail-image" name="thumbnail"></div></div></div></div></div> <%- include('partials/exhibit-banners.ejs'); %> <%- include('partials/exhibit-styles.ejs'); %> <div id="exhibit-submit-card" class="card"><div class="card-body"><input type="hidden" name="page_layout" id="exhibit-page-layout" value="top_nav"> <input type="hidden" name="exhibit_template" id="exhibit-template" value="vertical_scroll"> <button class="btn btn-primary" type="button" id="save-exhibit-btn"><i class="fa fa-save"></i>&nbsp;&nbsp;Save</button></div><div class="card-footer text-muted"><small>Exhibit</small></div></div></div><div class="clearfix"></div> <%- include('../partials/footer.ejs'); %> <%- include('../partials/preview-html-modal.ejs'); %> </div><!-- libs --> <%- include('../partials/exhibits-libs-common.ejs'); %> <script src="https://unpkg.com/dropzone@5/dist/min/dropzone.min.js"></script><!-- app --> <%- include('../partials/exhibits-app-common.ejs'); %> <script src="/exhibits-dashboard/static/app/dist/exhibits.module.min.js?<%=build_version%>"></script><script src="/exhibits-dashboard/static/app/dist/uploads.module.min.js?<%=build_version%>"></script><script src="/exhibits-dashboard/static/app/dist/exhibits.common.form.module.min.js?<%=build_version%>"></script><script src="/exhibits-dashboard/static/app/dist/exhibits.add.form.module.min.js?<%=build_version%>"></script><script>exhibitsAddFormModule.init();
-    exhibitsCommonFormModule.init();</script></body>
+    }
+    .media-preview-area {
+        border: 2px dashed #c8ced3;
+        border-radius: 4px;
+        padding: 8px;
+        background: #f8f9fa;
+        height: 180px;
+        max-width: 280px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        overflow: hidden;
+        margin-bottom: 8px;
+    }
+    .media-preview-area:has(img) {
+        border-style: solid;
+        border-color: #dee2e6;
+        background: #fff;
+    }
+    .media-preview-area img {
+        max-width: 100%;
+        max-height: 160px;
+        object-fit: contain;
+        display: block;
+        border-radius: 3px;
+    }
+    .media-placeholder {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 6px;
+        color: #adb5bd;
+    }
+    .media-placeholder i {
+        font-size: 2rem;
+    }
+    .media-placeholder span {
+        font-size: 12px;
+    }
+    .media-preview-area:has(img) .media-placeholder {
+        display: none;
+    }
+    #hero-image-filename-display,
+    #thumbnail-filename-display {
+        display: inline-block;
+        max-width: 280px;
+        font-size: 12px;
+        color: #555;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+        vertical-align: middle;
+    }</style><body> <%- include('partials/nav-dashboard-exhibits-add-form.ejs'); %> <div id="right-panel" class="right-panel"> <%- include('../partials/main-header.ejs'); %> <div class="content" style="min-height: 875px;"><div id="message"></div><!-- exhibit data card --> <%- include('partials/exhibit-data-card.ejs'); %> <!-- <%- // include('../partials/item-media-subjects-card'); %> --><div id="exhibit-media-card" class="card"><div class="card-header"><strong class="card-title mb-3">Exhibit Media</strong></div><div class="card-body"><div class="row"><div class="col-6 col-md-6"><div id="hero-image-display" class="media-preview-area"><div class="media-placeholder"><i class="fa fa-picture-o"></i> <span>No image selected</span></div></div><p><span id="hero-image-filename-display"></span>&nbsp;&nbsp; <span><a id="hero-trash" title="Remove hero image" href="#" style="display:none"><i class="fa fa-trash"></i></a></span></p><input type="hidden" id="hero-image" name="hero_image"> <input type="hidden" id="hero-image-media-uuid" name="hero_image_media_uuid"> <button type="button" class="btn btn-outline-primary" id="pick-hero-image-btn" data-media-role="hero_image" data-media-type-filter="image"><i class="fa fa-picture-o"></i>&nbsp;Select Hero Image</button></div><div class="col-6 col-md-6"><div id="thumbnail-image-display" class="media-preview-area"><div class="media-placeholder"><i class="fa fa-picture-o"></i> <span>No image selected</span></div></div><p><span id="thumbnail-filename-display"></span>&nbsp;&nbsp; <span><a id="thumbnail-trash" title="Remove thumbnail" href="#" style="display:none"><i class="fa fa-trash"></i></a></span></p><input type="hidden" id="thumbnail-image" name="thumbnail"> <input type="hidden" id="thumbnail-media-uuid" name="thumbnail_media_uuid"> <button type="button" class="btn btn-outline-primary" id="pick-thumbnail-btn" data-media-role="thumbnail" data-media-type-filter="image"><i class="fa fa-picture-o"></i>&nbsp;Select Thumbnail</button></div></div></div></div> <%- include('partials/exhibit-banners.ejs'); %> <%- include('partials/exhibit-styles.ejs'); %> <div id="exhibit-submit-card" class="card"><div class="card-body"><input type="hidden" name="page_layout" id="exhibit-page-layout" value="top_nav"> <input type="hidden" name="exhibit_template" id="exhibit-template" value="vertical_scroll"> <button class="btn btn-primary" type="button" id="save-exhibit-btn"><i class="fa fa-save"></i>&nbsp;&nbsp;Save</button></div><div class="card-footer text-muted"><small>Exhibit</small></div></div></div><div class="clearfix"></div> <%- include('../partials/footer.ejs'); %> <%- include('../partials/preview-html-modal.ejs'); %> <%- include('../partials/media-picker-modal.ejs'); %> </div><!-- libs --> <%- include('../partials/exhibits-libs-common.ejs'); %> <!--
+<script src="https://unpkg.com/dropzone@5/dist/min/dropzone.min.js"></script>
+--><!-- app --> <%- include('../partials/exhibits-app-common.ejs'); %> <script src="/exhibits-dashboard/static/app/dist/exhibits.module.min.js?<%=build_version%>"></script><!--
+<script src="/exhibits-dashboard/static/app/dist/uploads.module.min.js?<%=build_version%>"></script>
+--><script src="/exhibits-dashboard/static/app/dist/media.picker.module.min.js?<%=build_version%>"></script><script src="/exhibits-dashboard/static/app/dist/exhibits.common.form.module.min.js?<%=build_version%>"></script><script src="/exhibits-dashboard/static/app/dist/exhibits.add.form.module.min.js?<%=build_version%>"></script><script>exhibitsAddFormModule.init();
+    exhibitsCommonFormModule.init();
+    mediaPickerModule.init();</script></body>

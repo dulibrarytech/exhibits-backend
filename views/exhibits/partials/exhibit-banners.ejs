@@ -1,53 +1,62 @@
+<style>
+    #exhibit-banner-card .banner-option img {
+        max-width: 180px;
+        height: auto;
+    }
+
+    #exhibit-banner-card .banner-option .btn {
+        white-space: normal;
+        word-wrap: break-word;
+        text-align: left;
+        max-width: 100%;
+    }
+</style>
+
 <div id="exhibit-banner-card" class="card">
     <div class="card-header">
         <strong class="card-title mb-3">Exhibit Banner</strong>
     </div>
     <div class="card-body">
-        <!--
-        <div class="alert alert-info">
-            <i class="fa fa-info"></i> <span id="info-message">Provide info to user about exhibit banner</span>
-        </div>
-        -->
         <div class="row">
-            <div class="col-4 col-md-4">
+            <div class="col-4 col-md-4 banner-option">
                 <p><img src="/exhibits-dashboard/static/images/banner_1.png"></p>
                 <p>
                     <label class="btn btn-default" for="exhibit-banner-1">
                         <input type="radio" class="btn-check" name="banner_template"
                                id="exhibit-banner-1" value="banner_1" autocomplete="off" checked/>
-                        <span style="font-size: 12px">Hero image above description, no title</span>
+                        <span style="font-size: 12px">Hero Image + Description<!--Hero image above description, no title--></span>
                     </label>
                 </p>
             </div>
-            <div class="col-4 col-md-4">
+            <div class="col-4 col-md-4 banner-option">
                 <p><img src="/exhibits-dashboard/static/images/banner_2.png"></p>
                 <p>
                     <label class="btn btn-default" for="exhibit-banner-2">
                         <input type="radio" class="btn-check" name="banner_template"
                                id="exhibit-banner-2" value="banner_2" autocomplete="off"/>
-                        <span style="font-size: 12px">Hero image above title and description</span>
+                        <span style="font-size: 12px">Hero Image + Title + Description<!--Hero image above title and description--></span>
                     </label>
                 </p>
             </div>
-            <div class="col-4 col-md-4">
+            <div class="col-4 col-md-4 banner-option">
                 <p><img src="/exhibits-dashboard/static/images/banner_3.png"></p>
                 <p>
                     <label class="btn btn-default" for="exhibit-banner-3">
                         <input type="radio" class="btn-check" name="banner_template"
                                id="exhibit-banner-3" value="banner_3" autocomplete="off"/>
-                        <span style="font-size: 12px">Hero image above description, title text over image</span>
+                        <span style="font-size: 12px">Hero Image with Title Overlay + Description<!--Hero image above description, title text over image--></span>
                     </label>
                 </p>
             </div>
         </div>
-        <div class="row">
-            <div class="col-4 col-md-4">
+        <div class="row mt-3">
+            <div class="col-4 col-md-4 banner-option">
                 <p><img src="/exhibits-dashboard/static/images/banner_4.png"></p>
                 <p>
                     <label class="btn btn-default" for="exhibit-banner-4">
                         <input type="radio" class="btn-check" name="banner_template"
                                id="exhibit-banner-4" value="banner_4" autocomplete="off"/>
-                        <span style="font-size: 12px">Hero image and title text above description</span>
+                        <span style="font-size: 12px">Side-by-side + Description<!--Hero image and title text above description--></span>
                     </label>
                 </p>
             </div>

@@ -19,262 +19,22 @@
 'use strict';
 
 const LOGGER = require('../../libs/log4');
+const HELPER = require('../../libs/helper');
+const Base_tasks = require('./tasks_helper');
 
 /**
  * Object contains tasks used to manage exhibit timeline records
  * @param DB
  * @param TABLE
- * @type {Exhibit_record_tasks}
+ * @type {Exhibit_timeline_record_tasks}
  */
-const Exhibit_timeline_record_tasks = class {
+const Exhibit_timeline_record_tasks = class extends Base_tasks {
 
     constructor(DB, TABLE) {
-        this.DB = DB;
-        this.TABLE = TABLE;
-        this.UUID_REGEX = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
-        this.QUERY_TIMEOUT = 10000;
+        super(DB, TABLE);
     }
 
-    // ==================== VALIDATION HELPERS ====================
-
-    /**
-     * Validates that database connection is available
-     * @private
-     */
-    _validate_database() {
-        if (!this.DB || typeof this.DB !== 'function') {
-            throw new Error('Database connection is not available');
-        }
-    }
-
-    /**
-     * Validates that a specific table exists
-     * @param {string} table_name - Name of the table to validate
-     * @private
-     */
-    _validate_table(table_name) {
-        if (!this.TABLE?.[table_name]) {
-            throw new Error(`Table name "${table_name}" is not defined`);
-        }
-    }
-
-    /**
-     * Validates a UUID string
-     * @param {string} uuid - UUID to validate
-     * @param {string} field_name - Name of the field for error message
-     * @returns {string} Trimmed UUID
-     * @private
-     */
-    _validate_uuid(uuid, field_name = 'UUID') {
-        if (!uuid || typeof uuid !== 'string' || !uuid.trim()) {
-            throw new Error(`Valid ${field_name} is required`);
-        }
-
-        const trimmed_uuid = uuid.trim();
-
-        if (!this.UUID_REGEX.test(trimmed_uuid)) {
-            throw new Error(`Invalid ${field_name} format`);
-        }
-
-        return trimmed_uuid;
-    }
-
-    /**
-     * Validates multiple UUIDs at once
-     * @param {Object} uuid_map - Object with uuid_value: field_name pairs
-     * @returns {Object} Object with validated and trimmed UUIDs
-     * @private
-     */
-    _validate_uuids(uuid_map) {
-        const validated = {};
-        for (const [value, name] of Object.entries(uuid_map)) {
-            validated[name] = this._validate_uuid(value, name);
-        }
-        return validated;
-    }
-
-    /**
-     * Validates a required string field
-     * @param {string} value - Value to validate
-     * @param {string} field_name - Name of the field for error message
-     * @returns {string} Trimmed value
-     * @private
-     */
-    _validate_string(value, field_name) {
-        if (!value || typeof value !== 'string' || !value.trim()) {
-            throw new Error(`Valid ${field_name} is required`);
-        }
-        return value.trim();
-    }
-
-    /**
-     * Validates a data object
-     * @param {Object} data - Data object to validate
-     * @private
-     */
-    _validate_data_object(data) {
-        if (!data || typeof data !== 'object' || Array.isArray(data)) {
-            throw new Error('Data must be a valid object');
-        }
-
-        if (Object.keys(data).length === 0) {
-            throw new Error('Data object cannot be empty');
-        }
-    }
-
-    /**
-     * Sanitizes data against a whitelist of allowed fields
-     * @param {Object} data - Data to sanitize
-     * @param {Array<string>} allowed_fields - Whitelist of allowed fields
-     * @param {Array<string>} skip_fields - Fields to skip during sanitization
-     * @returns {Object} Sanitized data and invalid fields
-     * @private
-     */
-    _sanitize_data(data, allowed_fields, skip_fields = []) {
-        const sanitized_data = {};
-        const invalid_fields = [];
-
-        for (const [key, value] of Object.entries(data)) {
-            // Skip identifier fields
-            if (skip_fields.includes(key)) {
-                continue;
-            }
-
-            // Security: prevent prototype pollution
-            if (key === '__proto__' || key === 'constructor' || key === 'prototype') {
-                LOGGER.module().warn('Dangerous property skipped', {key});
-                continue;
-            }
-
-            // Whitelist check
-            if (allowed_fields.includes(key)) {
-                sanitized_data[key] = value;
-            } else {
-                invalid_fields.push(key);
-            }
-        }
-
-        // Warn about invalid fields
-        if (invalid_fields.length > 0) {
-            LOGGER.module().warn('Invalid fields ignored', {
-                fields: invalid_fields
-            });
-        }
-
-        return {sanitized_data, invalid_fields};
-    }
-
-    /**
-     * Handles error logging and re-throwing
-     * @param {Error} error - Error to handle
-     * @param {string} method_name - Name of the method where error occurred
-     * @param {Object} context - Additional context for logging
-     * @private
-     */
-    _handle_error(error, method_name, context = {}) {
-        const error_context = {
-            method: method_name,
-            ...context,
-            timestamp: new Date().toISOString(),
-            message: error.message,
-            stack: error.stack
-        };
-
-        LOGGER.module().error(
-            `Failed to ${method_name.replace(/_/g, ' ')}`,
-            error_context
-        );
-
-        throw error;
-    }
-
-    /**
-     * Logs successful operation
-     * @param {string} message - Success message
-     * @param {Object} context - Context for logging
-     * @private
-     */
-    _log_success(message, context = {}) {
-        LOGGER.module().info(message, {
-            ...context,
-            timestamp: new Date().toISOString()
-        });
-    }
-
-    // ==================== COMMON OPERATIONS ====================
-
-    /**
-     * Generic update publish status for any table
-     * @param {string} table_name - Table name
-     * @param {Object} where_clause - Where conditions
-     * @param {number} status - 0 or 1
-     * @param {string} [updated_by=null] - User ID
-     * @returns {Promise<Object>} Update result
-     * @private
-     */
-    async _update_publish_status(table_name, where_clause, status, updated_by = null) {
-        this._validate_database();
-        this._validate_table(table_name);
-
-        if (![0, 1].includes(status)) {
-            throw new Error('Status must be 0 or 1');
-        }
-
-        const update_data = {is_published: status};
-        if (updated_by) {
-            update_data.updated_by = updated_by;
-        }
-
-        const affected_rows = await this.DB(this.TABLE[table_name])
-            .where(where_clause)
-            .update(update_data)
-            .timeout(this.QUERY_TIMEOUT);
-
-        return {
-            success: true,
-            affected_rows,
-            status: status === 1 ? 'published' : 'suppressed',
-            message: `Records ${status === 1 ? 'published' : 'suppressed'} successfully`
-        };
-    }
-
-    /**
-     * Generic reorder function
-     * @param {string} table_name - Table name
-     * @param {Object} where_clause - Where conditions
-     * @param {Object} item - Item with uuid and order
-     * @returns {Promise<Object>} Reorder result
-     * @private
-     */
-    async _reorder_items(table_name, where_clause, item) {
-
-        this._validate_database();
-        this._validate_table(table_name);
-
-        if (!item || typeof item !== 'object' || Array.isArray(item)) {
-            throw new Error('Valid item object is required');
-        }
-
-        if (!item.uuid || typeof item.order !== 'number') {
-            throw new Error('Item must have uuid and order properties');
-        }
-
-        const affected_rows = await this.DB(this.TABLE[table_name])
-            .where({
-                ...where_clause,
-                uuid: item.uuid
-            })
-            .update({order: item.order})
-            .timeout(this.QUERY_TIMEOUT);
-
-        return {
-            success: true,
-            affected_rows,
-            uuid: item.uuid,
-            order: item.order,
-            message: 'Item reordered successfully'
-        };
-    }
+    // Shared methods inherited from Base_tasks
 
     // ==================== TIMELINE RECORDS ====================
 
@@ -590,6 +350,7 @@ const Exhibit_timeline_record_tasks = class {
 
             this._validate_database();
             this._validate_table('timeline_item_records');
+            this._validate_table('media_library_records');
 
             const validated = this._validate_uuids({
                 [is_member_of_exhibit]: 'exhibit UUID',
@@ -597,13 +358,37 @@ const Exhibit_timeline_record_tasks = class {
             });
 
             const timeline_items = await this.DB(this.TABLE.timeline_item_records)
-                .select('*')
+                .select(
+                    `${this.TABLE.timeline_item_records}.*`,
+                    `media_lib.name as media_name`,
+                    `media_lib.ingest_method as media_ingest_method`,
+                    `media_lib.kaltura_thumbnail_url as media_kaltura_thumbnail_url`,
+                    `media_lib.repo_uuid as media_repo_uuid`,
+                    `media_lib.thumbnail_path as media_thumbnail_path`,
+                    `thumb_lib.name as thumbnail_media_name`,
+                    `thumb_lib.ingest_method as thumbnail_ingest_method`,
+                    `thumb_lib.kaltura_thumbnail_url as thumbnail_media_kaltura_thumbnail_url`,
+                    `thumb_lib.repo_uuid as thumbnail_media_repo_uuid`,
+                    `thumb_lib.thumbnail_path as thumbnail_media_thumbnail_path`
+                )
+                .leftJoin(
+                    `${this.TABLE.media_library_records} as media_lib`,
+                    `${this.TABLE.timeline_item_records}.media_uuid`,
+                    '=',
+                    `media_lib.uuid`
+                )
+                .leftJoin(
+                    `${this.TABLE.media_library_records} as thumb_lib`,
+                    `${this.TABLE.timeline_item_records}.thumbnail_media_uuid`,
+                    '=',
+                    `thumb_lib.uuid`
+                )
                 .where({
-                    is_member_of_exhibit: validated['exhibit UUID'],
-                    is_member_of_timeline: validated['timeline UUID'],
-                    is_deleted: 0
+                    [`${this.TABLE.timeline_item_records}.is_member_of_exhibit`]: validated['exhibit UUID'],
+                    [`${this.TABLE.timeline_item_records}.is_member_of_timeline`]: validated['timeline UUID'],
+                    [`${this.TABLE.timeline_item_records}.is_deleted`]: 0
                 })
-                .orderBy('order', 'asc')
+                .orderBy(`${this.TABLE.timeline_item_records}.order`, 'asc')
                 .timeout(this.QUERY_TIMEOUT);
 
             this._log_success('Timeline item records retrieved successfully', {
@@ -631,11 +416,12 @@ const Exhibit_timeline_record_tasks = class {
 
         const ALLOWED_FIELDS = [
             'uuid', 'is_member_of_timeline', 'is_member_of_exhibit', 'repo_uuid',
-            'thumbnail', 'title', 'caption', 'item_type', 'mime_type', 'media',
-            'text', 'wrap_text', 'description', 'type', 'layout', 'media_width',
-            'media_padding', 'alt_text', 'is_alt_text_decorative', 'pdf_open_to_page',
-            'item_subjects', 'styles', 'order', 'date', 'is_repo_item', 'is_kaltura_item',
-            'is_embedded', 'is_published', 'is_locked', 'locked_by_user', 'locked_at',
+            'thumbnail', 'thumbnail_media_uuid', 'title', 'caption', 'item_type',
+            'mime_type', 'media', 'media_uuid', 'text', 'wrap_text', 'description',
+            'type', 'layout', 'media_width', 'media_padding', 'alt_text',
+            'is_alt_text_decorative', 'pdf_open_to_page', 'item_subjects', 'styles',
+            'order', 'date', 'is_repo_item', 'is_kaltura_item', 'is_embedded',
+            'is_published', 'is_locked', 'locked_by_user', 'locked_at',
             'is_deleted', 'owner'
         ];
 
@@ -795,6 +581,7 @@ const Exhibit_timeline_record_tasks = class {
 
             this._validate_database();
             this._validate_table('timeline_item_records');
+            this._validate_table('media_library_records');
 
             const user_id_trimmed = this._validate_string(user_id, 'user ID');
             const validated = this._validate_uuids({
@@ -803,13 +590,51 @@ const Exhibit_timeline_record_tasks = class {
                 [item_uuid]: 'timeline item UUID'
             });
 
+            const uid_number = Number(user_id_trimmed);
+            if (isNaN(uid_number)) {
+                throw new Error('User ID must be a valid number');
+            }
+
             const timeline_item = await this.DB(this.TABLE.timeline_item_records)
-                .select('*')
+                .select(
+                    `${this.TABLE.timeline_item_records}.*`,
+                    // Media library metadata for the primary media asset
+                    `media_lib.name as media_name`,
+                    `media_lib.original_filename as media_filename`,
+                    `media_lib.ingest_method as media_ingest_method`,
+                    `media_lib.kaltura_thumbnail_url as media_kaltura_thumbnail_url`,
+                    `media_lib.repo_uuid as media_repo_uuid`,
+                    `media_lib.thumbnail_path as media_thumbnail_path`,
+                    `media_lib.alt_text as media_alt_text`,
+                    `media_lib.is_alt_text_decorative as media_is_alt_text_decorative`,
+                    `media_lib.topics_subjects as media_topics_subjects`,
+                    `media_lib.genre_form_subjects as media_genre_form_subjects`,
+                    `media_lib.places_subjects as media_places_subjects`,
+                    // Media library metadata for the thumbnail asset
+                    `thumb_lib.name as thumbnail_media_name`,
+                    `thumb_lib.original_filename as thumbnail_filename`,
+                    `thumb_lib.ingest_method as thumb_ingest_method`,
+                    `thumb_lib.kaltura_thumbnail_url as thumb_kaltura_thumbnail_url`,
+                    `thumb_lib.repo_uuid as thumbnail_repo_uuid`,
+                    `thumb_lib.thumbnail_path as thumb_thumbnail_path`
+                )
+                .leftJoin(
+                    `${this.TABLE.media_library_records} as media_lib`,
+                    `${this.TABLE.timeline_item_records}.media_uuid`,
+                    '=',
+                    `media_lib.uuid`
+                )
+                .leftJoin(
+                    `${this.TABLE.media_library_records} as thumb_lib`,
+                    `${this.TABLE.timeline_item_records}.thumbnail_media_uuid`,
+                    '=',
+                    `thumb_lib.uuid`
+                )
                 .where({
-                    is_member_of_exhibit: validated['exhibit UUID'],
-                    is_member_of_timeline: validated['timeline UUID'],
-                    uuid: validated['timeline item UUID'],
-                    is_deleted: 0
+                    [`${this.TABLE.timeline_item_records}.is_member_of_exhibit`]: validated['exhibit UUID'],
+                    [`${this.TABLE.timeline_item_records}.is_member_of_timeline`]: validated['timeline UUID'],
+                    [`${this.TABLE.timeline_item_records}.uuid`]: validated['timeline item UUID'],
+                    [`${this.TABLE.timeline_item_records}.is_deleted`]: 0
                 })
                 .first()
                 .timeout(this.QUERY_TIMEOUT);
@@ -818,43 +643,47 @@ const Exhibit_timeline_record_tasks = class {
                 throw new Error('Timeline item record not found');
             }
 
-            // Check lock status
-            if (timeline_item.is_locked === 1) {
-                if (String(timeline_item.locked_by_user) === String(user_id_trimmed)) {
-                    return {
-                        success: true,
-                        item: timeline_item,
-                        already_locked_by_user: true,
-                        message: 'Timeline item already locked by you'
-                    };
-                } else {
+            // Handle locking
+            if (timeline_item.is_locked === 0) {
+                try {
+                    const HELPER_TASK = new HELPER();
+                    await HELPER_TASK.lock_record(
+                        user_id_trimmed,
+                        validated['timeline item UUID'],
+                        this.DB,
+                        this.TABLE.timeline_item_records
+                    );
+
+                    timeline_item.is_locked = 1;
+                    timeline_item.locked_by_user = uid_number;
+                    timeline_item.locked_at = new Date();
+
+                    this._log_success('Timeline item record locked for editing', {
+                        item_id: validated['timeline item UUID'],
+                        locked_by: uid_number
+                    });
+
+                } catch (lock_error) {
+                    LOGGER.module().warn('Failed to lock timeline item record', {
+                        item_id: validated['timeline item UUID'],
+                        error: lock_error.message
+                    });
+                }
+            } else {
+                const locked_by_number = Number(timeline_item.locked_by_user);
+                if (locked_by_number !== uid_number) {
                     throw new Error(`Timeline item is locked by another user (ID: ${timeline_item.locked_by_user})`);
                 }
+
+                this._log_success('Timeline item record already locked by this user', {
+                    item_id: validated['timeline item UUID'],
+                    locked_by: timeline_item.locked_by_user
+                });
             }
-
-            // Lock the record
-            await this.lock_timeline_item_record(validated['timeline item UUID'], user_id_trimmed);
-
-            // Refetch with lock info
-            const locked_item = await this.DB(this.TABLE.timeline_item_records)
-                .select('*')
-                .where({
-                    is_member_of_exhibit: validated['exhibit UUID'],
-                    is_member_of_timeline: validated['timeline UUID'],
-                    uuid: validated['timeline item UUID'],
-                    is_deleted: 0
-                })
-                .first()
-                .timeout(this.QUERY_TIMEOUT);
-
-            this._log_success('Timeline item record retrieved and locked', {
-                item_uuid: validated['timeline item UUID'],
-                user_id: user_id_trimmed
-            });
 
             return {
                 success: true,
-                item: locked_item,
+                item: timeline_item,
                 locked_by_user: true,
                 message: 'Timeline item locked for editing'
             };
@@ -930,12 +759,12 @@ const Exhibit_timeline_record_tasks = class {
     async update_timeline_item_record(data, updated_by = null) {
 
         const UPDATABLE_FIELDS = [
-            'repo_uuid', 'thumbnail', 'title', 'caption', 'item_type', 'mime_type',
-            'media', 'text', 'wrap_text', 'description', 'type', 'layout',
-            'media_width', 'media_padding', 'alt_text', 'is_alt_text_decorative',
-            'pdf_open_to_page', 'item_subjects', 'styles', 'order', 'date',
-            'is_repo_item', 'is_kaltura_item', 'is_embedded', 'is_published',
-            'is_locked', 'locked_by_user', 'locked_at', 'owner'
+            'repo_uuid', 'thumbnail', 'thumbnail_media_uuid', 'title', 'caption',
+            'item_type', 'mime_type', 'media', 'media_uuid', 'text', 'wrap_text',
+            'description', 'type', 'layout', 'media_width', 'media_padding', 'alt_text',
+            'is_alt_text_decorative', 'pdf_open_to_page', 'item_subjects', 'styles',
+            'order', 'date', 'is_repo_item', 'is_kaltura_item', 'is_embedded',
+            'is_published', 'is_locked', 'locked_by_user', 'locked_at', 'owner'
         ];
 
         try {

@@ -236,15 +236,7 @@ const itemsEditStandardItemFormModule = (function () {
 
             // Handle media-specific fields
             if (is_media_path) {
-
-                await helperMediaModule.display_media_fields_common(record);
-
-                if (record.item_subjects !== null && record.item_subjects?.length > 0) {
-                    const subjects = record.item_subjects.split('|');
-                    await helperModule.create_subjects_menu(subjects);
-                } else {
-                    await helperModule.create_subjects_menu();
-                }
+                itemsCommonStandardItemFormModule.populate_media_previews(record);
             }
 
             // Set radio button selections
@@ -574,10 +566,6 @@ const itemsEditStandardItemFormModule = (function () {
             exhibitsModule.set_exhibit_title(exhibit_id);
             await display_edit_record();
             document.querySelector('#update-item-btn').addEventListener('click', itemsEditStandardItemFormModule.update_item_record);
-
-            if (window.location.pathname.indexOf('media') !== -1) {
-                helperMediaModule.media_edit_init();
-            }
 
         } catch (error) {
             document.querySelector('#message').innerHTML = `<div class="alert alert-danger" role="alert"><i class="fa fa-exclamation"></i> ${error.message}</div>`;

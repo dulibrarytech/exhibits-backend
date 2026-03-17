@@ -28,7 +28,7 @@ const itemsAddGridItemFormModule = (function () {
         // CRITICAL: Check if we're in edit mode first
         const item_id = helperModule.get_parameter_by_name('item_id');
         if (item_id) {
-            console.log('🔴 Item ID exists - already in edit mode, preventing duplicate creation');
+            console.log('Item ID exists - already in edit mode, preventing duplicate creation');
             console.log('Current URL:', window.location.href);
             console.log('item_id:', item_id);
 
@@ -44,7 +44,7 @@ const itemsAddGridItemFormModule = (function () {
             return false;
         }
 
-        console.log('🟢 CREATE FUNCTION CALLED - No item_id, proceeding with creation');
+        console.log('CREATE FUNCTION CALLED - No item_id, proceeding with creation');
 
         // Prevent duplicate submissions
         if (this._is_creating_grid_item) {
@@ -144,7 +144,7 @@ const itemsAddGridItemFormModule = (function () {
                 throw new Error('Server did not return a valid grid item ID');
             }
 
-            console.log('✅ Grid item record created successfully, ID:', new_grid_item_id);
+            console.log('Grid item record created successfully, ID:', new_grid_item_id);
 
             // Show success message
             display_status_message(message_element, 'success', 'Grid item record created successfully. Redirecting to edit page...');
@@ -160,7 +160,7 @@ const itemsAddGridItemFormModule = (function () {
             return true;
 
         } catch (error) {
-            console.error('❌ Error creating grid item record:', error);
+            console.error('Error creating grid item record:', error);
 
             const message_element = document.querySelector('#message');
             const error_message = error.user_message || error.message || 'Unable to create grid item record. Please try again.';
@@ -332,10 +332,6 @@ const itemsAddGridItemFormModule = (function () {
 
             exhibitsModule.set_exhibit_title(exhibit_id);
             document.querySelector('#save-item-btn').addEventListener('click', itemsAddGridItemFormModule.create_grid_item_record);
-
-            if (window.location.pathname.indexOf('media') !== -1) {
-                await helperModule.create_subjects_menu();
-            }
 
         } catch (error) {
             document.querySelector('#message').innerHTML = `<div class="alert alert-danger" role="alert"><i class="fa fa-exclamation"></i> ${error.message}</div>`;
