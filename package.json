@@ -1,7 +1,7 @@
 {
-  "name": "duexhibits-backend",
+  "name": "exhibits-builder",
   "version": "2.0.0",
-  "description": "DU Exhibits Backend Application",
+  "description": "DU Exhibits Builder Application - EBD @ DU",
   "main": "exhibits.js",
   "scripts": {
     "test": "NODE_OPTIONS=--max-old-space-size=4096 vitest --run --reporter verbose",
