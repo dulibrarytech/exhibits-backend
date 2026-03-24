@@ -172,7 +172,6 @@ const itemsDetailsGridFormModule = (function () {
         const cache_dom_elements = () => {
             return {
                 created: document.querySelector('#created'),
-                grid_title: document.querySelector('#grid-title-input'),
                 grid_text: document.querySelector('#grid-text-input'),
                 grid_columns: document.querySelector('#grid-columns')
             };

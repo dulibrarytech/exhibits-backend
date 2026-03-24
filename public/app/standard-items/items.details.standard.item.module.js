@@ -130,7 +130,6 @@ const itemsDetailsStandardItemModule = (function () {
         }
 
         // Set basic item data
-        set_element_value('#item-title-input', helperModule.unescape(record.title));
         set_element_value('#item-text-input', helperModule.unescape(record.text));
 
         // Populate media previews using the shared common module

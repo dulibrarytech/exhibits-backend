@@ -467,7 +467,6 @@ const itemsEditVerticalTimelineFormModule = (function () {
         const cache_dom_elements = () => {
             return {
                 created: document.querySelector('#created'),
-                timeline_title: document.querySelector('#timeline-title-input'),
                 timeline_text: document.querySelector('#timeline-text-input'),
                 timeline_bg_color: document.querySelector('#timeline-background-color'),
                 timeline_bg_color_picker: document.querySelector('#timeline-background-color-picker'),

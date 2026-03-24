@@ -89,6 +89,7 @@ const itemsDetailsHeadingModule = (function () {
 
         document.querySelector('#created').innerHTML = item_created;
         document.querySelector('#item-heading-text-input').value = helperModule.unescape(record.text);
+        document.querySelector('#item-heading-type-input').value = record.type;
 
         if (document.querySelector('#is-published') !== null && is_published === 1) {
             document.querySelector('#is-published').value = true;
