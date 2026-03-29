@@ -431,6 +431,7 @@ exports.reorder_items = async function (req, res) {
             item: (item) => ITEMS_MODEL.reorder_items(exhibit_id, item),
             grid: (item) => GRIDS_MODEL.reorder_grids(exhibit_id, item),
             heading: (item) => HEADINGS_MODEL.reorder_headings(exhibit_id, item),
+            subheading: (item) => HEADINGS_MODEL.reorder_headings(exhibit_id, item),
             timeline: (item) => TIMELINES_MODEL.reorder_timelines(exhibit_id, item),
             griditem: (item) => {
                 const {grid_id, ...item_data} = item;
