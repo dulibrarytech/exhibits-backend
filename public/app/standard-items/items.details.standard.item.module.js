@@ -153,44 +153,6 @@ const itemsDetailsStandardItemModule = (function () {
         set_radio_value('layout', record.layout);
         set_radio_value('media_width', String(record.media_width));
 
-        // Parse and apply styles
-        const apply_styles = () => {
-            let styles = {};
-
-            try {
-                styles = JSON.parse(record.styles || '{}');
-            } catch (e) {
-                console.error('Invalid styles JSON:', e.message);
-                return;
-            }
-
-            if (Object.keys(styles).length === 0) {
-                return;
-            }
-
-            const style_field_map = {
-                backgroundColor: ['#item-background-color', '#item-background-color-picker'],
-                color: ['#item-font-color', '#item-font-color-picker']
-            };
-
-            for (const [style_key, selectors] of Object.entries(style_field_map)) {
-                const value = styles[style_key] || '';
-                selectors.forEach(selector => set_element_value(selector, value));
-            }
-
-            if (styles.fontFamily) {
-                set_element_value('#item-font', styles.fontFamily);
-            }
-
-            if (styles.fontSize) {
-                set_element_value('#item-font-size', styles.fontSize.replace(/px$/, ''));
-            } else {
-                set_element_value('#item-font-size', '');
-            }
-        };
-
-        apply_styles();
-
         // Disable all form fields after population (details view is read-only)
         disable_all_fields();
 

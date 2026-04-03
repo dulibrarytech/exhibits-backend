@@ -1,14 +1,4 @@
 <%- include('../partials/header.ejs'); %>
-<style>
-    .color-picker {
-        background-color: none;
-        outline: none;
-        border: 1px solid grey;
-        height: 38px;
-        width: 50px;
-        cursor: pointer;
-    }
-</style>
 <body>
 <%- include('../partials/nav-dashboard'); %>
 <div id="right-panel" class="right-panel">
@@ -18,7 +8,6 @@
         <h1><span id="exhibit-title"></span> - Text Item</h1>
 
         <%- include('partials/item-data-card.ejs'); %>
-        <%- include('partials/standard-item-styles.ejs'); %>
 
         <input type="radio"
                name="layout"

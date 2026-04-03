@@ -1,13 +1,5 @@
 <%- include('../partials/header.ejs'); %>
 <style>
-    .color-picker {
-        background-color: none;
-        outline: none;
-        border: 1px solid grey;
-        height: 38px;
-        width: 50px;
-        cursor: pointer;
-    }
     .media-preview-area {
         border: 2px dashed #c8ced3;
         border-radius: 4px;
@@ -180,6 +172,7 @@
                 </div>
 
                 <%- include('partials/item-alt-text.ejs'); %>
+                <%- include('../partials/item-style-dropdown.ejs'); %>
                 <%- include('partials/wrap-text-item.ejs'); %>
                 <%- include('../partials/embed-item.ejs'); %>
                 <%- include('partials/media-padding.ejs'); %>
@@ -268,8 +261,6 @@
                 <%- include('partials/item-media-widths.ejs'); %>
             </div>
         </div>
-
-        <%- include('partials/standard-item-styles.ejs'); %>
 
         <div id="item-submit-card" class="card">
             <div class="card-body">

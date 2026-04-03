@@ -253,47 +253,13 @@ const itemsEditStandardItemFormModule = (function () {
             set_radio_value('layout', record.layout);
             set_radio_value('media_width', String(record.media_width));
 
-            // Parse and apply styles
-            const apply_styles = () => {
-                let styles = {};
-
-                try {
-                    styles = JSON.parse(record.styles || '{}');
-                } catch (e) {
-                    console.error('Invalid styles JSON:', e.message);
-                    return;
-                }
-
-                if (Object.keys(styles).length === 0) {
-                    return;
-                }
-
-                const style_field_map = {
-                    backgroundColor: ['#item-background-color', '#item-background-color-picker'],
-                    color: ['#item-font-color', '#item-font-color-picker'],
-                };
-
-                // Apply color and background styles
-                for (const [style_key, selectors] of Object.entries(style_field_map)) {
-                    const value = styles[style_key] || '';
-                    selectors.forEach(selector => set_element_value(selector, value));
-                }
-
-                // Set font family
-                if (styles.fontFamily) {
-                    set_element_value('#item-font', styles.fontFamily);
-                }
-
-                // Set font size (remove 'px' suffix)
-                if (styles.fontSize) {
-                    const font_size_value = styles.fontSize.replace(/px$/, '');
-                    set_element_value('#item-font-size', font_size_value);
-                } else {
-                    set_element_value('#item-font-size', '');
-                }
-            };
-
-            apply_styles();
+            // Set saved style selection after dropdown is populated
+            // Style keys are simple strings like "item1"; skip "{}" (prepare_styles default) and legacy JSON blobs
+            if (is_media_path && record.styles && typeof record.styles === 'string'
+                && record.styles.trim() !== '' && !record.styles.startsWith('{')) {
+                await itemsCommonStandardItemFormModule.wait_for_styles();
+                itemsCommonStandardItemFormModule.set_item_style(record.styles);
+            }
 
             return false;
 
