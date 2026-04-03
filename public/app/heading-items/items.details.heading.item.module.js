@@ -48,7 +48,7 @@ const itemsDetailsHeadingModule = (function () {
 
             let response = await httpModule.req({
                 method: 'GET',
-                url: endpoint + '?type=edit&uid=' + profile.uid,
+                url: endpoint + '?uid=' + profile.uid,
                 headers: {
                     'Content-Type': 'application/json',
                     'x-access-token': token
@@ -216,7 +216,6 @@ const itemsDetailsHeadingModule = (function () {
             const exhibit_id = helperModule.get_parameter_by_name('exhibit_id');
             await exhibitsModule.set_exhibit_title(exhibit_id);
 
-            document.querySelector('#save-heading-btn').addEventListener('click', await itemsDetailsHeadingModule.update_item_heading_record);
             await display_edit_record();
 
         } catch (error) {

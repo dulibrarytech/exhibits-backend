@@ -18,8 +18,9 @@
 
 'use strict';
 
+const APP_CONFIG = require('../config/app_config')();
 const CONTROLLER = require('../dashboard/controller');
-const APP_PATH = '/exhibits-dashboard';
+const APP_PATH = APP_CONFIG.app_path;
 
 module.exports = function (app) {
 
@@ -176,5 +177,9 @@ module.exports = function (app) {
     //============Media============//
     app.route(APP_PATH + '/media/library')
         .get(CONTROLLER.get_dashboard_media);
+
+    //============Styles============//
+    app.route(APP_PATH + '/styles')
+        .get(CONTROLLER.get_dashboard_styles);
 
 };

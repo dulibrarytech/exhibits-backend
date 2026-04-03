@@ -220,136 +220,6 @@ const itemsCommonStandardItemFormModule = (function () {
         }
     }
 
-    // ==================== MEDIA SUBJECTS HELPERS ====================
-
-    /**
-     * Parses a subject field value into an array of trimmed, non-empty strings.
-     * Handles JSON arrays, comma-separated strings, and semicolon-separated strings.
-     * @param {string|null|undefined} raw - Raw subject value from the database
-     * @returns {string[]} Parsed subject array
-     */
-    function parse_subject_field(raw) {
-        if (!raw || typeof raw !== 'string') return [];
-
-        const trimmed = raw.trim();
-        if (trimmed.length === 0) return [];
-
-        // Try JSON array first
-        if (trimmed.startsWith('[')) {
-            try {
-                const parsed = JSON.parse(trimmed);
-                if (Array.isArray(parsed)) {
-                    return parsed
-                        .map(s => (typeof s === 'string' ? s.trim() : String(s).trim()))
-                        .filter(s => s.length > 0);
-                }
-            } catch (_) {
-                // Fall through to string splitting
-            }
-        }
-
-        // Split on semicolons first (more common for multi-value subject fields), then commas
-        const delimiter = trimmed.includes(';') ? ';' : ',';
-        return trimmed
-            .split(delimiter)
-            .map(s => s.trim())
-            .filter(s => s.length > 0);
-    }
-
-    /**
-     * Renders badges into a container element
-     * @param {string} container_id - Badge container element ID
-     * @param {string} group_id - Group wrapper element ID
-     * @param {string[]} subjects - Array of subject strings
-     * @param {string} badge_modifier - CSS class modifier (topic, genre, place)
-     * @returns {boolean} True if at least one badge was rendered
-     */
-    function render_subject_badges(container_id, group_id, subjects, badge_modifier) {
-        const container = document.getElementById(container_id);
-        const group = document.getElementById(group_id);
-        if (!container || !group) return false;
-
-        container.innerHTML = '';
-
-        if (!subjects || subjects.length === 0) {
-            group.style.display = 'none';
-            return false;
-        }
-
-        subjects.forEach(subject => {
-            const badge = document.createElement('span');
-            badge.className = `media-subject-badge media-subject-badge--${badge_modifier}`;
-            badge.textContent = subject;
-            container.appendChild(badge);
-        });
-
-        group.style.display = '';
-        return true;
-    }
-
-    /**
-     * Renders the media subjects card for a selected media asset.
-     * Parses topics_subjects, genre_form_subjects, and places_subjects
-     * and displays them as color-coded badges grouped by type.
-     *
-     * @param {Object|null} media - Media object with subject fields (null to hide)
-     */
-    function render_media_subjects(media) {
-        const card = document.getElementById('media-subjects-card');
-        if (!card) return;
-
-        // Hide and reset when no media or null
-        if (!media) {
-            card.style.display = 'none';
-            return;
-        }
-
-        // Parse all three subject types
-        const topics = parse_subject_field(media.topics_subjects);
-        const genres = parse_subject_field(media.genre_form_subjects);
-        const places = parse_subject_field(media.places_subjects);
-
-        const has_any = topics.length > 0 || genres.length > 0 || places.length > 0;
-
-        if (!has_any) {
-            card.style.display = 'none';
-            return;
-        }
-
-        // Render each group
-        render_subject_badges('media-subjects-topics', 'media-subjects-topics-group', topics, 'topic');
-        render_subject_badges('media-subjects-genre', 'media-subjects-genre-group', genres, 'genre');
-        render_subject_badges('media-subjects-places', 'media-subjects-places-group', places, 'place');
-
-        // Hide the empty-state message
-        const empty_el = document.getElementById('media-subjects-empty');
-        if (empty_el) empty_el.style.display = 'none';
-
-        // Show the card (explicit 'flex' matches Bootstrap 4 .card layout and overrides CSS rule)
-        card.style.display = 'flex';
-    }
-
-    /**
-     * Hides and resets the media subjects card
-     */
-    function hide_media_subjects() {
-        const card = document.getElementById('media-subjects-card');
-        if (!card) return;
-        card.style.display = 'none';
-
-        // Clear badge containers
-        ['media-subjects-topics', 'media-subjects-genre', 'media-subjects-places'].forEach(id => {
-            const el = document.getElementById(id);
-            if (el) el.innerHTML = '';
-        });
-
-        // Hide groups
-        ['media-subjects-topics-group', 'media-subjects-genre-group', 'media-subjects-places-group'].forEach(id => {
-            const el = document.getElementById(id);
-            if (el) el.style.display = 'none';
-        });
-    }
-
     /**
      * Handles media asset selection from the picker for Item Media
      */
@@ -360,6 +230,7 @@ const itemsCommonStandardItemFormModule = (function () {
         };
 
         set_val('#item-media-uuid', media.uuid || '');
+        set_val('#item-media-uuid-prev', media.uuid || '');
         set_val('#item-media-type', media.media_type || '');
         set_val('#item-mime-type', media.mime_type || '');
 
@@ -372,7 +243,6 @@ const itemsCommonStandardItemFormModule = (function () {
 
         toggle_pdf_open_to_page(media.media_type);
         toggle_alt_text_display(media);
-        render_media_subjects(media);
     }
 
     /**
@@ -385,6 +255,7 @@ const itemsCommonStandardItemFormModule = (function () {
         };
 
         set_val('#thumbnail-media-uuid', media.uuid || '');
+        set_val('#thumbnail-media-uuid-prev', media.uuid || '');
 
         update_media_preview(
             '#thumbnail-image-display',
@@ -403,7 +274,17 @@ const itemsCommonStandardItemFormModule = (function () {
             if (el) el.value = val;
         };
 
+        // Remove exhibit association from the media record being cleared (fire-and-forget)
+        const exhibit_uuid = helperModule.get_parameter_by_name('exhibit_id');
+        const prev_uuid_el = document.querySelector('#item-media-uuid-prev');
+        const prev_uuid = prev_uuid_el ? prev_uuid_el.value : null;
+
+        if (exhibit_uuid && prev_uuid && typeof mediaPickerModule !== 'undefined') {
+            mediaPickerModule.remove_exhibit_association(prev_uuid, exhibit_uuid, 'item_media');
+        }
+
         set_val('#item-media-uuid', '');
+        set_val('#item-media-uuid-prev', '');
         set_val('#item-media-type', '');
         set_val('#item-mime-type', '');
 
@@ -417,15 +298,26 @@ const itemsCommonStandardItemFormModule = (function () {
 
         toggle_pdf_open_to_page('');
         toggle_alt_text_display(null);
-        hide_media_subjects();
     }
 
     /**
      * Clears the Thumbnail selection
      */
     function clear_thumbnail() {
+        // Remove exhibit association from the thumbnail media record being cleared (fire-and-forget)
+        const exhibit_uuid = helperModule.get_parameter_by_name('exhibit_id');
+        const prev_uuid_el = document.querySelector('#thumbnail-media-uuid-prev');
+        const prev_uuid = prev_uuid_el ? prev_uuid_el.value : null;
+
+        if (exhibit_uuid && prev_uuid && typeof mediaPickerModule !== 'undefined') {
+            mediaPickerModule.remove_exhibit_association(prev_uuid, exhibit_uuid, 'thumbnail');
+        }
+
         const el = document.querySelector('#thumbnail-media-uuid');
         if (el) el.value = '';
+
+        const prev_el = document.querySelector('#thumbnail-media-uuid-prev');
+        if (prev_el) prev_el.value = '';
 
         reset_media_preview(
             '#thumbnail-image-display',
@@ -450,10 +342,13 @@ const itemsCommonStandardItemFormModule = (function () {
         const pick_media_btn = document.querySelector('#pick-item-media-btn');
         if (pick_media_btn) {
             pick_media_btn.addEventListener('click', function () {
+                const prev_el = document.querySelector('#item-media-uuid-prev');
                 mediaPickerModule.open({
                     role: 'item_media',
-                    exhibit_uuid: null,
+                    exhibit_uuid: helperModule.get_parameter_by_name('exhibit_id') || null,
+                    previous_media_uuid: prev_el ? prev_el.value || null : null,
                     media_type_filter: null,
+                    create_exhibit_binding: false,
                     on_select: handle_item_media_selected
                 });
             });
@@ -463,10 +358,13 @@ const itemsCommonStandardItemFormModule = (function () {
         const pick_thumb_btn = document.querySelector('#pick-thumbnail-btn');
         if (pick_thumb_btn) {
             pick_thumb_btn.addEventListener('click', function () {
+                const prev_el = document.querySelector('#thumbnail-media-uuid-prev');
                 mediaPickerModule.open({
                     role: 'thumbnail',
-                    exhibit_uuid: null,
+                    exhibit_uuid: helperModule.get_parameter_by_name('exhibit_id') || null,
+                    previous_media_uuid: prev_el ? prev_el.value || null : null,
                     media_type_filter: 'image',
+                    create_exhibit_binding: false,
                     on_select: handle_thumbnail_selected
                 });
             });
@@ -525,10 +423,7 @@ const itemsCommonStandardItemFormModule = (function () {
                 repo_uuid: record.media_repo_uuid || null,
                 thumbnail_path: record.media_thumbnail_path || null,
                 alt_text: record.media_alt_text || null,
-                is_alt_text_decorative: record.media_is_alt_text_decorative ?? null,
-                topics_subjects: record.media_topics_subjects || null,
-                genre_form_subjects: record.media_genre_form_subjects || null,
-                places_subjects: record.media_places_subjects || null
+                is_alt_text_decorative: record.media_is_alt_text_decorative ?? null
             };
 
             update_media_preview(
@@ -548,9 +443,6 @@ const itemsCommonStandardItemFormModule = (function () {
 
             // Show read-only alt text from the media library asset
             toggle_alt_text_display(media_obj);
-
-            // Show media subjects from the media library asset
-            render_media_subjects(media_obj);
         }
 
         // Thumbnail preview
@@ -700,8 +592,9 @@ const itemsCommonStandardItemFormModule = (function () {
             await authModule.check_auth(token);
 
             navModule.init();
-            navModule.back_to_items();
-            navModule.set_preview_link();
+            // Note: #back-to-items href is now wired by navModule.wire_nav_links()
+            // via data-nav-path attributes set in the unified nav partial.
+            // set_preview_link() is already called inside init().
 
             document.querySelector('#item-background-color-picker').addEventListener('input', () => {
                 if (document.querySelector('#item-background-color')) {

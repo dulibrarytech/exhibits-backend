@@ -697,6 +697,97 @@ const Exhibit_timeline_record_tasks = class extends Base_tasks {
     }
 
     /**
+     * Gets a timeline item record for the details (read-only) view.
+     * Performs the same media-library JOINs as get_timeline_item_edit_record
+     * but does NOT lock the record.
+     * @param {string} is_member_of_exhibit - The exhibit UUID
+     * @param {string} is_member_of_timeline - The timeline UUID
+     * @param {string} item_uuid - The timeline item UUID
+     * @returns {Promise<Object>} Timeline item record with media library metadata
+     */
+    async get_timeline_item_details_record(is_member_of_exhibit, is_member_of_timeline, item_uuid) {
+
+        try {
+
+            this._validate_database();
+            this._validate_table('timeline_item_records');
+            this._validate_table('media_library_records');
+
+            const validated = this._validate_uuids({
+                [is_member_of_exhibit]: 'exhibit UUID',
+                [is_member_of_timeline]: 'timeline UUID',
+                [item_uuid]: 'timeline item UUID'
+            });
+
+            const timeline_item = await this.DB(this.TABLE.timeline_item_records)
+                .select(
+                    `${this.TABLE.timeline_item_records}.*`,
+                    // Media library metadata for the primary media asset
+                    `media_lib.name as media_name`,
+                    `media_lib.original_filename as media_filename`,
+                    `media_lib.ingest_method as media_ingest_method`,
+                    `media_lib.kaltura_thumbnail_url as media_kaltura_thumbnail_url`,
+                    `media_lib.repo_uuid as media_repo_uuid`,
+                    `media_lib.thumbnail_path as media_thumbnail_path`,
+                    `media_lib.alt_text as media_alt_text`,
+                    `media_lib.is_alt_text_decorative as media_is_alt_text_decorative`,
+                    `media_lib.topics_subjects as media_topics_subjects`,
+                    `media_lib.genre_form_subjects as media_genre_form_subjects`,
+                    `media_lib.places_subjects as media_places_subjects`,
+                    // Media library metadata for the thumbnail asset
+                    `thumb_lib.name as thumbnail_media_name`,
+                    `thumb_lib.original_filename as thumbnail_filename`,
+                    `thumb_lib.ingest_method as thumb_ingest_method`,
+                    `thumb_lib.kaltura_thumbnail_url as thumb_kaltura_thumbnail_url`,
+                    `thumb_lib.repo_uuid as thumbnail_repo_uuid`,
+                    `thumb_lib.thumbnail_path as thumb_thumbnail_path`
+                )
+                .leftJoin(
+                    `${this.TABLE.media_library_records} as media_lib`,
+                    `${this.TABLE.timeline_item_records}.media_uuid`,
+                    '=',
+                    `media_lib.uuid`
+                )
+                .leftJoin(
+                    `${this.TABLE.media_library_records} as thumb_lib`,
+                    `${this.TABLE.timeline_item_records}.thumbnail_media_uuid`,
+                    '=',
+                    `thumb_lib.uuid`
+                )
+                .where({
+                    [`${this.TABLE.timeline_item_records}.is_member_of_exhibit`]: validated['exhibit UUID'],
+                    [`${this.TABLE.timeline_item_records}.is_member_of_timeline`]: validated['timeline UUID'],
+                    [`${this.TABLE.timeline_item_records}.uuid`]: validated['timeline item UUID'],
+                    [`${this.TABLE.timeline_item_records}.is_deleted`]: 0
+                })
+                .first()
+                .timeout(this.QUERY_TIMEOUT);
+
+            if (!timeline_item) {
+                throw new Error('Timeline item record not found');
+            }
+
+            this._log_success('Timeline item details record retrieved successfully', {
+                uuid: timeline_item.uuid,
+                title: timeline_item.title
+            });
+
+            return {
+                success: true,
+                item: timeline_item,
+                message: 'Timeline item details record retrieved'
+            };
+
+        } catch (error) {
+            this._handle_error(error, 'get_timeline_item_details_record', {
+                is_member_of_exhibit,
+                is_member_of_timeline,
+                item_uuid
+            });
+        }
+    }
+
+    /**
      * Locks a timeline item record
      * @param {string} item_uuid - The timeline item UUID
      * @param {string} user_id - The user ID locking the record

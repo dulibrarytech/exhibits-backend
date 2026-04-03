@@ -1,29 +1,8 @@
 <%- include('../partials/header.ejs'); %>
 
 <body>
-<!-- Move nav to partial -->
-<aside id="left-panel" class="left-panel" aria-label="Main navigation">
-    <nav class="navbar navbar-expand-sm navbar-default">
-        <div id="main-menu" class="main-menu">
-            <ul class="nav navbar-nav">
-                <li class="menu-title">Menu</li>
-            </ul>
-            <ul id="items-menu" class="nav navbar-nav" aria-label="Items navigation"></ul>
-            <ul class="nav navbar-nav" aria-label="Account actions">
-                <li>
-                    <a href="/exhibits-dashboard/exhibits" data-keyboard="false">
-                        <i class="menu-icon fa fa-arrow-left"></i>Back to Exhibit Builder</a>
-                </li>
-                <li>
-                    <a href="#" id="logout" data-keyboard="false">
-                        <i class="menu-icon fa fa-sign-out" aria-hidden="true"></i>
-                        <span>Logout</span>
-                    </a>
-                </li>
-            </ul>
-        </div>
-    </nav>
-</aside>
+
+<%- include('../partials/nav-dashboard'); %>
 
 <div id="right-panel" class="right-panel">
     <%- include('../partials/main-header.ejs'); %>
@@ -133,6 +112,15 @@
     <%- include('../partials/footer.ejs'); %>
 </div>
 <style>
+
+    /* Match exhibit table font size */
+    #media-card .card-body {
+        font-size: 0.875rem;
+    }
+
+    #items td {
+        font-size: 0.875rem;
+    }
 
     /* Hide First/Last buttons (prev + numbers + next only) */
     #items_wrapper .dt-paging .dt-paging-button.first,
@@ -273,6 +261,158 @@
             font-size: 0.8rem;
         }
     }
+
+    /* Truncate long media names in the Name column */
+    .media-name-cell .media-name {
+        display: inline-block;
+        max-width: 220px;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        vertical-align: middle;
+        cursor: default;
+    }
+
+    /* Truncate long filenames in the File Name column */
+    .media-filename {
+        display: inline-block;
+        max-width: 180px;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        vertical-align: middle;
+        cursor: default;
+    }
+
+    /* ==================== Exhibit Filter Dropdown ==================== */
+
+    .exhibit-filter-wrapper {
+        position: relative;
+        font-size: 0.85rem;
+        color: #6c757d;
+    }
+
+    .exhibit-filter-label {
+        display: block;
+        margin-bottom: 0.25rem;
+        font-weight: normal;
+        white-space: nowrap;
+    }
+
+    .exhibit-filter-input-container {
+        position: relative;
+        display: flex;
+        align-items: center;
+    }
+
+    .exhibit-filter-input {
+        width: 100%;
+        padding: 0.3rem 2.2rem 0.3rem 0.5rem;
+        font-size: 0.85rem;
+        line-height: 1.5;
+        color: #495057;
+        background-color: #fff;
+        border: 1px solid #aaa;
+        border-radius: 0.2rem;
+        transition: border-color 0.15s ease-in-out, box-shadow 0.15s ease-in-out;
+        text-overflow: ellipsis;
+        overflow: hidden;
+        white-space: nowrap;
+    }
+
+    .exhibit-filter-input::placeholder {
+        color: #6c757d;
+    }
+
+    .exhibit-filter-input:focus {
+        border-color: #7f7f7f;
+        outline: 0;
+        box-shadow: 0 0 0 0.15rem rgba(127, 127, 127, 0.2);
+    }
+
+    .exhibit-filter-clear {
+        position: absolute;
+        right: 0.25rem;
+        top: 50%;
+        transform: translateY(-50%);
+        background: none;
+        border: none;
+        color: #6c757d;
+        font-size: 1.15rem;
+        line-height: 1;
+        padding: 0 0.35rem;
+        cursor: pointer;
+        z-index: 2;
+    }
+
+    .exhibit-filter-clear:hover {
+        color: #343a40;
+    }
+
+    .exhibit-filter-caret {
+        position: absolute;
+        right: 0.5rem;
+        top: 50%;
+        transform: translateY(-50%);
+        color: #adb5bd;
+        font-size: 0.75rem;
+        pointer-events: all;
+        cursor: pointer;
+        z-index: 2;
+    }
+
+    .exhibit-filter-listbox {
+        position: absolute;
+        top: 100%;
+        left: 0;
+        z-index: 1050;
+        min-width: 340px;
+        max-width: 500px;
+        max-height: 220px;
+        overflow-y: auto;
+        margin: 2px 0 0;
+        padding: 0.25rem 0;
+        list-style: none;
+        background: #fff;
+        border: 1px solid #ced4da;
+        border-radius: 0.2rem;
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.12);
+    }
+
+    .exhibit-filter-option {
+        padding: 0.35rem 0.75rem;
+        cursor: pointer;
+        white-space: normal;
+        word-break: break-word;
+        font-size: 0.85rem;
+        color: #495057;
+    }
+
+    .exhibit-filter-option:hover,
+    .exhibit-filter-option.active {
+        background-color: #f0f0f0;
+        color: #343a40;
+    }
+
+    .exhibit-filter-empty {
+        padding: 0.5rem 0.75rem;
+        color: #adb5bd;
+        font-style: italic;
+        font-size: 0.85rem;
+        list-style: none;
+    }
+
+    @media (max-width: 768px) {
+        .exhibit-filter-wrapper {
+            margin-top: 0.5rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .exhibit-filter-listbox {
+            min-width: 100%;
+            max-width: 100%;
+        }
+    }
 </style>
 
 <!-- Uploaded Media Modal -->
@@ -313,6 +453,9 @@
 <script src="/exhibits-dashboard/static/app/dist/helper.repo.subjects.module.min.js?<%=build_version%>"></script>
 
 <!-- Modals Module -->
+<!-- Edit Modal Module (must load before modals.upload which delegates to it) -->
+<script src="/exhibits-dashboard/static/app/dist/modals.edit.module.min.js?<%=build_version%>"></script>
+
 <script src="/exhibits-dashboard/static/app/dist/modals.upload.module.min.js?<%=build_version%>"></script>
 
 <script src="/exhibits-dashboard/static/app/dist/modals.repo.module.min.js?<%=build_version%>"></script>

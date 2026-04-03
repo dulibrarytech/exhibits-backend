@@ -1,0 +1,303 @@
+<%- include('../partials/header.ejs'); %>
+<style>
+    .color-picker {
+        background-color: none;
+        outline: none;
+        border: 1px solid grey;
+        height: 38px;
+        width: 50px;
+        cursor: pointer;
+    }
+    .media-preview-area {
+        border: 2px dashed #c8ced3;
+        border-radius: 4px;
+        padding: 8px;
+        background: #f8f9fa;
+        height: 180px;
+        max-width: 280px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        overflow: hidden;
+        margin-bottom: 8px;
+    }
+    .media-preview-area:has(img) {
+        border-style: solid;
+        border-color: #dee2e6;
+        background: #fff;
+    }
+    .media-preview-area img {
+        max-width: 100%;
+        max-height: 160px;
+        object-fit: contain;
+        display: block;
+        border-radius: 3px;
+    }
+    .media-placeholder {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 6px;
+        color: #adb5bd;
+    }
+    .media-placeholder i {
+        font-size: 2rem;
+    }
+    .media-placeholder span {
+        font-size: 12px;
+    }
+    .media-preview-area:has(img) .media-placeholder {
+        display: none;
+    }
+    #item-media-filename-display,
+    #thumbnail-filename-display {
+        display: inline-block;
+        max-width: 280px;
+        font-size: 12px;
+        color: #555;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+        vertical-align: middle;
+    }
+    /* Media Subjects card styles */
+    .media-subject-group {
+        margin-bottom: 10px;
+    }
+    .media-subject-group:last-of-type {
+        margin-bottom: 0;
+    }
+    .media-subject-label {
+        display: block;
+        font-size: 11px;
+        font-weight: 600;
+        color: #6c757d;
+        text-transform: uppercase;
+        letter-spacing: 0.4px;
+        margin-bottom: 5px;
+    }
+    .media-subject-badges {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 5px;
+    }
+    .media-subject-badge {
+        display: inline-block;
+        padding: 3px 9px;
+        font-size: 12px;
+        font-weight: 400;
+        line-height: 1.4;
+        border-radius: 3px;
+        white-space: nowrap;
+    }
+    .media-subject-badge--topic {
+        background-color: #e8f0fe;
+        color: #1a56db;
+        border: 1px solid #c7d9f5;
+    }
+    .media-subject-badge--genre {
+        background-color: #fef3e2;
+        color: #b45309;
+        border: 1px solid #f5deb3;
+    }
+    .media-subject-badge--place {
+        background-color: #e6f6ed;
+        color: #0e7c3a;
+        border: 1px solid #b8e0cb;
+    }
+    #media-subjects-card {
+        display: none;
+    }
+</style>
+<body>
+<%- include('../partials/nav-dashboard'); %>
+<div id="right-panel" class="right-panel">
+    <%- include('../partials/main-header.ejs'); %>
+    <div class="content" style="min-height: 875px;">
+        <div id="message"></div>
+        <h1><span id="exhibit-title"></span> - Media Item</h1>
+        <%- include('partials/item-data-card.ejs'); %>
+        <div id="item-media-card" class="card">
+            <div class="card-header">
+                <strong class="card-title mb-3">Item Media</strong>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-6 col-md-6">
+                        <div id="item-media-display" class="media-preview-area">
+                            <div class="media-placeholder">
+                                <i class="fa fa-file-o"></i>
+                                <span>No media selected</span>
+                            </div>
+                        </div>
+                        <p>
+                            <span id="item-media-filename-display"></span>&nbsp;&nbsp;
+                            <span><a id="item-media-trash" title="Remove media" href="#"
+                                     style="display:none"><i class="fa fa-trash"></i></a></span>
+                        </p>
+                        <input type="hidden" id="item-media-uuid" name="item_media_uuid">
+                        <input type="hidden" id="item-media-type" name="item_media_type">
+                        <input type="hidden" id="item-mime-type" name="item_mime_type">
+                        <button type="button" class="btn btn-outline-primary"
+                                id="pick-item-media-btn">
+                            <i class="fa fa-file-o"></i>&nbsp;Select Media
+                        </button>
+                    </div>
+                    <div class="col-6 col-md-6">
+                        <div id="thumbnail-image-display" class="media-preview-area">
+                            <div class="media-placeholder">
+                                <i class="fa fa-picture-o"></i>
+                                <span>No image selected</span>
+                            </div>
+                        </div>
+                        <p>
+                            <span id="thumbnail-filename-display"></span>&nbsp;&nbsp;
+                            <span><a id="thumbnail-trash" title="Remove thumbnail" href="#"
+                                     style="display:none"><i class="fa fa-trash"></i></a></span>
+                        </p>
+                        <input type="hidden" id="thumbnail-media-uuid" name="thumbnail_media_uuid">
+                        <button type="button" class="btn btn-outline-primary"
+                                id="pick-thumbnail-btn"
+                                data-media-type-filter="image">
+                            <i class="fa fa-picture-o"></i>&nbsp;Select Thumbnail
+                        </button>
+                    </div>
+                </div>
+
+                <div id="pdf-open-to-page-group" class="row mt-3" style="display: none;">
+                    <div class="col-sm-4">
+                        <label class="sr-only" for="pdf-open-to-page">Open PDF to page</label>
+                        <div class="input-group">
+                            <div class="input-group-prepend">
+                                <div class="input-group-text">Open PDF to page</div>
+                            </div>
+                            <input type="number" class="form-control" id="pdf-open-to-page" min="1" value="1">
+                        </div>
+                        <small class="form-text text-muted"><i class="fa fa-exclamation-circle"></i> <em>The viewer will automatically open to the page entered</em></small>
+                    </div>
+                </div>
+
+                <%- include('partials/item-alt-text.ejs'); %>
+                <%- include('partials/wrap-text-item.ejs'); %>
+                <%- include('../partials/embed-item.ejs'); %>
+                <%- include('partials/media-padding.ejs'); %>
+
+            </div>
+        </div>
+
+        <%- include('../partials/media-subjects.ejs'); %>
+
+        <div id="item-layout-card" class="card">
+            <div class="card-header">
+                <strong class="card-title mb-3">Item Layout</strong>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-4 col-md-4">
+                        <p><img src="/exhibits-dashboard/static/images/item_layout_text_left_media_right.png"
+                                width="135" height="135"></p>
+                        <p>
+                            <label class="btn btn-default" for="item-layout-media-right" style="font-size: 14px">Media right, text left
+                                <input type="radio"
+                                       name="layout"
+                                       id="item-layout-media-right"
+                                       value="media_right" checked/>
+                            </label>
+                        </p>
+                    </div>
+                    <div class="col-4 col-md-4">
+                        <p><img src="/exhibits-dashboard/static/images/item_layout_media_top_text_bottom.png"
+                                width="135" height="135"></p>
+                        <p>
+                            <label class="btn btn-default" for="item-layout-media-top" style="font-size: 14px">Media top, text below
+                                <input type="radio"
+                                       name="layout"
+                                       id="item-layout-media-top"
+                                       value="media_top"/>
+                            </label>
+                        </p>
+                    </div>
+                    <div class="col-4 col-md-4">
+                        <p><img src="/exhibits-dashboard/static/images/item_layout_text_top_media_bottom.png"
+                                width="135" height="135"></p>
+                        <p>
+                            <label class="btn btn-default" for="item-layout-media-bottom" style="font-size: 14px">Text top, media below
+                                <input type="radio"
+                                       name="layout"
+                                       id="item-layout-media-bottom"
+                                       value="media_bottom"/>
+                            </label>
+                        </p>
+                    </div>
+                </div>
+                <div class="row">
+                    <div class="col-4 col-md-4">
+                        <p><img src="/exhibits-dashboard/static/images/item_layout_media_only.png"
+                                width="135" height="135"></p>
+                        <p>
+                            <label class="btn btn-default" for="item-layout-media-only" style="font-size: 14px">Media only
+                                <input type="radio"
+                                       name="layout"
+                                       id="item-layout-media-only"
+                                       value="media_only"/>
+                            </label>
+                        </p>
+                    </div>
+                    <div class="col-4 col-md-4">
+                        <p><img src="/exhibits-dashboard/static/images/item_layout_media_left_text_right.png"
+                                width="135" height="135"></p>
+                        <p>
+                            <label class="btn btn-default" for="item-layout-media-left" style="font-size: 14px">Media left, text right
+                                <input type="radio"
+                                       name="layout"
+                                       id="item-layout-media-left"
+                                       value="media_left"/>
+                            </label>
+                        </p>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div id="item-media-widths-card" class="card">
+            <div class="card-header">
+                <strong class="card-title mb-3">Item Media Widths</strong>
+            </div>
+            <div class="card-body">
+                <%- include('partials/item-media-widths.ejs'); %>
+            </div>
+        </div>
+
+        <%- include('partials/standard-item-styles.ejs'); %>
+
+        <div id="item-submit-card" class="card">
+            <div class="card-body">
+                <button class="btn btn-primary" type="button" id="save-item-btn">
+                    <i class="fa fa-save"></i>&nbsp;&nbsp;Save
+                </button>
+            </div>
+            <div class="card-footer text-muted"><small>Item</small></div>
+        </div>
+    </div>
+    <div class="clearfix"></div>
+    <%- include('../partials/footer.ejs'); %>
+    <%- include('../partials/preview-html-modal.ejs'); %>
+    <%- include('../partials/media-picker-modal.ejs'); %>
+</div>
+<!-- libs -->
+<%- include('../partials/exhibits-libs-common.ejs'); %>
+<!-- app -->
+<%- include('../partials/exhibits-app-common.ejs'); %>
+<script src="/exhibits-dashboard/static/app/dist/exhibits.module.min.js?<%=build_version%>"></script>
+<script src="/exhibits-dashboard/static/app/dist/items.module.min.js?<%=build_version%>"></script>
+
+<script src="/exhibits-dashboard/static/app/dist/media.picker.module.min.js?<%=build_version%>"></script>
+<script src="/exhibits-dashboard/static/app/dist/items.common.standard.item.form.module.min.js?<%=build_version%>"></script>
+<script src="/exhibits-dashboard/static/app/dist/items.add.standard.item.form.module.min.js?<%=build_version%>"></script>
+<script>
+    navModule.wire_nav_links();
+    itemsCommonStandardItemFormModule.init();
+    itemsAddStandardItemFormModule.init();
+    mediaPickerModule.init();
+</script>
+</body>
+</html>

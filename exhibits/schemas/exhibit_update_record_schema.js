@@ -28,7 +28,6 @@ module.exports = () => {
         description: {type: 'string'},
         page_layout: {type: 'string'},
         exhibit_template: {type: 'string'},
-        styles: {type: 'object'},
         updated_by: {type: 'string'}
     };
 };

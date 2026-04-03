@@ -97,13 +97,6 @@ const itemsDetailsTimelineItemModule = (function () {
                 return null;
             }
 
-            const profile = authModule.get_user_profile_data();
-
-            if (!profile?.uid) {
-                display_message(message_element, 'danger', 'Invalid user profile data');
-                return null;
-            }
-
             if (!EXHIBITS_ENDPOINTS?.exhibits?.timeline_item_record?.get?.endpoint) {
                 display_message(message_element, 'danger', 'API endpoint configuration missing');
                 return null;
@@ -115,8 +108,7 @@ const itemsDetailsTimelineItemModule = (function () {
                 .replace(':item_id', encodeURIComponent(item_id));
 
             const params = new URLSearchParams({
-                type: 'edit',
-                uid: profile.uid
+                type: 'details'
             });
             const full_url = `${endpoint}?${params.toString()}`;
 

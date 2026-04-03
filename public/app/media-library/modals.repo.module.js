@@ -94,12 +94,13 @@ const repoModalsModule = (function() {
     };
 
     /**
-     * Derive media_type from a MIME type string
+     * Derive media_type from a MIME type string.
+     * MIME type is the sole source of truth for media_type classification.
      * @param {string|null} mime_type - MIME type (e.g. 'image/tiff', 'application/pdf')
-     * @returns {string} One of: 'image', 'pdf', 'audio', 'video', or 'image' as default
+     * @returns {string} One of: 'image', 'pdf', 'audio', 'video', or 'unknown'
      */
     const derive_media_type = (mime_type) => {
-        if (!mime_type || typeof mime_type !== 'string') return 'image';
+        if (!mime_type || typeof mime_type !== 'string') return 'unknown';
 
         const mt = mime_type.toLowerCase();
 
@@ -108,7 +109,7 @@ const repoModalsModule = (function() {
         if (mt.startsWith('audio/')) return 'audio';
         if (mt.startsWith('video/')) return 'video';
 
-        return 'image';
+        return 'unknown';
     };
 
     // ========================================

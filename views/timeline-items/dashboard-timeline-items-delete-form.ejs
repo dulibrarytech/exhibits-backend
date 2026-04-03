@@ -1,6 +1,6 @@
 <%- include('../partials/header.ejs'); %>
 <body>
-<%- include('../partials/nav.ejs'); %>
+<%- include('../partials/nav-dashboard.ejs'); %>
 <div id="right-panel" class="right-panel">
     <%- include('../partials/main-header.ejs'); %>
     <div class="content" style="min-height: 875px;">
@@ -33,6 +33,9 @@
 
         try {
 
+            navModule.init();
+            navModule.wire_nav_links();
+
             const status = helperModule.get_parameter_by_name('status');
             const exhibit_id = helperModule.get_parameter_by_name('exhibit_id');
             const timeline_id = helperModule.get_parameter_by_name('timeline_id');
@@ -54,8 +57,6 @@
                 document.querySelector('#delete-item-btn').addEventListener('click', itemsTimelineModule.delete_timeline_item);
                 helperModule.show_form();
             }
-
-            navModule.set_item_list_link();
 
         } catch (error) {
             document.querySelector('#message').innerHTML = `<div class="alert alert-danger" role="alert"><i class="fa fa-exclamation"></i> ${error.message}</div>`;

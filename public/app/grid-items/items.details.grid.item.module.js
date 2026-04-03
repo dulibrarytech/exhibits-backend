@@ -20,7 +20,7 @@ const itemsDetailsGridItemModule = (function () {
 
     'use strict';
 
-    const APP_PATH = window.localStorage.getItem('exhibits_app_path');
+    // const APP_PATH = window.localStorage.getItem('exhibits_app_path');
     const EXHIBITS_ENDPOINTS = endpointsModule.get_exhibits_endpoints();
     let obj = {};
 
@@ -32,7 +32,6 @@ const itemsDetailsGridItemModule = (function () {
             const grid_id = helperModule.get_parameter_by_name('grid_id');
             const item_id = helperModule.get_parameter_by_name('item_id');
             const token = authModule.get_user_token();
-            const profile = authModule.get_user_profile_data();
             let tmp = EXHIBITS_ENDPOINTS.exhibits.grid_item_record.get.endpoint.replace(':exhibit_id', exhibit_id);
             tmp = tmp.replace(':grid_id', grid_id);
             let endpoint = tmp.replace(':item_id', item_id);
@@ -50,7 +49,7 @@ const itemsDetailsGridItemModule = (function () {
 
             let response = await httpModule.req({
                 method: 'GET',
-                url: endpoint + '?type=edit&uid=' + profile.uid,
+                url: endpoint + '?type=details',
                 headers: {
                     'Content-Type': 'application/json',
                     'x-access-token': token
@@ -108,9 +107,6 @@ const itemsDetailsGridItemModule = (function () {
             const el = document.querySelector(selector);
             if (el) el.value = value;
         };
-
-        // Check lock status
-        helperModule.check_if_locked(record, '#item-submit-card');
 
         // Format and display creation/update metadata
         const create_datetime = helperModule.format_date(new Date(record.created));

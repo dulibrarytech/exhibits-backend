@@ -18,31 +18,33 @@
 
 'use strict';
 
+const APP_CONFIG = require('../config/app_config')();
 const CONTROLLER = require('../auth/controller');
 const ENDPOINTS = require('../auth/endpoints');
 const TOKENS = require('../libs/tokens');
+const APP_PATH = APP_CONFIG.app_path;
 
 module.exports = function (app) {
 
-    app.route('/exhibits-dashboard/auth')
+    app.route(`${APP_PATH}/auth`)
         .get(CONTROLLER.get_auth_landing);
 
-    app.route('/exhibits-dashboard/auth/login')
+    app.route(`${APP_PATH}/auth/login`)
         .get(TOKENS.verify);
 
-    app.route('/exhibits-dashboard/auth/sso')
+    app.route(`${APP_PATH}/auth/sso`)
         .post(CONTROLLER.sso);
 
-    app.route('/exhibits-dashboard/auth/permissions')
+    app.route(`${APP_PATH}/auth/permissions`)
         .post(TOKENS.verify, CONTROLLER.check_permissions);
 
-    app.route('/exhibits-dashboard/auth/roles')
+    app.route(`${APP_PATH}/auth/roles`)
         .get(TOKENS.verify, CONTROLLER.get_roles);
 
-    app.route('/exhibits-dashboard/auth/role')
+    app.route(`${APP_PATH}/auth/role`)
         .get(TOKENS.verify, CONTROLLER.get_user_role);
 
-    app.route('/exhibits-dashboard/auth/role/update')
+    app.route(`${APP_PATH}/auth/role/update`)
         .get(CONTROLLER.update_user_role);
 
     app.route(ENDPOINTS().auth.authentication.endpoint)

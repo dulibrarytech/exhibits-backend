@@ -26,6 +26,23 @@
     -->
     <link rel="stylesheet" href="/exhibits-dashboard/static/assets/css/cs-skin-elastic.css" type="text/css">
     <link rel="stylesheet" href="/exhibits-dashboard/static/assets/css/style.css" type="text/css">
+    <link rel="stylesheet" href="/exhibits-dashboard/static/assets/css/sidebar-overrides.css?<%=build_version%>" type="text/css">
     <link rel="stylesheet" href="https://unpkg.com/dropzone@5/dist/min/dropzone.min.css" type="text/css">
     <link rel="stylesheet" href="/exhibits-dashboard/static/libs/data_tables/datatables.min.css" type="text/css">
+    <script>
+        // Apply sidebar collapsed state synchronously before first paint.
+        // Runs before <body> exists, so targets <html> — the theme's .open
+        // CSS selectors (.open aside.left-panel, .open .right-panel, etc.)
+        // match any ancestor, so this works immediately.
+        // Default: collapsed. Only expand if user explicitly set '0'.
+        (function () {
+            try {
+                if (localStorage.getItem('exhibits_sidebar_collapsed') !== '0') {
+                    document.documentElement.classList.add('open');
+                }
+            } catch (e) {
+                document.documentElement.classList.add('open');
+            }
+        })();
+    </script>
 </head>

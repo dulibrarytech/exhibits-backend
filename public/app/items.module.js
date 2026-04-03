@@ -306,6 +306,11 @@ const itemsModule = (function() {
                 item_data_element.innerHTML = item_data;
             }
 
+            // Initialize action dropdown handlers
+            if (typeof itemsListDisplayModule !== 'undefined' && typeof itemsListDisplayModule.setup_item_action_handlers === 'function') {
+                itemsListDisplayModule.setup_item_action_handlers();
+            }
+
             // Destroy existing DataTable instance if it exists
             const items_table = document.querySelector('#items');
             if (items_table && DataTable.isDataTable('#items')) {
@@ -317,6 +322,9 @@ const itemsModule = (function() {
             const ITEM_LIST = new DataTable('#items', {
                 paging: false,
                 rowReorder: true,
+                columnDefs: [
+                    { orderable: false, searchable: false, targets: [2, 4] } // Child Items, Actions
+                ],
                 language: {
                     emptyTable: 'No items found',
                     zeroRecords: 'No matching items found',
@@ -779,7 +787,10 @@ const itemsModule = (function() {
         span.appendChild(icon);
 
         span.appendChild(document.createElement('br'));
-        span.appendChild(document.createTextNode('Published'));
+
+        const published_text = document.createElement('small');
+        published_text.textContent = 'Published';
+        span.appendChild(published_text);
 
         status_element.textContent = '';
         status_element.appendChild(span);
@@ -816,7 +827,10 @@ const itemsModule = (function() {
         span.appendChild(icon);
 
         span.appendChild(document.createElement('br'));
-        span.appendChild(document.createTextNode('Unpublished'));
+
+        const unpublished_text = document.createElement('small');
+        unpublished_text.textContent = 'Unpublished';
+        span.appendChild(unpublished_text);
 
         status_element.textContent = '';
         status_element.appendChild(span);
@@ -836,136 +850,112 @@ const itemsModule = (function() {
             return;
         }
 
-        // Create actions container
-        const actions_div = document.createElement('div');
-        actions_div.className = 'card-text text-sm-center';
-
-        // Determine paths based on item type
-        let edit_path = '';
-        let delete_path = '';
-        let view_items_link = null;
-        let item_category = 'item';
-
         const encoded_exhibit_id = encodeURIComponent(exhibit_id);
         const encoded_uuid = encodeURIComponent(uuid);
+
+        // Determine edit/details URL based on item type
+        let edit_url = '';
+        let edit_label = '';
+        let edit_icon = '';
+        let delete_url = '';
+        let item_category = 'item';
 
         switch(item_type) {
             case 'heading':
                 item_category = 'heading';
-                if (is_published) {
-                    edit_path = `${APP_PATH}/items/heading/details?exhibit_id=${encoded_exhibit_id}&item_id=${encoded_uuid}`;
-                } else {
-                    edit_path = `${APP_PATH}/items/heading/edit?exhibit_id=${encoded_exhibit_id}&item_id=${encoded_uuid}`;
-                }
+                edit_url = is_published
+                    ? `${APP_PATH}/items/heading/details?exhibit_id=${encoded_exhibit_id}&item_id=${encoded_uuid}`
+                    : `${APP_PATH}/items/heading/edit?exhibit_id=${encoded_exhibit_id}&item_id=${encoded_uuid}`;
+                edit_label = is_published ? 'Details' : 'Edit';
+                edit_icon = is_published ? 'fa-folder-open' : 'fa-edit';
                 break;
 
             case 'text':
-                if (is_published) {
-                    edit_path = `${APP_PATH}/items/standard/text/details?exhibit_id=${encoded_exhibit_id}&item_id=${encoded_uuid}`;
-                } else {
-                    edit_path = `${APP_PATH}/items/standard/text/edit?exhibit_id=${encoded_exhibit_id}&item_id=${encoded_uuid}`;
-                }
+                edit_url = is_published
+                    ? `${APP_PATH}/items/standard/text/details?exhibit_id=${encoded_exhibit_id}&item_id=${encoded_uuid}`
+                    : `${APP_PATH}/items/standard/text/edit?exhibit_id=${encoded_exhibit_id}&item_id=${encoded_uuid}`;
+                edit_label = is_published ? 'Details' : 'Edit';
+                edit_icon = is_published ? 'fa-folder-open' : 'fa-edit';
                 break;
 
             case 'grid':
                 item_category = 'grid';
-                if (is_published) {
-                    edit_path = `${APP_PATH}/items/grid/details?exhibit_id=${encoded_exhibit_id}&item_id=${encoded_uuid}`;
-                } else {
-                    edit_path = `${APP_PATH}/items/grid/edit?exhibit_id=${encoded_exhibit_id}&item_id=${encoded_uuid}`;
-                }
-
-                // Add view items link for grids
-                const view_grid_url = `${APP_PATH}/items/grid/items?exhibit_id=${encoded_exhibit_id}&grid_id=${encoded_uuid}`;
-                view_items_link = document.createElement('a');
-                view_items_link.href = view_grid_url;
-                view_items_link.setAttribute('title', 'View grid items');
-                view_items_link.setAttribute('aria-label', 'view-grid-items');
-
-                const grid_icon = document.createElement('i');
-                grid_icon.className = 'fa fa-list pr-1';
-                grid_icon.setAttribute('aria-hidden', 'true');
-                view_items_link.appendChild(grid_icon);
+                edit_url = is_published
+                    ? `${APP_PATH}/items/grid/details?exhibit_id=${encoded_exhibit_id}&item_id=${encoded_uuid}`
+                    : `${APP_PATH}/items/grid/edit?exhibit_id=${encoded_exhibit_id}&item_id=${encoded_uuid}`;
+                edit_label = is_published ? 'Details' : 'Edit';
+                edit_icon = is_published ? 'fa-folder-open' : 'fa-edit';
                 break;
 
             case 'timeline':
                 item_category = 'timeline';
-                if (is_published) {
-                    edit_path = `${APP_PATH}/items/vertical-timeline/details?exhibit_id=${encoded_exhibit_id}&item_id=${encoded_uuid}`;
-                } else {
-                    edit_path = `${APP_PATH}/items/vertical-timeline/edit?exhibit_id=${encoded_exhibit_id}&item_id=${encoded_uuid}`;
-                }
-
-                // Add view items link for timelines
-                const view_timeline_url = `${APP_PATH}/items/timeline/items?exhibit_id=${encoded_exhibit_id}&timeline_id=${encoded_uuid}`;
-                view_items_link = document.createElement('a');
-                view_items_link.href = view_timeline_url;
-                view_items_link.setAttribute('title', 'View timeline items');
-                view_items_link.setAttribute('aria-label', 'view-timeline-items');
-
-                const timeline_icon = document.createElement('i');
-                timeline_icon.className = 'fa fa-list pr-1';
-                timeline_icon.setAttribute('aria-hidden', 'true');
-                view_items_link.appendChild(timeline_icon);
+                edit_url = is_published
+                    ? `${APP_PATH}/items/vertical-timeline/details?exhibit_id=${encoded_exhibit_id}&item_id=${encoded_uuid}`
+                    : `${APP_PATH}/items/vertical-timeline/edit?exhibit_id=${encoded_exhibit_id}&item_id=${encoded_uuid}`;
+                edit_label = is_published ? 'Details' : 'Edit';
+                edit_icon = is_published ? 'fa-folder-open' : 'fa-edit';
                 break;
 
             default:
-                // Image and other media types
-                if (is_published) {
-                    edit_path = `${APP_PATH}/items/standard/media/details?exhibit_id=${encoded_exhibit_id}&item_id=${encoded_uuid}`;
-                } else {
-                    edit_path = `${APP_PATH}/items/standard/media/edit?exhibit_id=${encoded_exhibit_id}&item_id=${encoded_uuid}`;
-                }
+                edit_url = is_published
+                    ? `${APP_PATH}/items/standard/media/details?exhibit_id=${encoded_exhibit_id}&item_id=${encoded_uuid}`
+                    : `${APP_PATH}/items/standard/media/edit?exhibit_id=${encoded_exhibit_id}&item_id=${encoded_uuid}`;
+                edit_label = is_published ? 'Details' : 'Edit';
+                edit_icon = is_published ? 'fa-folder-open' : 'fa-edit';
         }
 
-        delete_path = `${APP_PATH}/items/delete?exhibit_id=${encoded_exhibit_id}&item_id=${encoded_uuid}&type=${encodeURIComponent(item_category)}`;
+        delete_url = `${APP_PATH}/items/delete?exhibit_id=${encoded_exhibit_id}&item_id=${encoded_uuid}&type=${encodeURIComponent(item_category)}`;
 
-        // Add view items link if exists
-        if (view_items_link) {
-            actions_div.appendChild(view_items_link);
-            actions_div.appendChild(document.createTextNode('\u00A0'));
-        }
-
-        // Add edit/view link
-        const edit_link = document.createElement('a');
-        edit_link.href = edit_path;
-        edit_link.setAttribute('title', is_published ? 'View details' : 'Edit item');
-        edit_link.setAttribute('aria-label', is_published ? 'view-item-details' : 'edit-item');
-
-        const edit_icon = document.createElement('i');
-        edit_icon.className = is_published ? 'fa fa-folder-open pr-1' : 'fa fa-edit pr-1';
-        edit_icon.setAttribute('aria-hidden', 'true');
-        edit_link.appendChild(edit_icon);
-
-        actions_div.appendChild(edit_link);
-        actions_div.appendChild(document.createTextNode('\u00A0'));
-
-        // Add delete button (only if unpublished)
+        // Build delete action
+        let delete_html;
         if (is_published) {
-            const delete_icon = document.createElement('i');
-            delete_icon.className = 'fa fa-trash pr-1';
-            delete_icon.setAttribute('title', 'Can only delete if unpublished');
-            delete_icon.setAttribute('aria-label', 'delete-disabled');
-            delete_icon.style.color = '#d3d3d3';
-            delete_icon.setAttribute('aria-hidden', 'true');
-            actions_div.appendChild(delete_icon);
+            delete_html = `
+                    <a class="dropdown-item text-muted disabled"
+                       href="#"
+                       style="font-size: 0.875rem; pointer-events: none; opacity: 0.5;"
+                       title="Can only delete if unpublished">
+                        <i class="fa fa-trash mr-2" aria-hidden="true" style="width: 16px;"></i>
+                        Delete
+                    </a>`;
         } else {
-            const delete_link = document.createElement('a');
-            delete_link.href = delete_path;
-            delete_link.setAttribute('title', 'Delete item');
-            delete_link.setAttribute('aria-label', 'delete-item');
-
-            const delete_icon = document.createElement('i');
-            delete_icon.className = 'fa fa-trash pr-1';
-            delete_icon.setAttribute('aria-hidden', 'true');
-            delete_link.appendChild(delete_icon);
-
-            actions_div.appendChild(delete_link);
+            delete_html = `
+                    <a class="dropdown-item text-danger"
+                       href="${delete_url}"
+                       style="font-size: 0.875rem;">
+                        <i class="fa fa-trash mr-2" aria-hidden="true" style="width: 16px;"></i>
+                        Delete
+                    </a>`;
         }
 
-        // Replace content
-        actions_element.textContent = '';
-        actions_element.appendChild(actions_div);
+        actions_element.innerHTML = `
+            <div class="dropdown" style="display: inline-block; position: relative;">
+                <button type="button"
+                        class="btn btn-link p-0 border-0 item-actions-toggle"
+                        style="color: #6c757d; font-size: 1.25rem; line-height: 1; background: none;"
+                        data-toggle="dropdown"
+                        data-bs-toggle="dropdown"
+                        aria-haspopup="true"
+                        aria-expanded="false"
+                        title="Actions">
+                    <i class="fa fa-ellipsis-v" aria-hidden="true"></i>
+                </button>
+                <div class="dropdown-menu item-actions-menu">
+                    <a class="dropdown-item"
+                       href="${edit_url}"
+                       style="font-size: 0.875rem;">
+                        <i class="fa ${edit_icon} mr-2" aria-hidden="true" style="width: 16px;"></i>
+                        ${edit_label}
+                    </a>
+                    <div class="dropdown-divider"></div>
+                    ${delete_html}
+                </div>
+            </div>
+        `;
+
+        // Re-initialize dropdown handlers
+        if (typeof itemsListDisplayModule !== 'undefined' && typeof itemsListDisplayModule.setup_item_action_handlers === 'function') {
+            itemsListDisplayModule.setup_item_action_handlers();
+        }
     }
 
     /**

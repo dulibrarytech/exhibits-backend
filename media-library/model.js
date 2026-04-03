@@ -364,6 +364,82 @@ exports.update_media_record = async (media_id, data) => {
 };
 
 /**
+ * Adds an exhibit UUID to a media record's exhibits JSON array
+ * @param {string} media_id - Media record UUID
+ * @param {string} exhibit_uuid - Exhibit UUID to add
+ * @param {string|null} media_role - Role context for logging ('item_media', 'thumbnail', etc.)
+ * @returns {Promise<Object>} Result object with updated exhibits array
+ */
+exports.add_exhibit_to_media_record = async (media_id, exhibit_uuid, media_role = null) => {
+
+    try {
+
+        if (!is_valid_uuid(media_id)) {
+            return build_response(false, 'Invalid media ID format');
+        }
+
+        if (!is_valid_uuid(exhibit_uuid)) {
+            return build_response(false, 'Invalid exhibit UUID format');
+        }
+
+        const result = await media_task.add_exhibit_to_media_record(media_id, exhibit_uuid, media_role);
+
+        if (!result || !result.success) {
+            return build_response(false, result?.message || 'Failed to add exhibit to media record');
+        }
+
+        LOGGER.module().info('INFO: [/media-library/model (add_exhibit_to_media_record)] Exhibit added to media: ' + media_id);
+
+        return build_response(true, result.message, {
+            exhibits: result.exhibits,
+            already_present: result.already_present || false
+        });
+
+    } catch (error) {
+        LOGGER.module().error('ERROR: [/media-library/model (add_exhibit_to_media_record)] ' + error.message);
+        return build_response(false, 'Error adding exhibit to media record: ' + error.message);
+    }
+};
+
+/**
+ * Removes an exhibit UUID from a media record's exhibits JSON array
+ * @param {string} media_id - Media record UUID
+ * @param {string} exhibit_uuid - Exhibit UUID to remove
+ * @param {string|null} media_role - Role context for logging ('item_media', 'thumbnail', etc.)
+ * @returns {Promise<Object>} Result object with updated exhibits array
+ */
+exports.remove_exhibit_from_media_record = async (media_id, exhibit_uuid, media_role = null) => {
+
+    try {
+
+        if (!is_valid_uuid(media_id)) {
+            return build_response(false, 'Invalid media ID format');
+        }
+
+        if (!is_valid_uuid(exhibit_uuid)) {
+            return build_response(false, 'Invalid exhibit UUID format');
+        }
+
+        const result = await media_task.remove_exhibit_from_media_record(media_id, exhibit_uuid, media_role);
+
+        if (!result || !result.success) {
+            return build_response(false, result?.message || 'Failed to remove exhibit from media record');
+        }
+
+        LOGGER.module().info('INFO: [/media-library/model (remove_exhibit_from_media_record)] Exhibit removed from media: ' + media_id);
+
+        return build_response(true, result.message, {
+            exhibits: result.exhibits,
+            not_present: result.not_present || false
+        });
+
+    } catch (error) {
+        LOGGER.module().error('ERROR: [/media-library/model (remove_exhibit_from_media_record)] ' + error.message);
+        return build_response(false, 'Error removing exhibit from media record: ' + error.message);
+    }
+};
+
+/**
  * Deletes a media record (soft delete)
  * @param {string} media_id - Media record UUID
  * @param {string|null} username - Username (du_id) of user performing deletion

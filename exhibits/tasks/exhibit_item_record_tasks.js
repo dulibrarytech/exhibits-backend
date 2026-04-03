@@ -121,7 +121,6 @@ const Exhibit_item_record_tasks = class extends Base_tasks {
             });
 
             this._validate_string(data.item_type, 'item_type');
-            // this._validate_string(data.mime_type, 'mime_type');
 
             // Build record with defaults
             const record_data = {
@@ -412,6 +411,86 @@ const Exhibit_item_record_tasks = class extends Base_tasks {
         } catch (error) {
             this._handle_error(error, 'get_item_edit_record', {
                 uid,
+                uuid
+            });
+        }
+    }
+
+    /**
+     * Gets an item record with media library metadata for read-only details view.
+     * Same query as get_item_edit_record but does NOT lock the record.
+     * @param {string} is_member_of_exhibit - The exhibit UUID
+     * @param {string} uuid - The item UUID
+     * @returns {Promise<Object|null>} Item record with media metadata or null
+     */
+    async get_item_details_record(is_member_of_exhibit, uuid) {
+
+        try {
+
+            this._validate_database();
+            this._validate_table('item_records');
+            this._validate_table('media_library_records');
+
+            const validated = this._validate_uuids({
+                [is_member_of_exhibit]: 'exhibit UUID',
+                [uuid]: 'item UUID'
+            });
+
+            const record = await this.DB(this.TABLE.item_records)
+                .select(
+                    `${this.TABLE.item_records}.*`,
+                    // Media library metadata for the primary media asset
+                    `media_lib.name as media_name`,
+                    `media_lib.ingest_method as media_ingest_method`,
+                    `media_lib.kaltura_thumbnail_url as media_kaltura_thumbnail_url`,
+                    `media_lib.repo_uuid as media_repo_uuid`,
+                    `media_lib.thumbnail_path as media_thumbnail_path`,
+                    `media_lib.alt_text as media_alt_text`,
+                    `media_lib.is_alt_text_decorative as media_is_alt_text_decorative`,
+                    `media_lib.topics_subjects as media_topics_subjects`,
+                    `media_lib.genre_form_subjects as media_genre_form_subjects`,
+                    `media_lib.places_subjects as media_places_subjects`,
+                    // Media library metadata for the thumbnail asset
+                    `thumb_lib.name as thumbnail_media_name`,
+                    `thumb_lib.ingest_method as thumbnail_ingest_method`,
+                    `thumb_lib.repo_uuid as thumbnail_repo_uuid`,
+                    `thumb_lib.thumbnail_path as thumbnail_media_thumbnail_path`
+                )
+                .leftJoin(
+                    `${this.TABLE.media_library_records} as media_lib`,
+                    `${this.TABLE.item_records}.media_uuid`,
+                    '=',
+                    `media_lib.uuid`
+                )
+                .leftJoin(
+                    `${this.TABLE.media_library_records} as thumb_lib`,
+                    `${this.TABLE.item_records}.thumbnail_media_uuid`,
+                    '=',
+                    `thumb_lib.uuid`
+                )
+                .where({
+                    [`${this.TABLE.item_records}.is_member_of_exhibit`]: validated['exhibit UUID'],
+                    [`${this.TABLE.item_records}.uuid`]: validated['item UUID'],
+                    [`${this.TABLE.item_records}.is_deleted`]: 0
+                })
+                .first()
+                .timeout(this.QUERY_TIMEOUT);
+
+            if (!record) {
+                this._log_success('Item record not found', validated);
+                return null;
+            }
+
+            this._log_success('Item details record retrieved successfully', {
+                uuid: validated['item UUID'],
+                is_member_of_exhibit: validated['exhibit UUID']
+            });
+
+            return record;
+
+        } catch (error) {
+            this._handle_error(error, 'get_item_details_record', {
+                is_member_of_exhibit,
                 uuid
             });
         }

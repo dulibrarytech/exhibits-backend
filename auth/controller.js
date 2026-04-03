@@ -19,11 +19,12 @@
 'use strict';
 
 const CONFIG = require('../config/webservices_config')();
+const APP_CONFIG = require('../config/app_config')();
 const TOKEN = require('../libs/tokens');
 const MODEL = require('../auth/model');
 const LOGGER = require('../libs/log4');
 const AUTHORIZE = require('./authorize');
-const APP_PATH = '/exhibits-dashboard';
+const APP_PATH = APP_CONFIG.app_path;
 
 exports.get_auth_landing = function (req, res) {
     res.render('dist/auth-landing', {

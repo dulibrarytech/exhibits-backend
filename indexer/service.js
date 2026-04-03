@@ -18,14 +18,11 @@
 
 'use strict';
 
-const {Client} = require("@elastic/elasticsearch");
 const ES_CONFIG = require('../config/elasticsearch_config')();
 const INDEXER_UTILS_TASKS = require('./tasks/indexer_index_utils_tasks');
 const INDEX = ES_CONFIG.elasticsearch_index;
 const LOGGER = require('../libs/log4');
-const CLIENT = new Client({
-    node: ES_CONFIG.elasticsearch_host
-});
+const {CLIENT} = require('../indexer/indexer_helper');
 
 /**
  * Checks if index exists.  If it does, it deletes it.

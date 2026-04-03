@@ -226,7 +226,7 @@ const Media_record_tasks = class {
      * @param {Object} options - Query options
      * @param {number} [options.page=1] - Page number (1-based)
      * @param {number} [options.limit=20] - Records per page
-     * @param {string} [options.q=null] - Search term (matches name, original_filename, description)
+     * @param {string} [options.q=null] - Search term (matches name, original_filename, description, created_by)
      * @param {string} [options.media_type=null] - Media type filter (image, video, audio, pdf)
      * @returns {Promise<Object>} { success, records, total, page, limit, message }
      */
@@ -266,7 +266,8 @@ const Media_record_tasks = class {
                     query.where(function () {
                         this.where('name', 'like', like_term)
                             .orWhere('original_filename', 'like', like_term)
-                            .orWhere('description', 'like', like_term);
+                            .orWhere('description', 'like', like_term)
+                            .orWhere('created_by', 'like', like_term);
                     });
                 }
             };
@@ -548,6 +549,220 @@ const Media_record_tasks = class {
     }
 
     /**
+     * Adds an exhibit UUID to a media record's exhibits JSON array.
+     * Creates the array if null/empty; prevents duplicate entries.
+     * Uses a transaction with SELECT ... FOR UPDATE to prevent race conditions.
+     *
+     * @param {string} media_uuid - Media record UUID
+     * @param {string} exhibit_uuid - Exhibit UUID to add
+     * @param {string|null} media_role - Role context for logging ('item_media', 'thumbnail', etc.)
+     * @returns {Promise<Object>} Result with updated exhibits array
+     */
+    async add_exhibit_to_media_record(media_uuid, exhibit_uuid, media_role = null) {
+
+        try {
+
+            this._validate_database();
+            this._validate_table('media_library_records');
+
+            const validated_media_uuid = this._validate_uuid(media_uuid, 'media UUID');
+            const validated_exhibit_uuid = this._validate_uuid(exhibit_uuid, 'exhibit UUID');
+
+            const result = await this.DB.transaction(async (trx) => {
+
+                // Lock the row to prevent concurrent modifications
+                const record = await trx(this.TABLE.media_library_records)
+                    .select('id', 'uuid', 'exhibits', 'is_deleted')
+                    .where({ uuid: validated_media_uuid })
+                    .forUpdate()
+                    .first()
+                    .timeout(this.QUERY_TIMEOUT);
+
+                if (!record) {
+                    return { success: false, message: 'Media record not found' };
+                }
+
+                if (record.is_deleted === 1) {
+                    return { success: false, message: 'Cannot update deleted media record' };
+                }
+
+                // Parse existing exhibits array or initialize empty
+                let exhibits = [];
+
+                if (record.exhibits && typeof record.exhibits === 'string') {
+                    try {
+                        exhibits = JSON.parse(record.exhibits);
+
+                        if (!Array.isArray(exhibits)) {
+                            exhibits = [];
+                        }
+                    } catch (parse_error) {
+                        LOGGER.module().warn(`WARNING: [/media-library/tasks/media_record_tasks (add_exhibit_to_media_record)] Invalid JSON in exhibits field for ${validated_media_uuid}, resetting to empty array`);
+                        exhibits = [];
+                    }
+                }
+
+                // Prevent duplicate entries
+                if (exhibits.includes(validated_exhibit_uuid)) {
+                    return {
+                        success: true,
+                        already_present: true,
+                        exhibits: exhibits,
+                        message: 'Exhibit UUID already present in media record'
+                    };
+                }
+
+                // Append the exhibit UUID
+                exhibits.push(validated_exhibit_uuid);
+
+                // Write back
+                await trx(this.TABLE.media_library_records)
+                    .where({ uuid: validated_media_uuid, is_deleted: 0 })
+                    .update({
+                        exhibits: JSON.stringify(exhibits),
+                        updated: trx.fn.now()
+                    })
+                    .timeout(this.QUERY_TIMEOUT);
+
+                return {
+                    success: true,
+                    exhibits: exhibits,
+                    message: 'Exhibit UUID added to media record'
+                };
+            });
+
+            if (result.success && !result.already_present) {
+                this._log_success('Exhibit added to media record', {
+                    media_uuid: validated_media_uuid,
+                    exhibit_uuid: validated_exhibit_uuid,
+                    media_role: media_role || 'unknown',
+                    exhibits_count: result.exhibits.length
+                });
+            } else if (result.success && result.already_present) {
+                this._log_success('Exhibit already associated with media record (no-op)', {
+                    media_uuid: validated_media_uuid,
+                    exhibit_uuid: validated_exhibit_uuid,
+                    media_role: media_role || 'unknown',
+                    exhibits_count: result.exhibits.length
+                });
+            }
+
+            return result;
+
+        } catch (error) {
+            this._handle_error(error, 'add_exhibit_to_media_record', { media_uuid, exhibit_uuid, media_role });
+        }
+    }
+
+    /**
+     * Removes an exhibit UUID from a media record's exhibits JSON array.
+     * No-op if the exhibit UUID is not present in the array.
+     * Uses a transaction with SELECT ... FOR UPDATE to prevent race conditions.
+     *
+     * @param {string} media_uuid - Media record UUID
+     * @param {string} exhibit_uuid - Exhibit UUID to remove
+     * @param {string|null} media_role - Role context for logging ('item_media', 'thumbnail', etc.)
+     * @returns {Promise<Object>} Result with updated exhibits array
+     */
+    async remove_exhibit_from_media_record(media_uuid, exhibit_uuid, media_role = null) {
+
+        try {
+
+            this._validate_database();
+            this._validate_table('media_library_records');
+
+            const validated_media_uuid = this._validate_uuid(media_uuid, 'media UUID');
+            const validated_exhibit_uuid = this._validate_uuid(exhibit_uuid, 'exhibit UUID');
+
+            const result = await this.DB.transaction(async (trx) => {
+
+                // Lock the row to prevent concurrent modifications
+                const record = await trx(this.TABLE.media_library_records)
+                    .select('id', 'uuid', 'exhibits', 'is_deleted')
+                    .where({ uuid: validated_media_uuid })
+                    .forUpdate()
+                    .first()
+                    .timeout(this.QUERY_TIMEOUT);
+
+                if (!record) {
+                    return { success: false, message: 'Media record not found' };
+                }
+
+                if (record.is_deleted === 1) {
+                    return { success: false, message: 'Cannot update deleted media record' };
+                }
+
+                // Parse existing exhibits array
+                let exhibits = [];
+
+                if (record.exhibits && typeof record.exhibits === 'string') {
+                    try {
+                        exhibits = JSON.parse(record.exhibits);
+
+                        if (!Array.isArray(exhibits)) {
+                            exhibits = [];
+                        }
+                    } catch (parse_error) {
+                        LOGGER.module().warn(`WARNING: [/media-library/tasks/media_record_tasks (remove_exhibit_from_media_record)] Invalid JSON in exhibits field for ${validated_media_uuid}, resetting to empty array`);
+                        exhibits = [];
+                    }
+                }
+
+                // Check if UUID is present
+                const index = exhibits.indexOf(validated_exhibit_uuid);
+
+                if (index === -1) {
+                    return {
+                        success: true,
+                        not_present: true,
+                        exhibits: exhibits,
+                        message: 'Exhibit UUID was not present in media record'
+                    };
+                }
+
+                // Remove the exhibit UUID
+                exhibits.splice(index, 1);
+
+                // Write back (store null if empty for clean DB state)
+                await trx(this.TABLE.media_library_records)
+                    .where({ uuid: validated_media_uuid, is_deleted: 0 })
+                    .update({
+                        exhibits: exhibits.length > 0 ? JSON.stringify(exhibits) : null,
+                        updated: trx.fn.now()
+                    })
+                    .timeout(this.QUERY_TIMEOUT);
+
+                return {
+                    success: true,
+                    exhibits: exhibits,
+                    message: 'Exhibit UUID removed from media record'
+                };
+            });
+
+            if (result.success && !result.not_present) {
+                this._log_success('Exhibit removed from media record', {
+                    media_uuid: validated_media_uuid,
+                    exhibit_uuid: validated_exhibit_uuid,
+                    media_role: media_role || 'unknown',
+                    exhibits_count: result.exhibits.length
+                });
+            } else if (result.success && result.not_present) {
+                this._log_success('Exhibit was not associated with media record (no-op)', {
+                    media_uuid: validated_media_uuid,
+                    exhibit_uuid: validated_exhibit_uuid,
+                    media_role: media_role || 'unknown',
+                    exhibits_count: result.exhibits.length
+                });
+            }
+
+            return result;
+
+        } catch (error) {
+            this._handle_error(error, 'remove_exhibit_from_media_record', { media_uuid, exhibit_uuid, media_role });
+        }
+    }
+
+    /**
      * Checks if a non-deleted media record already exists with the given field value
      * Used to detect duplicate imports for repo_uuid and kaltura_entry_id
      * @param {string} field_name - Column name to check ('repo_uuid' or 'kaltura_entry_id')
@@ -644,7 +859,7 @@ const Media_record_tasks = class {
         }
     }
 
-    /** TODO
+    /** TODO: media searches currently occur client-side
      * Searches media records by keyword
      * @param {string} keyword - Search keyword
      * @param {Object} [options={}] - Search options (limit, offset)

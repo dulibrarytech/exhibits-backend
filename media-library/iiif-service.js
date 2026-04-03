@@ -33,7 +33,7 @@ const LOGGER = require('../libs/log4');
 
 // Base URL for constructing IIIF identifiers
 const APP_BASE_URL = APP_CONFIG.api_url || '';
-const IIIF_BASE = `${APP_BASE_URL}/exhibits-dashboard/iiif`;
+const IIIF_BASE = `${APP_BASE_URL}${APP_CONFIG.app_path}/iiif`;
 
 // IIIF Presentation API 3.0 context
 const IIIF_PRESENTATION_CONTEXT = 'http://iiif.io/api/presentation/3/context.json';
@@ -428,7 +428,7 @@ const build_kaltura_streaming_url = (entry_id) => {
         return null;
     }
 
-    return `https://cdnapisec.kaltura.com/p/${partner_id}/sp/${partner_id}00/playManifest/entryId/${entry_id}/format/applehttp/protocol/https`;
+    return `${KALTURA_CONFIG.kaltura_cdn}/p/${partner_id}/sp/${partner_id}00/playManifest/entryId/${entry_id}/format/applehttp/protocol/https`;
 };
 
 /**
@@ -446,7 +446,7 @@ const build_kaltura_embed_url = (entry_id) => {
         return null;
     }
 
-    return `https://cdnapisec.kaltura.com/p/${partner_id}/sp/${partner_id}00/embedIframeJs/uiconf_id/${uiconf_id}/partner_id/${partner_id}?iframeembed=true&entry_id=${entry_id}`;
+    return `${KALTURA_CONFIG.kaltura_cdn}/p/${partner_id}/sp/${partner_id}00/embedIframeJs/uiconf_id/${uiconf_id}/partner_id/${partner_id}?iframeembed=true&entry_id=${entry_id}`;
 };
 
 /**

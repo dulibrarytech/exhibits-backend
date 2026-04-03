@@ -105,8 +105,9 @@ const itemsCommonHeadingFormModule = (function () {
             await authModule.check_auth(token);
 
             navModule.init();
-            navModule.back_to_items();
-            navModule.set_preview_link();
+            // Note: #back-to-items href is now wired by navModule.wire_nav_links()
+            // via data-nav-path attributes set in the unified nav partial.
+            // set_preview_link() is already called inside init().
 
             document.querySelector('#heading-background-color-picker').addEventListener('input', () => {
                 if (document.querySelector('#heading-background-color')) {

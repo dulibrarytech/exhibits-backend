@@ -1,5 +1,13 @@
 <!-- Media Picker Modal -->
 <style>
+    #media-picker-modal .modal-header {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+    }
+    #media-picker-modal #media-picker-grid-container {
+        transition: opacity 0.15s ease-in-out;
+    }
     #media-picker-modal .media-grid {
         display: grid;
         grid-template-columns: repeat(4, 1fr);

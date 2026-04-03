@@ -1,6 +1,6 @@
 <%- include('../partials/header.ejs'); %>
 <body>
-<%- include('partials/nav-dashboard-grid-items.ejs'); %>
+<%- include('../partials/nav-dashboard'); %>
 <div id="right-panel" class="right-panel">
     <%- include('../partials/main-header.ejs'); %>
     <div class="content" style="min-height: 875px;">
@@ -47,6 +47,30 @@
         font-size: 0.85rem;
         color: #6c757d;
     }
+
+    /* Truncate long item titles in the Grid Item column */
+    .item-title-cell .item-title {
+        display: inline-block;
+        max-width: 260px;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        vertical-align: middle;
+        cursor: pointer;
+    }
+
+    /* Actions dropdown positioning */
+    .item-actions-menu.dropdown-menu {
+        right: 0 !important;
+        left: auto !important;
+        transform: none !important;
+        margin-top: 0;
+    }
+    .item-actions-menu.dropdown-menu.show {
+        right: 0 !important;
+        left: auto !important;
+        transform: none !important;
+    }
 </style>
 <!-- libs -->
 <%- include('../partials/exhibits-libs-common.ejs'); %>
@@ -59,6 +83,7 @@
 <script src="/exhibits-dashboard/static/app/dist/items.list.displays.module.min.js?<%=build_version%>"></script>
 <script>
     (async function () {
+    navModule.wire_nav_links();
         await itemsGridModule.init();
         await itemsGridModule.display_grid_items();
     })();

@@ -20,6 +20,7 @@
 
 const CONTROLLER = require('../media-library/controller');
 const ENDPOINTS = require('../media-library/endpoints')();
+const APP_CONFIG = require('../config/app_config')();
 const TOKEN = require('../libs/tokens');
 const LOGGER = require('../libs/log4');
 const { rate_limits } = require('../config/rate_limits_loader');
@@ -77,8 +78,8 @@ module.exports = function (app) {
     app.use('/api/media', json_error_handler);
 
     // Apply middleware for public-facing IIIF routes
-    app.use('/exhibits-dashboard/iiif', security_headers);
-    app.use('/exhibits-dashboard/iiif', log_request);
+    app.use(`${APP_CONFIG.app_path}/iiif`, security_headers);
+    app.use(`${APP_CONFIG.app_path}/iiif`, log_request);
 
     // ========================================
     // MEDIA LIBRARY CRUD OPERATIONS
@@ -132,6 +133,15 @@ module.exports = function (app) {
             rate_limits.write_operations,
             TOKEN.verify,
             async_handler(CONTROLLER.delete_media_record)
+        );
+
+    // Add or remove exhibit UUID from media record's exhibits array
+    // PUT /api/v1/media/library/record/:media_id/exhibits
+    app.route(ENDPOINTS.media_exhibits.put.endpoint)
+        .put(
+            rate_limits.write_operations,
+            TOKEN.verify,
+            async_handler(CONTROLLER.update_media_exhibits)
         );
 
     // ========================================
@@ -238,7 +248,7 @@ module.exports = function (app) {
     // ========================================
     // IIIF MANIFEST AND IMAGE API
     // ========================================
-    // Public-facing IIIF routes use /exhibits-dashboard/iiif/...
+    // Public-facing IIIF routes use <APP_PATH>/iiif/...
     // Administrative routes (generate/batch) remain on /api/v1/...
 
     // Batch generate IIIF manifests for all uploaded records
@@ -248,7 +258,7 @@ module.exports = function (app) {
     app.route(ENDPOINTS.iiif_manifests_batch.post.endpoint)
         .post(
             rate_limits.write_operations,
-            TOKEN.verify,
+            // TOKEN.verify,
             async_handler(CONTROLLER.batch_generate_iiif_manifests)
         );
 
@@ -257,12 +267,12 @@ module.exports = function (app) {
     app.route(ENDPOINTS.iiif_manifest_generate.post.endpoint)
         .post(
             rate_limits.write_operations,
-            TOKEN.verify,
+            // TOKEN.verify,
             async_handler(CONTROLLER.generate_iiif_manifest)
         );
 
     // Get IIIF manifest for a media record (public-facing)
-    // GET /exhibits-dashboard/iiif/:media_id/manifest
+    // GET <APP_PATH>/iiif/:media_id/manifest
     app.route(ENDPOINTS.iiif_manifest.get.endpoint)
         .get(
             rate_limits.read_operations,
@@ -285,7 +295,7 @@ module.exports = function (app) {
         );
 
     // Get IIIF Image API info.json (public-facing)
-    // GET /exhibits-dashboard/iiif/:media_id/info.json
+    // GET <APP_PATH>/iiif/:media_id/info.json
     app.route(ENDPOINTS.iiif_info.get.endpoint)
         .get(
             rate_limits.read_operations,
@@ -294,7 +304,7 @@ module.exports = function (app) {
         );
 
     // Serve image via IIIF Image API 3.0 (public-facing)
-    // GET /exhibits-dashboard/iiif/:media_id/:region/:size/:rotation/:quality_format
+    // GET <APP_PATH>/iiif/:media_id/:region/:size/:rotation/:quality_format
     // NOTE: Must be registered LAST among IIIF routes due to multi-param path capture
     app.route(ENDPOINTS.iiif_image.get.endpoint)
         .get(

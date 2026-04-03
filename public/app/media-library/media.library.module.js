@@ -27,10 +27,28 @@ const mediaLibraryModule = (function() {
     const get_repo_thumbnail_url = helperMediaLibraryModule.get_repo_thumbnail_url;
     const get_media_library_endpoints = endpointsModule.get_media_library_endpoints;
 
+    /**
+     * Strip HTML tags from a string
+     * @param {string} value - String potentially containing HTML
+     * @returns {string} Plain text with HTML tags removed
+     */
+    const strip_html = (value) => {
+        if (!value || typeof value !== 'string') {
+            return value || '';
+        }
+        const tmp = document.createElement('div');
+        tmp.innerHTML = value;
+        return tmp.textContent || tmp.innerText || '';
+    };
+
     let obj = {};
 
     // DataTable instance reference
     let media_data_table = null;
+
+    // Exhibit filter state
+    let exhibit_titles_cache = null;   // Map<uuid, title>
+    let selected_exhibit_uuid = null;  // Currently selected exhibit UUID for filtering
 
     // Image file extensions for thumbnail display
     const IMAGE_EXTENSIONS = ['.jpg', '.jpeg', '.png', '.gif', '.webp', '.svg'];
@@ -745,6 +763,365 @@ const mediaLibraryModule = (function() {
         }
     };
 
+    // ==================== EXHIBIT FILTER ====================
+
+    /**
+     * Fetches exhibit titles from the exhibits API and caches them.
+     * @returns {Promise<Map<string, string>|null>} Map of uuid→title or null on failure
+     */
+    const fetch_exhibit_titles = async () => {
+
+        if (exhibit_titles_cache !== null) {
+            return exhibit_titles_cache;
+        }
+
+        try {
+
+            const token = authModule.get_user_token();
+
+            if (!token) {
+                return null;
+            }
+
+            let endpoint = null;
+
+            if (typeof endpointsModule !== 'undefined' && typeof endpointsModule.get_exhibits_endpoints === 'function') {
+                const EXHIBIT_ENDPOINTS = endpointsModule.get_exhibits_endpoints();
+                endpoint = EXHIBIT_ENDPOINTS?.exhibits?.exhibit_records?.endpoint || null;
+            }
+
+            if (!endpoint) {
+                console.warn('Exhibits endpoint not configured for filter');
+                return null;
+            }
+
+            const response = await httpModule.req({
+                method: 'GET',
+                url: endpoint,
+                headers: {
+                    'Content-Type': 'application/json',
+                    'x-access-token': token
+                },
+                timeout: 15000,
+                validateStatus: (status) => status >= 200 && status < 600
+            });
+
+            if (!response || response.status !== HTTP_STATUS.OK || !response.data) {
+                return null;
+            }
+
+            // Handle both response shapes:
+            // Exhibits module: { status: 200, message: '...', data: [...] }
+            // Direct array: [...]
+            const payload = response.data;
+            const records = Array.isArray(payload) ? payload
+                : Array.isArray(payload.data) ? payload.data
+                : [];
+
+            const titles_map = new Map();
+
+            if (Array.isArray(records)) {
+                records.forEach(record => {
+                    if (record.uuid && record.title) {
+                        titles_map.set(record.uuid, strip_html(record.title));
+                    }
+                });
+            }
+
+            exhibit_titles_cache = titles_map;
+            return titles_map;
+
+        } catch (error) {
+            console.error('Error fetching exhibit titles:', error);
+            return null;
+        }
+    };
+
+    /**
+     * Builds the searchable exhibit filter dropdown inside the DataTable layout
+     * @param {Map<string, string>} titles_map - Map of exhibit UUID → title
+     */
+    const build_exhibit_filter = (titles_map) => {
+
+        const container = document.getElementById('exhibit-filter-container');
+
+        if (!container) {
+            return;
+        }
+
+        container.innerHTML = '';
+
+        if (!titles_map || titles_map.size === 0) {
+            return;
+        }
+
+        const sorted_entries = Array.from(titles_map.entries())
+            .sort((a, b) => a[1].localeCompare(b[1], undefined, { sensitivity: 'base' }));
+
+        // Build wrapper
+        const wrapper = document.createElement('div');
+        wrapper.className = 'exhibit-filter-wrapper';
+        wrapper.setAttribute('role', 'combobox');
+        wrapper.setAttribute('aria-expanded', 'false');
+        wrapper.setAttribute('aria-haspopup', 'listbox');
+        wrapper.setAttribute('aria-label', 'Filter by Exhibit');
+
+        // Label
+        const label = document.createElement('label');
+        label.className = 'exhibit-filter-label';
+        label.setAttribute('for', 'exhibit-filter-input');
+        label.textContent = 'Filter by Exhibit:';
+        wrapper.appendChild(label);
+
+        // Input container
+        const input_container = document.createElement('div');
+        input_container.className = 'exhibit-filter-input-container';
+
+        const input = document.createElement('input');
+        input.type = 'text';
+        input.id = 'exhibit-filter-input';
+        input.className = 'exhibit-filter-input';
+        input.placeholder = 'All exhibits';
+        input.setAttribute('autocomplete', 'off');
+        input.setAttribute('aria-controls', 'exhibit-filter-listbox');
+        input.setAttribute('role', 'searchbox');
+        input_container.appendChild(input);
+
+        const clear_btn = document.createElement('button');
+        clear_btn.type = 'button';
+        clear_btn.className = 'exhibit-filter-clear d-none';
+        clear_btn.innerHTML = '&times;';
+        clear_btn.setAttribute('aria-label', 'Clear exhibit filter');
+        clear_btn.setAttribute('tabindex', '-1');
+        input_container.appendChild(clear_btn);
+
+        const caret = document.createElement('span');
+        caret.className = 'exhibit-filter-caret';
+        caret.innerHTML = '<i class="fa fa-caret-down" aria-hidden="true"></i>';
+        input_container.appendChild(caret);
+
+        wrapper.appendChild(input_container);
+
+        // Dropdown listbox
+        const listbox = document.createElement('ul');
+        listbox.id = 'exhibit-filter-listbox';
+        listbox.className = 'exhibit-filter-listbox d-none';
+        listbox.setAttribute('role', 'listbox');
+
+        sorted_entries.forEach(([uuid, title]) => {
+            const li = document.createElement('li');
+            li.setAttribute('role', 'option');
+            li.setAttribute('data-uuid', uuid);
+            li.className = 'exhibit-filter-option';
+            li.textContent = title;
+            listbox.appendChild(li);
+        });
+
+        const empty_li = document.createElement('li');
+        empty_li.className = 'exhibit-filter-empty d-none';
+        empty_li.setAttribute('aria-live', 'polite');
+        empty_li.textContent = 'No matching exhibits';
+        listbox.appendChild(empty_li);
+
+        wrapper.appendChild(listbox);
+        container.appendChild(wrapper);
+
+        // ---- Event handlers ----
+        let active_index = -1;
+
+        const open_list = () => {
+            listbox.classList.remove('d-none');
+            wrapper.setAttribute('aria-expanded', 'true');
+        };
+
+        const close_list = () => {
+            listbox.classList.add('d-none');
+            wrapper.setAttribute('aria-expanded', 'false');
+            active_index = -1;
+            listbox.querySelectorAll('.exhibit-filter-option.active').forEach(el => el.classList.remove('active'));
+            input.removeAttribute('aria-activedescendant');
+        };
+
+        const get_visible_options = () => {
+            return Array.from(listbox.querySelectorAll('.exhibit-filter-option:not(.d-none)'));
+        };
+
+        const set_active = (index) => {
+            const options = get_visible_options();
+            if (options.length === 0) return;
+
+            listbox.querySelectorAll('.exhibit-filter-option.active').forEach(el => el.classList.remove('active'));
+
+            if (index < 0) index = options.length - 1;
+            if (index >= options.length) index = 0;
+            active_index = index;
+            options[active_index].classList.add('active');
+            options[active_index].scrollIntoView({ block: 'nearest' });
+            input.setAttribute('aria-activedescendant', options[active_index].getAttribute('data-uuid'));
+        };
+
+        const apply_filter = (uuid, title) => {
+            selected_exhibit_uuid = uuid;
+            input.value = title;
+            clear_btn.classList.remove('d-none');
+            caret.classList.add('d-none');
+            close_list();
+            if (media_data_table) {
+                media_data_table.draw();
+            }
+        };
+
+        const clear_filter = () => {
+            selected_exhibit_uuid = null;
+            input.value = '';
+            clear_btn.classList.add('d-none');
+            caret.classList.remove('d-none');
+            close_list();
+            filter_options('');
+            if (media_data_table) {
+                media_data_table.draw();
+            }
+        };
+
+        const filter_options = (search_text) => {
+            const lower = search_text.toLowerCase();
+            let visible_count = 0;
+
+            listbox.querySelectorAll('.exhibit-filter-option').forEach(li => {
+                const match = li.textContent.toLowerCase().includes(lower);
+                li.classList.toggle('d-none', !match);
+                if (match) visible_count++;
+            });
+
+            empty_li.classList.toggle('d-none', visible_count > 0);
+            active_index = -1;
+        };
+
+        input.addEventListener('focus', () => {
+            if (!selected_exhibit_uuid) {
+                filter_options(input.value);
+                open_list();
+            }
+        });
+
+        input.addEventListener('input', () => {
+            if (selected_exhibit_uuid) {
+                selected_exhibit_uuid = null;
+                clear_btn.classList.add('d-none');
+                caret.classList.remove('d-none');
+                if (media_data_table) {
+                    media_data_table.draw();
+                }
+            }
+            filter_options(input.value);
+            open_list();
+        });
+
+        input.addEventListener('keydown', (e) => {
+            const options = get_visible_options();
+
+            switch (e.key) {
+                case 'ArrowDown':
+                    e.preventDefault();
+                    if (listbox.classList.contains('d-none')) {
+                        open_list();
+                    }
+                    set_active(active_index + 1);
+                    break;
+                case 'ArrowUp':
+                    e.preventDefault();
+                    set_active(active_index - 1);
+                    break;
+                case 'Enter':
+                    e.preventDefault();
+                    if (active_index >= 0 && active_index < options.length) {
+                        const selected = options[active_index];
+                        apply_filter(selected.getAttribute('data-uuid'), selected.textContent);
+                    }
+                    break;
+                case 'Escape':
+                    e.preventDefault();
+                    if (!listbox.classList.contains('d-none')) {
+                        close_list();
+                    } else if (selected_exhibit_uuid) {
+                        clear_filter();
+                    }
+                    break;
+                case 'Tab':
+                    close_list();
+                    break;
+            }
+        });
+
+        listbox.addEventListener('click', (e) => {
+            const option = e.target.closest('.exhibit-filter-option');
+            if (option) {
+                apply_filter(option.getAttribute('data-uuid'), option.textContent);
+            }
+        });
+
+        clear_btn.addEventListener('click', (e) => {
+            e.preventDefault();
+            e.stopPropagation();
+            clear_filter();
+            input.focus();
+        });
+
+        caret.addEventListener('click', (e) => {
+            e.preventDefault();
+            e.stopPropagation();
+            if (listbox.classList.contains('d-none')) {
+                filter_options('');
+                open_list();
+                input.focus();
+            } else {
+                close_list();
+            }
+        });
+
+        document.addEventListener('click', (e) => {
+            if (!wrapper.contains(e.target)) {
+                close_list();
+            }
+        });
+
+        // Restore previous selection if set (e.g., after refresh)
+        if (selected_exhibit_uuid && titles_map.has(selected_exhibit_uuid)) {
+            input.value = titles_map.get(selected_exhibit_uuid);
+            clear_btn.classList.remove('d-none');
+            caret.classList.add('d-none');
+        }
+    };
+
+    /**
+     * Registers the DataTable custom search function for exhibit filtering.
+     * Idempotent — subsequent calls are no-ops.
+     */
+    const register_exhibit_search_filter = (() => {
+        let registered = false;
+
+        return () => {
+            if (registered) return;
+            registered = true;
+
+            if (typeof $ !== 'undefined' && typeof $.fn !== 'undefined' && typeof $.fn.dataTable !== 'undefined') {
+                $.fn.dataTable.ext.search.push((settings, data, dataIndex, rowData) => {
+                    if (settings.nTable && settings.nTable.id !== 'items') {
+                        return true;
+                    }
+                    if (!selected_exhibit_uuid) {
+                        return true;
+                    }
+                    const exhibits = rowData.exhibits;
+                    if (!Array.isArray(exhibits) || exhibits.length === 0) {
+                        return false;
+                    }
+                    return exhibits.includes(selected_exhibit_uuid);
+                });
+            }
+        };
+    })();
+
     /**
      * Display media records in DataTable
      * @returns {Promise<boolean>} True if successful, false otherwise
@@ -792,7 +1169,7 @@ const mediaLibraryModule = (function() {
 
                 return {
                     uuid: record.uuid || null,
-                    name: record.name || 'Untitled',
+                    name: strip_html(record.name) || 'Untitled',
                     filename: record.original_filename || 'N/A',
                     thumbnail_url: has_thumbnail ? build_thumbnail_url(record.uuid) : null,
                     media_url: record.uuid ? build_media_url(record.uuid) : null,
@@ -825,6 +1202,19 @@ const mediaLibraryModule = (function() {
                             }
                         }
                         return '';
+                    })(),
+                    exhibits: (() => {
+                        if (!record.exhibits) return [];
+                        if (Array.isArray(record.exhibits)) return record.exhibits;
+                        if (typeof record.exhibits === 'string') {
+                            try {
+                                const parsed = JSON.parse(record.exhibits);
+                                return Array.isArray(parsed) ? parsed : [];
+                            } catch (e) {
+                                return [];
+                            }
+                        }
+                        return [];
                     })()
                 };
             });
@@ -911,7 +1301,7 @@ const mediaLibraryModule = (function() {
                                 return `
                                     <div class="media-name-cell" style="display: flex; align-items: center;">
                                         ${thumbnail_html}
-                                        <small class="media-name" title="${row.filename !== 'N/A' ? 'File: ' + row.filename : ''}">${display_name}</small>
+                                        <small class="media-name" title="${sanitize_html(display_name)}">${sanitize_html(display_name)}</small>
                                     </div>`;
                             }
                             return data;
@@ -933,13 +1323,9 @@ const mediaLibraryModule = (function() {
                                     return '<small><i class="fa ' + kaltura_icon + '" style="margin-right: 4px;" aria-hidden="true"></i>Kaltura media</small>';
                                 }
 
-                                // Uploaded items: show filename with file size below it
-                                const max_length = 40;
-                                let filename_display = data || 'N/A';
-                                if (data && data.length > max_length) {
-                                    filename_display = `<span title="${data}">${data.substring(0, max_length)}...</span>`;
-                                }
-                                return `<small>${filename_display}</small><br><small><em>${row.size_display}</em></small>`;
+                                // Uploaded items: show filename with tooltip
+                                const safe_filename = sanitize_html(data || 'N/A');
+                                return `<small class="media-filename" title="${safe_filename}">${safe_filename}</small>`;
                             }
                             return data;
                         }
@@ -1000,7 +1386,7 @@ const mediaLibraryModule = (function() {
                         previous: '<i class="fa fa-chevron-left" aria-hidden="true"></i><span class="sr-only">Previous</span>'
                     }
                 },
-                dom: '<"row"<"col-sm-12 col-md-6"l><"col-sm-12 col-md-6"f>>' +
+                dom: '<"row align-items-end"<"col-sm-12 col-md-3"l><"col-sm-12 col-md-6"<"#exhibit-filter-container">><"col-sm-12 col-md-3"f>>' +
                      '<"row"<"col-sm-12"tr>>' +
                      '<"row"<"col-sm-12 col-md-5"i><"col-sm-12 col-md-7"p>>',
                 drawCallback: function() {
@@ -1021,6 +1407,22 @@ const mediaLibraryModule = (function() {
             if (records.length > 0) {
                 console.log(`Media library loaded: ${records.length} record(s)`);
             }
+
+            // Register the exhibit custom search filter (idempotent)
+            register_exhibit_search_filter();
+
+            // Fetch exhibit titles and build the filter dropdown
+            fetch_exhibit_titles().then(titles_map => {
+                if (titles_map && titles_map.size > 0) {
+                    build_exhibit_filter(titles_map);
+                    // Re-apply filter if a selection was preserved from previous load
+                    if (selected_exhibit_uuid && media_data_table) {
+                        media_data_table.draw();
+                    }
+                }
+            }).catch(err => {
+                console.warn('Could not load exhibit filter:', err);
+            });
 
             return true;
 

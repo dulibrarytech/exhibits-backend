@@ -1,6 +1,6 @@
 <%- include('../partials/header.ejs'); %>
 <body>
-<%- include('partials/nav-dashboard-timeline-items.ejs'); %>
+<%- include('../partials/nav-dashboard.ejs'); %>
 <div id="right-panel" class="right-panel">
     <%- include('../partials/main-header.ejs'); %>
     <div class="content" style="min-height: 875px;">
@@ -39,9 +39,10 @@
 <script src="/exhibits-dashboard/static/app/dist/items.timeline.module.min.js?<%=build_version%>"></script>
 <script src="/exhibits-dashboard/static/app/dist/items.list.displays.module.min.js?<%=build_version%>"></script>
 <script>
+    navModule.init();
+    navModule.wire_nav_links();
     itemsTimelineModule.init();
     itemsTimelineModule.display_timeline_items();
 </script>
 </body>
 </html>
-

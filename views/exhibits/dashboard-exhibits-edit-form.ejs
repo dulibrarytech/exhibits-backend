@@ -1,13 +1,5 @@
 <%- include('../partials/header.ejs'); %>
 <style>
-    .color-picker {
-        background-color: none;
-        outline: none;
-        border: 1px solid grey;
-        height: 38px;
-        width: 50px;
-        cursor: pointer;
-    }
     #cancel-exhibit-btn {
         min-width: 100px;
     }
@@ -65,7 +57,7 @@
     }
 </style>
 <body>
-<%- include('partials/nav-dashboard-exhibits-edit-form.ejs'); %>
+<%- include('../partials/nav-dashboard'); %>
 <div id="right-panel" class="right-panel">
     <%- include('../partials/main-header.ejs'); %>
     <div class="content" style="min-height: 875px;">
@@ -94,6 +86,7 @@
                         <input type="hidden" id="hero-image" name="hero_image">
                         <input type="hidden" id="hero-image-prev" name="hero_image-prev">
                         <input type="hidden" id="hero-image-media-uuid" name="hero_image_media_uuid">
+                        <input type="hidden" id="hero-image-media-uuid-prev" name="hero_image_media_uuid_prev">
                         <button type="button" class="btn btn-outline-primary"
                                 id="pick-hero-image-btn"
                                 data-media-role="hero_image"
@@ -119,6 +112,7 @@
                         <input type="hidden" id="thumbnail-image" name="thumbnail">
                         <input type="hidden" id="thumbnail-image-prev" name="thumbnail-prev">
                         <input type="hidden" id="thumbnail-media-uuid" name="thumbnail_media_uuid">
+                        <input type="hidden" id="thumbnail-media-uuid-prev" name="thumbnail_media_uuid_prev">
                         <button type="button" class="btn btn-outline-primary"
                                 id="pick-thumbnail-btn"
                                 data-media-role="thumbnail"
@@ -133,8 +127,6 @@
             </div>
         </div>
         <%- include('partials/exhibit-banners.ejs'); %>
-        <!-- styles -->
-        <%- include('partials/exhibit-styles.ejs'); %>
         <input type="hidden" id="is-published" name="is_published">
         <div id="exhibit-submit-card" class="card">
             <div class="card-body">
@@ -171,7 +163,7 @@
     exhibitsEditFormModule.init();
     exhibitsCommonFormModule.init();
     mediaPickerModule.init();
-    navModule.set_item_list_link();
+    navModule.wire_nav_links();
 
     const cancel_exhibit_btn = document.getElementById('cancel-exhibit-btn');
 

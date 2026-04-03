@@ -50,13 +50,38 @@ const mediaPickerModule = (function () {
     let _selected_media = null;
     let _current_role = null;
     let _current_exhibit_uuid = null;
+    let _previous_media_uuid = null;
     let _on_select_callback = null;
     let _media_type_filter = null;
+    let _create_exhibit_binding = true;
     let _current_page = 1;
     let _search_term = '';
     let _search_timeout = null;
+    let _request_id = 0;
 
     // ==================== PRIVATE HELPERS ====================
+
+    /**
+     * Resolves the media_exhibits PUT endpoint URL.
+     * Tries the frontend endpoint registry first; falls back to constructing
+     * from APP_PATH if the registry hasn't been updated yet.
+     * @returns {string|null} Endpoint URL template with :media_id placeholder, or null
+     */
+    function get_media_exhibits_endpoint() {
+        try {
+            const ml_endpoints = endpointsModule.get_media_library_endpoints();
+            if (ml_endpoints && ml_endpoints.media_exhibits && ml_endpoints.media_exhibits.put && ml_endpoints.media_exhibits.put.endpoint) {
+                return ml_endpoints.media_exhibits.put.endpoint;
+            }
+        } catch (e) {
+            // Endpoint not registered in frontend config — fall through
+        }
+        // Fallback: construct from APP_PATH
+        if (APP_PATH) {
+            return APP_PATH + '/api/v1/media/library/record/:media_id/exhibits';
+        }
+        return null;
+    }
 
     /**
      * Builds a thumbnail URL for a media library asset based on its ingest method
@@ -107,6 +132,19 @@ const mediaPickerModule = (function () {
         const textarea = document.createElement('textarea');
         textarea.innerHTML = str;
         return textarea.value;
+    }
+
+    /**
+     * Strips HTML tags from a string, returning plain text.
+     * Used to sanitize media names that may contain legacy HTML markup.
+     * @param {string} str - String potentially containing HTML tags
+     * @returns {string} Plain text with tags removed
+     */
+    function strip_html_tags(str) {
+        if (!str || typeof str !== 'string') return str;
+        const div = document.createElement('div');
+        div.innerHTML = str;
+        return div.textContent || div.innerText || '';
     }
 
     /**
@@ -179,8 +217,10 @@ const mediaPickerModule = (function () {
 
         const name_el = document.createElement('div');
         name_el.className = 'media-card-name';
-        name_el.textContent = media.name || media.original_filename || 'Untitled';
-        name_el.title = media.name || media.original_filename || '';
+        const raw_name = media.name || media.original_filename || 'Untitled';
+        const clean_name = strip_html_tags(raw_name);
+        name_el.textContent = clean_name;
+        name_el.title = clean_name;
         info.appendChild(name_el);
 
         const type_el = document.createElement('div');
@@ -247,7 +287,7 @@ const mediaPickerModule = (function () {
         const dims_el = document.querySelector('#media-picker-selection-dims');
         const thumb_el = document.querySelector('#media-picker-selection-thumb');
 
-        if (name_el) name_el.textContent = media.name || media.original_filename || 'Untitled';
+        if (name_el) name_el.textContent = strip_html_tags(media.name || media.original_filename || 'Untitled');
         if (type_el) type_el.textContent = media.media_type || '';
 
         if (dims_el) {
@@ -337,14 +377,27 @@ const mediaPickerModule = (function () {
         const container = document.querySelector('#media-picker-grid-container');
         if (!container) return;
 
-        // Show loading state
-        container.innerHTML = '';
-        const loading = document.createElement('div');
-        loading.className = 'media-loading';
-        loading.innerHTML = '<i class="fa fa-spinner fa-spin fa-2x"></i>&nbsp;&nbsp;Loading media...';
-        container.appendChild(loading);
+        // Increment request counter so earlier in-flight responses are discarded
+        const this_request = ++_request_id;
 
         _current_page = page || 1;
+
+        // Determine whether we already have content on screen.
+        // If the container only holds the initial loading spinner (or is empty)
+        // show the full spinner; otherwise keep existing cards visible and dim
+        // them to signal a refresh without a jarring flash.
+        const has_existing_content = container.querySelector('.media-grid') || container.querySelector('.media-empty');
+
+        if (has_existing_content) {
+            container.style.opacity = '0.5';
+            container.style.pointerEvents = 'none';
+        } else {
+            container.innerHTML = '';
+            const loading = document.createElement('div');
+            loading.className = 'media-loading';
+            loading.innerHTML = '<i class="fa fa-spinner fa-spin fa-2x"></i>&nbsp;&nbsp;Loading media...';
+            container.appendChild(loading);
+        }
 
         try {
 
@@ -385,6 +438,9 @@ const mediaPickerModule = (function () {
                 }
             });
 
+            // Discard stale response — a newer request has been issued
+            if (this_request !== _request_id) return;
+
             if (!response || !response.data) {
                 throw new Error('Failed to load media library');
             }
@@ -392,8 +448,10 @@ const mediaPickerModule = (function () {
             const records = response.data.data || [];
             const total_count = response.data.total || records.length;
 
-            // Clear container
+            // Clear container and restore full opacity
             container.innerHTML = '';
+            container.style.opacity = '';
+            container.style.pointerEvents = '';
 
             if (records.length === 0) {
                 const empty = document.createElement('div');
@@ -425,9 +483,15 @@ const mediaPickerModule = (function () {
             render_pagination(total_count, _current_page);
 
         } catch (error) {
+
+            // Discard stale error — a newer request has superseded this one
+            if (this_request !== _request_id) return;
+
             console.error('Error loading media grid:', error);
 
             container.innerHTML = '';
+            container.style.opacity = '';
+            container.style.pointerEvents = '';
             const error_div = document.createElement('div');
             error_div.className = 'media-empty';
             error_div.textContent = 'Error loading media library. Please try again.';
@@ -440,9 +504,11 @@ const mediaPickerModule = (function () {
     /**
      * Opens the media picker modal
      * @param {Object} options
-     * @param {string} options.role - 'hero_image' | 'thumbnail'
+     * @param {string} options.role - 'hero_image' | 'item_media' | 'thumbnail'
      * @param {string} options.exhibit_uuid - Exhibit UUID (null for add form)
+     * @param {string} options.previous_media_uuid - UUID of currently-bound media asset being replaced (null if none)
      * @param {string} options.media_type_filter - 'image' | 'video' | 'audio' | null
+     * @param {boolean} options.create_exhibit_binding - Whether to create an exhibit_media_library junction record (default true; false for item forms)
      * @param {Function} options.on_select - Callback: (media_asset) => void
      */
     obj.open = function (options) {
@@ -456,8 +522,10 @@ const mediaPickerModule = (function () {
 
             _current_role = options.role || null;
             _current_exhibit_uuid = options.exhibit_uuid || null;
+            _previous_media_uuid = options.previous_media_uuid || null;
             _on_select_callback = options.on_select || null;
             _media_type_filter = options.media_type_filter || null;
+            _create_exhibit_binding = options.create_exhibit_binding !== false;
             _selected_media = null;
             _search_term = '';
             _current_page = 1;
@@ -500,37 +568,100 @@ const mediaPickerModule = (function () {
             return;
         }
 
-        // If exhibit UUID is known and we have a role, create the binding via API
+        // If exhibit UUID is known and we have a role, manage bindings and exhibits field
         if (_current_exhibit_uuid && _current_role) {
+
+            // Create exhibit_media_library junction record (exhibit-level bindings only).
+            // Item forms set create_exhibit_binding=false because items store their own
+            // media_uuid — the junction table is only for exhibit-level media slots.
+            if (_create_exhibit_binding) {
+                try {
+
+                    const token = authModule.get_user_token();
+                    if (!token) {
+                        throw new Error('Authentication token not available');
+                    }
+
+                    const endpoint_base = EXHIBITS_ENDPOINTS.exhibits?.exhibit_media_library?.post?.endpoint;
+
+                    if (endpoint_base) {
+                        const endpoint = endpoint_base.replace(':exhibit_id', encodeURIComponent(_current_exhibit_uuid));
+
+                        await httpModule.req({
+                            method: 'POST',
+                            url: endpoint,
+                            data: {
+                                media_uuid: _selected_media.uuid,
+                                media_role: _current_role
+                            },
+                            headers: {
+                                'Content-Type': 'application/json',
+                                'x-access-token': token
+                            }
+                        });
+                    }
+
+                } catch (error) {
+                    console.error('Error creating media binding:', error);
+                    // Continue — the callback will still fire so the UI updates
+                }
+            }
+
+            // Update the exhibits field on media library records (fire-and-forget).
+            // This runs for ALL contexts (exhibit and item forms) so the media record
+            // always knows which exhibits reference it.
             try {
 
                 const token = authModule.get_user_token();
-                if (!token) {
-                    throw new Error('Authentication token not available');
-                }
+                const exhibits_endpoint_base = get_media_exhibits_endpoint();
 
-                const endpoint_base = EXHIBITS_ENDPOINTS.exhibits?.exhibit_media_library?.post?.endpoint;
+                if (token && exhibits_endpoint_base) {
 
-                if (endpoint_base) {
-                    const endpoint = endpoint_base.replace(':exhibit_id', encodeURIComponent(_current_exhibit_uuid));
+                    // If replacing existing media, remove exhibit UUID from old media record
+                    if (_previous_media_uuid && _previous_media_uuid !== _selected_media.uuid) {
 
-                    await httpModule.req({
-                        method: 'POST',
-                        url: endpoint,
+                        const remove_endpoint = exhibits_endpoint_base.replace(':media_id', encodeURIComponent(_previous_media_uuid));
+
+                        httpModule.req({
+                            method: 'PUT',
+                            url: remove_endpoint,
+                            data: {
+                                exhibit_uuid: _current_exhibit_uuid,
+                                action: 'remove',
+                                media_role: _current_role || null
+                            },
+                            headers: {
+                                'Content-Type': 'application/json',
+                                'x-access-token': token
+                            }
+                        }).catch(function (err) {
+                            console.error('Error removing exhibit from previous media record:', err);
+                        });
+                    }
+
+                    // Add exhibit UUID to newly selected media record
+                    const add_endpoint = exhibits_endpoint_base.replace(':media_id', encodeURIComponent(_selected_media.uuid));
+
+                    httpModule.req({
+                        method: 'PUT',
+                        url: add_endpoint,
                         data: {
-                            media_uuid: _selected_media.uuid,
-                            media_role: _current_role
+                            exhibit_uuid: _current_exhibit_uuid,
+                            action: 'add',
+                            media_role: _current_role || null
                         },
                         headers: {
                             'Content-Type': 'application/json',
                             'x-access-token': token
                         }
+                    }).catch(function (err) {
+                        console.error('Error adding exhibit to media record:', err);
                     });
                 }
 
             } catch (error) {
-                console.error('Error creating media binding:', error);
-                // Continue — the callback will still fire so the UI updates
+                console.error('Error updating media exhibits field:', error);
+                // Non-blocking — UI update proceeds regardless
             }
         }
 
@@ -550,10 +681,67 @@ const mediaPickerModule = (function () {
         _selected_media = null;
         _current_role = null;
         _current_exhibit_uuid = null;
+        _previous_media_uuid = null;
         _on_select_callback = null;
         _media_type_filter = null;
+        _create_exhibit_binding = true;
         _current_page = 1;
         _search_term = '';
+        _request_id = 0;
+    };
+
+    /**
+     * Removes an exhibit UUID from a media record's exhibits field.
+     * Use when media is cleared/unbound from an exhibit without opening the picker
+     * (e.g., a "Remove hero image" button on the exhibit edit page).
+     *
+     * @param {string} media_uuid - UUID of the media record to update
+     * @param {string} exhibit_uuid - UUID of the exhibit to disassociate
+     * @param {string|null} media_role - Role context for logging ('item_media', 'thumbnail', 'hero_image', etc.)
+     * @returns {Promise<boolean>} Whether the API call succeeded
+     */
+    obj.remove_exhibit_association = async function (media_uuid, exhibit_uuid, media_role) {
+
+        if (!media_uuid || !exhibit_uuid) {
+            console.warn('remove_exhibit_association: media_uuid and exhibit_uuid are required');
+            return false;
+        }
+
+        try {
+
+            const token = authModule.get_user_token();
+            if (!token) {
+                throw new Error('Authentication token not available');
+            }
+
+            const exhibits_endpoint_base = get_media_exhibits_endpoint();
+
+            if (!exhibits_endpoint_base) {
+                throw new Error('Media exhibits endpoint not found');
+            }
+
+            const endpoint = exhibits_endpoint_base.replace(':media_id', encodeURIComponent(media_uuid));
+
+            const response = await httpModule.req({
+                method: 'PUT',
+                url: endpoint,
+                data: {
+                    exhibit_uuid: exhibit_uuid,
+                    action: 'remove',
+                    media_role: media_role || null
+                },
+                headers: {
+                    'Content-Type': 'application/json',
+                    'x-access-token': token
+                }
+            });
+
+            return !!(response && response.data && response.data.success);
+
+        } catch (error) {
+            console.error('Error removing exhibit association:', error);
+            return false;
+        }
     };
 
     /**

@@ -18,7 +18,6 @@
 
 'use strict';
 
-const STORAGE_CONFIG = require('../config/storage_config')();
 const DB = require('../config/db_config')();
 const DB_TABLES = require('../config/db_tables_config')();
 const TABLES = DB_TABLES.exhibits;
@@ -36,8 +35,7 @@ const {
     is_valid_uuid,
     build_response,
     validate_input,
-    prepare_styles,
-    clean_media_fields
+    prepare_styles
 } = require('../exhibits/common_helper');
 
 // Constants
@@ -65,78 +63,6 @@ const validate_create_timeline_item_task = new VALIDATOR(EXHIBITS_CREATE_TIMELIN
 const validate_update_timeline_item_task = new VALIDATOR(EXHIBITS_UPDATE_TIMELINE_ITEM_SCHEMA);
 const timeline_record_task = new EXHIBIT_TIMELINE_RECORD_TASKS(DB, TABLES);
 const exhibit_tasks = new EXHIBIT_RECORD_TASKS(DB, TABLES);
-
-// is_valid_uuid imported from common_helper
-
-// build_response imported from common_helper
-
-// validate_input imported from common_helper
-
-// prepare_styles imported from common_helper
-
-/**
- * Processes media files for timeline items
- * @param {Object} data - Timeline item data
- * @returns {Object} Processed data
- */
-const process_timeline_item_media = (data) => {
-    const processed_data = {...data};
-
-    // Only process media if item type is not text
-    if (processed_data.item_type === CONSTANTS.ITEM_TYPES.TEXT) {
-        return processed_data;
-    }
-
-    // Media picker path: media_uuid is set directly by the client.
-    // Skip legacy media/thumbnail/kaltura/repo processing entirely.
-    if (processed_data.media_uuid && processed_data.media_uuid.length > 0) {
-        // Clean up legacy and temporary fields that are not relevant
-        clean_media_fields(processed_data);
-        return processed_data;
-    }
-
-    // Legacy path: process uploaded media, Kaltura, and repo items
-
-    // Process main media
-    if (processed_data.media &&
-        processed_data.media.length > 0 &&
-        processed_data.media !== processed_data.media_prev) {
-        processed_data.media = helper_task.process_uploaded_media(
-            processed_data.is_member_of_exhibit,
-            processed_data.uuid,
-            processed_data.media,
-            STORAGE_CONFIG.storage_path
-        );
-    }
-
-    // Process thumbnail
-    if (processed_data.thumbnail &&
-        processed_data.thumbnail.length > 0 &&
-        processed_data.thumbnail !== processed_data.thumbnail_prev) {
-        processed_data.thumbnail = helper_task.process_uploaded_media(
-            processed_data.is_member_of_exhibit,
-            processed_data.uuid,
-            processed_data.thumbnail,
-            STORAGE_CONFIG.storage_path
-        );
-    }
-
-    // Handle Kaltura items
-    if (processed_data.kaltura && processed_data.kaltura.length > 0) {
-        processed_data.media = processed_data.kaltura;
-        processed_data.is_kaltura_item = 1;
-    }
-    // Handle repository items
-    else if (processed_data.repo_uuid && processed_data.repo_uuid.length > 0) {
-        processed_data.media = processed_data.repo_uuid;
-        processed_data.is_repo_item = 1;
-    }
-
-    // Clean up temporary fields
-    clean_media_fields(processed_data);
-
-    return processed_data;
-};
 
 /**
  * Creates timeline record
@@ -371,9 +297,6 @@ exports.create_timeline_item_record = async (is_member_of_exhibit, timeline_id, 
             );
         }
 
-        // Process media
-        data = process_timeline_item_media(data);
-
         // Prepare styles and get order
         data.styles = prepare_styles(data.styles);
         data.order = await helper_task.order_timeline_items(data.is_member_of_timeline, DB, TABLES);
@@ -555,6 +478,53 @@ exports.get_timeline_item_edit_record = async (uid, is_member_of_exhibit, is_mem
 };
 
 /**
+ * Gets timeline item details record (read-only, no locking)
+ * @param {string} is_member_of_exhibit - Exhibit UUID
+ * @param {string} is_member_of_timeline - Timeline UUID
+ * @param {string} item_id - Timeline item UUID
+ * @returns {Promise<Object>} Response object
+ */
+exports.get_timeline_item_details_record = async (is_member_of_exhibit, is_member_of_timeline, item_id) => {
+
+    try {
+
+        if (!is_valid_uuid(is_member_of_exhibit) ||
+            !is_valid_uuid(is_member_of_timeline) ||
+            !is_valid_uuid(item_id)) {
+            return build_response(
+                CONSTANTS.STATUS_CODES.BAD_REQUEST,
+                'Invalid UUID provided'
+            );
+        }
+
+        const timeline_item = await timeline_record_task.get_timeline_item_details_record(
+            is_member_of_exhibit,
+            is_member_of_timeline,
+            item_id
+        );
+
+        return build_response(
+            CONSTANTS.STATUS_CODES.OK,
+            'Exhibit timeline item details record',
+            timeline_item
+        );
+
+    } catch (error) {
+        LOGGER.module().error(`ERROR: [/exhibits/timelines_model (get_timeline_item_details_record)] ${error.message}`, {
+            is_member_of_exhibit,
+            is_member_of_timeline,
+            item_id,
+            stack: error.stack
+        });
+
+        return build_response(
+            CONSTANTS.STATUS_CODES.BAD_REQUEST,
+            error.message
+        );
+    }
+};
+
+/**
  * Updates timeline item record
  * @param {string} is_member_of_exhibit - Exhibit UUID
  * @param {string} is_member_of_timeline - Timeline UUID
@@ -596,9 +566,6 @@ exports.update_timeline_item_record = async (is_member_of_exhibit, is_member_of_
                 validation_result
             );
         }
-
-        // Process media
-        data = process_timeline_item_media(data);
 
         // Prepare styles and get order
         data.styles = prepare_styles(data.styles);

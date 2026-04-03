@@ -18,7 +18,6 @@
 
 'use strict';
 
-const STORAGE_CONFIG = require('../config/storage_config')();
 const DB = require('../config/db_config')();
 const DB_TABLES = require('../config/db_tables_config')();
 const TABLES = DB_TABLES.exhibits;
@@ -71,38 +70,6 @@ const exhibit_media_library_task = new EXHIBIT_MEDIA_LIBRARY_TASKS(DB, TABLES);
 // build_response, validate_input, prepare_styles imported from common_helper
 
 /**
- * Processes media files for exhibit
- * @param {string} uuid - Exhibit UUID
- * @param {Object} data - Data containing media fields
- * @returns {Object} Processed data with updated media paths
- */
-const process_exhibit_media = (uuid, data) => {
-    const processed_data = { ...data };
-
-    if (processed_data.hero_image && processed_data.hero_image.length > 0) {
-        processed_data.hero_image = helper_task.process_uploaded_media(
-            uuid,
-            null,
-            processed_data.hero_image,
-            STORAGE_CONFIG.storage_path
-        );
-    }
-
-    if (processed_data.thumbnail && processed_data.thumbnail.length > 0) {
-        processed_data.thumbnail = helper_task.process_uploaded_media(
-            uuid,
-            null,
-            processed_data.thumbnail,
-            STORAGE_CONFIG.storage_path
-        );
-    }
-
-    return processed_data;
-};
-
-// prepare_styles imported from common_helper
-
-/**
  * Creates exhibit record
  * @param {Object} data - Exhibit data
  * @returns {Promise<Object>} Response object
@@ -132,17 +99,6 @@ exports.create_exhibit_record = async (data) => {
                 validation_result
             );
         }
-
-        // Ensure storage path exists only when direct-upload media is present
-        const has_direct_media = (data.hero_image && data.hero_image.length > 0) ||
-                                 (data.thumbnail && data.thumbnail.length > 0);
-
-        if (has_direct_media) {
-            helper_task.check_storage_path(data.uuid, STORAGE_CONFIG.storage_path);
-        }
-
-        // Process media files
-        data = process_exhibit_media(data.uuid, data);
 
         // Prepare styles
         data.styles = prepare_styles(data.styles);
@@ -341,46 +297,6 @@ exports.get_exhibit_edit_record = async (uid, uuid) => {
 };
 
 /**
- * Processes media updates for exhibit
- * @param {string} uuid - Exhibit UUID
- * @param {Object} data - Data containing media fields
- * @returns {Object} Processed data
- */
-const process_media_updates = (uuid, data) => {
-    const processed_data = { ...data };
-
-    // Process hero image if changed
-    if (processed_data.hero_image &&
-        processed_data.hero_image.length > 0 &&
-        processed_data.hero_image !== processed_data.hero_image_prev) {
-        processed_data.hero_image = helper_task.process_uploaded_media(
-            uuid,
-            null,
-            processed_data.hero_image,
-            STORAGE_CONFIG.storage_path
-        );
-    }
-
-    // Process thumbnail if changed
-    if (processed_data.thumbnail &&
-        processed_data.thumbnail.length > 0 &&
-        processed_data.thumbnail !== processed_data.thumbnail_prev) {
-        processed_data.thumbnail = helper_task.process_uploaded_media(
-            uuid,
-            null,
-            processed_data.thumbnail,
-            STORAGE_CONFIG.storage_path
-        );
-    }
-
-    // Clean up temporary fields
-    delete processed_data.hero_image_prev;
-    delete processed_data.thumbnail_prev;
-
-    return processed_data;
-};
-
-/**
  * Handles post-update republishing
  * @param {string} uuid - Exhibit UUID
  * @returns {Promise<void>}
@@ -454,21 +370,12 @@ exports.update_exhibit_record = async (uuid, data) => {
             );
         }
 
-        // Ensure storage path exists only when direct-upload media has changed
-        const has_direct_media = (data.hero_image && data.hero_image.length > 0 &&
-                                  data.hero_image !== data.hero_image_prev) ||
-                                 (data.thumbnail && data.thumbnail.length > 0 &&
-                                  data.thumbnail !== data.thumbnail_prev);
-
-        if (has_direct_media) {
-            helper_task.check_storage_path(uuid, STORAGE_CONFIG.storage_path);
+        // Prepare styles only when the payload includes them (styles form).
+        // The edit form no longer sends styles — omitting this field preserves
+        // the existing styles value in the database.
+        if (data.styles !== undefined) {
+            data.styles = prepare_styles(data.styles);
         }
-
-        // Process media updates
-        data = process_media_updates(uuid, data);
-
-        // Prepare styles
-        data.styles = prepare_styles(data.styles);
 
         // Extract and remove is_published flag
         const is_published = data.is_published;
@@ -736,41 +643,6 @@ exports.delete_exhibit_record = async (uuid) => {
             CONSTANTS.STATUS_CODES.BAD_REQUEST,
             error.message
         );
-    }
-};
-
-/**
- * Clears media value from exhibit
- * @param {string} uuid - Exhibit UUID
- * @param {string} media - Media field name
- * @returns {Promise<void>}
- */
-exports.delete_media_value = async (uuid, media) => {
-
-    try {
-
-        const uuid_check = validate_string_param(uuid, 'UUID');
-        const media_check = validate_string_param(media, 'media');
-
-        if (!uuid_check.valid || !media_check.valid) {
-            LOGGER.module().error('ERROR: [/exhibits/model (delete_media_value)] Invalid parameters');
-            return;
-        }
-
-        const result = await exhibit_record_task.delete_media_value(uuid, media);
-
-        if (result === true) {
-            LOGGER.module().info('INFO: [/exhibits/model (delete_media_value)] Media value deleted');
-        } else {
-            LOGGER.module().error('ERROR: [/exhibits/model (delete_media_value)] Unable to delete media value');
-        }
-
-    } catch (error) {
-        LOGGER.module().error(`ERROR: [/exhibits/model (delete_media_value)] ${error.message}`, {
-            uuid,
-            media,
-            stack: error.stack
-        });
     }
 };
 

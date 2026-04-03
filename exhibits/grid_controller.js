@@ -240,13 +240,26 @@ exports.get_grid_item_record = async function (req, res) {
             return res.status(result.status).send(result);
         }
 
+        // Handle details type request (media library JOIN without record locking)
+        if (type === 'details') {
+            const result = await GRIDS_MODEL.get_grid_item_details_record(exhibit_id, grid_id, item_id);
+
+            if (!validate_model_result(res, result, 'get_grid_item_record', {exhibit_id, grid_id, item_id})) return;
+
+            LOGGER.module().info('get_grid_item_record: Grid item details record retrieved successfully', {
+                exhibit_id, grid_id, item_id, status: result.status
+            });
+
+            return res.status(result.status).send(result);
+        }
+
         // Validate type parameter if provided
-        if (type !== undefined && type !== 'edit') {
+        if (type !== undefined && type !== 'edit' && type !== 'details') {
             LOGGER.module().error('get_grid_item_record: Invalid type parameter', {
                 type, exhibit_id, grid_id, item_id
             });
             return res.status(400).send({
-                message: 'Invalid type parameter. Allowed values: "edit"'
+                message: 'Invalid type parameter. Allowed values: "edit", "details"'
             });
         }
 

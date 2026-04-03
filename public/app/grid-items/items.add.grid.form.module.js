@@ -28,7 +28,7 @@ const itemsAddGridFormModule = (function () {
         // CRITICAL: Check if we're in edit mode first
         const item_id = helperModule.get_parameter_by_name('item_id');
         if (item_id) {
-            console.log('🔴 Item ID exists - already in edit mode, preventing duplicate creation');
+            console.log('Item ID exists - already in edit mode, preventing duplicate creation');
             console.log('Current URL:', window.location.href);
             console.log('item_id:', item_id);
 
@@ -44,7 +44,7 @@ const itemsAddGridFormModule = (function () {
             return false;
         }
 
-        console.log('🟢 CREATE FUNCTION CALLED - No item_id, proceeding with creation');
+        console.log('CREATE FUNCTION CALLED - No item_id, proceeding with creation');
 
         // Prevent duplicate submissions
         if (this._is_creating_grid) {
@@ -119,7 +119,7 @@ const itemsAddGridFormModule = (function () {
                     throw new Error('Server did not return a valid grid ID');
                 }
 
-                console.log('✅ Grid record created successfully, ID:', new_grid_id);
+                console.log('Grid record created successfully, ID:', new_grid_id);
 
                 // Show success message
                 display_status_message(message_element, 'success', 'Grid record created successfully. Redirecting to edit page...');
@@ -142,7 +142,7 @@ const itemsAddGridFormModule = (function () {
             }
 
         } catch (error) {
-            console.error('❌ Error creating grid record:', error);
+            console.error('Error creating grid record:', error);
 
             const message_element = document.querySelector('#message');
             const error_message = get_user_friendly_error_message(error);
@@ -732,7 +732,7 @@ const itemsAddGridFormModule = (function () {
         const exhibit_id = helperModule.get_parameter_by_name('exhibit_id');
         const redirect = '/items?exhibit_id=' + exhibit_id + '&status=403';
         await authModule.check_permissions(['add_item', 'add_item_to_any_exhibit'], 'grid', exhibit_id, null, redirect);
-        navModule.back_to_items();
+        // Note: #back-to-items href is now wired by navModule.wire_nav_links()
         exhibitsModule.set_exhibit_title(exhibit_id);
         document.querySelector('#save-item-btn').addEventListener('click', itemsAddGridFormModule.create_grid_record);
     };

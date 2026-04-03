@@ -18,7 +18,6 @@
 
 'use strict';
 
-const STORAGE_CONFIG = require('../config/storage_config')();
 const DB = require('../config/db_config')();
 const DB_TABLES = require('../config/db_tables_config')();
 const TABLES = DB_TABLES.exhibits;
@@ -36,8 +35,7 @@ const {
     is_valid_uuid,
     build_response,
     validate_input,
-    prepare_styles,
-    clean_media_fields
+    prepare_styles
 } = require('../exhibits/common_helper');
 
 // Constants
@@ -70,14 +68,6 @@ const validate_update_grid_item_task = new VALIDATOR(EXHIBITS_UPDATE_GRID_ITEM_S
 const grid_record_task = new EXHIBIT_GRID_RECORD_TASKS(DB, TABLES);
 const exhibit_tasks = new EXHIBIT_RECORD_TASKS(DB, TABLES);
 
-// is_valid_uuid imported from common_helper
-
-// build_response imported from common_helper
-
-// validate_input imported from common_helper
-
-// prepare_styles imported from common_helper
-
 /**
  * Safely parses integer value
  * @param {*} value - Value to parse
@@ -87,61 +77,6 @@ const exhibit_tasks = new EXHIBIT_RECORD_TASKS(DB, TABLES);
 const safe_parse_int = (value, default_value = 0) => {
     const parsed = parseInt(value, 10);
     return isNaN(parsed) ? default_value : parsed;
-};
-
-/**
- * Processes media files for grid items
- * @param {Object} data - Grid item data
- * @returns {Object} Processed data
- */
-const process_grid_item_media = (data) => {
-    const processed_data = {...data};
-
-    // Handle text items separately
-    if (processed_data.item_type === CONSTANTS.ITEM_TYPES.TEXT) {
-        processed_data.mime_type = CONSTANTS.MIME_TYPES.TEXT_PLAIN;
-        return processed_data;
-    }
-
-    // Process main media
-    if (processed_data.media &&
-        processed_data.media.length > 0 &&
-        processed_data.media !== processed_data.media_prev) {
-        processed_data.media = helper_task.process_uploaded_media(
-            processed_data.is_member_of_exhibit,
-            processed_data.uuid,
-            processed_data.media,
-            STORAGE_CONFIG.storage_path
-        );
-    }
-
-    // Process thumbnail
-    if (processed_data.thumbnail &&
-        processed_data.thumbnail.length > 0 &&
-        processed_data.thumbnail !== processed_data.thumbnail_prev) {
-        processed_data.thumbnail = helper_task.process_uploaded_media(
-            processed_data.is_member_of_exhibit,
-            processed_data.uuid,
-            processed_data.thumbnail,
-            STORAGE_CONFIG.storage_path
-        );
-    }
-
-    // Handle Kaltura items
-    if (processed_data.kaltura && processed_data.kaltura.length > 0) {
-        processed_data.media = processed_data.kaltura;
-        processed_data.is_kaltura_item = 1;
-    }
-    // Handle repository items
-    else if (processed_data.repo_uuid && processed_data.repo_uuid.length > 0) {
-        processed_data.media = processed_data.repo_uuid;
-        processed_data.is_repo_item = 1;
-    }
-
-    // Clean up temporary fields
-    clean_media_fields(processed_data);
-
-    return processed_data;
 };
 
 /**
@@ -380,9 +315,6 @@ exports.create_grid_item_record = async (is_member_of_exhibit, grid_id, data) =>
             );
         }
 
-        // Process media
-        data = process_grid_item_media(data);
-
         // Prepare styles and get order
         data.styles = prepare_styles(data.styles);
         data.order = await helper_task.order_grid_items(data.is_member_of_grid, DB, TABLES);
@@ -564,6 +496,53 @@ exports.get_grid_item_edit_record = async (uid, is_member_of_exhibit, is_member_
 };
 
 /**
+ * Gets grid item details record with media library metadata (no lock)
+ * @param {string} is_member_of_exhibit - Exhibit UUID
+ * @param {string} is_member_of_grid - Grid UUID
+ * @param {string} item_id - Grid item UUID
+ * @returns {Promise<Object>} Response object
+ */
+exports.get_grid_item_details_record = async (is_member_of_exhibit, is_member_of_grid, item_id) => {
+
+    try {
+
+        if (!is_valid_uuid(is_member_of_exhibit) ||
+            !is_valid_uuid(is_member_of_grid) ||
+            !is_valid_uuid(item_id)) {
+            return build_response(
+                CONSTANTS.STATUS_CODES.BAD_REQUEST,
+                'Invalid UUID provided'
+            );
+        }
+
+        const grid_item = await grid_record_task.get_grid_item_details_record(
+            is_member_of_exhibit,
+            is_member_of_grid,
+            item_id
+        );
+
+        return build_response(
+            CONSTANTS.STATUS_CODES.OK,
+            'Grid item details record',
+            grid_item
+        );
+
+    } catch (error) {
+        LOGGER.module().error(`ERROR: [/exhibits/grid_model (get_grid_item_details_record)] ${error.message}`, {
+            is_member_of_exhibit,
+            is_member_of_grid,
+            item_id,
+            stack: error.stack
+        });
+
+        return build_response(
+            CONSTANTS.STATUS_CODES.BAD_REQUEST,
+            error.message
+        );
+    }
+};
+
+/**
  * Handles post-update republishing for grid items
  * @param {string} is_member_of_exhibit - Exhibit UUID
  * @param {string} is_member_of_grid - Grid UUID
@@ -653,9 +632,6 @@ exports.update_grid_item_record = async (is_member_of_exhibit, is_member_of_grid
                 validation_result
             );
         }
-
-        // Process media
-        data = process_grid_item_media(data);
 
         // Update record
         const result = await grid_record_task.update_grid_item_record(data);

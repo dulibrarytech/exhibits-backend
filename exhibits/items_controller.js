@@ -18,9 +18,6 @@
 
 'use strict';
 
-const FS = require('fs');
-const PATH = require('path');
-const STORAGE_CONFIG = require('../config/storage_config')();
 const ITEMS_MODEL = require('../exhibits/items_model');
 const HEADINGS_MODEL = require('../exhibits/headings_model');
 const GRIDS_MODEL = require('../exhibits/grid_model');
@@ -108,6 +105,13 @@ exports.get_item_record = async function (req, res) {
             return;
         }
 
+        // Details mode: media library JOIN without record locking
+        if (type === 'details') {
+            const data = await ITEMS_MODEL.get_item_details_record(exhibit_id, item_id);
+            res.status(data.status).send(data);
+            return;
+        }
+
         // Reject unrecognized type values
         res.status(400).send({
             message: 'Bad request. Invalid type parameter.'
@@ -187,64 +191,6 @@ exports.delete_item_record = async function (req, res) {
         handle_error(res, 'delete_item_record', error,
             'Unable to delete item record.',
             req.params.item_id + ' for exhibit ' + req.params.exhibit_id);
-    }
-};
-
-exports.delete_item_media = async function (req, res) {
-
-    try {
-
-        const exhibit_id = req.params.exhibit_id;
-        const item_id = req.params.item_id;
-        const media = req.params.media;
-        const type = req.query.type;
-
-        if (!validate_param(res, exhibit_id, 'exhibit ID')) return;
-        if (!validate_param(res, item_id, 'item ID')) return;
-        if (!validate_param(res, media, 'media filename')) return;
-
-        // Prevent path traversal attacks
-        const safe_exhibit_id = PATH.basename(exhibit_id);
-        const safe_media = PATH.basename(media);
-
-        if (safe_exhibit_id !== exhibit_id || safe_media !== media) {
-            res.status(400).send({
-                message: 'Bad request. Invalid path characters.'
-            });
-            return;
-        }
-
-        // Build and verify file path is within storage directory
-        const file_path = PATH.join(STORAGE_CONFIG.storage_path, safe_exhibit_id, safe_media);
-        const resolved_path = PATH.resolve(file_path);
-        const storage_root = PATH.resolve(STORAGE_CONFIG.storage_path);
-
-        if (!resolved_path.startsWith(storage_root + PATH.sep)) {
-            res.status(400).send({
-                message: 'Bad request. Invalid file path.'
-            });
-            return;
-        }
-
-        // Delete database record first, then file
-        await ITEMS_MODEL.delete_media_value(item_id, media, type);
-        await FS.promises.unlink(resolved_path);
-
-        res.status(204).send();
-
-    } catch (error) {
-        // Handle file not found gracefully
-        if (error.code === 'ENOENT') {
-            LOGGER.module().warn('WARN: [/items/controller (delete_item_media)] Media file not found: ' + req.params.media + ' for item ' + req.params.item_id);
-            res.status(404).send({
-                message: 'Media file not found.'
-            });
-            return;
-        }
-
-        handle_error(res, 'delete_item_media', error,
-            'Unable to delete item media file.',
-            req.params.media + ' for item ' + req.params.item_id);
     }
 };
 

@@ -13,7 +13,7 @@
     }
 </style>
 <body>
-<%- include('partials/nav-dashboard-grid-edit-form.ejs'); %>
+<%- include('../partials/nav-dashboard'); %>
 <div id="right-panel" class="right-panel">
     <%- include('../partials/main-header.ejs'); %>
     <div class="content" style="min-height: 875px;">
@@ -48,6 +48,7 @@
 <script src="/exhibits-dashboard/static/app/dist/items.common.grid.form.module.min.js?<%=build_version%>"></script>
 <script src="/exhibits-dashboard/static/app/dist/items.edit.grid.form.module.min.js?<%=build_version%>"></script>
 <script>
+    navModule.wire_nav_links();
     itemsCommonStandardGridFormModule.init();
     itemsEditGridFormModule.init();
 

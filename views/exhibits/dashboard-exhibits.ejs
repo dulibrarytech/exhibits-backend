@@ -1,6 +1,77 @@
 <%- include('../partials/header.ejs'); %>
+<style>
+    /* ── Add Exhibit modal form styles ── */
+    .color-picker {
+        background-color: none;
+        outline: none;
+        border: 1px solid grey;
+        height: 38px;
+        width: 50px;
+        cursor: pointer;
+    }
+    .media-preview-area {
+        border: 2px dashed #c8ced3;
+        border-radius: 4px;
+        padding: 8px;
+        background: #f8f9fa;
+        height: 180px;
+        max-width: 280px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        overflow: hidden;
+        margin-bottom: 8px;
+    }
+    .media-preview-area:has(img) {
+        border-style: solid;
+        border-color: #dee2e6;
+        background: #fff;
+    }
+    .media-preview-area img {
+        max-width: 100%;
+        max-height: 160px;
+        object-fit: contain;
+        display: block;
+        border-radius: 3px;
+    }
+    .media-placeholder {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 6px;
+        color: #adb5bd;
+    }
+    .media-placeholder i {
+        font-size: 2rem;
+    }
+    .media-placeholder span {
+        font-size: 12px;
+    }
+    .media-preview-area:has(img) .media-placeholder {
+        display: none;
+    }
+    #hero-image-filename-display,
+    #thumbnail-filename-display {
+        display: inline-block;
+        max-width: 280px;
+        font-size: 12px;
+        color: #555;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+        vertical-align: middle;
+    }
+
+    /* ── Nested modal z-index fix ── */
+    .modal .modal {
+        z-index: 1060;
+    }
+    .modal .modal-backdrop {
+        z-index: 1055;
+    }
+</style>
 <body>
-<%- include('partials/nav-dashboard-exhibits.ejs'); %>
+<%- include('../partials/nav-dashboard'); %>
 <div id="right-panel" class="right-panel">
     <%- include('../partials/main-header.ejs'); %>
     <div class="content" style="min-height: 875px;">
@@ -15,10 +86,11 @@
                     <thead>
                     <tr>
                         <th aria-label="title">Title</th>
+                        <th aria-label="items">Items</th>
                         <th aria-label="status">Status</th>
-                        <th aria-label="actions">Actions</th>
                         <th aria-label="created">Created</th>
                         <th aria-label="updated">Updated</th>
+                        <th aria-label="actions">Actions</th>
                     </tr>
                     </thead>
                     <tbody id="exhibits-data"></tbody>
@@ -28,6 +100,10 @@
     </div>
     <div class="clearfix"></div>
     <%- include('../partials/footer.ejs'); %>
+
+    <!-- ══════════════════════════════════════════════════════════
+         Shared URL modal (existing)
+         ══════════════════════════════════════════════════════════ -->
     <div class="modal shared-url-modal" tabindex="-1" role="dialog" aria-labelledby="shared-url-modal" aria-hidden="true">
         <div class="modal-dialog modal-dialog-centered modal-lg" role="document">
             <div class="modal-content" style="background-color: #f2f2f2;">
@@ -43,6 +119,105 @@
             </div>
         </div>
     </div>
+
+    <!-- ══════════════════════════════════════════════════════════
+         Add Exhibit modal
+         ══════════════════════════════════════════════════════════ -->
+    <div class="modal fade" id="add-exhibit-modal" tabindex="-1" role="dialog"
+         aria-labelledby="add-exhibit-modal-label" aria-hidden="true"
+         data-backdrop="static" data-keyboard="false">
+        <div class="modal-dialog modal-xl modal-dialog-scrollable" role="document">
+            <div class="modal-content">
+                <div class="modal-header" style="display: flex; align-items: center;">
+                    <h5 class="modal-title" id="add-exhibit-modal-label" style="margin-bottom: 0;">
+                        <i class="ti-layout"></i>&nbsp;Add Exhibit
+                    </h5>
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close" style="margin: 0; padding: 0.75rem;">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
+                </div>
+                <div class="modal-body">
+                    <!-- scoped message area for the add-exhibit form -->
+                    <div id="add-exhibit-message"></div>
+
+                    <!-- exhibit data card -->
+                    <%- include('partials/exhibit-data-card.ejs'); %>
+
+                    <!-- exhibit media card -->
+                    <div id="exhibit-media-card" class="card">
+                        <div class="card-header">
+                            <strong class="card-title mb-3">Exhibit Media</strong>
+                        </div>
+                        <div class="card-body">
+                            <div class="row">
+                                <div class="col-6 col-md-6">
+                                    <div id="hero-image-display" class="media-preview-area">
+                                        <div class="media-placeholder">
+                                            <i class="fa fa-picture-o"></i>
+                                            <span>No image selected</span>
+                                        </div>
+                                    </div>
+                                    <p>
+                                        <span id="hero-image-filename-display"></span>&nbsp;&nbsp;
+                                        <span><a id="hero-trash" title="Remove hero image" href="#"
+                                                 style="display:none"><i class="fa fa-trash"></i></a></span>
+                                    </p>
+                                    <input type="hidden" id="hero-image" name="hero_image">
+                                    <input type="hidden" id="hero-image-media-uuid" name="hero_image_media_uuid">
+                                    <button type="button" class="btn btn-outline-primary"
+                                            id="pick-hero-image-btn"
+                                            data-media-role="hero_image"
+                                            data-media-type-filter="image">
+                                        <i class="fa fa-picture-o"></i>&nbsp;Select Hero Image
+                                    </button>
+                                </div>
+                                <div class="col-6 col-md-6">
+                                    <div id="thumbnail-image-display" class="media-preview-area">
+                                        <div class="media-placeholder">
+                                            <i class="fa fa-picture-o"></i>
+                                            <span>No image selected</span>
+                                        </div>
+                                    </div>
+                                    <p>
+                                        <span id="thumbnail-filename-display"></span>&nbsp;&nbsp;
+                                        <span><a id="thumbnail-trash" title="Remove thumbnail" href="#"
+                                                 style="display:none"><i class="fa fa-trash"></i></a></span>
+                                    </p>
+                                    <input type="hidden" id="thumbnail-image" name="thumbnail">
+                                    <input type="hidden" id="thumbnail-media-uuid" name="thumbnail_media_uuid">
+                                    <button type="button" class="btn btn-outline-primary"
+                                            id="pick-thumbnail-btn"
+                                            data-media-role="thumbnail"
+                                            data-media-type-filter="image">
+                                        <i class="fa fa-picture-o"></i>&nbsp;Select Thumbnail
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <%- include('partials/exhibit-banners.ejs'); %>
+                    <%- include('partials/exhibit-styles.ejs'); %>
+
+                    <input type="hidden" name="page_layout" id="exhibit-page-layout"
+                           value="top_nav" />
+                    <input type="hidden" name="exhibit_template" id="exhibit-template"
+                           value="vertical_scroll"/>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-dismiss="modal">Cancel</button>
+                    <button class="btn btn-primary" type="button" id="save-exhibit-btn">
+                        <i class="fa fa-save"></i>&nbsp;&nbsp;Save
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ── Modals required by the add-exhibit form ── -->
+    <%- include('../partials/preview-html-modal.ejs'); %>
+    <%- include('../partials/media-picker-modal.ejs'); %>
+
 </div>
 <style>
 
@@ -185,6 +360,54 @@
             font-size: 0.8rem;
         }
     }
+
+    /* Truncate long exhibit titles in the Title column */
+    .exhibit-title-cell .exhibit-title {
+        display: inline-block;
+        max-width: 260px;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        vertical-align: middle;
+    }
+
+    /* Clickable thumbnail and title links */
+    .exhibit-thumbnail-link {
+        flex-shrink: 0;
+        line-height: 0;
+    }
+    .exhibit-title-link {
+        color: #333;
+        text-decoration: none;
+    }
+    .exhibit-title-link:hover {
+        color: #005a9c;
+        text-decoration: underline;
+    }
+
+    /* Items column icon */
+    .exhibit-items-link {
+        color: #6c757d;
+        font-size: 1.1rem;
+        transition: color 0.15s ease-in-out;
+    }
+    .exhibit-items-link:hover {
+        color: #343a40;
+        text-decoration: none;
+    }
+
+    /* Actions dropdown positioning */
+    .exhibit-actions-menu.dropdown-menu {
+        right: 0 !important;
+        left: auto !important;
+        transform: none !important;
+        margin-top: 0;
+    }
+    .exhibit-actions-menu.dropdown-menu.show {
+        right: 0 !important;
+        left: auto !important;
+        transform: none !important;
+    }
 </style>
 <!-- libs -->
 <%- include('../partials/exhibits-libs-common.ejs'); %>
@@ -193,5 +416,46 @@
 <%- include('../partials/exhibits-app-common.ejs'); %>
 <script src="/exhibits-dashboard/static/app/dist/exhibits.module.min.js?<%=build_version%>"></script>
 <script src="/exhibits-dashboard/static/app/dist/home.module.min.js?<%=build_version%>"></script>
+<!-- add-exhibit modal modules -->
+<script src="/exhibits-dashboard/static/app/dist/media.picker.module.min.js?<%=build_version%>"></script>
+<script src="/exhibits-dashboard/static/app/dist/exhibits.common.form.module.min.js?<%=build_version%>"></script>
+<script src="/exhibits-dashboard/static/app/dist/exhibits.styles.module.min.js?<%=build_version%>"></script>
+<script src="/exhibits-dashboard/static/app/dist/exhibits.add.form.module.min.js?<%=build_version%>"></script>
+<script>
+    (function () {
+        'use strict';
+
+        let add_form_initialized = false;
+
+        // Initialize add-exhibit modules on first modal open
+        $('#add-exhibit-modal').on('shown.bs.modal', function () {
+
+            // Always point common form messages at the modal-scoped container
+            exhibitsCommonFormModule.set_message_selector('#add-exhibit-message');
+
+            if (add_form_initialized) {
+                return;
+            }
+
+            try {
+                exhibitsAddFormModule.init();
+                exhibitsCommonFormModule.init();
+                exhibitsStylesModule.init();
+                mediaPickerModule.init();
+                add_form_initialized = true;
+            } catch (error) {
+                console.error('Error initializing add-exhibit modal:', error);
+            }
+        });
+
+        // Reset form fields when modal is closed
+        $('#add-exhibit-modal').on('hidden.bs.modal', function () {
+
+            if (typeof exhibitsAddFormModule.reset_form === 'function') {
+                exhibitsAddFormModule.reset_form();
+            }
+        });
+    })();
+</script>
 </body>
 </html>

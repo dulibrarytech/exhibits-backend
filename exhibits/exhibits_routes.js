@@ -139,40 +139,6 @@ module.exports = function (app) {
         );
 
     // ========================================
-    // EXHIBIT MEDIA OPERATIONS
-    // ========================================
-
-    // Get exhibit-specific media (public access)
-    app.route(endpoints.exhibits.exhibit_media.get.endpoint)
-        .get(
-            rate_limits.public_media_access,
-            async_handler(CONTROLLER.get_exhibit_media)
-        );
-
-    // Delete exhibit-specific media (soft delete)
-    app.route(endpoints.exhibits.exhibit_media.delete.endpoint)
-        .delete(
-            rate_limits.media_operations,
-            TOKEN.verify,
-            async_handler(CONTROLLER.delete_exhibit_media)
-        );
-
-    // Get general media (public access)
-    app.route(endpoints.exhibits.media.get.endpoint)
-        .get(
-            rate_limits.public_media_access,
-            async_handler(CONTROLLER.get_media)
-        );
-
-    // Delete general media (soft delete)
-    app.route(endpoints.exhibits.media.delete.endpoint)
-        .delete(
-            rate_limits.media_operations,
-            TOKEN.verify,
-            async_handler(CONTROLLER.delete_media)
-        );
-
-    // ========================================
     // EXHIBIT STATE MANAGEMENT
     // ========================================
 

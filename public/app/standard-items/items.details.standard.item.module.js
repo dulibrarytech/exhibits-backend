@@ -31,7 +31,6 @@ const itemsDetailsStandardItemModule = (function () {
             const exhibit_id = helperModule.get_parameter_by_name('exhibit_id');
             const item_id = helperModule.get_parameter_by_name('item_id');
             const token = authModule.get_user_token();
-            const profile = authModule.get_user_profile_data();
             let tmp = EXHIBITS_ENDPOINTS.exhibits.item_records.get.endpoint.replace(':exhibit_id', exhibit_id);
             let endpoint = tmp.replace(':item_id', item_id);
 
@@ -48,7 +47,7 @@ const itemsDetailsStandardItemModule = (function () {
 
             let response = await httpModule.req({
                 method: 'GET',
-                url: endpoint + '?type=edit&uid=' + profile.uid,
+                url: endpoint + '?type=details',
                 headers: {
                     'Content-Type': 'application/json',
                     'x-access-token': token
@@ -106,9 +105,6 @@ const itemsDetailsStandardItemModule = (function () {
             const el = document.querySelector(selector);
             if (el) el.value = value;
         };
-
-        // Check lock status
-        helperModule.check_if_locked(record, '#exhibit-submit-card');
 
         // Format and display creation/update metadata
         const create_datetime = helperModule.format_date(new Date(record.created));

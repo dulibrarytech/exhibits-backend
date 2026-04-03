@@ -266,9 +266,31 @@ exports.get_thumbnail = async function (req, res) {
 
         const record = result.record;
 
-        // Check for thumbnail path
+        // Check for thumbnail path — if absent, try repo thumbnail fallback
         if (!record.thumbnail_path) {
-            LOGGER.module().warn(`WARNING: [/media-library/controller (get_thumbnail)] No thumbnail for media: ${media_id}`);
+
+            // Repo imports have no local thumbnail file; proxy from the repository thumbnail service
+            if (record.repo_uuid) {
+
+                const repo_result = await REPO_SERVICE.get_repo_tn(record.repo_uuid);
+
+                if (repo_result && repo_result.success && repo_result.thumbnail) {
+
+                    res.set({
+                        'Content-Type': repo_result.mime_type || 'image/jpeg',
+                        'Content-Length': repo_result.thumbnail.length,
+                        'Cache-Control': 'public, max-age=86400',
+                        'X-Content-Type-Options': 'nosniff'
+                    });
+
+                    return res.status(200).send(repo_result.thumbnail);
+                }
+
+                LOGGER.module().warn(`WARNING: [/media-library/controller (get_thumbnail)] Repo thumbnail unavailable for media: ${media_id} (repo_uuid: ${record.repo_uuid})`);
+            } else {
+                LOGGER.module().warn(`WARNING: [/media-library/controller (get_thumbnail)] No thumbnail for media: ${media_id}`);
+            }
+
             res.status(404).json({
                 success: false,
                 message: 'Thumbnail not found',
@@ -490,6 +512,19 @@ exports.create_media_record = async function (req, res) {
                 }
             }).catch(err => {
                 LOGGER.module().warn(`WARNING: [/media-library/controller (create_media_record)] IIIF manifest generation failed: ${err.message}`);
+            });
+        }
+
+        // Assign Kaltura entry to exhibits category after successful import (fire-and-forget)
+        if (data.ingest_method === 'kaltura' && data.kaltura_entry_id) {
+            KALTURA_SERVICE.assign_kaltura_category(data.kaltura_entry_id).then(category_result => {
+                if (!category_result || !category_result.success) {
+                    LOGGER.module().warn(`WARNING: [/media-library/controller (create_media_record)] Kaltura category assignment returned failure for entry ${data.kaltura_entry_id}: ${category_result?.message}`);
+                } else {
+                    LOGGER.module().info(`INFO: [/media-library/controller (create_media_record)] Kaltura entry ${data.kaltura_entry_id} assigned to exhibits category`);
+                }
+            }).catch(err => {
+                LOGGER.module().warn(`WARNING: [/media-library/controller (create_media_record)] Kaltura category assignment failed for entry ${data.kaltura_entry_id}: ${err.message}`);
             });
         }
 
@@ -744,6 +779,92 @@ exports.delete_media_record = async function (req, res) {
         res.status(500).json({
             success: false,
             message: 'Unable to delete media record.',
+            data: null
+        });
+    }
+};
+
+/**
+ * Adds or removes an exhibit UUID from a media record's exhibits JSON array
+ * Used to track which exhibits reference a given media library asset
+ *
+ * PUT /api/v1/media/library/record/:media_id/exhibits
+ *
+ * Body:
+ * - exhibit_uuid: {string} Exhibit UUID to add or remove
+ * - action: {string} 'add' or 'remove'
+ *
+ * @param {Object} req - Express request object
+ * @param {Object} res - Express response object
+ */
+exports.update_media_exhibits = async function (req, res) {
+
+    try {
+
+        const media_id = req.params.media_id;
+        const { exhibit_uuid, action, media_role } = req.body;
+
+        // Validate media_id
+        if (!is_valid_uuid(media_id)) {
+            return res.status(400).json({
+                success: false,
+                message: 'Invalid media ID format',
+                data: null
+            });
+        }
+
+        // Validate exhibit_uuid
+        if (!is_valid_uuid(exhibit_uuid)) {
+            return res.status(400).json({
+                success: false,
+                message: 'Invalid or missing exhibit_uuid',
+                data: null
+            });
+        }
+
+        // Validate action
+        const allowed_actions = ['add', 'remove'];
+
+        if (!action || !allowed_actions.includes(action)) {
+            return res.status(400).json({
+                success: false,
+                message: 'Invalid or missing action. Allowed: add, remove',
+                data: null
+            });
+        }
+
+        // Sanitize media_role (optional, for logging context)
+        const safe_role = (typeof media_role === 'string' && media_role.trim()) ? media_role.trim() : null;
+
+        let result;
+
+        if (action === 'add') {
+            result = await MEDIA_MODEL.add_exhibit_to_media_record(media_id, exhibit_uuid, safe_role);
+        } else {
+            result = await MEDIA_MODEL.remove_exhibit_from_media_record(media_id, exhibit_uuid, safe_role);
+        }
+
+        if (!result || !result.success) {
+            return res.status(400).json({
+                success: false,
+                message: result?.message || `Failed to ${action} exhibit association`,
+                data: null
+            });
+        }
+
+        return res.status(200).json({
+            success: true,
+            message: result.message,
+            data: {
+                exhibits: result.exhibits
+            }
+        });
+
+    } catch (error) {
+        LOGGER.module().error('ERROR: [/media-library/controller (update_media_exhibits)] ' + error.message);
+        return res.status(500).json({
+            success: false,
+            message: 'Unable to update media exhibits',
             data: null
         });
     }
@@ -1166,7 +1287,7 @@ exports.get_kaltura_config = async function (req, res) {
     }
 };
 
-/**
+/** Route currently not used -
  * Assigns a Kaltura media entry to the exhibits category
  * POST /api/v1/media/library/kaltura/:entry_id/category
  *

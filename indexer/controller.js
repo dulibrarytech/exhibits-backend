@@ -21,29 +21,7 @@
 const MODEL = require('../indexer/model');
 const SERVICE = require('../indexer/service');
 const LOGGER = require('../libs/log4');
-
-/**
- * Validates UUID format (v4)
- * @param {string} uuid - UUID to validate
- * @returns {boolean}
- */
-const is_valid_uuid = (uuid) => {
-    if (!uuid || typeof uuid !== 'string') {
-        return false;
-    }
-    const uuid_regex = /^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
-    return uuid_regex.test(uuid);
-};
-
-/**
- * Validates record type
- * @param {string} type - Record type to validate
- * @returns {boolean}
- */
-const is_valid_record_type = (type) => {
-    const valid_types = ['exhibit', 'collection', 'object', 'item']; // Adjust as needed
-    return type && typeof type === 'string' && valid_types.includes(type.toLowerCase());
-};
+const {is_valid_uuid, is_valid_record_type} = require('../indexer/indexer_helper');
 
 /**
  * Creates a new search index

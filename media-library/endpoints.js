@@ -16,7 +16,8 @@
 
 'use strict';
 
-const APP_PATH = '/exhibits-dashboard';
+const APP_CONFIG = require('../config/app_config')();
+const APP_PATH = APP_CONFIG.app_path;
 const PREFIX = '/api/';
 const VERSION = 'v1';
 const ENDPOINT = '/media/library';
@@ -126,6 +127,14 @@ const ENDPOINTS = {
             description: 'Removes Kaltura media entry from exhibits category by entry ID',
             endpoint: `${APP_PATH}${PREFIX}${VERSION}${ENDPOINT}/kaltura/:entry_id/category`,
             params: 'token or api_key, entry_id (path parameter)'
+        }
+    },
+    media_exhibits: {
+        put: {
+            description: 'Adds or removes an exhibit UUID from a media record exhibits array',
+            endpoint: `${APP_PATH}${PREFIX}${VERSION}${ENDPOINT}/record/:media_id/exhibits`,
+            params: 'token or api_key, media_id (UUID)',
+            body: '{ exhibit_uuid, action: "add" | "remove" }'
         }
     },
     iiif_manifest: {

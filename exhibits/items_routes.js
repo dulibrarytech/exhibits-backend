@@ -108,18 +108,6 @@ module.exports = function (app) {
         );
 
     // ========================================
-    // ITEM MEDIA OPERATIONS
-    // ========================================
-
-    // Delete item media (soft delete)
-    app.route(endpoints.exhibits.item_media.delete.endpoint)
-        .delete(
-            rate_limits.media_operations,
-            TOKEN.verify,
-            async_handler(CONTROLLER.delete_item_media)
-        );
-
-    // ========================================
     // ITEM STATE MANAGEMENT
     // ========================================
 

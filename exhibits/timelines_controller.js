@@ -158,6 +158,12 @@ exports.get_timeline_item_record = async function (req, res) {
             res.status(result.status).send(result);
         }
 
+        if (type === 'details') {
+            const result = await TIMELINES_MODEL.get_timeline_item_details_record(is_member_of_exhibit, is_member_of_timeline, item_id);
+            res.status(result.status).send(result);
+            return false;
+        }
+
         if (type === 'edit') {
 
             const uid = req.query.uid;

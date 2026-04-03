@@ -253,20 +253,23 @@ const exhibitsModule = (function () {
         const tr = document.createElement('tr');
         tr.id = exhibit.uuid;
 
-        // Column 1: Main content (title, thumbnail, buttons)
+        // Column 1: Main content (thumbnail, title, created by)
         tr.appendChild(create_main_content_column(exhibit));
 
-        // Column 2: Status
-        tr.appendChild(create_status_column(exhibit));
+        // Column 2: Items link
+        tr.appendChild(create_items_column(exhibit));
 
-        // Column 3: Actions
-        tr.appendChild(create_actions_column(exhibit));
+        // Column 3: Status
+        tr.appendChild(create_status_column(exhibit));
 
         // Column 4: Created date
         tr.appendChild(create_date_column(exhibit.created, 'exhibit-created'));
 
         // Column 5: Updated date
         tr.appendChild(create_date_column(exhibit.updated, 'exhibit-updated'));
+
+        // Column 6: Actions (dropdown)
+        tr.appendChild(create_actions_column(exhibit));
 
         return tr;
     }
@@ -279,67 +282,116 @@ const exhibitsModule = (function () {
     function create_main_content_column(exhibit) {
 
         const td = document.createElement('td');
-        td.style.width = '35%';
 
-        // Title section with featured/locked icons
-        const title_paragraph = create_title_section(exhibit);
-        td.appendChild(title_paragraph);
+        // Determine detail/edit URL based on publication status
+        const app_path = typeof APP_PATH !== 'undefined' ? APP_PATH : '';
+        const encoded_uuid = encodeURIComponent(exhibit.uuid);
+        const exhibit_url = `${app_path}/exhibits/exhibit/details?exhibit_id=${encoded_uuid}`;
 
-        // Thumbnail
+        // Flex container for thumbnail + title
+        const flex_div = document.createElement('div');
+        flex_div.className = 'exhibit-title-cell';
+        flex_div.style.cssText = 'display: flex; align-items: center;';
+
+        // Compact thumbnail (50x50) wrapped in link
         const thumbnail = create_thumbnail_element(exhibit);
-        td.appendChild(thumbnail);
+        const thumbnail_link = document.createElement('a');
+        thumbnail_link.href = exhibit_url;
+        thumbnail_link.className = 'exhibit-thumbnail-link';
+        thumbnail_link.setAttribute('aria-hidden', 'true');
+        thumbnail_link.setAttribute('tabindex', '-1');
+        thumbnail_link.appendChild(thumbnail);
+        flex_div.appendChild(thumbnail_link);
 
-        // Button group (Preview, Share)
-        const button_container = create_button_group(exhibit);
-        td.appendChild(button_container);
+        // Title container with featured/locked icons
+        const title_wrapper = document.createElement('div');
 
-        // Created by info
-        const created_info = create_created_by_info(exhibit.created_by);
-        td.appendChild(created_info);
+        const title_text = helperModule.strip_html(helperModule.unescape(exhibit.title));
 
-        return td;
-    }
+        // Title wrapped in link
+        const title_link = document.createElement('a');
+        title_link.href = exhibit_url;
+        title_link.className = 'exhibit-title-link';
+        title_link.setAttribute('title', title_text);
 
-    /**
-     * Create title section with featured and locked icons
-     * @param {Object} exhibit - Exhibit data
-     * @returns {HTMLElement} Paragraph element
-     */
-    function create_title_section(exhibit) {
+        const title_span = document.createElement('small');
+        title_span.className = 'exhibit-title';
+        title_span.textContent = title_text;
+        title_span.style.fontWeight = 'bold';
 
-        const p = document.createElement('p');
+        title_link.appendChild(title_span);
+        title_wrapper.appendChild(title_link);
 
-        // Title in strong tag
-        const strong = document.createElement('strong');
-        const title = helperModule.strip_html(helperModule.unescape(exhibit.title));
-        strong.textContent = title;
-        p.appendChild(strong);
-
-        // Featured icon
+        // Featured icon (inline after title)
         if (exhibit.is_featured === 1) {
-            p.appendChild(document.createTextNode('  '));
+            title_wrapper.appendChild(document.createTextNode('  '));
             const featured_icon = create_icon(
                 'fa fa-star',
                 'Featured',
                 'featured exhibit',
                 '#BA8E23'
             );
-            p.appendChild(featured_icon);
+            title_wrapper.appendChild(featured_icon);
         }
 
-        // Locked icon
+        // Locked icon (inline after title)
         if (exhibit.is_locked === 1) {
-            p.appendChild(document.createTextNode('  '));
+            title_wrapper.appendChild(document.createTextNode('  '));
             const locked_icon = create_icon(
                 'fa fa-lock',
                 'Record is currently locked',
                 'exhibit-is-locked',
                 '#BA8E23'
             );
-            p.appendChild(locked_icon);
+            title_wrapper.appendChild(locked_icon);
         }
 
-        return p;
+        // Created by info below title
+        const created_by_div = document.createElement('div');
+        const created_by_small = document.createElement('small');
+        created_by_small.style.fontSize = 'x-small';
+        const created_by_em = document.createElement('em');
+        created_by_em.textContent = `Exhibit created by ${exhibit.created_by}`;
+        created_by_small.appendChild(created_by_em);
+        created_by_div.appendChild(created_by_small);
+        title_wrapper.appendChild(created_by_div);
+
+        flex_div.appendChild(title_wrapper);
+        td.appendChild(flex_div);
+
+        return td;
+    }
+
+    /**
+     * Create items column with clickable icon linking to exhibit items
+     * @param {Object} exhibit - Exhibit data
+     * @returns {HTMLElement} Table cell
+     */
+    function create_items_column(exhibit) {
+
+        const td = document.createElement('td');
+        td.className = 'text-center';
+        td.style.verticalAlign = 'middle';
+
+        const app_path = typeof APP_PATH !== 'undefined' ? APP_PATH : '';
+        const encoded_uuid = encodeURIComponent(exhibit.uuid);
+
+        const link = document.createElement('a');
+        link.href = `${app_path}/items?exhibit_id=${encoded_uuid}`;
+        link.className = 'exhibit-items-link';
+
+        const title_text = helperModule.strip_html(helperModule.unescape(exhibit.title));
+        link.setAttribute('title', `View items for ${title_text}`);
+        link.setAttribute('aria-label', `View items for ${title_text}`);
+
+        const icon = document.createElement('i');
+        icon.className = 'fa fa-list';
+        icon.setAttribute('aria-hidden', 'true');
+
+        link.appendChild(icon);
+        td.appendChild(link);
+
+        return td;
     }
 
     /**
@@ -350,7 +402,6 @@ const exhibitsModule = (function () {
      */
     function create_thumbnail_element(exhibit) {
 
-        const p = document.createElement('p');
         const img = document.createElement('img');
 
         const default_image_url = `${APP_PATH}/static/images/image-tn.png`;
@@ -376,8 +427,7 @@ const exhibitsModule = (function () {
 
         img.src = thumbnail_url;
         img.alt = `${exhibit.uuid} thumbnail`;
-        img.height = 100;
-        img.width = 100;
+        img.style.cssText = 'width: 50px; height: 50px; object-fit: cover; border-radius: 4px; margin-right: 10px; vertical-align: middle; flex-shrink: 0;';
 
         // Handle broken image (404 error)
         img.addEventListener('error', function () {
@@ -387,106 +437,7 @@ const exhibitsModule = (function () {
             }
         });
 
-        p.appendChild(img);
-        return p;
-    }
-
-    /**
-     * Create button group with Preview and Share buttons
-     * @param {Object} exhibit - Exhibit data
-     * @returns {HTMLElement} Button container div
-     */
-    function create_button_group(exhibit) {
-
-        const container = document.createElement('div');
-        container.className = 'd-flex justify-content-between align-items-center';
-
-        const btn_group = document.createElement('div');
-        btn_group.className = 'btn-group';
-
-        // Preview button
-        const preview_span = document.createElement('span');
-        preview_span.id = 'preview-link';
-
-        const preview_button = document.createElement('button');
-        preview_button.type = 'button';
-        preview_button.className = 'btn btn-sm btn-outline-secondary';
-        preview_button.setAttribute('aria-label', 'Preview exhibit');
-
-        const preview_icon = document.createElement('i');
-        preview_icon.className = 'menu-icon fa fa-eye';
-        preview_icon.setAttribute('aria-hidden', 'true');
-        preview_button.appendChild(preview_icon);
-
-        preview_button.appendChild(document.createTextNode(' '));
-
-        const preview_small = document.createElement('small');
-        preview_small.textContent = 'Preview';
-        preview_button.appendChild(preview_small);
-
-        const preview_link = `${APP_PATH}/preview?uuid=${encodeURIComponent(exhibit.uuid)}`;
-        preview_button.addEventListener('click', () => {
-            exhibitsModule.open_preview(preview_link);
-        });
-
-        preview_span.appendChild(preview_button);
-        btn_group.appendChild(preview_span);
-
-        // Space between buttons
-        btn_group.appendChild(document.createTextNode('  '));
-
-        // Share button
-        const share_span = document.createElement('span');
-        share_span.id = 'share-link';
-
-        const share_button = document.createElement('button');
-        share_button.type = 'button';
-        share_button.className = 'btn btn-sm btn-outline-secondary';
-        share_button.setAttribute('aria-label', 'Share exhibit');
-        share_button.setAttribute('data-toggle', 'modal');
-        share_button.setAttribute('data-target', '.shared-url-modal');
-
-        const share_icon = document.createElement('i');
-        share_icon.className = 'fa fa-share-alt';
-        share_icon.setAttribute('aria-hidden', 'true');
-        share_button.appendChild(share_icon);
-
-        share_button.appendChild(document.createTextNode(' '));
-
-        const share_small = document.createElement('small');
-        share_small.textContent = 'Share';
-        share_button.appendChild(share_small);
-
-        // Event listener instead of onclick
-        share_button.addEventListener('click', () => {
-            exhibitsModule.create_shared_preview_url(exhibit.uuid);
-        });
-
-        share_span.appendChild(share_button);
-        btn_group.appendChild(share_span);
-
-        container.appendChild(btn_group);
-        return container;
-    }
-
-    /**
-     * Create "created by" info element
-     * @param {string} created_by - Username who created the exhibit
-     * @returns {HTMLElement} Paragraph element
-     */
-    function create_created_by_info(created_by) {
-
-        const p = document.createElement('p');
-        const span = document.createElement('span');
-        span.style.fontSize = 'x-small';
-
-        const em = document.createElement('em');
-        em.textContent = `Exhibit created by ${created_by}`;
-
-        span.appendChild(em);
-        p.appendChild(span);
-
-        return p;
+        return img;
     }
 
     /**
@@ -497,7 +448,6 @@ const exhibitsModule = (function () {
     function create_status_column(exhibit) {
 
         const td = document.createElement('td');
-        td.style.width = '5%';
         td.style.textAlign = 'center';
 
         const small = document.createElement('small');
@@ -535,7 +485,10 @@ const exhibitsModule = (function () {
 
             span.appendChild(icon);
             span.appendChild(document.createElement('br'));
-            span.appendChild(document.createTextNode('Published'));
+
+            const published_text = document.createElement('small');
+            published_text.textContent = 'Published';
+            span.appendChild(published_text);
         } else {
             link.className = 'publish-exhibit';
             span.id = 'publish';
@@ -548,7 +501,10 @@ const exhibitsModule = (function () {
 
             span.appendChild(icon);
             span.appendChild(document.createElement('br'));
-            span.appendChild(document.createTextNode('Unpublished'));
+
+            const unpublished_text = document.createElement('small');
+            unpublished_text.textContent = 'Unpublished';
+            span.appendChild(unpublished_text);
         }
 
         link.appendChild(span);
@@ -563,66 +519,187 @@ const exhibitsModule = (function () {
     function create_actions_column(exhibit) {
 
         const td = document.createElement('td');
-        td.style.width = '10%';
+        td.className = 'text-center';
+        td.style.width = '5%';
 
-        const div = document.createElement('div');
-        div.className = 'card-text text-sm-center';
-        div.id = `${exhibit.uuid}-actions`;
+        const uuid = exhibit.uuid;
+        const encoded_uuid = encodeURIComponent(uuid);
+        const title = helperModule.strip_html(helperModule.unescape(exhibit.title));
+        const escaped_title = (title || 'Untitled').replace(/'/g, "\\'").replace(/"/g, '&quot;');
 
-        // View items link (always visible)
-        const items_link = create_link_element(
-            `${APP_PATH}/items?exhibit_id=${encodeURIComponent(exhibit.uuid)}`,
-            'View Exhibit Items',
-            'view-exhibit-items',
-            'fa fa-list'
-        );
-        items_link.classList.add('pr-1');
-        div.appendChild(items_link);
-        div.appendChild(document.createTextNode(' '));
+        td.innerHTML = build_exhibit_actions_dropdown_html(uuid, encoded_uuid, escaped_title, exhibit.is_published);
 
-        if (exhibit.is_published === 1) {
-            // Published: show details link and disabled delete
-            const details_link = create_link_element(
-                `${APP_PATH}/exhibits/exhibit/details?exhibit_id=${encodeURIComponent(exhibit.uuid)}`,
-                'View details',
-                'exhibit-details',
-                'fa fa-folder-open'
-            );
-            details_link.classList.add('pr-1');
-            div.appendChild(details_link);
-            div.appendChild(document.createTextNode(' '));
+        return td;
+    }
 
-            // Disabled delete icon
-            const trash_icon = document.createElement('i');
-            trash_icon.className = 'fa fa-trash pr-1';
-            trash_icon.setAttribute('title', 'Can only delete if unpublished');
-            trash_icon.setAttribute('aria-label', 'delete-exhibit');
-            trash_icon.style.color = '#d3d3d3';
-            div.appendChild(trash_icon);
+    /**
+     * Build dropdown HTML for exhibit actions
+     * @param {string} uuid - Exhibit UUID
+     * @param {string} encoded_uuid - URL-encoded UUID
+     * @param {string} escaped_title - HTML-escaped title
+     * @param {number} is_published - Publication status (0 or 1)
+     * @returns {string} Dropdown HTML string
+     */
+    function build_exhibit_actions_dropdown_html(uuid, encoded_uuid, escaped_title, is_published) {
+
+        const app_path = typeof APP_PATH !== 'undefined' ? APP_PATH : '';
+
+        // Build state-dependent actions
+        let edit_action_html;
+        let delete_action_html;
+
+        if (is_published === 1) {
+            // Published: show details, disabled delete
+            edit_action_html = `
+                    <a class="dropdown-item" 
+                       href="${app_path}/exhibits/exhibit/details?exhibit_id=${encoded_uuid}"
+                       style="font-size: 0.875rem;">
+                        <i class="fa fa-folder-open mr-2" aria-hidden="true" style="width: 16px;"></i>
+                        Details
+                    </a>`;
+            delete_action_html = `
+                    <a class="dropdown-item text-muted disabled" 
+                       href="#" 
+                       style="font-size: 0.875rem; pointer-events: none; opacity: 0.5;"
+                       title="Can only delete if unpublished">
+                        <i class="fa fa-trash mr-2" aria-hidden="true" style="width: 16px;"></i>
+                        Delete
+                    </a>`;
         } else {
-            // Unpublished: show edit and delete links
-            const edit_link = create_link_element(
-                `${APP_PATH}/exhibits/exhibit/edit?exhibit_id=${encodeURIComponent(exhibit.uuid)}`,
-                'Edit',
-                'edit-exhibit',
-                'fa fa-edit'
-            );
-            edit_link.classList.add('pr-1');
-            div.appendChild(edit_link);
-            div.appendChild(document.createTextNode(' '));
-
-            const delete_link = create_link_element(
-                `${APP_PATH}/exhibits/exhibit/delete?exhibit_id=${encodeURIComponent(exhibit.uuid)}`,
-                'Delete exhibit',
-                'delete-exhibit',
-                'fa fa-trash'
-            );
-            delete_link.classList.add('pr-1');
-            div.appendChild(delete_link);
+            // Unpublished: show edit, active delete
+            edit_action_html = `
+                    <a class="dropdown-item" 
+                       href="${app_path}/exhibits/exhibit/edit?exhibit_id=${encoded_uuid}"
+                       style="font-size: 0.875rem;">
+                        <i class="fa fa-edit mr-2" aria-hidden="true" style="width: 16px;"></i>
+                        Edit
+                    </a>`;
+            delete_action_html = `
+                    <a class="dropdown-item text-danger" 
+                       href="${app_path}/exhibits/exhibit/delete?exhibit_id=${encoded_uuid}"
+                       style="font-size: 0.875rem;">
+                        <i class="fa fa-trash mr-2" aria-hidden="true" style="width: 16px;"></i>
+                        Delete
+                    </a>`;
         }
 
-        td.appendChild(div);
-        return td;
+        return `
+            <div class="dropdown" style="display: inline-block; position: relative;">
+                <button type="button" 
+                        class="btn btn-link p-0 border-0 exhibit-actions-toggle" 
+                        style="color: #6c757d; font-size: 1.25rem; line-height: 1; background: none;"
+                        data-toggle="dropdown"
+                        data-bs-toggle="dropdown"
+                        aria-haspopup="true"
+                        aria-expanded="false"
+                        aria-label="Actions for ${escaped_title}"
+                        title="Actions">
+                    <i class="fa fa-ellipsis-v" aria-hidden="true"></i>
+                </button>
+                <div class="dropdown-menu exhibit-actions-menu" aria-label="Actions menu for ${escaped_title}">
+                    ${edit_action_html}
+                    <div class="dropdown-divider"></div>
+                    <a class="dropdown-item btn-preview-exhibit" 
+                       href="#" 
+                       data-uuid="${uuid}"
+                       style="font-size: 0.875rem;">
+                        <i class="fa fa-eye mr-2" aria-hidden="true" style="width: 16px;"></i>
+                        Preview
+                    </a>
+                    <a class="dropdown-item btn-share-exhibit" 
+                       href="#" 
+                       data-uuid="${uuid}"
+                       style="font-size: 0.875rem;">
+                        <i class="fa fa-share-alt mr-2" aria-hidden="true" style="width: 16px;"></i>
+                        Share
+                    </a>
+                    <div class="dropdown-divider"></div>
+                    ${delete_action_html}
+                </div>
+            </div>
+        `;
+    }
+
+    /**
+     * Setup exhibit action dropdown handlers after each DataTable draw
+     */
+    function setup_exhibit_action_handlers() {
+
+        // Initialize Bootstrap dropdowns (support both Bootstrap 4 and 5)
+        document.querySelectorAll('.exhibit-actions-toggle').forEach(toggle => {
+            if (typeof bootstrap !== 'undefined' && bootstrap.Dropdown) {
+                new bootstrap.Dropdown(toggle);
+            } else if (typeof $ !== 'undefined' && typeof $.fn.dropdown !== 'undefined') {
+                $(toggle).dropdown();
+            }
+        });
+
+        // Close dropdowns when clicking outside
+        document.removeEventListener('click', close_open_exhibit_dropdowns);
+        document.addEventListener('click', close_open_exhibit_dropdowns);
+
+        // Preview button handlers (dropdown items)
+        document.querySelectorAll('.btn-preview-exhibit').forEach(btn => {
+            btn.addEventListener('click', function(e) {
+                e.preventDefault();
+                e.stopPropagation();
+                close_open_exhibit_dropdowns();
+                const uuid = this.getAttribute('data-uuid');
+                if (uuid) {
+                    const preview_link = `${APP_PATH}/preview?uuid=${encodeURIComponent(uuid)}`;
+                    exhibitsModule.open_preview(preview_link);
+                }
+            });
+        });
+
+        // Share button handlers (dropdown items)
+        document.querySelectorAll('.btn-share-exhibit').forEach(btn => {
+            btn.addEventListener('click', function(e) {
+                e.preventDefault();
+                e.stopPropagation();
+                close_open_exhibit_dropdowns();
+                const uuid = this.getAttribute('data-uuid');
+                if (uuid) {
+                    // Open the share modal
+                    const modal_el = document.querySelector('.shared-url-modal');
+                    if (modal_el) {
+                        if (typeof $ !== 'undefined' && typeof $.fn.modal !== 'undefined') {
+                            $(modal_el).modal('show');
+                        } else if (typeof bootstrap !== 'undefined' && bootstrap.Modal) {
+                            const bs_modal = new bootstrap.Modal(modal_el);
+                            bs_modal.show();
+                        }
+                    }
+                    exhibitsModule.create_shared_preview_url(uuid);
+                }
+            });
+        });
+    }
+
+    /**
+     * Close all open exhibit dropdown menus
+     * @param {Event} [e] - Optional click event
+     */
+    function close_open_exhibit_dropdowns(e) {
+        // If event provided, check if click was inside a dropdown
+        if (e && e.target.closest('.dropdown')) {
+            return;
+        }
+
+        // Close all open dropdowns
+        document.querySelectorAll('.exhibit-actions-menu.dropdown-menu.show').forEach(menu => {
+            menu.classList.remove('show');
+            const toggle = menu.previousElementSibling;
+            if (toggle) {
+                toggle.setAttribute('aria-expanded', 'false');
+            }
+        });
+
+        // Also handle Bootstrap 4 jQuery dropdowns
+        if (typeof $ !== 'undefined' && typeof $.fn.dropdown !== 'undefined') {
+            $('.exhibit-actions-menu.dropdown-menu.show').removeClass('show');
+            $('.exhibit-actions-toggle[aria-expanded="true"]').attr('aria-expanded', 'false');
+        }
     }
 
     /**
@@ -634,18 +711,14 @@ const exhibitsModule = (function () {
     function create_date_column(date_string, aria_label) {
 
         const td = document.createElement('td');
-        td.style.width = '4%';
         td.className = 'item-order';
         td.setAttribute('aria-label', aria_label);
 
-        const span = document.createElement('span');
-        span.style.paddingLeft = '4px';
-
+        const small = document.createElement('small');
         const date = new Date(date_string);
-        const formatted_date = helperModule.format_date(date);
-        span.textContent = formatted_date;
+        small.textContent = helperModule.format_date(date);
 
-        td.appendChild(span);
+        td.appendChild(small);
         return td;
     }
 
@@ -680,35 +753,6 @@ const exhibitsModule = (function () {
     }
 
     /**
-     * Create link element with icon
-     * @param {string} href - Link URL
-     * @param {string} title - Title attribute
-     * @param {string} aria_label - ARIA label
-     * @param {string} icon_class - Icon class
-     * @returns {HTMLElement} Link element
-     */
-    function create_link_element(href, title, aria_label, icon_class) {
-
-        const link = document.createElement('a');
-        link.href = href;
-
-        if (title) {
-            link.setAttribute('title', title);
-        }
-
-        if (aria_label) {
-            link.setAttribute('aria-label', aria_label);
-        }
-
-        if (icon_class) {
-            const icon = create_icon(icon_class, '', '', '');
-            link.appendChild(icon);
-            link.appendChild(document.createTextNode(' '));
-        }
-
-        return link;
-    }
-
     /**
      * Display message helper (reusable across module)
      * @param {HTMLElement} element - Target element
@@ -762,12 +806,16 @@ const exhibitsModule = (function () {
 
             const exhibit_list = new DataTable('#exhibits', {
                 paging: true,
-                order: [[4, 'desc']], // Sort by updated date descending
+                order: [[4, 'desc']], // Sort by updated date descending (column index 4)
                 rowReorder: false,
                 pageLength: 25,
                 lengthMenu: [[10, 25, 50, 100, -1], [10, 25, 50, 100, 'All']],
                 responsive: true,
                 autoWidth: false,
+                columnDefs: [
+                    { orderable: false, searchable: false, targets: 1 }, // Items column
+                    { orderable: false, searchable: false, targets: 5 } // Actions column
+                ],
                 language: {
                     emptyTable: 'No exhibits found',
                     zeroRecords: 'No matching exhibits found',
@@ -794,6 +842,9 @@ const exhibitsModule = (function () {
                     table.querySelectorAll('thead th').forEach(th => {
                         th.setAttribute('scope', 'col');
                     });
+
+                    // Setup action dropdown handlers after each draw
+                    setup_exhibit_action_handlers();
                 }
             });
 
@@ -1018,7 +1069,6 @@ const exhibitsModule = (function () {
     // Module-level constants
     const EXHIBIT_CONSTANTS = {
         STATUS_SUFFIX: '-status',
-        ACTIONS_SUFFIX: '-actions',
         MESSAGE_DURATION: 5000,
         HTTP_OK: 200,
         HTTP_NO_CONTENT: 204,
@@ -1038,21 +1088,7 @@ const exhibitsModule = (function () {
             css_class_to_add: 'suppress-exhibit',
             css_class_to_remove: 'publish-exhibit',
             click_handler: suppress_exhibit,
-            actions: (app_path, encoded_uuid) => [
-                {
-                    href: `${app_path}/items?exhibit_id=${encoded_uuid}`,
-                    title: 'View Exhibit Items',
-                    icon: 'fa fa-list pr-1',
-                    label: 'view-items'
-                },
-                {
-                    href: `${app_path}/exhibits/exhibit/details?exhibit_id=${encoded_uuid}`,
-                    title: 'View details',
-                    icon: 'fa fa-folder-open pr-1',
-                    label: 'exhibit-details'
-                },
-                {type: 'disabled-trash'}
-            ]
+            is_published: 1
         },
         SUPPRESSED: {
             span_id: 'publish',
@@ -1063,26 +1099,7 @@ const exhibitsModule = (function () {
             css_class_to_add: 'publish-exhibit',
             css_class_to_remove: 'suppress-exhibit',
             click_handler: publish_exhibit,
-            actions: (app_path, encoded_uuid) => [
-                {
-                    href: `${app_path}/items?exhibit_id=${encoded_uuid}`,
-                    title: 'View Exhibit Items',
-                    icon: 'fa fa-list pr-1',
-                    label: 'view-items'
-                },
-                {
-                    href: `${app_path}/exhibits/exhibit/edit?exhibit_id=${encoded_uuid}`,
-                    title: 'Edit',
-                    icon: 'fa fa-edit pr-1',
-                    label: 'edit-exhibit'
-                },
-                {
-                    href: `${app_path}/exhibits/exhibit/delete?exhibit_id=${encoded_uuid}`,
-                    title: 'Delete exhibit',
-                    icon: 'fa fa-trash pr-1',
-                    label: 'delete-exhibit'
-                }
-            ]
+            is_published: 0
         }
     };
 
@@ -1169,7 +1186,8 @@ const exhibitsModule = (function () {
         icon.setAttribute('aria-hidden', 'true');
 
         const br = document.createElement('br');
-        const text = document.createTextNode(state_config.text);
+        const text = document.createElement('small');
+        text.textContent = state_config.text;
 
         span.appendChild(icon);
         span.appendChild(br);
@@ -1183,44 +1201,31 @@ const exhibitsModule = (function () {
      * @param {Object} state_config - State configuration object
      */
     function update_exhibit_actions_ui_generic(clean_uuid, state_config) {
-        const actions_id = `${clean_uuid}${EXHIBIT_CONSTANTS.ACTIONS_SUFFIX}`;
-        const actions_element = document.getElementById(actions_id);
+        // Find the row by UUID and update the last td (actions column)
+        const row = document.getElementById(clean_uuid);
 
-        if (!actions_element) {
-            console.warn(`Actions element not found: ${actions_id}`);
+        if (!row) {
+            console.warn(`Exhibit row not found: ${clean_uuid}`);
             return;
         }
 
-        // Clear existing content safely
-        while (actions_element.firstChild) {
-            actions_element.removeChild(actions_element.firstChild);
+        // Actions column is the last td in the row
+        const cells = row.querySelectorAll('td');
+        const actions_td = cells[cells.length - 1];
+
+        if (!actions_td) {
+            console.warn(`Actions cell not found for: ${clean_uuid}`);
+            return;
         }
 
-        // Safely encode UUID for URL
         const encoded_uuid = encodeURIComponent(clean_uuid);
+        const escaped_title = 'Exhibit';
 
-        // Validate APP_PATH is defined
-        const app_path = typeof APP_PATH !== 'undefined' ? APP_PATH : '';
+        // Rebuild dropdown with new published state
+        actions_td.innerHTML = build_exhibit_actions_dropdown_html(clean_uuid, encoded_uuid, escaped_title, state_config.is_published);
 
-        // Get action configurations for this state
-        const action_configs = state_config.actions(app_path, encoded_uuid);
-
-        // Create action elements
-        const actions = [];
-        action_configs.forEach((config, index) => {
-            if (config.type === 'disabled-trash') {
-                actions.push(create_disabled_trash_icon());
-            } else {
-                actions.push(create_action_link(config.href, config.title, config.icon, config.label));
-            }
-
-            // Add spacing between actions (except after last action)
-            if (index < action_configs.length - 1) {
-                actions.push(document.createTextNode('\u00A0'));
-            }
-        });
-
-        actions.forEach(action => actions_element.appendChild(action));
+        // Re-initialize dropdown handlers for this new dropdown
+        setup_exhibit_action_handlers();
     }
 
     /**
@@ -1340,42 +1345,6 @@ const exhibitsModule = (function () {
     }
 
     /**
-     * Creates an action link element safely
-     * @param {string} href - Link URL
-     * @param {string} title - Link title
-     * @param {string} icon_class - Icon class names
-     * @param {string} aria_label - Aria label for accessibility
-     * @returns {HTMLAnchorElement}
-     */
-    function create_action_link(href, title, icon_class, aria_label) {
-        const link = document.createElement('a');
-        link.href = href;
-        link.title = title;
-        link.setAttribute('aria-label', aria_label);
-
-        const icon = document.createElement('i');
-        icon.className = icon_class;
-        icon.setAttribute('aria-hidden', 'true');
-
-        link.appendChild(icon);
-        return link;
-    }
-
-    /**
-     * Creates a disabled trash icon element
-     * @returns {HTMLElement}
-     */
-    function create_disabled_trash_icon() {
-        const icon = document.createElement('i');
-        icon.className = 'fa fa-trash pr-1';
-        icon.title = 'Can only delete if unpublished';
-        icon.style.color = '#d3d3d3';
-        icon.setAttribute('aria-label', 'delete-exhibit');
-        icon.setAttribute('aria-disabled', 'true');
-        icon.setAttribute('aria-hidden', 'true');
-        return icon;
-    }
-
     /**
      * Displays a message to the user
      * @param {string} type - Message type ('warning', 'danger', 'success', 'info')

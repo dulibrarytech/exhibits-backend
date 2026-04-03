@@ -244,7 +244,7 @@ const exhibitsEditFormModule = (function () {
         try {
 
             // Validate exhibitsCommonFormModule exists and has required methods
-            if (!validate_module(exhibitsCommonFormModule, ['get_common_form_fields', 'get_exhibit_styles'])) {
+            if (!validate_module(exhibitsCommonFormModule, ['get_common_form_fields'])) {
                 throw new Error('exhibitsCommonFormModule is not properly configured');
             }
 
@@ -255,16 +255,6 @@ const exhibitsEditFormModule = (function () {
             if (!exhibit || typeof exhibit !== 'object') {
                 throw new Error('Failed to retrieve common form fields');
             }
-
-            // Get exhibit styles
-            const styles = exhibitsCommonFormModule.get_exhibit_styles();
-
-            // Validate styles were retrieved successfully
-            if (!styles || typeof styles !== 'object') {
-                throw new Error('Failed to retrieve exhibit styles');
-            }
-
-            exhibit.styles = styles;
 
             // Get previous image values (used for comparison on update)
             exhibit.hero_image_prev = get_element_value('#hero-image-prev');
@@ -292,28 +282,6 @@ const exhibitsEditFormModule = (function () {
     }
 
     async function display_edit_record() {
-
-        // Configuration for style mappings
-        const style_selectors = {
-            navigation: {
-                backgroundColor: { input: '#nav-background-color', picker: '#nav-background-color-picker' },
-                color: { input: '#nav-font-color', picker: '#nav-font-color-picker' },
-                fontFamily: { select: '#nav-font' },
-                fontSize: { input: '#nav-font-size' }
-            },
-            template: {
-                backgroundColor: { input: '#template-background-color', picker: '#template-background-color-picker' },
-                color: { input: '#template-font-color', picker: '#template-font-color-picker' },
-                fontFamily: { select: '#template-font' },
-                fontSize: { input: '#template-font-size' }
-            },
-            introduction: {
-                backgroundColor: { input: '#introduction-background-color', picker: '#introduction-background-color-picker' },
-                color: { input: '#introduction-font-color', picker: '#introduction-font-color-picker' },
-                fontFamily: { select: '#introduction-font' },
-                fontSize: { input: '#introduction-font-size' }
-            }
-        };
 
         // Helper function to safely set element value
         const set_element_value = (selector, value) => {
@@ -467,6 +435,10 @@ const exhibitsEditFormModule = (function () {
             const uuid_el = document.querySelector(uuid_input_selector);
             if (uuid_el) uuid_el.value = binding.media_uuid;
 
+            // Set the -prev tracking field for replace/clear operations
+            const prev_el = document.querySelector(uuid_input_selector + '-prev');
+            if (prev_el) prev_el.value = binding.media_uuid;
+
             set_element_display(trash_selector, 'inline');
         };
 
@@ -515,51 +487,6 @@ const exhibitsEditFormModule = (function () {
                     radio_buttons[i].checked = true;
                     break;
                 }
-            }
-        };
-
-        // Helper function to set select option by value
-        const set_select_value = (selector, value) => {
-            const select_element = document.querySelector(selector);
-            if (!select_element || !value) return;
-
-            for (let i = 0; i < select_element.options.length; i++) {
-                if (select_element.options[i].value === value) {
-                    select_element.value = value;
-                    break;
-                }
-            }
-        };
-
-        // Helper function to populate style fields
-        const populate_style_fields = (section, styles, config) => {
-
-            if (!styles || !styles.exhibit || !styles.exhibit[section]) return;
-
-            const section_styles = styles.exhibit[section];
-            const section_config = config[section];
-
-            // Background color
-            if (section_styles.backgroundColor) {
-                set_element_value(section_config.backgroundColor.input, section_styles.backgroundColor);
-                set_element_value(section_config.backgroundColor.picker, section_styles.backgroundColor);
-            }
-
-            // Font color
-            if (section_styles.color) {
-                set_element_value(section_config.color.input, section_styles.color);
-                set_element_value(section_config.color.picker, section_styles.color);
-            }
-
-            // Font family
-            if (section_styles.fontFamily) {
-                set_select_value(section_config.fontFamily.select, section_styles.fontFamily);
-            }
-
-            // Font size (remove 'px' suffix)
-            if (section_styles.fontSize) {
-                const font_size_value = String(section_styles.fontSize).replace('px', '');
-                set_element_value(section_config.fontSize.input, font_size_value);
             }
         };
 
@@ -760,22 +687,6 @@ const exhibitsEditFormModule = (function () {
             // Set banner template selection
             if (record.banner_template) {
                 set_radio_selection('banner_template', record.banner_template);
-            }
-
-            // Parse and set styles
-            if (record.styles) {
-                try {
-                    const styles = JSON.parse(record.styles);
-
-                    // Populate styles for each section
-                    populate_style_fields('navigation', styles, style_selectors);
-                    populate_style_fields('template', styles, style_selectors);
-                    populate_style_fields('introduction', styles, style_selectors);
-
-                } catch (parse_error) {
-                    console.error('Error parsing styles JSON:', parse_error);
-                    // Continue execution even if styles fail to parse
-                }
             }
 
             return false;
@@ -1401,11 +1312,20 @@ const exhibitsEditFormModule = (function () {
                                 } else {
                                     console.warn('exhibit_media_library DELETE endpoint not configured');
                                 }
+
+                                // Remove exhibit UUID from media record's exhibits field (fire-and-forget)
+                                if (typeof mediaPickerModule !== 'undefined' && typeof mediaPickerModule.remove_exhibit_association === 'function') {
+                                    mediaPickerModule.remove_exhibit_association(media_uuid, exhibit_uuid, media_role);
+                                }
                             }
                         } catch (unbind_error) {
                             console.error(`Error unbinding media role ${media_role}:`, unbind_error);
                         }
                     }
+
+                    // Reset -prev tracking field
+                    const prev_el = document.querySelector(uuid_selector + '-prev');
+                    if (prev_el) prev_el.value = '';
 
                     clear_media_slot(display_selector, image_selector, uuid_selector, filename_selector, trash_selector, legacy_migrate_selector);
                 }
@@ -1456,14 +1376,19 @@ const exhibitsEditFormModule = (function () {
             const pick_hero_btn = document.querySelector('#pick-hero-image-btn');
             if (pick_hero_btn) {
                 pick_hero_btn.addEventListener('click', function () {
+                    const prev_el = document.querySelector('#hero-image-media-uuid-prev');
                     mediaPickerModule.open({
                         role: 'hero_image',
                         exhibit_uuid: exhibit_uuid,
+                        previous_media_uuid: prev_el ? prev_el.value || null : null,
                         media_type_filter: 'image',
                         on_select: function (media) {
-                            // Update media UUID hidden input
+                            // Update media UUID hidden input and -prev tracking field
                             const uuid_el = document.querySelector('#hero-image-media-uuid');
                             if (uuid_el) uuid_el.value = media.uuid;
+
+                            const prev_track = document.querySelector('#hero-image-media-uuid-prev');
+                            if (prev_track) prev_track.value = media.uuid;
 
                             // Show preview thumbnail
                             const display_el = document.querySelector('#hero-image-display');
@@ -1512,13 +1437,18 @@ const exhibitsEditFormModule = (function () {
             const pick_thumbnail_btn = document.querySelector('#pick-thumbnail-btn');
             if (pick_thumbnail_btn) {
                 pick_thumbnail_btn.addEventListener('click', function () {
+                    const prev_el = document.querySelector('#thumbnail-media-uuid-prev');
                     mediaPickerModule.open({
                         role: 'thumbnail',
                         exhibit_uuid: exhibit_uuid,
+                        previous_media_uuid: prev_el ? prev_el.value || null : null,
                         media_type_filter: 'image',
                         on_select: function (media) {
                             const uuid_el = document.querySelector('#thumbnail-media-uuid');
                             if (uuid_el) uuid_el.value = media.uuid;
+
+                            const prev_track = document.querySelector('#thumbnail-media-uuid-prev');
+                            if (prev_track) prev_track.value = media.uuid;
 
                             const display_el = document.querySelector('#thumbnail-image-display');
                             if (display_el) {

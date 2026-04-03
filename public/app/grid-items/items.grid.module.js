@@ -179,6 +179,11 @@ const itemsGridModule = (function () {
         // Insert all items at once
         document.querySelector('#grid-item-list').innerHTML = item_data;
 
+        // Initialize action dropdown handlers
+        if (typeof itemsListDisplayModule !== 'undefined' && typeof itemsListDisplayModule.setup_item_action_handlers === 'function') {
+            itemsListDisplayModule.setup_item_action_handlers();
+        }
+
         // Initialize DataTable
         const GRID_ITEM_LIST = new DataTable('#grid-items', {
             paging: false,
@@ -264,7 +269,7 @@ const itemsGridModule = (function () {
                 let elem = document.getElementById(uuid);
                 elem.classList.remove('publish-item');
                 elem.classList.add('suppress-item');
-                elem.innerHTML = '<span id="suppress" title="published"><i class="fa fa-cloud" style="color: green"></i><br>Published</span>';
+                elem.innerHTML = '<span id="suppress" title="published"><i class="fa fa-cloud" style="color: green"></i><br><small>Published</small></span>';
 
                 const trIds = Array.from(document.querySelectorAll('tr')).map(tr => tr.id).filter(id => id);
                 let uuid_found = trIds.find((arr_result) => {
@@ -287,15 +292,45 @@ const itemsGridModule = (function () {
                     details_path = `${APP_PATH}/items/grid/item/media/details?exhibit_id=${exhibit_id}&grid_id=${grid_id}&item_id=${uuid}`;
                 }
 
+                const delete_url = `${APP_PATH}/items/grid/item/delete?exhibit_id=${exhibit_id}&grid_id=${grid_id}&item_id=${uuid}`;
+
                 let uuid_actions = `${uuid}-item-actions`;
                 let actions_elem = document.getElementById(uuid_actions);
-                let item_details = `<a href="${details_path}" title="View details" aria-label="item-details"><i class="fa fa-folder-open pr-1"></i> </a>`;
-                let trash = `<i title="Can only delete if unpublished" style="color: #d3d3d3" class="fa fa-trash pr-1" aria-label="delete-grid-item"></i>`;
+                actions_elem.className = 'text-center';
                 actions_elem.innerHTML = `
-                    <div class="card-text text-sm-center">
-                    ${item_details}&nbsp;
-                    ${trash}
-                    </div>`;
+                    <div class="dropdown" style="display: inline-block; position: relative;">
+                        <button type="button"
+                                class="btn btn-link p-0 border-0 item-actions-toggle"
+                                style="color: #6c757d; font-size: 1.25rem; line-height: 1; background: none;"
+                                data-toggle="dropdown"
+                                data-bs-toggle="dropdown"
+                                aria-haspopup="true"
+                                aria-expanded="false"
+                                title="Actions">
+                            <i class="fa fa-ellipsis-v" aria-hidden="true"></i>
+                        </button>
+                        <div class="dropdown-menu item-actions-menu">
+                            <a class="dropdown-item"
+                               href="${details_path}"
+                               style="font-size: 0.875rem;">
+                                <i class="fa fa-folder-open mr-2" aria-hidden="true" style="width: 16px;"></i>
+                                Details
+                            </a>
+                            <div class="dropdown-divider"></div>
+                            <a class="dropdown-item text-muted disabled"
+                               href="#"
+                               style="font-size: 0.875rem; pointer-events: none; opacity: 0.5;"
+                               title="Can only delete if unpublished">
+                                <i class="fa fa-trash mr-2" aria-hidden="true" style="width: 16px;"></i>
+                                Delete
+                            </a>
+                        </div>
+                    </div>
+                `;
+
+                if (typeof itemsListDisplayModule !== 'undefined' && typeof itemsListDisplayModule.setup_item_action_handlers === 'function') {
+                    itemsListDisplayModule.setup_item_action_handlers();
+                }
 
             } else if (response.status === 403) {
                 scrollTo(0, 0);
@@ -350,7 +385,7 @@ const itemsGridModule = (function () {
                 let elem = document.getElementById(uuid);
                 elem.classList.remove('suppress-item');
                 elem.classList.add('publish-item');
-                elem.innerHTML = '<span id="publish" title="suppressed"><i class="fa fa-cloud-upload" style="color: darkred"></i><br>Suppressed</span>';
+                elem.innerHTML = '<span id="publish" title="suppressed"><i class="fa fa-cloud-upload" style="color: darkred"></i><br><small>Unpublished</small></span>';
 
                 const trIds = Array.from(document.querySelectorAll('tr')).map(tr => tr.id).filter(id => id);
                 let uuid_found = trIds.find((arr_result) => {
@@ -366,8 +401,6 @@ const itemsGridModule = (function () {
 
                 let type = uuid_found.split('_');
                 let edit_path;
-                let delete_path;
-                let view_items = '';
 
                 if (type[1] === 'griditem' && type[2] === 'text') {
                     edit_path = `${APP_PATH}/items/grid/item/text/edit?exhibit_id=${exhibit_id}&grid_id=${grid_id}&item_id=${uuid}`;
@@ -375,18 +408,44 @@ const itemsGridModule = (function () {
                     edit_path = `${APP_PATH}/items/grid/item/media/edit?exhibit_id=${exhibit_id}&grid_id=${grid_id}&item_id=${uuid}`;
                 }
 
-                delete_path = `${APP_PATH}/items/grid/item/delete?exhibit_id=${exhibit_id}&grid_id=${grid_id}&item_id=${uuid}`;
+                const delete_path = `${APP_PATH}/items/grid/item/delete?exhibit_id=${exhibit_id}&grid_id=${grid_id}&item_id=${uuid}`;
 
                 let uuid_actions = `${uuid}-item-actions`;
                 let actions_elem = document.getElementById(uuid_actions);
-                let item_edit = `<a href="${edit_path}" title="Edit item" aria-label="edit-item"><i class="fa fa-edit pr-1"></i> </a>`;
-                let trash = `<a href="${delete_path}" title="Delete item" aria-label="delete-item"><i class="fa fa-trash pr-1"></i></a>`;
+                actions_elem.className = 'text-center';
                 actions_elem.innerHTML = `
-                    <div class="card-text text-sm-center">
-                    ${view_items}&nbsp;
-                    ${item_edit}&nbsp;
-                    ${trash}
-                    </div>`;
+                    <div class="dropdown" style="display: inline-block; position: relative;">
+                        <button type="button"
+                                class="btn btn-link p-0 border-0 item-actions-toggle"
+                                style="color: #6c757d; font-size: 1.25rem; line-height: 1; background: none;"
+                                data-toggle="dropdown"
+                                data-bs-toggle="dropdown"
+                                aria-haspopup="true"
+                                aria-expanded="false"
+                                title="Actions">
+                            <i class="fa fa-ellipsis-v" aria-hidden="true"></i>
+                        </button>
+                        <div class="dropdown-menu item-actions-menu">
+                            <a class="dropdown-item"
+                               href="${edit_path}"
+                               style="font-size: 0.875rem;">
+                                <i class="fa fa-edit mr-2" aria-hidden="true" style="width: 16px;"></i>
+                                Edit
+                            </a>
+                            <div class="dropdown-divider"></div>
+                            <a class="dropdown-item text-danger"
+                               href="${delete_path}"
+                               style="font-size: 0.875rem;">
+                                <i class="fa fa-trash mr-2" aria-hidden="true" style="width: 16px;"></i>
+                                Delete
+                            </a>
+                        </div>
+                    </div>
+                `;
+
+                if (typeof itemsListDisplayModule !== 'undefined' && typeof itemsListDisplayModule.setup_item_action_handlers === 'function') {
+                    itemsListDisplayModule.setup_item_action_handlers();
+                }
 
             } else if (response === undefined) {
                 scrollTo(0, 0);
@@ -620,7 +679,6 @@ const itemsGridModule = (function () {
             const token = authModule.get_user_token();
             await authModule.check_auth(token);
 
-            // navModule.init();
             navModule.set_grid_item_nav_menu_links();
             helperModule.show_form();
 

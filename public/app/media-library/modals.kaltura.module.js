@@ -128,16 +128,57 @@ const kalturaModalsModule = (function() {
     };
 
     /**
-     * Derive mime type from Kaltura item type
-     * @param {string} item_type - 'audio' or 'video'
+     * Normalize Kaltura item type classifications to simple media categories.
+     * Kaltura and Dublin Core descriptors (e.g. 'moving image', 'sound recording')
+     * are mapped to their simple equivalents ('video', 'audio').
+     * @param {string} raw_item_type - Raw Kaltura item type value
+     * @returns {string} Normalized type: 'audio', 'video', or the original value lowercased
+     */
+    const normalize_kaltura_item_type = (raw_item_type) => {
+        if (!raw_item_type || typeof raw_item_type !== 'string') return '';
+        const type = raw_item_type.toLowerCase().trim();
+        const mapping = {
+            'moving image': 'video',
+            'video': 'video',
+            'sound recording': 'audio',
+            'sound recording non musical': 'audio',
+            'sound recording-nonmusical': 'audio',
+            'sound recording nonmusical': 'audio',
+            'audio': 'audio'
+        };
+        return mapping[type] || type;
+    };
+
+    /**
+     * Derive media_type from a MIME type string.
+     * MIME type is the sole source of truth for media_type classification.
+     * @param {string} mime_type - MIME type (e.g. 'video/mp4', 'audio/mpeg', 'image/jpeg')
+     * @returns {string} One of: 'image', 'pdf', 'audio', 'video', or 'unknown'
+     */
+    const derive_media_type_from_mime = (mime_type) => {
+        if (!mime_type || typeof mime_type !== 'string') return 'unknown';
+        const mt = mime_type.toLowerCase().trim();
+        if (mt.startsWith('image/')) return 'image';
+        if (mt === 'application/pdf') return 'pdf';
+        if (mt.startsWith('audio/')) return 'audio';
+        if (mt.startsWith('video/')) return 'video';
+        return 'unknown';
+    };
+
+    /**
+     * Derive mime type from Kaltura item type.
+     * Accepts both normalized ('audio', 'video') and raw Kaltura descriptors
+     * ('moving image', 'sound recording') by normalizing first.
+     * @param {string} item_type - Kaltura item type (raw or normalized)
      * @returns {string} mime type string
      */
     const get_mime_type = (item_type) => {
+        const normalized = normalize_kaltura_item_type(item_type);
         const mime_types = {
             'audio': 'audio/mpeg',
             'video': 'video/mp4'
         };
-        return mime_types[item_type] || '';
+        return mime_types[normalized] || '';
     };
 
     /**
@@ -153,8 +194,11 @@ const kalturaModalsModule = (function() {
         const title = escape_html(strip_html(media_data.title || ''));
         const description = escape_html(strip_html(media_data.description || ''));
         const item_type = media_data.item_type || '';
-        const type_icon = get_item_type_icon(item_type);
-        const type_label = get_item_type_label(item_type);
+        const normalized_type = normalize_kaltura_item_type(item_type);
+        const derived_mime_type = get_mime_type(item_type);
+        const derived_media_type = derive_media_type_from_mime(derived_mime_type);
+        const type_icon = get_item_type_icon(normalized_type);
+        const type_label = get_item_type_label(normalized_type);
         const thumbnail_url = media_data.thumbnail || '';
 
         let html = '';
@@ -245,8 +289,8 @@ const kalturaModalsModule = (function() {
 
         // Hidden fields for Kaltura data
         html += '<input type="hidden" class="kaltura-entry-id" name="entry_id" value="' + entry_id + '">';
-        html += '<input type="hidden" class="kaltura-item-type" name="media_type" value="' + escape_html(item_type) + '">';
-        html += '<input type="hidden" class="kaltura-mime-type" name="mime_type" value="' + escape_html(get_mime_type(item_type)) + '">';
+        html += '<input type="hidden" class="kaltura-media-type" name="media_type" value="' + escape_html(derived_media_type) + '">';
+        html += '<input type="hidden" class="kaltura-mime-type" name="mime_type" value="' + escape_html(derived_mime_type) + '">';
         html += '<input type="hidden" class="kaltura-thumbnail-url" name="kaltura_thumbnail_url" value="' + escape_html(thumbnail_url) + '">';
         html += '<input type="hidden" class="kaltura-media-width" name="media_width" value="' + escape_html(String(media_data.media_width || '')) + '">';
         html += '<input type="hidden" class="kaltura-media-height" name="media_height" value="' + escape_html(String(media_data.media_height || '')) + '">';
@@ -307,12 +351,14 @@ const kalturaModalsModule = (function() {
             const name = form.querySelector('.kaltura-name')?.value?.trim() || '';
             const description = form.querySelector('.kaltura-description')?.value?.trim() || '';
             const entry_id = form.querySelector('.kaltura-entry-id')?.value || '';
-            const media_type = form.querySelector('.kaltura-item-type')?.value || '';
-            const thumbnail_url = form.querySelector('.kaltura-thumbnail-url')?.value || '';
             const mime_type = form.querySelector('.kaltura-mime-type')?.value || '';
+            const thumbnail_url = form.querySelector('.kaltura-thumbnail-url')?.value || '';
             const media_width = form.querySelector('.kaltura-media-width')?.value || '';
             const media_height = form.querySelector('.kaltura-media-height')?.value || '';
             const ms_duration = form.querySelector('.kaltura-ms-duration')?.value || '';
+
+            // Derive media_type from MIME type (sole source of truth)
+            const media_type = derive_media_type_from_mime(mime_type);
 
             // Collect dropdown values
             const item_type_select = form.querySelector('select[name="item_type"]');
@@ -637,7 +683,10 @@ const kalturaModalsModule = (function() {
 
         const entry_id = record.kaltura_entry_id || '';
         const name = decode_html_entities(record.name || 'Kaltura Media');
-        const item_type = record.item_type || record.media_type || '';
+        // Normalize item_type/media_type to handle both legacy values
+        // (e.g. 'moving image', 'sound recording') and MIME-derived values ('audio', 'video')
+        const raw_type = record.item_type || record.media_type || '';
+        const item_type = normalize_kaltura_item_type(raw_type);
 
         if (!entry_id) {
             console.error('No kaltura_entry_id found in record');

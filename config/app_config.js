@@ -26,6 +26,7 @@ const APP_CONFIG = {
     organization: process.env.ORGANIZATION,
     app_host: process.env.APP_HOST,
     app_port: process.env.APP_PORT,
+    app_path: process.env.APP_PATH,
     api_url: process.env.API_URL,
     build_version: process.env.BUILD_VERSION
 };

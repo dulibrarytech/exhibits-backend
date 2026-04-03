@@ -18,9 +18,6 @@
 
 'use strict';
 
-const path = require('path');
-const fs = require('fs').promises;
-
 // ==================== VALIDATION HELPERS ====================
 
 /**
@@ -100,82 +97,6 @@ const validate_status_code = (status) => {
     return { valid: true, status_code };
 };
 
-// ==================== FILE / PATH HELPERS ====================
-
-/**
- * Validates that storage configuration is properly initialized
- * @param {Object} storage_config - The storage configuration object
- * @returns {boolean} True if config has a storage_path
- */
-const validate_storage_config = (storage_config) => {
-    return !!(storage_config && storage_config.storage_path);
-};
-
-/**
- * Resolves a file path and verifies it is contained within the allowed base directory.
- * Prevents path traversal attacks at the resolved-path level.
- * @param {string} base_storage_path - The resolved base storage directory
- * @param  {...string} segments - Path segments to join onto the base
- * @returns {{ resolved_path: string, is_safe: boolean }}
- */
-const resolve_safe_path = (base_storage_path, ...segments) => {
-    const joined = path.join(base_storage_path, ...segments);
-    const resolved_path = path.resolve(joined);
-    const is_safe = resolved_path.startsWith(base_storage_path);
-    return { resolved_path, is_safe };
-};
-
-/**
- * Checks a filename extension against an allow-list
- * @param {string} filename - The filename (or path) to check
- * @param {string[]} allowed_extensions - Array of allowed extensions, including the dot (e.g. ['.jpg', '.png'])
- * @returns {{ valid: boolean, extension: string }}
- */
-const validate_file_extension = (filename, allowed_extensions) => {
-    const extension = path.extname(filename).toLowerCase();
-    const valid = extension.length > 0 && allowed_extensions.includes(extension);
-    return { valid, extension };
-};
-
-/**
- * Stats a file path and returns whether it exists and is a regular file.
- * Distinguishes between "not found" and unexpected stat errors.
- * @param {string} resolved_file_path - Absolute path to the file
- * @returns {Promise<{ exists: boolean, is_file: boolean, stats: Object|null, error: Error|null }>}
- */
-const check_file_exists = async (resolved_file_path) => {
-
-    try {
-        const stats = await fs.stat(resolved_file_path);
-        return {
-            exists: true,
-            is_file: stats.isFile(),
-            stats,
-            error: null
-        };
-    } catch (stat_error) {
-        if (stat_error.code === 'ENOENT') {
-            return {
-                exists: false,
-                is_file: false,
-                stats: null,
-                error: null
-            };
-        }
-        // Unexpected stat error — bubble up
-        return {
-            exists: false,
-            is_file: false,
-            stats: null,
-            error: stat_error
-        };
-    }
-};
-
-// ==================== RESPONSE HELPERS ====================
-
-// build_response moved to common_helper
-
 // ==================== EXPORTS ====================
 
 module.exports = {
@@ -184,10 +105,5 @@ module.exports = {
     has_path_traversal,
     validate_request_body,
     validate_model_result,
-    validate_status_code,
-    // File / path
-    validate_storage_config,
-    resolve_safe_path,
-    validate_file_extension,
-    check_file_exists
+    validate_status_code
 };

@@ -46,14 +46,14 @@ const rate_limit_configs = {
     // Strict rate limit for write operations (create, update, delete)
     write_operations: {
         window_ms: 15 * 60 * 1000, // 15 minutes
-        max_requests: 150,
+        max_requests: 1000, // 150
         message: 'Too many write requests'
     },
 
     // Moderate rate limit for read operations
     read_operations: {
         window_ms: 15 * 60 * 1000, // 15 minutes
-        max_requests: 250,
+        max_requests: 1000, // 250
         message: 'Too many read requests'
     },
 
@@ -67,7 +67,7 @@ const rate_limit_configs = {
     // Strict rate limit for media upload/delete operations
     media_operations: {
         window_ms: 15 * 60 * 1000, // 15 minutes
-        max_requests: 150,
+        max_requests: 1000, // 150
         message: 'Too many media operations'
     },
 
@@ -81,7 +81,7 @@ const rate_limit_configs = {
     // Standard rate limit for public media access (no auth required)
     public_media_access: {
         window_ms: 15 * 60 * 1000, // 15 minutes
-        max_requests: 500,
+        max_requests: 1000, // 500
         message: 'Too many public media requests'
     },
 
@@ -95,7 +95,7 @@ const rate_limit_configs = {
     // General API operations
     general_operations: {
         window_ms: 15 * 60 * 1000, // 15 minutes
-        max_requests: 250,
+        max_requests: 1000, // 250
         message: 'Too many requests'
     }
 };

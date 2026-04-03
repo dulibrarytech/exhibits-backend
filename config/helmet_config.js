@@ -54,24 +54,24 @@
  */
 
 // Kaltura domains
-const KALTURA_CDN = 'https://cdnapisec.kaltura.com';
-const KALTURA_VOD = 'https://cfvod.kaltura.com';
-const KALTURA_STATS = 'https://stats.kaltura.com';
-const KALTURA_ANALYTICS = 'https://analytics.kaltura.com';
+const KALTURA_CDN = process.env.KALTURA_CDN;
+const KALTURA_VOD = process.env.KALTURA_VOD;
+const KALTURA_STATS = process.env.KALTURA_STATS;
+const KALTURA_ANALYTICS = process.env.KALTURA_ANALYTICS;
 
 // CDN domains (from partials)
-const JSDELIVR = 'https://cdn.jsdelivr.net';
-const UNPKG = 'https://unpkg.com';
-const CLOUDFLARE_CDN = 'https://cdnjs.cloudflare.com';
-const JQUERY_CDN = 'https://code.jquery.com';
+const JSDELIVR = process.env.JSDELIVR;
+const UNPKG = process.env.UNPKG;
+const CLOUDFLARE_CDN = process.env.CLOUDFLARE_CDN;
+const JQUERY_CDN = process.env.JQUERY_CDN;
 
 // Image domains (from header.ejs favicons)
-const IMGUR = 'https://i.imgur.com';
-const DU_LIBRARY = 'https://library.du.edu';
-const DU_EXHIBITS_PUBLIC = 'https://exhibits.library.du.edu';
+const IMGUR = process.env.IMGUR;
+const DU_LIBRARY = process.env.DU_LIBRARY;
+const DU_EXHIBITS_PUBLIC = process.env.DU_EXHIBITS_PUBLIC;
 
-const GOOGLE_FONTS_CSS = 'https://fonts.googleapis.com';
-const GOOGLE_FONTS_FILES = 'https://fonts.gstatic.com';
+const GOOGLE_FONTS_CSS = process.env.GOOGLE_FONTS_CSS;
+const GOOGLE_FONTS_FILES = process.env.GOOGLE_FONTS_FILES;
 
 module.exports = function () {
 

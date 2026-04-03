@@ -1,3 +1,17 @@
+<style>
+    #exhibit-data-card .badge-required {
+        background-color: #e8f4fd;
+        color: #0c5fa5;
+        font-size: 0.65rem;
+        font-weight: 600;
+        text-transform: uppercase;
+        letter-spacing: 0.03em;
+        padding: 0.25em 0.5em;
+        border-radius: 0.25rem;
+        vertical-align: middle;
+    }
+</style>
+
 <div id="exhibit-data-card" class="card">
     <div class="card-header">
         <strong class="card-title mb-3">Exhibit Data</strong>
@@ -10,12 +24,10 @@
             <div class="col-12 col-md-12">
                 <div class="row form-group">
                     <div class="col-12">
-                        <div class="form-text text-muted" style="font-size: 17px"><span
-                                    style="color: darkred">*</span>
-                            Title <small><em>(Required)</em></small>
+                        <div class="form-text text-muted" style="font-size: 17px">
+                            Title <span class="badge badge-required">Required</span>
                             &nbsp;&nbsp;<a onclick="helperModule.preview_html('exhibit-title-input');return false;" data-toggle="modal" data-target=".preview-html" class="btn-xs btn-light"><span style="padding: 5px"><i class="fa fa-code"></i> <small>Preview Field</small></span></a>
                         </div>
-                        <span id="exhibit-title-error" class="is-error"></span>
                         <textarea id="exhibit-title-input" class="form-control" name="exhibit_title_input"
                                   rows="4"></textarea>
 

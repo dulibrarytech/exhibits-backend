@@ -9,7 +9,9 @@ gulp.task('minify-exhibit-modules', function () {
         'public/app/exhibits/exhibits.common.form.module.js',
         'public/app/exhibits/exhibits.details.module.js',
         'public/app/exhibits/exhibits.edit.form.module.js',
-        'public/app/exhibits/exhibits.module.js'
+        'public/app/exhibits/exhibits.module.js',
+        'public/app/exhibits/exhibits.styles.module.js',
+        'public/app/exhibits/exhibits.styles.form.module.js'
     ])
         .pipe(uglify())
         .on('error', function (err) {
@@ -141,6 +143,7 @@ gulp.task('minify-media-library-modules', function () {
         'public/app/media-library/kaltura.service.module.js',
         'public/app/media-library/media.library.module.js',
         'public/app/media-library/modals.delete.module.js',
+        'public/app/media-library/modals.edit.module.js',
         'public/app/media-library/modals.kaltura.module.js',
         'public/app/media-library/modals.repo.module.js',
         'public/app/media-library/modals.upload.module.js',

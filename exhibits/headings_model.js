@@ -58,14 +58,6 @@ const validate_heading_update_task = new VALIDATOR(EXHIBITS_UPDATE_HEADING_SCHEM
 const heading_record_task = new EXHIBIT_HEADING_RECORD_TASKS(DB, TABLES);
 const exhibit_tasks = new EXHIBIT_RECORD_TASKS(DB, TABLES);
 
-// is_valid_uuid imported from common_helper
-
-// build_response imported from common_helper
-
-// validate_input imported from common_helper
-
-// prepare_styles imported from common_helper
-
 /**
  * Handles post-update republishing for heading
  * @param {string} is_member_of_exhibit - Exhibit UUID

@@ -63,58 +63,11 @@
         white-space: nowrap;
         vertical-align: middle;
     }
-    /* Media Subjects card styles */
-    .media-subject-group {
-        margin-bottom: 10px;
-    }
-    .media-subject-group:last-of-type {
-        margin-bottom: 0;
-    }
-    .media-subject-label {
-        display: block;
-        font-size: 11px;
-        font-weight: 600;
-        color: #6c757d;
-        text-transform: uppercase;
-        letter-spacing: 0.4px;
-        margin-bottom: 5px;
-    }
-    .media-subject-badges {
-        display: flex;
-        flex-wrap: wrap;
-        gap: 5px;
-    }
-    .media-subject-badge {
-        display: inline-block;
-        padding: 3px 9px;
-        font-size: 12px;
-        font-weight: 400;
-        line-height: 1.4;
-        border-radius: 3px;
-        white-space: nowrap;
-    }
-    .media-subject-badge--topic {
-        background-color: #e8f0fe;
-        color: #1a56db;
-        border: 1px solid #c7d9f5;
-    }
-    .media-subject-badge--genre {
-        background-color: #fef3e2;
-        color: #b45309;
-        border: 1px solid #f5deb3;
-    }
-    .media-subject-badge--place {
-        background-color: #e6f6ed;
-        color: #0e7c3a;
-        border: 1px solid #b8e0cb;
-    }
-    #media-subjects-card {
-        display: none;
-    }
+
 </style>
 <body>
 
-<%- include('partials/nav-dashboard-grid-edit-media-item-form.ejs'); %>
+<%- include('../partials/nav-dashboard'); %>
 
 <div id="right-panel" class="right-panel">
     <%- include('../partials/main-header.ejs'); %>
@@ -174,7 +127,6 @@
             </div>
         </div>
 
-        <%- include('../partials/media-subjects.ejs'); %>
         <%- include('partials/item-layout-card.ejs') %>
 
         <div id="item-media-widths-card" class="card">
@@ -216,6 +168,7 @@
 <script src="/exhibits-dashboard/static/app/dist/items.edit.grid.item.form.module.min.js?<%= build_version %>"></script>
 <script src="/exhibits-dashboard/static/app/dist/media.picker.module.min.js?<%= build_version %>"></script>
 <script>
+    navModule.wire_nav_links();
     itemsCommonGridItemFormModule.init();
     itemsEditGridItemFormModule.init();
     mediaPickerModule.init();

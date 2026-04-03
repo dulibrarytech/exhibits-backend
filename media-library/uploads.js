@@ -25,8 +25,9 @@ const { exiftool } = require('exiftool-vendored');
 const LOGGER = require('../libs/log4');
 
 // Configuration
-const storage_config = require('../config/storage_config')();
-const APP_PATH = '/exhibits-dashboard';
+const storage_config = require('./storage_config')();
+const APP_CONFIG = require('../config/app_config')();
+const APP_PATH = APP_CONFIG.app_path;
 const STORAGE_PATH = storage_config.storage_path;
 const MAX_FILE_SIZE = storage_config.upload_max;
 const MAX_FILES = 10;

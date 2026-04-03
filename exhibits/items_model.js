@@ -18,7 +18,6 @@
 
 'use strict';
 
-const STORAGE_CONFIG = require('../config/storage_config')();
 const HTTP = require('axios');
 const KALTURA = require('kaltura-client');
 const CONFIG = require('../config/webservices_config')();
@@ -41,9 +40,7 @@ const {
     is_valid_uuid,
     build_response,
     validate_input,
-    prepare_styles,
-    process_media_files,
-    clean_media_fields
+    prepare_styles
 } = require('../exhibits/common_helper');
 
 // Constants
@@ -81,95 +78,6 @@ const item_task = new EXHIBIT_ITEM_RECORD_TASKS(DB, TABLES);
 const heading_task = new EXHIBIT_HEADING_RECORD_TASKS(DB, TABLES);
 const grid_task = new EXHIBIT_GRID_RECORD_TASKS(DB, TABLES);
 const timeline_task = new EXHIBIT_TIMELINE_RECORD_TASKS(DB, TABLES);
-
-// is_valid_uuid imported from common_helper
-
-// build_response imported from common_helper
-
-// validate_input imported from common_helper
-
-// prepare_styles imported from common_helper
-
-/**
- * Processes media files for items
- * @param {Object} data - Item data
- * @returns {Object} Processed data
- */
-const process_item_media = (data) => {
-    const processed_data = {...data};
-
-    // Handle text items separately
-    if (processed_data.item_type === CONSTANTS.ITEM_TYPES.TEXT) {
-        processed_data.mime_type = CONSTANTS.MIME_TYPES.TEXT_PLAIN;
-        return processed_data;
-    }
-
-    // Process uploaded media and thumbnail files
-    process_media_files(processed_data, helper_task, STORAGE_CONFIG.storage_path);
-
-    // Handle Kaltura items
-    if (processed_data.kaltura && processed_data.kaltura.length > 0) {
-        processed_data.media = processed_data.kaltura;
-        processed_data.is_kaltura_item = 1;
-    }
-    // Handle repository items
-    else if (processed_data.repo_uuid && processed_data.repo_uuid.length > 0) {
-        processed_data.media = processed_data.repo_uuid;
-        processed_data.is_repo_item = 1;
-    }
-
-    // Clean up temporary fields
-    clean_media_fields(processed_data);
-
-    return processed_data;
-};
-
-/**
- * Processes media files for item updates
- * @param {Object} data - Item update data
- * @returns {Object} Processed data
- */
-const process_item_update_media = (data) => {
-    const processed_data = {...data};
-
-    // Handle text items separately
-    if (processed_data.item_type === CONSTANTS.ITEM_TYPES.TEXT) {
-        return processed_data;
-    }
-
-    // Process uploaded media and thumbnail files
-    process_media_files(processed_data, helper_task, STORAGE_CONFIG.storage_path);
-
-    // Handle Kaltura items - complex logic for audio/video
-    if (processed_data.kaltura && processed_data.kaltura.length > 0) {
-        processed_data.media = processed_data.kaltura;
-        processed_data.is_kaltura_item = 1;
-    }
-
-    // Reset Kaltura flag if not audio/video and no Kaltura ID
-    if ((!processed_data.kaltura || processed_data.kaltura.length === 0) &&
-        processed_data.item_type !== CONSTANTS.ITEM_TYPES.AUDIO &&
-        processed_data.item_type !== CONSTANTS.ITEM_TYPES.VIDEO) {
-        processed_data.is_kaltura_item = 0;
-    }
-
-    // Set Kaltura flag for audio/video items
-    if (processed_data.item_type === CONSTANTS.ITEM_TYPES.AUDIO ||
-        processed_data.item_type === CONSTANTS.ITEM_TYPES.VIDEO) {
-        processed_data.is_kaltura_item = 1;
-    }
-
-    // Handle repository items
-    if (processed_data.repo_uuid && processed_data.repo_uuid.length > 0) {
-        processed_data.media = processed_data.repo_uuid;
-        processed_data.is_repo_item = 1;
-    }
-
-    // Clean up temporary fields
-    clean_media_fields(processed_data);
-
-    return processed_data;
-};
 
 /**
  * Fetches grid items for grids in parallel
@@ -262,7 +170,7 @@ exports.get_item_records = async (is_member_of_exhibit) => {
 
         // Combine and sort all records
         const records = [...items, ...headings, ...grids, ...timelines];
-        // console.log('PRE SORT ', records);
+
         records.sort((a, b) => {
             return (a.order || 0) - (b.order || 0);
         });
@@ -346,9 +254,6 @@ exports.create_item_record = async (is_member_of_exhibit, data) => {
                 validation_result
             );
         }
-
-        // Process media
-        data = process_item_media(data);
 
         // Prepare styles and get order
         data.styles = prepare_styles(data.styles);
@@ -473,9 +378,6 @@ exports.update_item_record = async (is_member_of_exhibit, item_id, data) => {
             );
         }
 
-        // Process media
-        data = process_item_update_media(data);
-
         // Prepare styles
         data.styles = prepare_styles(data.styles);
 
@@ -516,40 +418,6 @@ exports.update_item_record = async (is_member_of_exhibit, item_id, data) => {
             CONSTANTS.STATUS_CODES.BAD_REQUEST,
             `Unable to update record: ${error.message}`
         );
-    }
-};
-
-/**
- * Clears media value from item
- * @param {string} uuid - Item UUID
- * @param {string} media - Media field name
- * @param {string} type - Media type
- * @returns {Promise<void>}
- */
-exports.delete_media_value = async (uuid, media, type) => {
-
-    try {
-
-        if (!is_valid_uuid(uuid) || !media || !type) {
-            LOGGER.module().error('ERROR: [/exhibits/items_model (delete_media_value)] Invalid parameters');
-            return;
-        }
-
-        const result = await item_task.delete_media_value(uuid, media, type);
-
-        if (result && result.success === true) {
-            LOGGER.module().info('INFO: [/exhibits/items_model (delete_media_value)] Media value deleted');
-        } else {
-            LOGGER.module().error('ERROR: [/exhibits/items_model (delete_media_value)] Unable to delete media value');
-        }
-
-    } catch (error) {
-        LOGGER.module().error(`ERROR: [/exhibits/items_model (delete_media_value)] ${error.message}`, {
-            uuid,
-            media,
-            type,
-            stack: error.stack
-        });
     }
 };
 
@@ -621,6 +489,45 @@ exports.get_item_edit_record = async (uid, is_member_of_exhibit, uuid) => {
     } catch (error) {
         LOGGER.module().error(`ERROR: [/exhibits/items_model (get_item_edit_record)] ${error.message}`, {
             uid,
+            is_member_of_exhibit,
+            uuid,
+            stack: error.stack
+        });
+
+        return build_response(
+            CONSTANTS.STATUS_CODES.BAD_REQUEST,
+            error.message
+        );
+    }
+};
+
+/**
+ * Gets item details record with media library metadata (no lock)
+ * @param {string} is_member_of_exhibit - Exhibit UUID
+ * @param {string} uuid - Item UUID
+ * @returns {Promise<Object>} Response object
+ */
+exports.get_item_details_record = async (is_member_of_exhibit, uuid) => {
+
+    try {
+
+        if (!is_valid_uuid(is_member_of_exhibit) || !is_valid_uuid(uuid)) {
+            return build_response(
+                CONSTANTS.STATUS_CODES.BAD_REQUEST,
+                'Invalid UUID provided'
+            );
+        }
+
+        const record = await item_task.get_item_details_record(is_member_of_exhibit, uuid);
+
+        return build_response(
+            CONSTANTS.STATUS_CODES.OK,
+            'Item details record',
+            record
+        );
+
+    } catch (error) {
+        LOGGER.module().error(`ERROR: [/exhibits/items_model (get_item_details_record)] ${error.message}`, {
             is_member_of_exhibit,
             uuid,
             stack: error.stack
@@ -1040,7 +947,7 @@ exports.unlock_item_record = async (uid, uuid, options) => {
     }
 };
 
-/**
+/** TODO: deprecate - moved to media library module
  * Gets item subjects from external API
  * @returns {Promise<*>} Subjects data
  */

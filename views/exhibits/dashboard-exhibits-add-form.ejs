@@ -62,7 +62,7 @@
     }
 </style>
 <body>
-<%- include('partials/nav-dashboard-exhibits-add-form.ejs'); %>
+<%- include('../partials/nav-dashboard'); %>
 <div id="right-panel" class="right-panel">
     <%- include('../partials/main-header.ejs'); %>
     <div class="content" style="min-height: 875px;">
@@ -92,6 +92,7 @@
                         </p>
                         <input type="hidden" id="hero-image" name="hero_image">
                         <input type="hidden" id="hero-image-media-uuid" name="hero_image_media_uuid">
+                        <input type="hidden" id="hero-image-media-uuid-prev" name="hero_image_media_uuid_prev">
                         <button type="button" class="btn btn-outline-primary"
                                 id="pick-hero-image-btn"
                                 data-media-role="hero_image"
@@ -113,6 +114,7 @@
                         </p>
                         <input type="hidden" id="thumbnail-image" name="thumbnail">
                         <input type="hidden" id="thumbnail-media-uuid" name="thumbnail_media_uuid">
+                        <input type="hidden" id="thumbnail-media-uuid-prev" name="thumbnail_media_uuid_prev">
                         <button type="button" class="btn btn-outline-primary"
                                 id="pick-thumbnail-btn"
                                 data-media-role="thumbnail"
@@ -158,10 +160,12 @@
 -->
 <script src="/exhibits-dashboard/static/app/dist/media.picker.module.min.js?<%=build_version%>"></script>
 <script src="/exhibits-dashboard/static/app/dist/exhibits.common.form.module.min.js?<%=build_version%>"></script>
+<script src="/exhibits-dashboard/static/app/dist/exhibits.styles.module.min.js?<%=build_version%>"></script>
 <script src="/exhibits-dashboard/static/app/dist/exhibits.add.form.module.min.js?<%=build_version%>"></script>
 <script>
     exhibitsAddFormModule.init();
     exhibitsCommonFormModule.init();
+    exhibitsStylesModule.init();
     mediaPickerModule.init();
 </script>
 </body>
