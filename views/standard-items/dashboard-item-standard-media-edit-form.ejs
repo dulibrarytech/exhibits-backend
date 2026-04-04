@@ -65,6 +65,7 @@
         <div id="message"></div>
         <h1><span id="exhibit-title"></span> - Media Item</h1>
         <%- include('partials/item-data-card.ejs'); %>
+        <%- include('../partials/item-styles-card.ejs'); %>
         <div id="item-media-card" class="card">
             <div class="card-header">
                 <strong class="card-title mb-3">Item Media</strong>
@@ -128,7 +129,6 @@
                 </div>
 
                 <%- include('partials/item-alt-text.ejs'); %>
-                <%- include('../partials/item-style-dropdown.ejs'); %>
                 <%- include('partials/wrap-text-item.ejs'); %>
                 <%- include('../partials/embed-item.ejs'); %>
                 <%- include('partials/media-padding.ejs'); %>

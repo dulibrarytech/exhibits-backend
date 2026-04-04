@@ -526,12 +526,9 @@ const itemsCommonStandardItemFormModule = (function () {
                 select_el.appendChild(option);
             }
 
-            // Show the dropdown group
-            const group_el = document.querySelector('#item-style-group');
-            if (group_el) group_el.style.display = '';
-
-            const separator_el = document.querySelector('#item-style-separator');
-            if (separator_el) separator_el.style.display = '';
+            // Show the styles card
+            const card_el = document.querySelector('#item-styles-card');
+            if (card_el) card_el.style.display = '';
 
         } catch (error) {
             console.error('Failed to fetch exhibit styles:', error.message);
@@ -760,8 +757,10 @@ const itemsCommonStandardItemFormModule = (function () {
             // Wire up media picker buttons on media paths
             if (window.location.pathname.indexOf('media') !== -1) {
                 init_media_picker_buttons();
-                styles_promise = fetch_and_populate_styles();
             }
+
+            // Fetch and populate styles dropdown (both media and text paths)
+            styles_promise = fetch_and_populate_styles();
 
         } catch (error) {
             document.querySelector('#message').innerHTML = `<div class="alert alert-danger" role="alert"><i class="fa fa-exclamation"></i> ${error.message}</div>`;

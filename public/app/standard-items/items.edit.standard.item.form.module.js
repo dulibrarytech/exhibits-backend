@@ -255,7 +255,7 @@ const itemsEditStandardItemFormModule = (function () {
 
             // Set saved style selection after dropdown is populated
             // Style keys are simple strings like "item1"; skip "{}" (prepare_styles default) and legacy JSON blobs
-            if (is_media_path && record.styles && typeof record.styles === 'string'
+            if (record.styles && typeof record.styles === 'string'
                 && record.styles.trim() !== '' && !record.styles.startsWith('{')) {
                 await itemsCommonStandardItemFormModule.wait_for_styles();
                 itemsCommonStandardItemFormModule.set_item_style(record.styles);
