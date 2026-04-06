@@ -704,6 +704,14 @@ const itemsEditVerticalTimelineFormModule = (function () {
             // Apply style settings
             apply_style_settings(record.styles, elements);
 
+            // Set saved style selection after dropdown is populated
+            // Style keys are simple strings like "item1"; skip "{}" (prepare_styles default) and legacy JSON blobs
+            if (record.styles && typeof record.styles === 'string'
+                && record.styles.trim() !== '' && !record.styles.startsWith('{')) {
+                await itemsCommonVerticalTimelineFormModule.wait_for_styles();
+                itemsCommonVerticalTimelineFormModule.set_item_style(record.styles);
+            }
+
             return false;
 
         } catch (error) {

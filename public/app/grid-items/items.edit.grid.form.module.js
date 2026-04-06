@@ -136,6 +136,14 @@ const itemsEditGridFormModule = (function () {
         document.querySelector('#grid-text-input').value = helperModule.unescape(record.text);
         document.querySelector('#grid-columns').value = record.columns;
 
+        // Set saved style selection after dropdown is populated
+        // Style keys are simple strings like "item1"; skip "{}" (prepare_styles default) and legacy JSON blobs
+        if (record.styles && typeof record.styles === 'string'
+            && record.styles.trim() !== '' && !record.styles.startsWith('{')) {
+            await itemsCommonStandardGridFormModule.wait_for_styles();
+            itemsCommonStandardGridFormModule.set_item_style(record.styles);
+        }
+
         /*
         let styles = JSON.parse(record.styles);
 
