@@ -274,7 +274,7 @@ const itemsTimelineModule = (function () {
     function handle_empty_timeline(elements) {
 
         if (elements.card !== null) {
-            elements.card.style.display = 'none';
+            elements.card.remove();
         }
 
         if (elements.title_heading !== null) {

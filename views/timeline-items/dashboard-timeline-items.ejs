@@ -39,10 +39,12 @@
 <script src="/exhibits-dashboard/static/app/dist/items.timeline.module.min.js?<%=build_version%>"></script>
 <script src="/exhibits-dashboard/static/app/dist/items.list.displays.module.min.js?<%=build_version%>"></script>
 <script>
-    navModule.init();
-    navModule.wire_nav_links();
-    itemsTimelineModule.init();
-    itemsTimelineModule.display_timeline_items();
+    (async function () {
+        navModule.init();
+        navModule.wire_nav_links();
+        await itemsTimelineModule.init();
+        await itemsTimelineModule.display_timeline_items();
+    })();
 </script>
 </body>
 </html>

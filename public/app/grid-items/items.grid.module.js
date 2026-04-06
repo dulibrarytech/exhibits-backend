@@ -156,7 +156,7 @@ const itemsGridModule = (function () {
             const exhibit_title = document.querySelector('#exhibit-title');
 
             if (item_card !== null) {
-                item_card.style.display = 'none';
+                item_card.remove();
             }
 
             if (exhibit_title !== null && exhibit_title.parentElement !== null) {
