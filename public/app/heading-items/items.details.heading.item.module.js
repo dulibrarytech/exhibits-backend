@@ -67,7 +67,6 @@ const itemsDetailsHeadingModule = (function () {
     async function display_edit_record () {
 
         let record = await get_item_heading_record();
-        let styles;
         let is_published = record.is_published;
         let created_by = record.created_by;
         let created = record.created;
@@ -96,37 +95,6 @@ const itemsDetailsHeadingModule = (function () {
             document.querySelector('#is-published').value = true;
         } else if (document.querySelector('#is-published') !== null && is_published === 0) {
             document.querySelector('#is-published').value = false;
-        }
-
-        if (typeof record.styles === 'string') {
-            styles = JSON.parse(record.styles);
-        }
-
-        if (Object.keys(styles).length !== 0) {
-
-            if (styles.backgroundColor !== undefined && styles.backgroundColor.length !== 0) {
-                document.querySelector('#heading-background-color').value = styles.backgroundColor;
-                document.querySelector('#heading-background-color-picker').value = styles.backgroundColor;
-            }
-
-            if (styles.color !== undefined && styles.color.length !== 0) {
-                document.querySelector('#heading-font-color').value = styles.color;
-                document.querySelector('#heading-font-color-picker').value = styles.color;
-            }
-
-            if (styles.fontSize !== undefined) {
-                document.querySelector('#heading-font-size').value = styles.fontSize.replace('px', '');
-            } else {
-                document.querySelector('#heading-font-size').value = '';
-            }
-
-            let font_values = document.querySelector('#heading-font');
-
-            for (let i = 0;i<font_values.length;i++) {
-                if (font_values[i].value === styles.fontFamily) {
-                    document.querySelector('#heading-font').value = styles.fontFamily;
-                }
-            }
         }
 
         return false;
