@@ -56,7 +56,7 @@ exports.up = function(knex) {
 
           newHeadings = newHeadings.map(heading => ({
             ...heading,
-            order: Number(heading.order) >= Number(titledItem.order)
+            order: Number(heading.order) > Number(titledItem.order)
               ? Number(heading.order) + 1
               : heading.order
           }))
