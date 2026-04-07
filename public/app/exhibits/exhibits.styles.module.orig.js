@@ -29,7 +29,7 @@ const exhibitsStylesModule = (function () {
      */
     const STYLE_SECTIONS = [
         'introduction',
-        'navigation',
+        'nav',
         'heading1',
         'item1',
         'heading2',
@@ -44,7 +44,7 @@ const exhibitsStylesModule = (function () {
      */
     const REQUIRED_SECTIONS = [
         'introduction',
-        'navigation',
+        'nav',
         'heading1',
         'item1'
     ];
@@ -55,7 +55,7 @@ const exhibitsStylesModule = (function () {
      */
     const SECTION_LABELS = {
         introduction: 'Exhibit Introduction',
-        navigation: 'Navigation Menu',
+        nav: 'Navigation Menu',
         heading1: 'Heading Style 1',
         item1: 'Item Style 1',
         heading2: 'Heading Style 2',
@@ -338,7 +338,7 @@ const exhibitsStylesModule = (function () {
      * {
      *   exhibit: {
      *     introduction: { backgroundColor, color, fontFamily, fontSize },
-     *     navigation: { ... },
+     *     nav: { ... },
      *     heading1: { ... },
      *     ...
      *   }
@@ -379,7 +379,7 @@ const exhibitsStylesModule = (function () {
      * Used when loading an existing exhibit record for editing.
      *
      * @param {Object} styles - The styles object from the exhibit record
-     *                          Expected shape: { exhibit: { introduction: {...}, navigation: {...}, ... } }
+     *                          Expected shape: { exhibit: { introduction: {...}, nav: {...}, ... } }
      */
     obj.set_styles = function (styles) {
 

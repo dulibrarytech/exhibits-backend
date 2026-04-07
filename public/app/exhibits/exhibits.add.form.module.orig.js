@@ -445,7 +445,7 @@ const exhibitsAddFormModule = (function () {
 
             // ── Style fields — clear all color inputs, pickers, font sizes, font selects ──
             const style_sections = [
-                'introduction', 'navigation', 'heading1', 'item1',
+                'introduction', 'nav', 'heading1', 'item1',
                 'heading2', 'heading3', 'item2', 'item3'
             ];
 
