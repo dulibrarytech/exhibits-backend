@@ -22,6 +22,5 @@ module.exports = () => {
 
     return {
         is_member_of_exhibit: {type: 'string'},
-        title: {type: 'string'}
     };
 };
