@@ -811,6 +811,7 @@ const Exhibit_timeline_record_tasks = class extends Base_tasks {
             const lock_data = {
                 is_locked: 1,
                 locked_by_user: user_id.trim(),
+                locked_at: this.DB.fn.now(),
                 updated: this.DB.fn.now(),
                 updated_by: user_id.trim()
             };
