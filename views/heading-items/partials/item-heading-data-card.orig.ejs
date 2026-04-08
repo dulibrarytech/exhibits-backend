@@ -1,17 +1,3 @@
-<style>
-    #item-heading-card .badge-required {
-        background-color: #e8f4fd;
-        color: #0c5fa5;
-        font-size: 0.65rem;
-        font-weight: 600;
-        text-transform: uppercase;
-        letter-spacing: 0.03em;
-        padding: 0.25em 0.5em;
-        border-radius: 0.25rem;
-        vertical-align: middle;
-    }
-</style>
-
 <div id="item-heading-card" class="card">
     <div class="card-header">
         <strong class="card-title mb-3">Heading Data</strong>
@@ -26,8 +12,8 @@
                 <div class="col-12 col-md-12">
                     <div class="row form-group">
                         <div class="col-12">
-                            <div class="form-text text-muted" style="font-size: 17px">
-                                Heading Text <span class="badge badge-required">Required</span>
+                            <div class="form-text text-muted" style="font-size: 17px"><span style="color: darkred">*</span>
+                                Heading Text <small><em>(Required)</em></small>
                                 &nbsp;&nbsp;<a onclick="helperModule.preview_html('item-heading-text-input');return false;" data-toggle="modal" data-target=".preview-html" class="btn-xs btn-light"><span style="padding: 5px"><i class="fa fa-code"></i> <small>Preview Field</small></span></a>
                             </div>
                             <span id="item-heading-text-error" class="is-error"></span>
