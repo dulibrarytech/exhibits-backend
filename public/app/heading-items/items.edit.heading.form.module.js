@@ -293,12 +293,6 @@ const itemsEditHeadingFormModule = (function () {
             heading_text_input: document.querySelector('#item-heading-text-input'),
             heading_type_input: document.querySelector('#item-heading-type-input'),
             is_published: document.querySelector('#is-published'),
-            background_color: document.querySelector('#heading-background-color'),
-            background_color_picker: document.querySelector('#heading-background-color-picker'),
-            font_color: document.querySelector('#heading-font-color'),
-            font_color_picker: document.querySelector('#heading-font-color-picker'),
-            font_size: document.querySelector('#heading-font-size'),
-            font_family: document.querySelector('#heading-font')
         };
     }
 
