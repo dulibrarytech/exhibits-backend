@@ -221,12 +221,23 @@ const Exhibit_item_record_tasks = class extends Base_tasks {
                     `media_lib.thumbnail_path as media_thumbnail_path`,
                     `media_lib.alt_text as media_alt_text`,
                     `media_lib.is_alt_text_decorative as media_is_alt_text_decorative`,
+                    // v2 indexer fields: IIIF, Kaltura, subjects, dimensions
+                    `media_lib.iiif_manifest as media_iiif_manifest`,
+                    `media_lib.kaltura_entry_id`,
+                    `media_lib.media_width as ml_media_width`,
+                    `media_lib.media_height as ml_media_height`,
+                    `media_lib.media_type as ml_media_type`,
+                    `media_lib.filename as ml_media_filename`,
+                    `media_lib.topics_subjects as media_topics_subjects`,
+                    `media_lib.genre_form_subjects as media_genre_form_subjects`,
+                    `media_lib.places_subjects as media_places_subjects`,
                     // Media library metadata for the thumbnail asset
                     `thumb_lib.name as thumbnail_media_name`,
                     `thumb_lib.ingest_method as thumbnail_ingest_method`,
                     `thumb_lib.kaltura_thumbnail_url as thumbnail_media_kaltura_thumbnail_url`,
                     `thumb_lib.repo_uuid as thumbnail_media_repo_uuid`,
-                    `thumb_lib.thumbnail_path as thumbnail_media_thumbnail_path`
+                    `thumb_lib.thumbnail_path as thumbnail_media_thumbnail_path`,
+                    `thumb_lib.iiif_manifest as thumb_iiif_manifest`
                 )
                 .leftJoin(
                     `${this.TABLE.media_library_records} as media_lib`,
@@ -273,6 +284,7 @@ const Exhibit_item_record_tasks = class extends Base_tasks {
 
             this._validate_database();
             this._validate_table('item_records');
+            this._validate_table('media_library_records');
 
             const validated = this._validate_uuids({
                 [is_member_of_exhibit]: 'exhibit UUID',
@@ -280,11 +292,50 @@ const Exhibit_item_record_tasks = class extends Base_tasks {
             });
 
             const result = await this.DB(this.TABLE.item_records)
-                .select('*')
+                .select(
+                    `${this.TABLE.item_records}.*`,
+                    // Media library metadata for the primary media asset
+                    `media_lib.name as media_name`,
+                    `media_lib.ingest_method as media_ingest_method`,
+                    `media_lib.kaltura_thumbnail_url as media_kaltura_thumbnail_url`,
+                    `media_lib.repo_uuid as media_repo_uuid`,
+                    `media_lib.thumbnail_path as media_thumbnail_path`,
+                    `media_lib.alt_text as media_alt_text`,
+                    `media_lib.is_alt_text_decorative as media_is_alt_text_decorative`,
+                    // v2 indexer fields: IIIF, Kaltura, subjects, dimensions
+                    `media_lib.iiif_manifest as media_iiif_manifest`,
+                    `media_lib.kaltura_entry_id`,
+                    `media_lib.media_width as ml_media_width`,
+                    `media_lib.media_height as ml_media_height`,
+                    `media_lib.media_type as ml_media_type`,
+                    `media_lib.filename as ml_media_filename`,
+                    `media_lib.topics_subjects as media_topics_subjects`,
+                    `media_lib.genre_form_subjects as media_genre_form_subjects`,
+                    `media_lib.places_subjects as media_places_subjects`,
+                    // Media library metadata for the thumbnail asset
+                    `thumb_lib.name as thumbnail_media_name`,
+                    `thumb_lib.ingest_method as thumbnail_ingest_method`,
+                    `thumb_lib.kaltura_thumbnail_url as thumbnail_media_kaltura_thumbnail_url`,
+                    `thumb_lib.repo_uuid as thumbnail_media_repo_uuid`,
+                    `thumb_lib.thumbnail_path as thumbnail_media_thumbnail_path`,
+                    `thumb_lib.iiif_manifest as thumb_iiif_manifest`
+                )
+                .leftJoin(
+                    `${this.TABLE.media_library_records} as media_lib`,
+                    `${this.TABLE.item_records}.media_uuid`,
+                    '=',
+                    `media_lib.uuid`
+                )
+                .leftJoin(
+                    `${this.TABLE.media_library_records} as thumb_lib`,
+                    `${this.TABLE.item_records}.thumbnail_media_uuid`,
+                    '=',
+                    `thumb_lib.uuid`
+                )
                 .where({
-                    is_member_of_exhibit: validated['exhibit UUID'],
-                    uuid: validated['item UUID'],
-                    is_deleted: 0
+                    [`${this.TABLE.item_records}.is_member_of_exhibit`]: validated['exhibit UUID'],
+                    [`${this.TABLE.item_records}.uuid`]: validated['item UUID'],
+                    [`${this.TABLE.item_records}.is_deleted`]: 0
                 })
                 .first()
                 .timeout(this.QUERY_TIMEOUT);

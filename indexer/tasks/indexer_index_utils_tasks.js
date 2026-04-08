@@ -54,13 +54,16 @@ const Indexer_index_utils_tasks = class {
             throw new Error('Valid configuration object is required');
         }
 
-        // Validate required config properties
-        if (typeof this.CONFIG.number_of_shards !== 'number' || this.CONFIG.number_of_shards < 1) {
-            throw new Error('CONFIG.number_of_shards must be a positive number');
+        // Validate required config properties (coerce from string if needed)
+        this.CONFIG.elasticsearch_shards = Number(this.CONFIG.elasticsearch_shards);
+        this.CONFIG.elasticsearch_replicas = Number(this.CONFIG.elasticsearch_replicas);
+
+        if (!Number.isFinite(this.CONFIG. elasticsearch_shards) || this.CONFIG. elasticsearch_shards < 1) {
+            throw new Error('CONFIG.elasticsearch_shards must be a positive number');
         }
 
-        if (typeof this.CONFIG.number_of_replicas !== 'number' || this.CONFIG.number_of_replicas < 0) {
-            throw new Error('CONFIG.number_of_replicas must be a non-negative number');
+        if (!Number.isFinite(this.CONFIG.elasticsearch_replicas) || this.CONFIG.elasticsearch_replicas < 0) {
+            throw new Error('CONFIG.elasticsearch_replicas must be a non-negative number');
         }
 
         // Validate index name format (Elasticsearch index naming rules)
@@ -720,6 +723,16 @@ const Indexer_index_utils_tasks = class {
             // Check if index already exists
             const check_result = await this.check_index();
 
+            if (!check_result.success) {
+                return {
+                    success: false,
+                    index: this.INDEX_NAME,
+                    step: 'check_index',
+                    error: check_result.error || 'Failed to check index existence',
+                    message: 'Index check failed'
+                };
+            }
+
             if (check_result.exists) {
                 return {
                     success: false,
@@ -791,26 +804,61 @@ const Indexer_index_utils_tasks = class {
      */
     async recreate_index(options = {}) {
         try {
-            // Check if index exists
-            const check_result = await this.check_index();
+            // Delete existing index directly — handles 404 (not found) gracefully,
+            // avoiding reliance on check_index which can fail on misconfigured connections
+            const delete_result = await this.delete_index();
 
-            if (check_result.exists) {
-                // Delete existing index
-                const delete_result = await this.delete_index();
-
-                if (!delete_result.success && !delete_result.not_found) {
-                    return {
-                        success: false,
-                        index: this.INDEX_NAME,
-                        step: 'delete_index',
-                        error: delete_result.error || 'Failed to delete existing index',
-                        message: 'Index deletion failed'
-                    };
-                }
+            if (!delete_result.success && !delete_result.not_found) {
+                return {
+                    success: false,
+                    index: this.INDEX_NAME,
+                    step: 'delete_index',
+                    error: delete_result.error || 'Failed to delete existing index',
+                    message: 'Index deletion failed'
+                };
             }
 
-            // Setup new index
-            return await this.setup_index(options);
+            // Create index
+            const create_result = await this.create_index(options);
+
+            if (!create_result.success) {
+                return {
+                    success: false,
+                    index: this.INDEX_NAME,
+                    step: 'create_index',
+                    error: create_result.error || 'Failed to create index',
+                    message: 'Index creation failed'
+                };
+            }
+
+            // Create mappings
+            const mapping_result = await this.create_mappings(options);
+
+            if (!mapping_result.success) {
+                // Rollback — delete the index since mappings failed
+                await this.delete_index();
+
+                return {
+                    success: false,
+                    index: this.INDEX_NAME,
+                    step: 'create_mappings',
+                    error: mapping_result.error || 'Failed to create mappings',
+                    message: 'Mapping creation failed, index rolled back'
+                };
+            }
+
+            this._log_success('Index recreated successfully', {
+                index: this.INDEX_NAME,
+                field_count: mapping_result.field_count
+            });
+
+            return {
+                success: true,
+                index: this.INDEX_NAME,
+                create_result,
+                mapping_result,
+                message: 'Index recreated successfully'
+            };
 
         } catch (error) {
             this._handle_error(error, 'recreate_index');

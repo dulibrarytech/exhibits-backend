@@ -17,15 +17,6 @@
       }
     }
   },
-  "alt_text": {
-    "type": "text",
-    "fields": {
-      "keyword": {
-        "type": "keyword",
-        "ignore_above": 256
-      }
-    }
-  },
   "banner": {
     "type": "text",
     "fields": {
@@ -104,9 +95,6 @@
   "is_anchor": {
     "type": "long"
   },
-  "is_alt_text_decorative": {
-    "type": "long"
-  },
   "is_embedded": {
     "type": "long"
   },
@@ -159,15 +147,6 @@
   "items": {
     "type": "nested",
     "properties": {
-      "alt_text": {
-        "type": "text",
-        "fields": {
-          "keyword": {
-            "type": "keyword",
-            "ignore_above": 256
-          }
-        }
-      },
       "caption": {
         "type": "text",
         "fields": {
@@ -193,9 +172,6 @@
         }
       },
       "is_embedded": {
-        "type": "long"
-      },
-      "is_alt_text_decorative": {
         "type": "long"
       },
       "is_kaltura_item": {
@@ -226,22 +202,6 @@
           }
         }
       },
-      "kaltura": {
-        "type": "object",
-        "properties": {
-          "kaltura_id": {
-            "type": "keyword"
-          },
-          "kaltura_stream_url": {
-            "type": "text",
-            "index": false
-          },
-          "kaltura_thumbnail": {
-            "type": "text",
-            "index": false
-          }
-        }
-      },
       "layout": {
         "type": "text",
         "fields": {
@@ -260,47 +220,8 @@
           }
         }
       },
-      "media_height": {
-        "type": "long"
-      },
-      "media_iiif": {
-        "type": "object",
-        "enabled": false
-      },
       "media_padding": {
         "type": "long"
-      },
-      "media_subjects": {
-        "type": "object",
-        "properties": {
-          "topics": {
-            "type": "text",
-            "fields": {
-              "keyword": {
-                "type": "keyword",
-                "ignore_above": 256
-              }
-            }
-          },
-          "genre_form": {
-            "type": "text",
-            "fields": {
-              "keyword": {
-                "type": "keyword",
-                "ignore_above": 256
-              }
-            }
-          },
-          "places": {
-            "type": "text",
-            "fields": {
-              "keyword": {
-                "type": "keyword",
-                "ignore_above": 256
-              }
-            }
-          }
-        }
       },
       "media_width": {
         "type": "long"
@@ -312,15 +233,6 @@
         "type": "long"
       },
       "styles": {
-        "type": "text",
-        "fields": {
-          "keyword": {
-            "type": "keyword",
-            "ignore_above": 256
-          }
-        }
-      },
-      "subjects": {
         "type": "text",
         "fields": {
           "keyword": {
@@ -346,10 +258,6 @@
             "ignore_above": 256
           }
         }
-      },
-      "thumbnail_iiif": {
-        "type": "object",
-        "enabled": false
       },
       "title": {
         "type": "text",
@@ -383,22 +291,6 @@
       }
     }
   },
-  "kaltura": {
-    "type": "object",
-    "properties": {
-      "kaltura_id": {
-        "type": "keyword"
-      },
-      "kaltura_stream_url": {
-        "type": "text",
-        "index": false
-      },
-      "kaltura_thumbnail": {
-        "type": "text",
-        "index": false
-      }
-    }
-  },
   "layout": {
     "type": "text",
     "fields": {
@@ -417,47 +309,8 @@
       }
     }
   },
-  "media_height": {
-    "type": "long"
-  },
-  "media_iiif": {
-    "type": "object",
-    "enabled": false
-  },
   "media_padding": {
     "type": "long"
-  },
-  "media_subjects": {
-    "type": "object",
-    "properties": {
-      "topics": {
-        "type": "text",
-        "fields": {
-          "keyword": {
-            "type": "keyword",
-            "ignore_above": 256
-          }
-        }
-      },
-      "genre_form": {
-        "type": "text",
-        "fields": {
-          "keyword": {
-            "type": "keyword",
-            "ignore_above": 256
-          }
-        }
-      },
-      "places": {
-        "type": "text",
-        "fields": {
-          "keyword": {
-            "type": "keyword",
-            "ignore_above": 256
-          }
-        }
-      }
-    }
   },
   "media_width": {
     "type": "long"
@@ -527,15 +380,6 @@
       }
     }
   },
-  "subjects": {
-    "type": "text",
-    "fields": {
-      "keyword": {
-        "type": "keyword",
-        "ignore_above": 256
-      }
-    }
-  },
   "template": {
     "type": "text",
     "fields": {
@@ -562,10 +406,6 @@
         "ignore_above": 256
       }
     }
-  },
-  "thumbnail_iiif": {
-    "type": "object",
-    "enabled": false
   },
   "thumbnail_image": {
     "type": "text",

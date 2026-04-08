@@ -415,14 +415,50 @@ const Exhibit_record_tasks = class extends Base_tasks {
 
             this._validate_database();
             this._validate_table('exhibit_records');
+            this._validate_table('media_library_records');
             const uuid_validated = this._validate_uuid(uuid, 'exhibit UUID');
 
+            const exhibit_table = this.TABLE.exhibit_records;
+            const media_table = this.TABLE.media_library_records;
+
+            const qualified_fields = this.FIELDS.map(f => `${exhibit_table}.${f}`);
+
             const record = await this._with_timeout(
-                this.DB(this.TABLE.exhibit_records)
-                    .select(this.FIELDS)
+                this.DB(exhibit_table)
+                    .select(
+                        ...qualified_fields,
+                        // Hero image media library metadata
+                        `hero_lib.iiif_manifest as hero_iiif_manifest`,
+                        `hero_lib.kaltura_entry_id as hero_kaltura_entry_id`,
+                        `hero_lib.kaltura_thumbnail_url as hero_kaltura_thumbnail_url`,
+                        `hero_lib.media_width as hero_media_width`,
+                        `hero_lib.media_height as hero_media_height`,
+                        `hero_lib.thumbnail_path as hero_thumbnail_path`,
+                        `hero_lib.topics_subjects as hero_topics_subjects`,
+                        `hero_lib.genre_form_subjects as hero_genre_form_subjects`,
+                        `hero_lib.places_subjects as hero_places_subjects`,
+                        // Thumbnail media library metadata
+                        `thumb_lib.iiif_manifest as thumb_iiif_manifest`,
+                        `thumb_lib.thumbnail_path as thumb_thumbnail_path`,
+                        `thumb_lib.topics_subjects as thumb_topics_subjects`,
+                        `thumb_lib.genre_form_subjects as thumb_genre_form_subjects`,
+                        `thumb_lib.places_subjects as thumb_places_subjects`
+                    )
+                    .leftJoin(
+                        `${media_table} as hero_lib`,
+                        `${exhibit_table}.hero_image_media_uuid`,
+                        '=',
+                        `hero_lib.uuid`
+                    )
+                    .leftJoin(
+                        `${media_table} as thumb_lib`,
+                        `${exhibit_table}.thumbnail_media_uuid`,
+                        '=',
+                        `thumb_lib.uuid`
+                    )
                     .where({
-                        uuid: uuid_validated,
-                        is_deleted: 0
+                        [`${exhibit_table}.uuid`]: uuid_validated,
+                        [`${exhibit_table}.is_deleted`]: 0
                     })
                     .first()
             );

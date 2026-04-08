@@ -101,6 +101,67 @@ const process_subjects = (subjects) => {
     return '';
 };
 
+/**
+ * Extracts IIIF URLs from a stored manifest JSON string
+ * @param {string|null} iiif_manifest_json - JSON manifest string from media library
+ * @returns {Object|null} Extracted URLs or null
+ */
+const resolve_iiif_urls = (iiif_manifest_json) => {
+
+    if (!iiif_manifest_json) {
+        return null;
+    }
+
+    try {
+        const manifest = typeof iiif_manifest_json === 'string'
+            ? JSON.parse(iiif_manifest_json)
+            : iiif_manifest_json;
+
+        return {
+            manifest_url: manifest.id || null,
+            image_url: manifest.items?.[0]?.items?.[0]?.items?.[0]?.body?.id || null,
+            service_url: manifest.items?.[0]?.items?.[0]?.items?.[0]?.body?.service?.[0]?.id || null,
+            thumbnail_url: manifest.thumbnail?.[0]?.id || null
+        };
+
+    } catch (error) {
+        LOGGER.module().error('ERROR: [/indexer/indexer_helper (resolve_iiif_urls)] ' + error.message);
+        return null;
+    }
+};
+
+/**
+ * Builds Kaltura streaming data from media library fields
+ * @param {string|null} entry_id - Kaltura entry ID
+ * @param {string|null} thumbnail_url - Kaltura thumbnail URL
+ * @returns {Object|null} Kaltura data or null
+ */
+const resolve_kaltura = (entry_id, thumbnail_url) => {
+
+    if (!entry_id) {
+        return null;
+    }
+
+    return {
+        kaltura_id: entry_id,
+        kaltura_stream_url: entry_id,
+        kaltura_thumbnail: thumbnail_url || null
+    };
+};
+
+/**
+ * Merges media-library-bound subject fields into a structured object
+ * @param {Object} record - Record with media_topics_subjects, media_genre_form_subjects, media_places_subjects
+ * @returns {Object} Structured subjects object with topics, genre_form, places arrays
+ */
+const merge_media_subjects = (record) => {
+    return {
+        topics: process_subjects(record.media_topics_subjects),
+        genre_form: process_subjects(record.media_genre_form_subjects),
+        places: process_subjects(record.media_places_subjects)
+    };
+};
+
 // ─── Index record constructors ──────────────────────────────────────────────
 
 /**
@@ -113,6 +174,11 @@ const construct_exhibit_index_record = (record) => {
     if (!record) {
         throw new Error('Invalid record provided');
     }
+
+    // Resolve IIIF URLs from hero and thumbnail media library manifests
+    const hero_iiif = resolve_iiif_urls(record.hero_iiif_manifest);
+    const thumb_iiif = resolve_iiif_urls(record.thumb_iiif_manifest);
+    const hero_kaltura = resolve_kaltura(record.hero_kaltura_entry_id, record.hero_kaltura_thumbnail_url);
 
     return {
         uuid: record.uuid,
@@ -134,7 +200,28 @@ const construct_exhibit_index_record = (record) => {
         is_published: record.is_published,
         is_featured: record.is_featured,
         is_preview: record.is_preview,
-        created: record.created
+        created: record.created,
+        // v2: resolved hero image IIIF/Kaltura
+        media_iiif: hero_iiif ? {
+            manifest_url: hero_iiif.manifest_url,
+            image_url: hero_iiif.image_url,
+            service_url: hero_iiif.service_url
+        } : null,
+        kaltura: hero_kaltura,
+        // v2: resolved thumbnail IIIF
+        thumbnail_iiif: thumb_iiif ? {
+            manifest_url: thumb_iiif.manifest_url,
+            thumbnail_url: thumb_iiif.thumbnail_url
+        } : null,
+        // v2: media-bound subjects from hero image
+        media_subjects: {
+            topics: process_subjects(record.hero_topics_subjects),
+            genre_form: process_subjects(record.hero_genre_form_subjects),
+            places: process_subjects(record.hero_places_subjects)
+        },
+        // v2: media dimensions
+        media_width: record.hero_media_width || null,
+        media_height: record.hero_media_height || null
     };
 };
 
@@ -174,41 +261,59 @@ const construct_item_index_record = (record) => {
         throw new Error('Invalid record provided');
     }
 
+    // Resolve IIIF URLs from media library manifests
+    const media_iiif = resolve_iiif_urls(record.media_iiif_manifest);
+    const thumb_iiif = resolve_iiif_urls(record.thumb_iiif_manifest);
+    const kaltura = resolve_kaltura(record.kaltura_entry_id, record.media_kaltura_thumbnail_url);
+
     const index_record = {
         uuid: record.uuid,
         is_member_of_exhibit: record.is_member_of_exhibit,
-        thumbnail: record.thumbnail,
         title: record.title,
         caption: record.caption,
         item_type: record.item_type,
-        media: record.media,
         text: record.text,
         wrap_text: record.wrap_text,
         description: record.description,
         type: record.type,
         layout: record.layout,
-        media_width: record.media_width,
         media_padding: record.media_padding,
-        alt_text: record.alt_text,
-        is_alt_text_decorative: record.is_alt_text_decorative,
         pdf_open_to_page: record.pdf_open_to_page,
-        date: record.date,
         styles: record.styles,
-        subjects: process_subjects(record.item_subjects),
         order: record.order,
         is_published: record.is_published,
         is_embedded: record.is_embedded,
         is_repo_item: record.is_repo_item,
         is_kaltura_item: record.is_kaltura_item,
-        created: record.created
+        created: record.created,
+        // Legacy media filename preserved for backward compatibility
+        media: record.media,
+        // v2: resolved media IIIF URLs
+        media_iiif: media_iiif ? {
+            manifest_url: media_iiif.manifest_url,
+            image_url: media_iiif.image_url,
+            service_url: media_iiif.service_url
+        } : null,
+        // v2: resolved thumbnail — prefer IIIF thumbnail URL, fall back to legacy
+        thumbnail: thumb_iiif?.thumbnail_url || record.thumbnail,
+        thumbnail_iiif: thumb_iiif ? {
+            manifest_url: thumb_iiif.manifest_url,
+            thumbnail_url: thumb_iiif.thumbnail_url
+        } : null,
+        // v2: Kaltura streaming data
+        kaltura: kaltura,
+        // v2: prefer media library alt_text over item-level
+        alt_text: record.media_alt_text || record.alt_text,
+        is_alt_text_decorative: record.media_is_alt_text_decorative ?? record.is_alt_text_decorative,
+        // v2: media dimensions from library (fall back to item-level)
+        media_width: record.ml_media_width || record.media_width,
+        media_height: record.ml_media_height || null,
+        // v2: item-level subjects + media-bound subjects
+        subjects: process_subjects(record.item_subjects),
+        media_subjects: merge_media_subjects(record),
+        // Date — Elasticsearch date fields can't be empty strings
+        date: (record.date && record.date.length > 0) ? record.date : null
     };
-
-    // Elasticsearch date fields can't be empty strings
-    if (record.date && record.date.length > 0) {
-        index_record.date = record.date;
-    } else {
-        index_record.date = null;
-    }
 
     return index_record;
 };
@@ -625,6 +730,9 @@ module.exports = {
     is_valid_record_type,
     build_response,
     process_subjects,
+    resolve_iiif_urls,
+    resolve_kaltura,
+    merge_media_subjects,
     construct_exhibit_index_record,
     construct_heading_index_record,
     construct_item_index_record,
