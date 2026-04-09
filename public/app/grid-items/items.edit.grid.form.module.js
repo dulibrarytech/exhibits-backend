@@ -20,7 +20,7 @@ const itemsEditGridFormModule = (function () {
 
     'use strict';
 
-    const APP_PATH = window.localStorage.getItem('exhibits_app_path');
+    // const APP_PATH = window.localStorage.getItem('exhibits_app_path');
     const EXHIBITS_ENDPOINTS = endpointsModule.get_exhibits_endpoints();
     let obj = {};
 
@@ -132,9 +132,16 @@ const itemsEditGridFormModule = (function () {
         }
 
         document.querySelector('#created').innerHTML = item_created;
-        document.querySelector('#grid-title-input').value = helperModule.unescape(record.title);
         document.querySelector('#grid-text-input').value = helperModule.unescape(record.text);
         document.querySelector('#grid-columns').value = record.columns;
+
+        // Set saved style selection after dropdown is populated
+        // Style keys are simple strings like "item1"; skip "{}" (prepare_styles default) and legacy JSON blobs
+        if (record.styles && typeof record.styles === 'string'
+            && record.styles.trim() !== '' && !record.styles.startsWith('{')) {
+            await itemsCommonStandardGridFormModule.wait_for_styles();
+            itemsCommonStandardGridFormModule.set_item_style(record.styles);
+        }
 
         /*
         let styles = JSON.parse(record.styles);
@@ -181,7 +188,7 @@ const itemsEditGridFormModule = (function () {
         const item_id = helperModule.get_parameter_by_name('item_id');
         const redirect = '/items/grid/details?exhibit_id=' + exhibit_id + '&item_id=' + item_id + '&status=403';
         await authModule.check_permissions(['update_item', 'update_any_item'], 'grid', exhibit_id, item_id, redirect);
-
+        // Note: #back-to-items and #grid-items hrefs are now wired by navModule.wire_nav_links()
         exhibitsModule.set_exhibit_title(exhibit_id);
         document.querySelector('#save-item-btn').addEventListener('click', itemsEditGridFormModule.update_grid_record);
         await display_edit_record();

@@ -19,7 +19,11 @@
 'use strict';
 
 const TIMELINES_MODEL = require('../exhibits/timelines_model');
-const AUTHORIZE = require('../auth/authorize');
+const {
+    validate_param,
+    check_authorization,
+    handle_error
+} = require('../exhibits/timelines_helper');
 
 exports.create_timeline_record = async function (req, res) {
 
@@ -28,34 +32,21 @@ exports.create_timeline_record = async function (req, res) {
         const is_member_of_exhibit = req.params.exhibit_id;
         const data = req.body;
 
-        if (data === undefined || is_member_of_exhibit === undefined) {
-            res.status(400).send('Bad request.');
-            return false;
-        }
+        if (!validate_param(res, data)) return false;
+        if (!validate_param(res, is_member_of_exhibit)) return false;
 
-        const permissions = ['add_item', 'add_item_to_any_exhibit'];
-        let options = {};
-        options.req = req;
-        options.permissions = permissions;
-        options.record_type = 'timeline';
-        options.parent_id = is_member_of_exhibit;
-        options.child_id = null;
-
-        const is_authorized = await AUTHORIZE.check_permission(options);
-
-        if (is_authorized === false) {
-            res.status(403).send({
-                message: 'Unauthorized request'
-            });
-
-            return false;
-        }
+        const is_authorized = await check_authorization(
+            req, res,
+            ['add_item', 'add_item_to_any_exhibit'],
+            'timeline', is_member_of_exhibit, null
+        );
+        if (!is_authorized) return false;
 
         const result = await TIMELINES_MODEL.create_timeline_record(is_member_of_exhibit, data);
         res.status(result.status).send(result);
 
     } catch (error) {
-        res.status(500).send({message: `Unable to create timeline record. ${error.message}`});
+        handle_error(res, 'Unable to create timeline record.', error);
     }
 };
 
@@ -67,34 +58,22 @@ exports.update_timeline_record = async function (req, res) {
         const timeline_id = req.params.timeline_id;
         const data = req.body;
 
-        if (data === undefined || is_member_of_exhibit === undefined || timeline_id === undefined) {
-            res.status(400).send('Bad request.');
-            return false;
-        }
+        if (!validate_param(res, data)) return false;
+        if (!validate_param(res, is_member_of_exhibit)) return false;
+        if (!validate_param(res, timeline_id)) return false;
 
-        const permissions = ['update_item', 'update_any_item'];
-        let options = {};
-        options.req = req;
-        options.permissions = permissions;
-        options.record_type = 'timeline';
-        options.parent_id = is_member_of_exhibit;
-        options.child_id = timeline_id;
-
-        const is_authorized = await AUTHORIZE.check_permission(options);
-
-        if (is_authorized === false) {
-            res.status(403).send({
-                message: 'Unauthorized request'
-            });
-
-            return false;
-        }
+        const is_authorized = await check_authorization(
+            req, res,
+            ['update_item', 'update_any_item'],
+            'timeline', is_member_of_exhibit, timeline_id
+        );
+        if (!is_authorized) return false;
 
         const result = await TIMELINES_MODEL.update_timeline_record(is_member_of_exhibit, timeline_id, data);
         res.status(result.status).send(result);
 
     } catch (error) {
-        res.status(500).send({message: `Unable to update timeline record. ${error.message}`});
+        handle_error(res, 'Unable to update timeline record.', error);
     }
 };
 
@@ -105,16 +84,14 @@ exports.get_timeline_record = async function (req, res) {
         const is_member_of_exhibit = req.params.exhibit_id;
         const timeline_id = req.params.timeline_id;
 
-        if (is_member_of_exhibit === undefined || timeline_id === undefined) {
-            res.status(400).send('Bad request.');
-            return false;
-        }
+        if (!validate_param(res, is_member_of_exhibit)) return false;
+        if (!validate_param(res, timeline_id)) return false;
 
         const result = await TIMELINES_MODEL.get_timeline_record(is_member_of_exhibit, timeline_id);
         res.status(result.status).send(result);
 
     } catch (error) {
-        res.status(500).send({message: `Unable to get timeline record. ${error.message}`});
+        handle_error(res, 'Unable to get timeline record.', error);
     }
 };
 
@@ -126,34 +103,22 @@ exports.create_timeline_item_record = async function (req, res) {
         const timeline_id = req.params.timeline_id;
         const data = req.body;
 
-        if (is_member_of_exhibit === undefined || timeline_id === undefined || data === undefined) {
-            res.status(400).send('Bad request.');
-            return false;
-        }
+        if (!validate_param(res, is_member_of_exhibit)) return false;
+        if (!validate_param(res, timeline_id)) return false;
+        if (!validate_param(res, data)) return false;
 
-        const permissions = ['add_item', 'add_item_to_any_exhibit'];
-        let options = {};
-        options.req = req;
-        options.permissions = permissions;
-        options.record_type = 'timeline_item';
-        options.parent_id = is_member_of_exhibit;
-        options.child_id = null;
-
-        const is_authorized = await AUTHORIZE.check_permission(options);
-        console.log('is_authorized ', is_authorized);
-        if (is_authorized === false) {
-            res.status(403).send({
-                message: 'Unauthorized request'
-            });
-
-            return false;
-        }
+        const is_authorized = await check_authorization(
+            req, res,
+            ['add_item', 'add_item_to_any_exhibit'],
+            'timeline_item', is_member_of_exhibit, null
+        );
+        if (!is_authorized) return false;
 
         const result = await TIMELINES_MODEL.create_timeline_item_record(is_member_of_exhibit, timeline_id, data);
         res.status(result.status).send(result);
 
     } catch (error) {
-        res.status(500).send({message: `Unable to create timeline item record. ${error.message}`});
+        handle_error(res, 'Unable to create timeline item record.', error);
     }
 };
 
@@ -164,16 +129,14 @@ exports.get_timeline_item_records = async function (req, res) {
         const is_member_of_exhibit = req.params.exhibit_id;
         const is_member_of_timeline = req.params.timeline_id;
 
-        if (is_member_of_exhibit === undefined || is_member_of_timeline === undefined) {
-            res.status(400).send('Bad request.');
-            return false;
-        }
+        if (!validate_param(res, is_member_of_exhibit)) return false;
+        if (!validate_param(res, is_member_of_timeline)) return false;
 
         const result = await TIMELINES_MODEL.get_timeline_item_records(is_member_of_exhibit, is_member_of_timeline);
         res.status(result.status).send(result);
 
     } catch (error) {
-        res.status(500).send({message: `Unable to get timeline item records. ${error.message}`});
+        handle_error(res, 'Unable to get timeline item records.', error);
     }
 };
 
@@ -186,14 +149,19 @@ exports.get_timeline_item_record = async function (req, res) {
         const item_id = req.params.item_id;
         const type = req.query.type;
 
-        if (is_member_of_exhibit === undefined || is_member_of_timeline === undefined || item_id === undefined) {
-            res.status(400).send('Bad request.');
-            return false;
-        }
+        if (!validate_param(res, is_member_of_exhibit)) return false;
+        if (!validate_param(res, is_member_of_timeline)) return false;
+        if (!validate_param(res, item_id)) return false;
 
         if (type === undefined) {
             const result = await TIMELINES_MODEL.get_timeline_item_record(is_member_of_exhibit, is_member_of_timeline, item_id);
             res.status(result.status).send(result);
+        }
+
+        if (type === 'details') {
+            const result = await TIMELINES_MODEL.get_timeline_item_details_record(is_member_of_exhibit, is_member_of_timeline, item_id);
+            res.status(result.status).send(result);
+            return false;
         }
 
         if (type === 'edit') {
@@ -211,7 +179,7 @@ exports.get_timeline_item_record = async function (req, res) {
         }
 
     } catch (error) {
-        res.status(500).send({message: `Unable to get timeline item. ${error.message}`});
+        handle_error(res, 'Unable to get timeline item.', error);
     }
 };
 
@@ -224,34 +192,23 @@ exports.update_timeline_item_record = async function (req, res) {
         const item_id = req.params.item_id;
         const data = req.body;
 
-        if (data === undefined || is_member_of_exhibit === undefined || timeline_id === undefined || item_id === undefined) {
-            res.status(400).send('Bad request.');
-            return false;
-        }
+        if (!validate_param(res, data)) return false;
+        if (!validate_param(res, is_member_of_exhibit)) return false;
+        if (!validate_param(res, timeline_id)) return false;
+        if (!validate_param(res, item_id)) return false;
 
-        const permissions = ['update_item', 'update_any_item'];
-        let options = {};
-        options.req = req;
-        options.permissions = permissions;
-        options.record_type = 'timeline_item';
-        options.parent_id = is_member_of_exhibit;
-        options.child_id = item_id;
-
-        const is_authorized = await AUTHORIZE.check_permission(options);
-
-        if (is_authorized === false) {
-            res.status(403).send({
-                message: 'Unauthorized request'
-            });
-
-            return false;
-        }
+        const is_authorized = await check_authorization(
+            req, res,
+            ['update_item', 'update_any_item'],
+            'timeline_item', is_member_of_exhibit, item_id
+        );
+        if (!is_authorized) return false;
 
         const result = await TIMELINES_MODEL.update_timeline_item_record(is_member_of_exhibit, timeline_id, item_id, data);
         res.status(result.status).send(result);
 
     } catch (error) {
-        res.status(500).send({message: `Unable to update timeline item. ${error.message}`});
+        handle_error(res, 'Unable to update timeline item.', error);
     }
 };
 
@@ -269,23 +226,12 @@ exports.publish_timeline_item_record = async function (req, res) {
             return false;
         }
 
-        const permissions = ['publish_item', 'publish_any_item'];
-        let options = {};
-        options.req = req;
-        options.permissions = permissions;
-        options.record_type = 'timeline_item';
-        options.parent_id = exhibit_id;
-        options.child_id = timeline_item_id;
-
-        const is_authorized = await AUTHORIZE.check_permission(options);
-
-        if (is_authorized === false) {
-            res.status(403).send({
-                message: 'Unauthorized request'
-            });
-
-            return false;
-        }
+        const is_authorized = await check_authorization(
+            req, res,
+            ['publish_item', 'publish_any_item'],
+            'timeline_item', exhibit_id, timeline_item_id
+        );
+        if (!is_authorized) return false;
 
         result = await TIMELINES_MODEL.publish_timeline_item_record(exhibit_id, timeline_id, timeline_item_id);
 
@@ -301,7 +247,7 @@ exports.publish_timeline_item_record = async function (req, res) {
         }
 
     } catch (error) {
-        res.status(500).send({message: `Unable to publish timeline item record. ${error.message}`});
+        handle_error(res, 'Unable to publish timeline item record.', error);
     }
 };
 
@@ -319,23 +265,12 @@ exports.suppress_timeline_item_record = async function (req, res) {
             return false;
         }
 
-        const permissions = ['suppress_item', 'suppress_any_item'];
-        let options = {};
-        options.req = req;
-        options.permissions = permissions;
-        options.record_type = 'timeline_item';
-        options.parent_id = exhibit_id;
-        options.child_id = timeline_item_id;
-
-        const is_authorized = await AUTHORIZE.check_permission(options);
-
-        if (is_authorized === false) {
-            res.status(403).send({
-                message: 'Unauthorized request'
-            });
-
-            return false;
-        }
+        const is_authorized = await check_authorization(
+            req, res,
+            ['suppress_item', 'suppress_any_item'],
+            'timeline_item', exhibit_id, timeline_item_id
+        );
+        if (!is_authorized) return false;
 
         result = await TIMELINES_MODEL.suppress_timeline_item_record(exhibit_id, timeline_id, timeline_item_id);
 
@@ -350,7 +285,7 @@ exports.suppress_timeline_item_record = async function (req, res) {
         }
 
     } catch (error) {
-        res.status(500).send({message: `Unable to suppress timeline item record. ${error.message}`});
+        handle_error(res, 'Unable to suppress timeline item record.', error);
     }
 };
 
@@ -368,29 +303,18 @@ exports.delete_timeline_item_record = async function (req, res) {
             return false;
         }
 
-        const permissions = ['delete_item', 'delete_any_item'];
-        let options = {};
-        options.req = req;
-        options.permissions = permissions;
-        options.record_type = record_type;
-        options.parent_id = is_member_of_exhibit;
-        options.child_id = timeline_item_id;
-
-        const is_authorized = await AUTHORIZE.check_permission(options);
-
-        if (is_authorized === false) {
-            res.status(403).send({
-                message: 'Unauthorized request'
-            });
-
-            return false;
-        }
+        const is_authorized = await check_authorization(
+            req, res,
+            ['delete_item', 'delete_any_item'],
+            record_type, is_member_of_exhibit, timeline_item_id
+        );
+        if (!is_authorized) return false;
 
         const result = await TIMELINES_MODEL.delete_timeline_item_record(is_member_of_exhibit, timeline_id, timeline_item_id, record_type);
         res.status(result.status).send(result);
 
     } catch (error) {
-        res.status(500).send({message: `Unable to delete timeline item. ${error.message}`});
+        handle_error(res, 'Unable to delete timeline item.', error);
     }
 };
 
@@ -405,15 +329,8 @@ exports.unlock_timeline_item_record = async function (req, res) {
         const force = req.query.force;
         let options = {};
 
-        if (item_id === undefined || item_id.length === 0) {
-            res.status(400).send('Bad request.');
-            return false;
-        }
-
-        if (uid === undefined || uid.length === 0) {
-            res.status(400).send('Bad request.');
-            return false;
-        }
+        if (!validate_param(res, item_id)) return false;
+        if (!validate_param(res, uid)) return false;
 
         if (force !== undefined && force === 'true') {
             options.force = true;
@@ -422,23 +339,12 @@ exports.unlock_timeline_item_record = async function (req, res) {
         }
 
         /*
-        const permissions = ['update_any_item'];
-        let options = {};
-        options.req = req;
-        options.permissions = permissions;
-        options.record_type = 'timeline_item';
-        options.parent_id = exhibit_id;
-        options.child_id = item_id;
-
-        const is_authorized = await AUTHORIZE.check_permission(options);
-
-        if (is_authorized === false) {
-            res.status(403).send({
-                message: 'Unauthorized request'
-            });
-
-            return false;
-        }
+        const is_authorized = await check_authorization(
+            req, res,
+            ['update_any_item'],
+            'timeline_item', exhibit_id, item_id
+        );
+        if (!is_authorized) return false;
         */
 
         const result = await TIMELINES_MODEL.unlock_timeline_item_record(uid, item_id, options);
@@ -454,6 +360,6 @@ exports.unlock_timeline_item_record = async function (req, res) {
         }
 
     } catch (error) {
-        res.status(500).send({message: `Unable to unlock timeline item record. ${error.message}`});
+        handle_error(res, 'Unable to unlock timeline item record.', error);
     }
 };

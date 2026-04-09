@@ -10,30 +10,7 @@
     }
 </style>
 <body>
-<aside id="left-panel" class="left-panel">
-    <nav class="navbar navbar-expand-sm navbar-default">
-        <div id="main-menu" class="main-menu">
-            <ul class="nav navbar-nav">
-                <li class="menu-title">Menu</li>
-            </ul>
-            <ul class="nav navbar-nav"><li id="preview-link"></li></ul>
-            <ul class="nav navbar-nav">
-                <li>
-                    <a id="back-to-items" href="#" data-keyboard="false">
-                        <i class=" menu-icon fa fa-arrow-left"></i>Back to Exhibit Items</a>
-                </li>
-            </ul>
-            <ul id="items-menu" class="nav navbar-nav"></ul>
-            <ul class="nav navbar-nav">
-                <li>
-                    <a href="#" id="logout" data-keyboard="false">
-                        <i class="menu-icon fa fa-sign-out"></i>Logout
-                    </a>
-                </li>
-            </ul>
-        </div>
-    </nav>
-</aside>
+<%- include('../partials/nav-dashboard'); %>
 <div id="right-panel" class="right-panel">
     <%- include('../partials/main-header.ejs'); %>
     <div class="content" style="min-height: 875px;">
@@ -51,12 +28,10 @@
                     <div class="col-8 col-md-8">
                         <div class="row form-group">
                             <div class="col-12">
-                                <div class="form-text text-muted" style="font-size: 17px">
-                                    Title
-                                    &nbsp;&nbsp;<a onclick="helperModule.preview_html('grid-title-input');return false;" data-toggle="modal" data-target=".preview-html" class="btn-xs btn-light"><span style="padding: 5px"><i class="fa fa-code"></i> <small>Preview Field</small></span></a>
+                                <div class="form-text text-muted" style="font-size: 17px">Text
+                                    &nbsp;&nbsp;<a onclick="helperModule.preview_html('grid-text-input');return false;" data-toggle="modal" data-target=".preview-html" class="btn-xs btn-light"><span style="padding: 5px"><i class="fa fa-code"></i> <small>Preview Field</small></span></a>
                                 </div>
-                                <span id="grid-title-error" class="is-error"></span>
-                                <textarea disabled id="grid-title-input" class="form-control" name="grid_title_input"
+                                <textarea disabled id="grid-text-input" class="form-control" name="grid_text_input"
                                           rows="4"></textarea>
                             </div>
                         </div>
@@ -72,19 +47,6 @@
                                        style="width: 150px" value="4"><small class="form-text text-muted"></small>
 
                                 <span id="grid-title-error" class="is-error"></span>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-                <div class="row">
-                    <div class="col-12 col-md-12">
-                        <div class="row form-group">
-                            <div class="col-12">
-                                <div class="form-text text-muted" style="font-size: 17px">Text
-                                    &nbsp;&nbsp;<a onclick="helperModule.preview_html('grid-text-input');return false;" data-toggle="modal" data-target=".preview-html" class="btn-xs btn-light"><span style="padding: 5px"><i class="fa fa-code"></i> <small>Preview Field</small></span></a>
-                                </div>
-                                <textarea disabled id="grid-text-input" class="form-control" name="grid_text_input"
-                                          rows="4"></textarea>
                             </div>
                         </div>
                     </div>
@@ -200,6 +162,7 @@
 <script src="/exhibits-dashboard/static/app/dist/items.common.grid.form.module.min.js?<%=build_version%>"></script>
 <script src="/exhibits-dashboard/static/app/dist/items.details.grid.module.min.js?<%=build_version%>"></script>
 <script>
+    navModule.wire_nav_links();
     itemsCommonStandardGridFormModule.init();
     itemsDetailsGridFormModule.init();
     document.querySelector('#edit-item-btn').addEventListener('click', (event) => {

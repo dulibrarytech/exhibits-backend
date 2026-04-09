@@ -574,19 +574,10 @@ const itemsEditGridItemFormModule = (function () {
             // Set basic form fields
             set_basic_fields(record, elements);
 
-            // Display media fields if on media page
-            if (window.location.pathname.indexOf('media') !== -1) {
-
-                if (typeof helperMediaModule?.display_media_fields_common === 'function') {
-                    await helperMediaModule.display_media_fields_common(record);
-                }
-
-                if (record.item_subjects !== null && record.item_subjects?.length > 0) {
-                    const subjects = record.item_subjects.split('|');
-                    await helperModule.create_subjects_menu(subjects);
-                } else {
-                    await helperModule.create_subjects_menu();
-                }
+            // Populate media previews from record (media picker integration)
+            const is_media_path = window.location.pathname.includes('media');
+            if (is_media_path) {
+                itemsCommonGridItemFormModule.populate_media_previews(record);
             }
 
             // Set layout selection
@@ -594,6 +585,12 @@ const itemsEditGridItemFormModule = (function () {
 
             // Set media width selection
             set_media_width_selection(record.media_width, elements.media_width);
+
+            // Set embed item checkbox from record
+            const embed_item_el = document.getElementById('embed-item');
+            if (embed_item_el) {
+                embed_item_el.checked = record.is_embedded === 1;
+            }
 
             // Apply style settings
             apply_style_settings(record.styles, elements);
@@ -753,10 +750,6 @@ const itemsEditGridItemFormModule = (function () {
             // item data
             document.querySelector('#item-title-input').value = helperModule.unescape(record.title);
             document.querySelector('#item-text-input').value = helperModule.unescape(record.text);
-
-            if (window.location.pathname.indexOf('media') !== -1) {
-                await helperMediaModule.display_media_fields_common(record);
-            }
 
             let layouts = document.getElementsByName('layout');
 
@@ -1065,13 +1058,9 @@ const itemsEditGridItemFormModule = (function () {
             await authModule.check_permissions(['update_item', 'update_any_item'], 'grid_item', exhibit_id, item_id, redirect);
 
             exhibitsModule.set_exhibit_title(exhibit_id);
-            navModule.back_to_grid_items();
+            // Note: #back-to-items href is now wired by navModule.wire_nav_links()
             await display_edit_record();
             document.querySelector('#save-item-btn').addEventListener('click', itemsEditGridItemFormModule.update_grid_item_record);
-
-            if (window.location.pathname.indexOf('media') !== -1) {
-                helperMediaModule.media_edit_init();
-            }
 
         } catch (error) {
             document.querySelector('#message').innerHTML = `<div class="alert alert-danger" role="alert"><i class="fa fa-exclamation"></i> ${error.message}</div>`;

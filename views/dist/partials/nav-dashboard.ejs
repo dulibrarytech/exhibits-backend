@@ -1,0 +1,92 @@
+<%#
+    Unified navigation partial — replaces per-page nav fragments.
+
+    Expects a `nav` object in template locals with:
+      show_preview  {boolean}  - render the #preview-link placeholder (default false)
+      back          {object}   - back link: { label, id?, href?, nav_path?, icon? }
+      links         {array}    - middle links: [{ label, id?, icon, href?, nav_path?, modal?, wrapper_id? }]
+
+    Static links use `href` (fully qualified path).
+    Dynamic links use `nav_path` (relative path with {exhibit_id} etc. tokens,
+    resolved at runtime by navModule.wire_nav_links()).
+
+    Collapsed icon centering is handled at two layers:
+    1. Post-aside <script> — runs synchronously before paint.
+    2. navModule.apply_collapsed_centering() — runs at DOMContentLoaded,
+       after double-rAF, and on each toggle click.
+
+    The root cause of the left-alignment was Bootstrap 4's
+    .navbar-expand-sm .navbar-nav { flex-direction: row } which makes
+    each <li> only as wide as its icon (~20px), left-aligned in the row.
+    The fix forces flex-direction:column + width:100% on the <ul> and <li>.
+-%> <%# ── Pre-paint body sync ── -%> <script>if (document.documentElement.classList.contains('open')) {
+        document.body.classList.add('open');
+    }</script><aside id="left-panel" class="left-panel"><nav class="navbar navbar-expand-sm navbar-default"><div id="main-menu" class="main-menu collapse navbar-collapse"><ul class="nav navbar-nav"><li class="sidebar-toggle-item"><a href="#" id="sidebar-toggle" title="Toggle sidebar"><i class="menu-icon fa fa-bars"></i><span class="nav-label">Toggle</span></a></li> <% if (typeof nav !== 'undefined' && nav.show_preview) { %> <li id="preview-link"></li> <% } %> <% if (typeof nav !== 'undefined' && nav.back) { %> <li><a <% if (nav.back.id) { %> id="<%= nav.back.id %>" <% } %> title="<%= nav.back.label %>" href="<%= nav.back.href || '#' %>" <% if (nav.back.nav_path) { %> data-nav-path="<%= nav.back.nav_path %>" <% } %> data-keyboard="false"><i class="menu-icon fa <%= nav.back.icon || 'fa-arrow-left' %>"></i><span class="nav-label"><%= nav.back.label %></span></a></li> <% } %> <% if (typeof nav !== 'undefined' && nav.links && nav.links.length) { %> <% nav.links.forEach(function (link) { %> <li <% if (link.wrapper_id) { %> id="<%= link.wrapper_id %>" <% } %>><a <% if (link.id) { %> id="<%= link.id %>" <% } %> title="<%= link.label %>" href="<%= link.href || '#' %>" <% if (link.nav_path) { %> data-nav-path="<%= link.nav_path %>" <% } %> <% if (link.modal) { %> data-toggle="modal" data-target="<%= link.modal %>" <% } %> data-keyboard="false"><i class="menu-icon <%= link.icon %>"></i><span class="nav-label"><%= link.label %></span></a></li> <% }); %> <% } %> <li><a title="Logout" href="#" id="logout" data-keyboard="false"><i class="menu-icon fa fa-sign-out"></i><span class="nav-label">Logout</span></a></li></ul></div></nav></aside> <%# ── Post-aside layout styling ──
+    Runs synchronously after </aside> is parsed, before paint.
+    Collapsed: centers icons, hides labels in the 83px sidebar.
+    Expanded: overrides theme CSS to close the icon-text gap and
+    prevent label wrapping.
+    Both branches force flex-direction:column on .navbar-nav and
+    width:100% on <li> to override Bootstrap's .navbar-expand-sm
+    { flex-direction: row }.
+    navModule.apply_collapsed_centering() reinforces this at
+    DOMContentLoaded.
+-%> <script>(function () {
+        var panel = document.getElementById('left-panel');
+        if (!panel) return;
+        var navbar = panel.querySelector('.navbar');
+        var mainMenu = panel.querySelector('#main-menu');
+        var navUl = panel.querySelector('#main-menu .navbar-nav');
+        var items = panel.querySelectorAll('.navbar-nav > li');
+        var links = panel.querySelectorAll('.navbar-nav > li > a');
+        var icons = panel.querySelectorAll('.navbar-nav > li > a > .menu-icon');
+        var labels = panel.querySelectorAll('.nav-label');
+
+        if (panel.offsetWidth <= 83) {
+            // Collapsed state — center icons, hide labels
+            if (navbar) {
+                navbar.style.cssText = 'display:block;width:100%;';
+            }
+            if (mainMenu) {
+                mainMenu.style.cssText = 'display:block;width:100%;';
+            }
+            if (navUl) {
+                navUl.style.cssText = 'flex-direction:column;width:100%;';
+            }
+            for (var i = 0; i < items.length; i++) {
+                items[i].style.cssText = 'padding:0;width:100%;';
+            }
+            for (var j = 0; j < links.length; j++) {
+                links[j].style.cssText = 'display:flex;justify-content:center;align-items:center;max-width:none;padding:12px 0;font-size:14px;width:100%;';
+            }
+            for (var k = 0; k < icons.length; k++) {
+                icons[k].style.cssText = 'float:none;display:inline-block;width:auto;margin:0;font-size:20px;';
+            }
+            for (var m = 0; m < labels.length; m++) {
+                labels[m].style.display = 'none';
+            }
+        } else {
+            // Expanded state — close icon-text gap, prevent wrapping
+            if (navbar) {
+                navbar.style.cssText = 'display:block;width:100%;';
+            }
+            if (mainMenu) {
+                mainMenu.style.cssText = 'display:block;width:100%;';
+            }
+            if (navUl) {
+                navUl.style.cssText = 'flex-direction:column;width:100%;';
+            }
+            for (var i2 = 0; i2 < items.length; i2++) {
+                items[i2].style.cssText = 'padding:0;width:100%;';
+            }
+            for (var j2 = 0; j2 < links.length; j2++) {
+                links[j2].style.cssText = 'display:flex;align-items:center;max-width:none;padding:12px 15px;font-size:14px;width:100%;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;';
+            }
+            for (var k2 = 0; k2 < icons.length; k2++) {
+                icons[k2].style.cssText = 'float:none;display:inline-flex;flex-shrink:0;width:auto;margin:0 10px 0 0;font-size:20px;';
+            }
+            for (var m2 = 0; m2 < labels.length; m2++) {
+                labels[m2].style.cssText = 'display:inline;white-space:nowrap;';
+            }
+        }
+    })();</script>

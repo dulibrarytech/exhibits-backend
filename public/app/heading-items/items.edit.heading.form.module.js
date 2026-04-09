@@ -261,11 +261,19 @@ const itemsEditHeadingFormModule = (function () {
             // Set heading text value
             set_heading_text(record.text, dom_elements.heading_text_input);
 
+            // Set heading type value
+            set_heading_type(record.type, dom_elements.heading_type_input);
+
             // Set published status
             set_published_status(record.is_published, dom_elements.is_published);
 
-            // Apply style settings
-            apply_style_settings(record.styles, dom_elements);
+            // Set saved style selection after dropdown is populated
+            // Style keys are simple strings like "heading1"; skip "{}" (prepare_styles default) and legacy JSON blobs
+            if (record.styles && typeof record.styles === 'string'
+                && record.styles.trim() !== '' && !record.styles.startsWith('{')) {
+                await itemsCommonHeadingFormModule.wait_for_styles();
+                itemsCommonHeadingFormModule.set_item_style(record.styles);
+            }
 
             return false;
 
@@ -283,13 +291,8 @@ const itemsEditHeadingFormModule = (function () {
         return {
             created: document.querySelector('#created'),
             heading_text_input: document.querySelector('#item-heading-text-input'),
+            heading_type_input: document.querySelector('#item-heading-type-input'),
             is_published: document.querySelector('#is-published'),
-            background_color: document.querySelector('#heading-background-color'),
-            background_color_picker: document.querySelector('#heading-background-color-picker'),
-            font_color: document.querySelector('#heading-font-color'),
-            font_color_picker: document.querySelector('#heading-font-color-picker'),
-            font_size: document.querySelector('#heading-font-size'),
-            font_family: document.querySelector('#heading-font')
         };
     }
 
@@ -352,6 +355,17 @@ const itemsEditHeadingFormModule = (function () {
     }
 
     /**
+     * Set heading type input value
+     */
+    function set_heading_type(type, element) {
+        if (!element) {
+            return;
+        }
+
+        element.value = type;
+    }
+
+    /**
      * Set published status checkbox
      */
     function set_published_status(is_published, element) {
@@ -362,106 +376,6 @@ const itemsEditHeadingFormModule = (function () {
         // Handle both numeric (0/1) and boolean values
         const PUBLISHED_VALUES = [1, true, '1', 'true'];
         element.checked = PUBLISHED_VALUES.includes(is_published);
-    }
-
-    /**
-     * Parse and apply style settings
-     */
-    function apply_style_settings(styles_data, elements) {
-        if (!styles_data) {
-            return;
-        }
-
-        let styles;
-
-        // Safely parse styles JSON
-        try {
-            styles = typeof styles_data === 'string'
-                ? JSON.parse(styles_data)
-                : styles_data;
-        } catch (error) {
-            console.error('Failed to parse styles JSON:', error);
-            return;
-        }
-
-        if (!styles || typeof styles !== 'object' || Object.keys(styles).length === 0) {
-            return;
-        }
-
-        // Apply background color
-        apply_color_setting(
-            styles.backgroundColor,
-            elements.background_color,
-            elements.background_color_picker
-        );
-
-        // Apply font color
-        apply_color_setting(
-            styles.color,
-            elements.font_color,
-            elements.font_color_picker
-        );
-
-        // Apply font size
-        apply_font_size(styles.fontSize, elements.font_size);
-
-        // Apply font family
-        apply_font_family(styles.fontFamily, elements.font_family);
-    }
-
-    /**
-     * Apply color value to input and color picker
-     */
-    function apply_color_setting(color_value, input_element, picker_element) {
-        if (!color_value) {
-            return;
-        }
-
-        const sanitized_color = String(color_value).trim();
-
-        if (sanitized_color && input_element) {
-            input_element.value = sanitized_color;
-        }
-
-        if (sanitized_color && picker_element) {
-            picker_element.value = sanitized_color;
-        }
-    }
-
-    /**
-     * Apply font size setting
-     */
-    function apply_font_size(font_size_value, element) {
-        if (!element) {
-            return;
-        }
-
-        if (font_size_value) {
-            // Remove 'px' suffix (case-insensitive)
-            const size_numeric = String(font_size_value).replace(/px$/i, '').trim();
-            element.value = size_numeric;
-        } else {
-            element.value = '';
-        }
-    }
-
-    /**
-     * Apply font family if it exists in select options
-     */
-    function apply_font_family(font_family_value, element) {
-        if (!font_family_value || !element) {
-            return;
-        }
-
-        const sanitized_font = String(font_family_value).trim();
-
-        // Check if the font family exists in the select options
-        const options = Array.from(element.options);
-        const has_matching_option = options.some(option => option.value === sanitized_font);
-
-        if (has_matching_option) {
-            element.value = sanitized_font;
-        }
     }
 
     /**

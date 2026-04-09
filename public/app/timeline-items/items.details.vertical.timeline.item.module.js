@@ -20,31 +20,32 @@ const itemsDetailsTimelineItemModule = (function () {
 
     'use strict';
 
-    // const APP_PATH = window.localStorage.getItem('exhibits_app_path');
     const EXHIBITS_ENDPOINTS = endpointsModule.get_exhibits_endpoints();
     let obj = {};
 
     async function get_timeline_item_record() {
-        // Cache DOM element
+
         const message_element = document.querySelector('#message');
 
-        /**
-         * Display status message to user (XSS-safe)
-         */
         const display_message = (element, type, message) => {
-            if (!element) {
-                return;
-            }
+            if (!element) return;
 
             const valid_types = ['info', 'success', 'danger', 'warning'];
             const alert_type = valid_types.includes(type) ? type : 'danger';
+
+            const icon_map = {
+                'info': 'fa fa-info',
+                'success': 'fa fa-check',
+                'danger': 'fa fa-exclamation',
+                'warning': 'fa fa-exclamation-triangle'
+            };
 
             const alert_div = document.createElement('div');
             alert_div.className = `alert alert-${alert_type}`;
             alert_div.setAttribute('role', 'alert');
 
             const icon = document.createElement('i');
-            icon.className = get_icon_class(alert_type);
+            icon.className = icon_map[alert_type] || 'fa fa-exclamation';
             alert_div.appendChild(icon);
 
             const text_node = document.createTextNode(` ${message}`);
@@ -54,22 +55,6 @@ const itemsDetailsTimelineItemModule = (function () {
             element.appendChild(alert_div);
         };
 
-        /**
-         * Get icon class for alert type
-         */
-        const get_icon_class = (alert_type) => {
-            const icon_map = {
-                'info': 'fa fa-info',
-                'success': 'fa fa-check',
-                'danger': 'fa fa-exclamation',
-                'warning': 'fa fa-exclamation-triangle'
-            };
-            return icon_map[alert_type] || 'fa fa-exclamation';
-        };
-
-        /**
-         * Validate required parameters
-         */
         const validate_parameters = (exhibit_id, timeline_id, item_id) => {
             if (!exhibit_id || !timeline_id || !item_id) {
                 return {
@@ -78,7 +63,6 @@ const itemsDetailsTimelineItemModule = (function () {
                 };
             }
 
-            // Validate reasonable string lengths
             if (exhibit_id.length > 255 || timeline_id.length > 255 || item_id.length > 255) {
                 return {
                     valid: false,
@@ -90,7 +74,7 @@ const itemsDetailsTimelineItemModule = (function () {
         };
 
         try {
-            // Get and validate required parameters
+
             const exhibit_id = helperModule.get_parameter_by_name('exhibit_id');
             const timeline_id = helperModule.get_parameter_by_name('timeline_id');
             const item_id = helperModule.get_parameter_by_name('item_id');
@@ -101,7 +85,6 @@ const itemsDetailsTimelineItemModule = (function () {
                 return null;
             }
 
-            // Get and validate authentication
             const token = authModule.get_user_token();
 
             if (!token || token === false) {
@@ -114,22 +97,24 @@ const itemsDetailsTimelineItemModule = (function () {
                 return null;
             }
 
-            // Validate endpoint configuration
             if (!EXHIBITS_ENDPOINTS?.exhibits?.timeline_item_record?.get?.endpoint) {
                 display_message(message_element, 'danger', 'API endpoint configuration missing');
                 return null;
             }
 
-            // Construct endpoint with URL encoding
             const endpoint = EXHIBITS_ENDPOINTS.exhibits.timeline_item_record.get.endpoint
                 .replace(':exhibit_id', encodeURIComponent(exhibit_id))
                 .replace(':timeline_id', encodeURIComponent(timeline_id))
                 .replace(':item_id', encodeURIComponent(item_id));
 
-            // Make API request with timeout
+            const params = new URLSearchParams({
+                type: 'details'
+            });
+            const full_url = `${endpoint}?${params.toString()}`;
+
             const response = await httpModule.req({
                 method: 'GET',
-                url: endpoint,
+                url: full_url,
                 headers: {
                     'Content-Type': 'application/json',
                     'x-access-token': token
@@ -137,7 +122,6 @@ const itemsDetailsTimelineItemModule = (function () {
                 timeout: 30000
             });
 
-            // Validate response structure
             if (!response) {
                 throw new Error('No response received from server');
             }
@@ -153,10 +137,8 @@ const itemsDetailsTimelineItemModule = (function () {
             return response.data.data;
 
         } catch (error) {
-            // Log error for debugging
             console.error('Error in get_timeline_item_record:', error);
 
-            // Display error message (use user_message from Axios interceptor if available)
             const error_message = error.user_message || 'Unable to load the timeline item record. Please try again.';
             display_message(message_element, 'danger', error_message);
 
@@ -164,129 +146,35 @@ const itemsDetailsTimelineItemModule = (function () {
         }
     }
 
+    /**
+     * Disables all interactive form fields on the page.
+     * Called after record data is populated so the details page is read-only.
+     */
+    function disable_all_fields() {
+
+        const form_elements = document.querySelectorAll(
+            'input:not([type="hidden"]), textarea, select, button[type="button"]:not(#edit-item-btn)'
+        );
+
+        form_elements.forEach(element => {
+            if (!element.disabled && !element.readOnly) {
+                element.disabled = true;
+            }
+        });
+
+        // Hide media picker buttons and trash links (not applicable on details view)
+        const picker_buttons = document.querySelectorAll('#pick-item-media-btn, #pick-thumbnail-btn');
+        picker_buttons.forEach(btn => {
+            btn.style.display = 'none';
+        });
+
+        const trash_links = document.querySelectorAll('#item-media-trash, #thumbnail-trash');
+        trash_links.forEach(link => {
+            link.style.display = 'none';
+        });
+    }
+
     async function display_details_record() {
-
-        /**
-         * Cache all required DOM elements
-         */
-        const cache_dom_elements = () => {
-            return {
-                created: document.querySelector('#created'),
-                item_title: document.querySelector('#item-title-input'),
-                item_text: document.querySelector('#item-text-input'),
-                item_date: document.querySelector('#item-date-input')
-            };
-        };
-
-        /**
-         * Display creation and update metadata securely
-         */
-        const display_metadata_info = (record, created_element) => {
-            if (!created_element || !record) {
-                return;
-            }
-
-            const metadata_parts = [];
-
-            // Add creation info
-            if (record.created_by && record.created) {
-                const create_date = new Date(record.created);
-
-                if (is_valid_date(create_date)) {
-                    const create_date_time = helperModule.format_date(create_date);
-                    const created_em = document.createElement('em');
-                    created_em.textContent = `Created by ${record.created_by} on ${create_date_time}`;
-                    metadata_parts.push(created_em);
-                }
-            }
-
-            // Add update info
-            if (record.updated_by && record.updated) {
-                const update_date = new Date(record.updated);
-
-                if (is_valid_date(update_date)) {
-                    const update_date_time = helperModule.format_date(update_date);
-                    const updated_em = document.createElement('em');
-                    updated_em.textContent = `Last updated by ${record.updated_by} on ${update_date_time}`;
-                    metadata_parts.push(updated_em);
-                }
-            }
-
-            // Clear and append content safely
-            created_element.textContent = '';
-
-            metadata_parts.forEach((part, index) => {
-                if (index > 0) {
-                    created_element.appendChild(document.createTextNode(' | '));
-                }
-                created_element.appendChild(part);
-            });
-        };
-
-        /**
-         * Set item title input value
-         */
-        const set_item_title = (title, element) => {
-            if (!element) {
-                return;
-            }
-
-            const unescaped_title = title ? helperModule.unescape(title) : '';
-            element.value = unescaped_title;
-        };
-
-        /**
-         * Set item text input value
-         */
-        const set_item_text = (text, element) => {
-            if (!element) {
-                return;
-            }
-
-            const unescaped_text = text ? helperModule.unescape(text) : '';
-            element.value = unescaped_text;
-        };
-
-        /**
-         * Set item date input value (extract date from ISO string)
-         */
-        const set_item_date = (date_value, element) => {
-            if (!element) {
-                return;
-            }
-
-            if (!date_value) {
-                element.value = '';
-                return;
-            }
-
-            // Extract date portion from ISO date string
-            const date_str = String(date_value);
-            const date_parts = date_str.split('T');
-
-            if (date_parts.length > 0 && date_parts[0]) {
-                element.value = date_parts[0];
-            } else {
-                element.value = '';
-            }
-        };
-
-        /**
-         * Display media fields if on media page
-         */
-        const display_media_fields = async (record) => {
-            if (window.location.pathname.indexOf('media') === -1) {
-                return;
-            }
-
-            if (typeof helperMediaModule?.display_media_fields_common === 'function') {
-                try {
-                    await helperMediaModule.display_media_fields_common(record);
-                } catch (error) {
-                    console.error('Error displaying media fields:', error);
-                }
-            }
-        };
 
         /**
          * Validate if a date is valid
@@ -300,10 +188,7 @@ const itemsDetailsTimelineItemModule = (function () {
          */
         const display_error_message = (message) => {
             const message_element = document.querySelector('#message');
-
-            if (!message_element) {
-                return;
-            }
+            if (!message_element) return;
 
             const alert_div = document.createElement('div');
             alert_div.className = 'alert alert-danger';
@@ -321,26 +206,79 @@ const itemsDetailsTimelineItemModule = (function () {
         };
 
         try {
-            // Fetch record data
-            const record = await get_timeline_item_record();
 
-            if (!record) {
+            const data = await get_timeline_item_record();
+
+            if (!data || !data.item) {
                 throw new Error('Failed to load timeline item record data');
             }
 
-            // Cache all DOM elements
-            const elements = cache_dom_elements();
+            const record = data.item;
 
-            // Display metadata (creation/update info)
-            display_metadata_info(record, elements.created);
+            // Helper for safe DOM value setting
+            const set_element_value = (selector, value) => {
+                const el = document.querySelector(selector);
+                if (el) el.value = value;
+            };
+
+            // Display creation/update metadata
+            const created_el = document.querySelector('#created');
+            if (created_el) {
+                const metadata_parts = [];
+
+                if (record.created_by && record.created) {
+                    const create_date = new Date(record.created);
+                    if (is_valid_date(create_date)) {
+                        const created_em = document.createElement('em');
+                        created_em.textContent = `Created by ${record.created_by} on ${helperModule.format_date(create_date)}`;
+                        metadata_parts.push(created_em);
+                    }
+                }
+
+                if (record.updated_by && record.updated) {
+                    const update_date = new Date(record.updated);
+                    if (is_valid_date(update_date)) {
+                        const updated_em = document.createElement('em');
+                        updated_em.textContent = `Last updated by ${record.updated_by} on ${helperModule.format_date(update_date)}`;
+                        metadata_parts.push(updated_em);
+                    }
+                }
+
+                created_el.textContent = '';
+                metadata_parts.forEach((part, index) => {
+                    if (index > 0) {
+                        created_el.appendChild(document.createTextNode(' | '));
+                    }
+                    created_el.appendChild(part);
+                });
+            }
 
             // Set basic form fields
-            set_item_title(record.title, elements.item_title);
-            set_item_text(record.text, elements.item_text);
-            set_item_date(record.date, elements.item_date);
+            set_element_value('#item-title-input', record.title ? helperModule.unescape(record.title) : '');
+            set_element_value('#item-text-input', record.text ? helperModule.unescape(record.text) : '');
 
-            // Display media fields if on media page
-            await display_media_fields(record);
+            // Set date field (extract date portion from ISO string)
+            if (record.date) {
+                const date_str = String(record.date);
+                const date_parts = date_str.split('T');
+                set_element_value('#item-date-input', date_parts.length > 0 ? date_parts[0] : '');
+            } else {
+                set_element_value('#item-date-input', '');
+            }
+
+            // Populate media previews using the shared common module
+            if (window.location.pathname.indexOf('media') !== -1) {
+                itemsCommonVerticalTimelineItemFormModule.populate_media_previews(record);
+            }
+
+            // Set embed item checkbox from record
+            const embed_item_el = document.getElementById('embed-item');
+            if (embed_item_el) {
+                embed_item_el.checked = record.is_embedded === 1;
+            }
+
+            // Disable all form fields after population (details view is read-only)
+            disable_all_fields();
 
             return false;
 
@@ -365,10 +303,6 @@ const itemsDetailsTimelineItemModule = (function () {
             exhibitsModule.set_exhibit_title(exhibit_id);
             navModule.set_timeline_item_nav_menu_links();
             await display_details_record();
-
-            if (window.location.pathname.indexOf('media') !== -1) {
-                helperMediaModule.media_edit_init();
-            }
 
         } catch (error) {
             document.querySelector('#message').innerHTML = `<div class="alert alert-danger" role="alert"><i class="fa fa-exclamation"></i> ${error.message}</div>`;

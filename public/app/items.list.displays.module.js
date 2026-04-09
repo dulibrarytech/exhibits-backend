@@ -123,26 +123,6 @@ const itemsListDisplayModule = (function() {
     };
 
     /**
-     * Create link element
-     */
-    const create_link = (href, title, aria_label, icon_class, additional_content = '') => {
-        const link = document.createElement('a');
-        link.href = href;
-        link.setAttribute('title', title);
-        link.setAttribute('aria-label', aria_label);
-
-        const icon = create_icon(icon_class);
-        link.appendChild(icon);
-
-        if (additional_content) {
-            const text = document.createTextNode(additional_content);
-            link.appendChild(text);
-        }
-
-        return link;
-    };
-
-    /**
      * Create publish/suppress status button
      */
     const create_status_button = (item_id, is_published) => {
@@ -162,7 +142,10 @@ const itemsListDisplayModule = (function() {
             const icon = create_icon('fa fa-cloud', '', '', 'green');
             span.appendChild(icon);
             span.appendChild(document.createElement('br'));
-            span.appendChild(document.createTextNode('Published'));
+
+            const text = document.createElement('small');
+            text.textContent = 'Published';
+            span.appendChild(text);
         } else {
             link.className = 'publish-item';
             span.id = `publish-${item_id}`;
@@ -171,7 +154,10 @@ const itemsListDisplayModule = (function() {
             const icon = create_icon('fa fa-cloud-upload', '', '', 'darkred');
             span.appendChild(icon);
             span.appendChild(document.createElement('br'));
-            span.appendChild(document.createTextNode('Unpublished'));
+
+            const text = document.createElement('small');
+            text.textContent = 'Unpublished';
+            span.appendChild(text);
         }
 
         link.appendChild(span);
@@ -193,153 +179,6 @@ const itemsListDisplayModule = (function() {
         span.setAttribute('aria-label', `Item order ${order_number}`);
         span.textContent = order_number.toString();
         td.appendChild(span);
-
-        return td;
-    };
-
-    /**
-     * Create edit link based on item type
-     */
-    const create_edit_link = (item, item_route, is_published) => {
-        const exhibit_id = encodeURIComponent(item.is_member_of_exhibit);
-        const item_id = encodeURIComponent(item.uuid);
-        let url = '';
-        let title = '';
-        let icon_class = '';
-
-        if (is_published === 1) {
-            // Published items - view details
-            if (item.item_type === 'text') {
-                url = `${APP_PATH}/items/${item_route}/text/details?exhibit_id=${exhibit_id}&item_id=${item_id}`;
-            } else if (item.type === 'heading' || item.type === 'grid' || item.type === 'vertical_timeline') {
-                // Heading, grid, and timeline items use /items/{route}/details
-                url = `${APP_PATH}/items/${item_route}/details?exhibit_id=${exhibit_id}&item_id=${item_id}`;
-            } else {
-                url = `${APP_PATH}/items/${item_route}/media/details?exhibit_id=${exhibit_id}&item_id=${item_id}`;
-            }
-            title = 'View details';
-            icon_class = 'fa fa-folder-open pr-1';
-        } else {
-            // Unpublished items - edit
-            if (item.item_type === 'text') {
-                url = `${APP_PATH}/items/${item_route}/text/edit?exhibit_id=${exhibit_id}&item_id=${item_id}`;
-            } else if (item.type === 'heading' || item.type === 'grid' || item.type === 'vertical_timeline') {
-                // Heading, grid, and timeline items use /items/{route}/edit
-                url = `${APP_PATH}/items/${item_route}/edit?exhibit_id=${exhibit_id}&item_id=${item_id}`;
-            } else {
-                url = `${APP_PATH}/items/${item_route}/media/edit?exhibit_id=${exhibit_id}&item_id=${item_id}`;
-            }
-            title = 'Edit item';
-            icon_class = 'fa fa-edit pr-1';
-        }
-
-        return create_link(url, title, `${title.toLowerCase().replace(' ', '-')}`, icon_class);
-    };
-
-    /**
-     * Create delete button
-     */
-    const create_delete_button = (item, is_published) => {
-        if (is_published === 1) {
-            // Published items cannot be deleted
-            const icon = create_icon('fa fa-trash pr-1', 'Can only delete if unpublished', 'delete-disabled', '#d3d3d3');
-            return icon;
-        } else {
-            // Unpublished items can be deleted
-            const exhibit_id = encodeURIComponent(item.is_member_of_exhibit);
-            const item_id = encodeURIComponent(item.uuid);
-            const type = encodeURIComponent(item.type);
-            const url = `${APP_PATH}/items/delete?exhibit_id=${exhibit_id}&item_id=${item_id}&type=${type}`;
-
-            return create_link(url, 'Delete item', 'delete-item', 'fa fa-trash pr-1');
-        }
-    };
-
-    /**
-     * Create table row for standard items
-     */
-    const create_standard_item_row = (item, item_route) => {
-        const tr = document.createElement('tr');
-        tr.id = `${item.uuid}_${item.item_type}_${item.type}`;
-
-        // Order cell
-        tr.appendChild(create_order_cell(item.order));
-
-        // Metadata cell
-        const metadata_td = create_item_metadata_cell(item);
-        tr.appendChild(metadata_td);
-
-        // Status cell
-        const status_td = create_table_cell('', '');
-        status_td.style.width = '5%';
-        status_td.style.textAlign = 'center';
-        const status_button = create_status_button(item.uuid, item.is_published);
-        status_td.appendChild(status_button);
-        tr.appendChild(status_td);
-
-        // Actions cell
-        const actions_td = document.createElement('td');
-        actions_td.id = `${item.uuid}-item-actions`;
-        actions_td.style.width = '10%';
-
-        const actions_div = document.createElement('div');
-        actions_div.className = 'card-text text-sm-center';
-
-        const edit_link = create_edit_link(item, item_route, item.is_published);
-        actions_div.appendChild(edit_link);
-        actions_div.appendChild(document.createTextNode('\u00A0'));
-
-        const delete_button = create_delete_button(item, item.is_published);
-        actions_div.appendChild(delete_button);
-
-        actions_td.appendChild(actions_div);
-        tr.appendChild(actions_td);
-
-        return tr;
-    };
-
-    /**
-     * Create metadata cell content
-     */
-    const create_item_metadata_cell = (item) => {
-        const td = document.createElement('td');
-        td.className = 'item-metadata';
-
-        // Type button
-        const type_para = document.createElement('p');
-        const type_button = document.createElement('button');
-        type_button.className = 'btn btn-default';
-        type_button.setAttribute('type', 'button');
-        type_button.setAttribute('aria-label', `${item.item_type || 'standard'} item`);
-
-        const type_icon = get_item_type_icon(item.item_type);
-        type_button.appendChild(type_icon);
-        type_button.appendChild(document.createTextNode(' '));
-
-        const type_small = document.createElement('small');
-        type_small.textContent = 'standard item';
-        type_button.appendChild(type_small);
-
-        type_para.appendChild(type_button);
-
-        // Lock icon if locked
-        if (item.is_locked === 1) {
-            type_para.appendChild(document.createTextNode('\u00A0\u00A0'));
-            const lock_icon = create_icon('fa fa-lock', 'Record is currently locked', 'exhibit-is-locked', '#BA8E23');
-            type_para.appendChild(lock_icon);
-        }
-
-        td.appendChild(type_para);
-
-        // Title
-        const title = helperModule.strip_html(helperModule.unescape(item.title || ''));
-        if (title) {
-            const title_para = document.createElement('p');
-            const title_strong = document.createElement('strong');
-            title_strong.textContent = title;
-            title_para.appendChild(title_strong);
-            td.appendChild(title_para);
-        }
 
         return td;
     };
@@ -372,6 +211,55 @@ const itemsListDisplayModule = (function() {
         };
 
         return thumbnail_map[media_type] || thumbnail_map['default'];
+    };
+
+    /**
+     * Decodes HTML entities in a string (XSS middleware encodes at input time)
+     */
+    const decode_html_entities = (str) => {
+        if (!str || typeof str !== 'string') return str;
+        const textarea = document.createElement('textarea');
+        textarea.innerHTML = str;
+        return textarea.value;
+    };
+
+    /**
+     * Build a thumbnail URL for a media library asset based on its ingest method.
+     * Mirrors the routing logic in build_thumbnail_url from the common module.
+     * @param {Object} opts
+     * @param {string} opts.uuid - Media library asset UUID
+     * @param {string} opts.ingest_method - 'upload' | 'repository' | 'kaltura'
+     * @param {string} opts.kaltura_thumbnail_url - Kaltura thumbnail URL (if any)
+     * @param {string} opts.repo_uuid - Repository UUID (if any)
+     * @param {string} opts.thumbnail_path - Physical thumbnail path (if any)
+     * @returns {string|null} Thumbnail URL or null
+     */
+    const build_media_library_thumbnail_url = (opts) => {
+        if (!opts || !opts.uuid) return null;
+
+        const token = authModule.get_user_token();
+        if (!token) return null;
+
+        // Kaltura assets use their own thumbnail URL
+        if (opts.ingest_method === 'kaltura' && opts.kaltura_thumbnail_url) {
+            let url = decode_html_entities(opts.kaltura_thumbnail_url);
+            if (url.startsWith('http://')) {
+                url = url.replace('http://', 'https://');
+            }
+            return url;
+        }
+
+        // Repository imports: repo thumbnail endpoint
+        if (opts.ingest_method === 'repository' && opts.repo_uuid) {
+            return `${APP_PATH}/api/v1/media/library/repo/thumbnail?uuid=${encodeURIComponent(opts.repo_uuid)}&token=${encodeURIComponent(token)}`;
+        }
+
+        // Uploaded files: media library thumbnail endpoint
+        if (opts.thumbnail_path) {
+            return `${APP_PATH}/api/v1/media/library/thumbnail/${encodeURIComponent(opts.uuid)}?token=${encodeURIComponent(token)}`;
+        }
+
+        return null;
     };
 
     /**
@@ -414,49 +302,52 @@ const itemsListDisplayModule = (function() {
             const tr = document.createElement('tr');
             tr.id = `${item.uuid}_${item.item_type}_${item.type}`;
 
-            // Order cell with drag handle (always show, even for published items)
+            // Order cell with drag handle
             tr.appendChild(create_order_cell(item.order));
 
-            // Metadata cell
-            const metadata_td = document.createElement('td');
-            metadata_td.className = 'item-metadata';
-
-            // Type button
-            const type_para = document.createElement('p');
-            const type_button = document.createElement('button');
-            type_button.className = 'btn btn-default';
-            type_button.setAttribute('type', 'button');
-            type_button.setAttribute('aria-label', `${item.item_type || 'standard'} item`);
-
-            const type_icon = get_item_type_icon(item.item_type);
-            type_button.appendChild(type_icon);
-            type_button.appendChild(document.createTextNode(' '));
-
-            const type_small = document.createElement('small');
-            type_small.textContent = 'item';
-            type_button.appendChild(type_small);
-
-            type_para.appendChild(type_button);
-
-            // Lock icon if locked
-            if (item.is_locked === 1) {
-                type_para.appendChild(document.createTextNode('\u00A0\u00A0'));
-                const lock_icon = create_icon('fa fa-lock', 'Record is currently locked', 'exhibit-is-locked', '#BA8E23');
-                type_para.appendChild(lock_icon);
-            }
-
-            metadata_td.appendChild(type_para);
-
-            // Title
-            let title = helperModule.strip_html(helperModule.unescape(item.title || ''));
-
-            // Handle thumbnails and media
+            // Resolve title and thumbnail
+            let title = helperModule.strip_html(helperModule.unescape(item.media_name || item.title || ''));
             let thumbnail_element = null;
-            let media_text = item.media || '';
 
             if (item.item_type !== 'text') {
-                // Handle repository items
-                if (item.is_repo_item === 1 && item.media) {
+
+                // ── Media library asset path (preferred) ──
+                if (item.thumbnail_media_uuid || item.media_uuid) {
+
+                    if (item.thumbnail_media_uuid) {
+                        const thumb_url = build_media_library_thumbnail_url({
+                            uuid: item.thumbnail_media_uuid,
+                            ingest_method: item.thumbnail_ingest_method,
+                            kaltura_thumbnail_url: item.thumbnail_media_kaltura_thumbnail_url,
+                            repo_uuid: item.thumbnail_media_repo_uuid,
+                            thumbnail_path: item.thumbnail_media_thumbnail_path
+                        });
+
+                        if (thumb_url) {
+                            thumbnail_element = create_thumbnail_image(thumb_url, title || 'Item thumbnail');
+                        } else {
+                            thumbnail_element = create_thumbnail_image(get_thumbnail_url(item.item_type), `${item.item_type} thumbnail`);
+                        }
+                    } else if (item.media_uuid) {
+                        const media_thumb_url = build_media_library_thumbnail_url({
+                            uuid: item.media_uuid,
+                            ingest_method: item.media_ingest_method,
+                            kaltura_thumbnail_url: item.media_kaltura_thumbnail_url,
+                            repo_uuid: item.media_repo_uuid,
+                            thumbnail_path: item.media_thumbnail_path
+                        });
+
+                        if (media_thumb_url) {
+                            thumbnail_element = create_thumbnail_image(media_thumb_url, title || `${item.item_type} thumbnail`);
+                        } else {
+                            thumbnail_element = create_thumbnail_image(get_thumbnail_url(item.item_type), `${item.item_type} thumbnail`);
+                        }
+                    } else {
+                        thumbnail_element = create_thumbnail_image(get_thumbnail_url(item.item_type), `${item.item_type} thumbnail`);
+                    }
+                }
+                // ── Legacy: repository items ──
+                else if (item.is_repo_item === 1 && item.media) {
                     const repo_record = await helperMediaModule.get_repo_item_data(item.media);
                     if (repo_record) {
                         if (!title || title.length === 0) {
@@ -465,50 +356,43 @@ const itemsListDisplayModule = (function() {
                         const thumbnail_url = helperMediaModule.render_repo_thumbnail(repo_record.thumbnail.data);
                         thumbnail_element = create_thumbnail_image(thumbnail_url, item.uuid);
                     }
-                } else if (item.is_kaltura_item === 1) {
-                    // Kaltura items
+                }
+                // ── Legacy: Kaltura items ──
+                else if (item.is_kaltura_item === 1) {
                     if (!title || title.length === 0) {
                         title = 'Kaltura Item';
                     }
                     const kaltura_thumbnail = get_thumbnail_url(item.item_type);
                     thumbnail_element = create_thumbnail_image(kaltura_thumbnail, item.item_type + ' thumbnail');
-                } else {
-                    // Regular uploaded media
+                }
+                // ── Legacy: uploaded media with file paths ──
+                else {
                     let thumbnail_url = null;
 
-                    // Determine thumbnail based on media type
                     if (item.item_type === 'video') {
                         thumbnail_url = `${APP_PATH}/static/images/video-tn.png`;
-                        thumbnail_element = create_thumbnail_image(thumbnail_url, 'video-thumbnail');
                     } else if (item.item_type === 'audio') {
                         thumbnail_url = `${APP_PATH}/static/images/audio-tn.png`;
-                        thumbnail_element = create_thumbnail_image(thumbnail_url, 'audio-thumbnail');
                     } else if (item.item_type === 'pdf') {
                         thumbnail_url = `${APP_PATH}/static/images/pdf-tn.png`;
-                        thumbnail_element = create_thumbnail_image(thumbnail_url, 'pdf-thumbnail');
                     } else if (item.item_type === 'image') {
-                        // Images - check for thumbnail or use media file
-                        if (!thumbnail_element) {
-                            if (item.thumbnail && item.thumbnail.length > 0) {
-                                thumbnail_url = EXHIBITS_ENDPOINTS.exhibits.exhibit_media.get.endpoint
-                                    .replace(':exhibit_id', encodeURIComponent(item.is_member_of_exhibit))
-                                    .replace(':media', encodeURIComponent(item.thumbnail));
-                                thumbnail_element = create_thumbnail_image(thumbnail_url, item.uuid + '-thumbnail');
-                            } else if (item.media && item.media.length > 0) {
-                                thumbnail_url = EXHIBITS_ENDPOINTS.exhibits.exhibit_media.get.endpoint
-                                    .replace(':exhibit_id', encodeURIComponent(item.is_member_of_exhibit))
-                                    .replace(':media', encodeURIComponent(item.media));
-                                thumbnail_element = create_thumbnail_image(thumbnail_url, item.uuid + '-media');
-                            } else {
-                                thumbnail_url = `${APP_PATH}/static/images/image-tn.png`;
-                                thumbnail_element = create_thumbnail_image(thumbnail_url, 'no-thumbnail');
-                            }
+                        if (item.thumbnail && item.thumbnail.length > 0) {
+                            thumbnail_url = EXHIBITS_ENDPOINTS.exhibits.exhibit_media.get.endpoint
+                                .replace(':exhibit_id', encodeURIComponent(item.is_member_of_exhibit))
+                                .replace(':media', encodeURIComponent(item.thumbnail));
+                        } else if (item.media && item.media.length > 0) {
+                            thumbnail_url = EXHIBITS_ENDPOINTS.exhibits.exhibit_media.get.endpoint
+                                .replace(':exhibit_id', encodeURIComponent(item.is_member_of_exhibit))
+                                .replace(':media', encodeURIComponent(item.media));
+                        } else {
+                            thumbnail_url = `${APP_PATH}/static/images/image-tn.png`;
                         }
                     }
+
+                    if (thumbnail_url) {
+                        thumbnail_element = create_thumbnail_image(thumbnail_url, `${item.item_type || 'item'} thumbnail`);
+                    }
                 }
-            } else {
-                // Text only items
-                media_text = 'Text only';
             }
 
             // Fallback title from text if needed
@@ -519,60 +403,78 @@ const itemsListDisplayModule = (function() {
                 }
             }
 
-            // Add title
-            if (title) {
-                const title_para = document.createElement('p');
-                const strong = document.createElement('strong');
-                strong.textContent = title;
-                title_para.appendChild(strong);
-                metadata_td.appendChild(title_para);
-            }
-
-            // Add thumbnail
+            // Extract the <img> from the <p> wrapper created by create_thumbnail_image
+            let thumbnail_img = null;
             if (thumbnail_element) {
-                metadata_td.appendChild(thumbnail_element);
+                const img = thumbnail_element.querySelector('img');
+                if (img) {
+                    thumbnail_img = img;
+                }
             }
 
-            // Add media filename
-            if (media_text) {
-                const media_small = document.createElement('small');
-                const media_em = document.createElement('em');
-                media_em.textContent = media_text;
-                media_small.appendChild(media_em);
-                metadata_td.appendChild(media_small);
-            }
+            // Determine item type icon
+            const icon_map = {
+                'text': 'fa fa-file-text-o',
+                'image': 'fa fa-image',
+                'video': 'fa fa-file-video-o',
+                'audio': 'fa fa-file-audio-o',
+                'pdf': 'fa fa-file-pdf-o'
+            };
+            const type_icon_class = icon_map[item.item_type] || 'fa fa-file-o';
 
-            tr.appendChild(metadata_td);
+            // Compute detail URL (always details page regardless of publish status)
+            const exhibit_id = encodeURIComponent(item.is_member_of_exhibit);
+            const item_id = encodeURIComponent(item.uuid);
+            const details_url = item.item_type === 'text'
+                ? `${APP_PATH}/items/standard/text/details?exhibit_id=${exhibit_id}&item_id=${item_id}`
+                : `${APP_PATH}/items/standard/media/details?exhibit_id=${exhibit_id}&item_id=${item_id}`;
+
+            // Compact item cell
+            tr.appendChild(build_compact_item_cell({
+                title: title,
+                type_label: 'item',
+                type_icon_class: type_icon_class,
+                thumbnail_img: thumbnail_img,
+                is_locked: item.is_locked,
+                details_url: details_url
+            }));
+
+            // Child items cell (empty for standard items)
+            tr.appendChild(build_child_items_cell());
 
             // Status cell
             const status_td = create_table_cell('item-status', '');
+            status_td.style.textAlign = 'center';
             const status_small = document.createElement('small');
-            const status_button = create_status_button(item.uuid, item.is_published);
-            status_small.appendChild(status_button);
+            status_small.appendChild(create_status_button(item.uuid, item.is_published));
             status_td.appendChild(status_small);
             tr.appendChild(status_td);
 
-            // Actions cell
-            const actions_td = document.createElement('td');
-            actions_td.id = `${item.uuid}-item-actions`;
-            actions_td.style.width = '10%';
+            // Actions dropdown
+            let edit_url;
+            if (item.is_published === 1) {
+                edit_url = item.item_type === 'text'
+                    ? `${APP_PATH}/items/standard/text/details?exhibit_id=${exhibit_id}&item_id=${item_id}`
+                    : `${APP_PATH}/items/standard/media/details?exhibit_id=${exhibit_id}&item_id=${item_id}`;
+            } else {
+                edit_url = item.item_type === 'text'
+                    ? `${APP_PATH}/items/standard/text/edit?exhibit_id=${exhibit_id}&item_id=${item_id}`
+                    : `${APP_PATH}/items/standard/media/edit?exhibit_id=${exhibit_id}&item_id=${item_id}`;
+            }
 
-            const actions_div = document.createElement('div');
-            actions_div.className = 'card-text text-sm-center';
+            const delete_url = `${APP_PATH}/items/delete?exhibit_id=${exhibit_id}&item_id=${item_id}&type=item`;
 
-            const edit_link = create_edit_link(item, 'standard', item.is_published);
-            actions_div.appendChild(edit_link);
-            actions_div.appendChild(document.createTextNode('\u00A0'));
-
-            const delete_button = create_delete_button(item, item.is_published);
-            actions_div.appendChild(delete_button);
-
-            actions_td.appendChild(actions_div);
-            tr.appendChild(actions_td);
+            tr.appendChild(build_actions_cell({
+                actions_id: `${item.uuid}-item-actions`,
+                edit_url: edit_url,
+                edit_label: item.is_published === 1 ? 'Details' : 'Edit',
+                edit_icon: item.is_published === 1 ? 'fa-folder-open' : 'fa-edit',
+                delete_url: delete_url,
+                is_published: item.is_published
+            }));
 
             const container = document.createElement('div');
             container.appendChild(tr);
-
             return container.innerHTML;
 
         } catch (error) {
@@ -594,78 +496,49 @@ const itemsListDisplayModule = (function() {
             // Order cell
             tr.appendChild(create_order_cell(item.order));
 
-            // Metadata cell
-            const metadata_td = document.createElement('td');
-            metadata_td.className = 'item-metadata';
+            // Compact item cell
+            const title = helperModule.strip_html(helperModule.unescape(item.text || ''));
+            const exhibit_id = encodeURIComponent(item.is_member_of_exhibit);
+            const item_id = encodeURIComponent(item.uuid);
+            const details_url = `${APP_PATH}/items/heading/details?exhibit_id=${exhibit_id}&item_id=${item_id}`;
 
-            const type_para = document.createElement('p');
-            const type_button = document.createElement('button');
-            type_button.className = 'btn btn-default';
-            type_button.setAttribute('type', 'button');
-            type_button.setAttribute('aria-label', 'heading item');
+            tr.appendChild(build_compact_item_cell({
+                title: title,
+                type_label: item.type,
+                type_icon_class: 'fa fa-header',
+                thumbnail_img: null,
+                is_locked: item.is_locked,
+                details_url: details_url
+            }));
 
-            const icon = create_icon('fa fa-header');
-            type_button.appendChild(icon);
-            type_button.appendChild(document.createTextNode(' '));
+            // Child items cell (empty for headings)
+            tr.appendChild(build_child_items_cell());
 
-            const small = document.createElement('small');
-            small.textContent = 'heading';
-            type_button.appendChild(small);
-
-            type_para.appendChild(type_button);
-
-            // Lock icon if locked
-            if (item.is_locked === 1) {
-                type_para.appendChild(document.createTextNode('\u00A0\u00A0'));
-                const lock_icon = create_icon('fa fa-lock', 'Record is currently locked', 'exhibit-is-locked', '#BA8E23');
-                type_para.appendChild(lock_icon);
-            }
-
-            metadata_td.appendChild(type_para);
-
-            // Title
-            const text = helperModule.strip_html(helperModule.unescape(item.text || ''));
-            if (text) {
-                const text_para = document.createElement('p');
-                const strong = document.createElement('strong');
-                strong.textContent = text;
-                text_para.appendChild(strong);
-                metadata_td.appendChild(text_para);
-            }
-
-            tr.appendChild(metadata_td);
-
-            // Status cell - FIXED: Added <small> wrapper for consistent font size
+            // Status cell
             const status_td = create_table_cell('', '');
-            status_td.style.width = '5%';
             status_td.style.textAlign = 'center';
             const status_small = document.createElement('small');
-            const status_button = create_status_button(item.uuid, item.is_published);
-            status_small.appendChild(status_button);
+            status_small.appendChild(create_status_button(item.uuid, item.is_published));
             status_td.appendChild(status_small);
             tr.appendChild(status_td);
 
-            // Actions cell
-            const actions_td = document.createElement('td');
-            actions_td.id = `${item.uuid}-item-actions`;
-            actions_td.style.width = '10%';
+            // Actions dropdown
+            const edit_url = item.is_published === 1
+                ? `${APP_PATH}/items/heading/details?exhibit_id=${exhibit_id}&item_id=${item_id}`
+                : `${APP_PATH}/items/heading/edit?exhibit_id=${exhibit_id}&item_id=${item_id}`;
+            const delete_url = `${APP_PATH}/items/delete?exhibit_id=${exhibit_id}&item_id=${item_id}&type=heading`;
 
-            const actions_div = document.createElement('div');
-            actions_div.className = 'card-text text-sm-center';
-
-            const edit_link = create_edit_link(item, 'heading', item.is_published);
-            actions_div.appendChild(edit_link);
-            actions_div.appendChild(document.createTextNode('\u00A0'));
-
-            const delete_button = create_delete_button(item, item.is_published);
-            actions_div.appendChild(delete_button);
-
-            actions_td.appendChild(actions_div);
-            tr.appendChild(actions_td);
+            tr.appendChild(build_actions_cell({
+                actions_id: `${item.uuid}-item-actions`,
+                edit_url: edit_url,
+                edit_label: item.is_published === 1 ? 'Details' : 'Edit',
+                edit_icon: item.is_published === 1 ? 'fa-folder-open' : 'fa-edit',
+                delete_url: delete_url,
+                is_published: item.is_published
+            }));
 
             const container = document.createElement('div');
             container.appendChild(tr);
-
             return container.innerHTML;
 
         } catch (error) {
@@ -686,86 +559,52 @@ const itemsListDisplayModule = (function() {
             // Order cell
             tr.appendChild(create_order_cell(item.order));
 
-            // Metadata cell
-            const metadata_td = document.createElement('td');
-            metadata_td.className = 'item-metadata';
-
-            const type_para = document.createElement('p');
-            const type_button = document.createElement('button');
-            type_button.className = 'btn btn-default';
-            type_button.setAttribute('type', 'button');
-            type_button.setAttribute('aria-label', 'grid item');
-
-            const icon = create_icon('fa fa-th');
-            type_button.appendChild(icon);
-            type_button.appendChild(document.createTextNode(' '));
-
-            const small = document.createElement('small');
-            small.textContent = 'grid';
-            type_button.appendChild(small);
-
-            type_para.appendChild(type_button);
-
-            // Lock icon if locked
-            if (item.is_locked === 1) {
-                type_para.appendChild(document.createTextNode('\u00A0\u00A0'));
-                const lock_icon = create_icon('fa fa-lock', 'Record is currently locked', 'exhibit-is-locked', '#BA8E23');
-                type_para.appendChild(lock_icon);
-            }
-
-            metadata_td.appendChild(type_para);
-
-            // Title
+            // Compact item cell
             const title = helperModule.strip_html(helperModule.unescape(item.title || ''));
-            if (title) {
-                const title_para = document.createElement('p');
-                const strong = document.createElement('strong');
-                strong.textContent = title;
-                title_para.appendChild(strong);
-                metadata_td.appendChild(title_para);
-            }
+            const exhibit_id = encodeURIComponent(item.is_member_of_exhibit);
+            const item_id = encodeURIComponent(item.uuid);
+            const details_url = `${APP_PATH}/items/grid/details?exhibit_id=${exhibit_id}&item_id=${item_id}`;
 
-            tr.appendChild(metadata_td);
+            tr.appendChild(build_compact_item_cell({
+                title: title,
+                type_label: 'grid',
+                type_icon_class: 'fa fa-th',
+                thumbnail_img: null,
+                is_locked: item.is_locked,
+                details_url: details_url
+            }));
 
-            // Status cell - FIXED: Added <small> wrapper for consistent font size
+            // Child items cell (link to grid items)
+            tr.appendChild(build_child_items_cell({
+                url: `${APP_PATH}/items/grid/items?exhibit_id=${exhibit_id}&grid_id=${item_id}`,
+                title: `View grid items for ${title}`
+            }));
+
+            // Status cell
             const status_td = create_table_cell('', '');
-            status_td.style.width = '5%';
             status_td.style.textAlign = 'center';
             const status_small = document.createElement('small');
-            const status_button = create_status_button(item.uuid, item.is_published);
-            status_small.appendChild(status_button);
+            status_small.appendChild(create_status_button(item.uuid, item.is_published));
             status_td.appendChild(status_small);
             tr.appendChild(status_td);
 
-            // Actions cell
-            const actions_td = document.createElement('td');
-            actions_td.id = `${item.uuid}-item-actions`;
-            actions_td.style.width = '10%';
+            // Actions dropdown
+            const edit_url = item.is_published === 1
+                ? `${APP_PATH}/items/grid/details?exhibit_id=${exhibit_id}&item_id=${item_id}`
+                : `${APP_PATH}/items/grid/edit?exhibit_id=${exhibit_id}&item_id=${item_id}`;
+            const delete_url = `${APP_PATH}/items/delete?exhibit_id=${exhibit_id}&item_id=${item_id}&type=grid`;
 
-            const actions_div = document.createElement('div');
-            actions_div.className = 'card-text text-sm-center';
-
-            // View grid items link
-            const exhibit_id = encodeURIComponent(item.is_member_of_exhibit);
-            const grid_id = encodeURIComponent(item.uuid);
-            const view_url = `${APP_PATH}/items/grid/items?exhibit_id=${exhibit_id}&grid_id=${grid_id}`;
-            const view_link = create_link(view_url, 'View grid items', 'view-grid-items', 'fa fa-list pr-1');
-            actions_div.appendChild(view_link);
-            actions_div.appendChild(document.createTextNode('\u00A0'));
-
-            const edit_link = create_edit_link(item, 'grid', item.is_published);
-            actions_div.appendChild(edit_link);
-            actions_div.appendChild(document.createTextNode('\u00A0'));
-
-            const delete_button = create_delete_button(item, item.is_published);
-            actions_div.appendChild(delete_button);
-
-            actions_td.appendChild(actions_div);
-            tr.appendChild(actions_td);
+            tr.appendChild(build_actions_cell({
+                actions_id: `${item.uuid}-item-actions`,
+                edit_url: edit_url,
+                edit_label: item.is_published === 1 ? 'Details' : 'Edit',
+                edit_icon: item.is_published === 1 ? 'fa-folder-open' : 'fa-edit',
+                delete_url: delete_url,
+                is_published: item.is_published
+            }));
 
             const container = document.createElement('div');
             container.appendChild(tr);
-
             return container.innerHTML;
 
         } catch (error) {
@@ -790,49 +629,52 @@ const itemsListDisplayModule = (function() {
             const tr = document.createElement('tr');
             tr.id = `${item.uuid}_${item.type}_${item.item_type}`;
 
-            // Order cell with drag handle (always show, even for published items)
+            // Order cell with drag handle
             tr.appendChild(create_order_cell(item.order));
 
-            // Metadata cell
-            const metadata_td = document.createElement('td');
-            metadata_td.className = 'item-metadata';
-
-            // Type button
-            const type_para = document.createElement('p');
-            const type_button = document.createElement('button');
-            type_button.className = 'btn btn-default';
-            type_button.setAttribute('type', 'button');
-            type_button.setAttribute('aria-label', `${item.item_type || 'grid'} item`);
-
-            const type_icon = get_item_type_icon(item.item_type);
-            type_button.appendChild(type_icon);
-            type_button.appendChild(document.createTextNode(' '));
-
-            const small = document.createElement('small');
-            small.textContent = 'grid item';
-            type_button.appendChild(small);
-
-            type_para.appendChild(type_button);
-
-            // Lock icon if locked
-            if (item.is_locked === 1) {
-                type_para.appendChild(document.createTextNode('\u00A0\u00A0'));
-                const lock_icon = create_icon('fa fa-lock', 'Record is currently locked', 'exhibit-is-locked', '#BA8E23');
-                type_para.appendChild(lock_icon);
-            }
-
-            metadata_td.appendChild(type_para);
-
-            // Title
-            let title = helperModule.unescape(item.title || '');
-
-            // Get thumbnail based on item type
+            // Resolve title and thumbnail
+            let title = helperModule.strip_html(helperModule.unescape(item.media_name || item.title || ''));
             let thumbnail_element = null;
-            let media_text = '';
 
             if (item.item_type !== 'text') {
-                // Handle repository items
-                if (item.is_repo_item === 1) {
+
+                // ── Media library asset path (preferred) ──
+                if (item.thumbnail_media_uuid || item.media_uuid) {
+
+                    if (item.thumbnail_media_uuid) {
+                        const thumb_url = build_media_library_thumbnail_url({
+                            uuid: item.thumbnail_media_uuid,
+                            ingest_method: item.thumbnail_ingest_method,
+                            kaltura_thumbnail_url: item.thumbnail_media_kaltura_thumbnail_url,
+                            repo_uuid: item.thumbnail_media_repo_uuid,
+                            thumbnail_path: item.thumbnail_media_thumbnail_path
+                        });
+
+                        if (thumb_url) {
+                            thumbnail_element = create_thumbnail_image(thumb_url, title || 'Grid item thumbnail');
+                        } else {
+                            thumbnail_element = create_thumbnail_image(get_thumbnail_url(item.item_type), `${item.item_type} thumbnail`);
+                        }
+                    } else if (item.media_uuid) {
+                        const media_thumb_url = build_media_library_thumbnail_url({
+                            uuid: item.media_uuid,
+                            ingest_method: item.media_ingest_method,
+                            kaltura_thumbnail_url: item.media_kaltura_thumbnail_url,
+                            repo_uuid: item.media_repo_uuid,
+                            thumbnail_path: item.media_thumbnail_path
+                        });
+
+                        if (media_thumb_url) {
+                            thumbnail_element = create_thumbnail_image(media_thumb_url, title || `${item.item_type} thumbnail`);
+                        } else {
+                            thumbnail_element = create_thumbnail_image(get_thumbnail_url(item.item_type), `${item.item_type} thumbnail`);
+                        }
+                    } else {
+                        thumbnail_element = create_thumbnail_image(get_thumbnail_url(item.item_type), `${item.item_type} thumbnail`);
+                    }
+                }
+                // ── Legacy: repository items ──
+                else if (item.is_repo_item === 1 && item.media) {
                     const repo_record = await helperMediaModule.get_repo_item_data(item.media);
                     if (repo_record) {
                         if (!title) {
@@ -841,14 +683,16 @@ const itemsListDisplayModule = (function() {
                         const thumbnail_url = helperMediaModule.render_repo_thumbnail(repo_record.thumbnail.data);
                         thumbnail_element = create_thumbnail_image(thumbnail_url, 'Repository item thumbnail');
                     }
-                } else if (item.is_kaltura_item === 1) {
+                }
+                // ── Legacy: Kaltura items ──
+                else if (item.is_kaltura_item === 1) {
                     if (!title) {
                         title = 'Kaltura Item';
                     }
-                    const kaltura_thumbnail = get_thumbnail_url(item.item_type);
-                    thumbnail_element = create_thumbnail_image(kaltura_thumbnail, 'Kaltura item thumbnail');
-                } else if (item.item_type === 'image') {
-                    // Image items
+                    thumbnail_element = create_thumbnail_image(get_thumbnail_url(item.item_type), 'Kaltura item thumbnail');
+                }
+                // ── Legacy: uploaded media with file paths ──
+                else if (item.item_type === 'image') {
                     let image_src = '';
                     if (item.thumbnail && item.thumbnail.length > 0) {
                         image_src = EXHIBITS_ENDPOINTS.exhibits.exhibit_media.get.endpoint
@@ -862,120 +706,91 @@ const itemsListDisplayModule = (function() {
                         image_src = get_thumbnail_url('default');
                     }
                     thumbnail_element = create_thumbnail_image(image_src, title || 'Item image');
-                } else {
-                    // Other media types (video, audio, pdf)
-                    const thumbnail_url = get_thumbnail_url(item.item_type);
-                    thumbnail_element = create_thumbnail_image(thumbnail_url, `${item.item_type} thumbnail`);
                 }
-
-                if (item.media && item.media.length > 0) {
-                    media_text = item.media;
+                // ── Legacy: non-image media types ──
+                else {
+                    thumbnail_element = create_thumbnail_image(get_thumbnail_url(item.item_type), `${item.item_type} thumbnail`);
                 }
-            } else {
-                // Text only items
-                media_text = 'Text only';
             }
 
             // Fallback title from text if needed
             if (!title && item.text && item.text.length > 0) {
-                title = helperModule.unescape(item.text);
+                title = helperModule.strip_html(helperModule.unescape(item.text));
                 if (title.length > 200) {
                     title = title.substring(0, 200) + '...';
                 }
             }
 
-            // Add title
-            if (title) {
-                const title_para = document.createElement('p');
-                const strong = document.createElement('strong');
-                strong.textContent = title;
-                title_para.appendChild(strong);
-                metadata_td.appendChild(title_para);
-            }
-
-            // Add thumbnail
+            // Extract the <img> from the <p> wrapper
+            let thumbnail_img = null;
             if (thumbnail_element) {
-                metadata_td.appendChild(thumbnail_element);
+                const img = thumbnail_element.querySelector('img');
+                if (img) {
+                    thumbnail_img = img;
+                }
             }
 
-            // Add media filename
-            if (media_text) {
-                const media_small = document.createElement('small');
-                const media_em = document.createElement('em');
-                media_em.textContent = media_text;
-                media_small.appendChild(media_em);
-                metadata_td.appendChild(media_small);
-            }
+            // Determine item type icon
+            const icon_map = {
+                'text': 'fa fa-file-text-o',
+                'image': 'fa fa-image',
+                'video': 'fa fa-file-video-o',
+                'audio': 'fa fa-file-audio-o',
+                'pdf': 'fa fa-file-pdf-o'
+            };
+            const type_icon_class = icon_map[item.item_type] || 'fa fa-file-o';
 
-            tr.appendChild(metadata_td);
-
-            // Status cell
-            const status_td = create_table_cell('', '');
-            status_td.style.width = '5%';
-            status_td.style.textAlign = 'center';
-            const status_small = document.createElement('small');
-            const status_button = create_status_button(item.uuid, item.is_published);
-            status_small.appendChild(status_button);
-            status_td.appendChild(status_small);
-            tr.appendChild(status_td);
-
-            // Actions cell
-            const actions_td = document.createElement('td');
-            actions_td.id = `${item.uuid}-item-actions`;
-            actions_td.style.width = '10%';
-
-            const actions_div = document.createElement('div');
-            actions_div.className = 'card-text text-sm-center';
-
-            // Edit/view link for grid items
+            // Compute detail URL (always details page regardless of publish status)
             const exhibit_id = encodeURIComponent(item.is_member_of_exhibit);
             const grid_id = encodeURIComponent(item.is_member_of_grid);
             const item_id = encodeURIComponent(item.uuid);
+            const details_url = item.item_type === 'text'
+                ? `${APP_PATH}/items/grid/item/text/details?exhibit_id=${exhibit_id}&grid_id=${grid_id}&item_id=${item_id}`
+                : `${APP_PATH}/items/grid/item/media/details?exhibit_id=${exhibit_id}&grid_id=${grid_id}&item_id=${item_id}`;
 
-            let edit_url = '';
-            let edit_title = '';
-            let edit_icon = '';
+            // Compact item cell
+            tr.appendChild(build_compact_item_cell({
+                title: title,
+                type_label: 'grid item',
+                type_icon_class: type_icon_class,
+                thumbnail_img: thumbnail_img,
+                is_locked: item.is_locked,
+                details_url: details_url
+            }));
 
+            // Status cell
+            const status_td = create_table_cell('', '');
+            status_td.style.textAlign = 'center';
+            const status_small = document.createElement('small');
+            status_small.appendChild(create_status_button(item.uuid, item.is_published));
+            status_td.appendChild(status_small);
+            tr.appendChild(status_td);
+
+            // Actions dropdown
+            let edit_url;
             if (item.is_published === 1) {
-                // Published - view details
-                if (item.item_type === 'text') {
-                    edit_url = `${APP_PATH}/items/grid/item/text/details?exhibit_id=${exhibit_id}&grid_id=${grid_id}&item_id=${item_id}`;
-                } else {
-                    edit_url = `${APP_PATH}/items/grid/item/media/details?exhibit_id=${exhibit_id}&grid_id=${grid_id}&item_id=${item_id}`;
-                }
-                edit_title = 'View details';
-                edit_icon = 'fa fa-folder-open pr-1';
+                edit_url = item.item_type === 'text'
+                    ? `${APP_PATH}/items/grid/item/text/details?exhibit_id=${exhibit_id}&grid_id=${grid_id}&item_id=${item_id}`
+                    : `${APP_PATH}/items/grid/item/media/details?exhibit_id=${exhibit_id}&grid_id=${grid_id}&item_id=${item_id}`;
             } else {
-                // Unpublished - edit
-                if (item.item_type === 'text') {
-                    edit_url = `${APP_PATH}/items/grid/item/text/edit?exhibit_id=${exhibit_id}&grid_id=${grid_id}&item_id=${item_id}`;
-                } else {
-                    edit_url = `${APP_PATH}/items/grid/item/media/edit?exhibit_id=${exhibit_id}&grid_id=${grid_id}&item_id=${item_id}`;
-                }
-                edit_title = 'Edit grid item';
-                edit_icon = 'fa fa-edit pr-1';
+                edit_url = item.item_type === 'text'
+                    ? `${APP_PATH}/items/grid/item/text/edit?exhibit_id=${exhibit_id}&grid_id=${grid_id}&item_id=${item_id}`
+                    : `${APP_PATH}/items/grid/item/media/edit?exhibit_id=${exhibit_id}&grid_id=${grid_id}&item_id=${item_id}`;
             }
 
-            const edit_link = create_link(edit_url, edit_title, edit_title.toLowerCase().replace(' ', '-'), edit_icon);
-            actions_div.appendChild(edit_link);
-            actions_div.appendChild(document.createTextNode('\u00A0'));
+            const delete_url = `${APP_PATH}/items/grid/item/delete?exhibit_id=${exhibit_id}&grid_id=${grid_id}&item_id=${item_id}`;
 
-            // Delete button
-            if (item.is_published === 1) {
-                const delete_icon = create_icon('fa fa-trash pr-1', 'Can only delete if unpublished', 'delete-disabled', '#d3d3d3');
-                actions_div.appendChild(delete_icon);
-            } else {
-                const delete_url = `${APP_PATH}/items/grid/item/delete?exhibit_id=${exhibit_id}&grid_id=${grid_id}&item_id=${item_id}`;
-                const delete_link = create_link(delete_url, 'Delete grid item', 'delete-grid-item', 'fa fa-trash pr-1');
-                actions_div.appendChild(delete_link);
-            }
-
-            actions_td.appendChild(actions_div);
-            tr.appendChild(actions_td);
+            tr.appendChild(build_actions_cell({
+                actions_id: `${item.uuid}-item-actions`,
+                edit_url: edit_url,
+                edit_label: item.is_published === 1 ? 'Details' : 'Edit',
+                edit_icon: item.is_published === 1 ? 'fa-folder-open' : 'fa-edit',
+                delete_url: delete_url,
+                is_published: item.is_published
+            }));
 
             const container = document.createElement('div');
             container.appendChild(tr);
-
             return container.innerHTML;
 
         } catch (error) {
@@ -991,93 +806,58 @@ const itemsListDisplayModule = (function() {
     obj.display_timelines = async function(item) {
 
         try {
-
             const tr = document.createElement('tr');
             tr.id = `${item.uuid}_${item.type}`;
 
             // Order cell
             tr.appendChild(create_order_cell(item.order));
 
-            // Metadata cell
-            const metadata_td = document.createElement('td');
-            metadata_td.className = 'item-metadata';
-
-            const type_para = document.createElement('p');
-            const type_button = document.createElement('button');
-            type_button.className = 'btn btn-default';
-            type_button.setAttribute('type', 'button');
-            type_button.setAttribute('aria-label', 'timeline item');
-
-            const icon = create_icon('fa fa-clock-o');
-            type_button.appendChild(icon);
-            type_button.appendChild(document.createTextNode(' '));
-
-            const small = document.createElement('small');
-            small.textContent = 'timeline';
-            type_button.appendChild(small);
-
-            type_para.appendChild(type_button);
-
-            // Lock icon if locked
-            if (item.is_locked === 1) {
-                type_para.appendChild(document.createTextNode('\u00A0\u00A0'));
-                const lock_icon = create_icon('fa fa-lock', 'Record is currently locked', 'exhibit-is-locked', '#BA8E23');
-                type_para.appendChild(lock_icon);
-            }
-
-            metadata_td.appendChild(type_para);
-
-            // Title
+            // Compact item cell
             const title = helperModule.strip_html(helperModule.unescape(item.title || ''));
-            if (title) {
-                const title_para = document.createElement('p');
-                const strong = document.createElement('strong');
-                strong.textContent = title;
-                title_para.appendChild(strong);
-                metadata_td.appendChild(title_para);
-            }
+            const exhibit_id = encodeURIComponent(item.is_member_of_exhibit);
+            const item_id = encodeURIComponent(item.uuid);
+            const details_url = `${APP_PATH}/items/vertical-timeline/details?exhibit_id=${exhibit_id}&item_id=${item_id}`;
 
-            tr.appendChild(metadata_td);
+            tr.appendChild(build_compact_item_cell({
+                title: title,
+                type_label: 'timeline',
+                type_icon_class: 'fa fa-clock-o',
+                thumbnail_img: null,
+                is_locked: item.is_locked,
+                details_url: details_url
+            }));
 
-            // Status cell - FIXED: Added <small> wrapper for consistent font size
+            // Child items cell (link to timeline items)
+            tr.appendChild(build_child_items_cell({
+                url: `${APP_PATH}/items/timeline/items?exhibit_id=${exhibit_id}&timeline_id=${item_id}`,
+                title: `View timeline items for ${title}`
+            }));
+
+            // Status cell
             const status_td = create_table_cell('', '');
-            status_td.style.width = '5%';
             status_td.style.textAlign = 'center';
             const status_small = document.createElement('small');
-            const status_button = create_status_button(item.uuid, item.is_published);
-            status_small.appendChild(status_button);
+            status_small.appendChild(create_status_button(item.uuid, item.is_published));
             status_td.appendChild(status_small);
             tr.appendChild(status_td);
 
-            // Actions cell
-            const actions_td = document.createElement('td');
-            actions_td.id = `${item.uuid}-item-actions`;
-            actions_td.style.width = '10%';
+            // Actions dropdown
+            const edit_url = item.is_published === 1
+                ? `${APP_PATH}/items/vertical-timeline/details?exhibit_id=${exhibit_id}&item_id=${item_id}`
+                : `${APP_PATH}/items/vertical-timeline/edit?exhibit_id=${exhibit_id}&item_id=${item_id}`;
+            const delete_url = `${APP_PATH}/items/delete?exhibit_id=${exhibit_id}&item_id=${item_id}&type=vertical_timeline`;
 
-            const actions_div = document.createElement('div');
-            actions_div.className = 'card-text text-sm-center';
-
-            // View timeline items link
-            const exhibit_id = encodeURIComponent(item.is_member_of_exhibit);
-            const timeline_id = encodeURIComponent(item.uuid);
-            const view_url = `${APP_PATH}/items/timeline/items?exhibit_id=${exhibit_id}&timeline_id=${timeline_id}`;
-            const view_link = create_link(view_url, 'View timeline items', 'view-timeline-items', 'fa fa-list pr-1');
-            actions_div.appendChild(view_link);
-            actions_div.appendChild(document.createTextNode('\u00A0'));
-
-            const edit_link = create_edit_link(item, 'vertical-timeline', item.is_published);
-            actions_div.appendChild(edit_link);
-            actions_div.appendChild(document.createTextNode('\u00A0'));
-
-            const delete_button = create_delete_button(item, item.is_published);
-            actions_div.appendChild(delete_button);
-
-            actions_td.appendChild(actions_div);
-            tr.appendChild(actions_td);
+            tr.appendChild(build_actions_cell({
+                actions_id: `${item.uuid}-item-actions`,
+                edit_url: edit_url,
+                edit_label: item.is_published === 1 ? 'Details' : 'Edit',
+                edit_icon: item.is_published === 1 ? 'fa-folder-open' : 'fa-edit',
+                delete_url: delete_url,
+                is_published: item.is_published
+            }));
 
             const container = document.createElement('div');
             container.appendChild(tr);
-
             return container.innerHTML;
 
         } catch (error) {
@@ -1103,45 +883,49 @@ const itemsListDisplayModule = (function() {
             const tr = document.createElement('tr');
             tr.id = `${item.uuid}_${item.type}_${item.item_type}`;
 
-            // Metadata cell
-            const metadata_td = document.createElement('td');
-            metadata_td.className = 'item-metadata';
-
-            // Type button
-            const type_para = document.createElement('p');
-            const type_button = document.createElement('button');
-            type_button.className = 'btn btn-default';
-            type_button.setAttribute('type', 'button');
-
-            const type_icon = get_item_type_icon(item.item_type);
-            type_button.appendChild(type_icon);
-            type_button.appendChild(document.createTextNode(' '));
-
-            const small = document.createElement('small');
-            small.textContent = 'timeline item';
-            type_button.appendChild(small);
-
-            type_para.appendChild(type_button);
-
-            // Lock icon if locked
-            if (item.is_locked === 1) {
-                type_para.appendChild(document.createTextNode('\u00A0\u00A0'));
-                const lock_icon = create_icon('fa fa-lock', 'Record is currently locked', 'exhibit-is-locked', '#BA8E23');
-                type_para.appendChild(lock_icon);
-            }
-
-            metadata_td.appendChild(type_para);
-
-            // Title
-            let title = helperModule.strip_html(helperModule.unescape(item.title || ''));
-
-            // Get thumbnail based on item type
+            // Resolve title and thumbnail
+            let title = helperModule.strip_html(helperModule.unescape(item.media_name || item.title || ''));
             let thumbnail_element = null;
-            let media_text = '';
 
             if (item.item_type !== 'text') {
-                // Handle repository items
-                if (item.is_repo_item === 1) {
+
+                // ── Media library asset path (preferred) ──
+                if (item.thumbnail_media_uuid || item.media_uuid) {
+
+                    if (item.thumbnail_media_uuid) {
+                        const thumb_url = build_media_library_thumbnail_url({
+                            uuid: item.thumbnail_media_uuid,
+                            ingest_method: item.thumbnail_ingest_method,
+                            kaltura_thumbnail_url: item.thumbnail_media_kaltura_thumbnail_url,
+                            repo_uuid: item.thumbnail_media_repo_uuid,
+                            thumbnail_path: item.thumbnail_media_thumbnail_path
+                        });
+
+                        if (thumb_url) {
+                            thumbnail_element = create_thumbnail_image(thumb_url, title || 'Timeline item thumbnail');
+                        } else {
+                            thumbnail_element = create_thumbnail_image(get_thumbnail_url(item.item_type), `${item.item_type} thumbnail`);
+                        }
+                    } else if (item.media_uuid) {
+                        const media_thumb_url = build_media_library_thumbnail_url({
+                            uuid: item.media_uuid,
+                            ingest_method: item.media_ingest_method,
+                            kaltura_thumbnail_url: item.media_kaltura_thumbnail_url,
+                            repo_uuid: item.media_repo_uuid,
+                            thumbnail_path: item.media_thumbnail_path
+                        });
+
+                        if (media_thumb_url) {
+                            thumbnail_element = create_thumbnail_image(media_thumb_url, title || `${item.item_type} thumbnail`);
+                        } else {
+                            thumbnail_element = create_thumbnail_image(get_thumbnail_url(item.item_type), `${item.item_type} thumbnail`);
+                        }
+                    } else {
+                        thumbnail_element = create_thumbnail_image(get_thumbnail_url(item.item_type), `${item.item_type} thumbnail`);
+                    }
+                }
+                // ── Legacy: repository items ──
+                else if (item.is_repo_item === 1 && item.media) {
                     const repo_record = await helperMediaModule.get_repo_item_data(item.media);
                     if (repo_record) {
                         if (!title) {
@@ -1150,14 +934,16 @@ const itemsListDisplayModule = (function() {
                         const thumbnail_url = helperMediaModule.render_repo_thumbnail(repo_record.thumbnail.data);
                         thumbnail_element = create_thumbnail_image(thumbnail_url, 'Repository item thumbnail');
                     }
-                } else if (item.is_kaltura_item === 1) {
+                }
+                // ── Legacy: Kaltura items ──
+                else if (item.is_kaltura_item === 1) {
                     if (!title) {
                         title = 'Kaltura Item';
                     }
-                    const kaltura_thumbnail = get_thumbnail_url(item.item_type);
-                    thumbnail_element = create_thumbnail_image(kaltura_thumbnail, 'Kaltura item thumbnail');
-                } else if (item.item_type === 'image') {
-                    // Image items
+                    thumbnail_element = create_thumbnail_image(get_thumbnail_url(item.item_type), 'Kaltura item thumbnail');
+                }
+                // ── Legacy: uploaded media with file paths ──
+                else if (item.item_type === 'image') {
                     let image_src = '';
                     if (item.thumbnail && item.thumbnail.length > 0) {
                         image_src = EXHIBITS_ENDPOINTS.exhibits.exhibit_media.get.endpoint
@@ -1171,18 +957,11 @@ const itemsListDisplayModule = (function() {
                         image_src = get_thumbnail_url('default');
                     }
                     thumbnail_element = create_thumbnail_image(image_src, title || 'Item image');
-                } else {
-                    // Other media types
-                    const thumbnail_url = get_thumbnail_url(item.item_type);
-                    thumbnail_element = create_thumbnail_image(thumbnail_url, `${item.item_type} thumbnail`);
                 }
-
-                if (item.media && item.media.length > 0) {
-                    media_text = item.media;
+                // ── Legacy: non-image media types ──
+                else {
+                    thumbnail_element = create_thumbnail_image(get_thumbnail_url(item.item_type), `${item.item_type} thumbnail`);
                 }
-            } else {
-                // Text only items
-                media_text = 'Text only';
             }
 
             // Fallback title from text if needed
@@ -1193,34 +972,45 @@ const itemsListDisplayModule = (function() {
                 }
             }
 
-            // Add title
-            if (title) {
-                const title_para = document.createElement('p');
-                const strong = document.createElement('strong');
-                strong.textContent = title;
-                title_para.appendChild(strong);
-                metadata_td.appendChild(title_para);
-            }
-
-            // Add thumbnail
+            // Extract the <img> from the <p> wrapper
+            let thumbnail_img = null;
             if (thumbnail_element) {
-                metadata_td.appendChild(thumbnail_element);
+                const img = thumbnail_element.querySelector('img');
+                if (img) {
+                    thumbnail_img = img;
+                }
             }
 
-            // Add media filename
-            if (media_text) {
-                const media_small = document.createElement('small');
-                const media_em = document.createElement('em');
-                media_em.textContent = media_text;
-                media_small.appendChild(media_em);
-                metadata_td.appendChild(media_small);
-            }
+            // Determine item type icon
+            const icon_map = {
+                'text': 'fa fa-file-text-o',
+                'image': 'fa fa-image',
+                'video': 'fa fa-file-video-o',
+                'audio': 'fa fa-file-audio-o',
+                'pdf': 'fa fa-file-pdf-o'
+            };
+            const type_icon_class = icon_map[item.item_type] || 'fa fa-file-o';
 
-            tr.appendChild(metadata_td);
+            // Compute detail URL (always details page regardless of publish status)
+            const exhibit_id = encodeURIComponent(item.is_member_of_exhibit);
+            const timeline_id = encodeURIComponent(item.is_member_of_timeline);
+            const item_id = encodeURIComponent(item.uuid);
+            const details_url = item.item_type === 'text'
+                ? `${APP_PATH}/items/vertical-timeline/item/text/details?exhibit_id=${exhibit_id}&timeline_id=${timeline_id}&item_id=${item_id}`
+                : `${APP_PATH}/items/vertical-timeline/item/media/details?exhibit_id=${exhibit_id}&timeline_id=${timeline_id}&item_id=${item_id}`;
 
-            // Date cell
+            // Compact item cell
+            tr.appendChild(build_compact_item_cell({
+                title: title,
+                type_label: 'timeline item',
+                type_icon_class: type_icon_class,
+                thumbnail_img: thumbnail_img,
+                is_locked: item.is_locked,
+                details_url: details_url
+            }));
+
+            // Date cell (hidden column used for sorting)
             const date_td = create_table_cell('', '');
-            date_td.style.width = '5%';
             date_td.style.textAlign = 'center';
 
             if (item.date) {
@@ -1239,71 +1029,37 @@ const itemsListDisplayModule = (function() {
 
             // Status cell
             const status_td = create_table_cell('', '');
-            status_td.style.width = '5%';
             status_td.style.textAlign = 'center';
             const status_small = document.createElement('small');
-            const status_button = create_status_button(item.uuid, item.is_published);
-            status_small.appendChild(status_button);
+            status_small.appendChild(create_status_button(item.uuid, item.is_published));
             status_td.appendChild(status_small);
             tr.appendChild(status_td);
 
-            // Actions cell
-            const actions_td = document.createElement('td');
-            actions_td.id = `${item.uuid}-item-actions`;
-            actions_td.style.width = '10%';
-
-            const actions_div = document.createElement('div');
-            actions_div.className = 'card-text text-sm-center';
-
-            // Edit/view link for timeline items
-            const exhibit_id = encodeURIComponent(item.is_member_of_exhibit);
-            const timeline_id = encodeURIComponent(item.is_member_of_timeline);
-            const item_id = encodeURIComponent(item.uuid);
-
-            let edit_url = '';
-            let edit_title = '';
-            let edit_icon = '';
-
+            // Actions dropdown
+            let edit_url;
             if (item.is_published === 1) {
-                // Published - view details
-                if (item.item_type === 'text') {
-                    edit_url = `${APP_PATH}/items/vertical-timeline/item/text/details?exhibit_id=${exhibit_id}&timeline_id=${timeline_id}&item_id=${item_id}`;
-                } else {
-                    edit_url = `${APP_PATH}/items/vertical-timeline/item/media/details?exhibit_id=${exhibit_id}&timeline_id=${timeline_id}&item_id=${item_id}`;
-                }
-                edit_title = 'View details';
-                edit_icon = 'fa fa-folder-open pr-1';
+                edit_url = item.item_type === 'text'
+                    ? `${APP_PATH}/items/vertical-timeline/item/text/details?exhibit_id=${exhibit_id}&timeline_id=${timeline_id}&item_id=${item_id}`
+                    : `${APP_PATH}/items/vertical-timeline/item/media/details?exhibit_id=${exhibit_id}&timeline_id=${timeline_id}&item_id=${item_id}`;
             } else {
-                // Unpublished - edit
-                if (item.item_type === 'text') {
-                    edit_url = `${APP_PATH}/items/vertical-timeline/item/text/edit?exhibit_id=${exhibit_id}&timeline_id=${timeline_id}&item_id=${item_id}`;
-                } else {
-                    edit_url = `${APP_PATH}/items/vertical-timeline/item/media/edit?exhibit_id=${exhibit_id}&timeline_id=${timeline_id}&item_id=${item_id}`;
-                }
-                edit_title = 'Edit timeline item';
-                edit_icon = 'fa fa-edit pr-1';
+                edit_url = item.item_type === 'text'
+                    ? `${APP_PATH}/items/vertical-timeline/item/text/edit?exhibit_id=${exhibit_id}&timeline_id=${timeline_id}&item_id=${item_id}`
+                    : `${APP_PATH}/items/vertical-timeline/item/media/edit?exhibit_id=${exhibit_id}&timeline_id=${timeline_id}&item_id=${item_id}`;
             }
 
-            const edit_link = create_link(edit_url, edit_title, edit_title.toLowerCase().replace(' ', '-'), edit_icon);
-            actions_div.appendChild(edit_link);
-            actions_div.appendChild(document.createTextNode('\u00A0'));
+            const delete_url = `${APP_PATH}/items/timeline/item/delete?exhibit_id=${exhibit_id}&timeline_id=${timeline_id}&item_id=${item_id}`;
 
-            // Delete button
-            if (item.is_published === 1) {
-                const delete_icon = create_icon('fa fa-trash pr-1', 'Can only delete if unpublished', 'delete-disabled', '#d3d3d3');
-                actions_div.appendChild(delete_icon);
-            } else {
-                const delete_url = `${APP_PATH}/items/timeline/item/delete?exhibit_id=${exhibit_id}&timeline_id=${timeline_id}&item_id=${item_id}`;
-                const delete_link = create_link(delete_url, 'Delete timeline item', 'delete-timeline-item', 'fa fa-trash pr-1');
-                actions_div.appendChild(delete_link);
-            }
-
-            actions_td.appendChild(actions_div);
-            tr.appendChild(actions_td);
+            tr.appendChild(build_actions_cell({
+                actions_id: `${item.uuid}-item-actions`,
+                edit_url: edit_url,
+                edit_label: item.is_published === 1 ? 'Details' : 'Edit',
+                edit_icon: item.is_published === 1 ? 'fa-folder-open' : 'fa-edit',
+                delete_url: delete_url,
+                is_published: item.is_published
+            }));
 
             const container = document.createElement('div');
             container.appendChild(tr);
-
             return container.innerHTML;
 
         } catch (error) {
@@ -1311,6 +1067,252 @@ const itemsListDisplayModule = (function() {
             display_error_message(error.message || 'Unable to display timeline item');
             return '';
         }
+    };
+
+    /**
+     * Build dropdown HTML for item actions
+     * @param {Object} opts - Options
+     * @param {string} opts.edit_url - Edit/details URL
+     * @param {string} opts.edit_label - 'Edit' or 'Details'
+     * @param {string} opts.edit_icon - Icon class (e.g. 'fa-edit')
+     * @param {string} opts.delete_url - Delete URL
+     * @param {number} opts.is_published - 1 or 0
+     * @returns {string} Dropdown HTML
+     */
+    const build_item_actions_dropdown_html = (opts) => {
+
+        let delete_html;
+        if (opts.is_published === 1) {
+            delete_html = `
+                    <a class="dropdown-item text-muted disabled"
+                       href="#"
+                       style="font-size: 0.875rem; pointer-events: none; opacity: 0.5;"
+                       title="Can only delete if unpublished">
+                        <i class="fa fa-trash mr-2" aria-hidden="true" style="width: 16px;"></i>
+                        Delete
+                    </a>`;
+        } else {
+            delete_html = `
+                    <a class="dropdown-item text-danger"
+                       href="${opts.delete_url}"
+                       style="font-size: 0.875rem;">
+                        <i class="fa fa-trash mr-2" aria-hidden="true" style="width: 16px;"></i>
+                        Delete
+                    </a>`;
+        }
+
+        return `
+            <div class="dropdown" style="display: inline-block; position: relative;">
+                <button type="button"
+                        class="btn btn-link p-0 border-0 item-actions-toggle"
+                        style="color: #6c757d; font-size: 1.25rem; line-height: 1; background: none;"
+                        data-toggle="dropdown"
+                        data-bs-toggle="dropdown"
+                        aria-haspopup="true"
+                        aria-expanded="false"
+                        title="Actions">
+                    <i class="fa fa-ellipsis-v" aria-hidden="true"></i>
+                </button>
+                <div class="dropdown-menu item-actions-menu">
+                    <a class="dropdown-item"
+                       href="${opts.edit_url}"
+                       style="font-size: 0.875rem;">
+                        <i class="fa ${opts.edit_icon} mr-2" aria-hidden="true" style="width: 16px;"></i>
+                        ${opts.edit_label}
+                    </a>
+                    <div class="dropdown-divider"></div>
+                    ${delete_html}
+                </div>
+            </div>
+        `;
+    };
+
+    /**
+     * Setup item action dropdown handlers
+     * Called after HTML injection and on DataTable redraws
+     */
+    obj.setup_item_action_handlers = function() {
+
+        // Initialize Bootstrap dropdowns (support both Bootstrap 4 and 5)
+        document.querySelectorAll('.item-actions-toggle').forEach(toggle => {
+            if (typeof bootstrap !== 'undefined' && bootstrap.Dropdown) {
+                new bootstrap.Dropdown(toggle);
+            } else if (typeof $ !== 'undefined' && typeof $.fn.dropdown !== 'undefined') {
+                $(toggle).dropdown();
+            }
+        });
+
+        // Close dropdowns when clicking outside
+        document.removeEventListener('click', close_open_item_dropdowns);
+        document.addEventListener('click', close_open_item_dropdowns);
+    };
+
+    /**
+     * Close all open item dropdown menus
+     * @param {Event} [e] - Optional click event
+     */
+    const close_open_item_dropdowns = (e) => {
+        if (e && e.target.closest('.dropdown')) {
+            return;
+        }
+
+        document.querySelectorAll('.item-actions-menu.dropdown-menu.show').forEach(menu => {
+            menu.classList.remove('show');
+            const toggle = menu.previousElementSibling;
+            if (toggle) {
+                toggle.setAttribute('aria-expanded', 'false');
+            }
+        });
+
+        if (typeof $ !== 'undefined' && typeof $.fn.dropdown !== 'undefined') {
+            $('.item-actions-menu.dropdown-menu.show').removeClass('show');
+            $('.item-actions-toggle[aria-expanded="true"]').attr('aria-expanded', 'false');
+        }
+    };
+
+    /**
+     * Build compact item metadata cell with optional thumbnail
+     * @param {Object} opts
+     * @param {string} opts.title - Item title
+     * @param {string} opts.type_label - Type label (e.g. 'item', 'heading', 'grid', 'timeline')
+     * @param {string} opts.type_icon_class - FA icon class for the type
+     * @param {HTMLElement|null} [opts.thumbnail_img] - Optional thumbnail img element
+     * @param {number} [opts.is_locked] - 1 if locked
+     * @param {string} [opts.details_url] - Optional URL for title/thumbnail links
+     * @returns {HTMLElement} Table cell
+     */
+    const build_compact_item_cell = (opts) => {
+        const td = document.createElement('td');
+
+        const flex_div = document.createElement('div');
+        flex_div.className = 'item-title-cell';
+        flex_div.style.cssText = 'display: flex; align-items: center;';
+
+        // Thumbnail (50x50) or placeholder icon
+        let thumbnail_element;
+        if (opts.thumbnail_img) {
+            const default_tn = `${APP_PATH}/static/images/image-tn.png`;
+            opts.thumbnail_img.style.cssText = 'width: 50px; height: 50px; object-fit: cover; border-radius: 4px; margin-right: 10px; vertical-align: middle; flex-shrink: 0;';
+
+            // Use inline onerror so the fallback survives innerHTML serialization
+            opts.thumbnail_img.setAttribute('onerror', `this.onerror=null; this.src='${default_tn}';`);
+
+            thumbnail_element = opts.thumbnail_img;
+        } else {
+            // No thumbnail - use a static type icon as placeholder
+            const icon_placeholder = document.createElement('div');
+            icon_placeholder.style.cssText = 'width: 50px; height: 50px; border-radius: 4px; margin-right: 10px; flex-shrink: 0; display: flex; align-items: center; justify-content: center; background: #f0f0f0; color: #999;';
+            const ph_icon = create_icon(opts.type_icon_class);
+            ph_icon.style.fontSize = '1.2rem';
+            icon_placeholder.appendChild(ph_icon);
+            thumbnail_element = icon_placeholder;
+        }
+
+        // Wrap thumbnail in link if details_url provided
+        if (opts.details_url) {
+            const thumb_link = document.createElement('a');
+            thumb_link.href = opts.details_url;
+            thumb_link.className = 'item-thumbnail-link';
+            thumb_link.setAttribute('aria-hidden', 'true');
+            thumb_link.setAttribute('tabindex', '-1');
+            thumb_link.appendChild(thumbnail_element);
+            flex_div.appendChild(thumb_link);
+        } else {
+            flex_div.appendChild(thumbnail_element);
+        }
+
+        // Title + type wrapper
+        const title_wrapper = document.createElement('div');
+
+        // Title
+        if (opts.title) {
+            if (opts.details_url) {
+                const title_link = document.createElement('a');
+                title_link.href = opts.details_url;
+                title_link.className = 'item-title-link';
+                title_link.setAttribute('title', opts.title);
+
+                const title_span = document.createElement('small');
+                title_span.className = 'item-title';
+                title_span.textContent = opts.title;
+                title_span.style.fontWeight = 'bold';
+
+                title_link.appendChild(title_span);
+                title_wrapper.appendChild(title_link);
+            } else {
+                const title_span = document.createElement('small');
+                title_span.className = 'item-title';
+                title_span.textContent = opts.title;
+                title_span.setAttribute('title', opts.title);
+                title_span.style.fontWeight = 'bold';
+                title_wrapper.appendChild(title_span);
+            }
+        }
+
+        // Lock icon inline
+        if (opts.is_locked === 1) {
+            title_wrapper.appendChild(document.createTextNode('  '));
+            const lock_icon = create_icon('fa fa-lock', 'Record is currently locked', 'exhibit-is-locked', '#BA8E23');
+            title_wrapper.appendChild(lock_icon);
+        }
+
+        // Type label below
+        const type_div = document.createElement('div');
+        const type_small = document.createElement('small');
+        type_small.style.color = '#6c757d';
+        const type_icon = create_icon(opts.type_icon_class);
+        type_icon.style.marginRight = '4px';
+        type_small.appendChild(type_icon);
+        type_small.appendChild(document.createTextNode(opts.type_label));
+        type_div.appendChild(type_small);
+        title_wrapper.appendChild(type_div);
+
+        flex_div.appendChild(title_wrapper);
+        td.appendChild(flex_div);
+        return td;
+    };
+
+    /**
+     * Build child items cell with optional clickable icon
+     * @param {Object} [opts] - Options (omit or pass null for an empty cell)
+     * @param {string} [opts.url] - URL to view child items
+     * @param {string} [opts.title] - Tooltip / aria-label text
+     * @returns {HTMLElement} Table cell
+     */
+    const build_child_items_cell = (opts) => {
+        const td = document.createElement('td');
+        td.style.cssText = 'text-align: center; vertical-align: middle;';
+
+        if (opts && opts.url) {
+            const link = document.createElement('a');
+            link.href = opts.url;
+            link.className = 'child-items-link';
+            link.style.display = 'inline-block';
+            link.setAttribute('title', opts.title || 'View child items');
+            link.setAttribute('aria-label', opts.title || 'View child items');
+
+            const icon = document.createElement('i');
+            icon.className = 'fa fa-list';
+            icon.setAttribute('aria-hidden', 'true');
+
+            link.appendChild(icon);
+            td.appendChild(link);
+        }
+
+        return td;
+    };
+
+    /**
+     * Build compact actions cell with dropdown
+     * @param {Object} opts - Same as build_item_actions_dropdown_html
+     * @returns {HTMLElement} Table cell
+     */
+    const build_actions_cell = (opts) => {
+        const td = document.createElement('td');
+        td.id = opts.actions_id || '';
+        td.className = 'text-center';
+        td.innerHTML = build_item_actions_dropdown_html(opts);
+        return td;
     };
 
     /**

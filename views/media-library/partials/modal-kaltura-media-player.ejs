@@ -1,0 +1,182 @@
+<!-- Kaltura Media Player Modal -->
+<div class="modal fade" 
+     id="kaltura-player-modal" 
+     tabindex="-1" 
+     role="dialog" 
+     aria-labelledby="kaltura-player-modal-title" 
+     aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered modal-lg" id="kaltura-player-dialog" role="document">
+        <div class="modal-content">
+            <div class="modal-header" style="display: flex; align-items: center; justify-content: space-between;">
+                <h4 class="modal-title mb-0" id="kaltura-player-modal-title" style="font-size: 1.5rem; font-weight: 500;">
+                    <i class="fa fa-play-circle" id="kaltura-player-type-icon" style="margin-right: 8px;" aria-hidden="true"></i>
+                    <span id="kaltura-player-header-text">Kaltura Media Player</span>
+                </h4>
+                <button type="button" 
+                        class="close ml-auto" 
+                        id="kaltura-player-close-btn"
+                        aria-label="Close"
+                        style="margin: 0; padding: 0;">
+                    <span aria-hidden="true" style="font-size: 1.5rem;">&times;</span>
+                </button>
+            </div>
+            <div class="modal-body">
+                <!-- Kaltura iframe player container -->
+                <div id="kaltura-player-container" class="kaltura-player-wrapper mb-3">
+                    <div class="embed-responsive embed-responsive-16by9" id="kaltura-player-responsive">
+                        <iframe id="kaltura-player-iframe"
+                                class="embed-responsive-item"
+                                src=""
+                                title="Kaltura media player"
+                                allowfullscreen
+                                webkitallowfullscreen
+                                mozallowfullscreen
+                                frameborder="0"
+                                allow="autoplay; encrypted-media; fullscreen"
+                                sandbox="allow-scripts allow-same-origin allow-popups allow-forms"
+                                aria-label="Media player">
+                        </iframe>
+                    </div>
+                </div>
+
+                <!-- Loading indicator (shown while iframe loads) -->
+                <div id="kaltura-player-loading" class="text-center py-4" style="display: none;">
+                    <i class="fa fa-spinner fa-spin fa-2x" aria-hidden="true"></i>
+                    <p class="mt-2 text-muted">Loading media player...</p>
+                </div>
+
+                <!-- Error message area -->
+                <div id="kaltura-player-error" style="display: none;"></div>
+
+                <!-- Kaltura media information -->
+                <div id="kaltura-player-info" class="text-muted small border-top pt-3 text-center">
+                    <p class="mb-1">
+                        <strong>Name:</strong> 
+                        <span id="kaltura-player-media-name">-</span>
+                    </p>
+                    <p class="mb-1">
+                        <strong>Entry ID:</strong> 
+                        <span id="kaltura-player-entry-id">-</span>
+                    </p>
+                    <p class="mb-0">
+                        <strong>Type:</strong> 
+                        <span id="kaltura-player-media-type">-</span>
+                    </p>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" 
+                        class="btn btn-secondary" 
+                        id="kaltura-player-cancel-btn">
+                    Close
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+/* Kaltura Player Modal Styles */
+#kaltura-player-modal .modal-content {
+    border: none;
+    box-shadow: 0 10px 40px rgba(0, 0, 0, 0.3);
+}
+
+#kaltura-player-modal .modal-header {
+    border-bottom: 1px solid #dee2e6;
+    padding: 1rem 1.25rem;
+    background-color: #f8f9fa;
+}
+
+#kaltura-player-modal .modal-body {
+    padding: 1.25rem;
+    background-color: #000;
+}
+
+#kaltura-player-modal .modal-footer {
+    border-top: 1px solid #dee2e6;
+    padding: 0.75rem 1.25rem;
+    background-color: #f8f9fa;
+}
+
+/* Player wrapper */
+.kaltura-player-wrapper {
+    background-color: #000;
+    border-radius: 4px;
+    overflow: hidden;
+}
+
+/* Compact aspect ratio for audio-only mode */
+#kaltura-player-modal .embed-responsive-audio {
+    position: relative;
+    width: 100%;
+    padding-bottom: 15%;
+    min-height: 80px;
+}
+
+#kaltura-player-modal .embed-responsive-audio .embed-responsive-item,
+#kaltura-player-modal .embed-responsive-audio iframe {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    border: 0;
+}
+
+/* Info section on dark background */
+#kaltura-player-info {
+    color: #ccc !important;
+    border-top-color: #333 !important;
+}
+
+#kaltura-player-info strong {
+    color: #e0e0e0;
+}
+
+#kaltura-player-info span {
+    color: #aaa;
+}
+
+/* Loading indicator on dark background */
+#kaltura-player-loading {
+    color: #ccc;
+}
+
+#kaltura-player-loading .text-muted {
+    color: #999 !important;
+}
+
+/* Audio-specific modal sizing and styling */
+#kaltura-player-modal.kaltura-audio-mode .modal-dialog {
+    max-width: 550px;
+}
+
+#kaltura-player-modal.kaltura-audio-mode .modal-body {
+    background-color: #f8f9fa;
+}
+
+#kaltura-player-modal.kaltura-audio-mode .kaltura-player-wrapper {
+    background-color: #f0f0f0;
+}
+
+#kaltura-player-modal.kaltura-audio-mode #kaltura-player-info {
+    color: #6c757d !important;
+    border-top-color: #dee2e6 !important;
+}
+
+#kaltura-player-modal.kaltura-audio-mode #kaltura-player-info strong {
+    color: #495057;
+}
+
+#kaltura-player-modal.kaltura-audio-mode #kaltura-player-info span {
+    color: #6c757d;
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+    #kaltura-player-modal .modal-dialog {
+        margin: 0.5rem;
+    }
+}
+</style>

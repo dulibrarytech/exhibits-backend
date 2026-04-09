@@ -30,7 +30,9 @@ const TABLES = {
     timeline_item_records: process.env.TIMELINE_ITEM_RECORDS,
     user_records: process.env.USER_RECORDS,
     roles_records: process.env.ROLES_RECORDS,
-    users_roles: process.env.USERS_ROLES
+    users_roles: process.env.USERS_ROLES,
+    media_library_records: process.env.MEDIA_LIBRARY_RECORDS,
+    exhibit_media_records: process.env.EXHIBIT_MEDIA_RECORDS
 };
 const DB_TABLES_CONFIG = {
     exhibits: HELPER_TASK.check_config(TABLES)

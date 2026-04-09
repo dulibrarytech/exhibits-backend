@@ -1,0 +1,13 @@
+<%- include('../partials/header.ejs'); %> <style>#cancel-exhibit-btn {
+        min-width: 100px;
+    }
+
+    /* Color picker: match the exhibit edit form input-group-prepend look */
+    #exhibit-styles-card .input-group-prepend .color-picker.btn-default {
+        border: 1px solid #ced4da;
+        border-right: none;
+        border-radius: 0.25rem 0 0 0.25rem;
+        height: calc(1.5em + 0.75rem + 2px);
+        padding: 0.25rem 0.4rem;
+    }</style><body> <%- include('../partials/nav-dashboard'); %> <div id="right-panel" class="right-panel"> <%- include('../partials/main-header.ejs'); %> <div class="content" style="min-height: 875px;"><div id="message"></div><h1><span id="exhibit-title"></span></h1><!-- styles --> <%- include('partials/exhibit-styles.ejs'); %> <div id="exhibit-submit-card" class="card"><div class="card-body"><button class="btn btn-primary" type="button" id="save-exhibit-btn"><i class="fa fa-save"></i>&nbsp;&nbsp;Save</button> <button class="btn btn-outline-secondary ms-2" type="button" id="cancel-exhibit-btn"><i class="fa fa-times"></i>&nbsp;&nbsp;Cancel</button></div><div class="card-footer text-muted"><small>Exhibit Styles</small></div></div></div><div class="clearfix"></div> <%- include('../partials/footer.ejs'); %> </div><!-- libs --> <%- include('../partials/exhibits-libs-common.ejs'); %> <!-- app --> <%- include('../partials/exhibits-app-common.ejs'); %> <script src="/exhibits-dashboard/static/app/dist/exhibits.styles.module.min.js?<%=build_version%>"></script><script src="/exhibits-dashboard/static/app/dist/exhibits.styles.form.module.min.js?<%=build_version%>"></script><script>exhibitsStylesFormModule.init();
+    navModule.wire_nav_links();</script></body>

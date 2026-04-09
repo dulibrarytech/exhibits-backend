@@ -1,1 +1,164 @@
-<div id="exhibit-styles-card" class="card"><div class="card-header"><strong class="card-title mb-3">Exhibit Styles</strong></div><div class="card-body"><div class="row"><div class="col-4 col-md-4"><p><span class="form-text text-muted" style="font-size: 14px"><strong>Apply Styles to Exhibit Introduction</strong></span></p><div class="row form-group"><div class="col-12 col-md-12"><p></p><div class="form-text text-muted" style="font-size: 13px"><label for="introduction-background-color">Introduction Background Color</label></div><p></p><div class="input-group"><div class="input-group-btn"><input title="Color Picker" class="color-picker btn btn-default" type="color" id="introduction-background-color-picker" value="#ffffff"></div><input type="text" id="introduction-background-color" name="introduction_background_color" placeholder="i.e. #FFFFFF" class="form-control" style="height: 40px"></div></div></div><div class="row form-group"><div class="col-12 col-md-12"><p></p><div class="form-text text-muted" style="font-size: 13px"><label for="introduction-font-color">Introduction Font Color</label></div><p></p><div class="input-group"><div class="input-group-btn"><input title="Color Picker" class="color-picker btn btn-default" type="color" id="introduction-font-color-picker" value="#ffffff"></div><input type="text" id="introduction-font-color" name="nav_font_color" placeholder="i.e. #FFFFFF" class="form-control" style="height: 40px"></div></div></div><div class="row form-group"><div class="col-12 col-md-12"><p></p><div class="form-text text-muted" style="font-size: 13px"><label for="introduction-font-size">Introduction Font Size</label></div><p></p><div class="input-group"><input type="number" id="introduction-font-size" name="introduction_font_size" placeholder="" class="form-control" min="1" max="50" style="height: 40px"><div class="input-group-append"><span class="input-group-text" id="basic-addon2">px</span></div></div></div></div><div class="row form-group"><div class="col-12 col-md-12"><p></p><div class="form-text text-muted" style="font-size: 13px"><label for="introduction_font">Introduction Font</label></div><p></p><div class="input-group"><select name="introduction_font" id="introduction-font" class="form-control-lg form-control text-muted" style="height: 40px"><option value="">Select From Menu</option><option value="">----------</option> <%- include('exhibit-fonts-options-list.ejs'); %> </select></div></div></div></div><div class="col-4 col-md-4"><p><span class="form-text text-muted" style="font-size: 14px"><strong>Apply Styles to Navigation Menu</strong></span></p><div class="row form-group"><div class="col-12 col-md-12"><p></p><div class="form-text text-muted" style="font-size: 13px"><label for="nav-background-color">Navigation Background Color</label></div><p></p><div class="input-group"><div class="input-group-btn"><input title="Color Picker" class="color-picker btn btn-default" type="color" id="nav-background-color-picker" value="#ffffff"></div><input type="text" id="nav-background-color" name="nav_background_color" placeholder="i.e. #FFFFFF" class="form-control" style="height: 40px"></div></div></div><div class="row form-group"><div class="col-12 col-md-12"><p></p><div class="form-text text-muted" style="font-size: 13px"><label for="nav-font-color">Navigation Font Color</label></div><p></p><div class="input-group"><div class="input-group-btn"><input title="Color Picker" class="color-picker btn btn-default" type="color" id="nav-font-color-picker" value="#ffffff"></div><input type="text" id="nav-font-color" name="nav_font_color" placeholder="i.e. #FFFFFF" class="form-control" style="height: 40px"></div></div></div><div class="row form-group"><div class="col-12 col-md-12"><p></p><div class="form-text text-muted" style="font-size: 13px"><label for="nav-font-size">Navigation Font Size</label></div><p></p><div class="input-group"><input type="number" id="nav-font-size" name="nav_font_size" placeholder="" class="form-control" min="1" max="50" style="height: 40px"><div class="input-group-append"><span class="input-group-text" id="basic-addon2">px</span></div></div></div></div><div class="row form-group"><div class="col-12 col-md-12"><p></p><div class="form-text text-muted" style="font-size: 13px"><label for="nav_font">Navigation Font</label></div><p></p><div class="input-group"><select name="nav_font" id="nav-font" class="form-control-lg form-control text-muted" style="height: 40px"><option value="">Select From Menu</option><option value="">----------</option> <%- include('exhibit-fonts-options-list.ejs'); %> </select></div></div></div></div><div class="col-4 col-md-4"><p><span class="form-text text-muted" style="font-size: 14px"><strong>Apply Styles to Exhibit</strong></span></p><div class="row form-group"><div class="col-12 col-md-12"><p></p><div class="form-text text-muted" style="font-size: 13px"><label for="template-background-color">Exhibit Background Color</label></div><p></p><div class="input-group"><div class="input-group-btn"><input title="Color Picker" class="color-picker btn btn-default" type="color" id="template-background-color-picker" value="#ffffff"></div><input type="text" id="template-background-color" name="template_background_color" placeholder="i.e. #FFFFFF" class="form-control" style="height: 40px"></div></div></div><div class="row form-group"><div class="col-12 col-md-12"><p></p><div class="form-text text-muted" style="font-size: 13px"><label for="template-font-color">Exhibit Font Color</label></div><p></p><div class="input-group"><div class="input-group-btn"><input title="Color Picker" class="color-picker btn btn-default" type="color" id="template-font-color-picker" value="#ffffff"></div><input type="text" id="template-font-color" name="template_font_color" placeholder="i.e. #FFFFFF" class="form-control" style="height: 40px"></div></div></div><div class="row form-group"><div class="col-12 col-md-12"><p></p><div class="form-text text-muted" style="font-size: 13px"><label for="template-font-size">Exhibit Font Size</label></div><p></p><div class="input-group"><input type="number" id="template-font-size" name="template_font_size" placeholder="" class="form-control" min="1" max="50" style="height: 40px"><div class="input-group-append"><span class="input-group-text" id="basic-addon2">px</span></div></div></div></div><div class="row form-group"><div class="col-12 col-md-12"><p></p><div class="form-text text-muted" style="font-size: 13px"><label for="template-font">Exhibit Font</label></div><p></p><div class="input-group"><select name="template_font" id="template-font" class="form-control-lg form-control text-muted" style="height: 40px"><option value="">Select From Menu</option><option value="">----------</option> <%- include('exhibit-fonts-options-list.ejs'); %> </select></div></div></div></div></div></div></div>
+<style>/* ── Exhibit Styles accordion ── */
+    #exhibit-styles-card .section-group-label {
+        font-size: 0.75rem;
+        font-weight: 600;
+        text-transform: uppercase;
+        letter-spacing: 0.05em;
+        color: #6c757d;
+        margin-bottom: 0.5rem;
+        padding-left: 0.25rem;
+    }
+
+    #exhibit-styles-card .section-group-label .optional-info {
+        font-size: 0.78rem;
+        color: #adb5bd;
+        font-style: italic;
+        text-transform: none;
+        letter-spacing: normal;
+    }
+
+    #exhibit-styles-card .accordion .card {
+        border: 1px solid #dee2e6;
+        border-radius: 0 !important;
+        margin-bottom: -1px;
+        box-shadow: none;
+    }
+
+    #exhibit-styles-card .accordion .card:first-of-type {
+        border-top-left-radius: 0.375rem !important;
+        border-top-right-radius: 0.375rem !important;
+    }
+
+    #exhibit-styles-card .accordion .card:last-of-type {
+        border-bottom-left-radius: 0.375rem !important;
+        border-bottom-right-radius: 0.375rem !important;
+    }
+
+    #exhibit-styles-card .accordion .card-header {
+        background-color: #fff;
+        border-bottom: 1px solid #dee2e6;
+        padding: 0;
+        cursor: pointer;
+    }
+
+    #exhibit-styles-card .accordion .card-header:hover {
+        background-color: #f8f9fa;
+    }
+
+    #exhibit-styles-card .accordion .card-header .btn-link {
+        width: 100%;
+        text-align: left;
+        padding: 0.85rem 1.25rem;
+        color: #212529;
+        font-weight: 600;
+        font-size: 0.95rem;
+        text-decoration: none;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+    }
+
+    #exhibit-styles-card .accordion .card-header .btn-link:hover,
+    #exhibit-styles-card .accordion .card-header .btn-link:focus {
+        text-decoration: none;
+        color: #212529;
+    }
+
+    #exhibit-styles-card .section-left {
+        display: flex;
+        align-items: center;
+        gap: 0.65rem;
+    }
+
+    #exhibit-styles-card .section-right {
+        display: flex;
+        align-items: center;
+        gap: 0.75rem;
+    }
+
+    #exhibit-styles-card .chevron {
+        transition: transform 0.2s ease;
+        color: #6c757d;
+        font-size: 0.75rem;
+    }
+
+    #exhibit-styles-card .btn-link.collapsed .chevron {
+        transform: rotate(-90deg);
+    }
+
+    #exhibit-styles-card .badge-required {
+        background-color: #e8f4fd;
+        color: #0c5fa5;
+        font-size: 0.65rem;
+        font-weight: 600;
+        text-transform: uppercase;
+        letter-spacing: 0.03em;
+        padding: 0.25em 0.5em;
+        border-radius: 0.25rem;
+    }
+
+    #exhibit-styles-card .badge-optional {
+        background-color: #f0f0f0;
+        color: #6c757d;
+        font-size: 0.65rem;
+        font-weight: 600;
+        text-transform: uppercase;
+        letter-spacing: 0.03em;
+        padding: 0.25em 0.5em;
+        border-radius: 0.25rem;
+    }
+
+    #exhibit-styles-card .color-swatches {
+        display: flex;
+        align-items: center;
+        gap: 0.35rem;
+    }
+
+    #exhibit-styles-card .color-swatch {
+        width: 18px;
+        height: 18px;
+        border-radius: 50%;
+        border: 2px solid #dee2e6;
+        flex-shrink: 0;
+        background: repeating-conic-gradient(#e9ecef 0% 25%, #fff 0% 50%) 50% / 8px 8px;
+    }
+
+    #exhibit-styles-card .accordion .card-body {
+        padding: 1.25rem;
+        background-color: #fdfdfe;
+        border-top: 1px solid #e9ecef;
+    }
+
+    #exhibit-styles-card .style-field label {
+        font-size: 0.82rem;
+        font-weight: 600;
+        color: #495057;
+        margin-bottom: 0.35rem;
+    }
+
+    #exhibit-styles-card .input-group-prepend .color-picker.btn-default {
+        border: 1px solid #ced4da;
+        border-right: none;
+        border-radius: 0.25rem 0 0 0.25rem;
+        height: calc(1.5em + 0.75rem + 2px);
+        padding: 0.25rem 0.4rem;
+    }</style> <%
+/**
+ * Style sections configuration.
+ * Each section defines its key (used for id/name prefixes), display label,
+ * whether it is required, and the accordion group it belongs to.
+ */
+const styleSections = [
+    { key: 'introduction', label: 'Exhibit Introduction', required: true, group: 'required' },
+    { key: 'navigation', label: 'Navigation Menu', required: true, group: 'required' },
+    { key: 'heading1', label: 'Heading Style 1', required: true, group: 'required' },
+    { key: 'item1', label: 'Item Style 1', required: true, group: 'required' },
+    { key: 'heading2', label: 'Heading Style 2', required: false, group: 'optional' },
+    { key: 'heading3', label: 'Heading Style 3', required: false, group: 'optional' },
+    { key: 'item2', label: 'Item Style 2', required: false, group: 'optional' },
+    { key: 'item3', label: 'Item Style 3', required: false, group: 'optional' }
+];
+
+const requiredSections = styleSections.filter(s => s.group === 'required');
+const optionalSections = styleSections.filter(s => s.group === 'optional');
+%> <div id="exhibit-styles-card" class="card"><div class="card-header"><strong class="card-title mb-3">Exhibit Styles</strong></div><div class="card-body"><!-- ── Required Styles ── --><div class="section-group-label">Required Styles</div><div class="accordion mb-4" id="requiredStylesAccordion"> <% requiredSections.forEach(function(section, idx) { %> <div class="card"><div class="card-header" id="heading-<%= section.key %>"><button class="btn btn-link<%= idx > 0 ? ' collapsed' : '' %>" type="button" data-toggle="collapse" data-target="#collapse-<%= section.key %>" aria-expanded="<%= idx === 0 ? 'true' : 'false' %>" aria-controls="collapse-<%= section.key %>"><span class="section-left"><span><%= section.label %></span><span class="badge badge-required">Required</span> </span><span class="section-right"><span class="color-swatches"><span class="color-swatch" id="swatch-<%= section.key %>-bg" title="Background color"></span> <span class="color-swatch" id="swatch-<%= section.key %>-font" title="Font color"></span> </span><i class="fa fa-chevron-down chevron"></i></span></button></div><div id="collapse-<%= section.key %>" class="collapse<%= idx === 0 ? ' show' : '' %>" aria-labelledby="heading-<%= section.key %>"><div class="card-body"><!-- Fields: 2×2 grid --><div class="row"><div class="col-md-6 style-field mb-3"><label for="<%= section.key %>-background-color">Background Color</label><div class="input-group"><div class="input-group-prepend"><input title="Color Picker" class="color-picker btn btn-default" type="color" id="<%= section.key %>-background-color-picker" value="#ffffff"></div><input type="text" class="form-control style-color-field" id="<%= section.key %>-background-color" name="<%= section.key %>_background_color" data-section="<%= section.key %>" data-role="bg" placeholder="i.e. #FFFFFF"></div></div><div class="col-md-6 style-field mb-3"><label for="<%= section.key %>-font-color">Font Color</label><div class="input-group"><div class="input-group-prepend"><input title="Color Picker" class="color-picker btn btn-default" type="color" id="<%= section.key %>-font-color-picker" value="#ffffff"></div><input type="text" class="form-control style-color-field" id="<%= section.key %>-font-color" name="<%= section.key %>_font_color" data-section="<%= section.key %>" data-role="font" placeholder="i.e. #333333"></div></div></div><div class="row"><div class="col-md-6 style-field mb-3"><label for="<%= section.key %>-font-size">Font Size</label><div class="input-group"><input type="number" class="form-control" id="<%= section.key %>-font-size" name="<%= section.key %>_font_size" placeholder="" min="1" max="120"><div class="input-group-append"><span class="input-group-text">px</span></div></div></div><div class="col-md-6 style-field mb-3"><label for="<%= section.key %>-font">Font</label> <select class="form-control" id="<%= section.key %>-font" name="<%= section.key %>_font"><option value="">Select From Menu</option><option value="">----------</option> <%- include('exhibit-fonts-options-list.ejs'); %> </select></div></div></div></div></div> <% }); %> </div><!-- ── Optional Styles ── --><div class="section-group-label">Optional Styles <span class="optional-info ml-2">&mdash; Leave blank to inherit defaults</span></div><div class="accordion mb-3" id="optionalStylesAccordion"> <% optionalSections.forEach(function(section) { %> <div class="card"><div class="card-header" id="heading-<%= section.key %>"><button class="btn btn-link collapsed" type="button" data-toggle="collapse" data-target="#collapse-<%= section.key %>" aria-expanded="false" aria-controls="collapse-<%= section.key %>"><span class="section-left"><span><%= section.label %></span><span class="badge badge-optional">Optional</span> </span><span class="section-right"><span class="color-swatches"><span class="color-swatch" id="swatch-<%= section.key %>-bg" title="Background color"></span> <span class="color-swatch" id="swatch-<%= section.key %>-font" title="Font color"></span> </span><i class="fa fa-chevron-down chevron"></i></span></button></div><div id="collapse-<%= section.key %>" class="collapse" aria-labelledby="heading-<%= section.key %>"><div class="card-body"><!-- Fields: 2×2 grid --><div class="row"><div class="col-md-6 style-field mb-3"><label for="<%= section.key %>-background-color">Background Color</label><div class="input-group"><div class="input-group-prepend"><input title="Color Picker" class="color-picker btn btn-default" type="color" id="<%= section.key %>-background-color-picker" value="#ffffff"></div><input type="text" class="form-control style-color-field" id="<%= section.key %>-background-color" name="<%= section.key %>_background_color" data-section="<%= section.key %>" data-role="bg" placeholder="i.e. #FFFFFF"></div></div><div class="col-md-6 style-field mb-3"><label for="<%= section.key %>-font-color">Font Color</label><div class="input-group"><div class="input-group-prepend"><input title="Color Picker" class="color-picker btn btn-default" type="color" id="<%= section.key %>-font-color-picker" value="#ffffff"></div><input type="text" class="form-control style-color-field" id="<%= section.key %>-font-color" name="<%= section.key %>_font_color" data-section="<%= section.key %>" data-role="font" placeholder="i.e. #333333"></div></div></div><div class="row"><div class="col-md-6 style-field mb-3"><label for="<%= section.key %>-font-size">Font Size</label><div class="input-group"><input type="number" class="form-control" id="<%= section.key %>-font-size" name="<%= section.key %>_font_size" placeholder="" min="1" max="120"><div class="input-group-append"><span class="input-group-text">px</span></div></div></div><div class="col-md-6 style-field mb-3"><label for="<%= section.key %>-font">Font</label> <select class="form-control" id="<%= section.key %>-font" name="<%= section.key %>_font"><option value="">Select From Menu</option><option value="">----------</option> <%- include('exhibit-fonts-options-list.ejs'); %> </select></div></div></div></div></div> <% }); %> </div></div></div>

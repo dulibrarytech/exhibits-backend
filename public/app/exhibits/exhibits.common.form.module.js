@@ -23,6 +23,31 @@ const exhibitsCommonFormModule = (function () {
     const EXHIBITS_ENDPOINTS = endpointsModule.get_exhibits_endpoints();
     let obj = {};
 
+    /**
+     * Configurable message container selector.
+     * Defaults to '#message' (standalone page).
+     * Call set_message_selector('#add-exhibit-message') before init()
+     * when the form is rendered inside the add-exhibit modal.
+     * @type {string}
+     */
+    let message_selector = '#message';
+
+    /**
+     * Sets the CSS selector used for displaying form messages.
+     * Must be called before init() when the form lives in a modal
+     * whose message container differs from the page-level '#message'.
+     *
+     * @param {string} selector - CSS selector for the message container
+     */
+    obj.set_message_selector = function (selector) {
+
+        if (typeof selector === 'string' && selector.trim().length > 0) {
+            message_selector = selector.trim();
+        } else {
+            console.warn('Invalid message selector provided, keeping current:', message_selector);
+        }
+    };
+
     obj.get_common_form_fields = function () {
 
         // Cache all DOM selectors
@@ -31,7 +56,6 @@ const exhibitsCommonFormModule = (function () {
             subtitle: '#exhibit-sub-title-input',
             description: '#exhibit-description-input',
             curators: '#exhibit-about-the-curators-input',
-            exhibit_subjects: '#selected-subjects',
             alert_text: '#exhibit-alert-text-input',
             is_featured: '#is-featured',
             is_student_curated: '#is-student-curated',
@@ -42,8 +66,7 @@ const exhibitsCommonFormModule = (function () {
             thumbnail: '#thumbnail-image',
             page_layout: '#exhibit-page-layout',
             template: '#exhibit-template',
-            title_error: '#exhibit-title-error',
-            message: '#message'
+            message: message_selector
         };
 
         // Helper function to safely get element value
@@ -95,6 +118,18 @@ const exhibitsCommonFormModule = (function () {
         };
 
         try {
+            // Clear any previous title validation state
+            const title_el = document.querySelector(selectors.title);
+
+            if (title_el) {
+                title_el.classList.remove('is-invalid');
+                const prev_feedback = title_el.parentNode.querySelector('.title-validation-feedback');
+
+                if (prev_feedback) {
+                    prev_feedback.parentNode.removeChild(prev_feedback);
+                }
+            }
+
             // Get and clean text inputs
             const title = helperModule.clean_html(get_element_value(selectors.title));
             const subtitle = helperModule.clean_html(get_element_value(selectors.subtitle));
@@ -103,7 +138,19 @@ const exhibitsCommonFormModule = (function () {
 
             // Validate required field
             if (!title) {
-                show_error(selectors.title_error, 'Please enter an exhibit title');
+
+                if (title_el) {
+                    title_el.classList.add('is-invalid');
+
+                    const feedback = document.createElement('div');
+                    feedback.className = 'invalid-feedback title-validation-feedback';
+                    feedback.style.display = 'block';
+                    feedback.textContent = 'Title is required';
+
+                    title_el.parentNode.insertBefore(feedback, title_el.nextSibling);
+                    title_el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                }
+
                 return false;
             }
 
@@ -125,6 +172,10 @@ const exhibitsCommonFormModule = (function () {
             const hero_image = get_element_value(selectors.hero_image);
             const thumbnail = get_element_value(selectors.thumbnail);
 
+            // Get media library UUIDs (from picker flow)
+            const hero_image_media_uuid = get_element_value('#hero-image-media-uuid');
+            const thumbnail_media_uuid = get_element_value('#thumbnail-media-uuid');
+
             // Get banner template from radio buttons
             const banner_elements = document.getElementsByName('banner_template');
             const banner_template = banner_elements.length > 0
@@ -134,14 +185,12 @@ const exhibitsCommonFormModule = (function () {
             // Get layout fields
             const page_layout = get_element_value(selectors.page_layout);
             const exhibit_template = get_element_value(selectors.template);
-            const exhibit_subjects = get_element_value(selectors.exhibit_subjects);
 
             // Construct exhibit object
             const exhibit = {
                 title,
                 subtitle,
                 description,
-                exhibit_subjects: exhibit_subjects,
                 about_the_curators: about_curators,
                 is_featured: bool_to_int(is_featured),
                 is_student_curated: bool_to_int(is_student_curated),
@@ -152,6 +201,15 @@ const exhibitsCommonFormModule = (function () {
                 page_layout: page_layout,
                 exhibit_template: exhibit_template
             };
+
+            // Add media library UUIDs if present (from media picker flow)
+            if (hero_image_media_uuid) {
+                exhibit.hero_image_media_uuid = hero_image_media_uuid;
+            }
+
+            if (thumbnail_media_uuid) {
+                exhibit.thumbnail_media_uuid = thumbnail_media_uuid;
+            }
 
             // Add optional fields only if they have values, converted to Number
             if (owner_value) {
@@ -181,101 +239,6 @@ const exhibitsCommonFormModule = (function () {
         }
     };
 
-    obj.get_exhibit_styles = function () {
-
-        // Configuration mapping for style fields
-        const style_config = {
-            navigation: {
-                backgroundColor: { selector: '#nav-background-color', transform: null },
-                color: { selector: '#nav-font-color', transform: null },
-                fontFamily: { selector: '#nav-font', transform: null },
-                fontSize: { selector: '#nav-font-size', transform: (val) => val ? `${val}px` : '' }
-            },
-            template: {
-                backgroundColor: { selector: '#template-background-color', transform: null },
-                color: { selector: '#template-font-color', transform: null },
-                fontFamily: { selector: '#template-font', transform: null },
-                fontSize: { selector: '#template-font-size', transform: (val) => val ? `${val}px` : '' }
-            },
-            introduction: {
-                backgroundColor: { selector: '#introduction-background-color', transform: null },
-                color: { selector: '#introduction-font-color', transform: null },
-                fontFamily: { selector: '#introduction-font', transform: null },
-                fontSize: { selector: '#introduction-font-size', transform: (val) => val ? `${val}px` : '' }
-            }
-        };
-
-        // Helper function to safely get element value
-        const get_element_value = (selector) => {
-            const element = document.querySelector(selector);
-            return element?.value?.trim() || '';
-        };
-
-        // Helper function to apply transformation if provided
-        const apply_transform = (value, transform) => {
-            if (!value) return '';
-            return transform ? transform(value) : value;
-        };
-
-        // Helper function to display error messages safely (prevents XSS)
-        const show_error = (message) => {
-            const message_el = document.querySelector('#message');
-            if (!message_el) {
-                console.error('Message element not found');
-                return;
-            }
-
-            const alert_div = document.createElement('div');
-            alert_div.className = 'alert alert-danger';
-            alert_div.setAttribute('role', 'alert');
-
-            const icon = document.createElement('i');
-            icon.className = 'fa fa-exclamation';
-
-            const text = document.createTextNode(` ${message}`);
-
-            alert_div.appendChild(icon);
-            alert_div.appendChild(text);
-
-            message_el.innerHTML = '';
-            message_el.appendChild(alert_div);
-        };
-
-        // Build styles object from configuration
-        const build_styles_object = (config) => {
-            const result = {};
-
-            for (const [section, properties] of Object.entries(config)) {
-                result[section] = {};
-
-                for (const [property, settings] of Object.entries(properties)) {
-                    const raw_value = get_element_value(settings.selector);
-                    result[section][property] = apply_transform(raw_value, settings.transform);
-                }
-            }
-
-            return result;
-        };
-
-        try {
-
-            const styles = build_styles_object(style_config);
-
-            return {
-                exhibit: styles
-            };
-
-        } catch (error) {
-            // Log error for debugging
-            console.error('Error getting exhibit styles:', error);
-
-            // Display safe error message
-            show_error('An error occurred while processing style data');
-
-            return null;
-        }
-    };
-
     /**
      * Deletes hero image
      */
@@ -287,7 +250,7 @@ const exhibitsCommonFormModule = (function () {
 
         // Helper function to safely display messages (prevents XSS)
         const show_message = (message, type = 'success', icon = 'fa-info') => {
-            const message_el = document.querySelector('#message');
+            const message_el = document.querySelector(message_selector);
             if (!message_el) {
                 console.error('Message element not found');
                 return;
@@ -334,6 +297,7 @@ const exhibitsCommonFormModule = (function () {
             clear_element('#hero-image');
             clear_element('#hero-image-filename-display');
             clear_element('#hero-image-display');
+            clear_element('#hero-image-media-uuid');
             set_element_display('#hero-trash', 'none');
         };
 
@@ -421,7 +385,7 @@ const exhibitsCommonFormModule = (function () {
 
             // Clear message after delay
             timeout_id = setTimeout(() => {
-                clear_element('#message');
+                clear_element(message_selector);
             }, MESSAGE_CLEAR_DELAY);
 
             return true;
@@ -451,7 +415,7 @@ const exhibitsCommonFormModule = (function () {
 
         // Helper function to safely display messages (prevents XSS)
         const show_message = (message, type = 'success', icon = 'fa-info') => {
-            const message_el = document.querySelector('#message');
+            const message_el = document.querySelector(message_selector);
             if (!message_el) {
                 console.error('Message element not found');
                 return;
@@ -498,6 +462,7 @@ const exhibitsCommonFormModule = (function () {
             clear_element('#thumbnail-image');
             clear_element('#thumbnail-filename-display');
             clear_element('#thumbnail-image-display');
+            clear_element('#thumbnail-media-uuid');
             set_element_display('#thumbnail-trash', 'none');
         };
 
@@ -585,7 +550,7 @@ const exhibitsCommonFormModule = (function () {
 
             // Clear success message after delay
             timeout_id = setTimeout(() => {
-                clear_element('#message');
+                clear_element(message_selector);
             }, MESSAGE_CLEAR_DELAY);
 
             return true;
@@ -609,37 +574,9 @@ const exhibitsCommonFormModule = (function () {
 
     obj.init = async function () {
 
-        // Configuration for color picker pairs
-        const color_picker_pairs = [
-            {
-                input: '#introduction-background-color',
-                picker: '#introduction-background-color-picker'
-            },
-            {
-                input: '#introduction-font-color',
-                picker: '#introduction-font-color-picker'
-            },
-            {
-                input: '#nav-background-color',
-                picker: '#nav-background-color-picker'
-            },
-            {
-                input: '#nav-font-color',
-                picker: '#nav-font-color-picker'
-            },
-            {
-                input: '#template-background-color',
-                picker: '#template-background-color-picker'
-            },
-            {
-                input: '#template-font-color',
-                picker: '#template-font-color-picker'
-            }
-        ];
-
         // Helper function to safely display error messages (prevents XSS)
         const show_error = (message) => {
-            const message_el = document.querySelector('#message');
+            const message_el = document.querySelector(message_selector);
             if (!message_el) {
                 console.error('Message element not found');
                 return;
@@ -671,45 +608,7 @@ const exhibitsCommonFormModule = (function () {
             }
         };
 
-        // Helper function to sync color picker with input
-        const sync_color_values = (source_el, target_el) => {
-            if (source_el && target_el) {
-                target_el.value = source_el.value;
-            }
-        };
-
-        // Helper function to setup bidirectional color picker sync
-        const setup_color_picker_sync = (input_selector, picker_selector) => {
-            const input_el = document.querySelector(input_selector);
-            const picker_el = document.querySelector(picker_selector);
-
-            if (!input_el || !picker_el) {
-                console.warn(`Color picker elements not found: ${input_selector} or ${picker_selector}`);
-                return false;
-            }
-
-            // Picker to input sync
-            picker_el.addEventListener('input', () => {
-                sync_color_values(picker_el, input_el);
-            });
-
-            // Input to picker sync
-            input_el.addEventListener('input', () => {
-                sync_color_values(input_el, picker_el);
-            });
-
-            return true;
-        };
-
         try {
-
-            // Initialize upload modules
-            if (uploadsModule) {
-                uploadsModule.upload_exhibit_hero_image();
-                uploadsModule.upload_exhibit_thumbnail_image();
-            } else {
-                console.warn('uploadsModule not available');
-            }
 
             // Check authentication
             const token = authModule.get_user_token();
@@ -726,21 +625,6 @@ const exhibitsCommonFormModule = (function () {
             // Hide trash buttons initially
             set_element_display('#hero-trash', 'none');
             set_element_display('#thumbnail-trash', 'none');
-
-            // Setup color picker synchronization
-            let synced_count = 0;
-            let failed_count = 0;
-
-            for (const pair of color_picker_pairs) {
-                const success = setup_color_picker_sync(pair.input, pair.picker);
-                if (success) {
-                    synced_count++;
-                } else {
-                    failed_count++;
-                }
-            }
-
-            console.log(`Color pickers initialized: ${synced_count} synced, ${failed_count} failed`);
 
             // Show form
             if (helperModule && typeof helperModule.show_form === 'function') {

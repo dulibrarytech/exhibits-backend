@@ -31,7 +31,6 @@ const itemsDetailsHeadingModule = (function () {
             const exhibit_id = helperModule.get_parameter_by_name('exhibit_id');
             const item_id = helperModule.get_parameter_by_name('item_id');
             const token = authModule.get_user_token();
-            const profile = authModule.get_user_profile_data();
             let tmp = EXHIBITS_ENDPOINTS.exhibits.heading_records.get.endpoint.replace(':exhibit_id', exhibit_id);
             let endpoint = tmp.replace(':heading_id', item_id);
 
@@ -48,7 +47,7 @@ const itemsDetailsHeadingModule = (function () {
 
             let response = await httpModule.req({
                 method: 'GET',
-                url: endpoint + '?type=edit&uid=' + profile.uid,
+                url: endpoint + '?type=details',
                 headers: {
                     'Content-Type': 'application/json',
                     'x-access-token': token
@@ -67,7 +66,6 @@ const itemsDetailsHeadingModule = (function () {
     async function display_edit_record () {
 
         let record = await get_item_heading_record();
-        let styles;
         let is_published = record.is_published;
         let created_by = record.created_by;
         let created = record.created;
@@ -91,42 +89,12 @@ const itemsDetailsHeadingModule = (function () {
 
         document.querySelector('#created').innerHTML = item_created;
         document.querySelector('#item-heading-text-input').value = helperModule.unescape(record.text);
+        document.querySelector('#item-heading-type-input').value = record.type;
 
         if (document.querySelector('#is-published') !== null && is_published === 1) {
             document.querySelector('#is-published').value = true;
         } else if (document.querySelector('#is-published') !== null && is_published === 0) {
             document.querySelector('#is-published').value = false;
-        }
-
-        if (typeof record.styles === 'string') {
-            styles = JSON.parse(record.styles);
-        }
-
-        if (Object.keys(styles).length !== 0) {
-
-            if (styles.backgroundColor !== undefined && styles.backgroundColor.length !== 0) {
-                document.querySelector('#heading-background-color').value = styles.backgroundColor;
-                document.querySelector('#heading-background-color-picker').value = styles.backgroundColor;
-            }
-
-            if (styles.color !== undefined && styles.color.length !== 0) {
-                document.querySelector('#heading-font-color').value = styles.color;
-                document.querySelector('#heading-font-color-picker').value = styles.color;
-            }
-
-            if (styles.fontSize !== undefined) {
-                document.querySelector('#heading-font-size').value = styles.fontSize.replace('px', '');
-            } else {
-                document.querySelector('#heading-font-size').value = '';
-            }
-
-            let font_values = document.querySelector('#heading-font');
-
-            for (let i = 0;i<font_values.length;i++) {
-                if (font_values[i].value === styles.fontFamily) {
-                    document.querySelector('#heading-font').value = styles.fontFamily;
-                }
-            }
         }
 
         return false;
@@ -216,7 +184,6 @@ const itemsDetailsHeadingModule = (function () {
             const exhibit_id = helperModule.get_parameter_by_name('exhibit_id');
             await exhibitsModule.set_exhibit_title(exhibit_id);
 
-            document.querySelector('#save-heading-btn').addEventListener('click', await itemsDetailsHeadingModule.update_item_heading_record);
             await display_edit_record();
 
         } catch (error) {

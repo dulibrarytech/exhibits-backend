@@ -19,6 +19,7 @@
 'use strict';
 
 const LOGGER = require('../../libs/log4');
+const Base_tasks = require('./tasks_helper');
 
 /**
  * Object contains tasks used to manage recycled records
@@ -26,11 +27,10 @@ const LOGGER = require('../../libs/log4');
  * @param TABLE
  * @type {Recycled_record_tasks}
  */
-const Recycled_record_tasks = class {
+const Recycled_record_tasks = class extends Base_tasks {
 
     constructor(DB, TABLE) {
-        this.DB = DB;
-        this.TABLE = TABLE;
+        super(DB, TABLE);
     }
 
     /**

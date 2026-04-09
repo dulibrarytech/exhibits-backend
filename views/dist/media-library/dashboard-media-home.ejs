@@ -1,0 +1,323 @@
+<%- include('../partials/header.ejs'); %> <body> <%- include('../partials/nav-dashboard'); %> <div id="right-panel" class="right-panel"> <%- include('../partials/main-header.ejs'); %> <main class="content" id="main-content"><div id="message" role="status" aria-live="polite"></div><h1 id="media-library-title">Media Library</h1><section id="media-card" class="card" aria-labelledby="import-upload-heading"><div class="card-header"><strong class="card-title mb-3" id="import-upload-heading">Import/Upload Media</strong></div><div class="card-body"><div class="container"><!-- Media tabs --><ul class="nav nav-tabs" id="mediaTab" role="tablist"><li class="nav-item" role="presentation"><button class="nav-link active" id="import-repo-media-tab" data-toggle="tab" data-target="#import-repo-media" type="button" role="tab" aria-controls="import-repo-media" aria-selected="true">Import Repository Media</button></li><li class="nav-item" role="presentation"><button class="nav-link" id="upload-media-tab" data-toggle="tab" data-target="#upload-media" type="button" role="tab" aria-controls="upload-media" aria-selected="false">Upload Media</button></li><li class="nav-item" role="presentation"><button class="nav-link" id="import-audio-video-tab" data-toggle="tab" data-target="#import-audio-video" type="button" role="tab" aria-controls="import-audio-video" aria-selected="false">Import Kaltura Audio/Video</button></li></ul><div class="tab-content" id="mediaTabContent"><div class="tab-pane fade show active pt-4" id="import-repo-media" role="tabpanel" aria-labelledby="import-repo-media-tab" tabindex="0"> <%- include('partials/tab-import-repo-media.ejs'); %> </div><div class="tab-pane fade pt-4" id="upload-media" role="tabpanel" aria-labelledby="upload-media-tab" tabindex="0"> <%- include('partials/tab-upload-media.ejs'); %> </div><div class="tab-pane fade pt-4" id="import-audio-video" role="tabpanel" aria-labelledby="import-audio-video-tab" tabindex="0"> <%- include('partials/tab-import-audio-video.ejs'); %> </div></div></div><input type="hidden" id="is-repo-item" name="is_repo_item" value="0"></div></section><section id="item-card" class="card" aria-labelledby="media-list-heading"><div class="card-header"><strong class="card-title mb-3" id="media-list-heading">Media List</strong></div><div class="card-body"><table id="items" class="display" style="width:100%"><caption class="sr-only">List of media files in the library</caption><thead><tr><th scope="col">Name</th><th scope="col">File Name</th><th scope="col">Import Type</th><th scope="col">Date Added</th><th scope="col">Actions</th></tr></thead><tbody id="media-data"></tbody></table></div></section></main><div class="clearfix"></div> <%- include('../partials/footer.ejs'); %> </div><style>/* Match exhibit table font size */
+    #media-card .card-body {
+        font-size: 0.875rem;
+    }
+
+    #items td {
+        font-size: 0.875rem;
+    }
+
+    /* Hide First/Last buttons (prev + numbers + next only) */
+    #items_wrapper .dt-paging .dt-paging-button.first,
+    #items_wrapper .dt-paging .dt-paging-button.last {
+        display: none !important;
+    }
+
+    /* Paging container layout */
+    #items_wrapper .dt-paging {
+        text-align: right;
+        white-space: nowrap;
+        padding-top: 15px;
+    }
+
+    /* Paging nav - use inline-flex for connected button group */
+    #items_wrapper .dt-paging nav {
+        display: inline-flex;
+    }
+
+    /* Base button styling - .page-link */
+    #items_wrapper .dt-paging .dt-paging-button {
+        display: inline-block;
+        box-sizing: border-box;
+        min-width: 1.5em;
+        padding: 0.4rem 0.75rem !important;
+        margin-left: -1px !important;
+        font-size: 0.875rem !important;
+        line-height: 1.5 !important;
+        text-align: center;
+        text-decoration: none !important;
+        cursor: pointer;
+        color: #7f7f7f !important;
+        background: #fff !important;
+        background-color: #fff !important;
+        border: 1px solid #7f7f7f !important;
+        border-radius: 0 !important;
+        transition: all 0.15s ease-in-out;
+        box-shadow: none !important;
+    }
+
+    /* First visible button (Previous) - rounded left corners */
+    #items_wrapper .dt-paging .dt-paging-button.previous {
+        margin-left: 0 !important;
+        border-top-left-radius: 0.2rem !important;
+        border-bottom-left-radius: 0.2rem !important;
+    }
+
+    /* Last visible button (Next) - rounded right corners */
+    #items_wrapper .dt-paging .dt-paging-button.next {
+        border-top-right-radius: 0.2rem !important;
+        border-bottom-right-radius: 0.2rem !important;
+    }
+
+    /* Hover state - match repo .page-link:hover */
+    #items_wrapper .dt-paging .dt-paging-button:hover {
+        z-index: 2;
+        color: #5f5f5f !important;
+        text-decoration: none !important;
+        background-color: #f0f0f0 !important;
+        background: #f0f0f0 !important;
+        border-color: #7f7f7f !important;
+    }
+
+    /* Active/current page - .page-item.active .page-link */
+    #items_wrapper .dt-paging .dt-paging-button.current,
+    #items_wrapper .dt-paging .dt-paging-button.current:hover {
+        z-index: 3;
+        color: #fff !important;
+        background-color: #7f7f7f !important;
+        background: #7f7f7f !important;
+        border-color: #7f7f7f !important;
+    }
+
+    /* Disabled state - match repo .page-item.disabled .page-link */
+    #items_wrapper .dt-paging .dt-paging-button.disabled,
+    #items_wrapper .dt-paging .dt-paging-button.disabled:hover,
+    #items_wrapper .dt-paging .dt-paging-button.disabled:active {
+        color: #b0b0b0 !important;
+        pointer-events: none;
+        cursor: default;
+        background-color: #fff !important;
+        background: #fff !important;
+        border-color: #b0b0b0 !important;
+        box-shadow: none !important;
+    }
+
+    /* Focus state - .page-link:focus */
+    #items_wrapper .dt-paging .dt-paging-button:focus {
+        z-index: 3;
+        outline: 0;
+        box-shadow: 0 0 0 0.2rem rgba(127, 127, 127, 0.25) !important;
+    }
+
+    /* Ellipsis styling */
+    #items_wrapper .dt-paging .ellipsis {
+        display: inline-block;
+        padding: 0.4rem 0.75rem;
+        font-size: 0.875rem;
+        line-height: 1.5;
+        color: #b0b0b0;
+        background-color: #fff;
+        border: 1px solid #b0b0b0;
+        margin-left: -1px;
+    }
+
+    /* Info row - add separator and pagination-info */
+    #items_wrapper .row:last-child {
+        border-top: 1px solid #e9ecef;
+        margin-top: 10px;
+    }
+
+    #items_wrapper .dt-info {
+        font-size: 0.85rem;
+        color: #6c757d;
+        padding-top: 15px;
+    }
+
+    /* Length menu and search styling consistency */
+    #items_wrapper .dt-length {
+        font-size: 0.85rem;
+        color: #6c757d;
+    }
+
+    #items_wrapper .dt-search {
+        font-size: 0.85rem;
+        color: #6c757d;
+    }
+
+    /* Responsive pagination adjustments */
+    @media (max-width: 768px) {
+        #items_wrapper .dt-paging .dt-paging-button {
+            padding: 0.3rem 0.6rem !important;
+            font-size: 0.8rem !important;
+        }
+
+        #items_wrapper .dt-paging .ellipsis {
+            padding: 0.3rem 0.6rem;
+            font-size: 0.8rem;
+        }
+    }
+
+    /* Truncate long media names in the Name column */
+    .media-name-cell .media-name {
+        display: inline-block;
+        max-width: 220px;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        vertical-align: middle;
+        cursor: default;
+    }
+
+    /* Truncate long filenames in the File Name column */
+    .media-filename {
+        display: inline-block;
+        max-width: 180px;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        vertical-align: middle;
+        cursor: default;
+    }
+
+    /* ==================== Exhibit Filter Dropdown ==================== */
+
+    .exhibit-filter-wrapper {
+        position: relative;
+        font-size: 0.85rem;
+        color: #6c757d;
+    }
+
+    .exhibit-filter-label {
+        display: block;
+        margin-bottom: 0.25rem;
+        font-weight: normal;
+        white-space: nowrap;
+    }
+
+    .exhibit-filter-input-container {
+        position: relative;
+        display: flex;
+        align-items: center;
+    }
+
+    .exhibit-filter-input {
+        width: 100%;
+        padding: 0.3rem 2.2rem 0.3rem 0.5rem;
+        font-size: 0.85rem;
+        line-height: 1.5;
+        color: #495057;
+        background-color: #fff;
+        border: 1px solid #aaa;
+        border-radius: 0.2rem;
+        transition: border-color 0.15s ease-in-out, box-shadow 0.15s ease-in-out;
+        text-overflow: ellipsis;
+        overflow: hidden;
+        white-space: nowrap;
+    }
+
+    .exhibit-filter-input::placeholder {
+        color: #6c757d;
+    }
+
+    .exhibit-filter-input:focus {
+        border-color: #7f7f7f;
+        outline: 0;
+        box-shadow: 0 0 0 0.15rem rgba(127, 127, 127, 0.2);
+    }
+
+    .exhibit-filter-clear {
+        position: absolute;
+        right: 0.25rem;
+        top: 50%;
+        transform: translateY(-50%);
+        background: none;
+        border: none;
+        color: #6c757d;
+        font-size: 1.15rem;
+        line-height: 1;
+        padding: 0 0.35rem;
+        cursor: pointer;
+        z-index: 2;
+    }
+
+    .exhibit-filter-clear:hover {
+        color: #343a40;
+    }
+
+    .exhibit-filter-caret {
+        position: absolute;
+        right: 0.5rem;
+        top: 50%;
+        transform: translateY(-50%);
+        color: #adb5bd;
+        font-size: 0.75rem;
+        pointer-events: all;
+        cursor: pointer;
+        z-index: 2;
+    }
+
+    .exhibit-filter-listbox {
+        position: absolute;
+        top: 100%;
+        left: 0;
+        z-index: 1050;
+        min-width: 340px;
+        max-width: 500px;
+        max-height: 220px;
+        overflow-y: auto;
+        margin: 2px 0 0;
+        padding: 0.25rem 0;
+        list-style: none;
+        background: #fff;
+        border: 1px solid #ced4da;
+        border-radius: 0.2rem;
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.12);
+    }
+
+    .exhibit-filter-option {
+        padding: 0.35rem 0.75rem;
+        cursor: pointer;
+        white-space: normal;
+        word-break: break-word;
+        font-size: 0.85rem;
+        color: #495057;
+    }
+
+    .exhibit-filter-option:hover,
+    .exhibit-filter-option.active {
+        background-color: #f0f0f0;
+        color: #343a40;
+    }
+
+    .exhibit-filter-empty {
+        padding: 0.5rem 0.75rem;
+        color: #adb5bd;
+        font-style: italic;
+        font-size: 0.85rem;
+        list-style: none;
+    }
+
+    @media (max-width: 768px) {
+        .exhibit-filter-wrapper {
+            margin-top: 0.5rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .exhibit-filter-listbox {
+            min-width: 100%;
+            max-width: 100%;
+        }
+    }</style><!-- Uploaded Media Modal --> <%- include('partials/modal-uploaded-media-forms.ejs'); %> <!-- Repo Media Modal --> <%- include('partials/modal-repo-media-forms.ejs'); %> <!-- Kaltura Media Modal --> <%- include('partials/modal-kaltura-media-forms.ejs'); %> <!-- Edit Media Modal --> <%- include('partials/modal-edit-media-form.ejs'); %> <%- include('partials/modal-delete-media-confirm') %> <!-- View Media Modal --> <%- include('partials/modal-upload-media-view.ejs'); %> <!-- View Kaltura Media Modal --> <%- include('partials/modal-kaltura-media-view.ejs'); %> <!-- Kaltura Media Player Modal --> <%- include('partials/modal-kaltura-media-player.ejs'); %> <!-- External Libraries --> <%- include('../partials/exhibits-libs-common.ejs'); %> <script src="/exhibits-dashboard/static/libs/data_tables/datatables.min.js"></script><!-- Dropzone.js Library --><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/dropzone/5.9.3/dropzone.min.css" crossorigin="anonymous" referrerpolicy="no-referrer"><script src="https://cdnjs.cloudflare.com/ajax/libs/dropzone/5.9.3/dropzone.min.js" crossorigin="anonymous" referrerpolicy="no-referrer"></script><!-- Application Scripts --> <%- include('../partials/exhibits-app-common.ejs'); %> <script src="/exhibits-dashboard/static/app/dist/helper.media.module.min.js?<%=build_version%>"></script><!-- Media Library Helper Module (must load before all other media-library modules) --><script src="/exhibits-dashboard/static/app/dist/helper.media.library.module.min.js?<%=build_version%>"></script><!-- Repo Subjects Helper Module (must load before modal modules) --><script src="/exhibits-dashboard/static/app/dist/helper.repo.subjects.module.min.js?<%=build_version%>"></script><!-- Modals Module --><!-- Edit Modal Module (must load before modals.upload which delegates to it) --><script src="/exhibits-dashboard/static/app/dist/modals.edit.module.min.js?<%=build_version%>"></script><script src="/exhibits-dashboard/static/app/dist/modals.upload.module.min.js?<%=build_version%>"></script><script src="/exhibits-dashboard/static/app/dist/modals.repo.module.min.js?<%=build_version%>"></script><!-- Delete Confirmation Modal Module --><script src="/exhibits-dashboard/static/app/dist/modals.delete.module.min.js?<%=build_version%>"></script><!-- Uploads Module --><script src="/exhibits-dashboard/static/app/dist/uploads.module.min.js?<%=build_version%>"></script><!-- Repository Pagination Module (must load before repo.service.module) --><script src="/exhibits-dashboard/static/app/dist/repo.pagination.module.min.js?<%=build_version%>"></script><!-- Repository Service Module --><script src="/exhibits-dashboard/static/app/dist/repo.service.module.min.js?<%=build_version%>"></script><!-- Kaltura Modals Module --><script src="/exhibits-dashboard/static/app/dist/modals.kaltura.module.min.js?<%=build_version%>"></script><!-- Kaltura Service Module --><script src="/exhibits-dashboard/static/app/dist/kaltura.service.module.min.js?<%=build_version%>"></script><!-- Media Library Module --><script src="/exhibits-dashboard/static/app/dist/media.library.module.min.js?<%=build_version%>"></script><script>// Initialize media library module when DOM is ready
+    document.addEventListener('DOMContentLoaded', function() {
+
+        // Pre-fetch and cache subjects/resource types for dropdown population
+        if (typeof repoSubjectsModule !== 'undefined') {
+            repoSubjectsModule.init();
+        }
+
+        mediaLibraryModule.init();
+        
+        // Initialize repo service module (will also init pagination module)
+        if (typeof repoServiceModule !== 'undefined') {
+            repoServiceModule.init();
+        }
+
+        // Initialize Kaltura modules
+        if (typeof kalturaModalsModule !== 'undefined') {
+            kalturaModalsModule.init();
+        }
+
+        if (typeof kalturaServiceModule !== 'undefined') {
+            kalturaServiceModule.init();
+        }
+    });</script></body>

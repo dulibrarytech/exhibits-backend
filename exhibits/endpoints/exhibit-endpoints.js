@@ -44,5 +44,20 @@ module.exports = {
             endpoint: `${APP_PATH}/shared`,
             params: 'token'
         }
+    },
+    exhibit_media_library: {
+        get: {
+            description: 'Gets media library bindings for an exhibit',
+            endpoint: `${APP_PATH}${PREFIX}${VERSION}${ENDPOINT}/:exhibit_id/media-library`
+        },
+        post: {
+            description: 'Binds a media library asset to an exhibit',
+            endpoint: `${APP_PATH}${PREFIX}${VERSION}${ENDPOINT}/:exhibit_id/media-library`,
+            body: 'media_uuid, media_role (hero_image | thumbnail)'
+        },
+        delete: {
+            description: 'Removes a media library binding from an exhibit',
+            endpoint: `${APP_PATH}${PREFIX}${VERSION}${ENDPOINT}/:exhibit_id/media-library/:media_role`
+        }
     }
 };

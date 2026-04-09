@@ -20,7 +20,6 @@ const itemsEditTimelineItemFormModule = (function () {
 
     'use strict';
 
-    // const APP_PATH = window.localStorage.getItem('exhibits_app_path');
     const EXHIBITS_ENDPOINTS = endpointsModule.get_exhibits_endpoints();
     let obj = {};
 
@@ -279,14 +278,7 @@ const itemsEditTimelineItemFormModule = (function () {
                 created: document.querySelector('#created'),
                 item_title: document.querySelector('#item-title-input'),
                 item_text: document.querySelector('#item-text-input'),
-                item_date: document.querySelector('#item-date-input'),
-                // Commented out style elements for future use
-                // item_bg_color: document.querySelector('#item-background-color'),
-                // item_bg_color_picker: document.querySelector('#item-background-color-picker'),
-                // item_font_color: document.querySelector('#item-font-color'),
-                // item_font_color_picker: document.querySelector('#item-font-color-picker'),
-                // item_font: document.querySelector('#item-font'),
-                // item_font_size: document.querySelector('#item-font-size')
+                item_date: document.querySelector('#item-date-input')
             };
         };
 
@@ -385,6 +377,7 @@ const itemsEditTimelineItemFormModule = (function () {
 
         /**
          * Display media fields if on media page
+         * Delegates to common module's populate_media_previews
          */
         const display_media_fields = async (record) => {
 
@@ -392,20 +385,7 @@ const itemsEditTimelineItemFormModule = (function () {
                 return;
             }
 
-            if (typeof helperMediaModule?.display_media_fields_common === 'function') {
-                try {
-                    await helperMediaModule.display_media_fields_common(record);
-                } catch (error) {
-                    console.error('Error displaying media fields:', error);
-                }
-            }
-
-            if (record.item_subjects !== null && record.item_subjects?.length > 0) {
-                const subjects = record.item_subjects.split('|');
-                await helperModule.create_subjects_menu(subjects);
-            } else {
-                await helperModule.create_subjects_menu();
-            }
+            itemsCommonVerticalTimelineItemFormModule.populate_media_previews(record);
         };
 
         /**
@@ -493,9 +473,6 @@ const itemsEditTimelineItemFormModule = (function () {
             // Cache all DOM elements
             const elements = cache_dom_elements();
 
-            // Check if record is locked
-            await helperModule.check_if_locked(record, '#item-submit-card');
-
             // Display metadata (creation/update info)
             display_metadata_info(record, elements.created);
 
@@ -506,6 +483,12 @@ const itemsEditTimelineItemFormModule = (function () {
 
             // Display media fields if on media page
             await display_media_fields(record);
+
+            // Set embed item checkbox from record
+            const embed_item_el = document.getElementById('embed-item');
+            if (embed_item_el) {
+                embed_item_el.checked = record.is_embedded === 1;
+            }
 
             // Apply style settings (currently commented out)
             // apply_style_settings(record.styles, elements);
@@ -771,13 +754,10 @@ const itemsEditTimelineItemFormModule = (function () {
             await authModule.check_permissions(['update_item', 'update_any_item'], 'timeline_item', exhibit_id, item_id, redirect);
 
             await exhibitsModule.set_exhibit_title(exhibit_id);
-            navModule.set_timeline_item_nav_menu_links();
+            // navModule.set_timeline_item_nav_menu_links();
+            navModule.back_to_timeline_items();
             await display_edit_record();
             document.querySelector('#save-item-btn').addEventListener('click', itemsEditTimelineItemFormModule.update_timeline_item_record);
-
-            if (window.location.pathname.indexOf('media') !== -1) {
-                helperMediaModule.media_edit_init();
-            }
 
         } catch (error) {
             document.querySelector('#message').innerHTML = `<div class="alert alert-danger" role="alert"><i class="fa fa-exclamation"></i> ${error.message}</div>`;

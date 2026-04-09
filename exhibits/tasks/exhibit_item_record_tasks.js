@@ -20,145 +20,21 @@
 
 const HELPER = require('../../libs/helper');
 const LOGGER = require('../../libs/log4');
+const Base_tasks = require('./tasks_helper');
 
 /**
  * Object contains tasks used to manage exhibit item records
  * @param DB
  * @param TABLE
- * @type {Exhibit_record_tasks}
+ * @type {Exhibit_item_record_tasks}
  */
-const Exhibit_item_record_tasks = class {
+const Exhibit_item_record_tasks = class extends Base_tasks {
 
     constructor(DB, TABLE) {
-        this.DB = DB;
-        this.TABLE = TABLE;
-        this.UUID_REGEX = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
-        this.QUERY_TIMEOUT = 10000;
+        super(DB, TABLE);
     }
 
-    // ==================== VALIDATION HELPERS ====================
-
-    /**
-     * Validates that database connection is available
-     * @private
-     */
-    _validate_database() {
-        if (!this.DB || typeof this.DB !== 'function') {
-            throw new Error('Database connection is not available');
-        }
-    }
-
-    /**
-     * Validates that a specific table exists
-     * @param {string} table_name - Name of the table to validate
-     * @private
-     */
-    _validate_table(table_name) {
-        if (!this.TABLE?.[table_name]) {
-            throw new Error(`Table name "${table_name}" is not defined`);
-        }
-    }
-
-    /**
-     * Validates a UUID string
-     * @param {string} uuid - UUID to validate
-     * @param {string} field_name - Name of the field for error message
-     * @returns {string} Trimmed UUID
-     * @private
-     */
-    _validate_uuid(uuid, field_name = 'UUID') {
-        if (!uuid || typeof uuid !== 'string' || !uuid.trim()) {
-            throw new Error(`Valid ${field_name} is required`);
-        }
-
-        const trimmed_uuid = uuid.trim();
-
-        if (!this.UUID_REGEX.test(trimmed_uuid)) {
-            throw new Error(`Invalid ${field_name} format`);
-        }
-
-        return trimmed_uuid;
-    }
-
-    /**
-     * Validates multiple UUIDs at once
-     * @param {Object} uuid_map - Object with uuid_value: field_name pairs
-     * @returns {Object} Object with validated and trimmed UUIDs
-     * @private
-     */
-    _validate_uuids(uuid_map) {
-        const validated = {};
-        for (const [value, name] of Object.entries(uuid_map)) {
-            validated[name] = this._validate_uuid(value, name);
-        }
-        return validated;
-    }
-
-    /**
-     * Validates a required string field
-     * @param {string} value - Value to validate
-     * @param {string} field_name - Name of the field for error message
-     * @returns {string} Trimmed value
-     * @private
-     */
-    _validate_string(value, field_name) {
-        if (!value || typeof value !== 'string' || !value.trim()) {
-            throw new Error(`Valid ${field_name} is required`);
-        }
-        return value.trim();
-    }
-
-    /**
-     * Validates a data object
-     * @param {Object} data - Data object to validate
-     * @private
-     */
-    _validate_data_object(data) {
-        if (!data || typeof data !== 'object' || Array.isArray(data)) {
-            throw new Error('Data must be a valid object');
-        }
-
-        if (Object.keys(data).length === 0) {
-            throw new Error('Data object cannot be empty');
-        }
-    }
-
-    /**
-     * Handles error logging and re-throwing
-     * @param {Error} error - Error to handle
-     * @param {string} method_name - Name of the method where error occurred
-     * @param {Object} context - Additional context for logging
-     * @private
-     */
-    _handle_error(error, method_name, context = {}) {
-        const error_context = {
-            method: method_name,
-            ...context,
-            timestamp: new Date().toISOString(),
-            message: error.message,
-            stack: error.stack
-        };
-
-        LOGGER.module().error(
-            `Failed to ${method_name.replace(/_/g, ' ')}`,
-            error_context
-        );
-
-        throw error;
-    }
-
-    /**
-     * Logs successful operation
-     * @param {string} message - Success message
-     * @param {Object} context - Context for logging
-     * @private
-     */
-    _log_success(message, context = {}) {
-        LOGGER.module().info(message, {
-            ...context,
-            timestamp: new Date().toISOString()
-        });
-    }
+    // Validation helpers, _handle_error, _log_success inherited from Base_tasks
 
     /**
      * Sets default values for item fields
@@ -220,124 +96,7 @@ const Exhibit_item_record_tasks = class {
         return table_name;
     }
 
-    // ==================== COMMON OPERATIONS ====================
-
-    /**
-     * Generic update publish status for any table
-     * @param {string} table_name - Table name
-     * @param {Object} where_clause - Where conditions
-     * @param {number} status - 0 or 1
-     * @param {string} [updated_by=null] - User ID
-     * @returns {Promise<Object>} Update result
-     * @private
-     */
-    async _update_publish_status(table_name, where_clause, status, updated_by = null) {
-        this._validate_database();
-        this._validate_table(table_name);
-
-        if (![0, 1].includes(status)) {
-            throw new Error('Status must be 0 or 1');
-        }
-
-        const update_data = {is_published: status};
-        if (updated_by) {
-            update_data.updated_by = updated_by;
-        }
-
-        const affected_rows = await this.DB(this.TABLE[table_name])
-            .where(where_clause)
-            .update(update_data)
-            .timeout(this.QUERY_TIMEOUT);
-
-        return {
-            success: true,
-            affected_rows,
-            status: status === 1 ? 'published' : 'suppressed',
-            message: `Records ${status === 1 ? 'published' : 'suppressed'} successfully`
-        };
-    }
-
-    /**
-     * Generic update single record publish status
-     * @param {string} table_name - Table name
-     * @param {string} uuid - Record UUID
-     * @param {number} status - 0 or 1
-     * @param {string} [updated_by=null] - User ID
-     * @returns {Promise<Object>} Update result
-     * @private
-     */
-    async _update_single_publish_status(table_name, uuid, status, updated_by = null) {
-        this._validate_database();
-        this._validate_table(table_name);
-
-        const uuid_trimmed = this._validate_uuid(uuid, `${table_name} UUID`);
-
-        if (![0, 1].includes(status)) {
-            throw new Error('Status must be 0 or 1');
-        }
-
-        const update_data = {is_published: status};
-        if (updated_by) {
-            update_data.updated_by = updated_by;
-        }
-
-        const affected_rows = await this.DB(this.TABLE[table_name])
-            .where({uuid: uuid_trimmed})
-            .update(update_data)
-            .timeout(this.QUERY_TIMEOUT);
-
-        if (affected_rows === 0) {
-            throw new Error(`No ${table_name} record found or updated`);
-        }
-
-        return {
-            success: true,
-            uuid: uuid_trimmed,
-            affected_rows,
-            updated_by,
-            message: `${table_name} record ${status === 1 ? 'published' : 'suppressed'} successfully`
-        };
-    }
-
-    /**
-     * Generic reorder function
-     * @param {string} table_name - Table name
-     * @param {Object} where_clause - Where conditions
-     * @param {Object} item - Item with uuid and order
-     * @returns {Promise<Object>} Reorder result
-     * @private
-     */
-    async _reorder_items(table_name, where_clause, item) {
-
-        this._validate_database();
-        this._validate_table(table_name);
-        console.log(table_name);
-        console.log(where_clause);
-        console.log(item);
-        if (!item || typeof item !== 'object' || Array.isArray(item)) {
-            throw new Error('Valid item object is required');
-        }
-
-        if (!item.uuid || typeof item.order !== 'number') {
-            throw new Error('Item must have uuid and order properties');
-        }
-
-        const affected_rows = await this.DB(this.TABLE[table_name])
-            .where({
-                ...where_clause,
-                uuid: item.uuid
-            })
-            .update({order: item.order})
-            .timeout(this.QUERY_TIMEOUT);
-
-        return {
-            success: true,
-            affected_rows,
-            uuid: item.uuid,
-            order: item.order,
-            message: `${table_name} reordered successfully`
-        };
-    }
+    // _update_publish_status, _update_single_publish_status, _reorder_items inherited from Base_tasks
 
     // ==================== ITEM RECORDS ====================
 
@@ -362,7 +121,6 @@ const Exhibit_item_record_tasks = class {
             });
 
             this._validate_string(data.item_type, 'item_type');
-            // this._validate_string(data.mime_type, 'mime_type');
 
             // Build record with defaults
             const record_data = {
@@ -372,8 +130,10 @@ const Exhibit_item_record_tasks = class {
                 mime_type: data.mime_type.trim() || null,
                 title: data.title?.trim() || '',
                 thumbnail: data.thumbnail || null,
+                thumbnail_media_uuid: data.thumbnail_media_uuid || null,
                 caption: data.caption || null,
                 media: data.media || null,
+                media_uuid: data.media_uuid || null,
                 text: data.text || null,
                 description: data.description || null,
                 alt_text: data.alt_text || null,
@@ -446,16 +206,56 @@ const Exhibit_item_record_tasks = class {
 
             this._validate_database();
             this._validate_table('item_records');
+            this._validate_table('media_library_records');
 
             const exhibit_uuid = this._validate_uuid(is_member_of_exhibit, 'exhibit UUID');
 
             const items = await this.DB(this.TABLE.item_records)
-                .select('*')
+                .select(
+                    `${this.TABLE.item_records}.*`,
+                    // Media library metadata for the primary media asset
+                    `media_lib.name as media_name`,
+                    `media_lib.ingest_method as media_ingest_method`,
+                    `media_lib.kaltura_thumbnail_url as media_kaltura_thumbnail_url`,
+                    `media_lib.repo_uuid as media_repo_uuid`,
+                    `media_lib.thumbnail_path as media_thumbnail_path`,
+                    `media_lib.alt_text as media_alt_text`,
+                    `media_lib.is_alt_text_decorative as media_is_alt_text_decorative`,
+                    // v2 indexer fields: IIIF, Kaltura, subjects, dimensions
+                    `media_lib.iiif_manifest as media_iiif_manifest`,
+                    `media_lib.kaltura_entry_id`,
+                    `media_lib.media_width as ml_media_width`,
+                    `media_lib.media_height as ml_media_height`,
+                    `media_lib.media_type as ml_media_type`,
+                    `media_lib.filename as ml_media_filename`,
+                    `media_lib.topics_subjects as media_topics_subjects`,
+                    `media_lib.genre_form_subjects as media_genre_form_subjects`,
+                    `media_lib.places_subjects as media_places_subjects`,
+                    // Media library metadata for the thumbnail asset
+                    `thumb_lib.name as thumbnail_media_name`,
+                    `thumb_lib.ingest_method as thumbnail_ingest_method`,
+                    `thumb_lib.kaltura_thumbnail_url as thumbnail_media_kaltura_thumbnail_url`,
+                    `thumb_lib.repo_uuid as thumbnail_media_repo_uuid`,
+                    `thumb_lib.thumbnail_path as thumbnail_media_thumbnail_path`,
+                    `thumb_lib.iiif_manifest as thumb_iiif_manifest`
+                )
+                .leftJoin(
+                    `${this.TABLE.media_library_records} as media_lib`,
+                    `${this.TABLE.item_records}.media_uuid`,
+                    '=',
+                    `media_lib.uuid`
+                )
+                .leftJoin(
+                    `${this.TABLE.media_library_records} as thumb_lib`,
+                    `${this.TABLE.item_records}.thumbnail_media_uuid`,
+                    '=',
+                    `thumb_lib.uuid`
+                )
                 .where({
-                    is_member_of_exhibit: exhibit_uuid,
-                    is_deleted: 0
+                    [`${this.TABLE.item_records}.is_member_of_exhibit`]: exhibit_uuid,
+                    [`${this.TABLE.item_records}.is_deleted`]: 0
                 })
-                .orderBy('order', 'asc')
+                .orderBy(`${this.TABLE.item_records}.order`, 'asc')
                 .timeout(this.QUERY_TIMEOUT);
 
             this._log_success('Item records retrieved successfully', {
@@ -484,6 +284,7 @@ const Exhibit_item_record_tasks = class {
 
             this._validate_database();
             this._validate_table('item_records');
+            this._validate_table('media_library_records');
 
             const validated = this._validate_uuids({
                 [is_member_of_exhibit]: 'exhibit UUID',
@@ -491,11 +292,50 @@ const Exhibit_item_record_tasks = class {
             });
 
             const result = await this.DB(this.TABLE.item_records)
-                .select('*')
+                .select(
+                    `${this.TABLE.item_records}.*`,
+                    // Media library metadata for the primary media asset
+                    `media_lib.name as media_name`,
+                    `media_lib.ingest_method as media_ingest_method`,
+                    `media_lib.kaltura_thumbnail_url as media_kaltura_thumbnail_url`,
+                    `media_lib.repo_uuid as media_repo_uuid`,
+                    `media_lib.thumbnail_path as media_thumbnail_path`,
+                    `media_lib.alt_text as media_alt_text`,
+                    `media_lib.is_alt_text_decorative as media_is_alt_text_decorative`,
+                    // v2 indexer fields: IIIF, Kaltura, subjects, dimensions
+                    `media_lib.iiif_manifest as media_iiif_manifest`,
+                    `media_lib.kaltura_entry_id`,
+                    `media_lib.media_width as ml_media_width`,
+                    `media_lib.media_height as ml_media_height`,
+                    `media_lib.media_type as ml_media_type`,
+                    `media_lib.filename as ml_media_filename`,
+                    `media_lib.topics_subjects as media_topics_subjects`,
+                    `media_lib.genre_form_subjects as media_genre_form_subjects`,
+                    `media_lib.places_subjects as media_places_subjects`,
+                    // Media library metadata for the thumbnail asset
+                    `thumb_lib.name as thumbnail_media_name`,
+                    `thumb_lib.ingest_method as thumbnail_ingest_method`,
+                    `thumb_lib.kaltura_thumbnail_url as thumbnail_media_kaltura_thumbnail_url`,
+                    `thumb_lib.repo_uuid as thumbnail_media_repo_uuid`,
+                    `thumb_lib.thumbnail_path as thumbnail_media_thumbnail_path`,
+                    `thumb_lib.iiif_manifest as thumb_iiif_manifest`
+                )
+                .leftJoin(
+                    `${this.TABLE.media_library_records} as media_lib`,
+                    `${this.TABLE.item_records}.media_uuid`,
+                    '=',
+                    `media_lib.uuid`
+                )
+                .leftJoin(
+                    `${this.TABLE.media_library_records} as thumb_lib`,
+                    `${this.TABLE.item_records}.thumbnail_media_uuid`,
+                    '=',
+                    `thumb_lib.uuid`
+                )
                 .where({
-                    is_member_of_exhibit: validated['exhibit UUID'],
-                    uuid: validated['item UUID'],
-                    is_deleted: 0
+                    [`${this.TABLE.item_records}.is_member_of_exhibit`]: validated['exhibit UUID'],
+                    [`${this.TABLE.item_records}.uuid`]: validated['item UUID'],
+                    [`${this.TABLE.item_records}.is_deleted`]: 0
                 })
                 .first()
                 .timeout(this.QUERY_TIMEOUT);
@@ -521,6 +361,7 @@ const Exhibit_item_record_tasks = class {
 
             this._validate_database();
             this._validate_table('item_records');
+            this._validate_table('media_library_records');
 
             if (uid === null || uid === undefined || uid === '') {
                 throw new Error('Valid user ID is required');
@@ -537,11 +378,41 @@ const Exhibit_item_record_tasks = class {
             });
 
             const record = await this.DB(this.TABLE.item_records)
-                .select('*')
+                .select(
+                    `${this.TABLE.item_records}.*`,
+                    // Media library metadata for the primary media asset
+                    `media_lib.name as media_name`,
+                    `media_lib.ingest_method as media_ingest_method`,
+                    `media_lib.kaltura_thumbnail_url as media_kaltura_thumbnail_url`,
+                    `media_lib.repo_uuid as media_repo_uuid`,
+                    `media_lib.thumbnail_path as media_thumbnail_path`,
+                    `media_lib.alt_text as media_alt_text`,
+                    `media_lib.is_alt_text_decorative as media_is_alt_text_decorative`,
+                    `media_lib.topics_subjects as media_topics_subjects`,
+                    `media_lib.genre_form_subjects as media_genre_form_subjects`,
+                    `media_lib.places_subjects as media_places_subjects`,
+                    // Media library metadata for the thumbnail asset
+                    `thumb_lib.name as thumbnail_media_name`,
+                    `thumb_lib.ingest_method as thumbnail_ingest_method`,
+                    `thumb_lib.repo_uuid as thumbnail_repo_uuid`,
+                    `thumb_lib.thumbnail_path as thumbnail_media_thumbnail_path`
+                )
+                .leftJoin(
+                    `${this.TABLE.media_library_records} as media_lib`,
+                    `${this.TABLE.item_records}.media_uuid`,
+                    '=',
+                    `media_lib.uuid`
+                )
+                .leftJoin(
+                    `${this.TABLE.media_library_records} as thumb_lib`,
+                    `${this.TABLE.item_records}.thumbnail_media_uuid`,
+                    '=',
+                    `thumb_lib.uuid`
+                )
                 .where({
-                    is_member_of_exhibit: validated['exhibit UUID'],
-                    uuid: validated['item UUID'],
-                    is_deleted: 0
+                    [`${this.TABLE.item_records}.is_member_of_exhibit`]: validated['exhibit UUID'],
+                    [`${this.TABLE.item_records}.uuid`]: validated['item UUID'],
+                    [`${this.TABLE.item_records}.is_deleted`]: 0
                 })
                 .first()
                 .timeout(this.QUERY_TIMEOUT);
@@ -597,6 +468,86 @@ const Exhibit_item_record_tasks = class {
     }
 
     /**
+     * Gets an item record with media library metadata for read-only details view.
+     * Same query as get_item_edit_record but does NOT lock the record.
+     * @param {string} is_member_of_exhibit - The exhibit UUID
+     * @param {string} uuid - The item UUID
+     * @returns {Promise<Object|null>} Item record with media metadata or null
+     */
+    async get_item_details_record(is_member_of_exhibit, uuid) {
+
+        try {
+
+            this._validate_database();
+            this._validate_table('item_records');
+            this._validate_table('media_library_records');
+
+            const validated = this._validate_uuids({
+                [is_member_of_exhibit]: 'exhibit UUID',
+                [uuid]: 'item UUID'
+            });
+
+            const record = await this.DB(this.TABLE.item_records)
+                .select(
+                    `${this.TABLE.item_records}.*`,
+                    // Media library metadata for the primary media asset
+                    `media_lib.name as media_name`,
+                    `media_lib.ingest_method as media_ingest_method`,
+                    `media_lib.kaltura_thumbnail_url as media_kaltura_thumbnail_url`,
+                    `media_lib.repo_uuid as media_repo_uuid`,
+                    `media_lib.thumbnail_path as media_thumbnail_path`,
+                    `media_lib.alt_text as media_alt_text`,
+                    `media_lib.is_alt_text_decorative as media_is_alt_text_decorative`,
+                    `media_lib.topics_subjects as media_topics_subjects`,
+                    `media_lib.genre_form_subjects as media_genre_form_subjects`,
+                    `media_lib.places_subjects as media_places_subjects`,
+                    // Media library metadata for the thumbnail asset
+                    `thumb_lib.name as thumbnail_media_name`,
+                    `thumb_lib.ingest_method as thumbnail_ingest_method`,
+                    `thumb_lib.repo_uuid as thumbnail_repo_uuid`,
+                    `thumb_lib.thumbnail_path as thumbnail_media_thumbnail_path`
+                )
+                .leftJoin(
+                    `${this.TABLE.media_library_records} as media_lib`,
+                    `${this.TABLE.item_records}.media_uuid`,
+                    '=',
+                    `media_lib.uuid`
+                )
+                .leftJoin(
+                    `${this.TABLE.media_library_records} as thumb_lib`,
+                    `${this.TABLE.item_records}.thumbnail_media_uuid`,
+                    '=',
+                    `thumb_lib.uuid`
+                )
+                .where({
+                    [`${this.TABLE.item_records}.is_member_of_exhibit`]: validated['exhibit UUID'],
+                    [`${this.TABLE.item_records}.uuid`]: validated['item UUID'],
+                    [`${this.TABLE.item_records}.is_deleted`]: 0
+                })
+                .first()
+                .timeout(this.QUERY_TIMEOUT);
+
+            if (!record) {
+                this._log_success('Item record not found', validated);
+                return null;
+            }
+
+            this._log_success('Item details record retrieved successfully', {
+                uuid: validated['item UUID'],
+                is_member_of_exhibit: validated['exhibit UUID']
+            });
+
+            return record;
+
+        } catch (error) {
+            this._handle_error(error, 'get_item_details_record', {
+                is_member_of_exhibit,
+                uuid
+            });
+        }
+    }
+
+    /**
      * Updates an item record
      * @param {Object} data - Item data to update
      * @param {string} [updated_by=null] - User ID performing the update
@@ -605,11 +556,12 @@ const Exhibit_item_record_tasks = class {
     async update_item_record(data, updated_by = null) {
 
         const UPDATABLE_FIELDS = [
-            'thumbnail', 'title', 'caption', 'item_type', 'mime_type', 'media',
-            'text', 'wrap_text', 'description', 'type', 'layout', 'media_width',
-            'media_padding', 'alt_text', 'is_alt_text_decorative', 'pdf_open_to_page',
-            'item_subjects', 'styles', 'order', 'is_repo_item', 'is_kaltura_item',
-            'is_embedded', 'is_published', 'is_locked', 'locked_by_user', 'locked_at', 'owner'
+            'thumbnail', 'thumbnail_media_uuid', 'title', 'caption', 'item_type', 'mime_type',
+            'media', 'media_uuid', 'text', 'wrap_text', 'description', 'type', 'layout',
+            'media_width', 'media_padding', 'alt_text', 'is_alt_text_decorative',
+            'pdf_open_to_page', 'item_subjects', 'styles', 'order', 'is_repo_item',
+            'is_kaltura_item', 'is_embedded', 'is_published', 'is_locked', 'locked_by_user',
+            'locked_at', 'owner'
         ];
 
         try {

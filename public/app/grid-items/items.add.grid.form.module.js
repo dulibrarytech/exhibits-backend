@@ -28,7 +28,7 @@ const itemsAddGridFormModule = (function () {
         // CRITICAL: Check if we're in edit mode first
         const item_id = helperModule.get_parameter_by_name('item_id');
         if (item_id) {
-            console.log('🔴 Item ID exists - already in edit mode, preventing duplicate creation');
+            console.log('Item ID exists - already in edit mode, preventing duplicate creation');
             console.log('Current URL:', window.location.href);
             console.log('item_id:', item_id);
 
@@ -44,7 +44,7 @@ const itemsAddGridFormModule = (function () {
             return false;
         }
 
-        console.log('🟢 CREATE FUNCTION CALLED - No item_id, proceeding with creation');
+        console.log('CREATE FUNCTION CALLED - No item_id, proceeding with creation');
 
         // Prevent duplicate submissions
         if (this._is_creating_grid) {
@@ -119,7 +119,7 @@ const itemsAddGridFormModule = (function () {
                     throw new Error('Server did not return a valid grid ID');
                 }
 
-                console.log('✅ Grid record created successfully, ID:', new_grid_id);
+                console.log('Grid record created successfully, ID:', new_grid_id);
 
                 // Show success message
                 display_status_message(message_element, 'success', 'Grid record created successfully. Redirecting to edit page...');
@@ -142,7 +142,7 @@ const itemsAddGridFormModule = (function () {
             }
 
         } catch (error) {
-            console.error('❌ Error creating grid record:', error);
+            console.error('Error creating grid record:', error);
 
             const message_element = document.querySelector('#message');
             const error_message = get_user_friendly_error_message(error);
@@ -727,69 +727,14 @@ const itemsAddGridFormModule = (function () {
         return 'Unable to create grid record. Please try again.';
     }
 
-    /*
-    obj.create_grid_record__ = async function () {
-
-        try {
-
-            window.scrollTo(0, 0);
-            let exhibit_id = helperModule.get_parameter_by_name('exhibit_id');
-
-            if (exhibit_id === undefined) {
-                document.querySelector('#message').innerHTML = `<div class="alert alert-warning" role="alert"><i class="fa fa-info"></i> Unable to create grid record.</div>`;
-                return false;
-            }
-
-            document.querySelector('#message').innerHTML = `<div class="alert alert-info" role="alert"><i class="fa fa-info"></i> Creating grid record...</div>`;
-
-            const data = itemsCommonStandardGridFormModule.get_common_grid_form_fields();
-
-            if (data === false) {
-                return false;
-            }
-
-            data.created_by = helperModule.get_user_name();
-            data.owner = helperModule.get_owner();
-
-            let token = authModule.get_user_token();
-            let response = await httpModule.req({
-                method: 'POST',
-                url: EXHIBITS_ENDPOINTS.exhibits.grid_records.post.endpoint.replace(':exhibit_id', exhibit_id),
-                data: data,
-                headers: {
-                    'Content-Type': 'application/json',
-                    'x-access-token': token
-                }
-            });
-
-            if (response !== undefined && response.status === 201) {
-
-                window.scrollTo(0, 0);
-                document.querySelector('#message').innerHTML = `<div class="alert alert-success" role="alert"><i class="fa fa-info"></i> Grid record created</div>`;
-                const grid_id = response.data.data;
-
-                setTimeout(() => {
-                    location.replace(`${APP_PATH}/items/grid/edit?exhibit_id=${exhibit_id}&item_id=${grid_id}`);
-                }, 900);
-            } else if (response === undefined) {
-                document.querySelector('#message').innerHTML = `<div class="alert alert-danger" role="alert"><i class="fa fa-exclamation"></i> You do not have permission to add item to this exhibit.</div>`;
-            }
-
-        } catch (error) {
-            document.querySelector('#message').innerHTML = `<div class="alert alert-danger" role="alert"><i class="fa fa-exclamation"></i> ${error.message}</div>`;
-        }
-    };
-    */
-
     obj.init = async function () {
 
         const exhibit_id = helperModule.get_parameter_by_name('exhibit_id');
         const redirect = '/items?exhibit_id=' + exhibit_id + '&status=403';
         await authModule.check_permissions(['add_item', 'add_item_to_any_exhibit'], 'grid', exhibit_id, null, redirect);
-
+        // Note: #back-to-items href is now wired by navModule.wire_nav_links()
         exhibitsModule.set_exhibit_title(exhibit_id);
         document.querySelector('#save-item-btn').addEventListener('click', itemsAddGridFormModule.create_grid_record);
-
     };
 
     return obj;

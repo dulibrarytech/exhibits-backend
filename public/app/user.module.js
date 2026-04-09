@@ -312,7 +312,38 @@ const userModule = (function () {
 
             const data_table = new DataTable(table_el, {
                 paging: true,
-                order: [[0, 'asc']]
+                order: [[0, 'asc']],
+                pageLength: 25,
+                lengthMenu: [[10, 25, 50, 100, -1], [10, 25, 50, 100, 'All']],
+                responsive: true,
+                autoWidth: false,
+                columnDefs: [
+                    { orderable: false, searchable: false, targets: 3 } // Actions column
+                ],
+                language: {
+                    emptyTable: 'No users found',
+                    zeroRecords: 'No matching users found',
+                    info: 'Showing _START_ - _END_ of _TOTAL_ results',
+                    infoEmpty: 'No users available',
+                    infoFiltered: '(filtered from _MAX_ total users)',
+                    search: 'Search users:',
+                    lengthMenu: 'Show _MENU_ users per page',
+                    paginate: {
+                        first: '<i class="fa fa-angle-double-left" aria-hidden="true"></i><span class="sr-only">First</span>',
+                        last: '<i class="fa fa-angle-double-right" aria-hidden="true"></i><span class="sr-only">Last</span>',
+                        next: '<i class="fa fa-chevron-right" aria-hidden="true"></i><span class="sr-only">Next</span>',
+                        previous: '<i class="fa fa-chevron-left" aria-hidden="true"></i><span class="sr-only">Previous</span>'
+                    }
+                },
+                dom: '<"row"<"col-sm-12 col-md-6"l><"col-sm-12 col-md-6"f>>' +
+                     '<"row"<"col-sm-12"tr>>' +
+                     '<"row"<"col-sm-12 col-md-5"i><"col-sm-12 col-md-7"p>>',
+                drawCallback: function() {
+                    const table = this.api().table().node();
+                    table.querySelectorAll('thead th').forEach(th => {
+                        th.setAttribute('scope', 'col');
+                    });
+                }
             });
 
             // Attach event listeners using DataTable's event delegation

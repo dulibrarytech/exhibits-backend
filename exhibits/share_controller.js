@@ -18,10 +18,11 @@
 
 'use strict';
 
+const APP_CONFIG = require('../config/app_config')();
 const WEBSERVICES_CONFIG = require('../config/webservices_config')();
 const EXHIBITS_MODEL = require('../exhibits/exhibits_model');
 const TOKEN = require('../libs/tokens');
-const APP_PATH = '/exhibits-dashboard';
+const APP_PATH = APP_CONFIG.app_path;
 
 exports.create_shared_exhibit_preview_url = async function (req, res) {
 

@@ -939,7 +939,7 @@ const Helper = class {
         }
     }
 
-    /**
+    /** TODO: Deprecate - moved to media library
      * Renames and moves uploaded image
      * @param exhibit_id
      * @param item_id
@@ -968,12 +968,13 @@ const Helper = class {
         return `${media_file}`;
     }
 
-    /**
+    /** TODO: REMOVE
      * Converts byte size to human readable format
      * @param bytes
      * @param decimals
      * @return {string|{batch_size: number, size_type: string}}
      */
+    /*
     format_bytes(bytes, decimals = 2) {
 
         if (!+bytes) return '0 Bytes';
@@ -988,26 +989,7 @@ const Helper = class {
         };
     }
 
-    /** TODO: deprecate - exhibits are no longer reordered
-     * order exhibits
-     * @param uuid
-     * @param db
-     * @param tables
      */
-    /*
-    async order_exhibits(uuid, db, tables) {
-
-        try {
-
-            let exhibit_order = await db(tables.exhibit_records).select('order').andWhere('is_deleted', 0);
-            return this.get_next_order_number(exhibit_order);
-
-        } catch (error) {
-            LOGGER.module().error('ERROR: [/libs/helper (order_exhibits)] unable to order exhibits ' + error.message);
-            return false;
-        }
-    }
-    */
 };
 
 module.exports = Helper;

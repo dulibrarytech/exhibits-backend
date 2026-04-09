@@ -1,26 +1,6 @@
 <%- include('../partials/header.ejs'); %>
-
 <body>
-<aside id="left-panel" class="left-panel">
-    <nav class="navbar navbar-expand-sm navbar-default">
-        <div id="main-menu" class="main-menu">
-            <ul class="nav navbar-nav">
-                <li class="menu-title">Menu</li>
-            </ul>
-            <ul class="nav navbar-nav">
-                <li id="preview-link"></li>
-            </ul>
-            <ul id="items-menu" class="nav navbar-nav"></ul>
-            <ul class="nav navbar-nav">
-                <li>
-                    <a href="#" id="logout" data-keyboard="false">
-                        <i class="menu-icon fa fa-sign-out"></i>Logout
-                    </a>
-                </li>
-            </ul>
-        </div>
-    </nav>
-</aside>
+<%- include('../partials/nav-dashboard'); %>
 <div id="right-panel" class="right-panel">
     <%- include('../partials/main-header.ejs'); %>
     <div class="content" style="min-height: 875px;">
@@ -36,6 +16,7 @@
                     <tr>
                         <th>Order</th>
                         <th>Item</th>
+                        <th>Child Items</th>
                         <th>Status</th>
                         <th>Actions</th>
                     </tr>
@@ -48,6 +29,73 @@
     <div class="clearfix"></div>
     <%- include('../partials/footer.ejs'); %>
 </div>
+<style>
+    /* Info row - add separator */
+    #items_wrapper .row:last-child {
+        border-top: 1px solid #e9ecef;
+        margin-top: 10px;
+    }
+
+    #items_wrapper .dt-info {
+        font-size: 0.85rem;
+        color: #6c757d;
+        padding-top: 15px;
+    }
+
+    /* Search styling consistency */
+    #items_wrapper .dt-search {
+        font-size: 0.85rem;
+        color: #6c757d;
+    }
+
+    /* Truncate long item titles in the Item column */
+    .item-title-cell .item-title {
+        display: inline-block;
+        max-width: 260px;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        vertical-align: middle;
+    }
+
+    /* Clickable thumbnail and title links */
+    .item-thumbnail-link {
+        flex-shrink: 0;
+        line-height: 0;
+    }
+    .item-title-link {
+        color: #333;
+        text-decoration: none;
+    }
+    .item-title-link:hover {
+        color: #005a9c;
+        text-decoration: underline;
+    }
+
+    /* Child Items column icon */
+    .child-items-link {
+        color: #6c757d;
+        font-size: 1.1rem;
+        transition: color 0.15s ease-in-out;
+    }
+    .child-items-link:hover {
+        color: #343a40;
+        text-decoration: none;
+    }
+
+    /* Actions dropdown positioning */
+    .item-actions-menu.dropdown-menu {
+        right: 0 !important;
+        left: auto !important;
+        transform: none !important;
+        margin-top: 0;
+    }
+    .item-actions-menu.dropdown-menu.show {
+        right: 0 !important;
+        left: auto !important;
+        transform: none !important;
+    }
+</style>
 <!-- libs -->
 <%- include('../partials/exhibits-libs-common.ejs'); %>
 <script src="/exhibits-dashboard/static/libs/data_tables/datatables.min.js"></script>
@@ -59,6 +107,7 @@
 <script src="/exhibits-dashboard/static/app/dist/items.list.displays.module.min.js?<%=build_version%>"></script>
 <script>
     window.scrollTo(0, 0);
+    navModule.wire_nav_links();
     itemsModule.init();
 </script>
 </body>

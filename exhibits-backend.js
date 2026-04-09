@@ -26,5 +26,11 @@ process.env.NODE_TLS_REJECT_UNAUTHORIZED = 0;
 const express = require('./config/express');
 const app = express();
 
+const uploads = require('./media-library/uploads');
+process.on('SIGTERM', async () => {
+ await uploads.shutdown_exiftool();
+ process.exit(0);
+});
+
 console.log(process.env.APP_NAME + ' running at http://' + process.env.APP_HOST + ':' + process.env.APP_PORT + ' in ' + process.env.NODE_ENV + ' mode.');
 module.exports = app;

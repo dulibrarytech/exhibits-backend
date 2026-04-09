@@ -18,7 +18,6 @@
 
 'use strict';
 
-const STORAGE_CONFIG = require('../config/storage_config')();
 const DB = require('../config/db_config')();
 const DB_TABLES = require('../config/db_tables_config')();
 const TABLES = DB_TABLES.exhibits;
@@ -32,6 +31,12 @@ const VALIDATOR = require('../libs/validate');
 const EXHIBIT_RECORD_TASKS = require('./tasks/exhibit_record_tasks');
 const INDEXER_MODEL = require('../indexer/model');
 const LOGGER = require('../libs/log4');
+const {
+    is_valid_uuid,
+    build_response,
+    validate_input,
+    prepare_styles
+} = require('../exhibits/common_helper');
 
 // Constants
 const CONSTANTS = {
@@ -58,122 +63,6 @@ const validate_create_timeline_item_task = new VALIDATOR(EXHIBITS_CREATE_TIMELIN
 const validate_update_timeline_item_task = new VALIDATOR(EXHIBITS_UPDATE_TIMELINE_ITEM_SCHEMA);
 const timeline_record_task = new EXHIBIT_TIMELINE_RECORD_TASKS(DB, TABLES);
 const exhibit_tasks = new EXHIBIT_RECORD_TASKS(DB, TABLES);
-
-/**
- * Validates UUID format
- * @param {string} uuid - UUID to validate
- * @returns {boolean} True if valid
- */
-const is_valid_uuid = (uuid) => {
-    return uuid && typeof uuid === 'string' && uuid.length > 0;
-};
-
-/**
- * Builds standardized response object
- * @param {number} status - HTTP status code
- * @param {string} message - Response message
- * @param {*} data - Optional response data
- * @returns {Object} Response object
- */
-const build_response = (status, message, data = null) => {
-    const response = {status, message};
-    if (data !== null) {
-        response.data = data;
-    }
-    return response;
-};
-
-/**
- * Validates input data
- * @param {Object} data - Data to validate
- * @param {Object} validator - Validator instance
- * @param {string} context - Context for error logging
- * @returns {Object|true} Validation result
- */
-const validate_input = (data, validator, context) => {
-    if (!data || typeof data !== 'object') {
-        LOGGER.module().error(`ERROR: [/exhibits/timelines_model (${context})] Invalid input data format`);
-        return [{message: 'Invalid input data format'}];
-    }
-
-    const validation_result = validator.validate(data);
-
-    if (validation_result !== true) {
-        const error_msg = validation_result[0].message || 'Validation failed';
-        LOGGER.module().error(`ERROR: [/exhibits/timelines_model (${context})] ${error_msg}`);
-    }
-
-    return validation_result;
-};
-
-/**
- * Prepares styles data for storage
- * @param {Object|string|undefined} styles - Styles object or string
- * @returns {string} JSON stringified styles
- */
-const prepare_styles = (styles) => {
-    if (!styles || (typeof styles === 'object' && Object.keys(styles).length === 0)) {
-        return JSON.stringify({});
-    }
-    return typeof styles === 'string' ? styles : JSON.stringify(styles);
-};
-
-/**
- * Processes media files for timeline items
- * @param {Object} data - Timeline item data
- * @returns {Object} Processed data
- */
-const process_timeline_item_media = (data) => {
-    const processed_data = {...data};
-
-    // Only process media if item type is not text
-    if (processed_data.item_type === CONSTANTS.ITEM_TYPES.TEXT) {
-        return processed_data;
-    }
-
-    // Process main media
-    if (processed_data.media &&
-        processed_data.media.length > 0 &&
-        processed_data.media !== processed_data.media_prev) {
-        processed_data.media = helper_task.process_uploaded_media(
-            processed_data.is_member_of_exhibit,
-            processed_data.uuid,
-            processed_data.media,
-            STORAGE_CONFIG.storage_path
-        );
-    }
-
-    // Process thumbnail
-    if (processed_data.thumbnail &&
-        processed_data.thumbnail.length > 0 &&
-        processed_data.thumbnail !== processed_data.thumbnail_prev) {
-        processed_data.thumbnail = helper_task.process_uploaded_media(
-            processed_data.is_member_of_exhibit,
-            processed_data.uuid,
-            processed_data.thumbnail,
-            STORAGE_CONFIG.storage_path
-        );
-    }
-
-    // Handle Kaltura items
-    if (processed_data.kaltura && processed_data.kaltura.length > 0) {
-        processed_data.media = processed_data.kaltura;
-        processed_data.is_kaltura_item = 1;
-    }
-    // Handle repository items
-    else if (processed_data.repo_uuid && processed_data.repo_uuid.length > 0) {
-        processed_data.media = processed_data.repo_uuid;
-        processed_data.is_repo_item = 1;
-    }
-
-    // Clean up temporary fields
-    delete processed_data.kaltura;
-    delete processed_data.repo_uuid;
-    delete processed_data.media_prev;
-    delete processed_data.thumbnail_prev;
-
-    return processed_data;
-};
 
 /**
  * Creates timeline record
@@ -205,7 +94,7 @@ exports.create_timeline_record = async (is_member_of_exhibit, data) => {
         data.styles = prepare_styles(data.styles);
 
         // Validate
-        const validation_result = validate_input(data, validate_create_timeline_task, 'create_timeline_record');
+        const validation_result = validate_input(data, validate_create_timeline_task, 'timelines_model (create_timeline_record)');
 
         if (validation_result !== true) {
             return build_response(
@@ -284,7 +173,7 @@ exports.update_timeline_record = async (is_member_of_exhibit, timeline_id, data)
         data.styles = prepare_styles(data.styles);
 
         // Validate
-        const validation_result = validate_input(data, validate_update_timeline_task, 'update_timeline_record');
+        const validation_result = validate_input(data, validate_update_timeline_task, 'timelines_model (update_timeline_record)');
 
         if (validation_result !== true) {
             return build_response(
@@ -399,7 +288,7 @@ exports.create_timeline_item_record = async (is_member_of_exhibit, timeline_id, 
         data.is_member_of_timeline = timeline_id;
 
         // Validate with create schema
-        const validation_result = validate_input(data, validate_create_timeline_item_task, 'create_timeline_item_record');
+        const validation_result = validate_input(data, validate_create_timeline_item_task, 'timelines_model (create_timeline_item_record)');
 
         if (validation_result !== true) {
             return build_response(
@@ -407,9 +296,6 @@ exports.create_timeline_item_record = async (is_member_of_exhibit, timeline_id, 
                 validation_result
             );
         }
-
-        // Process media
-        data = process_timeline_item_media(data);
 
         // Prepare styles and get order
         data.styles = prepare_styles(data.styles);
@@ -592,6 +478,53 @@ exports.get_timeline_item_edit_record = async (uid, is_member_of_exhibit, is_mem
 };
 
 /**
+ * Gets timeline item details record (read-only, no locking)
+ * @param {string} is_member_of_exhibit - Exhibit UUID
+ * @param {string} is_member_of_timeline - Timeline UUID
+ * @param {string} item_id - Timeline item UUID
+ * @returns {Promise<Object>} Response object
+ */
+exports.get_timeline_item_details_record = async (is_member_of_exhibit, is_member_of_timeline, item_id) => {
+
+    try {
+
+        if (!is_valid_uuid(is_member_of_exhibit) ||
+            !is_valid_uuid(is_member_of_timeline) ||
+            !is_valid_uuid(item_id)) {
+            return build_response(
+                CONSTANTS.STATUS_CODES.BAD_REQUEST,
+                'Invalid UUID provided'
+            );
+        }
+
+        const timeline_item = await timeline_record_task.get_timeline_item_details_record(
+            is_member_of_exhibit,
+            is_member_of_timeline,
+            item_id
+        );
+
+        return build_response(
+            CONSTANTS.STATUS_CODES.OK,
+            'Exhibit timeline item details record',
+            timeline_item
+        );
+
+    } catch (error) {
+        LOGGER.module().error(`ERROR: [/exhibits/timelines_model (get_timeline_item_details_record)] ${error.message}`, {
+            is_member_of_exhibit,
+            is_member_of_timeline,
+            item_id,
+            stack: error.stack
+        });
+
+        return build_response(
+            CONSTANTS.STATUS_CODES.BAD_REQUEST,
+            error.message
+        );
+    }
+};
+
+/**
  * Updates timeline item record
  * @param {string} is_member_of_exhibit - Exhibit UUID
  * @param {string} is_member_of_timeline - Timeline UUID
@@ -625,7 +558,7 @@ exports.update_timeline_item_record = async (is_member_of_exhibit, is_member_of_
         data.uuid = item_id;
 
         // Validate with update schema
-        const validation_result = validate_input(data, validate_update_timeline_item_task, 'update_timeline_item_record');
+        const validation_result = validate_input(data, validate_update_timeline_item_task, 'timelines_model (update_timeline_item_record)');
 
         if (validation_result !== true) {
             return build_response(
@@ -633,9 +566,6 @@ exports.update_timeline_item_record = async (is_member_of_exhibit, is_member_of_
                 validation_result
             );
         }
-
-        // Process media
-        data = process_timeline_item_media(data);
 
         // Prepare styles and get order
         data.styles = prepare_styles(data.styles);

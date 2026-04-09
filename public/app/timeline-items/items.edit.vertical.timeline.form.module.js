@@ -467,7 +467,6 @@ const itemsEditVerticalTimelineFormModule = (function () {
         const cache_dom_elements = () => {
             return {
                 created: document.querySelector('#created'),
-                timeline_title: document.querySelector('#timeline-title-input'),
                 timeline_text: document.querySelector('#timeline-text-input'),
                 timeline_bg_color: document.querySelector('#timeline-background-color'),
                 timeline_bg_color_picker: document.querySelector('#timeline-background-color-picker'),
@@ -704,6 +703,14 @@ const itemsEditVerticalTimelineFormModule = (function () {
             // Apply style settings
             apply_style_settings(record.styles, elements);
 
+            // Set saved style selection after dropdown is populated
+            // Style keys are simple strings like "item1"; skip "{}" (prepare_styles default) and legacy JSON blobs
+            if (record.styles && typeof record.styles === 'string'
+                && record.styles.trim() !== '' && !record.styles.startsWith('{')) {
+                await itemsCommonVerticalTimelineFormModule.wait_for_styles();
+                itemsCommonVerticalTimelineFormModule.set_item_style(record.styles);
+            }
+
             return false;
 
         } catch (error) {
@@ -722,6 +729,7 @@ const itemsEditVerticalTimelineFormModule = (function () {
 
         exhibitsModule.set_exhibit_title(exhibit_id);
         document.querySelector('#save-timeline-btn').addEventListener('click', itemsEditVerticalTimelineFormModule.update_timeline_record);
+        navModule.edit_timeline_back_to_items();
         await display_edit_record();
     };
 

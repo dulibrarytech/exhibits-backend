@@ -231,20 +231,11 @@ const itemsEditStandardItemFormModule = (function () {
             }
 
             // Set basic item data
-            set_element_value('#item-title-input', helperModule.unescape(record.title));
             set_element_value('#item-text-input', helperModule.unescape(record.text));
 
             // Handle media-specific fields
             if (is_media_path) {
-
-                await helperMediaModule.display_media_fields_common(record);
-
-                if (record.item_subjects !== null && record.item_subjects?.length > 0) {
-                    const subjects = record.item_subjects.split('|');
-                    await helperModule.create_subjects_menu(subjects);
-                } else {
-                    await helperModule.create_subjects_menu();
-                }
+                itemsCommonStandardItemFormModule.populate_media_previews(record);
             }
 
             // Set radio button selections
@@ -261,47 +252,13 @@ const itemsEditStandardItemFormModule = (function () {
             set_radio_value('layout', record.layout);
             set_radio_value('media_width', String(record.media_width));
 
-            // Parse and apply styles
-            const apply_styles = () => {
-                let styles = {};
-
-                try {
-                    styles = JSON.parse(record.styles || '{}');
-                } catch (e) {
-                    console.error('Invalid styles JSON:', e.message);
-                    return;
-                }
-
-                if (Object.keys(styles).length === 0) {
-                    return;
-                }
-
-                const style_field_map = {
-                    backgroundColor: ['#item-background-color', '#item-background-color-picker'],
-                    color: ['#item-font-color', '#item-font-color-picker'],
-                };
-
-                // Apply color and background styles
-                for (const [style_key, selectors] of Object.entries(style_field_map)) {
-                    const value = styles[style_key] || '';
-                    selectors.forEach(selector => set_element_value(selector, value));
-                }
-
-                // Set font family
-                if (styles.fontFamily) {
-                    set_element_value('#item-font', styles.fontFamily);
-                }
-
-                // Set font size (remove 'px' suffix)
-                if (styles.fontSize) {
-                    const font_size_value = styles.fontSize.replace(/px$/, '');
-                    set_element_value('#item-font-size', font_size_value);
-                } else {
-                    set_element_value('#item-font-size', '');
-                }
-            };
-
-            apply_styles();
+            // Set saved style selection after dropdown is populated
+            // Style keys are simple strings like "item1"; skip "{}" (prepare_styles default) and legacy JSON blobs
+            if (record.styles && typeof record.styles === 'string'
+                && record.styles.trim() !== '' && !record.styles.startsWith('{')) {
+                await itemsCommonStandardItemFormModule.wait_for_styles();
+                itemsCommonStandardItemFormModule.set_item_style(record.styles);
+            }
 
             return false;
 
@@ -574,10 +531,6 @@ const itemsEditStandardItemFormModule = (function () {
             exhibitsModule.set_exhibit_title(exhibit_id);
             await display_edit_record();
             document.querySelector('#update-item-btn').addEventListener('click', itemsEditStandardItemFormModule.update_item_record);
-
-            if (window.location.pathname.indexOf('media') !== -1) {
-                helperMediaModule.media_edit_init();
-            }
 
         } catch (error) {
             document.querySelector('#message').innerHTML = `<div class="alert alert-danger" role="alert"><i class="fa fa-exclamation"></i> ${error.message}</div>`;

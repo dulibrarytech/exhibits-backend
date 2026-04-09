@@ -1,0 +1,309 @@
+/**
+ * Sidebar overrides — loaded after style.css
+ *
+ * 1. Reduces expanded sidebar from 280px → 220px
+ * 2. Pre-paint collapse — html.open rules that fire immediately when the
+ *    early <head> script adds .open to <html>, before <body> exists.
+ *    The theme's body.open rules don't match until DOMContentLoaded
+ *    (when init_sidebar_toggle syncs .open to <body>), so without
+ *    these html.open rules the sidebar flashes expanded on load.
+ * 3. Adds smooth transition on collapse/expand (gated behind .sidebar-ready)
+ * 4. Styles the hamburger toggle button
+ * 5. Collapsed icon centering — #left-panel ID + flexbox + !important
+ *    beats all theme rules including @media breakpoint overrides
+ * 6. Responsive collapse centering (≤1024px) — duplicates centering
+ *    WITHOUT .open for the theme's @media responsive collapse
+ *
+ * The theme's existing `.open` body/html class drives the collapsed (83px) state.
+ * This file only overrides the expanded width and adds the toggle affordance.
+ */
+
+/* ── 1. Narrower expanded sidebar ── */
+
+aside.left-panel {
+    width: 220px;
+}
+
+.right-panel {
+    margin-left: 220px;
+}
+
+/* The theme has a dead `left: 280px` immediately overridden by `left: 0`
+   on .right-panel header.header — no override needed there. */
+
+/* ≤1024px breakpoint: theme defaults to collapsed and uses .open to expand.
+   Override the expand width from 280 → 220. */
+@media (max-width: 1024px) {
+    .open aside.left-panel {
+        width: 220px;
+        max-width: 220px;
+    }
+
+    aside.left-panel.open-menu {
+        max-width: 220px;
+        width: 220px;
+    }
+}
+
+/* ── 2. Pre-paint collapse (html.open) ── */
+/* The early <head> inline script adds .open to <html> synchronously, but
+   the theme's collapse rules target body.open — which doesn't exist until
+   DOMContentLoaded.  These html.open rules bridge that gap so the sidebar
+   renders collapsed on first paint with zero flash.
+   Once init_sidebar_toggle syncs .open to <body>, the theme's body.open
+   rules also match and these become redundant (same values, no conflict). */
+
+html.open aside.left-panel {
+    width: 83px;
+}
+
+html.open .right-panel {
+    margin-left: 83px;
+}
+
+/* Hide menu-item text in collapsed state (mirrors theme's body.open blanket rule) */
+html.open #left-panel .navbar .navbar-nav li a {
+    font-size: 0;
+}
+
+/* Force full-width on container chain in collapsed state.
+   The theme sets .navbar { display: inline-block } which shrink-wraps
+   the nav to content width.  Without these, centering is meaningless. */
+html.open #left-panel .navbar {
+    display: block !important;
+    width: 100% !important;
+}
+
+html.open #left-panel #main-menu {
+    display: block !important;
+    width: 100% !important;
+}
+
+html.open #left-panel .navbar .navbar-nav {
+    flex-direction: column !important;
+    width: 100% !important;
+}
+
+/* Keep menu icons visible and centered at collapsed size. */
+html.open #left-panel .navbar .navbar-nav li {
+    padding: 0 !important;
+    width: 100% !important;
+}
+
+html.open #left-panel .navbar .navbar-nav li > a {
+    display: flex !important;
+    justify-content: center !important;
+    align-items: center !important;
+    max-width: none !important;
+    padding: 12px 0 !important;
+    width: 100% !important;
+}
+
+html.open #left-panel .navbar .navbar-nav li a .menu-icon {
+    font-size: 20px !important;
+    float: none !important;
+    display: inline-block !important;
+    width: auto !important;
+    margin: 0 !important;
+}
+
+html.open #left-panel .navbar .navbar-nav li > a > .menu-icon.bi {
+    margin-top: 0 !important;
+}
+
+/* Hide "Menu" title in collapsed state */
+html.open aside.left-panel .menu-title {
+    font-size: 0;
+}
+
+/* ── 3. Smooth transitions (gated) ── */
+/* Transitions are only enabled after navModule adds .sidebar-ready to <body>.
+   This prevents the visible collapse animation on page load — the sidebar
+   renders in its final state immediately via the early <head> script. */
+
+body.sidebar-ready aside.left-panel {
+    transition: width 0.25s ease;
+}
+
+body.sidebar-ready .right-panel {
+    transition: margin-left 0.25s ease;
+}
+
+/* Prevent horizontal scrollbar flash during transition */
+aside.left-panel {
+    overflow-x: hidden;
+}
+
+aside.left-panel:hover {
+    overflow-x: auto;
+}
+
+/* ── 4. Toggle button ── */
+
+/* Expanded state: full-width link with icon + text */
+.sidebar-toggle-item {
+    border-bottom: 1px solid #e8e9ed;
+    margin-bottom: 4px;
+}
+
+#sidebar-toggle {
+    cursor: pointer;
+    display: inline-block;
+    width: 100%;
+    padding: 10px 0;
+    color: #5A5A5A;
+    font-size: 14px;
+    line-height: 26px;
+    background: none !important;
+}
+
+#sidebar-toggle:hover {
+    color: #333;
+    text-decoration: none;
+}
+
+#sidebar-toggle .menu-icon {
+    color: #5A5A5A;
+    float: left;
+    margin-top: 8px;
+    width: 55px;
+    text-align: left;
+    z-index: 9;
+}
+
+#sidebar-toggle:hover .menu-icon {
+    color: #333;
+}
+
+/* Collapsed state (.open on body or html): override the theme's font-size:0
+   blanket rule so the toggle icon stays visible and clickable.
+   Uses #sidebar-toggle to beat the expanded-state ID-based specificity. */
+.open aside.left-panel #sidebar-toggle {
+    font-size: 0;
+    display: flex !important;
+    justify-content: center !important;
+    align-items: center !important;
+    padding: 10px 0;
+}
+
+.open aside.left-panel #sidebar-toggle .menu-icon {
+    font-size: 20px !important;
+    float: none !important;
+    display: inline-block !important;
+    width: auto !important;
+    margin: 0 !important;
+}
+
+/* Collapsed separator */
+.open aside.left-panel .sidebar-toggle-item {
+    border-bottom: 1px solid #e8e9ed;
+}
+
+/* ── 5. Collapsed icon centering ── */
+/* Force full-width on container chain + center icons when .open is set.
+   The theme sets .navbar { display: inline-block } which shrink-wraps
+   the nav to content width; this must be overridden in collapsed state. */
+
+.open #left-panel .navbar {
+    display: block !important;
+    width: 100% !important;
+}
+
+.open #left-panel #main-menu {
+    display: block !important;
+    width: 100% !important;
+}
+
+.open #left-panel .navbar .navbar-nav {
+    flex-direction: column !important;
+    width: 100% !important;
+}
+
+.open #left-panel .navbar .navbar-nav li {
+    padding: 0 !important;
+    width: 100% !important;
+}
+
+.open #left-panel .navbar .navbar-nav li > a {
+    display: flex !important;
+    justify-content: center !important;
+    align-items: center !important;
+    max-width: none !important;
+    padding: 12px 0 !important;
+    width: 100% !important;
+}
+
+.open #left-panel .navbar .navbar-nav li a .menu-icon {
+    float: none !important;
+    display: inline-block !important;
+    width: auto !important;
+    margin: 0 !important;
+}
+
+/* Normalize Bootstrap Icons vertical offset in collapsed state */
+.open #left-panel .navbar .navbar-nav li > a > .menu-icon.bi {
+    margin-top: 0 !important;
+}
+
+.open #left-panel .navbar .navbar-nav li .nav-label {
+    display: none !important;
+}
+
+/* ── 6. Responsive collapse centering (≤1024px) ── */
+/* At ≤1024px the theme collapses the sidebar to 83px WITHOUT .open —
+   it applies collapse rules directly to aside.left-panel.  Sections 2
+   and 5 only match when .open is present, so icons are off-center at
+   this breakpoint.  These rules duplicate the centering without the
+   .open requirement, scoped inside @media so they don't affect the
+   expanded sidebar on wider viewports. */
+
+@media (max-width: 1024px) {
+    /* Force full-width on container chain.
+       The theme sets .navbar { display: inline-block } which shrink-wraps
+       the nav to content width.  Without these, centering is meaningless. */
+    #left-panel .navbar {
+        display: block !important;
+        width: 100% !important;
+    }
+
+    #left-panel #main-menu {
+        display: block !important;
+        width: 100% !important;
+    }
+
+    #left-panel .navbar .navbar-nav {
+        flex-direction: column !important;
+        width: 100% !important;
+    }
+
+    #left-panel .navbar .navbar-nav li {
+        padding: 0 !important;
+        width: 100% !important;
+    }
+
+    #left-panel .navbar .navbar-nav li > a {
+        display: flex !important;
+        justify-content: center !important;
+        align-items: center !important;
+        max-width: none !important;
+        padding: 12px 0 !important;
+        font-size: 14px !important;
+        width: 100% !important;
+    }
+
+    #left-panel .navbar .navbar-nav li a .menu-icon {
+        float: none !important;
+        display: inline-block !important;
+        width: auto !important;
+        margin: 0 !important;
+        font-size: 20px !important;
+    }
+
+    #left-panel .navbar .navbar-nav li > a > .menu-icon.bi {
+        margin-top: 0 !important;
+    }
+
+    #left-panel .navbar .navbar-nav li .nav-label {
+        display: none !important;
+    }
+}

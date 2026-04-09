@@ -1,1 +1,292 @@
-<%- include('../partials/header.ejs'); %> <body><aside id="left-panel" class="left-panel"><nav class="navbar navbar-expand-sm navbar-default"><div id="main-menu" class="main-menu collapse navbar-collapse"><ul class="nav navbar-nav"><li class="menu-title">Menu</li><li><a href="/exhibits-dashboard/exhibits/exhibit" data-keyboard="false"><i class="menu-icon ti-layout"></i>Add Exhibit</a></li><li><a href="/exhibits-dashboard/users" data-keyboard="false"><i class="menu-icon fa fa-users"></i>Users</a></li><li><a href="#" id="logout"><i class="menu-icon fa fa-sign-out"></i>Logout</a></li></ul></div></nav></aside><div id="right-panel" class="right-panel"> <%- include('../partials/main-header.ejs'); %> <div class="content" style="min-height: 875px;"><div id="message"></div><h1>Exhibits</h1><div id="exhibit-card" class="card"><div class="card-header"><strong class="card-title mb-3"></strong></div><div class="card-body"><table id="exhibits" class="display"><!--<table id="exhibits" class="table table-striped table-bordered">--><thead><tr><th aria-label="title">Title</th><th aria-label="status">Status</th><th aria-label="actions">Actions</th><th aria-label="created">Created</th><th aria-label="updated">Updated</th></tr></thead><tbody id="exhibits-data"></tbody></table></div></div></div><div class="clearfix"></div> <%- include('../partials/footer.ejs'); %> <div class="modal shared-url-modal" tabindex="-1" role="dialog" aria-labelledby="shared-url-modal" aria-hidden="true"><div class="modal-dialog modal-dialog-centered modal-lg" role="document"><div class="modal-content" style="background-color: #f2f2f2;"><div class="modal-header"><h5 class="modal-title" id="staticBackdropLabel"><i class="fa fa-info"></i> Generates preview URL to share with staff who do not have access to the system</h5></div><div id="copy-message"></div><div id="shared-url" class="modal-body"></div><div id="shared-url-copy" style="visibility: hidden"></div><div class="modal-footer"><button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button></div></div></div></div></div><!-- libs --> <%- include('../partials/exhibits-libs-common.ejs'); %> <script src="/exhibits-dashboard/static/libs/data_tables/datatables.min.js"></script><!-- app --> <%- include('../partials/exhibits-app-common.ejs'); %> <script src="/exhibits-dashboard/static/app/dist/exhibits.module.min.js?<%=build_version%>"></script><script src="/exhibits-dashboard/static/app/dist/home.module.min.js?<%=build_version%>"></script></body>
+<%- include('../partials/header.ejs'); %> <style>/* ── Add Exhibit modal form styles ── */
+    .color-picker {
+        background-color: none;
+        outline: none;
+        border: 1px solid grey;
+        height: 38px;
+        width: 50px;
+        cursor: pointer;
+    }
+    .media-preview-area {
+        border: 2px dashed #c8ced3;
+        border-radius: 4px;
+        padding: 8px;
+        background: #f8f9fa;
+        height: 180px;
+        max-width: 280px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        overflow: hidden;
+        margin-bottom: 8px;
+    }
+    .media-preview-area:has(img) {
+        border-style: solid;
+        border-color: #dee2e6;
+        background: #fff;
+    }
+    .media-preview-area img {
+        max-width: 100%;
+        max-height: 160px;
+        object-fit: contain;
+        display: block;
+        border-radius: 3px;
+    }
+    .media-placeholder {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 6px;
+        color: #adb5bd;
+    }
+    .media-placeholder i {
+        font-size: 2rem;
+    }
+    .media-placeholder span {
+        font-size: 12px;
+    }
+    .media-preview-area:has(img) .media-placeholder {
+        display: none;
+    }
+    #hero-image-filename-display,
+    #thumbnail-filename-display {
+        display: inline-block;
+        max-width: 280px;
+        font-size: 12px;
+        color: #555;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+        vertical-align: middle;
+    }
+
+    /* ── Nested modal z-index fix ── */
+    .modal .modal {
+        z-index: 1060;
+    }
+    .modal .modal-backdrop {
+        z-index: 1055;
+    }</style><body> <%- include('../partials/nav-dashboard'); %> <div id="right-panel" class="right-panel"> <%- include('../partials/main-header.ejs'); %> <div class="content" style="min-height: 875px;"><div id="message"></div><h1>Exhibits</h1><div id="exhibit-card" class="card"><div class="card-header"><strong class="card-title mb-3"></strong></div><div class="card-body"><table id="exhibits" class="display"><thead><tr><th aria-label="title">Title</th><th aria-label="items">Items</th><th aria-label="status">Status</th><th aria-label="created">Created</th><th aria-label="updated">Updated</th><th aria-label="actions">Actions</th></tr></thead><tbody id="exhibits-data"></tbody></table></div></div></div><div class="clearfix"></div> <%- include('../partials/footer.ejs'); %> <!-- ══════════════════════════════════════════════════════════
+         Shared URL modal (existing)
+         ══════════════════════════════════════════════════════════ --><div class="modal shared-url-modal" tabindex="-1" role="dialog" aria-labelledby="shared-url-modal" aria-hidden="true"><div class="modal-dialog modal-dialog-centered modal-lg" role="document"><div class="modal-content" style="background-color: #f2f2f2;"><div class="modal-header"><h5 class="modal-title" id="staticBackdropLabel"><i class="fa fa-info"></i> Generates preview URL to share with staff who do not have access to the system</h5></div><div id="copy-message"></div><div id="shared-url" class="modal-body"></div><div id="shared-url-copy" style="visibility: hidden"></div><div class="modal-footer"><button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button></div></div></div></div><!-- ══════════════════════════════════════════════════════════
+         Add Exhibit modal
+         ══════════════════════════════════════════════════════════ --><div class="modal fade" id="add-exhibit-modal" tabindex="-1" role="dialog" aria-labelledby="add-exhibit-modal-label" aria-hidden="true" data-backdrop="static" data-keyboard="false"><div class="modal-dialog modal-xl modal-dialog-scrollable" role="document"><div class="modal-content"><div class="modal-header" style="display: flex; align-items: center;"><h5 class="modal-title" id="add-exhibit-modal-label" style="margin-bottom: 0;"><i class="ti-layout"></i>&nbsp;Add Exhibit</h5><button type="button" class="close" data-dismiss="modal" aria-label="Close" style="margin: 0; padding: 0.75rem;"><span aria-hidden="true">&times;</span></button></div><div class="modal-body"><!-- scoped message area for the add-exhibit form --><div id="add-exhibit-message"></div><!-- exhibit data card --> <%- include('partials/exhibit-data-card.ejs'); %> <!-- exhibit media card --><div id="exhibit-media-card" class="card"><div class="card-header"><strong class="card-title mb-3">Exhibit Media</strong></div><div class="card-body"><div class="row"><div class="col-6 col-md-6"><div id="hero-image-display" class="media-preview-area"><div class="media-placeholder"><i class="fa fa-picture-o"></i> <span>No image selected</span></div></div><p><span id="hero-image-filename-display"></span>&nbsp;&nbsp; <span><a id="hero-trash" title="Remove hero image" href="#" style="display:none"><i class="fa fa-trash"></i></a></span></p><input type="hidden" id="hero-image" name="hero_image"> <input type="hidden" id="hero-image-media-uuid" name="hero_image_media_uuid"> <button type="button" class="btn btn-outline-primary" id="pick-hero-image-btn" data-media-role="hero_image" data-media-type-filter="image"><i class="fa fa-picture-o"></i>&nbsp;Select Hero Image</button></div><div class="col-6 col-md-6"><div id="thumbnail-image-display" class="media-preview-area"><div class="media-placeholder"><i class="fa fa-picture-o"></i> <span>No image selected</span></div></div><p><span id="thumbnail-filename-display"></span>&nbsp;&nbsp; <span><a id="thumbnail-trash" title="Remove thumbnail" href="#" style="display:none"><i class="fa fa-trash"></i></a></span></p><input type="hidden" id="thumbnail-image" name="thumbnail"> <input type="hidden" id="thumbnail-media-uuid" name="thumbnail_media_uuid"> <button type="button" class="btn btn-outline-primary" id="pick-thumbnail-btn" data-media-role="thumbnail" data-media-type-filter="image"><i class="fa fa-picture-o"></i>&nbsp;Select Thumbnail</button></div></div></div></div> <%- include('partials/exhibit-banners.ejs'); %> <%- include('partials/exhibit-styles.ejs'); %> <input type="hidden" name="page_layout" id="exhibit-page-layout" value="top_nav"> <input type="hidden" name="exhibit_template" id="exhibit-template" value="vertical_scroll"></div><div class="modal-footer"><button type="button" class="btn btn-secondary" data-dismiss="modal">Cancel</button> <button class="btn btn-primary" type="button" id="save-exhibit-btn"><i class="fa fa-save"></i>&nbsp;&nbsp;Save</button></div></div></div></div><!-- ── Modals required by the add-exhibit form ── --> <%- include('../partials/preview-html-modal.ejs'); %> <%- include('../partials/media-picker-modal.ejs'); %> </div><style>/* Hide First/Last buttons to match repo pagination (prev + numbers + next only) */
+    #exhibits_wrapper .dt-paging .dt-paging-button.first,
+    #exhibits_wrapper .dt-paging .dt-paging-button.last {
+        display: none !important;
+    }
+
+    /* Paging container layout */
+    #exhibits_wrapper .dt-paging {
+        text-align: right;
+        white-space: nowrap;
+        padding-top: 15px;
+    }
+
+    /* Paging nav - use inline-flex for connected button group */
+    #exhibits_wrapper .dt-paging nav {
+        display: inline-flex;
+    }
+
+    /* Base button styling - match repo .page-link */
+    #exhibits_wrapper .dt-paging .dt-paging-button {
+        display: inline-block;
+        box-sizing: border-box;
+        min-width: 1.5em;
+        padding: 0.4rem 0.75rem !important;
+        margin-left: -1px !important;
+        font-size: 0.875rem !important;
+        line-height: 1.5 !important;
+        text-align: center;
+        text-decoration: none !important;
+        cursor: pointer;
+        color: #7f7f7f !important;
+        background: #fff !important;
+        background-color: #fff !important;
+        border: 1px solid #7f7f7f !important;
+        border-radius: 0 !important;
+        transition: all 0.15s ease-in-out;
+        box-shadow: none !important;
+    }
+
+    /* First visible button (Previous) - rounded left corners */
+    #exhibits_wrapper .dt-paging .dt-paging-button.previous {
+        margin-left: 0 !important;
+        border-top-left-radius: 0.2rem !important;
+        border-bottom-left-radius: 0.2rem !important;
+    }
+
+    /* Last visible button (Next) - rounded right corners */
+    #exhibits_wrapper .dt-paging .dt-paging-button.next {
+        border-top-right-radius: 0.2rem !important;
+        border-bottom-right-radius: 0.2rem !important;
+    }
+
+    /* Hover state - match repo .page-link:hover */
+    #exhibits_wrapper .dt-paging .dt-paging-button:hover {
+        z-index: 2;
+        color: #5f5f5f !important;
+        text-decoration: none !important;
+        background-color: #f0f0f0 !important;
+        background: #f0f0f0 !important;
+        border-color: #7f7f7f !important;
+    }
+
+    /* Active/current page - match repo .page-item.active .page-link */
+    #exhibits_wrapper .dt-paging .dt-paging-button.current,
+    #exhibits_wrapper .dt-paging .dt-paging-button.current:hover {
+        z-index: 3;
+        color: #fff !important;
+        background-color: #7f7f7f !important;
+        background: #7f7f7f !important;
+        border-color: #7f7f7f !important;
+    }
+
+    /* Disabled state - match repo .page-item.disabled .page-link */
+    #exhibits_wrapper .dt-paging .dt-paging-button.disabled,
+    #exhibits_wrapper .dt-paging .dt-paging-button.disabled:hover,
+    #exhibits_wrapper .dt-paging .dt-paging-button.disabled:active {
+        color: #b0b0b0 !important;
+        pointer-events: none;
+        cursor: default;
+        background-color: #fff !important;
+        background: #fff !important;
+        border-color: #b0b0b0 !important;
+        box-shadow: none !important;
+    }
+
+    /* Focus state - match repo .page-link:focus */
+    #exhibits_wrapper .dt-paging .dt-paging-button:focus {
+        z-index: 3;
+        outline: 0;
+        box-shadow: 0 0 0 0.2rem rgba(127, 127, 127, 0.25) !important;
+    }
+
+    /* Ellipsis styling */
+    #exhibits_wrapper .dt-paging .ellipsis {
+        display: inline-block;
+        padding: 0.4rem 0.75rem;
+        font-size: 0.875rem;
+        line-height: 1.5;
+        color: #b0b0b0;
+        background-color: #fff;
+        border: 1px solid #b0b0b0;
+        margin-left: -1px;
+    }
+
+    /* Info row - add separator and match repo pagination-info */
+    #exhibits_wrapper .row:last-child {
+        border-top: 1px solid #e9ecef;
+        margin-top: 10px;
+    }
+
+    #exhibits_wrapper .dt-info {
+        font-size: 0.85rem;
+        color: #6c757d;
+        padding-top: 15px;
+    }
+
+    /* Length menu and search styling consistency */
+    #exhibits_wrapper .dt-length {
+        font-size: 0.85rem;
+        color: #6c757d;
+    }
+
+    #exhibits_wrapper .dt-search {
+        font-size: 0.85rem;
+        color: #6c757d;
+    }
+
+    /* Responsive pagination adjustments */
+    @media (max-width: 768px) {
+        #exhibits_wrapper .dt-paging .dt-paging-button {
+            padding: 0.3rem 0.6rem !important;
+            font-size: 0.8rem !important;
+        }
+
+        #exhibits_wrapper .dt-paging .ellipsis {
+            padding: 0.3rem 0.6rem;
+            font-size: 0.8rem;
+        }
+    }
+
+    /* Truncate long exhibit titles in the Title column */
+    .exhibit-title-cell .exhibit-title {
+        display: inline-block;
+        max-width: 260px;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        vertical-align: middle;
+    }
+
+    /* Clickable thumbnail and title links */
+    .exhibit-thumbnail-link {
+        flex-shrink: 0;
+        line-height: 0;
+    }
+    .exhibit-title-link {
+        color: #333;
+        text-decoration: none;
+    }
+    .exhibit-title-link:hover {
+        color: #005a9c;
+        text-decoration: underline;
+    }
+
+    /* Items column icon */
+    .exhibit-items-link {
+        color: #6c757d;
+        font-size: 1.1rem;
+        transition: color 0.15s ease-in-out;
+    }
+    .exhibit-items-link:hover {
+        color: #343a40;
+        text-decoration: none;
+    }
+
+    /* Actions dropdown positioning */
+    .exhibit-actions-menu.dropdown-menu {
+        right: 0 !important;
+        left: auto !important;
+        transform: none !important;
+        margin-top: 0;
+    }
+    .exhibit-actions-menu.dropdown-menu.show {
+        right: 0 !important;
+        left: auto !important;
+        transform: none !important;
+    }</style><!-- libs --> <%- include('../partials/exhibits-libs-common.ejs'); %> <script src="/exhibits-dashboard/static/libs/data_tables/datatables.min.js"></script><!-- app --> <%- include('../partials/exhibits-app-common.ejs'); %> <script src="/exhibits-dashboard/static/app/dist/exhibits.module.min.js?<%=build_version%>"></script><script src="/exhibits-dashboard/static/app/dist/home.module.min.js?<%=build_version%>"></script><!-- add-exhibit modal modules --><script src="/exhibits-dashboard/static/app/dist/media.picker.module.min.js?<%=build_version%>"></script><script src="/exhibits-dashboard/static/app/dist/exhibits.common.form.module.min.js?<%=build_version%>"></script><script src="/exhibits-dashboard/static/app/dist/exhibits.styles.module.min.js?<%=build_version%>"></script><script src="/exhibits-dashboard/static/app/dist/exhibits.add.form.module.min.js?<%=build_version%>"></script><script>(function () {
+        'use strict';
+
+        let add_form_initialized = false;
+
+        // Initialize add-exhibit modules on first modal open
+        $('#add-exhibit-modal').on('shown.bs.modal', function () {
+
+            // Always point common form messages at the modal-scoped container
+            exhibitsCommonFormModule.set_message_selector('#add-exhibit-message');
+
+            if (add_form_initialized) {
+                return;
+            }
+
+            try {
+                exhibitsAddFormModule.init();
+                exhibitsCommonFormModule.init();
+                exhibitsStylesModule.init();
+                mediaPickerModule.init();
+                add_form_initialized = true;
+            } catch (error) {
+                console.error('Error initializing add-exhibit modal:', error);
+            }
+        });
+
+        // Reset form fields when modal is closed
+        $('#add-exhibit-modal').on('hidden.bs.modal', function () {
+
+            if (typeof exhibitsAddFormModule.reset_form === 'function') {
+                exhibitsAddFormModule.reset_form();
+            }
+        });
+    })();</script></body>

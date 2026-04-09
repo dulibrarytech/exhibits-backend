@@ -29,6 +29,12 @@ const VALIDATOR = require('../libs/validate');
 const EXHIBIT_RECORD_TASKS = require('./tasks/exhibit_record_tasks');
 const INDEXER_MODEL = require('../indexer/model');
 const LOGGER = require('../libs/log4');
+const {
+    is_valid_uuid,
+    build_response,
+    validate_input,
+    prepare_styles
+} = require('../exhibits/common_helper');
 
 // Constants
 const CONSTANTS = {
@@ -51,65 +57,6 @@ const validate_create_heading_task = new VALIDATOR(EXHIBITS_CREATE_HEADING_SCHEM
 const validate_heading_update_task = new VALIDATOR(EXHIBITS_UPDATE_HEADING_SCHEMA);
 const heading_record_task = new EXHIBIT_HEADING_RECORD_TASKS(DB, TABLES);
 const exhibit_tasks = new EXHIBIT_RECORD_TASKS(DB, TABLES);
-
-/**
- * Validates UUID format
- * @param {string} uuid - UUID to validate
- * @returns {boolean} True if valid
- */
-const is_valid_uuid = (uuid) => {
-    return uuid && typeof uuid === 'string' && uuid.length > 0;
-};
-
-/**
- * Builds standardized response object
- * @param {number} status - HTTP status code
- * @param {string} message - Response message
- * @param {*} data - Optional response data
- * @returns {Object} Response object
- */
-const build_response = (status, message, data = null) => {
-    const response = { status, message };
-    if (data !== null) {
-        response.data = data;
-    }
-    return response;
-};
-
-/**
- * Validates input data
- * @param {Object} data - Data to validate
- * @param {Object} validator - Validator instance
- * @param {string} context - Context for error logging
- * @returns {Object|true} Validation result
- */
-const validate_input = (data, validator, context) => {
-    if (!data || typeof data !== 'object') {
-        LOGGER.module().error(`ERROR: [/exhibits/headings_model (${context})] Invalid input data format`);
-        return [{ message: 'Invalid input data format' }];
-    }
-
-    const validation_result = validator.validate(data);
-
-    if (validation_result !== true) {
-        const error_msg = validation_result[0].message || 'Validation failed';
-        LOGGER.module().error(`ERROR: [/exhibits/headings_model (${context})] ${error_msg}`);
-    }
-
-    return validation_result;
-};
-
-/**
- * Prepares styles data for storage
- * @param {Object|string|undefined} styles - Styles object or string
- * @returns {string} JSON stringified styles
- */
-const prepare_styles = (styles) => {
-    if (!styles || (typeof styles === 'object' && Object.keys(styles).length === 0)) {
-        return JSON.stringify({});
-    }
-    return typeof styles === 'string' ? styles : JSON.stringify(styles);
-};
 
 /**
  * Handles post-update republishing for heading
@@ -180,7 +127,7 @@ exports.create_heading_record = async (is_member_of_exhibit, data) => {
         data.is_member_of_exhibit = is_member_of_exhibit;
 
         // Validate
-        const validation_result = validate_input(data, validate_create_heading_task, 'create_heading_record');
+        const validation_result = validate_input(data, validate_create_heading_task, 'headings_model (create_heading_record)');
 
         if (validation_result !== true) {
             return build_response(
@@ -343,7 +290,7 @@ exports.update_heading_record = async (is_member_of_exhibit, uuid, data) => {
         delete data.is_published;
 
         // Validate
-        const validation_result = validate_input(data, validate_heading_update_task, 'update_heading_record');
+        const validation_result = validate_input(data, validate_heading_update_task, 'headings_model (update_heading_record)');
 
         if (validation_result !== true) {
             return build_response(

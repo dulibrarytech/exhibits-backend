@@ -1,16 +1,23 @@
 {
-  "name": "duexhibits-backend",
-  "version": "1.1.14",
-  "description": "DU Exhibits Backend Application",
+  "name": "exhibits-builder",
+  "version": "2.0.0",
+  "description": "DU Exhibits Builder Application - EBD @ DU",
   "main": "exhibits.js",
   "scripts": {
     "test": "NODE_OPTIONS=--max-old-space-size=4096 vitest --run --reporter verbose",
-    "test:integration": "mocha -r dotenv/config exhibits/tests/exhibits.test.js"
+    "test:integration": "mocha -r dotenv/config exhibits/tests/exhibits.test.js",
+    "start": "node exhibits-backend.js",
+    "migrate:latest": "knex migrate:latest",
+    "migrate:up": "knex migrate:up",
+    "migrate:down": "knex migrate:down",
+    "migrate:rollback": "knex migrate:rollback",
+    "migrate:make": "knex migrate:make"
   },
   "author": "fernando.reyes@du.edu",
   "license": "Apache",
   "dependencies": {
     "@elastic/elasticsearch": "^8.12.2",
+    "@napi-rs/canvas": "^0.1.95",
     "ajv": "^6.12.0",
     "axios": "^1.6.7",
     "body-parser": "^1.19.0",
@@ -18,6 +25,7 @@
     "dompurify": "^3.2.6",
     "dotenv": "^4.0.0",
     "ejs": "^3.1.8",
+    "exiftool-vendored": "^35.9.0",
     "express": "^4.17.1",
     "express-rate-limit": "^8.2.1",
     "helmet": "^3.23.3",
@@ -30,6 +38,8 @@
     "method-override": "^2.3.10",
     "multer": "^1.4.5-lts.1",
     "mysql2": "^3.11.4",
+    "pdfjs-dist": "^5.4.624",
+    "sharp": "^0.34.5",
     "uuid": "^8.3.2",
     "validator": "^13.7.0"
   },
@@ -40,7 +50,7 @@
     "gulp-htmlmin": "^5.0.1",
     "gulp-rename": "^2.1.0",
     "gulp-uglify": "^3.0.2",
-    "mocha": "^11.7.1",
+    "mocha": "^11.3.0",
     "supertest": "^6.1.3",
     "vitest": "^3.2.4"
   }
