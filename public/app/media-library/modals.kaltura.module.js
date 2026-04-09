@@ -250,7 +250,7 @@ const kalturaModalsModule = (function() {
         // Name field (required) - pre-populated from Kaltura title
         html += '<div class="row">';
         html += '<div class="col-12 mb-3">';
-        html += '<label class="form-label">Name <span class="text-danger">*</span></label>';
+        html += '<label class="form-label">Name <span class="badge badge-required">Required</span></label>';
         html += '<input type="text" class="form-control kaltura-name" name="name" value="' + title + '" required>';
         html += '<div class="invalid-feedback">Name is required</div>';
         html += '</div></div>';
@@ -273,7 +273,7 @@ const kalturaModalsModule = (function() {
             html += '<select class="form-control" name="topics_subjects"><option value="">Select a topic...</option></select>';
             html += '</div>';
             html += '<div class="col-md-6 mb-3">';
-            html += '<label class="form-label">Genre/Form <span class="text-danger">*</span></label>';
+            html += '<label class="form-label">Genre/Form <span class="badge badge-required">Required</span></label>';
             html += '<select class="form-control" name="genre_form_subjects"><option value="">Select genre/form...</option></select>';
             html += '</div></div>';
             html += '<div class="row">';
@@ -282,7 +282,7 @@ const kalturaModalsModule = (function() {
             html += '<select class="form-control" name="places_subjects"><option value="">Select a place...</option></select>';
             html += '</div>';
             html += '<div class="col-md-6 mb-3">';
-            html += '<label class="form-label">Item Type <span class="text-danger">*</span></label>';
+            html += '<label class="form-label">Item Type <span class="badge badge-required">Required</span></label>';
             html += '<select class="form-control" name="item_type" required><option value="">Select item type...</option></select>';
             html += '</div></div>';
         }

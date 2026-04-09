@@ -32,7 +32,7 @@
                     <p class="text-muted">
                         <i class="fa fa-pencil" style="margin-right: 6px;" aria-hidden="true"></i>
                         Please review and provide details for the Kaltura media item below.
-                        Fields marked with <span class="text-danger">*</span> are required.
+                        Fields marked <span class="badge badge-required">Required</span> must be completed.
                         Click <strong>Save</strong> when done.
                     </p>
                 </div>
@@ -65,6 +65,18 @@
 
 <style>
 /* Kaltura Import Modal Styles */
+.badge-required {
+    background-color: #e8f4fd;
+    color: #0c5fa5;
+    font-size: 0.65rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.03em;
+    padding: 0.25em 0.5em;
+    border-radius: 0.25rem;
+    vertical-align: middle;
+}
+
 #kaltura-media-modal .modal-content {
     border: none;
     box-shadow: 0 10px 40px rgba(0, 0, 0, 0.3);

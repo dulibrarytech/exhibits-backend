@@ -231,7 +231,7 @@ const mediaEditModalModule = (function() {
         let alt_text_html = '';
         if (is_image) {
             alt_text_html = '<div class="col-md-6 mb-3">' +
-                '<label class="form-label" for="edit-file-alt-text">Alt Text <span class="text-danger">*</span></label>' +
+                '<label class="form-label" for="edit-file-alt-text">Alt Text <span class="badge badge-required">Required</span></label>' +
                 '<input type="text" class="form-control" id="edit-file-alt-text" name="alt_text" value="' + escape_html(record.alt_text || '') + '" placeholder="Describe the image for screen readers" required aria-required="true">' +
                 '<div class="invalid-feedback">Please provide alt text for accessibility.</div>' +
                 '<small class="form-text text-muted"><i class="fa fa-universal-access" style="margin-right: 8px;" aria-hidden="true"></i>Required for accessibility</small>' +
@@ -281,7 +281,7 @@ const mediaEditModalModule = (function() {
         // Row 1: Name (required) and Alt Text (images only - required)
         html += '<div class="row">';
         html += '<div class="' + name_col_class + ' mb-3">';
-        html += '<label class="form-label" for="edit-file-name">Name <span class="text-danger">*</span></label>';
+        html += '<label class="form-label" for="edit-file-name">Name <span class="badge badge-required">Required</span></label>';
         html += '<input type="text" class="form-control" id="edit-file-name" name="name" value="' + escape_html(record.name || '') + '" placeholder="Enter a name" required aria-required="true">';
         html += '<div class="invalid-feedback">Please provide a name.</div>';
         html += '</div>';
@@ -304,7 +304,7 @@ const mediaEditModalModule = (function() {
         html += '</select>';
         html += '</div>';
         html += '<div class="col-md-6 mb-3">';
-        html += '<label class="form-label" for="edit-file-genre-form">Genre/Form <span class="text-danger">*</span></label>';
+        html += '<label class="form-label" for="edit-file-genre-form">Genre/Form <span class="badge badge-required">Required</span></label>';
         html += '<select class="form-control form-select custom-select" id="edit-file-genre-form" name="genre_form_subjects" data-selected="' + escape_html(record.genre_form_subjects || '') + '">';
         html += '<option value="">Select genre/form...</option>';
         html += '</select>';
@@ -319,7 +319,7 @@ const mediaEditModalModule = (function() {
         html += '</select>';
         html += '</div>';
         html += '<div class="col-md-6 mb-3">';
-        html += '<label class="form-label" for="edit-file-item-type">Item Type <span class="text-danger">*</span></label>';
+        html += '<label class="form-label" for="edit-file-item-type">Item Type <span class="badge badge-required">Required</span></label>';
         html += '<select class="form-control form-select custom-select" id="edit-file-item-type" name="item_type" required data-selected="' + escape_html(record.item_type || '') + '">';
         html += '<option value="">Select item type...</option>';
         html += '</select>';

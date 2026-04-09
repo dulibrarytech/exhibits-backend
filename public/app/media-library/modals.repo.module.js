@@ -370,7 +370,7 @@ const repoModalsModule = (function() {
         let alt_text_html = '';
         if (is_image) {
             alt_text_html = '<div class="col-md-6 mb-3">' +
-                '<label class="form-label" for="repo-alt-text-' + index + '">Alt Text <span class="text-danger">*</span></label>' +
+                '<label class="form-label" for="repo-alt-text-' + index + '">Alt Text <span class="badge badge-required">Required</span></label>' +
                 '<input type="text" class="form-control repo-alt-text" id="repo-alt-text-' + index + '" name="alt_text" placeholder="Describe the image for screen readers" required aria-required="true">' +
                 '<div class="invalid-feedback">Please provide alt text for accessibility.</div>' +
                 '<small class="form-text text-muted"><i class="fa fa-universal-access" style="margin-right: 8px;" aria-hidden="true"></i>Required for accessibility</small>' +
@@ -413,7 +413,7 @@ const repoModalsModule = (function() {
         // Row 1: Name (required) - populated from title - and Alt Text (images only - required)
         html += '<div class="row">';
         html += '<div class="col-md-6 mb-3">';
-        html += '<label class="form-label" for="repo-name-' + index + '">Name <span class="text-danger">*</span></label>';
+        html += '<label class="form-label" for="repo-name-' + index + '">Name <span class="badge badge-required">Required</span></label>';
         html += '<input type="text" class="form-control repo-name" id="repo-name-' + index + '" name="name" value="' + title + '" placeholder="Enter a name" required aria-required="true">';
         html += '<div class="invalid-feedback">Please provide a name.</div>';
         html += '</div>';
@@ -436,7 +436,7 @@ const repoModalsModule = (function() {
         html += '</select>';
         html += '</div>';
         html += '<div class="col-md-6 mb-3">';
-        html += '<label class="form-label" for="repo-genre-form-' + index + '">Genre/Form <span class="text-danger">*</span></label>';
+        html += '<label class="form-label" for="repo-genre-form-' + index + '">Genre/Form <span class="badge badge-required">Required</span></label>';
         html += '<select class="form-control form-select custom-select repo-genre-form" id="repo-genre-form-' + index + '" name="genre_form_subjects"' + (repo_subjects.genre_form ? ' data-selected="' + escape_html(repo_subjects.genre_form) + '"' : '') + '>';
         html += '<option value="">Select genre/form...</option>';
         html += '</select>';
@@ -451,7 +451,7 @@ const repoModalsModule = (function() {
         html += '</select>';
         html += '</div>';
         html += '<div class="col-md-6 mb-3">';
-        html += '<label class="form-label" for="repo-item-type-' + index + '">Item Type <span class="text-danger">*</span></label>';
+        html += '<label class="form-label" for="repo-item-type-' + index + '">Item Type <span class="badge badge-required">Required</span></label>';
         html += '<select class="form-control form-select custom-select repo-item-type" id="repo-item-type-' + index + '" name="item_type" required' + (repo_subjects.resource_type ? ' data-selected="' + escape_html(repo_subjects.resource_type) + '"' : '') + '>';
         html += '<option value="">Select item type...</option>';
         html += '</select>';
