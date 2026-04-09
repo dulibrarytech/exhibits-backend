@@ -87,7 +87,13 @@ exports.up = function(knex) {
         }));
       }
     }
-  });
+  }).then(() => knex.schema.alterTable('tbl_timelines', table => {
+    table.dropColumn('title');
+  })).then(() => knex.schema.alterTable('tbl_grids', table => {
+    table.dropColumn('title');
+  })).then(() => knex.schema.alterTable('tbl_standard_items', table => {
+    table.dropColumn('title');
+  }));
 };
 
 /**
@@ -97,5 +103,11 @@ exports.up = function(knex) {
 exports.down = function(knex) {
   return knex.schema.alterTable('tbl_timelines', table => {
     table.text('title').nullable().alter();
-  });
+  }).then(() => knex.schema.alterTable('tbl_timelines', table => {
+    table.text('title');
+  })).then(() => knex.schema.alterTable('tbl_grids', table => {
+    table.text('title');
+  })).then(() => knex.schema.alterTable('tbl_standard_items', table => {
+    table.text('title');
+  }));
 };
