@@ -26,12 +26,12 @@
                 <div class="col-7 col-md-7">
                     <div class="row form-group">
                         <div class="col-7 col-md-7">
-                            <div class="form-text text-muted" style="font-size: 17px"><span style="color: darkred">*</span>
-                                Heading Type <small><em>(Required)</em></small>
+                            <div class="form-text text-muted" style="font-size: 17px">
+                                Heading Type <span class="badge badge-required">Required</span>
                             </div>
                             <span id="item-heading-type-error" class="is-error"></span>
                             <div class="input-group">
-                                <select name="item_heading_type_input" id="item-heading-type-input"
+                                <select <%= (typeof is_details !== 'undefined' && is_details) ? 'disabled' : '' %> name="item_heading_type_input" id="item-heading-type-input"
                                         class="form-control-lg form-control text-muted" style="height: 40px">
                                     <option value="">Select From Menu</option>
                                     <option value="">----------</option>
@@ -52,7 +52,7 @@
                                 &nbsp;&nbsp;<a onclick="helperModule.preview_html('item-heading-text-input');return false;" data-toggle="modal" data-target=".preview-html" class="btn-xs btn-light"><span style="padding: 5px"><i class="fa fa-code"></i> <small>Preview Field</small></span></a>
                             </div>
                             <span id="item-heading-text-error" class="is-error"></span>
-                            <textarea id="item-heading-text-input" class="form-control" name="item_heading_text_input"
+                            <textarea <%= (typeof is_details !== 'undefined' && is_details) ? 'disabled' : '' %> id="item-heading-text-input" class="form-control" name="item_heading_text_input"
                                       rows="4"></textarea>
                         </div>
                     </div>
