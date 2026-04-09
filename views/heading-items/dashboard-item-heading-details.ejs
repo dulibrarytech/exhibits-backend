@@ -1,14 +1,4 @@
 <%- include('../partials/header.ejs'); %>
-<style>
-    .color-picker {
-        background-color: none;
-        outline: none;
-        border: 1px solid grey;
-        height: 38px;
-        width: 50px;
-        cursor: pointer;
-    }
-</style>
 <body>
 <%- include('../partials/nav-dashboard'); %>
 <div id="right-panel" class="right-panel">
@@ -43,78 +33,6 @@
                     </div>
                 </div>
             </form>
-        </div>
-        <div id="heading-styles-card" class="card">
-            <div class="card-header">
-                <strong class="card-title mb-3">Heading Styles</strong>
-            </div>
-            <div class="card-body">
-                <div class="row">
-                    <div class="col-6 col-md-6">
-                        <p>
-                        <div class="form-text text-muted" style="font-size: 17px">
-                            <label for="heading-background-color">Heading Background Color</label>
-                        </div>
-                        </p>
-                        <div class="input-group">
-                            <div class="input-group-btn">
-                                <input disabled title="Color Picker" class="color-picker btn btn-default" type="color"
-                                       id="heading-background-color-picker" value="#ffffff">
-                            </div>
-                            <input disabled type="text" id="heading-background-color" name="heading_background_color"
-                                   placeholder="i.e. #FFFFFF" class="form-control" style="height: 40px">
-
-                        </div>
-                    </div>
-                    <div class="col-6 col-md-6">
-                        <p>
-                        <div class="form-text text-muted" style="font-size: 17px">
-                            <label for="heading-font-color">Heading Font Color</label>
-                        </div>
-                        </p>
-                        <div class="input-group">
-                            <div class="input-group-btn">
-                                <input disabled title="Color Picker" class="color-picker btn btn-default" type="color"
-                                       id="heading-font-color-picker"
-                                       value="#ffffff">
-                            </div>
-                            <input disabled type="text" id="heading-font-color" name="item_font_color"
-                                   placeholder="i.e. #FFFFFF" class="form-control" style="height: 40px">
-                        </div>
-                    </div>
-                </div>
-                <div class="row">
-                    <div class="col-6 col-md-6">
-                        <p>
-                        <div class="form-text text-muted" style="font-size: 17px">
-                            <label for="heading-font-size">Heading Font Size</label>
-                        </div>
-                        </p>
-                        <div class="input-group">
-                            <input disabled type="number" id="heading-font-size" name="heading_font_size"
-                                   placeholder="" class="form-control" min="1" max="50" style="height: 40px">
-                            <div class="input-group-append">
-                                <span class="input-group-text" id="basic-addon2">px</span>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="col-6 col-md-6">
-                        <p>
-                        <div class="form-text text-muted" style="font-size: 17px">
-                            <label for="heading-font">Heading Font</label>
-                        </div>
-                        </p>
-                        <div class="input-group">
-                            <select disabled name="heading_font" id="heading-font"
-                                    class="form-control-lg form-control text-muted" style="height: 40px">
-                                <option value="">Select From Menu</option>
-                                <option value="">----------</option>
-                                <%- include('../exhibits/partials/exhibit-fonts-options-list.ejs'); %>
-                            </select>
-                        </div>
-                    </div>
-                </div>
-            </div>
         </div>
         <div id="item-submit-card" class="card">
             <div class="card-body">

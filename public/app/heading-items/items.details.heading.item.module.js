@@ -31,7 +31,6 @@ const itemsDetailsHeadingModule = (function () {
             const exhibit_id = helperModule.get_parameter_by_name('exhibit_id');
             const item_id = helperModule.get_parameter_by_name('item_id');
             const token = authModule.get_user_token();
-            const profile = authModule.get_user_profile_data();
             let tmp = EXHIBITS_ENDPOINTS.exhibits.heading_records.get.endpoint.replace(':exhibit_id', exhibit_id);
             let endpoint = tmp.replace(':heading_id', item_id);
 
@@ -48,7 +47,7 @@ const itemsDetailsHeadingModule = (function () {
 
             let response = await httpModule.req({
                 method: 'GET',
-                url: endpoint + '?uid=' + profile.uid,
+                url: endpoint + '?type=details',
                 headers: {
                     'Content-Type': 'application/json',
                     'x-access-token': token

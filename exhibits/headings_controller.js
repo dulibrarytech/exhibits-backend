@@ -79,6 +79,12 @@ exports.get_heading_record = async function (req, res) {
             return false;
         }
 
+        if (type === 'details') {
+            const data = await HEADINGS_MODEL.get_heading_record(is_member_of_exhibit, uuid);
+            res.status(data.status).send(data);
+            return false;
+        }
+
         if (type === 'edit') {
 
             const uid = req.query.uid;
