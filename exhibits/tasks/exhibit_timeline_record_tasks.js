@@ -43,7 +43,6 @@ const Exhibit_timeline_record_tasks = class extends Base_tasks {
      * @param {Object} data - Timeline record data
      * @param {string} data.uuid - Timeline UUID (required)
      * @param {string} data.is_member_of_exhibit - Exhibit UUID (required)
-     * @param {string} data.title - Timeline title (required)
      * @param {string} [created_by=null] - User ID creating the record
      * @returns {Promise<Object>} Created timeline record with ID
      * @throws {Error} If validation fails or creation fails
@@ -54,7 +53,6 @@ const Exhibit_timeline_record_tasks = class extends Base_tasks {
             'uuid',
             'is_member_of_exhibit',
             'type',
-            'title',
             'text',
             'styles',
             'order',
@@ -74,8 +72,6 @@ const Exhibit_timeline_record_tasks = class extends Base_tasks {
                 [data.uuid]: 'timeline UUID',
                 [data.is_member_of_exhibit]: 'exhibit UUID'
             });
-
-            const title = this._validate_string(data.title, 'timeline title');
 
             // Sanitize data
             const {sanitized_data} = this._sanitize_data(data, ALLOWED_FIELDS);
@@ -122,7 +118,6 @@ const Exhibit_timeline_record_tasks = class extends Base_tasks {
                 this._log_success('Timeline record created successfully', {
                     id: insert_id,
                     uuid: record.uuid,
-                    title: record.title,
                     created_by
                 });
 
@@ -218,7 +213,6 @@ const Exhibit_timeline_record_tasks = class extends Base_tasks {
 
             this._log_success('Timeline record retrieved successfully', {
                 uuid: timeline_record.uuid,
-                title: timeline_record.title
             });
 
             return timeline_record;
@@ -241,7 +235,6 @@ const Exhibit_timeline_record_tasks = class extends Base_tasks {
 
         const UPDATABLE_FIELDS = [
             'type',
-            'title',
             'text',
             'styles',
             'order',

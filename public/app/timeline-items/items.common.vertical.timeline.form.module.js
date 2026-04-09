@@ -43,7 +43,6 @@ const itemsCommonVerticalTimelineFormModule = (function () {
             };
 
             // Get timeline metadata
-            timeline.title = get_element_value('#timeline-title-input');
             timeline.text = get_element_value('#timeline-text-input');
 
             // Validate required title field

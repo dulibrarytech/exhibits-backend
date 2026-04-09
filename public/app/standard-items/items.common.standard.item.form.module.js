@@ -673,7 +673,6 @@ const itemsCommonStandardItemFormModule = (function () {
             };
 
             // Get item metadata
-            item.title = getElementValue('#item-title-input');
             item.text = getElementValue('#item-text-input');
 
             // Validate text content for text paths

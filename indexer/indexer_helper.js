@@ -269,7 +269,6 @@ const construct_item_index_record = (record) => {
     const index_record = {
         uuid: record.uuid,
         is_member_of_exhibit: record.is_member_of_exhibit,
-        title: record.title,
         caption: record.caption,
         item_type: record.item_type,
         text: record.text,
@@ -334,7 +333,6 @@ const construct_grid_index_record = (record) => {
         uuid: record.uuid,
         type: record.type,
         columns: record.columns,
-        title: record.title,
         text: record.text,
         styles: record.styles,
         subjects: process_subjects(record.item_subjects),
@@ -360,7 +358,6 @@ const construct_timeline_index_record = (record) => {
         is_member_of_exhibit: record.is_member_of_exhibit,
         uuid: record.uuid,
         type: record.type,
-        title: record.title,
         text: record.text,
         styles: record.styles,
         subjects: process_subjects(record.item_subjects),

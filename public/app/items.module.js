@@ -284,6 +284,7 @@ const itemsModule = (function() {
 
                 switch(type) {
                     case 'heading':
+                    case 'subheading':
                         item_data += await itemsListDisplayModule.display_heading_items(record);
                         break;
                     case 'item':
@@ -862,6 +863,7 @@ const itemsModule = (function() {
 
         switch(item_type) {
             case 'heading':
+            case 'subheading':
                 item_category = 'heading';
                 edit_url = is_published
                     ? `${APP_PATH}/items/heading/details?exhibit_id=${encoded_exhibit_id}&item_id=${encoded_uuid}`

@@ -261,6 +261,9 @@ const itemsEditHeadingFormModule = (function () {
             // Set heading text value
             set_heading_text(record.text, dom_elements.heading_text_input);
 
+            // Set heading type value
+            set_heading_type(record.type, dom_elements.heading_type_input);
+
             // Set published status
             set_published_status(record.is_published, dom_elements.is_published);
 
@@ -288,7 +291,8 @@ const itemsEditHeadingFormModule = (function () {
         return {
             created: document.querySelector('#created'),
             heading_text_input: document.querySelector('#item-heading-text-input'),
-            is_published: document.querySelector('#is-published')
+            heading_type_input: document.querySelector('#item-heading-type-input'),
+            is_published: document.querySelector('#is-published'),
         };
     }
 
@@ -348,6 +352,17 @@ const itemsEditHeadingFormModule = (function () {
 
         const unescaped_text = text ? helperModule.unescape(text) : '';
         element.value = unescaped_text;
+    }
+
+    /**
+     * Set heading type input value
+     */
+    function set_heading_type(type, element) {
+        if (!element) {
+            return;
+        }
+
+        element.value = type;
     }
 
     /**

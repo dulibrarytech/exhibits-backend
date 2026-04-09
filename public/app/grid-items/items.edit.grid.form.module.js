@@ -132,7 +132,6 @@ const itemsEditGridFormModule = (function () {
         }
 
         document.querySelector('#created').innerHTML = item_created;
-        document.querySelector('#grid-title-input').value = helperModule.unescape(record.title);
         document.querySelector('#grid-text-input').value = helperModule.unescape(record.text);
         document.querySelector('#grid-columns').value = record.columns;
 

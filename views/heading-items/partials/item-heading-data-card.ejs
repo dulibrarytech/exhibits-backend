@@ -23,6 +23,27 @@
         <div class="card-body">
             <input id="exhibit-uuid" type="hidden" name="exhibit_uuid">
             <div class="row">
+                <div class="col-7 col-md-7">
+                    <div class="row form-group">
+                        <div class="col-7 col-md-7">
+                            <div class="form-text text-muted" style="font-size: 17px"><span style="color: darkred">*</span>
+                                Heading Type <small><em>(Required)</em></small>
+                            </div>
+                            <span id="item-heading-type-error" class="is-error"></span>
+                            <div class="input-group">
+                                <select name="item_heading_type_input" id="item-heading-type-input"
+                                        class="form-control-lg form-control text-muted" style="height: 40px">
+                                    <option value="">Select From Menu</option>
+                                    <option value="">----------</option>
+                                    <option value="heading">Heading</option>
+                                    <option value="subheading">Subheading</option>
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="row">
                 <div class="col-12 col-md-12">
                     <div class="row form-group">
                         <div class="col-12">

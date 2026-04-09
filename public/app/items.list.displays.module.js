@@ -504,7 +504,7 @@ const itemsListDisplayModule = (function() {
 
             tr.appendChild(build_compact_item_cell({
                 title: title,
-                type_label: 'heading',
+                type_label: item.type,
                 type_icon_class: 'fa fa-header',
                 thumbnail_img: null,
                 is_locked: item.is_locked,

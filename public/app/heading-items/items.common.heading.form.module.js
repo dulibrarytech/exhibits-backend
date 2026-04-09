@@ -56,6 +56,15 @@ const itemsCommonHeadingFormModule = (function () {
                 return false;
             }
 
+            // Get heading type
+            item_heading.type = get_element_value('#item-heading-type-input');
+
+            // Validate required heading type
+            if (!item_heading.type || item_heading.type.length === 0) {
+                show_error('Please select heading type');
+                return false;
+            }
+
             // Get optional published status
             const published_el = document.querySelector('#is-published');
 
