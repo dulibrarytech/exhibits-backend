@@ -331,7 +331,7 @@ const uploadsModule = (function() {
 
         ITEM_MEDIA.options.itemDropzone = create_base_dropzone_config({
             zone_name: 'Item Media',
-            max_filesize: 150000, // 150MB
+            max_filesize: 100000000, // 100MB
             accepted_files: 'image/png,image/jpeg,image/jpg,application/pdf',
             dict_message: '<small><em>Drag and Drop Item Media file here or Click to Upload</em></small>',
             file_type: 'item_media',
