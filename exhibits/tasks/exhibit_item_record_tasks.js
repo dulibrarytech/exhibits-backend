@@ -83,7 +83,8 @@ const Exhibit_item_record_tasks = class extends Base_tasks {
             'timeline': 'timeline_records',
             'standard_item': 'item_records',
             'grid_item': 'grid_item_records',
-            'timeline_item': 'timeline_item_records'
+            'timeline_item': 'timeline_item_records',
+            'vertical_timeline': 'timeline_records'
         };
 
         const normalized_type = type.toLowerCase().trim();

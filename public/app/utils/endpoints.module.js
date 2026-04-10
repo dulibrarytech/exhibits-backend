@@ -353,6 +353,7 @@ const endpointsModule = (function() {
      * Initialize endpoints module
      */
     obj.init = function() {
+        console.log('ENDPOINTS ', endpointsModule.get_exhibits_endpoints().exhibits.timeline_item_records.delete.endpoint);
         try {
             // Check localStorage availability
             if (!is_local_storage_available()) {

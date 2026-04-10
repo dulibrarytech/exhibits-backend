@@ -164,19 +164,6 @@ exports.delete_item_record = async function (req, res) {
         if (!validate_param(res, exhibit_id, 'exhibit ID')) return;
         if (!validate_param(res, item_id, 'item ID')) return;
 
-        // Validate record type if provided
-        /* TODO: determine record types
-        const valid_record_types = ['item', 'grid', 'heading'];
-
-        if (record_type !== undefined && (typeof record_type !== 'string' || !valid_record_types.includes(record_type))) {
-            res.status(400).send({
-                message: 'Bad request. Invalid record type.'
-            });
-            return;
-        }
-
-         */
-
         const is_authorized = await check_authorization(
             req, res,
             ['delete_item', 'delete_any_item'],
