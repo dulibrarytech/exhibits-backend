@@ -209,7 +209,7 @@ const uploadsModule = (function() {
 
         EXHIBIT_HERO.options.heroDropzone = create_base_dropzone_config({
             zone_name: 'Hero Image',
-            max_filesize: 1000, // 1MB
+            max_filesize: 10000, // 10MB
             accepted_files: 'image/png,image/jpeg,image/jpg',
             dict_message: '<small><em>Drag and Drop Hero Image file here or Click to Upload</em></small>',
             file_type: 'exhibit_hero',
@@ -270,7 +270,7 @@ const uploadsModule = (function() {
 
         THUMBNAIL.options.thumbnailDropzone = create_base_dropzone_config({
             zone_name: 'Thumbnail Image',
-            max_filesize: 1000, // 1MB
+            max_filesize: 10000, // 10MB
             accepted_files: 'image/png,image/jpeg,image/jpg',
             dict_message: '<small><em>Drag and Drop Thumbnail Image file here or Click to Upload</em></small>',
             file_type: 'exhibit_thumbnail',
@@ -331,7 +331,7 @@ const uploadsModule = (function() {
 
         ITEM_MEDIA.options.itemDropzone = create_base_dropzone_config({
             zone_name: 'Item Media',
-            max_filesize: 10000, // 10MB
+            max_filesize: 150000, // 150MB
             accepted_files: 'image/png,image/jpeg,image/jpg,application/pdf',
             dict_message: '<small><em>Drag and Drop Item Media file here or Click to Upload</em></small>',
             file_type: 'item_media',
