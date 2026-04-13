@@ -463,11 +463,9 @@ exports.create_media_record = async function (req, res) {
             data.original_filename = decode_html_entities(data.original_filename);
         }
 
-        // TODO: figure out permissions
-        /*
         const auth_options = {
             req,
-            permissions: ['add_item', 'add_item_to_any_exhibit'],
+            permissions: ['can_create_media'],
             record_type: 'item',
             parent_id: null,
             child_id: null
@@ -483,7 +481,6 @@ exports.create_media_record = async function (req, res) {
             });
             return;
         }
-        */
 
         const result = await MEDIA_MODEL.create_media_record(data);
 
