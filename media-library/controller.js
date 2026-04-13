@@ -712,7 +712,6 @@ exports.update_media_record = async function (req, res) {
             return;
         }
 
-
         const result = await MEDIA_MODEL.update_media_record(media_id, data);
 
         if (!result || !result.success) {
@@ -773,6 +772,25 @@ exports.delete_media_record = async function (req, res) {
         // Get username from verified token for deleted_by name lookup
         // (req.decoded is set by TOKEN.verify middleware)
         const username = req.decoded?.sub || null;
+
+        const auth_options = {
+            req,
+            permissions: ['can_delete_any_media', 'can_delete_media'],
+            record_type: 'item',
+            parent_id: null,
+            child_id: null
+        };
+
+        const is_authorized = await AUTHORIZE.check_permission(auth_options);
+
+        if (is_authorized !== true) {
+            res.status(403).json({
+                success: false,
+                message: 'Unauthorized request',
+                data: null
+            });
+            return;
+        }
 
         const result = await MEDIA_MODEL.delete_media_record(media_id, username);
 
