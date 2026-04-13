@@ -693,6 +693,26 @@ exports.update_media_record = async function (req, res) {
             data.username = req.decoded.sub;
         }
 
+        const auth_options = {
+            req,
+            permissions: ['can_update_any_media', 'can_update_media'],
+            record_type: 'item',
+            parent_id: null,
+            child_id: null
+        };
+
+        const is_authorized = await AUTHORIZE.check_permission(auth_options);
+
+        if (is_authorized !== true) {
+            res.status(403).json({
+                success: false,
+                message: 'Unauthorized request',
+                data: null
+            });
+            return;
+        }
+
+
         const result = await MEDIA_MODEL.update_media_record(media_id, data);
 
         if (!result || !result.success) {
