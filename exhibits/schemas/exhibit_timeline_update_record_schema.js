@@ -22,7 +22,6 @@ module.exports = () => {
 
     return {
         is_member_of_exhibit: {type: 'string'},
-        uuid: {type: 'string'},
-        title: {type: 'string'}
+        uuid: {type: 'string'}
     };
 };
