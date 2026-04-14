@@ -20,6 +20,7 @@
 
 const {Client} = require('@elastic/elasticsearch');
 const ES_CONFIG = require('../config/elasticsearch_config')();
+const WEBSERVICES_CONFIG = require('../config/webservices_config')();
 const LOGGER = require('../libs/log4');
 
 // ─── Shared Elasticsearch client ────────────────────────────────────────────
@@ -92,13 +93,13 @@ const build_response = (status, message, data = null) => {
 /**
  * Processes pipe-delimited subjects string into array
  * @param {string|null} subjects - Pipe-delimited subjects string
- * @returns {Array|string} Array of subjects or empty string
+ * @returns {Array|null} Array of subjects or null
  */
 const process_subjects = (subjects) => {
     if (subjects && typeof subjects === 'string' && subjects.length > 0) {
         return subjects.split('|').filter(s => s.trim().length > 0);
     }
-    return '';
+    return null;
 };
 
 /**
@@ -162,6 +163,57 @@ const merge_media_subjects = (record) => {
     };
 };
 
+/**
+ * Builds a IIIF manifest URL for repository import items using the external repo endpoint
+ * @param {Object} record - Item record with is_repo_item and media fields
+ * @returns {Object|null} Object with manifest_url only, or null if not a repo item
+ */
+const resolve_repo_iiif = (record) => {
+
+    if (record.is_repo_item !== 1 || !record.media) {
+        return null;
+    }
+
+    const endpoint = WEBSERVICES_CONFIG.repo_iiif_endpoint;
+
+    if (!endpoint) {
+        LOGGER.module().error('ERROR: [/indexer/indexer_helper (resolve_repo_iiif)] REPO_IIIF_ENDPOINT is not configured');
+        return null;
+    }
+
+    return {
+        manifest_url: endpoint + record.media
+    };
+};
+
+/**
+ * Normalizes empty strings and undefined values to null throughout a record.
+ * Recurses into nested plain objects but preserves arrays and Date instances as-is.
+ * (Child records in arrays are expected to be normalized independently by their own constructors.)
+ * @param {Object} obj - Record object to normalize
+ * @returns {Object} Normalized record with empty strings/undefined converted to null
+ */
+const normalize_empty_to_null = (obj) => {
+
+    if (!obj || typeof obj !== 'object' || Array.isArray(obj)) {
+        return obj;
+    }
+
+    const result = {};
+
+    for (const [key, value] of Object.entries(obj)) {
+        if (value === '' || value === undefined) {
+            result[key] = null;
+        } else if (value !== null && typeof value === 'object' && !Array.isArray(value) && !(value instanceof Date)) {
+            result[key] = normalize_empty_to_null(value);
+        } else {
+            result[key] = value;
+        }
+    }
+
+    return result;
+};
+
 // ─── Index record constructors ──────────────────────────────────────────────
 
 /**
@@ -180,7 +232,7 @@ const construct_exhibit_index_record = (record) => {
     const thumb_iiif = resolve_iiif_urls(record.thumb_iiif_manifest);
     const hero_kaltura = resolve_kaltura(record.hero_kaltura_entry_id, record.hero_kaltura_thumbnail_url);
 
-    return {
+    return normalize_empty_to_null({
         uuid: record.uuid,
         type: record.type,
         title: record.title,
@@ -222,7 +274,7 @@ const construct_exhibit_index_record = (record) => {
         // v2: media dimensions
         media_width: record.hero_media_width || null,
         media_height: record.hero_media_height || null
-    };
+    });
 };
 
 /**
@@ -236,7 +288,7 @@ const construct_heading_index_record = (record) => {
         throw new Error('Invalid record provided');
     }
 
-    return {
+    return normalize_empty_to_null({
         is_member_of_exhibit: record.is_member_of_exhibit,
         uuid: record.uuid,
         type: record.type,
@@ -247,7 +299,7 @@ const construct_heading_index_record = (record) => {
         is_anchor: record.is_anchor,
         is_published: record.is_published,
         created: record.created
-    };
+    });
 };
 
 /**
@@ -265,6 +317,9 @@ const construct_item_index_record = (record) => {
     const media_iiif = resolve_iiif_urls(record.media_iiif_manifest);
     const thumb_iiif = resolve_iiif_urls(record.thumb_iiif_manifest);
     const kaltura = resolve_kaltura(record.kaltura_entry_id, record.media_kaltura_thumbnail_url);
+
+    // Repo import fallback: construct IIIF manifest URL from the repo endpoint + media UUID
+    const repo_iiif = !media_iiif ? resolve_repo_iiif(record) : null;
 
     const index_record = {
         uuid: record.uuid,
@@ -287,12 +342,12 @@ const construct_item_index_record = (record) => {
         created: record.created,
         // Legacy media filename preserved for backward compatibility
         media: record.media,
-        // v2: resolved media IIIF URLs
+        // v2: resolved media IIIF URLs (media library manifest, or repo import fallback)
         media_iiif: media_iiif ? {
             manifest_url: media_iiif.manifest_url,
             image_url: media_iiif.image_url,
             service_url: media_iiif.service_url
-        } : null,
+        } : repo_iiif,
         // v2: resolved thumbnail — prefer IIIF thumbnail URL, fall back to legacy
         thumbnail: thumb_iiif?.thumbnail_url || record.thumbnail,
         thumbnail_iiif: thumb_iiif ? {
@@ -311,10 +366,10 @@ const construct_item_index_record = (record) => {
         subjects: process_subjects(record.item_subjects),
         media_subjects: merge_media_subjects(record),
         // Date — Elasticsearch date fields can't be empty strings
-        date: (record.date && record.date.length > 0) ? record.date : null
+        date: record.date || null
     };
 
-    return index_record;
+    return normalize_empty_to_null(index_record);
 };
 
 /**
@@ -328,7 +383,7 @@ const construct_grid_index_record = (record) => {
         throw new Error('Invalid record provided');
     }
 
-    return {
+    return normalize_empty_to_null({
         is_member_of_exhibit: record.is_member_of_exhibit,
         uuid: record.uuid,
         type: record.type,
@@ -340,7 +395,7 @@ const construct_grid_index_record = (record) => {
         is_published: record.is_published,
         created: record.created,
         items: record.items
-    };
+    });
 };
 
 /**
@@ -354,7 +409,7 @@ const construct_timeline_index_record = (record) => {
         throw new Error('Invalid record provided');
     }
 
-    return {
+    return normalize_empty_to_null({
         is_member_of_exhibit: record.is_member_of_exhibit,
         uuid: record.uuid,
         type: record.type,
@@ -365,7 +420,7 @@ const construct_timeline_index_record = (record) => {
         is_published: record.is_published,
         created: record.created,
         items: record.items
-    };
+    });
 };
 
 // ─── Batch indexing ─────────────────────────────────────────────────────────
@@ -728,8 +783,10 @@ module.exports = {
     build_response,
     process_subjects,
     resolve_iiif_urls,
+    resolve_repo_iiif,
     resolve_kaltura,
     merge_media_subjects,
+    normalize_empty_to_null,
     construct_exhibit_index_record,
     construct_heading_index_record,
     construct_item_index_record,

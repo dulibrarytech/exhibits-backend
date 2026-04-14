@@ -26,6 +26,7 @@ const WEBSERVICES_CONFIG = {
     sso_logout_url: process.env.SSO_LOGOUT_URL,
     exhibit_preview_url: process.env.EXHIBIT_URL,
     exhibit_preview_api_key: process.env.EXHIBIT_PREVIEW_API_KEY,
+    repo_iiif_endpoint: process.env.REPO_IIIF_ENDPOINT,
     repo_item_api_url: process.env.REPO_ITEM_API_URL,
     repo_item_api_key: process.env.REPO_ITEM_API_KEY,
     tn_service: process.env.TN_SERVICE,
