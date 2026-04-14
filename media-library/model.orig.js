@@ -183,10 +183,6 @@ exports.create_media_record = async (data) => {
                 data.created_by = user_result.full_name;
             }
 
-            if (user_result.success && user_result.id) {
-                data.owner = user_result.id;
-            }
-
             delete data.username;
         }
 

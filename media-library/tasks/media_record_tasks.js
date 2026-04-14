@@ -992,7 +992,7 @@ const Media_record_tasks = class {
 
             // Query user_records by du_id (the SSO username stored as JWT sub claim)
             const user = await this.DB(this.TABLE.user_records)
-                .select('first_name', 'last_name')
+                .select('id', 'first_name', 'last_name')
                 .where({du_id: username.trim()})
                 .first()
                 .timeout(this.QUERY_TIMEOUT);
@@ -1018,6 +1018,7 @@ const Media_record_tasks = class {
 
             return {
                 success: true,
+                id: user.id,
                 full_name: full_name || null,
                 first_name: first_name,
                 last_name: last_name,

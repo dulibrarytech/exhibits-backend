@@ -466,7 +466,7 @@ exports.create_media_record = async function (req, res) {
         const auth_options = {
             req,
             permissions: ['can_create_media'],
-            record_type: 'item',
+            record_type: 'media',
             parent_id: null,
             child_id: null
         };
@@ -696,8 +696,8 @@ exports.update_media_record = async function (req, res) {
         const auth_options = {
             req,
             permissions: ['can_update_any_media', 'can_update_media'],
-            record_type: 'item',
-            parent_id: null,
+            record_type: 'media',
+            parent_id: media_id,
             child_id: null
         };
 
@@ -776,8 +776,8 @@ exports.delete_media_record = async function (req, res) {
         const auth_options = {
             req,
             permissions: ['can_delete_any_media', 'can_delete_media'],
-            record_type: 'item',
-            parent_id: null,
+            record_type: 'media',
+            parent_id: media_id,
             child_id: null
         };
 

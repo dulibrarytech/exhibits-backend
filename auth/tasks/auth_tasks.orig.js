@@ -450,7 +450,7 @@ const Auth_tasks = class {
                 }
             }
 
-            // Record type mapping including exhibit and media
+            // Record type mapping including exhibit
             const record_type_map = {
                 'exhibit': this.TABLE.exhibit_records,
                 'item': this.TABLE.item_records,
@@ -458,8 +458,7 @@ const Auth_tasks = class {
                 'grid': this.TABLE.grid_records,
                 'grid_item': this.TABLE.grid_item_records,
                 'timeline': this.TABLE.timeline_records,
-                'timeline_item': this.TABLE.timeline_item_records,
-                'media': this.TABLE.media_library_records
+                'timeline_item': this.TABLE.timeline_item_records
             };
 
             // Validate record_type
@@ -476,31 +475,6 @@ const Auth_tasks = class {
 
             // If child_id is not provided, only check exhibit ownership
             if (!is_child_provided) {
-
-                // Handle media record type (standalone, no parent/child hierarchy)
-                if (normalized_record_type === 'media') {
-                    const media_data = await this.DB(this.TABLE.media_library_records)
-                        .select('owner')
-                        .where({ uuid: parent_id, is_deleted: 0 })
-                        .limit(1);
-
-                    if (!media_data || media_data.length === 0) {
-                        LOGGER.module().warn(`WARNING: [/auth/tasks (check_ownership)] media record not found: ${parent_id}`);
-                        return 0;
-                    }
-
-                    const media_owner = media_data[0].owner;
-
-                    // Validate owner is a valid number
-                    const parsed_media_owner = Number(media_owner);
-                    if (!Number.isInteger(parsed_media_owner) || parsed_media_owner <= 0) {
-                        LOGGER.module().error(`ERROR: [/auth/tasks (check_ownership)] invalid media owner: ${media_owner}`);
-                        return 0;
-                    }
-
-                    return parsed_media_owner;
-                }
-
                 LOGGER.module().debug('No child_id provided, checking exhibit ownership only');
 
                 const exhibit_data = await this.DB(this.TABLE.exhibit_records)
