@@ -1,66 +1,4 @@
 <%- include('../partials/header.ejs'); %>
-<style>
-    .color-picker {
-        background-color: none;
-        outline: none;
-        border: 1px solid grey;
-        height: 38px;
-        width: 50px;
-        cursor: pointer;
-    }
-    .media-preview-area {
-        border: 2px dashed #c8ced3;
-        border-radius: 4px;
-        padding: 8px;
-        background: #f8f9fa;
-        height: 180px;
-        max-width: 280px;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        overflow: hidden;
-        margin-bottom: 8px;
-    }
-    .media-preview-area:has(img) {
-        border-style: solid;
-        border-color: #dee2e6;
-        background: #fff;
-    }
-    .media-preview-area img {
-        max-width: 100%;
-        max-height: 160px;
-        object-fit: contain;
-        display: block;
-        border-radius: 3px;
-    }
-    .media-placeholder {
-        display: flex;
-        flex-direction: column;
-        align-items: center;
-        gap: 6px;
-        color: #adb5bd;
-    }
-    .media-placeholder i {
-        font-size: 2rem;
-    }
-    .media-placeholder span {
-        font-size: 12px;
-    }
-    .media-preview-area:has(img) .media-placeholder {
-        display: none;
-    }
-    #hero-image-filename-display,
-    #thumbnail-filename-display {
-        display: inline-block;
-        max-width: 280px;
-        font-size: 12px;
-        color: #555;
-        overflow: hidden;
-        text-overflow: ellipsis;
-        white-space: nowrap;
-        vertical-align: middle;
-    }
-</style>
 <body>
 <%- include('../partials/nav-dashboard'); %>
 <div id="right-panel" class="right-panel">
@@ -69,9 +7,6 @@
         <div id="message"></div>
         <!-- exhibit data card -->
         <%- include('partials/exhibit-data-card.ejs'); %>
-        <!--
-        <%- // include('../partials/item-media-subjects-card'); %>
-        -->
         <div id="exhibit-media-card" class="card">
             <div class="card-header">
                 <strong class="card-title mb-3">Exhibit Media</strong>
@@ -125,10 +60,8 @@
                 </div>
             </div>
         </div>
-
         <%- include('partials/exhibit-banners.ejs'); %>
         <%- include('partials/exhibit-styles.ejs'); %>
-
         <div id="exhibit-submit-card" class="card">
             <div class="card-body">
                 <input type="hidden" name="page_layout" id="exhibit-page-layout"
@@ -149,15 +82,9 @@
 </div>
 <!-- libs -->
 <%- include('../partials/exhibits-libs-common.ejs'); %>
-<!--
-<script src="https://unpkg.com/dropzone@5/dist/min/dropzone.min.js"></script>
--->
 <!-- app -->
 <%- include('../partials/exhibits-app-common.ejs'); %>
 <script src="/exhibits-dashboard/static/app/dist/exhibits.module.min.js?<%=build_version%>"></script>
-<!--
-<script src="/exhibits-dashboard/static/app/dist/uploads.module.min.js?<%=build_version%>"></script>
--->
 <script src="/exhibits-dashboard/static/app/dist/media.picker.module.min.js?<%=build_version%>"></script>
 <script src="/exhibits-dashboard/static/app/dist/exhibits.common.form.module.min.js?<%=build_version%>"></script>
 <script src="/exhibits-dashboard/static/app/dist/exhibits.styles.module.min.js?<%=build_version%>"></script>

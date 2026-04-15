@@ -1,0 +1,885 @@
+/**
+ * media.library.css
+ *
+ * Styles for the media library page (dashboard-media-home.ejs) and its
+ * included partials. Loaded ONLY on the media library page via a <link>
+ * tag in dashboard-media-home.ejs — not in header.ejs.
+ *
+ * Consolidates inline <style> blocks from:
+ *   - dashboard-media-home.ejs      (DataTables, exhibit filter dropdown)
+ *   - tab-import-repo-media.ejs     (repo search results, pagination)
+ *   - tab-upload-media.ejs          (Dropzone customization)
+ *   - modal-edit-media-form.ejs     (.badge-required only — removed, already in common)
+ *   - modal-uploaded-media-forms.ejs (upload import modal)
+ *   - modal-repo-media-forms.ejs    (repo import modal)
+ *   - modal-kaltura-media-forms.ejs (Kaltura import modal)
+ *   - modal-kaltura-media-player.ejs (Kaltura player modal)
+ *
+ * NOTE: .badge-required is provided by exhibits.common.css (loaded globally
+ * via header.ejs) and has been removed from the three modal partials that
+ * duplicated it.
+ */
+
+/* ═══════════════════════════════════════════════════════════════════
+   1. Media Library Table
+   Media-library-specific table styling. DataTables pagination,
+   info, search, and separator styles are now in the global
+   datatables.overrides.css loaded via header.ejs.
+   ═══════════════════════════════════════════════════════════════════ */
+
+/* Match exhibit table font size */
+#media-card .card-body {
+    font-size: 0.875rem;
+}
+
+#items td {
+    font-size: 0.875rem;
+}
+
+/* Truncate long media names in the Name column */
+.media-name-cell .media-name {
+    display: inline-block;
+    max-width: 220px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    vertical-align: middle;
+    cursor: default;
+}
+
+/* Truncate long filenames in the File Name column */
+.media-filename {
+    display: inline-block;
+    max-width: 180px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    vertical-align: middle;
+    cursor: default;
+}
+
+/* ═══════════════════════════════════════════════════════════════════
+   2. Exhibit Filter Dropdown
+   Autocomplete-style dropdown for filtering media by exhibit
+   ═══════════════════════════════════════════════════════════════════ */
+
+.exhibit-filter-wrapper {
+    position: relative;
+    font-size: 0.85rem;
+    color: #6c757d;
+}
+
+.exhibit-filter-label {
+    display: block;
+    margin-bottom: 0.25rem;
+    font-weight: normal;
+    white-space: nowrap;
+}
+
+.exhibit-filter-input-container {
+    position: relative;
+    display: flex;
+    align-items: center;
+}
+
+.exhibit-filter-input {
+    width: 100%;
+    padding: 0.3rem 2.2rem 0.3rem 0.5rem;
+    font-size: 0.85rem;
+    line-height: 1.5;
+    color: #495057;
+    background-color: #fff;
+    border: 1px solid #aaa;
+    border-radius: 0.2rem;
+    transition: border-color 0.15s ease-in-out, box-shadow 0.15s ease-in-out;
+    text-overflow: ellipsis;
+    overflow: hidden;
+    white-space: nowrap;
+}
+
+.exhibit-filter-input::placeholder {
+    color: #6c757d;
+}
+
+.exhibit-filter-input:focus {
+    border-color: #7f7f7f;
+    outline: 0;
+    box-shadow: 0 0 0 0.15rem rgba(127, 127, 127, 0.2);
+}
+
+.exhibit-filter-clear {
+    position: absolute;
+    right: 0.25rem;
+    top: 50%;
+    transform: translateY(-50%);
+    background: none;
+    border: none;
+    color: #6c757d;
+    font-size: 1.15rem;
+    line-height: 1;
+    padding: 0 0.35rem;
+    cursor: pointer;
+    z-index: 2;
+}
+
+.exhibit-filter-clear:hover {
+    color: #343a40;
+}
+
+.exhibit-filter-caret {
+    position: absolute;
+    right: 0.5rem;
+    top: 50%;
+    transform: translateY(-50%);
+    color: #adb5bd;
+    font-size: 0.75rem;
+    pointer-events: all;
+    cursor: pointer;
+    z-index: 2;
+}
+
+.exhibit-filter-listbox {
+    position: absolute;
+    top: 100%;
+    left: 0;
+    z-index: 1050;
+    min-width: 340px;
+    max-width: 500px;
+    max-height: 220px;
+    overflow-y: auto;
+    margin: 2px 0 0;
+    padding: 0.25rem 0;
+    list-style: none;
+    background: #fff;
+    border: 1px solid #ced4da;
+    border-radius: 0.2rem;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.12);
+}
+
+.exhibit-filter-option {
+    padding: 0.35rem 0.75rem;
+    cursor: pointer;
+    white-space: normal;
+    word-break: break-word;
+    font-size: 0.85rem;
+    color: #495057;
+}
+
+.exhibit-filter-option:hover,
+.exhibit-filter-option.active {
+    background-color: #f0f0f0;
+    color: #343a40;
+}
+
+.exhibit-filter-empty {
+    padding: 0.5rem 0.75rem;
+    color: #adb5bd;
+    font-style: italic;
+    font-size: 0.85rem;
+    list-style: none;
+}
+
+@media (max-width: 768px) {
+    .exhibit-filter-wrapper {
+        margin-top: 0.5rem;
+        margin-bottom: 0.5rem;
+    }
+
+    .exhibit-filter-listbox {
+        min-width: 100%;
+        max-width: 100%;
+    }
+}
+
+/* ═══════════════════════════════════════════════════════════════════
+   3. Repository Search Results & Pagination
+   Search result cards and pagination for the repo import tab
+   ═══════════════════════════════════════════════════════════════════ */
+
+/* Repository Search Results Styles */
+.repo-results-list {
+    display: block;
+}
+
+.repo-result-item {
+    transition: all 0.2s ease;
+    background-color: #fff;
+}
+
+.repo-result-item:hover {
+    border-color: #5f5f5f !important;
+    box-shadow: 0 2px 8px rgba(95, 95, 95, 0.15);
+}
+
+.repo-result-item.selected {
+    background-color: #e7f1ff !important;
+    border-color: #007bff !important;
+}
+
+.repo-result-item.selected .card-body {
+    background-color: #e7f1ff;
+}
+
+.repo-result-item .form-check-input:checked {
+    background-color: #007bff;
+    border-color: #007bff;
+}
+
+.repo-result-item h6 {
+    color: #333;
+    font-weight: 600;
+    font-size: 1rem;
+    margin-bottom: 5px;
+}
+
+.repo-result-item .badge {
+    font-size: 0.8em;
+    padding: 4px 8px;
+}
+
+#repo-import-btn {
+    transition: all 0.3s ease;
+}
+
+/* Loading spinner */
+#repo-search-results .fa-spinner {
+    color: #007bff;
+}
+
+/* Pagination */
+.repo-pagination {
+    border-top: 1px solid #e9ecef;
+    padding-top: 15px;
+}
+
+.repo-pagination .pagination {
+    margin-bottom: 0;
+}
+
+.repo-pagination .page-link {
+    padding: 0.4rem 0.75rem;
+    font-size: 0.875rem;
+    line-height: 1.5;
+    color: #7f7f7f;
+    background-color: #fff;
+    border: 1px solid #7f7f7f;
+    transition: all 0.15s ease-in-out;
+}
+
+.repo-pagination .page-link:hover {
+    z-index: 2;
+    color: #5f5f5f;
+    text-decoration: none;
+    background-color: #f0f0f0;
+    border-color: #7f7f7f;
+}
+
+.repo-pagination .page-item.active .page-link {
+    z-index: 3;
+    color: #fff;
+    background-color: #7f7f7f;
+    border-color: #7f7f7f;
+}
+
+.repo-pagination .page-item.disabled .page-link {
+    color: #b0b0b0;
+    pointer-events: none;
+    cursor: auto;
+    background-color: #fff;
+    border-color: #b0b0b0;
+}
+
+.repo-pagination .page-link:focus {
+    z-index: 3;
+    outline: 0;
+    box-shadow: 0 0 0 0.2rem rgba(127, 127, 127, 0.25);
+}
+
+.repo-pagination .pagination-info {
+    font-size: 0.85rem;
+    color: #6c757d;
+}
+
+/* Responsive pagination adjustments */
+@media (max-width: 768px) {
+    .repo-result-item .row {
+        flex-wrap: wrap;
+    }
+
+    .repo-result-item .col {
+        flex: 0 0 100%;
+        max-width: 100%;
+        margin-top: 10px;
+    }
+
+    .repo-pagination .d-flex {
+        flex-direction: column;
+        align-items: flex-start !important;
+    }
+
+    .repo-pagination .pagination {
+        margin-top: 10px;
+    }
+
+    .repo-pagination .page-link {
+        padding: 0.3rem 0.6rem;
+        font-size: 0.8rem;
+    }
+}
+
+@media (max-width: 576px) {
+    /* Simplify pagination on very small screens */
+    .repo-pagination .page-item {
+        display: none;
+    }
+
+    /* Always show: first, last, active, prev, next */
+    .repo-pagination .page-item:first-child,
+    .repo-pagination .page-item:last-child,
+    .repo-pagination .page-item.active {
+        display: block;
+    }
+
+    /* Show prev/next which are first and last li elements */
+    .repo-pagination .page-item:nth-child(1),
+    .repo-pagination .page-item:nth-last-child(1) {
+        display: block;
+    }
+}
+
+/* Results header responsive */
+.repo-results-header {
+    gap: 10px;
+}
+
+@media (max-width: 576px) {
+    .repo-results-header {
+        flex-direction: column;
+        align-items: flex-start !important;
+    }
+}
+
+/* ═══════════════════════════════════════════════════════════════════
+   4. Dropzone Upload Customization
+   Custom styles for the Dropzone.js file upload area
+   ═══════════════════════════════════════════════════════════════════ */
+
+.dropzone-wrapper .dropzone {
+    border: 2px dashed #ccc;
+    border-radius: 8px;
+    padding: 30px;
+    text-align: center;
+    background: #fafafa;
+    transition: border-color 0.3s ease, background-color 0.3s ease;
+    min-height: 180px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.dropzone-wrapper .dropzone:hover {
+    border-color: #999;
+    background: #f5f5f5;
+}
+
+.dropzone-wrapper .dropzone.dz-drag-hover {
+    border-color: #0d6efd;
+    background: #e7f1ff;
+}
+
+.dropzone-wrapper .dz-message {
+    margin: 0;
+}
+
+.dropzone-wrapper .dz-preview {
+    margin: 10px;
+}
+
+.dropzone-wrapper .dz-preview .dz-remove {
+    font-size: 12px;
+    margin-top: 5px;
+}
+
+.uploaded-thumbnail {
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    padding: 4px;
+    background: #fff;
+}
+
+.uploaded-filename {
+    font-family: monospace;
+    background: #f8f9fa;
+    padding: 2px 6px;
+    border-radius: 3px;
+    font-size: 11px;
+}
+
+/* ═══════════════════════════════════════════════════════════════════
+   5. Import Modal — Shared Chrome
+   Modal content, header, body, footer styling shared across the
+   uploaded-media, repo-media, and kaltura-media import modals.
+   Uses selector grouping — no HTML or JS changes required.
+   ═══════════════════════════════════════════════════════════════════ */
+
+/* Darker modal backdrop for import modals */
+.modal-backdrop.show {
+    opacity: 0.7;
+}
+
+/* Prevent body scroll when modal is open */
+body.modal-open {
+    overflow: hidden;
+}
+
+/* Modal chrome — identical across all three import modals */
+#uploaded-media-modal .modal-content,
+#repo-media-modal .modal-content,
+#kaltura-media-modal .modal-content {
+    border: none;
+    box-shadow: 0 10px 40px rgba(0, 0, 0, 0.3);
+}
+
+#uploaded-media-modal .modal-header,
+#repo-media-modal .modal-header,
+#kaltura-media-modal .modal-header {
+    border-bottom: none;
+    padding: 1.25rem 1.5rem;
+    background-color: #f8f9fa;
+}
+
+#uploaded-media-modal .modal-body,
+#repo-media-modal .modal-body,
+#kaltura-media-modal .modal-body {
+    padding: 1.5rem;
+    max-height: 70vh;
+    overflow-y: auto;
+}
+
+#uploaded-media-modal .modal-footer,
+#repo-media-modal .modal-footer,
+#kaltura-media-modal .modal-footer {
+    border-top: 1px solid #dee2e6;
+    padding: 1rem 1.5rem;
+}
+
+/* Alert info — identical across all three import modals */
+#uploaded-media-modal .alert-info,
+#repo-media-modal .alert-info,
+#kaltura-media-modal .alert-info {
+    background-color: #e7f3ff;
+    border-color: #b6d4fe;
+    color: #084298;
+}
+
+/* ═══════════════════════════════════════════════════════════════════
+   6. Import Form Cards — Shared Structure
+   Card base, hover, header, body shared across file-form-card,
+   repo-form-card, and kaltura-form-card.
+   ═══════════════════════════════════════════════════════════════════ */
+
+/* Card base — shared across all three */
+.file-form-card,
+.repo-form-card,
+.kaltura-form-card {
+    border: 1px solid #dee2e6;
+    border-radius: 8px;
+    overflow: hidden;
+    transition: all 0.3s ease;
+}
+
+/* Hover shadow — uploaded and repo */
+.file-form-card:hover,
+.repo-form-card:hover {
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+/* Card header — uploaded and repo (kaltura overrides below) */
+.file-form-card .card-header,
+.repo-form-card .card-header {
+    padding: 0.75rem 1rem;
+    border-bottom: 1px solid #dee2e6;
+    transition: all 0.3s ease;
+}
+
+/* Card body — uploaded and repo */
+.file-form-card .card-body,
+.repo-form-card .card-body {
+    padding: 1.25rem;
+}
+
+/* ── Saved state: uploaded + repo (green header) ── */
+
+.file-form-card.saved,
+.repo-form-card.saved {
+    border-color: #198754;
+}
+
+.file-form-card.saved .card-header,
+.repo-form-card.saved .card-header {
+    background-color: #198754 !important;
+    color: #fff !important;
+}
+
+.file-form-card.saved .file-type-badge,
+.repo-form-card.saved .item-type-badge {
+    background-color: rgba(255, 255, 255, 0.2) !important;
+}
+
+/* ── Number badge: uploaded + repo (identical 28px blue circle) ── */
+
+.file-number,
+.item-number {
+    width: 28px;
+    height: 28px;
+    border-radius: 50%;
+    background: #0d6efd;
+    color: #fff;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 0.85rem;
+    font-weight: 600;
+    flex-shrink: 0;
+    transition: all 0.3s ease;
+}
+
+/* ═══════════════════════════════════════════════════════════════════
+   7. Import Preview & Metadata Display
+   Preview container, preview box, and metadata labels shared
+   across uploaded-media and repo-media form cards.
+   ═══════════════════════════════════════════════════════════════════ */
+
+/* Preview container — uploaded and repo */
+.file-preview-container,
+.item-preview-container {
+    padding: 1rem;
+    background: #f8f9fa;
+    border-radius: 8px;
+}
+
+/* Preview box — uploaded and repo (120×120) */
+.file-preview,
+.item-preview {
+    width: 120px;
+    height: 120px;
+    margin: 0 auto;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: #fff;
+    border: 1px solid #ddd;
+    border-radius: 8px;
+    overflow: hidden;
+}
+
+.file-preview img,
+.item-preview img {
+    max-width: 100%;
+    max-height: 100%;
+    object-fit: cover;
+}
+
+.file-preview .file-icon,
+.item-preview .file-icon {
+    font-size: 48px;
+    color: #6c757d;
+}
+
+/* Metadata displays */
+.file-name-display {
+    max-width: 150px;
+    margin: 0 auto;
+    font-weight: 500;
+}
+
+.item-pid-display,
+.item-creator-display {
+    max-width: 150px;
+    margin: 0 auto;
+    font-size: 0.75rem;
+}
+
+.item-form-title {
+    max-width: 400px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+/* ═══════════════════════════════════════════════════════════════════
+   8. Import Type Badge Colors
+   Color coding for media type badges across both badge prefixes.
+   ═══════════════════════════════════════════════════════════════════ */
+
+/* Shared colors: image, pdf, video, audio */
+.file-type-badge.type-image,
+.item-type-badge.type-image,
+.item-type-badge.type-object {
+    background-color: #0d6efd !important;
+}
+
+.file-type-badge.type-pdf,
+.item-type-badge.type-pdf {
+    background-color: #dc3545 !important;
+}
+
+.file-type-badge.type-video,
+.item-type-badge.type-video {
+    background-color: #6f42c1 !important;
+}
+
+.file-type-badge.type-audio,
+.item-type-badge.type-audio {
+    background-color: #fd7e14 !important;
+}
+
+/* Repo-only types */
+.item-type-badge.type-collection {
+    background-color: #20c997 !important;
+}
+
+.item-type-badge.type-compound {
+    background-color: #6c757d !important;
+}
+
+/* ═══════════════════════════════════════════════════════════════════
+   9. Import Form Validation & Save Buttons
+   ═══════════════════════════════════════════════════════════════════ */
+
+/* Form validation — shared across all three form classes */
+.file-details-form.was-validated .form-control:invalid,
+.repo-details-form.was-validated .form-control:invalid,
+.kaltura-details-form.was-validated .form-control:invalid {
+    border-color: #dc3545;
+}
+
+.file-details-form.was-validated .form-control:valid,
+.repo-details-form.was-validated .form-control:valid,
+.kaltura-details-form.was-validated .form-control:valid {
+    border-color: #198754;
+}
+
+/* Save buttons — uploaded and repo */
+.btn-save-file,
+.btn-save-repo-item {
+    min-width: 100px;
+}
+
+/* ═══════════════════════════════════════════════════════════════════
+   10. Import Responsive Adjustments
+   Shared responsive rules for preview containers, card headers,
+   and form titles across all three import modals.
+   ═══════════════════════════════════════════════════════════════════ */
+
+@media (max-width: 768px) {
+    .file-preview-container,
+    .item-preview-container,
+    .kaltura-preview-container {
+        margin-bottom: 1rem;
+    }
+
+    .file-preview,
+    .item-preview {
+        width: 80px;
+        height: 80px;
+    }
+
+    .file-preview .file-icon,
+    .item-preview .file-icon {
+        font-size: 32px;
+    }
+
+    .file-form-card .card-header,
+    .repo-form-card .card-header,
+    .kaltura-form-card .card-header {
+        flex-wrap: wrap;
+        gap: 0.5rem;
+    }
+
+    .file-form-title,
+    .kaltura-form-title {
+        font-size: 0.9rem;
+    }
+
+    .item-form-title {
+        font-size: 0.9rem;
+        max-width: 200px;
+    }
+}
+
+/* ═══════════════════════════════════════════════════════════════════
+   11. Kaltura Import — Modal-Specific Overrides
+   Rules where the Kaltura import modal diverges from the shared
+   uploaded/repo patterns. These override or supplement Groups 6–7.
+   ═══════════════════════════════════════════════════════════════════ */
+
+/* Kaltura card header — transition on bg only (not all) */
+.kaltura-form-card .card-header {
+    transition: background-color 0.3s ease;
+}
+
+/* Kaltura card body — explicit white bg */
+.kaltura-form-card .card-body {
+    background-color: #fff;
+}
+
+/* Kaltura preview container — no bg/border-radius */
+.kaltura-form-card .item-preview-container {
+    padding: 1rem;
+}
+
+/* Kaltura preview box — larger (150×150), different border-radius */
+.kaltura-form-card .item-preview {
+    width: 150px;
+    height: 150px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin: 0 auto;
+    overflow: hidden;
+    border-radius: 4px;
+    border: 1px solid #dee2e6;
+    background-color: #fff;
+}
+
+.kaltura-form-card .item-preview img {
+    max-width: 100%;
+    max-height: 100%;
+    object-fit: cover;
+}
+
+.kaltura-form-card .item-preview .file-icon {
+    font-size: 48px;
+    color: #6c757d;
+}
+
+/* Completed form indicator (different from saved state) */
+.kaltura-form-card.form-complete .card-header {
+    background-color: #d1e7dd !important;
+}
+
+.kaltura-form-card.form-complete .kaltura-item-number {
+    background-color: #198754 !important;
+}
+
+/* Bounce animation for static backdrop click */
+@keyframes kaltura-modal-bounce {
+    0%   { transform: scale(1); }
+    25%  { transform: scale(1.01); }
+    50%  { transform: scale(0.99); }
+    75%  { transform: scale(1.005); }
+    100% { transform: scale(1); }
+}
+
+#kaltura-media-modal .modal-content.bounce {
+    animation: kaltura-modal-bounce 0.3s ease-in-out;
+}
+
+/* ═══════════════════════════════════════════════════════════════════
+   12. Kaltura Player Modal
+   Video/audio player modal for previewing Kaltura media
+   ═══════════════════════════════════════════════════════════════════ */
+
+#kaltura-player-modal .modal-content {
+    border: none;
+    box-shadow: 0 10px 40px rgba(0, 0, 0, 0.3);
+}
+
+#kaltura-player-modal .modal-header {
+    border-bottom: 1px solid #dee2e6;
+    padding: 1rem 1.25rem;
+    background-color: #f8f9fa;
+}
+
+#kaltura-player-modal .modal-body {
+    padding: 1.25rem;
+    background-color: #000;
+}
+
+#kaltura-player-modal .modal-footer {
+    border-top: 1px solid #dee2e6;
+    padding: 0.75rem 1.25rem;
+    background-color: #f8f9fa;
+}
+
+/* Player wrapper */
+.kaltura-player-wrapper {
+    background-color: #000;
+    border-radius: 4px;
+    overflow: hidden;
+}
+
+/* Compact aspect ratio for audio-only mode */
+#kaltura-player-modal .embed-responsive-audio {
+    position: relative;
+    width: 100%;
+    padding-bottom: 15%;
+    min-height: 80px;
+}
+
+#kaltura-player-modal .embed-responsive-audio .embed-responsive-item,
+#kaltura-player-modal .embed-responsive-audio iframe {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    border: 0;
+}
+
+/* Info section on dark background */
+#kaltura-player-info {
+    color: #ccc !important;
+    border-top-color: #333 !important;
+}
+
+#kaltura-player-info strong {
+    color: #e0e0e0;
+}
+
+#kaltura-player-info span {
+    color: #aaa;
+}
+
+/* Loading indicator on dark background */
+#kaltura-player-loading {
+    color: #ccc;
+}
+
+#kaltura-player-loading .text-muted {
+    color: #999 !important;
+}
+
+/* Audio-specific modal sizing and styling */
+#kaltura-player-modal.kaltura-audio-mode .modal-dialog {
+    max-width: 550px;
+}
+
+#kaltura-player-modal.kaltura-audio-mode .modal-body {
+    background-color: #f8f9fa;
+}
+
+#kaltura-player-modal.kaltura-audio-mode .kaltura-player-wrapper {
+    background-color: #f0f0f0;
+}
+
+#kaltura-player-modal.kaltura-audio-mode #kaltura-player-info {
+    color: #6c757d !important;
+    border-top-color: #dee2e6 !important;
+}
+
+#kaltura-player-modal.kaltura-audio-mode #kaltura-player-info strong {
+    color: #495057;
+}
+
+#kaltura-player-modal.kaltura-audio-mode #kaltura-player-info span {
+    color: #6c757d;
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+    #kaltura-player-modal .modal-dialog {
+        margin: 0.5rem;
+    }
+}

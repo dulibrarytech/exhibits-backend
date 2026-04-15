@@ -1,0 +1,407 @@
+/**
+ * exhibits.common.css
+ *
+ * Shared styles for the exhibits dashboard — loaded after style.css and
+ * sidebar-overrides.css via header.ejs.
+ *
+ * Consolidates inline <style> blocks that were duplicated across
+ * exhibit and item templates:
+ *
+ *   Exhibit pages:
+ *   - dashboard-exhibits.ejs
+ *   - dashboard-exhibits-add-form.ejs
+ *   - dashboard-exhibits-edit-form.ejs
+ *   - dashboard-exhibits-details.ejs
+ *   - dashboard-styles-form.ejs
+ *   - exhibit-data-card.ejs        (partial)
+ *   - exhibit-banners.ejs          (partial)
+ *   - exhibit-styles.ejs           (partial)
+ *
+ *   Standard item pages:
+ *   - dashboard-item-standard-media-add-form.ejs
+ *   - dashboard-item-standard-media-edit-form.ejs
+ *   - dashboard-item-standard-media-details.ejs
+ *   - dashboard-item-standard-text-details.ejs
+ *   - dashboard-item-standard-text-edit-form.ejs
+ *   - item-data-card.ejs           (partial)
+ *
+ *   Grid pages:
+ *   - dashboard-grid-add-form.ejs
+ *   - dashboard-grid-add-media-item-form.ejs
+ *   - dashboard-grid-add-text-item-form.ejs
+ *   - dashboard-grid-details.ejs
+ *   - dashboard-grid-edit-form.ejs
+ *   - dashboard-grid-edit-media-item-form.ejs
+ *   - dashboard-grid-edit-text-item-form.ejs
+ *   - dashboard-grid-item-media-details.ejs
+ *   - dashboard-grid-item-text-details.ejs
+ *   - item-grid-item-data-card.ejs (partial)
+ *
+ *   Timeline pages:
+ *   - dashboard-vertical-timeline-add-form.ejs
+ *   - dashboard-vertical-timeline-details.ejs
+ *   - dashboard-vertical-timeline-edit-form.ejs
+ *   - dashboard-vertical-timeline-item-media-add-form.ejs
+ *   - dashboard-vertical-timeline-item-media-details.ejs
+ *   - dashboard-vertical-timeline-item-media-edit-form.ejs
+ *   - dashboard-vertical-timeline-item-text-add-form.ejs
+ *   - dashboard-vertical-timeline-item-text-details.ejs
+ *   - dashboard-vertical-timeline-item-text-edit-form.ejs
+ *   - item-vertical-timeline-item-data-card.ejs (partial)
+ *
+ *   Heading pages:
+ *   - dashboard-item-heading-edit-form.ejs
+ *   - item-heading-data-card.ejs    (partial)
+ *
+ *   Media library partials (.badge-required only):
+ *   - modal-edit-media-form.ejs     (partial)
+ *   - modal-kaltura-media-forms.ejs (partial)
+ *   - modal-repo-media-forms.ejs   (partial)
+ *
+ *   User pages:
+ *   - user-data-card.ejs           (partial)
+ *
+ * After loading this file the inline <style> blocks in every file above
+ * can be removed EXCEPT the DataTables / listing-page-specific blocks in
+ * dashboard-exhibits.ejs, dashboard-items.ejs, dashboard-grid-items.ejs,
+ * and dashboard-timeline-items.ejs.
+ */
+
+/* ═══════════════════════════════════════════════════════════════════
+   1. Media Preview Area
+   Used on add, edit, details, and listing-page modal for hero/thumbnail
+   ═══════════════════════════════════════════════════════════════════ */
+
+.media-preview-area {
+    border: 2px dashed #c8ced3;
+    border-radius: 4px;
+    padding: 8px;
+    background: #f8f9fa;
+    height: 180px;
+    max-width: 280px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    overflow: hidden;
+    margin-bottom: 8px;
+}
+
+.media-preview-area:has(img) {
+    border-style: solid;
+    border-color: #dee2e6;
+    background: #fff;
+}
+
+.media-preview-area img {
+    max-width: 100%;
+    max-height: 160px;
+    object-fit: contain;
+    display: block;
+    border-radius: 3px;
+}
+
+.media-placeholder {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 6px;
+    color: #adb5bd;
+}
+
+.media-placeholder i {
+    font-size: 2rem;
+}
+
+.media-placeholder span {
+    font-size: 12px;
+}
+
+.media-preview-area:has(img) .media-placeholder {
+    display: none;
+}
+
+#hero-image-filename-display,
+#item-media-filename-display,
+#thumbnail-filename-display {
+    display: inline-block;
+    max-width: 280px;
+    font-size: 12px;
+    color: #555;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    vertical-align: middle;
+}
+
+/* ═══════════════════════════════════════════════════════════════════
+   2. Color Picker
+   Base swatch button + input-group-prepend variant used in styles forms
+   ═══════════════════════════════════════════════════════════════════ */
+
+.color-picker {
+    background-color: none;
+    outline: none;
+    border: 1px solid grey;
+    height: 38px;
+    width: 50px;
+    cursor: pointer;
+}
+
+.input-group-prepend .color-picker.btn-default {
+    border: 1px solid #ced4da;
+    border-right: none;
+    border-radius: 0.25rem 0 0 0.25rem;
+    height: calc(1.5em + 0.75rem + 2px);
+    padding: 0.25rem 0.4rem;
+}
+
+/* ═══════════════════════════════════════════════════════════════════
+   3. Badges (Required / Optional)
+   Used in exhibit-data-card.ejs and exhibit-styles.ejs
+   ═══════════════════════════════════════════════════════════════════ */
+
+.badge-required {
+    background-color: #e8f4fd;
+    color: #0c5fa5;
+    font-size: 0.65rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.03em;
+    padding: 0.25em 0.5em;
+    border-radius: 0.25rem;
+    vertical-align: middle;
+}
+
+.badge-optional {
+    background-color: #f0f0f0;
+    color: #6c757d;
+    font-size: 0.65rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.03em;
+    padding: 0.25em 0.5em;
+    border-radius: 0.25rem;
+}
+
+/* ═══════════════════════════════════════════════════════════════════
+   4. Cancel Button
+   Used on edit-form and styles-form pages
+   ═══════════════════════════════════════════════════════════════════ */
+
+#cancel-exhibit-btn {
+    min-width: 100px;
+}
+
+/* ═══════════════════════════════════════════════════════════════════
+   5. Nested Modal Z-Index
+   Ensures a modal opened from within another modal stacks correctly.
+   Currently used by the add-exhibit modal on dashboard-exhibits.ejs
+   (media picker inside add-exhibit modal).
+   ═══════════════════════════════════════════════════════════════════ */
+
+.modal .modal {
+    z-index: 1060;
+}
+
+.modal .modal-backdrop {
+    z-index: 1055;
+}
+
+/* ═══════════════════════════════════════════════════════════════════
+   6. Exhibit Banners
+   Banner card image thumbnails and radio-label buttons
+   ═══════════════════════════════════════════════════════════════════ */
+
+#exhibit-banner-card .banner-option img {
+    max-width: 180px;
+    height: auto;
+}
+
+#exhibit-banner-card .banner-option .btn {
+    white-space: normal;
+    word-wrap: break-word;
+    text-align: left;
+    max-width: 100%;
+}
+
+/* ═══════════════════════════════════════════════════════════════════
+   7. Exhibit Styles Accordion
+   Accordion panels for required/optional style sections
+   ═══════════════════════════════════════════════════════════════════ */
+
+#exhibit-styles-card .section-group-label {
+    font-size: 0.75rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    color: #6c757d;
+    margin-bottom: 0.5rem;
+    padding-left: 0.25rem;
+}
+
+#exhibit-styles-card .section-group-label .optional-info {
+    font-size: 0.78rem;
+    color: #adb5bd;
+    font-style: italic;
+    text-transform: none;
+    letter-spacing: normal;
+}
+
+#exhibit-styles-card .accordion .card {
+    border: 1px solid #dee2e6;
+    border-radius: 0 !important;
+    margin-bottom: -1px;
+    box-shadow: none;
+}
+
+#exhibit-styles-card .accordion .card:first-of-type {
+    border-top-left-radius: 0.375rem !important;
+    border-top-right-radius: 0.375rem !important;
+}
+
+#exhibit-styles-card .accordion .card:last-of-type {
+    border-bottom-left-radius: 0.375rem !important;
+    border-bottom-right-radius: 0.375rem !important;
+}
+
+#exhibit-styles-card .accordion .card-header {
+    background-color: #fff;
+    border-bottom: 1px solid #dee2e6;
+    padding: 0;
+    cursor: pointer;
+}
+
+#exhibit-styles-card .accordion .card-header:hover {
+    background-color: #f8f9fa;
+}
+
+#exhibit-styles-card .accordion .card-header .btn-link {
+    width: 100%;
+    text-align: left;
+    padding: 0.85rem 1.25rem;
+    color: #212529;
+    font-weight: 600;
+    font-size: 0.95rem;
+    text-decoration: none;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+}
+
+#exhibit-styles-card .accordion .card-header .btn-link:hover,
+#exhibit-styles-card .accordion .card-header .btn-link:focus {
+    text-decoration: none;
+    color: #212529;
+}
+
+#exhibit-styles-card .section-left {
+    display: flex;
+    align-items: center;
+    gap: 0.65rem;
+}
+
+#exhibit-styles-card .section-right {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+}
+
+#exhibit-styles-card .chevron {
+    transition: transform 0.2s ease;
+    color: #6c757d;
+    font-size: 0.75rem;
+}
+
+#exhibit-styles-card .btn-link.collapsed .chevron {
+    transform: rotate(-90deg);
+}
+
+#exhibit-styles-card .color-swatches {
+    display: flex;
+    align-items: center;
+    gap: 0.35rem;
+}
+
+#exhibit-styles-card .color-swatch {
+    width: 18px;
+    height: 18px;
+    border-radius: 50%;
+    border: 2px solid #dee2e6;
+    flex-shrink: 0;
+    background: repeating-conic-gradient(#e9ecef 0% 25%, #fff 0% 50%) 50% / 8px 8px;
+}
+
+#exhibit-styles-card .accordion .card-body {
+    padding: 1.25rem;
+    background-color: #fdfdfe;
+    border-top: 1px solid #e9ecef;
+}
+
+#exhibit-styles-card .style-field label {
+    font-size: 0.82rem;
+    font-weight: 600;
+    color: #495057;
+    margin-bottom: 0.35rem;
+}
+
+/* ═══════════════════════════════════════════════════════════════════
+   8. Media Subjects
+   Subject badges displayed on media item forms (standard, grid, timeline).
+   Card is hidden by default; JS shows it when a media asset is selected.
+   ═══════════════════════════════════════════════════════════════════ */
+
+#media-subjects-card {
+    display: none;
+}
+
+.media-subject-group {
+    margin-bottom: 10px;
+}
+
+.media-subject-group:last-of-type {
+    margin-bottom: 0;
+}
+
+.media-subject-label {
+    display: block;
+    font-size: 11px;
+    font-weight: 600;
+    color: #6c757d;
+    text-transform: uppercase;
+    letter-spacing: 0.4px;
+    margin-bottom: 5px;
+}
+
+.media-subject-badges {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 5px;
+}
+
+.media-subject-badge {
+    display: inline-block;
+    padding: 3px 9px;
+    font-size: 12px;
+    font-weight: 400;
+    line-height: 1.4;
+    border-radius: 3px;
+    white-space: nowrap;
+}
+
+.media-subject-badge--topic {
+    background-color: #e8f0fe;
+    color: #1a56db;
+    border: 1px solid #c7d9f5;
+}
+
+.media-subject-badge--genre {
+    background-color: #fef3e2;
+    color: #b45309;
+    border: 1px solid #f5deb3;
+}
+
+.media-subject-badge--place {
+    background-color: #e6f6ed;
+    color: #0e7c3a;
+    border: 1px solid #b8e0cb;
+}

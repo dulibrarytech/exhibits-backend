@@ -2,6 +2,8 @@ const gulp = require('gulp');
 const uglify = require('gulp-uglify');
 const htmlmin = require('gulp-htmlmin');
 const rename = require('gulp-rename');
+const cleanCSS = require('gulp-clean-css');
+const concat = require('gulp-concat');
 
 gulp.task('minify-exhibit-modules', function () {
     return gulp.src([
@@ -99,7 +101,6 @@ gulp.task('minify-timeline-items-modules', function () {
 gulp.task('minify-utils-modules', function () {
     return gulp.src([
         'public/app/utils/auth.module.js',
-        // TODO 'public/app/utils/config.module.js',
         'public/app/utils/dom.module.js',
         'public/app/utils/endpoints.module.js',
         'public/app/utils/helper.module.js',
@@ -158,6 +159,24 @@ gulp.task('minify-media-library-modules', function () {
         })
         .pipe(rename({suffix: '.min'}))
         .pipe(gulp.dest('public/app/dist'));
+});
+
+gulp.task('minify-css', function () {
+    return gulp.src([
+        'public/assets/css/style.css',
+        'public/assets/css/cs-skin-elastic.css',
+        'public/assets/css/datatables.overrides.css',
+        'public/assets/css/sidebar-overrides.css',
+        'public/assets/css/exhibits.common.css',
+        'public/assets/css/media.library.css'
+    ])
+        .pipe(concat('dashboard.min.css'))
+        .pipe(cleanCSS())
+        .on('error', function (err) {
+            console.error('Error in minify-css task:', err.toString());
+            this.emit('end');
+        })
+        .pipe(gulp.dest('public/assets/dist'));
 });
 
 gulp.task('minify-exhibit-views', function () {
@@ -297,6 +316,7 @@ gulp.task('default', gulp.parallel(
     'minify-utils-modules',
     'minify-modules',
     'minify-media-library-modules',
+    'minify-css',
     'minify-exhibit-views',
     'minify-exhibit-partial-views',
     'minify-grid-item-views',
