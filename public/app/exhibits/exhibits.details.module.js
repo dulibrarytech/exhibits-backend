@@ -134,7 +134,7 @@ const exhibitsDetailsModule = (function () {
             const endpoint_base = endpoint_config.replace(':exhibit_id', encoded_uuid);
 
             // Build query parameters safely
-            const query_string = build_query_string({ uid: profile.uid });
+            const query_string = build_query_string({ type: 'details', uid: profile.uid });
             const endpoint = `${endpoint_base}?${query_string}`;
 
             // Make request with timeout

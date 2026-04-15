@@ -183,8 +183,8 @@ exports.get_exhibit_record = async function (req, res) {
             // Get edit record
             data = await EXHIBITS_MODEL.get_exhibit_edit_record(sanitized_user_uid, sanitized_exhibit_uuid);
 
-        } else if (type === undefined || type === null || type === '') {
-            // Handle standard exhibit record request
+        } else if (type === 'details' || type === undefined || type === null || type === '') {
+            // Handle standard/details exhibit record request (no record locking)
 
             // Validate model method exists
             if (typeof EXHIBITS_MODEL.get_exhibit_record !== 'function') {
