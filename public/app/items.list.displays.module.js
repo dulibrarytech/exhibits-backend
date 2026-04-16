@@ -306,7 +306,7 @@ const itemsListDisplayModule = (function() {
             tr.appendChild(create_order_cell(item.order));
 
             // Resolve title and thumbnail
-            let title = helperModule.strip_html(helperModule.unescape(item.media_name || item.title || ''));
+            let title = helperModule.strip_html(helperModule.unescape(item.title || ''));
             let thumbnail_element = null;
 
             if (item.item_type !== 'text') {
@@ -398,6 +398,14 @@ const itemsListDisplayModule = (function() {
             // Fallback title from text if needed
             if ((!title || title.length === 0) && item.text && item.text.length > 0) {
                 title = helperModule.strip_html(helperModule.unescape(item.text));
+                if (title.length > 200) {
+                    title = title.substring(0, 200) + '...';
+                }
+            }
+
+            // Final fallback: media library asset name
+            if ((!title || title.length === 0) && item.media_name) {
+                title = helperModule.strip_html(helperModule.unescape(item.media_name));
                 if (title.length > 200) {
                     title = title.substring(0, 200) + '...';
                 }
@@ -633,7 +641,7 @@ const itemsListDisplayModule = (function() {
             tr.appendChild(create_order_cell(item.order));
 
             // Resolve title and thumbnail
-            let title = helperModule.strip_html(helperModule.unescape(item.media_name || item.title || ''));
+            let title = helperModule.strip_html(helperModule.unescape(item.title || ''));
             let thumbnail_element = null;
 
             if (item.item_type !== 'text') {
@@ -716,6 +724,14 @@ const itemsListDisplayModule = (function() {
             // Fallback title from text if needed
             if (!title && item.text && item.text.length > 0) {
                 title = helperModule.strip_html(helperModule.unescape(item.text));
+                if (title.length > 200) {
+                    title = title.substring(0, 200) + '...';
+                }
+            }
+
+            // Final fallback: media library asset name
+            if ((!title || title.length === 0) && item.media_name) {
+                title = helperModule.strip_html(helperModule.unescape(item.media_name));
                 if (title.length > 200) {
                     title = title.substring(0, 200) + '...';
                 }
@@ -884,7 +900,7 @@ const itemsListDisplayModule = (function() {
             tr.id = `${item.uuid}_${item.type}_${item.item_type}`;
 
             // Resolve title and thumbnail
-            let title = helperModule.strip_html(helperModule.unescape(item.media_name || item.title || ''));
+            let title = helperModule.strip_html(helperModule.unescape(item.title || ''));
             let thumbnail_element = null;
 
             if (item.item_type !== 'text') {
@@ -967,6 +983,14 @@ const itemsListDisplayModule = (function() {
             // Fallback title from text if needed
             if (!title && item.text && item.text.length > 0) {
                 title = helperModule.unescape(item.text);
+                if (title.length > 200) {
+                    title = title.substring(0, 200) + '...';
+                }
+            }
+
+            // Final fallback: media library asset name
+            if ((!title || title.length === 0) && item.media_name) {
+                title = helperModule.strip_html(helperModule.unescape(item.media_name));
                 if (title.length > 200) {
                     title = title.substring(0, 200) + '...';
                 }
