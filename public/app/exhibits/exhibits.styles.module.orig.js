@@ -28,7 +28,6 @@ const exhibitsStylesModule = (function () {
      * @type {string[]}
      */
     const STYLE_SECTIONS = [
-        'template',
         'introduction',
         'navigation',
         'heading1',
@@ -44,7 +43,6 @@ const exhibitsStylesModule = (function () {
      * @type {string[]}
      */
     const REQUIRED_SECTIONS = [
-        'template',
         'introduction',
         'navigation',
         'heading1',
@@ -56,7 +54,6 @@ const exhibitsStylesModule = (function () {
      * @type {Object}
      */
     const SECTION_LABELS = {
-        template: 'Exhibit',
         introduction: 'Exhibit Introduction',
         navigation: 'Navigation Menu',
         heading1: 'Heading Style 1',
