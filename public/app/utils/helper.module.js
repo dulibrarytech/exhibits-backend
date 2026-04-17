@@ -1679,7 +1679,7 @@ const helperModule = (function () {
         // Path to endpoint configuration map
         const endpoint_config_map = [
             {
-                paths: ['exhibits/exhibit/edit'],
+                paths: ['exhibits/exhibit/edit', 'styles'],
                 endpoint_key: 'exhibits.exhibit_unlock_record.post.endpoint',
                 params: (exhibit_id) => ({exhibit_id})
             },

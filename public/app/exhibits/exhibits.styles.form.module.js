@@ -604,9 +604,9 @@ const exhibitsStylesFormModule = (function () {
             // Wire Save button
             add_click_listener('#save-exhibit-btn', obj.update_styles);
 
-            // Wire Cancel button — navigate back to exhibit edit form
+            // Wire Cancel button — navigate to exhibit details page
             add_click_listener('#cancel-exhibit-btn', function () {
-                const url = APP_PATH + '/exhibits/exhibit/edit?exhibit_id=' + encodeURIComponent(exhibit_id);
+                const url = APP_PATH + '/exhibits/exhibit/details?exhibit_id=' + encodeURIComponent(exhibit_id);
                 window.location.href = url;
             });
 
