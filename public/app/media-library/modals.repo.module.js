@@ -249,6 +249,14 @@ const repoModalsModule = (function() {
 
             const endpoint = EXHIBITS_ENDPOINTS.media_records.post.endpoint;
 
+            // Helper to reset the save button on error paths
+            const reset_save_btn = () => {
+                if (save_btn) {
+                    save_btn.disabled = false;
+                    save_btn.innerHTML = '<i class="fa fa-save" style="margin-right: 6px;" aria-hidden="true"></i>Save';
+                }
+            };
+
             // Make API request
             const response = await httpModule.req({
                 method: 'POST',
@@ -262,17 +270,42 @@ const repoModalsModule = (function() {
                 validateStatus: (status) => status >= 200 && status < 600
             });
 
-            // Validate response - expect 201 Created
-            if (!response || response.status !== HTTP_STATUS.CREATED) {
-                const error_message = response?.data?.message || 'Failed to create media record';
-                throw new Error(error_message);
+            // Handle undefined response (network/server error)
+            if (!response) {
+                display_repo_card_message(card, 'danger', 'Unable to save media record. Please check your connection and try again.');
+                reset_save_btn();
+                return;
+            }
+
+            // Handle 403 Forbidden
+            if (response.status === HTTP_STATUS.FORBIDDEN) {
+                display_repo_card_message(card, 'danger', response.data?.message || 'You do not have permission to create media records.');
+                reset_save_btn();
+                return;
+            }
+
+            // Handle 400 Bad Request
+            if (response.status === HTTP_STATUS.BAD_REQUEST) {
+                display_repo_card_message(card, 'danger', response.data?.message || 'Invalid media data. Please check the form and try again.');
+                reset_save_btn();
+                return;
+            }
+
+            // Handle success - expect 201 Created
+            if (response.status !== HTTP_STATUS.CREATED || !response.data?.success) {
+                const error_message = response.data?.message || 'Failed to create media record.';
+                display_repo_card_message(card, 'danger', error_message);
+                reset_save_btn();
+                return;
             }
 
             const response_data = response.data;
             const new_item_id = response_data?.data;
 
             if (!new_item_id) {
-                throw new Error('Server did not return a valid item ID');
+                display_repo_card_message(card, 'danger', 'Server did not return a valid item ID.');
+                reset_save_btn();
+                return;
             }
 
             // SUCCESS: Update UI to saved state
@@ -318,6 +351,7 @@ const repoModalsModule = (function() {
             display_repo_card_message(card, 'success', 'Media record created successfully');
 
         } catch (error) {
+            // Catch block is reserved for truly unexpected errors (runtime exceptions, not HTTP failures)
             console.error('Error saving repo item:', error);
 
             // Revert button state
@@ -327,7 +361,7 @@ const repoModalsModule = (function() {
             }
 
             // Show error feedback to user
-            display_repo_card_message(card, 'danger', error.message || 'Failed to save media record');
+            display_repo_card_message(card, 'danger', 'An unexpected error occurred while saving the media record.');
         }
     };
 
@@ -695,7 +729,22 @@ const repoModalsModule = (function() {
 
             // Handle response
             if (!response) {
-                return { success: false, message: 'No response from server' };
+                return { success: false, message: 'Unable to update media record. Please check your connection and try again.' };
+            }
+
+            // Handle 403 Forbidden
+            if (response.status === HTTP_STATUS.FORBIDDEN) {
+                return { success: false, message: response.data?.message || 'You do not have permission to update this media record.' };
+            }
+
+            // Handle 404 Not Found
+            if (response.status === HTTP_STATUS.NOT_FOUND) {
+                return { success: false, message: response.data?.message || 'Media record not found.' };
+            }
+
+            // Handle 400 Bad Request
+            if (response.status === HTTP_STATUS.BAD_REQUEST) {
+                return { success: false, message: response.data?.message || 'Invalid update data. Please check the form and try again.' };
             }
 
             if (response.status === HTTP_STATUS.OK && response.data?.success) {
@@ -713,7 +762,7 @@ const repoModalsModule = (function() {
 
         } catch (error) {
             console.error('Error updating media record:', error);
-            return { success: false, message: error.message || 'Error updating media record' };
+            return { success: false, message: 'An unexpected error occurred while updating the media record.' };
         }
     };
 

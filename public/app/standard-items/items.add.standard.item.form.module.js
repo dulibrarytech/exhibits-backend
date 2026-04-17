@@ -44,8 +44,6 @@ const itemsAddStandardItemFormModule = (function () {
             return false;
         }
 
-        console.log('CREATE FUNCTION CALLED - No item_id, proceeding with creation');
-
         // Prevent duplicate submissions
         if (this._is_creating_item) {
             console.log('Already creating, preventing duplicate submission');

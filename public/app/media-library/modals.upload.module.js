@@ -27,6 +27,7 @@ const mediaModalsModule = (function() {
     const clean_filename_for_title = helperMediaLibraryModule.clean_filename_for_title;
     const build_media_url = helperMediaLibraryModule.build_media_url;
     const get_thumbnail_url_for_media = helperMediaLibraryModule.get_thumbnail_url_for_media;
+    const HTTP_STATUS = helperMediaLibraryModule.HTTP_STATUS;
 
     const EXHIBITS_ENDPOINTS = endpointsModule.get_media_library_endpoints();
 
@@ -206,6 +207,14 @@ const mediaModalsModule = (function() {
             // Construct endpoint
             const endpoint = EXHIBITS_ENDPOINTS.media_records.post.endpoint;
 
+            // Helper to reset the save button on error paths
+            const reset_save_btn = () => {
+                if (save_btn) {
+                    save_btn.disabled = false;
+                    save_btn.innerHTML = '<i class="fa fa-save" style="margin-right: 6px;" aria-hidden="true"></i>Save';
+                }
+            };
+
             // Make API request with JSON data
             const response = await httpModule.req({
                 method: 'POST',
@@ -215,22 +224,46 @@ const mediaModalsModule = (function() {
                     'Content-Type': 'application/json',
                     'x-access-token': token
                 },
-                timeout: 30000
+                timeout: 30000,
+                validateStatus: (status) => status >= 200 && status < 600
             });
 
-            console.log('RESPONSE ', response);
+            // Handle undefined response (network/server error)
+            if (!response) {
+                display_card_message(card, 'danger', 'Unable to save media record. Please check your connection and try again.');
+                reset_save_btn();
+                return false;
+            }
 
-            // Validate response - expect 201 Created
-            if (!response || response.status !== 201) {
-                const error_message = response?.data?.message || 'Failed to create media record';
-                throw new Error(error_message);
+            // Handle 403 Forbidden
+            if (response.status === HTTP_STATUS.FORBIDDEN) {
+                display_card_message(card, 'danger', response.data?.message || 'You do not have permission to create media records.');
+                reset_save_btn();
+                return false;
+            }
+
+            // Handle 400 Bad Request
+            if (response.status === HTTP_STATUS.BAD_REQUEST) {
+                display_card_message(card, 'danger', response.data?.message || 'Invalid media data. Please check the form and try again.');
+                reset_save_btn();
+                return false;
+            }
+
+            // Handle success - expect 201 Created
+            if (response.status !== HTTP_STATUS.CREATED || !response.data?.success) {
+                const error_message = response.data?.message || 'Failed to create media record.';
+                display_card_message(card, 'danger', error_message);
+                reset_save_btn();
+                return false;
             }
 
             const response_data = response.data;
             const new_item_id = response_data?.data;
 
             if (!new_item_id) {
-                throw new Error('Server did not return a valid item ID');
+                display_card_message(card, 'danger', 'Server did not return a valid item ID.');
+                reset_save_btn();
+                return false;
             }
 
             // SUCCESS: Update UI to saved state
@@ -276,16 +309,17 @@ const mediaModalsModule = (function() {
             display_card_message(card, 'success', 'Media record created successfully');
 
         } catch (error) {
+            // Catch block is reserved for truly unexpected errors (runtime exceptions, not HTTP failures)
             console.error('Error saving file:', error);
-            
+
             // Revert button state
             if (save_btn) {
                 save_btn.disabled = false;
                 save_btn.innerHTML = '<i class="fa fa-save" style="margin-right: 6px;" aria-hidden="true"></i>Save';
             }
-            
+
             // Show error feedback to user
-            display_card_message(card, 'danger', error.message || 'Failed to save media record');
+            display_card_message(card, 'danger', 'An unexpected error occurred while saving the media record.');
         }
     };
 

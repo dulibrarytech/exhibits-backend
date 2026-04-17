@@ -149,7 +149,22 @@ const mediaEditModalModule = (function() {
 
             // Handle response
             if (!response) {
-                return { success: false, message: 'No response from server' };
+                return { success: false, message: 'Unable to update media record. Please check your connection and try again.' };
+            }
+
+            // Handle 403 Forbidden
+            if (response.status === HTTP_STATUS.FORBIDDEN) {
+                return { success: false, message: response.data?.message || 'You do not have permission to update this media record.' };
+            }
+
+            // Handle 404 Not Found
+            if (response.status === HTTP_STATUS.NOT_FOUND) {
+                return { success: false, message: response.data?.message || 'Media record not found.' };
+            }
+
+            // Handle 400 Bad Request
+            if (response.status === HTTP_STATUS.BAD_REQUEST) {
+                return { success: false, message: response.data?.message || 'Invalid update data. Please check the form and try again.' };
             }
 
             if (response.status === HTTP_STATUS.OK && response.data?.success) {
@@ -167,7 +182,7 @@ const mediaEditModalModule = (function() {
 
         } catch (error) {
             console.error('Error updating media record:', error);
-            return { success: false, message: error.message || 'Error updating media record' };
+            return { success: false, message: 'An unexpected error occurred while updating the media record.' };
         }
     };
 

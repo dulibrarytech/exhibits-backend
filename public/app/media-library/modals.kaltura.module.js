@@ -425,7 +425,36 @@ const kalturaModalsModule = (function() {
                 validateStatus: (status) => status >= 200 && status < 600
             });
 
-            if (response && (response.status === HTTP_STATUS.CREATED || response.status === HTTP_STATUS.OK) && response.data?.success) {
+            // Helper to reset the save button on error paths
+            const reset_save_btn = () => {
+                if (save_btn) {
+                    save_btn.disabled = false;
+                    save_btn.innerHTML = '<i class="fa fa-save" style="margin-right: 6px;" aria-hidden="true"></i>Save';
+                }
+            };
+
+            // Handle undefined response (network/server error)
+            if (!response) {
+                display_card_message(card, 'danger', 'Unable to save Kaltura media record. Please check your connection and try again.');
+                reset_save_btn();
+                return;
+            }
+
+            // Handle 403 Forbidden
+            if (response.status === HTTP_STATUS.FORBIDDEN) {
+                display_card_message(card, 'danger', response.data?.message || 'You do not have permission to create media records.');
+                reset_save_btn();
+                return;
+            }
+
+            // Handle 400 Bad Request
+            if (response.status === HTTP_STATUS.BAD_REQUEST) {
+                display_card_message(card, 'danger', response.data?.message || 'Invalid media data. Please check the form and try again.');
+                reset_save_btn();
+                return;
+            }
+
+            if ((response.status === HTTP_STATUS.CREATED || response.status === HTTP_STATUS.OK) && response.data?.success) {
 
                 // Mark card as saved
                 const card_header = card.querySelector('.card-header');
@@ -458,22 +487,18 @@ const kalturaModalsModule = (function() {
                 update_modal_status(true);
 
             } else {
-                const error_message = response?.data?.message || 'Failed to save Kaltura media record';
+                const error_message = response.data?.message || 'Failed to save Kaltura media record';
                 display_card_message(card, 'danger', error_message);
-
-                // Re-enable save button
-                if (save_btn) {
-                    save_btn.disabled = false;
-                    save_btn.innerHTML = '<i class="fa fa-save" style="margin-right: 6px;" aria-hidden="true"></i>Save';
-                }
+                reset_save_btn();
             }
 
         } catch (error) {
+            // Catch block is reserved for truly unexpected errors (runtime exceptions, not HTTP failures)
             console.error('Error saving Kaltura media record:', error);
 
             const card = document.getElementById('kaltura-form-card');
             if (card) {
-                display_card_message(card, 'danger', 'An unexpected error occurred while saving');
+                display_card_message(card, 'danger', 'An unexpected error occurred while saving the media record.');
 
                 const save_btn = card.querySelector('.btn-save-kaltura-item');
                 if (save_btn) {

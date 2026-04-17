@@ -126,8 +126,26 @@ const mediaDeleteModalModule = (function() {
                 validateStatus: (status) => status >= 200 && status < 600
             });
 
-            // Handle response
-            if (response && response.status === HTTP_STATUS.OK && response.data?.success) {
+            // Handle undefined response (network/server error)
+            if (!response) {
+                display_delete_modal_message('danger', 'Unable to delete media record. Please check your connection and try again.');
+                return;
+            }
+
+            // Handle 403 Forbidden
+            if (response.status === HTTP_STATUS.FORBIDDEN) {
+                display_delete_modal_message('danger', response.data?.message || 'You do not have permission to delete this media record.');
+                return;
+            }
+
+            // Handle 404 Not Found
+            if (response.status === HTTP_STATUS.NOT_FOUND) {
+                display_delete_modal_message('danger', response.data?.message || 'Media record not found.');
+                return;
+            }
+
+            // Handle success
+            if (response.status === HTTP_STATUS.OK && response.data?.success) {
                 // Store callback reference before closing modal (close_delete_modal nullifies it)
                 const callback = delete_modal_callback;
 
@@ -138,11 +156,12 @@ const mediaDeleteModalModule = (function() {
                 if (typeof callback === 'function') {
                     callback(true, 'Media record deleted successfully.');
                 }
-
-            } else {
-                const error_message = response?.data?.message || 'Failed to delete media record.';
-                display_delete_modal_message('danger', error_message);
+                return;
             }
+
+            // Any other non-success response
+            const error_message = response.data?.message || 'Failed to delete media record.';
+            display_delete_modal_message('danger', error_message);
 
         } catch (error) {
             console.error('Error deleting media record:', error);
