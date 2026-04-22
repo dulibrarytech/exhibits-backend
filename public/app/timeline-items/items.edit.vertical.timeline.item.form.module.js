@@ -760,7 +760,7 @@ const itemsEditTimelineItemFormModule = (function () {
             document.querySelector('#save-item-btn').addEventListener('click', itemsEditTimelineItemFormModule.update_timeline_item_record);
 
         } catch (error) {
-            document.querySelector('#message').innerHTML = `<div class="alert alert-danger" role="alert"><i class="fa fa-exclamation"></i> ${error.message}</div>`;
+            domModule.set_alert(document.querySelector('#message'), 'danger', error.message);
         }
     };
 

@@ -43,7 +43,7 @@ const itemsCommonHeadingFormModule = (function () {
                 const message_el = document.querySelector('#message');
 
                 if (message_el) {
-                    message_el.innerHTML = `<div class="alert alert-danger" role="alert"><i class="fa fa-exclamation"></i> ${message}</div>`;
+                    domModule.set_alert(message_el, 'danger', message);
                 }
             };
 
@@ -82,7 +82,7 @@ const itemsCommonHeadingFormModule = (function () {
             console.error('Error in get_common_heading_form_fields:', error.message);
             const message_el = document.querySelector('#message');
             if (message_el) {
-                message_el.innerHTML = `<div class="alert alert-danger" role="alert"><i class="fa fa-exclamation"></i> ${error.message}</div>`;
+                domModule.set_alert(message_el, 'danger', error.message);
             }
             return false;
         }
@@ -280,7 +280,7 @@ const itemsCommonHeadingFormModule = (function () {
             styles_promise = fetch_and_populate_styles();
 
         } catch (error) {
-            document.querySelector('#message').innerHTML = `<div class="alert alert-danger" role="alert"><i class="fa fa-exclamation"></i> ${error.message}</div>`;
+            domModule.set_alert(document.querySelector('#message'), 'danger', error.message);
         }
     };
 

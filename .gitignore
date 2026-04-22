@@ -55,6 +55,7 @@ test-data/
 # JIRA plugin
 atlassian-ide-plugin.xml
 storage
+storage_v1
 logs
 logs/*.log
 logs/*.gz

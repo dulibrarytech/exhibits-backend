@@ -219,6 +219,66 @@ const domModule = (function () {
         return document.querySelector(selector);
     };
 
+    /**
+     * Renders a Bootstrap alert into a container using safe DOM construction.
+     * Accepts either a CSS selector string or a direct element reference as the
+     * first argument so callers that already hold a reference avoid a second
+     * querySelector call.
+     *
+     * @param {string|Element} target  - CSS selector or DOM element
+     * @param {string}         type    - Bootstrap context: 'danger'|'warning'|'success'|'info'
+     * @param {string}         message - Plain-text message (never inserted as HTML)
+     */
+    obj.set_alert = function(target, type, message) {
+        const el = (typeof target === 'string') ? document.querySelector(target) : target;
+        if (!el) return;
+
+        const icon_map = {
+            danger:  'fa-exclamation-circle',
+            warning: 'fa-exclamation-triangle',
+            success: 'fa-check',
+            info:    'fa-info-circle'
+        };
+
+        while (el.firstChild) {
+            el.removeChild(el.firstChild);
+        }
+
+        const alert_div = document.createElement('div');
+        alert_div.className = 'alert alert-' + (type || 'danger');
+        alert_div.setAttribute('role', 'alert');
+
+        const icon = document.createElement('i');
+        icon.className = 'fa ' + (icon_map[type] || 'fa-exclamation-circle');
+        icon.setAttribute('aria-hidden', 'true');
+        alert_div.appendChild(icon);
+        alert_div.appendChild(document.createTextNode(' ' + (message || '')));
+
+        el.appendChild(alert_div);
+    };
+
+    /**
+     * Renders a spinner / loading indicator into a container using safe DOM
+     * construction (no innerHTML). Used for in-progress status messages.
+     *
+     * @param {string|Element} target  - CSS selector or DOM element
+     * @param {string}         message - Plain-text loading message
+     */
+    obj.set_loading = function(target, message) {
+        const el = (typeof target === 'string') ? document.querySelector(target) : target;
+        if (!el) return;
+
+        while (el.firstChild) {
+            el.removeChild(el.firstChild);
+        }
+
+        const icon = document.createElement('i');
+        icon.className = 'fa fa-spinner fa-spin';
+        icon.setAttribute('aria-hidden', 'true');
+        el.appendChild(icon);
+        el.appendChild(document.createTextNode(' ' + (message || '')));
+    };
+
     return obj;
 
 }());

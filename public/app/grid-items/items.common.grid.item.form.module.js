@@ -426,7 +426,7 @@ const itemsCommonGridItemFormModule = (function () {
             const show_error = (message) => {
                 const message_el = document.querySelector('#message');
                 if (message_el) {
-                    message_el.innerHTML = `<div class="alert alert-danger" role="alert"><i class="fa fa-exclamation"></i> ${message}</div>`;
+                    domModule.set_alert(message_el, 'danger', message);
                 }
             };
 
@@ -491,7 +491,7 @@ const itemsCommonGridItemFormModule = (function () {
             console.error('Error in get_common_grid_item_form_fields:', error.message);
             const message_el = document.querySelector('#message');
             if (message_el) {
-                message_el.innerHTML = `<div class="alert alert-danger" role="alert"><i class="fa fa-exclamation"></i> ${error.message}</div>`;
+                domModule.set_alert(message_el, 'danger', error.message);
             }
             return false;
         }
@@ -545,7 +545,7 @@ const itemsCommonGridItemFormModule = (function () {
             }
 
         } catch (error) {
-            document.querySelector('#message').innerHTML = `<div class="alert alert-danger" role="alert"><i class="fa fa-exclamation"></i> ${error.message}</div>`;
+            domModule.set_alert(document.querySelector('#message'), 'danger', error.message);
         }
     };
 

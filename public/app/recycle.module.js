@@ -43,7 +43,7 @@ const recycleModule = (function () {
             }
 
         } catch (error) {
-            document.querySelector('#message').innerHTML = `<div class="alert alert-danger" role="alert"><i class="fa fa-exclamation"></i> ${error.message}</div>`;
+            domModule.set_alert(document.querySelector('#message'), 'danger', error.message);
         }
     }
 
@@ -199,13 +199,13 @@ const recycleModule = (function () {
                     }, 900);
 
                 } else {
-                    document.querySelector('#exhibit-no-delete').innerHTML = `<i class="fa fa-exclamation"></i> ${response.data.message}`;
+                    domModule.set_alert(document.querySelector('#exhibit-no-delete'), 'danger', response.data.message);
                 }
 
             })();
 
         } catch (error) {
-            document.querySelector('#message').innerHTML = `<div class="alert alert-danger" role="alert"><i class="fa fa-exclamation"></i> ${error.message}</div>`;
+            domModule.set_alert(document.querySelector('#message'), 'danger', error.message);
         }
 
         return false;
@@ -227,7 +227,7 @@ const recycleModule = (function () {
         if (response.status === 200) {
 
             scrollTo(0, 0);
-            document.querySelector('#message').innerHTML = `<div class="alert alert-success" role="alert"><i class="fa fa-check"></i> Exhibit published</div>`;
+            domModule.set_alert(document.querySelector('#message'), 'success', 'Exhibit published');
 
             setTimeout(() => {
                 location.reload();
@@ -251,7 +251,7 @@ const recycleModule = (function () {
 
         if (response.status === 204) {
             scrollTo(0, 0);
-            document.querySelector('#message').innerHTML = `<div class="alert alert-warning" role="alert"><i class="fa fa-warning"></i> Exhibit must contain at least one item to publish</div>`;
+            domModule.set_alert(document.querySelector('#message'), 'warning', 'Exhibit must contain at least one item to publish');
 
             setTimeout(() => {
                 document.querySelector('#message').innerHTML = '';
@@ -275,7 +275,7 @@ const recycleModule = (function () {
         if (response.status === 200) {
 
             scrollTo(0, 0);
-            document.querySelector('#message').innerHTML = `<div class="alert alert-success" role="alert"><i class="fa fa-check"></i> Exhibit suppressed</div>`;
+            domModule.set_alert(document.querySelector('#message'), 'success', 'Exhibit suppressed');
 
             setTimeout(() => {
                 location.reload();
@@ -299,7 +299,7 @@ const recycleModule = (function () {
 
         if (response.status === 204) {
             scrollTo(0, 0);
-            document.querySelector('#message').innerHTML = `<div class="alert alert-danger" role="alert"><i class="fa fa-exclamation"></i> Unable to suppress exhibit</div>`;
+            domModule.set_alert(document.querySelector('#message'), 'danger', 'Unable to suppress exhibit');
 
             setTimeout(() => {
                 document.querySelector('#message').innerHTML = '';
@@ -321,7 +321,7 @@ const recycleModule = (function () {
             });
 
         } catch (error) {
-            document.querySelector('#message').innerHTML = `<div class="alert alert-danger" role="alert"><i class="fa fa-exclamation"></i> ${error.message}</div>`;
+            domModule.set_alert(document.querySelector('#message'), 'danger', error.message);
         }
     }
 
@@ -339,7 +339,7 @@ const recycleModule = (function () {
             });
 
         } catch (error) {
-            document.querySelector('#message').innerHTML = `<div class="alert alert-danger" role="alert"><i class="fa fa-exclamation"></i> ${error.message}</div>`;
+            domModule.set_alert(document.querySelector('#message'), 'danger', error.message);
         }
     }
 
@@ -348,7 +348,7 @@ const recycleModule = (function () {
 
         (async function () {
 
-            document.querySelector('#shared-url').innerHTML = `<div class="alert alert-info" role="alert"><i class="fa fa-info"></i> Generating Shared URL...</div>`;
+            domModule.set_alert(document.querySelector('#shared-url'), 'info', 'Generating Shared URL...');
 
             const EXHIBITS_ENDPOINTS = endpointsModule.get_exhibits_endpoints();
             let token = authModule.get_user_token();
@@ -357,7 +357,7 @@ const recycleModule = (function () {
             if (token === false) {
 
                 setTimeout(() => {
-                    document.querySelector('#message').innerHTML = `<div class="alert alert-info" role="alert"><i class="fa fa-info"></i> Unable to get session token</div>`;
+                    domModule.set_alert(document.querySelector('#message'), 'info', 'Unable to get session token');
                     authModule.logout();
                 }, 1000);
 
@@ -407,7 +407,7 @@ const recycleModule = (function () {
                 let elem = document.querySelector('#shared-url-copy');
                 const shared_url = elem.textContent;
                 await navigator.clipboard.writeText(shared_url);
-                document.querySelector('#copy-message').innerHTML = `<div class="alert alert-info" role="alert"><i class="fa fa-info"></i> URL copied to clipboard!</div>`;
+                domModule.set_alert(document.querySelector('#copy-message'), 'info', 'URL copied to clipboard!');
 
                 setTimeout(() => {
                     document.querySelector('#copy-message').innerHTML = '';
@@ -415,7 +415,7 @@ const recycleModule = (function () {
             })();
 
         } catch (error) {
-            document.querySelector('#message').innerHTML = `<div class="alert alert-info" role="alert"><i class="fa fa-info"></i> Failed to copy shared URL to clipboard. Error: ${error.message}</div>`;
+            domModule.set_alert(document.querySelector('#message'), 'info', 'Failed to copy shared URL to clipboard. Error: ${error.message}');
         }
     }
 
@@ -432,7 +432,7 @@ const recycleModule = (function () {
             // navModule.set_logout_link();
 
         } catch (error) {
-            document.querySelector('#message').innerHTML = `<div class="alert alert-danger" role="alert"><i class="fa fa-exclamation"></i> ${error.message}</div>`;
+            domModule.set_alert(document.querySelector('#message'), 'danger', error.message);
         }
 
     };

@@ -103,7 +103,7 @@ const itemsGridModule = (function () {
         }
 
         const sanitized_message = sanitize_html(message);
-        element.innerHTML = `<div class="alert alert-danger" role="alert"><i class="fa fa-exclamation"></i> ${sanitized_message}</div>`;
+        domModule.set_alert(element, 'danger', sanitized_message);
     }
 
     /**
@@ -334,7 +334,7 @@ const itemsGridModule = (function () {
 
             } else if (response.status === 403) {
                 scrollTo(0, 0);
-                document.querySelector('#message').innerHTML = `<div class="alert alert-danger" role="alert"><i class="fa fa-danger"></i> You do not have permission to publish this record.</div>`;
+                domModule.set_alert(document.querySelector('#message'), 'danger', 'You do not have permission to publish this record.');
 
                 setTimeout(() => {
                     document.querySelector('#message').innerHTML = '';
@@ -343,7 +343,7 @@ const itemsGridModule = (function () {
 
             if (response.status === 500) {
                 scrollTo(0, 0);
-                document.querySelector('#message').innerHTML = `<div class="alert alert-danger" role="alert"><i class="fa fa-exclamation"></i> ${response.data.message}</div>`;
+                domModule.set_alert(document.querySelector('#message'), 'danger', response.data.message);
 
                 setTimeout(() => {
                     // document.querySelector('#message').innerHTML = '';
@@ -353,7 +353,7 @@ const itemsGridModule = (function () {
             return false;
 
         } catch (error) {
-            document.querySelector('#message').innerHTML = `<div class="alert alert-danger" role="alert"><i class="fa fa-exclamation"></i> ${error.message}</div>`;
+            domModule.set_alert(document.querySelector('#message'), 'danger', error.message);
         }
     }
 
@@ -449,7 +449,7 @@ const itemsGridModule = (function () {
 
             } else if (response === undefined) {
                 scrollTo(0, 0);
-                document.querySelector('#message').innerHTML = `<div class="alert alert-danger" role="alert"><i class="fa fa-danger"></i> You do not have permission to unpublish this record.</div>`;
+                domModule.set_alert(document.querySelector('#message'), 'danger', 'You do not have permission to unpublish this record.');
 
                 setTimeout(() => {
                     document.querySelector('#message').innerHTML = '';
@@ -458,7 +458,7 @@ const itemsGridModule = (function () {
 
             if (response !== undefined && response.status === 204) {
                 scrollTo(0, 0);
-                document.querySelector('#message').innerHTML = `<div class="alert alert-warning" role="alert"><i class="fa fa-warning"></i> Unable to unpublish grid item</div>`;
+                domModule.set_alert(document.querySelector('#message'), 'warning', 'Unable to unpublish grid item');
 
                 setTimeout(() => {
                     document.querySelector('#message').innerHTML = '';
@@ -468,7 +468,7 @@ const itemsGridModule = (function () {
             return false;
 
         } catch (error) {
-            document.querySelector('#message').innerHTML = `<div class="alert alert-danger" role="alert"><i class="fa fa-exclamation"></i> ${error.message}</div>`;
+            domModule.set_alert(document.querySelector('#message'), 'danger', error.message);
         }
     }
 
@@ -648,11 +648,11 @@ const itemsGridModule = (function () {
                     window.location.replace(`${APP_PATH}/items/grid/items?exhibit_id=${exhibit_id}&grid_id=${grid_id}`);
                 }, 900);
             } else if (response === undefined) {
-                document.querySelector('#message').innerHTML = `<div class="alert alert-danger" role="alert"><i class="fa fa-exclamation"></i> You do not have permission to delete this item.</div>`;
+                domModule.set_alert(document.querySelector('#message'), 'danger', 'You do not have permission to delete this item.');
             }
 
         } catch (error) {
-            document.querySelector('#message').innerHTML = `<div class="alert alert-danger" role="alert"><i class="fa fa-exclamation"></i> ${error.message}</div>`;
+            domModule.set_alert(document.querySelector('#message'), 'danger', error.message);
         }
     };
 
@@ -672,7 +672,7 @@ const itemsGridModule = (function () {
                 }, 0);
 
                 setTimeout(() => {
-                    document.querySelector('#message').innerHTML = `<div class="alert alert-danger" role="alert"><i class="fa fa-exclamation"></i> You do not have permission to add item.</div>`;
+                    domModule.set_alert(document.querySelector('#message'), 'danger', 'You do not have permission to add item.');
                 }, 50);
             }
 
@@ -683,7 +683,7 @@ const itemsGridModule = (function () {
             helperModule.show_form();
 
         } catch (error) {
-            document.querySelector('#message').innerHTML = `<div class="alert alert-danger" role="alert"><i class="fa fa-exclamation"></i> ${error.message}</div>`;
+            domModule.set_alert(document.querySelector('#message'), 'danger', error.message);
         }
     };
 

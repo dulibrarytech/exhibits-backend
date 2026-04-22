@@ -416,11 +416,11 @@ const itemsEditVerticalTimelineFormModule = (function () {
             const timeline_id = helperModule.get_parameter_by_name('item_id');
 
             if (exhibit_id === undefined || timeline_id === undefined) {
-                document.querySelector('#message').innerHTML = `<div class="alert alert-warning" role="alert"><i class="fa fa-info"></i> Unable to update timeline record.</div>`;
+                domModule.set_alert(document.querySelector('#message'), 'warning', 'Unable to update timeline record.');
                 return false;
             }
 
-            document.querySelector('#message').innerHTML = `<div class="alert alert-info" role="alert"><i class="fa fa-info"></i> Updating timeline record...</div>`;
+            domModule.set_alert(document.querySelector('#message'), 'info', 'Updating timeline record...');
 
             const data = itemsCommonVerticalTimelineFormModule.get_common_timeline_form_fields(rich_text_data);
 
@@ -446,7 +446,7 @@ const itemsEditVerticalTimelineFormModule = (function () {
             if (response !== undefined && response.status === 201) {
 
                 window.scrollTo(0, 0);
-                document.querySelector('#message').innerHTML = `<div class="alert alert-success" role="alert"><i class="fa fa-info"></i> Timeline record updated</div>`;
+                domModule.set_alert(document.querySelector('#message'), 'success', 'Timeline record updated');
                 const timeline_id = response.data.data;
 
                 setTimeout(() => {
@@ -455,7 +455,7 @@ const itemsEditVerticalTimelineFormModule = (function () {
             }
 
         } catch (error) {
-            document.querySelector('#message').innerHTML = `<div class="alert alert-danger" role="alert"><i class="fa fa-exclamation"></i> ${error.message}</div>`;
+            domModule.set_alert(document.querySelector('#message'), 'danger', error.message);
         }
     };
 

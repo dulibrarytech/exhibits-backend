@@ -668,7 +668,7 @@ const itemsCommonStandardItemFormModule = (function () {
             const showError = (message) => {
                 const messageEl = document.querySelector('#message');
                 if (messageEl) {
-                    messageEl.innerHTML = `<div class="alert alert-danger" role="alert"><i class="fa fa-exclamation"></i> ${message}</div>`;
+                    domModule.set_alert(messageEl, 'danger', message);
                 }
             };
 
@@ -729,7 +729,7 @@ const itemsCommonStandardItemFormModule = (function () {
         } catch (error) {
             const messageEl = document.querySelector('#message');
             if (messageEl) {
-                messageEl.innerHTML = `<div class="alert alert-danger" role="alert"><i class="fa fa-exclamation"></i> ${error.message}</div>`;
+                domModule.set_alert(messageEl, 'danger', error.message);
             }
             return false; // Return false on error for consistency
         }
@@ -762,7 +762,7 @@ const itemsCommonStandardItemFormModule = (function () {
             styles_promise = fetch_and_populate_styles();
 
         } catch (error) {
-            document.querySelector('#message').innerHTML = `<div class="alert alert-danger" role="alert"><i class="fa fa-exclamation"></i> ${error.message}</div>`;
+            domModule.set_alert(document.querySelector('#message'), 'danger', error.message);
         }
     };
 

@@ -60,7 +60,7 @@ const itemsEditStandardItemFormModule = (function () {
             }
 
         } catch (error) {
-            document.querySelector('#message').innerHTML = `<div class="alert alert-danger" role="alert"><i class="fa fa-exclamation"></i> ${error.message}</div>`;
+            domModule.set_alert(document.querySelector('#message'), 'danger', error.message);
         }
     }
 
@@ -265,7 +265,7 @@ const itemsEditStandardItemFormModule = (function () {
         } catch (error) {
             console.log(error);
             console.error('Error in display_edit_record:', error.message);
-            document.querySelector('#message').innerHTML = `<div class="alert alert-danger" role="alert"><i class="fa fa-exclamation"></i> ${error.message}</div>`;
+            domModule.set_alert(document.querySelector('#message'), 'danger', error.message);
             return false;
         }
     }
@@ -533,7 +533,7 @@ const itemsEditStandardItemFormModule = (function () {
             document.querySelector('#update-item-btn').addEventListener('click', itemsEditStandardItemFormModule.update_item_record);
 
         } catch (error) {
-            document.querySelector('#message').innerHTML = `<div class="alert alert-danger" role="alert"><i class="fa fa-exclamation"></i> ${error.message}</div>`;
+            domModule.set_alert(document.querySelector('#message'), 'danger', error.message);
         }
     };
 

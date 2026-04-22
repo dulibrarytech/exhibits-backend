@@ -148,7 +148,7 @@ const helperModule = (function () {
         try {
             const message_el = document.querySelector('#message');
             if (message_el) {
-                message_el.innerHTML = `<div class="alert alert-danger" role="alert"><i class="fa fa-exclamation"></i> ${message}</div>`;
+                domModule.set_alert(message_el, 'danger', message);
             }
         } catch (error) {
             console.error('Error displaying message:', error.message);
@@ -670,7 +670,7 @@ const helperModule = (function () {
             const cdate = new Date().getFullYear();
             domModule.html('#cdate', DOMPurify.sanitize(cdate));
         } catch (error) {
-            document.querySelector('#message').innerHTML = `<div class="alert alert-danger" role="alert"><i class="fa fa-exclamation"></i> ${error.message}</div>`;
+            domModule.set_alert(document.querySelector('#message'), 'danger', error.message);
         }
     };
 

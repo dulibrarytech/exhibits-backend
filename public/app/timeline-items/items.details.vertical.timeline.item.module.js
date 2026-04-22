@@ -296,7 +296,7 @@ const itemsDetailsTimelineItemModule = (function () {
             const status = helperModule.get_parameter_by_name('status');
 
             if (status !== null && status === '403') {
-                document.querySelector('#message').innerHTML = `<div class="alert alert-danger" role="alert"><i class="fa fa-exclamation"></i> You do not have permission to edit this record.</div>`;
+                domModule.set_alert(document.querySelector('#message'), 'danger', 'You do not have permission to edit this record.');
             }
 
             const exhibit_id = helperModule.get_parameter_by_name('exhibit_id');
@@ -305,7 +305,7 @@ const itemsDetailsTimelineItemModule = (function () {
             await display_details_record();
 
         } catch (error) {
-            document.querySelector('#message').innerHTML = `<div class="alert alert-danger" role="alert"><i class="fa fa-exclamation"></i> ${error.message}</div>`;
+            domModule.set_alert(document.querySelector('#message'), 'danger', error.message);
         }
     };
 

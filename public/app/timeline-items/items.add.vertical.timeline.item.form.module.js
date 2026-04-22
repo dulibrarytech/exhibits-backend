@@ -264,16 +264,16 @@ const itemsAddVerticalTimelineItemFormModule = (function () {
             const timeline_id = helperModule.get_parameter_by_name('timeline_id');
 
             if (timeline_id === undefined) {
-                document.querySelector('#message').innerHTML = `<div class="alert alert-warning" role="alert"><i class="fa fa-info"></i> Unable to create timeline item record.</div>`;
+                domModule.set_alert(document.querySelector('#message'), 'warning', 'Unable to create timeline item record.');
                 return false;
             }
 
-            document.querySelector('#message').innerHTML = `<div class="alert alert-info" role="alert"><i class="fa fa-info"></i> Creating timeline item record...</div>`;
+            domModule.set_alert(document.querySelector('#message'), 'info', 'Creating timeline item record...');
 
             let data = itemsCommonVerticalTimelineItemFormModule.get_common_timeline_item_form_fields();
 
             if (data === undefined) {
-                document.querySelector('#message').innerHTML = `<div class="alert alert-danger" role="alert"><i class="fa fa-exclamation"></i> Unable to get form field values</div>`;
+                domModule.set_alert(document.querySelector('#message'), 'danger', 'Unable to get form field values');
                 return false;
             } else if (data === false) {
                 return false;
@@ -309,7 +309,7 @@ const itemsAddVerticalTimelineItemFormModule = (function () {
             if (response !== undefined && response.status === 201) {
 
                 let message = 'Timeline item record created';
-                document.querySelector('#message').innerHTML = `<div class="alert alert-success" role="alert"><i class="fa fa-info"></i> ${message}</div>`;
+                domModule.set_alert(document.querySelector('#message'), 'success', message);
 
                 const timeline_item_id = response.data.data;
 
@@ -325,11 +325,11 @@ const itemsAddVerticalTimelineItemFormModule = (function () {
 
                 }, 900);
             } else if (response === undefined) {
-                document.querySelector('#message').innerHTML = `<div class="alert alert-danger" role="alert"><i class="fa fa-exclamation"></i> You do not have permission to add item to this exhibit.</div>`;
+                domModule.set_alert(document.querySelector('#message'), 'danger', 'You do not have permission to add item to this exhibit.');
             }
 
         } catch (error) {
-            document.querySelector('#message').innerHTML = `<div class="alert alert-danger" role="alert"><i class="fa fa-exclamation"></i> ${error.message}</div>`;
+            domModule.set_alert(document.querySelector('#message'), 'danger', error.message);
         }
     };
 
@@ -346,7 +346,7 @@ const itemsAddVerticalTimelineItemFormModule = (function () {
             document.querySelector('#save-item-btn').addEventListener('click', itemsAddVerticalTimelineItemFormModule.create_timeline_item_record);
 
         } catch (error) {
-            document.querySelector('#message').innerHTML = `<div class="alert alert-danger" role="alert"><i class="fa fa-exclamation"></i> ${error.message}</div>`;
+            domModule.set_alert(document.querySelector('#message'), 'danger', error.message);
         }
     };
 

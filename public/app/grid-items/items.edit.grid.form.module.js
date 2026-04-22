@@ -59,7 +59,7 @@ const itemsEditGridFormModule = (function () {
             }
 
         } catch (error) {
-            document.querySelector('#message').innerHTML = `<div class="alert alert-danger" role="alert"><i class="fa fa-exclamation"></i> ${error.message}</div>`;
+            domModule.set_alert(document.querySelector('#message'), 'danger', error.message);
         }
     }
 
@@ -73,11 +73,11 @@ const itemsEditGridFormModule = (function () {
             const data = itemsCommonStandardGridFormModule.get_common_grid_form_fields();
 
             if (exhibit_id === undefined || grid_id === undefined) {
-                document.querySelector('#message').innerHTML = `<div class="alert alert-warning" role="alert"><i class="fa fa-info"></i> Unable to update grid record.</div>`;
+                domModule.set_alert(document.querySelector('#message'), 'warning', 'Unable to update grid record.');
                 return false;
             }
 
-            document.querySelector('#message').innerHTML = `<div class="alert alert-info" role="alert"><i class="fa fa-info"></i> Updating grid record...</div>`;
+            domModule.set_alert(document.querySelector('#message'), 'info', 'Updating grid record...');
 
             data.updated_by = helperModule.get_user_name();
 
@@ -97,7 +97,7 @@ const itemsEditGridFormModule = (function () {
             if (response !== undefined && response.status === 201) {
 
                 window.scrollTo(0, 0);
-                document.querySelector('#message').innerHTML = `<div class="alert alert-success" role="alert"><i class="fa fa-info"></i> Grid record updated</div>`;
+                domModule.set_alert(document.querySelector('#message'), 'success', 'Grid record updated');
                 const grid_id = response.data.data;
 
                 setTimeout(() => {
@@ -106,7 +106,7 @@ const itemsEditGridFormModule = (function () {
             }
 
         } catch (error) {
-            document.querySelector('#message').innerHTML = `<div class="alert alert-danger" role="alert"><i class="fa fa-exclamation"></i> ${error.message}</div>`;
+            domModule.set_alert(document.querySelector('#message'), 'danger', error.message);
         }
     };
 

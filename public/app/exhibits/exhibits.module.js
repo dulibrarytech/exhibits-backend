@@ -753,7 +753,6 @@ const exhibitsModule = (function () {
     }
 
     /**
-    /**
      * Display message helper (reusable across module)
      * @param {HTMLElement} element - Target element
      * @param {string} alert_type - Alert type ('info', 'success', 'danger', 'warning')
@@ -972,7 +971,7 @@ const exhibitsModule = (function () {
 
     obj.set_exhibit_title = async function (uuid) {
         let title = await exhibitsModule.get_exhibit_title(uuid);
-        document.querySelector('#exhibit-title').innerHTML = `${title}`;
+        document.querySelector('#exhibit-title').textContent = title;
         return false;
     };
 
@@ -985,7 +984,7 @@ const exhibitsModule = (function () {
             exhibitsModule.close_preview();
         }
 
-        document.querySelector('#message').innerHTML = `<div class="alert alert-info" role="alert"><i class="fa fa-info-circle"></i> Building Exhibit Preview...</div>`;
+        domModule.set_alert(document.querySelector('#message'), 'info', 'Building Exhibit Preview...');
 
         setTimeout(() => {
             link = window.open(preview_link + '&t=' + token, '_blank', 'location=yes,scrollbars=yes,status=yes');

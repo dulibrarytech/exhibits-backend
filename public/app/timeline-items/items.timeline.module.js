@@ -510,14 +510,14 @@ const itemsTimelineModule = (function () {
 
             if (response !== undefined && response.status === 204) {
                 scrollTo(0, 0);
-                document.querySelector('#message').innerHTML = `<div class="alert alert-danger" role="alert"><i class="fa fa-exclamation"></i> Unable to publish timeline item</div>`;
+                domModule.set_alert(document.querySelector('#message'), 'danger', 'Unable to publish timeline item');
 
                 setTimeout(() => {
                     document.querySelector('#message').innerHTML = '';
                 }, 5000);
             } else if (response === undefined) {
                 scrollTo(0, 0);
-                document.querySelector('#message').innerHTML = `<div class="alert alert-danger" role="alert"><i class="fa fa-exclamation"></i> Unable to publish timeline item</div>`;
+                domModule.set_alert(document.querySelector('#message'), 'danger', 'Unable to publish timeline item');
 
                 setTimeout(() => {
                     document.querySelector('#message').innerHTML = '';
@@ -527,7 +527,7 @@ const itemsTimelineModule = (function () {
             return false;
 
         } catch (error) {
-            document.querySelector('#message').innerHTML = `<div class="alert alert-danger" role="alert"><i class="fa fa-exclamation"></i> ${error.message}</div>`;
+            domModule.set_alert(document.querySelector('#message'), 'danger', error.message);
         }
     }
 
@@ -633,7 +633,7 @@ const itemsTimelineModule = (function () {
 
             } else if (response === undefined) {
                 scrollTo(0, 0);
-                document.querySelector('#message').innerHTML = `<div class="alert alert-danger" role="alert"><i class="fa fa-danger"></i> You do not have permission to unpublish this record.</div>`;
+                domModule.set_alert(document.querySelector('#message'), 'danger', 'You do not have permission to unpublish this record.');
 
                 setTimeout(() => {
                     document.querySelector('#message').innerHTML = '';
@@ -642,7 +642,7 @@ const itemsTimelineModule = (function () {
 
             if (response !== undefined && response.status === 204) {
                 scrollTo(0, 0);
-                document.querySelector('#message').innerHTML = `<div class="alert alert-warning" role="alert"><i class="fa fa-warning"></i> Unable to unpublish timeline item</div>`;
+                domModule.set_alert(document.querySelector('#message'), 'warning', 'Unable to unpublish timeline item');
 
                 setTimeout(() => {
                     document.querySelector('#message').innerHTML = '';
@@ -652,7 +652,7 @@ const itemsTimelineModule = (function () {
             return false;
 
         } catch (error) {
-            document.querySelector('#message').innerHTML = `<div class="alert alert-danger" role="alert"><i class="fa fa-exclamation"></i> ${error.message}</div>`;
+            domModule.set_alert(document.querySelector('#message'), 'danger', error.message);
         }
     }
 
@@ -671,7 +671,7 @@ const itemsTimelineModule = (function () {
             });
 
         } catch (error) {
-            document.querySelector('#message').innerHTML = `<div class="alert alert-danger" role="alert"><i class="fa fa-exclamation"></i> ${error.message}</div>`;
+            domModule.set_alert(document.querySelector('#message'), 'danger', error.message);
         }
     }
 
@@ -690,7 +690,7 @@ const itemsTimelineModule = (function () {
             });
 
         } catch (error) {
-            document.querySelector('#message').innerHTML = `<div class="alert alert-danger" role="alert"><i class="fa fa-exclamation"></i> ${error.message}</div>`;
+            domModule.set_alert(document.querySelector('#message'), 'danger', error.message);
         }
     }
 
@@ -724,7 +724,7 @@ const itemsTimelineModule = (function () {
             }
 
         } catch (error) {
-            document.querySelector('#message').innerHTML = `<div class="alert alert-danger" role="alert"><i class="fa fa-exclamation"></i> ${error.message}</div>`;
+            domModule.set_alert(document.querySelector('#message'), 'danger', error.message);
         }
     };
 
@@ -744,7 +744,7 @@ const itemsTimelineModule = (function () {
                 }, 0);
 
                 setTimeout(() => {
-                    document.querySelector('#message').innerHTML = `<div class="alert alert-danger" role="alert"><i class="fa fa-exclamation"></i> You do not have permission to add item.</div>`;
+                    domModule.set_alert(document.querySelector('#message'), 'danger', 'You do not have permission to add item.');
                 }, 50);
             }
 
@@ -759,7 +759,7 @@ const itemsTimelineModule = (function () {
             helperModule.show_form();
 
         } catch (error) {
-            document.querySelector('#message').innerHTML = `<div class="alert alert-danger" role="alert"><i class="fa fa-exclamation"></i> ${error.message}</div>`;
+            domModule.set_alert(document.querySelector('#message'), 'danger', error.message);
         }
     };
 

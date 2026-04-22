@@ -545,7 +545,6 @@ const navModule = (function () {
     };
 
     obj.set_logout_link = function () {
-        ;
         document.querySelector('#logout').addEventListener('click', authModule.logout);
     };
 

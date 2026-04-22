@@ -59,7 +59,7 @@ const itemsDetailsHeadingModule = (function () {
             }
 
         } catch (error) {
-            document.querySelector('#message').innerHTML = `<div class="alert alert-danger" role="alert"><i class="fa fa-exclamation"></i> ${error.message}</div>`;
+            domModule.set_alert(document.querySelector('#message'), 'danger', error.message);
         }
     }
 
@@ -106,7 +106,7 @@ const itemsDetailsHeadingModule = (function () {
         try {
 
             scrollTo(0, 0);
-            document.querySelector('#message').innerHTML = `<div class="alert alert-info" role="alert"><i class="fa fa-info"></i> Updating heading record...</div>`;
+            domModule.set_alert(document.querySelector('#message'), 'info', 'Updating heading record...');
             let exhibit_id = helperModule.get_parameter_by_name('exhibit_id');
             let item_id = helperModule.get_parameter_by_name('item_id');
             let token = authModule.get_user_token();
@@ -118,13 +118,13 @@ const itemsDetailsHeadingModule = (function () {
             }
 
             if (exhibit_id === undefined || item_id === undefined) {
-                document.querySelector('#message').innerHTML = `<div class="alert alert-danger" role="alert"><i class="fa fa-exclamation"></i> Unable to get record ID</div>`;
+                domModule.set_alert(document.querySelector('#message'), 'danger', 'Unable to get record ID');
                 return false;
             }
 
             if (token === false) {
                 setTimeout(() => {
-                    document.querySelector('#message').innerHTML = `<div class="alert alert-danger" role="alert"><i class="fa fa-exclamation"></i> Unable to get session token</div>`;
+                    domModule.set_alert(document.querySelector('#message'), 'danger', 'Unable to get session token');
                     authModule.logout();
                 }, 1000);
 
@@ -134,7 +134,7 @@ const itemsDetailsHeadingModule = (function () {
             const user = JSON.parse(sessionStorage.getItem('exhibits_user'));
 
             if (user.name === null) {
-                document.querySelector('#message').innerHTML = `<div class="alert alert-danger" role="alert"><i class="fa fa-exclamation"></i> Unable to retrieve your name</div>`;
+                domModule.set_alert(document.querySelector('#message'), 'danger', 'Unable to retrieve your name');
                 return false;
             }
 
@@ -155,7 +155,7 @@ const itemsDetailsHeadingModule = (function () {
 
             if (response !== undefined && response.status === 201) {
 
-                document.querySelector('#message').innerHTML = `<div class="alert alert-success" role="alert"><i class="fa fa-info"></i> Heading record updated</div>`;
+                domModule.set_alert(document.querySelector('#message'), 'success', 'Heading record updated');
 
                 setTimeout(() => {
                     window.location.reload();
@@ -164,7 +164,7 @@ const itemsDetailsHeadingModule = (function () {
             }
 
         } catch (error) {
-            document.querySelector('#message').innerHTML = `<div class="alert alert-danger" role="alert"><i class="fa fa-exclamation"></i> ${error.message}</div>`;
+            domModule.set_alert(document.querySelector('#message'), 'danger', error.message);
         }
     };
 
@@ -178,7 +178,7 @@ const itemsDetailsHeadingModule = (function () {
 
             if (status !== null && status === '403') {
                 window.scrollTo(0, 0);
-                document.querySelector('#message').innerHTML = `<div class="alert alert-danger" role="alert"><i class="fa fa-exclamation"></i> You do not have permission to edit this record.</div>`;
+                domModule.set_alert(document.querySelector('#message'), 'danger', 'You do not have permission to edit this record.');
             }
 
             const exhibit_id = helperModule.get_parameter_by_name('exhibit_id');
@@ -187,7 +187,7 @@ const itemsDetailsHeadingModule = (function () {
             await display_edit_record();
 
         } catch (error) {
-            document.querySelector('#message').innerHTML = `<div class="alert alert-danger" role="alert"><i class="fa fa-exclamation"></i> ${error.message}</div>`;
+            domModule.set_alert(document.querySelector('#message'), 'danger', error.message);
         }
     };
 

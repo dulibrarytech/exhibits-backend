@@ -47,7 +47,7 @@ const userModule = (function () {
             }
 
         } catch (error) {
-            document.querySelector('#message').innerHTML = `<div class="alert alert-danger" role="alert"><i class="fa fa-exclamation"></i> ${error.message}</div>`;
+            domModule.set_alert(document.querySelector('#message'), 'danger', error.message);
         }
     }
 
@@ -76,7 +76,7 @@ const userModule = (function () {
             }
 
         } catch (error) {
-            document.querySelector(MESSAGE_SELECTOR).innerHTML = `<div class="alert alert-danger" role="alert"><i class="fa fa-exclamation"></i> ${error.message}</div>`;
+            domModule.set_alert(document.querySelector(MESSAGE_SELECTOR), 'danger', error.message);
         }
     }
 
@@ -99,7 +99,7 @@ const userModule = (function () {
             }
 
         } catch (error) {
-            document.querySelector(MESSAGE_SELECTOR).innerHTML = `<div class="alert alert-danger" role="alert"><i class="fa fa-exclamation"></i> ${error.message}</div>`;
+            domModule.set_alert(document.querySelector(MESSAGE_SELECTOR), 'danger', error.message);
         }
     }
 
@@ -161,13 +161,7 @@ const userModule = (function () {
         function show_message(message_text, type = 'danger') {
             const message_el = get_element(CONFIG.message_selector);
             if (!message_el) return;
-
-            const icon = type === 'danger' ? 'exclamation' : 'info';
-            message_el.innerHTML = `
-            <div class="alert alert-${type}" role="alert">
-                <i class="fa fa-${icon}"></i> ${message_text}
-            </div>
-        `;
+            domModule.set_alert(message_el, type, message_text);
         }
 
         /**
@@ -506,11 +500,7 @@ const userModule = (function () {
         function show_error(message) {
             const message_el = get_element(CONFIG.message_selector);
             if (message_el) {
-                message_el.innerHTML = `
-                <div class="alert alert-danger" role="alert">
-                    <i class="fa fa-exclamation"></i> ${message}
-                </div>
-            `;
+                domModule.set_alert(message_el, 'danger', message);
             }
         }
 
@@ -741,13 +731,13 @@ const userModule = (function () {
             const token = authModule.get_user_token();
 
             if (user_id === undefined) {
-                document.querySelector(MESSAGE_SELECTOR).innerHTML = `<div class="alert alert-danger" role="alert"><i class="fa fa-exclamation"></i> Unable to get user ID</div>`;
+                domModule.set_alert(document.querySelector(MESSAGE_SELECTOR), 'danger', 'Unable to get user ID');
                 return false;
             }
 
             if (token === false) {
                 setTimeout(() => {
-                    document.querySelector(MESSAGE_SELECTOR).innerHTML = `<div class="alert alert-danger" role="alert"><i class="fa fa-exclamation"></i> Unable to get session token</div>`;
+                    domModule.set_alert(document.querySelector(MESSAGE_SELECTOR), 'danger', 'Unable to get session token');
                     authModule.logout();
                 }, 1000);
 
@@ -755,13 +745,13 @@ const userModule = (function () {
             }
 
             if (data === undefined) {
-                document.querySelector(MESSAGE_SELECTOR).innerHTML = `<div class="alert alert-danger" role="alert"><i class="fa fa-exclamation"></i> Unable to get form field values</div>`;
+                domModule.set_alert(document.querySelector(MESSAGE_SELECTOR), 'danger', 'Unable to get form field values');
                 return false;
             } else if (data === null) {
                 return false;
             }
 
-            document.querySelector(MESSAGE_SELECTOR).innerHTML = `<div class="alert alert-info" role="alert"><i class="fa fa-info"></i> Updating user record...</div>`;
+            domModule.set_alert(document.querySelector(MESSAGE_SELECTOR), 'info', 'Updating user record...');
 
             const endpoint = USER_ENDPOINTS.users.update_user.put.endpoint.replace(':user_id', user_id);
             const response = await httpModule.req({
@@ -776,7 +766,7 @@ const userModule = (function () {
 
             if (response !== undefined && response.status === 201) {
 
-                document.querySelector(MESSAGE_SELECTOR).innerHTML = `<div class="alert alert-success" role="alert"><i class="fa fa-info"></i> User record updated</div>`;
+                domModule.set_alert(document.querySelector(MESSAGE_SELECTOR), 'success', 'User record updated');
 
                 setTimeout(() => {
                     window.location.reload();
@@ -786,7 +776,7 @@ const userModule = (function () {
             return false;
 
         } catch (error) {
-            document.querySelector(MESSAGE_SELECTOR).innerHTML = `<div class="alert alert-danger" role="alert"><i class="fa fa-exclamation"></i> ${error.message}</div>`;
+            domModule.set_alert(document.querySelector(MESSAGE_SELECTOR), 'danger', error.message);
         }
     };
 
@@ -799,10 +789,7 @@ const userModule = (function () {
             window.scrollTo(0, 0);
 
             const show_message = (message, type = 'danger') => {
-                const message_el = document.querySelector(MESSAGE_SELECTOR);
-                if (message_el) {
-                    message_el.innerHTML = `<div class="alert alert-${type}" role="alert"><i class="fa fa-${type === 'success' ? 'check' : type === 'info' ? 'info' : 'exclamation'}"></i> ${message}</div>`;
-                }
+                domModule.set_alert(document.querySelector(MESSAGE_SELECTOR), type, message);
             };
 
             // Validate required modules exist
@@ -948,7 +935,7 @@ const userModule = (function () {
                     }, 2000);
                 }
 
-                message_el.innerHTML = `<div class="alert alert-danger" role="alert"><i class="fa fa-exclamation"></i> ${error_message}</div>`;
+                domModule.set_alert(message_el, 'danger', error_message);
             }
 
             return false;
@@ -961,12 +948,11 @@ const userModule = (function () {
 
             const show_message = (message, type = 'danger', selector = MESSAGE_SELECTOR) => {
                 const message_el = document.querySelector(selector);
-                if (message_el) {
-                    if (type === 'loading') {
-                        message_el.innerHTML = `<i class="fa fa-spinner fa-spin"></i> ${message}`;
-                    } else {
-                        message_el.innerHTML = `<div class="alert alert-${type}" role="alert"><i class="fa fa-exclamation"></i> ${message}</div>`;
-                    }
+                if (!message_el) return;
+                if (type === 'loading') {
+                    domModule.set_loading(message_el, message);
+                } else {
+                    domModule.set_alert(message_el, type, message);
                 }
             };
 
@@ -1102,7 +1088,7 @@ const userModule = (function () {
                     }, 2000);
                 }
 
-                message_el.innerHTML = `<div class="alert alert-danger" role="alert"><i class="fa fa-exclamation"></i> ${error_message}</div>`;
+                domModule.set_alert(message_el, 'danger', error_message);
             }
 
             return false;
@@ -1273,30 +1259,70 @@ const userModule = (function () {
         function update_status_display(element, config) {
             if (!element) return;
 
-            element.innerHTML = `
-            <span id="${config.span_id}" title="${config.title}">
-                <i class="fa ${config.icon}" style="color: ${config.color}"></i>
-                <br>${config.label}
-            </span>
-        `;
+            while (element.firstChild) { element.removeChild(element.firstChild); }
+
+            const span = document.createElement('span');
+            span.id = config.span_id;
+            span.title = config.title;
+
+            const icon = document.createElement('i');
+            icon.className = 'fa ' + config.icon;
+            icon.style.color = config.color;
+            icon.setAttribute('aria-hidden', 'true');
+            span.appendChild(icon);
+            span.appendChild(document.createElement('br'));
+            span.appendChild(document.createTextNode(config.label));
+
+            element.appendChild(span);
         }
 
         /**
          * Generate action buttons HTML based on status
          */
         function generate_action_buttons(user_id, show_edit_delete) {
+            const frag = document.createDocumentFragment();
+
             if (show_edit_delete) {
-                // Inactive: show edit and delete links
-                const app_path = APP_PATH;
-                const edit_button = `<a href="${app_path}/users/edit?user_id=${user_id}" title="View user details" aria-label="user-details"><i class="fa fa-edit pr-1"></i></a>`;
-                const delete_button = `<a href="${app_path}/users/delete?user_id=${user_id}" title="Delete User" aria-label="delete-user"><i class="fa fa-trash pr-1"></i></a>`;
-                return `${edit_button}&nbsp;${delete_button}`;
+                const edit_a = document.createElement('a');
+                edit_a.href = APP_PATH + '/users/edit?user_id=' + encodeURIComponent(user_id);
+                edit_a.title = 'View user details';
+                edit_a.setAttribute('aria-label', 'user-details');
+                const edit_i = document.createElement('i');
+                edit_i.className = 'fa fa-edit pr-1';
+                edit_i.setAttribute('aria-hidden', 'true');
+                edit_a.appendChild(edit_i);
+                frag.appendChild(edit_a);
+
+                frag.appendChild(document.createTextNode(' '));
+
+                const del_a = document.createElement('a');
+                del_a.href = APP_PATH + '/users/delete?user_id=' + encodeURIComponent(user_id);
+                del_a.title = 'Delete User';
+                del_a.setAttribute('aria-label', 'delete-user');
+                const del_i = document.createElement('i');
+                del_i.className = 'fa fa-trash pr-1';
+                del_i.setAttribute('aria-hidden', 'true');
+                del_a.appendChild(del_i);
+                frag.appendChild(del_a);
             } else {
-                // Active: show disabled buttons
-                const edit_button = '<i title="Only administrators can view user details" style="color: #d3d3d3" class="fa fa-edit pr-1"></i>';
-                const delete_button = '<i title="Only administrators can delete users" style="color: #d3d3d3" class="fa fa-trash pr-1" aria-label="delete-user"></i>';
-                return `${edit_button}&nbsp;${delete_button}`;
+                const edit_i = document.createElement('i');
+                edit_i.className = 'fa fa-edit pr-1';
+                edit_i.title = 'Only administrators can view user details';
+                edit_i.style.color = '#d3d3d3';
+                edit_i.setAttribute('aria-hidden', 'true');
+                frag.appendChild(edit_i);
+
+                frag.appendChild(document.createTextNode(' '));
+
+                const del_i = document.createElement('i');
+                del_i.className = 'fa fa-trash pr-1';
+                del_i.title = 'Only administrators can delete users';
+                del_i.style.color = '#d3d3d3';
+                del_i.setAttribute('aria-label', 'delete-user');
+                frag.appendChild(del_i);
             }
+
+            return frag;
         }
 
         /**
@@ -1307,8 +1333,12 @@ const userModule = (function () {
             const actions_element = get_element(`${user_id}-user-actions`);
             if (!actions_element) return;
 
-            const buttons_html = generate_action_buttons(user_id, show_edit_delete);
-            actions_element.innerHTML = `<div class="card-text text-sm-center">${buttons_html}</div>`;
+            while (actions_element.firstChild) { actions_element.removeChild(actions_element.firstChild); }
+
+            const wrapper = document.createElement('div');
+            wrapper.className = 'card-text text-sm-center';
+            wrapper.appendChild(generate_action_buttons(user_id, show_edit_delete));
+            actions_element.appendChild(wrapper);
         }
 
         /**
@@ -1409,7 +1439,7 @@ const userModule = (function () {
             const show_error = (message) => {
                 const message_el = document.querySelector(MESSAGE_SELECTOR);
                 if (message_el) {
-                    message_el.innerHTML = `<div class="alert alert-danger" role="alert"><i class="fa fa-exclamation"></i> ${message}</div>`;
+                    domModule.set_alert(message_el, 'danger', message);
                 }
             };
 
@@ -1514,7 +1544,7 @@ const userModule = (function () {
                     }, 2000);
                 }
 
-                message_el.innerHTML = `<div class="alert alert-danger" role="alert"><i class="fa fa-exclamation"></i> ${error_message}</div>`;
+                domModule.set_alert(message_el, 'danger', error_message);
             }
 
             return null;
@@ -1528,7 +1558,7 @@ const userModule = (function () {
             const show_error = (message) => {
                 const message_el = document.querySelector(MESSAGE_SELECTOR);
                 if (message_el) {
-                    message_el.innerHTML = `<div class="alert alert-danger" role="alert"><i class="fa fa-exclamation"></i> ${message}</div>`;
+                    domModule.set_alert(message_el, 'danger', message);
                 }
             };
 
@@ -1626,7 +1656,7 @@ const userModule = (function () {
 
             const message_el = document.querySelector(MESSAGE_SELECTOR);
             if (message_el) {
-                message_el.innerHTML = `<div class="alert alert-danger" role="alert"><i class="fa fa-exclamation"></i> An error occurred while loading roles.</div>`;
+                domModule.set_alert(message_el, 'danger', 'An error occurred while loading roles.');
             }
 
             return false;
@@ -1651,7 +1681,7 @@ const userModule = (function () {
             const show_error = (message) => {
                 const message_el = document.querySelector(MESSAGE_SELECTOR);
                 if (message_el) {
-                    message_el.innerHTML = `<div class="alert alert-danger" role="alert"><i class="fa fa-exclamation"></i> ${message}</div>`;
+                    domModule.set_alert(message_el, 'danger', message);
                 }
             };
 
@@ -1725,7 +1755,7 @@ const userModule = (function () {
 
             const message_el = document.querySelector(MESSAGE_SELECTOR);
             if (message_el) {
-                message_el.innerHTML = `<div class="alert alert-danger" role="alert"><i class="fa fa-exclamation"></i> An error occurred while checking permissions.</div>`;
+                domModule.set_alert(message_el, 'danger', 'An error occurred while checking permissions.');
             }
 
             return false;

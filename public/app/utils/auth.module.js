@@ -108,7 +108,7 @@ const authModule = (function () {
         try {
             const message_el = document.querySelector('#message');
             if (message_el) {
-                message_el.innerHTML = `<div class="alert alert-danger" role="alert"><i class="fa fa-exclamation"></i> ${message}</div>`;
+                domModule.set_alert(message_el, 'danger', message);
             }
         } catch (error) {
             console.error('Error displaying message:', error.message);
