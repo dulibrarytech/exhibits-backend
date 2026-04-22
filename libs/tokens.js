@@ -33,6 +33,46 @@ const TOKEN_TYPES = {
 const MAX_USERNAME_LENGTH = 255;
 const MAX_UUID_LENGTH = 36; // Standard UUID length
 
+// Cookie-based token transport avoids leaking the JWT into browser
+// history, Referer headers, and access logs. See set_auth_cookie.
+const TOKEN_COOKIE_NAME = 'exhibits_token';
+const TOKEN_COOKIE_MAX_AGE_SECONDS = 8 * 60 * 60;
+
+/**
+ * Parses a named cookie from the request's Cookie header. Kept local to
+ * this module so the auth middleware does not pull in cookie-parser.
+ * @param {Object} req   - Express request object
+ * @param {string} name  - Cookie name
+ * @returns {string|null}
+ * @private
+ */
+function get_cookie(req, name) {
+
+    const header = req && req.headers && req.headers.cookie;
+
+    if (!header || typeof header !== 'string') {
+        return null;
+    }
+
+    const parts = header.split(';');
+
+    for (let i = 0; i < parts.length; i++) {
+        const eq = parts[i].indexOf('=');
+        if (eq < 0) {
+            continue;
+        }
+        if (parts[i].slice(0, eq).trim() === name) {
+            try {
+                return decodeURIComponent(parts[i].slice(eq + 1).trim());
+            } catch (error) {
+                return null;
+            }
+        }
+    }
+
+    return null;
+}
+
 /**
  * Validates username input
  * @param {string} username - Username to validate
@@ -308,7 +348,10 @@ function validate_api_key(key) {
  */
 exports.verify = function (req, res, next) {
 
-    const token = req.headers['x-access-token'] || req.query.t || req.query.token;
+    const token = req.headers['x-access-token']
+        || get_cookie(req, TOKEN_COOKIE_NAME)
+        || req.query.t
+        || req.query.token;
     const api_key = req.query.api_key;
 
     // Verify JWT token
@@ -374,7 +417,10 @@ exports.verify = function (req, res, next) {
  */
 exports.verify_with_query = function (req, res, next) {
 
-    const token = req.headers['x-access-token'] || req.query.token || req.query.t;
+    const token = req.headers['x-access-token']
+        || get_cookie(req, TOKEN_COOKIE_NAME)
+        || req.query.token
+        || req.query.t;
     const api_key = req.query.api_key;
 
     // Verify JWT token
@@ -469,4 +515,32 @@ exports.verify_shared = function (req, res, next) {
         req.decoded = decoded;
         next();
     });
+};
+
+/**
+ * Writes the session JWT into an HttpOnly cookie. Lets preview windows
+ * and media <img> requests authenticate without the token appearing in
+ * URLs, browser history, Referer headers, or access logs.
+ * @param {Object} res   - Express response object
+ * @param {string} token - Signed JWT
+ */
+exports.set_auth_cookie = function (res, token) {
+
+    if (!res || typeof token !== 'string' || token.length === 0) {
+        return;
+    }
+
+    const parts = [
+        `${TOKEN_COOKIE_NAME}=${encodeURIComponent(token)}`,
+        'Path=/',
+        'HttpOnly',
+        'SameSite=Lax',
+        `Max-Age=${TOKEN_COOKIE_MAX_AGE_SECONDS}`
+    ];
+
+    if (process.env.NODE_ENV === 'production') {
+        parts.push('Secure');
+    }
+
+    res.append('Set-Cookie', parts.join('; '));
 };

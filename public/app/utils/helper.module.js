@@ -1378,20 +1378,8 @@ const helperModule = (function () {
             });
 
             // Handle response
-            if (response && response.status === 201) {
+            if (response && response.status === 200) {
                 console.log('Grid items reordered successfully');
-
-                // Optional: Display success message
-                const message_element = document.querySelector('#message');
-                if (message_element) {
-                    display_success_message(message_element, 'Grid items reordered successfully');
-
-                    // Clear message after 3 seconds
-                    setTimeout(() => {
-                        message_element.textContent = '';
-                    }, 3000);
-                }
-
                 return true;
             } else {
                 throw new Error('Failed to reorder grid items - server returned an error');
@@ -2470,20 +2458,6 @@ const helperModule = (function () {
             }
 
             return null;
-        }
-    };
-
-    obj.check_app_env = function () {
-
-        const hostname = window.location.hostname;
-
-        if (hostname === 'localhost' || hostname === 'libwebapw01-vlt.du.edu' || hostname === 'exhibits.dev') {
-
-            const app_message = document.querySelector('#app-message');
-
-            if (app_message !== null) {
-                app_message.innerHTML = '<div class="alert alert-danger"><i class="fa fa-exclamation-circle"></i> <strong>"STOP! Do not use Development Site"</strong>&nbsp;&nbsp;&nbsp;<a class="btn btn-info" href="https://exhibits-backend.library.du.edu/exhibits-dashboard/auth" target="_blank">Go to Live Site </a> </div>';
-            }
         }
     };
 

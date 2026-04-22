@@ -414,9 +414,9 @@ const exhibitsModule = (function () {
                 // Kaltura thumbnails are external URLs (no auth required)
                 thumbnail_url = exhibit.media_library_thumbnail_kaltura_url;
             } else {
-                // Uploaded/repo thumbnails served via media library endpoint (auth via query param)
-                const token = authModule.get_user_token();
-                thumbnail_url = `${APP_PATH}/api/v1/media/library/thumbnail/${encodeURIComponent(exhibit.media_library_thumbnail_uuid)}?token=${encodeURIComponent(token)}`;
+                // Same-origin thumbnails authenticate via the HttpOnly
+                // exhibits_token cookie; no JWT is embedded in <img src>.
+                thumbnail_url = `${APP_PATH}/api/v1/media/library/thumbnail/${encodeURIComponent(exhibit.media_library_thumbnail_uuid)}`;
             }
         } else if (exhibit.thumbnail && exhibit.thumbnail.length > 0) {
             // Legacy direct-upload thumbnail on the exhibit record
@@ -978,7 +978,6 @@ const exhibitsModule = (function () {
     obj.open_preview = function (preview_link) {
 
         scrollTo(0, 0);
-        const token = authModule.get_user_token();
 
         if (link !== undefined) {
             exhibitsModule.close_preview();
@@ -987,7 +986,9 @@ const exhibitsModule = (function () {
         domModule.set_alert(document.querySelector('#message'), 'info', 'Building Exhibit Preview...');
 
         setTimeout(() => {
-            link = window.open(preview_link + '&t=' + token, '_blank', 'location=yes,scrollbars=yes,status=yes');
+            // Auth travels via the HttpOnly exhibits_token cookie set at
+            // SSO callback; the JWT no longer appears in the preview URL.
+            link = window.open(preview_link, '_blank', 'location=yes,scrollbars=yes,status=yes');
             document.querySelector('#message').innerHTML = '';
         }, 900);
     };

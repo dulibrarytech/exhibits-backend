@@ -30,7 +30,7 @@ module.exports = function (app) {
         .get(CONTROLLER.get_auth_landing);
 
     app.route(`${APP_PATH}/auth/login`)
-        .get(TOKENS.verify);
+        .get(CONTROLLER.initiate_login);
 
     app.route(`${APP_PATH}/auth/sso`)
         .post(CONTROLLER.sso);

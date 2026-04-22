@@ -558,15 +558,16 @@ const exhibitsAddFormModule = (function () {
 
             container.innerHTML = '';
 
-            const token = authModule.get_user_token();
+            // Same-origin thumbnail requests authenticate via the HttpOnly
+            // exhibits_token cookie; no JWT is embedded in <img src>.
             let thumb_url = '';
 
             if (media.ingest_method === 'kaltura' && media.kaltura_thumbnail_url) {
                 thumb_url = media.kaltura_thumbnail_url;
             } else if (media.ingest_method === 'repository' && media.repo_uuid) {
-                thumb_url = `${APP_PATH}/api/v1/media/library/repo/thumbnail?uuid=${encodeURIComponent(media.repo_uuid)}&token=${encodeURIComponent(token)}`;
+                thumb_url = `${APP_PATH}/api/v1/media/library/repo/thumbnail?uuid=${encodeURIComponent(media.repo_uuid)}`;
             } else if (media.uuid && media.thumbnail_path) {
-                thumb_url = `${APP_PATH}/api/v1/media/library/thumbnail/${media.uuid}?token=${encodeURIComponent(token)}`;
+                thumb_url = `${APP_PATH}/api/v1/media/library/thumbnail/${media.uuid}`;
             }
 
             if (thumb_url) {

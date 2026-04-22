@@ -898,11 +898,11 @@ const authModule = (function () {
                 child_id: child_id || null
             };
 
-            // Validate payload can be serialized
-            let serialized_payload;
+            // Validate payload can be serialized. The serialized body is
+            // not logged — it contains permissions, record_type, parent_id,
+            // and child_id, which should not appear in the browser console.
             try {
-                serialized_payload = JSON.stringify(request_payload);
-                console.log(serialized_payload);
+                JSON.stringify(request_payload);
             } catch (stringify_error) {
                 console.error('Failed to serialize permission request:', stringify_error.message);
                 show_error_message('Failed to process permission request.');

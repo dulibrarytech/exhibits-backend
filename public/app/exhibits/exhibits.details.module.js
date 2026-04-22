@@ -311,16 +311,16 @@ const exhibitsDetailsModule = (function () {
 
             if (!binding) return;
 
-            // Build thumbnail URL based on ingest method
-            const token = authModule.get_user_token();
+            // Same-origin thumbnail requests authenticate via the HttpOnly
+            // exhibits_token cookie; no JWT is embedded in <img src>.
             let thumb_url = '';
 
             if (binding.ingest_method === 'kaltura' && binding.kaltura_thumbnail_url) {
                 thumb_url = binding.kaltura_thumbnail_url;
             } else if (binding.ingest_method === 'repository' && binding.repo_uuid) {
-                thumb_url = `${APP_PATH}/api/v1/media/library/repo/thumbnail?uuid=${encodeURIComponent(binding.repo_uuid)}&token=${encodeURIComponent(token)}`;
+                thumb_url = `${APP_PATH}/api/v1/media/library/repo/thumbnail?uuid=${encodeURIComponent(binding.repo_uuid)}`;
             } else if (binding.media_uuid && binding.thumbnail_path) {
-                thumb_url = `${APP_PATH}/api/v1/media/library/thumbnail/${binding.media_uuid}?token=${encodeURIComponent(token)}`;
+                thumb_url = `${APP_PATH}/api/v1/media/library/thumbnail/${binding.media_uuid}`;
             }
 
             if (thumb_url) {

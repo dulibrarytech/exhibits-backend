@@ -358,8 +358,10 @@ const exhibitsStylesFormModule = (function () {
 
             helperModule.setup_auto_unlock(record);
 
-            // Set exhibit title in the page header
-            set_text_content('#exhibit-title', helperModule.unescape(record.title || ''));
+            // Set exhibit title in the page header. Strip HTML before
+            // textContent render so rich-text markup (e.g. <b>…</b>) saved
+            // on the record does not show as literal tags.
+            set_text_content('#exhibit-title', helperModule.strip_html(helperModule.unescape(record.title || '')));
 
             // Populate style fields from the record
             if (record.styles) {

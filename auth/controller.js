@@ -32,8 +32,32 @@ exports.get_auth_landing = function (req, res) {
         appname: CONFIG.app_name,
         appversion: CONFIG.app_version,
         organization: CONFIG.organization,
-        build_version: CONFIG.build_version
+        build_version: CONFIG.build_version,
+        // Server-side flag replaces the old client-side hostname check so
+        // no internal hostnames need to appear in browser-shipped JS.
+        is_dev_env: process.env.NODE_ENV !== 'production'
     });
+};
+
+/**
+ * Starts the SSO round-trip for the Authenticate button on the landing
+ * page. Always redirects to the SSO URL regardless of current auth state;
+ * the SSO callback issues a fresh session cookie on return.
+ */
+exports.initiate_login = function (req, res) {
+
+    try {
+
+        const encoded_callback = encodeURIComponent(CONFIG.sso_response_url);
+        const redirect_url = CONFIG.sso_url + '?app_url=' + encoded_callback;
+        res.redirect(redirect_url);
+
+    } catch (error) {
+        LOGGER.module().error(
+            `ERROR: [/auth/controller (initiate_login)] unable to redirect to SSO: ${error.message}`
+        );
+        res.status(500).send('Unable to start authentication.');
+    }
 };
 
 exports.sso = async function (req, res) {
@@ -101,6 +125,11 @@ exports.sso = async function (req, res) {
             );
             return res.status(500).json({ message: 'Authentication failed.' });
         }
+
+        // Primary auth transport: HttpOnly cookie read by TOKEN.verify /
+        // TOKEN.verify_with_query. Preview windows and media <img> requests
+        // now authenticate via this cookie instead of a URL query string.
+        TOKEN.set_auth_cookie(res, token);
 
         // Successful authentication - redirect with token
         const redirect_url = `${APP_PATH}/exhibits?t=${encoded_token}&id=${auth_result.data}`;
