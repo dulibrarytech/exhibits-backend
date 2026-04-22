@@ -525,99 +525,149 @@ const exhibitsModule = (function () {
         const uuid = exhibit.uuid;
         const encoded_uuid = encodeURIComponent(uuid);
         const title = helperModule.strip_html(helperModule.unescape(exhibit.title));
-        const escaped_title = (title || 'Untitled').replace(/'/g, "\\'").replace(/"/g, '&quot;');
 
-        td.innerHTML = build_exhibit_actions_dropdown_html(uuid, encoded_uuid, escaped_title, exhibit.is_published);
+        td.appendChild(build_exhibit_actions_dropdown(uuid, encoded_uuid, title || 'Untitled', exhibit.is_published));
 
         return td;
     }
 
     /**
-     * Build dropdown HTML for exhibit actions
-     * @param {string} uuid - Exhibit UUID
-     * @param {string} encoded_uuid - URL-encoded UUID
-     * @param {string} escaped_title - HTML-escaped title
+     * Build the exhibit-actions dropdown as a DOM element. DOM construction
+     * (setAttribute + textContent) replaces the former innerHTML template
+     * so server-supplied title text cannot escape into markup.
+     *
+     * @param {string} uuid         - Exhibit UUID
+     * @param {string} encoded_uuid - URL-encoded UUID (used in hrefs)
+     * @param {string} title        - Plain-text title for ARIA labels
      * @param {number} is_published - Publication status (0 or 1)
-     * @returns {string} Dropdown HTML string
+     * @returns {HTMLElement} Dropdown container element
      */
-    function build_exhibit_actions_dropdown_html(uuid, encoded_uuid, escaped_title, is_published) {
+    function build_exhibit_actions_dropdown(uuid, encoded_uuid, title, is_published) {
 
         const app_path = typeof APP_PATH !== 'undefined' ? APP_PATH : '';
+        const display_title = title || 'Untitled';
 
-        // Build state-dependent actions
-        let edit_action_html;
-        let delete_action_html;
+        const make_item = (class_name, href, icon_class, label, options) => {
+
+            const a = document.createElement('a');
+            a.className = class_name;
+            a.href = href;
+            a.style.fontSize = '0.875rem';
+
+            if (options && options.data_uuid) {
+                a.setAttribute('data-uuid', options.data_uuid);
+            }
+
+            if (options && options.title_attr) {
+                a.title = options.title_attr;
+            }
+
+            if (options && options.disabled) {
+                a.style.pointerEvents = 'none';
+                a.style.opacity = '0.5';
+            }
+
+            const icon = document.createElement('i');
+            icon.className = `${icon_class} mr-2`;
+            icon.setAttribute('aria-hidden', 'true');
+            icon.style.width = '16px';
+            a.appendChild(icon);
+            a.appendChild(document.createTextNode(' ' + label));
+
+            return a;
+        };
+
+        const make_divider = () => {
+            const d = document.createElement('div');
+            d.className = 'dropdown-divider';
+            return d;
+        };
+
+        const dropdown = document.createElement('div');
+        dropdown.className = 'dropdown';
+        dropdown.style.display = 'inline-block';
+        dropdown.style.position = 'relative';
+
+        const toggle = document.createElement('button');
+        toggle.type = 'button';
+        toggle.className = 'btn btn-link p-0 border-0 exhibit-actions-toggle';
+        toggle.style.color = '#6c757d';
+        toggle.style.fontSize = '1.25rem';
+        toggle.style.lineHeight = '1';
+        toggle.style.background = 'none';
+        toggle.setAttribute('data-toggle', 'dropdown');
+        toggle.setAttribute('data-bs-toggle', 'dropdown');
+        toggle.setAttribute('aria-haspopup', 'true');
+        toggle.setAttribute('aria-expanded', 'false');
+        toggle.setAttribute('aria-label', `Actions for ${display_title}`);
+        toggle.title = 'Actions';
+
+        const toggle_icon = document.createElement('i');
+        toggle_icon.className = 'fa fa-ellipsis-v';
+        toggle_icon.setAttribute('aria-hidden', 'true');
+        toggle.appendChild(toggle_icon);
+
+        dropdown.appendChild(toggle);
+
+        const menu = document.createElement('div');
+        menu.className = 'dropdown-menu exhibit-actions-menu';
+        menu.setAttribute('aria-label', `Actions menu for ${display_title}`);
 
         if (is_published === 1) {
-            // Published: show details, disabled delete
-            edit_action_html = `
-                    <a class="dropdown-item" 
-                       href="${app_path}/exhibits/exhibit/details?exhibit_id=${encoded_uuid}"
-                       style="font-size: 0.875rem;">
-                        <i class="fa fa-folder-open mr-2" aria-hidden="true" style="width: 16px;"></i>
-                        Details
-                    </a>`;
-            delete_action_html = `
-                    <a class="dropdown-item text-muted disabled" 
-                       href="#" 
-                       style="font-size: 0.875rem; pointer-events: none; opacity: 0.5;"
-                       title="Can only delete if unpublished">
-                        <i class="fa fa-trash mr-2" aria-hidden="true" style="width: 16px;"></i>
-                        Delete
-                    </a>`;
+            menu.appendChild(make_item(
+                'dropdown-item',
+                `${app_path}/exhibits/exhibit/details?exhibit_id=${encoded_uuid}`,
+                'fa fa-folder-open',
+                'Details'
+            ));
         } else {
-            // Unpublished: show edit, active delete
-            edit_action_html = `
-                    <a class="dropdown-item" 
-                       href="${app_path}/exhibits/exhibit/edit?exhibit_id=${encoded_uuid}"
-                       style="font-size: 0.875rem;">
-                        <i class="fa fa-edit mr-2" aria-hidden="true" style="width: 16px;"></i>
-                        Edit
-                    </a>`;
-            delete_action_html = `
-                    <a class="dropdown-item text-danger" 
-                       href="${app_path}/exhibits/exhibit/delete?exhibit_id=${encoded_uuid}"
-                       style="font-size: 0.875rem;">
-                        <i class="fa fa-trash mr-2" aria-hidden="true" style="width: 16px;"></i>
-                        Delete
-                    </a>`;
+            menu.appendChild(make_item(
+                'dropdown-item',
+                `${app_path}/exhibits/exhibit/edit?exhibit_id=${encoded_uuid}`,
+                'fa fa-edit',
+                'Edit'
+            ));
         }
 
-        return `
-            <div class="dropdown" style="display: inline-block; position: relative;">
-                <button type="button" 
-                        class="btn btn-link p-0 border-0 exhibit-actions-toggle" 
-                        style="color: #6c757d; font-size: 1.25rem; line-height: 1; background: none;"
-                        data-toggle="dropdown"
-                        data-bs-toggle="dropdown"
-                        aria-haspopup="true"
-                        aria-expanded="false"
-                        aria-label="Actions for ${escaped_title}"
-                        title="Actions">
-                    <i class="fa fa-ellipsis-v" aria-hidden="true"></i>
-                </button>
-                <div class="dropdown-menu exhibit-actions-menu" aria-label="Actions menu for ${escaped_title}">
-                    ${edit_action_html}
-                    <div class="dropdown-divider"></div>
-                    <a class="dropdown-item btn-preview-exhibit" 
-                       href="#" 
-                       data-uuid="${uuid}"
-                       style="font-size: 0.875rem;">
-                        <i class="fa fa-eye mr-2" aria-hidden="true" style="width: 16px;"></i>
-                        Preview
-                    </a>
-                    <a class="dropdown-item btn-share-exhibit" 
-                       href="#" 
-                       data-uuid="${uuid}"
-                       style="font-size: 0.875rem;">
-                        <i class="fa fa-share-alt mr-2" aria-hidden="true" style="width: 16px;"></i>
-                        Share
-                    </a>
-                    <div class="dropdown-divider"></div>
-                    ${delete_action_html}
-                </div>
-            </div>
-        `;
+        menu.appendChild(make_divider());
+
+        menu.appendChild(make_item(
+            'dropdown-item btn-preview-exhibit',
+            '#',
+            'fa fa-eye',
+            'Preview',
+            { data_uuid: uuid }
+        ));
+
+        menu.appendChild(make_item(
+            'dropdown-item btn-share-exhibit',
+            '#',
+            'fa fa-share-alt',
+            'Share',
+            { data_uuid: uuid }
+        ));
+
+        menu.appendChild(make_divider());
+
+        if (is_published === 1) {
+            menu.appendChild(make_item(
+                'dropdown-item text-muted disabled',
+                '#',
+                'fa fa-trash',
+                'Delete',
+                { disabled: true, title_attr: 'Can only delete if unpublished' }
+            ));
+        } else {
+            menu.appendChild(make_item(
+                'dropdown-item text-danger',
+                `${app_path}/exhibits/exhibit/delete?exhibit_id=${encoded_uuid}`,
+                'fa fa-trash',
+                'Delete'
+            ));
+        }
+
+        dropdown.appendChild(menu);
+        return dropdown;
     }
 
     /**
@@ -1219,10 +1269,12 @@ const exhibitsModule = (function () {
         }
 
         const encoded_uuid = encodeURIComponent(clean_uuid);
-        const escaped_title = 'Exhibit';
 
-        // Rebuild dropdown with new published state
-        actions_td.innerHTML = build_exhibit_actions_dropdown_html(clean_uuid, encoded_uuid, escaped_title, state_config.is_published);
+        // Rebuild dropdown with new published state using safe DOM construction.
+        while (actions_td.firstChild) {
+            actions_td.removeChild(actions_td.firstChild);
+        }
+        actions_td.appendChild(build_exhibit_actions_dropdown(clean_uuid, encoded_uuid, 'Exhibit', state_config.is_published));
 
         // Re-initialize dropdown handlers for this new dropdown
         setup_exhibit_action_handlers();
