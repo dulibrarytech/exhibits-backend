@@ -631,7 +631,7 @@ const exhibitsCommonFormModule = (function () {
                 helperModule.show_form();
             }
 
-            console.log('Module initialized successfully');
+            console.debug('Module initialized successfully');
             return true;
 
         } catch (error) {

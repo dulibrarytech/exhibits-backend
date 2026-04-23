@@ -1405,7 +1405,7 @@ const mediaLibraryModule = (function() {
 
             // Display success message if records exist
             if (records.length > 0) {
-                console.log(`Media library loaded: ${records.length} record(s)`);
+                console.debug(`Media library loaded: ${records.length} record(s)`);
             }
 
             // Register the exhibit custom search filter (idempotent)
@@ -1510,7 +1510,7 @@ const mediaLibraryModule = (function() {
         // Setup tab switching handler for lazy initialization
         obj.setup_upload_tab_handler();
 
-        console.log('Dropzone and uploads module initialized successfully');
+        console.debug('Dropzone and uploads module initialized successfully');
         return true;
     };
 
@@ -1563,7 +1563,7 @@ const mediaLibraryModule = (function() {
             helperModule.show_form();
             navModule.set_logout_link();
 
-            console.log('Media library module initialized');
+            console.debug('Media library module initialized');
 
         } catch (error) {
             console.error('Error initializing media library module:', error);

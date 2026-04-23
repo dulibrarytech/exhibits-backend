@@ -27,6 +27,40 @@ const navModule = (function () {
     // ==================== COLLAPSED CENTERING ====================
 
     /**
+     * Sidebar element references, cached on first successful lookup. The
+     * sidebar structure is static after DOMContentLoaded, so re-querying
+     * it on every resize tick and every sidebar toggle is wasted work.
+     * get_nav_elements() populates this once and reuses it thereafter.
+     */
+    let nav_elements_cache = null;
+
+    function get_nav_elements() {
+
+        if (nav_elements_cache !== null) {
+            return nav_elements_cache;
+        }
+
+        const panel = document.getElementById('left-panel');
+
+        if (!panel) {
+            return null;
+        }
+
+        nav_elements_cache = {
+            panel: panel,
+            navbar: panel.querySelector('.navbar'),
+            main_menu: panel.querySelector('#main-menu'),
+            nav_ul: panel.querySelector('#main-menu .navbar-nav'),
+            items: panel.querySelectorAll('#main-menu .navbar-nav > li'),
+            links: panel.querySelectorAll('#main-menu .navbar-nav > li > a'),
+            icons: panel.querySelectorAll('#main-menu .navbar-nav > li > a > .menu-icon'),
+            labels: panel.querySelectorAll('#main-menu .nav-label')
+        };
+
+        return nav_elements_cache;
+    }
+
+    /**
      * Determines if the sidebar is currently in collapsed (83px icon-only) state.
      *
      * The sidebar can be collapsed in TWO ways:
@@ -41,14 +75,14 @@ const navModule = (function () {
      */
     function is_sidebar_collapsed() {
 
-        const panel = document.getElementById('left-panel');
+        const els = get_nav_elements();
 
-        if (!panel) {
+        if (!els) {
             return false;
         }
 
         // 83px is the theme's collapsed width in both .open and @media modes
-        return panel.offsetWidth <= 83;
+        return els.panel.offsetWidth <= 83;
     }
 
     /**
@@ -61,19 +95,11 @@ const navModule = (function () {
      */
     function apply_collapsed_centering(collapsed) {
 
-        const panel = document.getElementById('left-panel');
+        const els = get_nav_elements();
 
-        if (!panel) {
+        if (!els) {
             return;
         }
-
-        const navbar = panel.querySelector('.navbar');
-        const main_menu = panel.querySelector('#main-menu');
-        const nav_ul = panel.querySelector('#main-menu .navbar-nav');
-        const items = panel.querySelectorAll('#main-menu .navbar-nav > li');
-        const links = panel.querySelectorAll('#main-menu .navbar-nav > li > a');
-        const icons = panel.querySelectorAll('#main-menu .navbar-nav > li > a > .menu-icon');
-        const labels = panel.querySelectorAll('#main-menu .nav-label');
 
         if (collapsed) {
 
@@ -82,12 +108,12 @@ const navModule = (function () {
             // shrink-wraps the nav to content width (~20px icon).
             // Without full-width containers, centering within the <a>
             // has no effect — the whole chain is flush-left in the 83px sidebar.
-            if (navbar) {
-                navbar.style.cssText = 'display:block;width:100%;';
+            if (els.navbar) {
+                els.navbar.style.cssText = 'display:block;width:100%;';
             }
 
-            if (main_menu) {
-                main_menu.style.cssText = 'display:block;width:100%;';
+            if (els.main_menu) {
+                els.main_menu.style.cssText = 'display:block;width:100%;';
             }
 
             // Force vertical stacking — Bootstrap's .navbar-expand-sm sets
@@ -95,24 +121,24 @@ const navModule = (function () {
             // <li> only as wide as its icon (~20px) and left-aligned within
             // the row.  Switching to column + width:100% ensures each <li>
             // spans the full 83px sidebar width so centering works.
-            if (nav_ul) {
-                nav_ul.style.cssText = 'flex-direction:column;width:100%;';
+            if (els.nav_ul) {
+                els.nav_ul.style.cssText = 'flex-direction:column;width:100%;';
             }
 
-            for (let i = 0; i < items.length; i++) {
-                items[i].style.cssText = 'padding:0;width:100%;';
+            for (let i = 0; i < els.items.length; i++) {
+                els.items[i].style.cssText = 'padding:0;width:100%;';
             }
 
-            for (let j = 0; j < links.length; j++) {
-                links[j].style.cssText = 'display:flex;justify-content:center;align-items:center;max-width:none;padding:12px 0;font-size:14px;width:100%;';
+            for (let j = 0; j < els.links.length; j++) {
+                els.links[j].style.cssText = 'display:flex;justify-content:center;align-items:center;max-width:none;padding:12px 0;font-size:14px;width:100%;';
             }
 
-            for (let k = 0; k < icons.length; k++) {
-                icons[k].style.cssText = 'float:none;display:inline-block;width:auto;margin:0;font-size:20px;';
+            for (let k = 0; k < els.icons.length; k++) {
+                els.icons[k].style.cssText = 'float:none;display:inline-block;width:auto;margin:0;font-size:20px;';
             }
 
-            for (let m = 0; m < labels.length; m++) {
-                labels[m].style.display = 'none';
+            for (let m = 0; m < els.labels.length; m++) {
+                els.labels[m].style.display = 'none';
             }
 
         } else {
@@ -121,32 +147,32 @@ const navModule = (function () {
             // .menu-icon with a large fixed width (~70px gap) and no
             // white-space control, causing labels to sit far from icons
             // and wrap to a second line.
-            if (navbar) {
-                navbar.style.cssText = 'display:block;width:100%;';
+            if (els.navbar) {
+                els.navbar.style.cssText = 'display:block;width:100%;';
             }
 
-            if (main_menu) {
-                main_menu.style.cssText = 'display:block;width:100%;';
+            if (els.main_menu) {
+                els.main_menu.style.cssText = 'display:block;width:100%;';
             }
 
-            if (nav_ul) {
-                nav_ul.style.cssText = 'flex-direction:column;width:100%;';
+            if (els.nav_ul) {
+                els.nav_ul.style.cssText = 'flex-direction:column;width:100%;';
             }
 
-            for (let i = 0; i < items.length; i++) {
-                items[i].style.cssText = 'padding:0;width:100%;';
+            for (let i = 0; i < els.items.length; i++) {
+                els.items[i].style.cssText = 'padding:0;width:100%;';
             }
 
-            for (let j = 0; j < links.length; j++) {
-                links[j].style.cssText = 'display:flex;align-items:center;max-width:none;padding:12px 15px;font-size:14px;width:100%;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;';
+            for (let j = 0; j < els.links.length; j++) {
+                els.links[j].style.cssText = 'display:flex;align-items:center;max-width:none;padding:12px 15px;font-size:14px;width:100%;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;';
             }
 
-            for (let k = 0; k < icons.length; k++) {
-                icons[k].style.cssText = 'float:none;display:inline-flex;flex-shrink:0;width:auto;margin:0 10px 0 0;font-size:20px;';
+            for (let k = 0; k < els.icons.length; k++) {
+                els.icons[k].style.cssText = 'float:none;display:inline-flex;flex-shrink:0;width:auto;margin:0 10px 0 0;font-size:20px;';
             }
 
-            for (let m = 0; m < labels.length; m++) {
-                labels[m].style.cssText = 'display:inline;white-space:nowrap;';
+            for (let m = 0; m < els.labels.length; m++) {
+                els.labels[m].style.cssText = 'display:inline;white-space:nowrap;';
             }
         }
     }
@@ -387,7 +413,7 @@ const navModule = (function () {
             const el = document.getElementById(entries[i][0]);
 
             if (el === null) {
-                console.log('WARN: nav menu link element not found: #' + entries[i][0]);
+                console.debug('WARN: nav menu link element not found: #' + entries[i][0]);
                 continue;
             }
 
@@ -444,7 +470,7 @@ const navModule = (function () {
             const el = document.getElementById(entries[i][0]);
 
             if (el === null) {
-                console.log('WARN: nav menu link element not found: #' + entries[i][0]);
+                console.debug('WARN: nav menu link element not found: #' + entries[i][0]);
                 continue;
             }
 
@@ -471,7 +497,7 @@ const navModule = (function () {
             const el = document.getElementById(entries[i][0]);
 
             if (el === null) {
-                console.log('WARN: nav menu link element not found: #' + entries[i][0]);
+                console.debug('WARN: nav menu link element not found: #' + entries[i][0]);
                 continue;
             }
 

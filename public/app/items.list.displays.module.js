@@ -348,14 +348,7 @@ const itemsListDisplayModule = (function() {
                 }
                 // ── Legacy: repository items ──
                 else if (item.is_repo_item === 1 && item.media) {
-                    const repo_record = await helperMediaModule.get_repo_item_data(item.media);
-                    if (repo_record) {
-                        if (!title || title.length === 0) {
-                            title = repo_record.title;
-                        }
-                        const thumbnail_url = helperMediaModule.render_repo_thumbnail(repo_record.thumbnail.data);
-                        thumbnail_element = create_thumbnail_image(thumbnail_url, item.uuid);
-                    }
+                    thumbnail_element = create_thumbnail_image(get_thumbnail_url(item.item_type), `${item.item_type} thumbnail`);
                 }
                 // ── Legacy: Kaltura items ──
                 else if (item.is_kaltura_item === 1) {
@@ -683,14 +676,7 @@ const itemsListDisplayModule = (function() {
                 }
                 // ── Legacy: repository items ──
                 else if (item.is_repo_item === 1 && item.media) {
-                    const repo_record = await helperMediaModule.get_repo_item_data(item.media);
-                    if (repo_record) {
-                        if (!title) {
-                            title = repo_record.title;
-                        }
-                        const thumbnail_url = helperMediaModule.render_repo_thumbnail(repo_record.thumbnail.data);
-                        thumbnail_element = create_thumbnail_image(thumbnail_url, 'Repository item thumbnail');
-                    }
+                    thumbnail_element = create_thumbnail_image(get_thumbnail_url(item.item_type), 'Repository item thumbnail');
                 }
                 // ── Legacy: Kaltura items ──
                 else if (item.is_kaltura_item === 1) {
@@ -942,14 +928,7 @@ const itemsListDisplayModule = (function() {
                 }
                 // ── Legacy: repository items ──
                 else if (item.is_repo_item === 1 && item.media) {
-                    const repo_record = await helperMediaModule.get_repo_item_data(item.media);
-                    if (repo_record) {
-                        if (!title) {
-                            title = repo_record.title;
-                        }
-                        const thumbnail_url = helperMediaModule.render_repo_thumbnail(repo_record.thumbnail.data);
-                        thumbnail_element = create_thumbnail_image(thumbnail_url, 'Repository item thumbnail');
-                    }
+                    thumbnail_element = create_thumbnail_image(get_thumbnail_url(item.item_type), 'Repository item thumbnail');
                 }
                 // ── Legacy: Kaltura items ──
                 else if (item.is_kaltura_item === 1) {
@@ -1343,7 +1322,7 @@ const itemsListDisplayModule = (function() {
      * Initialize module
      */
     obj.init = function() {
-        console.log('Items list displays module initialized');
+        console.debug('Items list displays module initialized');
         return true;
     };
 

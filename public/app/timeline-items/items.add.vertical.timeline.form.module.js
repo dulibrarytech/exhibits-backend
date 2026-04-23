@@ -28,13 +28,13 @@ const itemsAddVerticalTimelineFormModule = (function () {
         // CRITICAL: Check if we're in edit mode first
         const item_id = helperModule.get_parameter_by_name('item_id');
         if (item_id) {
-            console.log('🔴 Item ID exists - already in edit mode, preventing duplicate creation');
-            console.log('Current URL:', window.location.href);
-            console.log('item_id:', item_id);
+            console.debug('🔴 Item ID exists - already in edit mode, preventing duplicate creation');
+            console.debug('Current URL:', window.location.href);
+            console.debug('item_id:', item_id);
 
             // Call update instead if it exists
             if (obj.update_timeline_record && typeof obj.update_timeline_record === 'function') {
-                console.log('Redirecting to update function...');
+                console.debug('Redirecting to update function...');
                 return await obj.update_timeline_record();
             }
 
@@ -44,11 +44,11 @@ const itemsAddVerticalTimelineFormModule = (function () {
             return false;
         }
 
-        console.log('🟢 CREATE FUNCTION CALLED - No item_id, proceeding with creation');
+        console.debug('🟢 CREATE FUNCTION CALLED - No item_id, proceeding with creation');
 
         // Prevent duplicate submissions
         if (this._is_creating_timeline) {
-            console.log('Already creating, preventing duplicate submission');
+            console.debug('Already creating, preventing duplicate submission');
             return false;
         }
 
@@ -142,7 +142,7 @@ const itemsAddVerticalTimelineFormModule = (function () {
                 throw new Error('Server did not return a valid timeline ID');
             }
 
-            console.log('✅ Timeline record created successfully, ID:', new_timeline_id);
+            console.debug('✅ Timeline record created successfully, ID:', new_timeline_id);
 
             // Show success message
             display_status_message(message_element, 'success', 'Timeline record created successfully. Redirecting to edit page...');
@@ -176,9 +176,9 @@ const itemsAddVerticalTimelineFormModule = (function () {
      * Gracefully redirect to timeline edit page (prevents back button to create page)
      */
     function redirect_to_timeline_edit_page(exhibit_id, timeline_id) {
-        console.log('=== REDIRECTING TO TIMELINE EDIT PAGE ===');
-        console.log('exhibit_id:', exhibit_id);
-        console.log('timeline_id:', timeline_id);
+        console.debug('=== REDIRECTING TO TIMELINE EDIT PAGE ===');
+        console.debug('exhibit_id:', exhibit_id);
+        console.debug('timeline_id:', timeline_id);
 
         const params = new URLSearchParams({
             exhibit_id: exhibit_id,
@@ -187,8 +187,8 @@ const itemsAddVerticalTimelineFormModule = (function () {
 
         const edit_url = `${APP_PATH}/items/vertical-timeline/edit?${params.toString()}`;
 
-        console.log('Redirecting to:', edit_url);
-        console.log('Note: Back button will NOT return to create page');
+        console.debug('Redirecting to:', edit_url);
+        console.debug('Note: Back button will NOT return to create page');
 
         // Use window.location.replace() to prevent back button to create page
         // This replaces the current history entry instead of adding a new one
@@ -578,7 +578,7 @@ const itemsAddVerticalTimelineFormModule = (function () {
             display_message(message_element, 'success', 'Timeline record created successfully');
 
             // Log timeline ID for debugging
-            console.log('Created timeline ID:', new_timeline_id);
+            console.debug('Created timeline ID:', new_timeline_id);
 
             // Transition to edit mode without page reload
             await transition_to_edit_mode(exhibit_id, new_timeline_id);

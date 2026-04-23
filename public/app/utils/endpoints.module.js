@@ -16,9 +16,12 @@ const endpointsModule = (function() {
     let obj = {};
 
     /**
-     * Check if localStorage is available
+     * Probe localStorage once at module init. Every get/set call previously
+     * performed a setItem/removeItem round-trip just to confirm availability;
+     * on a page load with ~dozens of endpoint reads, that added up. The
+     * probe runs once here and the boolean is reused.
      */
-    const is_local_storage_available = () => {
+    const LOCAL_STORAGE_AVAILABLE = (() => {
         try {
             const test_key = '__localStorage_test__';
             window.localStorage.setItem(test_key, 'test');
@@ -28,7 +31,9 @@ const endpointsModule = (function() {
             console.error('localStorage not available:', error);
             return false;
         }
-    };
+    })();
+
+    const is_local_storage_available = () => LOCAL_STORAGE_AVAILABLE;
 
     /**
      * Safely get item from localStorage with JSON parsing
@@ -226,7 +231,7 @@ const endpointsModule = (function() {
             if (users_saved && exhibits_saved && indexer_saved && media_library_saved) {
                 // Clear cache to force reload
                 clear_cache();
-                console.log('Endpoints saved successfully');
+                console.debug('Endpoints saved successfully');
                 return true;
             } else {
                 console.error('Failed to save one or more endpoint types');
@@ -304,7 +309,7 @@ const endpointsModule = (function() {
             window.localStorage.removeItem('exhibits_endpoints_media_library');
 
             clear_cache();
-            console.log('Endpoints cleared successfully');
+            console.debug('Endpoints cleared successfully');
             return true;
 
         } catch (error) {
@@ -392,7 +397,7 @@ const endpointsModule = (function() {
      */
     obj.refresh_cache = function() {
         clear_cache();
-        console.log('Endpoints cache cleared');
+        console.debug('Endpoints cache cleared');
     };
 
     return obj;

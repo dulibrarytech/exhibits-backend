@@ -1731,11 +1731,19 @@ const exhibitsModule = (function () {
     }
 
     /**
-     * Fallback clipboard copy method for older browsers
+     * Fallback clipboard copy for environments without Clipboard API
+     * (non-secure contexts and very old browsers). Relies on the
+     * deprecated document.execCommand('copy'), which may be removed
+     * from future browser versions — when the minimum supported browser
+     * is confirmed to always provide navigator.clipboard in the contexts
+     * this app runs in, this whole function can be deleted.
      * @param {string} text - Text to copy
      * @throws {Error} - If copy operation fails
      */
     function copy_to_clipboard_fallback(text) {
+
+        console.warn('copy_to_clipboard_fallback: using deprecated document.execCommand("copy") — Clipboard API was unavailable or failed.');
+
         // Create temporary textarea
         const textarea = document.createElement('textarea');
         textarea.value = text;

@@ -664,7 +664,7 @@ const kalturaModalsModule = (function() {
         // Open modal
         helperMediaLibraryModule.show_bootstrap_modal(modal_element);
 
-        console.log('Kaltura media modal opened');
+        console.debug('Kaltura media modal opened');
     };
 
     // ========================================
@@ -824,7 +824,7 @@ const kalturaModalsModule = (function() {
         // Open modal (dismissible)
         helperMediaLibraryModule.show_bootstrap_modal(modal_element, { backdrop: true, keyboard: true });
 
-        console.log('Kaltura player modal opened for entry:', entry_id);
+        console.debug('Kaltura player modal opened for entry:', entry_id);
     };
 
     /**
@@ -1005,7 +1005,7 @@ const kalturaModalsModule = (function() {
      */
     obj.init = function() {
         init_modal_events();
-        console.log('Kaltura modals module initialized');
+        console.debug('Kaltura modals module initialized');
         return true;
     };
 

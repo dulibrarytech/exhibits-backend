@@ -360,7 +360,7 @@ const repoPaginationModule = (function() {
      */
     obj.init = function() {
         obj.reset();
-        console.log('Repo pagination module initialized');
+        console.debug('Repo pagination module initialized');
         return true;
     };
 

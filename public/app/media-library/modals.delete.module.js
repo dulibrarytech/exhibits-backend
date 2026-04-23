@@ -304,7 +304,7 @@ const mediaDeleteModalModule = (function() {
         // Show modal
         helperMediaLibraryModule.show_bootstrap_modal(modal_element);
 
-        console.log('Delete media modal opened for: ' + name);
+        console.debug('Delete media modal opened for: ' + name);
     };
 
     /**

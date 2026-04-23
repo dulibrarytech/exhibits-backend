@@ -1,163 +1,11 @@
+// JS minification has moved to esbuild. See `esbuild.config.js` and the
+// `build:js` npm script — gulp is retained here only for CSS and EJS view
+// minification, which esbuild does not handle.
+
 const gulp = require('gulp');
-const uglify = require('gulp-uglify');
 const htmlmin = require('gulp-htmlmin');
-const rename = require('gulp-rename');
 const cleanCSS = require('gulp-clean-css');
 const concat = require('gulp-concat');
-
-gulp.task('minify-exhibit-modules', function () {
-    return gulp.src([
-        'public/app/exhibits/exhibits.add.form.module.js',
-        'public/app/exhibits/exhibits.common.form.module.js',
-        'public/app/exhibits/exhibits.details.module.js',
-        'public/app/exhibits/exhibits.edit.form.module.js',
-        'public/app/exhibits/exhibits.module.js',
-        'public/app/exhibits/exhibits.styles.module.js',
-        'public/app/exhibits/exhibits.styles.form.module.js'
-    ])
-        .pipe(uglify())
-        .on('error', function (err) {
-            console.error('Error in minify-exhibit-modules task:', err.toString());
-            this.emit('end'); // End the task to prevent Gulp from crashing
-        })
-        .pipe(rename({suffix: '.min'}))
-        .pipe(gulp.dest('public/app/dist'));
-});
-
-gulp.task('minify-grid-items-modules', function () {
-    return gulp.src([
-        'public/app/grid-items/items.add.grid.form.module.js',
-        'public/app/grid-items/items.add.grid.item.form.module.js',
-        'public/app/grid-items/items.common.grid.form.module.js',
-        'public/app/grid-items/items.common.grid.item.form.module.js',
-        'public/app/grid-items/items.details.grid.module.js',
-        'public/app/grid-items/items.details.grid.item.module.js',
-        'public/app/grid-items/items.edit.grid.form.module.js',
-        'public/app/grid-items/items.edit.grid.item.form.module.js',
-        'public/app/grid-items/items.grid.module.js'
-    ])
-        .pipe(uglify())
-        .on('error', function (err) {
-            console.error('Error in minify-grid-items-modules task:', err.toString());
-            this.emit('end'); // End the task to prevent Gulp from crashing
-        })
-        .pipe(rename({suffix: '.min'}))
-        .pipe(gulp.dest('public/app/dist'));
-});
-
-gulp.task('minify-heading-items-modules', function () {
-    return gulp.src([
-        'public/app/heading-items/items.add.heading.form.module.js',
-        'public/app/heading-items/items.common.heading.form.module.js',
-        'public/app/heading-items/items.details.heading.item.module.js',
-        'public/app/heading-items/items.edit.heading.form.module.js'
-    ])
-        .pipe(uglify())
-        .on('error', function (err) {
-            console.error('Error in minify-heading-items-modules task:', err.toString());
-            this.emit('end'); // End the task to prevent Gulp from crashing
-        })
-        .pipe(rename({suffix: '.min'}))
-        .pipe(gulp.dest('public/app/dist'));
-});
-
-gulp.task('minify-standard-items-modules', function () {
-    return gulp.src([
-        'public/app/standard-items/items.add.standard.item.form.module.js',
-        'public/app/standard-items/items.common.standard.item.form.module.js',
-        'public/app/standard-items/items.details.standard.item.module.js',
-        'public/app/standard-items/items.edit.standard.item.form.module.js'
-    ])
-        .pipe(uglify())
-        .on('error', function (err) {
-            console.error('Error in minify-standard-items-modules task:', err.toString());
-            this.emit('end'); // End the task to prevent Gulp from crashing
-        })
-        .pipe(rename({suffix: '.min'}))
-        .pipe(gulp.dest('public/app/dist'));
-});
-
-gulp.task('minify-timeline-items-modules', function () {
-    return gulp.src([
-        'public/app/timeline-items/items.add.vertical.timeline.form.module.js',
-        'public/app/timeline-items/items.add.vertical.timeline.item.form.module.js',
-        'public/app/timeline-items/items.common.vertical.timeline.form.module.js',
-        'public/app/timeline-items/items.common.vertical.timeline.item.form.module.js',
-        'public/app/timeline-items/items.edit.vertical.timeline.form.module.js',
-        'public/app/timeline-items/items.edit.vertical.timeline.item.form.module.js',
-        'public/app/timeline-items/items.details.vertical.timeline.module.js',
-        'public/app/timeline-items/items.details.vertical.timeline.item.module.js',
-        'public/app/timeline-items/items.timeline.module.js'
-    ])
-        .pipe(uglify())
-        .on('error', function (err) {
-            console.error('Error in minify-timeline-items-modules task:', err.toString());
-            this.emit('end'); // End the task to prevent Gulp from crashing
-        })
-        .pipe(rename({suffix: '.min'}))
-        .pipe(gulp.dest('public/app/dist'));
-});
-
-gulp.task('minify-utils-modules', function () {
-    return gulp.src([
-        'public/app/utils/auth.module.js',
-        'public/app/utils/dom.module.js',
-        'public/app/utils/endpoints.module.js',
-        'public/app/utils/helper.module.js',
-        'public/app/utils/http.module.js',
-        'public/app/utils/uploads.module.js',
-        'public/app/utils/media.picker.module.js',
-        'public/app/utils/nav.module.js'
-    ])
-        .pipe(uglify())
-        .on('error', function (err) {
-            console.error('Error in minify-utils-modules task:', err.toString());
-            this.emit('end'); // End the task to prevent Gulp from crashing
-        })
-        .pipe(rename({suffix: '.min'}))
-        .pipe(gulp.dest('public/app/dist'));
-});
-
-gulp.task('minify-modules', function () {
-    return gulp.src([
-        'public/app/home.module.js',
-        'public/app/items.list.displays.module.js',
-        'public/app/items.module.js',
-        'public/app/recycle.module.js',
-        'public/app/user.module.js'
-    ])
-        .pipe(uglify())
-        .on('error', function (err) {
-            console.error('Error in minify-modules task:', err.toString());
-            this.emit('end'); // End the task to prevent Gulp from crashing
-        })
-        .pipe(rename({suffix: '.min'}))
-        .pipe(gulp.dest('public/app/dist'));
-});
-
-gulp.task('minify-media-library-modules', function () {
-    return gulp.src([
-        'public/app/media-library/helper.media.library.module.js',
-        'public/app/media-library/helper.repo.subjects.module.js',
-        'public/app/media-library/kaltura.service.module.js',
-        'public/app/media-library/media.library.module.js',
-        'public/app/media-library/modals.delete.module.js',
-        'public/app/media-library/modals.edit.module.js',
-        'public/app/media-library/modals.kaltura.module.js',
-        'public/app/media-library/modals.repo.module.js',
-        'public/app/media-library/modals.upload.module.js',
-        'public/app/media-library/repo.pagination.module.js',
-        'public/app/media-library/repo.service.module.js',
-        'public/app/media-library/uploads.module.js'
-    ])
-        .pipe(uglify())
-        .on('error', function (err) {
-            console.error('Error in minify-media-library-modules task:', err.toString());
-            this.emit('end'); // End the task to prevent Gulp from crashing
-        })
-        .pipe(rename({suffix: '.min'}))
-        .pipe(gulp.dest('public/app/dist'));
-});
 
 gulp.task('minify-css', function () {
     return gulp.src([
@@ -306,14 +154,6 @@ gulp.task('minify-media-library-partial-views', function () {
 });
 
 gulp.task('default', gulp.parallel(
-    'minify-exhibit-modules',
-    'minify-grid-items-modules',
-    'minify-heading-items-modules',
-    'minify-standard-items-modules',
-    'minify-timeline-items-modules',
-    'minify-utils-modules',
-    'minify-modules',
-    'minify-media-library-modules',
     'minify-css',
     'minify-exhibit-views',
     'minify-exhibit-partial-views',

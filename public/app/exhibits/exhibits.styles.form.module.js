@@ -349,14 +349,14 @@ const exhibitsStylesFormModule = (function () {
             cached_record = record;
 
             // Record locking
-            await helperModule.check_if_locked(record, '#exhibit-submit-card');
+            await lockModule.check_if_locked(record, '#exhibit-submit-card');
 
             if (is_locked_by_other_user(record)) {
                 const is_admin = await is_user_administrator();
                 disable_form_fields(is_admin);
             }
 
-            helperModule.setup_auto_unlock(record);
+            lockModule.setup_auto_unlock(record);
 
             // Set exhibit title in the page header. Strip HTML before
             // textContent render so rich-text markup (e.g. <b>…</b>) saved
@@ -508,7 +508,7 @@ const exhibitsStylesFormModule = (function () {
             // Re-fetch to refresh cache and confirm round-trip
             try {
                 await display_styles_record();
-                console.log('Styles form re-rendered with updated data');
+                console.debug('Styles form re-rendered with updated data');
             } catch (render_error) {
                 console.error('Error re-rendering styles form:', render_error);
                 show_message('Styles updated, but form refresh failed. Please reload the page.', 'warning', 'fa-exclamation');
@@ -615,7 +615,7 @@ const exhibitsStylesFormModule = (function () {
             // Load and display styles
             await display_styles_record();
 
-            console.log('Styles form module initialized successfully');
+            console.debug('Styles form module initialized successfully');
             return true;
 
         } catch (error) {

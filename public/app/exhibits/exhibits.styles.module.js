@@ -491,7 +491,7 @@ const exhibitsStylesModule = (function () {
                 }
             }
 
-            console.log('Styles module initialized: ' + synced_count + ' color pickers synced, ' + failed_count + ' failed');
+            console.debug('Styles module initialized: ' + synced_count + ' color pickers synced, ' + failed_count + ' failed');
             return true;
 
         } catch (error) {

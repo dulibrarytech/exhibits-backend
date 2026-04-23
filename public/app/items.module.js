@@ -338,7 +338,7 @@ const itemsModule = (function() {
 
             // Handle row reordering
             ITEM_LIST.on('row-reordered', async (e, reordered_items) => {
-                await helperModule.reorder_items(e, reordered_items);
+                await reorderModule.reorder_items(e, reordered_items);
             });
 
             // Use event delegation for publish/suppress buttons (vanilla JS)
@@ -994,7 +994,7 @@ const itemsModule = (function() {
             navModule.set_item_nav_menu_links();
             // navModule.set_logout_link();
 
-            console.log('Items module initialized');
+            console.debug('Items module initialized');
 
         } catch (error) {
             console.error('Error initializing items module:', error);

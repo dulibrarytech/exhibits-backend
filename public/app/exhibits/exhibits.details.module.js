@@ -632,7 +632,7 @@ const exhibitsDetailsModule = (function () {
                 element.disabled = true;
             });
 
-            console.log('Module initialized successfully');
+            console.debug('Module initialized successfully');
             return true;
 
         } catch (error) {

@@ -28,13 +28,13 @@ const itemsAddVerticalTimelineItemFormModule = (function () {
         // CRITICAL: Check if we're in edit mode first
         const item_id = helperModule.get_parameter_by_name('item_id');
         if (item_id) {
-            console.log('🔴 Item ID exists - already in edit mode, preventing duplicate creation');
-            console.log('Current URL:', window.location.href);
-            console.log('item_id:', item_id);
+            console.debug('🔴 Item ID exists - already in edit mode, preventing duplicate creation');
+            console.debug('Current URL:', window.location.href);
+            console.debug('item_id:', item_id);
 
             // Call update instead if it exists
             if (obj.update_timeline_item_record && typeof obj.update_timeline_item_record === 'function') {
-                console.log('Redirecting to update function...');
+                console.debug('Redirecting to update function...');
                 return await obj.update_timeline_item_record();
             }
 
@@ -44,11 +44,11 @@ const itemsAddVerticalTimelineItemFormModule = (function () {
             return false;
         }
 
-        console.log('🟢 CREATE FUNCTION CALLED - No item_id, proceeding with creation');
+        console.debug('🟢 CREATE FUNCTION CALLED - No item_id, proceeding with creation');
 
         // Prevent duplicate submissions
         if (this._is_creating_timeline_item) {
-            console.log('Already creating, preventing duplicate submission');
+            console.debug('Already creating, preventing duplicate submission');
             return false;
         }
 
@@ -144,7 +144,7 @@ const itemsAddVerticalTimelineItemFormModule = (function () {
                 throw new Error('Server did not return a valid timeline item ID');
             }
 
-            console.log('✅ Timeline item record created successfully, ID:', new_timeline_item_id);
+            console.debug('✅ Timeline item record created successfully, ID:', new_timeline_item_id);
 
             // Show success message
             display_status_message(message_element, 'success', 'Timeline item record created successfully. Redirecting to edit page...');
@@ -178,19 +178,19 @@ const itemsAddVerticalTimelineItemFormModule = (function () {
      * Gracefully redirect to timeline item edit page (prevents back button to create page)
      */
     function redirect_to_timeline_item_edit_page(exhibit_id, timeline_id, timeline_item_id) {
-        console.log('=== REDIRECTING TO TIMELINE ITEM EDIT PAGE ===');
-        console.log('exhibit_id:', exhibit_id);
-        console.log('timeline_id:', timeline_id);
-        console.log('timeline_item_id:', timeline_item_id);
+        console.debug('=== REDIRECTING TO TIMELINE ITEM EDIT PAGE ===');
+        console.debug('exhibit_id:', exhibit_id);
+        console.debug('timeline_id:', timeline_id);
+        console.debug('timeline_item_id:', timeline_item_id);
 
         // Determine item form type based on current URL path
         let item_form = 'text';
 
         if (window.location.pathname.indexOf('media') !== -1) {
             item_form = 'media';
-            console.log('Media form detected from URL path');
+            console.debug('Media form detected from URL path');
         } else {
-            console.log('Text form detected (default)');
+            console.debug('Text form detected (default)');
         }
 
         const params = new URLSearchParams({
@@ -201,9 +201,9 @@ const itemsAddVerticalTimelineItemFormModule = (function () {
 
         const edit_url = `${APP_PATH}/items/vertical-timeline/item/${item_form}/edit?${params.toString()}`;
 
-        console.log('Item form type:', item_form);
-        console.log('Redirecting to:', edit_url);
-        console.log('Note: Back button will NOT return to create page');
+        console.debug('Item form type:', item_form);
+        console.debug('Redirecting to:', edit_url);
+        console.debug('Note: Back button will NOT return to create page');
 
         // Use window.location.replace() to prevent back button to create page
         // This replaces the current history entry instead of adding a new one

@@ -228,7 +228,7 @@ const mediaUploadsModule = (function() {
      * Handle modal completion callback
      */
     const handle_modal_complete = (saved_count) => {
-        console.log('Modal completed - ' + saved_count + ' files saved');
+        console.debug('Modal completed - ' + saved_count + ' files saved');
 
         // Clear the upload area
         clear_uploaded_media_fields();
@@ -296,24 +296,24 @@ const mediaUploadsModule = (function() {
             addRemoveLinks: defaults.add_remove_links,
             
             init: function() {
-                console.log('Dropzone initialized: ' + (options.zone_name || 'unnamed') + ' (max ' + MAX_FILES + ' files)');
+                console.debug('Dropzone initialized: ' + (options.zone_name || 'unnamed') + ' (max ' + MAX_FILES + ' files)');
                 dropzone_instance = this;
 
                 this.on('addedfile', function(file) {
                     clear_message(document.querySelector('.upload-error'));
-                    console.log('File added: ' + file.name + ' (' + this.files.length + '/' + MAX_FILES + ' files)');
+                    console.debug('File added: ' + file.name + ' (' + this.files.length + '/' + MAX_FILES + ' files)');
                 });
 
                 this.on('processing', function(file) {
-                    console.log('Processing: ' + file.name);
+                    console.debug('Processing: ' + file.name);
                 });
 
                 this.on('uploadprogress', function(file, progress) {
-                    console.log('Upload progress for ' + file.name + ': ' + Math.round(progress) + '%');
+                    console.debug('Upload progress for ' + file.name + ': ' + Math.round(progress) + '%');
                 });
 
                 this.on('queuecomplete', function() {
-                    console.log('All files in queue processed');
+                    console.debug('All files in queue processed');
                     if (uploaded_files_data.length > 0) {
                         setTimeout(function() {
                             open_uploaded_media_modal();
@@ -329,7 +329,7 @@ const mediaUploadsModule = (function() {
             },
 
             success: options.success_handler || function(file, response) {
-                console.log('Upload successful:', response);
+                console.debug('Upload successful:', response);
                 this.removeFile(file);
             },
 
@@ -425,11 +425,6 @@ const mediaUploadsModule = (function() {
                     uploaded_at: uploaded_file.uploaded_at || new Date().toISOString()
                 });
 
-                if (typeof helperMediaModule !== 'undefined' && 
-                    typeof helperMediaModule.clear_media_fields === 'function') {
-                    helperMediaModule.clear_media_fields('uploaded_media');
-                }
-
                 clear_message(elements.error);
 
                 if (elements.media_type) {
@@ -471,7 +466,7 @@ const mediaUploadsModule = (function() {
                     clear_message(elements.error);
                 }, 4000);
 
-                console.log('Item media uploaded: ' + uuid + ' (' + media_type + ')');
+                console.debug('Item media uploaded: ' + uuid + ' (' + media_type + ')');
             }
         });
 
@@ -510,11 +505,11 @@ const mediaUploadsModule = (function() {
 
     obj.init = function() {
         if (initialized) {
-            console.log('Uploads module already initialized');
+            console.debug('Uploads module already initialized');
             return true;
         }
 
-        console.log('Initializing uploads module...');
+        console.debug('Initializing uploads module...');
 
         if (typeof Dropzone === 'undefined') {
             console.error('Dropzone library not loaded - uploads module cannot initialize');
@@ -532,8 +527,8 @@ const mediaUploadsModule = (function() {
             mediaModalsModule.init();
         }
 
-        console.log('Upload endpoint:', UPLOAD_ENDPOINT);
-        console.log('Max files per upload:', MAX_FILES);
+        console.debug('Upload endpoint:', UPLOAD_ENDPOINT);
+        console.debug('Max files per upload:', MAX_FILES);
 
         Dropzone.autoDiscover = false;
 
@@ -541,7 +536,7 @@ const mediaUploadsModule = (function() {
         obj.upload_media();
 
         initialized = true;
-        console.log('Uploads module initialized successfully');
+        console.debug('Uploads module initialized successfully');
         return true;
     };
 

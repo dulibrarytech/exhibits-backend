@@ -242,7 +242,7 @@ const itemsEditTimelineItemFormModule = (function () {
                 button.style.opacity = '0.6';
             });
 
-            console.log(`Disabled ${disabled_count} form elements (record locked by another user)`);
+            console.debug(`Disabled ${disabled_count} form elements (record locked by another user)`);
         };
 
         /**
@@ -459,7 +459,7 @@ const itemsEditTimelineItemFormModule = (function () {
             const record = data.item;
 
             // Check if record is locked
-            await helperModule.check_if_locked(record, '#item-submit-card');
+            await lockModule.check_if_locked(record, '#item-submit-card');
 
             // Disable form fields if locked by another user
             if (is_locked_by_other_user(record)) {
@@ -468,7 +468,7 @@ const itemsEditTimelineItemFormModule = (function () {
             }
 
             // Setup automatic unlock when user navigates away
-            helperModule.setup_auto_unlock(record);
+            lockModule.setup_auto_unlock(record);
 
             // Cache all DOM elements
             const elements = cache_dom_elements();

@@ -103,7 +103,7 @@ const itemsEditStandardItemFormModule = (function () {
             form_elements.forEach(element => {
                 // Skip the unlock button if user is an administrator
                 if (is_admin && element.id === 'unlock-record') {
-                    console.log('Preserving unlock button for administrator');
+                    console.debug('Preserving unlock button for administrator');
                     return;
                 }
 
@@ -129,7 +129,7 @@ const itemsEditStandardItemFormModule = (function () {
                 button.style.opacity = '0.6';
             });
 
-            console.log(`Disabled ${disabled_count} form elements (record locked by another user)`);
+            console.debug(`Disabled ${disabled_count} form elements (record locked by another user)`);
         };
 
         // Helper function to check if record is locked by another user
@@ -172,7 +172,7 @@ const itemsEditStandardItemFormModule = (function () {
             }
 
             // Check if record is locked
-            await helperModule.check_if_locked(record, '#item-submit-card');
+            await lockModule.check_if_locked(record, '#item-submit-card');
 
             // Disable form fields if locked by another user
             if (is_locked_by_other_user(record)) {
@@ -185,7 +185,7 @@ const itemsEditStandardItemFormModule = (function () {
 
             // Setup automatic unlock when user navigates away (only if current user has it locked)
             // setup_auto_unlock(record);
-            helperModule.setup_auto_unlock(record);
+            lockModule.setup_auto_unlock(record);
 
             const is_media_path = window.location.pathname.includes('media');
 
@@ -222,7 +222,7 @@ const itemsEditStandardItemFormModule = (function () {
             }
 
             // Check if record is locked
-            await helperModule.check_if_locked(record, '#exhibit-submit-card');
+            await lockModule.check_if_locked(record, '#exhibit-submit-card');
 
             // Set published status
             const published_el = document.querySelector('#is-published');
@@ -263,8 +263,7 @@ const itemsEditStandardItemFormModule = (function () {
             return false;
 
         } catch (error) {
-            console.log(error);
-            console.error('Error in display_edit_record:', error.message);
+            console.error('Error in display_edit_record:', error);
             domModule.set_alert(document.querySelector('#message'), 'danger', error.message);
             return false;
         }

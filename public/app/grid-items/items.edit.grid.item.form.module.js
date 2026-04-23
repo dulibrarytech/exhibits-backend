@@ -245,7 +245,7 @@ const itemsEditGridItemFormModule = (function () {
                 button.style.opacity = '0.6';
             });
 
-            console.log(`Disabled ${disabled_count} form elements (record locked by another user)`);
+            console.debug(`Disabled ${disabled_count} form elements (record locked by another user)`);
         };
 
         /**
@@ -554,7 +554,7 @@ const itemsEditGridItemFormModule = (function () {
             const elements = cache_dom_elements();
 
             // Check if record is locked
-            await helperModule.check_if_locked(record, '#item-submit-card');
+            await lockModule.check_if_locked(record, '#item-submit-card');
 
             // Disable form fields if locked by another user
             if (is_locked_by_other_user(record)) {
@@ -563,7 +563,7 @@ const itemsEditGridItemFormModule = (function () {
             }
 
             // Setup automatic unlock when user navigates away
-            helperModule.setup_auto_unlock(record);
+            lockModule.setup_auto_unlock(record);
 
             // Display metadata (creation/update info)
             display_metadata_info(record, elements.created);
@@ -642,7 +642,7 @@ const itemsEditGridItemFormModule = (function () {
             form_elements.forEach(element => {
                 // Skip the unlock button if user is an administrator
                 if (is_admin && element.id === 'unlock-record') {
-                    console.log('Preserving unlock button for administrator');
+                    console.debug('Preserving unlock button for administrator');
                     return;
                 }
 
@@ -668,7 +668,7 @@ const itemsEditGridItemFormModule = (function () {
                 button.style.opacity = '0.6';
             });
 
-            console.log(`Disabled ${disabled_count} form elements (record locked by another user)`);
+            console.debug(`Disabled ${disabled_count} form elements (record locked by another user)`);
         };
 
         // Helper function to check if record is locked by another user
@@ -716,7 +716,7 @@ const itemsEditGridItemFormModule = (function () {
             let update_date_time = helperModule.format_date(update_date);
 
             // Check if record is locked
-            await helperModule.check_if_locked(record, '#item-submit-card');
+            await lockModule.check_if_locked(record, '#item-submit-card');
 
             // Disable form fields if locked by another user
             if (is_locked_by_other_user(record)) {
@@ -729,7 +729,7 @@ const itemsEditGridItemFormModule = (function () {
 
             // Setup automatic unlock when user navigates away (only if current user has it locked)
             // setup_auto_unlock(record);
-            helperModule.setup_auto_unlock(record);
+            lockModule.setup_auto_unlock(record);
 
             if (created_by !== null) {
                 item_created += `<em>Created by ${created_by} on ${create_date_time}</em>`;

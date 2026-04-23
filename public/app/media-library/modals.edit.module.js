@@ -543,7 +543,7 @@ const mediaEditModalModule = (function() {
             save_btn.innerHTML = '<i class="fa fa-save" style="margin-right: 6px;"></i>Save Changes';
         }
 
-        console.log('Edit media modal opened for UUID:', uuid);
+        console.debug('Edit media modal opened for UUID:', uuid);
     };
 
     /**
@@ -557,7 +557,7 @@ const mediaEditModalModule = (function() {
      * Initialize the edit modal module
      */
     obj.init = function() {
-        console.log('Media edit modal module initialized');
+        console.debug('Media edit modal module initialized');
         return true;
     };
 

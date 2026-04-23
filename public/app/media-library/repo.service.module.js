@@ -778,7 +778,7 @@ const repoServiceModule = (function() {
         }
 
         init_event_listeners();
-        console.log('Repo service module initialized');
+        console.debug('Repo service module initialized');
         return true;
     };
 

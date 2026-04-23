@@ -29,12 +29,9 @@ const homeModule = (function () {
             await authModule.get_auth_user_data();
         }
 
-        let home_timer = setTimeout(async () => {
-            await exhibitsModule.init();
-            clearTimeout(home_timer);
-            history.replaceState({}, '', APP_PATH + '/exhibits');
-            history.pushState({}, '', APP_PATH + '/exhibits');
-            }, 0);
+        await exhibitsModule.init();
+        history.replaceState({}, '', APP_PATH + '/exhibits');
+        history.pushState({}, '', APP_PATH + '/exhibits');
     };
 
     return obj;

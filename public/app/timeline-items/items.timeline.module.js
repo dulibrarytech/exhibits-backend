@@ -116,7 +116,7 @@ const itemsTimelineModule = (function () {
             }
 
             // Log success
-            console.log(`Retrieved ${response.data.data.length} timeline items`);
+            console.debug(`Retrieved ${response.data.data.length} timeline items`);
 
             return response.data.data;
 
@@ -349,8 +349,12 @@ const itemsTimelineModule = (function () {
                 items.map(item => itemsListDisplayModule.display_timeline_items(item))
             );
 
-            // Insert all items at once
-            elements.timeline_item_list.innerHTML = item_html_array.join('');
+            // Insert all rows at once via a DocumentFragment — matches the
+            // bulk batching pattern used in exhibits.module.js.
+            const timeline_template = document.createElement('template');
+            timeline_template.innerHTML = item_html_array.join('');
+            elements.timeline_item_list.textContent = '';
+            elements.timeline_item_list.appendChild(timeline_template.content);
 
             // Initialize action dropdown handlers
             if (typeof itemsListDisplayModule !== 'undefined' && typeof itemsListDisplayModule.setup_item_action_handlers === 'function') {

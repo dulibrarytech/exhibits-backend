@@ -176,8 +176,13 @@ const itemsGridModule = (function () {
             item_data += await itemsListDisplayModule.display_grid_items(items[i]);
         }
 
-        // Insert all items at once
-        document.querySelector('#grid-item-list').innerHTML = item_data;
+        // Insert all rows at once via a DocumentFragment — matches the bulk
+        // batching pattern used in exhibits.module.js.
+        const grid_item_list = document.querySelector('#grid-item-list');
+        const grid_template = document.createElement('template');
+        grid_template.innerHTML = item_data;
+        grid_item_list.textContent = '';
+        grid_item_list.appendChild(grid_template.content);
 
         // Initialize action dropdown handlers
         if (typeof itemsListDisplayModule !== 'undefined' && typeof itemsListDisplayModule.setup_item_action_handlers === 'function') {
@@ -199,7 +204,7 @@ const itemsGridModule = (function () {
         });
 
         GRID_ITEM_LIST.on('row-reordered', async (e, reordered_items) => {
-            await helperModule.reorder_grid_items(e, reordered_items);
+            await reorderModule.reorder_grid_items(e, reordered_items);
         });
 
         // Use delegated events on table body for publish/suppress actions

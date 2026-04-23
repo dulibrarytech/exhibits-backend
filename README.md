@@ -30,8 +30,13 @@ npm install
 Add .env file in root folder (see .env-example)
 Create "logs" folder in web root
 Import mysql schemas "exhibits" to db, schemas found in db folder.  Change extensions from .txt to .sql
+run "npm run build (full: JS + views)"
 run "node exhibits-backend.js"
 http://localhost:8004/exhibits-dashboard/auth
+-----------------------------------------------
+npm run build (full: JS + views)
+npm run build:js (JS only)
+npm run build:views (gulp default)
 ```
 
 ### Maintainers

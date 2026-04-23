@@ -525,7 +525,7 @@ const exhibitsEditFormModule = (function () {
             form_elements.forEach(element => {
                 // Skip the unlock button if user is an administrator
                 if (is_admin && element.id === 'unlock-record') {
-                    console.log('Preserving unlock button for administrator');
+                    console.debug('Preserving unlock button for administrator');
                     return;
                 }
 
@@ -551,7 +551,7 @@ const exhibitsEditFormModule = (function () {
                 button.style.opacity = '0.6';
             });
 
-            console.log(`Disabled ${disabled_count} form elements (record locked by another user)`);
+            console.debug(`Disabled ${disabled_count} form elements (record locked by another user)`);
         };
 
         // Helper function to check if record is locked by another user
@@ -594,7 +594,7 @@ const exhibitsEditFormModule = (function () {
             }
 
             // Check if record is locked
-            await helperModule.check_if_locked(record, '#exhibit-submit-card');
+            await lockModule.check_if_locked(record, '#exhibit-submit-card');
 
             // Disable form fields if locked by another user
             if (is_locked_by_other_user(record)) {
@@ -607,7 +607,7 @@ const exhibitsEditFormModule = (function () {
 
             // Setup automatic unlock when user navigates away (only if current user has it locked)
             // setup_auto_unlock(record);
-            helperModule.setup_auto_unlock(record);
+            lockModule.setup_auto_unlock(record);
 
             // Set audit information
             set_audit_info(record.created_by, record.created, record.updated_by, record.updated);
@@ -806,7 +806,7 @@ const exhibitsEditFormModule = (function () {
             // Re-render the form with updated data
             try {
                 await display_edit_record();
-                console.log('Form re-rendered with updated data');
+                console.debug('Form re-rendered with updated data');
             } catch (render_error) {
                 console.error('Error re-rendering form:', render_error);
                 // Don't fail the whole operation if re-render fails
@@ -1305,7 +1305,7 @@ const exhibitsEditFormModule = (function () {
                                     });
 
                                     if (response && (response.status === 204 || response.status === 200)) {
-                                        console.log(`Media library binding unbound for role: ${media_role}`);
+                                        console.debug(`Media library binding unbound for role: ${media_role}`);
                                     } else {
                                         console.warn(`Unexpected response unbinding media role ${media_role}:`, response?.status);
                                     }
@@ -1512,7 +1512,7 @@ const exhibitsEditFormModule = (function () {
                 'thumbnail'
             );
 
-            console.log('Module initialized successfully');
+            console.debug('Module initialized successfully');
             return true;
 
         } catch (error) {

@@ -567,7 +567,7 @@ const repoModalsModule = (function() {
         // Update status
         update_repo_modal_status();
 
-        console.log('Populated repo modal with ' + imported_items_data.length + ' item forms');
+        console.debug('Populated repo modal with ' + imported_items_data.length + ' item forms');
     };
 
     /**
@@ -584,7 +584,7 @@ const repoModalsModule = (function() {
      * Handle done/close button click in repo import modal
      */
     const handle_repo_modal_done = async () => {
-        console.log('Closing repo modal - ' + saved_items_count + ' items were saved');
+        console.debug('Closing repo modal - ' + saved_items_count + ' items were saved');
 
         close_repo_modal();
 
@@ -654,7 +654,7 @@ const repoModalsModule = (function() {
         // Open modal
         helperMediaLibraryModule.show_bootstrap_modal(modal_element);
 
-        console.log('Repo media modal opened with ' + imported_items_data.length + ' items');
+        console.debug('Repo media modal opened with ' + imported_items_data.length + ' items');
     };
 
     /**
@@ -1107,7 +1107,7 @@ const repoModalsModule = (function() {
             }
         }
 
-        console.log('View media modal opened for: ' + name);
+        console.debug('View media modal opened for: ' + name);
     };
 
     /**
@@ -1121,7 +1121,7 @@ const repoModalsModule = (function() {
      * Initialize the modals module
      */
     obj.init = function() {
-        console.log('Repo modals module initialized');
+        console.debug('Repo modals module initialized');
         return true;
     };
 

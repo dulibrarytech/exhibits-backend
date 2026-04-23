@@ -123,9 +123,9 @@ const recycleModule = (function () {
              */
         }
 
-        // console.log(deleted_exhibits);
+        // console.debug(deleted_exhibits);
         for (let i=0;i<deleted_exhibits.length;i++) {
-            // console.log(deleted_exhibits[i]);
+            // console.debug(deleted_exhibits[i]);
 
             let uuid = deleted_exhibits[i].uuid;
             let id = deleted_exhibits[i].id;
@@ -154,8 +154,13 @@ const recycleModule = (function () {
             exhibit_data += '</tr>';
 
         }
-        console.log(exhibit_data);
-        document.querySelector('#exhibits-data').innerHTML = exhibit_data;
+        // Insert all rows at once via a DocumentFragment — matches the bulk
+        // batching pattern used in exhibits.module.js.
+        const exhibits_data_el = document.querySelector('#exhibits-data');
+        const recycle_template = document.createElement('template');
+        recycle_template.innerHTML = exhibit_data;
+        exhibits_data_el.textContent = '';
+        exhibits_data_el.appendChild(recycle_template.content);
 
         /*
         const EXHIBIT_LIST = new DataTable('#exhibits', {

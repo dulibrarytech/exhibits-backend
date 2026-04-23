@@ -530,7 +530,7 @@ const mediaModalsModule = (function() {
             all_files_input.value = uploaded_files_data.map(function(f) { return f.filename; }).join(',');
         }
 
-        console.log('Populated modal with ' + uploaded_files_data.length + ' file forms');
+        console.debug('Populated modal with ' + uploaded_files_data.length + ' file forms');
     };
 
     /**
@@ -547,7 +547,7 @@ const mediaModalsModule = (function() {
      * Handle done/close button click in modal
      */
     const handle_modal_done = async () => {
-        console.log('Closing modal - ' + saved_files_count + ' files were saved');
+        console.debug('Closing modal - ' + saved_files_count + ' files were saved');
 
         close_modal();
 
@@ -612,7 +612,7 @@ const mediaModalsModule = (function() {
         // Open modal
         helperMediaLibraryModule.show_bootstrap_modal(modal_element);
 
-        console.log('Uploaded media modal opened with ' + uploaded_files_data.length + ' files');
+        console.debug('Uploaded media modal opened with ' + uploaded_files_data.length + ' files');
     };
 
     /**
@@ -854,7 +854,7 @@ const mediaModalsModule = (function() {
             }
         }
 
-        console.log('View media modal opened for: ' + name);
+        console.debug('View media modal opened for: ' + name);
     };
 
     /**
@@ -868,7 +868,7 @@ const mediaModalsModule = (function() {
      * Initialize the modals module
      */
     obj.init = function() {
-        console.log('Media modals module initialized');
+        console.debug('Media modals module initialized');
         return true;
     };
 

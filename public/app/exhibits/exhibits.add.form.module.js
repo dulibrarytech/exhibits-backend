@@ -756,7 +756,7 @@ const exhibitsAddFormModule = (function () {
             }
 
             // Log initialization summary
-            console.log(`Initialization complete: ${attached_count} listeners attached, ${failed_count} failed`);
+            console.debug(`Initialization complete: ${attached_count} listeners attached, ${failed_count} failed`);
 
             // Clear item list navigation
             clear_element('#item-list-nav');

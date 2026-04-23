@@ -280,7 +280,7 @@ const kalturaServiceModule = (function() {
      */
     obj.init = function() {
         init_event_listeners();
-        console.log('Kaltura service module initialized');
+        console.debug('Kaltura service module initialized');
         return true;
     };
 

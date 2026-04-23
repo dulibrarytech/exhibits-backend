@@ -188,7 +188,7 @@ const repoSubjectsModule = (function() {
     obj.clear_cache = function() {
         subjects_cache = null;
         resource_types_cache = null;
-        console.log('Repo subjects cache cleared');
+        console.debug('Repo subjects cache cleared');
     };
 
     // ========================================
@@ -1075,7 +1075,7 @@ const repoSubjectsModule = (function() {
                 obj.get_resource_types()
             ]);
 
-            console.log('Repo subjects module initialized');
+            console.debug('Repo subjects module initialized');
 
         } catch (error) {
             console.error('Error initializing repo subjects module:', error);

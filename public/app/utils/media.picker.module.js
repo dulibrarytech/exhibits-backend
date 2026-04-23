@@ -40,7 +40,9 @@ const mediaPickerModule = (function () {
     // ==================== CONSTANTS ====================
 
     const APP_PATH = window.localStorage.getItem('exhibits_app_path');
-    const EXHIBITS_ENDPOINTS = endpointsModule.get_exhibits_endpoints();
+    // Exhibits endpoints are fetched lazily at call time — capturing them
+    // at IIFE parse time runs before authModule.save_user_auth_data() has
+    // populated localStorage, leaving the value null on first page load.
     const PAGE_SIZE = 20;
     const SEARCH_DEBOUNCE_MS = 300;
 
@@ -104,16 +106,14 @@ const mediaPickerModule = (function () {
             return url;
         }
 
-        // Repository imports: use the repo thumbnail endpoint with the repo_uuid
+        // Same-origin thumbnail requests rely on the HttpOnly exhibits_token
+        // cookie for authentication, so the JWT is never embedded in <img src>.
         if (media.ingest_method === 'repository' && media.repo_uuid) {
-            const token = authModule.get_user_token();
-            return `${APP_PATH}/api/v1/media/library/repo/thumbnail?uuid=${encodeURIComponent(media.repo_uuid)}&token=${encodeURIComponent(token)}`;
+            return `${APP_PATH}/api/v1/media/library/repo/thumbnail?uuid=${encodeURIComponent(media.repo_uuid)}`;
         }
 
-        // Uploaded files: use media library thumbnail endpoint
         if (media.uuid && media.thumbnail_path) {
-            const token = authModule.get_user_token();
-            return `${APP_PATH}/api/v1/media/library/thumbnail/${media.uuid}?token=${encodeURIComponent(token)}`;
+            return `${APP_PATH}/api/v1/media/library/thumbnail/${media.uuid}`;
         }
 
         return '';
@@ -582,7 +582,8 @@ const mediaPickerModule = (function () {
                         throw new Error('Authentication token not available');
                     }
 
-                    const endpoint_base = EXHIBITS_ENDPOINTS.exhibits?.exhibit_media_library?.post?.endpoint;
+                    const exhibits_endpoints = endpointsModule.get_exhibits_endpoints();
+                    const endpoint_base = exhibits_endpoints?.exhibits?.exhibit_media_library?.post?.endpoint;
 
                     if (endpoint_base) {
                         const endpoint = endpoint_base.replace(':exhibit_id', encodeURIComponent(_current_exhibit_uuid));
@@ -791,7 +792,7 @@ const mediaPickerModule = (function () {
             obj.reset();
         });
 
-        console.log('mediaPickerModule initialized');
+        console.debug('mediaPickerModule initialized');
     };
 
     return obj;
