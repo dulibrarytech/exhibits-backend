@@ -620,7 +620,7 @@ const itemsAddVerticalTimelineFormModule = (function () {
             await authModule.check_permissions(['add_item', 'add_item_to_any_exhibit'], 'timeline', exhibit_id, null, redirect);
 
             exhibitsModule.set_exhibit_title(exhibit_id);
-            document.querySelector('#save-timeline-btn').addEventListener('click', itemsAddVerticalTimelineFormModule.create_timeline_record);
+            domModule.on('#save-timeline-btn', 'click', itemsAddVerticalTimelineFormModule.create_timeline_record);
 
         } catch (error) {
             domModule.set_alert(document.querySelector('#message'), 'danger', error.message);

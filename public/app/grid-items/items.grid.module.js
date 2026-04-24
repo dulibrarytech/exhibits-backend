@@ -144,10 +144,7 @@ const itemsGridModule = (function () {
         domModule.empty('#message');
 
         if (items === null) {
-            const item_card = document.querySelector('#item-card');
-            if (item_card) {
-                item_card.innerHTML = '';
-            }
+            domModule.empty('#item-card');
             if (grid_items_table !== null) {
                 grid_items_table.style.visibility = 'visible';
             }
@@ -631,11 +628,8 @@ const itemsGridModule = (function () {
 
         try {
 
-            const delete_message = document.querySelector('#delete-message');
-            if (delete_message) {
-                delete_message.innerHTML = 'Deleting grid item...';
-            }
-            document.querySelector('#delete-card').style.display = 'none';
+            domModule.set_text('#delete-message', 'Deleting grid item...');
+            domModule.hide('#delete-card');
             const exhibit_id = helperModule.get_parameter_by_name('exhibit_id');
             const grid_id = helperModule.get_parameter_by_name('grid_id');
             const grid_item_id = helperModule.get_parameter_by_name('item_id');

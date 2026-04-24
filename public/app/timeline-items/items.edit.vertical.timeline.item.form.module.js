@@ -757,7 +757,7 @@ const itemsEditTimelineItemFormModule = (function () {
             // Nav links wired by navModule.wire_nav_links() from the view
             // using data-nav-path + NAV_CONFIGS.timeline_item_form.
             await display_edit_record();
-            document.querySelector('#save-item-btn').addEventListener('click', itemsEditTimelineItemFormModule.update_timeline_item_record);
+            domModule.on('#save-item-btn', 'click', itemsEditTimelineItemFormModule.update_timeline_item_record);
 
         } catch (error) {
             domModule.set_alert(document.querySelector('#message'), 'danger', error.message);

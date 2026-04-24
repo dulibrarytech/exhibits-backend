@@ -435,18 +435,18 @@ const itemsTimelineModule = (function () {
             if (response !== undefined && response.status === 200) {
 
                 setTimeout(() => {
-                    let elem = document.getElementById(uuid);
-                    document.getElementById(uuid).classList.remove('publish-item');
-                    document.getElementById(uuid).classList.add('suppress-item');
-                    document.getElementById(uuid).replaceWith(elem.cloneNode(true));
-                    const status_after_publish = document.getElementById(uuid);
-                    if (status_after_publish) {
-                        status_after_publish.innerHTML = '<span id="suppress" title="published"><i class="fa fa-cloud" style="color: green"></i><br><small>Published</small></span>';
-                    }
-                    document.getElementById(uuid).addEventListener('click', async (event) => {
+                    const elem = document.getElementById(uuid);
+                    if (!elem) return;
+                    elem.classList.remove('publish-item');
+                    elem.classList.add('suppress-item');
+                    elem.replaceWith(elem.cloneNode(true));
+                    const replaced = document.getElementById(uuid);
+                    if (!replaced) return;
+                    replaced.innerHTML = '<span id="suppress" title="published"><i class="fa fa-cloud" style="color: green"></i><br><small>Published</small></span>';
+                    replaced.addEventListener('click', async (event) => {
                         event.preventDefault();
-                        const uuid = elem.getAttribute('id');
-                        await suppress_timeline_item(uuid);
+                        const id = elem.getAttribute('id');
+                        await suppress_timeline_item(id);
                     }, false);
                 }, 0);
 
@@ -563,18 +563,18 @@ const itemsTimelineModule = (function () {
             if (response !== undefined && response.status === 200) {
 
                 setTimeout(() => {
-                    let elem = document.getElementById(uuid);
-                    document.getElementById(uuid).classList.remove('suppress-item');
-                    document.getElementById(uuid).classList.add('publish-item');
-                    document.getElementById(uuid).replaceWith(elem.cloneNode(true));
-                    const status_after_suppress = document.getElementById(uuid);
-                    if (status_after_suppress) {
-                        status_after_suppress.innerHTML = '<span id="publish" title="suppressed"><i class="fa fa-cloud-upload" style="color: darkred"></i><br><small>Unpublished</small></span>';
-                    }
-                    document.getElementById(uuid).addEventListener('click', async (event) => {
+                    const elem = document.getElementById(uuid);
+                    if (!elem) return;
+                    elem.classList.remove('suppress-item');
+                    elem.classList.add('publish-item');
+                    elem.replaceWith(elem.cloneNode(true));
+                    const replaced = document.getElementById(uuid);
+                    if (!replaced) return;
+                    replaced.innerHTML = '<span id="publish" title="suppressed"><i class="fa fa-cloud-upload" style="color: darkred"></i><br><small>Unpublished</small></span>';
+                    replaced.addEventListener('click', async (event) => {
                         event.preventDefault();
-                        const uuid = elem.getAttribute('id');
-                        await publish_timeline_item(uuid);
+                        const id = elem.getAttribute('id');
+                        await publish_timeline_item(id);
                     }, false);
                 }, 0);
 
@@ -708,10 +708,7 @@ const itemsTimelineModule = (function () {
 
         try {
 
-            const delete_message = document.querySelector('#delete-message');
-            if (delete_message) {
-                delete_message.innerHTML = 'Deleting timeline item...';
-            }
+            domModule.set_text('#delete-message', 'Deleting timeline item...');
             const exhibit_id = helperModule.get_parameter_by_name('exhibit_id');
             const timeline_id = helperModule.get_parameter_by_name('timeline_id');
             const timeline_item_id = helperModule.get_parameter_by_name('item_id');

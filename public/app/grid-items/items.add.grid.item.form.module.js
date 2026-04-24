@@ -265,7 +265,7 @@ const itemsAddGridItemFormModule = (function () {
             await authModule.check_permissions(['add_item', 'add_item_to_any_exhibit'], 'grid_item', exhibit_id, null, redirect);
 
             exhibitsModule.set_exhibit_title(exhibit_id);
-            document.querySelector('#save-item-btn').addEventListener('click', itemsAddGridItemFormModule.create_grid_item_record);
+            domModule.on('#save-item-btn', 'click', itemsAddGridItemFormModule.create_grid_item_record);
 
         } catch (error) {
             domModule.set_alert(document.querySelector('#message'), 'danger', error.message);

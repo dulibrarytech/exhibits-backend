@@ -87,17 +87,14 @@ const itemsDetailsHeadingModule = (function () {
             item_created += ` | <em>Last updated by ${updated_by} on ${update_date_time}</em>`;
         }
 
-        const created_elem = document.querySelector('#created');
-        if (created_elem) {
-            created_elem.innerHTML = item_created;
-        }
-        document.querySelector('#item-heading-text-input').value = helperModule.unescape(record.text);
-        document.querySelector('#item-heading-type-input').value = record.type;
+        domModule.html('#created', item_created);
+        domModule.set_value('#item-heading-text-input', helperModule.unescape(record.text));
+        domModule.set_value('#item-heading-type-input', record.type);
 
-        if (document.querySelector('#is-published') !== null && is_published === 1) {
-            document.querySelector('#is-published').value = true;
-        } else if (document.querySelector('#is-published') !== null && is_published === 0) {
-            document.querySelector('#is-published').value = false;
+        if (is_published === 1) {
+            domModule.set_value('#is-published', true);
+        } else if (is_published === 0) {
+            domModule.set_value('#is-published', false);
         }
 
         return false;

@@ -65,7 +65,10 @@ const domModule = (function () {
     };
 
     /**
-     * Gets or sets form field data
+     * Gets or sets form field data. Sanitizes writes via DOMPurify and
+     * returns the trimmed value. Returns empty string when the target
+     * element is not found — previously threw "Cannot read properties of
+     * null" on id.value.trim() when the selector didn't match.
      * @param selector
      * @param data
      * @returns {*}
@@ -78,11 +81,15 @@ const domModule = (function () {
 
             let id = document.querySelector(selector);
 
-            if (id && data !== null) {
+            if (!id) {
+                return '';
+            }
+
+            if (data !== null && data !== undefined) {
                 id.value = DOMPurify.sanitize(data);
             }
 
-            return id.value.trim();
+            return typeof id.value === 'string' ? id.value.trim() : '';
 
         } else {
             // A proper selector (id or class) has not been defined
@@ -90,6 +97,118 @@ const domModule = (function () {
         }
 
         return result;
+    };
+
+    /**
+     * Straight-through value setter. Unlike obj.val, does not sanitize or
+     * trim — use when the caller has already validated/shaped the value
+     * (e.g. internal state being restored). Safe no-op on missing target.
+     * @param {string|Element} target
+     * @param value
+     */
+    obj.set_value = function(target, value) {
+        const el = (typeof target === 'string') ? document.querySelector(target) : target;
+        if (!el) return;
+        el.value = value;
+    };
+
+    /**
+     * Safe value getter. Returns fallback when target is missing or has no
+     * value property.
+     * @param {string|Element} target
+     * @param {*} [fallback='']
+     * @returns {*}
+     */
+    obj.get_value = function(target, fallback = '') {
+        const el = (typeof target === 'string') ? document.querySelector(target) : target;
+        if (!el || typeof el.value === 'undefined') return fallback;
+        return el.value;
+    };
+
+    /**
+     * Safe addEventListener. No-op when target is missing.
+     * @param {string|Element} target
+     * @param {string} event
+     * @param {Function} handler
+     * @param {boolean|Object} [options]
+     */
+    obj.on = function(target, event, handler, options) {
+        const el = (typeof target === 'string') ? document.querySelector(target) : target;
+        if (!el) return;
+        el.addEventListener(event, handler, options);
+    };
+
+    /**
+     * Safe classList.add. No-op when target is missing.
+     * @param {string|Element} target
+     * @param {...string} class_names
+     */
+    obj.add_class = function(target, ...class_names) {
+        const el = (typeof target === 'string') ? document.querySelector(target) : target;
+        if (!el || !el.classList) return;
+        el.classList.add(...class_names);
+    };
+
+    /**
+     * Safe classList.remove. No-op when target is missing.
+     * @param {string|Element} target
+     * @param {...string} class_names
+     */
+    obj.remove_class = function(target, ...class_names) {
+        const el = (typeof target === 'string') ? document.querySelector(target) : target;
+        if (!el || !el.classList) return;
+        el.classList.remove(...class_names);
+    };
+
+    /**
+     * Safe classList.toggle. No-op when target is missing.
+     * @param {string|Element} target
+     * @param {string} class_name
+     * @param {boolean} [force]
+     * @returns {boolean} true when class ends up applied, false otherwise or when target missing
+     */
+    obj.toggle_class = function(target, class_name, force) {
+        const el = (typeof target === 'string') ? document.querySelector(target) : target;
+        if (!el || !el.classList) return false;
+        return typeof force === 'boolean' ? el.classList.toggle(class_name, force) : el.classList.toggle(class_name);
+    };
+
+    /**
+     * Swap one class for another. Used by publish/suppress UI flips where a
+     * state class pair is mutually exclusive. No-op when target missing.
+     * @param {string|Element} target
+     * @param {string} old_class
+     * @param {string} new_class
+     */
+    obj.replace_class = function(target, old_class, new_class) {
+        const el = (typeof target === 'string') ? document.querySelector(target) : target;
+        if (!el || !el.classList) return;
+        el.classList.remove(old_class);
+        el.classList.add(new_class);
+    };
+
+    /**
+     * Safe text setter. Writes via textContent (not innerHTML) so the value
+     * is never parsed as HTML. No-op when target is missing.
+     * @param {string|Element} target
+     * @param {string} text
+     */
+    obj.set_text = function(target, text) {
+        const el = (typeof target === 'string') ? document.querySelector(target) : target;
+        if (!el) return;
+        el.textContent = text == null ? '' : String(text);
+    };
+
+    /**
+     * Safe text getter. Returns fallback when target is missing.
+     * @param {string|Element} target
+     * @param {string} [fallback='']
+     * @returns {string}
+     */
+    obj.get_text = function(target, fallback = '') {
+        const el = (typeof target === 'string') ? document.querySelector(target) : target;
+        if (!el) return fallback;
+        return el.textContent || '';
     };
 
     /**

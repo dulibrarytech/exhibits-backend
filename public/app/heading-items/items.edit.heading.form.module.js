@@ -436,10 +436,7 @@ const itemsEditHeadingFormModule = (function () {
             item_created += ` | <em>Last updated by ${updated_by} on ${update_date_time}</em>`;
         }
 
-        const created_elem = document.querySelector('#created');
-        if (created_elem) {
-            created_elem.innerHTML = item_created;
-        }
+        document.querySelector('#created').innerHTML = item_created;
         document.querySelector('#item-heading-text-input').value = helperModule.unescape(record.text);
 
         if (document.querySelector('#is-published') !== null && is_published === 1) {
@@ -828,7 +825,7 @@ const itemsEditHeadingFormModule = (function () {
             await authModule.check_permissions(['update_item', 'update_any_item'], 'heading', exhibit_id, heading_id, redirect);
             await exhibitsModule.set_exhibit_title(exhibit_id);
 
-            document.querySelector('#save-heading-btn').addEventListener('click', await itemsEditHeadingFormModule.update_item_heading_record);
+            domModule.on('#save-heading-btn', 'click', await itemsEditHeadingFormModule.update_item_heading_record);
             await display_edit_record();
 
         } catch (error) {

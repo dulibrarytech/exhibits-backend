@@ -529,7 +529,7 @@ const itemsEditStandardItemFormModule = (function () {
 
             exhibitsModule.set_exhibit_title(exhibit_id);
             await display_edit_record();
-            document.querySelector('#update-item-btn').addEventListener('click', itemsEditStandardItemFormModule.update_item_record);
+            domModule.on('#update-item-btn', 'click', itemsEditStandardItemFormModule.update_item_record);
 
         } catch (error) {
             domModule.set_alert(document.querySelector('#message'), 'danger', error.message);

@@ -739,26 +739,26 @@ const itemsEditGridItemFormModule = (function () {
                 item_created += ` | <em>Last updated by ${updated_by} on ${update_date_time}</em>`;
             }
 
-            const created_elem = document.querySelector('#created');
-            if (created_elem) {
-                created_elem.innerHTML = item_created;
-            }
+            domModule.html('#created', item_created);
 
-            if (document.querySelector('#is-published') !== null && is_published === 1) {
-                document.querySelector('#is-published').value = true;
-            } else if (document.querySelector('#is-published') !== null && is_published === 0) {
-                document.querySelector('#is-published').value = false;
+            if (is_published === 1) {
+                domModule.set_value('#is-published', true);
+            } else if (is_published === 0) {
+                domModule.set_value('#is-published', false);
             }
 
             // item data
-            document.querySelector('#item-title-input').value = helperModule.unescape(record.title);
-            document.querySelector('#item-text-input').value = helperModule.unescape(record.text);
+            domModule.set_value('#item-title-input', helperModule.unescape(record.title));
+            domModule.set_value('#item-text-input', helperModule.unescape(record.text));
 
             let layouts = document.getElementsByName('layout');
 
             for (let j = 0; j < layouts.length; j++) {
                 if (layouts[j].value === record.layout) {
-                    document.querySelector('#' + layouts[j].id).checked = true;
+                    const layout_radio = document.querySelector('#' + layouts[j].id);
+                    if (layout_radio) {
+                        layout_radio.checked = true;
+                    }
                 }
             }
 
@@ -766,7 +766,10 @@ const itemsEditGridItemFormModule = (function () {
 
             for (let j = 0; j < media_width.length; j++) {
                 if (parseInt(media_width[j].value) === parseInt(record.media_width)) {
-                    document.querySelector('#' + media_width[j].id).checked = true;
+                    const width_radio = document.querySelector('#' + media_width[j].id);
+                    if (width_radio) {
+                        width_radio.checked = true;
+                    }
                 }
             }
 
@@ -775,31 +778,33 @@ const itemsEditGridItemFormModule = (function () {
             if (Object.keys(styles).length !== 0) {
 
                 if (styles.backgroundColor !== undefined) {
-                    document.querySelector('#item-background-color').value = styles.backgroundColor;
-                    document.querySelector('#item-background-color-picker').value = styles.backgroundColor;
+                    domModule.set_value('#item-background-color', styles.backgroundColor);
+                    domModule.set_value('#item-background-color-picker', styles.backgroundColor);
                 } else {
-                    document.querySelector('#item-background-color').value = '';
+                    domModule.set_value('#item-background-color', '');
                 }
 
                 if (styles.color !== undefined) {
-                    document.querySelector('#item-font-color').value = styles.color;
-                    document.querySelector('#item-font-color-picker').value = styles.color;
+                    domModule.set_value('#item-font-color', styles.color);
+                    domModule.set_value('#item-font-color-picker', styles.color);
                 } else {
-                    document.querySelector('#item-font-color').value = '';
+                    domModule.set_value('#item-font-color', '');
                 }
 
                 let font_values = document.querySelector('#item-font');
 
-                for (let i = 0; i < font_values.length; i++) {
-                    if (font_values[i].value === styles.fontFamily) {
-                        document.querySelector('#item-font').value = styles.fontFamily;
+                if (font_values) {
+                    for (let i = 0; i < font_values.length; i++) {
+                        if (font_values[i].value === styles.fontFamily) {
+                            domModule.set_value('#item-font', styles.fontFamily);
+                        }
                     }
                 }
 
                 if (styles.fontSize !== undefined) {
-                    document.querySelector('#item-font-size').value = styles.fontSize.replace('px', '');
+                    domModule.set_value('#item-font-size', styles.fontSize.replace('px', ''));
                 } else {
-                    document.querySelector('#item-font-size').value = '';
+                    domModule.set_value('#item-font-size', '');
                 }
             }
 
@@ -1063,7 +1068,7 @@ const itemsEditGridItemFormModule = (function () {
             exhibitsModule.set_exhibit_title(exhibit_id);
             // Note: #back-to-items href is now wired by navModule.wire_nav_links()
             await display_edit_record();
-            document.querySelector('#save-item-btn').addEventListener('click', itemsEditGridItemFormModule.update_grid_item_record);
+            domModule.on('#save-item-btn', 'click', itemsEditGridItemFormModule.update_grid_item_record);
 
         } catch (error) {
             domModule.set_alert(document.querySelector('#message'), 'danger', error.message);

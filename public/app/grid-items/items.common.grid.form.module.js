@@ -265,33 +265,21 @@ const itemsCommonStandardGridFormModule = (function () {
 
             navModule.init();
 
-            let grid_background_color_picker = document.querySelector('#grid-background-color-picker');
+            domModule.on('#grid-background-color-picker', 'input', () => {
+                domModule.set_value('#grid-background-color', domModule.get_value('#grid-background-color-picker'));
+            });
 
-            if (grid_background_color_picker) {
-                document.querySelector('#grid-background-color-picker').addEventListener('input', () => {
-                    if (document.querySelector('#grid-background-color')) {
-                        document.querySelector('#grid-background-color').value = document.querySelector('#grid-background-color-picker').value;
-                    }
-                });
+            domModule.on('#grid-background-color', 'input', () => {
+                domModule.set_value('#grid-background-color-picker', domModule.get_value('#grid-background-color'));
+            });
 
-                document.querySelector('#grid-background-color').addEventListener('input', () => {
-                    document.querySelector('#grid-background-color-picker').value = document.querySelector('#grid-background-color').value;
-                });
-            }
+            domModule.on('#grid-font-color-picker', 'input', () => {
+                domModule.set_value('#grid-font-color', domModule.get_value('#grid-font-color-picker'));
+            });
 
-            let grid_font_color_picker = document.querySelector('#grid-font-color-picker');
-
-            if (grid_font_color_picker) {
-                document.querySelector('#grid-font-color-picker').addEventListener('input', () => {
-                    if (document.querySelector('#grid-font-color')) {
-                        document.querySelector('#grid-font-color').value = document.querySelector('#grid-font-color-picker').value;
-                    }
-                });
-
-                document.querySelector('#grid-font-color').addEventListener('input', () => {
-                    document.querySelector('#grid-font-color-picker').value = document.querySelector('#grid-font-color').value;
-                });
-            }
+            domModule.on('#grid-font-color', 'input', () => {
+                domModule.set_value('#grid-font-color-picker', domModule.get_value('#grid-font-color'));
+            });
 
             helperModule.show_form();
 

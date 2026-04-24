@@ -734,7 +734,7 @@ const itemsAddGridFormModule = (function () {
         await authModule.check_permissions(['add_item', 'add_item_to_any_exhibit'], 'grid', exhibit_id, null, redirect);
         // Note: #back-to-items href is now wired by navModule.wire_nav_links()
         exhibitsModule.set_exhibit_title(exhibit_id);
-        document.querySelector('#save-item-btn').addEventListener('click', itemsAddGridFormModule.create_grid_record);
+        domModule.on('#save-item-btn', 'click', itemsAddGridFormModule.create_grid_record);
     };
 
     return obj;

@@ -721,7 +721,7 @@ const exhibitsAddFormModule = (function () {
                         previous_media_uuid: prev_el ? prev_el.value || null : null,
                         media_type_filter: 'image',
                         on_select: function (media) {
-                            document.querySelector('#hero-image-media-uuid').value = media.uuid;
+                            domModule.set_value('#hero-image-media-uuid', media.uuid);
                             var prev_track = document.querySelector('#hero-image-media-uuid-prev');
                             if (prev_track) prev_track.value = media.uuid;
                             render_media_preview('#hero-image-display', media);
@@ -743,7 +743,7 @@ const exhibitsAddFormModule = (function () {
                         previous_media_uuid: prev_el ? prev_el.value || null : null,
                         media_type_filter: 'image',
                         on_select: function (media) {
-                            document.querySelector('#thumbnail-media-uuid').value = media.uuid;
+                            domModule.set_value('#thumbnail-media-uuid', media.uuid);
                             var prev_track = document.querySelector('#thumbnail-media-uuid-prev');
                             if (prev_track) prev_track.value = media.uuid;
                             render_media_preview('#thumbnail-image-display', media);

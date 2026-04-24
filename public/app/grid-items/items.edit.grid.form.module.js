@@ -131,12 +131,9 @@ const itemsEditGridFormModule = (function () {
             item_created += ` | <em>Last updated by ${updated_by} on ${update_date_time}</em>`;
         }
 
-        const created_elem = document.querySelector('#created');
-        if (created_elem) {
-            created_elem.innerHTML = item_created;
-        }
-        document.querySelector('#grid-text-input').value = helperModule.unescape(record.text);
-        document.querySelector('#grid-columns').value = record.columns;
+        domModule.html('#created', item_created);
+        domModule.set_value('#grid-text-input', helperModule.unescape(record.text));
+        domModule.set_value('#grid-columns', record.columns);
 
         // Set saved style selection after dropdown is populated
         // Style keys are simple strings like "item1"; skip "{}" (prepare_styles default) and legacy JSON blobs
@@ -193,7 +190,7 @@ const itemsEditGridFormModule = (function () {
         await authModule.check_permissions(['update_item', 'update_any_item'], 'grid', exhibit_id, item_id, redirect);
         // Note: #back-to-items and #grid-items hrefs are now wired by navModule.wire_nav_links()
         exhibitsModule.set_exhibit_title(exhibit_id);
-        document.querySelector('#save-item-btn').addEventListener('click', itemsEditGridFormModule.update_grid_record);
+        domModule.on('#save-item-btn', 'click', itemsEditGridFormModule.update_grid_record);
         await display_edit_record();
     };
 

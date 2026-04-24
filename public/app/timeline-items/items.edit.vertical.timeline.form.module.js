@@ -728,7 +728,7 @@ const itemsEditVerticalTimelineFormModule = (function () {
         await authModule.check_permissions(['update_item', 'update_any_item'], 'timeline', exhibit_id, item_id, redirect);
 
         exhibitsModule.set_exhibit_title(exhibit_id);
-        document.querySelector('#save-timeline-btn').addEventListener('click', itemsEditVerticalTimelineFormModule.update_timeline_record);
+        domModule.on('#save-timeline-btn', 'click', itemsEditVerticalTimelineFormModule.update_timeline_record);
         // Nav links wired by navModule.wire_nav_links() from the view
         // using data-nav-path + NAV_CONFIGS.timeline_edit_form.
         await display_edit_record();

@@ -1025,10 +1025,7 @@ const userModule = (function () {
             // Handle successful deletion (204 No Content)
             if (response.status === 204) {
 
-                const delete_card = document.querySelector('#delete-card');
-                if (delete_card) {
-                    delete_card.innerHTML = '';
-                }
+                domModule.empty('#delete-card');
                 show_message('User deleted successfully.', 'success', '#message');
 
                 setTimeout(() => {
@@ -1112,28 +1109,33 @@ const userModule = (function () {
 
         if (response.status === 200) {
 
-            let id_elem = document.getElementById(id);
-            document.getElementById(id).classList.remove('active-user');
-            document.getElementById(id).classList.add('inactive-user');
-            document.getElementById(id).replaceWith(id_elem.cloneNode(true));
-            const status_after_activate = document.getElementById(id);
-            if (status_after_activate) {
-                status_after_activate.innerHTML = '<span id="suppress" title="published"><i class="fa fa-user" style="color: green"></i><br>Active</span>';
+            const id_elem = document.getElementById(id);
+            if (id_elem) {
+                id_elem.classList.remove('active-user');
+                id_elem.classList.add('inactive-user');
+                // Clone-then-replace strips previously-bound event listeners
+                id_elem.replaceWith(id_elem.cloneNode(true));
+                const replaced = document.getElementById(id);
+                if (replaced) {
+                    replaced.innerHTML = '<span id="suppress" title="published"><i class="fa fa-user" style="color: green"></i><br>Active</span>';
+                    replaced.addEventListener('click', async () => {
+                        await deactivate_user(id);
+                    }, false);
+                }
             }
-            document.getElementById(id).addEventListener('click', async () => {
-                await deactivate_user(id);
-            }, false);
 
-            let actions_id = `${id}-user-actions`;
-            let actions_elem = document.getElementById(actions_id);
-            let user_edit = `<i title="Only administrators can view user details" style="color: #d3d3d3" class="fa fa-edit pr-1"></i>`;
-            let trash = `<i title="Only administrators can delete users" style="color: #d3d3d3" class="fa fa-trash pr-1" aria-label="delete-user"></i>`;
+            const actions_id = `${id}-user-actions`;
+            const actions_elem = document.getElementById(actions_id);
+            const user_edit = `<i title="Only administrators can view user details" style="color: #d3d3d3" class="fa fa-edit pr-1"></i>`;
+            const trash = `<i title="Only administrators can delete users" style="color: #d3d3d3" class="fa fa-trash pr-1" aria-label="delete-user"></i>`;
 
-            actions_elem.innerHTML = `
+            if (actions_elem) {
+                actions_elem.innerHTML = `
                         <div class="card-text text-sm-center">
                         ${user_edit}&nbsp;
                         ${trash}
                         </div>`;
+            }
 
         }
     }
@@ -1152,28 +1154,32 @@ const userModule = (function () {
 
         if (response.status === 200) {
 
-            let id_elem = document.getElementById(id);
-            document.getElementById(id).classList.remove('inactive-user');
-            document.getElementById(id).classList.add('active-user');
-            document.getElementById(id).replaceWith(id_elem.cloneNode(true));
-            const status_after_deactivate = document.getElementById(id);
-            if (status_after_deactivate) {
-                status_after_deactivate.innerHTML = '<span id="publish" title="suppressed"><i class="fa fa-user" style="color: darkred"></i><br>Inactive</span>';
+            const id_elem = document.getElementById(id);
+            if (id_elem) {
+                id_elem.classList.remove('inactive-user');
+                id_elem.classList.add('active-user');
+                id_elem.replaceWith(id_elem.cloneNode(true));
+                const replaced = document.getElementById(id);
+                if (replaced) {
+                    replaced.innerHTML = '<span id="publish" title="suppressed"><i class="fa fa-user" style="color: darkred"></i><br>Inactive</span>';
+                    replaced.addEventListener('click', async (event) => {
+                        await activate_user(id);
+                    }, false);
+                }
             }
-            document.getElementById(id).addEventListener('click', async (event) => {
-                await activate_user(id);
-            }, false);
 
-            let actions_id = `${id}-user-actions`;
-            let actions_elem = document.getElementById(actions_id);
-            let user_edit = `<a href="${APP_PATH}/users/edit?user_id=${id}" title="View user details" aria-label="user-details"><i class="fa fa-edit pr-1"></i></a>`;
-            let trash = `<a href="${APP_PATH}/users/delete?user_id=${id}" title="Delete User" aria-label="delete-user"><i class="fa fa-trash pr-1"></i></a>`;
+            const actions_id = `${id}-user-actions`;
+            const actions_elem = document.getElementById(actions_id);
+            const user_edit = `<a href="${APP_PATH}/users/edit?user_id=${id}" title="View user details" aria-label="user-details"><i class="fa fa-edit pr-1"></i></a>`;
+            const trash = `<a href="${APP_PATH}/users/delete?user_id=${id}" title="Delete User" aria-label="delete-user"><i class="fa fa-trash pr-1"></i></a>`;
 
-            actions_elem.innerHTML = `
+            if (actions_elem) {
+                actions_elem.innerHTML = `
                         <div class="card-text text-sm-center">
                         ${user_edit}&nbsp;
                         ${trash}
                         </div>`;
+            }
 
         }
     }

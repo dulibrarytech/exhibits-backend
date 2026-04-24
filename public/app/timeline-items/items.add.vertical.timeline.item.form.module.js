@@ -343,7 +343,7 @@ const itemsAddVerticalTimelineItemFormModule = (function () {
             await authModule.check_permissions(['add_item', 'add_item_to_any_exhibit'], 'timeline_item', exhibit_id, null, redirect);
 
             exhibitsModule.set_exhibit_title(exhibit_id);
-            document.querySelector('#save-item-btn').addEventListener('click', itemsAddVerticalTimelineItemFormModule.create_timeline_item_record);
+            domModule.on('#save-item-btn', 'click', itemsAddVerticalTimelineItemFormModule.create_timeline_item_record);
 
         } catch (error) {
             domModule.set_alert(document.querySelector('#message'), 'danger', error.message);

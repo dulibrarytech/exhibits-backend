@@ -502,43 +502,28 @@ const itemsCommonGridItemFormModule = (function () {
         try {
 
             if (window.location.pathname.indexOf('text') !== -1) {
-                const required_text = document.querySelector('#is-required-text');
-                if (required_text) {
-                    required_text.innerHTML = 'Exhibit Text <span class="badge badge-required">Required</span>';
-                }
+                domModule.html('#is-required-text', 'Exhibit Text <span class="badge badge-required">Required</span>');
             }
 
             const token = authModule.get_user_token();
             await authModule.check_auth(token);
             navModule.init();
 
-            let item_background_color_picker = document.querySelector('#item-background-color-picker');
+            domModule.on('#item-background-color-picker', 'input', () => {
+                domModule.set_value('#item-background-color', domModule.get_value('#item-background-color-picker'));
+            });
 
-            if (item_background_color_picker) {
-                document.querySelector('#item-background-color-picker').addEventListener('input', () => {
-                    if (document.querySelector('#item-background-color')) {
-                        document.querySelector('#item-background-color').value = document.querySelector('#item-background-color-picker').value;
-                    }
-                });
+            domModule.on('#item-background-color', 'input', () => {
+                domModule.set_value('#item-background-color-picker', domModule.get_value('#item-background-color'));
+            });
 
-                document.querySelector('#item-background-color').addEventListener('input', () => {
-                    document.querySelector('#item-background-color-picker').value = document.querySelector('#item-background-color').value;
-                });
-            }
+            domModule.on('#item-font-color-picker', 'input', () => {
+                domModule.set_value('#item-font-color', domModule.get_value('#item-font-color-picker'));
+            });
 
-            let item_font_color_picker = document.querySelector('#item-font-color-picker');
-
-            if (item_font_color_picker) {
-                document.querySelector('#item-font-color-picker').addEventListener('input', () => {
-                    if (document.querySelector('#item-font-color')) {
-                        document.querySelector('#item-font-color').value = document.querySelector('#item-font-color-picker').value;
-                    }
-                });
-
-                document.querySelector('#item-font-color').addEventListener('input', () => {
-                    document.querySelector('#item-font-color-picker').value = document.querySelector('#item-font-color').value;
-                });
-            }
+            domModule.on('#item-font-color', 'input', () => {
+                domModule.set_value('#item-font-color-picker', domModule.get_value('#item-font-color'));
+            });
 
             helperModule.show_form();
 

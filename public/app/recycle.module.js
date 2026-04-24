@@ -55,10 +55,7 @@ const recycleModule = (function () {
         let exhibit_data = '';
 
         if (records === false) {
-            const exhibit_card = document.querySelector('#exhibit-card');
-            if (exhibit_card) {
-                exhibit_card.innerHTML = '';
-            }
+            domModule.empty('#exhibit-card');
             return false;
         }
 
@@ -67,10 +64,7 @@ const recycleModule = (function () {
         }
 
         if (records.length === 0) {
-            const card = document.querySelector('.card');
-            if (card) {
-                card.innerHTML = '';
-            }
+            domModule.empty('.card');
             domModule.set_alert('#message', 'info', 'No deleted records found.');
             return false;
         }
@@ -190,10 +184,7 @@ const recycleModule = (function () {
 
             (async function () {
 
-                const delete_message = document.querySelector('#delete-message');
-                if (delete_message) {
-                    delete_message.innerHTML = 'Deleting exhibit...';
-                }
+                domModule.set_text('#delete-message', 'Deleting exhibit...');
                 const EXHIBITS_ENDPOINTS = endpointsModule.get_exhibits_endpoints();
                 const uuid = helperModule.get_parameter_by_name('exhibit_id');
                 const token = authModule.get_user_token();

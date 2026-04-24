@@ -258,25 +258,13 @@ const itemsCommonVerticalTimelineFormModule = (function () {
             // using data-nav-path + NAV_CONFIGS.timeline_{add,edit}_form / _details.
             navModule.init();
 
-            let timeline_background_color_picker =  document.querySelector('#timeline-background-color-picker');
+            domModule.on('#timeline-background-color-picker', 'input', () => {
+                domModule.set_value('#timeline-background-color', domModule.get_value('#timeline-background-color-picker'));
+            });
 
-            if (timeline_background_color_picker) {
-                document.querySelector('#timeline-background-color-picker').addEventListener('input', () => {
-                    if (document.querySelector('#timeline-background-color')) {
-                        document.querySelector('#timeline-background-color').value = document.querySelector('#timeline-background-color-picker').value;
-                    }
-                });
-            }
-
-            let timeline_font_color_picker =  document.querySelector('#timeline-font_color-picker');
-
-            if (timeline_font_color_picker) {
-                document.querySelector('#timeline-font-color-picker').addEventListener('input', () => {
-                    if (document.querySelector('#timeline-font-color')) {
-                        document.querySelector('#timeline-font-color').value = document.querySelector('#timeline-font-color-picker').value;
-                    }
-                });
-            }
+            domModule.on('#timeline-font-color-picker', 'input', () => {
+                domModule.set_value('#timeline-font-color', domModule.get_value('#timeline-font-color-picker'));
+            });
 
             helperModule.show_form();
 
