@@ -439,7 +439,10 @@ const itemsTimelineModule = (function () {
                     document.getElementById(uuid).classList.remove('publish-item');
                     document.getElementById(uuid).classList.add('suppress-item');
                     document.getElementById(uuid).replaceWith(elem.cloneNode(true));
-                    document.getElementById(uuid).innerHTML = '<span id="suppress" title="published"><i class="fa fa-cloud" style="color: green"></i><br><small>Published</small></span>';
+                    const status_after_publish = document.getElementById(uuid);
+                    if (status_after_publish) {
+                        status_after_publish.innerHTML = '<span id="suppress" title="published"><i class="fa fa-cloud" style="color: green"></i><br><small>Published</small></span>';
+                    }
                     document.getElementById(uuid).addEventListener('click', async (event) => {
                         event.preventDefault();
                         const uuid = elem.getAttribute('id');
@@ -564,7 +567,10 @@ const itemsTimelineModule = (function () {
                     document.getElementById(uuid).classList.remove('suppress-item');
                     document.getElementById(uuid).classList.add('publish-item');
                     document.getElementById(uuid).replaceWith(elem.cloneNode(true));
-                    document.getElementById(uuid).innerHTML = '<span id="publish" title="suppressed"><i class="fa fa-cloud-upload" style="color: darkred"></i><br><small>Unpublished</small></span>';
+                    const status_after_suppress = document.getElementById(uuid);
+                    if (status_after_suppress) {
+                        status_after_suppress.innerHTML = '<span id="publish" title="suppressed"><i class="fa fa-cloud-upload" style="color: darkred"></i><br><small>Unpublished</small></span>';
+                    }
                     document.getElementById(uuid).addEventListener('click', async (event) => {
                         event.preventDefault();
                         const uuid = elem.getAttribute('id');
@@ -702,7 +708,10 @@ const itemsTimelineModule = (function () {
 
         try {
 
-            document.querySelector('#delete-message').innerHTML = 'Deleting timeline item...';
+            const delete_message = document.querySelector('#delete-message');
+            if (delete_message) {
+                delete_message.innerHTML = 'Deleting timeline item...';
+            }
             const exhibit_id = helperModule.get_parameter_by_name('exhibit_id');
             const timeline_id = helperModule.get_parameter_by_name('timeline_id');
             const timeline_item_id = helperModule.get_parameter_by_name('item_id');

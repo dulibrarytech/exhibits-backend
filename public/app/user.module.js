@@ -1025,7 +1025,10 @@ const userModule = (function () {
             // Handle successful deletion (204 No Content)
             if (response.status === 204) {
 
-                document.querySelector('#delete-card').innerHTML = '';
+                const delete_card = document.querySelector('#delete-card');
+                if (delete_card) {
+                    delete_card.innerHTML = '';
+                }
                 show_message('User deleted successfully.', 'success', '#message');
 
                 setTimeout(() => {
@@ -1113,7 +1116,10 @@ const userModule = (function () {
             document.getElementById(id).classList.remove('active-user');
             document.getElementById(id).classList.add('inactive-user');
             document.getElementById(id).replaceWith(id_elem.cloneNode(true));
-            document.getElementById(id).innerHTML = '<span id="suppress" title="published"><i class="fa fa-user" style="color: green"></i><br>Active</span>';
+            const status_after_activate = document.getElementById(id);
+            if (status_after_activate) {
+                status_after_activate.innerHTML = '<span id="suppress" title="published"><i class="fa fa-user" style="color: green"></i><br>Active</span>';
+            }
             document.getElementById(id).addEventListener('click', async () => {
                 await deactivate_user(id);
             }, false);
@@ -1150,7 +1156,10 @@ const userModule = (function () {
             document.getElementById(id).classList.remove('inactive-user');
             document.getElementById(id).classList.add('active-user');
             document.getElementById(id).replaceWith(id_elem.cloneNode(true));
-            document.getElementById(id).innerHTML = '<span id="publish" title="suppressed"><i class="fa fa-user" style="color: darkred"></i><br>Inactive</span>';
+            const status_after_deactivate = document.getElementById(id);
+            if (status_after_deactivate) {
+                status_after_deactivate.innerHTML = '<span id="publish" title="suppressed"><i class="fa fa-user" style="color: darkred"></i><br>Inactive</span>';
+            }
             document.getElementById(id).addEventListener('click', async (event) => {
                 await activate_user(id);
             }, false);

@@ -502,7 +502,10 @@ const itemsCommonGridItemFormModule = (function () {
         try {
 
             if (window.location.pathname.indexOf('text') !== -1) {
-                document.querySelector('#is-required-text').innerHTML = 'Exhibit Text <span class="badge badge-required">Required</span>';
+                const required_text = document.querySelector('#is-required-text');
+                if (required_text) {
+                    required_text.innerHTML = 'Exhibit Text <span class="badge badge-required">Required</span>';
+                }
             }
 
             const token = authModule.get_user_token();

@@ -20,6 +20,46 @@ const exhibitsModule = (function () {
 
     'use strict';
 
+    // Module-level constants
+    const EXHIBIT_CONSTANTS = {
+        STATUS_SUFFIX: '-status',
+        MESSAGE_DURATION: 5000,
+        HTTP_OK: 200,
+        HTTP_NO_CONTENT: 204,
+        HTTP_FORBIDDEN: 403,
+        HTTP_UNPROCESSABLE_ENTITY: 422,
+        UUID_PATTERN: /^[a-f0-9-]+$/i
+    };
+
+    // Exhibit state configurations
+    // click_handler values reference suppress_exhibit / publish_exhibit, which are
+    // function declarations further down in this IIFE. Function declarations are
+    // hoisted, so these identifiers resolve correctly at the time this object is built.
+    const EXHIBIT_STATES = {
+        PUBLISHED: {
+            span_id: 'suppress',
+            title: 'published',
+            icon_class: 'fa fa-cloud',
+            icon_color: 'green',
+            text: 'Published',
+            css_class_to_add: 'suppress-exhibit',
+            css_class_to_remove: 'publish-exhibit',
+            click_handler: suppress_exhibit,
+            is_published: 1
+        },
+        SUPPRESSED: {
+            span_id: 'publish',
+            title: 'suppressed',
+            icon_class: 'fa fa-cloud-upload',
+            icon_color: 'darkred',
+            text: 'Unpublished',
+            css_class_to_add: 'publish-exhibit',
+            css_class_to_remove: 'suppress-exhibit',
+            click_handler: publish_exhibit,
+            is_published: 0
+        }
+    };
+
     const APP_PATH = window.localStorage.getItem('exhibits_app_path');
     let obj = {};
     let link;
@@ -1028,43 +1068,6 @@ const exhibitsModule = (function () {
         }
 
         return false;
-    };
-
-    // Module-level constants
-    const EXHIBIT_CONSTANTS = {
-        STATUS_SUFFIX: '-status',
-        MESSAGE_DURATION: 5000,
-        HTTP_OK: 200,
-        HTTP_NO_CONTENT: 204,
-        HTTP_FORBIDDEN: 403,
-        HTTP_UNPROCESSABLE_ENTITY: 422,
-        UUID_PATTERN: /^[a-f0-9-]+$/i
-    };
-
-// Exhibit state configurations
-    const EXHIBIT_STATES = {
-        PUBLISHED: {
-            span_id: 'suppress',
-            title: 'published',
-            icon_class: 'fa fa-cloud',
-            icon_color: 'green',
-            text: 'Published',
-            css_class_to_add: 'suppress-exhibit',
-            css_class_to_remove: 'publish-exhibit',
-            click_handler: suppress_exhibit,
-            is_published: 1
-        },
-        SUPPRESSED: {
-            span_id: 'publish',
-            title: 'suppressed',
-            icon_class: 'fa fa-cloud-upload',
-            icon_color: 'darkred',
-            text: 'Unpublished',
-            css_class_to_add: 'publish-exhibit',
-            css_class_to_remove: 'suppress-exhibit',
-            click_handler: publish_exhibit,
-            is_published: 0
-        }
     };
 
     /**

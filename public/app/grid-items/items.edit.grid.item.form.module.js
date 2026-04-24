@@ -739,7 +739,10 @@ const itemsEditGridItemFormModule = (function () {
                 item_created += ` | <em>Last updated by ${updated_by} on ${update_date_time}</em>`;
             }
 
-            document.querySelector('#created').innerHTML = item_created;
+            const created_elem = document.querySelector('#created');
+            if (created_elem) {
+                created_elem.innerHTML = item_created;
+            }
 
             if (document.querySelector('#is-published') !== null && is_published === 1) {
                 document.querySelector('#is-published').value = true;
