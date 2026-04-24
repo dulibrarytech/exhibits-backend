@@ -53,7 +53,6 @@ const Exhibit_timeline_record_tasks = class extends Base_tasks {
             'uuid',
             'is_member_of_exhibit',
             'type',
-            'title',
             'text',
             'styles',
             'order',
@@ -80,7 +79,6 @@ const Exhibit_timeline_record_tasks = class extends Base_tasks {
             // Set defaults
             const defaults = {
                 type: 'vertical_timeline',
-                title: '',
                 order: 0,
                 is_deleted: 0,
                 is_published: 0,
