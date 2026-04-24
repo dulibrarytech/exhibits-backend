@@ -754,8 +754,8 @@ const itemsEditTimelineItemFormModule = (function () {
             await authModule.check_permissions(['update_item', 'update_any_item'], 'timeline_item', exhibit_id, item_id, redirect);
 
             await exhibitsModule.set_exhibit_title(exhibit_id);
-            // navModule.set_timeline_item_nav_menu_links();
-            navModule.back_to_timeline_items();
+            // Nav links wired by navModule.wire_nav_links() from the view
+            // using data-nav-path + NAV_CONFIGS.timeline_item_form.
             await display_edit_record();
             document.querySelector('#save-item-btn').addEventListener('click', itemsEditTimelineItemFormModule.update_timeline_item_record);
 

@@ -517,14 +517,14 @@ const itemsTimelineModule = (function () {
                 domModule.set_alert(document.querySelector('#message'), 'danger', 'Unable to publish timeline item');
 
                 setTimeout(() => {
-                    document.querySelector('#message').innerHTML = '';
+                    domModule.empty('#message');
                 }, 5000);
             } else if (response === undefined) {
                 scrollTo(0, 0);
                 domModule.set_alert(document.querySelector('#message'), 'danger', 'Unable to publish timeline item');
 
                 setTimeout(() => {
-                    document.querySelector('#message').innerHTML = '';
+                    domModule.empty('#message');
                 }, 5000);
             }
 
@@ -640,7 +640,7 @@ const itemsTimelineModule = (function () {
                 domModule.set_alert(document.querySelector('#message'), 'danger', 'You do not have permission to unpublish this record.');
 
                 setTimeout(() => {
-                    document.querySelector('#message').innerHTML = '';
+                    domModule.empty('#message');
                 }, 5000);
             }
 
@@ -649,7 +649,7 @@ const itemsTimelineModule = (function () {
                 domModule.set_alert(document.querySelector('#message'), 'warning', 'Unable to unpublish timeline item');
 
                 setTimeout(() => {
-                    document.querySelector('#message').innerHTML = '';
+                    domModule.empty('#message');
                 }, 5000);
             }
 
@@ -755,11 +755,9 @@ const itemsTimelineModule = (function () {
             const token = authModule.get_user_token();
             await authModule.check_auth(token);
 
+            // Nav links wired by navModule.wire_nav_links() from the view
+            // using data-nav-path + NAV_CONFIGS.timeline_items_list.
             navModule.init();
-            // navModule.set_preview_link();
-            // navModule.back_to_items();
-            navModule.set_timeline_item_nav_menu_links();
-            // navModule.set_logout_link();
             helperModule.show_form();
 
         } catch (error) {

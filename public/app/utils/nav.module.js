@@ -86,10 +86,29 @@ const navModule = (function () {
     }
 
     /**
-     * Applies or clears inline style attributes on sidebar nav elements
-     * to center icons in collapsed state.  Inline style attributes sit at
-     * the absolute top of the CSS cascade and cannot be overridden by any
-     * stylesheet rule.
+     * Applies inline style attributes on sidebar nav elements so the
+     * collapsed (83px) layout centers icons and the expanded layout
+     * closes the icon/label gap and prevents label wrapping. Inline
+     * style attributes sit at the absolute top of the CSS cascade and
+     * cannot be overridden by any stylesheet rule.
+     *
+     * Why full-width containers (navbar, main_menu, nav_ul, items)?
+     * The theme sets .navbar { display: inline-block } which shrink-
+     * wraps the nav to the icon width (~20px). Without full-width
+     * containers, centering inside the <a> has no effect — the whole
+     * chain collapses flush-left in the 83px sidebar.
+     *
+     * Why flex-direction:column on the nav <ul>?
+     * Bootstrap's .navbar-expand-sm sets flex-direction:row on
+     * .navbar-nav at ≥576px, which makes each <li> only as wide as its
+     * icon (~20px) and left-aligned within the row. Column + width:100%
+     * forces each <li> to span the full sidebar so centering works.
+     *
+     * Source of truth for the style strings themselves:
+     * window.__EXHIBITS_NAV_STYLES__, defined by the post-aside inline
+     * script in views/partials/nav-dashboard.ejs. Both the pre-paint
+     * applier there and this function read from that table so edits in
+     * either place stay in sync.
      *
      * @param {boolean} collapsed - true when sidebar is in 83px state
      */
@@ -101,80 +120,30 @@ const navModule = (function () {
             return;
         }
 
-        if (collapsed) {
+        const table = window.__EXHIBITS_NAV_STYLES__;
 
-            // Force full-width on all container levels.
-            // The theme sets .navbar { display: inline-block } which
-            // shrink-wraps the nav to content width (~20px icon).
-            // Without full-width containers, centering within the <a>
-            // has no effect — the whole chain is flush-left in the 83px sidebar.
-            if (els.navbar) {
-                els.navbar.style.cssText = 'display:block;width:100%;';
-            }
-
-            if (els.main_menu) {
-                els.main_menu.style.cssText = 'display:block;width:100%;';
-            }
-
-            // Force vertical stacking — Bootstrap's .navbar-expand-sm sets
-            // flex-direction:row on .navbar-nav at ≥576px, which makes each
-            // <li> only as wide as its icon (~20px) and left-aligned within
-            // the row.  Switching to column + width:100% ensures each <li>
-            // spans the full 83px sidebar width so centering works.
-            if (els.nav_ul) {
-                els.nav_ul.style.cssText = 'flex-direction:column;width:100%;';
-            }
-
-            for (let i = 0; i < els.items.length; i++) {
-                els.items[i].style.cssText = 'padding:0;width:100%;';
-            }
-
-            for (let j = 0; j < els.links.length; j++) {
-                els.links[j].style.cssText = 'display:flex;justify-content:center;align-items:center;max-width:none;padding:12px 0;font-size:14px;width:100%;';
-            }
-
-            for (let k = 0; k < els.icons.length; k++) {
-                els.icons[k].style.cssText = 'float:none;display:inline-block;width:auto;margin:0;font-size:20px;';
-            }
-
-            for (let m = 0; m < els.labels.length; m++) {
-                els.labels[m].style.display = 'none';
-            }
-
-        } else {
-
-            // Apply expanded layout styles — theme CSS alone leaves
-            // .menu-icon with a large fixed width (~70px gap) and no
-            // white-space control, causing labels to sit far from icons
-            // and wrap to a second line.
-            if (els.navbar) {
-                els.navbar.style.cssText = 'display:block;width:100%;';
-            }
-
-            if (els.main_menu) {
-                els.main_menu.style.cssText = 'display:block;width:100%;';
-            }
-
-            if (els.nav_ul) {
-                els.nav_ul.style.cssText = 'flex-direction:column;width:100%;';
-            }
-
-            for (let i = 0; i < els.items.length; i++) {
-                els.items[i].style.cssText = 'padding:0;width:100%;';
-            }
-
-            for (let j = 0; j < els.links.length; j++) {
-                els.links[j].style.cssText = 'display:flex;align-items:center;max-width:none;padding:12px 15px;font-size:14px;width:100%;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;';
-            }
-
-            for (let k = 0; k < els.icons.length; k++) {
-                els.icons[k].style.cssText = 'float:none;display:inline-flex;flex-shrink:0;width:auto;margin:0 10px 0 0;font-size:20px;';
-            }
-
-            for (let m = 0; m < els.labels.length; m++) {
-                els.labels[m].style.cssText = 'display:inline;white-space:nowrap;';
-            }
+        if (!table) {
+            // Partial did not emit the style table (e.g., a page that
+            // renders nav.module.js without nav-dashboard.ejs). Nothing
+            // we can safely apply without it; bail rather than inventing
+            // a second source of truth.
+            return;
         }
+
+        const styles = table[collapsed ? 'collapsed' : 'expanded'];
+
+        if (!styles) {
+            return;
+        }
+
+        if (els.navbar)    els.navbar.style.cssText    = styles.navbar;
+        if (els.main_menu) els.main_menu.style.cssText = styles.main_menu;
+        if (els.nav_ul)    els.nav_ul.style.cssText    = styles.nav_ul;
+
+        for (let i = 0; i < els.items.length;  i++) els.items[i].style.cssText  = styles.item;
+        for (let j = 0; j < els.links.length;  j++) els.links[j].style.cssText  = styles.link;
+        for (let k = 0; k < els.icons.length;  k++) els.icons[k].style.cssText  = styles.icon;
+        for (let m = 0; m < els.labels.length; m++) els.labels[m].style.cssText = styles.label;
     }
 
     // ==================== SIDEBAR TOGGLE ====================
@@ -292,6 +261,72 @@ const navModule = (function () {
     // ==================== NAV LINK WIRING ====================
 
     /**
+     * Populates the preview-link placeholder emitted by the unified nav
+     * partial when `show_preview: true`. The partial emits an empty
+     * <li id="preview-link"> and relies on this function to build the
+     * anchor and wire the click handler, since the preview URL depends
+     * on the current exhibit_id query param. Idempotent — repeated calls
+     * are no-ops so it is safe to run on DOMContentLoaded AND from
+     * wire_nav_links() without double-binding.
+     */
+    function wire_preview_link() {
+
+        const li = document.getElementById('preview-link');
+
+        if (!li || li.dataset.initialized === '1') {
+            return;
+        }
+
+        const uuid = helperModule.get_parameter_by_name('exhibit_id');
+        const preview_link = APP_PATH + '/preview?uuid=' + uuid;
+
+        const anchor = document.createElement('a');
+        anchor.title = 'Previews Exhibit';
+        anchor.href = preview_link;
+        anchor.target = '_blank';
+        anchor.rel = 'noopener noreferrer';
+
+        const icon = document.createElement('i');
+        icon.className = 'menu-icon fa fa-eye';
+        anchor.appendChild(icon);
+
+        const label = document.createElement('span');
+        label.className = 'nav-label';
+        label.textContent = 'Preview';
+        anchor.appendChild(label);
+
+        anchor.addEventListener('click', function (e) {
+            // Defer the exhibitsModule lookup to click time so pages
+            // that never trigger preview don't need the dep loaded.
+            if (typeof exhibitsModule !== 'undefined' && typeof exhibitsModule.open_preview === 'function') {
+                e.preventDefault();
+                exhibitsModule.open_preview(preview_link);
+            }
+        });
+
+        li.textContent = '';
+        li.appendChild(anchor);
+        li.dataset.initialized = '1';
+    }
+
+    /**
+     * Attaches the logout click handler to the #logout link emitted by
+     * the unified nav partial. Idempotent via dataset flag — every page
+     * with a nav gets this wired automatically on DOMContentLoaded.
+     */
+    function wire_logout_link() {
+
+        const el = document.getElementById('logout');
+
+        if (!el || el.dataset.initialized === '1') {
+            return;
+        }
+
+        el.addEventListener('click', authModule.logout);
+        el.dataset.initialized = '1';
+    }
+
+    /**
      * Generic nav link wiring — resolves data-nav-path tokens and sets href.
      *
      * Reads query-string params from the current URL and replaces {exhibit_id},
@@ -299,8 +334,11 @@ const navModule = (function () {
      * attributes within #main-menu.  Prepends APP_PATH to the resolved path.
      *
      * If a required token value is missing (null / empty), the link's parent
-     * <li> is removed from the DOM (matches the old set_item_list_link behavior
-     * of removing the nav entry when exhibit_id is absent).
+     * <li> is removed from the DOM — the nav entry vanishes rather than
+     * linking to a broken path with an undefined id.
+     *
+     * Also wires the preview and logout links so a single call from per-page
+     * scripts covers everything needed by the unified nav partial.
      */
     obj.wire_nav_links = function () {
 
@@ -347,252 +385,41 @@ const navModule = (function () {
 
             el.href = APP_PATH + path;
         }
+
+        wire_preview_link();
+        wire_logout_link();
     };
 
-    // ==================== LEGACY NAV FUNCTIONS ====================
-    // Preserved for non-exhibit page families until they migrate
-    // to the unified nav partial + wire_nav_links().
-
-    obj.set_preview_link = function () {
-
-        const uuid = helperModule.get_parameter_by_name('exhibit_id');
-        const preview_link = APP_PATH + '/preview?uuid=' + uuid;
-        const li = document.getElementById('preview-link');
-
-        if (li === null) {
-            return;
-        }
-
-        const anchor = document.createElement('a');
-        anchor.title = 'Previews Exhibit';
-        anchor.href = preview_link;
-        anchor.target = '_blank';
-        anchor.rel = 'noopener noreferrer';
-        anchor.innerHTML = '<i class="menu-icon fa fa-eye"></i><span class="nav-label">Preview</span>';
-
-        anchor.addEventListener('click', function (e) {
-            e.preventDefault();
-            exhibitsModule.open_preview(preview_link);
-        });
-
-        li.textContent = '';
-        li.appendChild(anchor);
-    };
-
-    obj.back_to_exhibits = function () {
-        const exhibit_id = helperModule.get_parameter_by_name('exhibit_id');
-        const back_link = document.getElementById('back-to-exhibits');
-        const item_list_link = document.getElementById('item-list');
-
-        if (back_link) {
-            back_link.href = `${APP_PATH}/exhibits?exhibit_id=${encodeURIComponent(exhibit_id)}`;
-        }
-
-        if (item_list_link) {
-            item_list_link.href = `${APP_PATH}/items?exhibit_id=${encodeURIComponent(exhibit_id)}`;
-        }
-    };
-
-    // nav-dashboard-items.ejs
-    obj.set_item_nav_menu_links = function () {
-
-        const uuid = helperModule.get_parameter_by_name('exhibit_id');
-
-        const link_map = {
-            'exhibits-link': '/exhibits/exhibit/details',
-            'heading-link': '/items/heading',
-            'standard-media-item-link': '/items/standard/media',
-            'standard-text-item-link': '/items/standard/text',
-            'item-grid-link': '/items/grid',
-            'item-vertical-timeline-link': '/items/vertical-timeline'
-        };
-
-        const entries = Object.entries(link_map);
-
-        for (let i = 0; i < entries.length; i++) {
-            const el = document.getElementById(entries[i][0]);
-
-            if (el === null) {
-                console.debug('WARN: nav menu link element not found: #' + entries[i][0]);
-                continue;
-            }
-
-            el.href = APP_PATH + entries[i][1] + '?exhibit_id=' + uuid;
-        }
-    };
-
-    // nav-dashboard-grid-add-form.ejs
-    // items.add.grid.form.module.js
-    obj.back_to_items = function () {
-        const exhibit_id = helperModule.get_parameter_by_name('exhibit_id');
-        const back_to_items_link = document.getElementById('back-to-items');
-
-        if (back_to_items_link) {
-            back_to_items_link.href = `${APP_PATH}/items?exhibit_id=${encodeURIComponent(exhibit_id)}`;
-        }
-    };
-
-    // nav-dashboard-grid-edit-form.ejs
-    // items.edit.grid.form.module.js
-    obj.edit_grid_back_to_items = function () {
-
-        const exhibit_id = helperModule.get_parameter_by_name('exhibit_id');
-        const grid_id = helperModule.get_parameter_by_name('item_id');
-        const params = `exhibit_id=${encodeURIComponent(exhibit_id)}&grid_id=${encodeURIComponent(grid_id)}`;
-        const grid_items_link = document.getElementById('grid-items');
-        const back_to_items_link = document.getElementById('back-to-items');
-
-        if (grid_items_link) {
-            grid_items_link.href = `${APP_PATH}/items/grid/items?${params}`;
-        }
-
-        if (back_to_items_link) {
-            back_to_items_link.href = `${APP_PATH}/items?exhibit_id=${encodeURIComponent(exhibit_id)}`;
-        }
-    };
-
-    // nav-dashboard-grid-items.ejs
-    obj.set_grid_item_nav_menu_links = function () {
-
-        const exhibit_id = helperModule.get_parameter_by_name('exhibit_id');
-        const grid_id = helperModule.get_parameter_by_name('grid_id');
-        const query = '?exhibit_id=' + exhibit_id + '&grid_id=' + grid_id;
-
-        const link_map = {
-            'back-to-items': '/items?exhibit_id=' + exhibit_id,
-            'grid-media-item-link': '/items/grid/item/media' + query,
-            'grid-text-item-link': '/items/grid/item/text' + query
-        };
-
-        const entries = Object.entries(link_map);
-
-        for (let i = 0; i < entries.length; i++) {
-            const el = document.getElementById(entries[i][0]);
-
-            if (el === null) {
-                console.debug('WARN: nav menu link element not found: #' + entries[i][0]);
-                continue;
-            }
-
-            el.href = APP_PATH + entries[i][1];
-        }
-    };
-
-    // dashboard-timeline-items.ejs
-    obj.set_timeline_item_nav_menu_links = function () {
-
-        const exhibit_id = helperModule.get_parameter_by_name('exhibit_id');
-        const timeline_id = helperModule.get_parameter_by_name('timeline_id');
-        const query = '?exhibit_id=' + exhibit_id + '&timeline_id=' + timeline_id;
-
-        const link_map = {
-            'back-to-items': '/items?exhibit_id=' + exhibit_id,
-            'timeline-media-item-link': '/items/vertical-timeline/item/media' + query,
-            'timeline-text-item-link': '/items/vertical-timeline/item/text' + query
-        };
-
-        const entries = Object.entries(link_map);
-
-        for (let i = 0; i < entries.length; i++) {
-            const el = document.getElementById(entries[i][0]);
-
-            if (el === null) {
-                console.debug('WARN: nav menu link element not found: #' + entries[i][0]);
-                continue;
-            }
-
-            el.href = APP_PATH + entries[i][1];
-        }
-    };
-
-    obj.set_exhibits_details_nav_menu_links = function () {
-
-        const exhibit_id = helperModule.get_parameter_by_name('exhibit_id');
-        const back_link = document.getElementById('back-to-exhibits');
-        const styles_link = document.getElementById('exhibit-styles');
-
-        if (back_link) {
-            back_link.href = `${APP_PATH}/exhibits?exhibit_id=${encodeURIComponent(exhibit_id)}`;
-        }
-
-        if (styles_link) {
-            styles_link.href = `${APP_PATH}/styles?exhibit_id=${encodeURIComponent(exhibit_id)}`;
-        }
-    };
-
-    obj.back_to_grid_items = function () {
-        const exhibit_id = helperModule.get_parameter_by_name('exhibit_id');
-        const grid_id = helperModule.get_parameter_by_name('grid_id');
-        const back_link = document.getElementById('back-to-items');
-
-        if (back_link) {
-            back_link.href = `${APP_PATH}/items/grid/items?exhibit_id=${encodeURIComponent(exhibit_id)}&grid_id=${encodeURIComponent(grid_id)}`;
-        }
-    };
-
-    obj.back_to_timeline_items = function () {
-        const exhibit_id = helperModule.get_parameter_by_name('exhibit_id');
-        const timeline_id = helperModule.get_parameter_by_name('timeline_id');
-        const back_link = document.getElementById('back-to-items');
-
-        if (back_link) {
-            back_link.href = `${APP_PATH}/items/timeline/items?exhibit_id=${encodeURIComponent(exhibit_id)}&timeline_id=${encodeURIComponent(timeline_id)}`;
-        }
-    };
-
-    // nav-dashboard-vertical-timeline-edit-form.ejs
-    // items.edit.vertical.timeline.form.module.js
-    obj.edit_timeline_back_to_items = function () {
-
-        const exhibit_id = helperModule.get_parameter_by_name('exhibit_id');
-        const timeline_id = helperModule.get_parameter_by_name('item_id');
-        const timeline_items = document.getElementById('timeline-items');
-        const back_to_items_link = document.getElementById('back-to-items');
-
-        if (timeline_items) {
-            timeline_items.href = `${APP_PATH}/items/timeline/items?exhibit_id=${encodeURIComponent(exhibit_id)}&timeline_id=${encodeURIComponent(timeline_id)}`;
-        }
-
-        if (back_to_items_link) {
-            back_to_items_link.href = `${APP_PATH}/items?exhibit_id=${encodeURIComponent(exhibit_id)}`;
-        }
-    };
-
-    //
-    obj.set_item_list_link = function () {
-
-        const exhibit_id = helperModule.get_parameter_by_name('exhibit_id');
-
-        if (exhibit_id !== null) {
-            document.querySelector('#item-list').setAttribute('href', `${APP_PATH}/items?exhibit_id=${exhibit_id}`);
-        } else {
-            document.querySelector('#item-list-nav').remove();
-        }
-    };
-
-    obj.set_logout_link = function () {
-        document.querySelector('#logout').addEventListener('click', authModule.logout);
-    };
-
+    /**
+     * Back-compat shim. Preview and logout wiring moved to private
+     * wire_preview_link() / wire_logout_link() helpers auto-invoked
+     * on DOMContentLoaded and from wire_nav_links(). Existing pages
+     * that still call navModule.init() continue to work; new pages
+     * should call wire_nav_links() directly.
+     */
     obj.init = function () {
-        this.set_preview_link();
-        this.set_logout_link();
-
+        wire_preview_link();
+        wire_logout_link();
         // Re-apply centering after dynamic links (preview) are created
         apply_collapsed_centering(is_sidebar_collapsed());
     };
 
-    // ==================== AUTO-INIT SIDEBAR TOGGLE ====================
-    // The sidebar toggle must work on every page, including pages whose
-    // modules do not call navModule.init().  DOMContentLoaded guarantees
-    // #sidebar-toggle exists before we attach the listener.
+    // ==================== AUTO-INIT ====================
+    // The sidebar toggle, preview link, and logout handler must work on
+    // every page, including pages whose modules do not explicitly call
+    // navModule.init() or navModule.wire_nav_links(). DOMContentLoaded
+    // guarantees the nav elements exist before we touch them.
+
+    function auto_init() {
+        obj.init_sidebar_toggle();
+        wire_preview_link();
+        wire_logout_link();
+    }
 
     if (document.readyState === 'loading') {
-        document.addEventListener('DOMContentLoaded', function () {
-            obj.init_sidebar_toggle();
-        });
+        document.addEventListener('DOMContentLoaded', auto_init);
     } else {
-        obj.init_sidebar_toggle();
+        auto_init();
     }
 
     return obj;

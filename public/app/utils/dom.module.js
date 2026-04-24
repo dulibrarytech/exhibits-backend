@@ -185,19 +185,23 @@ const domModule = (function () {
     };
 
     /**
-     * Empties contents of element
-     * @param selector
-     * @returns {boolean}
+     * Empties contents of element. Safe no-op when the target is missing
+     * — previously threw "Cannot read properties of null" when the
+     * selector didn't match, which cascade-crashed callers that ran this
+     * inside their own error handlers. Accepts selector string or element.
+     * @param {string|Element} target
      */
-    obj.empty = function(selector) {
+    obj.empty = function(target) {
 
-        let elem = document.querySelector(selector);
+        const elem = (typeof target === 'string') ? document.querySelector(target) : target;
+
+        if (!elem) {
+            return;
+        }
 
         while (elem.firstChild) {
             elem.removeChild(elem.firstChild);
         }
-
-        return true;
     };
 
     /**

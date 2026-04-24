@@ -301,7 +301,8 @@ const itemsDetailsTimelineItemModule = (function () {
 
             const exhibit_id = helperModule.get_parameter_by_name('exhibit_id');
             exhibitsModule.set_exhibit_title(exhibit_id);
-            navModule.set_timeline_item_nav_menu_links();
+            // Nav links wired by navModule.wire_nav_links() from the view
+            // using data-nav-path + NAV_CONFIGS.timeline_item_details.
             await display_details_record();
 
         } catch (error) {

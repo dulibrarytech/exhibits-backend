@@ -254,8 +254,9 @@ const itemsCommonVerticalTimelineFormModule = (function () {
             const token = authModule.get_user_token();
             await authModule.check_auth(token);
 
+            // Nav links wired by navModule.wire_nav_links() from the view
+            // using data-nav-path + NAV_CONFIGS.timeline_{add,edit}_form / _details.
             navModule.init();
-            navModule.back_to_items();
 
             let timeline_background_color_picker =  document.querySelector('#timeline-background-color-picker');
 
@@ -283,7 +284,11 @@ const itemsCommonVerticalTimelineFormModule = (function () {
             styles_promise = fetch_and_populate_styles();
 
         } catch (error) {
-            document.querySelector('#message').innerHTML = `<div class="alert alert-danger" role="alert"><i class="fa fa-exclamation"></i> ${error.message}</div>`;
+            // domModule.set_alert is a no-op if #message is absent, so a
+            // missing target cannot mask the original error with a
+            // secondary "Cannot set properties of null" TypeError.
+            domModule.set_alert('#message', 'danger', error.message);
+            console.error('itemsCommonVerticalTimelineFormModule.init failed:', error);
         }
     };
 

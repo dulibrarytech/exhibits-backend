@@ -1,6 +1,6 @@
 <%- include('../partials/header.ejs'); %>
 <body>
-<%- include('../partials/nav.ejs'); %>
+<%- include('../partials/nav-dashboard.ejs'); %>
 <div id="right-panel" class="right-panel">
     <%- include('../partials/main-header.ejs'); %>
     <div class="content" style="min-height: 875px;">
@@ -40,7 +40,7 @@
 
             if (status !== null && status === '403') {
 
-                document.querySelector('#message').innerHTML = `<div class="alert alert-danger" role="alert"><i class="fa fa-exclamation"></i> You do not have permission to delete this item.</div>`;
+                domModule.set_alert('#message', 'danger', 'You do not have permission to delete this item.');
 
                 setTimeout(() => {
                     window.history.replaceState({page: 'items'}, '', '/exhibits-dashboard/items/grid/item/delete?exhibit_id=' + exhibit_id + '&grid_id=' + grid_id + '&item_id=' + item_id);
@@ -51,14 +51,18 @@
                 const redirect = '/items/grid/item/delete?exhibit_id=' + exhibit_id + '&grid_id=' + grid_id + '&item_id=' + item_id + '&status=403';
                 await authModule.check_permissions(['delete_item', 'delete_any_item'], 'item', exhibit_id, item_id, redirect);
                 await exhibitsModule.set_exhibit_title(exhibit_id);
-                document.querySelector('#delete-item-btn').addEventListener('click', itemsGridModule.delete_grid_item);
+                const delete_btn = document.querySelector('#delete-item-btn');
+                if (delete_btn) {
+                    delete_btn.addEventListener('click', itemsGridModule.delete_grid_item);
+                }
                 helperModule.show_form();
             }
 
-            navModule.set_item_list_link();
+            navModule.wire_nav_links();
 
         } catch (error) {
-            document.querySelector('#message').innerHTML = `<div class="alert alert-danger" role="alert"><i class="fa fa-exclamation"></i> ${error.message}</div>`;
+            domModule.set_alert('#message', 'danger', error.message);
+            console.error('grid-items delete form init failed:', error);
         }
 
     })();

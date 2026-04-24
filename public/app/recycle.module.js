@@ -65,7 +65,7 @@ const recycleModule = (function () {
 
         if (records.length === 0) {
             document.querySelector('.card').innerHTML = '';
-            document.querySelector('#message').innerHTML = '<div class="alert alert-info" role="alert">No deleted records found.</div>';
+            domModule.set_alert('#message', 'info', 'No deleted records found.');
             return false;
         }
 
@@ -259,7 +259,7 @@ const recycleModule = (function () {
             domModule.set_alert(document.querySelector('#message'), 'warning', 'Exhibit must contain at least one item to publish');
 
             setTimeout(() => {
-                document.querySelector('#message').innerHTML = '';
+                domModule.empty('#message');
             }, 5000);
         }
     }
@@ -307,7 +307,7 @@ const recycleModule = (function () {
             domModule.set_alert(document.querySelector('#message'), 'danger', 'Unable to suppress exhibit');
 
             setTimeout(() => {
-                document.querySelector('#message').innerHTML = '';
+                domModule.empty('#message');
             }, 5000);
         }
     }

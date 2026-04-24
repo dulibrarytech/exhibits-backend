@@ -56,15 +56,13 @@ const exhibitsModule = (function () {
 
         // Handle 403 Forbidden
         if (response?.status === 403) {
-            display_exhibits_error_message('You do not have permission to view exhibits');
+            domModule.set_alert('#message', 'danger', 'You do not have permission to view exhibits');
             return undefined;
         }
 
         if (response?.status === 429) {
             window.scrollTo({ top: 0, behavior: 'smooth' });
-            const message = response.data.message;
-            const message_element = document.querySelector('#message');
-            display_message(message_element, 'warning', message);
+            domModule.set_alert('#message', 'warning', response.data.message);
             return false;
         }
 
@@ -82,58 +80,43 @@ const exhibitsModule = (function () {
 
         // Response exists but status is not 200
         if (response) {
-            display_exhibits_error_message(`Request failed with status ${response.status}`);
+            domModule.set_alert('#message', 'danger', `Request failed with status ${response.status}`);
             return undefined;
         }
 
         // Response is undefined - network or server error
-        display_exhibits_error_message('Unable to load exhibits. Please check your connection and try again.');
+        domModule.set_alert('#message', 'danger', 'Unable to load exhibits. Please check your connection and try again.');
         return undefined;
     }
 
     /**
-     * Display error message
-     *
-     * @param {string} message - Error message to display
-     * @returns {void}
+     * Renders an alert and auto-clears it after a delay. All toast-style
+     * messages in this module (publish/unpublish results, copy feedback,
+     * rate-limit warnings) funnel through here so they share one codepath
+     * with domModule.set_alert instead of rebuilding the same DOM inline.
+     * @param {string} type              - 'danger'|'warning'|'success'|'info'
+     * @param {string} message           - Plain-text message
+     * @param {string|Element} [target]  - CSS selector or element; defaults to '#message'
+     * @param {number} [duration]        - ms before auto-clear; defaults to EXHIBIT_CONSTANTS.MESSAGE_DURATION
      */
-    function display_exhibits_error_message(message) {
+    function flash_message(type, message, target = '#message', duration) {
 
-        const message_elem = document.querySelector('#message');
-
-        // Validate element exists
-        if (!message_elem) {
-            console.error('Message element #message not found in DOM');
+        const container = (typeof target === 'string') ? document.querySelector(target) : target;
+        if (!container) {
             return;
         }
 
-        // Clear previous content safely
-        message_elem.textContent = '';
+        window.scrollTo({top: 0, behavior: 'smooth'});
+        domModule.set_alert(container, type, message);
 
-        // Create alert container
-        const alert_div = document.createElement('div');
-        alert_div.className = 'alert alert-danger';
-        alert_div.setAttribute('role', 'alert');
+        const rendered = container.firstChild;
+        const clear_after = (typeof duration === 'number') ? duration : EXHIBIT_CONSTANTS.MESSAGE_DURATION;
 
-        // WCAG 2.1 - Make error announcements polite for screen readers
-        alert_div.setAttribute('aria-live', 'polite');
-        alert_div.setAttribute('aria-atomic', 'true');
-
-        // Create icon (decorative, hidden from screen readers)
-        const icon = document.createElement('i');
-        icon.className = 'fa fa-exclamation';
-        icon.setAttribute('aria-hidden', 'true');
-        alert_div.appendChild(icon);
-
-        // Add space between icon and text
-        alert_div.appendChild(document.createTextNode(' '));
-
-        // Create message text safely (prevents XSS)
-        const message_text = document.createTextNode(message);
-        alert_div.appendChild(message_text);
-
-        // Append to message container
-        message_elem.appendChild(alert_div);
+        setTimeout(() => {
+            if (container.firstChild === rendered) {
+                container.textContent = '';
+            }
+        }, clear_after);
     }
 
     obj.display_exhibits = async function () {
@@ -160,7 +143,7 @@ const exhibitsModule = (function () {
             // Handle empty results
             if (!exhibits || exhibits.length === 0) {
                 clear_exhibits_display();
-                display_no_exhibits_message();
+                domModule.set_alert('#message', 'info', 'No Exhibits found.');
                 return false;
             }
 
@@ -197,12 +180,7 @@ const exhibitsModule = (function () {
 
         } catch (error) {
             console.error('Error displaying exhibits:', error);
-
-            const message_elem = document.querySelector('#message');
-            if (message_elem) {
-                display_message(message_elem, 'danger', get_user_friendly_error_message(error));
-            }
-
+            domModule.set_alert('#message', 'danger', get_user_friendly_error_message(error));
             return false;
         }
     };
@@ -215,32 +193,6 @@ const exhibitsModule = (function () {
         if (card) {
             card.textContent = '';
         }
-    }
-
-    /**
-     * Display "no exhibits found" message
-     */
-    function display_no_exhibits_message() {
-
-        const message_elem = document.querySelector('#message');
-
-        if (!message_elem) {
-            console.warn('Message element not found');
-            return;
-        }
-
-        message_elem.textContent = '';
-
-        const alert_div = document.createElement('div');
-        alert_div.className = 'alert alert-info';
-        alert_div.setAttribute('role', 'status');
-        alert_div.setAttribute('aria-live', 'polite');
-        alert_div.setAttribute('aria-atomic', 'true');
-
-        const text = document.createTextNode('No Exhibits found.');
-        alert_div.appendChild(text);
-
-        message_elem.appendChild(alert_div);
     }
 
     /**
@@ -803,44 +755,6 @@ const exhibitsModule = (function () {
     }
 
     /**
-     * Display message helper (reusable across module)
-     * @param {HTMLElement} element - Target element
-     * @param {string} alert_type - Alert type ('info', 'success', 'danger', 'warning')
-     * @param {string} message - Message text
-     */
-    function display_message(element, alert_type, message) {
-
-        if (!element) {
-            console.error('Display message: element not found');
-            return;
-        }
-
-        element.textContent = '';
-
-        const alert_div = document.createElement('div');
-        alert_div.className = `alert alert-${alert_type}`;
-        alert_div.setAttribute('role', 'alert');
-        alert_div.setAttribute('aria-live', 'polite');
-        alert_div.setAttribute('aria-atomic', 'true');
-
-        const icon_class_map = {
-            'info': 'fa fa-info',
-            'success': 'fa fa-check',
-            'danger': 'fa fa-exclamation',
-            'warning': 'fa fa-exclamation-triangle'
-        };
-
-        const icon = create_icon(icon_class_map[alert_type] || 'fa fa-info', '', '', '');
-        alert_div.appendChild(icon);
-        alert_div.appendChild(document.createTextNode(' '));
-
-        const text = document.createTextNode(message);
-        alert_div.appendChild(text);
-
-        element.appendChild(alert_div);
-    }
-
-    /**
      * Initialize DataTable with configuration
      * @returns {Object} DataTable instance
      */
@@ -999,7 +913,7 @@ const exhibitsModule = (function () {
         if (response?.status === 403) {
             const message_elem = document.querySelector('#message');
             if (message_elem) {
-                display_message(message_elem, 'danger', 'You do not have permission to view this exhibit');
+                domModule.set_alert(message_elem, 'danger', 'You do not have permission to view this exhibit');
             }
             return undefined;
         }
@@ -1012,7 +926,7 @@ const exhibitsModule = (function () {
         if (response === undefined) {
             const message_elem = document.querySelector('#message');
             if (message_elem) {
-                display_message(message_elem, 'danger', 'Unable to load exhibit title. Please check your connection and try again.');
+                domModule.set_alert(message_elem, 'danger', 'Unable to load exhibit title. Please check your connection and try again.');
             }
         }
 
@@ -1039,7 +953,7 @@ const exhibitsModule = (function () {
             // Auth travels via the HttpOnly exhibits_token cookie set at
             // SSO callback; the JWT no longer appears in the preview URL.
             link = window.open(preview_link, '_blank', 'location=yes,scrollbars=yes,status=yes');
-            document.querySelector('#message').innerHTML = '';
+            domModule.empty('#message');
         }, 900);
     };
 
@@ -1078,7 +992,7 @@ const exhibitsModule = (function () {
                 delete_card_elem.textContent = '';
             }
             if (message_elem) {
-                display_message(message_elem, 'danger', 'You do not have permission to delete this record');
+                domModule.set_alert(message_elem, 'danger', 'You do not have permission to delete this record');
             }
             return false;
         }
@@ -1087,7 +1001,7 @@ const exhibitsModule = (function () {
             window.scrollTo({ top: 0, behavior: 'smooth' });
             const message = response.data.message;
             const message_element = document.querySelector('#message');
-            display_message(message_element, 'warning', message);
+            domModule.set_alert(message_element, 'warning', message);
             return false;
         }
 
@@ -1101,7 +1015,7 @@ const exhibitsModule = (function () {
                 delete_card_elem.textContent = '';
             }
             if (message_elem) {
-                display_message(message_elem, 'warning', 'Cannot delete an exhibit that contains items');
+                domModule.set_alert(message_elem, 'warning', 'Cannot delete an exhibit that contains items');
             }
         } else if (response === undefined) {
             scrollTo(0, 0);
@@ -1109,7 +1023,7 @@ const exhibitsModule = (function () {
                 delete_card_elem.textContent = '';
             }
             if (message_elem) {
-                display_message(message_elem, 'danger', 'Unable to delete exhibit. Please check your connection and try again.');
+                domModule.set_alert(message_elem, 'danger', 'Unable to delete exhibit. Please check your connection and try again.');
             }
         }
 
@@ -1306,13 +1220,13 @@ const exhibitsModule = (function () {
 
             // Handle 403 Forbidden
             if (response?.status === EXHIBIT_CONSTANTS.HTTP_FORBIDDEN) {
-                show_message('danger', 'You do not have permission to publish this record');
+                flash_message('danger', 'You do not have permission to publish this record');
                 return false;
             }
 
             // Handle 422 Unprocessable Entity - exhibit must contain at least one item
             if (response?.status === EXHIBIT_CONSTANTS.HTTP_UNPROCESSABLE_ENTITY) {
-                show_message('warning', 'Exhibit must contain at least one item to publish');
+                flash_message('warning', 'Exhibit must contain at least one item to publish');
                 return false;
             }
 
@@ -1320,7 +1234,7 @@ const exhibitsModule = (function () {
                 window.scrollTo({ top: 0, behavior: 'smooth' });
                 const message = response.data.message;
                 const message_element = document.querySelector('#message');
-                display_message(message_element, 'warning', message);
+                domModule.set_alert(message_element, 'warning', message);
                 return false;
             }
 
@@ -1329,14 +1243,14 @@ const exhibitsModule = (function () {
                 update_exhibit_status_ui_generic(uuid, EXHIBIT_STATES.PUBLISHED);
                 update_exhibit_actions_ui_generic(clean_uuid, EXHIBIT_STATES.PUBLISHED);
             } else if (!response) {
-                show_message('danger', 'Unable to publish exhibit. Please check your connection and try again.');
+                flash_message('danger', 'Unable to publish exhibit. Please check your connection and try again.');
             }
 
             return false;
 
         } catch (error) {
             console.error('Error publishing exhibit:', error);
-            show_message('danger', get_user_friendly_error_message(error));
+            flash_message('danger', get_user_friendly_error_message(error));
             return false;
         }
     }
@@ -1367,7 +1281,7 @@ const exhibitsModule = (function () {
 
             // Handle 403 Forbidden
             if (response?.status === EXHIBIT_CONSTANTS.HTTP_FORBIDDEN) {
-                show_message('danger', 'You do not have permission to unpublish this record');
+                flash_message('danger', 'You do not have permission to unpublish this record');
                 return false;
             }
 
@@ -1375,7 +1289,7 @@ const exhibitsModule = (function () {
                 window.scrollTo({ top: 0, behavior: 'smooth' });
                 const message = response.data.message;
                 const message_element = document.querySelector('#message');
-                display_message(message_element, 'warning', message);
+                domModule.set_alert(message_element, 'warning', message);
                 return false;
             }
 
@@ -1384,62 +1298,16 @@ const exhibitsModule = (function () {
                 update_exhibit_status_ui_generic(uuid, EXHIBIT_STATES.SUPPRESSED);
                 update_exhibit_actions_ui_generic(clean_uuid, EXHIBIT_STATES.SUPPRESSED);
             } else if (!response) {
-                show_message('danger', 'Unable to unpublish exhibit. Please check your connection and try again.');
+                flash_message('danger', 'Unable to unpublish exhibit. Please check your connection and try again.');
             }
 
             return false;
 
         } catch (error) {
             console.error('Error suppressing exhibit:', error);
-            show_message('danger', get_user_friendly_error_message(error));
+            flash_message('danger', get_user_friendly_error_message(error));
             return false;
         }
-    }
-
-    /**
-    /**
-     * Displays a message to the user
-     * @param {string} type - Message type ('warning', 'danger', 'success', 'info')
-     * @param {string} message - Message text to display
-     * @param {number} duration - How long to display message in milliseconds
-     */
-    function show_message(type, message, duration = EXHIBIT_CONSTANTS.MESSAGE_DURATION) {
-        const message_container = document.querySelector('#message');
-
-        if (!message_container) {
-            console.error('Message container not found');
-            return;
-        }
-
-        // Scroll to top for visibility
-        window.scrollTo({top: 0, behavior: 'smooth'});
-
-        // Clear existing content
-        while (message_container.firstChild) {
-            message_container.removeChild(message_container.firstChild);
-        }
-
-        // Create alert element safely
-        const alert_div = document.createElement('div');
-        alert_div.className = `alert alert-${type}`;
-        alert_div.setAttribute('role', 'alert');
-
-        const icon = document.createElement('i');
-        icon.className = type === 'warning' ? 'fa fa-warning' : 'fa fa-exclamation-circle';
-        icon.setAttribute('aria-hidden', 'true');
-
-        const message_text = document.createTextNode(` ${message}`);
-
-        alert_div.appendChild(icon);
-        alert_div.appendChild(message_text);
-        message_container.appendChild(alert_div);
-
-        // Auto-clear message after delay
-        setTimeout(() => {
-            if (message_container.firstChild === alert_div) {
-                message_container.removeChild(alert_div);
-            }
-        }, duration);
     }
 
     /**
@@ -1456,18 +1324,18 @@ const exhibitsModule = (function () {
 
         // Input validation
         if (!uuid || typeof uuid !== 'string') {
-            show_info_message('#shared-url', 'Invalid exhibit UUID provided');
+            domModule.set_alert('#shared-url', 'info', 'Invalid exhibit UUID provided');
             return false;
         }
 
         // Validate UUID format
         if (!/^[a-f0-9-]+$/i.test(uuid)) {
-            show_info_message('#shared-url', 'Invalid UUID format');
+            domModule.set_alert('#shared-url', 'info', 'Invalid UUID format');
             return false;
         }
 
         // Show loading state
-        show_info_message('#shared-url', 'Generating Shared URL...');
+        domModule.set_alert('#shared-url', 'info', 'Generating Shared URL...');
 
         // Get endpoints and token
         const exhibits_endpoints = endpointsModule.get_exhibits_endpoints();
@@ -1476,7 +1344,7 @@ const exhibitsModule = (function () {
         // Validate token
         if (!token || token === false) {
             setTimeout(() => {
-                show_info_message('#message', 'Unable to get session token');
+                domModule.set_alert('#message', 'info', 'Unable to get session token');
                 authModule.logout();
             }, TOKEN_ERROR_DELAY);
             return false;
@@ -1498,7 +1366,7 @@ const exhibitsModule = (function () {
 
         // Handle 403 Forbidden
         if (response?.status === EXHIBIT_CONSTANTS.HTTP_FORBIDDEN) {
-            show_error_message('#shared-url', 'You do not have permission to create a shared URL for this exhibit');
+            domModule.set_alert('#shared-url', 'danger', 'You do not have permission to create a shared URL for this exhibit');
             return false;
         }
 
@@ -1506,7 +1374,7 @@ const exhibitsModule = (function () {
         if (response?.status === HTTP_CREATED && response.data?.shared_url) {
             // Validate the shared URL
             if (!is_valid_url(response.data.shared_url)) {
-                show_error_message('#shared-url', 'Invalid shared URL received from server');
+                domModule.set_alert('#shared-url', 'danger', 'Invalid shared URL received from server');
                 return false;
             }
 
@@ -1523,7 +1391,7 @@ const exhibitsModule = (function () {
         } else {
             // Handle unexpected response
             const error_message = response?.data?.message || 'Failed to create shared URL';
-            show_info_message('#shared-url', error_message);
+            domModule.set_alert('#shared-url', 'info', error_message);
         }
 
         return false;
@@ -1610,62 +1478,6 @@ const exhibitsModule = (function () {
         container.appendChild(wrapper);
     }
 
-    /**
-     * Displays an info message in the specified container
-     * @param {string} selector - CSS selector for the container
-     * @param {string} message - Message to display
-     */
-    function show_info_message(selector, message) {
-        display_alert_message(selector, 'info', message, 'fa-info-circle');
-    }
-
-    /**
-     * Displays an error message in the specified container
-     * @param {string} selector - CSS selector for the container
-     * @param {string} message - Message to display
-     */
-    function show_error_message(selector, message) {
-        display_alert_message(selector, 'danger', message, 'fa-exclamation-circle');
-    }
-
-    /**
-     * Displays an alert message in the specified container
-     * @param {string} selector - CSS selector for the container
-     * @param {string} type - Alert type ('info', 'danger', 'warning', 'success')
-     * @param {string} message - Message to display
-     * @param {string} icon_class - FontAwesome icon class
-     */
-    function display_alert_message(selector, type, message, icon_class) {
-        const container = document.querySelector(selector);
-
-        if (!container) {
-            console.error(`Container not found: ${selector}`);
-            return;
-        }
-
-        // Clear existing content
-        while (container.firstChild) {
-            container.removeChild(container.firstChild);
-        }
-
-        // Create alert element
-        const alert_div = document.createElement('div');
-        alert_div.className = `alert alert-${type}`;
-        alert_div.setAttribute('role', 'alert');
-
-        // Create icon
-        const icon = document.createElement('i');
-        icon.className = `fa ${icon_class}`;
-        icon.setAttribute('aria-hidden', 'true');
-
-        // Create message text
-        const message_text = document.createTextNode(` ${message}`);
-
-        // Assemble and append
-        alert_div.appendChild(icon);
-        alert_div.appendChild(message_text);
-        container.appendChild(alert_div);
-    }
 
     /**
      * Copies the shared URL to the clipboard
@@ -1700,11 +1512,11 @@ const exhibitsModule = (function () {
             await copy_to_clipboard(shared_url);
 
             // Show success message
-            show_copy_success_message(COPY_MESSAGE_SELECTOR, COPY_MESSAGE_DURATION);
+            flash_message('info', 'URL copied to clipboard!', COPY_MESSAGE_SELECTOR, COPY_MESSAGE_DURATION);
 
         } catch (error) {
             console.error('Error copying to clipboard:', error);
-            show_copy_error_message(COPY_MESSAGE_SELECTOR, get_user_friendly_error_message(error));
+            domModule.set_alert(COPY_MESSAGE_SELECTOR, 'danger', get_user_friendly_error_message(error) || 'Failed to copy URL to clipboard');
         }
     };
 
@@ -1776,88 +1588,6 @@ const exhibitsModule = (function () {
     }
 
     /**
-     * Displays a success message after copying
-     * @param {string} selector - CSS selector for message container
-     * @param {number} duration - How long to display the message
-     */
-    function show_copy_success_message(selector, duration) {
-        const container = document.querySelector(selector);
-
-        if (!container) {
-            console.warn(`Copy message container not found: ${selector}`);
-            return;
-        }
-
-        // Clear existing content
-        while (container.firstChild) {
-            container.removeChild(container.firstChild);
-        }
-
-        // Create alert element
-        const alert_div = document.createElement('div');
-        alert_div.className = 'alert alert-info';
-        alert_div.setAttribute('role', 'alert');
-
-        // Create icon
-        const icon = document.createElement('i');
-        icon.className = 'fa fa-info-circle';
-        icon.setAttribute('aria-hidden', 'true');
-
-        // Create message text
-        const message_text = document.createTextNode(' URL copied to clipboard!');
-
-        // Assemble
-        alert_div.appendChild(icon);
-        alert_div.appendChild(message_text);
-        container.appendChild(alert_div);
-
-        // Auto-clear after duration
-        setTimeout(() => {
-            if (container.firstChild === alert_div) {
-                container.removeChild(alert_div);
-            }
-        }, duration);
-    }
-
-    /**
-     * Displays an error message after failed copy
-     * @param {string} selector - CSS selector for message container
-     * @param {string} error_message - Error message to display
-     */
-    function show_copy_error_message(selector, error_message) {
-        const container = document.querySelector(selector);
-
-        if (!container) {
-            console.error(`Copy message container not found: ${selector}`);
-            return;
-        }
-
-        // Clear existing content
-        while (container.firstChild) {
-            container.removeChild(container.firstChild);
-        }
-
-        // Create alert element
-        const alert_div = document.createElement('div');
-        alert_div.className = 'alert alert-danger';
-        alert_div.setAttribute('role', 'alert');
-
-        // Create icon
-        const icon = document.createElement('i');
-        icon.className = 'fa fa-exclamation-circle';
-        icon.setAttribute('aria-hidden', 'true');
-
-        // Create message text (sanitize error message)
-        const safe_error = error_message || 'Failed to copy URL to clipboard';
-        const message_text = document.createTextNode(` ${safe_error}`);
-
-        // Assemble
-        alert_div.appendChild(icon);
-        alert_div.appendChild(message_text);
-        container.appendChild(alert_div);
-    }
-
-    /**
      * Initializes the exhibits module
      * Verifies authentication, loads exhibits, and sets up the UI
      * @returns {Promise<void>}
@@ -1891,7 +1621,7 @@ const exhibitsModule = (function () {
 
         } catch (error) {
             console.error('Error initializing exhibits module:', error);
-            handle_init_error(error);
+            domModule.set_alert('#message', 'danger', get_user_friendly_error_message(error));
         }
     };
 
@@ -1910,6 +1640,7 @@ const exhibitsModule = (function () {
 
     /**
      * Initializes UI components (form and navigation)
+     * Logout wiring is handled by navModule's auto-init on DOMContentLoaded.
      */
     function initialize_ui_components() {
 
@@ -1919,53 +1650,10 @@ const exhibitsModule = (function () {
             } else {
                 console.warn('helperModule.show_form is not available');
             }
-
-            if (typeof navModule !== 'undefined' && typeof navModule.set_logout_link === 'function') {
-                navModule.set_logout_link();
-            } else {
-                console.warn('navModule.set_logout_link is not available');
-            }
         } catch (error) {
             console.error('Error initializing UI components:', error);
             // Non-critical error, log but don't throw
         }
-    }
-
-    /**
-     * Handles initialization errors by displaying appropriate messages
-     * @param {Error} error - The error that occurred
-     */
-    function handle_init_error(error) {
-        const message_container = document.querySelector('#message');
-
-        if (!message_container) {
-            console.error('Message container not found, cannot display error to user');
-            return;
-        }
-
-        // Clear existing content
-        while (message_container.firstChild) {
-            message_container.removeChild(message_container.firstChild);
-        }
-
-        // Create alert element safely
-        const alert_div = document.createElement('div');
-        alert_div.className = 'alert alert-danger';
-        alert_div.setAttribute('role', 'alert');
-
-        // Create icon
-        const icon = document.createElement('i');
-        icon.className = 'fa fa-exclamation-circle';
-        icon.setAttribute('aria-hidden', 'true');
-
-        // Create safe error message
-        const error_message = get_user_friendly_error_message(error);
-        const message_text = document.createTextNode(` ${error_message}`);
-
-        // Assemble and display
-        alert_div.appendChild(icon);
-        alert_div.appendChild(message_text);
-        message_container.appendChild(alert_div);
     }
 
     /**

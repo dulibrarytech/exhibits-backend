@@ -501,9 +501,9 @@ const itemsCommonVerticalTimelineItemFormModule = (function () {
             const token = authModule.get_user_token();
             await authModule.check_auth(token);
 
+            // Nav links wired by navModule.wire_nav_links() from the view
+            // using data-nav-path + NAV_CONFIGS.timeline_item_form.
             navModule.init();
-            navModule.back_to_timeline_items();
-            navModule.set_preview_link();
             helperModule.show_form();
 
             // Wire up media picker buttons if on a media form

@@ -986,13 +986,12 @@ const itemsModule = (function() {
             const token = authModule.get_user_token();
             await authModule.check_auth(token);
 
-            // Initialize page
+            // Initialize page. Nav links (including preview and logout)
+            // are wired by navModule.wire_nav_links() from the view
+            // using data-nav-path + NAV_CONFIGS.items_list.
             exhibitsModule.set_exhibit_title(exhibit_id);
             await obj.display_items();
             helperModule.show_form();
-            // navModule.set_preview_link();
-            navModule.set_item_nav_menu_links();
-            // navModule.set_logout_link();
 
             console.debug('Items module initialized');
 

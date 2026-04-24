@@ -36,7 +36,14 @@ const MAX_UUID_LENGTH = 36; // Standard UUID length
 // Cookie-based token transport avoids leaking the JWT into browser
 // history, Referer headers, and access logs. See set_auth_cookie.
 const TOKEN_COOKIE_NAME = 'exhibits_token';
-const TOKEN_COOKIE_MAX_AGE_SECONDS = 8 * 60 * 60;
+// Fallback lifetime used only when the JWT's `exp` claim cannot be read.
+// The effective Max-Age is normally derived from the token's exp so the
+// cookie never expires before the JWT it carries.
+const TOKEN_COOKIE_FALLBACK_MAX_AGE_SECONDS = 8 * 60 * 60;
+// Floor so we never set a cookie that expires on arrival, which would
+// trigger a burst of "no valid authentication" requests from images
+// already inflight.
+const TOKEN_COOKIE_MIN_MAX_AGE_SECONDS = 60;
 
 /**
  * Parses a named cookie from the request's Cookie header. Kept local to
@@ -366,6 +373,12 @@ exports.verify = function (req, res, next) {
                 });
             }
 
+            // Rolling cookie refresh: re-issue the cookie on every
+            // authenticated request so its Max-Age always tracks the
+            // JWT's remaining lifetime. Prevents the cookie from
+            // expiring before the token and stranding <img> requests.
+            exports.set_auth_cookie(res, token);
+
             req.decoded = decoded;
             return next();
         });
@@ -437,6 +450,9 @@ exports.verify_with_query = function (req, res, next) {
                 });
             }
 
+            // Rolling cookie refresh: see verify() for rationale.
+            exports.set_auth_cookie(res, token);
+
             req.decoded = decoded;
             return next();
         });
@@ -464,8 +480,11 @@ exports.verify_with_query = function (req, res, next) {
         return next();
     }
 
-    // No valid authentication provided - return 401 (no SSO redirect for API endpoints)
-    LOGGER.module().warn('WARNING: [/libs/tokens lib (verify_with_query)] no valid authentication provided');
+    // No valid authentication provided - return 401 (no SSO redirect for API endpoints).
+    // Logged at info rather than warn: an unauth'd resource request is
+    // an ordinary 401, not an alert. A browser whose session cookie
+    // expired will emit many of these per page as <img> tags reload.
+    LOGGER.module().info('INFO: [/libs/tokens lib (verify_with_query)] no valid authentication provided');
 
     return res.status(401).json({
         success: false,
@@ -518,6 +537,39 @@ exports.verify_shared = function (req, res, next) {
 };
 
 /**
+ * Derives the cookie Max-Age from a signed JWT's `exp` claim so the
+ * cookie never outlives — or, crucially, undercuts — the token it
+ * carries. When the cookie Max-Age was shorter than the JWT lifetime,
+ * the cookie would silently expire first and cookie-authenticated
+ * requests (media <img> src, preview windows) would 401 even though
+ * the user's session was still valid.
+ * @param {string} token - Signed JWT
+ * @returns {number}     - Cookie Max-Age in seconds
+ * @private
+ */
+function derive_cookie_max_age(token) {
+
+    try {
+
+        const decoded = JWT.decode(token);
+
+        if (decoded && typeof decoded.exp === 'number') {
+
+            const remaining = decoded.exp - Math.floor(Date.now() / 1000);
+
+            if (remaining > TOKEN_COOKIE_MIN_MAX_AGE_SECONDS) {
+                return remaining;
+            }
+        }
+
+    } catch (error) {
+        LOGGER.module().error('ERROR: [/libs/tokens lib (derive_cookie_max_age)] unable to decode token: ' + error.message);
+    }
+
+    return TOKEN_COOKIE_FALLBACK_MAX_AGE_SECONDS;
+}
+
+/**
  * Writes the session JWT into an HttpOnly cookie. Lets preview windows
  * and media <img> requests authenticate without the token appearing in
  * URLs, browser history, Referer headers, or access logs.
@@ -530,12 +582,14 @@ exports.set_auth_cookie = function (res, token) {
         return;
     }
 
+    const max_age = derive_cookie_max_age(token);
+
     const parts = [
         `${TOKEN_COOKIE_NAME}=${encodeURIComponent(token)}`,
         'Path=/',
         'HttpOnly',
         'SameSite=Lax',
-        `Max-Age=${TOKEN_COOKIE_MAX_AGE_SECONDS}`
+        `Max-Age=${max_age}`
     ];
 
     if (process.env.NODE_ENV === 'production') {

@@ -77,7 +77,7 @@ const NAV_CONFIGS = {
         back: {
             id: 'back-to-exhibits',
             label: 'Back to Exhibits',
-            href: APP_PATH + '/exhibits'
+            nav_path: '/exhibits?exhibit_id={exhibit_id}'
         },
         links: [
             { id: 'item-list', label: 'Exhibit Items', icon: 'fa fa-list pr-1', nav_path: '/items?exhibit_id={exhibit_id}', wrapper_id: 'item-list-nav' }
@@ -331,8 +331,16 @@ const NAV_CONFIGS = {
         }
     },
 
-    // ── Minimal (session-out, logout, access-denied, recycle) ──
-    minimal: {}
+    // ── Minimal (session-out, logout, recycle) ──
+    minimal: {},
+
+    access_denied: {
+        back: {
+            id: 'back-to-items',
+            label: 'Back to Exhibit Items',
+            nav_path: '/items?exhibit_id={exhibit_id}'
+        }
+    }
 };
 
 //======================== Exhibits ========================//
@@ -668,7 +676,7 @@ exports.get_dashboard_users_delete_form = function (req, res) {
 exports.get_dashboard_access_denied = function (req, res) {
     res.render('dist/dashboard-access-denied', {
         ...template_config,
-        nav: NAV_CONFIGS.minimal
+        nav: NAV_CONFIGS.access_denied
     });
 };
 

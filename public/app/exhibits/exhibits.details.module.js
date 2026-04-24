@@ -610,10 +610,8 @@ const exhibitsDetailsModule = (function () {
                 show_message('You do not have permission to edit this record.', 'danger', 'fa-exclamation');
             }
 
-            // Initialize navigation
-            if (navModule && typeof navModule.back_to_exhibits === 'function') {
-                navModule.back_to_exhibits();
-            }
+            // Nav links wired by navModule.wire_nav_links() from the view
+            // using data-nav-path + NAV_CONFIGS.exhibits_details.
 
             // Add save button listener
             add_listener('#save-exhibit-btn', 'click', exhibitsDetailsModule?.update_exhibit_record);

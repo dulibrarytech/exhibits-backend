@@ -1559,9 +1559,9 @@ const mediaLibraryModule = (function() {
             // Initialize page - display media records in DataTable
             await obj.display_media_records();
 
-            // Show form and setup navigation
+            // Show form. Logout/preview wiring runs automatically on
+            // DOMContentLoaded via nav.module.js auto-init.
             helperModule.show_form();
-            navModule.set_logout_link();
 
             console.debug('Media library module initialized');
 

@@ -729,7 +729,8 @@ const itemsEditVerticalTimelineFormModule = (function () {
 
         exhibitsModule.set_exhibit_title(exhibit_id);
         document.querySelector('#save-timeline-btn').addEventListener('click', itemsEditVerticalTimelineFormModule.update_timeline_record);
-        navModule.edit_timeline_back_to_items();
+        // Nav links wired by navModule.wire_nav_links() from the view
+        // using data-nav-path + NAV_CONFIGS.timeline_edit_form.
         await display_edit_record();
     };
 

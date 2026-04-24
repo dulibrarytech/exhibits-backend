@@ -36,7 +36,7 @@ const itemsEditGridFormModule = (function () {
 
             if (token === false) {
 
-                document.querySelector('#message').innerHTML = 'ERROR: Unable to get API endpoints';
+                domModule.set_alert('#message', 'danger', 'Unable to get API endpoints');
 
                 setTimeout(() => {
                     authModule.redirect_to_auth();

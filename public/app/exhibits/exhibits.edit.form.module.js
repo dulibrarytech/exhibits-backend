@@ -1361,8 +1361,8 @@ const exhibitsEditFormModule = (function () {
                 redirect_url
             );
 
-            // Initialize navigation
-            navModule.back_to_exhibits();
+            // Nav links wired by navModule.wire_nav_links() from the view
+            // using data-nav-path + NAV_CONFIGS.exhibits_edit_form.
 
             // Add save button listener
             add_listener('#save-exhibit-btn', 'click', exhibitsEditFormModule?.update_exhibit_record);

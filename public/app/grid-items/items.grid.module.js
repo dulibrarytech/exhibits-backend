@@ -135,13 +135,13 @@ const itemsGridModule = (function () {
             card_element.style.minHeight = '200px';
         }
 
-        document.querySelector('#message').innerHTML = '<div class="alert alert-info" role="alert"><i class="fa fa-spinner fa-spin"></i> Loading grid items...</div>';
+        domModule.set_loading('#message', 'Loading grid items...');
 
         await exhibitsModule.set_exhibit_title(exhibit_id);
         const items = await get_grid_items(exhibit_id, grid_id);
 
         // Clear loading message
-        document.querySelector('#message').innerHTML = '';
+        domModule.empty('#message');
 
         if (items === null) {
             document.querySelector('#item-card').innerHTML = '';
@@ -163,7 +163,7 @@ const itemsGridModule = (function () {
                 exhibit_title.parentElement.style.display = 'none';
             }
 
-            document.querySelector('#message').innerHTML = '<div class="alert alert-info" role="alert">Grid is empty.</div>';
+            domModule.set_alert('#message', 'info', 'Grid is empty.');
             return false;
         }
 
@@ -342,7 +342,7 @@ const itemsGridModule = (function () {
                 domModule.set_alert(document.querySelector('#message'), 'danger', 'You do not have permission to publish this record.');
 
                 setTimeout(() => {
-                    document.querySelector('#message').innerHTML = '';
+                    domModule.empty('#message');
                 }, 5000);
             }
 
@@ -351,7 +351,7 @@ const itemsGridModule = (function () {
                 domModule.set_alert(document.querySelector('#message'), 'danger', response.data.message);
 
                 setTimeout(() => {
-                    // document.querySelector('#message').innerHTML = '';
+                    // domModule.empty('#message');
                 }, 5000);
             }
 
@@ -457,7 +457,7 @@ const itemsGridModule = (function () {
                 domModule.set_alert(document.querySelector('#message'), 'danger', 'You do not have permission to unpublish this record.');
 
                 setTimeout(() => {
-                    document.querySelector('#message').innerHTML = '';
+                    domModule.empty('#message');
                 }, 5000);
             }
 
@@ -466,7 +466,7 @@ const itemsGridModule = (function () {
                 domModule.set_alert(document.querySelector('#message'), 'warning', 'Unable to unpublish grid item');
 
                 setTimeout(() => {
-                    document.querySelector('#message').innerHTML = '';
+                    domModule.empty('#message');
                 }, 5000);
             }
 
@@ -684,7 +684,8 @@ const itemsGridModule = (function () {
             const token = authModule.get_user_token();
             await authModule.check_auth(token);
 
-            navModule.set_grid_item_nav_menu_links();
+            // Nav links wired by navModule.wire_nav_links() from the view
+            // using data-nav-path + NAV_CONFIGS.grid_items_list.
             helperModule.show_form();
 
         } catch (error) {

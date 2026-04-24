@@ -80,67 +80,56 @@
     Both branches force flex-direction:column on .navbar-nav and
     width:100% on <li> to override Bootstrap's .navbar-expand-sm
     { flex-direction: row }.
-    navModule.apply_collapsed_centering() reinforces this at
-    DOMContentLoaded.
+
+    The style strings for each state live on window.__EXHIBITS_NAV_STYLES__
+    so navModule.apply_collapsed_centering() (which re-applies after
+    DOMContentLoaded, on sidebar toggle, and on viewport resize) reads
+    from the same object — one source of truth. Edit styles here, both
+    appliers pick them up.
 -%>
 <script>
     (function () {
+        // Shared style table — see nav.module.js apply_collapsed_centering.
+        window.__EXHIBITS_NAV_STYLES__ = {
+            collapsed: {
+                navbar:    'display:block;width:100%;',
+                main_menu: 'display:block;width:100%;',
+                nav_ul:    'flex-direction:column;width:100%;',
+                item:      'padding:0;width:100%;',
+                link:      'display:flex;justify-content:center;align-items:center;max-width:none;padding:12px 0;font-size:14px;width:100%;',
+                icon:      'float:none;display:inline-block;width:auto;margin:0;font-size:20px;',
+                label:     'display:none;'
+            },
+            expanded: {
+                navbar:    'display:block;width:100%;',
+                main_menu: 'display:block;width:100%;',
+                nav_ul:    'flex-direction:column;width:100%;',
+                item:      'padding:0;width:100%;',
+                link:      'display:flex;align-items:center;max-width:none;padding:12px 15px;font-size:14px;width:100%;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;',
+                icon:      'float:none;display:inline-flex;flex-shrink:0;width:auto;margin:0 10px 0 0;font-size:20px;',
+                label:     'display:inline;white-space:nowrap;'
+            }
+        };
+
         var panel = document.getElementById('left-panel');
         if (!panel) return;
-        var navbar = panel.querySelector('.navbar');
-        var mainMenu = panel.querySelector('#main-menu');
-        var navUl = panel.querySelector('#main-menu .navbar-nav');
-        var items = panel.querySelectorAll('.navbar-nav > li');
-        var links = panel.querySelectorAll('.navbar-nav > li > a');
-        var icons = panel.querySelectorAll('.navbar-nav > li > a > .menu-icon');
-        var labels = panel.querySelectorAll('.nav-label');
 
-        if (panel.offsetWidth <= 83) {
-            // Collapsed state — center icons, hide labels
-            if (navbar) {
-                navbar.style.cssText = 'display:block;width:100%;';
-            }
-            if (mainMenu) {
-                mainMenu.style.cssText = 'display:block;width:100%;';
-            }
-            if (navUl) {
-                navUl.style.cssText = 'flex-direction:column;width:100%;';
-            }
-            for (var i = 0; i < items.length; i++) {
-                items[i].style.cssText = 'padding:0;width:100%;';
-            }
-            for (var j = 0; j < links.length; j++) {
-                links[j].style.cssText = 'display:flex;justify-content:center;align-items:center;max-width:none;padding:12px 0;font-size:14px;width:100%;';
-            }
-            for (var k = 0; k < icons.length; k++) {
-                icons[k].style.cssText = 'float:none;display:inline-block;width:auto;margin:0;font-size:20px;';
-            }
-            for (var m = 0; m < labels.length; m++) {
-                labels[m].style.display = 'none';
-            }
-        } else {
-            // Expanded state — close icon-text gap, prevent wrapping
-            if (navbar) {
-                navbar.style.cssText = 'display:block;width:100%;';
-            }
-            if (mainMenu) {
-                mainMenu.style.cssText = 'display:block;width:100%;';
-            }
-            if (navUl) {
-                navUl.style.cssText = 'flex-direction:column;width:100%;';
-            }
-            for (var i2 = 0; i2 < items.length; i2++) {
-                items[i2].style.cssText = 'padding:0;width:100%;';
-            }
-            for (var j2 = 0; j2 < links.length; j2++) {
-                links[j2].style.cssText = 'display:flex;align-items:center;max-width:none;padding:12px 15px;font-size:14px;width:100%;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;';
-            }
-            for (var k2 = 0; k2 < icons.length; k2++) {
-                icons[k2].style.cssText = 'float:none;display:inline-flex;flex-shrink:0;width:auto;margin:0 10px 0 0;font-size:20px;';
-            }
-            for (var m2 = 0; m2 < labels.length; m2++) {
-                labels[m2].style.cssText = 'display:inline;white-space:nowrap;';
-            }
-        }
+        var styles = window.__EXHIBITS_NAV_STYLES__[panel.offsetWidth <= 83 ? 'collapsed' : 'expanded'];
+
+        var navbar   = panel.querySelector('.navbar');
+        var mainMenu = panel.querySelector('#main-menu');
+        var navUl    = panel.querySelector('#main-menu .navbar-nav');
+        var items    = panel.querySelectorAll('.navbar-nav > li');
+        var links    = panel.querySelectorAll('.navbar-nav > li > a');
+        var icons    = panel.querySelectorAll('.navbar-nav > li > a > .menu-icon');
+        var labels   = panel.querySelectorAll('.nav-label');
+
+        if (navbar)   navbar.style.cssText   = styles.navbar;
+        if (mainMenu) mainMenu.style.cssText = styles.main_menu;
+        if (navUl)    navUl.style.cssText    = styles.nav_ul;
+        for (var i = 0; i < items.length;  i++) items[i].style.cssText  = styles.item;
+        for (var j = 0; j < links.length;  j++) links[j].style.cssText  = styles.link;
+        for (var k = 0; k < icons.length;  k++) icons[k].style.cssText  = styles.icon;
+        for (var m = 0; m < labels.length; m++) labels[m].style.cssText = styles.label;
     })();
 </script>

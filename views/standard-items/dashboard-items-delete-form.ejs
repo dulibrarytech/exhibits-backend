@@ -1,6 +1,6 @@
 <%- include('../partials/header.ejs'); %>
 <body>
-<%- include('../partials/nav.ejs'); %>
+<%- include('../partials/nav-dashboard.ejs'); %>
 <div id="right-panel" class="right-panel">
     <%- include('../partials/main-header.ejs'); %>
     <div class="content" style="min-height: 875px;">
@@ -97,7 +97,7 @@
                     helperModule.show_form();
                 }
 
-                navModule.set_item_list_link();
+                navModule.wire_nav_links();
 
             } catch (error) {
                 display_message(error.message);

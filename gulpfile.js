@@ -6,6 +6,18 @@ const gulp = require('gulp');
 const htmlmin = require('gulp-htmlmin');
 const cleanCSS = require('gulp-clean-css');
 const concat = require('gulp-concat');
+const fs = require('node:fs/promises');
+const path = require('node:path');
+
+// Wipe views/dist before rebuilding so stale artifacts — renamed source
+// partials, deleted templates, moved includes — cannot survive a build
+// and mask bugs on one machine while breaking another. The minify-*
+// tasks below copy from source into dist but never clean; without this
+// step the dist directory only ever grows, and a stale file can keep a
+// broken include path working locally until a fresh clone exposes it.
+gulp.task('clean-views', function () {
+    return fs.rm(path.join(__dirname, 'views', 'dist'), { recursive: true, force: true });
+});
 
 gulp.task('minify-css', function () {
     return gulp.src([
@@ -153,22 +165,28 @@ gulp.task('minify-media-library-partial-views', function () {
         .pipe(gulp.dest('views/dist/media-library/partials'));
 });
 
-gulp.task('default', gulp.parallel(
-    'minify-css',
-    'minify-exhibit-views',
-    'minify-exhibit-partial-views',
-    'minify-grid-item-views',
-    'minify-grid-item-partial-views',
-    'minify-heading-item-views',
-    'minify-heading-item-partial-views',
-    'minify-standard-item-views',
-    'minify-standard-item-partial-views',
-    'minify-timeline-item-views',
-    'minify-timeline-item-partial-views',
-    'minify-users-views',
-    'minify-users-partial-views',
-    'minify-partial-views',
-    'minify-views',
-    'minify-media-library-views',
-    'minify-media-library-partial-views'
+// clean-views runs first (series); all minify tasks then run concurrently.
+// minify-css writes to public/assets/dist/ (a single concatenated file that
+// always overwrites), so it does not participate in the clean step.
+gulp.task('default', gulp.series(
+    'clean-views',
+    gulp.parallel(
+        'minify-css',
+        'minify-exhibit-views',
+        'minify-exhibit-partial-views',
+        'minify-grid-item-views',
+        'minify-grid-item-partial-views',
+        'minify-heading-item-views',
+        'minify-heading-item-partial-views',
+        'minify-standard-item-views',
+        'minify-standard-item-partial-views',
+        'minify-timeline-item-views',
+        'minify-timeline-item-partial-views',
+        'minify-users-views',
+        'minify-users-partial-views',
+        'minify-partial-views',
+        'minify-views',
+        'minify-media-library-views',
+        'minify-media-library-partial-views'
+    )
 ));

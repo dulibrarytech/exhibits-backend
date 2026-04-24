@@ -37,7 +37,7 @@ const itemsEditStandardItemFormModule = (function () {
 
             if (token === false) {
 
-                document.querySelector('#message').innerHTML = 'ERROR: Unable to get API endpoints';
+                domModule.set_alert('#message', 'danger', 'Unable to get API endpoints');
 
                 setTimeout(() => {
                     window.location.replace(APP_PATH + '/exhibits-dashboard/auth');
