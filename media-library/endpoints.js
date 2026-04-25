@@ -144,20 +144,6 @@ const ENDPOINTS = {
             params: 'token or api_key, media_id (UUID)'
         }
     },
-    iiif_manifest_generate: {
-        post: {
-            description: 'Regenerates IIIF manifest for a specific media record',
-            endpoint: `${APP_PATH}${PREFIX}${VERSION}${ENDPOINT}/iiif/:media_id/manifest/generate`,
-            params: 'token or api_key, media_id (UUID)'
-        }
-    },
-    iiif_manifests_batch: {
-        post: {
-            description: 'Batch generates IIIF manifests for all uploaded records without manifests',
-            endpoint: `${APP_PATH}${PREFIX}${VERSION}${ENDPOINT}/iiif/manifests/generate`,
-            params: 'token or api_key'
-        }
-    },
     iiif_info: {
         get: {
             description: 'Gets IIIF Image API 3.0 info.json for a media record',

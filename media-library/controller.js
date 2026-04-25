@@ -501,17 +501,6 @@ exports.create_media_record = async function (req, res) {
             data: result.id
         });
 
-        // Auto-generate IIIF manifest for uploaded and Kaltura items (fire-and-forget)
-        if (data.ingest_method === 'upload' || data.ingest_method === 'kaltura') {
-            IIIF_SERVICE.generate_manifest(result.uuid).then(manifest_result => {
-                if (!manifest_result || !manifest_result.success) {
-                    LOGGER.module().warn(`WARNING: [/media-library/controller (create_media_record)] IIIF manifest generation returned failure: ${manifest_result?.message}`);
-                }
-            }).catch(err => {
-                LOGGER.module().warn(`WARNING: [/media-library/controller (create_media_record)] IIIF manifest generation failed: ${err.message}`);
-            });
-        }
-
         // Assign Kaltura entry to exhibits category after successful import (fire-and-forget)
         if (data.ingest_method === 'kaltura' && data.kaltura_entry_id) {
             KALTURA_SERVICE.assign_kaltura_category(data.kaltura_entry_id).then(category_result => {
@@ -727,15 +716,6 @@ exports.update_media_record = async function (req, res) {
             success: true,
             message: result.message,
             data: result.record
-        });
-
-        // Regenerate IIIF manifest when metadata changes (fire-and-forget)
-        IIIF_SERVICE.generate_manifest(media_id).then(manifest_result => {
-            if (!manifest_result || !manifest_result.success) {
-                LOGGER.module().warn(`WARNING: [/media-library/controller (update_media_record)] IIIF manifest regeneration returned failure: ${manifest_result?.message}`);
-            }
-        }).catch(err => {
-            LOGGER.module().warn(`WARNING: [/media-library/controller (update_media_record)] IIIF manifest regeneration failed: ${err.message}`);
         });
 
     } catch (error) {
@@ -1454,9 +1434,10 @@ exports.remove_kaltura_category = async function (req, res) {
 
 /**
  * Gets the IIIF Presentation 3.0 manifest for a media record
- * Returns stored manifest or generates on-the-fly if not cached
+ * Built on demand from the live DB row; URLs derived from the request host
+ * so the manifest is portable across servers.
  *
- * GET /api/v1/media/library/iiif/:media_id/manifest
+ * GET <APP_PATH>/iiif/:media_id/manifest
  *
  * @param {Object} req - Express request object
  * @param {Object} res - Express response object
@@ -1478,9 +1459,11 @@ exports.get_iiif_manifest = async function (req, res) {
             });
         }
 
-        LOGGER.module().info(`INFO: [/media-library/controller (get_iiif_manifest)] Fetching manifest for: ${media_id}`);
+        LOGGER.module().info(`INFO: [/media-library/controller (get_iiif_manifest)] Building manifest for: ${media_id}`);
 
-        const result = await IIIF_SERVICE.get_manifest(media_id);
+        const base_url = IIIF_SERVICE.derive_iiif_base(req);
+        const file_base = IIIF_SERVICE.derive_file_base(req);
+        const result = await IIIF_SERVICE.build_manifest_for_uuid(media_id, base_url, file_base);
 
         if (!result || !result.success) {
             LOGGER.module().warn(`WARNING: [/media-library/controller (get_iiif_manifest)] Failed: ${result?.message}`);
@@ -1517,108 +1500,9 @@ exports.get_iiif_manifest = async function (req, res) {
 };
 
 /**
- * Regenerates the IIIF manifest for a specific media record
- * Forces a fresh build from current metadata and stores it
- *
- * POST /api/v1/media/library/iiif/:media_id/manifest/generate
- *
- * @param {Object} req - Express request object
- * @param {Object} res - Express response object
- * @returns {Promise<void>}
- */
-exports.generate_iiif_manifest = async function (req, res) {
-
-    try {
-
-        const media_id = req.params.media_id;
-
-        if (!is_valid_uuid(media_id)) {
-            LOGGER.module().warn(`WARNING: [/media-library/controller (generate_iiif_manifest)] Invalid media ID: ${media_id}`);
-            return res.status(400).json({
-                success: false,
-                message: 'Invalid media ID',
-                data: null
-            });
-        }
-
-        LOGGER.module().info(`INFO: [/media-library/controller (generate_iiif_manifest)] Regenerating manifest for: ${media_id}`);
-
-        const result = await IIIF_SERVICE.generate_manifest(media_id);
-
-        if (!result || !result.success) {
-            LOGGER.module().warn(`WARNING: [/media-library/controller (generate_iiif_manifest)] Failed: ${result?.message}`);
-
-            return res.status(200).json({
-                success: false,
-                message: result?.message || 'Failed to generate manifest',
-                data: null
-            });
-        }
-
-        return res.status(201).json({
-            success: true,
-            message: result.message,
-            data: result.manifest
-        });
-
-    } catch (error) {
-        LOGGER.module().error(`ERROR: [/media-library/controller (generate_iiif_manifest)] ${error.message}`);
-
-        return res.status(500).json({
-            success: false,
-            message: 'Internal server error generating manifest',
-            data: null
-        });
-    }
-};
-
-/**
- * Batch generates IIIF manifests for all uploaded media records
- * that do not already have a stored manifest
- *
- * POST /api/v1/media/library/iiif/manifests/generate
- *
- * @param {Object} req - Express request object
- * @param {Object} res - Express response object
- * @returns {Promise<void>}
- */
-exports.batch_generate_iiif_manifests = async function (req, res) {
-
-    try {
-
-        LOGGER.module().info('INFO: [/media-library/controller (batch_generate_iiif_manifests)] Starting batch generation');
-
-        const result = await IIIF_SERVICE.batch_generate_manifests();
-
-        if (!result || !result.success) {
-            return res.status(200).json({
-                success: false,
-                message: result?.message || 'Batch generation failed',
-                data: result?.stats || null
-            });
-        }
-
-        return res.status(200).json({
-            success: true,
-            message: result.message,
-            data: result.stats
-        });
-
-    } catch (error) {
-        LOGGER.module().error(`ERROR: [/media-library/controller (batch_generate_iiif_manifests)] ${error.message}`);
-
-        return res.status(500).json({
-            success: false,
-            message: 'Internal server error during batch manifest generation',
-            data: null
-        });
-    }
-};
-
-/**
  * Gets the IIIF Image API 3.0 info.json for a media record
  *
- * GET /api/v1/media/library/iiif/:media_id/info.json
+ * GET <APP_PATH>/iiif/:media_id/info.json
  *
  * @param {Object} req - Express request object
  * @param {Object} res - Express response object
@@ -1641,7 +1525,8 @@ exports.get_iiif_info = async function (req, res) {
 
         LOGGER.module().info(`INFO: [/media-library/controller (get_iiif_info)] Fetching info.json for: ${media_id}`);
 
-        const result = await IIIF_SERVICE.get_info(media_id);
+        const base_url = IIIF_SERVICE.derive_iiif_base(req);
+        const result = await IIIF_SERVICE.get_info(media_id, base_url);
 
         if (!result || !result.success) {
             const status_code = result?.message?.includes('not found') ? 404 : 200;

@@ -364,7 +364,7 @@ const Exhibit_timeline_record_tasks = class extends Base_tasks {
                     `media_lib.alt_text as media_alt_text`,
                     `media_lib.is_alt_text_decorative as media_is_alt_text_decorative`,
                     // v2 indexer fields: IIIF, Kaltura, subjects, dimensions
-                    `media_lib.iiif_manifest as media_iiif_manifest`,
+                    `media_lib.uuid as media_lib_uuid`,
                     `media_lib.kaltura_entry_id`,
                     `media_lib.media_width as ml_media_width`,
                     `media_lib.media_height as ml_media_height`,
@@ -379,7 +379,7 @@ const Exhibit_timeline_record_tasks = class extends Base_tasks {
                     `thumb_lib.kaltura_thumbnail_url as thumbnail_media_kaltura_thumbnail_url`,
                     `thumb_lib.repo_uuid as thumbnail_media_repo_uuid`,
                     `thumb_lib.thumbnail_path as thumbnail_media_thumbnail_path`,
-                    `thumb_lib.iiif_manifest as thumb_iiif_manifest`
+                    `thumb_lib.uuid as thumb_lib_uuid`
                 )
                 .leftJoin(
                     `${this.TABLE.media_library_records} as media_lib`,

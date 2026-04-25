@@ -251,26 +251,6 @@ module.exports = function (app) {
     // Public-facing IIIF routes use <APP_PATH>/iiif/...
     // Administrative routes (generate/batch) remain on /api/v1/...
 
-    // Batch generate IIIF manifests for all uploaded records
-    // POST /api/v1/media/library/iiif/manifests/generate
-    // NOTE: Must be registered BEFORE routes with :media_id parameter
-    // to prevent Express from matching "manifests" as a UUID
-    app.route(ENDPOINTS.iiif_manifests_batch.post.endpoint)
-        .post(
-            rate_limits.write_operations,
-            // TOKEN.verify,
-            async_handler(CONTROLLER.batch_generate_iiif_manifests)
-        );
-
-    // Regenerate IIIF manifest for a specific media record
-    // POST /api/v1/media/library/iiif/:media_id/manifest/generate
-    app.route(ENDPOINTS.iiif_manifest_generate.post.endpoint)
-        .post(
-            rate_limits.write_operations,
-            // TOKEN.verify,
-            async_handler(CONTROLLER.generate_iiif_manifest)
-        );
-
     // Get IIIF manifest for a media record (public-facing)
     // GET <APP_PATH>/iiif/:media_id/manifest
     app.route(ENDPOINTS.iiif_manifest.get.endpoint)

@@ -31,10 +31,6 @@ const LOGGER = require('../libs/log4');
 // Configuration
 // ---------------------------------------------------------------------------
 
-// Base URL for constructing IIIF identifiers
-const APP_BASE_URL = APP_CONFIG.api_url || '';
-const IIIF_BASE = `${APP_BASE_URL}${APP_CONFIG.app_path}/iiif`;
-
 // IIIF Presentation API 3.0 context
 const IIIF_PRESENTATION_CONTEXT = 'http://iiif.io/api/presentation/3/context.json';
 
@@ -57,6 +53,31 @@ const IIIF_IMAGE_QUALITY = 80;
 // ---------------------------------------------------------------------------
 // Helpers
 // ---------------------------------------------------------------------------
+
+/**
+ * Derives the IIIF base URL from an Express request, e.g.
+ * https://exhibits.dev/exhibits-dashboard/iiif
+ * @param {Object} req - Express request
+ * @returns {string} IIIF base URL
+ */
+exports.derive_iiif_base = (req) => {
+    const proto = req.protocol;
+    const host = req.get('host');
+    return `${proto}://${host}${APP_CONFIG.app_path}/iiif`;
+};
+
+/**
+ * Derives the file-download base URL from an Express request, e.g.
+ * https://exhibits.dev/exhibits-dashboard
+ * Used for the PDF rendering URL on PDF canvases.
+ * @param {Object} req - Express request
+ * @returns {string} File-download base URL
+ */
+exports.derive_file_base = (req) => {
+    const proto = req.protocol;
+    const host = req.get('host');
+    return `${proto}://${host}${APP_CONFIG.app_path}`;
+};
 
 /**
  * Builds a standardized response object
@@ -295,9 +316,10 @@ const build_metadata_pairs = (record) => {
 /**
  * Builds a IIIF thumbnail object for a manifest or canvas
  * @param {Object} record - Media library DB record
+ * @param {string} base_url - IIIF base URL
  * @returns {Object|null} IIIF thumbnail object or null
  */
-const build_manifest_thumbnail = (record) => {
+const build_manifest_thumbnail = (record, base_url) => {
 
     if (!record.uuid) {
         return null;
@@ -314,7 +336,7 @@ const build_manifest_thumbnail = (record) => {
 
     // Uploaded items: thumbnail served through IIIF Image API at a constrained size
     return {
-        id: `${IIIF_BASE}/${record.uuid}/full/!400,400/0/default.jpg`,
+        id: `${base_url}/${record.uuid}/full/!400,400/0/default.jpg`,
         type: 'Image',
         format: 'image/jpeg',
         width: 400,
@@ -328,13 +350,14 @@ const build_manifest_thumbnail = (record) => {
  * with an ImageService3 service descriptor
  * @param {Object} record - Media library DB record
  * @param {string} canvas_id - Canvas URI
+ * @param {string} base_url - IIIF base URL
  * @returns {Object} IIIF canvas object
  */
-const build_image_canvas = (record, canvas_id) => {
+const build_image_canvas = (record, canvas_id, base_url) => {
 
     const width = record.media_width || 800;
     const height = record.media_height || 600;
-    const image_id = `${IIIF_BASE}/${record.uuid}/full/max/0/default.jpg`;
+    const image_id = `${base_url}/${record.uuid}/full/max/0/default.jpg`;
 
     return {
         id: canvas_id,
@@ -356,7 +379,7 @@ const build_image_canvas = (record, canvas_id) => {
                     width: width,
                     height: height,
                     service: [{
-                        id: `${IIIF_BASE}/${record.uuid}`,
+                        id: `${base_url}/${record.uuid}`,
                         type: 'ImageService3',
                         profile: 'level1'
                     }]
@@ -373,14 +396,16 @@ const build_image_canvas = (record, canvas_id) => {
  * The full PDF is linked as a rendering (download) resource
  * @param {Object} record - Media library DB record
  * @param {string} canvas_id - Canvas URI
+ * @param {string} base_url - IIIF base URL
+ * @param {string} file_base - File-download base URL
  * @returns {Object} IIIF canvas object
  */
-const build_pdf_canvas = (record, canvas_id) => {
+const build_pdf_canvas = (record, canvas_id, base_url, file_base) => {
 
     // PDF canvas dimensions — use stored dimensions or US Letter defaults
     const width = record.media_width || 612;
     const height = record.media_height || 792;
-    const thumbnail_id = `${IIIF_BASE}/${record.uuid}/full/max/0/default.jpg`;
+    const thumbnail_id = `${base_url}/${record.uuid}/full/max/0/default.jpg`;
 
     return {
         id: canvas_id,
@@ -406,7 +431,7 @@ const build_pdf_canvas = (record, canvas_id) => {
             }]
         }],
         rendering: [{
-            id: `${APP_BASE_URL}/api/v1/media/library/file/${record.uuid}`,
+            id: `${file_base}/api/v1/media/library/file/${record.uuid}`,
             type: 'Text',
             label: { en: ['Download PDF'] },
             format: 'application/pdf'
@@ -562,11 +587,13 @@ const build_audio_canvas = (record, canvas_id) => {
  * Handles uploaded images and PDFs (ingest_method = 'upload')
  * and Kaltura video/audio (ingest_method = 'kaltura')
  * @param {Object} record - Full media library DB record
+ * @param {string} base_url - IIIF base URL (e.g., https://host/path/iiif)
+ * @param {string} file_base - File-download base URL (e.g., https://host/path)
  * @returns {Object} IIIF manifest JSON-LD
  */
-const build_manifest = (record) => {
+const build_manifest = (record, base_url, file_base) => {
 
-    const manifest_id = `${IIIF_BASE}/${record.uuid}/manifest`;
+    const manifest_id = `${base_url}/${record.uuid}/manifest`;
     const canvas_id = `${manifest_id}/canvas/1`;
 
     // Core manifest structure
@@ -592,9 +619,9 @@ const build_manifest = (record) => {
     const canvas_type = normalize_media_type(record.media_type);
 
     if (canvas_type === 'image') {
-        manifest.items = [build_image_canvas(record, canvas_id)];
+        manifest.items = [build_image_canvas(record, canvas_id, base_url)];
     } else if (canvas_type === 'pdf') {
-        manifest.items = [build_pdf_canvas(record, canvas_id)];
+        manifest.items = [build_pdf_canvas(record, canvas_id, base_url, file_base)];
     } else if (canvas_type === 'video') {
         manifest.items = [build_video_canvas(record, canvas_id)];
     } else if (canvas_type === 'audio') {
@@ -602,7 +629,7 @@ const build_manifest = (record) => {
     }
 
     // Manifest-level thumbnail
-    const thumbnail = build_manifest_thumbnail(record);
+    const thumbnail = build_manifest_thumbnail(record, base_url);
 
     if (thumbnail) {
         manifest.thumbnail = [thumbnail];
@@ -612,16 +639,19 @@ const build_manifest = (record) => {
 };
 
 // ---------------------------------------------------------------------------
-// IIIF Presentation API — Manifest CRUD
+// IIIF Presentation API — Manifest builder (on-demand)
 // ---------------------------------------------------------------------------
 
 /**
- * Generates a IIIF manifest for a media record and stores it in the database
- * Fetches the full record, builds the manifest, and updates the iiif_manifest column
+ * Builds a IIIF manifest for a media record on demand from the live DB row.
+ * URLs are built from the supplied base_url/file_base so the manifest is
+ * portable across hosts — no values are persisted.
  * @param {string} uuid - Media record UUID
+ * @param {string} base_url - IIIF base URL (e.g., https://host/path/iiif)
+ * @param {string} file_base - File-download base URL (e.g., https://host/path)
  * @returns {Promise<Object>} Result object with manifest data
  */
-exports.generate_manifest = async function (uuid) {
+exports.build_manifest_for_uuid = async function (uuid, base_url, file_base) {
 
     try {
 
@@ -629,180 +659,36 @@ exports.generate_manifest = async function (uuid) {
             return build_response(false, 'Invalid UUID format', { manifest: null });
         }
 
-        LOGGER.module().info(`INFO: [/media-library/iiif-service (generate_manifest)] Generating manifest for: ${uuid}`);
-
-        // Fetch the full media record
         const result = await MEDIA_MODEL.get_media_record(uuid);
 
         if (!result || !result.success || !result.record) {
-            LOGGER.module().warn(`WARNING: [/media-library/iiif-service (generate_manifest)] Record not found: ${uuid}`);
             return build_response(false, 'Media record not found', { manifest: null });
         }
 
         const record = result.record;
 
-        // Only generate manifests for uploaded and Kaltura items
         if (record.ingest_method !== 'upload' && record.ingest_method !== 'kaltura') {
-            LOGGER.module().info(`INFO: [/media-library/iiif-service (generate_manifest)] Skipping non-upload record: ${uuid} (${record.ingest_method})`);
             return build_response(false, `Manifest generation not supported for ingest method: ${record.ingest_method}`, {
                 manifest: null
             });
         }
 
         if (!SUPPORTED_MEDIA_TYPES.includes(normalize_media_type(record.media_type))) {
-            LOGGER.module().info(`INFO: [/media-library/iiif-service (generate_manifest)] Skipping unsupported media type: ${uuid} (${record.media_type})`);
             return build_response(false, `Manifest generation not supported for media type: ${record.media_type}`, {
                 manifest: null
             });
         }
 
-        // Build the manifest
-        const manifest = build_manifest(record);
-        const manifest_json = JSON.stringify(manifest);
+        const manifest = build_manifest(record, base_url, file_base);
 
-        // Store manifest in database
-        const update_result = await MEDIA_MODEL.update_media_record(uuid, {
-            iiif_manifest: manifest_json
-        });
-
-        if (!update_result || !update_result.success) {
-            LOGGER.module().error(`ERROR: [/media-library/iiif-service (generate_manifest)] Failed to store manifest for: ${uuid}`);
-            return build_response(false, 'Failed to store manifest', { manifest: null });
-        }
-
-        LOGGER.module().info(`INFO: [/media-library/iiif-service (generate_manifest)] Manifest generated and stored for: ${uuid}`);
-
-        return build_response(true, 'Manifest generated successfully', { manifest });
+        return build_response(true, 'Manifest built', { manifest });
 
     } catch (error) {
-        LOGGER.module().error(`ERROR: [/media-library/iiif-service (generate_manifest)] ${error.message}`, {
+        LOGGER.module().error(`ERROR: [/media-library/iiif-service (build_manifest_for_uuid)] ${error.message}`, {
             uuid,
             stack: error.stack
         });
-        return build_response(false, 'Error generating manifest: ' + error.message, { manifest: null });
-    }
-};
-
-/**
- * Retrieves a stored IIIF manifest for a media record
- * Returns the parsed manifest from the iiif_manifest column
- * If no manifest is stored, generates one on-the-fly and caches it
- * @param {string} uuid - Media record UUID
- * @returns {Promise<Object>} Result object with manifest data
- */
-exports.get_manifest = async function (uuid) {
-
-    try {
-
-        if (!is_valid_uuid(uuid)) {
-            return build_response(false, 'Invalid UUID format', { manifest: null });
-        }
-
-        LOGGER.module().info(`INFO: [/media-library/iiif-service (get_manifest)] Fetching manifest for: ${uuid}`);
-
-        // Fetch the full media record
-        const result = await MEDIA_MODEL.get_media_record(uuid);
-
-        if (!result || !result.success || !result.record) {
-            return build_response(false, 'Media record not found', { manifest: null });
-        }
-
-        const record = result.record;
-
-        // If manifest is already stored, return it
-        if (record.iiif_manifest) {
-
-            try {
-
-                const manifest = typeof record.iiif_manifest === 'string'
-                    ? JSON.parse(record.iiif_manifest)
-                    : record.iiif_manifest;
-
-                return build_response(true, 'Manifest retrieved from storage', { manifest });
-
-            } catch (parse_error) {
-                LOGGER.module().warn(`WARNING: [/media-library/iiif-service (get_manifest)] Stored manifest is invalid JSON for: ${uuid}, regenerating`);
-            }
-        }
-
-        // No stored manifest — generate on-the-fly and cache
-        LOGGER.module().info(`INFO: [/media-library/iiif-service (get_manifest)] No stored manifest for: ${uuid}, generating`);
-        return await exports.generate_manifest(uuid);
-
-    } catch (error) {
-        LOGGER.module().error(`ERROR: [/media-library/iiif-service (get_manifest)] ${error.message}`, {
-            uuid,
-            stack: error.stack
-        });
-        return build_response(false, 'Error retrieving manifest: ' + error.message, { manifest: null });
-    }
-};
-
-/**
- * Batch generates IIIF manifests for all uploaded media records
- * that do not already have a stored manifest
- * @returns {Promise<Object>} Result object with generation statistics
- */
-exports.batch_generate_manifests = async function () {
-
-    try {
-
-        LOGGER.module().info('INFO: [/media-library/iiif-service (batch_generate_manifests)] Starting batch manifest generation');
-
-        // Get all media records
-        const result = await MEDIA_MODEL.get_media_records();
-
-        if (!result || !result.success || !result.records) {
-            return build_response(false, 'Failed to retrieve media records', {
-                stats: { total: 0, generated: 0, skipped: 0, failed: 0 }
-            });
-        }
-
-        const stats = { total: 0, generated: 0, skipped: 0, failed: 0 };
-        const records = result.records;
-
-        for (const record of records) {
-
-            stats.total++;
-
-            // Only process uploaded and Kaltura items
-            if (record.ingest_method !== 'upload' && record.ingest_method !== 'kaltura') {
-                stats.skipped++;
-                continue;
-            }
-
-            if (!SUPPORTED_MEDIA_TYPES.includes(normalize_media_type(record.media_type))) {
-                stats.skipped++;
-                continue;
-            }
-
-            // Skip records that already have a manifest (unless force regenerate)
-            if (record.iiif_manifest) {
-                stats.skipped++;
-                continue;
-            }
-
-            const gen_result = await exports.generate_manifest(record.uuid);
-
-            if (gen_result.success) {
-                stats.generated++;
-            } else {
-                stats.failed++;
-                LOGGER.module().warn(`WARNING: [/media-library/iiif-service (batch_generate_manifests)] Failed for ${record.uuid}: ${gen_result.message}`);
-            }
-        }
-
-        LOGGER.module().info(`INFO: [/media-library/iiif-service (batch_generate_manifests)] Complete — Generated: ${stats.generated}, Skipped: ${stats.skipped}, Failed: ${stats.failed}`);
-
-        return build_response(true, 'Batch manifest generation complete', { stats });
-
-    } catch (error) {
-        LOGGER.module().error(`ERROR: [/media-library/iiif-service (batch_generate_manifests)] ${error.message}`, {
-            stack: error.stack
-        });
-        return build_response(false, 'Error during batch manifest generation: ' + error.message, {
-            stats: { total: 0, generated: 0, skipped: 0, failed: 0 }
-        });
+        return build_response(false, 'Error building manifest: ' + error.message, { manifest: null });
     }
 };
 
@@ -814,9 +700,10 @@ exports.batch_generate_manifests = async function () {
  * Builds the IIIF Image API 3.0 info.json response for a media record
  * Provides image dimensions, supported formats, and service profile
  * @param {string} uuid - Media record UUID
+ * @param {string} base_url - IIIF base URL (e.g., https://host/path/iiif)
  * @returns {Promise<Object>} Result object with info.json data
  */
-exports.get_info = async function (uuid) {
+exports.get_info = async function (uuid, base_url) {
 
     try {
 
@@ -839,7 +726,7 @@ exports.get_info = async function (uuid) {
 
         const info = {
             '@context': IIIF_IMAGE_CONTEXT,
-            id: `${IIIF_BASE}/${uuid}`,
+            id: `${base_url}/${uuid}`,
             type: 'ImageService3',
             protocol: 'http://iiif.io/api/image',
             profile: 'level1',

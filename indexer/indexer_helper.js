@@ -21,12 +21,30 @@
 const {Client} = require('@elastic/elasticsearch');
 const ES_CONFIG = require('../config/elasticsearch_config')();
 const WEBSERVICES_CONFIG = require('../config/webservices_config')();
+const APP_CONFIG = require('../config/app_config')();
 const LOGGER = require('../libs/log4');
 
-// ─── Shared Elasticsearch client ────────────────────────────────────────────
+// IIIF base URL used to construct manifest/image URLs at index time.
+// Resolved once per indexer run so a host change is a single env var flip + reindex.
+const IIIF_INDEX_BASE = `${APP_CONFIG.api_url || ''}${APP_CONFIG.app_path || ''}/iiif`;
 
-const CLIENT = new Client({
-    node: ES_CONFIG.elasticsearch_host
+// ─── Shared Elasticsearch client ────────────────────────────────────────────
+// Construction is deferred via Proxy so modules that transitively require this
+// file can load in environments where elasticsearch_host is not configured
+// (e.g., test runs). The real Client is instantiated on first property access,
+// and surfaces a clear error only if ES is used without configuration.
+
+let _es_client = null;
+const CLIENT = new Proxy({}, {
+    get(_, prop) {
+        if (_es_client === null) {
+            if (!ES_CONFIG.elasticsearch_host) {
+                throw new Error('Elasticsearch client unavailable: elasticsearch_host is not configured');
+            }
+            _es_client = new Client({ node: ES_CONFIG.elasticsearch_host });
+        }
+        return _es_client[prop];
+    }
 });
 
 // ─── Constants ──────────────────────────────────────────────────────────────
@@ -103,32 +121,24 @@ const process_subjects = (subjects) => {
 };
 
 /**
- * Extracts IIIF URLs from a stored manifest JSON string
- * @param {string|null} iiif_manifest_json - JSON manifest string from media library
- * @returns {Object|null} Extracted URLs or null
+ * Builds IIIF URLs for a media record by UUID using the indexer-time base.
+ * Replaces the prior approach of parsing a stored manifest blob; URLs now live
+ * only in the search index and are reproducible by reindexing.
+ * @param {string|null} media_uuid - Media library record UUID
+ * @returns {Object|null} URLs or null
  */
-const resolve_iiif_urls = (iiif_manifest_json) => {
+const build_iiif_urls = (media_uuid) => {
 
-    if (!iiif_manifest_json) {
+    if (!media_uuid) {
         return null;
     }
 
-    try {
-        const manifest = typeof iiif_manifest_json === 'string'
-            ? JSON.parse(iiif_manifest_json)
-            : iiif_manifest_json;
-
-        return {
-            manifest_url: manifest.id || null,
-            image_url: manifest.items?.[0]?.items?.[0]?.items?.[0]?.body?.id || null,
-            service_url: manifest.items?.[0]?.items?.[0]?.items?.[0]?.body?.service?.[0]?.id || null,
-            thumbnail_url: manifest.thumbnail?.[0]?.id || null
-        };
-
-    } catch (error) {
-        LOGGER.module().error('ERROR: [/indexer/indexer_helper (resolve_iiif_urls)] ' + error.message);
-        return null;
-    }
+    return {
+        manifest_url: `${IIIF_INDEX_BASE}/${media_uuid}/manifest`,
+        image_url: `${IIIF_INDEX_BASE}/${media_uuid}/full/max/0/default.jpg`,
+        service_url: `${IIIF_INDEX_BASE}/${media_uuid}`,
+        thumbnail_url: `${IIIF_INDEX_BASE}/${media_uuid}/full/!400,400/0/default.jpg`
+    };
 };
 
 /**
@@ -227,9 +237,9 @@ const construct_exhibit_index_record = (record) => {
         throw new Error('Invalid record provided');
     }
 
-    // Resolve IIIF URLs from hero and thumbnail media library manifests
-    const hero_iiif = resolve_iiif_urls(record.hero_iiif_manifest);
-    const thumb_iiif = resolve_iiif_urls(record.thumb_iiif_manifest);
+    // Build IIIF URLs from hero and thumbnail media library UUIDs
+    const hero_iiif = build_iiif_urls(record.hero_lib_uuid);
+    const thumb_iiif = build_iiif_urls(record.thumb_lib_uuid);
     const hero_kaltura = resolve_kaltura(record.hero_kaltura_entry_id, record.hero_kaltura_thumbnail_url);
 
     return normalize_empty_to_null({
@@ -313,9 +323,9 @@ const construct_item_index_record = (record) => {
         throw new Error('Invalid record provided');
     }
 
-    // Resolve IIIF URLs from media library manifests
-    const media_iiif = resolve_iiif_urls(record.media_iiif_manifest);
-    const thumb_iiif = resolve_iiif_urls(record.thumb_iiif_manifest);
+    // Build IIIF URLs from media library UUIDs
+    const media_iiif = build_iiif_urls(record.media_lib_uuid);
+    const thumb_iiif = build_iiif_urls(record.thumb_lib_uuid);
     const kaltura = resolve_kaltura(record.kaltura_entry_id, record.media_kaltura_thumbnail_url);
 
     // Repo import fallback: construct IIIF manifest URL from the repo endpoint + media UUID
@@ -782,7 +792,7 @@ module.exports = {
     is_valid_record_type,
     build_response,
     process_subjects,
-    resolve_iiif_urls,
+    build_iiif_urls,
     resolve_repo_iiif,
     resolve_kaltura,
     merge_media_subjects,

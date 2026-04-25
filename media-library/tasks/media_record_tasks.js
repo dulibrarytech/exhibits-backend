@@ -371,7 +371,7 @@ const Media_record_tasks = class {
             'file_size', 'size', 'topics', 'genre_form', 'places', 'item_type',
             'topics_subjects', 'genre_form_subjects', 'places_subjects',
             'is_published', 'metadata', 'tags', 'updated_by',
-            'iiif_manifest', 'media_width', 'media_height', 'media_duration'
+            'media_width', 'media_height', 'media_duration'
         ];
 
         try {

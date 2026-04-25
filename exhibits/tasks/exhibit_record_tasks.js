@@ -428,7 +428,7 @@ const Exhibit_record_tasks = class extends Base_tasks {
                     .select(
                         ...qualified_fields,
                         // Hero image media library metadata
-                        `hero_lib.iiif_manifest as hero_iiif_manifest`,
+                        `hero_lib.uuid as hero_lib_uuid`,
                         `hero_lib.kaltura_entry_id as hero_kaltura_entry_id`,
                         `hero_lib.kaltura_thumbnail_url as hero_kaltura_thumbnail_url`,
                         `hero_lib.media_width as hero_media_width`,
@@ -438,7 +438,7 @@ const Exhibit_record_tasks = class extends Base_tasks {
                         `hero_lib.genre_form_subjects as hero_genre_form_subjects`,
                         `hero_lib.places_subjects as hero_places_subjects`,
                         // Thumbnail media library metadata
-                        `thumb_lib.iiif_manifest as thumb_iiif_manifest`,
+                        `thumb_lib.uuid as thumb_lib_uuid`,
                         `thumb_lib.thumbnail_path as thumb_thumbnail_path`,
                         `thumb_lib.topics_subjects as thumb_topics_subjects`,
                         `thumb_lib.genre_form_subjects as thumb_genre_form_subjects`,
