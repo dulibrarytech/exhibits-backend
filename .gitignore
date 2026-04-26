@@ -59,9 +59,10 @@ storage_v1
 logs
 logs/*.log
 logs/*.gz
-test
+
 *.sql
 trash
+
 # Ignore files containing '.orig' in the name
 *.orig*
 

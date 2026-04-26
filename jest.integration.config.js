@@ -11,11 +11,10 @@ module.exports = {
     testEnvironment: 'node',
     rootDir: __dirname,
     testMatch: ['<rootDir>/test/integration/**/*.test.js'],
-    setupFilesAfterEnv: ['<rootDir>/test/integration/setup.js'],
+    setupFilesAfterEnv: ['<rootDir>/jest.integration.setup.js'],
     testPathIgnorePatterns: ['/node_modules/', '/coverage/'],
     testTimeout: 30000,
     clearMocks: true,
     restoreMocks: true,
     maxWorkers: 1,
-    forceExit: true,
 };
