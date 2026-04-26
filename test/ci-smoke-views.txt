@@ -1,0 +1,1 @@
+From test/: npm run test:views or node smoke-views.js
