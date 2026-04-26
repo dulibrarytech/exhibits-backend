@@ -74,3 +74,5 @@ trash
 views/dist/
 public/app/dist/
 public/assets/dist/%
+
+/public/libs/axios-2.x/test
