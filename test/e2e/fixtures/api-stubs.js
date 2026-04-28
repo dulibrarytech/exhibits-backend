@@ -198,6 +198,516 @@ function timelineItemRecordFixture(overrides = {}) {
 }
 
 /**
+ * Media-library record fixture. Defaults to an upload-ingest record.
+ * Pass `ingest_method: 'repository'` or `'kaltura'` (plus the
+ * variant-specific fields documented inline) to exercise the other
+ * two filename-column branches.
+ *
+ * Wire-format note: media-library records use numeric `is_active`
+ * elsewhere in the app, but this list endpoint returns each record
+ * verbatim from the model — the columns the renderer actually reads
+ * are documented per-line below. The `exhibits` column may be a JSON
+ * string OR an array (display_media_records normalizes both shapes);
+ * we pass an array because that's the cleaner happy-path.
+ */
+function mediaRecordFixture(overrides = {}) {
+    return {
+        uuid: 'media-uuid-1',
+        name: 'Sample image',                  // shown in Name column
+        original_filename: 'sample.jpg',       // shown in File Name column for upload ingest
+        media_type: 'image',
+        mime_type: 'image/jpeg',
+        ingest_method: 'upload',               // 'upload' | 'repository' | 'kaltura'
+        thumbnail_path: '/path/to/thumb.jpg',  // truthy → server-thumbnail branch
+        size: 12345,
+        created: '2026-04-01T00:00:00Z',
+        created_by: 'tester',
+        upload_uuid: 'upload-uuid-1',
+        repo_uuid: null,
+        repo_handle: null,
+        kaltura_thumbnail_url: null,
+        kaltura_entry_id: null,
+        exhibits: [],
+        ...overrides,
+    };
+}
+
+/**
+ * Stubs the media-library list endpoint at
+ *   GET /api/v1/media/library
+ *
+ * Wire-format quirk: every media-library response wraps the payload
+ * as `{success: true, data: <records>}` — NOT the bare `{data: …}`
+ * the rest of the app uses. `display_media_records` literally checks
+ * `response.data?.success` before reading `response.data.data`. If you
+ * forget the wrap, the list silently shows the empty-state message
+ * because the success branch is skipped.
+ *
+ * Returns a state object capturing GET hits for assertions.
+ */
+async function stubMediaLibraryListApi(page, opts = {}) {
+    const records = opts.records ?? [mediaRecordFixture()];
+    const status = opts.status ?? 200;
+
+    const state = {
+        getCount: 0,
+        lastUrl: null,
+    };
+
+    // Anchored regex: claim only the bare list URL (with optional
+    // query string), not /api/v1/media/library/record/<id>, /file/<id>,
+    // /thumbnail/<id>, /repo/*, /kaltura/*, /duplicate-check, etc.
+    // Single-record / variant stubs in later hops register their own
+    // routes against those siblings.
+    const pattern = new RegExp(`${APP_PATH}/api/v1/media/library(?:\\?.*)?$`);
+
+    await page.route(pattern, (route) => {
+        const req = route.request();
+        if (req.method() !== 'GET') {
+            return route.fallback();
+        }
+        state.getCount += 1;
+        state.lastUrl = req.url();
+
+        if (status === 200) {
+            return route.fulfill({
+                status: 200,
+                contentType: 'application/json',
+                body: JSON.stringify({ success: true, data: records }),
+            });
+        }
+        return route.fulfill({
+            status,
+            contentType: 'application/json',
+            body: JSON.stringify({ success: false, message: `HTTP ${status}` }),
+        });
+    });
+
+    return state;
+}
+
+/**
+ * Stubs the single-record media-library endpoints:
+ *   GET    /api/v1/media/library/record/<media_id>   (open_edit_media_modal)
+ *   PUT    /api/v1/media/library/record/<media_id>   (handle_edit_form_submit)
+ *   DELETE /api/v1/media/library/record/<media_id>   (handle_delete_confirm)
+ *
+ * Anchored regex: claims ONLY `…/record/<id>` URLs, leaving sibling
+ * paths (`…/file/<id>`, `…/thumbnail/<id>`, `…/repo/*`, `…/kaltura/*`)
+ * to their own future stubs.
+ *
+ * Wire-format quirk: every media-library endpoint wraps its payload as
+ * `{success: true, data: {...}}` — bare `{data: {...}}` skips the
+ * success branch in `mediaLibraryModule.get_media_record` /
+ * `mediaDeleteModalModule.handle_delete_confirm` and the caller treats
+ * it as a load/delete failure.
+ *
+ * Returns a state object capturing GET/PUT/DELETE traffic for assertions.
+ */
+async function stubMediaRecordApi(page, opts = {}) {
+    const record = opts.record ?? mediaRecordFixture();
+    const getStatus = opts.getStatus ?? 200;
+    const putStatus = opts.putStatus ?? 200;
+    const deleteStatus = opts.deleteStatus ?? 200;
+
+    const state = {
+        getCount: 0,
+        putCount: 0,
+        deleteCount: 0,
+        lastPutPayload: null,
+        lastPutUrl: null,
+        lastDeleteUrl: null,
+    };
+
+    const pattern = new RegExp(
+        `${APP_PATH}/api/v1/media/library/record/[^/?]+(?:\\?.*)?$`
+    );
+
+    await page.route(pattern, (route) => {
+        const req = route.request();
+        const method = req.method();
+
+        if (method === 'GET') {
+            state.getCount += 1;
+            if (getStatus === 200) {
+                return route.fulfill({
+                    status: 200,
+                    contentType: 'application/json',
+                    body: JSON.stringify({ success: true, data: record }),
+                });
+            }
+            return route.fulfill({
+                status: getStatus,
+                contentType: 'application/json',
+                body: JSON.stringify({ success: false, message: `HTTP ${getStatus}` }),
+            });
+        }
+
+        if (method === 'PUT') {
+            state.putCount += 1;
+            state.lastPutPayload = req.postDataJSON();
+            state.lastPutUrl = req.url();
+            if (putStatus === 200) {
+                return route.fulfill({
+                    status: 200,
+                    contentType: 'application/json',
+                    body: JSON.stringify({
+                        success: true,
+                        message: 'Media record updated successfully',
+                        data: { ...record, ...(state.lastPutPayload || {}) },
+                    }),
+                });
+            }
+            return route.fulfill({
+                status: putStatus,
+                contentType: 'application/json',
+                body: JSON.stringify({ success: false, message: `HTTP ${putStatus}` }),
+            });
+        }
+
+        if (method === 'DELETE') {
+            state.deleteCount += 1;
+            state.lastDeleteUrl = req.url();
+            if (deleteStatus === 200) {
+                // The server returns 200 (NOT 204 like the items
+                // /api/v1/exhibits/.../items/<id> delete) and the
+                // module checks `response.data?.success`. A bare 204
+                // with no body would skip the success branch in
+                // handle_delete_confirm and surface a generic
+                // "Failed to delete" error.
+                return route.fulfill({
+                    status: 200,
+                    contentType: 'application/json',
+                    body: JSON.stringify({
+                        success: true,
+                        message: 'Media record deleted successfully.',
+                    }),
+                });
+            }
+            return route.fulfill({
+                status: deleteStatus,
+                contentType: 'application/json',
+                body: JSON.stringify({ success: false, message: `HTTP ${deleteStatus}` }),
+            });
+        }
+
+        return route.fallback();
+    });
+
+    return state;
+}
+
+/**
+ * Stubs the two metadata endpoints `populate_subjects_dropdowns`
+ * fetches in parallel:
+ *   GET /api/v1/media/library/repo/subjects        → {success, data: {subjects: {topical, genre_form, geographic}}}
+ *   GET /api/v1/media/library/repo/resource-types  → {success, data: {resource_types: [{value, label}]}}
+ *
+ * The defaults are minimal-but-functional: one Genre/Form value
+ * ("Photographs") so the `data-required="true"` widget validation can
+ * pass when the fixture record sets `genre_form_subjects: 'Photographs'`
+ * (init_multi_select pre-populates the hidden input from data-selected
+ * if a matching option exists), plus one resource-type ("image") so
+ * the required `select[name="item_type"]` gets a matching option.
+ *
+ * Override either via opts.subjects / opts.resourceTypes when a test
+ * needs different selections.
+ */
+async function stubRepoMetadataApi(page, opts = {}) {
+    const subjects = opts.subjects ?? {
+        topical: [],
+        genre_form: [{ value: 'Photographs', label: 'Photographs' }],
+        geographic: [],
+    };
+    const resourceTypes = opts.resourceTypes ?? [
+        { value: 'image', label: 'Image' },
+        { value: 'pdf', label: 'PDF Document' },
+    ];
+
+    await page.route(
+        new RegExp(`${APP_PATH}/api/v1/media/library/repo/subjects(?:\\?.*)?$`),
+        (route) => {
+            if (route.request().method() !== 'GET') return route.fallback();
+            return route.fulfill({
+                status: 200,
+                contentType: 'application/json',
+                body: JSON.stringify({
+                    success: true,
+                    data: { subjects },
+                }),
+            });
+        }
+    );
+
+    await page.route(
+        new RegExp(`${APP_PATH}/api/v1/media/library/repo/resource-types(?:\\?.*)?$`),
+        (route) => {
+            if (route.request().method() !== 'GET') return route.fallback();
+            return route.fulfill({
+                status: 200,
+                contentType: 'application/json',
+                body: JSON.stringify({
+                    success: true,
+                    data: { resource_types: resourceTypes },
+                }),
+            });
+        }
+    );
+}
+
+/**
+ * Repository search-result fixture. `repo.service.module`'s renderer
+ * reads `uuid`, `title`, `abstract` (or `description`), `object_type`
+ * (or `type`), `pid`, `handle`, `creator`, `has_children`,
+ * `children_count`. Anything else is ignored.
+ *
+ * The search request also accepts records under several response
+ * shapes (`data.data.records`, `data.data`, `data.results`,
+ * `data` as bare array). The stub uses the most-common shape:
+ * `{success: true, data: {records: [...], total: N}}`.
+ */
+function repoSearchItemFixture(overrides = {}) {
+    return {
+        uuid: 'repo-uuid-1',
+        title: 'Sample repository item',
+        abstract: 'Sample abstract',
+        object_type: 'object',
+        pid: 'codu:1234',
+        handle: 'http://example.com/handle/1',
+        creator: 'Sample Creator',
+        has_children: false,
+        children_count: 0,
+        ...overrides,
+    };
+}
+
+/**
+ * Stubs the repository search endpoint:
+ *   GET /api/v1/media/library/repo/search?q=<term>
+ *
+ * Wire-format details:
+ *   - Same `{success: true, data: {…}}` envelope as the rest of the
+ *     media-library API.
+ *   - Module accepts records under `data.data.records`,
+ *     `data.data` (array), `data.results`, or bare `data` (array).
+ *     This stub uses `data.data.records` — the canonical shape.
+ *   - `repo.service.module.search` filters out records where
+ *     `object_type === 'collection'` AFTER the response, so the
+ *     stub can return collection records to exercise the filter
+ *     branch (set `object_type: 'collection'`).
+ *
+ * Returns a state object capturing the search URL for assertions.
+ */
+async function stubRepoSearchApi(page, opts = {}) {
+    const records = opts.records ?? [repoSearchItemFixture()];
+    const status = opts.status ?? 200;
+
+    const state = {
+        getCount: 0,
+        lastUrl: null,
+        lastQuery: null,
+    };
+
+    const pattern = new RegExp(
+        `${APP_PATH}/api/v1/media/library/repo/search(?:\\?.*)?$`
+    );
+
+    await page.route(pattern, (route) => {
+        const req = route.request();
+        if (req.method() !== 'GET') return route.fallback();
+
+        state.getCount += 1;
+        state.lastUrl = req.url();
+
+        try {
+            const u = new URL(req.url());
+            state.lastQuery = u.searchParams.get('q');
+        } catch (_) {
+            state.lastQuery = null;
+        }
+
+        if (status === 200) {
+            return route.fulfill({
+                status: 200,
+                contentType: 'application/json',
+                body: JSON.stringify({
+                    success: true,
+                    data: { records, total: records.length },
+                }),
+            });
+        }
+        return route.fulfill({
+            status,
+            contentType: 'application/json',
+            body: JSON.stringify({ success: false, message: `HTTP ${status}` }),
+        });
+    });
+
+    return state;
+}
+
+/**
+ * Stubs the repo thumbnail endpoint (binary image data in production).
+ * In tests the response body doesn't actually need to be a valid
+ * image — the page only cares whether the request succeeds (200) or
+ * fails (the inline `onerror` handler swaps to a placeholder icon).
+ *
+ * We return a 200 with empty body so the `<img>` doesn't trigger the
+ * onerror fallback. The test layout is then deterministic regardless
+ * of how the browser handles broken-image rendering.
+ */
+async function stubRepoThumbnailApi(page) {
+    const pattern = new RegExp(
+        `${APP_PATH}/api/v1/media/library/repo/thumbnail(?:\\?.*)?$`
+    );
+
+    await page.route(pattern, (route) => {
+        if (route.request().method() !== 'GET') return route.fallback();
+        return route.fulfill({
+            status: 200,
+            contentType: 'image/png',
+            body: '',
+        });
+    });
+}
+
+/**
+ * Kaltura-entry fixture mirroring the metadata
+ * `kaltura.service.module.get_kaltura_media` reads from the response:
+ *   - entry_id      → modal hidden `.kaltura-entry-id` input AND
+ *                     the "ID:" badge under the modal preview
+ *                     (NOTE: the modal does NOT read the typed value
+ *                     from `#audio-video`; it reads `data.entry_id`
+ *                     from the response payload, so any spec that
+ *                     asserts on the modal's hidden entry-id field
+ *                     must override this default to match the value
+ *                     it types into the search input.)
+ *   - title         → modal Name field (pre-populated, required)
+ *   - description   → modal Description field
+ *   - item_type     → hidden `#kaltura-item-type` input + icon dispatch
+ *   - mime_type     → audio/video icon dispatch in modals.kaltura.module
+ *   - thumbnail     → show_thumbnail() AND modal preview <img src>
+ *   - media_width / media_height / ms_duration → hidden modal fields
+ *
+ * Defaults to a video entry with a thumbnail URL.
+ */
+function kalturaEntryFixture(overrides = {}) {
+    return {
+        entry_id: '0_kaltura1',
+        title: 'Sample Kaltura video',
+        description: 'Sample Kaltura description',
+        item_type: 'video',
+        mime_type: 'video/mp4',
+        thumbnail: 'https://cdnapisec.kaltura.com/p/0/thumb.jpg',
+        media_width: 1280,
+        media_height: 720,
+        ms_duration: 60000,
+        ...overrides,
+    };
+}
+
+/**
+ * Stubs the Kaltura entry-lookup endpoint:
+ *   GET /api/v1/media/library/kaltura/<entry_id>
+ *
+ * Wire-format: `{success: true, data: <metadata>}` — same envelope as
+ * the rest of the media-library API. On 200 the module:
+ *   1. Sets hidden `#kaltura-item-type` from `data.item_type`.
+ *   2. Sets hidden `#is-kaltura-item` to '1'.
+ *   3. Calls `show_thumbnail(data.thumbnail, data.title)` (makes
+ *      `#kaltura-thumbnail-container` visible).
+ *   4. Opens the import modal via
+ *      `kalturaModalsModule.open_kaltura_media_modal(data, callback)`.
+ *
+ * Note: the lookup is preceded by a duplicate-check fetch in the
+ * service module — register `stubMediaDuplicateCheckApi` (default
+ * exists:false) before this stub, or the lookup short-circuits with
+ * a "duplicate" warning before the entry GET fires.
+ *
+ * Returns a state object capturing GET traffic for assertions.
+ */
+async function stubKalturaEntryApi(page, opts = {}) {
+    const data = opts.data ?? kalturaEntryFixture();
+    const status = opts.status ?? 200;
+
+    const state = {
+        getCount: 0,
+        lastUrl: null,
+        lastEntryId: null,
+    };
+
+    const pattern = new RegExp(
+        `${APP_PATH}/api/v1/media/library/kaltura/[^/?]+(?:\\?.*)?$`
+    );
+
+    await page.route(pattern, (route) => {
+        const req = route.request();
+        if (req.method() !== 'GET') return route.fallback();
+
+        state.getCount += 1;
+        state.lastUrl = req.url();
+
+        // Module URL-encodes the entry id into the path. Decode it
+        // back so specs can assert on the typed value without
+        // worrying about percent-encoding.
+        try {
+            const path = new URL(req.url()).pathname;
+            const tail = path.split('/').filter(Boolean).pop() || '';
+            state.lastEntryId = decodeURIComponent(tail);
+        } catch (_) {
+            state.lastEntryId = null;
+        }
+
+        if (status === 200) {
+            return route.fulfill({
+                status: 200,
+                contentType: 'application/json',
+                body: JSON.stringify({ success: true, data }),
+            });
+        }
+        return route.fulfill({
+            status,
+            contentType: 'application/json',
+            body: JSON.stringify({ success: false, message: `HTTP ${status}` }),
+        });
+    });
+
+    return state;
+}
+
+/**
+ * Stubs the duplicate-check endpoint:
+ *   GET /api/v1/media/library/duplicate-check?field=<field>&value=<v>
+ *
+ * Called by `repo.service.module`'s `handle_item_selection` (with
+ * `field=repo_uuid`) AND by `kaltura.service.module.get_kaltura_media`
+ * (with `field=kaltura_entry_id`) BEFORE the entry GET fires. If the
+ * response says the record already exists, the calling module aborts
+ * the import flow and shows a warning. For happy-path tests, default
+ * `exists: false`.
+ */
+async function stubMediaDuplicateCheckApi(page, opts = {}) {
+    const exists = opts.exists ?? false;
+    const record = opts.record ?? null;
+
+    const pattern = new RegExp(
+        `${APP_PATH}/api/v1/media/library/duplicate-check(?:\\?.*)?$`
+    );
+
+    await page.route(pattern, (route) => {
+        if (route.request().method() !== 'GET') return route.fallback();
+        return route.fulfill({
+            status: 200,
+            contentType: 'application/json',
+            body: JSON.stringify({
+                success: true,
+                data: { exists, record },
+            }),
+        });
+    });
+}
+
+/**
  * User-record fixture. `id` is numeric (the users table is the only
  * record set in this app that exposes integer ids on the wire — every
  * other record is uuid-keyed). `is_active` is 1/0; `role` is the
@@ -1119,4 +1629,14 @@ module.exports = {
     timelineRecordFixture,
     timelineItemRecordFixture,
     userFixture,
+    mediaRecordFixture,
+    stubMediaLibraryListApi,
+    stubMediaRecordApi,
+    stubRepoMetadataApi,
+    repoSearchItemFixture,
+    stubRepoSearchApi,
+    stubRepoThumbnailApi,
+    stubMediaDuplicateCheckApi,
+    kalturaEntryFixture,
+    stubKalturaEntryApi,
 };

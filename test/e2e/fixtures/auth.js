@@ -128,7 +128,38 @@ function buildMediaLibraryEndpoints(appPath) {
         media_record: {
             get: { endpoint: `${base}/record/:media_id` },
         },
+        media_file: {
+            get: { endpoint: `${base}/file/:media_id` },
+        },
+        media_thumbnail: {
+            get: { endpoint: `${base}/thumbnail/:media_id` },
+        },
+        media_duplicate_check: {
+            get: { endpoint: `${base}/duplicate-check` },
+        },
+        repo_media_search: {
+            get: { endpoint: `${base}/repo/search` },
+        },
+        repo_thumbnail: {
+            get: { endpoint: `${base}/repo/thumbnail` },
+        },
+        repo_subjects: {
+            get: { endpoint: `${base}/repo/subjects` },
+        },
+        repo_resource_types: {
+            get: { endpoint: `${base}/repo/resource-types` },
+        },
+        kaltura_media: {
+            get: { endpoint: `${base}/kaltura/:entry_id` },
+        },
+        kaltura_config: {
+            get: { endpoint: `${base}/kaltura/config/player` },
+        },
         media_exhibits: {
+            // NOTE: server canonical is `${base}/record/:media_id/exhibits`
+            // but media-picker e2e tests already pass against this shape.
+            // Flagged in modified-46 README; not changed here to avoid
+            // a regression. Worth a separate audit + fixture update.
             put: { endpoint: `${base}/exhibits/:media_id` },
         },
     };
