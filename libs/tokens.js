@@ -45,6 +45,41 @@ const TOKEN_COOKIE_FALLBACK_MAX_AGE_SECONDS = 8 * 60 * 60;
 // already inflight.
 const TOKEN_COOKIE_MIN_MAX_AGE_SECONDS = 60;
 
+// ===== Test-only auth bypass =====
+//
+// When BOTH env vars are set, verify() and verify_with_query() short-circuit
+// and inject a synthetic decoded JWT into req.decoded. This lets Playwright
+// E2E specs run against a server that has no real JWT issued, without
+// traversing DU SSO. Two-key gate (EXHIBITS_TEST_AUTH_BYPASS + NODE_ENV) is
+// defense in depth: NODE_ENV=test is uncommon in real deployments, and the
+// dedicated flag means a stray NODE_ENV alone cannot disarm auth. Production
+// must never set NODE_ENV=test, and CI deploys must never set the bypass
+// flag. The startup warnings below scream into stderr and the application
+// log if the bypass is ever active, so a misconfigured environment surfaces
+// loudly rather than silently shipping unauthenticated.
+const TEST_AUTH_BYPASS_ENABLED = (
+    process.env.EXHIBITS_TEST_AUTH_BYPASS === '1'
+    && process.env.NODE_ENV === 'test'
+);
+
+const TEST_BYPASS_DECODED = TEST_AUTH_BYPASS_ENABLED ? {
+    sub: 'pw-test-user',
+    iss: TOKEN_CONFIG.token_issuer,
+    type: TOKEN_TYPES.SESSION,
+    iat: Math.floor(Date.now() / 1000)
+} : null;
+
+if (TEST_AUTH_BYPASS_ENABLED) {
+    const banner = '*** [tokens] AUTH BYPASS ACTIVE — verify() and verify_with_query() short-circuit. '
+        + 'Trigger: EXHIBITS_TEST_AUTH_BYPASS=1 + NODE_ENV=test. '
+        + 'This MUST NEVER fire in production. ***';
+    // eslint-disable-next-line no-console
+    console.warn('\n' + banner + '\n');
+    try {
+        LOGGER.module().warn('WARN: ' + banner);
+    } catch (_) { /* logger may not be ready at module load */ }
+}
+
 /**
  * Parses a named cookie from the request's Cookie header. Kept local to
  * this module so the auth middleware does not pull in cookie-parser.
@@ -355,6 +390,11 @@ function validate_api_key(key) {
  */
 exports.verify = function (req, res, next) {
 
+    if (TEST_AUTH_BYPASS_ENABLED) {
+        req.decoded = TEST_BYPASS_DECODED;
+        return next();
+    }
+
     const token = req.headers['x-access-token']
         || get_cookie(req, TOKEN_COOKIE_NAME)
         || req.query.t
@@ -417,18 +457,23 @@ exports.verify = function (req, res, next) {
 /**
  * Verifies session token with query parameter support
  * Does NOT redirect to SSO - returns 401 instead (for API/resource endpoints)
- * 
+ *
  * Supports token from:
  *   - Header: x-access-token
  *   - Query parameter: token (for img src URLs that cannot set headers)
  *   - Query parameter: t
  *   - API key: api_key query parameter
- * 
+ *
  * @param {Object} req - Express request object
  * @param {Object} res - Express response object
  * @param {Function} next - Express next middleware function
  */
 exports.verify_with_query = function (req, res, next) {
+
+    if (TEST_AUTH_BYPASS_ENABLED) {
+        req.decoded = TEST_BYPASS_DECODED;
+        return next();
+    }
 
     const token = req.headers['x-access-token']
         || get_cookie(req, TOKEN_COOKIE_NAME)

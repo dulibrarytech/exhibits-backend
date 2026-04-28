@@ -7,6 +7,9 @@
     "test": "npm run test:unit && npm run test:integration",
     "test:unit": "NODE_OPTIONS=--max-old-space-size=4096 vitest --run --reporter verbose",
     "test:integration": "NODE_OPTIONS=--max-old-space-size=4096 jest --config jest.integration.config.js",
+    "test:e2e": "playwright test",
+    "test:e2e:ui": "playwright test --ui",
+    "test:e2e:install": "playwright install --with-deps chromium",
     "test:views": "node test/smoke-views.js",
     "start": "node exhibits-backend.js",
     "build": "node esbuild.config.js && gulp",
@@ -49,6 +52,7 @@
     "validator": "^13.7.0"
   },
   "devDependencies": {
+    "@playwright/test": "^1.48.0",
     "esbuild": "^0.28.0",
     "gulp": "^5.0.1",
     "gulp-clean-css": "^4.3.0",

@@ -696,12 +696,6 @@ const exhibitsModule = (function () {
                 toggle.setAttribute('aria-expanded', 'false');
             }
         });
-
-        // Also handle Bootstrap 4 jQuery dropdowns
-        if (typeof $ !== 'undefined' && typeof $.fn.dropdown !== 'undefined') {
-            $('.exhibit-actions-menu.dropdown-menu.show').removeClass('show');
-            $('.exhibit-actions-toggle[aria-expanded="true"]').attr('aria-expanded', 'false');
-        }
     }
 
     /**

@@ -38,9 +38,20 @@ http://localhost:8004/exhibits-dashboard/auth
 npm ci                                                                                                                                                                    
 npm run build     # esbuild + gulp, produces all three dist dirs                                                                                                        
 node exhibits-backend.js
+
 npm run build (full: JS + views)
 npm run build:js (JS only)
 npm run build:views (gulp default)
+
+===Client-side tests===
+node tools/install-cdn-libs.js
+npm run test:e2e:install (chromium)
+npm run test:e2e
+
+===Server-side tests===
+npm run test
+npx vitest run (only runs the vitest suite)
+
 ```
 
 ### Maintainers

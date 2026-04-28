@@ -76,3 +76,4 @@ public/app/dist/
 public/assets/dist/%
 
 /public/libs/axios-2.x/test
+/playwright-report

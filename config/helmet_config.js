@@ -39,7 +39,7 @@
  *
  *   exhibits-libs-common.ejs:
  *     - code.jquery.com       (JS: jQuery)
- *     - cdn.jsdelivr.net      (JS: popper, bootstrap, jquery-match-height)
+ *     - cdn.jsdelivr.net      (JS: popper, bootstrap)
  *
  *   dashboard-media-home.ejs:
  *     - cdnjs.cloudflare.com  (JS+CSS: dropzone)

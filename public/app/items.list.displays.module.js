@@ -1166,11 +1166,6 @@ const itemsListDisplayModule = (function() {
                 toggle.setAttribute('aria-expanded', 'false');
             }
         });
-
-        if (typeof $ !== 'undefined' && typeof $.fn.dropdown !== 'undefined') {
-            $('.item-actions-menu.dropdown-menu.show').removeClass('show');
-            $('.item-actions-toggle[aria-expanded="true"]').attr('aria-expanded', 'false');
-        }
     };
 
     /**

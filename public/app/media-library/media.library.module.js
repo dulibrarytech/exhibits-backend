@@ -755,12 +755,6 @@ const mediaLibraryModule = (function() {
                 toggle.setAttribute('aria-expanded', 'false');
             }
         });
-
-        // Also handle Bootstrap 4 jQuery dropdowns
-        if (typeof $ !== 'undefined' && typeof $.fn.dropdown !== 'undefined') {
-            $('.dropdown-menu.show').removeClass('show');
-            $('.media-actions-toggle[aria-expanded="true"]').attr('aria-expanded', 'false');
-        }
     };
 
     // ==================== EXHIBIT FILTER ====================
