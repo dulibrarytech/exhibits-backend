@@ -33,7 +33,7 @@
         navModule.wire_nav_links();
         const user_id = helperModule.get_parameter_by_name('user_id');
         const user = await userModule.display_user(user_id);
-        document.querySelector('#delete-user').innerHTML = `${user[0].first_name} ${user[0].last_name}`;
+        document.querySelector('#delete-user').innerHTML = `${user.first_name} ${user.last_name}`;
         document.querySelector('#delete-user-btn').addEventListener('click', userModule.delete_user);
         helperModule.show_form();
     })();

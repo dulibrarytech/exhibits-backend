@@ -1333,18 +1333,8 @@ async function stubTimelineRecordApi(page, opts = {}) {
  * Falls through on:
  *   /…/items/<id>/<sub>                                     (publish/suppress, future)
  *
- * Almost a mirror of stubGridItemRecordApi (different parent path), but
- * the GET response shape DIVERGES:
- *
- *   {data: {item: <record>}}    ← timeline-item edit + details modules
- *   {data: <record>}            ← every other module set
- *
- * Both `items.edit.vertical.timeline.item.form.module.js:455` and
- * `items.details.vertical.timeline.item.module.js:212` do
- * `if (!data || !data.item) { throw … }; const record = data.item;`
- * — they unwrap a `.item` key that no other module's response carries.
- * This stub matches the irregular shape on GET; POST and PUT keep the
- * standard shapes (those code paths don't unwrap).
+ * Mirrors stubGridItemRecordApi (different parent path). All three
+ * methods use the standard `{data: <record>}` shape.
  */
 async function stubTimelineItemApi(page, opts = {}) {
     const exhibitId = opts.exhibitId ?? 'exhibit-uuid-1';
@@ -1385,11 +1375,10 @@ async function stubTimelineItemApi(page, opts = {}) {
             }
 
             if (method === 'GET' && segments.length === 1) {
-                // Note the {item: record} wrapper — see header comment.
                 return route.fulfill({
                     status: 200,
                     contentType: 'application/json',
-                    body: JSON.stringify({ data: { item: record } }),
+                    body: JSON.stringify({ data: record }),
                 });
             }
 
@@ -1421,27 +1410,15 @@ async function stubTimelineItemApi(page, opts = {}) {
  *   DELETE /api/v1/users/<user_id>             (delete_user)
  *   PUT    /api/v1/users/status/<id>/<active>  (status toggle)
  *
- * Wire-format quirks worth knowing (this module set diverges from
- * every other one):
+ * Wire-format (matches the `{data: …}` envelope used elsewhere in the API):
  *
- *   - List GET returns the array DIRECTLY (no `{data: …}` wrapper).
- *     `get_user_records` returns `response.data` and the caller
- *     does `Array.isArray(users)` — so the body must be an array.
- *
- *   - Single GET returns an array containing one user `[{…}]`. Both
- *     the edit module (`record[record.length - 1]`) and the delete
- *     EJS (`user[0]`) index into it. The model returns it that way
- *     in production; controllers `res.json(response.data)` it through
- *     unmodified.
- *
- *   - POST save returns `{user: {data: {id: <int>}}}` — three layers
- *     deep. user.module.js literally reads
- *     `response.data.user.data.id` to redirect to the new edit page.
- *     If you change the wrap shape, the new-user redirect breaks.
- *
- *   - DELETE returns 204 with no body.
- *   - Status PUT returns 200; user.module.js only checks the status
- *     code, body is unused.
+ *   - List GET   → 200 `{data: [users]}`
+ *   - Single GET → 200 `{data: <user>}`  (single object, not an array)
+ *   - POST save  → 201 `{data: {id, …}}` (the new user record)
+ *   - PUT update → 201 `{data: {id}}`
+ *   - DELETE     → 204, no body
+ *   - Status PUT → 200 `{data: {id, is_active}}`; user.module.js only
+ *     checks the status code.
  *
  * Returns a state object so specs can assert on POST/PUT/DELETE
  * traffic without re-registering inline routes.
@@ -1483,7 +1460,10 @@ async function stubUsersApi(page, opts = {}) {
             return route.fulfill({
                 status: statusUpdateStatus,
                 contentType: 'application/json',
-                body: '{}',
+                body: JSON.stringify({
+                    message: 'User status updated successfully.',
+                    data: { id: Number(segments[1]), is_active: Number(segments[2]) },
+                }),
             });
         }
 
@@ -1493,8 +1473,7 @@ async function stubUsersApi(page, opts = {}) {
                 return route.fulfill({
                     status: listStatus,
                     contentType: 'application/json',
-                    // Note: raw array — no `{data: …}` wrap. See header.
-                    body: JSON.stringify(listStatus === 200 ? users : { message: 'Forbidden' }),
+                    body: JSON.stringify(listStatus === 200 ? { data: users } : { message: 'Forbidden' }),
                 });
             }
             if (method === 'POST') {
@@ -1503,10 +1482,9 @@ async function stubUsersApi(page, opts = {}) {
                 return route.fulfill({
                     status: createStatus,
                     contentType: 'application/json',
-                    // Note: triple-nested {user:{data:{id:N}}}. See header.
                     body: JSON.stringify({
                         message: 'User created successfully.',
-                        user: { data: { id: newUserId } },
+                        data: { id: newUserId },
                     }),
                 });
             }
@@ -1519,8 +1497,7 @@ async function stubUsersApi(page, opts = {}) {
                 return route.fulfill({
                     status: recordStatus,
                     contentType: 'application/json',
-                    // Note: array wrap (single-element). See header.
-                    body: JSON.stringify(recordStatus === 200 ? [record] : { message: 'Not found' }),
+                    body: JSON.stringify(recordStatus === 200 ? { data: record } : { message: 'Not found' }),
                 });
             }
             if (method === 'PUT') {
@@ -1531,7 +1508,7 @@ async function stubUsersApi(page, opts = {}) {
                     contentType: 'application/json',
                     body: JSON.stringify({
                         message: 'User updated successfully.',
-                        user: { data: { id: Number(segments[0]) } },
+                        data: { id: Number(segments[0]) },
                     }),
                 });
             }

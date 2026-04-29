@@ -410,76 +410,10 @@ const itemsEditHeadingFormModule = (function () {
         message_element.appendChild(alert_div);
     }
 
-    /*
-    async function display_edit_record__ () {
-
-        let record = await get_item_heading_record();
-        let styles;
-        let is_published = record.is_published;
-        let created_by = record.created_by;
-        let created = record.created;
-        let create_date = new Date(created);
-        let updated_by = record.updated_by;
-        let updated = record.updated;
-        let update_date = new Date(updated);
-        let item_created = '';
-        let create_date_time = helperModule.format_date(create_date);
-        let update_date_time = helperModule.format_date(update_date);
-
-        lockModule.check_if_locked(record, '#item-submit-card');
-
-        if (created_by !== null) {
-            item_created += `<em>Created by ${created_by} on ${create_date_time}</em>`;
-        }
-
-        if (updated_by !== null) {
-            item_created += ` | <em>Last updated by ${updated_by} on ${update_date_time}</em>`;
-        }
-
-        document.querySelector('#created').innerHTML = item_created;
-        document.querySelector('#item-heading-text-input').value = helperModule.unescape(record.text);
-
-        if (document.querySelector('#is-published') !== null && is_published === 1) {
-            document.querySelector('#is-published').value = true;
-        } else if (document.querySelector('#is-published') !== null && is_published === 0) {
-            document.querySelector('#is-published').value = false;
-        }
-
-        if (typeof record.styles === 'string') {
-            styles = JSON.parse(record.styles);
-        }
-
-        if (Object.keys(styles).length !== 0) {
-
-            if (styles.backgroundColor !== undefined && styles.backgroundColor.length !== 0) {
-                document.querySelector('#heading-background-color').value = styles.backgroundColor;
-                document.querySelector('#heading-background-color-picker').value = styles.backgroundColor;
-            }
-
-            if (styles.color !== undefined && styles.color.length !== 0) {
-                document.querySelector('#heading-font-color').value = styles.color;
-                document.querySelector('#heading-font-color-picker').value = styles.color;
-            }
-
-            if (styles.fontSize !== undefined) {
-                document.querySelector('#heading-font-size').value = styles.fontSize.replace('px', '');
-            } else {
-                document.querySelector('#heading-font-size').value = '';
-            }
-
-            let font_values = document.querySelector('#heading-font');
-
-            for (let i = 0;i<font_values.length;i++) {
-                if (font_values[i].value === styles.fontFamily) {
-                    document.querySelector('#heading-font').value = styles.fontFamily;
-                }
-            }
-        }
-
-        return false;
-    }
-    */
-
+    /**
+     * Update item heading record
+     * @returns {Promise<boolean>}
+     */
     obj.update_item_heading_record = async function() {
         // Prevent duplicate submissions
         if (this._is_updating) {

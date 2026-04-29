@@ -43,7 +43,6 @@ const itemsCommonStandardGridFormModule = (function () {
             };
 
             // Get grid metadata
-            grid.title = get_element_value('#grid-title-input');
             grid.text = get_element_value('#grid-text-input');
 
             const columns_value = get_element_value('#grid-columns');

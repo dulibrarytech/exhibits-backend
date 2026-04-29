@@ -54,7 +54,8 @@ const User_tasks = class {
             return await this.DB(this.TABLE).select('*')
             .where({
                 id: id
-            });
+            })
+            .first();
 
         } catch (error) {
             LOGGER.module().error('ERROR: [/users/tasks (get_user)] unable to get user ' + error.message);

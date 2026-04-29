@@ -38,10 +38,6 @@ test.describe('Edit timeline form (items.edit.vertical.timeline.form.module)', (
             `${APP_PATH}/items/vertical-timeline/edit?exhibit_id=${EXHIBIT_UUID}&item_id=${TIMELINE_UUID}`
         );
 
-        // Only #timeline-text-input populates — `#timeline-title-input` is
-        // omitted from `cache_dom_elements` in the edit module so
-        // set_timeline_title bails on the nullish element. Asserting the
-        // observable state, with the latent bug noted in the README.
         await expect(page.locator('#timeline-text-input')).toHaveValue('Existing timeline text');
         await expect(page.locator('#created')).toContainText(/Created by tester/);
     });

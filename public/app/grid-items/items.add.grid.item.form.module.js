@@ -32,15 +32,8 @@ const itemsAddGridItemFormModule = (function () {
             console.debug('Current URL:', window.location.href);
             console.debug('item_id:', item_id);
 
-            // Call update instead if it exists
-            if (obj.update_grid_item_record && typeof obj.update_grid_item_record === 'function') {
-                console.debug('Redirecting to update function...');
-                return await obj.update_grid_item_record();
-            }
-
             const message_element = document.querySelector('#message');
-            display_status_message(message_element, 'warning', 'Already in edit mode. Update function not available.');
-            console.error('ERROR: update_grid_item_record function not found!');
+            display_status_message(message_element, 'warning', 'Already in edit mode.');
             return false;
         }
 

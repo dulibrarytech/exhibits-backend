@@ -49,7 +49,8 @@ describe('User_tasks', () => {
             insert: jest.fn().mockReturnThis(),
             update: jest.fn().mockReturnThis(),
             del: jest.fn().mockReturnThis(),
-            count: jest.fn().mockReturnThis()
+            count: jest.fn().mockReturnThis(),
+            first: jest.fn().mockReturnThis()
         };
         return query;
     };
@@ -151,10 +152,11 @@ describe('User_tasks', () => {
     // ==================== GET_USER TESTS ====================
     describe('get_user', () => {
         test('should return user by id with all schema fields', async () => {
-            const mockUser = [createMockUser()];
+            const mockUser = createMockUser();
 
             mockQuery.select.mockReturnThis();
-            mockQuery.where.mockResolvedValue(mockUser);
+            mockQuery.where.mockReturnThis();
+            mockQuery.first.mockResolvedValue(mockUser);
 
             const result = await userTasks.get_user(1);
 
@@ -162,35 +164,38 @@ describe('User_tasks', () => {
             expect(mockQuery.select).toHaveBeenCalledWith('*');
             expect(mockQuery.where).toHaveBeenCalledWith({ id: 1 });
             expect(result).toEqual(mockUser);
-            expect(result[0]).toHaveProperty('du_id');
-            expect(result[0]).toHaveProperty('email');
-            expect(result[0]).toHaveProperty('token');
+            expect(result).toHaveProperty('du_id');
+            expect(result).toHaveProperty('email');
+            expect(result).toHaveProperty('token');
         });
 
-        test('should return empty array when user not found', async () => {
+        test('should return undefined when user not found', async () => {
             mockQuery.select.mockReturnThis();
-            mockQuery.where.mockResolvedValue([]);
+            mockQuery.where.mockReturnThis();
+            mockQuery.first.mockResolvedValue(undefined);
 
             const result = await userTasks.get_user(999);
 
-            expect(result).toEqual([]);
+            expect(result).toBeUndefined();
         });
 
         test('should handle unsigned int id (schema: int(11) unsigned)', async () => {
-            const mockUser = [createMockUser({ id: 4294967295 })]; // Max unsigned int
+            const mockUser = createMockUser({ id: 4294967295 }); // Max unsigned int
 
             mockQuery.select.mockReturnThis();
-            mockQuery.where.mockResolvedValue(mockUser);
+            mockQuery.where.mockReturnThis();
+            mockQuery.first.mockResolvedValue(mockUser);
 
             const result = await userTasks.get_user(4294967295);
 
             expect(mockQuery.where).toHaveBeenCalledWith({ id: 4294967295 });
-            expect(result[0].id).toBe(4294967295);
+            expect(result.id).toBe(4294967295);
         });
 
         test('should handle database errors gracefully', async () => {
             mockQuery.select.mockReturnThis();
-            mockQuery.where.mockRejectedValue(new Error('Query failed'));
+            mockQuery.where.mockReturnThis();
+            mockQuery.first.mockRejectedValue(new Error('Query failed'));
 
             const result = await userTasks.get_user(1);
 
@@ -709,15 +714,16 @@ describe('User_tasks', () => {
 
             // 4. Get user
             mockQuery.select.mockReturnThis();
-            mockQuery.where.mockResolvedValue([createMockUser({
+            mockQuery.where.mockReturnThis();
+            mockQuery.first.mockResolvedValue(createMockUser({
                 id: 41,
                 du_id: 'lifecycleuser',
                 first_name: 'Lifecycle',
                 last_name: 'Test',
                 email: 'lifecycle@test.com'
-            })]);
+            }));
             const getResult = await userTasks.get_user(41);
-            expect(getResult[0].du_id).toBe('lifecycleuser');
+            expect(getResult.du_id).toBe('lifecycleuser');
 
             // 5. Update user (only first_name, last_name, email)
             mockQuery.where.mockReturnThis();
@@ -800,23 +806,25 @@ describe('User_tasks', () => {
 
         test('should handle zero as user id', async () => {
             mockQuery.select.mockReturnThis();
-            mockQuery.where.mockResolvedValue([]);
+            mockQuery.where.mockReturnThis();
+            mockQuery.first.mockResolvedValue(undefined);
 
             const result = await userTasks.get_user(0);
 
             expect(mockQuery.where).toHaveBeenCalledWith({ id: 0 });
-            expect(result).toEqual([]);
+            expect(result).toBeUndefined();
         });
 
         test('should handle user with null token', async () => {
-            const mockUser = [createMockUser({ token: null })];
+            const mockUser = createMockUser({ token: null });
 
             mockQuery.select.mockReturnThis();
-            mockQuery.where.mockResolvedValue(mockUser);
+            mockQuery.where.mockReturnThis();
+            mockQuery.first.mockResolvedValue(mockUser);
 
             const result = await userTasks.get_user(1);
 
-            expect(result[0].token).toBeNull();
+            expect(result.token).toBeNull();
         });
 
         test('should handle default is_active value (schema default is 1)', async () => {
@@ -837,18 +845,19 @@ describe('User_tasks', () => {
         });
 
         test('should handle timestamps (created and last_login)', async () => {
-            const mockUser = [createMockUser({
+            const mockUser = createMockUser({
                 created: '2025-01-15 08:30:00',
                 last_login: '2025-12-18 16:45:30'
-            })];
+            });
 
             mockQuery.select.mockReturnThis();
-            mockQuery.where.mockResolvedValue(mockUser);
+            mockQuery.where.mockReturnThis();
+            mockQuery.first.mockResolvedValue(mockUser);
 
             const result = await userTasks.get_user(1);
 
-            expect(result[0].created).toBe('2025-01-15 08:30:00');
-            expect(result[0].last_login).toBe('2025-12-18 16:45:30');
+            expect(result.created).toBe('2025-01-15 08:30:00');
+            expect(result.last_login).toBe('2025-12-18 16:45:30');
         });
     });
 });

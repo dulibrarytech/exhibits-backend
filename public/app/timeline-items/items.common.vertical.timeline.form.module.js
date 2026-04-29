@@ -35,23 +35,8 @@ const itemsCommonVerticalTimelineFormModule = (function () {
                 return el?.value?.trim() ?? default_value;
             };
 
-            const show_error = (message) => {
-                const message_el = document.querySelector('#message');
-                if (message_el) {
-                    message_el.innerHTML = `<div class="alert alert-danger" role="alert"><i class="fa fa-exclamation"></i> ${message}</div>`;
-                }
-            };
-
             // Get timeline metadata
             timeline.text = get_element_value('#timeline-text-input');
-
-            // Validate required title field
-            /*
-            if (!timeline.title || timeline.title.length === 0) {
-                show_error('Please enter a title for the timeline');
-                return false;
-            }
-            */
 
             // Collect selected style preset (empty string → null for DB storage)
             const style_val = get_element_value('#item-style-select');

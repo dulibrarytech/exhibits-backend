@@ -32,15 +32,8 @@ const itemsAddVerticalTimelineFormModule = (function () {
             console.debug('Current URL:', window.location.href);
             console.debug('item_id:', item_id);
 
-            // Call update instead if it exists
-            if (obj.update_timeline_record && typeof obj.update_timeline_record === 'function') {
-                console.debug('Redirecting to update function...');
-                return await obj.update_timeline_record();
-            }
-
             const message_element = document.querySelector('#message');
-            display_status_message(message_element, 'warning', 'Already in edit mode. Update function not available.');
-            console.error('ERROR: update_timeline_record function not found!');
+            display_status_message(message_element, 'warning', 'Already in edit mode.');
             return false;
         }
 
@@ -89,7 +82,7 @@ const itemsAddVerticalTimelineFormModule = (function () {
             const form_data = itemsCommonVerticalTimelineFormModule.get_common_timeline_form_fields();
 
             if (!form_data || form_data === false) {
-                display_status_message(message_element, 'danger', 'Unable to get form field values. Please check all required fields.');
+                // display_status_message(message_element, 'danger', 'Unable to get form field values. Please check all required fields.');
                 return false;
             }
 
@@ -518,7 +511,7 @@ const itemsAddVerticalTimelineFormModule = (function () {
             const form_data = itemsCommonVerticalTimelineFormModule.get_common_timeline_form_fields();
 
             if (!form_data || form_data === false) {
-                display_message(message_element, 'danger', 'Unable to get form field values. Please check all required fields.');
+                // display_message(message_element, 'danger', 'Unable to get form field values. Please check all required fields.');
                 return false;
             }
 

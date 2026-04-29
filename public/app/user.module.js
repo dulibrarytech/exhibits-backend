@@ -41,7 +41,7 @@ const userModule = (function () {
             });
 
             if (response !== undefined && response.status === 200) {
-                return response.data;
+                return response.data?.data;
             } else if (response === undefined) {
                 return false;
             }
@@ -72,7 +72,7 @@ const userModule = (function () {
             });
 
             if (response.status === 200) {
-                return response.data;
+                return response.data?.data;
             }
 
         } catch (error) {
@@ -600,21 +600,13 @@ const userModule = (function () {
                     return false;
                 }
 
-                const record = await get_user_record();
+                const user = await get_user_record();
 
-                if (!record || !Array.isArray(record) || record.length === 0) {
+                if (!user || typeof user !== 'object') {
                     show_error('Unable to retrieve user record');
                     setTimeout(() => {
                         window.location.replace(`${APP_PATH}/users`)
                     }, 1000)
-                    return false;
-                }
-
-                // Extract user (record is an array, get last element)
-                const user = record[record.length - 1];
-
-                if (!user) {
-                    show_error('User record is empty');
                     return false;
                 }
 
@@ -863,13 +855,13 @@ const userModule = (function () {
             // Handle successful user creation
             if (response.status === 201) {
                 // Validate response contains user data
-                if (!response.data || !response.data.user || !response.data.user.data.id) {
+                if (!response.data || !response.data.data || !response.data.data.id) {
                     console.error('Invalid user data in response');
                     show_message('User saved but unable to retrieve user ID.');
                     return false;
                 }
 
-                const user_id = response.data.user.data.id;
+                const user_id = response.data.data.id;
 
                 // Validate user ID
                 if (!Number.isInteger(user_id) || user_id <= 0) {
@@ -887,8 +879,8 @@ const userModule = (function () {
                 return true;
             }
 
-            // Handle other success responses that indicate no save
-            if (response.status === 200) { // 409
+            // Handle conflict — user already exists
+            if (response.status === 409) {
                 const message = response.data?.message || 'User already exists.';
                 show_message(message);
                 return false;

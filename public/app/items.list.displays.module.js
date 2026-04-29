@@ -491,6 +491,11 @@ const itemsListDisplayModule = (function() {
     obj.display_heading_items = async function(item) {
 
         try {
+            // Validate required data
+            if (!item || !item.uuid) {
+                throw new Error('Invalid heading item data');
+            }
+
             const tr = document.createElement('tr');
             tr.id = `${item.uuid}_${item.type}`;
 
@@ -554,6 +559,11 @@ const itemsListDisplayModule = (function() {
      */
     obj.display_grids = async function(item) {
         try {
+            // Validate required data
+            if (!item || !item.uuid) {
+                throw new Error('Invalid grid data');
+            }
+
             const tr = document.createElement('tr');
             tr.id = `${item.uuid}_${item.type}`;
 
@@ -625,10 +635,8 @@ const itemsListDisplayModule = (function() {
                 throw new Error('Invalid grid item data');
             }
 
-            item.type = 'griditem';
-
             const tr = document.createElement('tr');
-            tr.id = `${item.uuid}_${item.type}_${item.item_type}`;
+            tr.id = `${item.uuid}_griditem_${item.item_type}`;
 
             // Order cell with drag handle
             tr.appendChild(create_order_cell(item.order));
@@ -808,6 +816,11 @@ const itemsListDisplayModule = (function() {
     obj.display_timelines = async function(item) {
 
         try {
+            // Validate required data
+            if (!item || !item.uuid) {
+                throw new Error('Invalid timeline data');
+            }
+
             const tr = document.createElement('tr');
             tr.id = `${item.uuid}_${item.type}`;
 
@@ -880,10 +893,8 @@ const itemsListDisplayModule = (function() {
                 throw new Error('Invalid timeline item data');
             }
 
-            item.type = 'timelineitem';
-
             const tr = document.createElement('tr');
-            tr.id = `${item.uuid}_${item.type}_${item.item_type}`;
+            tr.id = `${item.uuid}_timelineitem_${item.item_type}`;
 
             // Resolve title and thumbnail
             let title = helperModule.strip_html(helperModule.unescape(item.title || ''));
@@ -1017,10 +1028,14 @@ const itemsListDisplayModule = (function() {
             date_td.style.textAlign = 'center';
 
             if (item.date) {
+                // Use UTC accessors so a date-only ISO string (parsed as
+                // UTC midnight by `new Date(...)`) doesn't shift backwards
+                // on negative-UTC machines. The displayed/sort key here
+                // is a calendar date, not a localized time.
                 const item_date = new Date(item.date);
-                const year = item_date.getFullYear();
-                const month = (item_date.getMonth() + 1).toString().padStart(2, '0');
-                const day = item_date.getDate().toString().padStart(2, '0');
+                const year = item_date.getUTCFullYear();
+                const month = (item_date.getUTCMonth() + 1).toString().padStart(2, '0');
+                const day = item_date.getUTCDate().toString().padStart(2, '0');
                 const sort_date = `${year}-${month}-${day}`;
 
                 const date_small = document.createElement('small');
@@ -1192,7 +1207,13 @@ const itemsListDisplayModule = (function() {
             const default_tn = `${APP_PATH}/static/images/image-tn.png`;
             opts.thumbnail_img.style.cssText = 'width: 50px; height: 50px; object-fit: cover; border-radius: 4px; margin-right: 10px; vertical-align: middle; flex-shrink: 0;';
 
-            // Use inline onerror so the fallback survives innerHTML serialization
+            // Inline onerror is required because the row HTML is serialized
+            // via container.innerHTML (see end of each display_* builder)
+            // and re-parsed when injected into the DataTables tbody —
+            // addEventListener handlers would be lost on the round trip.
+            // Will need addressing under a strict CSP that disallows inline
+            // event handlers; same pattern lives in several media-library
+            // modules.
             opts.thumbnail_img.setAttribute('onerror', `this.onerror=null; this.src='${default_tn}';`);
 
             thumbnail_element = opts.thumbnail_img;

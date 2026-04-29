@@ -691,12 +691,7 @@ const Exhibit_timeline_record_tasks = class extends Base_tasks {
                 });
             }
 
-            return {
-                success: true,
-                item: timeline_item,
-                locked_by_user: true,
-                message: 'Timeline item locked for editing'
-            };
+            return timeline_item;
 
         } catch (error) {
             this._handle_error(error, 'get_timeline_item_edit_record', {
@@ -782,11 +777,7 @@ const Exhibit_timeline_record_tasks = class extends Base_tasks {
                 title: timeline_item.title
             });
 
-            return {
-                success: true,
-                item: timeline_item,
-                message: 'Timeline item details record retrieved'
-            };
+            return timeline_item;
 
         } catch (error) {
             this._handle_error(error, 'get_timeline_item_details_record', {

@@ -147,19 +147,15 @@ const exhibitsEditFormModule = (function () {
             const endpoint = `${endpoint_base}?${query_string}`;
 
             // Make request with timeout
-            const response = await Promise.race([
-                httpModule.req({
-                    method: 'GET',
-                    url: endpoint,
-                    headers: {
-                        'Content-Type': 'application/json',
-                        'x-access-token': token
-                    }
-                }),
-                new Promise((_, reject) =>
-                    setTimeout(() => reject(new Error('Request timeout')), REQUEST_TIMEOUT)
-                )
-            ]);
+            const response = await httpModule.req({
+                method: 'GET',
+                url: endpoint,
+                headers: {
+                    'Content-Type': 'application/json',
+                    'x-access-token': token
+                },
+                timeout: REQUEST_TIMEOUT
+            });
 
             // Validate response structure
             if (!response) {
@@ -174,11 +170,6 @@ const exhibitsEditFormModule = (function () {
                 throw new Error('Invalid response structure from server');
             }
 
-            if (response.data.data.length === 0) {
-                throw new Error('Exhibit record not found');
-            }
-
-            // Return the first record
             return response.data.data;
 
         } catch (error) {
@@ -780,20 +771,16 @@ const exhibitsEditFormModule = (function () {
             const update_url = EXHIBITS_ENDPOINTS.exhibits.exhibit_records.endpoints.put.endpoint.replace(':exhibit_id', encoded_uuid);
 
             // Make API request with timeout
-            const response = await Promise.race([
-                httpModule.req({
-                    method: 'PUT',
-                    url: update_url,
-                    data: data,
-                    headers: {
-                        'Content-Type': 'application/json',
-                        'x-access-token': token
-                    }
-                }),
-                new Promise((_, reject) =>
-                    setTimeout(() => reject(new Error('Request timeout')), REQUEST_TIMEOUT)
-                )
-            ]);
+            const response = await httpModule.req({
+                method: 'PUT',
+                url: update_url,
+                data: data,
+                headers: {
+                    'Content-Type': 'application/json',
+                    'x-access-token': token
+                },
+                timeout: REQUEST_TIMEOUT
+            });
 
             // Validate response
             if (!response || response.status !== 201) {
@@ -951,19 +938,15 @@ const exhibitsEditFormModule = (function () {
             show_message('Deleting hero image...', 'info');
 
             // Make DELETE request with timeout
-            const response = await Promise.race([
-                httpModule.req({
-                    method: 'DELETE',
-                    url: endpoint,
-                    headers: {
-                        'Content-Type': 'application/json',
-                        'x-access-token': token
-                    }
-                }),
-                new Promise((_, reject) =>
-                    setTimeout(() => reject(new Error('Request timeout')), REQUEST_TIMEOUT)
-                )
-            ]);
+            const response = await httpModule.req({
+                method: 'DELETE',
+                url: endpoint,
+                headers: {
+                    'Content-Type': 'application/json',
+                    'x-access-token': token
+                },
+                timeout: REQUEST_TIMEOUT
+            });
 
             // Validate response
             if (!response) {
@@ -1116,19 +1099,15 @@ const exhibitsEditFormModule = (function () {
             show_message('Deleting thumbnail image...', 'info');
 
             // Make DELETE request with timeout
-            const response = await Promise.race([
-                httpModule.req({
-                    method: 'DELETE',
-                    url: endpoint,
-                    headers: {
-                        'Content-Type': 'application/json',
-                        'x-access-token': token
-                    }
-                }),
-                new Promise((_, reject) =>
-                    setTimeout(() => reject(new Error('Request timeout')), REQUEST_TIMEOUT)
-                )
-            ]);
+            const response = await httpModule.req({
+                method: 'DELETE',
+                url: endpoint,
+                headers: {
+                    'Content-Type': 'application/json',
+                    'x-access-token': token
+                },
+                timeout: REQUEST_TIMEOUT
+            });
 
             // Validate response
             if (!response) {

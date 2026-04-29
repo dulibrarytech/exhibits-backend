@@ -47,7 +47,7 @@ test.describe('Exhibit details page (exhibits.details.module)', () => {
         await expect(page.locator('#exhibit-description-input')).toBeDisabled();
 
         // Save button is hidden on details mode; Edit is the primary action.
-        await expect(page.locator('#edit-exhibit-btn')).toBeVisible();
+        await expect(page.locator('#edit-item-btn')).toBeVisible();
     });
 
     test('clicking Edit navigates to the edit page with the same exhibit_id', async ({ page }) => {
@@ -58,10 +58,7 @@ test.describe('Exhibit details page (exhibits.details.module)', () => {
 
         await page.goto(`${APP_PATH}/exhibits/exhibit/details?exhibit_id=${EXHIBIT_UUID}`);
 
-        // Edit button id is #edit-exhibit-btn here, NOT #edit-item-btn
-        // (which is what the heading/grid/standard/timeline details
-        // pages use). The exhibit page is the odd one out.
-        await page.click('#edit-exhibit-btn');
+        await page.click('#edit-item-btn');
 
         await page.waitForURL(
             new RegExp(`${APP_PATH}/exhibits/exhibit/edit`),

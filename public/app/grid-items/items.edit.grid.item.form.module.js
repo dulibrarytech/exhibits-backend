@@ -575,7 +575,7 @@ const itemsEditGridItemFormModule = (function () {
             set_basic_fields(record, elements);
 
             // Populate media previews from record (media picker integration)
-            const is_media_path = window.location.pathname.includes('media');
+            const is_media_path = window.location.pathname.split('/').filter(Boolean).includes('media');
             if (is_media_path) {
                 itemsCommonGridItemFormModule.populate_media_previews(record);
             }

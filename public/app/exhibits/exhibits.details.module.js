@@ -138,19 +138,15 @@ const exhibitsDetailsModule = (function () {
             const endpoint = `${endpoint_base}?${query_string}`;
 
             // Make request with timeout
-            const response = await Promise.race([
-                httpModule.req({
-                    method: 'GET',
-                    url: endpoint,
-                    headers: {
-                        'Content-Type': 'application/json',
-                        'x-access-token': token
-                    }
-                }),
-                new Promise((_, reject) =>
-                    setTimeout(() => reject(new Error('Request timeout')), REQUEST_TIMEOUT)
-                )
-            ]);
+            const response = await httpModule.req({
+                method: 'GET',
+                url: endpoint,
+                headers: {
+                    'Content-Type': 'application/json',
+                    'x-access-token': token
+                },
+                timeout: REQUEST_TIMEOUT
+            });
 
             // Validate response structure
             if (!response) {
@@ -618,17 +614,6 @@ const exhibitsDetailsModule = (function () {
 
             // Display the record details
             await display_details_record();
-
-            // Disable all visible form fields (details page is read-only).
-            // Shared partials (data card, banners, styles) render inputs without
-            // the disabled attribute so the edit form can use them interactively.
-            // This sweep ensures they are disabled on the read-only details page.
-            const form_elements = document.querySelectorAll(
-                'input:not([type="hidden"]):not([disabled]), textarea:not([disabled]), select:not([disabled])'
-            );
-            form_elements.forEach(element => {
-                element.disabled = true;
-            });
 
             console.debug('Module initialized successfully');
             return true;

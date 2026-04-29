@@ -98,27 +98,11 @@ test.describe('Users edit page (user.module.js — display_user_record / update_
         expect(state.lastUpdatePayload.role_id).toBe('1');
     });
 
-    test('redirects to /users when the record GET returns no rows', async ({ page }) => {
-        // Server returns a 200 with an empty array body — the legitimate
-        // "no such user" shape. process_user_record short-circuits
-        // (`!record || record.length === 0`), shows the alert, then
-        // schedules the redirect after 1s.
-        await stubUsersApi(page, {
-            users: [],
-            record: undefined,
-            recordStatus: 200,
-        });
-        // Override the record GET to send back an empty array so we
-        // hit the redirect branch (the `record` opt above defaults to
-        // `users[0] ?? userFixture()` which would still send a row).
-        await page.route(`**${APP_PATH}/api/v1/users/1**`, (route) => {
-            if (route.request().method() !== 'GET') return route.fallback();
-            return route.fulfill({
-                status: 200,
-                contentType: 'application/json',
-                body: JSON.stringify([]),
-            });
-        });
+    test('redirects to /users when the record GET returns 404', async ({ page }) => {
+        // Server returns a 404 for "no such user". process_user_record
+        // short-circuits when get_user_record yields a falsy value,
+        // shows the alert, then schedules the redirect after 1s.
+        await stubUsersApi(page, { recordStatus: 404 });
         await stubAuthRolesApi(page);
 
         await page.goto(`${APP_PATH}/users/edit?user_id=1`);

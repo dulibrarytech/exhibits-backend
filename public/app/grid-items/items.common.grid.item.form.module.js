@@ -413,9 +413,9 @@ const itemsCommonGridItemFormModule = (function () {
         try {
 
             const item = { styles: {} };
-            const path = window.location.pathname;
-            const is_text_path = path.includes('text');
-            const is_media_path = path.includes('media');
+            const path_segments = window.location.pathname.split('/').filter(Boolean);
+            const is_text_path = path_segments.includes('text');
+            const is_media_path = path_segments.includes('media');
 
             // Helper function for safe DOM queries
             const get_element_value = (selector, default_value = '') => {

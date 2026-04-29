@@ -16,7 +16,7 @@
 
  */
 
-const itemsEditTimelineItemFormModule = (function () {
+const itemsEditVerticalTimelineItemFormModule = (function () {
 
     'use strict';
 
@@ -450,13 +450,11 @@ const itemsEditTimelineItemFormModule = (function () {
 
         try {
             // Fetch record data
-            const data = await get_timeline_item_record();
+            const record = await get_timeline_item_record();
 
-            if (!data || !data.item) {
+            if (!record) {
                 throw new Error('Failed to load timeline item record data');
             }
-
-            const record = data.item;
 
             // Check if record is locked
             await lockModule.check_if_locked(record, '#item-submit-card');
@@ -757,7 +755,7 @@ const itemsEditTimelineItemFormModule = (function () {
             // Nav links wired by navModule.wire_nav_links() from the view
             // using data-nav-path + NAV_CONFIGS.timeline_item_form.
             await display_edit_record();
-            domModule.on('#save-item-btn', 'click', itemsEditTimelineItemFormModule.update_timeline_item_record);
+            domModule.on('#save-item-btn', 'click', itemsEditVerticalTimelineItemFormModule.update_timeline_item_record);
 
         } catch (error) {
             domModule.set_alert(document.querySelector('#message'), 'danger', error.message);

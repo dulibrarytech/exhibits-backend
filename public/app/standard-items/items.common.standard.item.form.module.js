@@ -655,9 +655,9 @@ const itemsCommonStandardItemFormModule = (function () {
         try {
 
             const item = {};
-            const path = window.location.pathname;
-            const isTextPath = path.includes('text');
-            const isMediaPath = path.includes('media');
+            const path_segments = window.location.pathname.split('/').filter(Boolean);
+            const isTextPath = path_segments.includes('text');
+            const isMediaPath = path_segments.includes('media');
 
             // Helper function for safe DOM queries
             const getElementValue = (selector, defaultValue = '') => {

@@ -42,11 +42,11 @@ test.describe('Add heading form (items.add.heading.form.module)', () => {
         await page.selectOption('#item-heading-type-input', 'heading');
         await page.click('#save-heading-btn');
 
-        // The common module sets a "Please enter heading text" alert, but
-        // create_heading_record then overwrites it with this generic one.
-        // We assert the user-visible final state, not the intermediate.
+        // The common module's per-field validation message is now the
+        // user-visible final state (create_heading_record no longer
+        // clobbers it with a generic banner).
         await expect(page.locator('#message .alert-danger')).toContainText(
-            /invalid form data/i
+            /please enter heading text/i
         );
         expect(state.createCount).toBe(0);
     });
@@ -61,7 +61,7 @@ test.describe('Add heading form (items.add.heading.form.module)', () => {
         await page.click('#save-heading-btn');
 
         await expect(page.locator('#message .alert-danger')).toContainText(
-            /invalid form data/i
+            /please select heading type/i
         );
         expect(state.createCount).toBe(0);
     });

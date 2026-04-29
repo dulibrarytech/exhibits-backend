@@ -69,7 +69,7 @@ test.describe('Users add page (user.module.js — save_user_record)', () => {
         // Role 'User' → id 2 in the stubAuthRolesApi default fixture.
         expect(state.lastCreatePayload.role_id).toBe('2');
 
-        // save_user_record reads response.data.user.data.id (= newUserId)
+        // save_user_record reads response.data.data.id (= newUserId)
         // and redirects to /users/edit?user_id=<id> after 900ms.
         await page.waitForURL(
             new RegExp(`${APP_PATH}/users/edit\\?user_id=99`),

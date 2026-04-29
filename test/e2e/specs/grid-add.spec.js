@@ -45,13 +45,11 @@ test.describe('Add grid form (items.add.grid.form.module)', () => {
         await page.fill('#grid-columns', '');
         await page.click('#save-item-btn');
 
-        // The common module sets a "Please enter the number of columns"
-        // alert directly, but create_grid_record then overwrites it with
-        // this generic one (same UX bug previously observed in
-        // create_heading_record). Assert what the user actually sees,
-        // not the intermediate state.
+        // The common module's per-field validation message is now the
+        // user-visible final state (create_grid_record no longer clobbers
+        // it with a generic banner).
         await expect(page.locator('#message .alert-danger')).toContainText(
-            /invalid form data/i
+            /please enter the number of columns/i
         );
         expect(state.createCount).toBe(0);
     });
@@ -96,8 +94,7 @@ test.describe('Add grid form (items.add.grid.form.module)', () => {
     test('does not POST when item_id is already present (edit mode guard)', async ({ page }) => {
         const state = await stubGridRecordApi(page, { exhibitId: EXHIBIT_UUID });
 
-        // item_id present → create_grid_record bails out (and tries to
-        // call obj.update_grid_record which is undefined on the add module).
+        // item_id present → create_grid_record bails out without POSTing.
         await page.goto(`${APP_PATH}/items/grid?exhibit_id=${EXHIBIT_UUID}&item_id=existing-grid`);
 
         await page.click('#save-item-btn');

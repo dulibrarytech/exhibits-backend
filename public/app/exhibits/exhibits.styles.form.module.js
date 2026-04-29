@@ -196,21 +196,15 @@ const exhibitsStylesFormModule = (function () {
             const endpoint = endpoint_base + '?' + query_string;
 
             // Fetch with timeout
-            const response = await Promise.race([
-                httpModule.req({
-                    method: 'GET',
-                    url: endpoint,
-                    headers: {
-                        'Content-Type': 'application/json',
-                        'x-access-token': token
-                    }
-                }),
-                new Promise(function (_, reject) {
-                    setTimeout(function () {
-                        reject(new Error('Request timeout'));
-                    }, REQUEST_TIMEOUT);
-                })
-            ]);
+            const response = await httpModule.req({
+                method: 'GET',
+                url: endpoint,
+                headers: {
+                    'Content-Type': 'application/json',
+                    'x-access-token': token
+                },
+                timeout: REQUEST_TIMEOUT
+            });
 
             if (!response) {
                 throw new Error('No response received from server');
@@ -481,22 +475,16 @@ const exhibitsStylesFormModule = (function () {
             const update_url = EXHIBITS_ENDPOINTS.exhibits.exhibit_records.endpoints.put.endpoint
                 .replace(':exhibit_id', encoded_uuid);
 
-            const response = await Promise.race([
-                httpModule.req({
-                    method: 'PUT',
-                    url: update_url,
-                    data: data,
-                    headers: {
-                        'Content-Type': 'application/json',
-                        'x-access-token': token
-                    }
-                }),
-                new Promise(function (_, reject) {
-                    setTimeout(function () {
-                        reject(new Error('Request timeout'));
-                    }, REQUEST_TIMEOUT);
-                })
-            ]);
+            const response = await httpModule.req({
+                method: 'PUT',
+                url: update_url,
+                data: data,
+                headers: {
+                    'Content-Type': 'application/json',
+                    'x-access-token': token
+                },
+                timeout: REQUEST_TIMEOUT
+            });
 
             if (!response || response.status !== 201) {
                 throw new Error('Failed to update exhibit styles');

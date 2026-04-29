@@ -49,7 +49,7 @@ test.describe('Edit standard media item form (items.edit.standard.item.form.modu
         await expect(page.locator('#created')).toContainText(/Created by tester/);
     });
 
-    test('PUTs payload preserving media_uuid via #update-item-btn', async ({ page }) => {
+    test('PUTs payload preserving media_uuid via #save-item-btn', async ({ page }) => {
         const state = await stubStandardItemApi(page, {
             exhibitId: EXHIBIT_UUID,
             record: standardItemRecordFixture({
@@ -73,9 +73,7 @@ test.describe('Edit standard media item form (items.edit.standard.item.form.modu
             && req.method() === 'PUT'
         );
 
-        // Standard-item edit uses #update-item-btn (not #save-item-btn).
-        // See modified-31 README — unique among module sets.
-        await page.click('#update-item-btn');
+        await page.click('#save-item-btn');
         await putPromise;
 
         await expect.poll(() => state.lastUpdatePayload).not.toBeNull();

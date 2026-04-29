@@ -171,7 +171,6 @@ const itemsDetailsVerticalTimelineModule = (function () {
         const cache_dom_elements = () => {
             return {
                 created: document.querySelector('#created'),
-                timeline_title: document.querySelector('#timeline-title-input'),
                 timeline_text: document.querySelector('#timeline-text-input')
             };
         };
@@ -219,18 +218,6 @@ const itemsDetailsVerticalTimelineModule = (function () {
                 }
                 created_element.appendChild(part);
             });
-        };
-
-        /**
-         * Set timeline title input value
-         */
-        const set_timeline_title = (title, element) => {
-            if (!element) {
-                return;
-            }
-
-            const unescaped_title = title ? helperModule.unescape(title) : '';
-            element.value = unescaped_title;
         };
 
         /**
@@ -292,7 +279,6 @@ const itemsDetailsVerticalTimelineModule = (function () {
             display_metadata_info(record, elements.created);
 
             // Set timeline form fields
-            set_timeline_title(record.title, elements.timeline_title);
             set_timeline_text(record.text, elements.timeline_text);
 
             return false;

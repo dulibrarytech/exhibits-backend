@@ -98,11 +98,17 @@ const itemsEditGridFormModule = (function () {
 
                 window.scrollTo(0, 0);
                 domModule.set_alert(document.querySelector('#message'), 'success', 'Grid record updated');
-                const grid_id = response.data.data;
 
+                // Refresh the display with updated data instead of reloading
+                await display_edit_record();
+
+                // Auto-dismiss success message after a delay
                 setTimeout(() => {
-                    window.location.reload();
-                }, 900);
+                    const message_el = document.querySelector('#message');
+                    if (message_el) {
+                        message_el.innerHTML = '';
+                    }
+                }, 3000);
             }
 
         } catch (error) {

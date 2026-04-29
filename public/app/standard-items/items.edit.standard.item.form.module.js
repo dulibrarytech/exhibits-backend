@@ -187,7 +187,7 @@ const itemsEditStandardItemFormModule = (function () {
             // setup_auto_unlock(record);
             lockModule.setup_auto_unlock(record);
 
-            const is_media_path = window.location.pathname.includes('media');
+            const is_media_path = window.location.pathname.split('/').filter(Boolean).includes('media');
 
             // Helper function for safe DOM queries
             const set_element_value = (selector, value) => {
@@ -520,7 +520,7 @@ const itemsEditStandardItemFormModule = (function () {
             const item_id = helperModule.get_parameter_by_name('item_id');
             let type = 'media';
 
-            if (window.location.pathname.indexOf('text')) {
+            if (window.location.pathname.indexOf('text') !== -1) {
                 type = 'text';
             }
 
@@ -529,7 +529,7 @@ const itemsEditStandardItemFormModule = (function () {
 
             exhibitsModule.set_exhibit_title(exhibit_id);
             await display_edit_record();
-            domModule.on('#update-item-btn', 'click', itemsEditStandardItemFormModule.update_item_record);
+            domModule.on('#save-item-btn', 'click', itemsEditStandardItemFormModule.update_item_record);
 
         } catch (error) {
             domModule.set_alert(document.querySelector('#message'), 'danger', error.message);

@@ -268,13 +268,9 @@ describe('stubStandardItemApi (reorder defense)', () => {
 // stubTimelineItemApi — {data: {item: <record>}} response shape
 // ============================================================
 
-describe('stubTimelineItemApi (response-shape regression — modified-37)', () => {
+describe('stubTimelineItemApi (response-shape)', () => {
 
-    test('GET /…/items/<id> → response wraps record in `{item: ...}`', async () => {
-        // The timeline-item edit and details modules unwrap `data.item`
-        // — uniquely among all module sets. modified-37 fixed the
-        // stub to match. This test guards against accidentally
-        // dropping the wrapper.
+    test('GET /…/items/<id> → response is plain {data: <record>}', async () => {
         const page = makeMockPage();
         await stubs.stubTimelineItemApi(page, {
             exhibitId: 'X',
@@ -284,12 +280,12 @@ describe('stubTimelineItemApi (response-shape regression — modified-37)', () =
         const result = await page.invokeHandler(0, 'GET', url('/api/v1/exhibits/X/timelines/T/items/abc?type=edit&uid=1'));
         expect(result.action).toBe('fulfill');
         const body = JSON.parse(result.payload.body);
-        expect(body.data.item).toBeDefined();
-        expect(body.data.item.text).toBe('hello');
+        expect(body.data.item).toBeUndefined();
+        expect(body.data.text).toBe('hello');
+        expect(body.data.uuid).toBe('abc');
     });
 
-    test('PUT /…/items/<id> → response is plain {data: {uuid}} (no wrapper)', async () => {
-        // Only GET responses carry the .item wrapper. PUT is plain.
+    test('PUT /…/items/<id> → response is plain {data: {uuid}}', async () => {
         const page = makeMockPage();
         const state = await stubs.stubTimelineItemApi(page, {
             exhibitId: 'X',
@@ -304,7 +300,6 @@ describe('stubTimelineItemApi (response-shape regression — modified-37)', () =
         );
         expect(result.action).toBe('fulfill');
         const body = JSON.parse(result.payload.body);
-        expect(body.data.item).toBeUndefined();
         expect(body.data.uuid).toBe('abc');
         expect(state.lastUpdatePayload).toEqual({ text: 'edited' });
     });

@@ -223,18 +223,6 @@ const itemsDetailsGridFormModule = (function () {
         };
 
         /**
-         * Set grid title input value
-         */
-        const set_grid_title = (title, element) => {
-            if (!element) {
-                return;
-            }
-
-            const unescaped_title = title ? helperModule.unescape(title) : '';
-            element.value = unescaped_title;
-        };
-
-        /**
          * Set grid text input value
          */
         const set_grid_text = (text, element) => {
@@ -312,7 +300,6 @@ const itemsDetailsGridFormModule = (function () {
             display_metadata_info(record, dom_elements.created);
 
             // Set form field values
-            set_grid_title(record.title, dom_elements.grid_title);
             set_grid_text(record.text, dom_elements.grid_text);
             set_grid_columns(record.columns, dom_elements.grid_columns);
 

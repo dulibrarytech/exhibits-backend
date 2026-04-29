@@ -354,19 +354,15 @@ const exhibitsCommonFormModule = (function () {
             show_message('Deleting hero image...', 'info');
 
             // Make DELETE request with timeout
-            const response = await Promise.race([
-                httpModule.req({
-                    method: 'DELETE',
-                    url: endpoint,
-                    headers: {
-                        'Content-Type': 'application/json',
-                        'x-access-token': token
-                    }
-                }),
-                new Promise((_, reject) =>
-                    setTimeout(() => reject(new Error('Request timeout')), REQUEST_TIMEOUT)
-                )
-            ]);
+            const response = await httpModule.req({
+                method: 'DELETE',
+                url: endpoint,
+                headers: {
+                    'Content-Type': 'application/json',
+                    'x-access-token': token
+                },
+                timeout: REQUEST_TIMEOUT
+            });
 
             // Validate response
             if (!response) {
@@ -519,19 +515,15 @@ const exhibitsCommonFormModule = (function () {
             show_message('Deleting thumbnail image...', 'info');
 
             // Make DELETE request with timeout
-            const response = await Promise.race([
-                httpModule.req({
-                    method: 'DELETE',
-                    url: endpoint,
-                    headers: {
-                        'Content-Type': 'application/json',
-                        'x-access-token': token
-                    }
-                }),
-                new Promise((_, reject) =>
-                    setTimeout(() => reject(new Error('Request timeout')), REQUEST_TIMEOUT)
-                )
-            ]);
+            const response = await httpModule.req({
+                method: 'DELETE',
+                url: endpoint,
+                headers: {
+                    'Content-Type': 'application/json',
+                    'x-access-token': token
+                },
+                timeout: REQUEST_TIMEOUT
+            });
 
             // Validate response
             if (!response) {

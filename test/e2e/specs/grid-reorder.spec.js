@@ -67,7 +67,7 @@ test.describe('Grid items — row reorder', () => {
         expect(Array.isArray(state.lastReorderPayload)).toBe(true);
         expect(state.lastReorderPayload.length).toBeGreaterThan(0);
 
-        // build_grid_reorder_array (in reorder.module.js) emits objects with
+        // build_reorder_array (in reorder.module.js) emits objects with
         // string uuids — assert the shape so a malformed payload would be
         // visible without spec-coupling to the exact reorder.
         for (const entry of state.lastReorderPayload) {

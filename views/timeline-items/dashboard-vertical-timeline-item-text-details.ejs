@@ -35,7 +35,7 @@
                         <div class="row form-group">
                             <div class="col-12">
                                 <div class="form-text text-muted" style="font-size: 17px"><span style="color: darkred">*</span>Date</div>
-                                <input disabled class="form-control" id="item-date-input" type="date" value="0000-00-00" />
+                                <input disabled class="form-control" id="item-date-input" type="date" />
                             </div>
                         </div>
                     </div>
@@ -196,7 +196,7 @@
     navModule.init();
     navModule.wire_nav_links();
     itemsCommonVerticalTimelineItemFormModule.init();
-    itemsDetailsTimelineItemModule.init();
+    itemsDetailsVerticalTimelineItemModule.init();
     document.querySelector('#edit-item-btn').addEventListener('click', (event) => {
         event.preventDefault();
         document.querySelector('.content').style.visibility = 'hidden';

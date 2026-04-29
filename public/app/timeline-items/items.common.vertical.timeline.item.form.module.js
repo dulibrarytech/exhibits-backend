@@ -403,8 +403,7 @@ const itemsCommonVerticalTimelineItemFormModule = (function () {
         try {
 
             const item = { styles: {} };
-            const path = window.location.pathname;
-            const is_media_path = path.includes('media');
+            const is_media_path = window.location.pathname.split('/').filter(Boolean).includes('media');
 
             // Helper function for safe DOM queries
             const get_element_value = (selector, default_value = '') => {
@@ -507,8 +506,7 @@ const itemsCommonVerticalTimelineItemFormModule = (function () {
             helperModule.show_form();
 
             // Wire up media picker buttons if on a media form
-            const path = window.location.pathname;
-            if (path.includes('media')) {
+            if (window.location.pathname.split('/').filter(Boolean).includes('media')) {
                 init_media_picker_buttons();
             }
 

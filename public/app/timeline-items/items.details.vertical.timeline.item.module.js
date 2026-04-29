@@ -16,7 +16,7 @@
 
  */
 
-const itemsDetailsTimelineItemModule = (function () {
+const itemsDetailsVerticalTimelineItemModule = (function () {
 
     'use strict';
 
@@ -207,13 +207,11 @@ const itemsDetailsTimelineItemModule = (function () {
 
         try {
 
-            const data = await get_timeline_item_record();
+            const record = await get_timeline_item_record();
 
-            if (!data || !data.item) {
+            if (!record) {
                 throw new Error('Failed to load timeline item record data');
             }
-
-            const record = data.item;
 
             // Helper for safe DOM value setting
             const set_element_value = (selector, value) => {

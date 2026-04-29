@@ -20,7 +20,6 @@ const MODULE_PATH = resolve(
 function build_form() {
     document.body.innerHTML = `
         <div id="message"></div>
-        <input type="text" id="grid-title-input" />
         <input type="text" id="grid-text-input" />
         <input type="number" id="grid-columns" />
         <select id="item-style-select">
@@ -60,8 +59,6 @@ describe('itemsCommonStandardGridFormModule', () => {
     describe('get_common_grid_form_fields', () => {
 
         it('returns false and shows an alert when columns is empty', () => {
-            set_value('#grid-title-input', 'Grid Title');
-
             const result = globalThis.itemsCommonStandardGridFormModule
                 .get_common_grid_form_fields();
 
@@ -100,7 +97,6 @@ describe('itemsCommonStandardGridFormModule', () => {
         });
 
         it('returns the assembled grid object on a fully valid form', () => {
-            set_value('#grid-title-input', 'My Grid');
             set_value('#grid-text-input', 'Some grid copy');
             set_value('#grid-columns', '4');
             set_value('#item-style-select', 'item2');
@@ -109,7 +105,6 @@ describe('itemsCommonStandardGridFormModule', () => {
                 .get_common_grid_form_fields();
 
             expect(result).toEqual({
-                title: 'My Grid',
                 text: 'Some grid copy',
                 columns: '4',
                 styles: 'item2',
@@ -136,15 +131,13 @@ describe('itemsCommonStandardGridFormModule', () => {
             expect(result.styles).toBeNull();
         });
 
-        it('trims surrounding whitespace from title and text', () => {
-            set_value('#grid-title-input', '   spacey title   ');
+        it('trims surrounding whitespace from text', () => {
             set_value('#grid-text-input', '\tspacey text\n');
             set_value('#grid-columns', '3');
 
             const result = globalThis.itemsCommonStandardGridFormModule
                 .get_common_grid_form_fields();
 
-            expect(result.title).toBe('spacey title');
             expect(result.text).toBe('spacey text');
         });
 
@@ -152,7 +145,7 @@ describe('itemsCommonStandardGridFormModule', () => {
             // Force querySelector to throw after the form is in the DOM
             const original_qs = document.querySelector.bind(document);
             document.querySelector = vi.fn((sel) => {
-                if (sel === '#grid-title-input') throw new Error('boom');
+                if (sel === '#grid-text-input') throw new Error('boom');
                 return original_qs(sel);
             });
 

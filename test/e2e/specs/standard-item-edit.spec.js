@@ -41,7 +41,7 @@ test.describe('Edit standard text item form (items.edit.standard.item.form.modul
         await expect(page.locator('#created')).toContainText(/Created by tester/);
     });
 
-    test('PUTs updated payload via #update-item-btn and shows success', async ({ page }) => {
+    test('PUTs updated payload via #save-item-btn and shows success', async ({ page }) => {
         await stubDashboardDeps(page, {
             exhibit: { record: exhibitFixture({ uuid: EXHIBIT_UUID }) },
         });
@@ -65,10 +65,7 @@ test.describe('Edit standard text item form (items.edit.standard.item.form.modul
             && req.method() === 'PUT'
         );
 
-        // Standard-item edit form's save button is #update-item-btn,
-        // not #save-item-btn — different from every other module set
-        // covered so far.
-        await page.click('#update-item-btn');
+        await page.click('#save-item-btn');
         await putPromise;
 
         await expect.poll(() => state.lastUpdatePayload).not.toBeNull();

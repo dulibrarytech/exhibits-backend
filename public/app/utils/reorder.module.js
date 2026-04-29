@@ -30,73 +30,7 @@ const reorderModule = (function () {
      * @returns {Promise<boolean>} True if successful, false otherwise
      */
     obj.reorder_items = async function (event, reordered_items) {
-
-        try {
-            if (!reordered_items || !Array.isArray(reordered_items)) {
-                console.error('Invalid reordered_items parameter');
-                return false;
-            }
-
-            if (reordered_items.length === 0) {
-                console.debug('No items to reorder');
-                return false;
-            }
-
-            const EXHIBITS_ENDPOINTS = endpointsModule.get_exhibits_endpoints();
-
-            if (!EXHIBITS_ENDPOINTS?.exhibits?.reorder_records?.post?.endpoint) {
-                throw new Error('Reorder endpoint not configured');
-            }
-
-            const exhibit_id = helperModule.get_parameter_by_name('exhibit_id');
-
-            if (!exhibit_id) {
-                throw new Error('Exhibit ID not found in URL');
-            }
-
-            const token = authModule.get_user_token();
-
-            if (!token || token === false) {
-                throw new Error('Not authenticated - please log in again');
-            }
-
-            const updated_order = build_reorder_array(reordered_items);
-
-            if (!updated_order || updated_order.length === 0) {
-                throw new Error('Failed to build reorder data');
-            }
-
-            const endpoint = EXHIBITS_ENDPOINTS.exhibits.reorder_records.post.endpoint
-                .replace(':exhibit_id', encodeURIComponent(exhibit_id));
-
-            const response = await httpModule.req({
-                method: 'POST',
-                url: endpoint,
-                data: updated_order,
-                headers: {
-                    'Content-Type': 'application/json',
-                    'x-access-token': token
-                },
-                timeout: 30000
-            });
-
-            if (response && response.status === 200) {
-                console.debug('Items reordered successfully');
-                return true;
-            } else {
-                throw new Error('Failed to reorder items - server returned an error');
-            }
-
-        } catch (error) {
-            console.error('Error reordering items:', error);
-
-            const message_element = document.querySelector('#message');
-            if (message_element) {
-                display_error_message(message_element, error.message || 'An error occurred while reordering items');
-            }
-
-            return false;
-        }
+        return _reorder(event, reordered_items, null);
     };
 
     /**
@@ -107,6 +41,30 @@ const reorderModule = (function () {
      * @returns {Promise<boolean>} True if successful, false otherwise
      */
     obj.reorder_grid_items = async function (event, reordered_items) {
+        const grid_id = helperModule.get_parameter_by_name('grid_id');
+
+        if (!grid_id) {
+            console.error('Error reordering grid items: Grid ID not found in URL');
+            const message_element = document.querySelector('#message');
+            if (message_element) {
+                display_error_message(message_element, 'Grid ID not found in URL');
+            }
+            return false;
+        }
+
+        return _reorder(event, reordered_items, grid_id);
+    };
+
+    /**
+     * Shared reorder POST. When `grid_id` is provided the request reorders
+     * grid items (each entry tagged with `grid_id` and `type: 'griditem'`);
+     * otherwise it reorders top-level items (each entry tagged with the
+     * type parsed from the row id).
+     */
+    async function _reorder(event, reordered_items, grid_id) {
+
+        const is_grid = grid_id != null;
+        const label = is_grid ? 'grid items' : 'items';
 
         try {
             if (!reordered_items || !Array.isArray(reordered_items)) {
@@ -115,7 +73,7 @@ const reorderModule = (function () {
             }
 
             if (reordered_items.length === 0) {
-                console.debug('No grid items to reorder');
+                console.debug(`No ${label} to reorder`);
                 return false;
             }
 
@@ -131,22 +89,16 @@ const reorderModule = (function () {
                 throw new Error('Exhibit ID not found in URL');
             }
 
-            const grid_id = helperModule.get_parameter_by_name('grid_id');
-
-            if (!grid_id) {
-                throw new Error('Grid ID not found in URL');
-            }
-
             const token = authModule.get_user_token();
 
             if (!token || token === false) {
                 throw new Error('Not authenticated - please log in again');
             }
 
-            const updated_order = build_grid_reorder_array(reordered_items, grid_id);
+            const updated_order = build_reorder_array(reordered_items, grid_id);
 
             if (!updated_order || updated_order.length === 0) {
-                throw new Error('Failed to build grid reorder data');
+                throw new Error(`Failed to build ${is_grid ? 'grid ' : ''}reorder data`);
             }
 
             const endpoint = EXHIBITS_ENDPOINTS.exhibits.reorder_records.post.endpoint
@@ -164,81 +116,41 @@ const reorderModule = (function () {
             });
 
             if (response && response.status === 200) {
-                console.debug('Grid items reordered successfully');
+                console.debug(`${is_grid ? 'Grid items' : 'Items'} reordered successfully`);
                 return true;
             } else {
-                throw new Error('Failed to reorder grid items - server returned an error');
+                throw new Error(`Failed to reorder ${label} - server returned an error`);
             }
 
         } catch (error) {
-            console.error('Error reordering grid items:', error);
+            console.error(`Error reordering ${label}:`, error);
 
             const message_element = document.querySelector('#message');
             if (message_element) {
-                display_error_message(message_element, error.message || 'An error occurred while reordering grid items');
+                display_error_message(message_element, error.message || `An error occurred while reordering ${label}`);
             }
 
             return false;
         }
-    };
-
-    /**
-     * Build reorder array from DataTables reordered items
-     */
-    function build_reorder_array(reordered_items) {
-        const updated_order = [];
-
-        for (let i = 0; i < reordered_items.length; i++) {
-            const item = reordered_items[i];
-
-            if (!item || !item.node) {
-                console.warn('Invalid item at index', i);
-                continue;
-            }
-
-            const node = item.node;
-            const id = node.getAttribute('id');
-
-            if (!id) {
-                console.warn('Item missing id attribute at index', i);
-                continue;
-            }
-
-            const parsed_data = parse_item_id(id);
-
-            if (!parsed_data) {
-                console.warn('Could not parse item ID:', id);
-                continue;
-            }
-
-            const order_number = get_order_number(node);
-
-            if (order_number === null) {
-                console.warn('Could not find order number for item:', id);
-                continue;
-            }
-
-            updated_order.push({
-                uuid: parsed_data.uuid,
-                type: parsed_data.type,
-                order: order_number
-            });
-        }
-
-        return updated_order;
     }
 
     /**
-     * Build reorder array from DataTables reordered grid items
+     * Build reorder array from DataTables reordered items.
+     *
+     * When `grid_id` is provided, each entry is tagged with `grid_id` and
+     * `type: 'griditem'`; otherwise the type is parsed from the row id.
      */
-    function build_grid_reorder_array(reordered_items, grid_id) {
+    function build_reorder_array(reordered_items, grid_id) {
+
+        const is_grid = grid_id != null;
+        const item_label = is_grid ? 'grid item' : 'item';
         const updated_order = [];
 
         for (let i = 0; i < reordered_items.length; i++) {
             const item = reordered_items[i];
 
             if (!item || !item.node) {
-                console.warn('Invalid grid item at index', i);
+                console.warn(`Invalid ${item_label} at index`, i);
                 continue;
             }
 
@@ -246,30 +158,45 @@ const reorderModule = (function () {
             const id = node.getAttribute('id');
 
             if (!id) {
-                console.warn('Grid item missing id attribute at index', i);
-                continue;
-            }
-
-            const uuid = parse_grid_item_id(id);
-
-            if (!uuid) {
-                console.warn('Could not parse grid item ID:', id);
+                console.warn(`${is_grid ? 'Grid item' : 'Item'} missing id attribute at index`, i);
                 continue;
             }
 
             const order_number = get_order_number(node);
 
             if (order_number === null) {
-                console.warn('Could not find order number for grid item:', id);
+                console.warn(`Could not find order number for ${item_label}:`, id);
                 continue;
             }
 
-            updated_order.push({
-                grid_id: grid_id,
-                uuid: uuid,
-                type: 'griditem',
-                order: order_number
-            });
+            if (is_grid) {
+                const uuid = parse_grid_item_id(id);
+
+                if (!uuid) {
+                    console.warn('Could not parse grid item ID:', id);
+                    continue;
+                }
+
+                updated_order.push({
+                    grid_id: grid_id,
+                    uuid: uuid,
+                    type: 'griditem',
+                    order: order_number
+                });
+            } else {
+                const parsed_data = parse_item_id(id);
+
+                if (!parsed_data) {
+                    console.warn('Could not parse item ID:', id);
+                    continue;
+                }
+
+                updated_order.push({
+                    uuid: parsed_data.uuid,
+                    type: parsed_data.type,
+                    order: order_number
+                });
+            }
         }
 
         return updated_order;

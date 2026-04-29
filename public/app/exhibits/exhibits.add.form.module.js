@@ -223,20 +223,16 @@ const exhibitsAddFormModule = (function () {
             data.owner = helperModule.get_owner();
 
             // Make API request with timeout
-            const response = await Promise.race([
-                httpModule.req({
-                    method: 'POST',
-                    url: EXHIBITS_ENDPOINTS.exhibits.exhibit_records.endpoint,
-                    data: data,
-                    headers: {
-                        'Content-Type': 'application/json',
-                        'x-access-token': token
-                    }
-                }),
-                new Promise((_, reject) =>
-                    setTimeout(() => reject(new Error('Request timeout')), 30000)
-                )
-            ]);
+            const response = await httpModule.req({
+                method: 'POST',
+                url: EXHIBITS_ENDPOINTS.exhibits.exhibit_records.endpoint,
+                data: data,
+                headers: {
+                    'Content-Type': 'application/json',
+                    'x-access-token': token
+                },
+                timeout: 30000
+            });
 
             // Validate response structure
             if (!response || response.status !== 201) {

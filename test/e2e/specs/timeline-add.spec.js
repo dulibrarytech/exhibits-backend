@@ -27,11 +27,6 @@ test.describe('Add timeline form (items.add.vertical.timeline.form.module)', () 
 
         await page.goto(`${APP_PATH}/items/vertical-timeline?exhibit_id=${EXHIBIT_UUID}`);
 
-        // The EJS includes both #timeline-title-input and #timeline-text-input.
-        // Title is dead code (common module doesn't read it on save and edit
-        // module's cache_dom_elements omits it). We assert visibility for
-        // documentation and exercise text on save.
-        await expect(page.locator('#timeline-title-input')).toBeVisible();
         await expect(page.locator('#timeline-text-input')).toBeVisible();
         // Save button is #save-timeline-btn here, not #save-item-btn.
         await expect(page.locator('#save-timeline-btn')).toBeEnabled();
@@ -59,10 +54,6 @@ test.describe('Add timeline form (items.add.vertical.timeline.form.module)', () 
         await postPromise;
 
         await expect.poll(() => state.lastCreatePayload).not.toBeNull();
-        // Common form's get_common_timeline_form_fields serializes only
-        // text and styles. Title is read but never required, and the
-        // module doesn't actually read #timeline-title-input — known dead
-        // code (see modified-33 README).
         expect(state.lastCreatePayload.text).toBe('My new timeline');
 
         // Module redirects to /items/vertical-timeline/edit?... after

@@ -72,8 +72,8 @@ test.describe('Edit grid form (items.edit.grid.form.module)', () => {
         expect(state.lastUpdatePayload.text).toBe('Edited grid');
         expect(state.lastUpdatePayload.columns).toBe('6');
 
-        // update_grid_record sets a success alert *before* setTimeout-
-        // reload(900ms), so we can read it on the same page.
+        // update_grid_record refreshes the form in place (no reload),
+        // setting the success alert and auto-dismissing it after 3s.
         await expect(page.locator('#message .alert-success')).toBeVisible();
     });
 

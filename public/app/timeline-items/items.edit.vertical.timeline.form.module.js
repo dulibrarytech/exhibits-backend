@@ -447,11 +447,17 @@ const itemsEditVerticalTimelineFormModule = (function () {
 
                 window.scrollTo(0, 0);
                 domModule.set_alert(document.querySelector('#message'), 'success', 'Timeline record updated');
-                const timeline_id = response.data.data;
 
+                // Refresh the display with updated data instead of reloading
+                await display_edit_record();
+
+                // Auto-dismiss success message after a delay
                 setTimeout(() => {
-                    window.location.reload();
-                }, 900);
+                    const message_el = document.querySelector('#message');
+                    if (message_el) {
+                        message_el.innerHTML = '';
+                    }
+                }, 3000);
             }
 
         } catch (error) {
@@ -520,18 +526,6 @@ const itemsEditVerticalTimelineFormModule = (function () {
                 }
                 created_element.appendChild(part);
             });
-        };
-
-        /**
-         * Set timeline title input value
-         */
-        const set_timeline_title = (title, element) => {
-            if (!element) {
-                return;
-            }
-
-            const unescaped_title = title ? helperModule.unescape(title) : '';
-            element.value = unescaped_title;
         };
 
         /**
@@ -697,7 +691,6 @@ const itemsEditVerticalTimelineFormModule = (function () {
             display_metadata_info(record, elements.created);
 
             // Set timeline form fields
-            set_timeline_title(record.title, elements.timeline_title);
             set_timeline_text(record.text, elements.timeline_text);
 
             // Apply style settings

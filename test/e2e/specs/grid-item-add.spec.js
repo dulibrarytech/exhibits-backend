@@ -114,9 +114,7 @@ test.describe('Add grid text item form (items.add.grid.item.form.module)', () =>
             gridId: GRID_UUID,
         });
 
-        // item_id present → create_grid_item_record bails out (and tries
-        // to call obj.update_grid_item_record which is undefined on the
-        // add module).
+        // item_id present → create_grid_item_record bails out without POSTing.
         await page.goto(
             `${APP_PATH}/items/grid/item/text`
             + `?exhibit_id=${EXHIBIT_UUID}&grid_id=${GRID_UUID}&item_id=existing-grid-item`

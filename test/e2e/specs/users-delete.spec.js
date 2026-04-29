@@ -40,7 +40,7 @@ test.describe('Users delete page (user.module.js — display_user / delete_user)
 
         await expect(page.locator('#delete-card')).toBeVisible();
         // The EJS init writes "<first> <last>" into #delete-user from
-        // the array's first element (user[0]).
+        // the user record returned by display_user.
         await expect(page.locator('#delete-user')).toHaveText('Bob Builder');
         await expect(page.locator('#delete-user-btn')).toBeEnabled();
     });

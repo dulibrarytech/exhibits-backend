@@ -80,7 +80,7 @@ exports.get_users = async function (req, res) {
         }
 
         // Return successful response with users data
-        return res.status(200).json(response.data);
+        return res.status(200).json({data: response.data});
 
     } catch (error) {
         LOGGER.module().error(
@@ -158,7 +158,7 @@ exports.get_user = async function (req, res) {
         }
 
         // Return successful response with user data
-        return res.status(200).json(response.data);
+        return res.status(200).json({data: response.data});
 
     } catch (error) {
         LOGGER.module().error(
@@ -296,7 +296,7 @@ exports.update_user = async function (req, res) {
         // Return successful response with updated user data
         return res.status(201).json({
             message: 'User updated successfully.',
-            user: updated_user
+            data: {id: parsed_user_id}
         });
 
     } catch (error) {
@@ -381,8 +381,8 @@ exports.save_user = async function (req, res) {
         }
 
         // Check if save was successful
-        if (saved_user.data === false) { // 409
-            return res.status(200).json({
+        if (saved_user.data === false) {
+            return res.status(409).json({
                 message: 'User already exists'
             });
         }
@@ -390,7 +390,7 @@ exports.save_user = async function (req, res) {
         // Return successful response with saved user data
         return res.status(201).json({
             message: 'User created successfully.',
-            user: saved_user
+            data: saved_user.data
         });
 
     } catch (error) {
@@ -601,8 +601,7 @@ exports.update_status = async function (req, res) {
         // Return successful response
         return res.status(200).json({
             message: 'User status updated successfully.',
-            user_id: parsed_user_id,
-            is_active: parsed_is_active
+            data: {id: parsed_user_id, is_active: parsed_is_active}
         });
 
     } catch (error) {

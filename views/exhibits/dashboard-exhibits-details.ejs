@@ -7,7 +7,7 @@
         <div id="message"></div>
         <h1><span id="exhibit-title"></span></h1>
         <!-- exhibit data card -->
-        <%- include('partials/exhibit-data-card.ejs'); %>
+        <%- include('partials/exhibit-data-card.ejs', { disabled: true }); %>
         <div id="exhibit-media-card" class="card">
             <div class="card-header">
                 <strong class="card-title mb-3">Exhibit Media</strong>
@@ -45,7 +45,7 @@
                 </div>
             </div>
         </div>
-        <%- include('partials/exhibit-banners.ejs'); %>
+        <%- include('partials/exhibit-banners.ejs', { disabled: true }); %>
         <input type="hidden" id="is-published" name="is_published">
         <div id="exhibit-submit-card" class="card">
             <div class="card-body">
@@ -55,7 +55,7 @@
                        id="exhibit-page-layout" value="top_nav" />
                 <input type="hidden" name="exhibit_template" id="exhibit-template"
                        value="vertical_scroll"/>
-                <a href="#" class="btn btn-primary" type="button" id="edit-exhibit-btn">
+                <a href="#" class="btn btn-primary" type="button" id="edit-item-btn">
                     <i class="fa fa-edit"></i>&nbsp;&nbsp;Edit
                 </a>&nbsp;&nbsp;<span class="alert alert-warning"><i class="fa fa-warning"></i> Changes made to published exhibits are immediately visible to the public</span>
                 <button disabled class="btn btn-primary" type="button" id="save-exhibit-btn" style="visibility: hidden">
@@ -80,7 +80,7 @@
     exhibitsDetailsModule.init();
     exhibitsCommonFormModule.init();
     navModule.wire_nav_links();
-    document.querySelector('#edit-exhibit-btn').addEventListener('click', (event) => {
+    document.querySelector('#edit-item-btn').addEventListener('click', (event) => {
         event.preventDefault();
         document.querySelector('.content').style.visibility = 'hidden';
         const exhibit_id = helperModule.get_parameter_by_name('exhibit_id');
