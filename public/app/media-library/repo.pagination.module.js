@@ -35,6 +35,14 @@ const repoPaginationModule = (function() {
     // Callback for page changes
     let on_page_change_callback = null;
 
+    // Tracked click listener so re-bind across renders doesn't stack.
+    // Each render previously called container.addEventListener without
+    // removing the prior one — N renders meant N listeners and a single
+    // click triggered go_to_page N times (the same-page no-ops self-mask
+    // the duplicate fires).
+    let bound_listener = null;
+    let bound_container = null;
+
     let obj = {};
 
     /**
@@ -298,8 +306,14 @@ const repoPaginationModule = (function() {
 
         if (!container) return;
 
-        // Use event delegation for pagination links
-        container.addEventListener('click', function(event) {
+        // Detach prior listener before binding a new one. Without this,
+        // every re-render stacks another delegated handler on the same
+        // container — N renders → N go_to_page calls per click.
+        if (bound_listener && bound_container) {
+            bound_container.removeEventListener('click', bound_listener);
+        }
+
+        const handler = function(event) {
             const page_link = event.target.closest('.repo-page-link');
 
             if (page_link) {
@@ -322,7 +336,11 @@ const repoPaginationModule = (function() {
                     announce_page_change();
                 }
             }
-        });
+        };
+
+        container.addEventListener('click', handler);
+        bound_listener = handler;
+        bound_container = container;
     };
 
     /**

@@ -30,6 +30,13 @@ const mediaDeleteModalModule = (function() {
     let delete_modal_callback = null;
     let current_delete_uuid = null;
     let current_delete_name = null;
+    // In-flight guard for the DELETE request. The button's `disabled`
+    // attribute alone isn't sufficient: setup_delete_modal_handlers
+    // clones-and-replaces the confirm button on every modal open, so
+    // a freshly-opened modal starts with a non-disabled button. A
+    // tight double-click before the first response lands would hit
+    // the cloned button and fire a second DELETE.
+    let is_deleting = false;
 
     let obj = {};
 
@@ -82,10 +89,18 @@ const mediaDeleteModalModule = (function() {
      * Handle delete confirmation
      */
     const handle_delete_confirm = async () => {
+        // Module-level guard — survives confirm-button cloning across
+        // modal opens, where `disabled` does not.
+        if (is_deleting) {
+            return;
+        }
+        is_deleting = true;
+
         const confirm_btn = document.getElementById('delete-media-confirm-btn');
         const uuid = current_delete_uuid;
 
         if (!uuid) {
+            is_deleting = false;
             display_delete_modal_message('danger', 'No media record selected for deletion.');
             return;
         }
@@ -167,6 +182,9 @@ const mediaDeleteModalModule = (function() {
             console.error('Error deleting media record:', error);
             display_delete_modal_message('danger', 'An unexpected error occurred while deleting the media record.');
         } finally {
+            // Clear the in-flight guard so the user can retry after
+            // a failure (the success path closes the modal anyway).
+            is_deleting = false;
             // Re-enable confirm button
             if (confirm_btn) {
                 confirm_btn.disabled = false;

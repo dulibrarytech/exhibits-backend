@@ -369,6 +369,10 @@ const mediaEditModalModule = (function() {
         }
 
         if (!form.checkValidity() || !subjects_valid) {
+            // Surface the failure so the user (and tests) get a signal
+            // instead of an apparent no-op. Image records require alt_text
+            // and that's the most common silent failure path.
+            display_edit_modal_message('danger', 'Please fill in all required fields before saving.');
             return;
         }
 

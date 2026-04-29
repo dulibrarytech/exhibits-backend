@@ -111,20 +111,13 @@ test.describe('Media library delete modal (modals.delete.module.js — open_dele
         // poll-based visibility check covers the animation window.
         await expect(page.locator('#delete-media-modal')).not.toBeVisible();
 
-        // ── Why we don't assert on the page-level success alert ──
-        //
-        // handle_delete_click's success callback writes
-        // `<div class="alert alert-success">` into `#message` and
-        // *then* awaits refresh_media_records. The refresh's first
-        // step (get_media_records) calls `clear_message(message_element)`
-        // on a successful list GET — which empties `#message`,
-        // clobbering the alert we just wrote, before any assertion
-        // can observe it.
-        //
-        // This is a real UX bug (user sees a flicker, not a
-        // confirmation); flagged in the README's quirks. The list
-        // refresh + modal close above are sufficient evidence the
-        // success path ran.
+        // Page-level success alert persists through the post-delete
+        // refresh. get_media_records used to call clear_message()
+        // unconditionally on a successful list GET, wiping the alert
+        // before the user could see it. The fix preserves any
+        // alert-success / alert-info already present in #message so
+        // the 3-second setTimeout clear can run as intended.
+        await expect(page.locator('#message .alert-success')).toBeVisible();
     });
 
     test('DELETE failure shows danger alert in modal and re-enables the Delete button', async ({ page }) => {
@@ -158,5 +151,66 @@ test.describe('Media library delete modal (modals.delete.module.js — open_dele
         await expect(page.locator('#delete-media-message .alert-danger'))
             .toBeVisible();
         await expect(page.locator('#delete-media-confirm-btn')).toBeEnabled();
+    });
+
+    test('rapid double-click on confirm fires only one DELETE', async ({ page }) => {
+        // Regression for the confirm-button double-click race.
+        // setup_delete_modal_handlers clones-and-replaces the confirm
+        // button on every modal open, so the button's `disabled` state
+        // alone isn't sufficient to block a second click that lands
+        // before the first DELETE response. The fix adds a module-scope
+        // `is_deleting` guard that survives cloning. Two synchronous
+        // clicks should still result in exactly one DELETE.
+        const record = mediaRecordFixture({
+            uuid: TARGET_UUID,
+            name: 'Record to delete',
+            original_filename: 'doomed-photo.jpg',
+            ingest_method: 'upload',
+            media_type: 'image',
+        });
+        await stubMediaLibraryListApi(page, { records: [record] });
+
+        // Manually intercept the DELETE so we can hold the response
+        // open across both clicks. The shared stubMediaRecordApi
+        // returns synchronously, which is too fast to reproduce the
+        // race window.
+        let delete_count = 0;
+        let resolve_delete;
+        const delete_held = new Promise((resolve) => { resolve_delete = resolve; });
+        await page.route(
+            new RegExp(`${APP_PATH}/api/v1/media/library/record/[^/?]+(?:\\?.*)?$`),
+            async (route) => {
+                if (route.request().method() === 'DELETE') {
+                    delete_count += 1;
+                    await delete_held;
+                    return route.fulfill({
+                        status: 200,
+                        contentType: 'application/json',
+                        body: JSON.stringify({ success: true, message: 'ok' }),
+                    });
+                }
+                return route.fallback();
+            }
+        );
+
+        await page.goto(`${APP_PATH}/media/library`);
+        await expect(page.locator(`a.btn-delete-media[data-uuid="${TARGET_UUID}"]`))
+            .toHaveCount(1);
+        await page.locator(`a.btn-delete-media[data-uuid="${TARGET_UUID}"]`)
+            .dispatchEvent('click');
+        await expect(page.locator('#delete-media-confirm-btn')).toBeVisible();
+
+        // Fire two clicks back-to-back. dispatchEvent is synchronous
+        // and bypasses the `disabled` attribute check, mirroring the
+        // worst-case race the in-flight guard must defend against.
+        const confirm_btn = page.locator('#delete-media-confirm-btn');
+        await confirm_btn.dispatchEvent('click');
+        await confirm_btn.dispatchEvent('click');
+
+        // Release the held DELETE and let everything settle.
+        resolve_delete();
+        await page.waitForLoadState('networkidle');
+
+        expect(delete_count).toBe(1);
     });
 });

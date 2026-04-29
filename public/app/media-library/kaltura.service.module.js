@@ -187,20 +187,15 @@ const kalturaServiceModule = (function() {
                     return { success: false, message: 'No media data' };
                 }
 
+                // Inject the typed entry_id so the modal's hidden input is
+                // populated from a known-good source. build_kaltura_form_html
+                // reads media_data.entry_id; if the server response drops or
+                // renames that field, the modal would otherwise serialize
+                // an empty entry_id on save.
+                media_data.entry_id = trimmed_id;
+
                 // Show thumbnail on the tab
                 show_thumbnail(media_data.thumbnail, media_data.title);
-
-                // Set the hidden item type field
-                const item_type_field = document.getElementById('kaltura-item-type');
-                if (item_type_field) {
-                    item_type_field.value = media_data.item_type || '';
-                }
-
-                // Set the is-kaltura-item flag
-                const kaltura_flag = document.getElementById('is-kaltura-item');
-                if (kaltura_flag) {
-                    kaltura_flag.value = '1';
-                }
 
                 // Open the Kaltura modal with the media data
                 if (typeof kalturaModalsModule !== 'undefined' && typeof kalturaModalsModule.open_kaltura_media_modal === 'function') {
@@ -214,10 +209,6 @@ const kalturaServiceModule = (function() {
                             if (entry_input) {
                                 entry_input.value = '';
                             }
-
-                            // Reset hidden fields
-                            if (item_type_field) item_type_field.value = '';
-                            if (kaltura_flag) kaltura_flag.value = '0';
 
                             // Refresh media library table
                             if (typeof mediaLibraryModule !== 'undefined' && typeof mediaLibraryModule.refresh_media_records === 'function') {
@@ -241,6 +232,11 @@ const kalturaServiceModule = (function() {
         } catch (error) {
             console.error('Error getting Kaltura media:', error);
             hide_loading();
+            // Clear any prior-lookup thumbnail. show_thumbnail can run
+            // inside the success branch before the modal-open hop; if
+            // that hop throws, the stale thumbnail would otherwise sit
+            // above the danger alert.
+            hide_thumbnail();
             display_message('danger', 'An unexpected error occurred while retrieving Kaltura media.');
             return { success: false, message: error.message };
         }

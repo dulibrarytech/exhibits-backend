@@ -203,4 +203,41 @@ test.describe('Media library edit modal (modals.edit.module.js — open_edit_med
             .toBeVisible();
         await expect(page.locator('#edit-media-save-btn')).toBeEnabled();
     });
+
+    test('Save with missing alt_text on an image record surfaces a danger alert instead of silently no-op-ing', async ({ page }) => {
+        // Image records render a `required` alt_text input. Submit
+        // used to return silently on `!form.checkValidity()` — no
+        // message, no console log, no PUT — making the failure
+        // indistinguishable from a hung click. After the fix,
+        // handle_edit_form_submit surfaces a danger alert in
+        // #edit-media-message before bailing out.
+        const record = mediaRecordFixture({
+            uuid: TARGET_UUID,
+            name: 'Original record name',
+            ingest_method: 'upload',
+            media_type: 'image',
+            item_type: 'image',
+            genre_form_subjects: 'Photographs',
+            // Intentionally omit alt_text so checkValidity() fails.
+            alt_text: '',
+        });
+        const recordState = await stubMediaRecordApi(page, { record });
+        await stubMediaLibraryListApi(page, { records: [record] });
+        await stubRepoMetadataApi(page);
+
+        await page.goto(`${APP_PATH}/media/library`);
+        await expect(page.locator(`a.btn-edit-media[data-uuid="${TARGET_UUID}"]`))
+            .toHaveCount(1);
+        await page.locator(`a.btn-edit-media[data-uuid="${TARGET_UUID}"]`)
+            .dispatchEvent('click');
+        await expect(page.locator('#edit-file-name')).toHaveValue('Original record name');
+
+        await page.locator('#edit-media-save-btn').click();
+
+        // Validation fails → danger alert is rendered in
+        // #edit-media-message; the PUT is NOT fired.
+        await expect(page.locator('#edit-media-message .alert-danger'))
+            .toContainText(/required fields/i);
+        expect(recordState.putCount).toBe(0);
+    });
 });

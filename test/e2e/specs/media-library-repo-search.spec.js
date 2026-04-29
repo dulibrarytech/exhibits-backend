@@ -181,4 +181,65 @@ test.describe('Media library repo-search flow (repo.service.module.js)', () => {
         // own dedicated hop, if needed).
         await expect(page.locator('#repo-media-modal')).toBeVisible();
     });
+
+    test('repeated searches do not stack pagination click listeners on the results container', async ({ page }) => {
+        // Regression for the listener leak. Every render() used to
+        // call bind_events() which called container.addEventListener
+        // without removing the prior listener. After N searches the
+        // container had N delegated handlers and one click triggered
+        // go_to_page N times (self-masked because page === current_page
+        // returns false for all but the first).
+        //
+        // Patch addEventListener / removeEventListener on the page so
+        // we can count the net 'click' listeners on #repo-search-results.
+        // The fix removes the prior listener before binding a new one,
+        // so the net count stays at 1 regardless of how many searches
+        // run.
+        await stubRepoSearchDeps(page, {
+            search: {
+                records: [
+                    repoSearchItemFixture({ uuid: 'repo-uuid-a', title: 'Alpha' }),
+                ],
+            },
+        });
+
+        await page.addInitScript(() => {
+            window.__listener_counts = new Map();
+            const orig_add = EventTarget.prototype.addEventListener;
+            const orig_remove = EventTarget.prototype.removeEventListener;
+            EventTarget.prototype.addEventListener = function(type, listener, options) {
+                if (this instanceof Element && this.id === 'repo-search-results' && type === 'click') {
+                    window.__listener_counts.set(
+                        'repo-search-results:click',
+                        (window.__listener_counts.get('repo-search-results:click') || 0) + 1,
+                    );
+                }
+                return orig_add.call(this, type, listener, options);
+            };
+            EventTarget.prototype.removeEventListener = function(type, listener, options) {
+                if (this instanceof Element && this.id === 'repo-search-results' && type === 'click') {
+                    window.__listener_counts.set(
+                        'repo-search-results:click',
+                        (window.__listener_counts.get('repo-search-results:click') || 0) - 1,
+                    );
+                }
+                return orig_remove.call(this, type, listener, options);
+            };
+        });
+
+        await page.goto(`${APP_PATH}/media/library`);
+
+        // Run the search three times. Each invocation re-renders the
+        // results, which calls bind_events again.
+        for (let i = 0; i < 3; i += 1) {
+            await page.fill('#repo-uuid', `alpha-${i}`);
+            await page.click('#repo-uuid-btn');
+            await expect(page.locator('.repo-result-item')).toHaveCount(1);
+        }
+
+        const net_listeners = await page.evaluate(
+            () => window.__listener_counts.get('repo-search-results:click') || 0
+        );
+        expect(net_listeners).toBe(1);
+    });
 });

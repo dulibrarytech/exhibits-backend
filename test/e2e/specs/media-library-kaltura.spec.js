@@ -93,12 +93,6 @@ test.describe('Media library Kaltura entry lookup (kaltura.service.module.js —
         // Thumbnail container becomes visible (style.display = 'block').
         await expect(page.locator('#kaltura-thumbnail-container')).toBeVisible();
 
-        // Hidden fields populated before the modal opens — these are
-        // the contract `kaltura.service.module` writes to the page
-        // tab BEFORE handing off to the modal.
-        await expect(page.locator('#kaltura-item-type')).toHaveValue('video');
-        await expect(page.locator('#is-kaltura-item')).toHaveValue('1');
-
         // Import modal opens with the form. The Name input
         // (.kaltura-name inside #kaltura-media-modal) is pre-populated
         // from the entry's title.
@@ -111,6 +105,14 @@ test.describe('Media library Kaltura entry lookup (kaltura.service.module.js —
         // Hidden entry-id field carries what the user typed.
         await expect(page.locator('#kaltura-media-modal .kaltura-entry-id'))
             .toHaveValue('0_abc123xy');
+
+        // Dead tab-level hidden inputs were removed. The modal owns
+        // the form fields that get serialized on save; the page tab's
+        // #kaltura-item-type / #is-kaltura-item used to be written by
+        // get_kaltura_media but no consumer ever read them, so they
+        // were dropped. Lock that cleanup in.
+        await expect(page.locator('#kaltura-item-type')).toHaveCount(0);
+        await expect(page.locator('#is-kaltura-item')).toHaveCount(0);
     });
 
     test('Empty entry id shows a warning without firing the GET', async ({ page }) => {
@@ -173,5 +175,81 @@ test.describe('Media library Kaltura entry lookup (kaltura.service.module.js —
         await expect(page.locator('#kaltura-item-data .alert-danger'))
             .toBeVisible();
         await expect(page.locator('#kaltura-media-modal')).toBeHidden();
+    });
+
+    test('Modal entry_id falls back to the typed value when the response omits entry_id', async ({ page }) => {
+        // Regression: build_kaltura_form_html reads media_data.entry_id
+        // when populating the hidden .kaltura-entry-id input. If the
+        // server response drops or renames that field, the modal would
+        // serialize entry_id: '' on save. The fix injects the typed
+        // value into media_data before handing off to the modal.
+        const entry = kalturaEntryFixture({
+            title: 'Video without entry_id in response',
+            description: 'desc',
+            thumbnail: 'https://cdnapisec.kaltura.com/p/0/thumb-test.jpg',
+            item_type: 'video',
+            mime_type: 'video/mp4',
+        });
+        // Drop entry_id from the response payload to simulate the
+        // wire-format divergence the fix protects against.
+        delete entry.entry_id;
+        await stubKalturaEntryApi(page, { data: entry });
+        await stubRepoMetadataApi(page);
+
+        await page.goto(`${APP_PATH}/media/library`);
+        await switchToKalturaTab(page);
+
+        await page.fill('#audio-video', '0_typedvalue');
+        await page.click('#kaltura-btn');
+
+        await expect(page.locator('#kaltura-media-modal')).toBeVisible();
+        // Hidden entry-id field carries the typed value, not an
+        // empty string from the missing response field.
+        await expect(page.locator('#kaltura-media-modal .kaltura-entry-id'))
+            .toHaveValue('0_typedvalue');
+    });
+
+    test('thumbnail is hidden when the modal-open hop throws after a successful lookup', async ({ page }) => {
+        // Regression: the catch block in get_kaltura_media used to
+        // call hide_loading() but not hide_thumbnail(). show_thumbnail
+        // runs inside the success branch BEFORE the modal-open hop;
+        // if that hop throws, the stale thumbnail sits above the
+        // danger alert until the next successful lookup.
+        await stubKalturaEntryApi(page, {
+            data: kalturaEntryFixture({
+                entry_id: '0_abc123xy',
+                title: 'My Test Video',
+                thumbnail: 'https://cdnapisec.kaltura.com/p/0/thumb-test.jpg',
+                item_type: 'video',
+                mime_type: 'video/mp4',
+            }),
+        });
+        await stubRepoMetadataApi(page);
+
+        await page.goto(`${APP_PATH}/media/library`);
+        await switchToKalturaTab(page);
+
+        // Force the modal-open hop to throw so we hit the catch path.
+        // kalturaModalsModule is declared with `const` at the script
+        // top-level, so it's a global lexical binding — not on window.
+        // Reach it by name through eval so the override lands inside
+        // the same lexical environment.
+        await page.evaluate(() => {
+            // eslint-disable-next-line no-eval
+            eval('kalturaModalsModule').open_kaltura_media_modal = () => {
+                throw new Error('Forced modal-open failure for regression test');
+            };
+        });
+
+        await page.fill('#audio-video', '0_abc123xy');
+        await page.click('#kaltura-btn');
+
+        // Danger alert is shown.
+        await expect(page.locator('#kaltura-item-data .alert-danger'))
+            .toBeVisible();
+        // Thumbnail container is hidden again. Without the fix it
+        // would still be display:block from show_thumbnail().
+        await expect(page.locator('#kaltura-thumbnail-container'))
+            .toBeHidden();
     });
 });

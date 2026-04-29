@@ -223,8 +223,17 @@ const mediaLibraryModule = (function() {
 
             // Handle successful response
             if (response.status === HTTP_STATUS.OK && response.data?.success) {
-                // Clear any previous error messages on success
-                clear_message(message_element);
+                // Clear any previous error/warning messages on success, but
+                // preserve success/info alerts written by other flows (e.g., a
+                // post-delete success alert that triggered this refresh).
+                const existing_alert = message_element?.querySelector('.alert');
+                const preserve = existing_alert && (
+                    existing_alert.classList.contains('alert-success') ||
+                    existing_alert.classList.contains('alert-info')
+                );
+                if (!preserve) {
+                    clear_message(message_element);
+                }
                 return response.data.data || [];
             }
 
