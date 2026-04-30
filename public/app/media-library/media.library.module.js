@@ -250,9 +250,16 @@ const mediaLibraryModule = (function() {
     };
 
     /**
-     * Get a single media record by UUID
+     * Get a single media record by UUID.
+     *
      * @param {string} uuid - Media record UUID
-     * @returns {Promise<Object|null>} Media record data or null on failure
+     * @returns {Promise<{record: Object|null, status: number|null}>}
+     *   record: media record data on success, null otherwise.
+     *   status: HTTP status when a response was received; null on
+     *           pre-request validation failure or network/timeout
+     *           error. The caller uses status to surface a context-
+     *           specific message (403 vs 404 vs network) instead of
+     *           one generic alert.
      */
     obj.get_media_record = async function(uuid) {
 
@@ -262,13 +269,13 @@ const mediaLibraryModule = (function() {
 
             if (!uuid || typeof uuid !== 'string') {
                 console.error('Invalid UUID provided');
-                return null;
+                return { record: null, status: null };
             }
 
             // Validate endpoint configuration
             if (!MEDIA_ENDPOINTS?.media_record?.get?.endpoint) {
                 console.error('Media record get endpoint not configured');
-                return null;
+                return { record: null, status: null };
             }
 
             // Validate authentication
@@ -276,7 +283,7 @@ const mediaLibraryModule = (function() {
 
             if (!token || token === false) {
                 console.error('Session expired');
-                return null;
+                return { record: null, status: null };
             }
 
             // Construct endpoint with media_id
@@ -297,19 +304,19 @@ const mediaLibraryModule = (function() {
             // Handle response
             if (!response) {
                 console.error('No response from server');
-                return null;
+                return { record: null, status: null };
             }
 
             if (response.status === HTTP_STATUS.OK && response.data?.success) {
-                return response.data.data;
+                return { record: response.data.data, status: response.status };
             }
 
             console.error('Failed to get media record:', response.data?.message);
-            return null;
+            return { record: null, status: response.status };
 
         } catch (error) {
             console.error('Error getting media record:', error);
-            return null;
+            return { record: null, status: null };
         }
     };
 
@@ -323,14 +330,17 @@ const mediaLibraryModule = (function() {
             return;
         }
 
-        // Open edit modal via modals module
-        if (typeof mediaModalsModule !== 'undefined' && typeof mediaModalsModule.open_edit_media_modal === 'function') {
-            await mediaModalsModule.open_edit_media_modal(uuid, async () => {
+        // Open edit modal directly via mediaEditModalModule. The
+        // mediaModalsModule.open_edit_media_modal shim was a deprecated
+        // delegate; routing through it added a stack frame for no
+        // benefit and obscured the actual owning module.
+        if (typeof mediaEditModalModule !== 'undefined' && typeof mediaEditModalModule.open_edit_media_modal === 'function') {
+            await mediaEditModalModule.open_edit_media_modal(uuid, async () => {
                 // Refresh the data table after edit
                 await obj.refresh_media_records();
             });
         } else {
-            console.error('mediaModalsModule.open_edit_media_modal not available');
+            console.error('mediaEditModalModule.open_edit_media_modal not available');
         }
     };
 
@@ -486,83 +496,23 @@ const mediaLibraryModule = (function() {
 
         const message_element = document.querySelector('#message');
 
-        // Open delete confirmation modal via modals module
-        if (typeof mediaDeleteModalModule !== 'undefined' && typeof mediaDeleteModalModule.open_delete_media_modal === 'function') {
-            mediaDeleteModalModule.open_delete_media_modal(uuid, name, filename, item_type, thumbnail_url, async (success, message) => {
-                if (success) {
-                    // Show success message
-                    display_message(message_element, 'success', message || 'Media record deleted successfully.');
-                    
-                    // Refresh the data table
-                    await obj.refresh_media_records();
-
-                    // Clear success message after delay
-                    setTimeout(() => {
-                        clear_message(message_element);
-                    }, 3000);
-                }
-            });
-        } else {
-            // Fallback to confirm dialog if modal not available
-            const confirmed = confirm(`Are you sure you want to delete "${name || 'this media record'}"?\n\nThis action cannot be undone.`);
-            
-            if (!confirmed) {
-                return;
-            }
-
-            try {
-                // Get endpoints configuration
-                const MEDIA_ENDPOINTS = get_media_library_endpoints();
-
-                if (!MEDIA_ENDPOINTS?.media_records?.delete?.endpoint) {
-                    display_message(message_element, 'danger', 'Delete endpoint not configured');
-                    return;
-                }
-
-                // Validate authentication
-                const token = authModule.get_user_token();
-
-                if (!token || token === false) {
-                    display_message(message_element, 'danger', 'Session expired. Please log in again.');
-                    return;
-                }
-
-                // Construct endpoint with media_id
-                const endpoint = MEDIA_ENDPOINTS.media_records.delete.endpoint.replace(':media_id', uuid);
-
-                // Make API request
-                const response = await httpModule.req({
-                    method: 'DELETE',
-                    url: endpoint,
-                    headers: {
-                        'Content-Type': 'application/json',
-                        'x-access-token': token
-                    },
-                    timeout: 30000,
-                    validateStatus: (status) => status >= 200 && status < 600
-                });
-
-                // Handle response
-                if (response && response.status === HTTP_STATUS.OK && response.data?.success) {
-                    display_message(message_element, 'success', 'Media record deleted successfully.');
-                    
-                    // Refresh the data table
-                    await obj.refresh_media_records();
-
-                    // Clear success message after delay
-                    setTimeout(() => {
-                        clear_message(message_element);
-                    }, 3000);
-                } else {
-                    const error_message = response?.data?.message || 'Failed to delete media record.';
-                    display_message(message_element, 'danger', error_message);
-                }
-
-            } catch (error) {
-                console.error('Error deleting media record:', error);
-                display_message(message_element, 'danger', 'An unexpected error occurred while deleting the media record.');
-            }
+        if (typeof mediaDeleteModalModule === 'undefined' || typeof mediaDeleteModalModule.open_delete_media_modal !== 'function') {
+            console.error('mediaDeleteModalModule.open_delete_media_modal not available');
+            display_message(message_element, 'danger', 'Delete dialog is not available. Please refresh the page.');
+            return;
         }
+
+        mediaDeleteModalModule.open_delete_media_modal(uuid, name, filename, item_type, thumbnail_url, async (success, message) => {
+            if (success) {
+                display_message(message_element, 'success', message || 'Media record deleted successfully.');
+
+                await obj.refresh_media_records();
+
+                setTimeout(() => {
+                    clear_message(message_element);
+                }, 3000);
+            }
+        });
     };
 
     /**
@@ -575,8 +525,8 @@ const mediaLibraryModule = (function() {
         const name = row.name || 'Untitled';
         const filename = row.filename || 'Unknown file';
         const item_type = row.item_type || 'unknown';
-        const escaped_name = sanitize_html(name).replace(/'/g, "\\'").replace(/"/g, '&quot;');
-        const escaped_filename = sanitize_html(filename).replace(/'/g, "\\'").replace(/"/g, '&quot;');
+        const escaped_name = sanitize_html(name);
+        const escaped_filename = sanitize_html(filename);
 
         // Build Play action for Kaltura items
         let play_action_html = '';
@@ -1246,7 +1196,7 @@ const mediaLibraryModule = (function() {
                                                  style="width: ${THUMBNAIL_SIZE.width}px; height: ${THUMBNAIL_SIZE.height}px; object-fit: cover; border-radius: 4px; margin-right: 10px; vertical-align: middle; cursor: pointer;"
                                                  loading="lazy"
                                                  data-uuid="${row.uuid}" data-name="${sanitize_html(row.name)}" data-filename="${sanitize_html(row.filename)}" data-size="${row.size_display}" data-media-type="${row.media_type}" data-ingest-method="${row.ingest_method}" data-repo-uuid="${row.repo_uuid}" data-repo-handle="${row.repo_handle || ''}" title="Click to view"
-                                                 onerror="this.onerror=null; this.src='${PLACEHOLDER_IMAGE}';">`;
+                                                 data-fallback="placeholder" data-fallback-src="${PLACEHOLDER_IMAGE}">`;
                                     } else {
                                         thumbnail_html = `
                                             <img src="${PLACEHOLDER_IMAGE}" 
@@ -1264,7 +1214,7 @@ const mediaLibraryModule = (function() {
                                              style="width: ${THUMBNAIL_SIZE.width}px; height: ${THUMBNAIL_SIZE.height}px; object-fit: cover; border-radius: 4px; margin-right: 10px; vertical-align: middle; cursor: pointer;"
                                              loading="lazy"
                                              data-uuid="${row.uuid}" data-name="${sanitize_html(row.name)}" data-ingest-method="${row.ingest_method}" data-media-type="${row.media_type || ''}" data-kaltura-thumbnail-url="${row.kaltura_thumbnail_url}" data-kaltura-entry-id="${row.kaltura_entry_id || ''}" title="Click to view"
-                                             onerror="this.onerror=null; this.src='${PLACEHOLDER_IMAGE}';">`;
+                                             data-fallback="placeholder" data-fallback-src="${PLACEHOLDER_IMAGE}">`;
                                 } else if (row.ingest_method === 'kaltura') {
                                     // Kaltura item without thumbnail: show place
                                     thumbnail_html = `
@@ -1286,7 +1236,7 @@ const mediaLibraryModule = (function() {
                                              style="width: ${THUMBNAIL_SIZE.width}px; height: ${THUMBNAIL_SIZE.height}px; object-fit: cover; border-radius: 4px; margin-right: 10px; vertical-align: middle; ${tn_cursor_style}"
                                              loading="lazy"
                                              ${is_viewable ? `data-uuid="${row.uuid}" data-name="${sanitize_html(row.name)}" data-filename="${sanitize_html(row.filename)}" data-size="${row.size_display}" data-media-type="${row.media_type}" data-ingest-method="${row.ingest_method}" title="Click to view"` : ''}
-                                             onerror="this.onerror=null; this.src='${PLACEHOLDER_IMAGE}';">`;
+                                             data-fallback="placeholder" data-fallback-src="${PLACEHOLDER_IMAGE}">`;
                                 } else {
                                     // Placeholder image for items without thumbnails
                                     const is_upload_viewable = row.ingest_method === 'upload' && (row.is_image || row.media_type === 'pdf');
@@ -1320,9 +1270,13 @@ const mediaLibraryModule = (function() {
                                     return '<small><i class="fa fa-database" style="margin-right: 4px;" aria-hidden="true"></i>Repository media</small>';
                                 }
 
-                                // Kaltura items: show "Kaltura Media" with audio/video icon based on mime type
+                                // Kaltura items: show "Kaltura Media" with audio/video icon
+                                // dispatched on media_type. Every other branch in this file
+                                // reads media_type; mime_type was an inconsistent outlier
+                                // (harmless today since Kaltura rows carry both, but worth
+                                // harmonizing).
                                 if (row.ingest_method === 'kaltura') {
-                                    const kaltura_icon = (row.mime_type && row.mime_type.startsWith('audio')) ? 'fa-volume-up' : 'fa-film';
+                                    const kaltura_icon = row.media_type === 'audio' ? 'fa-volume-up' : 'fa-film';
                                     return '<small><i class="fa ' + kaltura_icon + '" style="margin-right: 4px;" aria-hidden="true"></i>Kaltura media</small>';
                                 }
 
@@ -1395,7 +1349,7 @@ const mediaLibraryModule = (function() {
                 drawCallback: function() {
                     // Accessibility improvements after each draw
                     const table = this.api().table().node();
-                    
+
                     // Add scope attributes to header cells
                     table.querySelectorAll('thead th').forEach(th => {
                         th.setAttribute('scope', 'col');
@@ -1403,6 +1357,11 @@ const mediaLibraryModule = (function() {
 
                     // Setup action button handlers after each draw
                     setup_action_handlers();
+
+                    // Wire CSP-safe <img> error handlers on the new
+                    // thumbnails. Row markup carries data-fallback="placeholder"
+                    // / data-fallback-src="..." instead of inline onerror.
+                    helperMediaLibraryModule.wire_image_fallbacks(table);
                 }
             });
 

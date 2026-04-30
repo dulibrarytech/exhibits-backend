@@ -123,19 +123,28 @@ test.describe('Media library list page (media.library.module.js — display_medi
                 }),
                 mediaRecordFixture({
                     uuid: 'k-1',
-                    name: 'Kaltura row',
+                    name: 'Kaltura video row',
                     original_filename: null,
                     ingest_method: 'kaltura',
                     kaltura_entry_id: 'entry-1',
                     media_type: 'video',
                     mime_type: 'video/mp4',
                 }),
+                mediaRecordFixture({
+                    uuid: 'k-2',
+                    name: 'Kaltura audio row',
+                    original_filename: null,
+                    ingest_method: 'kaltura',
+                    kaltura_entry_id: 'entry-2',
+                    media_type: 'audio',
+                    mime_type: 'audio/mp3',
+                }),
             ],
         });
 
         await page.goto(`${APP_PATH}/media/library`);
         // Wait for render to complete via the per-row contract.
-        await expect(page.locator('a.btn-edit-media')).toHaveCount(3);
+        await expect(page.locator('a.btn-edit-media')).toHaveCount(4);
 
         // Upload variant: literal filename rendered inside
         // <small.media-filename>. Use locator-count rather than visibility
@@ -147,15 +156,14 @@ test.describe('Media library list page (media.library.module.js — display_medi
 
         // Repository variant: hard-coded "Repository media" label with
         // a unique fa-database icon (only emitted by the repo branch).
-        // Counting the icon is the cleanest viewport-independent signal
-        // that the repo branch ran.
         await expect(page.locator('#media-data .fa-database')).toHaveCount(1);
 
-        // Kaltura variant: hard-coded "Kaltura media" label. The icon
-        // swaps based on mime_type — fa-volume-up for audio, fa-film
-        // for video. We seeded video/mp4, so fa-film should appear
-        // exactly once.
+        // Kaltura variants: icon dispatch reads media_type — fa-film for
+        // video, fa-volume-up for audio. The dispatch was previously
+        // checking mime_type which was inconsistent with every other
+        // branch in the file; locking media_type in here.
         await expect(page.locator('#media-data .fa-film')).toHaveCount(1);
+        await expect(page.locator('#media-data .fa-volume-up')).toHaveCount(1);
     });
 
     test('shows the DataTable empty-state when the API returns no records', async ({ page }) => {
@@ -216,5 +224,34 @@ test.describe('Media library list page (media.library.module.js — display_medi
         // Only Kaltura rows get the Play action item; upload rows don't.
         await expect(page.locator('a.btn-play-kaltura[data-uuid="k-1"]')).toHaveCount(1);
         await expect(page.locator('a.btn-play-kaltura[data-uuid="u-1"]')).toHaveCount(0);
+    });
+
+    test('record name with double-quotes does not break the action dropdown markup', async ({ page }) => {
+        // Regression: helperMediaLibraryModule.escape_html used to
+        // skip " and ', so a name like 12" Disco Single would inject
+        // a stray quote into bare attribute values (e.g. data-name="…")
+        // and the rest of the action-row markup would parse off-by-one.
+        // The fix encodes both quote chars; the dropdown must still
+        // resolve cleanly and the data-name attribute must round-trip
+        // the original string.
+        const tricky_name = 'Vinyl 12" "remix" — \'best of\'';
+        await stubMediaLibraryListApi(page, {
+            records: [
+                mediaRecordFixture({
+                    uuid: 'u-quote',
+                    name: tricky_name,
+                    ingest_method: 'upload',
+                }),
+            ],
+        });
+
+        await page.goto(`${APP_PATH}/media/library`);
+
+        // Edit + delete actions resolve and carry the original name
+        // verbatim once the browser decodes the entity-encoded attr.
+        await expect(page.locator('a.btn-edit-media[data-uuid="u-quote"]'))
+            .toHaveCount(1);
+        await expect(page.locator('a.btn-delete-media[data-uuid="u-quote"]'))
+            .toHaveAttribute('data-name', tricky_name);
     });
 });

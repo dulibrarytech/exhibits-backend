@@ -242,4 +242,52 @@ test.describe('Media library repo-search flow (repo.service.module.js)', () => {
         );
         expect(net_listeners).toBe(1);
     });
+
+    test('clicking a pagination link does not jump the window scroll', async ({ page }) => {
+        // Regression: pagination uses <a href="#"> elements. On a real
+        // mouse click, the browser focuses the anchor BEFORE the
+        // delegated click handler runs. If the anchor is near the
+        // viewport edge, the browser's "scroll focused element fully
+        // into view" behavior jumps the page — far enough to bring
+        // the Media List card below into view, away from the search
+        // results the user was looking at. The fix preventDefaults
+        // mousedown on the page-link so focus is never applied,
+        // leaving the click event itself to do the page-change work.
+        const records = [];
+        for (let i = 0; i < 35; i += 1) {
+            records.push(repoSearchItemFixture({
+                uuid: `repo-uuid-${i}`,
+                title: `Item ${i}`,
+            }));
+        }
+        await stubRepoSearchDeps(page, { search: { records } });
+
+        await page.setViewportSize({ width: 1280, height: 720 });
+        await page.goto(`${APP_PATH}/media/library`);
+
+        await page.fill('#repo-uuid', 'foo');
+        await page.click('#repo-uuid-btn');
+        await expect(page.locator('.repo-result-item')).toHaveCount(10);
+
+        // Pre-scroll so the page-3 anchor sits near the bottom edge
+        // of the viewport. With the anchor partially-visible, the
+        // focus-into-view that fires on real mouse-click would jump
+        // the scroll. Playwright's own actionability scroll-into-view
+        // is a no-op here because the anchor passes its visibility
+        // check (any visible portion satisfies it).
+        await page.evaluate(() => {
+            const a = document.querySelector('.repo-page-link[data-page="3"]');
+            const target = a.getBoundingClientRect().top + window.scrollY -
+                (window.innerHeight - a.getBoundingClientRect().height - 4);
+            window.scrollTo(0, target);
+        });
+        const scroll_before = await page.evaluate(() => window.scrollY);
+
+        await page.locator('.repo-page-link[data-page="3"]').first().click();
+        await expect(page.locator('.repo-result-item').first()).toContainText(/Item 2[0-9]/);
+
+        const scroll_after = await page.evaluate(() => window.scrollY);
+        // Window must not have jumped. Allow small rounding only.
+        expect(Math.abs(scroll_after - scroll_before)).toBeLessThan(10);
+    });
 });

@@ -18,6 +18,32 @@
 
 'use strict';
 
+/*
+ * ─── Known wire-format divergences from the rest of the app ───
+ *
+ * These are intentional inconsistencies tracked for a future
+ * "harmonize response shapes" pass; do not propagate them to new
+ * endpoints in this controller.
+ *
+ *   1. Envelope: every endpoint here wraps its payload in
+ *        { success: true|false, data: …, message?: … }
+ *      Other controllers in this app (exhibits, items, headings,
+ *      users) return bare { data: … } / { error: … } and signal
+ *      success via the HTTP status alone. The client modules in
+ *      public/app/media-library/* read `response.data?.success` and
+ *      will not render media if a bare envelope is returned.
+ *
+ *   2. DELETE record/<media_id> returns 200 + { success: true }.
+ *      Items DELETE (/api/v1/exhibits/<eid>/items/<id>) returns 204
+ *      with no body. modals.delete.module.js's handle_delete_confirm
+ *      reads `status === 200 && data.success`; switching this to 204
+ *      is a coordinated change with that client + its e2e stub.
+ *
+ * Either keep the envelope (and 200-with-body DELETE) when adding
+ * new endpoints OR commit to a full sweep across the controller, all
+ * client modules, and every Playwright stub. Don't half-migrate.
+ */
+
 const FS = require('fs');
 const PATH = require('path');
 const MEDIA_MODEL = require('../media-library/model');

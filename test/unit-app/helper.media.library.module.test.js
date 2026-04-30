@@ -119,14 +119,19 @@ describe('helperMediaLibraryModule', () => {
 
         it('encodes <, >, & in injected markup', () => {
             const out = helperMediaLibraryModule.escape_html('<script>alert("x")</script>');
-            // textContent → innerHTML round-trip encodes <, >, &.
-            // Single/double quotes are NOT escaped by this implementation
-            // (it relies on textContent semantics, which only encodes
-            // markup-significant chars); attribute-context callers must
-            // not feed unescaped output into bare attribute values.
             expect(out).not.toContain('<script>');
             expect(out).toContain('&lt;script&gt;');
             expect(out).toContain('&lt;/script&gt;');
+        });
+
+        it('encodes double and single quotes for attribute-context safety', () => {
+            // Bare attribute values like `<a title="${escape_html(x)}">`
+            // break if x contains a literal `"`. The same applies to
+            // single-quoted attributes. Both must be encoded.
+            expect(helperMediaLibraryModule.escape_html('say "hi"'))
+                .toBe('say &quot;hi&quot;');
+            expect(helperMediaLibraryModule.escape_html("it's fine"))
+                .toBe('it&#39;s fine');
         });
 
         it('passes plain text through unchanged', () => {
@@ -174,6 +179,24 @@ describe('helperMediaLibraryModule', () => {
             expect(helperMediaLibraryModule.format_file_size(1536)).toBe('1.5 KB');
             expect(helperMediaLibraryModule.format_file_size(1024 * 1024 * 2.5))
                 .toBe('2.5 MB');
+        });
+
+        it('formats TB-scale values (sizes table extended past GB)', () => {
+            const one_tb = Math.pow(1024, 4);
+            expect(helperMediaLibraryModule.format_file_size(one_tb)).toBe('1 TB');
+        });
+
+        it('clamps oversized inputs to PB instead of producing "undefined"', () => {
+            // 1 EB is past the sizes-table tail; clamp index to PB.
+            const one_eb = Math.pow(1024, 6);
+            expect(helperMediaLibraryModule.format_file_size(one_eb)).toBe('1024 PB');
+        });
+
+        it('returns "0 Bytes" for negative, NaN, Infinity, and non-number inputs', () => {
+            expect(helperMediaLibraryModule.format_file_size(-1)).toBe('0 Bytes');
+            expect(helperMediaLibraryModule.format_file_size(NaN)).toBe('0 Bytes');
+            expect(helperMediaLibraryModule.format_file_size(Infinity)).toBe('0 Bytes');
+            expect(helperMediaLibraryModule.format_file_size('1024')).toBe('0 Bytes');
         });
     });
 

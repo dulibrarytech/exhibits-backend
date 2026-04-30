@@ -320,15 +320,25 @@ const repoServiceModule = (function() {
         // Falls back to placeholder if thumbnail cannot be fetched
         const thumbnail_url = build_thumbnail_url(item.uuid);
 
-        // Build thumbnail HTML with inline styles for reliability
-        // Uses the repo thumbnail endpoint URL, with onerror fallback to icon placeholder
+        // Build thumbnail HTML with inline styles for reliability.
+        // Uses the repo thumbnail endpoint URL with a CSP-safe fallback:
+        // data-fallback="icon" + a wrapper-style/icon-style pair that
+        // recreates the same icon-on-grey-square placeholder the inline
+        // onerror used to write. wire_image_fallbacks() (called after
+        // each innerHTML write) attaches addEventListener('error', ...)
+        // instead of an inline handler.
+        const fallback_wrapper_style = 'width:80px;height:80px;background:#f8f9fa;display:flex;align-items:center;justify-content:center;border-radius:4px;';
+        const fallback_icon_style = 'color:#6c757d;';
         let thumbnail_html;
         if (thumbnail_url) {
             thumbnail_html = '<img src="' + escape_html(thumbnail_url) + '" ' +
                 'alt="Thumbnail for ' + title + '" ' +
                 'class="img-fluid rounded repo-thumbnail" ' +
                 'style="max-height: 80px; width: 80px; object-fit: cover;" ' +
-                'onerror="this.onerror=null; this.parentElement.innerHTML=\'<div style=\\\'width:80px;height:80px;background:#f8f9fa;display:flex;align-items:center;justify-content:center;border-radius:4px;\\\'><i class=\\\'fa ' + type_icon + ' fa-2x\\\' style=\\\'color:#6c757d;\\\' aria-hidden=\\\'true\\\'></i></div>\';">';
+                'data-fallback="icon" ' +
+                'data-fallback-icon="fa ' + escape_html(type_icon) + ' fa-2x" ' +
+                'data-fallback-icon-style="' + fallback_icon_style + '" ' +
+                'data-fallback-wrapper-style="' + fallback_wrapper_style + '">';
         } else {
             thumbnail_html = '<div style="width: 80px; height: 80px; background-color: #f8f9fa; display: flex; align-items: center; justify-content: center; border-radius: 4px;">' +
                 '<i class="fa ' + type_icon + ' fa-2x" style="color: #6c757d;" aria-hidden="true"></i>' +
@@ -490,10 +500,15 @@ const repoServiceModule = (function() {
         setup_checkbox_handlers();
 
         // Bind pagination events if module available
-        if (typeof repoPaginationModule !== 'undefined' && 
+        if (typeof repoPaginationModule !== 'undefined' &&
             typeof repoPaginationModule.bind_events === 'function') {
             repoPaginationModule.bind_events(results_container);
         }
+
+        // Wire CSP-safe <img> error handlers on the freshly injected
+        // thumbnail markup. Cards carry data-fallback="icon" + the
+        // wrapper/icon style data attributes.
+        helperMediaLibraryModule.wire_image_fallbacks(results_container);
     };
 
     /**

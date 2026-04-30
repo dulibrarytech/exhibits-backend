@@ -214,7 +214,7 @@ const mediaEditModalModule = (function() {
         let preview_html;
         if (is_kaltura && record.kaltura_thumbnail_url) {
             // Kaltura item: use kaltura thumbnail URL from database
-            preview_html = '<img src="' + escape_html(record.kaltura_thumbnail_url) + '" alt="' + escape_html(record.name || 'Kaltura media') + '" class="img-fluid" style="max-width:100%;max-height:300px;object-fit:contain;" onerror="this.onerror=null; this.style.display=\'none\'; this.nextElementSibling.style.display=\'block\';">' +
+            preview_html = '<img src="' + escape_html(record.kaltura_thumbnail_url) + '" alt="' + escape_html(record.name || 'Kaltura media') + '" class="img-fluid" style="max-width:100%;max-height:300px;object-fit:contain;" data-fallback="hide-show-next">' +
                 '<i class="fa ' + type_icon + '" style="font-size: 80px; color: #6c757d; display: none;" aria-hidden="true"></i>';
         } else if (is_kaltura) {
             // Kaltura item without thumbnail: show type icon
@@ -223,7 +223,7 @@ const mediaEditModalModule = (function() {
             // Repository item: use repo thumbnail endpoint
             const repo_tn_url = get_repo_thumbnail_url(record.repo_uuid);
             if (repo_tn_url) {
-                preview_html = '<img src="' + repo_tn_url + '" alt="' + escape_html(record.name || 'Repository media') + '" class="img-fluid" style="max-width:100%;max-height:300px;object-fit:contain;" onerror="this.onerror=null; this.style.display=\'none\'; this.nextElementSibling.style.display=\'block\';">' +
+                preview_html = '<img src="' + repo_tn_url + '" alt="' + escape_html(record.name || 'Repository media') + '" class="img-fluid" style="max-width:100%;max-height:300px;object-fit:contain;" data-fallback="hide-show-next">' +
                     '<i class="fa ' + type_icon + '" style="font-size: 80px; color: #6c757d; display: none;" aria-hidden="true"></i>';
             } else {
                 preview_html = '<i class="fa ' + type_icon + '" style="font-size: 80px; color: #6c757d;" aria-hidden="true"></i>';
@@ -236,7 +236,7 @@ const mediaEditModalModule = (function() {
             // PDF with server-generated thumbnail
             const tn_url = build_thumbnail_url(record.uuid);
             const tn_img_url = tn_url + (tn_url.includes('?') ? '&' : '?') + 'token=' + encodeURIComponent(token || '');
-            preview_html = '<img src="' + tn_img_url + '" alt="' + display_name + '" class="img-fluid" style="max-width:100%;max-height:300px;object-fit:contain;" onerror="this.onerror=null; this.style.display=\'none\'; this.nextElementSibling.style.display=\'block\';">' +
+            preview_html = '<img src="' + tn_img_url + '" alt="' + display_name + '" class="img-fluid" style="max-width:100%;max-height:300px;object-fit:contain;" data-fallback="hide-show-next">' +
                 '<i class="fa ' + type_icon + '" style="font-size: 80px; color: #6c757d; display: none;" aria-hidden="true"></i>';
         } else {
             preview_html = '<i class="fa ' + type_icon + '" style="font-size: 80px; color: #6c757d;" aria-hidden="true"></i>';
@@ -517,7 +517,7 @@ const mediaEditModalModule = (function() {
         helperMediaLibraryModule.show_bootstrap_modal(modal_element);
 
         // Fetch media record data
-        const record = await mediaLibraryModule.get_media_record(uuid);
+        const { record, status } = await mediaLibraryModule.get_media_record(uuid);
 
         // Hide loading indicator
         if (loading_indicator) {
@@ -525,12 +525,30 @@ const mediaEditModalModule = (function() {
         }
 
         if (!record) {
-            form_container.innerHTML = '<div class="alert alert-danger">Failed to load media record. Please try again.</div>';
+            // Surface a context-specific message instead of one
+            // generic alert for every failure mode.
+            let message;
+            if (status === 403) {
+                message = 'You do not have permission to view this media record.';
+            } else if (status === 404) {
+                message = 'Media record not found. It may have been deleted.';
+            } else if (status === null) {
+                message = 'Unable to load media record. Please check your connection and try again.';
+            } else {
+                message = 'Failed to load media record. Please try again.';
+            }
+            form_container.innerHTML = '<div class="alert alert-danger">' +
+                helperMediaLibraryModule.escape_html(message) + '</div>';
             return;
         }
 
         // Build and display edit form
         form_container.innerHTML = build_edit_form_html(record);
+
+        // Wire CSP-safe <img> error handlers on the preview thumbnail.
+        // Preview <img>s carry data-fallback="hide-show-next" instead of
+        // an inline onerror handler.
+        helperMediaLibraryModule.wire_image_fallbacks(form_container);
 
         // Populate subject and resource type dropdowns (upgrades selects to multi-select widgets)
         if (typeof repoSubjectsModule !== 'undefined') {

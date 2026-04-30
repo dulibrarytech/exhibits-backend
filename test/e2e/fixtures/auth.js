@@ -156,11 +156,8 @@ function buildMediaLibraryEndpoints(appPath) {
             get: { endpoint: `${base}/kaltura/config/player` },
         },
         media_exhibits: {
-            // NOTE: server canonical is `${base}/record/:media_id/exhibits`
-            // but media-picker e2e tests already pass against this shape.
-            // Flagged in modified-46 README; not changed here to avoid
-            // a regression. Worth a separate audit + fixture update.
-            put: { endpoint: `${base}/exhibits/:media_id` },
+            // Mirrors the canonical shape in media-library/endpoints.js.
+            put: { endpoint: `${base}/record/:media_id/exhibits` },
         },
     };
 }

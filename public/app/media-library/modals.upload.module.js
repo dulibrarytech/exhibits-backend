@@ -99,33 +99,6 @@ const mediaModalsModule = (function() {
     };
 
     // ========================================
-    // EDIT MODAL DELEGATION (backward-compatible)
-    // Delegates to mediaEditModalModule; prefer
-    // calling mediaEditModalModule directly.
-    // ========================================
-
-    /**
-     * @deprecated Use mediaEditModalModule.update_media_record() instead
-     */
-    obj.update_media_record = function(uuid, data) {
-        return mediaEditModalModule.update_media_record(uuid, data);
-    };
-
-    /**
-     * @deprecated Use mediaEditModalModule.open_edit_media_modal() instead
-     */
-    obj.open_edit_media_modal = function(uuid, callback) {
-        return mediaEditModalModule.open_edit_media_modal(uuid, callback);
-    };
-
-    /**
-     * @deprecated Use mediaEditModalModule.close_edit_media_modal() instead
-     */
-    obj.close_edit_media_modal = function() {
-        return mediaEditModalModule.close_edit_media_modal();
-    };
-
-    // ========================================
     // UPLOAD MODAL FUNCTIONS
     // ========================================
 

@@ -148,9 +148,7 @@ test.describe('Media library edit modal (modals.edit.module.js — open_edit_med
             .toBeVisible();
     });
 
-    test('GET failure shows the load-error alert in the form container', async ({ page }) => {
-        // Override the stub with a 404 (the modal's "Failed to load"
-        // branch fires for any non-success response).
+    test('GET 404 shows a "not found" message in the form container', async ({ page }) => {
         const record = mediaRecordFixture({
             uuid: TARGET_UUID,
             ingest_method: 'upload',
@@ -165,11 +163,33 @@ test.describe('Media library edit modal (modals.edit.module.js — open_edit_med
         await page.locator(`a.btn-edit-media[data-uuid="${TARGET_UUID}"]`)
             .dispatchEvent('click');
 
-        // open_edit_media_modal writes "Failed to load media record."
-        // into #edit-media-form-container when get_media_record returns
-        // null (which it does for any non-success response).
+        // get_media_record returns { record: null, status: 404 } and
+        // the caller writes the 404-specific message.
         await expect(page.locator('#edit-media-form-container .alert-danger'))
-            .toContainText(/Failed to load media record/i);
+            .toContainText(/not found/i);
+    });
+
+    test('GET 403 shows a permission-denied message distinct from the 404 path', async ({ page }) => {
+        // Regression for the bug where get_media_record collapsed
+        // 403 / 404 / network into a single generic "Failed to load"
+        // alert. The fix returns the response status alongside null
+        // so the caller can differentiate the message.
+        const record = mediaRecordFixture({
+            uuid: TARGET_UUID,
+            ingest_method: 'upload',
+        });
+        await stubMediaLibraryListApi(page, { records: [record] });
+        await stubMediaRecordApi(page, { record, getStatus: 403 });
+        await stubRepoMetadataApi(page);
+
+        await page.goto(`${APP_PATH}/media/library`);
+        await expect(page.locator(`a.btn-edit-media[data-uuid="${TARGET_UUID}"]`))
+            .toHaveCount(1);
+        await page.locator(`a.btn-edit-media[data-uuid="${TARGET_UUID}"]`)
+            .dispatchEvent('click');
+
+        await expect(page.locator('#edit-media-form-container .alert-danger'))
+            .toContainText(/permission/i);
     });
 
     test('PUT failure shows an error in the modal message area without closing', async ({ page }) => {
@@ -239,5 +259,39 @@ test.describe('Media library edit modal (modals.edit.module.js — open_edit_med
         await expect(page.locator('#edit-media-message .alert-danger'))
             .toContainText(/required fields/i);
         expect(recordState.putCount).toBe(0);
+    });
+
+    test('record name containing a literal double-quote round-trips into the edit form value', async ({ page }) => {
+        // Regression for helperMediaLibraryModule.escape_html. The
+        // edit form is built by string concatenation with bare
+        // attributes: `value="' + escape_html(record.name) + '"`. If
+        // escape_html doesn't encode `"`, a name like Vinyl 12" Album
+        // closes the attribute mid-stream and the input value gets
+        // truncated. The fix encodes both quote chars so the markup
+        // parses cleanly and the input round-trips the original name.
+        const tricky_name = 'Vinyl 12" "remix" Album';
+        const record = mediaRecordFixture({
+            uuid: TARGET_UUID,
+            name: tricky_name,
+            ingest_method: 'upload',
+            media_type: 'image',
+            item_type: 'image',
+            genre_form_subjects: 'Photographs',
+            alt_text: 'desc',
+        });
+        await stubMediaLibraryListApi(page, { records: [record] });
+        await stubMediaRecordApi(page, { record });
+        await stubRepoMetadataApi(page);
+
+        await page.goto(`${APP_PATH}/media/library`);
+        await expect(page.locator(`a.btn-edit-media[data-uuid="${TARGET_UUID}"]`))
+            .toHaveCount(1);
+        await page.locator(`a.btn-edit-media[data-uuid="${TARGET_UUID}"]`)
+            .dispatchEvent('click');
+
+        // Without the fix the value would be truncated at the first
+        // literal " (e.g. just "Vinyl 12") and the rest of the markup
+        // would parse as garbage attributes.
+        await expect(page.locator('#edit-file-name')).toHaveValue(tricky_name);
     });
 });

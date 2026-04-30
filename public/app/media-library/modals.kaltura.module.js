@@ -228,7 +228,8 @@ const kalturaModalsModule = (function() {
             html += '<img src="' + escape_html(thumbnail_url) + '" ' +
                 'alt="Thumbnail for ' + title + '" ' +
                 'style="max-width:100%;max-height:100%;object-fit:cover;" ' +
-                'onerror="this.onerror=null; this.parentElement.innerHTML=\'<i class=\\\'fa ' + type_icon + ' file-icon\\\' aria-hidden=\\\'true\\\'></i>\';">';
+                'data-fallback="icon" ' +
+                'data-fallback-icon="fa ' + escape_html(type_icon) + ' file-icon">';
         } else {
             html += '<i class="fa ' + type_icon + ' file-icon" aria-hidden="true"></i>';
         }
@@ -613,6 +614,11 @@ const kalturaModalsModule = (function() {
         // Build the form HTML
         const form_html = build_kaltura_form_html(kaltura_media_data);
         forms_container.innerHTML = form_html;
+
+        // Wire CSP-safe <img> error handlers on the freshly injected
+        // thumbnail markup. The thumbnail <img> carries data-fallback="icon"
+        // + data-fallback-icon instead of an inline onerror handler.
+        helperMediaLibraryModule.wire_image_fallbacks(forms_container);
 
         // CRITICAL: Call show_form() AFTER HTML is injected so the new .card elements exist in DOM
         if (typeof helperModule !== 'undefined' && typeof helperModule.show_form === 'function') {

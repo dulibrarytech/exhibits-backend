@@ -43,16 +43,27 @@ const helperMediaLibraryModule = (function() {
     const SUCCESS_AUTO_HIDE_DELAY = 5000;
 
     /**
-     * Escape HTML to prevent XSS
-     * Uses DOM textContent for safe encoding
+     * Escape HTML to prevent XSS in both text and attribute contexts.
+     *
+     * The textContent → innerHTML round-trip only encodes <, >, &;
+     * single and double quotes pass through, which is unsafe for bare
+     * attribute values (`<a title="${escape_html(name)}">` breaks if
+     * name contains a "). We chain explicit replacements for ' and "
+     * so a single helper covers both text and attribute use.
+     *
+     * Encoded entities in text content render the same as the original
+     * character, so over-encoding is harmless.
+     *
      * @param {string} str - String to escape
-     * @returns {string} Escaped HTML string
+     * @returns {string} Escaped HTML string safe for text or attribute contexts
      */
     obj.escape_html = (str) => {
         if (!str) return '';
         const div = document.createElement('div');
         div.textContent = str;
-        return div.innerHTML;
+        return div.innerHTML
+            .replace(/"/g, '&quot;')
+            .replace(/'/g, '&#39;');
     };
 
     /**
@@ -195,15 +206,26 @@ const helperMediaLibraryModule = (function() {
     };
 
     /**
-     * Format file size for display with adaptive units
+     * Format file size for display with adaptive units.
+     *
+     * Reject non-finite or non-positive inputs (NaN, Infinity, -1)
+     * by returning '0 Bytes' rather than producing a NaN-shaped
+     * string. Clamp the unit index so files larger than the largest
+     * unit (>= 1 PB) display in PB instead of `undefined`.
+     *
      * @param {number} bytes - File size in bytes
      * @returns {string} Formatted size string (e.g., '1.5 MB', '256 KB')
      */
     obj.format_file_size = (bytes) => {
-        if (!bytes || bytes === 0) return '0 Bytes';
+        if (typeof bytes !== 'number' || !Number.isFinite(bytes) || bytes <= 0) {
+            return '0 Bytes';
+        }
         const k = 1024;
-        const sizes = ['Bytes', 'KB', 'MB', 'GB'];
-        const i = Math.floor(Math.log(bytes) / Math.log(k));
+        const sizes = ['Bytes', 'KB', 'MB', 'GB', 'TB', 'PB'];
+        const i = Math.min(
+            Math.floor(Math.log(bytes) / Math.log(k)),
+            sizes.length - 1
+        );
         return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
     };
 
@@ -311,26 +333,103 @@ const helperMediaLibraryModule = (function() {
     obj.get_thumbnail_url_for_media = (media_type, uuid) => {
         const static_path = '/exhibits-dashboard/static/images';
 
+        const placeholder_for = (type) => {
+            switch (type) {
+                case 'image': return static_path + '/image-tn.png';
+                case 'video': return static_path + '/video-tn.png';
+                case 'audio': return static_path + '/audio-tn.png';
+                case 'pdf':   return static_path + '/pdf-tn.png';
+                default:      return static_path + '/default-tn.png';
+            }
+        };
+
         if ((media_type === 'image' || media_type === 'pdf') && uuid) {
             const token = authModule.get_user_token();
+            // Without a token the server-generated thumbnail returns
+            // 401, leaving the placeholder fallback to the inline
+            // <img onerror>. Skip the doomed request and fall through
+            // to the placeholder directly. Mirrors get_repo_thumbnail_url.
+            if (!token) {
+                return placeholder_for(media_type);
+            }
             const thumbnail_url = obj.build_thumbnail_url(uuid);
             if (thumbnail_url) {
-                return thumbnail_url + '?token=' + encodeURIComponent(token || '');
+                return thumbnail_url + '?token=' + encodeURIComponent(token);
             }
         }
 
-        switch (media_type) {
-            case 'image':
-                return static_path + '/image-tn.png';
-            case 'video':
-                return static_path + '/video-tn.png';
-            case 'audio':
-                return static_path + '/audio-tn.png';
-            case 'pdf':
-                return static_path + '/pdf-tn.png';
-            default:
-                return static_path + '/default-tn.png';
-        }
+        return placeholder_for(media_type);
+    };
+
+    // ========================================
+    // CSP-SAFE <img> FALLBACK WIRING
+    // ========================================
+    //
+    // Several modules render thumbnail markup through innerHTML and
+    // historically used inline `onerror="..."` to swap a placeholder /
+    // hide the broken <img> / replace the parent with an icon. That
+    // pattern is hostile to a strict Content Security Policy
+    // (script-src without 'unsafe-inline'). To stay CSP-ready, modules
+    // emit a sentinel `data-fallback="<strategy>"` attribute on the
+    // <img> instead, then call `wire_image_fallbacks(root)` after the
+    // innerHTML write. This helper attaches a single `error` listener
+    // per element that runs the chosen strategy.
+    //
+    // Strategies:
+    //   placeholder      — swap src to data-fallback-src
+    //   hide-show-next   — display:none on self, display:block on next sibling
+    //   icon             — replace parent.innerHTML with an <i> carrying
+    //                      class from data-fallback-icon and (optionally)
+    //                      data-fallback-icon-style. If data-fallback-
+    //                      wrapper-class or data-fallback-wrapper-style
+    //                      is set, the <i> is wrapped in a <div> with
+    //                      those attributes; otherwise the <i> is
+    //                      appended to the parent directly.
+
+    obj.wire_image_fallbacks = (root) => {
+        const scope = root || document;
+        const imgs = scope.querySelectorAll('img[data-fallback]:not([data-fallback-wired])');
+        imgs.forEach((img) => {
+            img.setAttribute('data-fallback-wired', '1');
+            img.addEventListener('error', function on_error() {
+                // One-shot — remove ourselves so a fallback that fails
+                // to load can't loop.
+                img.removeEventListener('error', on_error);
+                const strategy = img.getAttribute('data-fallback');
+                if (strategy === 'placeholder') {
+                    const src = img.getAttribute('data-fallback-src') || '';
+                    if (src && img.src !== src) {
+                        img.src = src;
+                    }
+                } else if (strategy === 'hide-show-next') {
+                    img.style.display = 'none';
+                    if (img.nextElementSibling) {
+                        img.nextElementSibling.style.display = 'block';
+                    }
+                } else if (strategy === 'icon') {
+                    const icon_class = img.getAttribute('data-fallback-icon') || '';
+                    const icon_style = img.getAttribute('data-fallback-icon-style') || '';
+                    const wrapper_class = img.getAttribute('data-fallback-wrapper-class') || '';
+                    const wrapper_style = img.getAttribute('data-fallback-wrapper-style') || '';
+                    const parent = img.parentElement;
+                    if (!parent) return;
+                    parent.innerHTML = '';
+                    const i = document.createElement('i');
+                    i.className = icon_class;
+                    if (icon_style) i.setAttribute('style', icon_style);
+                    i.setAttribute('aria-hidden', 'true');
+                    if (wrapper_class || wrapper_style) {
+                        const div = document.createElement('div');
+                        if (wrapper_class) div.className = wrapper_class;
+                        if (wrapper_style) div.setAttribute('style', wrapper_style);
+                        div.appendChild(i);
+                        parent.appendChild(div);
+                    } else {
+                        parent.appendChild(i);
+                    }
+                }
+            });
+        });
     };
 
     // ========================================

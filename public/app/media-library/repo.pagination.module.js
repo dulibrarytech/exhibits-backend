@@ -35,12 +35,16 @@ const repoPaginationModule = (function() {
     // Callback for page changes
     let on_page_change_callback = null;
 
-    // Tracked click listener so re-bind across renders doesn't stack.
+    // Tracked listeners so re-bind across renders doesn't stack.
     // Each render previously called container.addEventListener without
     // removing the prior one — N renders meant N listeners and a single
     // click triggered go_to_page N times (the same-page no-ops self-mask
-    // the duplicate fires).
+    // the duplicate fires). We also track mousedown (suppresses focus-
+    // induced scroll-into-view) and keydown (Enter/Space activation,
+    // since page-links no longer carry href="#").
     let bound_listener = null;
+    let bound_mousedown_listener = null;
+    let bound_keydown_listener = null;
     let bound_container = null;
 
     let obj = {};
@@ -96,16 +100,24 @@ const repoPaginationModule = (function() {
     };
 
     /**
-     * Navigate to a specific page
+     * Navigate to a specific page.
+     *
      * @param {number} page - Page number (1-based)
-     * @returns {boolean} True if navigation successful
+     * @returns {boolean|null} `true` on a real page change, `null`
+     *   when the requested page equals the current page (no-op),
+     *   `false` when the page is out of range. Splitting the no-op
+     *   from the invalid case lets callers distinguish "you're
+     *   already there" from "that page doesn't exist".
      */
     obj.go_to_page = function(page) {
-        if (page >= 1 && page <= state.total_pages && page !== state.current_page) {
-            state.current_page = page;
-            return true;
+        if (page < 1 || page > state.total_pages) {
+            return false;
         }
-        return false;
+        if (page === state.current_page) {
+            return null;
+        }
+        state.current_page = page;
+        return true;
     };
 
     /**
@@ -230,11 +242,12 @@ const repoPaginationModule = (function() {
 
         // Previous button
         const prev_disabled = !pagination_state.has_previous ? 'disabled' : '';
+        const prev_tabindex = pagination_state.has_previous ? '0' : '-1';
         html += '<li class="page-item ' + prev_disabled + '">';
-        html += '<a class="page-link repo-page-link" href="#" data-page="' + (pagination_state.current_page - 1) + '"';
+        html += '<a class="page-link repo-page-link" role="button" tabindex="' + prev_tabindex + '" data-page="' + (pagination_state.current_page - 1) + '"';
         html += ' aria-label="Previous page"';
         if (!pagination_state.has_previous) {
-            html += ' tabindex="-1" aria-disabled="true"';
+            html += ' aria-disabled="true"';
         }
         html += '>';
         html += '<i class="fa fa-chevron-left" aria-hidden="true"></i>';
@@ -251,7 +264,7 @@ const repoPaginationModule = (function() {
             } else {
                 const is_active = page_num === pagination_state.current_page;
                 html += '<li class="page-item ' + (is_active ? 'active' : '') + '">';
-                html += '<a class="page-link repo-page-link" href="#" data-page="' + page_num + '"';
+                html += '<a class="page-link repo-page-link" role="button" tabindex="0" data-page="' + page_num + '"';
                 if (is_active) {
                     html += ' aria-current="page"';
                 }
@@ -266,11 +279,12 @@ const repoPaginationModule = (function() {
 
         // Next button
         const next_disabled = !pagination_state.has_next ? 'disabled' : '';
+        const next_tabindex = pagination_state.has_next ? '0' : '-1';
         html += '<li class="page-item ' + next_disabled + '">';
-        html += '<a class="page-link repo-page-link" href="#" data-page="' + (pagination_state.current_page + 1) + '"';
+        html += '<a class="page-link repo-page-link" role="button" tabindex="' + next_tabindex + '" data-page="' + (pagination_state.current_page + 1) + '"';
         html += ' aria-label="Next page"';
         if (!pagination_state.has_next) {
-            html += ' tabindex="-1" aria-disabled="true"';
+            html += ' aria-disabled="true"';
         }
         html += '>';
         html += '<i class="fa fa-chevron-right" aria-hidden="true"></i>';
@@ -306,12 +320,32 @@ const repoPaginationModule = (function() {
 
         if (!container) return;
 
-        // Detach prior listener before binding a new one. Without this,
+        // Detach prior listeners before binding new ones. Without this,
         // every re-render stacks another delegated handler on the same
         // container — N renders → N go_to_page calls per click.
         if (bound_listener && bound_container) {
             bound_container.removeEventListener('click', bound_listener);
         }
+        if (bound_mousedown_listener && bound_container) {
+            bound_container.removeEventListener('mousedown', bound_mousedown_listener);
+        }
+        if (bound_keydown_listener && bound_container) {
+            bound_container.removeEventListener('keydown', bound_keydown_listener);
+        }
+
+        // Suppress mouse-induced focus on page links. The browser
+        // focuses an <a> before the click handler runs, and the
+        // "scroll focused element fully into view" behavior can jump
+        // the page when the anchor is near the viewport edge — far
+        // enough to bring the next section (the Media List card) into
+        // view. preventDefault on mousedown stops the focus from being
+        // applied without affecting the click event itself.
+        const mousedown_handler = function(event) {
+            if (event.button !== 0) return;
+            if (event.target.closest('.repo-page-link')) {
+                event.preventDefault();
+            }
+        };
 
         const handler = function(event) {
             const page_link = event.target.closest('.repo-page-link');
@@ -327,10 +361,36 @@ const repoPaginationModule = (function() {
                 const page = parseInt(page_link.dataset.page, 10);
 
                 if (page && obj.go_to_page(page)) {
-                    // Trigger callback
+                    // Capture scroll position BEFORE the page-change
+                    // callback runs. The callback re-renders the
+                    // results container, which destroys the focused
+                    // page-link anchor. Browsers — and possibly
+                    // intermediate tab/focus logic — can react to that
+                    // by scrolling another element into view (in
+                    // particular, the Media List card below). Restore
+                    // scrollY synchronously after the callback to
+                    // anchor the user where they were. We use rAF +
+                    // a fallback restore to catch any deferred scroll
+                    // that runs after layout settles.
+                    const scroll_x = window.scrollX;
+                    const scroll_y = window.scrollY;
+
                     if (typeof on_page_change_callback === 'function') {
                         on_page_change_callback(page, obj.get_current_page_results());
                     }
+
+                    // Synchronous restore (in case a scroll already
+                    // happened during the re-render).
+                    if (window.scrollX !== scroll_x || window.scrollY !== scroll_y) {
+                        window.scrollTo(scroll_x, scroll_y);
+                    }
+                    // Deferred restore covers any post-layout focus or
+                    // smooth-scroll that fires on the next frame.
+                    requestAnimationFrame(() => {
+                        if (window.scrollX !== scroll_x || window.scrollY !== scroll_y) {
+                            window.scrollTo(scroll_x, scroll_y);
+                        }
+                    });
 
                     // Announce page change for screen readers
                     announce_page_change();
@@ -338,8 +398,27 @@ const repoPaginationModule = (function() {
             }
         };
 
+        // Keyboard activation. Page links no longer carry href="#"
+        // (it was the original culprit for fragment-navigation scroll
+        // jumps). Without href the anchor still focuses and click-fires
+        // via mouse, but keyboard users need Enter/Space to dispatch
+        // the click explicitly. role="button" + tabindex="0" already
+        // make the element focusable and announced as a button.
+        const keydown_handler = function(event) {
+            if (event.key !== 'Enter' && event.key !== ' ') return;
+            const page_link = event.target.closest('.repo-page-link');
+            if (page_link) {
+                event.preventDefault();
+                page_link.click();
+            }
+        };
+
         container.addEventListener('click', handler);
+        container.addEventListener('mousedown', mousedown_handler);
+        container.addEventListener('keydown', keydown_handler);
         bound_listener = handler;
+        bound_mousedown_listener = mousedown_handler;
+        bound_keydown_listener = keydown_handler;
         bound_container = container;
     };
 
@@ -371,6 +450,17 @@ const repoPaginationModule = (function() {
      */
     obj.get_results_per_page = function() {
         return CONFIG.RESULTS_PER_PAGE;
+    };
+
+    /**
+     * Get the maximum number of page links rendered before the
+     * ellipsis-boundary kicks in. Symmetric with get_results_per_page
+     * so tests/consumers don't need to mirror the constant locally.
+     *
+     * @returns {number} Max visible page count
+     */
+    obj.get_max_visible_pages = function() {
+        return CONFIG.MAX_VISIBLE_PAGES;
     };
 
     /**
