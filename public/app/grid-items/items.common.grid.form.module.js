@@ -35,12 +35,22 @@ const itemsCommonStandardGridFormModule = (function () {
                 return el?.value?.trim() ?? default_value;
             };
 
-            const show_error = (message) => {
+            // Phase 3b — show_error now optionally accepts a field
+            // selector to associate the error with the offending input
+            // via domModule.set_field_error (aria-invalid + aria-describedby).
+            const show_error = (message, field_selector) => {
                 const message_el = document.querySelector('#message');
                 if (message_el) {
                     domModule.set_alert(message_el, 'danger', message);
                 }
+                if (field_selector) {
+                    const error_id = field_selector.replace('#', '') + '-error';
+                    domModule.set_field_error(field_selector, error_id, message);
+                }
             };
+
+            // Phase 3b — clear any prior field-level error state.
+            domModule.clear_field_error('#grid-columns', 'grid-columns-error');
 
             // Get grid metadata
             grid.text = get_element_value('#grid-text-input');
@@ -49,13 +59,13 @@ const itemsCommonStandardGridFormModule = (function () {
 
             // Validate columns is a valid number
             if (!columns_value || columns_value === '') {
-                show_error('Please enter the number of columns');
+                show_error('Please enter the number of columns', '#grid-columns');
                 return false;
             }
 
             const parsed_columns = Number(columns_value);
             if (!Number.isInteger(parsed_columns) || parsed_columns <= 0 || parsed_columns > 12) {
-                show_error('Please enter a valid number of columns (1-12)');
+                show_error('Please enter a valid number of columns (1-12)', '#grid-columns');
                 return false;
             }
 

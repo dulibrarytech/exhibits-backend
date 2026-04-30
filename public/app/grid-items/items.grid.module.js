@@ -189,10 +189,16 @@ const itemsGridModule = (function () {
             itemsListDisplayModule.setup_item_action_handlers();
         }
 
-        // Initialize DataTable
+        // Initialize DataTable.
+        // Phase 4: extend RowReorder's `excludedChildren` default (`'a'`)
+        // so it also skips drag handling when the user clicks the
+        // keyboard-reorder buttons inside .grabbable. See items.module.js
+        // for the full rationale.
         const GRID_ITEM_LIST = new DataTable('#grid-items', {
             paging: false,
-            rowReorder: true,
+            rowReorder: {
+                excludedChildren: 'a, .reorder-btn, .reorder-btn *'
+            },
             language: {
                 emptyTable: 'No grid items found',
                 zeroRecords: 'No matching grid items found',
@@ -205,6 +211,20 @@ const itemsGridModule = (function () {
 
         GRID_ITEM_LIST.on('row-reordered', async (e, reordered_items) => {
             await reorderModule.reorder_grid_items(e, reordered_items);
+        });
+
+        // Phase 4 — wire keyboard reorder buttons. The grid_id is always
+        // present for grid-item lists; pass it explicitly so the
+        // keyboard-built reorder array carries grid_id and type:'griditem'
+        // exactly as the drag flow does.
+        const grid_id_for_reorder = helperModule.get_parameter_by_name('grid_id');
+        if (typeof reorderModule.attach_keyboard_reorder_handlers === 'function') {
+            reorderModule.attach_keyboard_reorder_handlers('#grid-items', { grid_id: grid_id_for_reorder });
+        }
+        GRID_ITEM_LIST.on('draw', () => {
+            if (typeof reorderModule.update_reorder_button_states === 'function') {
+                reorderModule.update_reorder_button_states('#grid-items');
+            }
         });
 
         // Use delegated events on table body for publish/suppress actions
@@ -324,6 +344,8 @@ const itemsGridModule = (function () {
                             <div class="dropdown-divider"></div>
                             <a class="dropdown-item text-muted disabled"
                                href="#"
+                       aria-disabled="true"
+                       tabindex="-1"
                                style="font-size: 0.875rem; pointer-events: none; opacity: 0.5;"
                                title="Can only delete if unpublished">
                                 <i class="fa fa-trash mr-2" aria-hidden="true" style="width: 16px;"></i>

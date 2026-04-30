@@ -319,10 +319,20 @@ const itemsModule = (function() {
                 existing_table.destroy();
             }
 
-            // Initialize DataTable with row reordering
+            // Initialize DataTable with row reordering.
+            // Phase 4: extend RowReorder's `excludedChildren` default
+            // (`'a'`) so it also excludes the keyboard-reorder buttons
+            // rendered by create_order_cell. Without this, mousedown on
+            // a button initiates drag tracking — which captures pointer
+            // events at the document level and prevents `click` from
+            // firing on the button. RowReorder source:
+            //   if ($(e.target).is(excludedChildren)) { return true; }
+            // short-circuits drag-init when the descendant matches.
             const ITEM_LIST = new DataTable('#items', {
                 paging: false,
-                rowReorder: true,
+                rowReorder: {
+                    excludedChildren: 'a, .reorder-btn, .reorder-btn *'
+                },
                 columnDefs: [
                     { orderable: false, searchable: false, targets: [2, 4] } // Child Items, Actions
                 ],
@@ -336,9 +346,22 @@ const itemsModule = (function() {
                 }
             });
 
-            // Handle row reordering
+            // Handle row reordering (drag-and-drop)
             ITEM_LIST.on('row-reordered', async (e, reordered_items) => {
                 await reorderModule.reorder_items(e, reordered_items);
+            });
+
+            // Phase 4 — wire keyboard reorder buttons (Move up / Move down).
+            // Idempotent via dataset flag; safe to call after each redraw.
+            // Sets initial boundary-button states so the first row's
+            // Move up and the last row's Move down render disabled.
+            if (typeof reorderModule.attach_keyboard_reorder_handlers === 'function') {
+                reorderModule.attach_keyboard_reorder_handlers('#items');
+            }
+            ITEM_LIST.on('draw', () => {
+                if (typeof reorderModule.update_reorder_button_states === 'function') {
+                    reorderModule.update_reorder_button_states('#items');
+                }
             });
 
             // Use event delegation for publish/suppress buttons (vanilla JS)
@@ -914,6 +937,8 @@ const itemsModule = (function() {
             delete_html = `
                     <a class="dropdown-item text-muted disabled"
                        href="#"
+                       aria-disabled="true"
+                       tabindex="-1"
                        style="font-size: 0.875rem; pointer-events: none; opacity: 0.5;"
                        title="Can only delete if unpublished">
                         <i class="fa fa-trash mr-2" aria-hidden="true" style="width: 16px;"></i>

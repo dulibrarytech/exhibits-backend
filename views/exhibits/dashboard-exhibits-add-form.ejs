@@ -3,7 +3,8 @@
 <%- include('../partials/nav-dashboard'); %>
 <div id="right-panel" class="right-panel">
     <%- include('../partials/main-header.ejs'); %>
-    <div class="content" style="min-height: 875px;">
+    <main id="main" class="content" tabindex="-1">
+        <h1 class="visually-hidden">Add exhibit</h1>
         <div id="message"></div>
         <!-- exhibit data card -->
         <%- include('partials/exhibit-data-card.ejs'); %>
@@ -16,14 +17,14 @@
                     <div class="col-6 col-md-6">
                         <div id="hero-image-display" class="media-preview-area">
                             <div class="media-placeholder">
-                                <i class="fa fa-picture-o"></i>
+                                <i class="fa fa-picture-o" aria-hidden="true"></i>
                                 <span>No image selected</span>
                             </div>
                         </div>
                         <p>
                             <span id="hero-image-filename-display"></span>&nbsp;&nbsp;
                             <span><a id="hero-trash" title="Remove hero image" href="#"
-                                     style="display:none"><i class="fa fa-trash"></i></a></span>
+                                     style="display:none"><i class="fa fa-trash" aria-hidden="true"></i></a></span>
                         </p>
                         <input type="hidden" id="hero-image" name="hero_image">
                         <input type="hidden" id="hero-image-media-uuid" name="hero_image_media_uuid">
@@ -32,20 +33,20 @@
                                 id="pick-hero-image-btn"
                                 data-media-role="hero_image"
                                 data-media-type-filter="image">
-                            <i class="fa fa-picture-o"></i>&nbsp;Select Hero Image
+                            <i class="fa fa-picture-o" aria-hidden="true"></i>&nbsp;Select Hero Image
                         </button>
                     </div>
                     <div class="col-6 col-md-6">
                         <div id="thumbnail-image-display" class="media-preview-area">
                             <div class="media-placeholder">
-                                <i class="fa fa-picture-o"></i>
+                                <i class="fa fa-picture-o" aria-hidden="true"></i>
                                 <span>No image selected</span>
                             </div>
                         </div>
                         <p>
                             <span id="thumbnail-filename-display"></span>&nbsp;&nbsp;
                             <span><a id="thumbnail-trash" title="Remove thumbnail" href="#"
-                                     style="display:none"><i class="fa fa-trash"></i></a></span>
+                                     style="display:none"><i class="fa fa-trash" aria-hidden="true"></i></a></span>
                         </p>
                         <input type="hidden" id="thumbnail-image" name="thumbnail">
                         <input type="hidden" id="thumbnail-media-uuid" name="thumbnail_media_uuid">
@@ -54,7 +55,7 @@
                                 id="pick-thumbnail-btn"
                                 data-media-role="thumbnail"
                                 data-media-type-filter="image">
-                            <i class="fa fa-picture-o"></i>&nbsp;Select Thumbnail
+                            <i class="fa fa-picture-o" aria-hidden="true"></i>&nbsp;Select Thumbnail
                         </button>
                     </div>
                 </div>
@@ -69,12 +70,12 @@
                 <input type="hidden" name="exhibit_template" id="exhibit-template"
                        value="vertical_scroll"/>
                 <button class="btn btn-primary" type="button" id="save-exhibit-btn">
-                    <i class="fa fa-save"></i>&nbsp;&nbsp;Save
+                    <i class="fa fa-save" aria-hidden="true"></i>&nbsp;&nbsp;Save
                 </button>
             </div>
             <div class="card-footer text-muted"><small>Exhibit</small></div>
         </div>
-    </div>
+    </main>
     <div class="clearfix"></div>
     <%- include('../partials/footer.ejs'); %>
     <%- include('../partials/preview-html-modal.ejs'); %>

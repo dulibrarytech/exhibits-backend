@@ -9,9 +9,10 @@
 </aside>
 <div id="right-panel" class="right-panel">
     <%- include('partials/main-header.ejs'); %>
-    <div class="content" style="min-height: 875px;">
+    <main id="main" class="content" tabindex="-1">
+        <h1 class="visually-hidden">Logged out</h1>
         <div class="alert alert-primary" role="alert">Logging off...</div>
-    </div>
+    </main>
     <div class="clearfix"></div>
     <%- include('partials/footer.ejs'); %>
 </div>

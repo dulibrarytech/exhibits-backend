@@ -77,50 +77,13 @@ const reorderModule = (function () {
                 return false;
             }
 
-            const EXHIBITS_ENDPOINTS = endpointsModule.get_exhibits_endpoints();
-
-            if (!EXHIBITS_ENDPOINTS?.exhibits?.reorder_records?.post?.endpoint) {
-                throw new Error('Reorder endpoint not configured');
-            }
-
-            const exhibit_id = helperModule.get_parameter_by_name('exhibit_id');
-
-            if (!exhibit_id) {
-                throw new Error('Exhibit ID not found in URL');
-            }
-
-            const token = authModule.get_user_token();
-
-            if (!token || token === false) {
-                throw new Error('Not authenticated - please log in again');
-            }
-
             const updated_order = build_reorder_array(reordered_items, grid_id);
 
             if (!updated_order || updated_order.length === 0) {
                 throw new Error(`Failed to build ${is_grid ? 'grid ' : ''}reorder data`);
             }
 
-            const endpoint = EXHIBITS_ENDPOINTS.exhibits.reorder_records.post.endpoint
-                .replace(':exhibit_id', encodeURIComponent(exhibit_id));
-
-            const response = await httpModule.req({
-                method: 'POST',
-                url: endpoint,
-                data: updated_order,
-                headers: {
-                    'Content-Type': 'application/json',
-                    'x-access-token': token
-                },
-                timeout: 30000
-            });
-
-            if (response && response.status === 200) {
-                console.debug(`${is_grid ? 'Grid items' : 'Items'} reordered successfully`);
-                return true;
-            } else {
-                throw new Error(`Failed to reorder ${label} - server returned an error`);
-            }
+            return await _apply_reorder_post(updated_order, label);
 
         } catch (error) {
             console.error(`Error reordering ${label}:`, error);
@@ -132,6 +95,58 @@ const reorderModule = (function () {
 
             return false;
         }
+    }
+
+    /**
+     * POSTs a pre-built reorder array to the reorder endpoint. Shared by
+     * the drag flow (_reorder above) and the keyboard flow
+     * (_apply_keyboard_move below). Endpoint resolution and authentication
+     * checks live here so both call sites stay in sync.
+     *
+     * @param {Array<Object>} updated_order - {uuid, type, order [, grid_id]} entries
+     * @param {string}        label         - "items" or "grid items" for log/error text
+     * @returns {Promise<boolean>}
+     */
+    async function _apply_reorder_post(updated_order, label) {
+
+        const EXHIBITS_ENDPOINTS = endpointsModule.get_exhibits_endpoints();
+
+        if (!EXHIBITS_ENDPOINTS?.exhibits?.reorder_records?.post?.endpoint) {
+            throw new Error('Reorder endpoint not configured');
+        }
+
+        const exhibit_id = helperModule.get_parameter_by_name('exhibit_id');
+
+        if (!exhibit_id) {
+            throw new Error('Exhibit ID not found in URL');
+        }
+
+        const token = authModule.get_user_token();
+
+        if (!token || token === false) {
+            throw new Error('Not authenticated - please log in again');
+        }
+
+        const endpoint = EXHIBITS_ENDPOINTS.exhibits.reorder_records.post.endpoint
+            .replace(':exhibit_id', encodeURIComponent(exhibit_id));
+
+        const response = await httpModule.req({
+            method: 'POST',
+            url: endpoint,
+            data: updated_order,
+            headers: {
+                'Content-Type': 'application/json',
+                'x-access-token': token
+            },
+            timeout: 30000
+        });
+
+        if (response && response.status === 200) {
+            console.debug(`${label} reordered successfully`);
+            return true;
+        }
+
+        throw new Error(`Failed to reorder ${label} - server returned an error`);
     }
 
     /**
@@ -341,6 +356,312 @@ const reorderModule = (function () {
 
         element.appendChild(alert_div);
     }
+
+    /* ═══════════════════════════════════════════════════════════════════
+       Phase 4 — Keyboard reorder API (WCAG 2.1.1 + 2.5.7)
+
+       DataTables RowReorder is mouse-drag only. Keyboard users get
+       per-row Move up / Move down buttons that mutate the DOM, build a
+       reorder array from the new order, POST it via the same endpoint
+       the drag flow uses, refocus the moved button, and announce the
+       move via a polite live region.
+       ═══════════════════════════════════════════════════════════════════ */
+
+    /**
+     * Build a reorder array from the current DOM order of <tr> nodes.
+     * After move_row_up / move_row_down swaps adjacent rows in the DOM,
+     * each row's NEW order number is its 1-based position in the tbody;
+     * each row's id encodes the uuid + type the way build_reorder_array
+     * expects.
+     *
+     * @param {NodeList|Array<HTMLTableRowElement>} rows
+     * @param {string|null} grid_id
+     * @returns {Array<Object>} reorder entries
+     */
+    function build_reorder_array_from_dom(rows, grid_id) {
+
+        const is_grid = grid_id != null;
+        const updated_order = [];
+
+        for (let i = 0; i < rows.length; i++) {
+            const node = rows[i];
+            const id = node && node.getAttribute ? node.getAttribute('id') : null;
+
+            if (!id) {
+                continue;
+            }
+
+            const order_number = i + 1;
+
+            if (is_grid) {
+                const uuid = parse_grid_item_id(id);
+                if (!uuid) continue;
+                updated_order.push({ grid_id: grid_id, uuid: uuid, type: 'griditem', order: order_number });
+            } else {
+                const parsed = parse_item_id(id);
+                if (!parsed) continue;
+                updated_order.push({ uuid: parsed.uuid, type: parsed.type, order: order_number });
+            }
+        }
+
+        return updated_order;
+    }
+
+    /**
+     * Update the visible order-number text inside each row's .item-order
+     * cell to match its 1-based DOM position. Keeps the visual order
+     * column in sync with the new sequence after a keyboard move.
+     */
+    function refresh_order_numbers(rows) {
+        for (let i = 0; i < rows.length; i++) {
+            const node = rows[i];
+            if (!node) continue;
+            const order_cell = node.querySelector('.item-order');
+            if (!order_cell) continue;
+            const order_span = order_cell.querySelector('span[data-role="order-number"]')
+                || order_cell.querySelector('span');
+            if (order_span) {
+                order_span.textContent = String(i + 1);
+                order_span.setAttribute('aria-label', `Item order ${i + 1}`);
+            }
+        }
+    }
+
+    /**
+     * Sweep the rows and toggle disabled/aria-disabled on the move-up
+     * button of the first row and the move-down button of the last row.
+     * Also refreshes the buttons' aria-label to reflect the new
+     * "position N of M" context after a move.
+     */
+    obj.update_reorder_button_states = function (table_selector) {
+
+        const tbody = document.querySelector(`${table_selector} tbody`);
+        if (!tbody) return;
+
+        const rows = tbody.querySelectorAll('tr');
+        const total = rows.length;
+
+        // Apply disabled state to a move button. Phase 5b': handles both
+        // the original .btn-link form (the disabled DOM attribute alone
+        // is enough) and the dropdown-item form, which Bootstrap styles
+        // via the .disabled class.
+        const set_state = (btn, is_disabled) => {
+            if (!btn) return;
+            btn.disabled = is_disabled;
+            btn.classList.toggle('disabled', is_disabled);
+            btn.setAttribute('aria-disabled', is_disabled ? 'true' : 'false');
+            if (is_disabled) {
+                btn.setAttribute('tabindex', '-1');
+            } else {
+                btn.removeAttribute('tabindex');
+            }
+        };
+
+        for (let i = 0; i < rows.length; i++) {
+            const row = rows[i];
+            const up = row.querySelector('[data-action="move-up"]');
+            const down = row.querySelector('[data-action="move-down"]');
+            set_state(up, i === 0);
+            set_state(down, i === total - 1);
+        }
+    };
+
+    /**
+     * Announce a move via the page's polite live region. The list-page
+     * templates ship with <div id="reorder-status" class="visually-hidden"
+     * role="status" aria-live="polite"></div>; the textContent is
+     * replaced on each call so screen readers re-announce.
+     */
+    function announce(message) {
+        const region = document.getElementById('reorder-status');
+        if (!region) return;
+        // Force a re-announcement when the same text fires twice in a
+        // row by clearing first.
+        region.textContent = '';
+        // Defer one tick so the live region observer picks up the change.
+        setTimeout(() => { region.textContent = message; }, 16);
+    }
+
+    /**
+     * Resolve the row title for an aria announcement. Looks for a
+     * .item-title element; falls back to the row's id.
+     */
+    function read_row_title(row) {
+        if (!row) return '';
+        const title_el = row.querySelector('.item-title, [data-role="row-title"]');
+        if (title_el && title_el.textContent) {
+            return title_el.textContent.trim();
+        }
+        const id = row.getAttribute && row.getAttribute('id');
+        return id ? `row ${id}` : 'row';
+    }
+
+    /**
+     * Move the row containing `trigger_button` one position up or down
+     * in its tbody, POST the new order, refresh visual order numbers,
+     * refocus the same button on its new row (or the still-enabled
+     * sibling at the new boundary), and announce the move.
+     *
+     * @param {HTMLButtonElement} trigger_button - the move-up / move-down button
+     * @param {('up'|'down')}     direction
+     * @param {Object}            [opts]
+     * @param {string|null}       [opts.grid_id] - explicit grid_id (else read from URL)
+     * @param {string}            [opts.table_selector] - "#items" or "#grid-items"
+     * @returns {Promise<boolean>}
+     */
+    async function _apply_keyboard_move(trigger_button, direction, opts) {
+
+        if (!trigger_button) return false;
+        if (trigger_button.disabled || trigger_button.getAttribute('aria-disabled') === 'true') {
+            return false;
+        }
+
+        const row = trigger_button.closest('tr');
+        if (!row || !row.parentNode) return false;
+
+        const tbody = row.parentNode;
+        const all_rows = Array.from(tbody.querySelectorAll('tr'));
+        const idx = all_rows.indexOf(row);
+        const total = all_rows.length;
+
+        if (idx === -1) return false;
+        if (direction === 'up' && idx === 0) return false;
+        if (direction === 'down' && idx === total - 1) return false;
+
+        const sibling = direction === 'up' ? all_rows[idx - 1] : all_rows[idx + 1];
+        const new_idx = direction === 'up' ? idx - 1 : idx + 1;
+
+        // Snapshot for rollback if POST fails.
+        const next_sibling_before = row.nextSibling;
+        const sibling_next_before = sibling.nextSibling;
+
+        // Swap rows in the DOM.
+        if (direction === 'up') {
+            tbody.insertBefore(row, sibling);
+        } else {
+            tbody.insertBefore(sibling, row);
+        }
+
+        const opt = opts || {};
+        const explicit_grid_id = Object.prototype.hasOwnProperty.call(opt, 'grid_id') ? opt.grid_id : null;
+        const url_grid_id = helperModule && typeof helperModule.get_parameter_by_name === 'function'
+            ? helperModule.get_parameter_by_name('grid_id')
+            : null;
+        const grid_id = explicit_grid_id || url_grid_id || null;
+        const label = grid_id ? 'grid items' : 'items';
+        const table_selector = opt.table_selector || (grid_id ? '#grid-items' : '#items');
+
+        const updated_rows = Array.from(tbody.querySelectorAll('tr'));
+        const updated_order = build_reorder_array_from_dom(updated_rows, grid_id);
+
+        try {
+            const ok = await _apply_reorder_post(updated_order, label);
+            if (!ok) throw new Error(`Failed to reorder ${label}`);
+        } catch (error) {
+            // Roll back the DOM swap so the visible order matches the server.
+            if (direction === 'up') {
+                if (next_sibling_before) {
+                    tbody.insertBefore(row, next_sibling_before);
+                } else {
+                    tbody.appendChild(row);
+                }
+            } else {
+                if (sibling_next_before) {
+                    tbody.insertBefore(sibling, sibling_next_before);
+                } else {
+                    tbody.appendChild(sibling);
+                }
+            }
+            const message_element = document.querySelector('#message');
+            if (message_element) {
+                display_error_message(message_element, error.message || `An error occurred while reordering ${label}`);
+            }
+            return false;
+        }
+
+        // Update visible order numbers and boundary button states.
+        const final_rows = Array.from(tbody.querySelectorAll('tr'));
+        refresh_order_numbers(final_rows);
+        obj.update_reorder_button_states(table_selector);
+
+        // Refocus contract: same button on the new row, falling back to
+        // the still-enabled sibling if we landed at a boundary.
+        const moved_row = final_rows[new_idx];
+        const target_action = direction === 'up' ? 'move-up' : 'move-down';
+        let next_focus = moved_row && moved_row.querySelector(`[data-action="${target_action}"]`);
+        if (next_focus && next_focus.disabled) {
+            const fallback_action = direction === 'up' ? 'move-down' : 'move-up';
+            next_focus = moved_row.querySelector(`[data-action="${fallback_action}"]`);
+        }
+        if (next_focus && typeof next_focus.focus === 'function') {
+            next_focus.focus();
+        }
+
+        // Announce.
+        const title = read_row_title(moved_row);
+        announce(`Moved ${title} to position ${new_idx + 1} of ${total}`);
+
+        return true;
+    }
+
+    /**
+     * Public: move the row containing `trigger_button` up by one.
+     * @param {HTMLButtonElement} trigger_button
+     * @param {Object} [opts] - { grid_id, table_selector }
+     */
+    obj.move_row_up = function (trigger_button, opts) {
+        return _apply_keyboard_move(trigger_button, 'up', opts);
+    };
+
+    /**
+     * Public: move the row containing `trigger_button` down by one.
+     * @param {HTMLButtonElement} trigger_button
+     * @param {Object} [opts] - { grid_id, table_selector }
+     */
+    obj.move_row_down = function (trigger_button, opts) {
+        return _apply_keyboard_move(trigger_button, 'down', opts);
+    };
+
+    /**
+     * Wire delegated click handlers on a table for
+     * [data-action="move-up"] and [data-action="move-down"]. Idempotent
+     * via dataset flag — safe to call after every DataTable redraw.
+     *
+     * @param {string} table_selector - e.g. "#items" or "#grid-items"
+     * @param {Object} [opts] - { grid_id }
+     */
+    obj.attach_keyboard_reorder_handlers = function (table_selector, opts) {
+
+        const tbody = document.querySelector(`${table_selector} tbody`);
+        if (!tbody) return;
+
+        if (tbody.dataset.keyboardReorderInitialized === '1') {
+            // Refresh boundary states even when re-called (post-redraw).
+            obj.update_reorder_button_states(table_selector);
+            return;
+        }
+
+        tbody.dataset.keyboardReorderInitialized = '1';
+
+        tbody.addEventListener('click', async (event) => {
+            const btn = event.target.closest('[data-action="move-up"], [data-action="move-down"]');
+            if (!btn || !tbody.contains(btn)) return;
+
+            // Don't let DataTables RowReorder interpret this as a drag.
+            // (The pointerdown/mousedown stoppers in items.list.displays.module.js
+            // create_order_cell prevent RowReorder from initiating drag tracking
+            // in the first place; this is a belt-and-suspenders guard.)
+            event.preventDefault();
+            event.stopPropagation();
+
+            const direction = btn.getAttribute('data-action') === 'move-up' ? 'up' : 'down';
+            const merged_opts = Object.assign({ table_selector: table_selector }, opts || {});
+            await _apply_keyboard_move(btn, direction, merged_opts);
+        });
+
+        // Initial boundary-state pass.
+        obj.update_reorder_button_states(table_selector);
+    };
 
     return obj;
 

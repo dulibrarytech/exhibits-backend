@@ -3,7 +3,7 @@
 <%- include('../partials/nav-dashboard'); %>
 <div id="right-panel" class="right-panel">
     <%- include('../partials/main-header.ejs'); %>
-    <div class="content" style="min-height: 875px;">
+    <main id="main" class="content" tabindex="-1">
         <div id="message"></div>
         <h1><span id="exhibit-title"></span></h1>
         <!-- exhibit data card -->
@@ -17,14 +17,14 @@
                     <div class="col-6 col-md-6">
                         <div id="hero-image-display" class="media-preview-area">
                             <div class="media-placeholder">
-                                <i class="fa fa-picture-o"></i>
+                                <i class="fa fa-picture-o" aria-hidden="true"></i>
                                 <span>No image selected</span>
                             </div>
                         </div>
                         <p>
                             <span id="hero-image-filename-display"></span>&nbsp;&nbsp;
                             <span><a id="hero-trash" title="Remove hero image" href="#"
-                                     style="display:none"><i class="fa fa-trash"></i></a></span>
+                                     style="display:none"><i class="fa fa-trash" aria-hidden="true"></i></a></span>
                         </p>
                         <input type="hidden" id="hero-image" name="hero_image">
                         <input type="hidden" id="hero-image-prev" name="hero_image-prev">
@@ -34,23 +34,23 @@
                                 id="pick-hero-image-btn"
                                 data-media-role="hero_image"
                                 data-media-type-filter="image">
-                            <i class="fa fa-picture-o"></i>&nbsp;Select Hero Image
+                            <i class="fa fa-picture-o" aria-hidden="true"></i>&nbsp;Select Hero Image
                         </button>
                         <small id="hero-legacy-migrate" class="form-text text-muted" style="display:none">
-                            <i class="fa fa-info-circle"></i> Using legacy file. Select a media library asset to migrate.
+                            <i class="fa fa-info-circle" aria-hidden="true"></i> Using legacy file. Select a media library asset to migrate.
                         </small>
                     </div>
                     <div class="col-6 col-md-6">
                         <div id="thumbnail-image-display" class="media-preview-area">
                             <div class="media-placeholder">
-                                <i class="fa fa-picture-o"></i>
+                                <i class="fa fa-picture-o" aria-hidden="true"></i>
                                 <span>No image selected</span>
                             </div>
                         </div>
                         <p>
                             <span id="thumbnail-filename-display"></span>&nbsp;&nbsp;
                             <span><a id="thumbnail-trash" title="Remove thumbnail" href="#"
-                                     style="display:none"><i class="fa fa-trash"></i></a></span>
+                                     style="display:none"><i class="fa fa-trash" aria-hidden="true"></i></a></span>
                         </p>
                         <input type="hidden" id="thumbnail-image" name="thumbnail">
                         <input type="hidden" id="thumbnail-image-prev" name="thumbnail-prev">
@@ -60,10 +60,10 @@
                                 id="pick-thumbnail-btn"
                                 data-media-role="thumbnail"
                                 data-media-type-filter="image">
-                            <i class="fa fa-picture-o"></i>&nbsp;Select Thumbnail
+                            <i class="fa fa-picture-o" aria-hidden="true"></i>&nbsp;Select Thumbnail
                         </button>
                         <small id="thumbnail-legacy-migrate" class="form-text text-muted" style="display:none">
-                            <i class="fa fa-info-circle"></i> Using legacy file. Select a media library asset to migrate.
+                            <i class="fa fa-info-circle" aria-hidden="true"></i> Using legacy file. Select a media library asset to migrate.
                         </small>
                     </div>
                 </div>
@@ -80,15 +80,15 @@
                 <input type="hidden" name="exhibit_template" id="exhibit-template"
                        value="vertical_scroll"/>
                 <button class="btn btn-primary" type="button" id="save-exhibit-btn">
-                    <i class="fa fa-save"></i>&nbsp;&nbsp;Save
+                    <i class="fa fa-save" aria-hidden="true"></i>&nbsp;&nbsp;Save
                 </button>
                 <button class="btn btn-outline-secondary ms-2" type="button" id="cancel-exhibit-btn">
-                    <i class="fa fa-times"></i>&nbsp;&nbsp;Cancel
+                    <i class="fa fa-times" aria-hidden="true"></i>&nbsp;&nbsp;Cancel
                 </button>
             </div>
             <div class="card-footer text-muted"><small>Exhibit</small></div>
         </div>
-    </div>
+    </main>
     <div class="clearfix"></div>
     <%- include('../partials/footer.ejs'); %>
     <%- include('../partials/preview-html-modal.ejs'); %>

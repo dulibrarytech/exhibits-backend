@@ -348,6 +348,15 @@ const domModule = (function () {
      * first argument so callers that already hold a reference avoid a second
      * querySelector call.
      *
+     * Accessibility (WCAG 4.1.3 Status Messages):
+     * The inserted alert element carries the live-region semantics so it is
+     * announced regardless of how the surrounding container is wired in
+     * markup. Severity is mapped to politeness:
+     *   danger / warning -> aria-live="assertive" (interrupts SR speech)
+     *   success / info   -> aria-live="polite"    (queued behind current speech)
+     * aria-atomic="true" ensures the entire alert is read on each insertion
+     * even when the same container is reused with a new message.
+     *
      * @param {string|Element} target  - CSS selector or DOM element
      * @param {string}         type    - Bootstrap context: 'danger'|'warning'|'success'|'info'
      * @param {string}         message - Plain-text message (never inserted as HTML)
@@ -363,6 +372,13 @@ const domModule = (function () {
             info:    'fa-info-circle'
         };
 
+        const live_map = {
+            danger:  'assertive',
+            warning: 'assertive',
+            success: 'polite',
+            info:    'polite'
+        };
+
         while (el.firstChild) {
             el.removeChild(el.firstChild);
         }
@@ -370,6 +386,8 @@ const domModule = (function () {
         const alert_div = document.createElement('div');
         alert_div.className = 'alert alert-' + (type || 'danger');
         alert_div.setAttribute('role', 'alert');
+        alert_div.setAttribute('aria-live', live_map[type] || 'assertive');
+        alert_div.setAttribute('aria-atomic', 'true');
 
         const icon = document.createElement('i');
         icon.className = 'fa ' + (icon_map[type] || 'fa-exclamation-circle');
@@ -378,6 +396,95 @@ const domModule = (function () {
         alert_div.appendChild(document.createTextNode(' ' + (message || '')));
 
         el.appendChild(alert_div);
+    };
+
+    /**
+     * Marks a form field as invalid and associates a programmatic error
+     * message with it. Idempotent: calling it twice with the same field +
+     * message_id replaces the existing message in place.
+     *
+     * Accessibility (WCAG 3.3.1 Error Identification, 3.3.3 Error Suggestion,
+     * 4.1.2 Name, Role, Value):
+     *   - Sets aria-invalid="true" on the field so screen readers announce
+     *     the invalid state when focus enters the input.
+     *   - Inserts (or updates) a sibling <div role="alert"> with the message
+     *     and the supplied id. The id is appended to the field's
+     *     aria-describedby so the message is announced after the label.
+     *   - Existing aria-describedby tokens are preserved (Bootstrap form-text
+     *     hints, etc.); duplicates are deduplicated.
+     *
+     * Phase 3 forms call this from their validation pipelines; the page-level
+     * set_alert summary call remains for cross-field / submission errors.
+     *
+     * @param {string|Element} target     - field selector or element
+     * @param {string}         message_id - unique DOM id for the message node
+     * @param {string}         message    - plain-text error message
+     */
+    obj.set_field_error = function(target, message_id, message) {
+        const field = (typeof target === 'string') ? document.querySelector(target) : target;
+        if (!field || !message_id) return;
+
+        field.setAttribute('aria-invalid', 'true');
+
+        // Insert or update the message node. Place it as the next sibling
+        // of the field so it stays inside the same .form-group when one
+        // exists; callers needing a different anchor can pre-create the
+        // node with the message_id and we'll just update its text.
+        let msg = document.getElementById(message_id);
+        if (!msg) {
+            msg = document.createElement('div');
+            msg.id = message_id;
+            msg.className = 'invalid-feedback d-block';
+            msg.setAttribute('role', 'alert');
+            if (field.parentNode) {
+                if (field.nextSibling) {
+                    field.parentNode.insertBefore(msg, field.nextSibling);
+                } else {
+                    field.parentNode.appendChild(msg);
+                }
+            }
+        }
+        msg.textContent = message == null ? '' : String(message);
+
+        // Append message_id to aria-describedby without clobbering existing
+        // tokens (e.g. Bootstrap form-text hint ids).
+        const existing = (field.getAttribute('aria-describedby') || '')
+            .split(/\s+/).filter(Boolean);
+        if (existing.indexOf(message_id) === -1) {
+            existing.push(message_id);
+        }
+        field.setAttribute('aria-describedby', existing.join(' '));
+    };
+
+    /**
+     * Clears the invalid state and message previously set by set_field_error.
+     * Safe to call when no error is currently set. Removes the message_id
+     * token from aria-describedby (preserving any other tokens) and removes
+     * the message node from the DOM.
+     *
+     * @param {string|Element} target     - field selector or element
+     * @param {string}         message_id - id used in the matching set_field_error call
+     */
+    obj.clear_field_error = function(target, message_id) {
+        const field = (typeof target === 'string') ? document.querySelector(target) : target;
+        if (!field) return;
+
+        field.removeAttribute('aria-invalid');
+
+        if (message_id) {
+            const tokens = (field.getAttribute('aria-describedby') || '')
+                .split(/\s+/).filter(function (t) { return t && t !== message_id; });
+            if (tokens.length) {
+                field.setAttribute('aria-describedby', tokens.join(' '));
+            } else {
+                field.removeAttribute('aria-describedby');
+            }
+
+            const msg = document.getElementById(message_id);
+            if (msg && msg.parentNode) {
+                msg.parentNode.removeChild(msg);
+            }
+        }
     };
 
     /**

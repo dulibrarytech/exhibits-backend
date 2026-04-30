@@ -110,7 +110,14 @@ describe('itemsCommonGridItemFormModule', () => {
             },
             get_parameter_by_name: () => null,
         };
-        globalThis.domModule = { set_alert: vi.fn() };
+        // Phase 3b added set_field_error / clear_field_error calls
+        // alongside the existing set_alert summary, so the form-fields
+        // method can wire aria-invalid + aria-describedby. Stub all three.
+        globalThis.domModule = {
+            set_alert: vi.fn(),
+            set_field_error: vi.fn(),
+            clear_field_error: vi.fn(),
+        };
 
         navigate('/');
         build_form();

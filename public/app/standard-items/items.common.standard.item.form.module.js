@@ -665,19 +665,34 @@ const itemsCommonStandardItemFormModule = (function () {
                 return el?.value?.trim() ?? defaultValue;
             };
 
-            const showError = (message) => {
+            // Phase 3b — showError now optionally accepts a field
+            // selector. When provided, the message is associated with
+            // the field via domModule.set_field_error (aria-invalid +
+            // aria-describedby) in addition to the page-level alert.
+            const showError = (message, field_selector) => {
                 const messageEl = document.querySelector('#message');
                 if (messageEl) {
                     domModule.set_alert(messageEl, 'danger', message);
                 }
+                if (field_selector) {
+                    const error_id = field_selector.replace('#', '') + '-error';
+                    domModule.set_field_error(field_selector, error_id, message);
+                }
             };
+
+            // Phase 3b — clear any prior field-level error state from a
+            // previous submission so the now-valid fields lose their
+            // aria-invalid="true" and the stale message is removed.
+            ['#item-text-input', '#item-media-uuid'].forEach(s => {
+                domModule.clear_field_error(s, s.replace('#', '') + '-error');
+            });
 
             // Get item metadata
             item.text = getElementValue('#item-text-input');
 
             // Validate text content for text paths
             if (isTextPath && item.text.length === 0) {
-                showError('Please enter "Text" for this item');
+                showError('Please enter "Text" for this item', '#item-text-input');
                 return false;
             }
 
@@ -714,7 +729,7 @@ const itemsCommonStandardItemFormModule = (function () {
 
                 // Validate media content
                 if (!item.media_uuid) {
-                    showError('Please select a media item');
+                    showError('Please select a media item', '#item-media-uuid');
                     return false;
                 }
 

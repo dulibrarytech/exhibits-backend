@@ -3,7 +3,7 @@
 <%- include('../partials/nav-dashboard'); %>
 <div id="right-panel" class="right-panel">
     <%- include('../partials/main-header.ejs'); %>
-    <div class="content" style="min-height: 875px;">
+    <main id="main" class="content" tabindex="-1">
         <div id="message"></div>
         <h1><span id="exhibit-title"></span> - Media Item</h1>
         <%- include('partials/item-data-card.ejs'); %>
@@ -17,14 +17,14 @@
                     <div class="col-6 col-md-6">
                         <div id="item-media-display" class="media-preview-area">
                             <div class="media-placeholder">
-                                <i class="fa fa-file-o"></i>
+                                <i class="fa fa-file-o" aria-hidden="true"></i>
                                 <span>No media selected</span>
                             </div>
                         </div>
                         <p>
                             <span id="item-media-filename-display"></span>&nbsp;&nbsp;
                             <span><a id="item-media-trash" title="Remove media" href="#"
-                                     style="display:none"><i class="fa fa-trash"></i></a></span>
+                                     style="display:none"><i class="fa fa-trash" aria-hidden="true"></i></a></span>
                         </p>
                         <input type="hidden" id="item-media-uuid" name="item_media_uuid">
                         <input type="hidden" id="item-media-uuid-prev" name="item_media_uuid_prev">
@@ -32,27 +32,27 @@
                         <input type="hidden" id="item-mime-type" name="item_mime_type">
                         <button type="button" class="btn btn-outline-primary"
                                 id="pick-item-media-btn">
-                            <i class="fa fa-file-o"></i>&nbsp;Select Media
+                            <i class="fa fa-file-o" aria-hidden="true"></i>&nbsp;Select Media
                         </button>
                     </div>
                     <div class="col-6 col-md-6">
                         <div id="thumbnail-image-display" class="media-preview-area">
                             <div class="media-placeholder">
-                                <i class="fa fa-picture-o"></i>
+                                <i class="fa fa-picture-o" aria-hidden="true"></i>
                                 <span>No image selected</span>
                             </div>
                         </div>
                         <p>
                             <span id="thumbnail-filename-display"></span>&nbsp;&nbsp;
                             <span><a id="thumbnail-trash" title="Remove thumbnail" href="#"
-                                     style="display:none"><i class="fa fa-trash"></i></a></span>
+                                     style="display:none"><i class="fa fa-trash" aria-hidden="true"></i></a></span>
                         </p>
                         <input type="hidden" id="thumbnail-media-uuid" name="thumbnail_media_uuid">
                         <input type="hidden" id="thumbnail-media-uuid-prev" name="thumbnail_media_uuid_prev">
                         <button type="button" class="btn btn-outline-primary"
                                 id="pick-thumbnail-btn"
                                 data-media-type-filter="image">
-                            <i class="fa fa-picture-o"></i>&nbsp;Select Thumbnail
+                            <i class="fa fa-picture-o" aria-hidden="true"></i>&nbsp;Select Thumbnail
                         </button>
                     </div>
                 </div>
@@ -66,7 +66,7 @@
                             </div>
                             <input type="number" class="form-control" id="pdf-open-to-page" min="1" value="1">
                         </div>
-                        <small class="form-text text-muted"><i class="fa fa-exclamation-circle"></i> <em>The viewer will automatically open to the page entered</em></small>
+                        <small class="form-text text-muted"><i class="fa fa-exclamation-circle" aria-hidden="true"></i> <em>The viewer will automatically open to the page entered</em></small>
                     </div>
                 </div>
 
@@ -88,7 +88,7 @@
                 <div class="row">
                     <div class="col-4 col-md-4">
                         <p><img src="/exhibits-dashboard/static/images/item_layout_text_left_media_right.png"
-                                width="135" height="135"></p>
+                                width="135" height="135" alt=""></p>
                         <p>
                             <label class="btn btn-default" for="item-layout-media-right" style="font-size: 14px">Media right, text left
                                 <input type="radio"
@@ -100,7 +100,7 @@
                     </div>
                     <div class="col-4 col-md-4">
                         <p><img src="/exhibits-dashboard/static/images/item_layout_media_top_text_bottom.png"
-                                width="135" height="135"></p>
+                                width="135" height="135" alt=""></p>
                         <p>
                             <label class="btn btn-default" for="item-layout-media-top" style="font-size: 14px">Media top, text below
                                 <input type="radio"
@@ -112,7 +112,7 @@
                     </div>
                     <div class="col-4 col-md-4">
                         <p><img src="/exhibits-dashboard/static/images/item_layout_text_top_media_bottom.png"
-                                width="135" height="135"></p>
+                                width="135" height="135" alt=""></p>
                         <p>
                             <label class="btn btn-default" for="item-layout-media-bottom" style="font-size: 14px">Text top, media below
                                 <input type="radio"
@@ -126,7 +126,7 @@
                 <div class="row">
                     <div class="col-4 col-md-4">
                         <p><img src="/exhibits-dashboard/static/images/item_layout_media_only.png"
-                                width="135" height="135"></p>
+                                width="135" height="135" alt=""></p>
                         <p>
                             <label class="btn btn-default" for="item-layout-media-only" style="font-size: 14px">Media only
                                 <input type="radio"
@@ -138,7 +138,7 @@
                     </div>
                     <div class="col-4 col-md-4">
                         <p><img src="/exhibits-dashboard/static/images/item_layout_media_left_text_right.png"
-                                width="135" height="135"></p>
+                                width="135" height="135" alt=""></p>
                         <p>
                             <label class="btn btn-default" for="item-layout-media-left" style="font-size: 14px">Media left, text right
                                 <input type="radio"
@@ -163,12 +163,12 @@
         <div id="item-submit-card" class="card">
             <div class="card-body">
                 <button class="btn btn-primary" type="button" id="save-item-btn">
-                    <i class="fa fa-save"></i>&nbsp;&nbsp;Save
+                    <i class="fa fa-save" aria-hidden="true"></i>&nbsp;&nbsp;Save
                 </button>
             </div>
             <div class="card-footer text-muted"><small>Item</small></div>
         </div>
-    </div>
+    </main>
     <div class="clearfix"></div>
     <%- include('../partials/footer.ejs'); %>
     <%- include('../partials/preview-html-modal.ejs'); %>

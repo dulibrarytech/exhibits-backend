@@ -51,8 +51,15 @@ describe('itemsCommonStandardGridFormModule', () => {
         vi.spyOn(console, 'warn').mockImplementation(() => {});
         vi.spyOn(console, 'error').mockImplementation(() => {});
         // The methods reach for domModule.set_alert when reporting validation
-        // failures. Stubbed per-test so we can assert calls.
-        globalThis.domModule = { set_alert: vi.fn() };
+        // failures, and for set_field_error / clear_field_error (added in
+        // Phase 3b) to associate the error message with the offending input
+        // via aria-invalid + aria-describedby. All stubbed per-test so we
+        // can assert calls.
+        globalThis.domModule = {
+            set_alert: vi.fn(),
+            set_field_error: vi.fn(),
+            clear_field_error: vi.fn(),
+        };
         build_form();
     });
 

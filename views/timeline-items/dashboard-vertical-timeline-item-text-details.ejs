@@ -3,7 +3,7 @@
 <%- include('../partials/nav-dashboard.ejs'); %>
 <div id="right-panel" class="right-panel">
     <%- include('../partials/main-header.ejs'); %>
-    <div class="content" style="min-height: 875px;">
+    <main id="main" class="content" tabindex="-1">
         <div id="message"></div>
         <h1><span id="exhibit-title"></span> - Vertical Timeline Text Item</h1>
         <!-- item data card -->
@@ -21,7 +21,7 @@
                             <div class="col-12">
                                 <div class="form-text text-muted" style="font-size: 17px">
                                     Title <small><em>(Optional)</em></small>
-                                    &nbsp;&nbsp;<a onclick="helperModule.preview_html('item-title-input');return false;" data-toggle="modal" data-target=".preview-html" class="btn-xs btn-light"><span style="padding: 5px"><i class="fa fa-code"></i> <small>Preview Field</small></span></a>
+                                    &nbsp;&nbsp;<a onclick="helperModule.preview_html('item-title-input');return false;" data-toggle="modal" data-target=".preview-html" class="btn-xs btn-light"><span style="padding: 5px"><i class="fa fa-code" aria-hidden="true"></i> <small>Preview Field</small></span></a>
                                 </div>
                                 <span id="item-title-error" class="is-error"></span>
                                 <textarea disabled id="item-title-input" class="form-control" name="item_title_input"
@@ -45,7 +45,7 @@
                         <div class="row form-group">
                             <div class="col-12">
                                 <div class="form-text text-muted" style="font-size: 17px">Exhibit Text <small><em>(Optional)</em></small>
-                                    &nbsp;&nbsp;<a onclick="helperModule.preview_html('item-text-input');return false;" data-toggle="modal" data-target=".preview-html" class="btn-xs btn-light"><span style="padding: 5px"><i class="fa fa-code"></i> <small>Preview Field</small></span></a>
+                                    &nbsp;&nbsp;<a onclick="helperModule.preview_html('item-text-input');return false;" data-toggle="modal" data-target=".preview-html" class="btn-xs btn-light"><span style="padding: 5px"><i class="fa fa-code" aria-hidden="true"></i> <small>Preview Field</small></span></a>
                                 </div>
                                 <textarea disabled id="item-text-input" class="form-control" name="item_text_input"
                                           rows="4"></textarea>
@@ -58,7 +58,7 @@
                         <div class="row form-group">
                             <div class="col-12">
                                 <div class="form-text text-muted" style="font-size: 17px">Pop-up Window Description <small><em>(Optional)</em></small>
-                                    &nbsp;&nbsp;<a onclick="helperModule.preview_html('item-description-input');return false;" data-toggle="modal" data-target=".preview-html" class="btn-xs btn-light"><span style="padding: 5px"><i class="fa fa-code"></i> <small>Preview Field</small></span></a>
+                                    &nbsp;&nbsp;<a onclick="helperModule.preview_html('item-description-input');return false;" data-toggle="modal" data-target=".preview-html" class="btn-xs btn-light"><span style="padding: 5px"><i class="fa fa-code" aria-hidden="true"></i> <small>Preview Field</small></span></a>
                                 </div>
                                 <textarea disabled id="item-description-input" class="form-control" name="item_description_input"
                                           rows="4"></textarea>
@@ -72,7 +72,7 @@
                         <div class="row form-group">
                             <div class="col-12">
                                 <div class="form-text text-muted" style="font-size: 17px">Caption <small><em>(Optional)</em></small>
-                                    &nbsp;&nbsp;<a onclick="helperModule.preview_html('item-caption-input');return false;" data-toggle="modal" data-target=".preview-html" class="btn-xs btn-light"><span style="padding: 5px"><i class="fa fa-code"></i> <small>Preview Field</small></span></a>
+                                    &nbsp;&nbsp;<a onclick="helperModule.preview_html('item-caption-input');return false;" data-toggle="modal" data-target=".preview-html" class="btn-xs btn-light"><span style="padding: 5px"><i class="fa fa-code" aria-hidden="true"></i> <small>Preview Field</small></span></a>
                                 </div>
                                 <textarea disabled id="item-caption-input" class="form-control" name="item_caption_input" rows="4"></textarea>
                             </div>
@@ -169,15 +169,15 @@
         <div id="item-submit-card" class="card">
             <div class="card-body">
                 <button class="btn btn-primary" type="button" id="edit-item-btn">
-                    <i class="fa fa-edit"></i>&nbsp;&nbsp;Edit
-                </button>&nbsp;&nbsp;<span class="alert alert-warning"><i class="fa fa-warning"></i> Changes made to published exhibit timeline items are immediately visible to the public</span>
+                    <i class="fa fa-edit" aria-hidden="true"></i>&nbsp;&nbsp;Edit
+                </button>&nbsp;&nbsp;<span class="alert alert-warning"><i class="fa fa-warning" aria-hidden="true"></i> Changes made to published exhibit timeline items are immediately visible to the public</span>
                 <button class="btn btn-primary" type="button" id="save-item-btn" style="visibility: hidden">
-                    <i class="fa fa-save"></i>&nbsp;&nbsp;Save
+                    <i class="fa fa-save" aria-hidden="true"></i>&nbsp;&nbsp;Save
                 </button>
             </div>
             <div class="card-footer text-muted"><small>Vertical Timeline Item</small></div>
         </div>
-    </div>
+    </main>
     <div class="clearfix"></div>
     <%- include('../partials/footer.ejs'); %>
     <%- include('../partials/preview-html-modal.ejs'); %>

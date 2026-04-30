@@ -36,13 +36,21 @@ test.describe('Add Exhibit modal', () => {
 
         await page.click('#save-exhibit-btn');
 
-        // exhibits.common.form.module.js get_common_form_fields() flags the
-        // missing title by adding .is-invalid to #exhibit-title-input and
-        // inserting a .title-validation-feedback div as a sibling. There is
-        // NO alert in #add-exhibit-message on this validation path — that
-        // selector was a guess in the original speculative spec.
-        await expect(page.locator('#exhibit-title-input')).toHaveClass(/is-invalid/);
-        await expect(page.locator('.title-validation-feedback')).toBeVisible();
+        // Phase 3b: exhibits.common.form.module.js now flags a missing
+        // title via domModule.set_field_error, which:
+        //   - adds aria-invalid="true" to #exhibit-title-input
+        //   - inserts <div id="exhibit-title-input-error" role="alert">
+        //     populated with "Title is required"
+        // Bootstrap's `.is-invalid` class is still added for visual styling.
+        // There is NO alert in #add-exhibit-message on this validation path.
+        const titleInput = page.locator('#exhibit-title-input');
+        await expect(titleInput).toHaveClass(/is-invalid/);
+        await expect(titleInput).toHaveAttribute('aria-invalid', 'true');
+
+        const titleError = page.locator('#exhibit-title-input-error');
+        await expect(titleError).toBeVisible();
+        await expect(titleError).toHaveAttribute('role', 'alert');
+        await expect(titleError).toContainText('Title is required');
     });
 
     test('POSTs payload and closes modal on success', async ({ page }) => {

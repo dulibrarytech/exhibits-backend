@@ -38,21 +38,39 @@ const itemsCommonHeadingFormModule = (function () {
                 return el?.value?.trim() ?? default_value;
             };
 
-            const show_error = (message) => {
+            // Phase 3b — show_error now optionally accepts a field
+            // selector. When provided, the message is associated with
+            // the field via domModule.set_field_error (aria-invalid +
+            // aria-describedby) in addition to the page-level alert,
+            // so screen readers announce the error when focus enters
+            // the offending input.
+            const show_error = (message, field_selector) => {
 
                 const message_el = document.querySelector('#message');
 
                 if (message_el) {
                     domModule.set_alert(message_el, 'danger', message);
                 }
+
+                if (field_selector) {
+                    const error_id = field_selector.replace('#', '') + '-error';
+                    domModule.set_field_error(field_selector, error_id, message);
+                }
             };
+
+            // Phase 3b — clear any prior field-level error state from
+            // a previous submission so resubmitting after fixing one
+            // field doesn't leave aria-invalid on the now-valid field.
+            ['#item-heading-text-input', '#item-heading-type-input'].forEach(s => {
+                domModule.clear_field_error(s, s.replace('#', '') + '-error');
+            });
 
             // Get heading text
             item_heading.text = get_element_value('#item-heading-text-input');
 
             // Validate required heading text
             if (!item_heading.text || item_heading.text.length === 0) {
-                show_error('Please enter heading text');
+                show_error('Please enter heading text', '#item-heading-text-input');
                 return false;
             }
 
@@ -61,7 +79,7 @@ const itemsCommonHeadingFormModule = (function () {
 
             // Validate required heading type
             if (!item_heading.type || item_heading.type.length === 0) {
-                show_error('Please select heading type');
+                show_error('Please select heading type', '#item-heading-type-input');
                 return false;
             }
 

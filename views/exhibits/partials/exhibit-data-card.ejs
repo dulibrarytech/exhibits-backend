@@ -12,10 +12,10 @@
                 <div class="row form-group">
                     <div class="col-12">
                         <div class="form-text text-muted" style="font-size: 17px">
-                            Title <span class="badge badge-required">Required</span>
-                            &nbsp;&nbsp;<a onclick="helperModule.preview_html('exhibit-title-input');return false;" data-toggle="modal" data-target=".preview-html" class="btn-xs btn-light"><span style="padding: 5px"><i class="fa fa-code"></i> <small>Preview Field</small></span></a>
+                            <span id="exhibit-title-input-label">Title <span class="badge badge-required">Required</span></span>
+                            &nbsp;&nbsp;<a onclick="helperModule.preview_html('exhibit-title-input');return false;" data-toggle="modal" data-target=".preview-html" class="btn-xs btn-light"><span style="padding: 5px"><i class="fa fa-code" aria-hidden="true"></i> <small>Preview Field</small></span></a>
                         </div>
-                        <textarea <%= _disabled_attr %> id="exhibit-title-input" class="form-control" name="exhibit_title_input"
+                        <textarea <%= _disabled_attr %> id="exhibit-title-input" aria-labelledby="exhibit-title-input-label" class="form-control" name="exhibit_title_input"
                                   rows="4"></textarea>
 
                     </div>
@@ -26,10 +26,10 @@
             <div class="col-12 col-md-12">
                 <div class="row form-group">
                     <div class="col-12">
-                        <div class="form-text text-muted" style="font-size: 17px">Sub Title <small><em>(Optional)</em></small>
-                            &nbsp;&nbsp;<a onclick="helperModule.preview_html('exhibit-sub-title-input');return false;" data-toggle="modal" data-target=".preview-html" class="btn-xs btn-light"><span style="padding: 5px"><i class="fa fa-code"></i> <small>Preview Field</small></span></a>
+                        <div class="form-text text-muted" style="font-size: 17px"><span id="exhibit-sub-title-input-label">Sub Title <small><em>(Optional)</em></small></span>
+                            &nbsp;&nbsp;<a onclick="helperModule.preview_html('exhibit-sub-title-input');return false;" data-toggle="modal" data-target=".preview-html" class="btn-xs btn-light"><span style="padding: 5px"><i class="fa fa-code" aria-hidden="true"></i> <small>Preview Field</small></span></a>
                         </div>
-                        <textarea <%= _disabled_attr %> id="exhibit-sub-title-input" class="form-control" name="exhibit_sub_title_input"
+                        <textarea <%= _disabled_attr %> id="exhibit-sub-title-input" aria-labelledby="exhibit-sub-title-input-label" class="form-control" name="exhibit_sub_title_input"
                                   rows="4"></textarea>
 
                     </div>
@@ -40,10 +40,10 @@
             <div class="col-12 col-md-12">
                 <div class="row form-group">
                     <div class="col-12">
-                        <div class="form-text text-muted" style="font-size: 17px">Introduction <small><em>(Optional)</em></small>
-                            &nbsp;&nbsp;<a onclick="helperModule.preview_html('exhibit-description-input');return false;" data-toggle="modal" data-target=".preview-html" class="btn-xs btn-light"><span style="padding: 5px"><i class="fa fa-code"></i> <small>Preview Field</small></span></a>
+                        <div class="form-text text-muted" style="font-size: 17px"><span id="exhibit-description-input-label">Introduction <small><em>(Optional)</em></small></span>
+                            &nbsp;&nbsp;<a onclick="helperModule.preview_html('exhibit-description-input');return false;" data-toggle="modal" data-target=".preview-html" class="btn-xs btn-light"><span style="padding: 5px"><i class="fa fa-code" aria-hidden="true"></i> <small>Preview Field</small></span></a>
                         </div>
-                        <textarea <%= _disabled_attr %> id="exhibit-description-input" class="form-control" name="exhibit_description_input"
+                        <textarea <%= _disabled_attr %> id="exhibit-description-input" aria-labelledby="exhibit-description-input-label" class="form-control" name="exhibit_description_input"
                                   rows="4"></textarea>
                     </div>
                 </div>
@@ -53,10 +53,10 @@
             <div class="col-12 col-md-12">
                 <div class="row form-group">
                     <div class="col-12">
-                        <div class="form-text text-muted" style="font-size: 17px">About the curators <small><em>(Optional)</em></small>
-                            &nbsp;&nbsp;<a onclick="helperModule.preview_html('exhibit-about-the-curators-input');return false;" data-toggle="modal" data-target=".preview-html" class="btn-xs btn-light"><span style="padding: 5px"><i class="fa fa-code"></i> <small>Preview Field</small></span></a>
+                        <div class="form-text text-muted" style="font-size: 17px"><span id="exhibit-about-the-curators-input-label">About the curators <small><em>(Optional)</em></small></span>
+                            &nbsp;&nbsp;<a onclick="helperModule.preview_html('exhibit-about-the-curators-input');return false;" data-toggle="modal" data-target=".preview-html" class="btn-xs btn-light"><span style="padding: 5px"><i class="fa fa-code" aria-hidden="true"></i> <small>Preview Field</small></span></a>
                         </div>
-                        <textarea <%= _disabled_attr %> id="exhibit-about-the-curators-input" class="form-control" name="exhibit_about_the_curators_input"
+                        <textarea <%= _disabled_attr %> id="exhibit-about-the-curators-input" aria-labelledby="exhibit-about-the-curators-input-label" class="form-control" name="exhibit_about_the_curators_input"
                                   rows="4"></textarea>
                     </div>
                 </div>
@@ -67,7 +67,7 @@
                 <div class="row form-group">
                     <div class="col-12">
                         <p style="padding-top: 20px">
-                            <small class="form-text text-muted"><i class="fa fa-exclamation-circle"></i> <em>Click to add content disclaimer</em></small>
+                            <small class="form-text text-muted"><i class="fa fa-exclamation-circle" aria-hidden="true"></i> <em>Click to add content disclaimer</em></small>
                             <label for="is-content-advisory">Harmful Content Disclaimer&nbsp;
                                 <input <%= _disabled_attr %> type="checkbox" id="is-content-advisory" name="is_content_advisory">
                             </label>
@@ -89,7 +89,7 @@
                 <div class="row form-group">
                     <div class="col-12">
                         <p style="padding-top: 20px">
-                            <small class="form-text text-muted"><i class="fa fa-exclamation-circle"></i> <em>Exhibit will be featured on the main page</em></small>
+                            <small class="form-text text-muted"><i class="fa fa-exclamation-circle" aria-hidden="true"></i> <em>Exhibit will be featured on the main page</em></small>
                             <label for="is-featured">Feature exhibit&nbsp;
                                 <input <%= _disabled_attr %> type="checkbox" id="is-featured" name="is_featured">
                             </label>
@@ -103,7 +103,7 @@
                 <div class="row form-group">
                     <div class="col-12">
                         <p style="padding-top: 20px">
-                            <small class="form-text text-muted"><i class="fa fa-exclamation-circle"></i> <em>Student curated exhibit</em></small>
+                            <small class="form-text text-muted"><i class="fa fa-exclamation-circle" aria-hidden="true"></i> <em>Student curated exhibit</em></small>
                             <label for="is-student-curated">Student Curated&nbsp;
                                 <input <%= _disabled_attr %> type="checkbox" id="is-student-curated" name="is_student-curated">
                             </label>

@@ -11,11 +11,11 @@
                 <div class="row form-group">
                     <div class="col-12">
                         <div class="form-text text-muted" style="font-size: 17px">
-                            Title <small><em>(Optional)</em></small>
-                            &nbsp;&nbsp;<a onclick="helperModule.preview_html('item-title-input');return false;" data-toggle="modal" data-target=".preview-html" class="btn-xs btn-light"><span style="padding: 5px"><i class="fa fa-code"></i> <small>Preview Field</small></span></a>
+                            <span id="item-title-input-label">Title <small><em>(Optional)</em></small></span>
+                            &nbsp;&nbsp;<a onclick="helperModule.preview_html('item-title-input');return false;" data-toggle="modal" data-target=".preview-html" class="btn-xs btn-light"><span style="padding: 5px"><i class="fa fa-code" aria-hidden="true"></i> <small>Preview Field</small></span></a>
                         </div>
                         <span id="item-title-error" class="is-error"></span>
-                        <textarea id="item-title-input" class="form-control" name="item_title_input"
+                        <textarea id="item-title-input" aria-labelledby="item-title-input-label" class="form-control" name="item_title_input"
                                   rows="4"></textarea>
                     </div>
                 </div>
@@ -25,7 +25,7 @@
             <div class="col-12 col-md-12">
                 <div class="row form-group">
                     <div class="col-12">
-                        <div class="form-text text-muted" style="font-size: 17px">Date <span class="badge badge-required">Required</span></div>
+                        <label for="item-date-input" class="form-text text-muted" style="font-size: 17px">Date <span class="badge badge-required">Required</span></label>
                         <input class="form-control" id="item-date-input" type="date" />
                     </div>
                 </div>
@@ -35,10 +35,10 @@
             <div class="col-12 col-md-12">
                 <div class="row form-group">
                     <div class="col-12">
-                        <div class="form-text text-muted" style="font-size: 17px">Exhibit Text <small><em>(Optional)</em></small>
-                            &nbsp;&nbsp;<a onclick="helperModule.preview_html('item-text-input');return false;" data-toggle="modal" data-target=".preview-html" class="btn-xs btn-light"><span style="padding: 5px"><i class="fa fa-code"></i> <small>Preview Field</small></span></a>
+                        <div class="form-text text-muted" style="font-size: 17px"><span id="item-text-input-label">Exhibit Text <small><em>(Optional)</em></small></span>
+                            &nbsp;&nbsp;<a onclick="helperModule.preview_html('item-text-input');return false;" data-toggle="modal" data-target=".preview-html" class="btn-xs btn-light"><span style="padding: 5px"><i class="fa fa-code" aria-hidden="true"></i> <small>Preview Field</small></span></a>
                         </div>
-                        <textarea id="item-text-input" class="form-control" name="item_text_input"
+                        <textarea id="item-text-input" aria-labelledby="item-text-input-label" class="form-control" name="item_text_input"
                                   rows="4"></textarea>
                     </div>
                 </div>
@@ -48,10 +48,10 @@
             <div class="col-12 col-md-12">
                 <div class="row form-group">
                     <div class="col-12">
-                        <div class="form-text text-muted" style="font-size: 17px">Pop-up Window Description <small><em>(Optional)</em></small>
-                            &nbsp;&nbsp;<a onclick="helperModule.preview_html('item-description-input');return false;" data-toggle="modal" data-target=".preview-html" class="btn-xs btn-light"><span style="padding: 5px"><i class="fa fa-code"></i> <small>Preview Field</small></span></a>
+                        <div class="form-text text-muted" style="font-size: 17px"><span id="item-description-input-label">Pop-up Window Description <small><em>(Optional)</em></small></span>
+                            &nbsp;&nbsp;<a onclick="helperModule.preview_html('item-description-input');return false;" data-toggle="modal" data-target=".preview-html" class="btn-xs btn-light"><span style="padding: 5px"><i class="fa fa-code" aria-hidden="true"></i> <small>Preview Field</small></span></a>
                         </div>
-                        <textarea id="item-description-input" class="form-control" name="item_description_input"
+                        <textarea id="item-description-input" aria-labelledby="item-description-input-label" class="form-control" name="item_description_input"
                                   rows="4"></textarea>
                     </div>
                 </div>
@@ -61,10 +61,10 @@
             <div class="col-12 col-md-12">
                 <div class="row form-group">
                     <div class="col-12">
-                        <div class="form-text text-muted" style="font-size: 17px">Caption <small><em>(Optional)</em></small>
-                            &nbsp;&nbsp;<a onclick="helperModule.preview_html('item-caption-input');return false;" data-toggle="modal" data-target=".preview-html" class="btn-xs btn-light"><span style="padding: 5px"><i class="fa fa-code"></i> <small>Preview Field</small></span></a>
+                        <div class="form-text text-muted" style="font-size: 17px"><span id="item-caption-input-label">Caption <small><em>(Optional)</em></small></span>
+                            &nbsp;&nbsp;<a onclick="helperModule.preview_html('item-caption-input');return false;" data-toggle="modal" data-target=".preview-html" class="btn-xs btn-light"><span style="padding: 5px"><i class="fa fa-code" aria-hidden="true"></i> <small>Preview Field</small></span></a>
                         </div>
-                        <textarea id="item-caption-input" class="form-control" name="item_caption_input" rows="4"></textarea>
+                        <textarea id="item-caption-input" aria-labelledby="item-caption-input-label" class="form-control" name="item_caption_input" rows="4"></textarea>
                     </div>
                 </div>
             </div>

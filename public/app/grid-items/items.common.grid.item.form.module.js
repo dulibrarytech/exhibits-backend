@@ -423,12 +423,23 @@ const itemsCommonGridItemFormModule = (function () {
                 return el?.value?.trim() ?? default_value;
             };
 
-            const show_error = (message) => {
+            // Phase 3b — show_error now optionally accepts a field
+            // selector to associate the error with the offending input.
+            const show_error = (message, field_selector) => {
                 const message_el = document.querySelector('#message');
                 if (message_el) {
                     domModule.set_alert(message_el, 'danger', message);
                 }
+                if (field_selector) {
+                    const error_id = field_selector.replace('#', '') + '-error';
+                    domModule.set_field_error(field_selector, error_id, message);
+                }
             };
+
+            // Phase 3b — clear any prior field-level error state.
+            ['#item-text-input', '#item-media-uuid'].forEach(s => {
+                domModule.clear_field_error(s, s.replace('#', '') + '-error');
+            });
 
             // Validate required modules exist
             if (!helperModule) {
@@ -443,7 +454,7 @@ const itemsCommonGridItemFormModule = (function () {
 
             // Validate text content for text paths
             if (is_text_path && item.text.length === 0) {
-                show_error('Please enter "Text" for this item');
+                show_error('Please enter "Text" for this item', '#item-text-input');
                 return false;
             }
 
@@ -465,7 +476,7 @@ const itemsCommonGridItemFormModule = (function () {
 
                 // Validate media content
                 if (!item.media_uuid) {
-                    show_error('Please select a media item');
+                    show_error('Please select a media item', '#item-media-uuid');
                     return false;
                 }
 

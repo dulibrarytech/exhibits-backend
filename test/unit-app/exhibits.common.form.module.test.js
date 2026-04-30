@@ -99,6 +99,50 @@ describe('exhibitsCommonFormModule', () => {
                 return '';
             },
         };
+        // Phase 3b refactored exhibits.common.form.module to use
+        // domModule.set_field_error / clear_field_error for title
+        // validation, and to use domModule.set_alert via the local
+        // show_error helper for catch-path summaries. Stub all three
+        // before each test so individual cases can assert on calls.
+        globalThis.domModule = {
+            set_alert: vi.fn(),
+            set_field_error: vi.fn((field, error_id, message) => {
+                // Mirror the real helper closely enough that existing
+                // assertions ("title-validation-feedback creates a node
+                // with the message text") keep working. We insert a
+                // sibling div with the error_id so .toContain('alert')
+                // and other DOM-shape assertions still hold.
+                if (typeof field === 'string') {
+                    field = document.querySelector(field);
+                }
+                if (!field) return;
+                field.setAttribute('aria-invalid', 'true');
+                let msg = document.getElementById(error_id);
+                if (!msg) {
+                    msg = document.createElement('div');
+                    msg.id = error_id;
+                    msg.className = 'invalid-feedback d-block';
+                    msg.setAttribute('role', 'alert');
+                    if (field.parentNode) {
+                        field.parentNode.insertBefore(msg, field.nextSibling);
+                    }
+                }
+                msg.textContent = message == null ? '' : String(message);
+            }),
+            clear_field_error: vi.fn((field, error_id) => {
+                if (typeof field === 'string') {
+                    field = document.querySelector(field);
+                }
+                if (!field) return;
+                field.removeAttribute('aria-invalid');
+                if (error_id) {
+                    const msg = document.getElementById(error_id);
+                    if (msg && msg.parentNode) {
+                        msg.parentNode.removeChild(msg);
+                    }
+                }
+            }),
+        };
         build_form();
         // Reset message_selector to its default by re-eval is not ideal —
         // tests that mutate it should restore via set_message_selector.
@@ -153,26 +197,49 @@ describe('exhibitsCommonFormModule', () => {
             const result = globalThis.exhibitsCommonFormModule.get_common_form_fields();
 
             expect(result).toBe(false);
+
+            // Phase 3b: Bootstrap's `.is-invalid` visual class is preserved
+            // for styling, AND set_field_error wires aria-invalid + a
+            // sibling <div id="exhibit-title-input-error" role="alert">.
             const title_el = document.querySelector('#exhibit-title-input');
             expect(title_el.classList.contains('is-invalid')).toBe(true);
-            const feedback = document.querySelector('.title-validation-feedback');
+            expect(title_el.getAttribute('aria-invalid')).toBe('true');
+
+            // The `.title-validation-feedback` class is gone; the message
+            // now lives in the standardized error container that
+            // domModule.set_field_error owns.
+            expect(globalThis.domModule.set_field_error).toHaveBeenCalledWith(
+                expect.anything(),                  // title element
+                'exhibit-title-input-error',
+                'Title is required',
+            );
+            const feedback = document.getElementById('exhibit-title-input-error');
             expect(feedback).not.toBeNull();
+            expect(feedback.getAttribute('role')).toBe('alert');
             expect(feedback.textContent).toBe('Title is required');
         });
 
         it('clears prior title validation state on subsequent successful calls', () => {
             // First call: blank title → invalid state added.
             globalThis.exhibitsCommonFormModule.get_common_form_fields();
-            expect(document.querySelector('.title-validation-feedback')).not.toBeNull();
+            expect(document.getElementById('exhibit-title-input-error')).not.toBeNull();
 
             // Second call: provide a title — invalid state should be wiped.
+            // Phase 3b clears via domModule.clear_field_error, which the
+            // mock implements (see beforeEach) to remove the message node
+            // and aria-invalid.
             fill_minimum_valid_form();
             const result = globalThis.exhibitsCommonFormModule.get_common_form_fields();
 
             expect(result).not.toBe(false);
-            expect(document.querySelector('#exhibit-title-input').classList.contains('is-invalid'))
-                .toBe(false);
-            expect(document.querySelector('.title-validation-feedback')).toBeNull();
+            const title_el = document.querySelector('#exhibit-title-input');
+            expect(title_el.classList.contains('is-invalid')).toBe(false);
+            expect(title_el.hasAttribute('aria-invalid')).toBe(false);
+            expect(document.getElementById('exhibit-title-input-error')).toBeNull();
+            expect(globalThis.domModule.clear_field_error).toHaveBeenCalledWith(
+                expect.anything(),
+                'exhibit-title-input-error',
+            );
         });
 
         it('returns the assembled exhibit object on a fully valid form', () => {

@@ -5,7 +5,7 @@
 
 <div id="right-panel" class="right-panel">
     <%- include('../partials/main-header.ejs'); %>
-    <div class="content" style="min-height: 875px;">
+    <main id="main" class="content" tabindex="-1">
         <div id="message"></div>
         <h1><span id="exhibit-title"></span> - Grid Media Item</h1>
         <%- include('partials/item-grid-item-data-card.ejs'); %>
@@ -18,14 +18,14 @@
                     <div class="col-6 col-md-6">
                         <div id="item-media-display" class="media-preview-area">
                             <div class="media-placeholder">
-                                <i class="fa fa-file-o"></i>
+                                <i class="fa fa-file-o" aria-hidden="true"></i>
                                 <span>No media selected</span>
                             </div>
                         </div>
                         <p>
                             <span id="item-media-filename-display"></span>&nbsp;&nbsp;
                             <span><a id="item-media-trash" title="Remove media" href="#"
-                                     style="display:none"><i class="fa fa-trash"></i></a></span>
+                                     style="display:none"><i class="fa fa-trash" aria-hidden="true"></i></a></span>
                         </p>
                         <input type="hidden" id="item-media-uuid" name="item_media_uuid">
                         <input type="hidden" id="item-media-uuid-prev" name="item_media_uuid_prev">
@@ -33,27 +33,27 @@
                         <input type="hidden" id="item-mime-type" name="item_mime_type">
                         <button type="button" class="btn btn-outline-primary"
                                 id="pick-item-media-btn">
-                            <i class="fa fa-file-o"></i>&nbsp;Select Media
+                            <i class="fa fa-file-o" aria-hidden="true"></i>&nbsp;Select Media
                         </button>
                     </div>
                     <div class="col-6 col-md-6">
                         <div id="thumbnail-image-display" class="media-preview-area">
                             <div class="media-placeholder">
-                                <i class="fa fa-picture-o"></i>
+                                <i class="fa fa-picture-o" aria-hidden="true"></i>
                                 <span>No image selected</span>
                             </div>
                         </div>
                         <p>
                             <span id="thumbnail-filename-display"></span>&nbsp;&nbsp;
                             <span><a id="thumbnail-trash" title="Remove thumbnail" href="#"
-                                     style="display:none"><i class="fa fa-trash"></i></a></span>
+                                     style="display:none"><i class="fa fa-trash" aria-hidden="true"></i></a></span>
                         </p>
                         <input type="hidden" id="thumbnail-media-uuid" name="thumbnail_media_uuid">
                         <input type="hidden" id="thumbnail-media-uuid-prev" name="thumbnail_media_uuid_prev">
                         <button type="button" class="btn btn-outline-primary"
                                 id="pick-thumbnail-btn"
                                 data-media-type-filter="image">
-                            <i class="fa fa-picture-o"></i>&nbsp;Select Thumbnail
+                            <i class="fa fa-picture-o" aria-hidden="true"></i>&nbsp;Select Thumbnail
                         </button>
                     </div>
                 </div>
@@ -77,12 +77,12 @@
         <div id="item-submit-card" class="card">
             <div class="card-body">
                 <button class="btn btn-primary" type="button" id="edit-item-btn">
-                    <i class="fa fa-edit"></i>&nbsp;&nbsp;Edit
-                </button>&nbsp;&nbsp;<span class="alert alert-warning"><i class="fa fa-warning"></i> Changes made to published exhibit grid items are immediately visible to the public</span>
+                    <i class="fa fa-edit" aria-hidden="true"></i>&nbsp;&nbsp;Edit
+                </button>&nbsp;&nbsp;<span class="alert alert-warning"><i class="fa fa-warning" aria-hidden="true"></i> Changes made to published exhibit grid items are immediately visible to the public</span>
             </div>
             <div class="card-footer text-muted"><small>Grid Item</small></div>
         </div>
-    </div>
+    </main>
     <div class="clearfix"></div>
     <%- include('../partials/footer.ejs'); %>
     <%- include('../partials/preview-html-modal.ejs'); %>

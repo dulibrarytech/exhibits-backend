@@ -3,7 +3,8 @@
 <%- include('../partials/nav.ejs'); %>
 <div id="right-panel" class="right-panel">
     <%- include('../partials/main-header.ejs'); %>
-    <div class="content" style="min-height: 875px;">
+    <main id="main" class="content" tabindex="-1">
+        <h1 class="visually-hidden">Delete exhibit</h1>
         <div id="message"></div>
         <div id="warning-message"></div>
         <div id="delete-card" class="card">
@@ -12,14 +13,14 @@
             </div>
             <div class="card-body">
                 <div id="exhibit-no-delete" class="alert alert-danger" role="alert">
-                    <i class="fa fa-exclamation"></i> Are you sure you want to delete the <strong><span id="exhibit-title"></span></strong> exhibit?&nbsp;&nbsp;
+                    <i class="fa fa-exclamation" aria-hidden="true"></i> Are you sure you want to delete the <strong><span id="exhibit-title"></span></strong> exhibit?&nbsp;&nbsp;
                     <button class="btn btn-danger" type="button" id="delete-exhibit-btn">
-                        <i class="fa fa-trash"></i>&nbsp;&nbsp;<span id="delete-message">Delete</span>
+                        <i class="fa fa-trash" aria-hidden="true"></i>&nbsp;&nbsp;<span id="delete-message">Delete</span>
                     </button>
                 </div>
             </div>
         </div>
-    </div>
+    </main>
     <div class="clearfix"></div>
     <%- include('../partials/footer.ejs'); %>
 </div>
@@ -43,14 +44,14 @@
 
             if (items.length > 0) {
                 scrollTo(0, 0);
-                document.querySelector('#warning-message').innerHTML = `<div class="alert alert-warning" role="alert"><i class="fa fa-warning"></i> This exhibit contains items. Deleting the exhibit will also delete its associated items.</div>`;
+                document.querySelector('#warning-message').innerHTML = `<div class="alert alert-warning" role="alert"><i class="fa fa-warning" aria-hidden="true"></i> This exhibit contains items. Deleting the exhibit will also delete its associated items.</div>`;
             }
 
             document.querySelector('#delete-exhibit-btn').addEventListener('click', exhibitsModule.delete_exhibit);
             helperModule.show_form();
 
         } catch (error) {
-            document.querySelector('#message').innerHTML = `<div class="alert alert-danger" role="alert"><i class="fa fa-exclamation"></i> ${error.message}</div>`;
+            document.querySelector('#message').innerHTML = `<div class="alert alert-danger" role="alert"><i class="fa fa-exclamation" aria-hidden="true"></i> ${error.message}</div>`;
         }
 
     })();

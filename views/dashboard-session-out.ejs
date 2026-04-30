@@ -9,9 +9,10 @@
 </aside>
 <div id="right-panel" class="right-panel">
     <%- include('partials/main-header.ejs'); %>
-    <div class="content" style="min-height: 875px;">
-        <div class="alert alert-danger" role="alert"><i class="fa fa-exclamation"></i> Session Expired. One moment please...</div>
-    </div>
+    <main id="main" class="content" tabindex="-1">
+        <h1 class="visually-hidden">Session ended</h1>
+        <div class="alert alert-danger" role="alert"><i class="fa fa-exclamation" aria-hidden="true"></i> Session Expired. One moment please...</div>
+    </main>
     <div class="clearfix"></div>
     <script>window.sessionStorage.clear();</script>
     <script src="/exhibits-dashboard/static/app/dist/endpoints.module.min.js"></script>

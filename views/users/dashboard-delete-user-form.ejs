@@ -3,7 +3,8 @@
 <%- include('../partials/nav-dashboard.ejs'); %>
 <div id="right-panel" class="right-panel">
     <%- include('../partials/main-header.ejs'); %>
-    <div class="content" style="min-height: 875px;">
+    <main id="main" class="content" tabindex="-1">
+        <h1 class="visually-hidden">Delete user</h1>
         <div id="message"></div>
         <div id="delete-card" class="card">
             <div class="card-header">
@@ -11,14 +12,14 @@
             </div>
             <div class="card-body">
                 <div class="alert alert-danger" role="alert">
-                    <i class="fa fa-exclamation"></i> Are you sure you want to delete the user <strong><span id="delete-user"></span></strong>?&nbsp;&nbsp;
+                    <i class="fa fa-exclamation" aria-hidden="true"></i> Are you sure you want to delete the user <strong><span id="delete-user"></span></strong>?&nbsp;&nbsp;
                     <button class="btn btn-danger" type="button" id="delete-user-btn">
-                        <i class="fa fa-trash"></i>&nbsp;&nbsp;<span id="delete-message">Delete</span>
+                        <i class="fa fa-trash" aria-hidden="true"></i>&nbsp;&nbsp;<span id="delete-message">Delete</span>
                     </button>
                 </div>
             </div>
         </div>
-    </div>
+    </main>
     <div class="clearfix"></div>
     <%- include('../partials/footer.ejs'); %>
 </div>

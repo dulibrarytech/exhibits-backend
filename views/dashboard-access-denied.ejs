@@ -3,13 +3,14 @@
 <%- include('partials/nav-dashboard.ejs'); %>
 <div id="right-panel" class="right-panel">
     <%- include('partials/main-header.ejs'); %>
-    <div class="content" style="min-height: 875px;">
+    <main id="main" class="content" tabindex="-1">
+        <h1 class="visually-hidden">Access denied</h1>
         <div id="message">
             <div class="alert alert-danger" role="alert">
-                <i class="fa fa-exclamation"></i> You do not have permission to perform this action.
+                <i class="fa fa-exclamation" aria-hidden="true"></i> You do not have permission to perform this action.
             </div>
         </div>
-    </div>
+    </main>
     <div class="clearfix"></div>
     <%- include('partials/footer.ejs'); %>
 </div>

@@ -411,12 +411,23 @@ const itemsCommonVerticalTimelineItemFormModule = (function () {
                 return el?.value?.trim() ?? default_value;
             };
 
-            const show_error = (message) => {
+            // Phase 3b — show_error now optionally accepts a field
+            // selector to associate the error with the offending input.
+            const show_error = (message, field_selector) => {
                 const message_el = document.querySelector('#message');
                 if (message_el) {
                     domModule.set_alert(message_el, 'danger', message);
                 }
+                if (field_selector) {
+                    const error_id = field_selector.replace('#', '') + '-error';
+                    domModule.set_field_error(field_selector, error_id, message);
+                }
             };
+
+            // Phase 3b — clear any prior field-level error state.
+            ['#item-date-input', '#item-media-uuid'].forEach(s => {
+                domModule.clear_field_error(s, s.replace('#', '') + '-error');
+            });
 
             // Get item metadata
             item.title = get_element_value('#item-title-input');
@@ -425,21 +436,21 @@ const itemsCommonVerticalTimelineItemFormModule = (function () {
 
             // Validate required date field
             if (!item.date || item.date.length === 0) {
-                show_error('Please enter a timeline date');
+                show_error('Please enter a timeline date', '#item-date-input');
                 return false;
             }
 
             // Validate date format (YYYY-MM-DD)
             const date_pattern = /^\d{4}-\d{2}-\d{2}$/;
             if (!date_pattern.test(item.date)) {
-                show_error('Please enter a valid date format (YYYY-MM-DD)');
+                show_error('Please enter a valid date format (YYYY-MM-DD)', '#item-date-input');
                 return false;
             }
 
             // Validate date is a real date
             const date_obj = new Date(item.date);
             if (isNaN(date_obj.getTime())) {
-                show_error('Please enter a valid date');
+                show_error('Please enter a valid date', '#item-date-input');
                 return false;
             }
 
@@ -454,7 +465,7 @@ const itemsCommonVerticalTimelineItemFormModule = (function () {
 
                 // Validate that a media item has been selected
                 if (!media_uuid || media_uuid.length === 0) {
-                    show_error('Please select a media item');
+                    show_error('Please select a media item', '#item-media-uuid');
                     return false;
                 }
 

@@ -32,7 +32,7 @@
             <ul class="nav navbar-nav">
                 <li class="sidebar-toggle-item">
                     <a href="#" id="sidebar-toggle" title="Toggle sidebar">
-                        <i class="menu-icon fa fa-bars"></i><span class="nav-label">Toggle</span>
+                        <i class="menu-icon fa fa-bars" aria-hidden="true"></i><span class="nav-label">Toggle</span>
                     </a>
                 </li>
                 <% if (typeof nav !== 'undefined' && nav.show_preview) { %>
@@ -45,7 +45,7 @@
                        href="<%= nav.back.href || '#' %>"
                        <% if (nav.back.nav_path) { %>data-nav-path="<%= nav.back.nav_path %>"<% } %>
                        data-keyboard="false">
-                        <i class="menu-icon fa <%= nav.back.icon || 'fa-arrow-left' %>"></i><span class="nav-label"><%= nav.back.label %></span>
+                        <i class="menu-icon fa <%= nav.back.icon || 'fa-arrow-left' %>" aria-hidden="true"></i><span class="nav-label"><%= nav.back.label %></span>
                     </a>
                 </li>
                 <% } %>
@@ -65,7 +65,7 @@
                 <% } %>
                 <li>
                     <a title="Logout" href="#" id="logout" data-keyboard="false">
-                        <i class="menu-icon fa fa-sign-out"></i><span class="nav-label">Logout</span>
+                        <i class="menu-icon fa fa-sign-out" aria-hidden="true"></i><span class="nav-label">Logout</span>
                     </a>
                 </li>
             </ul>

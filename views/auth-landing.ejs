@@ -9,11 +9,12 @@
 </aside>
 <div id="right-panel" class="right-panel">
     <%- include('partials/main-header.ejs'); %>
-    <div class="content" style="min-height: 875px;">
+    <main id="main" class="content" tabindex="-1">
+        <h1 class="visually-hidden">Sign in to Exhibits Builder</h1>
         <div id="app-message">
             <% if (typeof is_dev_env !== 'undefined' && is_dev_env) { %>
                 <div class="alert alert-danger">
-                    <i class="fa fa-exclamation-circle"></i>
+                    <i class="fa fa-exclamation-circle" aria-hidden="true"></i>
                     <strong>"STOP! Do not use Development Site"</strong>&nbsp;&nbsp;&nbsp;
                     <a class="btn btn-info" href="https://exhibits-backend.library.du.edu/exhibits-dashboard/auth" target="_blank">Go to Live Site </a>
                 </div>
@@ -21,9 +22,9 @@
         </div>
         <div class="alert alert-primary" role="alert"><span id="message">Exhibits Builder Dashboard Login</span></div>
         <p>
-            <a href="/exhibits-dashboard/auth/login" class="btn btn-primary" type="button">Authenticate <i class="fa fa-sign-in"></i></a>
+            <a href="/exhibits-dashboard/auth/login" class="btn btn-primary" type="button">Authenticate <i class="fa fa-sign-in" aria-hidden="true"></i></a>
         </p>
-    </div>
+    </main>
     <div class="clearfix"></div>
     <script>window.sessionStorage.clear();</script>
     <script src="/exhibits-dashboard/static/libs/axios-2.x/dist/axios.min.js"></script>

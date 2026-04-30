@@ -3,7 +3,7 @@
 <%- include('../partials/nav-dashboard'); %>
 <div id="right-panel" class="right-panel">
     <%- include('../partials/main-header.ejs'); %>
-    <div class="content" style="min-height: 875px;">
+    <main id="main" class="content" tabindex="-1">
         <div id="message"></div>
         <h1><span id="exhibit-title"></span> - Grid</h1>
 
@@ -13,12 +13,12 @@
         <div id="item-submit-card" class="card">
             <div class="card-body">
                 <button class="btn btn-primary" type="button" id="save-item-btn">
-                    <i class="fa fa-save"></i>&nbsp;&nbsp;Save
+                    <i class="fa fa-save" aria-hidden="true"></i>&nbsp;&nbsp;Save
                 </button>
             </div>
             <div class="card-footer text-muted"><small>Grid</small></div>
         </div>
-    </div>
+    </main>
     <div class="clearfix"></div>
     <%- include('../partials/footer.ejs'); %>
     <%- include('../partials/preview-html-modal.ejs'); %>

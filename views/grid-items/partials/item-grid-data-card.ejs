@@ -10,11 +10,11 @@
             <div class="col-8 col-md-8">
                 <div class="row form-group">
                     <div class="col-12">
-                        <div class="form-text text-muted" style="font-size: 17px">Text
-                            <small><em>(Optional)</em></small>
-                            &nbsp;&nbsp;<a onclick="helperModule.preview_html('grid-text-input');return false;" data-toggle="modal" data-target=".preview-html" class="btn-xs btn-light"><span style="padding: 5px"><i class="fa fa-code"></i> <small>Preview Field</small></span></a>
+                        <div class="form-text text-muted" style="font-size: 17px"><span id="grid-text-input-label">Text
+                            <small><em>(Optional)</em></small></span>
+                            &nbsp;&nbsp;<a onclick="helperModule.preview_html('grid-text-input');return false;" data-toggle="modal" data-target=".preview-html" class="btn-xs btn-light"><span style="padding: 5px"><i class="fa fa-code" aria-hidden="true"></i> <small>Preview Field</small></span></a>
                         </div>
-                        <textarea id="grid-text-input" class="form-control" name="grid_text_input"
+                        <textarea id="grid-text-input" aria-labelledby="grid-text-input-label" class="form-control" name="grid_text_input"
                                   rows="4"></textarea>
                     </div>
                 </div>
@@ -22,9 +22,9 @@
             <div class="col-4 col-md-4">
                 <div class="row form-group">
                     <div class="col-12">
-                        <div class="form-text text-muted" style="font-size: 17px"><span style="color: darkred">*</span>
+                        <label for="grid-columns" class="form-text text-muted" style="font-size: 17px"><span style="color: darkred">*</span>
                             Grid Columns <small><em>(Required)</em></small>
-                        </div>
+                        </label>
                         <input type="number" id="grid-columns" name="grid_columns"
                                class="form-control" min="1"
                                style="width: 150px" value="4"><small class="form-text text-muted"></small>

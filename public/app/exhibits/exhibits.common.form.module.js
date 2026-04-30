@@ -118,16 +118,16 @@ const exhibitsCommonFormModule = (function () {
         };
 
         try {
-            // Clear any previous title validation state
+            // Clear any previous title validation state. Phase 3b — the
+            // bespoke `.title-validation-feedback` lookup is replaced by
+            // domModule.clear_field_error which removes the message node
+            // by id and unwires aria-describedby in one call.
             const title_el = document.querySelector(selectors.title);
+            const TITLE_ERROR_ID = 'exhibit-title-input-error';
 
             if (title_el) {
                 title_el.classList.remove('is-invalid');
-                const prev_feedback = title_el.parentNode.querySelector('.title-validation-feedback');
-
-                if (prev_feedback) {
-                    prev_feedback.parentNode.removeChild(prev_feedback);
-                }
+                domModule.clear_field_error(title_el, TITLE_ERROR_ID);
             }
 
             // Get and clean text inputs
@@ -136,18 +136,16 @@ const exhibitsCommonFormModule = (function () {
             const description = helperModule.clean_html(get_element_value(selectors.description));
             const about_curators = helperModule.clean_html(get_element_value(selectors.curators));
 
-            // Validate required field
+            // Validate required field. Phase 3b — set_field_error sets
+            // aria-invalid="true" on the field, inserts a sibling
+            // <div role="alert" id="<TITLE_ERROR_ID>"> and wires the
+            // field's aria-describedby. Bootstrap's `.is-invalid` class
+            // remains for visual styling alongside the aria semantics.
             if (!title) {
 
                 if (title_el) {
                     title_el.classList.add('is-invalid');
-
-                    const feedback = document.createElement('div');
-                    feedback.className = 'invalid-feedback title-validation-feedback';
-                    feedback.style.display = 'block';
-                    feedback.textContent = 'Title is required';
-
-                    title_el.parentNode.insertBefore(feedback, title_el.nextSibling);
+                    domModule.set_field_error(title_el, TITLE_ERROR_ID, 'Title is required');
                     title_el.scrollIntoView({ behavior: 'smooth', block: 'center' });
                 }
 

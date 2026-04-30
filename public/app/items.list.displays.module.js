@@ -165,17 +165,31 @@ const itemsListDisplayModule = (function() {
     };
 
     /**
-     * Create order cell with drag handle
+     * Create order cell with drag handle and order number.
+     *
+     * Layout: [drag-handle icon] [order #]
+     *
+     * The drag handle is the visual reorder affordance for mouse users.
+     * Keyboard / single-pointer alternative reorder controls live in the
+     * row's actions dropdown menu (see build_item_actions_dropdown_html
+     * for the "Move Up" / "Move Down" items). reorderModule's delegated
+     * click handler still picks up [data-action="move-up"] /
+     * [data-action="move-down"] anywhere within the row, so the move
+     * works the same regardless of where the trigger is rendered.
+     *
+     * @param {number} order_number - 1-based row position
      */
     const create_order_cell = (order_number) => {
         const td = document.createElement('td');
         td.className = 'grabbable item-order';
 
         const icon = create_icon('fa fa-reorder');
+        icon.setAttribute('aria-hidden', 'true');
         td.appendChild(icon);
 
         const span = document.createElement('span');
         span.style.paddingLeft = '4px';
+        span.setAttribute('data-role', 'order-number');
         span.setAttribute('aria-label', `Item order ${order_number}`);
         span.textContent = order_number.toString();
         td.appendChild(span);
@@ -471,7 +485,8 @@ const itemsListDisplayModule = (function() {
                 edit_label: item.is_published === 1 ? 'Details' : 'Edit',
                 edit_icon: item.is_published === 1 ? 'fa-folder-open' : 'fa-edit',
                 delete_url: delete_url,
-                is_published: item.is_published
+                is_published: item.is_published,
+                item_title: title
             }));
 
             const container = document.createElement('div');
@@ -540,7 +555,8 @@ const itemsListDisplayModule = (function() {
                 edit_label: item.is_published === 1 ? 'Details' : 'Edit',
                 edit_icon: item.is_published === 1 ? 'fa-folder-open' : 'fa-edit',
                 delete_url: delete_url,
-                is_published: item.is_published
+                is_published: item.is_published,
+                item_title: title
             }));
 
             const container = document.createElement('div');
@@ -611,7 +627,8 @@ const itemsListDisplayModule = (function() {
                 edit_label: item.is_published === 1 ? 'Details' : 'Edit',
                 edit_icon: item.is_published === 1 ? 'fa-folder-open' : 'fa-edit',
                 delete_url: delete_url,
-                is_published: item.is_published
+                is_published: item.is_published,
+                item_title: title
             }));
 
             const container = document.createElement('div');
@@ -796,7 +813,8 @@ const itemsListDisplayModule = (function() {
                 edit_label: item.is_published === 1 ? 'Details' : 'Edit',
                 edit_icon: item.is_published === 1 ? 'fa-folder-open' : 'fa-edit',
                 delete_url: delete_url,
-                is_published: item.is_published
+                is_published: item.is_published,
+                item_title: title
             }));
 
             const container = document.createElement('div');
@@ -868,7 +886,8 @@ const itemsListDisplayModule = (function() {
                 edit_label: item.is_published === 1 ? 'Details' : 'Edit',
                 edit_icon: item.is_published === 1 ? 'fa-folder-open' : 'fa-edit',
                 delete_url: delete_url,
-                is_published: item.is_published
+                is_published: item.is_published,
+                item_title: title
             }));
 
             const container = document.createElement('div');
@@ -1073,7 +1092,8 @@ const itemsListDisplayModule = (function() {
                 edit_label: item.is_published === 1 ? 'Details' : 'Edit',
                 edit_icon: item.is_published === 1 ? 'fa-folder-open' : 'fa-edit',
                 delete_url: delete_url,
-                is_published: item.is_published
+                is_published: item.is_published,
+                item_title: title
             }));
 
             const container = document.createElement('div');
@@ -1088,13 +1108,42 @@ const itemsListDisplayModule = (function() {
     };
 
     /**
-     * Build dropdown HTML for item actions
+     * Escape a string for safe interpolation into an HTML attribute value
+     * (or text inside the dropdown items). Used for aria-label values that
+     * carry user-supplied titles.
+     */
+    const escape_attr = (s) => String(s == null ? '' : s)
+        .replace(/&/g, '&amp;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#39;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;');
+
+    /**
+     * Build dropdown HTML for item actions.
+     *
+     * Layout:
+     *   Edit / Details
+     *   Move Up
+     *   Move Down
+     *   ──────────
+     *   Delete
+     *
+     * Move Up / Move Down are the keyboard / single-pointer reorder
+     * alternative (WCAG 2.1.1 + 2.5.7). They render with
+     * data-action="move-up" / "move-down" so the existing delegated
+     * handler in reorder.module.js (attached to each table's tbody)
+     * fires _apply_keyboard_move on click. Boundary disabling
+     * (first row → Move Up, last row → Move Down) is applied by
+     * reorderModule.update_reorder_button_states after each render.
+     *
      * @param {Object} opts - Options
-     * @param {string} opts.edit_url - Edit/details URL
+     * @param {string} opts.edit_url
      * @param {string} opts.edit_label - 'Edit' or 'Details'
-     * @param {string} opts.edit_icon - Icon class (e.g. 'fa-edit')
-     * @param {string} opts.delete_url - Delete URL
+     * @param {string} opts.edit_icon  - 'fa-edit' or 'fa-folder-open'
+     * @param {string} opts.delete_url
      * @param {number} opts.is_published - 1 or 0
+     * @param {string} [opts.item_title] - row title for the Move aria-labels
      * @returns {string} Dropdown HTML
      */
     const build_item_actions_dropdown_html = (opts) => {
@@ -1104,6 +1153,8 @@ const itemsListDisplayModule = (function() {
             delete_html = `
                     <a class="dropdown-item text-muted disabled"
                        href="#"
+                       aria-disabled="true"
+                       tabindex="-1"
                        style="font-size: 0.875rem; pointer-events: none; opacity: 0.5;"
                        title="Can only delete if unpublished">
                         <i class="fa fa-trash mr-2" aria-hidden="true" style="width: 16px;"></i>
@@ -1118,6 +1169,33 @@ const itemsListDisplayModule = (function() {
                         Delete
                     </a>`;
         }
+
+        // Phase 5b': keyboard-reorder controls relocated from the order
+        // cell into the actions dropdown. Both items render enabled;
+        // reorderModule.update_reorder_button_states adds .disabled +
+        // aria-disabled="true" + tabindex="-1" to boundary buttons after
+        // each table render.
+        const safe_title = escape_attr(
+            (opts.item_title && String(opts.item_title).trim()) || 'item'
+        );
+        const move_up_html = `
+                    <button type="button"
+                            class="dropdown-item"
+                            data-action="move-up"
+                            aria-label="Move ${safe_title} up"
+                            style="font-size: 0.875rem;">
+                        <i class="fa fa-arrow-up mr-2" aria-hidden="true" style="width: 16px;"></i>
+                        Move Up
+                    </button>`;
+        const move_down_html = `
+                    <button type="button"
+                            class="dropdown-item"
+                            data-action="move-down"
+                            aria-label="Move ${safe_title} down"
+                            style="font-size: 0.875rem;">
+                        <i class="fa fa-arrow-down mr-2" aria-hidden="true" style="width: 16px;"></i>
+                        Move Down
+                    </button>`;
 
         return `
             <div class="dropdown" style="display: inline-block; position: relative;">
@@ -1138,6 +1216,8 @@ const itemsListDisplayModule = (function() {
                         <i class="fa ${opts.edit_icon} mr-2" aria-hidden="true" style="width: 16px;"></i>
                         ${opts.edit_label}
                     </a>
+                    ${move_up_html}
+                    ${move_down_html}
                     <div class="dropdown-divider"></div>
                     ${delete_html}
                 </div>

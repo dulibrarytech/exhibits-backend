@@ -52,6 +52,7 @@
     "validator": "^13.7.0"
   },
   "devDependencies": {
+    "@axe-core/playwright": "^4.11.3",
     "@playwright/test": "^1.48.0",
     "esbuild": "^0.28.0",
     "gulp": "^5.0.1",
