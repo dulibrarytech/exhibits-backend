@@ -330,7 +330,7 @@ const mediaModalsModule = (function() {
 
         if (is_image) {
             alt_text_html = '<div class="col-md-6 mb-3">' +
-                '<label class="form-label" for="file-alt-text-' + index + '">Alt Text <span class="text-danger">*</span></label>' +
+                '<label class="form-label" for="file-alt-text-' + index + '">Alt Text <span class="badge badge-required">Required</span></label>' +
                 '<input type="text" class="form-control file-alt-text" id="file-alt-text-' + index + '" name="alt_text" placeholder="Describe the image for screen readers" required aria-required="true">' +
                 '<div class="invalid-feedback">Please provide alt text for accessibility.</div>' +
                 '<small class="form-text text-muted"><i class="fa fa-universal-access" style="margin-right: 8px;" aria-hidden="true"></i>Required for accessibility</small>' +
@@ -369,7 +369,7 @@ const mediaModalsModule = (function() {
         // Row 1: Name (required) and Alt Text (images only - required)
         html += '<div class="row">';
         html += '<div class="col-md-6 mb-3">';
-        html += '<label class="form-label" for="file-name-' + index + '">Name <span class="text-danger">*</span></label>';
+        html += '<label class="form-label" for="file-name-' + index + '">Name <span class="badge badge-required">Required</span></label>';
         html += '<input type="text" class="form-control file-name" id="file-name-' + index + '" name="name" value="' + escape_html(default_name) + '" placeholder="Enter a name" required aria-required="true">';
         html += '<div class="invalid-feedback">Please provide a name.</div>';
         html += '</div>';
@@ -392,7 +392,7 @@ const mediaModalsModule = (function() {
         html += '</select>';
         html += '</div>';
         html += '<div class="col-md-6 mb-3">';
-        html += '<label class="form-label" for="file-genre-form-' + index + '">Genre/Form <span class="text-danger">*</span></label>';
+        html += '<label class="form-label" for="file-genre-form-' + index + '">Genre/Form <span class="badge badge-required">Required</span></label>';
         html += '<select class="form-control form-select custom-select file-genre-form" id="file-genre-form-' + index + '" name="genre_form_subjects">';
         html += '<option value="">Select genre/form...</option>';
         html += '</select>';
@@ -407,7 +407,7 @@ const mediaModalsModule = (function() {
         html += '</select>';
         html += '</div>';
         html += '<div class="col-md-6 mb-3">';
-        html += '<label class="form-label" for="file-item-type-' + index + '">Item Type <span class="text-danger">*</span></label>';
+        html += '<label class="form-label" for="file-item-type-' + index + '">Item Type <span class="badge badge-required">Required</span></label>';
         html += '<select class="form-control form-select custom-select file-item-type" id="file-item-type-' + index + '" name="item_type" required>';
         html += '<option value="">Select item type...</option>';
         html += '</select>';

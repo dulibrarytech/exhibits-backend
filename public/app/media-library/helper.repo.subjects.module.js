@@ -983,7 +983,7 @@ const repoSubjectsModule = (function() {
         html += build_widget_html('topics_subjects', 'Select topics...', prefix + '-topics' + id_suffix);
         html += '</div>';
         html += '<div class="col-md-6 mb-3">';
-        html += '<label class="form-label">Genre/Form <span class="text-danger">*</span></label>';
+        html += '<label class="form-label">Genre/Form <span class="badge badge-required">Required</span></label>';
         html += build_widget_html('genre_form_subjects', 'Select genre/form...', prefix + '-genre-form' + id_suffix, true);
         html += '</div></div>';
 
@@ -994,7 +994,7 @@ const repoSubjectsModule = (function() {
         html += build_widget_html('places_subjects', 'Select places...', prefix + '-places' + id_suffix);
         html += '</div>';
         html += '<div class="col-md-6 mb-3">';
-        html += '<label class="form-label" for="' + prefix + '-item-type' + id_suffix + '">Item Type <span class="text-danger">*</span></label>';
+        html += '<label class="form-label" for="' + prefix + '-item-type' + id_suffix + '">Item Type <span class="badge badge-required">Required</span></label>';
         html += '<select class="form-control form-select custom-select ' + prefix + '-item-type" id="' + prefix + '-item-type' + id_suffix + '" name="item_type" required>';
         html += '<option value="">Select item type...</option>';
         html += '</select>';
