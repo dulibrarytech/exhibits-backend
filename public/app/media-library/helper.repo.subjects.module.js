@@ -924,11 +924,19 @@ const repoSubjectsModule = (function() {
                 item_type_selects.forEach((select) => {
                     select.insertAdjacentHTML('beforeend', type_options);
 
-                    // Pre-select existing value from data-selected (for edit forms)
+                    // Pre-select existing value from data-selected (for edit forms).
+                    // Match case-insensitively against option value/label so callers
+                    // can use canonical casing ("Moving Image") even if the catalog
+                    // stores a different case ("moving image").
                     const pre_selected = select.getAttribute('data-selected');
 
                     if (pre_selected) {
-                        select.value = pre_selected;
+                        const target = pre_selected.toLowerCase();
+                        const match = Array.from(select.options).find(option =>
+                            option.value.toLowerCase() === target ||
+                            option.textContent.trim().toLowerCase() === target
+                        );
+                        select.value = match ? match.value : pre_selected;
                     }
                 });
             }

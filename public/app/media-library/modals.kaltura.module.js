@@ -598,6 +598,50 @@ const kalturaModalsModule = (function() {
     };
 
     /**
+     * Default Genre/Form and Item Type assignments keyed by normalized media type.
+     * Applied automatically when the user imports a Kaltura record, so curators
+     * don't have to pick the obvious value for every audio/video item.
+     */
+    const KALTURA_DEFAULT_SUBJECTS = {
+        video: { genre_form: 'Video Recordings', item_type: 'Moving Image' },
+        audio: { genre_form: 'Sound Recordings', item_type: 'Sound Recording' }
+    };
+
+    /**
+     * Pre-select default Genre/Form and Item Type values for the Kaltura form
+     * based on media type. Sets `data-selected` on the underlying field elements
+     * so the helper module honors them during dropdown population.
+     *
+     * Genre/Form may be emitted either as a pre-built `.ms-widget` (from
+     * repoSubjectsModule.build_subjects_html) or as a native `<select>` that
+     * the helper later upgrades. Item Type is always a native `<select>`.
+     * Set data-selected on whichever is present.
+     *
+     * @param {HTMLElement} container - The forms container element
+     * @param {string} media_type - Normalized media type ('audio' or 'video')
+     */
+    const apply_default_subjects_for_media_type = (container, media_type) => {
+
+        const defaults = KALTURA_DEFAULT_SUBJECTS[media_type];
+        if (!container || !defaults) return;
+
+        const genre_widget = container.querySelector('.ms-widget[data-name="genre_form_subjects"]');
+        if (genre_widget) {
+            genre_widget.setAttribute('data-selected', defaults.genre_form);
+        } else {
+            const genre_select = container.querySelector('select[name="genre_form_subjects"]');
+            if (genre_select) {
+                genre_select.setAttribute('data-selected', defaults.genre_form);
+            }
+        }
+
+        const item_type_select = container.querySelector('select[name="item_type"]');
+        if (item_type_select) {
+            item_type_select.setAttribute('data-selected', defaults.item_type);
+        }
+    };
+
+    /**
      * Populate the Kaltura import modal with the form
      */
     const populate_kaltura_modal = () => {
@@ -632,6 +676,12 @@ const kalturaModalsModule = (function() {
                 handle_kaltura_save();
             });
         }
+
+        // Auto-select Genre/Form and Item Type defaults based on media type
+        // (must run before populate_subjects_dropdowns so the helper picks up data-selected)
+        const media_type_input = forms_container.querySelector('.kaltura-media-type');
+        const media_type = media_type_input ? media_type_input.value : '';
+        apply_default_subjects_for_media_type(forms_container, media_type);
 
         // Populate subject dropdowns via helper module
         if (typeof repoSubjectsModule !== 'undefined' && typeof repoSubjectsModule.populate_subjects_dropdowns === 'function') {
