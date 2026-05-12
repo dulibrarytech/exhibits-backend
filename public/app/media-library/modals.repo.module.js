@@ -38,10 +38,11 @@ const repoModalsModule = (function() {
 
     /**
      * Extract and categorize subjects from a repository display_record.
-     * Maps authority types to form field categories:
-     *   lcsh  → topics (topical subjects)
-     *   aat   → genre_form (genre/form)
-     *   lcnaf → places (geographic / name authority)
+     *
+     * Classification is driven by `terms[].type` (e.g. 'topical', 'genre_form',
+     * 'geographic') rather than `authority`, because genre/form terms can come
+     * from multiple authorities (tgm, aat, lcsh, etc.) and authority alone misses
+     * them. Falls back to authority-based mapping for records that omit `terms`.
      *
      * @param {Object|null} display_record - The display_record from a repo item
      * @returns {Object} { topics: string, genre_form: string, places: string, resource_type: string }
@@ -59,7 +60,6 @@ const repoModalsModule = (function() {
             result.resource_type = display_record.resource_type;
         }
 
-        // Extract subjects grouped by authority
         if (Array.isArray(display_record.subjects)) {
             const topics = [];
             const genre_form = [];
@@ -68,21 +68,29 @@ const repoModalsModule = (function() {
             display_record.subjects.forEach(subject => {
                 if (!subject || !subject.title) return;
 
-                const authority = (subject.authority || '').toLowerCase();
-                const title = subject.title;
+                const terms = Array.isArray(subject.terms) ? subject.terms : [];
+                const term_types = new Set(
+                    terms
+                        .map(t => (t && typeof t.type === 'string') ? t.type.trim().toLowerCase() : '')
+                        .filter(Boolean)
+                );
 
-                switch (authority) {
-                    case 'lcsh':
-                        topics.push(title);
-                        break;
-                    case 'aat':
-                        genre_form.push(title);
-                        break;
-                    case 'lcnaf':
-                        places.push(title);
-                        break;
-                    // naf and other authorities are skipped (no matching dropdown)
+                let bucket = null;
+                if (term_types.has('topical')) {
+                    bucket = topics;
+                } else if (term_types.has('genre_form')) {
+                    bucket = genre_form;
+                } else if (term_types.has('geographic')) {
+                    bucket = places;
+                } else {
+                    // Fallback: classify by authority for records without a terms[] array
+                    const authority = (subject.authority || '').toLowerCase();
+                    if (authority === 'lcsh') bucket = topics;
+                    else if (authority === 'aat') bucket = genre_form;
+                    else if (authority === 'lcnaf') bucket = places;
                 }
+
+                if (bucket) bucket.push(subject.title);
             });
 
             if (topics.length > 0) result.topics = topics.join(', ');
@@ -110,6 +118,21 @@ const repoModalsModule = (function() {
         if (mt.startsWith('video/')) return 'video';
 
         return 'unknown';
+    };
+
+    /**
+     * Extract the archival local identifier (e.g. "U116.01.0001.00050") from a
+     * repository item. Lives in display_record.identifiers as the entry whose
+     * `type === "local"`. Returns the raw identifier value (NOT html-escaped)
+     * for use in API payloads; HTML callers should escape as needed.
+     * @param {Object} item_data - The repository item data
+     * @returns {string} The local identifier value, or empty string if absent
+     */
+    const get_local_identifier = (item_data) => {
+        const ids = item_data && item_data.display_record && item_data.display_record.identifiers;
+        if (!Array.isArray(ids)) return '';
+        const entry = ids.find(i => i && i.type === 'local' && i.identifier);
+        return entry ? entry.identifier : '';
     };
 
     // ========================================
@@ -242,6 +265,7 @@ const repoModalsModule = (function() {
                 item_type: form_data.get('item_type') || null,
                 repo_uuid: item_data.uuid,
                 repo_handle: item_data.handle || null,
+                call_number: get_local_identifier(item_data) || null,
                 mime_type: item_data.mime_type || null,
                 media_type: derive_media_type(item_data.mime_type),
                 ingest_method: 'repository'
@@ -379,9 +403,12 @@ const repoModalsModule = (function() {
         const type_label = get_media_type_label(object_type);
         const type_icon = get_media_type_icon(object_type);
         const uuid = escape_html(item_data.uuid || '');
-        const pid = escape_html(item_data.pid || '');
         const creator = escape_html(item_data.creator || '');
         const is_image = object_type === 'image' || object_type === 'object';
+
+        // Local identifier (e.g. "U116.01.0001.00050") surfaced under the thumbnail
+        // so curators can cross-reference the source archival call number.
+        const local_identifier = escape_html(get_local_identifier(item_data));
 
         // Extract subjects and resource_type from display_record for pre-selection
         const repo_subjects = extract_repo_subjects(item_data.display_record || null);
@@ -432,8 +459,8 @@ const repoModalsModule = (function() {
         html += '<div class="item-preview-container text-center">';
         html += '<div class="item-preview mb-2">' + preview_html + '</div>';
         html += '<div class="item-meta small text-muted">';
-        if (pid) {
-            html += '<div class="item-pid-display text-truncate" title="PID: ' + pid + '">PID: ' + pid + '</div>';
+        if (local_identifier) {
+            html += '<div class="item-local-id-display text-truncate" title="' + local_identifier + '">' + local_identifier + '</div>';
         }
         if (creator) {
             html += '<div class="item-creator-display text-truncate" title="' + creator + '"><i class="fa fa-user" style="margin-right: 4px;" aria-hidden="true"></i>' + creator + '</div>';
@@ -876,8 +903,9 @@ const repoModalsModule = (function() {
      * @param {string} ingest_method - Ingest method (upload, repository, etc.)
      * @param {string} repo_uuid - Repository item UUID (for repo items)
      * @param {string} repo_handle - Repository handle URL (for repo items)
+     * @param {string} call_number - Archival local identifier (for repo items)
      */
-    obj.open_view_media_modal = function(uuid, name, filename, size, media_type, ingest_method, repo_uuid, repo_handle) {
+    obj.open_view_media_modal = function(uuid, name, filename, size, media_type, ingest_method, repo_uuid, repo_handle, call_number) {
         const modal_element = document.getElementById('view-media-modal');
 
         // Decode HTML entities in name to prevent double-encoding
@@ -905,19 +933,31 @@ const repoModalsModule = (function() {
         const info_el = document.getElementById('view-media-info');
         if (info_el) {
             if (is_repo) {
-                // Repository item: show name, UUID, and ingest method
-                info_el.innerHTML = '<p class="mb-1">' +
+                // Repository item: show name, Repo ID, Identifier (call number), and ingest method
+                let info_html = '<p class="mb-1">' +
                     '<strong>Name:</strong> ' +
                     '<span>' + escape_html(name || '-') + '</span>' +
                     '</p>' +
                     '<p class="mb-1">' +
-                    '<strong>UUID:</strong> ' +
+                    '<strong>Repo ID:</strong> ' +
                     '<span>' + escape_html(repo_uuid || '-') + '</span>' +
-                    '</p>' +
+                    '</p>';
+
+                if (call_number) {
+                    info_html +=
+                        '<p class="mb-1">' +
+                        '<strong>Identifier:</strong> ' +
+                        '<span>' + escape_html(call_number) + '</span>' +
+                        '</p>';
+                }
+
+                info_html +=
                     '<p class="mb-0">' +
                     '<strong>Ingest Method:</strong> ' +
                     '<span>' + escape_html(ingest_method || '-') + '</span>' +
                     '</p>';
+
+                info_el.innerHTML = info_html;
             } else {
                 // Uploaded item: show filename, size, and ingest method
                 info_el.innerHTML = '<p class="mb-1">' +

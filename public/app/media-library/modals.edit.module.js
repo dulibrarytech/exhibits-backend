@@ -276,6 +276,10 @@ const mediaEditModalModule = (function() {
             if (record.repo_uuid) {
                 html += '<div class="mb-1 text-truncate" title="' + escape_html(record.repo_uuid) + '"><strong>Repo ID:</strong> ' + escape_html(record.repo_uuid) + '</div>';
             }
+            // Archival local identifier (call_number) captured at import time
+            if (record.call_number) {
+                html += '<div class="mb-1 text-truncate" title="' + escape_html(record.call_number) + '"><strong>Identifier:</strong> ' + escape_html(record.call_number) + '</div>';
+            }
         } else {
             // Uploaded: show filename and file size
             html += '<div class="mb-1 text-truncate" title="' + display_name + '"><strong>Filename:</strong> ' + display_name + '</div>';

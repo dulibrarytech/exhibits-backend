@@ -444,7 +444,7 @@ const mediaLibraryModule = (function() {
      * @param {string} kaltura_thumbnail_url - Kaltura thumbnail URL (for kaltura items)
      * @param {string} kaltura_entry_id - Kaltura entry ID (for kaltura items)
      */
-    const handle_view_click = (uuid, name, filename, size, media_type, ingest_method, repo_uuid, repo_handle, kaltura_thumbnail_url, kaltura_entry_id) => {
+    const handle_view_click = (uuid, name, filename, size, media_type, ingest_method, repo_uuid, repo_handle, kaltura_thumbnail_url, kaltura_entry_id, call_number) => {
         if (!uuid) {
             console.error('No UUID provided for view');
             return;
@@ -468,7 +468,7 @@ const mediaLibraryModule = (function() {
 
         // Repository items: use repoModalsModule which handles repo thumbnail URLs
         if (ingest_method === 'repository' && typeof repoModalsModule !== 'undefined' && typeof repoModalsModule.open_view_media_modal === 'function') {
-            repoModalsModule.open_view_media_modal(uuid, name, filename, size, media_type, ingest_method, repo_uuid, repo_handle);
+            repoModalsModule.open_view_media_modal(uuid, name, filename, size, media_type, ingest_method, repo_uuid, repo_handle, call_number);
             return;
         }
 
@@ -651,7 +651,8 @@ const mediaLibraryModule = (function() {
                 const repo_handle = this.getAttribute('data-repo-handle');
                 const kaltura_thumbnail_url = this.getAttribute('data-kaltura-thumbnail-url');
                 const kaltura_entry_id = this.getAttribute('data-kaltura-entry-id');
-                handle_view_click(uuid, name, filename, size, media_type, ingest_method, repo_uuid, repo_handle, kaltura_thumbnail_url, kaltura_entry_id);
+                const call_number = this.getAttribute('data-call-number');
+                handle_view_click(uuid, name, filename, size, media_type, ingest_method, repo_uuid, repo_handle, kaltura_thumbnail_url, kaltura_entry_id, call_number);
             });
         });
 
@@ -686,7 +687,8 @@ const mediaLibraryModule = (function() {
                 const repo_handle = thumbnail.getAttribute('data-repo-handle');
                 const kaltura_thumbnail_url = thumbnail.getAttribute('data-kaltura-thumbnail-url');
                 const kaltura_entry_id = thumbnail.getAttribute('data-kaltura-entry-id');
-                handle_view_click(uuid, name, filename, size, media_type, ingest_method, repo_uuid, repo_handle, kaltura_thumbnail_url, kaltura_entry_id);
+                const call_number = thumbnail.getAttribute('data-call-number');
+                handle_view_click(uuid, name, filename, size, media_type, ingest_method, repo_uuid, repo_handle, kaltura_thumbnail_url, kaltura_entry_id, call_number);
             });
         });
 
@@ -1179,6 +1181,7 @@ const mediaLibraryModule = (function() {
                     upload_uuid: record.upload_uuid || null,
                     repo_uuid: record.repo_uuid || null,
                     repo_handle: record.repo_handle || null,
+                    call_number: record.call_number || null,
                     kaltura_thumbnail_url: record.kaltura_thumbnail_url || null,
                     kaltura_entry_id: record.kaltura_entry_id || null,
                     size: record.size || 0,
@@ -1237,15 +1240,15 @@ const mediaLibraryModule = (function() {
                                                  class="media-thumbnail media-thumbnail-clickable"
                                                  style="width: ${THUMBNAIL_SIZE.width}px; height: ${THUMBNAIL_SIZE.height}px; object-fit: cover; border-radius: 4px; margin-right: 10px; vertical-align: middle; cursor: pointer;"
                                                  loading="lazy"
-                                                 data-uuid="${row.uuid}" data-name="${sanitize_html(row.name)}" data-filename="${sanitize_html(row.filename)}" data-size="${row.size_display}" data-media-type="${row.media_type}" data-ingest-method="${row.ingest_method}" data-repo-uuid="${row.repo_uuid}" data-repo-handle="${row.repo_handle || ''}" title="Click to view"
+                                                 data-uuid="${row.uuid}" data-name="${sanitize_html(row.name)}" data-filename="${sanitize_html(row.filename)}" data-size="${row.size_display}" data-media-type="${row.media_type}" data-ingest-method="${row.ingest_method}" data-repo-uuid="${row.repo_uuid}" data-repo-handle="${row.repo_handle || ''}" data-call-number="${sanitize_html(row.call_number || '')}" title="Click to view"
                                                  data-fallback="placeholder" data-fallback-src="${PLACEHOLDER_IMAGE}">`;
                                     } else {
                                         thumbnail_html = `
-                                            <img src="${PLACEHOLDER_IMAGE}" 
+                                            <img src="${PLACEHOLDER_IMAGE}"
                                                  alt="Placeholder for ${display_name}"
                                                  class="media-thumbnail-placeholder media-thumbnail-clickable"
                                                  style="width: ${THUMBNAIL_SIZE.width}px; height: ${THUMBNAIL_SIZE.height}px; object-fit: cover; border-radius: 4px; margin-right: 10px; vertical-align: middle; cursor: pointer;"
-                                                 data-uuid="${row.uuid}" data-name="${sanitize_html(row.name)}" data-filename="${sanitize_html(row.filename)}" data-size="${row.size_display}" data-media-type="${row.media_type}" data-ingest-method="${row.ingest_method}" data-repo-uuid="${row.repo_uuid}" data-repo-handle="${row.repo_handle || ''}" title="Click to view">`;
+                                                 data-uuid="${row.uuid}" data-name="${sanitize_html(row.name)}" data-filename="${sanitize_html(row.filename)}" data-size="${row.size_display}" data-media-type="${row.media_type}" data-ingest-method="${row.ingest_method}" data-repo-uuid="${row.repo_uuid}" data-repo-handle="${row.repo_handle || ''}" data-call-number="${sanitize_html(row.call_number || '')}" title="Click to view">`;
                                     }
                                 } else if (row.ingest_method === 'kaltura' && row.kaltura_thumbnail_url) {
                                     // Kaltura item: use kaltura thumbnail URL from database
