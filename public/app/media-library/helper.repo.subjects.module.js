@@ -768,8 +768,11 @@ const repoSubjectsModule = (function() {
         const name = select_el.getAttribute('name') || '';
         const id = select_el.id || '';
 
-        // Genre/Form is a required field
-        const is_required = (name === 'genre_form_subjects');
+        // Genre/Form is always required. Other multi-select fields opt in by
+        // setting the `required` attribute on the source <select> — this lets
+        // each modal independently mark Topics required without forcing it
+        // everywhere the helper is used (e.g. the edit modal).
+        const is_required = (name === 'genre_form_subjects' || select_el.hasAttribute('required'));
 
         // Derive placeholder from the first option text
         const first_option = select_el.querySelector('option');
@@ -987,8 +990,9 @@ const repoSubjectsModule = (function() {
         // Row: Topics (multi-select), Genre/Form (multi-select)
         html += '<div class="row">';
         html += '<div class="col-md-6 mb-3">';
-        html += '<label class="form-label">Topics</label>';
-        html += build_widget_html('topics_subjects', 'Select topics...', prefix + '-topics' + id_suffix);
+        html += '<label class="form-label">Topics <span class="badge badge-required">Required</span></label>';
+        html += build_widget_html('topics_subjects', 'Select topics...', prefix + '-topics' + id_suffix, true);
+        html += '<small class="form-text text-muted">Recommended to choose 2-3</small>';
         html += '</div>';
         html += '<div class="col-md-6 mb-3">';
         html += '<label class="form-label">Genre/Form <span class="badge badge-required">Required</span></label>';

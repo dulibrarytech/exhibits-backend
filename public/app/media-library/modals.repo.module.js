@@ -464,10 +464,11 @@ const repoModalsModule = (function() {
         // Row 3: Topics, Genre/Form dropdowns
         html += '<div class="row">';
         html += '<div class="col-md-6 mb-3">';
-        html += '<label class="form-label" for="repo-topics-' + index + '">Topics</label>';
-        html += '<select class="form-control form-select custom-select repo-topics" id="repo-topics-' + index + '" name="topics_subjects"' + (repo_subjects.topics ? ' data-selected="' + escape_html(repo_subjects.topics) + '"' : '') + '>';
+        html += '<label class="form-label" for="repo-topics-' + index + '">Topics <span class="badge badge-required">Required</span></label>';
+        html += '<select class="form-control form-select custom-select repo-topics" id="repo-topics-' + index + '" name="topics_subjects" required' + (repo_subjects.topics ? ' data-selected="' + escape_html(repo_subjects.topics) + '"' : '') + '>';
         html += '<option value="">Select a topic...</option>';
         html += '</select>';
+        html += '<small class="form-text text-muted">Recommended to choose 2-3</small>';
         html += '</div>';
         html += '<div class="col-md-6 mb-3">';
         html += '<label class="form-label" for="repo-genre-form-' + index + '">Genre/Form <span class="badge badge-required">Required</span></label>';
