@@ -609,6 +609,13 @@ const mediaLibraryModule = (function() {
                     box-shadow: 0 0 5px rgba(0, 123, 255, 0.5);
                     transition: opacity 0.2s, box-shadow 0.2s;
                 }
+                .media-name-clickable {
+                    cursor: pointer;
+                }
+                .media-name-clickable:hover {
+                    color: #0d6efd;
+                    text-decoration: underline;
+                }
             `;
             document.head.appendChild(style);
         }
@@ -644,6 +651,41 @@ const mediaLibraryModule = (function() {
                 const repo_handle = this.getAttribute('data-repo-handle');
                 const kaltura_thumbnail_url = this.getAttribute('data-kaltura-thumbnail-url');
                 const kaltura_entry_id = this.getAttribute('data-kaltura-entry-id');
+                handle_view_click(uuid, name, filename, size, media_type, ingest_method, repo_uuid, repo_handle, kaltura_thumbnail_url, kaltura_entry_id);
+            });
+        });
+
+        // Name click handlers - mirror thumbnail-click behavior so users can open
+        // the view modal by clicking either the thumbnail or the name text.
+        // Only wires up rows whose thumbnail is itself clickable (the existing
+        // gating logic for previewable items); rows where the thumbnail isn't
+        // clickable (e.g. uploaded audio) keep a plain, non-interactive name.
+        document.querySelectorAll('.media-name-cell').forEach(cell => {
+            const thumbnail = cell.querySelector('.media-thumbnail-clickable');
+            const name_el = cell.querySelector('.media-name');
+            if (!thumbnail || !name_el || name_el.dataset.viewBound === 'true') return;
+
+            name_el.classList.add('media-name-clickable');
+            // Set cursor inline (matches how the thumbnail inline-styles its own
+            // cursor) so the pointer always wins regardless of any class/UA rule.
+            name_el.style.cursor = 'pointer';
+            if (!name_el.getAttribute('title')) {
+                name_el.setAttribute('title', 'Click to view');
+            }
+            name_el.dataset.viewBound = 'true';
+            name_el.addEventListener('click', function(e) {
+                e.preventDefault();
+                e.stopPropagation();
+                const uuid = thumbnail.getAttribute('data-uuid');
+                const name = thumbnail.getAttribute('data-name');
+                const filename = thumbnail.getAttribute('data-filename');
+                const size = thumbnail.getAttribute('data-size');
+                const media_type = thumbnail.getAttribute('data-media-type');
+                const ingest_method = thumbnail.getAttribute('data-ingest-method');
+                const repo_uuid = thumbnail.getAttribute('data-repo-uuid');
+                const repo_handle = thumbnail.getAttribute('data-repo-handle');
+                const kaltura_thumbnail_url = thumbnail.getAttribute('data-kaltura-thumbnail-url');
+                const kaltura_entry_id = thumbnail.getAttribute('data-kaltura-entry-id');
                 handle_view_click(uuid, name, filename, size, media_type, ingest_method, repo_uuid, repo_handle, kaltura_thumbnail_url, kaltura_entry_id);
             });
         });
