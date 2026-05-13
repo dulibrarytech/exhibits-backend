@@ -271,6 +271,15 @@ const mediaEditModalModule = (function() {
             if (record.kaltura_entry_id) {
                 html += '<div class="mb-1 text-truncate" title="Entry ID: ' + escape_html(record.kaltura_entry_id) + '"><strong>Entry ID:</strong> ' + escape_html(record.kaltura_entry_id) + '</div>';
             }
+            // Original filename captured at import via the Kaltura custom metadata
+            // profile (or synthesized {entry_id}.{fileExt}). Kaltura entries are
+            // single-file by nature so no "Files (N):" compound label is needed.
+            if (record.original_filename) {
+                const _kfn = String(record.original_filename).trim();
+                if (_kfn) {
+                    html += '<div class="mb-1 text-truncate" title="' + escape_html(_kfn) + '"><strong>Filename:</strong> ' + escape_html(_kfn) + '</div>';
+                }
+            }
         } else if (is_repo) {
             // Repository: show repo UUID as identifier
             if (record.repo_uuid) {
@@ -279,6 +288,16 @@ const mediaEditModalModule = (function() {
             // Archival local identifier (call_number) captured at import time
             if (record.call_number) {
                 html += '<div class="mb-1 text-truncate" title="' + escape_html(record.call_number) + '"><strong>Identifier:</strong> ' + escape_html(record.call_number) + '</div>';
+            }
+            // Original filename(s) from display_record.parts captured at import.
+            // The stored string is "; "-joined; show "Files (N):" for compound.
+            if (record.original_filename) {
+                const _fn = String(record.original_filename).trim();
+                if (_fn) {
+                    const _parts = _fn.split('; ').filter(s => s.length > 0);
+                    const _label = _parts.length > 1 ? 'Files (' + _parts.length + ')' : 'Filename';
+                    html += '<div class="mb-1 text-truncate" title="' + escape_html(_fn) + '"><strong>' + _label + ':</strong> ' + escape_html(_fn) + '</div>';
+                }
             }
         } else {
             // Uploaded: show filename and file size

@@ -508,6 +508,25 @@ exports.create_media_record = async function (req, res) {
             return;
         }
 
+        // For Kaltura imports, enrich the payload with the original uploaded filename
+        // before persisting. Pulled from the Kaltura custom metadata profile's
+        // OriginalFileName field; falls back to a synthesized "{entry_id}.{fileExt}".
+        // Awaited (unlike the post-insert category assignment below) so the value
+        // lands in the row on first save. Failures are non-fatal — the record still
+        // saves with the column default (empty string).
+        if (data.ingest_method === 'kaltura' && data.kaltura_entry_id && !data.original_filename) {
+            try {
+                const filename_result = await KALTURA_SERVICE.get_kaltura_original_filename(data.kaltura_entry_id);
+                if (filename_result && filename_result.success && filename_result.original_filename) {
+                    data.original_filename = filename_result.original_filename;
+                } else if (filename_result && !filename_result.success) {
+                    LOGGER.module().warn(`WARNING: [/media-library/controller (create_media_record)] Kaltura original filename lookup returned failure for entry ${data.kaltura_entry_id}: ${filename_result.message}`);
+                }
+            } catch (err) {
+                LOGGER.module().warn(`WARNING: [/media-library/controller (create_media_record)] Kaltura original filename lookup failed for entry ${data.kaltura_entry_id}: ${err.message}`);
+            }
+        }
+
         const result = await MEDIA_MODEL.create_media_record(data);
 
         if (!result || !result.success) {

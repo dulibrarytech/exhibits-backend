@@ -341,3 +341,146 @@ exports.remove_kaltura_category = async function (entry_id) {
         });
     }
 };
+
+/**
+ * Extracts the OriginalFileName value from a Kaltura custom-metadata XML payload.
+ * The metadata profile (ID configured via KALTURA_METADATA_PROFILE_ID) defines
+ * an OriginalFileName field whose stored value appears as
+ *   <OriginalFileName>some-file.tif</OriginalFileName>
+ * inside the per-entry metadata XML document. We use a targeted regex because
+ * the schema is small, known, and controlled — pulling in a full XML parser
+ * would be disproportionate for one field.
+ * @param {string} xml - Raw metadata XML payload
+ * @returns {string} Trimmed OriginalFileName value, or empty string if absent
+ */
+const extract_original_filename_from_xml = (xml) => {
+    if (!xml || typeof xml !== 'string') return '';
+    const match = xml.match(/<OriginalFileName>([\s\S]*?)<\/OriginalFileName>/i);
+    if (!match) return '';
+    return match[1].trim();
+};
+
+/**
+ * Selects the source/original FlavorAsset from a list of flavor assets.
+ * Prefers `isOriginal === true`; falls back to `tags` containing "source"
+ * (older Kaltura content sometimes marks the source only via tags).
+ * @param {Array} flavor_assets - Array of KalturaFlavorAsset objects
+ * @returns {Object|null} The original asset or null
+ */
+const find_original_flavor_asset = (flavor_assets) => {
+    if (!Array.isArray(flavor_assets) || flavor_assets.length === 0) return null;
+    const by_flag = flavor_assets.find(a => a && a.isOriginal === true);
+    if (by_flag) return by_flag;
+    return flavor_assets.find(a => {
+        if (!a || typeof a.tags !== 'string') return false;
+        return a.tags.toLowerCase().split(',').map(t => t.trim()).includes('source');
+    }) || null;
+};
+
+/**
+ * Retrieves the original uploaded filename for a Kaltura entry.
+ *
+ * Primary source: the OriginalFileName field on the configured custom metadata
+ * profile (KALTURA_METADATA_PROFILE_ID), retrieved via metadata.list.
+ *   https://developer.kaltura.com/api-docs/service/metadata/action/list
+ *
+ * Fallback: when no OriginalFileName is populated for the entry, synthesizes
+ * `{entry_id}.{fileExt}` by reading the source FlavorAsset's fileExt via
+ * flavorAsset.getByEntryId.
+ *   https://developer.kaltura.com/api-docs/service/flavorAsset/action/getByEntryId
+ *
+ * Returns success=true with original_filename=null when neither source yields
+ * a value, so callers can persist the record without an error path.
+ *
+ * @param {string} entry_id - Kaltura entry ID
+ * @returns {Promise<Object>} Result envelope with original_filename (string|null)
+ */
+exports.get_kaltura_original_filename = async function (entry_id) {
+
+    try {
+
+        // Validate entry ID
+        const validation = validate_entry_id(entry_id);
+
+        if (!validation.valid) {
+            LOGGER.module().warn(`WARNING: [/media-library/kaltura-service (get_kaltura_original_filename)] ${validation.message}`);
+            return build_response(false, validation.message, {
+                original_filename: null
+            });
+        }
+
+        const profile_id = KALTURA_CONFIG.kaltura_metadata_profile_id;
+
+        if (!profile_id) {
+            LOGGER.module().warn(`WARNING: [/media-library/kaltura-service (get_kaltura_original_filename)] Metadata profile id is not configured (KALTURA_METADATA_PROFILE_ID)`);
+            return build_response(false, 'Kaltura metadata profile id is not configured', {
+                original_filename: null
+            });
+        }
+
+        LOGGER.module().info(`INFO: [/media-library/kaltura-service (get_kaltura_original_filename)] Fetching original filename for entry ID: ${validation.entry_id}`);
+
+        // Get authenticated Kaltura client
+        const { client } = await get_kaltura_session();
+
+        // ----- Step 1: try the OriginalFileName custom-metadata field -----
+        const metadata_filter = new KALTURA.objects.MetadataFilter();
+        metadata_filter.metadataProfileIdEqual = profile_id;
+        metadata_filter.objectIdEqual = validation.entry_id;
+        metadata_filter.metadataObjectTypeEqual = KALTURA.enums.MetadataObjectType.ENTRY;
+
+        const metadata_response = await KALTURA.services.metadata.listAction(metadata_filter)
+            .execute(client);
+
+        if (metadata_response && metadata_response.objectType === 'KalturaAPIException') {
+            LOGGER.module().warn(`WARNING: [/media-library/kaltura-service (get_kaltura_original_filename)] metadata.list API exception for entry ID: ${validation.entry_id} - ${metadata_response.message}`);
+            // Don't bail — still try the flavor-asset fallback below
+        } else {
+            const objects = (metadata_response && Array.isArray(metadata_response.objects)) ? metadata_response.objects : [];
+            for (const meta of objects) {
+                const value = extract_original_filename_from_xml(meta && meta.xml);
+                if (value) {
+                    LOGGER.module().info(`INFO: [/media-library/kaltura-service (get_kaltura_original_filename)] OriginalFileName found for entry ID: ${validation.entry_id}`);
+                    return build_response(true, 'Original filename retrieved from custom metadata', {
+                        original_filename: value
+                    });
+                }
+            }
+        }
+
+        // ----- Step 2: synthesize from the source flavor asset's fileExt -----
+        const flavor_response = await KALTURA.services.flavorAsset.getByEntryId(validation.entry_id)
+            .execute(client);
+
+        if (flavor_response && flavor_response.objectType === 'KalturaAPIException') {
+            LOGGER.module().warn(`WARNING: [/media-library/kaltura-service (get_kaltura_original_filename)] flavorAsset.getByEntryId API exception for entry ID: ${validation.entry_id} - ${flavor_response.message}`);
+            return build_response(true, 'No original filename available', {
+                original_filename: null
+            });
+        }
+
+        const original_asset = find_original_flavor_asset(flavor_response);
+
+        if (original_asset && typeof original_asset.fileExt === 'string' && original_asset.fileExt.trim()) {
+            const synthesized = `${validation.entry_id}.${original_asset.fileExt.trim()}`;
+            LOGGER.module().info(`INFO: [/media-library/kaltura-service (get_kaltura_original_filename)] OriginalFileName not set; synthesized "${synthesized}" for entry ID: ${validation.entry_id}`);
+            return build_response(true, 'Original filename synthesized from flavor asset', {
+                original_filename: synthesized
+            });
+        }
+
+        LOGGER.module().info(`INFO: [/media-library/kaltura-service (get_kaltura_original_filename)] No original filename available for entry ID: ${validation.entry_id}`);
+        return build_response(true, 'No original filename available', {
+            original_filename: null
+        });
+
+    } catch (error) {
+        LOGGER.module().error(`ERROR: [/media-library/kaltura-service (get_kaltura_original_filename)] ${error.message}`, {
+            entry_id,
+            stack: error.stack
+        });
+        return build_response(false, 'Error retrieving Kaltura original filename: ' + error.message, {
+            original_filename: null
+        });
+    }
+};

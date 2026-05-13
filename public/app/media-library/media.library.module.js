@@ -1310,24 +1310,56 @@ const mediaLibraryModule = (function() {
                         title: 'File Name',
                         render: function(data, type, row) {
                             if (type === 'display') {
-                                // Repository items: show "Repository media" instead of filename/size
+                                // Repository items: show original_filename (captured at import).
+                                // Compound items (multi-part) get a "Files (N): " prefix so the
+                                // count is visible at a glance. Records imported before the
+                                // filename pipeline existed fall back to the legacy placeholder.
                                 if (row.ingest_method === 'repository') {
-                                    return '<small><i class="fa fa-database" style="margin-right: 4px;" aria-hidden="true"></i>Repository media</small>';
+                                    const original = data && data !== 'N/A' ? String(data).trim() : '';
+                                    if (!original) {
+                                        return '<small><i class="fa fa-database" style="margin-right: 4px;" aria-hidden="true"></i>Repository media</small>';
+                                    }
+                                    const parts = original.split('; ').filter(s => s.length > 0);
+                                    const prefix = parts.length > 1 ? 'Files (' + parts.length + '): ' : '';
+                                    const safe_repo_filename = sanitize_html(original);
+                                    // Image and PDF rows get a media-type icon, mirroring how Kaltura
+                                    // rows prefix audio/video icons. Same FA classes used elsewhere
+                                    // in the app (see helper.media.library.module.js icon map).
+                                    const repo_icon_class = row.media_type === 'image' ? 'fa-file-image-o'
+                                        : row.media_type === 'pdf' ? 'fa-file-pdf-o'
+                                        : '';
+                                    const repo_icon_html = repo_icon_class
+                                        ? '<i class="fa ' + repo_icon_class + '" style="margin-right: 4px;" aria-hidden="true"></i>'
+                                        : '';
+                                    return `<small class="media-filename" title="${safe_repo_filename}">${repo_icon_html}${prefix}${safe_repo_filename}</small>`;
                                 }
 
-                                // Kaltura items: show "Kaltura Media" with audio/video icon
-                                // dispatched on media_type. Every other branch in this file
-                                // reads media_type; mime_type was an inconsistent outlier
-                                // (harmless today since Kaltura rows carry both, but worth
-                                // harmonizing).
+                                // Kaltura items: show original_filename (captured at import via the
+                                // Kaltura custom metadata profile, or synthesized {entry_id}.{fileExt}).
+                                // Keeps the audio/video icon for at-a-glance media-type cue. Records
+                                // imported before the filename pipeline existed fall back to the legacy
+                                // "Kaltura media" placeholder.
                                 if (row.ingest_method === 'kaltura') {
                                     const kaltura_icon = row.media_type === 'audio' ? 'fa-volume-up' : 'fa-film';
-                                    return '<small><i class="fa ' + kaltura_icon + '" style="margin-right: 4px;" aria-hidden="true"></i>Kaltura media</small>';
+                                    const kaltura_original = data && data !== 'N/A' ? String(data).trim() : '';
+                                    if (!kaltura_original) {
+                                        return '<small><i class="fa ' + kaltura_icon + '" style="margin-right: 4px;" aria-hidden="true"></i>Kaltura media</small>';
+                                    }
+                                    const safe_kaltura_filename = sanitize_html(kaltura_original);
+                                    return `<small class="media-filename" title="${safe_kaltura_filename}"><i class="fa ${kaltura_icon}" style="margin-right: 4px;" aria-hidden="true"></i>${safe_kaltura_filename}</small>`;
                                 }
 
-                                // Uploaded items: show filename with tooltip
+                                // Uploaded items: show filename with tooltip. Image and PDF rows get
+                                // a media-type icon for visual parity with the Kaltura audio/video
+                                // icons. Other upload types render without an icon.
                                 const safe_filename = sanitize_html(data || 'N/A');
-                                return `<small class="media-filename" title="${safe_filename}">${safe_filename}</small>`;
+                                const upload_icon_class = row.media_type === 'image' ? 'fa-file-image-o'
+                                    : row.media_type === 'pdf' ? 'fa-file-pdf-o'
+                                    : '';
+                                const upload_icon_html = upload_icon_class
+                                    ? '<i class="fa ' + upload_icon_class + '" style="margin-right: 4px;" aria-hidden="true"></i>'
+                                    : '';
+                                return `<small class="media-filename" title="${safe_filename}">${upload_icon_html}${safe_filename}</small>`;
                             }
                             return data;
                         }

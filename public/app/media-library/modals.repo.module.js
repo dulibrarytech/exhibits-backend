@@ -121,6 +121,29 @@ const repoModalsModule = (function() {
     };
 
     /**
+     * Derive an Item Type label when display_record.resource_type is missing.
+     * Some repository records don't carry an explicit resource_type on the
+     * display_record. Falls back to the top-level `type` field, then to a
+     * mime-type-derived canonical archival term (still image / moving image /
+     * sound recording / text). The Item Type dropdown matches case-insensitively
+     * against option labels, so casing here doesn't matter.
+     * @param {Object} item_data - The repository item data
+     * @returns {string} A best-guess resource type label, or empty string
+     */
+    const derive_item_type_fallback = (item_data) => {
+        if (!item_data || typeof item_data !== 'object') return '';
+        if (typeof item_data.type === 'string' && item_data.type.trim()) {
+            return item_data.type.trim();
+        }
+        const mt = (item_data.mime_type || '').toLowerCase().trim();
+        if (mt.startsWith('image/')) return 'still image';
+        if (mt.startsWith('video/')) return 'moving image';
+        if (mt.startsWith('audio/')) return 'sound recording';
+        if (mt === 'application/pdf') return 'text';
+        return '';
+    };
+
+    /**
      * Extract the archival local identifier (e.g. "U116.01.0001.00050") from a
      * repository item. Lives in display_record.identifiers as the entry whose
      * `type === "local"`. Returns the raw identifier value (NOT html-escaped)
@@ -133,6 +156,44 @@ const repoModalsModule = (function() {
         if (!Array.isArray(ids)) return '';
         const entry = ids.find(i => i && i.type === 'local' && i.identifier);
         return entry ? entry.identifier : '';
+    };
+
+    // Separator used when joining multiple part filenames for a compound repo
+    // record. Chosen because filenames almost never contain "; " — keeps the
+    // joined string parseable when we later need to count or split it back out.
+    const PART_FILENAMES_JOINER = '; ';
+
+    /**
+     * Build a joined filename string from a repository item's parts array.
+     * Each part's `title` is a filename (e.g. "U116.01.0001.00050.tif").
+     * Single-part records yield one filename; compound records yield a
+     * joined list. Returns the raw value (NOT html-escaped).
+     * @param {Object} item_data - The repository item data
+     * @returns {string} Joined filename(s), or empty string if absent
+     */
+    const get_part_filenames = (item_data) => {
+        const parts = item_data && item_data.display_record && item_data.display_record.parts;
+        if (!Array.isArray(parts)) return '';
+        const titles = parts
+            .map(p => (p && typeof p.title === 'string') ? p.title.trim() : '')
+            .filter(t => t.length > 0);
+        return titles.join(PART_FILENAMES_JOINER);
+    };
+
+    /**
+     * Format a stored filename string for display under the thumbnail.
+     * Single-part → "Filename"; compound → "Files (N)". Caller html-escapes
+     * the returned `value`.
+     * @param {string} filename - The stored filename string (possibly joined)
+     * @returns {{label: string, value: string}|null} Display info, or null if empty
+     */
+    const format_filename_display = (filename) => {
+        if (!filename || typeof filename !== 'string') return null;
+        const trimmed = filename.trim();
+        if (!trimmed) return null;
+        const parts = trimmed.split(PART_FILENAMES_JOINER).filter(s => s.length > 0);
+        const label = parts.length > 1 ? 'Files (' + parts.length + ')' : 'Filename';
+        return { label: label, value: trimmed };
     };
 
     // ========================================
@@ -266,6 +327,7 @@ const repoModalsModule = (function() {
                 repo_uuid: item_data.uuid,
                 repo_handle: item_data.handle || null,
                 call_number: get_local_identifier(item_data) || null,
+                original_filename: get_part_filenames(item_data) || null,
                 mime_type: item_data.mime_type || null,
                 media_type: derive_media_type(item_data.mime_type),
                 ingest_method: 'repository'
@@ -410,8 +472,20 @@ const repoModalsModule = (function() {
         // so curators can cross-reference the source archival call number.
         const local_identifier = escape_html(get_local_identifier(item_data));
 
+        // Original filename(s) from display_record.parts. Single-part records show
+        // "Filename:", compound records show "Files (N):" so it's obvious at a
+        // glance which records bring more than one file along.
+        const filename_display = format_filename_display(get_part_filenames(item_data));
+
         // Extract subjects and resource_type from display_record for pre-selection
         const repo_subjects = extract_repo_subjects(item_data.display_record || null);
+
+        // Records that lack `display_record.resource_type` (some archival items
+        // omit it) still deserve an auto-populated Item Type. Fall back to the
+        // top-level `type` field, then derive from mime_type.
+        if (!repo_subjects.resource_type) {
+            repo_subjects.resource_type = derive_item_type_fallback(item_data);
+        }
 
         // Get thumbnail URL using repoServiceModule
         const thumbnail_url = get_repo_thumbnail_url(item_data.uuid);
@@ -461,6 +535,10 @@ const repoModalsModule = (function() {
         html += '<div class="item-meta small text-muted">';
         if (local_identifier) {
             html += '<div class="item-local-id-display text-truncate" title="' + local_identifier + '">' + local_identifier + '</div>';
+        }
+        if (filename_display) {
+            const filename_value = escape_html(filename_display.value);
+            html += '<div class="item-filename-display text-truncate" title="' + filename_value + '"><strong>' + filename_display.label + ':</strong> ' + filename_value + '</div>';
         }
         if (creator) {
             html += '<div class="item-creator-display text-truncate" title="' + creator + '"><i class="fa fa-user" style="margin-right: 4px;" aria-hidden="true"></i>' + creator + '</div>';
@@ -933,7 +1011,7 @@ const repoModalsModule = (function() {
         const info_el = document.getElementById('view-media-info');
         if (info_el) {
             if (is_repo) {
-                // Repository item: show name, Repo ID, Identifier (call number), and ingest method
+                // Repository item: show name, Repo ID, Identifier (call number), Filename(s), and ingest method
                 let info_html = '<p class="mb-1">' +
                     '<strong>Name:</strong> ' +
                     '<span>' + escape_html(name || '-') + '</span>' +
@@ -948,6 +1026,18 @@ const repoModalsModule = (function() {
                         '<p class="mb-1">' +
                         '<strong>Identifier:</strong> ' +
                         '<span>' + escape_html(call_number) + '</span>' +
+                        '</p>';
+                }
+
+                // `filename` carries record.original_filename (joined parts string for
+                // repo records imported after this feature shipped). Empty/'N/A' means
+                // the record predates the feature — silently skip in that case.
+                const filename_display_view = format_filename_display(filename && filename !== 'N/A' ? filename : '');
+                if (filename_display_view) {
+                    info_html +=
+                        '<p class="mb-1">' +
+                        '<strong>' + filename_display_view.label + ':</strong> ' +
+                        '<span>' + escape_html(filename_display_view.value) + '</span>' +
                         '</p>';
                 }
 
