@@ -46,6 +46,13 @@ const mediaLibraryModule = (function() {
     // DataTable instance reference
     let media_data_table = null;
 
+    // Full row records keyed by uuid. Populated when the table renders so the
+    // preview-modal click handlers can pass a complete record (including audit
+    // fields like created / created_by / updated_by) to each modal opener
+    // without needing to encode every field as a DOM data-attribute or fetch
+    // it back from the API on click.
+    const view_record_map = new Map();
+
     // Exhibit filter state
     let exhibit_titles_cache = null;   // Map<uuid, title>
     let selected_exhibit_uuid = null;  // Currently selected exhibit UUID for filtering
@@ -450,11 +457,19 @@ const mediaLibraryModule = (function() {
             return;
         }
 
+        // Look up the full row record so each preview modal can show the same
+        // metadata set the edit form shows (created, created_by, updated_by, etc.).
+        // Falls through to the legacy positional args when the lookup misses.
+        const record = view_record_map.get(uuid) || null;
+
         // Kaltura items: open player modal directly
         if (ingest_method === 'kaltura') {
 
             if (typeof kalturaModalsModule !== 'undefined' && typeof kalturaModalsModule.open_kaltura_player_modal === 'function') {
-                kalturaModalsModule.open_kaltura_player_modal({
+                // Player modal already accepts a record object. Prefer the full
+                // row record so audit fields surface; fall back to the minimum
+                // it needs to render the iframe.
+                kalturaModalsModule.open_kaltura_player_modal(record || {
                     kaltura_entry_id: kaltura_entry_id || '',
                     name: name || '',
                     item_type: media_type || ''
@@ -468,13 +483,13 @@ const mediaLibraryModule = (function() {
 
         // Repository items: use repoModalsModule which handles repo thumbnail URLs
         if (ingest_method === 'repository' && typeof repoModalsModule !== 'undefined' && typeof repoModalsModule.open_view_media_modal === 'function') {
-            repoModalsModule.open_view_media_modal(uuid, name, filename, size, media_type, ingest_method, repo_uuid, repo_handle, call_number);
+            repoModalsModule.open_view_media_modal(uuid, name, filename, size, media_type, ingest_method, repo_uuid, repo_handle, call_number, record);
             return;
         }
 
         // Uploaded items: use mediaModalsModule
         if (typeof mediaModalsModule !== 'undefined' && typeof mediaModalsModule.open_view_media_modal === 'function') {
-            mediaModalsModule.open_view_media_modal(uuid, name, filename, size, media_type, ingest_method);
+            mediaModalsModule.open_view_media_modal(uuid, name, filename, size, media_type, ingest_method, record);
         } else {
             console.error('mediaModalsModule.open_view_media_modal not available');
         }
@@ -710,7 +725,11 @@ const mediaLibraryModule = (function() {
                 e.stopPropagation();
                 close_open_dropdowns();
 
-                const record = {
+                // Prefer the full row record (audit fields surface in player metadata).
+                // Fall back to the minimal record assembled from data attributes when
+                // the row isn't in the map for some reason.
+                const uuid = this.getAttribute('data-uuid');
+                const record = (uuid && view_record_map.get(uuid)) || {
                     kaltura_entry_id: this.getAttribute('data-kaltura-entry-id'),
                     name: this.getAttribute('data-name'),
                     item_type: this.getAttribute('data-media-type') || ''
@@ -1158,7 +1177,9 @@ const mediaLibraryModule = (function() {
             // Get auth token for thumbnail URLs
             const token = authModule.get_user_token();
 
-            // Prepare data for DataTable
+            // Prepare data for DataTable. Clear the previous record map so stale
+            // rows (e.g. items deleted since the last render) can't be looked up.
+            view_record_map.clear();
             const table_data = records.map(record => {
 
                 // Determine if this item has a server-generated thumbnail
@@ -1178,6 +1199,7 @@ const mediaLibraryModule = (function() {
                     created: record.created || null,
                     created_display: format_date(record.created),
                     created_by: sanitize_html(record.created_by) || null,
+                    updated_by: sanitize_html(record.updated_by) || null,
                     upload_uuid: record.upload_uuid || null,
                     repo_uuid: record.repo_uuid || null,
                     repo_handle: record.repo_handle || null,
@@ -1215,6 +1237,14 @@ const mediaLibraryModule = (function() {
                         return [];
                     })()
                 };
+            });
+
+            // Cache the full row data for click-time lookup by the preview-modal
+            // dispatch. Done after the .map() so each row entry is fully built.
+            table_data.forEach(row_entry => {
+                if (row_entry && row_entry.uuid) {
+                    view_record_map.set(row_entry.uuid, row_entry);
+                }
             });
 
             // Initialize DataTable with configuration

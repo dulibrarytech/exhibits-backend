@@ -801,7 +801,15 @@ const kalturaModalsModule = (function() {
         const iframe = document.getElementById('kaltura-player-iframe');
         const name_el = document.getElementById('kaltura-player-media-name');
         const entry_id_el = document.getElementById('kaltura-player-entry-id');
+        const filename_row_el = document.getElementById('kaltura-player-filename-row');
+        const filename_el = document.getElementById('kaltura-player-filename');
         const type_el = document.getElementById('kaltura-player-media-type');
+        const date_created_row_el = document.getElementById('kaltura-player-date-created-row');
+        const date_created_el = document.getElementById('kaltura-player-date-created');
+        const added_by_row_el = document.getElementById('kaltura-player-added-by-row');
+        const added_by_el = document.getElementById('kaltura-player-added-by');
+        const updated_by_row_el = document.getElementById('kaltura-player-updated-by-row');
+        const updated_by_el = document.getElementById('kaltura-player-updated-by');
         const header_text = document.getElementById('kaltura-player-header-text');
         const type_icon = document.getElementById('kaltura-player-type-icon');
         const responsive_container = document.getElementById('kaltura-player-responsive');
@@ -812,11 +820,53 @@ const kalturaModalsModule = (function() {
         if (name_el) name_el.textContent = name;
         if (entry_id_el) entry_id_el.textContent = entry_id;
 
+        // Filename: only show the row when a value exists (records imported before
+        // the original_filename pipeline shipped won't have one).
+        if (record.original_filename && filename_el && filename_row_el) {
+            filename_el.textContent = String(record.original_filename).trim();
+            filename_row_el.style.display = '';
+        } else if (filename_row_el) {
+            filename_row_el.style.display = 'none';
+        }
+
         // Configure based on media type (audio vs video)
         const is_audio = item_type === 'audio';
 
         if (type_el) {
             type_el.textContent = is_audio ? 'Audio' : 'Video';
+        }
+
+        // Audit fields — only show rows when the record carries the values.
+        // Mirrors the edit form's behavior (and the Updated By hide rules:
+        // null / 'N/A' / 'migration_script' suppress the row).
+        if (date_created_el && date_created_row_el) {
+            const created_display = record.created_display || (record.created || '');
+            if (created_display) {
+                date_created_el.textContent = created_display;
+                date_created_row_el.style.display = '';
+            } else {
+                date_created_row_el.style.display = 'none';
+            }
+        }
+
+        if (added_by_el && added_by_row_el) {
+            if (record.created_by) {
+                added_by_el.textContent = record.created_by;
+                added_by_row_el.style.display = '';
+            } else {
+                added_by_row_el.style.display = 'none';
+            }
+        }
+
+        if (updated_by_el && updated_by_row_el) {
+            const ub = (record.updated_by || '').toString().trim();
+            const ubl = ub.toLowerCase();
+            if (ub && ubl !== 'n/a' && ubl !== 'migration_script') {
+                updated_by_el.textContent = ub;
+                updated_by_row_el.style.display = '';
+            } else {
+                updated_by_row_el.style.display = 'none';
+            }
         }
 
         if (header_text) {

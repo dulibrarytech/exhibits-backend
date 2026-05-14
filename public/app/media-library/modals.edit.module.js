@@ -305,9 +305,27 @@ const mediaEditModalModule = (function() {
             html += '<div class="mb-1"><strong>File Size:</strong> ' + file_size + '</div>';
         }
         html += '<div class="mb-1"><strong>Media Type:</strong> ' + type_label + '</div>';
+        // Ingest Method — capitalize the stored lowercase value ('upload' → 'Upload', etc.)
+        // for visual parity with the other labels in this metadata column.
+        const ingest_method_label = record.ingest_method
+            ? record.ingest_method.charAt(0).toUpperCase() + record.ingest_method.slice(1)
+            : 'N/A';
+        html += '<div class="mb-1"><strong>Ingest Method:</strong> ' + escape_html(ingest_method_label) + '</div>';
         html += '<div class="mb-1"><strong>Date Created:</strong> ' + format_edit_date(record.created) + '</div>';
         html += '<div class="mb-1"><strong>Added By:</strong> ' + escape_html(record.created_by || 'N/A') + '</div>';
-        html += '<div><strong>Updated By:</strong> ' + escape_html(record.updated_by || 'N/A') + '</div>';
+        // Hide "Updated By" when there's no real user attribution:
+        //   - missing (null / undefined / empty / whitespace) — never updated
+        //   - "N/A" — defensive (some upstream callers stamped this string)
+        //   - "migration_script" — script-driven updates aren't meaningful user
+        //                          history; case-insensitive in case of variants
+        const updated_by_raw = (record.updated_by || '').toString().trim();
+        const updated_by_normalized = updated_by_raw.toLowerCase();
+        const hide_updated_by = !updated_by_raw
+            || updated_by_normalized === 'n/a'
+            || updated_by_normalized === 'migration_script';
+        if (!hide_updated_by) {
+            html += '<div><strong>Updated By:</strong> ' + escape_html(record.updated_by) + '</div>';
+        }
         html += '</div>';
 
         html += '</div></div>'; // close edit-preview-container, col-md-4

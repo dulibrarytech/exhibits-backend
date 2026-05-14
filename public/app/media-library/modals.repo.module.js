@@ -982,8 +982,9 @@ const repoModalsModule = (function() {
      * @param {string} repo_uuid - Repository item UUID (for repo items)
      * @param {string} repo_handle - Repository handle URL (for repo items)
      * @param {string} call_number - Archival local identifier (for repo items)
+     * @param {Object} [record] - Full row record (for audit fields: created_display, created_by, updated_by)
      */
-    obj.open_view_media_modal = function(uuid, name, filename, size, media_type, ingest_method, repo_uuid, repo_handle, call_number) {
+    obj.open_view_media_modal = function(uuid, name, filename, size, media_type, ingest_method, repo_uuid, repo_handle, call_number, record) {
         const modal_element = document.getElementById('view-media-modal');
 
         // Decode HTML entities in name to prevent double-encoding
@@ -1011,43 +1012,44 @@ const repoModalsModule = (function() {
         const info_el = document.getElementById('view-media-info');
         if (info_el) {
             if (is_repo) {
-                // Repository item: show name, Repo ID, Identifier (call number), Filename(s), and ingest method
-                let info_html = '<p class="mb-1">' +
-                    '<strong>Name:</strong> ' +
-                    '<span>' + escape_html(name || '-') + '</span>' +
-                    '</p>' +
-                    '<p class="mb-1">' +
-                    '<strong>Repo ID:</strong> ' +
-                    '<span>' + escape_html(repo_uuid || '-') + '</span>' +
-                    '</p>';
-
-                if (call_number) {
-                    info_html +=
-                        '<p class="mb-1">' +
-                        '<strong>Identifier:</strong> ' +
-                        '<span>' + escape_html(call_number) + '</span>' +
-                        '</p>';
-                }
+                // Build the metadata block to match the edit form's sidebar 1:1.
+                // Row collection then render — keeps mb-0 on the very last row regardless
+                // of which optional rows (Identifier / Filename / audit) are included.
+                const rows = [
+                    ['Name', name || '-'],
+                    ['Repo ID', repo_uuid || '-']
+                ];
+                if (call_number) rows.push(['Identifier', call_number]);
 
                 // `filename` carries record.original_filename (joined parts string for
                 // repo records imported after this feature shipped). Empty/'N/A' means
                 // the record predates the feature — silently skip in that case.
                 const filename_display_view = format_filename_display(filename && filename !== 'N/A' ? filename : '');
-                if (filename_display_view) {
-                    info_html +=
-                        '<p class="mb-1">' +
-                        '<strong>' + filename_display_view.label + ':</strong> ' +
-                        '<span>' + escape_html(filename_display_view.value) + '</span>' +
-                        '</p>';
+                if (filename_display_view) rows.push([filename_display_view.label, filename_display_view.value]);
+
+                const media_type_for_view = (record && record.media_type) || media_type;
+                if (media_type_for_view && media_type_for_view !== 'N/A') rows.push(['Media Type', media_type_for_view]);
+
+                const ingest_method_cap = ingest_method
+                    ? ingest_method.charAt(0).toUpperCase() + ingest_method.slice(1)
+                    : 'N/A';
+                rows.push(['Ingest Method', ingest_method_cap]);
+
+                // Audit rows — only when the full record was passed through
+                if (record && record.created_display) rows.push(['Date Created', record.created_display]);
+                if (record && record.created_by) rows.push(['Added By', record.created_by]);
+                if (record && record.updated_by) {
+                    const ub = String(record.updated_by).trim();
+                    const ubl = ub.toLowerCase();
+                    if (ub && ubl !== 'n/a' && ubl !== 'migration_script') {
+                        rows.push(['Updated By', ub]);
+                    }
                 }
 
-                info_html +=
-                    '<p class="mb-0">' +
-                    '<strong>Ingest Method:</strong> ' +
-                    '<span>' + escape_html(ingest_method || '-') + '</span>' +
-                    '</p>';
-
-                info_el.innerHTML = info_html;
+                info_el.innerHTML = rows.map((row, idx) => {
+                    const cls = idx === rows.length - 1 ? 'mb-0' : 'mb-1';
+                    return '<p class="' + cls + '"><strong>' + row[0] + ':</strong> <span>' + escape_html(String(row[1])) + '</span></p>';
+                }).join('');
             } else {
                 // Uploaded item: show filename, size, and ingest method
                 info_el.innerHTML = '<p class="mb-1">' +

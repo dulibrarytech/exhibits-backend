@@ -714,21 +714,22 @@ const mediaModalsModule = (function() {
      * @param {string} size - Formatted file size
      * @param {string} media_type - Media type (image, pdf, etc.)
      * @param {string} ingest_method - Ingest method (upload, kaltura, etc.)
+     * @param {Object} [record] - Full row record (for audit fields)
      */
-    obj.open_view_media_modal = function(uuid, name, filename, size, media_type, ingest_method) {
+    obj.open_view_media_modal = function(uuid, name, filename, size, media_type, ingest_method, record) {
         const modal_element = document.getElementById('view-media-modal');
 
         // Decode HTML entities in name to prevent double-encoding
         name = decode_html_entities(name);
-        
+
         if (!modal_element) {
             console.error('View media modal not found');
             return;
         }
 
         // Determine display type - use passed media_type, fallback to filename detection
-        const display_type = (media_type && media_type !== 'N/A') 
-            ? media_type.toLowerCase() 
+        const display_type = (media_type && media_type !== 'N/A')
+            ? media_type.toLowerCase()
             : get_media_type_from_filename(filename);
 
         // Update modal title
@@ -737,35 +738,39 @@ const mediaModalsModule = (function() {
             title_el.textContent = name || 'View Media';
         }
 
-        // Update file info - rebuild info section to ensure correct structure
-        // (handles case where repo modal may have replaced the info HTML)
+        // Update file info — full edit-form parity. Row collection then render
+        // so mb-0 lands on the actual last visible row regardless of which
+        // optional audit fields are present.
         const info_el = document.getElementById('view-media-info');
         if (info_el) {
-            info_el.innerHTML = '<p class="mb-1">' +
-                '<strong>File:</strong> ' +
-                '<span id="view-media-filename">-</span>' +
-                '</p>' +
-                '<p class="mb-1">' +
-                '<strong>Size:</strong> ' +
-                '<span id="view-media-filesize">-</span>' +
-                '</p>' +
-                '<p class="mb-0">' +
-                '<strong>Ingest Method:</strong> ' +
-                '<span id="view-media-ingest-method">-</span>' +
-                '</p>';
-        }
+            const rows = [
+                ['Name', name || '-'],
+                ['Filename', filename || '-'],
+                ['File Size', size || '-']
+            ];
+            const media_type_for_view = (record && record.media_type) || media_type;
+            if (media_type_for_view && media_type_for_view !== 'N/A') rows.push(['Media Type', media_type_for_view]);
 
-        const filename_el = document.getElementById('view-media-filename');
-        const filesize_el = document.getElementById('view-media-filesize');
-        const ingest_method_el = document.getElementById('view-media-ingest-method');
-        if (filename_el) {
-            filename_el.textContent = filename || '-';
-        }
-        if (filesize_el) {
-            filesize_el.textContent = size || '-';
-        }
-        if (ingest_method_el) {
-            ingest_method_el.textContent = ingest_method || '-';
+            const ingest_method_cap = ingest_method
+                ? ingest_method.charAt(0).toUpperCase() + ingest_method.slice(1)
+                : 'N/A';
+            rows.push(['Ingest Method', ingest_method_cap]);
+
+            // Audit rows — only when the full record was passed through
+            if (record && record.created_display) rows.push(['Date Created', record.created_display]);
+            if (record && record.created_by) rows.push(['Added By', record.created_by]);
+            if (record && record.updated_by) {
+                const ub = String(record.updated_by).trim();
+                const ubl = ub.toLowerCase();
+                if (ub && ubl !== 'n/a' && ubl !== 'migration_script') {
+                    rows.push(['Updated By', ub]);
+                }
+            }
+
+            info_el.innerHTML = rows.map((row, idx) => {
+                const cls = idx === rows.length - 1 ? 'mb-0' : 'mb-1';
+                return '<p class="' + cls + '"><strong>' + row[0] + ':</strong> <span>' + escape_html(String(row[1])) + '</span></p>';
+            }).join('');
         }
 
         // Get elements
