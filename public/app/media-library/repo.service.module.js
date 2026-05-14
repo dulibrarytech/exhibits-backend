@@ -109,15 +109,15 @@ const repoServiceModule = (function() {
     };
 
     /**
-     * Hide loading indicator and show default state
+     * Clear the results container. Previously rendered a magnifying-glass
+     * placeholder with prompt text; the placeholder was removed for a cleaner
+     * empty state so the toolbar is the only visible affordance at rest.
+     * Name preserved for caller compatibility.
      */
     const hide_loading = () => {
         const results_container = document.getElementById('repo-search-results');
         if (results_container) {
-            results_container.innerHTML = '<div class="text-center py-4 text-muted">' +
-                '<i class="fa fa-search fa-3x mb-3" aria-hidden="true"></i>' +
-                '<p>Enter a search term above to find repository items</p>' +
-                '</div>';
+            results_container.innerHTML = '';
         }
     };
 
@@ -140,6 +140,18 @@ const repoServiceModule = (function() {
         if (selected_count) {
             selected_count.textContent = selected_items.size;
         }
+    };
+
+    /**
+     * Update the clear button visibility based on whether search results exist.
+     * Shows when there's something to clear (results currently displayed),
+     * hides otherwise. Keeps the toolbar uncluttered before the first search
+     * and after a clear/import.
+     */
+    const update_clear_button = () => {
+        const clear_btn = document.getElementById('repo-clear-btn');
+        if (!clear_btn) return;
+        clear_btn.style.display = current_search_results.length > 0 ? 'inline-block' : 'none';
     };
 
     /**
@@ -424,6 +436,7 @@ const repoServiceModule = (function() {
         
         // Store all results
         current_search_results = results_array;
+        update_clear_button();
 
         if (results_array.length === 0) {
             // Clear the results container - message is shown via display_message
@@ -691,6 +704,36 @@ const repoServiceModule = (function() {
         }
 
         update_import_button();
+        update_clear_button();
+    };
+
+    /**
+     * Clear the full repo search UI state: empties the search input, resets the
+     * results region to its default placeholder, drops any pending selections,
+     * clears the message area, and returns focus to the input. Bound to the
+     * Clear button and to the Escape key on the search input.
+     */
+    obj.clear_search = function() {
+        const search_input = document.getElementById('repo-uuid');
+        if (search_input) {
+            search_input.value = '';
+        }
+
+        // Reuse the loading/empty placeholder for the results region — same
+        // visual state the user sees before the first search.
+        hide_loading();
+
+        obj.clear_selections();
+        clear_message();
+
+        // Reset pagination state if the module exposes a reset hook
+        if (typeof repoPaginationModule !== 'undefined' && typeof repoPaginationModule.reset === 'function') {
+            repoPaginationModule.reset();
+        }
+
+        if (search_input && typeof search_input.focus === 'function') {
+            search_input.focus();
+        }
     };
 
     /**
@@ -729,6 +772,9 @@ const repoServiceModule = (function() {
                     if (results_container) {
                         results_container.innerHTML = '';
                     }
+                    // Reset results state + hide Clear button (results are gone)
+                    current_search_results = [];
+                    update_clear_button();
 
                     // Refresh media library table if available
                     if (typeof mediaLibraryModule !== 'undefined' && mediaLibraryModule.refresh_media_table) {
@@ -762,7 +808,7 @@ const repoServiceModule = (function() {
             });
         }
 
-        // Search on Enter key
+        // Search on Enter key + Escape clears the full search UI state
         const search_input = document.getElementById('repo-uuid');
         if (search_input) {
             search_input.addEventListener('keypress', async (event) => {
@@ -770,6 +816,21 @@ const repoServiceModule = (function() {
                     event.preventDefault();
                     await obj.search(search_input.value);
                 }
+            });
+            search_input.addEventListener('keydown', (event) => {
+                if (event.key === 'Escape') {
+                    event.preventDefault();
+                    obj.clear_search();
+                }
+            });
+        }
+
+        // Clear button click — empties input, resets results, drops selections
+        const clear_btn = document.getElementById('repo-clear-btn');
+        if (clear_btn) {
+            clear_btn.addEventListener('click', (event) => {
+                event.preventDefault();
+                obj.clear_search();
             });
         }
 
