@@ -945,6 +945,23 @@ const repoModalsModule = (function() {
             cancel_btn.parentNode.replaceChild(new_cancel_btn, cancel_btn);
             new_cancel_btn.addEventListener('click', close_view_modal);
         }
+
+        // Edit button: closes the preview and opens the edit form for the
+        // currently-displayed record. Mirrors the wiring in modals.upload.module.js
+        // (both modules share the same view-media-modal DOM element).
+        const edit_btn = document.getElementById('view-media-edit-btn');
+        if (edit_btn) {
+            const new_edit_btn = edit_btn.cloneNode(true);
+            edit_btn.parentNode.replaceChild(new_edit_btn, edit_btn);
+            new_edit_btn.addEventListener('click', () => {
+                const modal_el = document.getElementById('view-media-modal');
+                const uuid = modal_el && modal_el.dataset ? modal_el.dataset.uuid : '';
+                close_view_modal();
+                if (uuid && typeof mediaEditModalModule !== 'undefined' && typeof mediaEditModalModule.open_edit_media_modal === 'function') {
+                    setTimeout(() => { mediaEditModalModule.open_edit_media_modal(uuid); }, 200);
+                }
+            });
+        }
     };
 
     /**
@@ -993,6 +1010,14 @@ const repoModalsModule = (function() {
         if (!modal_element) {
             console.error('View media modal not found');
             return;
+        }
+
+        // Stash the uuid on the modal element so the Edit button click handler
+        // can read it back without needing closure capture.
+        if (uuid) {
+            modal_element.dataset.uuid = uuid;
+        } else {
+            delete modal_element.dataset.uuid;
         }
 
         const is_repo = ingest_method === 'repository';

@@ -681,6 +681,27 @@ const mediaModalsModule = (function() {
             cancel_btn.parentNode.replaceChild(new_cancel_btn, cancel_btn);
             new_cancel_btn.addEventListener('click', close_view_modal);
         }
+
+        // Edit button: closes the preview and opens the edit form for the
+        // currently-displayed record. The uuid is stashed on the modal element's
+        // dataset by the opener, so a single shared handler works regardless of
+        // which dispatch (repo or upload) populated the modal.
+        const edit_btn = document.getElementById('view-media-edit-btn');
+        if (edit_btn) {
+            const new_edit_btn = edit_btn.cloneNode(true);
+            edit_btn.parentNode.replaceChild(new_edit_btn, edit_btn);
+            new_edit_btn.addEventListener('click', () => {
+                const modal_el = document.getElementById('view-media-modal');
+                const uuid = modal_el && modal_el.dataset ? modal_el.dataset.uuid : '';
+                close_view_modal();
+                if (uuid && typeof mediaEditModalModule !== 'undefined' && typeof mediaEditModalModule.open_edit_media_modal === 'function') {
+                    // Small delay so the preview modal's close animation finishes
+                    // before the edit modal opens. Matches the pattern used in the
+                    // Kaltura view→player handoff.
+                    setTimeout(() => { mediaEditModalModule.open_edit_media_modal(uuid); }, 200);
+                }
+            });
+        }
     };
 
     /**
@@ -725,6 +746,15 @@ const mediaModalsModule = (function() {
         if (!modal_element) {
             console.error('View media modal not found');
             return;
+        }
+
+        // Stash the uuid on the modal element so the Edit button click handler
+        // can read it back without needing closure capture (the handler is wired
+        // once in setup_view_modal_handlers and serves every open of this modal).
+        if (uuid) {
+            modal_element.dataset.uuid = uuid;
+        } else {
+            delete modal_element.dataset.uuid;
         }
 
         // Determine display type - use passed media_type, fallback to filename detection

@@ -797,6 +797,13 @@ const kalturaModalsModule = (function() {
             return;
         }
 
+        // Stash the media-library uuid so the Edit button can read it back.
+        if (record.uuid) {
+            modal_element.dataset.uuid = record.uuid;
+        } else {
+            delete modal_element.dataset.uuid;
+        }
+
         // Set modal content
         const iframe = document.getElementById('kaltura-player-iframe');
         const name_el = document.getElementById('kaltura-player-media-name');
@@ -1026,6 +1033,21 @@ const kalturaModalsModule = (function() {
         if (player_cancel_btn) {
             player_cancel_btn.addEventListener('click', function() {
                 obj.close_kaltura_player_modal();
+            });
+        }
+
+        // Edit button in footer: closes the player and opens the edit form for
+        // the current record. The uuid is stashed on the modal element's dataset
+        // by the opener so this single init-time binding works across opens.
+        const player_edit_btn = document.getElementById('kaltura-player-edit-btn');
+        if (player_edit_btn) {
+            player_edit_btn.addEventListener('click', function() {
+                const modal_el = document.getElementById('kaltura-player-modal');
+                const uuid = modal_el && modal_el.dataset ? modal_el.dataset.uuid : '';
+                obj.close_kaltura_player_modal();
+                if (uuid && typeof mediaEditModalModule !== 'undefined' && typeof mediaEditModalModule.open_edit_media_modal === 'function') {
+                    setTimeout(() => { mediaEditModalModule.open_edit_media_modal(uuid); }, 200);
+                }
             });
         }
 
