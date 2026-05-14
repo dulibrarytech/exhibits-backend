@@ -67,10 +67,17 @@ const helperMediaLibraryModule = (function() {
     };
 
     /**
-     * Display a Bootstrap 4 dismissible alert in the specified container
+     * Display a Bootstrap 4 dismissible alert in the specified container.
+     *
+     * The message is normalized to plain text before being HTML-escaped: any
+     * HTML tags (whether raw, e.g. `<strong>Name</strong>`, or already entity-
+     * encoded by a misguided caller, e.g. `&lt;strong&gt;Name&lt;/strong&gt;`)
+     * are stripped first. This defends against backend metadata that contains
+     * markup leaking into the message UI as literal "&lt;strong&gt;..." text.
+     *
      * @param {string} container_id - DOM element ID for the message area
      * @param {string} type - Alert type ('success', 'danger', 'warning', 'info')
-     * @param {string} message - Message text (will be HTML-escaped)
+     * @param {string} message - Message text (HTML tags will be stripped, remaining text will be HTML-escaped)
      */
     obj.display_message = (container_id, type, message) => {
         const message_container = document.getElementById(container_id);
@@ -79,9 +86,14 @@ const helperMediaLibraryModule = (function() {
 
         const icon = ICON_MAP[type] || ICON_MAP.info;
 
+        // Strip first (removes tags + decodes any pre-escaped entities back to
+        // text), then escape — produces a clean plain-text rendering regardless
+        // of what shape the caller passed in.
+        const safe_message = obj.escape_html(obj.strip_html(message));
+
         message_container.innerHTML = '<div class="alert alert-' + type + ' alert-dismissible fade show" role="alert">' +
             '<i class="fa ' + icon + '" style="margin-right: 8px;" aria-hidden="true"></i>' +
-            obj.escape_html(message) +
+            safe_message +
             '<button type="button" class="close" data-dismiss="alert" aria-label="Close">' +
             '<span aria-hidden="true">&times;</span>' +
             '</button>' +

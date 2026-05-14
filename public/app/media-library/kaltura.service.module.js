@@ -144,7 +144,9 @@ const kalturaServiceModule = (function() {
 
                         hide_loading();
                         const existing = dup_response.data.data.record;
-                        const display_name = existing?.name ? ' (' + escape_html(existing.name) + ')' : '';
+                        // display_message strips any HTML in the value, so pass
+                        // existing.name as-is rather than pre-escaping it.
+                        const display_name = existing?.name ? ' (' + existing.name + ')' : '';
                         display_message('warning',
                             'This item already exists in the media library' + display_name +
                             '.');

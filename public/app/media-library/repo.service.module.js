@@ -204,7 +204,13 @@ const repoServiceModule = (function() {
                                 badge.className = 'duplicate-warning-badge alert alert-warning mb-0 mt-2';
                                 badge.style.cssText = 'padding: 6px 12px; font-size: 0.85rem;';
                                 const existing = dup_response.data.data.record;
-                                const display_name = existing?.name ? ' (' + escape_html(existing.name) + ')' : '';
+                                // strip_html first (the backend may include <strong>/<em>/<br>
+                                // markup in name) then escape_html, because this is injected
+                                // via badge.innerHTML below rather than going through
+                                // display_message (which now handles strip-then-escape itself).
+                                const display_name = existing?.name
+                                    ? ' (' + escape_html(helperMediaLibraryModule.strip_html(existing.name)) + ')'
+                                    : '';
                                 badge.innerHTML = '<i class="fa fa-exclamation-triangle" style="margin-right: 6px;" aria-hidden="true"></i>' +
                                     'This item already exists in the media library' + display_name + '.';
                                 const card_body = card.querySelector('.card-body');
