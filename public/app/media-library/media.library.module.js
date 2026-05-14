@@ -1428,6 +1428,18 @@ const mediaLibraryModule = (function() {
                             }
                             return '';
                         }
+                    },
+                    {
+                        // Hidden column that exists solely so DataTables' built-in
+                        // search box can match against the ingest method ("upload",
+                        // "repository", "kaltura"). No UI column is rendered. Kept
+                        // out of the toolbar's column-visibility toggle by virtue
+                        // of being invisible and not orderable.
+                        data: 'ingest_method',
+                        title: 'Ingest Method',
+                        visible: false,
+                        searchable: true,
+                        orderable: false
                     }
                 ],
                 order: [[2, 'desc']], // Sort by created date descending
