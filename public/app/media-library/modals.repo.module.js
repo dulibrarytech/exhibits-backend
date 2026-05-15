@@ -749,6 +749,18 @@ const repoModalsModule = (function() {
             done_btn.parentNode.replaceChild(new_done_btn, done_btn);
             new_done_btn.addEventListener('click', handle_repo_modal_done);
         }
+
+        // Cancel button: closes the modal at any point. Reuses handle_repo_modal_done
+        // because the cleanup is identical — close, refresh the table if anything
+        // was already saved, fire the callback with the saved count, reset state.
+        // Items saved via per-card Save remain saved (that's a server-side commit).
+        const cancel_btn = document.getElementById('repo-media-cancel-btn');
+
+        if (cancel_btn) {
+            const new_cancel_btn = cancel_btn.cloneNode(true);
+            cancel_btn.parentNode.replaceChild(new_cancel_btn, cancel_btn);
+            new_cancel_btn.addEventListener('click', handle_repo_modal_done);
+        }
     };
 
     /**
