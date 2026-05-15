@@ -39,13 +39,13 @@ const repoSubjectsModule = (function() {
     // ========================================
 
     /**
-     * Extract value and label from an API item
+     * Extract value and label from an API item.
      * @param {Object|string} item - Subject or resource type item
      * @returns {Object} { value, label }
      */
     const extract_item_fields = (item) => {
         const value = typeof item === 'object' ? (item.term || item.resource_type || item.value || item.name || '') : String(item);
-        const label = typeof item === 'object' ? (item.title || item.resource_type || item.label || item.name || '') : String(item);
+        const label = typeof item === 'object' ? (item.term || item.resource_type || item.label || item.name || item.title || '') : String(item);
         return { value: value, label: label };
     };
 
@@ -505,13 +505,18 @@ const repoSubjectsModule = (function() {
     };
 
     /**
-     * Update the hidden input value from the selected set
+     * Update the hidden input value from the selected set.
+     *
+     * Values are pipe-joined (not comma): a subject term can itself contain
+     * ", " (e.g. "Vietnam War, 1961-1975"), so a comma here would be re-split
+     * by the server's format_subjects_for_storage and corrupt the term. Pipe
+     * matches the DB storage delimiter and the data-selected contract.
      *
      * @param {HTMLInputElement} hidden_input - The hidden input element
      * @param {Set} selected_values - Set of currently selected values
      */
     const sync_hidden_input = (hidden_input, selected_values) => {
-        hidden_input.value = Array.from(selected_values).join(',');
+        hidden_input.value = Array.from(selected_values).join('|');
     };
 
     /**
@@ -560,8 +565,10 @@ const repoSubjectsModule = (function() {
                 label_to_value[item.value.toLowerCase()] = item.value;
             });
 
-            // Split on ", " (comma-space) to extract individual terms
-            const pre_selected_terms = pre_selected_str.split(', ').map(s => s.trim()).filter(s => s.length > 0);
+            // Split on '|' to extract individual terms. Pipe (not ", ") because a
+            // single subject term can itself contain ", " (e.g. "Vietnam War,
+            // 1961-1975");
+            const pre_selected_terms = pre_selected_str.split('|').map(s => s.trim()).filter(s => s.length > 0);
 
             pre_selected_terms.forEach(term => {
                 if (valid_values.has(term)) {

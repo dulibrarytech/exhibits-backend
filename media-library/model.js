@@ -53,13 +53,21 @@ const build_response = (success, message, data = null) => {
     };
 };
 
-// Subject fields that use delimiter-separated values
+// Subject fields that use delimiter-separated values.
+// Pipe '|' is the single delimiter end-to-end: the multi-select widget emits
+// pipe-joined values, this layer stores them pipe-delimited, and it emits
+// pipe-delimited values back to the widget's data-selected. A single subject
+// heading can itself contain ", " (e.g. the LCSH term "Vietnam War,
+// 1961-1975"), so a comma delimiter would shred such a term; subject headings
+// never contain a literal pipe.
 const SUBJECT_FIELDS = ['topics_subjects', 'genre_form_subjects', 'places_subjects'];
 
 /**
- * Converts subject field delimiters from comma to pipe for storage
+ * Normalizes incoming subject field values to the pipe-delimited storage form.
+ * Input arrives pipe-joined from the multi-select widget's hidden input; this
+ * trims/de-blanks each term and re-joins with '|'.
  * @param {Object} data - Record data object
- * @returns {Object} Data with subject fields converted to pipe delimiter
+ * @returns {Object} Data with subject fields normalized to pipe delimiter
  */
 const format_subjects_for_storage = (data) => {
     if (!data || typeof data !== 'object') return data;
@@ -67,7 +75,7 @@ const format_subjects_for_storage = (data) => {
     for (const field of SUBJECT_FIELDS) {
         if (data[field] && typeof data[field] === 'string') {
             data[field] = data[field]
-                .split(',')
+                .split('|')
                 .map(s => s.trim())
                 .filter(s => s.length > 0)
                 .join('|');
@@ -78,9 +86,12 @@ const format_subjects_for_storage = (data) => {
 };
 
 /**
- * Converts subject field delimiters from pipe to comma for display
+ * Normalizes stored subject field values for the API response. The stored
+ * form is already pipe-delimited; this trims/de-blanks each term and re-joins
+ * with '|' so term boundaries survive to the edit modal's data-selected
+ * attribute intact (terms may contain ", ").
  * @param {Object} record - Database record object
- * @returns {Object} Record with subject fields converted to comma delimiter
+ * @returns {Object} Record with subject fields normalized to pipe delimiter
  */
 const format_subjects_for_display = (record) => {
     if (!record || typeof record !== 'object') return record;
@@ -91,7 +102,7 @@ const format_subjects_for_display = (record) => {
                 .split('|')
                 .map(s => s.trim())
                 .filter(s => s.length > 0)
-                .join(', ');
+                .join('|');
         }
     }
 

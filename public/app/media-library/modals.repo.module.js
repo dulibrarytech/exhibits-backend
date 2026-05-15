@@ -39,14 +39,30 @@ const repoModalsModule = (function() {
     /**
      * Extract and categorize subjects from a repository display_record.
      *
-     * Classification is driven by `terms[].type` (e.g. 'topical', 'genre_form',
-     * 'geographic') rather than `authority`, because genre/form terms can come
-     * from multiple authorities (tgm, aat, lcsh, etc.) and authority alone misses
-     * them. Falls back to authority-based mapping for records that omit `terms`.
+     * Each subject's `terms[]` is iterated and *every* term is routed to the
+     * bucket matching that term's own `type` ('topical' → Topics,
+     * 'genre_form' → Genre/Form, 'geographic' → Places). This is required
+     * because a single subject heading (e.g. "Student protesters -- Colorado
+     * -- Denver") is a compound of multiple typed terms — a topical term plus
+     * geographic terms — that belong in different dropdowns. The previous
+     * implementation classified the whole subject into one bucket by its
+     * first-matching term type and pushed the concatenated `subject.title`,
+     * which both put the wrong (un-matchable) value into the dropdown and
+     * dropped the other terms entirely.
+     *
+     * Subjects with no `terms[]` array fall back to authority-based mapping of
+     * the whole `subject.title`. Values are de-duplicated (the same term can
+     * appear across multiple compound subjects, e.g. "Colorado"/"Denver").
      *
      * @param {Object|null} display_record - The display_record from a repo item
      * @returns {Object} { topics: string, genre_form: string, places: string, resource_type: string }
-     *                    Each value is a comma-space separated string for data-selected attributes
+     *                    Each value is a pipe-separated string for data-selected
+     *                    attributes. Pipe (not ", ") is used because a single LCSH
+     *                    heading can itself contain ", " (e.g. "Vietnam War,
+     *                    1961-1975"); a comma join+split would shred such a term.
+     *                    Subject headings never contain a literal pipe, so it is a
+     *                    collision-free separator shared with the DB storage format
+     *                    and the multi-select widget consumer.
      */
     const extract_repo_subjects = (display_record) => {
         const result = { topics: '', genre_form: '', places: '', resource_type: '' };
@@ -65,37 +81,43 @@ const repoModalsModule = (function() {
             const genre_form = [];
             const places = [];
 
+            const push_unique = (arr, value) => {
+                const v = (typeof value === 'string') ? value.trim() : '';
+                if (v && arr.indexOf(v) === -1) arr.push(v);
+            };
+
             display_record.subjects.forEach(subject => {
-                if (!subject || !subject.title) return;
+                if (!subject) return;
 
                 const terms = Array.isArray(subject.terms) ? subject.terms : [];
-                const term_types = new Set(
-                    terms
-                        .map(t => (t && typeof t.type === 'string') ? t.type.trim().toLowerCase() : '')
-                        .filter(Boolean)
-                );
 
-                let bucket = null;
-                if (term_types.has('topical')) {
-                    bucket = topics;
-                } else if (term_types.has('genre_form')) {
-                    bucket = genre_form;
-                } else if (term_types.has('geographic')) {
-                    bucket = places;
-                } else {
-                    // Fallback: classify by authority for records without a terms[] array
+                if (terms.length > 0) {
+                    // Route each term individually by its own type.
+                    terms.forEach(t => {
+                        if (!t || typeof t.type !== 'string') return;
+                        const type = t.type.trim().toLowerCase();
+                        const value = (typeof t.term === 'string') ? t.term : '';
+                        if (type === 'topical') {
+                            push_unique(topics, value);
+                        } else if (type === 'genre_form') {
+                            push_unique(genre_form, value);
+                        } else if (type === 'geographic') {
+                            push_unique(places, value);
+                        }
+                        // Other term types (e.g. temporal) have no dropdown — skipped.
+                    });
+                } else if (subject.title) {
+                    // No terms[] — classify the whole title by authority.
                     const authority = (subject.authority || '').toLowerCase();
-                    if (authority === 'lcsh') bucket = topics;
-                    else if (authority === 'aat') bucket = genre_form;
-                    else if (authority === 'lcnaf') bucket = places;
+                    if (authority === 'lcsh') push_unique(topics, subject.title);
+                    else if (authority === 'aat') push_unique(genre_form, subject.title);
+                    else if (authority === 'lcnaf') push_unique(places, subject.title);
                 }
-
-                if (bucket) bucket.push(subject.title);
             });
 
-            if (topics.length > 0) result.topics = topics.join(', ');
-            if (genre_form.length > 0) result.genre_form = genre_form.join(', ');
-            if (places.length > 0) result.places = places.join(', ');
+            if (topics.length > 0) result.topics = topics.join('|');
+            if (genre_form.length > 0) result.genre_form = genre_form.join('|');
+            if (places.length > 0) result.places = places.join('|');
         }
 
         return result;

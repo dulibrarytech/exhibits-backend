@@ -56,7 +56,7 @@ const IIIF_IMAGE_QUALITY = 80;
 
 /**
  * Derives the IIIF base URL from an Express request, e.g.
- * https://exhibits.dev/exhibits-dashboard/iiif
+ * https://host/exhibits-dashboard/iiif
  * @param {Object} req - Express request
  * @returns {string} IIIF base URL
  */
@@ -68,7 +68,7 @@ exports.derive_iiif_base = (req) => {
 
 /**
  * Derives the file-download base URL from an Express request, e.g.
- * https://exhibits.dev/exhibits-dashboard
+ * https://host/exhibits-dashboard
  * Used for the PDF rendering URL on PDF canvases.
  * @param {Object} req - Express request
  * @returns {string} File-download base URL
@@ -127,19 +127,25 @@ const is_valid_uuid = (uuid) => {
 };
 
 /**
- * Parses a delimited string into a trimmed, filtered array
- * Handles both pipe-delimited (raw DB format) and comma-delimited
- * (display format from model's format_subjects_for_display)
- * @param {string|null} value - Delimited string (e.g., "Denver|Boulder" or "Denver, Boulder")
+ * Parses a pipe-delimited subject string into a trimmed, filtered array.
+ *
+ * Pipe '|' is the single canonical subject delimiter at every layer (DB
+ * storage, model's format_subjects_for_display, the multi-select widget, and
+ * the indexer's process_subjects). It is collision-free because a single LCSH
+ * subfield term can itself contain ", " (e.g. "Vietnam War, 1961-1975",
+ * "Civil War, 1861-1865", or the geographic "Washington, D.C.") but never a
+ * literal pipe. Splitting on anything but pipe would shred such single-term
+ * values into bogus fragments in the manifest. A value with no pipe is a
+ * single term and is returned as a one-element array unchanged.
+ *
+ * @param {string|null} value - Pipe-delimited string (e.g., "Denver|Boulder")
  * @returns {string[]} Array of non-empty trimmed strings
  */
 const parse_delimited = (value) => {
     if (!value || typeof value !== 'string') {
         return [];
     }
-    // Use pipe delimiter if present (raw DB format), otherwise comma (display format)
-    const delimiter = value.includes('|') ? '|' : ',';
-    return value.split(delimiter).map(s => s.trim()).filter(Boolean);
+    return value.split('|').map(s => s.trim()).filter(Boolean);
 };
 
 /**
@@ -228,7 +234,7 @@ const build_metadata_pairs = (record) => {
         add_pair('Kaltura Entry ID', record.kaltura_entry_id);
     }
 
-    // Subject metadata (pipe-delimited in DB, comma-delimited after model formatting)
+    // Subject metadata (pipe-delimited in DB and after model formatting)
     const topics = parse_delimited(record.topics_subjects);
 
     if (topics.length > 0) {
