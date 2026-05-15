@@ -488,7 +488,13 @@ const repoModalsModule = (function() {
         const type_icon = get_media_type_icon(object_type);
         const uuid = escape_html(item_data.uuid || '');
         const creator = escape_html(item_data.creator || '');
-        const is_image = object_type === 'image' || object_type === 'object';
+        // Alt Text is an image-only accessibility field. Decide by the
+        // MIME-derived media type (the same source of truth as
+        // media_data.media_type), NOT object_type: repo items are commonly
+        // object_type "object" regardless of the underlying file, so keying
+        // off object_type forces a required Alt Text field onto non-image
+        // imports (letters, PDFs, audio, video).
+        const is_image = derive_media_type(item_data.mime_type) === 'image';
 
         // Local identifier (e.g. "U116.01.0001.00050") surfaced under the thumbnail
         // so curators can cross-reference the source archival call number.
@@ -710,8 +716,12 @@ const repoModalsModule = (function() {
 
     /**
      * Handle done/close button click in repo import modal
+     * @param {boolean} [preserve_repo_selections=false] - When true, the repo
+     *        search/selection state is left intact (used by Cancel so the Repo
+     *        Import tab — including its Clear button — stays as the user left
+     *        it). Done passes false: a completed import resets the tab.
      */
-    const handle_repo_modal_done = async () => {
+    const handle_repo_modal_done = async (preserve_repo_selections = false) => {
         console.debug('Closing repo modal - ' + saved_items_count + ' items were saved');
 
         close_repo_modal();
@@ -721,8 +731,11 @@ const repoModalsModule = (function() {
             await mediaLibraryModule.refresh_media_records();
         }
 
-        // Clear repo selections
-        if (typeof repoServiceModule !== 'undefined' && typeof repoServiceModule.clear_selections === 'function') {
+        // Clear repo selections. Skipped when cancelling so the user returns to
+        // the Repo Import tab with their search results still rendered — and
+        // the Clear button (its visibility tracks current_search_results)
+        // still visible — rather than having the tab silently reset.
+        if (!preserve_repo_selections && typeof repoServiceModule !== 'undefined' && typeof repoServiceModule.clear_selections === 'function') {
             repoServiceModule.clear_selections();
         }
 
@@ -747,19 +760,22 @@ const repoModalsModule = (function() {
             // Remove existing listeners by cloning
             const new_done_btn = done_btn.cloneNode(true);
             done_btn.parentNode.replaceChild(new_done_btn, done_btn);
-            new_done_btn.addEventListener('click', handle_repo_modal_done);
+            // Wrapped so the click Event isn't passed as preserve_repo_selections.
+            new_done_btn.addEventListener('click', () => handle_repo_modal_done());
         }
 
-        // Cancel button: closes the modal at any point. Reuses handle_repo_modal_done
-        // because the cleanup is identical — close, refresh the table if anything
-        // was already saved, fire the callback with the saved count, reset state.
-        // Items saved via per-card Save remain saved (that's a server-side commit).
+        // Cancel button: closes the modal at any point. Reuses
+        // handle_repo_modal_done but passes preserve_repo_selections=true so the
+        // Repo Import tab — including its Clear button — stays as the user left
+        // it. Still closes, refreshes the table if anything was already saved,
+        // fires the callback, and resets modal state. Items saved via per-card
+        // Save remain saved (that's a server-side commit).
         const cancel_btn = document.getElementById('repo-media-cancel-btn');
 
         if (cancel_btn) {
             const new_cancel_btn = cancel_btn.cloneNode(true);
             cancel_btn.parentNode.replaceChild(new_cancel_btn, cancel_btn);
-            new_cancel_btn.addEventListener('click', handle_repo_modal_done);
+            new_cancel_btn.addEventListener('click', () => handle_repo_modal_done(true));
         }
     };
 
