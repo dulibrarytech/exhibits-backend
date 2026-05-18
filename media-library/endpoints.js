@@ -54,6 +54,14 @@ const ENDPOINTS = {
             params: 'token or api_key, media_id (UUID)'
         }
     },
+    upload: {
+        delete: {
+            description: 'Deletes an unprocessed (staged, not-yet-saved) uploaded file and its thumbnail from staging storage',
+            endpoint: `${APP_PATH}${PREFIX}${VERSION}${ENDPOINT}/upload`,
+            params: 'token or api_key',
+            body: 'storage_path (required), thumbnail_path (optional)'
+        }
+    },
     media_file: {
         get: {
             description: 'Retrieves media file by UUID from hash-bucketed storage',

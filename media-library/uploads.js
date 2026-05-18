@@ -602,6 +602,36 @@ const resolve_storage_path = async (relative_path) => {
 // ---------------------------------------------------------------------------
 
 /**
+ * Guard: resolve a storage-relative path and assert it stays inside
+ * STORAGE_PATH. Hardening so EVERY caller of delete_stored_file is
+ * protected against path traversal — including callers that pass a
+ * client-supplied path. fs.unlink must never touch anything outside the
+ * storage root. The trailing-separator check also blocks the prefix-sibling
+ * bypass (e.g. "<storage>-evil" must not pass a "<storage>" prefix test).
+ * @param {string} relative_path - Relative path from DB or client
+ * @returns {string} The validated absolute path
+ * @throws {Error} If the resolved path escapes STORAGE_PATH
+ */
+const assert_within_storage = (relative_path) => {
+
+    // Contract: storage-relative paths only. Reject non-strings and absolute
+    // inputs outright so the guard is unambiguous for every caller (path.join
+    // would otherwise silently fold an absolute path into the storage root).
+    if (typeof relative_path !== 'string' || relative_path === '' || path.isAbsolute(relative_path)) {
+        throw new Error('Path traversal attempt detected: ' + relative_path);
+    }
+
+    const absolute_path = path.resolve(path.join(STORAGE_PATH, relative_path));
+    const resolved_storage = path.resolve(STORAGE_PATH);
+
+    if (absolute_path !== resolved_storage && !absolute_path.startsWith(resolved_storage + path.sep)) {
+        throw new Error('Path traversal attempt detected: ' + relative_path);
+    }
+
+    return absolute_path;
+};
+
+/**
  * Deletes a stored file and its thumbnail from the hash-bucketed structure
  * Cleans up empty parent directories
  * @param {string} relative_path - Relative file path from DB
@@ -613,7 +643,8 @@ const delete_stored_file = async (relative_path, thumbnail_relative_path = null)
     // Delete main file
     if (relative_path) {
 
-        const absolute_path = path.join(STORAGE_PATH, relative_path);
+        // Containment guard (throws on traversal — fatal for the main file).
+        const absolute_path = assert_within_storage(relative_path);
 
         try {
             await fs.unlink(absolute_path);
@@ -631,7 +662,17 @@ const delete_stored_file = async (relative_path, thumbnail_relative_path = null)
     // Delete thumbnail if present
     if (thumbnail_relative_path) {
 
-        const thumb_absolute = path.join(STORAGE_PATH, thumbnail_relative_path);
+        let thumb_absolute;
+
+        try {
+            // Containment guard. A traversal here is non-fatal (thumbnail
+            // cleanup never aborts the operation) but must never unlink
+            // outside storage — log and skip instead.
+            thumb_absolute = assert_within_storage(thumbnail_relative_path);
+        } catch (guard_error) {
+            LOGGER.module().error(`ERROR: [/media-library/uploads (delete_stored_file)] Rejected thumbnail path: ${guard_error.message}`);
+            return;
+        }
 
         try {
             await fs.unlink(thumb_absolute);

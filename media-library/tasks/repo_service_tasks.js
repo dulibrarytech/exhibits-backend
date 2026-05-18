@@ -211,6 +211,55 @@ const Repo_service_tasks = class {
     }
 
     /**
+     * Detect a record identifier in the raw search input.
+     *
+     * Repo PIDs are UUIDs and the Elasticsearch document _id IS that UUID
+     * (see _transform_hits: `uuid: hit._id`), so an exact id lookup resolves
+     * to a single record. Handles are URLs whose final path segment is that
+     * same UUID (e.g. http://hdl.handle.net/10176/<uuid>), so the UUID is
+     * pulled out prefix-agnostically.
+     *
+     * Detection is intentionally narrow so it cannot hijack a normal keyword
+     * search: it triggers only when the whole input is exactly a UUID, or the
+     * input is clearly a handle/URL that contains one. Anything else returns
+     * null and falls through to the regular fuzzy query.
+     *
+     * @param {string} raw - Trimmed search term
+     * @returns {string|null} Lowercased UUID, or null if not an identifier
+     * @private
+     */
+    _extract_record_id(raw) {
+        const s = (raw || '').trim();
+        if (!s) {
+            return null;
+        }
+
+        const UUID = '[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}';
+
+        // (a) The whole string is exactly a UUID/PID.
+        if (new RegExp('^' + UUID + '$', 'i').test(s)) {
+            return s.toLowerCase();
+        }
+
+        // (b) Handle / URL form containing a UUID. Restricted to clearly
+        // handle-like or URL-like inputs so a plain keyword phrase that merely
+        // happens to contain a UUID-shaped substring is not treated as an id.
+        const looks_like_handle =
+            /(?:hdl\.)?handle\.net\//i.test(s) ||
+            /^https?:\/\//i.test(s) ||
+            /^\d+\/[0-9a-f-]+$/i.test(s);
+
+        if (looks_like_handle) {
+            const match = s.match(new RegExp(UUID, 'i'));
+            if (match) {
+                return match[0].toLowerCase();
+            }
+        }
+
+        return null;
+    }
+
+    /**
      * Builds Elasticsearch search query based on index mappings
      * @param {string} term - Search term
      * @returns {Object} Elasticsearch query object
@@ -357,6 +406,57 @@ const Repo_service_tasks = class {
                     records: [],
                     total: 0
                 };
+            }
+
+            // Exact-identifier short-circuit: a PID/UUID or Handle resolves to
+            // a single record. The ES document _id is the record UUID, so a
+            // direct get is exact and fast. If the id isn't in this index this
+            // falls through to the fuzzy query below (never returns empty
+            // here), so it can't make search worse.
+            const record_id = this._extract_record_id(trimmed_term);
+
+            if (record_id) {
+                try {
+                    const exact = await this._with_timeout(
+                        this.CLIENT.get({ index: this.INDEX, id: record_id }),
+                        this.GET_TIMEOUT
+                    );
+
+                    if (exact && exact.found === true) {
+                        const records = this._transform_hits([{
+                            _id: exact._id || record_id,
+                            _source: exact._source,
+                            _score: 1
+                        }]);
+
+                        this._log_success('INFO: [/media-library/tasks/repo_service_tasks (search)] Resolved exact identifier', {
+                            term: trimmed_term,
+                            id: record_id
+                        });
+
+                        return {
+                            success: true,
+                            message: 'Found 1 result(s)',
+                            records: records,
+                            total: 1,
+                            size: 1,
+                            from: 0
+                        };
+                    }
+
+                    LOGGER.module().info('INFO: [/media-library/tasks/repo_service_tasks (search)] Identifier not found, falling back to keyword search', {
+                        term: trimmed_term,
+                        id: record_id
+                    });
+                } catch (id_error) {
+                    // 404 (not in this index) or any get failure — fall back to
+                    // the normal fuzzy search rather than dead-ending.
+                    LOGGER.module().info('INFO: [/media-library/tasks/repo_service_tasks (search)] Exact identifier lookup failed, falling back to keyword search', {
+                        term: trimmed_term,
+                        id: record_id,
+                        status_code: id_error.meta?.statusCode
+                    });
+                }
             }
 
             // Prepare search options with defaults

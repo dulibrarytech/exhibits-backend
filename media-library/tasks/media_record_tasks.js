@@ -829,6 +829,53 @@ const Media_record_tasks = class {
     }
 
     /**
+     * Finds a non-deleted media record that references the given storage_path.
+     * Used to confirm a staged upload is genuinely unprocessed before its
+     * file is deleted from staging — a file already linked to a saved record
+     * must NOT be removable via the unprocessed-upload delete path.
+     * @param {string} storage_path - Relative storage path to look up
+     * @returns {Promise<Object>} { success, exists, record|null }
+     */
+    async find_by_storage_path(storage_path) {
+
+        try {
+
+            this._validate_database();
+            this._validate_table('media_library_records');
+
+            if (!storage_path || typeof storage_path !== 'string' || storage_path.trim() === '') {
+                throw new Error('storage_path is required');
+            }
+
+            const trimmed_value = storage_path.trim();
+
+            const record = await this.DB(this.TABLE.media_library_records)
+                .select('id', 'uuid', 'name')
+                .where('storage_path', trimmed_value)
+                .andWhere({is_deleted: 0})
+                .first()
+                .timeout(this.QUERY_TIMEOUT);
+
+            if (record) {
+                return {
+                    success: true,
+                    exists: true,
+                    record: { uuid: record.uuid, name: record.name }
+                };
+            }
+
+            return {
+                success: true,
+                exists: false,
+                record: null
+            };
+
+        } catch (error) {
+            this._handle_error(error, 'find_by_storage_path', {storage_path});
+        }
+    }
+
+    /**
      * Gets the count of media records
      * @param {Object} [filters={}] - Optional filters (e.g., media_type)
      * @returns {Promise<number>} Count of media records

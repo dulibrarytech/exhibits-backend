@@ -135,6 +135,16 @@ module.exports = function (app) {
             async_handler(CONTROLLER.delete_media_record)
         );
 
+    // Delete an unprocessed (staged, not-yet-saved) uploaded file.
+    // Distinct literal path (/upload) — no collision with /record/:media_id.
+    // DELETE /api/v1/media/library/upload  body: { storage_path, thumbnail_path? }
+    app.route(ENDPOINTS.upload.delete.endpoint)
+        .delete(
+            rate_limits.write_operations,
+            TOKEN.verify,
+            async_handler(CONTROLLER.delete_uploaded_file)
+        );
+
     // Add or remove exhibit UUID from media record's exhibits array
     // PUT /api/v1/media/library/record/:media_id/exhibits
     app.route(ENDPOINTS.media_exhibits.put.endpoint)

@@ -368,12 +368,16 @@ describe('helperMediaLibraryModule', () => {
             const alert = container.querySelector('.alert.alert-danger');
             expect(alert).not.toBeNull();
             expect(alert.querySelector('i.fa-exclamation-circle')).not.toBeNull();
-            // Message text must be HTML-escaped — feeding markup-shaped
-            // input must not produce live elements inside the alert.
+            // Message markup is stripped to plain text, then HTML-escaped
+            // (display_message does escape_html(strip_html(message))). So
+            // markup-shaped input must neither produce a live element nor
+            // survive as literal "<b>...</b>" text — only the inner text
+            // remains, rendered safely.
             container.textContent = '';
             helperMediaLibraryModule.display_message('msg-area', 'info', '<b>x</b>');
             expect(container.querySelector('b')).toBeNull();
-            expect(container.textContent).toContain('<b>x</b>');
+            expect(container.textContent).not.toContain('<b>');
+            expect(container.textContent).toContain('x');
         });
 
         it('clear_message empties the container', () => {

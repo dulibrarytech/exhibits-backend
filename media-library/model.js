@@ -23,6 +23,8 @@ const DB_TABLES = require('../config/db_tables_config')();
 const TABLES = DB_TABLES.exhibits;
 const HELPER = require('../libs/helper');
 const MEDIA_TASKS = require('./tasks/media_record_tasks');
+const UPLOADS = require('./uploads');
+const PATH = require('path');
 const LOGGER = require('../libs/log4');
 // Initialize task instances
 const helper_task = new HELPER();
@@ -494,5 +496,60 @@ exports.delete_media_record = async (media_id, username = null) => {
     } catch (error) {
         LOGGER.module().error('ERROR: [/media-library/model (delete_media_record)] ' + error.message);
         return build_response(false, 'Error deleting media record: ' + error.message);
+    }
+};
+
+/**
+ * Removes an unprocessed (staged, not-yet-saved) uploaded file and its
+ * thumbnail from staging storage. Used by the upload modal's per-card
+ * Remove action so discarded uploads don't orphan on disk.
+ *
+ * Safety layers: (1) fast-fail rejection of obviously hostile paths;
+ * (2) an "unprocessed" guard that refuses any path already linked to a
+ * live media record (that's the saved-record delete flow's job); and
+ * (3) uploads.delete_stored_file hard-guards path containment for every
+ * caller. ENOENT is treated as success by delete_stored_file.
+ *
+ * @param {string} storage_path - Relative staged file path
+ * @param {string|null} thumbnail_path - Relative staged thumbnail path
+ * @returns {Promise<Object>} Standard response object
+ */
+exports.delete_uploaded_file = async (storage_path, thumbnail_path = null) => {
+
+    try {
+
+        if (!storage_path || typeof storage_path !== 'string' || storage_path.trim() === '') {
+            return build_response(false, 'storage_path is required');
+        }
+
+        const sp = storage_path.trim();
+        const tp = (thumbnail_path && typeof thumbnail_path === 'string' && thumbnail_path.trim() !== '')
+            ? thumbnail_path.trim()
+            : null;
+
+        const looks_hostile = (p) => p.includes('..') || p.includes('\0') || PATH.isAbsolute(p);
+
+        if (looks_hostile(sp) || (tp && looks_hostile(tp))) {
+            return build_response(false, 'Invalid file path');
+        }
+
+        // Unprocessed guard: never delete a file that belongs to a saved record.
+        const existing = await media_task.find_by_storage_path(sp);
+
+        if (existing && existing.exists) {
+            return build_response(false, 'This file is linked to a saved media record and cannot be removed here');
+        }
+
+        await UPLOADS.delete_stored_file(sp, tp);
+
+        LOGGER.module().info('INFO: [/media-library/model (delete_uploaded_file)] Removed staged upload: ' + sp);
+
+        return build_response(true, 'Uploaded file removed successfully', {
+            storage_path: sp
+        });
+
+    } catch (error) {
+        LOGGER.module().error('ERROR: [/media-library/model (delete_uploaded_file)] ' + error.message);
+        return build_response(false, 'Error removing uploaded file: ' + error.message);
     }
 };

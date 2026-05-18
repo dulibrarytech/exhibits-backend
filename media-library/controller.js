@@ -845,6 +845,83 @@ exports.delete_media_record = async function (req, res) {
 };
 
 /**
+ * Deletes an unprocessed (staged, not-yet-saved) uploaded file and its
+ * thumbnail from staging storage. This is part of the upload/create flow
+ * (the upload modal's per-card Remove), NOT a library-record deletion —
+ * so it is gated by the create-media capability, and the model refuses
+ * any path already linked to a saved record.
+ *
+ * DELETE /api/v1/media/library/upload
+ * Body: { storage_path: string (required), thumbnail_path: string (optional) }
+ *
+ * @param {Object} req - Express request object
+ * @param {Object} res - Express response object
+ */
+exports.delete_uploaded_file = async function (req, res) {
+
+    try {
+
+        const { storage_path, thumbnail_path } = req.body || {};
+
+        if (!storage_path || typeof storage_path !== 'string' || storage_path.trim() === '') {
+            res.status(400).json({
+                success: false,
+                message: 'Bad request. Missing or invalid storage_path.',
+                data: null
+            });
+            return;
+        }
+
+        const auth_options = {
+            req,
+            permissions: ['can_create_media'],
+            record_type: 'media',
+            parent_id: null,
+            child_id: null
+        };
+
+        const is_authorized = await AUTHORIZE.check_permission(auth_options);
+
+        if (is_authorized !== true) {
+            res.status(403).json({
+                success: false,
+                message: 'Unauthorized request',
+                data: null
+            });
+            return;
+        }
+
+        const result = await MEDIA_MODEL.delete_uploaded_file(
+            storage_path,
+            (typeof thumbnail_path === 'string' && thumbnail_path.trim() !== '') ? thumbnail_path : null
+        );
+
+        if (!result || !result.success) {
+            res.status(400).json({
+                success: false,
+                message: result?.message || 'Failed to remove uploaded file.',
+                data: null
+            });
+            return;
+        }
+
+        res.status(200).json({
+            success: true,
+            message: result.message,
+            data: null
+        });
+
+    } catch (error) {
+        LOGGER.module().error('ERROR: [/media-library/controller (delete_uploaded_file)] Unable to remove uploaded file: ' + error.message);
+        res.status(500).json({
+            success: false,
+            message: 'Unable to remove uploaded file.',
+            data: null
+        });
+    }
+};
+
+/**
  * Adds or removes an exhibit UUID from a media record's exhibits JSON array
  * Used to track which exhibits reference a given media library asset
  *
