@@ -55,6 +55,11 @@ const ENDPOINTS = {
         }
     },
     upload: {
+        get: {
+            description: 'Serves a staged (not-yet-saved) uploaded thumbnail by its storage-relative path',
+            endpoint: `${APP_PATH}${PREFIX}${VERSION}${ENDPOINT}/upload/thumbnail`,
+            params: 'token or api_key (query), path (relative thumbnail path, query)'
+        },
         delete: {
             description: 'Deletes an unprocessed (staged, not-yet-saved) uploaded file and its thumbnail from staging storage',
             endpoint: `${APP_PATH}${PREFIX}${VERSION}${ENDPOINT}/upload`,

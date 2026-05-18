@@ -289,6 +289,45 @@ const helperMediaLibraryModule = (function() {
     };
 
     /**
+     * Build the URL for a STAGED (not-yet-saved) uploaded thumbnail, served
+     * by its on-disk storage-relative path.
+     *
+     * The record-keyed thumbnail endpoint (build_thumbnail_url) resolves via
+     * a saved media_library_records row, which does not exist until the
+     * curator clicks Save (and is then keyed by a different, freshly-
+     * generated uuid). Both the upload modal card preview and the inline
+     * item-form preview must use this instead, or they 404 pre-save.
+     *
+     * Returns null when there is nothing to serve, the endpoint is not
+     * configured, or there is no auth token for the <img src> request — the
+     * caller then falls back to a static placeholder rather than issuing a
+     * doomed request. Mirrors get_thumbnail_url_for_media's token guard.
+     *
+     * @param {string} thumbnail_path - Relative staged thumbnail path
+     * @returns {string|null} Staged thumbnail URL (token in query) or null
+     */
+    obj.build_uploaded_thumbnail_url = (thumbnail_path) => {
+        if (!thumbnail_path) return null;
+
+        const endpoints = get_endpoints();
+
+        if (!endpoints?.upload?.get?.endpoint) {
+            console.warn('Uploaded (staged) thumbnail endpoint not configured');
+            return null;
+        }
+
+        const token = authModule.get_user_token();
+
+        if (!token || token === false) {
+            return null;
+        }
+
+        return endpoints.upload.get.endpoint +
+            '?path=' + encodeURIComponent(thumbnail_path) +
+            '&token=' + encodeURIComponent(token);
+    };
+
+    /**
      * Build media file URL for full-size file retrieval
      * Returns the raw endpoint URL without authentication token
      * @param {string} media_id - Media UUID

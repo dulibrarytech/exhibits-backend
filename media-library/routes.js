@@ -176,6 +176,19 @@ module.exports = function (app) {
             async_handler(CONTROLLER.get_thumbnail)
         );
 
+    // Get a staged (not-yet-saved) uploaded thumbnail by its storage-relative
+    // path. The upload modal needs this because the record-keyed thumbnail
+    // endpoint above 404s before Save (no media record exists yet). Distinct
+    // literal path (/upload/thumbnail) — no collision with /thumbnail/:media_id
+    // or the DELETE /upload route. Token in query string for <img src> use.
+    // GET /api/v1/media/library/upload/thumbnail?path=<rel>&token=<jwt>
+    app.route(ENDPOINTS.upload.get.endpoint)
+        .get(
+            rate_limits.read_operations,
+            TOKEN.verify_with_query || TOKEN.verify,
+            async_handler(CONTROLLER.get_uploaded_thumbnail)
+        );
+
     // ========================================
     // REPOSITORY SEARCH AND THUMBNAILS
     // ========================================

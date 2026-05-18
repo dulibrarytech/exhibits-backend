@@ -31,6 +31,33 @@ const mediaModalsModule = (function() {
 
     const EXHIBITS_ENDPOINTS = endpointsModule.get_media_library_endpoints();
 
+    /**
+     * Build the preview URL for a staged (not-yet-saved) upload thumbnail.
+     * The record-keyed thumbnail endpoint 404s here because no media record
+     * exists until Save, so serve the just-generated staged thumbnail by its
+     * storage-relative path instead. Returns null when there is nothing to
+     * serve or no way to authenticate the <img src> (caller then falls back
+     * to the static placeholder).
+     * @param {string} thumbnail_path - Relative staged thumbnail path
+     * @returns {string|null}
+     */
+    const build_staged_thumbnail_url = (thumbnail_path) => {
+        if (!thumbnail_path) {
+            return null;
+        }
+        const endpoint = EXHIBITS_ENDPOINTS?.upload?.get?.endpoint;
+        if (!endpoint) {
+            return null;
+        }
+        const token = authModule.get_user_token();
+        if (!token || token === false) {
+            return null;
+        }
+        return endpoint +
+            '?path=' + encodeURIComponent(thumbnail_path) +
+            '&token=' + encodeURIComponent(token);
+    };
+
     // Module state
     let uploaded_files_data = [];
     let saved_files_count = 0;
@@ -329,8 +356,11 @@ const mediaModalsModule = (function() {
         // Preview HTML
         let preview_html;
         if (is_image || is_pdf) {
-            // Use server-generated thumbnail for images and PDFs
-            const thumb_url = get_thumbnail_url_for_media(media_type, file_data.uuid);
+            // These files are staged (not yet saved), so the record-keyed
+            // thumbnail endpoint would 404. Prefer the staged thumbnail served
+            // by its on-disk path; fall back to the static placeholder.
+            const thumb_url = build_staged_thumbnail_url(file_data.thumbnail_path)
+                || get_thumbnail_url_for_media(media_type, file_data.uuid);
             preview_html = '<img src="' + thumb_url + '" alt="' + display_name + '" style="max-width:100%;max-height:100%;object-fit:cover;" onerror="this.onerror=null; this.parentNode.innerHTML=\'<i class=\\\'fa ' + type_icon + ' file-icon\\\' aria-hidden=\\\'true\\\'></i>\';">';
         } else {
             preview_html = '<i class="fa ' + type_icon + ' file-icon" aria-hidden="true"></i>';

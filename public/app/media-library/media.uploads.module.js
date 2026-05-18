@@ -21,6 +21,7 @@ const mediaUploadsModule = (function() {
     // Shared helpers
     const get_app_path = helperMediaLibraryModule.get_app_path;
     const get_thumbnail_url_for_media = helperMediaLibraryModule.get_thumbnail_url_for_media;
+    const build_uploaded_thumbnail_url = helperMediaLibraryModule.build_uploaded_thumbnail_url;
 
     const APP_PATH = get_app_path();
 
@@ -454,7 +455,12 @@ const mediaUploadsModule = (function() {
                 show_element(elements.media_trash);
 
                 setTimeout(function() {
-                    const thumbnail_url = get_thumbnail_url_for_media(media_type, uuid);
+                    // The file is staged (not yet a saved record), so the
+                    // record-keyed thumbnail endpoint would 404. Prefer the
+                    // staged thumbnail served by its on-disk path; fall back
+                    // to the static placeholder.
+                    const thumbnail_url = build_uploaded_thumbnail_url(thumbnail_path)
+                        || get_thumbnail_url_for_media(media_type, uuid);
                     display_thumbnail_image(elements.thumbnail_display, thumbnail_url, file.name);
                 }, 500);
 
