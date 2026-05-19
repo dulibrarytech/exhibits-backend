@@ -347,6 +347,11 @@ const mediaModalsModule = (function() {
         const file_size = format_file_size(file_data.file_size);
         const is_image = media_type === 'image';
         const is_pdf = media_type === 'pdf';
+        // Auto-populate Item Type from the uploaded file's media type, using
+        // the same canonical archival terms the repo import modal uses
+        // (matched case-insensitively against the resource-type options by
+        // the shared subjects widget): image → "still image", pdf → "text".
+        const default_item_type = is_image ? 'still image' : (is_pdf ? 'text' : '');
         const escaped_original_name = escape_html(file_data.original_name || file_data.filename);
         const escaped_mime = escape_html(file_data.mime_type);
 
@@ -450,7 +455,7 @@ const mediaModalsModule = (function() {
         html += '</div>';
         html += '<div class="col-md-6 mb-3">';
         html += '<label class="form-label" for="file-item-type-' + index + '">Item Type <span class="badge badge-required">Required</span></label>';
-        html += '<select class="form-control form-select custom-select file-item-type" id="file-item-type-' + index + '" name="item_type" required>';
+        html += '<select class="form-control form-select custom-select file-item-type" id="file-item-type-' + index + '" name="item_type" required' + (default_item_type ? ' data-selected="' + escape_html(default_item_type) + '"' : '') + '>';
         html += '<option value="">Select item type...</option>';
         html += '</select>';
         html += '</div></div>';
