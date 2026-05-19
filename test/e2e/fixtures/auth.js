@@ -2,6 +2,16 @@
 
 const DEFAULT_APP_PATH = process.env.APP_PATH || '/exhibits-dashboard';
 
+// Must match ENDPOINTS_REGISTRY_VERSION in
+// public/app/utils/endpoints.module.js. A real authenticated client gets
+// this stamped by save_exhibits_endpoints; seedAuth simulates a logged-in
+// client by writing the endpoint registry to localStorage directly, so it
+// must stamp the version too — otherwise endpointsModule.init() treats the
+// seeded client as a stale/legacy registry, wipes it, and redirects to the
+// auth entry on every page (breaking every spec). Bump in lockstep with
+// ENDPOINTS_REGISTRY_VERSION whenever the endpoint set changes.
+const DEFAULT_ENDPOINTS_VERSION = '2';
+
 const DEFAULT_TOKEN = {
     token: 'pw-test-token',
     expires: Date.now() + 24 * 60 * 60 * 1000,
@@ -193,25 +203,32 @@ async function seedAuth(page, opts = {}) {
     const usersEndpoints = JSON.stringify(
         opts.usersEndpoints ?? buildUsersEndpoints(appPath)
     );
+    const endpointsVersion = opts.endpointsVersion ?? DEFAULT_ENDPOINTS_VERSION;
 
-    await page.addInitScript(({ appPath, token, user, endpoints, mediaEndpoints, usersEndpoints }) => {
+    await page.addInitScript(({ appPath, token, user, endpoints, mediaEndpoints, usersEndpoints, endpointsVersion }) => {
         try {
             window.localStorage.setItem('exhibits_app_path', appPath);
             window.localStorage.setItem('exhibits_endpoints', endpoints);
             window.localStorage.setItem('exhibits_endpoints_media_library', mediaEndpoints);
             window.localStorage.setItem('exhibits_endpoints_users', usersEndpoints);
+            // Stamp the registry version so endpointsModule.init() treats this
+            // seeded client as current (not a stale/legacy registry to wipe +
+            // redirect). Mirrors what save_exhibits_endpoints does for a real
+            // authenticated client.
+            window.localStorage.setItem('exhibits_endpoints_version', endpointsVersion);
         } catch (_) {}
         try {
             window.sessionStorage.setItem('exhibits_token', token);
             window.sessionStorage.setItem('exhibits_user', user);
         } catch (_) {}
-    }, { appPath, token, user, endpoints, mediaEndpoints, usersEndpoints });
+    }, { appPath, token, user, endpoints, mediaEndpoints, usersEndpoints, endpointsVersion });
 }
 
 module.exports = {
     seedAuth,
     DEFAULT_TOKEN,
     DEFAULT_USER,
+    DEFAULT_ENDPOINTS_VERSION,
     buildExhibitsEndpoints,
     buildMediaLibraryEndpoints,
     buildUsersEndpoints,

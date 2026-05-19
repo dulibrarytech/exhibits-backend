@@ -4,6 +4,22 @@ const endpointsModule = (function() {
 
     const APP_PATH = '/exhibits-dashboard';
 
+    // Endpoints-registry version. The client caches the server's endpoint
+    // map in localStorage at authenticate time and reuses it indefinitely
+    // (no TTL). When the server adds/changes an endpoint, already-logged-in
+    // clients keep the stale map and silently 404 on the new endpoint until
+    // they re-authenticate. BUMP THIS STRING whenever the endpoint set the
+    // client must know about changes — a mismatch on the next page load
+    // wipes the stale cache and routes the client back through the normal
+    // auth flow once (the automated equivalent of a manual logout/login),
+    // so the new registry is refetched. History:
+    //   '1' — baseline
+    //   '2' — added media_library.upload.get / upload.delete
+    const ENDPOINTS_REGISTRY_VERSION = '2';
+    const ENDPOINTS_VERSION_KEY = 'exhibits_endpoints_version';
+    // sessionStorage one-shot guard so a failed/no-op re-auth can't loop.
+    const ENDPOINTS_REFRESH_GUARD = 'exhibits_endpoints_refresh_attempted';
+
     // Cache for parsed endpoints to avoid repeated JSON.parse
     let endpoints_cache = {
         users: null,
@@ -229,6 +245,17 @@ const endpointsModule = (function() {
 
             // Check if all saves were successful
             if (users_saved && exhibits_saved && indexer_saved && media_library_saved) {
+                // Stamp the registry version so future deploys can detect a
+                // stale client, and release the one-shot refresh guard.
+                safe_set_local_storage(ENDPOINTS_VERSION_KEY, ENDPOINTS_REGISTRY_VERSION);
+                try {
+                    if (window.sessionStorage) {
+                        window.sessionStorage.removeItem(ENDPOINTS_REFRESH_GUARD);
+                    }
+                } catch (guard_error) {
+                    console.warn('Could not clear endpoints refresh guard:', guard_error.message);
+                }
+
                 // Clear cache to force reload
                 clear_cache();
                 console.debug('Endpoints saved successfully');
@@ -307,6 +334,7 @@ const endpointsModule = (function() {
             window.localStorage.removeItem('exhibits_endpoints');
             window.localStorage.removeItem('exhibits_endpoints_indexer');
             window.localStorage.removeItem('exhibits_endpoints_media_library');
+            window.localStorage.removeItem(ENDPOINTS_VERSION_KEY);
 
             clear_cache();
             console.debug('Endpoints cleared successfully');
@@ -355,6 +383,84 @@ const endpointsModule = (function() {
     };
 
     /**
+     * Enforce the endpoints-registry version.
+     *
+     * Runs once per page load (from init). If a previously-cached registry
+     * exists but its stored version does not match ENDPOINTS_REGISTRY_VERSION
+     * (including the legacy case of no stored version at all), the stale
+     * registry is wiped and the client is routed back through the auth entry
+     * exactly once — the automated equivalent of the manual logout/login
+     * users otherwise need after the server adds an endpoint.
+     *
+     * Brand-new clients (no cached registry) are left untouched: they follow
+     * the normal first-time auth flow, which stamps the current version.
+     */
+    const enforce_registry_version = () => {
+
+        if (!is_local_storage_available()) {
+            return;
+        }
+
+        let stored_version = null;
+
+        try {
+            stored_version = window.localStorage.getItem(ENDPOINTS_VERSION_KEY);
+        } catch (error) {
+            return;
+        }
+
+        if (stored_version === ENDPOINTS_REGISTRY_VERSION) {
+            return; // up to date
+        }
+
+        // Only act when there is a previously-configured registry to
+        // invalidate. A client with no cached endpoints is simply new.
+        const had_endpoints = !!(
+            safe_get_local_storage('exhibits_endpoints_media_library') ||
+            safe_get_local_storage('exhibits_endpoints') ||
+            safe_get_local_storage('exhibits_endpoints_users') ||
+            safe_get_local_storage('exhibits_endpoints_indexer')
+        );
+
+        if (!had_endpoints) {
+            return;
+        }
+
+        console.warn(
+            'Endpoints registry version mismatch (have "' +
+            (stored_version || 'none') + '", need "' + ENDPOINTS_REGISTRY_VERSION +
+            '") — clearing stale cached endpoints and refreshing'
+        );
+
+        obj.clear_exhibits_endpoints();
+
+        // One-shot, loop-safe re-auth so the new registry is refetched. The
+        // guard lives in sessionStorage (per tab) and is cleared on the next
+        // successful save; if the round-trip fails to repopulate, we degrade
+        // to the prior behavior (warning + placeholder) instead of looping.
+        try {
+            const already_attempted =
+                window.sessionStorage &&
+                window.sessionStorage.getItem(ENDPOINTS_REFRESH_GUARD) === '1';
+
+            const at_entry =
+                window.location &&
+                typeof window.location.pathname === 'string' &&
+                (window.location.pathname === APP_PATH + '/' ||
+                 window.location.pathname === APP_PATH);
+
+            if (!already_attempted && !at_entry) {
+                if (window.sessionStorage) {
+                    window.sessionStorage.setItem(ENDPOINTS_REFRESH_GUARD, '1');
+                }
+                window.location.replace(APP_PATH + '/');
+            }
+        } catch (error) {
+            console.error('Endpoints version refresh redirect failed:', error);
+        }
+    };
+
+    /**
      * Initialize endpoints module
      */
     obj.init = function() {
@@ -365,6 +471,10 @@ const endpointsModule = (function() {
                 console.error('localStorage not available - endpoints module cannot function');
                 return null;
             }
+
+            // Invalidate + refresh a stale registry before any consumer
+            // reads it (may redirect; the page unloads in that case).
+            enforce_registry_version();
 
             // Save app path
             const path_saved = safe_set_local_storage('exhibits_app_path', APP_PATH);
