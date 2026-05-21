@@ -68,7 +68,15 @@ const Roles_tasks = class {
     }
 
     /**
-     * Saves user role data
+     * Saves user role data (upsert).
+     *
+     * One role per user is the intended model and is enforced by
+     * UNIQUE(user_id) on ctbl_user_roles (migration
+     * 20260518120000_add_rbac_integrity_constraints). A plain insert here would
+     * accrue a second role row on re-save, making get_user_role()[0] / role
+     * resolution nondeterministic — so this inserts or, on the existing
+     * user_id, updates the role in place.
+     *
      * @param user_id
      * @param role_id
      */
@@ -80,7 +88,9 @@ const Roles_tasks = class {
                 .insert({
                     user_id: user_id,
                     role_id: role_id
-                });
+                })
+                .onConflict('user_id')
+                .merge({ role_id: role_id });
 
         } catch (error) {
             LOGGER.module().error('ERROR: [/users/tasks (save_user_role)] unable to save user role data ' + error.message);

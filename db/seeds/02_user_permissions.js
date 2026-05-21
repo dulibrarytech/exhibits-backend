@@ -7,48 +7,51 @@
  * IDs are omitted so the database assigns them via AUTO_INCREMENT. Row order
  * below matches the production IDs on a fresh DB.
  *
- * Data quirks preserved verbatim from the source DB — see CHANGES.md for the
- * data-quality findings (mistyped delimiters, inconsistent spacing).
+ * The legacy free-text `has_permission` column was dropped by migration
+ * `20260518120100_drop_user_permissions_has_permission` — it was read by no
+ * code; `ctbl_role_permissions` is the single source of truth for grants.
+ * This seed therefore inserts only `permission` + `description`, and MUST run
+ * AFTER migrations (the pre-drop column is NOT NULL with no default).
  *
  * @param { import("knex").Knex } knex
  * @returns { Promise<void> }
  */
 exports.seed = async function (knex) {
   const rows = [
-    { permission: 'add_exhibit',                         description: 'Allows user to create an exhibit record',                  has_permission: 'admin,poweruser,generaluser,student' },
-    { permission: 'add_item',                            description: 'Allows user to create an item record',                     has_permission: 'admin,poweruser,generaluser,student' },
-    { permission: 'update_item',                         description: 'Allows user to update their item records',                 has_permission: 'admin,poweruser,generaluser,student' },
-    { permission: 'update_exhibit',                      description: 'Allows user to update their exhibit records',              has_permission: 'admin,poweruser,generaluser,student' },
-    { permission: 'publish_exhibit',                     description: 'Allows user to publish their exhibit',                     has_permission: 'admin,poweruser,generaluser,student' },
-    { permission: 'suppress_exhibit',                    description: 'Allows user to suppress their exhibit',                    has_permission: 'admin,poweruser,generaluser,student' },
-    { permission: 'publish_item',                        description: 'Allows user to publish their items',                       has_permission: 'admin,poweruser,generaluser,student' },
-    { permission: 'suppress_item',                       description: 'Allows user to suppress their items',                      has_permission: 'admin,poweruser,generaluser,student' },
-    { permission: 'add_item_to_any_exhibit',             description: 'Allows user to add items to any exhibit',                  has_permission: 'admin,poweruser,generaluser' },
-    { permission: 'delete_exhibit',                      description: 'Allows user to delete their exhibit records',              has_permission: 'admin,poweruser,generaluser,student' },
-    { permission: 'delete_item',                         description: 'Allows user to delete their item records',                 has_permission: 'admin,poweruser,generaluser,student' },
-    { permission: 'transfer_exhibit',                    description: 'Allows user to transfer their exhibit',                    has_permission: 'admin,poweruser,generaluser,student' },
-    { permission: 'transfer_any_exhibit',                description: 'Allows user to tranfer any exhibit',                       has_permission: 'admin' },
-    { permission: 'delete_any_exhibit',                  description: 'Allows user to delete any exhibit',                        has_permission: 'admin' },
-    { permission: 'delete_any_item',                     description: 'Allows user to delete any item',                           has_permission: 'admin,poweruser' },
-    { permission: 'add_items_to_any_published_exhibit',  description: 'Allows user to add items to any published exhibit',        has_permission: 'admin,poweruser' },
-    { permission: 'publish_any_exhibit',                 description: 'Allows user to publish any exhibit',                       has_permission: 'admin,poweruser' },
-    { permission: 'suppress_any_exhibit',                description: 'Allows user to suppress any exhibit',                      has_permission: 'admin,poweruser' },
-    { permission: 'update_any_exhibit',                  description: 'Allows user to update any exhibit',                        has_permission: 'admin.poweruser' },
-    { permission: 'update_any_item',                     description: 'Allows user to update any item',                           has_permission: 'admin,poweruser' },
-    { permission: 'unlock_record',                       description: 'Allows user to unlock any record',                         has_permission: 'admin' },
-    { permission: 'update_user_role',                    description: 'Allows user to update user roles',                         has_permission: 'admin' },
-    { permission: 'publish_any_item',                    description: 'Allows user to publish any item record',                   has_permission: 'admin, poweruser' },
-    { permission: 'suppress_any_item',                   description: 'Allow user to suppress any item record',                   has_permission: 'admin,poweruser' },
-    { permission: 'add_users',                           description: 'Allow user to create system account',                      has_permission: 'admin' },
-    { permission: 'update_users',                        description: 'Allow user to update system account',                      has_permission: 'admin' },
-    { permission: 'delete_users',                        description: 'Allow user to delete system account',                      has_permission: 'admin' },
-    { permission: 'view_users',                          description: 'Allow user to view system accounts',                       has_permission: 'admin.poweruser,generaluser,student' },
-    { permission: 'update_user',                         description: 'Allows user to update their profile',                      has_permission: 'admin.poweruser,generaluser,student' },
-    { permission: 'can_create_media',                    description: 'Allows user to create a media library record',             has_permission: 'admin,poweruser,generaluser,student' },
-    { permission: 'can_update_media',                    description: 'Allows user to update their media library records',        has_permission: 'admin,poweruser,generaluser,student' },
-    { permission: 'can_delete_media',                    description: 'Allows user to delete their media library records',        has_permission: 'admin,poweruser,generaluser' },
-    { permission: 'can_update_any_media',                description: 'Allows user to update any media library record',           has_permission: 'admin,poweruser' },
-    { permission: 'can_delete_any_media',                description: 'Allows user to delete any media library record',           has_permission: 'admin' },
+    { permission: 'add_exhibit',                         description: 'Allows user to create an exhibit record' },
+    { permission: 'add_item',                            description: 'Allows user to create an item record' },
+    { permission: 'update_item',                         description: 'Allows user to update their item records' },
+    { permission: 'update_exhibit',                      description: 'Allows user to update their exhibit records' },
+    { permission: 'publish_exhibit',                     description: 'Allows user to publish their exhibit' },
+    { permission: 'suppress_exhibit',                    description: 'Allows user to suppress their exhibit' },
+    { permission: 'publish_item',                        description: 'Allows user to publish their items' },
+    { permission: 'suppress_item',                       description: 'Allows user to suppress their items' },
+    { permission: 'add_item_to_any_exhibit',             description: 'Allows user to add items to any exhibit' },
+    { permission: 'delete_exhibit',                      description: 'Allows user to delete their exhibit records' },
+    { permission: 'delete_item',                         description: 'Allows user to delete their item records' },
+    { permission: 'transfer_exhibit',                    description: 'Allows user to transfer their exhibit' },
+    { permission: 'transfer_any_exhibit',                description: 'Allows user to tranfer any exhibit' },
+    { permission: 'delete_any_exhibit',                  description: 'Allows user to delete any exhibit' },
+    { permission: 'delete_any_item',                     description: 'Allows user to delete any item' },
+    { permission: 'add_items_to_any_published_exhibit',  description: 'Allows user to add items to any published exhibit' },
+    { permission: 'publish_any_exhibit',                 description: 'Allows user to publish any exhibit' },
+    { permission: 'suppress_any_exhibit',                description: 'Allows user to suppress any exhibit' },
+    { permission: 'update_any_exhibit',                  description: 'Allows user to update any exhibit' },
+    { permission: 'update_any_item',                     description: 'Allows user to update any item' },
+    { permission: 'unlock_record',                       description: 'Allows user to unlock any record' },
+    { permission: 'update_user_role',                    description: 'Allows user to update user roles' },
+    { permission: 'publish_any_item',                    description: 'Allows user to publish any item record' },
+    { permission: 'suppress_any_item',                   description: 'Allow user to suppress any item record' },
+    { permission: 'add_users',                           description: 'Allow user to create system account' },
+    { permission: 'update_users',                        description: 'Allow user to update system account' },
+    { permission: 'delete_users',                        description: 'Allow user to delete system account' },
+    { permission: 'view_users',                          description: 'Allow user to view system accounts' },
+    { permission: 'update_user',                         description: 'Allows user to update their profile' },
+    { permission: 'can_create_media',                    description: 'Allows user to create a media library record' },
+    { permission: 'can_update_media',                    description: 'Allows user to update their media library records' },
+    { permission: 'can_delete_media',                    description: 'Allows user to delete their media library records' },
+    { permission: 'can_update_any_media',                description: 'Allows user to update any media library record' },
+    { permission: 'can_delete_any_media',                description: 'Allows user to delete any media library record' },
   ];
 
   await knex('tbl_user_permissions').del();
