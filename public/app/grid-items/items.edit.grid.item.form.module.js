@@ -578,6 +578,10 @@ const itemsEditGridItemFormModule = (function () {
             const is_media_path = window.location.pathname.split('/').filter(Boolean).includes('media');
             if (is_media_path) {
                 itemsCommonGridItemFormModule.populate_media_previews(record);
+
+                // Populate optional Pop-up Window Description + Caption fields
+                domModule.set_value('#item-description-input', helperModule.unescape(record.description));
+                domModule.set_value('#item-caption-input', helperModule.unescape(record.caption));
             }
 
             // Set layout selection

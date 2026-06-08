@@ -480,6 +480,10 @@ const itemsCommonVerticalTimelineItemFormModule = (function () {
                     item.mime_type = mime_type;
                 }
 
+                // Collect optional Pop-up Window Description + Caption (media items only)
+                item.description = get_element_value('#item-description-input');
+                item.caption = get_element_value('#item-caption-input');
+
             } else {
                 // Default to text type for non-media paths
                 item.item_type = 'text';
@@ -519,6 +523,14 @@ const itemsCommonVerticalTimelineItemFormModule = (function () {
             // Wire up media picker buttons if on a media form
             if (window.location.pathname.split('/').filter(Boolean).includes('media')) {
                 init_media_picker_buttons();
+
+                // Reveal the media-only optional fields: Pop-up Window Description
+                // and Caption. They live in the shared item-data-card partial,
+                // hidden by default so they never appear on text item forms.
+                ['#is-media-only-description', '#is-media-only-caption'].forEach(selector => {
+                    const field = document.querySelector(selector);
+                    if (field) field.style.display = '';
+                });
             }
 
         } catch (error) {

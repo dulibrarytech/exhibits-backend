@@ -386,6 +386,17 @@ const itemsEditVerticalTimelineItemFormModule = (function () {
             }
 
             itemsCommonVerticalTimelineItemFormModule.populate_media_previews(record);
+
+            // Populate optional Pop-up Window Description + Caption fields
+            const description_el = document.querySelector('#item-description-input');
+            if (description_el) {
+                description_el.value = record.description ? helperModule.unescape(record.description) : '';
+            }
+
+            const caption_el = document.querySelector('#item-caption-input');
+            if (caption_el) {
+                caption_el.value = record.caption ? helperModule.unescape(record.caption) : '';
+            }
         };
 
         /**
