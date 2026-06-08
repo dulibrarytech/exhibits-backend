@@ -719,6 +719,10 @@ const itemsCommonStandardItemFormModule = (function () {
                 item.mime_type = getElementValue('#item-mime-type');
                 item.thumbnail_media_uuid = getElementValue('#thumbnail-media-uuid');
 
+                // Collect optional Pop-up Window Description + Caption (media items only)
+                item.description = getElementValue('#item-description-input');
+                item.caption = getElementValue('#item-caption-input');
+
                 // Collect PDF open-to-page value when media type is PDF
                 if (item.item_type.toLowerCase() === 'pdf') {
                     const page_val = parseInt(getElementValue('#pdf-open-to-page', '1'), 10);
@@ -774,6 +778,21 @@ const itemsCommonStandardItemFormModule = (function () {
             // Wire up media picker buttons on media paths
             if (window.location.pathname.indexOf('media') !== -1) {
                 init_media_picker_buttons();
+
+                // Exhibit Text is optional on media items (only required on text
+                // items) — relabel accordingly to match the rest of the card.
+                const exhibit_text_label = document.querySelector('#is-required-text');
+                if (exhibit_text_label) {
+                    exhibit_text_label.innerHTML = 'Exhibit Text <small><em>(Optional)</em></small>';
+                }
+
+                // Reveal the media-only optional fields: Pop-up Window Description
+                // and Caption. They live in the shared item-data-card partial,
+                // hidden by default so they never appear on text item forms.
+                ['#is-media-only-description', '#is-media-only-caption'].forEach(selector => {
+                    const field = document.querySelector(selector);
+                    if (field) field.style.display = '';
+                });
             }
 
             // Fetch and populate styles dropdown (both media and text paths)

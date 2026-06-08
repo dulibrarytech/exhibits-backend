@@ -236,6 +236,10 @@ const itemsEditStandardItemFormModule = (function () {
             // Handle media-specific fields
             if (is_media_path) {
                 itemsCommonStandardItemFormModule.populate_media_previews(record);
+
+                // Populate optional Pop-up Window Description + Caption fields
+                set_element_value('#item-description-input', helperModule.unescape(record.description));
+                set_element_value('#item-caption-input', helperModule.unescape(record.caption));
             }
 
             // Set radio button selections
