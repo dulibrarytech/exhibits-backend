@@ -1093,7 +1093,9 @@ const itemsListDisplayModule = (function() {
                 edit_icon: item.is_published === 1 ? 'fa-folder-open' : 'fa-edit',
                 delete_url: delete_url,
                 is_published: item.is_published,
-                item_title: title
+                item_title: title,
+                // Timeline item list: no keyboard-reorder items in the actions menu.
+                show_move: false
             }));
 
             const container = document.createElement('div');
@@ -1216,8 +1218,7 @@ const itemsListDisplayModule = (function() {
                         <i class="fa ${opts.edit_icon} mr-2" aria-hidden="true" style="width: 16px;"></i>
                         ${opts.edit_label}
                     </a>
-                    ${move_up_html}
-                    ${move_down_html}
+                    ${opts.show_move === false ? '' : move_up_html + move_down_html}
                     <div class="dropdown-divider"></div>
                     ${delete_html}
                 </div>
