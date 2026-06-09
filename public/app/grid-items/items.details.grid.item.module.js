@@ -138,6 +138,15 @@ const itemsDetailsGridItemModule = (function () {
         // Populate media previews using the shared common module
         if (window.location.pathname.indexOf('media') !== -1) {
             itemsCommonGridItemFormModule.populate_media_previews(record);
+
+            // Surface the popup-related fields read-only. The common form module
+            // (also init'd on this page) reveals/relocates them; here we fill in
+            // their values and gate the Embed Item control to audio/video media.
+            set_element_value('#item-description-input', helperModule.unescape(record.description));
+            set_element_value('#item-caption-input', helperModule.unescape(record.caption));
+
+            const embed_item_el = document.getElementById('embed-item');
+            if (embed_item_el) embed_item_el.checked = record.is_embedded === 1;
         }
 
         // Set radio button selections

@@ -560,6 +560,32 @@ const itemsCommonGridItemFormModule = (function () {
                     const field = document.querySelector(selector);
                     if (field) field.style.display = '';
                 });
+
+                // Group the Embed Item control with the Pop-up Window Description:
+                // relocate the checkbox up next to the description label. Embedded
+                // audio/video skip the pop-up viewer, so the two belong together.
+                const embed_group = document.querySelector('#embed-item-group');
+                const description_label = document.querySelector('#item-description-input-label');
+                if (embed_group && description_label) {
+                    const label_block = description_label.closest('.form-text');
+                    if (label_block) {
+                        label_block.insertAdjacentElement('afterend', embed_group);
+                    }
+                }
+
+                // Disable the Pop-up Window Description while Embed Item is checked
+                // (embedded items do not open the pop-up). The edit form dispatches a
+                // 'change' event after loading so the initial state stays in sync.
+                const embed_checkbox = document.querySelector('#embed-item');
+                const description_field = document.querySelector('#item-description-input');
+                if (embed_checkbox && description_field) {
+                    const sync_description_state = () => {
+                        description_field.disabled = embed_checkbox.checked;
+                        description_field.style.opacity = embed_checkbox.checked ? '0.5' : '';
+                    };
+                    embed_checkbox.addEventListener('change', sync_description_state);
+                    sync_description_state();
+                }
             }
 
         } catch (error) {

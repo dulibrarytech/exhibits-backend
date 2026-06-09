@@ -267,6 +267,10 @@ const itemsDetailsVerticalTimelineItemModule = (function () {
             // Populate media previews using the shared common module
             if (window.location.pathname.indexOf('media') !== -1) {
                 itemsCommonVerticalTimelineItemFormModule.populate_media_previews(record);
+
+                // Surface the Pop-up Window Description + Caption read-only.
+                set_element_value('#item-description-input', record.description ? helperModule.unescape(record.description) : '');
+                set_element_value('#item-caption-input', record.caption ? helperModule.unescape(record.caption) : '');
             }
 
             // Set embed item checkbox from record

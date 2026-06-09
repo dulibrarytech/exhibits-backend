@@ -594,6 +594,7 @@ const itemsEditGridItemFormModule = (function () {
             const embed_item_el = document.getElementById('embed-item');
             if (embed_item_el) {
                 embed_item_el.checked = record.is_embedded === 1;
+                embed_item_el.dispatchEvent(new Event('change'));
             }
 
             // Apply style settings

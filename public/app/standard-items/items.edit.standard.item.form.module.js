@@ -240,6 +240,14 @@ const itemsEditStandardItemFormModule = (function () {
                 // Populate optional Pop-up Window Description + Caption fields
                 set_element_value('#item-description-input', helperModule.unescape(record.description));
                 set_element_value('#item-caption-input', helperModule.unescape(record.caption));
+
+                // Populate the Embed Item flag and sync the description's enabled
+                // state (dispatch 'change' so the common module's listener runs).
+                const embed_item_el = document.getElementById('embed-item');
+                if (embed_item_el) {
+                    embed_item_el.checked = record.is_embedded === 1;
+                    embed_item_el.dispatchEvent(new Event('change'));
+                }
             }
 
             // Set radio button selections

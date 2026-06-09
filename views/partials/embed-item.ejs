@@ -1,12 +1,9 @@
-<hr>
-<div class="col-12 col-md-12">
-    <div class="row form-group">
-        <p style="padding-top: 20px">
-            <small class="form-text text-muted"><i class="fa fa-exclamation-circle" aria-hidden="true"></i> <em>Embedded items do not
-                    open the item viewer (popup window)</em></small>
-            <label for="embed-item">Embed item&nbsp;
-                <input type="checkbox" id="embed-item" name="embed_item">
-            </label>
-        </p>
-    </div>
+<% /* "Embed item" control (audio/video). Single source of truth — included by the
+      media card of the standard, grid, and timeline item forms. On add/edit media
+      forms the *.common.* form modules relocate #embed-item-group up next to the
+      Pop-up Window Description label and disable that description while this box is
+      checked, because embedded items do not open the pop-up viewer. */ %>
+<div id="embed-item-group" class="form-group" style="padding-top: 10px">
+    <small class="form-text text-muted"><i class="fa fa-exclamation-circle" aria-hidden="true"></i> <em>Embedded items do not open the item viewer (pop-up window)</em></small>
+    <label for="embed-item" style="font-weight: normal; cursor: pointer">Embed item&nbsp;<input type="checkbox" id="embed-item" name="embed_item"></label>
 </div>
