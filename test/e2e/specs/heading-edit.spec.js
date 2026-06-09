@@ -102,7 +102,7 @@ test.describe('Edit heading form (items.edit.heading.form.module)', () => {
         await expect(page.locator('#item-heading-type-input')).toBeDisabled();
     });
 
-    test('applies a saved style preset to the styles dropdown', async ({ page }) => {
+    test('applies a saved style preset to the styles chooser', async ({ page }) => {
         await stubHeadingPageDeps(page, {
             exhibit: {
                 record: exhibitFixture({
@@ -126,8 +126,10 @@ test.describe('Edit heading form (items.edit.heading.form.module)', () => {
 
         await page.goto(`${APP_PATH}/items/heading/edit?exhibit_id=${EXHIBIT_UUID}&item_id=${HEADING_UUID}`);
 
-        // The styles card is hidden until at least one preset is found.
-        await expect(page.locator('#item-style-select')).toBeVisible();
-        await expect(page.locator('#item-style-select')).toHaveValue('heading2');
+        // The styles card is hidden until at least one preset is found; the saved
+        // preset's radio is then checked in the swatch chooser that replaced the
+        // old <select> (see helperModule.build_item_style_swatch_options).
+        await expect(page.locator('#item-styles-card')).toBeVisible();
+        await expect(page.locator('#item-style-heading2')).toBeChecked();
     });
 });

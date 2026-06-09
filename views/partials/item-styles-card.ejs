@@ -4,11 +4,15 @@
     </div>
     <div class="card-body">
         <div class="row">
-            <div class="col-sm-4">
+            <div class="col-sm-6">
                 <small class="form-text text-muted"><i class="fa fa-exclamation-circle" aria-hidden="true"></i> <em>Applies an exhibit style preset to this item</em></small>
-                <select class="form-control" id="item-style-select" name="styles">
-                    <option value="">None</option>
-                </select>
+                <div id="item-style-options" class="item-style-chooser" role="radiogroup" aria-label="Item style preset">
+                    <label class="item-style-option" for="item-style-none">
+                        <input type="radio" id="item-style-none" name="styles" value="" checked>
+                        <span class="item-style-swatches"></span>
+                        <span class="item-style-name">None</span>
+                    </label>
+                </div>
             </div>
         </div>
     </div>

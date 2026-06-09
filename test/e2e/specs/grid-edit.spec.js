@@ -77,7 +77,7 @@ test.describe('Edit grid form (items.edit.grid.form.module)', () => {
         await expect(page.locator('#message .alert-success')).toBeVisible();
     });
 
-    test('applies a saved style preset to the styles dropdown', async ({ page }) => {
+    test('applies a saved style preset to the styles chooser', async ({ page }) => {
         await stubDashboardDeps(page, {
             exhibit: {
                 record: exhibitFixture({
@@ -101,9 +101,10 @@ test.describe('Edit grid form (items.edit.grid.form.module)', () => {
 
         await page.goto(`${APP_PATH}/items/grid/edit?exhibit_id=${EXHIBIT_UUID}&item_id=${GRID_UUID}`);
 
-        // Common module hides the style dropdown until at least one preset
-        // is found, then populates options keyed `item1`/`item2`/`item3`.
-        await expect(page.locator('#item-style-select')).toBeVisible();
-        await expect(page.locator('#item-style-select')).toHaveValue('item2');
+        // The styles card is hidden until at least one preset is found; the saved
+        // preset's radio is then checked in the swatch chooser that replaced the
+        // old <select> (see helperModule.build_item_style_swatch_options).
+        await expect(page.locator('#item-styles-card')).toBeVisible();
+        await expect(page.locator('#item-style-item2')).toBeChecked();
     });
 });

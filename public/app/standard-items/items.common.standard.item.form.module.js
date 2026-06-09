@@ -508,23 +508,11 @@ const itemsCommonStandardItemFormModule = (function () {
                 return;
             }
 
-            // Populate the select element
-            const select_el = document.querySelector('#item-style-select');
-
-            if (!select_el) {
-                console.warn('[styles] #item-style-select element not found in DOM');
-                return;
-            }
-
-            // Sort keys for consistent ordering (item1, item2, item3)
+            // Render the style presets as a radio "swatch chooser" — each option
+            // shows the preset's background + font colors as circles (mirrors the
+            // exhibit Styles form). Reuses helperModule + the .color-swatch visual.
             const sorted_keys = Object.keys(exhibit_style_map).sort();
-
-            for (const key of sorted_keys) {
-                const option = document.createElement('option');
-                option.value = key;
-                option.textContent = STYLE_KEY_LABELS[key] || key;
-                select_el.appendChild(option);
-            }
+            helperModule.build_item_style_swatch_options('#item-style-options', sorted_keys, exhibit_style_map, STYLE_KEY_LABELS);
 
             // Show the styles card
             const card_el = document.querySelector('#item-styles-card');
@@ -626,19 +614,7 @@ const itemsCommonStandardItemFormModule = (function () {
      * @param {string|null} styles_value - Saved style key (e.g. "item1") or null
      */
     obj.set_item_style = function (styles_value) {
-        const select_el = document.querySelector('#item-style-select');
-        if (!select_el || !styles_value) return;
-
-        // If the value matches a known option, select it
-        for (const option of select_el.options) {
-            if (option.value === styles_value) {
-                select_el.value = styles_value;
-                return;
-            }
-        }
-
-        // Value not found among options — might not have loaded yet or was removed
-        console.warn('Saved style key not found in dropdown options:', styles_value);
+        helperModule.check_item_style_option(styles_value);
     };
 
     /**
@@ -706,9 +682,8 @@ const itemsCommonStandardItemFormModule = (function () {
             item.layout = helperModule.get_checked_radio_button(document.getElementsByName('layout'));
             item.media_width = helperModule.get_checked_radio_button(document.getElementsByName('media_width'));
 
-            // Collect selected style preset (empty string → null for DB storage)
-            const style_val = getElementValue('#item-style-select');
-            item.styles = style_val || null;
+            // Collect the selected style preset (radio "swatch chooser"); None → null.
+            item.styles = helperModule.get_checked_radio_button(document.getElementsByName('styles'));
 
             // Handle media-specific logic
             if (isMediaPath) {

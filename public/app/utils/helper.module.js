@@ -1116,6 +1116,100 @@ const helperModule = (function () {
 
     }
 
+    /**
+     * Builds the item "Styles" preset chooser as radio rows with color swatches
+     * (background + font colors), mirroring the exhibit Styles form. Appends one
+     * row per preset key into the container, which already holds the static "None"
+     * row. Idempotent — clears any previously-appended preset rows first.
+     * @param {string} container_selector - e.g. '#item-style-options'
+     * @param {string[]} sorted_keys - preset keys (e.g. ['item1','item2'])
+     * @param {Object} style_map - key → { backgroundColor, color, ... }
+     * @param {Object} labels - key → human label (e.g. 'Item Style 1')
+     */
+    obj.build_item_style_swatch_options = function (container_selector, sorted_keys, style_map, labels) {
+
+        const container = document.querySelector(container_selector);
+
+        if (!container) {
+            return;
+        }
+
+        container.querySelectorAll('.item-style-option[data-preset]').forEach(function (el) {
+            el.remove();
+        });
+
+        (sorted_keys || []).forEach(function (key) {
+
+            const style = (style_map && style_map[key]) || {};
+
+            const row = document.createElement('label');
+            row.className = 'item-style-option';
+            row.setAttribute('data-preset', '1');
+            row.setAttribute('for', 'item-style-' + key);
+
+            const radio = document.createElement('input');
+            radio.type = 'radio';
+            radio.name = 'styles';
+            radio.value = key;
+            radio.id = 'item-style-' + key;
+
+            const swatches = document.createElement('span');
+            swatches.className = 'item-style-swatches';
+
+            [['backgroundColor', 'Background color'], ['color', 'Font color']].forEach(function (pair) {
+                const dot = document.createElement('span');
+                dot.className = 'color-swatch';
+                dot.title = pair[1];
+                const value = style[pair[0]];
+                if (value) {
+                    dot.style.backgroundColor = value;
+                    dot.style.backgroundImage = 'none';
+                }
+                swatches.appendChild(dot);
+            });
+
+            const name = document.createElement('span');
+            name.className = 'item-style-name';
+            name.textContent = (labels && labels[key]) || key;
+
+            row.appendChild(radio);
+            row.appendChild(swatches);
+            row.appendChild(name);
+            container.appendChild(row);
+        });
+    };
+
+    /**
+     * Checks the item-style radio matching the saved value (or "None" when the
+     * value is empty/unknown). Replaces the old <select>.value assignment.
+     * @param {string|null} value - saved style key (e.g. 'item1') or null
+     */
+    obj.check_item_style_option = function (value) {
+
+        const radios = document.getElementsByName('styles');
+
+        if (!radios || !radios.length) {
+            return;
+        }
+
+        const target = value || '';
+
+        for (let i = 0; i < radios.length; i++) {
+            if (radios[i].value === target) {
+                radios[i].checked = true;
+                return;
+            }
+        }
+
+        // Unknown value — fall back to "None".
+        for (let i = 0; i < radios.length; i++) {
+            if (radios[i].value === '') {
+                radios[i].checked = true;
+                return;
+            }
+        }
+    };
+
     obj.init = function () {
     };
 

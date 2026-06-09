@@ -331,6 +331,62 @@
     background: repeating-conic-gradient(#e9ecef 0% 25%, #fff 0% 50%) 50% / 8px 8px;
 }
 
+/* Item "Styles" preset chooser — radio swatch options on the item forms.
+   Reuses the .color-swatch circle visual from the exhibit Styles form so each
+   preset shows its background + font colors next to the option. */
+.item-style-chooser {
+    display: flex;
+    flex-direction: column;
+    gap: 0.3rem;
+    margin-top: 0.4rem;
+}
+
+.item-style-option {
+    display: flex;
+    align-items: center;
+    gap: 0.55rem;
+    margin: 0;
+    padding: 0.45rem 0.65rem;
+    border: 1px solid #dee2e6;
+    border-radius: 0.375rem;
+    cursor: pointer;
+    font-weight: 400;
+}
+
+.item-style-option:hover {
+    background-color: #f8f9fa;
+}
+
+.item-style-option:has(input:checked) {
+    border-color: #007bff;
+    background-color: #f0f7ff;
+}
+
+.item-style-option input[type="radio"] {
+    margin: 0;
+    flex-shrink: 0;
+}
+
+.item-style-swatches {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.3rem;
+}
+
+.item-style-chooser .color-swatch {
+    width: 18px;
+    height: 18px;
+    border-radius: 50%;
+    border: 2px solid #dee2e6;
+    flex-shrink: 0;
+    background: repeating-conic-gradient(#e9ecef 0% 25%, #fff 0% 50%) 50% / 8px 8px;
+}
+
+.item-style-name {
+    font-size: 0.95rem;
+    line-height: 1;
+}
+
 #exhibit-styles-card .accordion .card-body {
     padding: 1.25rem;
     background-color: #fdfdfe;
