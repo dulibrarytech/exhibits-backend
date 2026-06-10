@@ -300,6 +300,19 @@ const mediaUploadsModule = (function() {
                 console.debug('Dropzone initialized: ' + (options.zone_name || 'unnamed') + ' (max ' + MAX_FILES + ' files)');
                 dropzone_instance = this;
 
+                // The upload route now requires authentication. Attach the
+                // session token as x-access-token on each upload (same pattern
+                // as the rest of the media-library module); if it is somehow
+                // unavailable, the same-origin session cookie still applies.
+                this.on('sending', function(file, xhr) {
+                    const token = (typeof authModule !== 'undefined' && typeof authModule.get_user_token === 'function')
+                        ? authModule.get_user_token()
+                        : null;
+                    if (token) {
+                        xhr.setRequestHeader('x-access-token', token);
+                    }
+                });
+
                 this.on('addedfile', function(file) {
                     clear_message(document.querySelector('.upload-error'));
                     console.debug('File added: ' + file.name + ' (' + this.files.length + '/' + MAX_FILES + ' files)');

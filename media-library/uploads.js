@@ -23,6 +23,9 @@ const { v4: uuidv4 } = require('uuid');
 const sharp = require('sharp');
 const { exiftool } = require('exiftool-vendored');
 const LOGGER = require('../libs/log4');
+const TOKEN = require('../libs/tokens');
+const AUTHORIZE = require('../auth/authorize');
+const { rate_limits } = require('../config/rate_limits_loader');
 
 // Configuration
 const storage_config = require('./storage_config')();
@@ -784,12 +787,56 @@ const shutdown_exiftool = async () => {
 // ---------------------------------------------------------------------------
 
 /**
+ * Authorization guard for the upload route. Requires the `can_create_media`
+ * permission — the same gate the media controller applies to its other create
+ * paths. Runs after TOKEN.verify (reads req.decoded) and before multer, so an
+ * unauthorized request is rejected before any file is parsed or written to disk.
+ * @param {Object} req - Express request object
+ * @param {Object} res - Express response object
+ * @param {Function} next - Express next middleware function
+ */
+const require_create_media_permission = async (req, res, next) => {
+
+    try {
+
+        const is_authorized = await AUTHORIZE.check_permission({
+            req,
+            permissions: ['can_create_media'],
+            record_type: 'media',
+            parent_id: null,
+            child_id: null
+        });
+
+        if (is_authorized !== true) {
+            return res.status(403).json({
+                success: false,
+                message: 'Unauthorized request',
+                data: null
+            });
+        }
+
+        return next();
+
+    } catch (error) {
+        LOGGER.module().error(`ERROR: [/media-library/uploads (require_create_media_permission)] ${error.message}`);
+        return res.status(403).json({
+            success: false,
+            message: 'Unauthorized request',
+            data: null
+        });
+    }
+};
+
+/**
  * Register upload routes
  * @param {Object} app - Express application instance
  */
 module.exports = (app) => {
     app.post(
         `${APP_PATH}/media/library/uploads`,
+        rate_limits.media_operations,
+        TOKEN.verify,
+        require_create_media_permission,
         upload.array('files', MAX_FILES),
         handle_upload,
         handle_upload_error
