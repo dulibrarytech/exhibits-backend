@@ -22,17 +22,26 @@ function build_form() {
         <div id="message"></div>
         <input type="text" id="grid-text-input" />
         <input type="number" id="grid-columns" />
-        <select id="item-style-select">
-            <option value=""></option>
-            <option value="item1">Item Style 1</option>
-            <option value="item2">Item Style 2</option>
-            <option value="item3">Item Style 3</option>
-        </select>
+        <div id="item-style-options" role="radiogroup">
+            <label class="item-style-option"><input type="radio" name="styles" id="item-style-none" value="" checked> None</label>
+            <label class="item-style-option"><input type="radio" name="styles" id="item-style-item1" value="item1"> Item Style 1</label>
+            <label class="item-style-option"><input type="radio" name="styles" id="item-style-item2" value="item2"> Item Style 2</label>
+            <label class="item-style-option"><input type="radio" name="styles" id="item-style-item3" value="item3"> Item Style 3</label>
+        </div>
     `;
 }
 
 function set_value(selector, value) {
     document.querySelector(selector).value = value;
+}
+
+// Select a style preset by checking its radio (mirrors the swatch chooser that
+// replaced the old <select>). Enforces radio-group exclusivity, which jsdom
+// does not apply to programmatic .checked changes.
+function select_style(value) {
+    document.querySelectorAll('input[name="styles"]').forEach((radio) => {
+        radio.checked = radio.value === value;
+    });
 }
 
 describe('itemsCommonStandardGridFormModule', () => {
@@ -59,6 +68,26 @@ describe('itemsCommonStandardGridFormModule', () => {
             set_alert: vi.fn(),
             set_field_error: vi.fn(),
             clear_field_error: vi.fn(),
+        };
+        // The style-preset chooser (swatch radios) is read via
+        // helperModule.get_checked_radio_button and written via
+        // check_item_style_option. Stub both to mirror the real
+        // helper.module implementations.
+        globalThis.helperModule = {
+            get_checked_radio_button: (radios) => {
+                if (!radios || !radios.length) return null;
+                const checked = Array.from(radios).find((b) => b && b.checked);
+                if (!checked) return null;
+                const v = String(checked.value);
+                return v === '' || v === 'undefined' ? null : v;
+            },
+            check_item_style_option: (value) => {
+                const radios = document.getElementsByName('styles');
+                if (!radios || !radios.length) return;
+                const target = value || '';
+                for (const r of radios) { if (r.value === target) { r.checked = true; return; } }
+                for (const r of radios) { if (r.value === '') { r.checked = true; return; } }
+            },
         };
         build_form();
     });
@@ -106,7 +135,7 @@ describe('itemsCommonStandardGridFormModule', () => {
         it('returns the assembled grid object on a fully valid form', () => {
             set_value('#grid-text-input', 'Some grid copy');
             set_value('#grid-columns', '4');
-            set_value('#item-style-select', 'item2');
+            select_style('item2');
 
             const result = globalThis.itemsCommonStandardGridFormModule
                 .get_common_grid_form_fields();
@@ -130,7 +159,7 @@ describe('itemsCommonStandardGridFormModule', () => {
 
         it('sets styles to null when no preset is selected (empty option)', () => {
             set_value('#grid-columns', '3');
-            set_value('#item-style-select', '');
+            select_style('');
 
             const result = globalThis.itemsCommonStandardGridFormModule
                 .get_common_grid_form_fields();
@@ -173,35 +202,32 @@ describe('itemsCommonStandardGridFormModule', () => {
 
     describe('set_item_style', () => {
 
-        it('selects an option that matches the saved key', () => {
+        it('checks the radio that matches the saved key', () => {
             globalThis.itemsCommonStandardGridFormModule.set_item_style('item2');
 
-            expect(document.querySelector('#item-style-select').value).toBe('item2');
+            expect(document.querySelector('#item-style-item2').checked).toBe(true);
         });
 
-        it('warns when the saved key has no matching option', () => {
+        it('falls back to "None" when the saved key has no matching option', () => {
             globalThis.itemsCommonStandardGridFormModule.set_item_style('item999');
 
-            expect(console.warn).toHaveBeenCalledWith(
-                'Saved style key not found in dropdown options:',
-                'item999',
-            );
-            expect(document.querySelector('#item-style-select').value).toBe('');
+            expect(document.querySelector('#item-style-none').checked).toBe(true);
         });
 
-        it('is a no-op when the select element is missing', () => {
-            document.querySelector('#item-style-select').remove();
+        it('is a no-op when the style options are missing', () => {
+            document.getElementById('item-style-options').remove();
             expect(() =>
                 globalThis.itemsCommonStandardGridFormModule.set_item_style('item1'),
             ).not.toThrow();
         });
 
-        it('is a no-op when styles_value is falsy', () => {
-            globalThis.itemsCommonStandardGridFormModule.set_item_style(null);
-            globalThis.itemsCommonStandardGridFormModule.set_item_style('');
-            globalThis.itemsCommonStandardGridFormModule.set_item_style(undefined);
-            expect(console.warn).not.toHaveBeenCalled();
-            expect(document.querySelector('#item-style-select').value).toBe('');
+        it('selects "None" when styles_value is falsy', () => {
+            expect(() => {
+                globalThis.itemsCommonStandardGridFormModule.set_item_style(null);
+                globalThis.itemsCommonStandardGridFormModule.set_item_style('');
+                globalThis.itemsCommonStandardGridFormModule.set_item_style(undefined);
+            }).not.toThrow();
+            expect(document.querySelector('#item-style-none').checked).toBe(true);
         });
     });
 

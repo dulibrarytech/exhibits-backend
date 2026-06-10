@@ -21,7 +21,6 @@
 const DB = require('../config/db_config')();
 const DB_TABLES = require('../config/db_tables_config')();
 const TABLE = DB_TABLES.exhibits;
-const USERS_ROLES_TABLE = DB_TABLES.exhibits.users_roles;
 const AUTH_TASKS = require('../auth/tasks/auth_tasks');
 const ROLES_TASKS = require('../auth/tasks/roles_tasks');
 const EXHIBITS_ENDPOINTS = require('../exhibits/endpoints/index')();
@@ -29,12 +28,10 @@ const USERS_ENDPOINTS = require('../users/endpoints')();
 const INDEXER_ENDPOINTS = require('../indexer/endpoints')();
 const MEDIA_LIBRARY_ENDPOINTS = require('../media-library/endpoints')();
 const LOGGER = require('../libs/log4');
-const ROLE_TASKS = require("./tasks/roles_tasks");
 
 // Module-level singleton instances
 let AUTH_TASKS_INSTANCE = null;
 let ROLES_TASKS_INSTANCE = null;
-let ROLE_TASKS_INSTANCE = null;
 
 /**
  * Gets or creates singleton AUTH_TASKS instance
@@ -82,31 +79,6 @@ function get_roles_tasks_instance() {
         return ROLES_TASKS_INSTANCE;
     } catch (error) {
         LOGGER.module().error(`ERROR: [/auth/model] failed to create ROLES_TASKS instance: ${error.message}`);
-        return null;
-    }
-}
-
-/**
- * Gets or creates singleton ROLE_TASKS instance
- * @returns {Object|null} ROLE_TASKS instance or null on error
- */
-function get_role_tasks_instance() {
-
-    if (ROLE_TASKS_INSTANCE !== null) {
-        return ROLE_TASKS_INSTANCE;
-    }
-
-    if (typeof ROLE_TASKS === 'undefined' || typeof DB === 'undefined' || typeof USERS_ROLES_TABLE === 'undefined') {
-        LOGGER.module().error('ERROR: [/auth/model] ROLE_TASKS, DB, or USERS_ROLES_TABLE is not defined');
-        return null;
-    }
-
-    try {
-        ROLE_TASKS_INSTANCE = new ROLE_TASKS(DB, USERS_ROLES_TABLE);
-        LOGGER.module().debug('DEBUG: [/auth/model] ROLE_TASKS singleton instance created');
-        return ROLE_TASKS_INSTANCE;
-    } catch (error) {
-        LOGGER.module().error(`ERROR: [/auth/model] failed to create ROLE_TASKS instance: ${error.message}`);
         return null;
     }
 }
@@ -413,87 +385,12 @@ exports.get_user_role = async function (user_id) {
 };
 
 /**
- * Updates user role assignment (optimized)
- * @param {number|string} user_id - User ID to update
- * @param {number|string} role_id - Role ID to assign
- * @returns {Object} - {status: number, message: string, data: boolean}
- */
-exports.update_user_role = async function (user_id, role_id) {
-
-    try {
-        if (user_id === null || user_id === undefined) {
-            LOGGER.module().warn('WARNING: [/auth/model (update_user_role)] user_id parameter is null or undefined');
-            return {status: 400, message: 'Invalid user ID provided.', data: false};
-        }
-
-        if (typeof user_id === 'string' && user_id.trim().length === 0) {
-            LOGGER.module().warn('WARNING: [/auth/model (update_user_role)] user_id parameter is empty string');
-            return {status: 400, message: 'Invalid user ID provided.', data: false};
-        }
-
-        const numeric_user_id = Number(user_id);
-        if (isNaN(numeric_user_id) || !Number.isInteger(numeric_user_id) || numeric_user_id <= 0) {
-            LOGGER.module().warn(`WARNING: [/auth/model (update_user_role)] invalid user_id: ${user_id}`);
-            return {status: 400, message: 'Invalid user ID format.', data: false};
-        }
-
-        if (role_id === null || role_id === undefined) {
-            LOGGER.module().warn('WARNING: [/auth/model (update_user_role)] role_id parameter is null or undefined');
-            return {status: 400, message: 'Invalid role ID provided.', data: false};
-        }
-
-        if (typeof role_id === 'string' && role_id.trim().length === 0) {
-            LOGGER.module().warn('WARNING: [/auth/model (update_user_role)] role_id parameter is empty string');
-            return {status: 400, message: 'Invalid role ID provided.', data: false};
-        }
-
-        const numeric_role_id = Number(role_id);
-        if (isNaN(numeric_role_id) || !Number.isInteger(numeric_role_id) || numeric_role_id <= 0) {
-            LOGGER.module().warn(`WARNING: [/auth/model (update_user_role)] invalid role_id: ${role_id}`);
-            return {status: 400, message: 'Invalid role ID format.', data: false};
-        }
-
-        const TASKS = get_role_tasks_instance();
-        if (!TASKS) {
-            LOGGER.module().error('ERROR: [/auth/model (update_user_role)] failed to get ROLE_TASKS instance');
-            return {status: 500, message: 'Server configuration error.', data: false};
-        }
-
-        if (typeof TASKS.update_user_role !== 'function') {
-            LOGGER.module().error('ERROR: [/auth/model (update_user_role)] ROLE_TASKS instance missing update_user_role method');
-            return {status: 500, message: 'Unable to update user role.', data: false};
-        }
-
-        const result = await TASKS.update_user_role(numeric_user_id, numeric_role_id);
-
-        const success = result === true || (typeof result === 'number' && result > 0);
-
-        if (!success) {
-            LOGGER.module().warn(`WARNING: [/auth/model (update_user_role)] failed to update role for user id: ${numeric_user_id}`);
-            return {status: 500, message: 'Unable to update user role.', data: false};
-        }
-
-        LOGGER.module().debug(`DEBUG: [/auth/model (update_user_role)] role updated successfully for user id: ${numeric_user_id}`);
-
-        return {status: 200, message: 'User role updated successfully.', data: true};
-
-    } catch (error) {
-        LOGGER.module().error(`ERROR: [/auth/model (update_user_role)] unable to update user role: ${error.message}`);
-        if (process.env.NODE_ENV !== 'production') {
-            LOGGER.module().debug(`DEBUG: [/auth/model (update_user_role)] stack trace: ${error.stack}`);
-        }
-        return {status: 500, message: 'Unable to update user role.', data: false};
-    }
-};
-
-/**
  * Resets all singleton instances (useful for testing)
  * @returns {void}
  */
 exports._reset_all_instances = function () {
     AUTH_TASKS_INSTANCE = null;
     ROLES_TASKS_INSTANCE = null;
-    ROLE_TASKS_INSTANCE = null;
     LOGGER.module().debug('DEBUG: [/auth/model] all singleton instances reset');
 };
 
@@ -504,7 +401,6 @@ exports._reset_all_instances = function () {
 exports._get_instances_status = function () {
     return {
         auth_tasks: AUTH_TASKS_INSTANCE !== null,
-        roles_tasks: ROLES_TASKS_INSTANCE !== null,
-        role_tasks: ROLE_TASKS_INSTANCE !== null
+        roles_tasks: ROLES_TASKS_INSTANCE !== null
     };
 };
