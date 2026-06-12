@@ -87,6 +87,7 @@ const sources = [
     'public/app/items.module.js',
     'public/app/recycle.module.js',
     'public/app/user.module.js',
+    'public/app/index.management.module.js',
 
     // media-library
     'public/app/media-library/helper.media.library.module.js',

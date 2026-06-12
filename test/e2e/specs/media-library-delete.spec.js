@@ -207,9 +207,11 @@ test.describe('Media library delete modal (modals.delete.module.js — open_dele
         await confirm_btn.dispatchEvent('click');
         await confirm_btn.dispatchEvent('click');
 
-        // Release the held DELETE and let everything settle.
+        // Release the held DELETE. On success the module closes the delete modal —
+        // a deterministic settle signal, unlike networkidle (the media page never
+        // goes idle because of ongoing thumbnail requests).
         resolve_delete();
-        await page.waitForLoadState('networkidle');
+        await expect(page.locator('#delete-media-confirm-btn')).toBeHidden();
 
         expect(delete_count).toBe(1);
     });

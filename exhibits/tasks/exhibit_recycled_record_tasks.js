@@ -18,13 +18,20 @@
 
 'use strict';
 
-const LOGGER = require('../../libs/log4');
 const Base_tasks = require('./tasks_helper');
 
 /**
- * Object contains tasks used to manage recycled records
- * @param DB
- * @param TABLE
+ * Tasks used to manage recycled (soft-deleted) records.
+ *
+ * Construct with the full tables config object (`DB_TABLES.exhibits`); read
+ * methods resolve their own table from `this.TABLE.<key>`, and write methods
+ * take the resolved table NAME as their first argument. A record is "recycled"
+ * when `is_deleted = 1` (regardless of publish state, so a record deleted while
+ * published is still visible/purgeable here rather than becoming an orphan).
+ *
+ * Errors are NOT swallowed here — they propagate to the model so a failed
+ * delete/restore can never be reported as success.
+ *
  * @type {Recycled_record_tasks}
  */
 const Recycled_record_tasks = class extends Base_tasks {
@@ -34,123 +41,89 @@ const Recycled_record_tasks = class extends Base_tasks {
     }
 
     /**
-     * Gets trashed exhibit records
+     * Fetch recycled rows from a table, owner-scoped and tagged with their type.
+     * @param {string} table - resolved table name
+     * @param {string} type - record type tag added to each row (exhibit|heading|item|grid|timeline)
+     * @param {string|null} created_by - when set, restrict to this owner's rows; null = all owners
+     * @private
      */
-    async get_recycled_exhibit_records() {
+    async _get_recycled(table, type, created_by) {
 
-        try {
-
-            return await this.DB(this.TABLE.exhibit_records)
+        const query = this.DB(table)
             .select('*')
-            .where({
-                is_published: 0,
-                is_deleted: 1
-            });
+            .where({ is_deleted: 1 });
 
-        } catch (error) {
-            LOGGER.module().error('ERROR: [/exhibits/exhibit_recycled_record_tasks (get_recycled_exhibit_records)] unable to get recycled records ' + error.message);
+        if (created_by) {
+            query.andWhere('created_by', created_by);
         }
+
+        const rows = await query.timeout(this.QUERY_TIMEOUT);
+        // Tag each row so callers (list UI, restore/delete authz) can tell types apart.
+        return rows.map((row) => ({ ...row, type }));
+    }
+
+    async get_recycled_exhibit_records(created_by = null) {
+        return this._get_recycled(this.TABLE.exhibit_records, 'exhibit', created_by);
+    }
+
+    async get_recycled_heading_records(created_by = null) {
+        return this._get_recycled(this.TABLE.heading_records, 'heading', created_by);
+    }
+
+    async get_recycled_item_records(created_by = null) {
+        return this._get_recycled(this.TABLE.item_records, 'item', created_by);
+    }
+
+    async get_recycled_grid_records(created_by = null) {
+        return this._get_recycled(this.TABLE.grid_records, 'grid', created_by);
+    }
+
+    async get_recycled_timeline_records(created_by = null) {
+        return this._get_recycled(this.TABLE.timeline_records, 'timeline', created_by);
     }
 
     /**
-     * Gets trashed heading records
+     * Permanently delete a single recycled row. Scoped to `is_deleted = 1` so a
+     * live (non-recycled) record can never be hard-deleted through this path.
+     * @param {string} table - resolved table name
+     * @param {string} uuid - record uuid
+     * @returns {Promise<number>} affected row count
      */
-    async get_recycled_heading_records() {
-
-        try {
-
-            return await this.DB(this.TABLE.heading_records)
-            .select('*')
-            .where({
-                is_published: 0,
-                is_deleted: 1
-            });
-
-        } catch (error) {
-            LOGGER.module().error('ERROR: [/exhibits/exhibit_recycled_record_tasks (get_recycled_heading_records)] unable to get recycled heading records ' + error.message);
-        }
+    async delete_recycled_record(table, uuid) {
+        return this.DB(table)
+            .where({ uuid: uuid, is_deleted: 1 })
+            .delete()
+            .timeout(this.QUERY_TIMEOUT);
     }
 
     /**
-     * Gets recycled item records
+     * Permanently delete all recycled rows in a table, optionally owner-scoped.
+     * @param {string} table - resolved table name
+     * @param {string|null} created_by - when set, only this owner's rows; null = all owners
+     * @returns {Promise<number>} affected row count
      */
-    async get_recycled_item_records() {
+    async delete_all_recycled_records(table, created_by = null) {
 
-        try {
+        const query = this.DB(table).where({ is_deleted: 1 });
 
-            return await this.DB(this.TABLE.item_records)
-            .select('*')
-            .where({
-                is_published: 0,
-                is_deleted: 1
-            });
-
-        } catch (error) {
-            LOGGER.module().error('ERROR: [/exhibits/exhibit_recycled_record_tasks (get_recycled_item_records)] unable to get recycled item records ' + error.message);
+        if (created_by) {
+            query.andWhere('created_by', created_by);
         }
+
+        return query.delete().timeout(this.QUERY_TIMEOUT);
     }
 
     /**
-     * Permanently deletes recycled record
-     * @param is_member_of_exhibit
-     * @param uuid
+     * Restore a single recycled row (clears is_deleted). Scoped to `is_deleted = 1`.
+     * @param {string} table - resolved table name
+     * @param {string} uuid - record uuid
+     * @returns {Promise<number>} affected row count
      */
-    async delete_recycled_record(is_member_of_exhibit, uuid) {
-
-        try {
-
-            await this.DB(this.TABLE)
-            .where({
-                is_member_of_exhibit: is_member_of_exhibit,
-                uuid: uuid
-            })
-            .delete();
-
-        } catch (error) {
-            LOGGER.module().error('ERROR: [/exhibits/exhibit_recycled_record_tasks (delete_recycled_record)] unable to permanently delete record ' + error.message);
-        }
-    }
-
-    /**
-     * Permanently deletes all recycled records
-     */
-    async delete_all_recycled_records() {
-
-        try {
-
-            await this.DB(this.TABLE)
-            .where({
-                is_published: 0,
-                is_deleted: 1
-            })
-            .delete();
-
-        } catch (error) {
-            LOGGER.module().error('ERROR: [/exhibits/exhibit_recycled_record_tasks (delete_all_recycled_records)] unable to delete all records ' + error.message);
-        }
-    }
-
-    /**
-     * Restores recycled records
-     * @param is_member_of_exhibit
-     * @param uuid
-     */
-    async restore_recycled_record(is_member_of_exhibit, uuid) {
-
-        try {
-
-            await this.DB(this.TABLE)
-            .where({
-                is_member_of_exhibit: is_member_of_exhibit,
-                uuid: uuid
-            })
-            .update({
-                is_deleted: 0
-            });
-
-        } catch (error) {
-            LOGGER.module().error('ERROR: [/exhibits/exhibit_recycled_record_tasks (restore_recycled_record)] unable to restore record ' + error.message);
-        }
+    async restore_recycled_record(table, uuid) {
+        return this.DB(table)
+            .where({ uuid: uuid, is_deleted: 1 })
+            .update({ is_deleted: 0 })
+            .timeout(this.QUERY_TIMEOUT);
     }
 };
 

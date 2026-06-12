@@ -187,6 +187,76 @@ exports.index_exhibit = async (uuid, type) => {
 };
 
 /**
+ * Counts currently-published exhibits (is_published = 1, not deleted). This is the
+ * "should be in the index" target the admin can compare against the indexed count.
+ * @returns {Promise<number>}
+ */
+exports.get_published_exhibit_count = async () => {
+    try {
+        const records = await exhibit_record_task.get_exhibit_records();
+        if (!Array.isArray(records)) {
+            return 0;
+        }
+        return records.filter(record => Number(record.is_published) === 1).length;
+    } catch (error) {
+        LOGGER.module().error(`ERROR: [/indexer/model (get_published_exhibit_count)] ${error.message}`);
+        return 0;
+    }
+};
+
+/**
+ * Reindexes every currently-published exhibit into the (freshly rebuilt) index.
+ * Runs after a rebuild so published content returns to the empty index WITHOUT
+ * changing any publish state. Each exhibit is indexed independently — a single
+ * failure is logged and skipped rather than aborting the whole reindex.
+ * @returns {Promise<{total:number, indexed:number, failed:number}>}
+ */
+exports.reindex_published_exhibits = async () => {
+
+    const summary = { total: 0, indexed: 0, failed: 0 };
+
+    try {
+        const records = await exhibit_record_task.get_exhibit_records();
+        const published = Array.isArray(records)
+            ? records.filter(record => Number(record.is_published) === 1)
+            : [];
+        summary.total = published.length;
+
+        LOGGER.module().info(
+            `INFO: [/indexer/model (reindex_published_exhibits)] Reindexing ${summary.total} published exhibit(s) after rebuild...`
+        );
+
+        for (const exhibit of published) {
+            try {
+                const result = await exports.index_exhibit(exhibit.uuid, CONSTANTS.INDEX_TYPES.PUBLISH);
+                if (result && result.status === CONSTANTS.STATUS_CODES.CREATED) {
+                    summary.indexed++;
+                } else {
+                    summary.failed++;
+                    LOGGER.module().warn(
+                        `WARNING: [/indexer/model (reindex_published_exhibits)] Exhibit ${exhibit.uuid} not indexed: ${result ? result.data : 'no response'}`
+                    );
+                }
+            } catch (error) {
+                summary.failed++;
+                LOGGER.module().error(
+                    `ERROR: [/indexer/model (reindex_published_exhibits)] Exhibit ${exhibit.uuid} failed: ${error.message}`
+                );
+            }
+        }
+
+        LOGGER.module().info(
+            `INFO: [/indexer/model (reindex_published_exhibits)] Reindex complete: ${summary.indexed} indexed, ${summary.failed} failed of ${summary.total}.`
+        );
+
+    } catch (error) {
+        LOGGER.module().error(`ERROR: [/indexer/model (reindex_published_exhibits)] ${error.message}`);
+    }
+
+    return summary;
+};
+
+/**
  * Gets indexed record by UUID
  * @param {string} uuid - Record UUID
  * @returns {Promise<Object>} Response object

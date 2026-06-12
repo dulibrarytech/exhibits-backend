@@ -404,6 +404,50 @@ const navModule = (function () {
         apply_collapsed_centering(is_sidebar_collapsed());
     };
 
+    /**
+     * Gates admin-only nav links — those rendered with class `admin-only-nav`
+     * (hidden by CSS by default). Reveals them for Administrators; removes them
+     * for everyone else (fail closed). No-op, and no permission call, on pages
+     * that have no such links.
+     */
+    obj.gate_admin_links = async function () {
+
+        const admin_links = document.querySelectorAll('.admin-only-nav');
+
+        if (admin_links.length === 0) {
+            return;
+        }
+
+        // The post-login landing page populates the session profile
+        // asynchronously. Wait briefly for it so the admin link isn't evaluated
+        // before the profile exists (which would leave it hidden). Bounded.
+        if (typeof window.sessionStorage !== 'undefined') {
+            let waited = 0;
+            while (waited < 3000 && !window.sessionStorage.getItem('exhibits_user')) {
+                await new Promise(function (resolve) { setTimeout(resolve, 250); });
+                waited += 250;
+            }
+        }
+
+        let is_admin = false;
+
+        try {
+            if (typeof authModule !== 'undefined' && typeof authModule.is_administrator === 'function') {
+                is_admin = await authModule.is_administrator();
+            }
+        } catch (e) {
+            is_admin = false;
+        }
+
+        // Reveal for admins; otherwise leave the links hidden by CSS. Never remove
+        // them (timing-tolerant) and never trigger a redirect/logout.
+        if (is_admin === true) {
+            admin_links.forEach(function (el) {
+                el.classList.remove('admin-only-nav');
+            });
+        }
+    };
+
     // ==================== AUTO-INIT ====================
     // The sidebar toggle, preview link, and logout handler must work on
     // every page, including pages whose modules do not explicitly call
@@ -414,6 +458,7 @@ const navModule = (function () {
         obj.init_sidebar_toggle();
         wire_preview_link();
         wire_logout_link();
+        obj.gate_admin_links();
     }
 
     if (document.readyState === 'loading') {

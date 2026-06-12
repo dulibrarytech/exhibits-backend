@@ -307,3 +307,11 @@ aside.left-panel:hover {
         display: none !important;
     }
 }
+
+/* Admin-only nav links: hidden by default; navModule.gate_admin_links() reveals
+   them for Administrators (removes this class) or removes the element entirely.
+   The !important survives the inline styles the nav partial applies to every
+   <li>, so the link stays hidden until the async admin check resolves. */
+.admin-only-nav {
+    display: none !important;
+}

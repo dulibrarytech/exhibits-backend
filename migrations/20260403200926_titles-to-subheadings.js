@@ -2,7 +2,14 @@
  * @param { import("knex").Knex } knex
  * @returns { Promise<void> }
  */
-exports.up = function(knex) {
+exports.up = async function(knex) {
+  // This migration predates the 2026-04-30 baseline dump, so on that database
+  // its work is already done — the `title` columns it converts to subheadings
+  // and then drops no longer exist. Skip (idempotent) so migrate:latest records
+  // it and proceeds to the newer migrations instead of failing on a missing column.
+  if (!(await knex.schema.hasColumn('tbl_timelines', 'title'))) {
+    return;
+  }
   return knex.schema.alterTable('tbl_timelines', table => {
     table.text('title').nullable().alter();
   }).then(async () => {

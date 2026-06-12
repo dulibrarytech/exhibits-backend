@@ -21,7 +21,46 @@
 const MODEL = require('../indexer/model');
 const SERVICE = require('../indexer/service');
 const LOGGER = require('../libs/log4');
+const AUTHORIZE = require('../auth/authorize');
 const {is_valid_uuid, is_valid_record_type} = require('../indexer/indexer_helper');
+
+/**
+ * Route middleware: requires the `manage_index` permission.
+ * Runs after TOKEN.verify (which sets req.decoded), so an unauthenticated
+ * caller is already rejected; this gates the destructive index create/rebuild
+ * to roles that hold `manage_index` (Administrator only, per the RBAC matrix).
+ * @param {Object} req - Express request object
+ * @param {Object} res - Express response object
+ * @param {Function} next - Express next middleware function
+ */
+exports.require_manage_index_permission = async (req, res, next) => {
+
+    try {
+
+        const is_authorized = await AUTHORIZE.check_permission({
+            req,
+            permissions: ['manage_index']
+        });
+
+        if (is_authorized !== true) {
+            return res.status(403).json({
+                success: false,
+                message: 'Unauthorized request',
+                data: null
+            });
+        }
+
+        return next();
+
+    } catch (error) {
+        LOGGER.module().error(`ERROR: [/indexer/controller (require_manage_index_permission)] ${error.message}`);
+        return res.status(403).json({
+            success: false,
+            message: 'Unauthorized request',
+            data: null
+        });
+    }
+};
 
 /**
  * Creates a new search index
@@ -40,6 +79,20 @@ exports.create_index = async (req, res) => {
             throw new Error('Invalid response from service');
         }
 
+        // On a successful rebuild, repopulate the fresh (empty) index with the
+        // currently-published exhibits in the background. Publish state is NOT
+        // changed; the index self-heals over the next moments (watch the document
+        // count via the status endpoint / Refresh).
+        if (result.status === 201) {
+            setImmediate(() => {
+                MODEL.reindex_published_exhibits().catch((reindex_error) => {
+                    LOGGER.module().error('ERROR: [/indexer/controller (create_index reindex)]', {
+                        error: reindex_error.message
+                    });
+                });
+            });
+        }
+
         return res.status(result.status).json(result);
 
     } catch (error) {
@@ -53,6 +106,45 @@ exports.create_index = async (req, res) => {
             return res.status(500).json({
                 success: false,
                 message: 'Unable to create index'
+            });
+        }
+    }
+};
+
+/**
+ * Returns search index status (existence + document count) for the management view.
+ * @param {Object} req - Express request object
+ * @param {Object} res - Express response object
+ * @returns {Promise<void>}
+ */
+exports.get_index_status = async (req, res) => {
+
+    try {
+
+        const result = await SERVICE.get_index_status();
+
+        // Enrich with the count of currently-published exhibits so the admin can
+        // compare it against the indexed document count above.
+        if (result && result.data) {
+            try {
+                result.data.published_exhibits = await MODEL.get_published_exhibit_count();
+            } catch (count_error) {
+                result.data.published_exhibits = null;
+            }
+        }
+
+        return res.status(result.status).json(result);
+
+    } catch (error) {
+        LOGGER.module().error('ERROR: [/indexer/controller (get_index_status)]', {
+            error: error.message,
+            userId: req.decoded?.sub
+        });
+
+        if (!res.headersSent) {
+            return res.status(500).json({
+                success: false,
+                message: 'Unable to retrieve index status'
             });
         }
     }

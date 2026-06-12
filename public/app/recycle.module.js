@@ -1,6 +1,6 @@
 /**
 
- Copyright 2025 University of Denver
+ Copyright 2026 University of Denver
 
  Licensed under the Apache License, Version 2.0 (the "License");
  you may not use this file except in compliance with the License.
@@ -21,425 +21,606 @@ const recycleModule = (function () {
     'use strict';
 
     const APP_PATH = window.localStorage.getItem('exhibits_app_path');
-    let obj = {};
+    // Built directly from APP_PATH (same approach as index.management.module.js) so
+    // the page does not depend on the cached endpoints map carrying recycled_records.
+    const LIST_ENDPOINT = APP_PATH + '/api/v1/recycle';
+    const PAGE_SIZE = 25;
 
-    async function get_recycled_records() {
+    let obj = {};
+    let pending_delete = null;   // { exhibit_id, uuid, type } staged by the confirm modal
+    let all_records = [];        // full result set (paginated client-side)
+    let current_page = 1;
+
+    function el(id) {
+        return document.getElementById(id);
+    }
+
+    function set_alert(type, message) {
+        domModule.set_alert(document.querySelector('#message'), type, message);
+    }
+
+    function close_modal(selector) {
+        if (window.jQuery) {
+            try { window.jQuery(selector).modal('hide'); } catch (e) { /* manual fallback not required */ }
+        }
+    }
+
+    // Per-record op URL: /recycle/:exhibit_id/:uuid/:type. For an exhibit the
+    // exhibit_id IS its own uuid; for a child it is the parent exhibit uuid.
+    function record_url(exhibit_id, uuid, type) {
+        return `${LIST_ENDPOINT}/${encodeURIComponent(exhibit_id)}/${encodeURIComponent(uuid)}/${encodeURIComponent(type)}`;
+    }
+
+    function exhibit_id_of(record) {
+        return record.type === 'exhibit' ? record.uuid : (record.is_member_of_exhibit || '');
+    }
+
+    function display_label(record) {
+        let raw = record.title || record.text || record.name || '';
+        let label;
+        try {
+            label = helperModule.strip_html(helperModule.unescape(raw));
+        } catch (e) {
+            label = raw;
+        }
+        label = (label || '').trim();
+        return label || `(untitled ${record.type})`;
+    }
+
+    // ---- Rendering (DOM-built, never innerHTML with record data → XSS-safe) ----
+
+    // Font Awesome icon class for a record's type, mirroring the item list
+    // (heading → header "H", grid → th, timeline → clock; items by item_type).
+    function type_icon_class(record) {
+        switch (record.type) {
+            case 'heading': return 'fa fa-header';
+            case 'grid': return 'fa fa-th';
+            case 'timeline': return 'fa fa-clock-o';
+            case 'exhibit': return 'fa fa-folder-open-o';
+            default: {
+                const map = {
+                    text: 'fa fa-file-text-o',
+                    image: 'fa fa-image',
+                    video: 'fa fa-file-video-o',
+                    audio: 'fa fa-file-audio-o',
+                    pdf: 'fa fa-file-pdf-o'
+                };
+                return map[record.item_type] || 'fa fa-file-o';
+            }
+        }
+    }
+
+    // Title cell modelled on the item list's "Item" cell: thumbnail (or a type-icon
+    // placeholder) on the left, then the bold title with the type + its icon below.
+    // Thumbnails use the existing media-library thumbnail-by-UUID endpoint (no API
+    // change); a missing/unsupported thumbnail falls back to the standard placeholder
+    // image, and records without media get the gray type-icon box.
+    function build_title_cell(record, token) {
+
+        const td = document.createElement('td');
+        const label = display_label(record);
+        const icon_class = type_icon_class(record);
+        const thumb_uuid = record.thumbnail_media_uuid || record.media_uuid;
+
+        const cell = document.createElement('div');
+        cell.className = 'recycle-cell';
+
+        if (thumb_uuid && token) {
+            const img = document.createElement('img');
+            img.className = 'recycle-thumb';
+            img.src = `${APP_PATH}/api/v1/media/library/thumbnail/${encodeURIComponent(thumb_uuid)}?token=${encodeURIComponent(token)}`;
+            img.alt = '';
+            img.loading = 'lazy';
+            const fallback = `${APP_PATH}/static/images/image-tn.png`;
+            img.addEventListener('error', function () {
+                if (this.src !== fallback) {
+                    this.src = fallback;
+                }
+            });
+            cell.appendChild(img);
+        } else {
+            const box = document.createElement('div');
+            box.className = 'recycle-thumb-placeholder';
+            const icon = document.createElement('i');
+            icon.className = icon_class;
+            icon.setAttribute('aria-hidden', 'true');
+            box.appendChild(icon);
+            cell.appendChild(box);
+        }
+
+        const text = document.createElement('div');
+        text.className = 'recycle-text';
+
+        const title = document.createElement('div');
+        title.className = 'recycle-title';
+        title.textContent = label;
+        title.setAttribute('title', label);
+        text.appendChild(title);
+
+        const type_div = document.createElement('div');
+        const type_small = document.createElement('small');
+        type_small.className = 'recycle-type';
+        const type_icon = document.createElement('i');
+        type_icon.className = icon_class;
+        type_icon.setAttribute('aria-hidden', 'true');
+        type_icon.style.marginRight = '4px';
+        type_small.appendChild(type_icon);
+        type_small.appendChild(document.createTextNode(record.type));
+        type_div.appendChild(type_small);
+        text.appendChild(type_div);
+
+        cell.appendChild(text);
+        td.appendChild(cell);
+        return td;
+    }
+
+    function build_row(record, token) {
+
+        const exhibit_id = exhibit_id_of(record);
+        const tr = document.createElement('tr');
+
+        tr.appendChild(build_title_cell(record, token));
+
+        const td_owner = document.createElement('td');
+        td_owner.textContent = record.created_by || '—';
+        tr.appendChild(td_owner);
+
+        const td_actions = document.createElement('td');
+        td_actions.appendChild(build_actions_dropdown(record, exhibit_id));
+        tr.appendChild(td_actions);
+
+        return tr;
+    }
+
+    // Kebab (⋮) actions menu — mirrors the item list's `item-actions` dropdown
+    // (fa-ellipsis-v toggle + Bootstrap dropdown-menu). The Restore / Permanently
+    // Delete items keep the recycle-restore / recycle-delete classes + data-*
+    // attributes the delegated tbody click handler reads.
+    function dropdown_item(extra_class, icon_class, text, record, exhibit_id, label) {
+        const btn = document.createElement('button');
+        btn.type = 'button';
+        btn.className = 'dropdown-item ' + extra_class;
+        btn.style.fontSize = '0.875rem';
+        btn.dataset.exhibitId = exhibit_id;
+        btn.dataset.uuid = record.uuid;
+        btn.dataset.type = record.type;
+        if (label !== undefined) {
+            btn.dataset.label = label;
+        }
+        const icon = document.createElement('i');
+        icon.className = icon_class + ' mr-2';
+        icon.setAttribute('aria-hidden', 'true');
+        icon.style.width = '16px';
+        btn.appendChild(icon);
+        btn.appendChild(document.createTextNode(text));
+        return btn;
+    }
+
+    function build_actions_dropdown(record, exhibit_id) {
+
+        const wrapper = document.createElement('div');
+        wrapper.className = 'dropdown';
+        wrapper.style.cssText = 'display: inline-block; position: relative;';
+
+        const toggle = document.createElement('button');
+        toggle.type = 'button';
+        toggle.className = 'btn btn-link p-0 border-0 recycle-actions-toggle';
+        toggle.style.cssText = 'color: #6c757d; font-size: 1.25rem; line-height: 1; background: none;';
+        toggle.setAttribute('aria-haspopup', 'true');
+        toggle.setAttribute('aria-expanded', 'false');
+        toggle.setAttribute('title', 'Actions');
+        const dots = document.createElement('i');
+        dots.className = 'fa fa-ellipsis-v';
+        dots.setAttribute('aria-hidden', 'true');
+        toggle.appendChild(dots);
+
+        const menu = document.createElement('div');
+        menu.className = 'dropdown-menu recycle-actions-menu';
+        menu.appendChild(dropdown_item('recycle-restore', 'fa fa-undo', 'Restore', record, exhibit_id));
+        const divider = document.createElement('div');
+        divider.className = 'dropdown-divider';
+        menu.appendChild(divider);
+        menu.appendChild(dropdown_item('text-danger recycle-delete', 'fa fa-trash', 'Permanently Delete', record, exhibit_id, display_label(record)));
+
+        wrapper.appendChild(toggle);
+        wrapper.appendChild(menu);
+        return wrapper;
+    }
+
+    // The kebab menus are driven manually (no Bootstrap dropdown JS / Popper) so
+    // positioning and close-on-outside-click are fully predictable. Close any open
+    // menu by removing the `.show` class Bootstrap's CSS keys its display off.
+    function close_all_menus() {
+        document.querySelectorAll('#recycled .recycle-actions-menu.show').forEach((menu) => {
+            menu.classList.remove('show');
+            const wrapper = menu.parentElement;
+            const toggle = wrapper && wrapper.querySelector('.recycle-actions-toggle');
+            if (toggle) {
+                toggle.setAttribute('aria-expanded', 'false');
+            }
+        });
+    }
+
+    function total_pages() {
+        return Math.max(1, Math.ceil(all_records.length / PAGE_SIZE));
+    }
+
+    function render_pager(pages, start_index, shown) {
+        const pager = el('recycle-pager');
+        if (!pager) {
+            return;
+        }
+        if (pages <= 1) {
+            pager.style.display = 'none';
+            return;
+        }
+        pager.style.display = '';
+        const info = el('recycle-page-info');
+        if (info) {
+            info.textContent = `Showing ${start_index + 1}–${start_index + shown} of ${all_records.length} (page ${current_page} of ${pages})`;
+        }
+        const prev = el('recycle-prev');
+        if (prev) prev.disabled = current_page <= 1;
+        const next = el('recycle-next');
+        if (next) next.disabled = current_page >= pages;
+    }
+
+    function render_page() {
+
+        const tbody = el('recycled-data');
+        const table_wrap = el('recycled-table-wrap');
+        const empty_state = el('recycle-empty-state');
+        const pager = el('recycle-pager');
+        if (!tbody) {
+            return;
+        }
+
+        tbody.textContent = '';
+
+        if (all_records.length === 0) {
+            if (table_wrap) table_wrap.style.display = 'none';
+            if (empty_state) empty_state.style.display = '';
+            if (pager) pager.style.display = 'none';
+            return;
+        }
+
+        if (table_wrap) table_wrap.style.display = '';
+        if (empty_state) empty_state.style.display = 'none';
+
+        const pages = total_pages();
+        if (current_page > pages) current_page = pages;
+        if (current_page < 1) current_page = 1;
+
+        const start_index = (current_page - 1) * PAGE_SIZE;
+        const slice = all_records.slice(start_index, start_index + PAGE_SIZE);
+        const token = authModule.get_user_token();
+        slice.forEach((record) => tbody.appendChild(build_row(record, token)));
+
+        render_pager(pages, start_index, slice.length);
+    }
+
+    // Replace the result set and re-render. current_page is preserved (and clamped
+    // by render_page) so a refresh after a delete keeps you near where you were.
+    function set_records(records) {
+        all_records = Array.isArray(records) ? records : [];
+        render_page();
+    }
+
+    // ---- Data load ----
+
+    async function load_records() {
+
+        const token = authModule.get_user_token();
+        if (token === false) {
+            return;
+        }
 
         try {
 
-            const EXHIBITS_ENDPOINTS = endpointsModule.get_exhibits_endpoints();
-            const token = authModule.get_user_token();
             const response = await httpModule.req({
                 method: 'GET',
-                url: EXHIBITS_ENDPOINTS.exhibits.recycled_records.get.endpoint,
-                headers: {
-                    'Content-Type': 'application/json',
-                    'x-access-token': token
-                }
+                url: LIST_ENDPOINT,
+                headers: { 'x-access-token': token }
             });
 
-            if (response !== undefined && response.status === 200) {
-                return response.data.data;
-            }
-
-        } catch (error) {
-            domModule.set_alert(document.querySelector('#message'), 'danger', error.message);
-        }
-    }
-
-    obj.display_recycled_records = async function () {
-
-
-        // TODO: try catch block
-        const records = await get_recycled_records();
-        let exhibit_data = '';
-
-        if (records === false) {
-            domModule.empty('#exhibit-card');
-            return false;
-        }
-
-        if (records === undefined) {
-            authModule.redirect_to_auth();
-        }
-
-        if (records.length === 0) {
-            domModule.empty('.card');
-            domModule.set_alert('#message', 'info', 'No deleted records found.');
-            return false;
-        }
-
-        let deleted_exhibits = [];
-        let deleted_headings = [];
-
-        for (let i = 0; i < records.length; i++) {
-
-            if (records[i].type === 'exhibit') {
-                deleted_exhibits.push(records[i]);
-            }
-
-            if (records[i].type === 'heading') {
-                deleted_headings.push(records[i]);
-            }
-
-            /*
-            let uuid = records[i].uuid;
-            let is_published = records[i].is_published;
-            let preview_link = `${APP_PATH}/preview?uuid=${uuid}`;
-            let exhibit_items = `<a href="${APP_PATH}/items?exhibit_id=${uuid}" title="View Exhibit Items"><i class="fa fa-list pr-1"></i></a>&nbsp;`;
-            let order = `${records[i].order}`;
-            let thumbnail_url = '';
-            let thumbnail_fragment = '';
-            let status;
-            let title;
-            let exhibit_edit = '';
-            let trash = '';
-
-             */
-
-            /*
-            if (is_published === 1) {
-                order = `<td style="width: 4%" class="item-order" aria-label="exhibit-order"><span style="padding-left: 4px;">${order}</span></td>`;
-                status = `<a href="#" id="${uuid}" class="suppress-exhibit" aria-label="exhibit-status"><span id="suppress" title="published"><i class="fa fa-cloud" style="color: green"></i><br>Published</span></a>`;
-                exhibit_edit = `<i title="Can only edit if unpublished" style="color: #d3d3d3" class="fa fa-edit pr-1" aria-label="edit-exhibit"></i>`;
-                trash = `<i title="Can only delete if unpublished" style="color: #d3d3d3" class="fa fa-trash pr-1" aria-label="delete-exhibit"></i>`;
-            } else if (is_published === 0) {
-                order = `<td style="width: 4%;" class="grabbable item-order" aria-label="exhibit-order"><i class="fa fa-reorder"></i><span style="padding-left: 4px;">${order}</span></td>`;
-                status = `<a href="#" id="${uuid}" class="publish-exhibit" aria-label="exhibit-status"><span id="publish" title="suppressed"><i class="fa fa-cloud-upload" style="color: darkred"></i><br>Unpublished</span></a>`;
-                exhibit_edit = `<a href="${APP_PATH}/exhibits/exhibit/edit?exhibit_id=${uuid}" title="Edit" aria-label="edit-exhibit"><i class="fa fa-edit pr-1"></i> </a>`;
-                trash = `<a href="${APP_PATH}/exhibits/exhibit/delete?exhibit_id=${uuid}" title="Delete exhibit" aria-label="delete-exhibit"><i class="fa fa-trash pr-1"></i></a>`;
-            }
-
-             */
-
-            /*
-            if (exhibits[i].thumbnail.length > 0) {
-                thumbnail_url = `${APP_PATH}/api/v1/exhibits/${uuid}/media/${exhibits[i].thumbnail}`;
-                thumbnail_fragment = `<p><img src="${thumbnail_url}" alt="${uuid}-thumbnail" height="100" width="100"></p>`;
+            if (response !== undefined && response.status === 200 && response.data) {
+                set_records(response.data.data || []);
+            } else if (response !== undefined && response.status === 403) {
+                set_alert('danger', 'You are not authorized to view the recycle bin.');
+                set_records([]);
             } else {
-                thumbnail_url = `${APP_PATH}/static/images/image-tn.png`;
-                thumbnail_fragment = `<p><img src="${thumbnail_url}" alt="${uuid}-thumbnail" height="100" width="100"></p>`;
+                set_alert('danger', 'Unable to load recycled records.');
+                set_records([]);
             }
-             */
+
+        } catch (error) {
+            set_alert('danger', 'Unable to load recycled records.');
+            set_records([]);
         }
+    }
 
-        // console.debug(deleted_exhibits);
-        for (let i=0;i<deleted_exhibits.length;i++) {
-            // console.debug(deleted_exhibits[i]);
+    obj.display_recycled_records = load_records;
 
-            let uuid = deleted_exhibits[i].uuid;
-            let id = deleted_exhibits[i].id;
-            let title = helperModule.strip_html(helperModule.unescape(deleted_exhibits[i].title));
+    // ---- Restore ----
 
-            exhibit_data += `<tr id="${uuid}">`;
-            exhibit_data += `<td style="width: 5%">${id}</td>`;
-            exhibit_data += `<td style="width: 35%">
-                    <p><strong>${title}</strong></p>
-                    </td>`;
+    async function restore_record(exhibit_id, uuid, type) {
 
-            // exhibit_data += `<td style="width: 5%;text-align: center"><small>${status}</small></td>`;
-            exhibit_data += `<td style="width: 10%">
-                                <div class="card-text text-sm-center">
-                                    
-                                    <!--
-                                    <a href="${APP_PATH}/items/standard?exhibit_id=${uuid}" title="Add Items" aria-label="add-items"><i class="fa fa-plus pr-1"></i> </a>
-                                    &nbsp;-->
-                                    Restore
-                                   
-                                    &nbsp;
-                                    Permanently Delete
-                                  
-                                </div>
-                            </td>`;
-            exhibit_data += '</tr>';
-
+        const token = authModule.get_user_token();
+        if (token === false) {
+            return;
         }
-        // Insert all rows at once via a DocumentFragment — matches the bulk
-        // batching pattern used in exhibits.module.js.
-        const exhibits_data_el = document.querySelector('#exhibits-data');
-        const recycle_template = document.createElement('template');
-        recycle_template.innerHTML = exhibit_data;
-        exhibits_data_el.textContent = '';
-        exhibits_data_el.appendChild(recycle_template.content);
-
-        /*
-        const EXHIBIT_LIST = new DataTable('#exhibits', {
-            paging: true,
-            rowReorder: true
-        });
-
-        EXHIBIT_LIST.on('row-reordered', async (e, reordered_exhibits) => {
-            await helperModule.reorder_exhibits(e, reordered_exhibits);
-        });
-
-         */
-
-        // bind_publish_exhibit_events();
-        // bind_suppress_exhibit_events();
-    };
-
-    obj.delete_exhibit = function () {
 
         try {
 
-            (async function () {
+            const response = await httpModule.req({
+                method: 'PUT',
+                url: record_url(exhibit_id, uuid, type),
+                headers: { 'x-access-token': token }
+            });
 
-                domModule.set_text('#delete-message', 'Deleting exhibit...');
-                const EXHIBITS_ENDPOINTS = endpointsModule.get_exhibits_endpoints();
-                const uuid = helperModule.get_parameter_by_name('exhibit_id');
-                const token = authModule.get_user_token();
-                const response = await httpModule.req({
-                    method: 'DELETE',
-                    url: EXHIBITS_ENDPOINTS.exhibits.exhibit_records.endpoints.delete.endpoint.replace(':exhibit_id', uuid),
-                    headers: {
-                        'Content-Type': 'application/json',
-                        'x-access-token': token
-                    }
-                });
+            if (response !== undefined && (response.status === 200 || response.status === 204)) {
+                set_alert('success', 'Record restored.');
+                await load_records();
+            } else if (response !== undefined && response.status === 403) {
+                set_alert('danger', 'You are not authorized to restore this record.');
+            } else if (response !== undefined && response.status === 404) {
+                set_alert('warning', 'Record not found — it may already have been restored or deleted.');
+                await load_records();
+            } else {
+                set_alert('danger', 'Unable to restore record.');
+            }
 
-                if (response !== undefined && response.status === 204) {
+        } catch (error) {
+            set_alert('danger', 'Unable to restore record.');
+        }
+    }
 
-                    setTimeout(() => {
-                        window.location.replace(APP_PATH + '/exhibits');
-                    }, 900);
+    // ---- Permanent delete (single, via confirm modal) ----
 
-                } else {
-                    domModule.set_alert(document.querySelector('#exhibit-no-delete'), 'danger', response.data.message);
+    function open_delete_modal(exhibit_id, uuid, type, label) {
+        pending_delete = { exhibit_id, uuid, type };
+        const target = el('delete-confirm-target');
+        if (target) {
+            target.textContent = label || `${type} ${uuid}`;
+        }
+        if (window.jQuery) {
+            try { window.jQuery('#delete-confirm-modal').modal('show'); } catch (e) { /* noop */ }
+        }
+    }
+
+    async function delete_record() {
+
+        if (!pending_delete) {
+            return;
+        }
+
+        const { exhibit_id, uuid, type } = pending_delete;
+        const token = authModule.get_user_token();
+        if (token === false) {
+            return;
+        }
+
+        const confirm_btn = el('delete-confirm-btn');
+
+        try {
+
+            if (confirm_btn) {
+                confirm_btn.disabled = true;
+                confirm_btn.textContent = 'Deleting…';
+            }
+
+            const response = await httpModule.req({
+                method: 'DELETE',
+                url: record_url(exhibit_id, uuid, type),
+                headers: { 'x-access-token': token }
+            });
+
+            if (response !== undefined && (response.status === 200 || response.status === 204)) {
+                set_alert('success', 'Record permanently deleted.');
+                await load_records();
+            } else if (response !== undefined && response.status === 403) {
+                set_alert('danger', 'You are not authorized to delete this record.');
+            } else if (response !== undefined && response.status === 404) {
+                set_alert('warning', 'Record not found — it may already have been deleted.');
+                await load_records();
+            } else {
+                set_alert('danger', 'Unable to delete record.');
+            }
+
+        } catch (error) {
+            set_alert('danger', 'Unable to delete record.');
+        } finally {
+            if (confirm_btn) {
+                confirm_btn.disabled = false;
+                confirm_btn.textContent = 'Permanently Delete';
+            }
+            pending_delete = null;
+            close_modal('#delete-confirm-modal');
+        }
+    }
+
+    // ---- Empty bin (type-to-confirm modal) ----
+
+    function reset_empty_input() {
+        const input = el('empty-confirm-input');
+        if (input) input.value = '';
+        const btn = el('empty-confirm-btn');
+        if (btn) btn.disabled = true;
+    }
+
+    async function empty_bin() {
+
+        const token = authModule.get_user_token();
+        if (token === false) {
+            return;
+        }
+
+        const confirm_btn = el('empty-confirm-btn');
+
+        try {
+
+            if (confirm_btn) {
+                confirm_btn.disabled = true;
+                confirm_btn.textContent = 'Emptying…';
+            }
+
+            const response = await httpModule.req({
+                method: 'DELETE',
+                url: `${LIST_ENDPOINT}/all`,
+                headers: { 'x-access-token': token }
+            });
+
+            if (response !== undefined && (response.status === 200 || response.status === 204)) {
+                set_alert('success', 'Recycle bin emptied.');
+                await load_records();
+            } else if (response !== undefined && response.status === 403) {
+                set_alert('danger', 'You are not authorized to empty the recycle bin.');
+            } else {
+                set_alert('danger', 'Unable to empty the recycle bin.');
+            }
+
+        } catch (error) {
+            set_alert('danger', 'Unable to empty the recycle bin.');
+        } finally {
+            if (confirm_btn) {
+                confirm_btn.textContent = 'Empty Recycle Bin';
+            }
+            close_modal('#empty-confirm-modal');
+            reset_empty_input();
+        }
+    }
+
+    // ---- Event wiring ----
+
+    function wire_table() {
+        // Delegated: the tbody persists across re-renders, so wire once.
+        const tbody = el('recycled-data');
+        if (!tbody) {
+            return;
+        }
+
+        tbody.addEventListener('click', async function (event) {
+
+            // Kebab toggle: open this row's menu, closing any other open one.
+            const toggle = event.target.closest('.recycle-actions-toggle');
+            if (toggle) {
+                event.preventDefault();
+                event.stopPropagation(); // don't let the document handler immediately close it
+                const menu = toggle.parentElement.querySelector('.recycle-actions-menu');
+                const was_open = menu && menu.classList.contains('show');
+                close_all_menus();
+                if (menu && !was_open) {
+                    menu.classList.add('show');
+                    toggle.setAttribute('aria-expanded', 'true');
                 }
+                return;
+            }
 
-            })();
-
-        } catch (error) {
-            domModule.set_alert(document.querySelector('#message'), 'danger', error.message);
-        }
-
-        return false;
-    };
-
-    async function publish_exhibit(uuid) {
-
-        const EXHIBITS_ENDPOINTS = endpointsModule.get_exhibits_endpoints();
-        const token = authModule.get_user_token();
-        const response = await httpModule.req({
-            method: 'POST',
-            url: EXHIBITS_ENDPOINTS.exhibits.exhibit_publish.post.endpoint.replace(':exhibit_id', uuid),
-            headers: {
-                'Content-Type': 'application/json',
-                'x-access-token': token
+            // Menu items.
+            const btn = event.target.closest('button.dropdown-item');
+            if (!btn) {
+                return;
+            }
+            close_all_menus();
+            if (btn.classList.contains('recycle-restore')) {
+                await restore_record(btn.dataset.exhibitId, btn.dataset.uuid, btn.dataset.type);
+            } else if (btn.classList.contains('recycle-delete')) {
+                open_delete_modal(btn.dataset.exhibitId, btn.dataset.uuid, btn.dataset.type, btn.dataset.label);
             }
         });
 
-        if (response.status === 200) {
-
-            scrollTo(0, 0);
-            domModule.set_alert(document.querySelector('#message'), 'success', 'Exhibit published');
-
-            setTimeout(() => {
-                location.reload();
-            }, 900);
-
-            /*
-            setTimeout(() => {
-                let elem = document.getElementById(uuid);
-                document.getElementById(uuid).classList.remove('publish-exhibit');
-                document.getElementById(uuid).classList.add('suppress-exhibit');
-                document.getElementById(uuid).replaceWith(elem.cloneNode(true));
-                document.getElementById(uuid).innerHTML = '<span id="suppress" title="published"><i class="fa fa-cloud" style="color: green"></i><br>Published</span>';
-                document.getElementById(uuid).addEventListener('click', async () => {
-                    const uuid = elem.getAttribute('id');
-                    await suppress_exhibit(uuid);
-                }, false);
-            }, 0);
-
-             */
-        }
-
-        if (response.status === 204) {
-            scrollTo(0, 0);
-            domModule.set_alert(document.querySelector('#message'), 'warning', 'Exhibit must contain at least one item to publish');
-
-            setTimeout(() => {
-                domModule.empty('#message');
-            }, 5000);
-        }
-    }
-
-    async function suppress_exhibit(uuid) {
-
-        const EXHIBITS_ENDPOINTS = endpointsModule.get_exhibits_endpoints();
-        const token = authModule.get_user_token();
-        const response = await httpModule.req({
-            method: 'POST',
-            url: EXHIBITS_ENDPOINTS.exhibits.exhibit_suppress.post.endpoint.replace(':exhibit_id', uuid),
-            headers: {
-                'Content-Type': 'application/json',
-                'x-access-token': token
+        // Close any open kebab menu when clicking outside it (wired once).
+        document.addEventListener('click', function (event) {
+            if (event.target.closest('.recycle-actions-toggle') || event.target.closest('.recycle-actions-menu')) {
+                return;
             }
+            close_all_menus();
         });
-
-        if (response.status === 200) {
-
-            scrollTo(0, 0);
-            domModule.set_alert(document.querySelector('#message'), 'success', 'Exhibit suppressed');
-
-            setTimeout(() => {
-                location.reload();
-            }, 900);
-
-            /*
-            setTimeout(() => {
-                let elem = document.getElementById(uuid);
-                document.getElementById(uuid).classList.remove('suppress-exhibit');
-                document.getElementById(uuid).classList.add('publish-exhibit');
-                document.getElementById(uuid).replaceWith(elem.cloneNode(true));
-                document.getElementById(uuid).innerHTML = '<span id="publish" title="suppressed"><i class="fa fa-cloud-upload" style="color: darkred"></i><br>Suppressed</span>';
-                document.getElementById(uuid).addEventListener('click', async (event) => {
-                    const uuid = elem.getAttribute('id');
-                    await publish_exhibit(uuid);
-                }, false);
-            }, 0);
-
-             */
-        }
-
-        if (response.status === 204) {
-            scrollTo(0, 0);
-            domModule.set_alert(document.querySelector('#message'), 'danger', 'Unable to suppress exhibit');
-
-            setTimeout(() => {
-                domModule.empty('#message');
-            }, 5000);
-        }
     }
 
-    function bind_publish_exhibit_events() {
+    function wire_controls() {
 
-        try {
-
-            const exhibit_links = Array.from(document.getElementsByClassName('publish-exhibit'));
-
-            exhibit_links.forEach(exhibit_link => {
-                exhibit_link.addEventListener('click', async (event) => {
-                    const uuid = exhibit_link.getAttribute('id');
-                    await publish_exhibit(uuid);
-                });
+        const refresh = el('refresh-recycle');
+        if (refresh) {
+            refresh.addEventListener('click', function () {
+                load_records();
             });
-
-        } catch (error) {
-            domModule.set_alert(document.querySelector('#message'), 'danger', error.message);
         }
-    }
 
-    function bind_suppress_exhibit_events() {
-
-        try {
-
-            const exhibit_links = Array.from(document.getElementsByClassName('suppress-exhibit'));
-
-            exhibit_links.forEach(exhibit_link => {
-                exhibit_link.addEventListener('click', async () => {
-                    const uuid = exhibit_link.getAttribute('id');
-                    await suppress_exhibit(uuid);
-                });
-            });
-
-        } catch (error) {
-            domModule.set_alert(document.querySelector('#message'), 'danger', error.message);
-        }
-    }
-
-    /*
-    obj.create_shared_preview_url = function (uuid) {
-
-        (async function () {
-
-            domModule.set_alert(document.querySelector('#shared-url'), 'info', 'Generating Shared URL...');
-
-            const EXHIBITS_ENDPOINTS = endpointsModule.get_exhibits_endpoints();
-            let token = authModule.get_user_token();
-            let response;
-
-            if (token === false) {
-
-                setTimeout(() => {
-                    domModule.set_alert(document.querySelector('#message'), 'info', 'Unable to get session token');
-                    authModule.logout();
-                }, 1000);
-
-                return false;
-            }
-
-            response = await httpModule.req({
-                method: 'POST',
-                url: EXHIBITS_ENDPOINTS.exhibits.exhibit_shared.get.endpoint + '?uuid=' + uuid,
-                headers: {
-                    'Content-Type': 'application/json',
-                    'x-access-token': token
+        const prev = el('recycle-prev');
+        if (prev) {
+            prev.addEventListener('click', function () {
+                if (current_page > 1) {
+                    current_page--;
+                    render_page();
                 }
             });
+        }
 
-            if (response !== undefined && response.status === 201) {
+        const next = el('recycle-next');
+        if (next) {
+            next.addEventListener('click', function () {
+                if (current_page < total_pages()) {
+                    current_page++;
+                    render_page();
+                }
+            });
+        }
 
-                document.querySelector('#shared-url-copy').innerText = response.data.shared_url;
-                setTimeout(async () => {
+        const delete_confirm = el('delete-confirm-btn');
+        if (delete_confirm) {
+            delete_confirm.addEventListener('click', function () {
+                if (pending_delete) {
+                    delete_record();
+                }
+            });
+        }
 
-                    document.querySelector('#shared-url').innerHTML = `<div class="d-flex align-items-center">
-                                                                                    <p>
-                                                                                    - Shared URL created.&nbsp;&nbsp; 
-                                                                                    <button type="button" class="btn btn-sm btn-primary" onclick="exhibitsModule.copy();">
-                                                                                    <i class="fa fa-copy"> Copy</i>
-                                                                                    </button>
-                                                                                    <br>
-                                                                                    - Shared URL expires in 7 days.
-                                                                                    </p>
-                                                                                </div>`;
-                }, 900);
-            }
-
-            return false;
-
-        })();
-    };
-
-     */
-
-    /*
-    obj.copy = function () {
-
-        try {
-
-            (async function () {
-                let elem = document.querySelector('#shared-url-copy');
-                const shared_url = elem.textContent;
-                await navigator.clipboard.writeText(shared_url);
-                domModule.set_alert(document.querySelector('#copy-message'), 'info', 'URL copied to clipboard!');
-
-                setTimeout(() => {
-                    document.querySelector('#copy-message').innerHTML = '';
-                }, 5000);
-            })();
-
-        } catch (error) {
-            domModule.set_alert(document.querySelector('#message'), 'info', 'Failed to copy shared URL to clipboard. Error: ${error.message}');
+        // Empty-bin: destructive button only enables on an exact "EMPTY".
+        const empty_input = el('empty-confirm-input');
+        const empty_confirm = el('empty-confirm-btn');
+        if (empty_input && empty_confirm) {
+            empty_input.addEventListener('input', function () {
+                empty_confirm.disabled = empty_input.value.trim().toUpperCase() !== 'EMPTY';
+            });
+            empty_confirm.addEventListener('click', function () {
+                if (empty_input.value.trim().toUpperCase() === 'EMPTY') {
+                    empty_bin();
+                }
+            });
         }
     }
-
-     */
 
     obj.init = async function () {
 
-        try {
-
-            const token = authModule.get_user_token();
-            await authModule.check_auth(token);
-            await recycleModule.display_recycled_records();
-            // helperModule.show_form();
-            // navModule.set_logout_link();
-
-        } catch (error) {
-            domModule.set_alert(document.querySelector('#message'), 'danger', error.message);
+        if (typeof navModule !== 'undefined' && typeof navModule.wire_nav_links === 'function') {
+            navModule.wire_nav_links();
         }
 
+        // Access gate: the recycle bin is an admin tool. Gate on the Administrator
+        // role (same as Index Management) — the server still authorizes every
+        // operation (manage_recycle_bin for system-wide view/empty; delete_* +
+        // ownership for per-record restore/delete).
+        const is_admin = await authModule.is_administrator();
+        if (is_admin !== true) {
+            window.location.replace(APP_PATH + '/access-denied');
+            return;
+        }
+
+        const content = el('recycle-content');
+        if (content) {
+            content.style.display = '';
+        }
+
+        // Dashboard `.card` elements are `visibility: hidden` by default (style.css);
+        // reveal them the way every other dashboard page does.
+        if (typeof helperModule !== 'undefined' && typeof helperModule.show_form === 'function') {
+            helperModule.show_form();
+        }
+
+        wire_table();
+        wire_controls();
+        await load_records();
     };
 
     return obj;

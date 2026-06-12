@@ -23,139 +23,127 @@ const DB_TABLES = require('../config/db_tables_config')();
 const TABLES = DB_TABLES.exhibits;
 const EXHIBIT_RECYCLED_RECORD_TASKS = require('../exhibits/tasks/exhibit_recycled_record_tasks');
 const LOGGER = require('../libs/log4');
-// const HELPER = require('../libs/helper');
-// const VALIDATOR = require('../libs/validate');
+
+// The five record types that carry is_deleted, mapped to their physical table.
+const TYPE_TABLE = {
+    exhibit: TABLES.exhibit_records,
+    heading: TABLES.heading_records,
+    item: TABLES.item_records,
+    grid: TABLES.grid_records,
+    timeline: TABLES.timeline_records
+};
 
 /**
- * Get all recycled records
+ * Get recycled records across all five record types.
+ * @param {string|null} created_by - when set, only that owner's records are
+ *        returned; when null, all owners' records are returned (the caller must
+ *        already have authorized a system-wide view).
  */
-exports.get_recycled_records = async function () {
+exports.get_recycled_records = async function (created_by = null) {
 
     try {
 
         const TASKS = new EXHIBIT_RECYCLED_RECORD_TASKS(DB, TABLES);
-        let exhibit_records = await TASKS.get_recycled_exhibit_records();
-        let heading_records = await TASKS.get_recycled_heading_records();
-        let item_records = await TASKS.get_recycled_item_records();
-        let grid_records = await TASKS.get_recycled_item_records();
-        let timeline_records = await TASKS.get_recycled_item_records();
-        // TODO: grid items
-        // TODO: timeline items
-        let recycled = [...exhibit_records, ...heading_records, ...item_records, ...grid_records, ...timeline_records];
+
+        const [exhibits, headings, items, grids, timelines] = await Promise.all([
+            TASKS.get_recycled_exhibit_records(created_by),
+            TASKS.get_recycled_heading_records(created_by),
+            TASKS.get_recycled_item_records(created_by),
+            TASKS.get_recycled_grid_records(created_by),
+            TASKS.get_recycled_timeline_records(created_by)
+        ]);
 
         return {
             status: 200,
             message: 'Recycled records',
-            data: recycled
+            data: [...exhibits, ...headings, ...items, ...grids, ...timelines]
         };
 
     } catch (error) {
-        LOGGER.module().error('ERROR: [/exhibits/model (get_recycled_records)] ' + error.message);
-        return {
-            status: 400,
-            message: error.message
-        };
+        LOGGER.module().error('ERROR: [/exhibits/recycle_model (get_recycled_records)] ' + error.message);
+        return { status: 500, message: error.message, data: [] };
     }
 };
 
 /**
- * Permanently deletes recycled record
- * @param is_member_of_exhibit
- * @param uuid
- * @param type
+ * Permanently delete a single recycled record.
+ * @param {string} type - exhibit|heading|item|grid|timeline
+ * @param {string} uuid - record uuid
  */
-exports.delete_recycled_record = async function (is_member_of_exhibit, uuid, type) {
+exports.delete_recycled_record = async function (type, uuid) {
 
     try {
 
-        let table;
-
-        if (type === 'exhibit') {
-            table = TABLES.exhibit_records;
-        } else if (type === 'heading') {
-            table = TABLES.heading_records;
-        } else if (type === 'item') {
-            table = TABLES.item_records;
+        const table = TYPE_TABLE[type];
+        if (!table) {
+            return { status: 400, message: `Invalid record type: ${type}` };
         }
 
-        const TASKS = new EXHIBIT_RECYCLED_RECORD_TASKS(DB, table);
-        await TASKS.delete_trashed_record(is_member_of_exhibit, uuid);
+        const TASKS = new EXHIBIT_RECYCLED_RECORD_TASKS(DB, TABLES);
+        const affected = await TASKS.delete_recycled_record(table, uuid);
 
-        return {
-            status: 204,
-            message: 'Record permanently deleted'
-        };
-
-    } catch (error) {
-        LOGGER.module().error('ERROR: [/exhibits/model (delete_recycled_record)] ' + error.message);
-        return {
-            status: 400,
-            message: error.message
-        };
-    }
-};
-
-/**
- * Permanently deletes all trashed records
- */
-exports.delete_all_recycled_records = function () {
-
-    try {
-
-        let tables = [TABLES.exhibit_records, TABLES.heading_records, TABLES.item_records];
-
-        tables.forEach(async (table) => {
-            const TASKS = new EXHIBIT_RECYCLED_RECORD_TASKS(DB, table);
-            await TASKS.delete_all_recycled_records();
-        });
-
-        return {
-            status: 204,
-            message: 'Records permanently deleted'
-        };
-
-    } catch (error) {
-        LOGGER.module().error('ERROR: [/exhibits/model (delete_all_recycled_records)] ' + error.message);
-        return {
-            status: 400,
-            message: error.message
-        };
-    }
-};
-
-/**
- * Restores recycled record
- * @param is_member_of_exhibit
- * @param uuid
- * @param type
- */
-exports.restore_recycled_record = async function (is_member_of_exhibit, uuid, type) {
-
-    try {
-
-        let table;
-
-        if (type === 'exhibit') {
-            table = TABLES.exhibit_records;
-        } else if (type === 'heading') {
-            table = TABLES.heading_records;
-        } else if (type === 'item') {
-            table = TABLES.item_records;
+        if (!affected) {
+            return { status: 404, message: 'Recycled record not found' };
         }
 
-        const TASKS = new EXHIBIT_RECYCLED_RECORD_TASKS(DB, table);
-        await TASKS.restore_recycled_record(is_member_of_exhibit, uuid);
-
-        return {
-            status: 204,
-            message: 'Record permanently deleted'
-        };
+        return { status: 200, message: 'Record permanently deleted' };
 
     } catch (error) {
-        LOGGER.module().error('ERROR: [/exhibits/model (restore_recycled_record)] ' + error.message);
-        return {
-            status: 400,
-            message: error.message
-        };
+        LOGGER.module().error('ERROR: [/exhibits/recycle_model (delete_recycled_record)] ' + error.message);
+        return { status: 500, message: error.message };
+    }
+};
+
+/**
+ * Permanently delete all recycled records, optionally owner-scoped.
+ * @param {string|null} created_by - when set, only that owner's recycled records
+ *        are purged; when null, all owners' (caller must hold manage_recycle_bin).
+ */
+exports.delete_all_recycled_records = async function (created_by = null) {
+
+    try {
+
+        const TASKS = new EXHIBIT_RECYCLED_RECORD_TASKS(DB, TABLES);
+        let deleted = 0;
+
+        // Sequential + awaited so a failure surfaces (no fire-and-forget).
+        for (const table of Object.values(TYPE_TABLE)) {
+            deleted += await TASKS.delete_all_recycled_records(table, created_by);
+        }
+
+        return { status: 200, message: 'Records permanently deleted', deleted };
+
+    } catch (error) {
+        LOGGER.module().error('ERROR: [/exhibits/recycle_model (delete_all_recycled_records)] ' + error.message);
+        return { status: 500, message: error.message };
+    }
+};
+
+/**
+ * Restore a single recycled record (clears is_deleted).
+ * @param {string} type - exhibit|heading|item|grid|timeline
+ * @param {string} uuid - record uuid
+ */
+exports.restore_recycled_record = async function (type, uuid) {
+
+    try {
+
+        const table = TYPE_TABLE[type];
+        if (!table) {
+            return { status: 400, message: `Invalid record type: ${type}` };
+        }
+
+        const TASKS = new EXHIBIT_RECYCLED_RECORD_TASKS(DB, TABLES);
+        const affected = await TASKS.restore_recycled_record(table, uuid);
+
+        if (!affected) {
+            return { status: 404, message: 'Recycled record not found' };
+        }
+
+        return { status: 200, message: 'Record restored' };
+
+    } catch (error) {
+        LOGGER.module().error('ERROR: [/exhibits/recycle_model (restore_recycled_record)] ' + error.message);
+        return { status: 500, message: error.message };
     }
 };

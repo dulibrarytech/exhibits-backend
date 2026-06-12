@@ -145,8 +145,9 @@ test.describe('axe-core a11y scans (WCAG 2.0/2.1/2.2 AA)', () => {
         });
 
         await page.goto(`${APP_PATH}/media/library`);
-        // Allow render hop. Page may take longer than a list page.
-        await page.waitForLoadState('networkidle');
+        // Wait for the row to render (deterministic), not networkidle — the media
+        // page keeps loading thumbnail <img>s, so it may never reach network-idle.
+        await expect(page.locator('a.btn-delete-media')).toHaveCount(1);
 
         await expectNoAxeViolations(page);
     });

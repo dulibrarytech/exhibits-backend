@@ -16,9 +16,13 @@
  * @returns { Promise<void> }
  */
 exports.up = async function (knex) {
-  await knex.schema.raw(`
-    ALTER TABLE \`tbl_user_permissions\` DROP COLUMN \`has_permission\`;
-  `);
+  // Idempotent: only drop if the legacy column is still present, so the
+  // migration is safe to re-run and safe on a DB where it was already removed.
+  if (await knex.schema.hasColumn('tbl_user_permissions', 'has_permission')) {
+    await knex.schema.raw(`
+      ALTER TABLE \`tbl_user_permissions\` DROP COLUMN \`has_permission\`;
+    `);
+  }
 };
 
 /**

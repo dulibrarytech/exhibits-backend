@@ -107,8 +107,11 @@ test.describe('Users edit page (user.module.js — display_user_record / update_
 
         await page.goto(`${APP_PATH}/users/edit?user_id=1`);
 
+        // The 404 handler shows this alert for only ~1s before redirecting, so on a
+        // slow run the default 5s assertion can miss it — give it generous headroom.
         await expect(page.locator('#message .alert-danger')).toContainText(
-            /Unable to retrieve user record/i
+            /Unable to retrieve user record/i,
+            { timeout: 15000 }
         );
         await page.waitForURL(new RegExp(`${APP_PATH}/users(?:\\?|$)`), {
             waitUntil: 'commit',

@@ -1,0 +1,58 @@
+/**
+ * Migration: add the `manage_recycle_bin` permission and grant it to Administrator.
+ *
+ * Gates the SYSTEM-WIDE recycle-bin operations — viewing and emptying the bin
+ * across ALL owners. Per-record restore/permanent-delete reuse the existing
+ * delete_exhibit/delete_any_exhibit and delete_item/delete_any_item permissions
+ * (scoped by ownership), and any authenticated curator may view/empty their OWN
+ * recycled records — so this permission is specifically the "all owners" gate.
+ *
+ * Permission grants (`ctbl_role_permissions`) are not part of any seed — they
+ * live in the production DB — so a migration is the correct place to add this
+ * grant for existing databases. The matching permission DEFINITION is also
+ * appended to `db/seeds/02_user_permissions.js` for fresh installs.
+ *
+ * Idempotent: re-running inserts nothing already present. Mirrors
+ * `20260610120000_add_manage_index_permission`.
+ *
+ * @param { import("knex").Knex } knex
+ * @returns { Promise<void> }
+ */
+
+'use strict';
+
+const PERMISSION = 'manage_recycle_bin';
+const DESCRIPTION = 'Allows user to view and empty the entire recycle bin (all owners)';
+const ADMIN_ROLE = 'Administrator';
+
+exports.up = async function (knex) {
+
+    // 1. Permission definition — insert only if absent.
+    let perm = await knex('tbl_user_permissions').where({ permission: PERMISSION }).first('id');
+    if (!perm) {
+        const [id] = await knex('tbl_user_permissions').insert({ permission: PERMISSION, description: DESCRIPTION });
+        perm = { id };
+    }
+
+    // 2. Grant to Administrator — insert only if absent
+    //    (UNIQUE(role_id, permission_id) is a second guard against duplicates).
+    const admin = await knex('tbl_user_roles').where({ role: ADMIN_ROLE }).first('id');
+    if (admin) {
+        const existing = await knex('ctbl_role_permissions')
+            .where({ role_id: admin.id, permission_id: perm.id })
+            .first('id');
+        if (!existing) {
+            await knex('ctbl_role_permissions').insert({ role_id: admin.id, permission_id: perm.id });
+        }
+    }
+};
+
+exports.down = async function (knex) {
+
+    const perm = await knex('tbl_user_permissions').where({ permission: PERMISSION }).first('id');
+    if (perm) {
+        // Remove grants first (FK fk_crp_permission is ON DELETE CASCADE, but be explicit).
+        await knex('ctbl_role_permissions').where({ permission_id: perm.id }).del();
+        await knex('tbl_user_permissions').where({ id: perm.id }).del();
+    }
+};

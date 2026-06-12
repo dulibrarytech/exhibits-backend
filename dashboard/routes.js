@@ -182,4 +182,8 @@ module.exports = function (app) {
     app.route(APP_PATH + '/styles')
         .get(CONTROLLER.get_dashboard_styles);
 
+    //============Index Management============//
+    app.route(APP_PATH + '/index-management')
+        .get(CONTROLLER.get_dashboard_index_management);
+
 };

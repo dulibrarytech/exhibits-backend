@@ -7,7 +7,7 @@
  *
  * What it verifies:
  *   1. The four canonical roles exist with the expected ids/names.
- *   2. The 34 canonical permissions exist.
+ *   2. The 36 canonical permissions exist.
  *   3. Referential integrity of user -> role assignments
  *      (every user has exactly one role; no orphan / duplicate role rows).
  *   4. The ENFORCED role -> permission matrix (ctbl_role_permissions) matches
@@ -68,12 +68,12 @@ const ALL_PERMISSIONS = [
     'update_any_item', 'unlock_record', 'update_user_role', 'publish_any_item',
     'suppress_any_item', 'add_users', 'update_users', 'delete_users', 'view_users',
     'update_user', 'can_create_media', 'can_update_media', 'can_delete_media',
-    'can_update_any_media', 'can_delete_any_media'
+    'can_update_any_media', 'can_delete_any_media', 'manage_index', 'manage_recycle_bin'
 ];
 
 // ENFORCED per-role permission sets (ctbl_role_permissions), source of truth.
 const EXPECTED_ROLE_PERMISSIONS = {
-    1: [...ALL_PERMISSIONS], // Administrator: all 34
+    1: [...ALL_PERMISSIONS], // Administrator: all 36
     2: [ // Power User: 28
         'add_exhibit', 'add_item', 'update_item', 'update_exhibit', 'publish_exhibit',
         'suppress_exhibit', 'publish_item', 'suppress_item', 'add_item_to_any_exhibit',
@@ -139,7 +139,7 @@ describe('exhibitsv2 — roles & permissions catalog', () => {
         expect(actual).toEqual(ROLES);
     });
 
-    test('all 34 canonical permissions exist (no missing / extra)', async () => {
+    test('all 36 canonical permissions exist (no missing / extra)', async () => {
         const rows = await db('tbl_user_permissions').select('permission');
         const actual = rows.map(r => r.permission).sort();
         expect(actual).toEqual([...ALL_PERMISSIONS].sort());

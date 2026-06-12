@@ -1,7 +1,9 @@
 /**
  * Seed: tbl_user_permissions
  *
- * Snapshot of the 34 permissions in production `exhibitsv2` as of 2026-04-30.
+ * Snapshot of production `exhibitsv2` permissions: the 34 from 2026-04-30,
+ * `manage_index` (added 2026-06-10 to gate the indexer `/manage` route), and
+ * `manage_recycle_bin` (added 2026-06-11 to gate system-wide recycle-bin ops).
  * Re-running this seed wipes and reinserts all rows. Run with `knex seed:run`.
  *
  * IDs are omitted so the database assigns them via AUTO_INCREMENT. Row order
@@ -52,6 +54,8 @@ exports.seed = async function (knex) {
     { permission: 'can_delete_media',                    description: 'Allows user to delete their media library records' },
     { permission: 'can_update_any_media',                description: 'Allows user to update any media library record' },
     { permission: 'can_delete_any_media',                description: 'Allows user to delete any media library record' },
+    { permission: 'manage_index',                        description: 'Allows user to create and rebuild the search index' },
+    { permission: 'manage_recycle_bin',                  description: 'Allows user to view and empty the entire recycle bin (all owners)' },
   ];
 
   await knex('tbl_user_permissions').del();

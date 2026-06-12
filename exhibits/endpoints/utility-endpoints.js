@@ -35,9 +35,9 @@ module.exports = {
             endpoint: `${APP_PATH}${PREFIX}${VERSION}/recycle/:exhibit_id/:uuid/:type`,
             params: 'token or api_key'
         },
-        post: {
-            description: 'Permanently deletes all trash records',
-            endpoint: `${APP_PATH}${PREFIX}${VERSION}/recycle/:exhibit_id/:uuid/:type`,
+        empty: {
+            description: 'Permanently deletes all recycled records (empty bin)',
+            endpoint: `${APP_PATH}${PREFIX}${VERSION}/recycle/all`,
             params: 'token or api_key'
         },
         put: {

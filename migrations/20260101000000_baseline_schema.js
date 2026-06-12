@@ -10,6 +10,17 @@
  * @returns { Promise<void> }
  */
 exports.up = async function (knex) {
+
+  // Existing / dump-based databases already have this schema. Detect that and
+  // record the baseline as applied WITHOUT recreating anything, so
+  // `migrate:latest` proceeds to the newer migrations instead of failing with
+  // "table already exists". This implements, in code, the "mark as applied"
+  // note above so operators don't have to hand-edit knex_migrations. Fresh
+  // databases (no core table) fall through and the full schema is created below.
+  if (await knex.schema.hasTable('tbl_exhibits')) {
+    return;
+  }
+
   await knex.schema.raw(`
     CREATE TABLE \`ctbl_role_permissions\` (
       \`id\` int(11) NOT NULL AUTO_INCREMENT,

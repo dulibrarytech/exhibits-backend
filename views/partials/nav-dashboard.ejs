@@ -51,7 +51,7 @@
                 <% } %>
                 <% if (typeof nav !== 'undefined' && nav.links && nav.links.length) { %>
                 <% nav.links.forEach(function (link) { %>
-                <li<% if (link.wrapper_id) { %> id="<%= link.wrapper_id %>"<% } %>>
+                <li<% if (link.wrapper_id) { %> id="<%= link.wrapper_id %>"<% } %><% if (link.admin_only) { %> class="admin-only-nav"<% } %>>
                     <a<% if (link.id) { %> id="<%= link.id %>"<% } %>
                        title="<%= link.label %>"
                        href="<%= link.href || '#' %>"

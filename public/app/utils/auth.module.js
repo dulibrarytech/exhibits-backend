@@ -301,6 +301,48 @@ const authModule = (function () {
         }
     };
 
+    /**
+     * Returns true only when the current user's role is Administrator.
+     * Quiet check — no redirect and no error alert on a non-admin — so it can
+     * gate UI such as admin-only nav links. Role is resolved server-side.
+     * @returns {Promise<boolean>}
+     */
+    obj.is_administrator = async function () {
+
+        try {
+
+            // Read the session profile WITHOUT side effects. get_user_profile_data()
+            // redirects to /auth and clears the session when the profile is missing
+            // or invalid — which must never happen from a passive nav check; it
+            // caused spurious logouts to a broken URL when this ran before the
+            // post-login landing page had populated the profile.
+            let profile = null;
+
+            try {
+                const raw = (typeof window.sessionStorage !== 'undefined')
+                    ? window.sessionStorage.getItem('exhibits_user')
+                    : null;
+                if (raw) {
+                    profile = JSON.parse(raw);
+                }
+            } catch (parse_error) {
+                return false;
+            }
+
+            if (!profile || typeof profile.uid !== 'string' || profile.uid.length === 0) {
+                return false;
+            }
+
+            const role = await obj.get_user_role(profile.uid);
+
+            return typeof role === 'string' && role.trim().toLowerCase() === 'administrator';
+
+        } catch (error) {
+            console.error('Error in is_administrator:', error.message);
+            return false;
+        }
+    };
+
     obj.get_user_role = async function (user_id) {
 
         try {

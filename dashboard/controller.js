@@ -49,7 +49,9 @@ const NAV_CONFIGS = {
         links: [
             { label: 'Add Exhibit', icon: 'ti-layout', modal: '#add-exhibit-modal' },
             { label: 'Media Library', icon: 'bi bi-collection-play-fill', href: APP_PATH + '/media/library' },
-            { label: 'Users', icon: 'bi bi-people-fill', href: APP_PATH + '/users' }
+            { label: 'Users', icon: 'bi bi-people-fill', href: APP_PATH + '/users' },
+            { id: 'index-management-link', label: 'Index Management', icon: 'bi bi-database-gear', href: APP_PATH + '/index-management', admin_only: true },
+            { id: 'recycle-bin-link', label: 'Recycle Bin', icon: 'bi bi-trash', href: APP_PATH + '/recycle', admin_only: true }
         ]
     },
 
@@ -339,6 +341,22 @@ const NAV_CONFIGS = {
             id: 'back-to-items',
             label: 'Back to Exhibit Items',
             nav_path: '/items?exhibit_id={exhibit_id}'
+        }
+    },
+
+    index_management: {
+        back: {
+            id: 'back-to-exhibits',
+            label: 'Back to Exhibits',
+            href: APP_PATH + '/exhibits'
+        }
+    },
+
+    recycle: {
+        back: {
+            id: 'back-to-exhibits',
+            label: 'Back to Exhibits',
+            href: APP_PATH + '/exhibits'
         }
     }
 };
@@ -683,7 +701,7 @@ exports.get_dashboard_access_denied = function (req, res) {
 exports.get_dashboard_recycle = function (req, res) {
     res.render('dist/dashboard-recycle', {
         ...template_config,
-        nav: NAV_CONFIGS.minimal
+        nav: NAV_CONFIGS.recycle
     });
 };
 
@@ -692,6 +710,14 @@ exports.get_dashboard_media = function (req, res) {
     res.render('dist/media-library/dashboard-media-home.ejs', {
         ...template_config,
         nav: NAV_CONFIGS.media_library
+    });
+};
+
+//======================== Index Management ========================//
+exports.get_dashboard_index_management = function (req, res) {
+    res.render('dist/dashboard-index-management', {
+        ...template_config,
+        nav: NAV_CONFIGS.index_management
     });
 };
 
