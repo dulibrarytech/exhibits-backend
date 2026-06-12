@@ -34,7 +34,7 @@
                         </table>
                     </div>
 
-                    <div id="recycle-pager" class="d-flex align-items-center mt-3" style="display:none">
+                    <div id="recycle-pager" class="mt-3" style="display:none">
                         <button type="button" id="recycle-prev" class="btn btn-sm btn-secondary">Prev</button>
                         <span id="recycle-page-info" class="mx-3 text-muted"></span>
                         <button type="button" id="recycle-next" class="btn btn-sm btn-secondary">Next</button>
@@ -133,6 +133,15 @@
     #recycle-content .card-body p {
         font-family: 'Open Sans', sans-serif;
         font-size: 0.875rem;
+    }
+
+    /* Pager flex layout lives here (not the Bootstrap `d-flex` utility) because
+       `.d-flex { display: flex !important }` from CDN Bootstrap would override the
+       module's inline `display:none`, so the pager could never be hidden on an
+       empty bin. The module toggles inline display (none / '') against this rule. */
+    #recycle-pager {
+        display: flex;
+        align-items: center;
     }
 
     /* Match the typography/density of the DataTables-based exhibits & item lists.
