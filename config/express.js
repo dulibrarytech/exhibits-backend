@@ -26,6 +26,7 @@ const METHODOVERRIDE = require('method-override');
 const HELMET = require('helmet');
 const HELMET_CONFIG = require('../config/helmet_config')();
 const XSS = require('../libs/dom');
+const LOGGER = require('../libs/log4');
 const FS = require('fs');
 
 module.exports = function() {
@@ -49,6 +50,21 @@ module.exports = function() {
     APP.use(XSS.sanitize_req_query);
     APP.use(XSS.sanitize_req_body);
     APP.use(XSS.sanitize_req_params);
+
+    // API/IIIF request access log — method, url, status, duration, IP. Applied
+    // once globally here; the per-route copies in the *_routes.js files were
+    // mounted at the wrong path and never fired. Scoped to /api/ and /iiif (what
+    // those per-route loggers covered) so static assets and page renders aren't logged.
+    APP.use(function (req, res, next) {
+        if (req.path.indexOf('/api/') !== -1 || req.path.indexOf('/iiif') !== -1) {
+            const start = Date.now();
+            res.on('finish', function () {
+                LOGGER.module().info(`INFO: [${req.method}] ${req.originalUrl} - ${res.statusCode} - ${Date.now() - start}ms - ${req.ip}`);
+            });
+        }
+        next();
+    });
+
     APP.set('views', './views');
     APP.set('view engine', 'ejs');
 
@@ -75,8 +91,31 @@ module.exports = function() {
         FS.mkdirSync(`./logs`);
     }
 
-    APP.get('*', function(req, res){
+    // 404 — JSON for API paths, plain text elsewhere (replaces the per-route 404
+    // handlers that never fired). Covers all methods, not just GET.
+    APP.use(function (req, res) {
+        if (req.path.indexOf('/api/') !== -1) {
+            return res.status(404).json({ success: false, message: 'Endpoint not found', data: null });
+        }
         res.status(404).send('Resource Not Found');
+    });
+
+    // Global error handler (must be last; the 4-arg signature is what makes Express
+    // treat it as one). Consolidates the per-route handlers that never ran: a JSON
+    // 400 for a malformed request body, then JSON 500s for API paths and plain text
+    // elsewhere. Error details are hidden in production.
+    // eslint-disable-next-line no-unused-vars
+    APP.use(function (err, req, res, next) {
+        if (err instanceof SyntaxError && err.status === 400 && 'body' in err) {
+            LOGGER.module().warn(`WARNING: [JSON parse error] ${req.method} ${req.originalUrl}`);
+            return res.status(400).json({ success: false, message: 'Invalid JSON in request body', data: null });
+        }
+        LOGGER.module().error(`ERROR: [global error handler] ${err.message} - ${req.method} ${req.originalUrl}`);
+        const error_message = process.env.NODE_ENV === 'production' ? 'Internal server error' : err.message;
+        if (req.path.indexOf('/api/') !== -1) {
+            return res.status(err.status || 500).json({ success: false, message: error_message, data: null });
+        }
+        res.status(err.status || 500).send(error_message);
     });
 
     SERVER.listen(process.env.APP_PORT);

@@ -24,86 +24,105 @@ const CREATEDOMPURIFY = require('dompurify'),
     DOMPURIFY = CREATEDOMPURIFY(WINDOW),
     VALIDATOR = require('validator');
 
+// Top-level body keys the sanitizer leaves untouched (preserves prior behavior).
+const SKIP_BODY_KEYS = new Set(['is_active']);
+
 /**
- * Middleware function used to sanitize body (form) inputs
- * Uses DOMPurify to strip malicious HTML/scripts from string values.
+ * Sanitizes a single string: trim, then strip dangerous HTML/scripts with
+ * DOMPurify (safe markup is kept; scripts/event handlers are removed).
+ *
+ * @param {string} value
+ * @returns {string}
+ */
+function sanitize_string(value) {
+    return DOMPURIFY.sanitize(VALIDATOR.trim(value));
+}
+
+/**
+ * Recursively sanitizes every string leaf in a parsed request container
+ * (req.body / req.query / req.params), descending through nested objects AND
+ * arrays. JSON bodies and qs bracket-notation queries both produce nesting, and
+ * the previous top-level-only pass let nested string values bypass sanitization.
+ *
+ * Iterative (explicit stack) so a deeply nested payload cannot overflow the call
+ * stack. Mutates the container in place. Request containers are JSON/qs-parsed and
+ * therefore acyclic, so no cycle tracking is needed.
+ *
+ * @param {Object|Array} root - container to sanitize in place
+ * @param {Set<string>} [skip_root_keys] - keys to leave untouched at the TOP level only
+ */
+function sanitize_in_place(root, skip_root_keys) {
+
+    if (root === null || typeof root !== 'object') {
+        return;
+    }
+
+    const stack = [{ node: root, is_root: true }];
+
+    while (stack.length > 0) {
+
+        const { node, is_root } = stack.pop();
+
+        if (Array.isArray(node)) {
+            for (let i = 0; i < node.length; i++) {
+                const value = node[i];
+                if (typeof value === 'string') {
+                    node[i] = sanitize_string(value);
+                } else if (value !== null && typeof value === 'object') {
+                    stack.push({ node: value, is_root: false });
+                }
+            }
+            continue;
+        }
+
+        for (const key of Object.keys(node)) {
+
+            if (is_root && skip_root_keys !== undefined && skip_root_keys.has(key)) {
+                continue;
+            }
+
+            const value = node[key];
+            if (typeof value === 'string') {
+                node[key] = sanitize_string(value);
+            } else if (value !== null && typeof value === 'object') {
+                stack.push({ node: value, is_root: false });
+            }
+        }
+    }
+}
+
+/**
+ * Middleware: sanitize req.body, recursing through nested objects and arrays.
  *
  * @param req
  * @param res
  * @param next
  */
 exports.sanitize_req_body = function(req, res, next) {
-
-    if (req.body === undefined) {
-        next();
-        return;
-    }
-
-    const keys = Object.keys(req.body);
-
-    keys.forEach(function (prop) {
-
-        if (req.body.hasOwnProperty(prop)) {
-
-            if (prop !== 'is_active' && typeof req.body[prop] === 'string') {
-                req.body[prop] = DOMPURIFY.sanitize(VALIDATOR.trim(req.body[prop]));
-            }
-        }
-    });
-
+    sanitize_in_place(req.body, SKIP_BODY_KEYS);
     next();
 };
 
 /**
- * Middleware function used to sanitize param string inputs
- * Trims and sanitizes URL parameters with DOMPurify.
+ * Middleware: sanitize req.params, recursing through nested objects and arrays.
  *
  * @param req
  * @param res
  * @param next
  */
 exports.sanitize_req_params = function(req, res, next) {
-
-    if (req.params === undefined) {
-        next();
-        return;
-    }
-
-    const keys = Object.keys(req.params);
-
-    keys.forEach(function (prop) {
-
-        if (req.params.hasOwnProperty(prop) && typeof req.params[prop] === 'string') {
-            req.params[prop] = DOMPURIFY.sanitize(VALIDATOR.trim(req.params[prop]));
-        }
-    });
-
+    sanitize_in_place(req.params);
     next();
 };
 
 /**
- * Middleware function used to sanitize query string inputs
- * Trims and sanitizes query string parameters with DOMPurify.
+ * Middleware: sanitize req.query, recursing through nested objects and arrays.
  *
  * @param req
  * @param res
  * @param next
  */
 exports.sanitize_req_query = function(req, res, next) {
-
-    if (req.query === undefined) {
-        next();
-        return;
-    }
-
-    const keys = Object.keys(req.query);
-
-    keys.forEach(function (prop) {
-
-        if (req.query.hasOwnProperty(prop) && typeof req.query[prop] === 'string') {
-            req.query[prop] = DOMPURIFY.sanitize(VALIDATOR.trim(req.query[prop]));
-        }
-    });
-
+    sanitize_in_place(req.query);
     next();
 };

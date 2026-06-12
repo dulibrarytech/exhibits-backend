@@ -260,15 +260,17 @@ const Indexer_index_utils_tasks = class {
 
     /**
      * Checks if index exists
-     * @param {Object} [options={}] - Check options
-     * @param {string} [options.timeout='5s'] - Request timeout
+     * @param {Object} [options={}] - Check options (reserved; currently unused)
      * @returns {Promise<Object>} Result object with exists status
      */
     async check_index(options = {}) {
         try {
+            // NOTE: indices.exists is a HEAD request and rejects a `timeout` query
+            // param with a 400 (unrecognized parameter) — which made this report
+            // exists:false for a healthy index. Do NOT add one here. The client-side
+            // timeout is the _with_timeout() race below (INDEX_CHECK_TIMEOUT).
             const check_options = {
-                index: this.INDEX_NAME,
-                timeout: options.timeout || '5s'
+                index: this.INDEX_NAME
             };
 
             const response = await this._with_timeout(

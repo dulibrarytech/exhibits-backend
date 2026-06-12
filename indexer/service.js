@@ -71,11 +71,9 @@ exports.get_index_status = async function () {
 
     try {
 
-        // Use the ES client's exists() directly rather than the index_utils
-        // check_index() helper: check_index passes a `timeout` query param that
-        // the ES exists (HEAD) API rejects with 400, so it always reports
-        // exists:false. (recreate_index avoids check_index for the same reason.)
-        // The v8 client returns a boolean from indices.exists().
+        // get_index_status needs both existence and a doc count, so it reads
+        // existence with the ES client's exists() directly (a boolean in the v8
+        // client) rather than going through the check_index() helper.
         const exists = await CLIENT.indices.exists({ index: INDEX }) === true;
 
         let count = null;

@@ -877,55 +877,16 @@ describe('Exhibits Integration Tests', () => {
         });
     });
 
-    // ==================== ERROR HANDLING ====================
-
-    describe('Error Handling', () => {
-
-        describe('404 Handler', () => {
-
-            test('should return 404 for unknown exhibit routes', async () => {
-                const response = await request(app)
-                    .get('/api/exhibits/unknown-route')
-                    .expect('Content-Type', /json/)
-                    .expect(404);
-
-                expect(response.body.success).toBe(false);
-                expect(response.body.message).toBe('Endpoint not found');
-            });
-
-            test('should return 404 for deeply nested unknown routes', async () => {
-                const response = await request(app)
-                    .get('/api/exhibits/v2/unknown/nested/route')
-                    .expect('Content-Type', /json/)
-                    .expect(404);
-
-                expect(response.body.success).toBe(false);
-            });
-        });
-    });
+    // NOTE: JSON 404 handling and security headers are applied GLOBALLY in
+    // config/express.js (a JSON 404 for /api/ paths + Helmet), not per route file.
+    // They are therefore not asserted in this route-module unit test. The former
+    // per-route assertions here only passed because the mocked endpoints were under
+    // /api/exhibits/... — the path the (production-dead) per-route middleware was
+    // mounted on. The global handlers are covered by the express-app smoke.
 
     // ==================== SECURITY TESTS ====================
 
     describe('Security', () => {
-
-        describe('Security Headers', () => {
-
-            test('should include security headers in response', async () => {
-                mockExhibitsModel.get_exhibit_records.mockResolvedValue({
-                    status: 200,
-                    message: 'Exhibit records',
-                    data: []
-                });
-
-                const response = await request(app)
-                    .get('/api/exhibits/v2/exhibit')
-                    .expect(200);
-
-                expect(response.headers['x-content-type-options']).toBe('nosniff');
-                expect(response.headers['x-frame-options']).toBe('SAMEORIGIN');
-                expect(response.headers['x-xss-protection']).toBe('1; mode=block');
-            });
-        });
 
         describe('Input Validation', () => {
 

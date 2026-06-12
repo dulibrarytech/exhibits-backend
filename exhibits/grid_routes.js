@@ -21,34 +21,11 @@
 const CONTROLLER = require('../exhibits/grid_controller');
 const ENDPOINTS = require('../exhibits/endpoints/index');
 const TOKEN = require('../libs/tokens');
-const LOGGER = require('../libs/log4');
 const {rate_limits} = require('../config/rate_limits_loader');
 
-// Security headers middleware
-const security_headers = (req, res, next) => {
-    res.set({
-        'X-Content-Type-Options': 'nosniff',
-        'X-Frame-Options': 'SAMEORIGIN',
-        'X-XSS-Protection': '1; mode=block',
-        'Strict-Transport-Security': 'max-age=31536000; includeSubDomains',
-        'Content-Security-Policy': "default-src 'self'"
-    });
-    next();
-};
-
-// Request logging middleware
-const log_request = (req, res, next) => {
-    const start_time = Date.now();
-
-    res.on('finish', () => {
-        const duration = Date.now() - start_time;
-        LOGGER.module().info`INFO: [${req.method}] ${req.path} - Status: ${res.statusCode} - Duration: ${duration}ms - IP: ${req.ip}`;
-    });
-
-    next();
-};
-
-// Error handling middleware for async routes
+// Wrap an async handler so a rejected promise reaches the global error handler.
+// Security headers, request logging, and 404/error handling are applied once,
+// globally, in config/express.js — not per route file.
 const async_handler = (fn) => {
     return (req, res, next) => {
         Promise.resolve(fn(req, res, next)).catch(next);
@@ -56,11 +33,7 @@ const async_handler = (fn) => {
 };
 
 module.exports = function (app) {
-    // Apply global middleware for all grid routes
-    app.use('/api/grids', security_headers);
-    app.use('/api/grids', log_request);
 
-    // Get endpoints
     const endpoints = ENDPOINTS();
 
     // ========================================
@@ -163,33 +136,4 @@ module.exports = function (app) {
             async_handler(CONTROLLER.unlock_grid_item_record)
         );
 
-    // ========================================
-    // ERROR HANDLING
-    // ========================================
-
-    // 404 handler for grid routes
-    app.use('/api/grids/*', (req, res) => {
-        LOGGER.module().warn`WARNING: [404] Route not found: ${req.method} ${req.path}`;
-        res.status(404).json({
-            success: false,
-            message: 'Endpoint not found',
-            data: null
-        });
-    });
-
-    // Global error handler for grid routes
-    app.use('/api/grids', (err, req, res, next) => {
-        LOGGER.module().error`ERROR: [Global Error Handler] ${err.message} - Path: ${req.path}`;
-
-        // Don't expose error details in production
-        const error_message = process.env.NODE_ENV === 'production'
-            ? 'Internal server error'
-            : err.message;
-
-        res.status(err.status || 500).json({
-            success: false,
-            message: error_message,
-            data: null
-        });
-    });
 };

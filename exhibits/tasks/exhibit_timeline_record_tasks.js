@@ -49,11 +49,12 @@ const Exhibit_timeline_record_tasks = class extends Base_tasks {
      */
     async create_timeline_record(data, created_by = null) {
 
+        // `title` intentionally omitted — dropped from tbl_timelines by the
+        // titles-to-subheadings migration (timeline containers no longer carry a title).
         const ALLOWED_FIELDS = [
             'uuid',
             'is_member_of_exhibit',
             'type',
-            'title',
             'text',
             'styles',
             'order',
@@ -80,7 +81,6 @@ const Exhibit_timeline_record_tasks = class extends Base_tasks {
             // Set defaults
             const defaults = {
                 type: 'vertical_timeline',
-                title: '',
                 order: 0,
                 is_deleted: 0,
                 is_published: 0,

@@ -129,7 +129,6 @@ const Exhibit_item_record_tasks = class extends Base_tasks {
                 is_member_of_exhibit: validated['exhibit UUID'],
                 item_type: data.item_type.trim(),
                 mime_type: data.mime_type.trim() || null,
-                title: data.title?.trim() || '',
                 thumbnail: data.thumbnail || null,
                 thumbnail_media_uuid: data.thumbnail_media_uuid || null,
                 caption: data.caption || null,
@@ -557,7 +556,7 @@ const Exhibit_item_record_tasks = class extends Base_tasks {
     async update_item_record(data, updated_by = null) {
 
         const UPDATABLE_FIELDS = [
-            'thumbnail', 'thumbnail_media_uuid', 'title', 'caption', 'item_type', 'mime_type',
+            'thumbnail', 'thumbnail_media_uuid', 'caption', 'item_type', 'mime_type',
             'media', 'media_uuid', 'text', 'wrap_text', 'description', 'type', 'layout',
             'media_width', 'media_padding', 'alt_text', 'is_alt_text_decorative',
             'pdf_open_to_page', 'item_subjects', 'styles', 'order', 'is_repo_item',
@@ -576,8 +575,13 @@ const Exhibit_item_record_tasks = class extends Base_tasks {
             });
 
             // Check record exists
+            // NOTE: `title` was dropped from tbl_standard_items by the
+            // 20260403200926_titles-to-subheadings migration (standard items
+            // no longer carry a title). Do NOT select it here — an explicit
+            // reference to the missing column makes MySQL throw
+            // "Unknown column 'title'", which surfaced as a 400 on every update.
             const existing = await this.DB(this.TABLE.item_records)
-                .select('id', 'uuid', 'title', 'is_deleted')
+                .select('id', 'uuid', 'is_deleted')
                 .where({
                     is_member_of_exhibit: validated['exhibit UUID'],
                     uuid: validated['item UUID']
@@ -641,7 +645,6 @@ const Exhibit_item_record_tasks = class extends Base_tasks {
 
             this._log_success('Item record updated successfully', {
                 uuid: validated['item UUID'],
-                title: updated_record.title,
                 fields_updated: Object.keys(update_data).filter(f => f !== 'updated' && f !== 'updated_by'),
                 updated_by
             });
