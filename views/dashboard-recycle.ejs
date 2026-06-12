@@ -124,6 +124,17 @@
 </div>
 
 <style>
+    /* Match the dashboard content typography used by the other views (Open Sans,
+       0.875rem) so both cards' body text matches the index-management cards and the
+       exhibits/item lists — in particular the Empty Recycle Bin card's bare <p>,
+       which otherwise inherits the theme's larger default. Card titles and buttons
+       keep their default size. */
+    #recycle-content .card-body,
+    #recycle-content .card-body p {
+        font-family: 'Open Sans', sans-serif;
+        font-size: 0.875rem;
+    }
+
     /* Match the typography/density of the DataTables-based exhibits & item lists.
        Cells inherit the body font (Open Sans, 16px) exactly as those lists do; these
        rules replicate DataTables' cell metrics (padding, header weight, borders,
