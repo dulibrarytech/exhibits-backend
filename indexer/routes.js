@@ -21,21 +21,23 @@
 const CONTROLLER = require('../indexer/controller');
 const ENDPOINTS = require('../indexer/endpoints');
 const TOKEN = require('../libs/tokens');
+const {rate_limits} = require('../config/rate_limits_loader');
 
 module.exports = function (app) {
 
+    // Full index create/rebuild is expensive — strict index_operations limit.
     app.route(ENDPOINTS().indexer.index_utils.post.endpoint)
-    .post(TOKEN.verify, CONTROLLER.require_manage_index_permission, CONTROLLER.create_index);
+    .post(rate_limits.index_operations, TOKEN.verify, CONTROLLER.require_manage_index_permission, CONTROLLER.create_index);
 
     app.route(ENDPOINTS().indexer.index_utils.get.endpoint)
-    .get(TOKEN.verify, CONTROLLER.require_manage_index_permission, CONTROLLER.get_index_status);
+    .get(rate_limits.read_operations, TOKEN.verify, CONTROLLER.require_manage_index_permission, CONTROLLER.get_index_status);
 
     app.route(ENDPOINTS().indexer.index_records.endpoints.post.endpoint)
-    .post(TOKEN.verify, CONTROLLER.index_exhibit);
+    .post(rate_limits.write_operations, TOKEN.verify, CONTROLLER.index_exhibit);
 
     app.route(ENDPOINTS().indexer.index_records.endpoints.get.endpoint)
-    .get(TOKEN.verify, CONTROLLER.get_indexed_record);
+    .get(rate_limits.read_operations, TOKEN.verify, CONTROLLER.get_indexed_record);
 
     app.route(ENDPOINTS().indexer.index_records.endpoints.delete.endpoint)
-    .delete(TOKEN.verify, CONTROLLER.delete_record);
+    .delete(rate_limits.write_operations, TOKEN.verify, CONTROLLER.delete_record);
 };
