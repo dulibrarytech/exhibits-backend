@@ -30,7 +30,7 @@ const LOGGER = require('../libs/log4');
 const rate_limit_handler = (operation_type) => {
     return (req, res) => {
         if (typeof LOGGER !== 'undefined' && LOGGER.module) {
-            LOGGER.module().warn`WARNING: [Rate Limit] ${operation_type} limit exceeded for IP: ${req.ip} - Path: ${req.path}`;
+            LOGGER.module().warn(`WARNING: [Rate Limit] ${operation_type} limit exceeded for IP: ${req.ip} - Path: ${req.path}`);
         }
 
         res.status(429).json({
