@@ -395,10 +395,12 @@ exports.verify = function (req, res, next) {
         return next();
     }
 
+    // Session token from the API header or the HttpOnly cookie only — NOT the query
+    // string, which would leak the JWT via access logs, browser history, and Referer.
+    // Endpoints that genuinely need a query token (img-src media/thumbnails, public
+    // shares) use verify_with_query / verify_shared instead.
     const token = req.headers['x-access-token']
-        || get_cookie(req, TOKEN_COOKIE_NAME)
-        || req.query.t
-        || req.query.token;
+        || get_cookie(req, TOKEN_COOKIE_NAME);
     const api_key = req.query.api_key;
 
     // Verify JWT token
@@ -458,9 +460,10 @@ exports.verify = function (req, res, next) {
  * Page (HTML) auth middleware. Like verify(), but on ANY failure — a missing OR
  * a malformed/expired token — it redirects to SSO rather than returning a 401
  * JSON, which is the correct behavior for a browser navigation. Reads the session
- * from the `exhibits_token` cookie (sent automatically on page loads), falling
- * back to the header/query. Honors the test bypass so e2e page loads don't
- * traverse SSO. Use this on dashboard *page* routes, not API/resource routes.
+ * from the `exhibits_token` cookie (sent automatically on page loads), or the API
+ * header — NOT the query string (a token in a page URL leaks via history/Referer).
+ * Honors the test bypass so e2e page loads don't traverse SSO. Use this on
+ * dashboard *page* routes, not API/resource routes.
  *
  * @param req
  * @param res
@@ -479,9 +482,7 @@ exports.verify_page = function (req, res, next) {
     };
 
     const token = req.headers['x-access-token']
-        || get_cookie(req, TOKEN_COOKIE_NAME)
-        || req.query.t
-        || req.query.token;
+        || get_cookie(req, TOKEN_COOKIE_NAME);
 
     if (!token) {
         return redirect_to_sso();
