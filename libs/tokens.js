@@ -455,6 +455,50 @@ exports.verify = function (req, res, next) {
 };
 
 /**
+ * Page (HTML) auth middleware. Like verify(), but on ANY failure — a missing OR
+ * a malformed/expired token — it redirects to SSO rather than returning a 401
+ * JSON, which is the correct behavior for a browser navigation. Reads the session
+ * from the `exhibits_token` cookie (sent automatically on page loads), falling
+ * back to the header/query. Honors the test bypass so e2e page loads don't
+ * traverse SSO. Use this on dashboard *page* routes, not API/resource routes.
+ *
+ * @param req
+ * @param res
+ * @param next
+ */
+exports.verify_page = function (req, res, next) {
+
+    if (TEST_AUTH_BYPASS_ENABLED) {
+        req.decoded = TEST_BYPASS_DECODED;
+        return next();
+    }
+
+    const redirect_to_sso = function () {
+        const encoded_callback = encodeURIComponent(WEBSERVICES_CONFIG.sso_response_url);
+        return res.redirect(WEBSERVICES_CONFIG.sso_url + '?app_url=' + encoded_callback);
+    };
+
+    const token = req.headers['x-access-token']
+        || get_cookie(req, TOKEN_COOKIE_NAME)
+        || req.query.t
+        || req.query.token;
+
+    if (!token) {
+        return redirect_to_sso();
+    }
+
+    verify_jwt_token(token, function (error, decoded) {
+        if (error) {
+            return redirect_to_sso();
+        }
+        // Rolling cookie refresh, same as verify().
+        exports.set_auth_cookie(res, token);
+        req.decoded = decoded;
+        return next();
+    });
+};
+
+/**
  * Verifies session token with query parameter support
  * Does NOT redirect to SSO - returns 401 instead (for API/resource endpoints)
  *
