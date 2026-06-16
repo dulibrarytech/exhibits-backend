@@ -78,8 +78,9 @@ const is_valid_uuid = (uuid) => {
     }
     // Format check only. The previous `|| uuid.length > 0` made this a no-op — any
     // non-empty string passed. Every caller validates a genuine record/exhibit UUID
-    // (never a user id), so enforce the 8-4-4-4-12 hex shape.
-    const uuid_regex = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+    // (never a user id). Strict RFC shape (version 1-5, variant 8-b), consistent with
+    // Base_tasks and the media-library validators.
+    const uuid_regex = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
     return uuid_regex.test(uuid);
 };
 
