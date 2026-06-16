@@ -337,7 +337,7 @@ describe('User_tasks', () => {
 
     // ==================== SAVE_USER TESTS ====================
     describe('save_user', () => {
-        test('should save user successfully with all fields', async () => {
+        test('inserts only whitelisted columns (drops smuggled is_active/token)', async () => {
             const userData = {
                 du_id: 'newuser',
                 first_name: 'New',
@@ -353,7 +353,13 @@ describe('User_tasks', () => {
 
             expect(mockDB).toHaveBeenCalledWith('tbl_users');
             expect(userData.email).toBe('new@example.com'); // Should be lowercased
-            expect(mockQuery.insert).toHaveBeenCalledWith(userData);
+            // Mass-assignment guard: is_active and token (supplied above) are dropped.
+            expect(mockQuery.insert).toHaveBeenCalledWith({
+                du_id: 'newuser',
+                first_name: 'New',
+                last_name: 'User',
+                email: 'new@example.com'
+            });
             expect(result).toEqual([41]);
         });
 
@@ -458,41 +464,36 @@ describe('User_tasks', () => {
             }));
         });
 
-        test('should handle token at max length (varchar 500)', async () => {
-            const maxToken = 'x'.repeat(500);
+        test('does NOT insert client-supplied privileged fields (mass-assignment guard)', async () => {
+            // A caller that smuggles id/is_active/token/created into the body must not
+            // have them written — save_user inserts only the whitelisted columns. The
+            // session token in particular is set only at login (save_token), never here.
             const userData = {
                 du_id: 'testuser',
                 first_name: 'Test',
                 last_name: 'User',
                 email: 'test@example.com',
-                token: maxToken
+                id: 999,
+                is_active: 0,
+                token: 'x'.repeat(500),
+                created: '2000-01-01 00:00:00'
             };
 
             mockQuery.insert.mockResolvedValue([1]);
 
             await userTasks.save_user(userData);
 
-            expect(mockQuery.insert).toHaveBeenCalledWith(expect.objectContaining({
-                token: maxToken
-            }));
-        });
-
-        test('should allow null token (schema allows NULL)', async () => {
-            const userData = {
+            expect(mockQuery.insert).toHaveBeenCalledWith({
                 du_id: 'testuser',
                 first_name: 'Test',
                 last_name: 'User',
-                email: 'test@example.com',
-                token: null
-            };
-
-            mockQuery.insert.mockResolvedValue([1]);
-
-            await userTasks.save_user(userData);
-
-            expect(mockQuery.insert).toHaveBeenCalledWith(expect.objectContaining({
-                token: null
-            }));
+                email: 'test@example.com'
+            });
+            const inserted = mockQuery.insert.mock.calls[0][0];
+            expect(inserted).not.toHaveProperty('id');
+            expect(inserted).not.toHaveProperty('is_active');
+            expect(inserted).not.toHaveProperty('token');
+            expect(inserted).not.toHaveProperty('created');
         });
     });
 

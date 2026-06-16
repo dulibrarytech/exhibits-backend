@@ -266,8 +266,14 @@ exports.update_user = async function (id, user) {
             }
         }
 
-        const user_data = {...user};
-        delete user_data.role_id;
+        // Whitelist the updatable fields — never spread the request body (mass
+        // assignment). du_id (identity), is_active, token, id and timestamps are NOT
+        // user-editable here; role_id is applied separately above/below.
+        const user_data = {
+            first_name: user.first_name,
+            last_name: user.last_name,
+            email: user.email
+        };
 
         const update_result = await USER_TASK.update_user(numeric_id, user_data);
 
@@ -360,8 +366,15 @@ exports.save_user = async function (user) {
             return {status: 409, message: 'User already exists.', data: false};
         }
 
-        const user_data = {...user};
-        delete user_data.role_id;
+        // Whitelist the insertable fields — never spread the request body (mass
+        // assignment). id, is_active, token, created and last_login are server/DB
+        // managed; role_id is applied separately below.
+        const user_data = {
+            du_id: user.du_id,
+            first_name: user.first_name,
+            last_name: user.last_name,
+            email: user.email
+        };
 
         const save_result = await user_tasks.save_user(user_data);
 

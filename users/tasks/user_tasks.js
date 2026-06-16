@@ -96,8 +96,16 @@ const User_tasks = class {
 
             user.email = user.email.toLowerCase();
 
+            // Whitelist columns — never insert the raw object (defense-in-depth
+            // against mass assignment of id/is_active/token/timestamps), mirroring
+            // update_user.
             return await this.DB(this.TABLE)
-            .insert(user);
+            .insert({
+                du_id: user.du_id,
+                email: user.email,
+                first_name: user.first_name,
+                last_name: user.last_name
+            });
 
         } catch (error) {
             LOGGER.module().error('ERROR: [/users/tasks (save_user)] unable to save user data ' + error.message);
