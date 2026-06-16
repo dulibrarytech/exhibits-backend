@@ -142,6 +142,20 @@ const Media_record_tasks = class {
      */
     async create_media_record(data) {
 
+        // Whitelist insertable columns — never insert the raw object (mass
+        // assignment). id is auto-increment; is_deleted and updated_by are
+        // server/DB-managed; everything else is a real media-record column.
+        const INSERTABLE_FIELDS = [
+            'uuid', 'name', 'description', 'alt_text', 'is_alt_text_decorative',
+            'topics_subjects', 'genre_form_subjects', 'places_subjects',
+            'media_type', 'mime_type', 'item_type', 'call_number', 'filename',
+            'original_filename', 'ingest_method', 'repo_uuid', 'repo_handle',
+            'kaltura_entry_id', 'kaltura_thumbnail_url', 'exhibits', 'size',
+            'storage_path', 'thumbnail_path', 'exif_data', 'media_width',
+            'media_height', 'media_duration', 'iiif_manifest', 'owner',
+            'created', 'updated', 'created_by'
+        ];
+
         try {
 
             this._validate_database();
@@ -151,9 +165,16 @@ const Media_record_tasks = class {
                 throw new Error('Invalid media data: must be an object');
             }
 
+            const insert_data = {};
+            INSERTABLE_FIELDS.forEach((field) => {
+                if (Object.prototype.hasOwnProperty.call(data, field)) {
+                    insert_data[field] = data[field];
+                }
+            });
+
             const created_record = await this.DB.transaction(async (trx) => {
                 const [inserted_id] = await trx(this.TABLE.media_library_records)
-                    .insert(data)
+                    .insert(insert_data)
                     .timeout(this.QUERY_TIMEOUT);
 
                 const created = await trx(this.TABLE.media_library_records)

@@ -13,7 +13,7 @@
 const TEST_EXHIBIT_UUID = '550e8400-e29b-41d4-a716-446655440000';
 const TEST_TIMELINE_UUID = '660e8400-e29b-41d4-a716-446655440001';
 const TEST_TIMELINE_ITEM_UUID = '770e8400-e29b-41d4-a716-446655440002';
-const TEST_USER_UID = '880e8400-e29b-41d4-a716-446655440003';
+const TEST_USER_UID = '1'; // numeric tbl_users.id (the lock owner), NOT a UUID
 
 // ==================== MOCK SETUP ====================
 

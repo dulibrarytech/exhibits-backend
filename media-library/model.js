@@ -26,9 +26,12 @@ const MEDIA_TASKS = require('./tasks/media_record_tasks');
 const UPLOADS = require('./uploads');
 const PATH = require('path');
 const LOGGER = require('../libs/log4');
+const VALIDATOR = require('../libs/validate');
+const MEDIA_CREATE_SCHEMA = require('./schemas/media_create_record_schema')();
 // Initialize task instances
 const helper_task = new HELPER();
 const media_task = new MEDIA_TASKS(DB, TABLES);
+const validate_create_media = new VALIDATOR(MEDIA_CREATE_SCHEMA);
 
 // Constants for response building
 const STATUS_CODES = {
@@ -175,6 +178,16 @@ exports.create_media_record = async (data) => {
         // Validate input data
         if (!data || typeof data !== 'object') {
             return build_response(false, 'Invalid media data provided');
+        }
+
+        // Validate required fields/types against the create schema (ajv) — parity
+        // with the exhibit domains, which validate their create input.
+        const validation_result = validate_create_media.validate(data);
+        if (validation_result !== true) {
+            const message = Array.isArray(validation_result) && validation_result[0]
+                ? validation_result[0].message : 'Invalid media data';
+            LOGGER.module().warn('WARNING: [/media-library/model (create_media_record)] validation failed: ' + message);
+            return build_response(false, 'Invalid media data: ' + message);
         }
 
         // Generate UUID for the new record

@@ -76,8 +76,11 @@ const is_valid_uuid = (uuid) => {
     if (!uuid || typeof uuid !== 'string') {
         return false;
     }
+    // Format check only. The previous `|| uuid.length > 0` made this a no-op — any
+    // non-empty string passed. Every caller validates a genuine record/exhibit UUID
+    // (never a user id), so enforce the 8-4-4-4-12 hex shape.
     const uuid_regex = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
-    return uuid_regex.test(uuid) || uuid.length > 0;
+    return uuid_regex.test(uuid);
 };
 
 /**

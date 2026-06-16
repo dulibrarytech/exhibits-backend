@@ -23,12 +23,32 @@ const LOGGER = require('../libs/log4');
 // ==================== VALIDATION HELPERS ====================
 
 /**
- * Validates UUID format (non-empty string)
+ * Validates UUID format (8-4-4-4-12 hex). Previously this only checked for a
+ * non-empty string, so the validation was a no-op — any string passed.
  * @param {string} uuid - UUID to validate
  * @returns {boolean} True if valid
  */
 const is_valid_uuid = (uuid) => {
-    return uuid && typeof uuid === 'string' && uuid.length > 0;
+    if (!uuid || typeof uuid !== 'string') {
+        return false;
+    }
+    const uuid_regex = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+    return uuid_regex.test(uuid);
+};
+
+/**
+ * Validates a user id — the numeric tbl_users.id (e.g. the record-lock owner /
+ * req.query.uid). Users are keyed by an integer id, NOT a UUID, so is_valid_uuid
+ * must not be used on it.
+ * @param {string|number} value
+ * @returns {boolean} True if a positive integer
+ */
+const is_valid_user_id = (value) => {
+    if (value === null || value === undefined || value === '') {
+        return false;
+    }
+    const n = Number(value);
+    return Number.isInteger(n) && n > 0;
 };
 
 /**
@@ -140,6 +160,7 @@ const clean_media_fields = (data) => {
 
 module.exports = {
     is_valid_uuid,
+    is_valid_user_id,
     validate_input,
     prepare_styles,
     build_response,

@@ -31,7 +31,7 @@ const INDEXER_MODEL = require('../indexer/model');
 const LOGGER = require('../libs/log4');
 const {
     is_valid_uuid,
-    build_response,
+    is_valid_user_id,    build_response,
     validate_input,
     prepare_styles
 } = require('../exhibits/common_helper');
@@ -226,7 +226,7 @@ exports.get_heading_edit_record = async (uid, is_member_of_exhibit, uuid) => {
 
     try {
 
-        if (!is_valid_uuid(uid) || !is_valid_uuid(is_member_of_exhibit) || !is_valid_uuid(uuid)) {
+        if (!is_valid_user_id(uid) || !is_valid_uuid(is_member_of_exhibit) || !is_valid_uuid(uuid)) {
             return build_response(
                 CONSTANTS.STATUS_CODES.BAD_REQUEST,
                 'Invalid UUID provided'
@@ -515,7 +515,7 @@ exports.unlock_heading_record = async (uid, uuid, options) => {
 
     try {
 
-        if (!is_valid_uuid(uid) || !is_valid_uuid(uuid)) {
+        if (!is_valid_user_id(uid) || !is_valid_uuid(uuid)) {
             LOGGER.module().error('ERROR: [/exhibits/headings_model (unlock_heading_record)] Invalid UUID provided');
             return false;
         }
