@@ -19,6 +19,16 @@ const styleSections = [
 
 const requiredSections = styleSections.filter(s => s.group === 'required');
 const optionalSections = styleSections.filter(s => s.group === 'optional');
+
+const textSettingsKeys = [
+    'introduction',
+    'item1',
+    'item2',
+    'item3',
+    'heading1',
+    'heading2',
+    'heading3',
+]
 %>
 
 <div id="exhibit-styles-card" class="card">
@@ -124,6 +134,30 @@ const optionalSections = styleSections.filter(s => s.group === 'optional');
                                 </select>
                             </div>
                         </div>
+                        <% if (textSettingsKeys.includes(section.key)) { %>
+                        <div class="row">
+                            <div class="col-md-6 style-field mb-3">
+                                <label for="<%= section.key %>-margins">Text margins</label>
+                                <select class="form-control"
+                                        id="<%= section.key %>-margins"
+                                        name="<%= section.key %>_margins">
+                                    <option value="small">Small</option>
+                                    <option value="medium" selected>Medium</option>
+                                    <option value="large">Large</option>
+                                </select>
+                            </div>
+                            <div class="col-md-6 style-field mb-3">
+                                <label for="<%= section.key %>-text-align">Text Alignment</label>
+                                <select class="form-control"
+                                        id="<%= section.key %>-text-align"
+                                        name="<%= section.key %>_text_align">
+                                    <option value="left" selected>Left</option>
+                                    <option value="center">Center</option>
+                                    <option value="right">Right</option>
+                                </select>
+                            </div>
+                        </div>
+                        <% } %>
                     </div>
                 </div>
             </div>
@@ -230,6 +264,30 @@ const optionalSections = styleSections.filter(s => s.group === 'optional');
                                 </select>
                             </div>
                         </div>
+                        <% if (textSettingsKeys.includes(section.key)) { %>
+                        <div class="row">
+                            <div class="col-md-6 style-field mb-3">
+                                <label for="<%= section.key %>-margins">Margins</label>
+                                <select class="form-control"
+                                        id="<%= section.key %>-margins"
+                                        name="<%= section.key %>_margins">
+                                    <option value="small">Small</option>
+                                    <option value="medium" selected>Medium</option>
+                                    <option value="large">Large</option>
+                                </select>
+                            </div>
+                            <div class="col-md-6 style-field mb-3">
+                                <label for="<%= section.key %>-text-align">Text Alignment</label>
+                                <select class="form-control"
+                                        id="<%= section.key %>-text-align"
+                                        name="<%= section.key %>_text_align">
+                                    <option value="left" selected>Left</option>
+                                    <option value="center">Center</option>
+                                    <option value="right">Right</option>
+                                </select>
+                            </div>
+                        </div>
+                        <% } %>
                     </div>
                 </div>
             </div>

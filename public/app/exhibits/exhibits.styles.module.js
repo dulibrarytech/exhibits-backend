@@ -109,6 +109,18 @@ const exhibitsStylesModule = (function () {
             picker_suffix: null,
             swatch_role: null,
             transform: null
+        },
+        margins: {
+            suffix: '-margins',
+            picker_suffix: null,
+            swatch_role: null,
+            transform: null
+        },
+        textAlign: {
+            suffix: '-text-align',
+            picker_suffix: null,
+            swatch_role: null,
+            transform: null
         }
     };
 
@@ -442,6 +454,16 @@ const exhibitsStylesModule = (function () {
                 // Font family
                 if (section_data.fontFamily) {
                     set_element_value('#' + key + '-font', section_data.fontFamily);
+                }
+
+                // Text margins
+                if (section_data.margins) {
+                    set_element_value('#' + key + '-margins', section_data.margins);
+                }
+
+                // Text alignment
+                if (section_data.textAlign) {
+                    set_element_value('#' + key + '-text-align', section_data.textAlign);
                 }
             }
 
