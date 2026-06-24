@@ -206,12 +206,12 @@ describe('Grid Model Integration Tests', () => {
             expect(result.status).toBe(400);
         });
 
-        test('should return 200 when database operation fails', async () => {
+        test('should return 500 when database operation fails', async () => {
             mockGridRecordTask.create_grid_record.mockResolvedValue(false);
 
             const result = await GRID_MODEL.create_grid_record(TEST_EXHIBIT_UUID, { title: 'Test' });
 
-            expect(result.status).toBe(200);
+            expect(result.status).toBe(500);
             expect(result.message).toBe('Unable to create grid record');
         });
 
@@ -309,12 +309,12 @@ describe('Grid Model Integration Tests', () => {
             expect(result.status).toBe(400);
         });
 
-        test('should return 200 when database operation fails', async () => {
+        test('should return 500 when database operation fails', async () => {
             mockGridRecordTask.update_grid_record.mockResolvedValue(false);
 
             const result = await GRID_MODEL.update_grid_record(TEST_EXHIBIT_UUID, TEST_GRID_UUID, { title: 'Test' });
 
-            expect(result.status).toBe(200);
+            expect(result.status).toBe(500);
             expect(result.message).toBe('Unable to update grid record');
         });
     });
@@ -440,7 +440,7 @@ describe('Grid Model Integration Tests', () => {
             expect(mockGridRecordTask.create_grid_item_record).toHaveBeenCalled();
         });
 
-        test('should return 200 when database operation fails', async () => {
+        test('should return 500 when database operation fails', async () => {
             mockGridRecordTask.create_grid_item_record.mockResolvedValue(false);
 
             const result = await GRID_MODEL.create_grid_item_record(
@@ -449,7 +449,7 @@ describe('Grid Model Integration Tests', () => {
                 { title: 'Test' }
             );
 
-            expect(result.status).toBe(200);
+            expect(result.status).toBe(500);
             expect(result.message).toBe('Unable to create grid item record');
         });
     });
@@ -626,7 +626,7 @@ describe('Grid Model Integration Tests', () => {
 
             const result = await GRID_MODEL.create_grid_record(TEST_EXHIBIT_UUID, { title: 'Test' });
 
-            expect(result.status).toBe(200);
+            expect(result.status).toBe(500);
             expect(result.message).toContain('Unable to create grid record');
         });
 
@@ -635,7 +635,7 @@ describe('Grid Model Integration Tests', () => {
 
             const result = await GRID_MODEL.update_grid_record(TEST_EXHIBIT_UUID, TEST_GRID_UUID, { title: 'Test' });
 
-            expect(result.status).toBe(200);
+            expect(result.status).toBe(500);
             expect(result.message).toContain('Unable to update grid record');
         });
 
@@ -656,7 +656,7 @@ describe('Grid Model Integration Tests', () => {
                 { title: 'Test' }
             );
 
-            expect(result.status).toBe(200);
+            expect(result.status).toBe(500);
             expect(result.message).toContain('Unable to create grid item record');
         });
 

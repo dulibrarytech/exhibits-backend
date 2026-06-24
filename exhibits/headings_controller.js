@@ -55,7 +55,7 @@ exports.create_heading_record = async function (req, res) {
         res.status(result.status).send(result);
 
     } catch (error) {
-        res.status(408).send({message: `Unable to create heading record. ${error.message}`});
+        res.status(500).send({message: `Unable to create heading record. ${error.message}`});
     }
 };
 
@@ -100,7 +100,7 @@ exports.get_heading_record = async function (req, res) {
         }
 
     } catch (error) {
-        res.status(408).send({message: `Unable to get heading record. ${error.message}`});
+        res.status(500).send({message: `Unable to get heading record. ${error.message}`});
     }
 };
 
@@ -144,7 +144,7 @@ exports.update_heading_record = async function (req, res) {
         res.status(result.status).send(result);
 
     } catch (error) {
-        res.status(408).send({message: `Unable to update heading record. ${error.message}`});
+        res.status(500).send({message: `Unable to update heading record. ${error.message}`});
     }
 };
 

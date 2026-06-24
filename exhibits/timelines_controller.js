@@ -236,13 +236,12 @@ exports.publish_timeline_item_record = async function (req, res) {
         result = await TIMELINES_MODEL.publish_timeline_item_record(exhibit_id, timeline_id, timeline_item_id);
 
         if (result.status === true) {
-
             res.status(200).send({
                 message: 'timeline item published.'
             });
-        } else if (result.status === false) {
-            res.status(204).send({
-                message: 'Unable to publish timeline item'
+        } else {
+            res.status(422).send({
+                message: result?.message || 'Unable to publish timeline item'
             });
         }
 
@@ -274,12 +273,12 @@ exports.suppress_timeline_item_record = async function (req, res) {
 
         result = await TIMELINES_MODEL.suppress_timeline_item_record(exhibit_id, timeline_id, timeline_item_id);
 
-        if (result === true) {
+        if (result === true || result?.status === true) {
             res.status(200).send({
                 message: 'Item timeline suppressed.'
             });
-        } else if (result === false) {
-            res.status(204).send({
+        } else {
+            res.status(422).send({
                 message: 'Unable to suppress timeline item'
             });
         }

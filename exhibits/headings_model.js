@@ -42,7 +42,8 @@ const CONSTANTS = {
         OK: 200,
         CREATED: 201,
         NO_CONTENT: 204,
-        BAD_REQUEST: 400
+        BAD_REQUEST: 400,
+        INTERNAL_SERVER_ERROR: 500
     },
     PUBLICATION_STATUS: {
         PUBLISHED: 1,
@@ -146,7 +147,7 @@ exports.create_heading_record = async (is_member_of_exhibit, data) => {
         if (result === false) {
             LOGGER.module().error('ERROR: [/exhibits/headings_model (create_heading_record)] Database operation failed');
             return build_response(
-                CONSTANTS.STATUS_CODES.OK,
+                CONSTANTS.STATUS_CODES.INTERNAL_SERVER_ERROR,
                 'Unable to create heading record'
             );
         }
@@ -170,7 +171,7 @@ exports.create_heading_record = async (is_member_of_exhibit, data) => {
         });
 
         return build_response(
-            CONSTANTS.STATUS_CODES.OK,
+            CONSTANTS.STATUS_CODES.INTERNAL_SERVER_ERROR,
             `Unable to create record: ${error.message}`
         );
     }

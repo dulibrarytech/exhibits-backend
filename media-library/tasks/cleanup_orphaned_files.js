@@ -119,6 +119,12 @@ const PRIMARY_DIRS = [
     MEDIA_TYPE_DIRS.audio       // 'audio'
 ].filter(Boolean);
 
+// IIIF derivative-cache subtree (see media-library/iiif-cache.js). Its layout is
+// iiif_cache/<b1>/<b2>/<uuid>/<version>/<variant>.<ext>, so each record's
+// derivatives live under one <uuid> directory that is swept whole when the
+// UUID no longer has a DB record.
+const IIIF_CACHE_DIR = 'iiif_cache';
+
 // Batch size for DB lookups — keeps queries manageable
 const DB_BATCH_SIZE = 200;
 
@@ -175,6 +181,65 @@ const extract_uuid_from_path = (file_path) => {
     const basename = path.basename(file_path);
     const match = basename.match(UUID_REGEX);
     return match ? match[1].toLowerCase() : null;
+};
+
+/**
+ * Collects the UUID-level directories of the IIIF derivative cache.
+ * The cache nests as iiif_cache/<b1>/<b2>/<uuid>/..., so the UUID is a
+ * directory name (not a filename). Missing cache root is normal (nothing
+ * cached yet) and returns an empty map.
+ * @param {string} cache_root - Absolute path to the iiif_cache directory
+ * @returns {Promise<Map<string, string>>} Map of uuid -> absolute uuid-dir path
+ */
+const scan_iiif_cache_uuid_dirs = async (cache_root) => {
+
+    const map = new Map();
+
+    let bucket1_entries;
+
+    try {
+        bucket1_entries = await fs.readdir(cache_root, { withFileTypes: true });
+    } catch (error) {
+        if (error.code !== 'ENOENT') {
+            LOGGER.module().warn(`WARNING: [cleanup] Could not read IIIF cache ${cache_root}: ${error.message}`);
+        }
+        return map; // No cache directory yet — nothing to sweep
+    }
+
+    for (const bucket1 of bucket1_entries) {
+
+        if (!bucket1.isDirectory()) {
+            continue;
+        }
+
+        const bucket1_path = path.join(cache_root, bucket1.name);
+        const bucket2_entries = await fs.readdir(bucket1_path, { withFileTypes: true }).catch(() => []);
+
+        for (const bucket2 of bucket2_entries) {
+
+            if (!bucket2.isDirectory()) {
+                continue;
+            }
+
+            const bucket2_path = path.join(bucket1_path, bucket2.name);
+            const uuid_entries = await fs.readdir(bucket2_path, { withFileTypes: true }).catch(() => []);
+
+            for (const entry of uuid_entries) {
+
+                if (!entry.isDirectory()) {
+                    continue;
+                }
+
+                const uuid = entry.name.toLowerCase();
+
+                if (UUID_REGEX.test(uuid)) {
+                    map.set(uuid, path.join(bucket2_path, entry.name));
+                }
+            }
+        }
+    }
+
+    return map;
 };
 
 // ---------------------------------------------------------------------------
@@ -342,6 +407,9 @@ const run_cleanup = async (dry_run = true) => {
         files_deleted: 0,
         thumbnails_deleted: 0,
         skipped_too_new: 0,
+        cache_uuids_found: 0,
+        orphaned_cache_dirs: 0,
+        cache_dirs_deleted: 0,
         errors: 0,
         bytes_recovered: 0
     };
@@ -389,12 +457,11 @@ const run_cleanup = async (dry_run = true) => {
     const orphaned_uuids = all_uuids.filter(uuid => !existing_uuids.has(uuid));
 
     if (orphaned_uuids.length === 0) {
-        console.log('No orphaned files found. Storage is clean.');
-        LOGGER.module().info('INFO: [cleanup] No orphaned files found');
-        return stats;
+        console.log('No orphaned primary files found.\n');
+        LOGGER.module().info('INFO: [cleanup] No orphaned primary files found');
+    } else {
+        console.log(`Step 3: Processing ${orphaned_uuids.length} orphaned file(s)...`);
     }
-
-    console.log(`Step 3: Processing ${orphaned_uuids.length} orphaned file(s)...`);
 
     for (const uuid of orphaned_uuids) {
         const entry = file_map.get(uuid);
@@ -473,7 +540,65 @@ const run_cleanup = async (dry_run = true) => {
         }
     }
 
-    // Step 4: Summary
+    // Step 4: Sweep orphaned IIIF derivative-cache directories
+    // A cached UUID with no DB record (e.g. a hard-deleted record whose purge
+    // was missed) is removed whole. Soft-deleted records still have a DB row,
+    // so their derivatives are retained — matching how their source files are.
+    console.log('Step 4: Sweeping IIIF derivative cache...');
+
+    const cache_root = path.join(STORAGE_PATH, IIIF_CACHE_DIR);
+    const cache_uuid_dirs = await scan_iiif_cache_uuid_dirs(cache_root);
+    stats.cache_uuids_found = cache_uuid_dirs.size;
+
+    if (cache_uuid_dirs.size === 0) {
+        console.log('  No cached derivatives found.\n');
+    } else {
+
+        const cache_uuids = Array.from(cache_uuid_dirs.keys());
+        const cache_existing = await get_existing_uuids(cache_uuids);
+        const cache_orphans = cache_uuids.filter(uuid => !cache_existing.has(uuid));
+
+        console.log(`  ${cache_uuid_dirs.size} cached UUID(s); ${cache_orphans.length} orphaned\n`);
+
+        for (const uuid of cache_orphans) {
+
+            const dir = cache_uuid_dirs.get(uuid);
+
+            // Sum the directory's bytes for reporting
+            const files = await walk_directory(dir);
+            let dir_bytes = 0;
+
+            for (const file_path of files) {
+                try {
+                    dir_bytes += (await fs.stat(file_path)).size;
+                } catch {
+                    // File may have been removed concurrently
+                }
+            }
+
+            stats.orphaned_cache_dirs++;
+            console.log(`  ORPHAN (cache): ${IIIF_CACHE_DIR}/.../${uuid} (${format_bytes(dir_bytes)}, ${files.length} file(s))`);
+            LOGGER.module().info(`INFO: [cleanup] Orphaned IIIF cache dir: ${dir} (${format_bytes(dir_bytes)})`);
+
+            if (!dry_run) {
+
+                try {
+                    await fs.rm(dir, { recursive: true, force: true });
+                    await prune_empty_parents(path.dirname(dir));
+                    stats.cache_dirs_deleted++;
+                    stats.bytes_recovered += dir_bytes;
+                    LOGGER.module().info(`INFO: [cleanup] Deleted orphaned IIIF cache dir: ${dir}`);
+                } catch (error) {
+                    stats.errors++;
+                    LOGGER.module().error(`ERROR: [cleanup] Failed to remove IIIF cache dir ${dir}: ${error.message}`);
+                }
+            }
+        }
+
+        console.log('');
+    }
+
+    // Step 5: Summary
     console.log(`\n========================================`);
     console.log(`  Cleanup Summary — ${mode_label}`);
     console.log(`========================================`);
@@ -483,15 +608,18 @@ const run_cleanup = async (dry_run = true) => {
     console.log(`  Orphaned files:        ${stats.orphaned_files}`);
     console.log(`  Orphaned thumbnails:   ${stats.orphaned_thumbnails}`);
     console.log(`  Skipped (too new):     ${stats.skipped_too_new}`);
+    console.log(`  Cache UUIDs found:     ${stats.cache_uuids_found}`);
+    console.log(`  Orphaned cache dirs:   ${stats.orphaned_cache_dirs}`);
 
     if (!dry_run) {
         console.log(`  Files deleted:         ${stats.files_deleted}`);
         console.log(`  Thumbnails deleted:    ${stats.thumbnails_deleted}`);
+        console.log(`  Cache dirs deleted:    ${stats.cache_dirs_deleted}`);
         console.log(`  Space recovered:       ${format_bytes(stats.bytes_recovered)}`);
         console.log(`  Errors:                ${stats.errors}`);
     } else {
-        const total_orphans = stats.orphaned_files + stats.orphaned_thumbnails;
-        console.log(`\n  Run with --delete to remove ${total_orphans} orphaned file(s).`);
+        const total_orphans = stats.orphaned_files + stats.orphaned_thumbnails + stats.orphaned_cache_dirs;
+        console.log(`\n  Run with --delete to remove ${total_orphans} orphaned item(s).`);
     }
 
     console.log('');

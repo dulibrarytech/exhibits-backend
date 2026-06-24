@@ -222,12 +222,12 @@ describe('Timelines Model Integration Tests', () => {
             expect(result.status).toBe(400);
         });
 
-        test('should return 200 when database operation fails', async () => {
+        test('should return 500 when database operation fails', async () => {
             mockTimelineRecordTask.create_timeline_record.mockResolvedValue(false);
 
             const result = await TIMELINES_MODEL.create_timeline_record(TEST_EXHIBIT_UUID, { title: 'Test' });
 
-            expect(result.status).toBe(200);
+            expect(result.status).toBe(500);
             expect(result.message).toBe('Unable to create timeline record');
         });
 
@@ -319,7 +319,7 @@ describe('Timelines Model Integration Tests', () => {
             expect(result.status).toBe(400);
         });
 
-        test('should return 200 when database operation fails', async () => {
+        test('should return 500 when database operation fails', async () => {
             mockTimelineRecordTask.update_timeline_record.mockResolvedValue(false);
 
             const result = await TIMELINES_MODEL.update_timeline_record(
@@ -328,7 +328,7 @@ describe('Timelines Model Integration Tests', () => {
                 { title: 'Test' }
             );
 
-            expect(result.status).toBe(200);
+            expect(result.status).toBe(500);
             expect(result.message).toBe('Unable to update timeline record');
         });
     });
@@ -424,7 +424,7 @@ describe('Timelines Model Integration Tests', () => {
             expect(result.message).toBe('Invalid data provided');
         });
 
-        test('should return 200 when database operation fails', async () => {
+        test('should return 500 when database operation fails', async () => {
             mockTimelineRecordTask.create_timeline_item_record.mockResolvedValue(false);
 
             const result = await TIMELINES_MODEL.create_timeline_item_record(
@@ -433,7 +433,7 @@ describe('Timelines Model Integration Tests', () => {
                 { title: 'Test' }
             );
 
-            expect(result.status).toBe(200);
+            expect(result.status).toBe(500);
             expect(result.message).toBe('Unable to create timeline item record');
         });
     });
@@ -646,7 +646,7 @@ describe('Timelines Model Integration Tests', () => {
             expect(result.message).toBe('Invalid data provided');
         });
 
-        test('should return 200 when database operation fails', async () => {
+        test('should return 500 when database operation fails', async () => {
             mockTimelineRecordTask.update_timeline_item_record.mockResolvedValue(false);
 
             const result = await TIMELINES_MODEL.update_timeline_item_record(
@@ -656,7 +656,7 @@ describe('Timelines Model Integration Tests', () => {
                 { title: 'Test' }
             );
 
-            expect(result.status).toBe(200);
+            expect(result.status).toBe(500);
             expect(result.message).toBe('Unable to update timeline item record');
         });
     });
@@ -1127,7 +1127,7 @@ describe('Timelines Model Integration Tests', () => {
 
             const result = await TIMELINES_MODEL.create_timeline_record(TEST_EXHIBIT_UUID, { title: 'Test' });
 
-            expect(result.status).toBe(200);
+            expect(result.status).toBe(500);
             expect(result.message).toContain('Unable to create timeline record');
         });
 

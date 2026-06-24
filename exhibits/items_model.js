@@ -50,7 +50,8 @@ const CONSTANTS = {
         CREATED: 201,
         NO_CONTENT: 204,
         BAD_REQUEST: 400,
-        NOT_FOUND: 404
+        NOT_FOUND: 404,
+        INTERNAL_SERVER_ERROR: 500
     },
     ITEM_TYPES: {
         TEXT: 'text',
@@ -265,7 +266,7 @@ exports.create_item_record = async (is_member_of_exhibit, data) => {
         if (result === false) {
             LOGGER.module().error('ERROR: [/exhibits/items_model (create_item_record)] Database operation failed');
             return build_response(
-                CONSTANTS.STATUS_CODES.OK,
+                CONSTANTS.STATUS_CODES.INTERNAL_SERVER_ERROR,
                 'Unable to create item record'
             );
         }
@@ -289,7 +290,7 @@ exports.create_item_record = async (is_member_of_exhibit, data) => {
         });
 
         return build_response(
-            CONSTANTS.STATUS_CODES.OK,
+            CONSTANTS.STATUS_CODES.INTERNAL_SERVER_ERROR,
             `Unable to create record: ${error.message}`
         );
     }

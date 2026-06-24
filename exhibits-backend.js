@@ -23,10 +23,17 @@ require('dotenv').load();
 process.env.NODE_ENV = process.env.NODE_ENV || 'development';
 process.env.NODE_TLS_REJECT_UNAUTHORIZED = 0;
 
+const uploads = require('./media-library/uploads');
+const { register_process_handlers } = require('./config/process_handlers');
+
+// Global safety nets for otherwise-silent async faults — registered before app
+// init so startup faults are captured too. uncaughtException exits(1) after a
+// best-effort exiftool shutdown so a supervisor can restart cleanly.
+register_process_handlers({ on_fatal: () => uploads.shutdown_exiftool() });
+
 const express = require('./config/express');
 const app = express();
 
-const uploads = require('./media-library/uploads');
 process.on('SIGTERM', async () => {
  await uploads.shutdown_exiftool();
  process.exit(0);

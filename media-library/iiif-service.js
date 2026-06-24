@@ -23,6 +23,7 @@ const PATH = require('path');
 const SHARP = require('sharp');
 const MEDIA_MODEL = require('../media-library/model');
 const UPLOADS = require('../media-library/uploads');
+const IIIF_CACHE = require('../media-library/iiif-cache');
 const APP_CONFIG = require('../config/app_config')();
 const KALTURA_CONFIG = require('../config/kaltura_config')();
 const LOGGER = require('../libs/log4');
@@ -662,26 +663,28 @@ exports.build_manifest_for_uuid = async function (uuid, base_url, file_base) {
     try {
 
         if (!is_valid_uuid(uuid)) {
-            return build_response(false, 'Invalid UUID format', { manifest: null });
+            return build_response(false, 'Invalid UUID format', { manifest: null, status: 400 });
         }
 
         const result = await MEDIA_MODEL.get_media_record(uuid);
 
         if (!result || !result.success || !result.record) {
-            return build_response(false, 'Media record not found', { manifest: null });
+            return build_response(false, 'Media record not found', { manifest: null, status: 404 });
         }
 
         const record = result.record;
 
         if (record.ingest_method !== 'upload' && record.ingest_method !== 'kaltura') {
             return build_response(false, `Manifest generation not supported for ingest method: ${record.ingest_method}`, {
-                manifest: null
+                manifest: null,
+                status: 404
             });
         }
 
         if (!SUPPORTED_MEDIA_TYPES.includes(normalize_media_type(record.media_type))) {
             return build_response(false, `Manifest generation not supported for media type: ${record.media_type}`, {
-                manifest: null
+                manifest: null,
+                status: 404
             });
         }
 
@@ -694,7 +697,7 @@ exports.build_manifest_for_uuid = async function (uuid, base_url, file_base) {
             uuid,
             stack: error.stack
         });
-        return build_response(false, 'Error building manifest: ' + error.message, { manifest: null });
+        return build_response(false, 'Error building manifest: ' + error.message, { manifest: null, status: 500 });
     }
 };
 
@@ -714,7 +717,7 @@ exports.get_info = async function (uuid, base_url) {
     try {
 
         if (!is_valid_uuid(uuid)) {
-            return build_response(false, 'Invalid UUID format', { info: null });
+            return build_response(false, 'Invalid UUID format', { info: null, status: 400 });
         }
 
         LOGGER.module().info(`INFO: [/media-library/iiif-service (get_info)] Fetching info.json for: ${uuid}`);
@@ -723,7 +726,7 @@ exports.get_info = async function (uuid, base_url) {
         const result = await MEDIA_MODEL.get_media_record(uuid);
 
         if (!result || !result.success || !result.record) {
-            return build_response(false, 'Media record not found', { info: null });
+            return build_response(false, 'Media record not found', { info: null, status: 404 });
         }
 
         const record = result.record;
@@ -751,7 +754,7 @@ exports.get_info = async function (uuid, base_url) {
             uuid,
             stack: error.stack
         });
-        return build_response(false, 'Error retrieving image info: ' + error.message, { info: null });
+        return build_response(false, 'Error retrieving image info: ' + error.message, { info: null, status: 500 });
     }
 };
 
@@ -763,6 +766,12 @@ exports.get_info = async function (uuid, base_url) {
  * Resolves the source image buffer for a media record
  * For uploaded images: reads from local hash-bucketed storage
  * For uploaded PDFs: reads the generated thumbnail
+ *
+ * Reads are asynchronous (FS.promises.readFile) so a large original never
+ * blocks the event loop the way the previous synchronous readFileSync did.
+ * Only reached on a cache miss — a cached derivative is served without ever
+ * touching the original.
+ *
  * @param {Object} record - Media library DB record
  * @returns {Promise<Buffer|null>} Image buffer or null
  */
@@ -777,7 +786,7 @@ const resolve_image_source = async (record) => {
                 decode_html_entities(record.storage_path)
             );
 
-            return FS.readFileSync(resolved_path);
+            return await FS.promises.readFile(resolved_path);
         }
 
         // For PDFs: use the generated thumbnail (first page preview)
@@ -787,7 +796,7 @@ const resolve_image_source = async (record) => {
                 decode_html_entities(record.thumbnail_path)
             );
 
-            return FS.readFileSync(resolved_path);
+            return await FS.promises.readFile(resolved_path);
         }
 
         // Fallback: try thumbnail_path for any type that has one
@@ -797,7 +806,7 @@ const resolve_image_source = async (record) => {
                 decode_html_entities(record.thumbnail_path)
             );
 
-            return FS.readFileSync(resolved_path);
+            return await FS.promises.readFile(resolved_path);
         }
 
         return null;
@@ -975,6 +984,12 @@ const parse_quality_format = (quality_format) => {
  * Processes a IIIF Image API request
  * Applies region extraction, size scaling, and quality/format conversion using Sharp
  *
+ * Results are cached on disk keyed by (uuid, record version, region, size,
+ * rotation, quality.format): an identical request is served straight from the
+ * derivative cache without re-reading or re-transcoding the original. A strong
+ * ETag (derived from the same key) is returned so the caller can answer
+ * conditional requests with 304 Not Modified.
+ *
  * For uploaded images: reads from local hash-bucketed storage
  * For uploaded PDFs: uses the generated thumbnail
  *
@@ -983,14 +998,16 @@ const parse_quality_format = (quality_format) => {
  * @param {string} size - IIIF size parameter (max, w,h, !w,h, w,, ,h)
  * @param {string} rotation - IIIF rotation parameter (0 for Level 1)
  * @param {string} quality_format - IIIF quality.format parameter (default.jpg, gray.png, etc.)
- * @returns {Promise<Object>} Result object with image buffer and content type
+ * @param {Object} [options] - Optional request context
+ * @param {string} [options.if_none_match] - Client If-None-Match header for conditional requests
+ * @returns {Promise<Object>} Result object with image buffer, content type, etag and version
  */
-exports.get_image = async function (uuid, region, size, rotation, quality_format) {
+exports.get_image = async function (uuid, region, size, rotation, quality_format, options = {}) {
 
     try {
 
         if (!is_valid_uuid(uuid)) {
-            return build_response(false, 'Invalid UUID format', { image: null });
+            return build_response(false, 'Invalid UUID format', { image: null, status: 400 });
         }
 
         // Parse quality.format first — reject early if invalid
@@ -998,46 +1015,74 @@ exports.get_image = async function (uuid, region, size, rotation, quality_format
 
         if (!qf) {
             return build_response(false, `Unsupported quality/format: ${quality_format}. Supported formats: jpg, png, webp`, {
-                image: null
+                image: null,
+                status: 400
             });
         }
 
         // Only rotation=0 is supported (Level 1)
         if (rotation !== '0') {
-            return build_response(false, 'Only rotation value of 0 is supported', { image: null });
+            return build_response(false, 'Only rotation value of 0 is supported', { image: null, status: 400 });
         }
 
-        LOGGER.module().info(`INFO: [/media-library/iiif-service (get_image)] Processing IIIF image request: ${uuid}/${region}/${size}/${rotation}/${quality_format}`);
-
-        // Fetch the media record
+        // Fetch the media record (cheap indexed lookup; also yields the version
+        // token that keys the cache and the ETag)
         const result = await MEDIA_MODEL.get_media_record(uuid);
 
         if (!result || !result.success || !result.record) {
-            return build_response(false, 'Media record not found', { image: null });
+            return build_response(false, 'Media record not found', { image: null, status: 404 });
         }
 
         const record = result.record;
+        const version = record.updated || record.created || null;
+        const etag = IIIF_CACHE.compute_etag(uuid, version, region, size, rotation, quality_format);
 
-        // Resolve the source image buffer
+        // Conditional request: nothing changed — let the caller answer 304
+        if (options.if_none_match && options.if_none_match === etag) {
+            return build_response(true, 'Not modified', {
+                image: null,
+                content_type: qf.mime,
+                etag,
+                version,
+                not_modified: true
+            });
+        }
+
+        // Serve from the derivative cache when present (no source read, no transcode)
+        const cached = await IIIF_CACHE.get_cached(uuid, version, region, size, rotation, quality_format);
+
+        if (cached) {
+            return build_response(true, 'Image served from cache', {
+                image: cached,
+                content_type: qf.mime,
+                etag,
+                version,
+                cached: true
+            });
+        }
+
+        LOGGER.module().info(`INFO: [/media-library/iiif-service (get_image)] Cache miss — processing IIIF image request: ${uuid}/${region}/${size}/${rotation}/${quality_format}`);
+
+        // Resolve the source image buffer (async — never blocks the event loop)
         const source_buffer = await resolve_image_source(record);
 
         if (!source_buffer) {
-            return build_response(false, 'Image source not available', { image: null });
+            return build_response(false, 'Image source not available', { image: null, status: 404 });
         }
-
-        // Get source dimensions from Sharp (authoritative, regardless of DB values)
-        const source_metadata = await SHARP(source_buffer).metadata();
-        const source_width = source_metadata.width;
-        const source_height = source_metadata.height;
 
         // Build the Sharp pipeline
         let pipeline = SHARP(source_buffer);
 
-        // 1. Region extraction
-        const region_opts = parse_region(region, source_width, source_height);
+        // 1. Region extraction — source dimensions are only needed for a
+        //    non-"full" region, so the extra metadata decode is skipped otherwise
+        if (region !== 'full') {
 
-        if (region_opts) {
-            pipeline = pipeline.extract(region_opts);
+            const source_metadata = await SHARP(source_buffer).metadata();
+            const region_opts = parse_region(region, source_metadata.width, source_metadata.height);
+
+            if (region_opts) {
+                pipeline = pipeline.extract(region_opts);
+            }
         }
 
         // 2. Size scaling
@@ -1064,11 +1109,18 @@ exports.get_image = async function (uuid, region, size, rotation, quality_format
         // Execute pipeline
         const output_buffer = await pipeline.toBuffer();
 
+        // Store the derivative for subsequent requests (best-effort — a cache
+        // write failure must never fail the response)
+        await IIIF_CACHE.put_cached(uuid, version, region, size, rotation, quality_format, output_buffer);
+
         LOGGER.module().info(`INFO: [/media-library/iiif-service (get_image)] Image processed successfully for: ${uuid} (${output_buffer.length} bytes)`);
 
         return build_response(true, 'Image processed successfully', {
             image: output_buffer,
-            content_type: qf.mime
+            content_type: qf.mime,
+            etag,
+            version,
+            cached: false
         });
 
     } catch (error) {
@@ -1080,7 +1132,7 @@ exports.get_image = async function (uuid, region, size, rotation, quality_format
             quality_format,
             stack: error.stack
         });
-        return build_response(false, 'Error processing image: ' + error.message, { image: null });
+        return build_response(false, 'Error processing image: ' + error.message, { image: null, status: 500 });
     }
 };
 

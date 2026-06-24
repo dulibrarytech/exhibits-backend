@@ -44,7 +44,8 @@ const CONSTANTS = {
         OK: 200,
         CREATED: 201,
         NO_CONTENT: 204,
-        BAD_REQUEST: 400
+        BAD_REQUEST: 400,
+        INTERNAL_SERVER_ERROR: 500
     },
     ITEM_TYPES: {
         TEXT: 'text'
@@ -112,7 +113,7 @@ exports.create_timeline_record = async (is_member_of_exhibit, data) => {
         if (result === false) {
             LOGGER.module().error('ERROR: [/exhibits/timelines_model (create_timeline_record)] Database operation failed');
             return build_response(
-                CONSTANTS.STATUS_CODES.OK,
+                CONSTANTS.STATUS_CODES.INTERNAL_SERVER_ERROR,
                 'Unable to create timeline record'
             );
         }
@@ -136,7 +137,7 @@ exports.create_timeline_record = async (is_member_of_exhibit, data) => {
         });
 
         return build_response(
-            CONSTANTS.STATUS_CODES.OK,
+            CONSTANTS.STATUS_CODES.INTERNAL_SERVER_ERROR,
             `Unable to create timeline record: ${error.message}`
         );
     }
@@ -187,7 +188,7 @@ exports.update_timeline_record = async (is_member_of_exhibit, timeline_id, data)
 
         if (result === false) {
             return build_response(
-                CONSTANTS.STATUS_CODES.OK,
+                CONSTANTS.STATUS_CODES.INTERNAL_SERVER_ERROR,
                 'Unable to update timeline record'
             );
         }
@@ -212,7 +213,7 @@ exports.update_timeline_record = async (is_member_of_exhibit, timeline_id, data)
         });
 
         return build_response(
-            CONSTANTS.STATUS_CODES.OK,
+            CONSTANTS.STATUS_CODES.INTERNAL_SERVER_ERROR,
             `Unable to update timeline record: ${error.message}`
         );
     }
@@ -306,7 +307,7 @@ exports.create_timeline_item_record = async (is_member_of_exhibit, timeline_id, 
 
         if (result === false) {
             return build_response(
-                CONSTANTS.STATUS_CODES.OK,
+                CONSTANTS.STATUS_CODES.INTERNAL_SERVER_ERROR,
                 'Unable to create timeline item record'
             );
         }
@@ -331,7 +332,7 @@ exports.create_timeline_item_record = async (is_member_of_exhibit, timeline_id, 
         });
 
         return build_response(
-            CONSTANTS.STATUS_CODES.OK,
+            CONSTANTS.STATUS_CODES.INTERNAL_SERVER_ERROR,
             `Unable to create timeline item record: ${error.message}`
         );
     }
@@ -576,7 +577,7 @@ exports.update_timeline_item_record = async (is_member_of_exhibit, is_member_of_
 
         if (result === false) {
             return build_response(
-                CONSTANTS.STATUS_CODES.OK,
+                CONSTANTS.STATUS_CODES.INTERNAL_SERVER_ERROR,
                 'Unable to update timeline item record'
             );
         }
@@ -602,7 +603,7 @@ exports.update_timeline_item_record = async (is_member_of_exhibit, is_member_of_
         });
 
         return build_response(
-            CONSTANTS.STATUS_CODES.OK,
+            CONSTANTS.STATUS_CODES.INTERNAL_SERVER_ERROR,
             `Unable to update timeline item record: ${error.message}`
         );
     }

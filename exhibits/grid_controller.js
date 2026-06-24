@@ -402,12 +402,12 @@ exports.publish_grid_item_record = async function (req, res) {
 
         const result = await GRIDS_MODEL.publish_grid_item_record(exhibit_id, grid_id, grid_item_id);
 
-        if (!result.status) {
-            LOGGER.module().error(`publish_grid_item_record: ${result.message}`, {
+        if (!(result === true || (result && result.status === true))) {
+            LOGGER.module().error(`publish_grid_item_record: ${result?.message}`, {
                 exhibit_id, grid_id, grid_item_id, result
             });
-            return res.status(500).send({
-                message: result.message,
+            return res.status(422).send({
+                message: result?.message || 'Unable to publish grid item'
             });
         }
 
@@ -449,7 +449,6 @@ exports.suppress_grid_item_record = async function (req, res) {
         if (!is_authorized) return;
 
         const result = await GRIDS_MODEL.suppress_grid_item_record(exhibit_id, grid_id, grid_item_id);
-        console.log('SUPPRESS RESULT ', result);
 
         if (!result) {
             LOGGER.module().error('suppress_grid_item_record: Invalid response from database model', {
@@ -457,6 +456,17 @@ exports.suppress_grid_item_record = async function (req, res) {
             });
             return res.status(500).send({
                 message: 'Invalid response from database model'
+            });
+        }
+
+        // A truthy object with status:false is still a failure — the !result
+        // guard above previously let it fall through to a 200 response.
+        if (!(result === true || result.status === true)) {
+            LOGGER.module().error(`suppress_grid_item_record: ${result.message}`, {
+                exhibit_id, grid_id, grid_item_id, result
+            });
+            return res.status(422).send({
+                message: result.message || 'Unable to suppress grid item'
             });
         }
 

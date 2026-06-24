@@ -223,7 +223,7 @@ describe('Exhibits Model Integration Tests', () => {
 
             const result = await EXHIBITS_MODEL.create_exhibit_record(exhibitData);
 
-            expect(result.status).toBe(200);
+            expect(result.status).toBe(500);
             expect(result.message).toBe('Unable to create exhibit record');
         });
 
@@ -256,7 +256,7 @@ describe('Exhibits Model Integration Tests', () => {
 
             const result = await EXHIBITS_MODEL.create_exhibit_record(exhibitData);
 
-            expect(result.status).toBe(200);
+            expect(result.status).toBe(500);
             expect(result.message).toContain('Unable to create record');
         });
     });

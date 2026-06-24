@@ -1445,9 +1445,10 @@ exports.get_kaltura_media = async function (req, res) {
             LOGGER.module().warn(`WARNING: [/media-library/controller (get_kaltura_media)] Failed: ${result?.message}`);
 
             // Determine appropriate status code based on failure reason
+            // (default 500 — a service failure must not be reported as 200 OK)
             const status_code = result?.message?.includes('Unsupported media type') ? 422
                 : result?.message?.includes('not found') ? 404
-                : 200;
+                : 500;
 
             return res.status(status_code).json({
                 success: false,
@@ -1557,7 +1558,8 @@ exports.assign_kaltura_category = async function (req, res) {
             LOGGER.module().warn(`WARNING: [/media-library/controller (assign_kaltura_category)] Failed: ${result?.message}`);
 
             // Determine appropriate status code based on failure reason
-            const status_code = result?.message?.includes('not found') ? 404 : 200;
+            // (default 500 — a service failure must not be reported as 200 OK)
+            const status_code = result?.message?.includes('not found') ? 404 : 500;
 
             return res.status(status_code).json({
                 success: false,
@@ -1620,7 +1622,8 @@ exports.remove_kaltura_category = async function (req, res) {
             LOGGER.module().warn(`WARNING: [/media-library/controller (remove_kaltura_category)] Failed: ${result?.message}`);
 
             // Determine appropriate status code based on failure reason
-            const status_code = result?.message?.includes('not found') ? 404 : 200;
+            // (default 500 — a service failure must not be reported as 200 OK)
+            const status_code = result?.message?.includes('not found') ? 404 : 500;
 
             return res.status(status_code).json({
                 success: false,
@@ -1686,7 +1689,9 @@ exports.get_iiif_manifest = async function (req, res) {
         if (!result || !result.success) {
             LOGGER.module().warn(`WARNING: [/media-library/controller (get_iiif_manifest)] Failed: ${result?.message}`);
 
-            const status_code = result?.message?.includes('not found') ? 404 : 200;
+            // The service tags failures with an HTTP status; default to 500 so a
+            // genuine error is never reported as a 200 success.
+            const status_code = result?.status || 500;
 
             return res.status(status_code).json({
                 success: false,
@@ -1747,7 +1752,9 @@ exports.get_iiif_info = async function (req, res) {
         const result = await IIIF_SERVICE.get_info(media_id, base_url);
 
         if (!result || !result.success) {
-            const status_code = result?.message?.includes('not found') ? 404 : 200;
+            // The service tags failures with an HTTP status; default to 500 so a
+            // genuine error is never reported as a 200 success.
+            const status_code = result?.status || 500;
 
             return res.status(status_code).json({
                 success: false,
@@ -1816,15 +1823,17 @@ exports.get_iiif_image = async function (req, res) {
 
         LOGGER.module().info(`INFO: [/media-library/controller (get_iiif_image)] IIIF image request: ${media_id}/${region}/${size}/${rotation}/${quality_format}`);
 
-        const result = await IIIF_SERVICE.get_image(media_id, region, size, rotation, quality_format);
+        // Conditional-request validator — lets an unchanged derivative answer 304
+        const if_none_match = req.headers['if-none-match'];
+
+        const result = await IIIF_SERVICE.get_image(media_id, region, size, rotation, quality_format, { if_none_match });
 
         if (!result || !result.success) {
             LOGGER.module().warn(`WARNING: [/media-library/controller (get_iiif_image)] Failed: ${result?.message}`);
 
-            const status_code = result?.message?.includes('not found') ? 404
-                : result?.message?.includes('Unsupported') ? 400
-                : result?.message?.includes('rotation') ? 400
-                : 200;
+            // The service tags failures with an HTTP status; default to 500 so a
+            // genuine error is never reported as a 200 success.
+            const status_code = result?.status || 500;
 
             return res.status(status_code).json({
                 success: false,
@@ -1833,15 +1842,32 @@ exports.get_iiif_image = async function (req, res) {
             });
         }
 
-        // Stream the processed image with CORS headers
-        res.set({
-            'Content-Type': result.content_type,
-            'Content-Length': result.image.length,
+        // CORS + caching headers shared by 200 and 304 responses. The ETag is
+        // derived from the record version + IIIF params, so it changes when (and
+        // only when) the derivative's bytes change — making the long max-age safe.
+        const cache_headers = {
             'Access-Control-Allow-Origin': '*',
             'Access-Control-Allow-Methods': 'GET, OPTIONS',
             'Access-Control-Allow-Headers': 'Origin, Content-Type, Accept',
             'Cache-Control': 'public, max-age=86400',
             'X-Content-Type-Options': 'nosniff'
+        };
+
+        if (result.etag) {
+            cache_headers['ETag'] = result.etag;
+        }
+
+        // Conditional request matched the current derivative — nothing to send
+        if (result.not_modified) {
+            res.set(cache_headers);
+            return res.status(304).end();
+        }
+
+        // Stream the processed image
+        res.set({
+            ...cache_headers,
+            'Content-Type': result.content_type,
+            'Content-Length': result.image.length
         });
 
         return res.status(200).send(result.image);

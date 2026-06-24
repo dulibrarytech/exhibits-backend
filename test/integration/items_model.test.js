@@ -286,12 +286,12 @@ describe('Items Model Integration Tests', () => {
             expect(result.status).toBe(400);
         });
 
-        test('should return 200 when database operation fails', async () => {
+        test('should return 500 when database operation fails', async () => {
             mockItemRecordTask.create_item_record.mockResolvedValue(false);
 
             const result = await ITEMS_MODEL.create_item_record(TEST_EXHIBIT_UUID, { title: 'Test' });
 
-            expect(result.status).toBe(200);
+            expect(result.status).toBe(500);
             expect(result.message).toBe('Unable to create item record');
         });
 
@@ -864,7 +864,7 @@ describe('Items Model Integration Tests', () => {
 
             const result = await ITEMS_MODEL.create_item_record(TEST_EXHIBIT_UUID, { title: 'Test' });
 
-            expect(result.status).toBe(200);
+            expect(result.status).toBe(500);
             expect(result.message).toContain('Unable to create record');
         });
 

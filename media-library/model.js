@@ -24,6 +24,7 @@ const TABLES = DB_TABLES.exhibits;
 const HELPER = require('../libs/helper');
 const MEDIA_TASKS = require('./tasks/media_record_tasks');
 const UPLOADS = require('./uploads');
+const IIIF_CACHE = require('./iiif-cache');
 const PATH = require('path');
 const LOGGER = require('../libs/log4');
 const VALIDATOR = require('../libs/validate');
@@ -376,6 +377,10 @@ exports.update_media_record = async (media_id, data) => {
             return build_response(false, result?.message || 'Failed to update media record');
         }
 
+        // Invalidate cached IIIF derivatives — the record (and possibly its
+        // source file) changed, so superseded derivatives must not be reused.
+        await IIIF_CACHE.purge(media_id);
+
         LOGGER.module().info('INFO: [/media-library/model (update_media_record)] Media record updated successfully: ' + media_id);
 
         // Convert subject delimiters from pipe to comma for display in response
@@ -499,6 +504,9 @@ exports.delete_media_record = async (media_id, username = null) => {
         if (!result || !result.success) {
             return build_response(false, result?.message || 'Failed to delete media record');
         }
+
+        // Reclaim cached IIIF derivatives for the deleted record.
+        await IIIF_CACHE.purge(media_id);
 
         LOGGER.module().info('INFO: [/media-library/model (delete_media_record)] Media record deleted successfully: ' + media_id);
 

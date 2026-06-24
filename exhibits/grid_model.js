@@ -44,7 +44,8 @@ const CONSTANTS = {
         OK: 200,
         CREATED: 201,
         NO_CONTENT: 204,
-        BAD_REQUEST: 400
+        BAD_REQUEST: 400,
+        INTERNAL_SERVER_ERROR: 500
     },
     ITEM_TYPES: {
         TEXT: 'text'
@@ -128,7 +129,7 @@ exports.create_grid_record = async (is_member_of_exhibit, data) => {
         if (result === false) {
             LOGGER.module().error('ERROR: [/exhibits/grid_model (create_grid_record)] Database operation failed');
             return build_response(
-                CONSTANTS.STATUS_CODES.OK,
+                CONSTANTS.STATUS_CODES.INTERNAL_SERVER_ERROR,
                 'Unable to create grid record'
             );
         }
@@ -153,7 +154,7 @@ exports.create_grid_record = async (is_member_of_exhibit, data) => {
         });
 
         return build_response(
-            CONSTANTS.STATUS_CODES.OK,
+            CONSTANTS.STATUS_CODES.INTERNAL_SERVER_ERROR,
             `Unable to create grid record: ${error.message}`
         );
     }
@@ -205,7 +206,7 @@ exports.update_grid_record = async (is_member_of_exhibit, grid_id, data) => {
 
         if (result === false) {
             return build_response(
-                CONSTANTS.STATUS_CODES.OK,
+                CONSTANTS.STATUS_CODES.INTERNAL_SERVER_ERROR,
                 'Unable to update grid record'
             );
         }
@@ -230,7 +231,7 @@ exports.update_grid_record = async (is_member_of_exhibit, grid_id, data) => {
         });
 
         return build_response(
-            CONSTANTS.STATUS_CODES.OK,
+            CONSTANTS.STATUS_CODES.INTERNAL_SERVER_ERROR,
             `Unable to update grid record: ${error.message}`
         );
     }
@@ -324,7 +325,7 @@ exports.create_grid_item_record = async (is_member_of_exhibit, grid_id, data) =>
 
         if (result === false) {
             return build_response(
-                CONSTANTS.STATUS_CODES.OK,
+                CONSTANTS.STATUS_CODES.INTERNAL_SERVER_ERROR,
                 'Unable to create grid item record'
             );
         }
@@ -349,7 +350,7 @@ exports.create_grid_item_record = async (is_member_of_exhibit, grid_id, data) =>
         });
 
         return build_response(
-            CONSTANTS.STATUS_CODES.OK,
+            CONSTANTS.STATUS_CODES.INTERNAL_SERVER_ERROR,
             `Unable to create grid item record: ${error.message}`
         );
     }
@@ -638,7 +639,7 @@ exports.update_grid_item_record = async (is_member_of_exhibit, is_member_of_grid
 
         if (result === false) {
             return build_response(
-                CONSTANTS.STATUS_CODES.OK,
+                CONSTANTS.STATUS_CODES.INTERNAL_SERVER_ERROR,
                 'Unable to update grid item record'
             );
         }
@@ -669,7 +670,7 @@ exports.update_grid_item_record = async (is_member_of_exhibit, is_member_of_grid
         });
 
         return build_response(
-            CONSTANTS.STATUS_CODES.OK,
+            CONSTANTS.STATUS_CODES.INTERNAL_SERVER_ERROR,
             `Unable to update grid item record: ${error.message}`
         );
     }
