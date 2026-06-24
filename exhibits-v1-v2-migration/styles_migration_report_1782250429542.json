@@ -1,0 +1,94 @@
+{
+  "started_at": "2026-06-23T21:33:49.448Z",
+  "completed_at": "2026-06-23T21:33:49.542Z",
+  "dry_run": false,
+  "sub_phase_a": {
+    "exhibits_converted": 23,
+    "exhibits_skipped_v2": 0,
+    "exhibits_skipped_null": 0,
+    "errors": []
+  },
+  "sub_phase_b": {
+    "exhibits_processed": 17,
+    "items_updated": 110,
+    "overflow_events": [
+      {
+        "exhibit_id": 6,
+        "exhibit_uuid": "087b09e9-ab83-4599-bfe0-127d6fc459ee",
+        "distinct_styles": 6,
+        "slot_capacity": 3,
+        "affected_items": 14,
+        "dropped_styles": [
+          {
+            "normalized": "{\"backgroundColor\":\"#f8fae4\"}",
+            "original": {
+              "backgroundColor": "#F8FAE4"
+            },
+            "occurrence_count": 2,
+            "mapped_to": "item1"
+          },
+          {
+            "normalized": "{\"backgroundColor\":\"#e1f2f6\"}",
+            "original": {
+              "backgroundColor": "#E1F2F6"
+            },
+            "occurrence_count": 2,
+            "mapped_to": "item1"
+          },
+          {
+            "normalized": "{\"backgroundColor\":\"#f0dded\"}",
+            "original": {
+              "backgroundColor": "#F0DDED"
+            },
+            "occurrence_count": 1,
+            "mapped_to": "item1"
+          }
+        ]
+      }
+    ],
+    "errors": []
+  },
+  "sub_phase_c": {
+    "exhibits_processed": 23,
+    "headings_updated": 114,
+    "overflow_events": [
+      {
+        "exhibit_id": 6,
+        "exhibit_uuid": "087b09e9-ab83-4599-bfe0-127d6fc459ee",
+        "distinct_styles": 5,
+        "slot_capacity": 3,
+        "affected_headings": 5,
+        "dropped_styles": [
+          {
+            "normalized": "{\"backgroundColor\":\"#d68037\",\"color\":\"#ffffff\",\"fontFamily\":\"\",\"fontSize\":\"\"}",
+            "original": {
+              "backgroundColor": "#D68037",
+              "color": "#FFFFFF",
+              "fontFamily": "",
+              "fontSize": ""
+            },
+            "occurrence_count": 1,
+            "mapped_to": "heading1"
+          },
+          {
+            "normalized": "{\"backgroundColor\":\"#39a8c3\",\"color\":\"#ffffff\",\"fontFamily\":\"\",\"fontSize\":\"47px\"}",
+            "original": {
+              "backgroundColor": "#39A8C3",
+              "color": "#FFFFFF",
+              "fontFamily": "",
+              "fontSize": "47px"
+            },
+            "occurrence_count": 1,
+            "mapped_to": "heading1"
+          }
+        ]
+      }
+    ],
+    "errors": []
+  },
+  "sub_phase_d": {
+    "grid_items_cleared": 535,
+    "timeline_items_cleared": 129,
+    "errors": []
+  }
+}

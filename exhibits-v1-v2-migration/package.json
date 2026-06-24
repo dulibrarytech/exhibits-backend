@@ -1,0 +1,28 @@
+{
+  "name": "exhibits-v1-to-v2-migration",
+  "version": "1.0.0",
+  "description": "Migration script to backfill Exhibits v1 data and storage into v2",
+  "main": "migrate_v1_to_v2.js",
+  "scripts": {
+    "migrate": "node migrate_v1_to_v2.js",
+    "migrate:dry": "DRY_RUN=true node migrate_v1_to_v2.js",
+    "styles": "node migrate_styles_v1_to_v2.js",
+    "styles:dry": "DRY_RUN=true node migrate_styles_v1_to_v2.js",
+    "subjects": "node backfill_media_subjects.js",
+    "subjects:dry": "DRY_RUN=true node backfill_media_subjects.js",
+    "ownership:list": "node assign_ownership.js --list",
+    "ownership:dry": "DRY_RUN=true node assign_ownership.js",
+    "ownership": "DRY_RUN=false node assign_ownership.js"
+  },
+  "dependencies": {
+    "dotenv": "^16.4.7",
+    "@napi-rs/canvas": "^0.1.95",
+    "exiftool-vendored": "^35.15.1",
+    "knex": "^3.1.0",
+    "mysql2": "^3.12.0",
+    "pdfjs-dist": "^5.4.624",
+    "sharp": "^0.34.5",
+    "uuid": "^11.1.0"
+  },
+  "private": true
+}

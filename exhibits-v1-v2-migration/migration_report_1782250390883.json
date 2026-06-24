@@ -1,0 +1,2016 @@
+{
+  "started_at": "2026-06-23T21:31:30.546Z",
+  "completed_at": "2026-06-23T21:33:10.864Z",
+  "dry_run": false,
+  "users": {
+    "migrated": 11,
+    "skipped": 0,
+    "errors": []
+  },
+  "auth_tables": {
+    "user_role_assignments": 11,
+    "errors": []
+  },
+  "exhibits": {
+    "migrated": 23,
+    "skipped": 0,
+    "errors": []
+  },
+  "grids": {
+    "migrated": 123,
+    "skipped": 0,
+    "errors": []
+  },
+  "timelines": {
+    "migrated": 17,
+    "skipped": 0,
+    "errors": []
+  },
+  "heading_items": {
+    "migrated": 151,
+    "skipped": 0,
+    "errors": []
+  },
+  "standard_items": {
+    "migrated": 416,
+    "skipped": 0,
+    "errors": []
+  },
+  "grid_items": {
+    "migrated": 535,
+    "skipped": 0,
+    "errors": []
+  },
+  "timeline_items": {
+    "migrated": 129,
+    "skipped": 0,
+    "errors": []
+  },
+  "subheadings": {
+    "created": 137,
+    "exhibits_converted": 13,
+    "skipped_existing": 0,
+    "errors": []
+  },
+  "media_library": {
+    "created": 982,
+    "errors": []
+  },
+  "exhibit_media": {
+    "created": 44,
+    "errors": []
+  },
+  "files_copied": {
+    "count": 1873,
+    "total_bytes": 8062011712,
+    "errors": []
+  },
+  "thumbnails": {
+    "image_generated": 815,
+    "pdf_generated": 121,
+    "skipped": 0,
+    "failed": 1,
+    "errors": [
+      "Failed to generate image thumbnail from 28107c60-9a82-4c87-88b5-5b6fa8e24946_repository_item_media.tif: Warning treated as error due to failOn setting\nASCII value for tag \"Software\" does not end in null byte. Forcing it to be null\nASCII value for tag \"Software\" does not end in null byte. Forcing it to be null\nASCII value for tag \"Software\" does not end in null byte. Forcing it to be null\nASCII value for tag \"Software\" does not end in null byte. Forcing it to be null\nASCII value for tag \"Software\" does not end in null byte. Forcing it to be null\nASCII value for tag \"Software\" does not end in null byte. Forcing it to be null\nASCII value for tag \"Software\" does not end in null byte. Forcing it to be null\nASCII value for tag \"Software\" does not end in null byte. Forcing it to be null\nASCII value for tag \"Software\" does not end in null byte. Forcing it to be null\nerror in tile 0 x 0\nerror in tile 0 x 0\nerror in tile 0 x 10\nerror in tile 0 x 20\nerror in tile 0 x 0\nerror in tile 0 x 10"
+    ]
+  },
+  "iiif_manifests": {
+    "generated": 0,
+    "skipped": 0,
+    "failed": 937,
+    "kaltura_generated": 0,
+    "kaltura_skipped": 0,
+    "kaltura_failed": 39,
+    "error": null
+  },
+  "styles": {
+    "exhibit_styles_converted": 0,
+    "exhibit_styles_skipped_v2": 0,
+    "exhibit_styles_skipped_null": 0,
+    "item_presets_exhibits": 0,
+    "item_presets_items_updated": 0,
+    "item_presets_exceeds_3": [],
+    "heading_presets_exhibits": 0,
+    "heading_presets_updated": 0,
+    "heading_presets_exceeds_3": [],
+    "orphan_styles": [],
+    "errors": []
+  },
+  "html_decoded": {
+    "fields": 1564,
+    "records": 1170
+  },
+  "orphans": {
+    "files_without_db_reference": [
+      {
+        "file": "/Users/fernando.reyes/Dropbox/work/workspace/exhibits/storage_v1/0eadb6af-9cac-41e1-aca3-21fdbab8fe9f/739608a7-5f33-4433-af61-05bce2972720_1753307587894_item_media.pdf",
+        "exhibit_uuid": "0eadb6af-9cac-41e1-aca3-21fdbab8fe9f",
+        "filename": "739608a7-5f33-4433-af61-05bce2972720_1753307587894_item_media.pdf"
+      },
+      {
+        "file": "/Users/fernando.reyes/Dropbox/work/workspace/exhibits/storage_v1/0eadb6af-9cac-41e1-aca3-21fdbab8fe9f/86b24ed5-67e9-42ff-b66a-0c79ac7160f9_1753902723430_item_media.pdf",
+        "exhibit_uuid": "0eadb6af-9cac-41e1-aca3-21fdbab8fe9f",
+        "filename": "86b24ed5-67e9-42ff-b66a-0c79ac7160f9_1753902723430_item_media.pdf"
+      },
+      {
+        "file": "/Users/fernando.reyes/Dropbox/work/workspace/exhibits/storage_v1/0eadb6af-9cac-41e1-aca3-21fdbab8fe9f/f5c8e41c-8679-488c-90e1-fc75e0da51b8_1753307510587_item_media.pdf",
+        "exhibit_uuid": "0eadb6af-9cac-41e1-aca3-21fdbab8fe9f",
+        "filename": "f5c8e41c-8679-488c-90e1-fc75e0da51b8_1753307510587_item_media.pdf"
+      },
+      {
+        "file": "/Users/fernando.reyes/Dropbox/work/workspace/exhibits/storage_v1/0eadb6af-9cac-41e1-aca3-21fdbab8fe9f/f5c8e41c-8679-488c-90e1-fc75e0da51b8_1753308183554_item_media.pdf",
+        "exhibit_uuid": "0eadb6af-9cac-41e1-aca3-21fdbab8fe9f",
+        "filename": "f5c8e41c-8679-488c-90e1-fc75e0da51b8_1753308183554_item_media.pdf"
+      },
+      {
+        "file": "/Users/fernando.reyes/Dropbox/work/workspace/exhibits/storage_v1/119b5e25-e763-4619-ae08-982f11883e9d/119b5e25-e763-4619-ae08-982f11883e9d_1754447754015_exhibit_hero.jpg",
+        "exhibit_uuid": "119b5e25-e763-4619-ae08-982f11883e9d",
+        "filename": "119b5e25-e763-4619-ae08-982f11883e9d_1754447754015_exhibit_hero.jpg"
+      },
+      {
+        "file": "/Users/fernando.reyes/Dropbox/work/workspace/exhibits/storage_v1/119b5e25-e763-4619-ae08-982f11883e9d/79180dda-bbb1-4a17-bd1b-1d2a4fe80400_1754447795194_item_media.pdf",
+        "exhibit_uuid": "119b5e25-e763-4619-ae08-982f11883e9d",
+        "filename": "79180dda-bbb1-4a17-bd1b-1d2a4fe80400_1754447795194_item_media.pdf"
+      },
+      {
+        "file": "/Users/fernando.reyes/Dropbox/work/workspace/exhibits/storage_v1/162bf0f1-6a31-428f-887d-ad2e07ce572a/162bf0f1-6a31-428f-887d-ad2e07ce572a_1741645444494_exhibit_hero.jpg",
+        "exhibit_uuid": "162bf0f1-6a31-428f-887d-ad2e07ce572a",
+        "filename": "162bf0f1-6a31-428f-887d-ad2e07ce572a_1741645444494_exhibit_hero.jpg"
+      },
+      {
+        "file": "/Users/fernando.reyes/Dropbox/work/workspace/exhibits/storage_v1/1a37ef6b-863e-45b5-8fdf-37ec54654fc9/0162565e-2e8b-4fcd-9b81-4ef26fa3cd5d_1752179421009_item_media.jpg",
+        "exhibit_uuid": "1a37ef6b-863e-45b5-8fdf-37ec54654fc9",
+        "filename": "0162565e-2e8b-4fcd-9b81-4ef26fa3cd5d_1752179421009_item_media.jpg"
+      },
+      {
+        "file": "/Users/fernando.reyes/Dropbox/work/workspace/exhibits/storage_v1/1a37ef6b-863e-45b5-8fdf-37ec54654fc9/126bae4a-bc47-4ae0-9af2-d3f0725eeb9d_1752270072419_item_thumbnail.jpg",
+        "exhibit_uuid": "1a37ef6b-863e-45b5-8fdf-37ec54654fc9",
+        "filename": "126bae4a-bc47-4ae0-9af2-d3f0725eeb9d_1752270072419_item_thumbnail.jpg"
+      },
+      {
+        "file": "/Users/fernando.reyes/Dropbox/work/workspace/exhibits/storage_v1/1a37ef6b-863e-45b5-8fdf-37ec54654fc9/1372e1fc-d994-4748-8d68-acca8e704611_1752260328396_item_media.jpg",
+        "exhibit_uuid": "1a37ef6b-863e-45b5-8fdf-37ec54654fc9",
+        "filename": "1372e1fc-d994-4748-8d68-acca8e704611_1752260328396_item_media.jpg"
+      },
+      {
+        "file": "/Users/fernando.reyes/Dropbox/work/workspace/exhibits/storage_v1/1a37ef6b-863e-45b5-8fdf-37ec54654fc9/1edab233-e771-4253-8d30-7af082b990b8_1752179791703_item_media.jpg",
+        "exhibit_uuid": "1a37ef6b-863e-45b5-8fdf-37ec54654fc9",
+        "filename": "1edab233-e771-4253-8d30-7af082b990b8_1752179791703_item_media.jpg"
+      },
+      {
+        "file": "/Users/fernando.reyes/Dropbox/work/workspace/exhibits/storage_v1/1a37ef6b-863e-45b5-8fdf-37ec54654fc9/3213954c-0775-43ad-9e2a-ef6905da4bd5_1752691806955_item_media.jpg",
+        "exhibit_uuid": "1a37ef6b-863e-45b5-8fdf-37ec54654fc9",
+        "filename": "3213954c-0775-43ad-9e2a-ef6905da4bd5_1752691806955_item_media.jpg"
+      },
+      {
+        "file": "/Users/fernando.reyes/Dropbox/work/workspace/exhibits/storage_v1/1a37ef6b-863e-45b5-8fdf-37ec54654fc9/3c36d7c9-c69c-4ec7-9a23-c5e833d95594_1752251737267_item_media.png",
+        "exhibit_uuid": "1a37ef6b-863e-45b5-8fdf-37ec54654fc9",
+        "filename": "3c36d7c9-c69c-4ec7-9a23-c5e833d95594_1752251737267_item_media.png"
+      },
+      {
+        "file": "/Users/fernando.reyes/Dropbox/work/workspace/exhibits/storage_v1/1a37ef6b-863e-45b5-8fdf-37ec54654fc9/3ef11fd1-83cd-4b4e-ae91-c033298424a6_1752252171084_item_media.jpg",
+        "exhibit_uuid": "1a37ef6b-863e-45b5-8fdf-37ec54654fc9",
+        "filename": "3ef11fd1-83cd-4b4e-ae91-c033298424a6_1752252171084_item_media.jpg"
+      },
+      {
+        "file": "/Users/fernando.reyes/Dropbox/work/workspace/exhibits/storage_v1/1a37ef6b-863e-45b5-8fdf-37ec54654fc9/50fe6b9b-4b20-4f8e-aa80-f6a81221fe8c_1752180605091_item_media.jpg",
+        "exhibit_uuid": "1a37ef6b-863e-45b5-8fdf-37ec54654fc9",
+        "filename": "50fe6b9b-4b20-4f8e-aa80-f6a81221fe8c_1752180605091_item_media.jpg"
+      },
+      {
+        "file": "/Users/fernando.reyes/Dropbox/work/workspace/exhibits/storage_v1/1a37ef6b-863e-45b5-8fdf-37ec54654fc9/5159ad3a-e827-4656-9372-ce067a6ec4a1_1752179994523_item_media.jpg",
+        "exhibit_uuid": "1a37ef6b-863e-45b5-8fdf-37ec54654fc9",
+        "filename": "5159ad3a-e827-4656-9372-ce067a6ec4a1_1752179994523_item_media.jpg"
+      },
+      {
+        "file": "/Users/fernando.reyes/Dropbox/work/workspace/exhibits/storage_v1/1a37ef6b-863e-45b5-8fdf-37ec54654fc9/6fec1b32-ff5a-4951-b946-baec1900fc2a_1752180128678_item_media.jpg",
+        "exhibit_uuid": "1a37ef6b-863e-45b5-8fdf-37ec54654fc9",
+        "filename": "6fec1b32-ff5a-4951-b946-baec1900fc2a_1752180128678_item_media.jpg"
+      },
+      {
+        "file": "/Users/fernando.reyes/Dropbox/work/workspace/exhibits/storage_v1/1a37ef6b-863e-45b5-8fdf-37ec54654fc9/aa3e9aba-3ed8-46cc-95fb-253cb0b4ea84_1752253042186_item_media.jpg",
+        "exhibit_uuid": "1a37ef6b-863e-45b5-8fdf-37ec54654fc9",
+        "filename": "aa3e9aba-3ed8-46cc-95fb-253cb0b4ea84_1752253042186_item_media.jpg"
+      },
+      {
+        "file": "/Users/fernando.reyes/Dropbox/work/workspace/exhibits/storage_v1/1a37ef6b-863e-45b5-8fdf-37ec54654fc9/d252da3d-8dc4-4823-b54c-7c37b4d41228_1752257312804_item_media.pdf",
+        "exhibit_uuid": "1a37ef6b-863e-45b5-8fdf-37ec54654fc9",
+        "filename": "d252da3d-8dc4-4823-b54c-7c37b4d41228_1752257312804_item_media.pdf"
+      },
+      {
+        "file": "/Users/fernando.reyes/Dropbox/work/workspace/exhibits/storage_v1/1a37ef6b-863e-45b5-8fdf-37ec54654fc9/d72d270e-c739-480f-a6ab-945c9dc81750_1752684965716_item_media.jpg",
+        "exhibit_uuid": "1a37ef6b-863e-45b5-8fdf-37ec54654fc9",
+        "filename": "d72d270e-c739-480f-a6ab-945c9dc81750_1752684965716_item_media.jpg"
+      },
+      {
+        "file": "/Users/fernando.reyes/Dropbox/work/workspace/exhibits/storage_v1/3f23ddc0d2d77a9de6eb37d6896c1fd3/example-exhibit-short_hero.jpg",
+        "exhibit_uuid": "3f23ddc0d2d77a9de6eb37d6896c1fd3",
+        "filename": "example-exhibit-short_hero.jpg"
+      },
+      {
+        "file": "/Users/fernando.reyes/Dropbox/work/workspace/exhibits/storage_v1/3f23ddc0d2d77a9de6eb37d6896c1fd3/example-exhibit_2_tn.jpg",
+        "exhibit_uuid": "3f23ddc0d2d77a9de6eb37d6896c1fd3",
+        "filename": "example-exhibit_2_tn.jpg"
+      },
+      {
+        "file": "/Users/fernando.reyes/Dropbox/work/workspace/exhibits/storage_v1/44b4e456-8d05-4e71-a427-0b3af68a3e76/44b4e456-8d05-4e71-a427-0b3af68a3e76_1737586436119_exhibit_hero.jpg",
+        "exhibit_uuid": "44b4e456-8d05-4e71-a427-0b3af68a3e76",
+        "filename": "44b4e456-8d05-4e71-a427-0b3af68a3e76_1737586436119_exhibit_hero.jpg"
+      },
+      {
+        "file": "/Users/fernando.reyes/Dropbox/work/workspace/exhibits/storage_v1/44b4e456-8d05-4e71-a427-0b3af68a3e76/44b4e456-8d05-4e71-a427-0b3af68a3e76_1737586506329_exhibit_thumbnail.jpg",
+        "exhibit_uuid": "44b4e456-8d05-4e71-a427-0b3af68a3e76",
+        "filename": "44b4e456-8d05-4e71-a427-0b3af68a3e76_1737586506329_exhibit_thumbnail.jpg"
+      },
+      {
+        "file": "/Users/fernando.reyes/Dropbox/work/workspace/exhibits/storage_v1/4f491950-fdfd-44a4-9701-9d28a814652f/4f491950-fdfd-44a4-9701-9d28a814652f_1736281862132_exhibit_hero.jpg",
+        "exhibit_uuid": "4f491950-fdfd-44a4-9701-9d28a814652f",
+        "filename": "4f491950-fdfd-44a4-9701-9d28a814652f_1736281862132_exhibit_hero.jpg"
+      },
+      {
+        "file": "/Users/fernando.reyes/Dropbox/work/workspace/exhibits/storage_v1/4f491950-fdfd-44a4-9701-9d28a814652f/4f491950-fdfd-44a4-9701-9d28a814652f_1736459171917_exhibit_thumbnail.jpg",
+        "exhibit_uuid": "4f491950-fdfd-44a4-9701-9d28a814652f",
+        "filename": "4f491950-fdfd-44a4-9701-9d28a814652f_1736459171917_exhibit_thumbnail.jpg"
+      },
+      {
+        "file": "/Users/fernando.reyes/Dropbox/work/workspace/exhibits/storage_v1/4f491950-fdfd-44a4-9701-9d28a814652f/7b03c800-fc78-41fd-98d7-cb5ec6f41256_1736452609035_item_media.jpg",
+        "exhibit_uuid": "4f491950-fdfd-44a4-9701-9d28a814652f",
+        "filename": "7b03c800-fc78-41fd-98d7-cb5ec6f41256_1736452609035_item_media.jpg"
+      },
+      {
+        "file": "/Users/fernando.reyes/Dropbox/work/workspace/exhibits/storage_v1/4f491950-fdfd-44a4-9701-9d28a814652f/b306db51-a84d-4972-abdf-35c1b187f422_1731451971747_item_thumbnail.jpg",
+        "exhibit_uuid": "4f491950-fdfd-44a4-9701-9d28a814652f",
+        "filename": "b306db51-a84d-4972-abdf-35c1b187f422_1731451971747_item_thumbnail.jpg"
+      },
+      {
+        "file": "/Users/fernando.reyes/Dropbox/work/workspace/exhibits/storage_v1/4f491950-fdfd-44a4-9701-9d28a814652f/b306db51-a84d-4972-abdf-35c1b187f422_1731452110272_item_media.pdf",
+        "exhibit_uuid": "4f491950-fdfd-44a4-9701-9d28a814652f",
+        "filename": "b306db51-a84d-4972-abdf-35c1b187f422_1731452110272_item_media.pdf"
+      },
+      {
+        "file": "/Users/fernando.reyes/Dropbox/work/workspace/exhibits/storage_v1/4f6d167c-7c92-4022-a969-5ae910dd0de3/2b40310c-f50c-4b60-b433-4431d0cf5ab2_1732216135210_item_media.jpg",
+        "exhibit_uuid": "4f6d167c-7c92-4022-a969-5ae910dd0de3",
+        "filename": "2b40310c-f50c-4b60-b433-4431d0cf5ab2_1732216135210_item_media.jpg"
+      },
+      {
+        "file": "/Users/fernando.reyes/Dropbox/work/workspace/exhibits/storage_v1/4f6d167c-7c92-4022-a969-5ae910dd0de3/36a6e6eb-9511-4518-ae71-6682a1059976_1732055626824_item_media.jpg",
+        "exhibit_uuid": "4f6d167c-7c92-4022-a969-5ae910dd0de3",
+        "filename": "36a6e6eb-9511-4518-ae71-6682a1059976_1732055626824_item_media.jpg"
+      },
+      {
+        "file": "/Users/fernando.reyes/Dropbox/work/workspace/exhibits/storage_v1/4f6d167c-7c92-4022-a969-5ae910dd0de3/4f6d167c-7c92-4022-a969-5ae910dd0de3_1732054481600_exhibit_hero.png",
+        "exhibit_uuid": "4f6d167c-7c92-4022-a969-5ae910dd0de3",
+        "filename": "4f6d167c-7c92-4022-a969-5ae910dd0de3_1732054481600_exhibit_hero.png"
+      },
+      {
+        "file": "/Users/fernando.reyes/Dropbox/work/workspace/exhibits/storage_v1/4f6d167c-7c92-4022-a969-5ae910dd0de3/4f6d167c-7c92-4022-a969-5ae910dd0de3_1732054523969_exhibit_thumbnail.jpg",
+        "exhibit_uuid": "4f6d167c-7c92-4022-a969-5ae910dd0de3",
+        "filename": "4f6d167c-7c92-4022-a969-5ae910dd0de3_1732054523969_exhibit_thumbnail.jpg"
+      },
+      {
+        "file": "/Users/fernando.reyes/Dropbox/work/workspace/exhibits/storage_v1/539f9040-95c1-4b40-9e22-f25424c204f0/539f9040-95c1-4b40-9e22-f25424c204f0_1732645617125_exhibit_hero.jpg",
+        "exhibit_uuid": "539f9040-95c1-4b40-9e22-f25424c204f0",
+        "filename": "539f9040-95c1-4b40-9e22-f25424c204f0_1732645617125_exhibit_hero.jpg"
+      },
+      {
+        "file": "/Users/fernando.reyes/Dropbox/work/workspace/exhibits/storage_v1/539f9040-95c1-4b40-9e22-f25424c204f0/539f9040-95c1-4b40-9e22-f25424c204f0_1732645626862_exhibit_thumbnail.jpg",
+        "exhibit_uuid": "539f9040-95c1-4b40-9e22-f25424c204f0",
+        "filename": "539f9040-95c1-4b40-9e22-f25424c204f0_1732645626862_exhibit_thumbnail.jpg"
+      },
+      {
+        "file": "/Users/fernando.reyes/Dropbox/work/workspace/exhibits/storage_v1/642bbd319b780725f753b15e1df520e6/066cd940666788e636ce2861be6c280b.jpg",
+        "exhibit_uuid": "642bbd319b780725f753b15e1df520e6",
+        "filename": "066cd940666788e636ce2861be6c280b.jpg"
+      },
+      {
+        "file": "/Users/fernando.reyes/Dropbox/work/workspace/exhibits/storage_v1/642bbd319b780725f753b15e1df520e6/066cd940666788e636ce2861be6c280b_thumbnail.jpg",
+        "exhibit_uuid": "642bbd319b780725f753b15e1df520e6",
+        "filename": "066cd940666788e636ce2861be6c280b_thumbnail.jpg"
+      },
+      {
+        "file": "/Users/fernando.reyes/Dropbox/work/workspace/exhibits/storage_v1/642bbd319b780725f753b15e1df520e6/14805c26cb22be95408def7b0c4e3302.jpg",
+        "exhibit_uuid": "642bbd319b780725f753b15e1df520e6",
+        "filename": "14805c26cb22be95408def7b0c4e3302.jpg"
+      },
+      {
+        "file": "/Users/fernando.reyes/Dropbox/work/workspace/exhibits/storage_v1/642bbd319b780725f753b15e1df520e6/14805c26cb22be95408def7b0c4e3302_thumbnail.jpg",
+        "exhibit_uuid": "642bbd319b780725f753b15e1df520e6",
+        "filename": "14805c26cb22be95408def7b0c4e3302_thumbnail.jpg"
+      },
+      {
+        "file": "/Users/fernando.reyes/Dropbox/work/workspace/exhibits/storage_v1/642bbd319b780725f753b15e1df520e6/178740016e6fe0be339731bcf35775e4.jpg",
+        "exhibit_uuid": "642bbd319b780725f753b15e1df520e6",
+        "filename": "178740016e6fe0be339731bcf35775e4.jpg"
+      },
+      {
+        "file": "/Users/fernando.reyes/Dropbox/work/workspace/exhibits/storage_v1/642bbd319b780725f753b15e1df520e6/178740016e6fe0be339731bcf35775e4_thumbnail.jpg",
+        "exhibit_uuid": "642bbd319b780725f753b15e1df520e6",
+        "filename": "178740016e6fe0be339731bcf35775e4_thumbnail.jpg"
+      },
+      {
+        "file": "/Users/fernando.reyes/Dropbox/work/workspace/exhibits/storage_v1/642bbd319b780725f753b15e1df520e6/186430fa98d662a16244017aa4370a55.jpg",
+        "exhibit_uuid": "642bbd319b780725f753b15e1df520e6",
+        "filename": "186430fa98d662a16244017aa4370a55.jpg"
+      },
+      {
+        "file": "/Users/fernando.reyes/Dropbox/work/workspace/exhibits/storage_v1/642bbd319b780725f753b15e1df520e6/186430fa98d662a16244017aa4370a55_thumbnail.jpg",
+        "exhibit_uuid": "642bbd319b780725f753b15e1df520e6",
+        "filename": "186430fa98d662a16244017aa4370a55_thumbnail.jpg"
+      },
+      {
+        "file": "/Users/fernando.reyes/Dropbox/work/workspace/exhibits/storage_v1/642bbd319b780725f753b15e1df520e6/193d21bba6e1b87859cba161529f5989.jpg",
+        "exhibit_uuid": "642bbd319b780725f753b15e1df520e6",
+        "filename": "193d21bba6e1b87859cba161529f5989.jpg"
+      },
+      {
+        "file": "/Users/fernando.reyes/Dropbox/work/workspace/exhibits/storage_v1/642bbd319b780725f753b15e1df520e6/193d21bba6e1b87859cba161529f5989_thumbnail.jpg",
+        "exhibit_uuid": "642bbd319b780725f753b15e1df520e6",
+        "filename": "193d21bba6e1b87859cba161529f5989_thumbnail.jpg"
+      },
+      {
+        "file": "/Users/fernando.reyes/Dropbox/work/workspace/exhibits/storage_v1/642bbd319b780725f753b15e1df520e6/223b79dd2b8b47254a7faa900a1466c1.jpg",
+        "exhibit_uuid": "642bbd319b780725f753b15e1df520e6",
+        "filename": "223b79dd2b8b47254a7faa900a1466c1.jpg"
+      },
+      {
+        "file": "/Users/fernando.reyes/Dropbox/work/workspace/exhibits/storage_v1/642bbd319b780725f753b15e1df520e6/246710f929e62033e185cb6fb706a0c8.jpg",
+        "exhibit_uuid": "642bbd319b780725f753b15e1df520e6",
+        "filename": "246710f929e62033e185cb6fb706a0c8.jpg"
+      },
+      {
+        "file": "/Users/fernando.reyes/Dropbox/work/workspace/exhibits/storage_v1/642bbd319b780725f753b15e1df520e6/25c31c12e6ffe865f8a169ec67d023e5.jpg",
+        "exhibit_uuid": "642bbd319b780725f753b15e1df520e6",
+        "filename": "25c31c12e6ffe865f8a169ec67d023e5.jpg"
+      },
+      {
+        "file": "/Users/fernando.reyes/Dropbox/work/workspace/exhibits/storage_v1/642bbd319b780725f753b15e1df520e6/25c31c12e6ffe865f8a169ec67d023e5_thumbnail.jpg",
+        "exhibit_uuid": "642bbd319b780725f753b15e1df520e6",
+        "filename": "25c31c12e6ffe865f8a169ec67d023e5_thumbnail.jpg"
+      },
+      {
+        "file": "/Users/fernando.reyes/Dropbox/work/workspace/exhibits/storage_v1/642bbd319b780725f753b15e1df520e6/28314325314843dcbf419a82d7b18c72.jpg",
+        "exhibit_uuid": "642bbd319b780725f753b15e1df520e6",
+        "filename": "28314325314843dcbf419a82d7b18c72.jpg"
+      },
+      {
+        "file": "/Users/fernando.reyes/Dropbox/work/workspace/exhibits/storage_v1/642bbd319b780725f753b15e1df520e6/29393129b02278f9067d90b351d2ddbb.jpg",
+        "exhibit_uuid": "642bbd319b780725f753b15e1df520e6",
+        "filename": "29393129b02278f9067d90b351d2ddbb.jpg"
+      },
+      {
+        "file": "/Users/fernando.reyes/Dropbox/work/workspace/exhibits/storage_v1/642bbd319b780725f753b15e1df520e6/29393129b02278f9067d90b351d2ddbb_thumbnail.jpg",
+        "exhibit_uuid": "642bbd319b780725f753b15e1df520e6",
+        "filename": "29393129b02278f9067d90b351d2ddbb_thumbnail.jpg"
+      },
+      {
+        "file": "/Users/fernando.reyes/Dropbox/work/workspace/exhibits/storage_v1/642bbd319b780725f753b15e1df520e6/30d1f17750276a4c596e8e498e0097ed.jpg",
+        "exhibit_uuid": "642bbd319b780725f753b15e1df520e6",
+        "filename": "30d1f17750276a4c596e8e498e0097ed.jpg"
+      },
+      {
+        "file": "/Users/fernando.reyes/Dropbox/work/workspace/exhibits/storage_v1/642bbd319b780725f753b15e1df520e6/34a00ddb80b5773e38e97d4520939522.jpg",
+        "exhibit_uuid": "642bbd319b780725f753b15e1df520e6",
+        "filename": "34a00ddb80b5773e38e97d4520939522.jpg"
+      },
+      {
+        "file": "/Users/fernando.reyes/Dropbox/work/workspace/exhibits/storage_v1/642bbd319b780725f753b15e1df520e6/38b759d7b0d212669d495466b79200ba.jpg",
+        "exhibit_uuid": "642bbd319b780725f753b15e1df520e6",
+        "filename": "38b759d7b0d212669d495466b79200ba.jpg"
+      },
+      {
+        "file": "/Users/fernando.reyes/Dropbox/work/workspace/exhibits/storage_v1/642bbd319b780725f753b15e1df520e6/38b759d7b0d212669d495466b79200ba_thumbnail.jpg",
+        "exhibit_uuid": "642bbd319b780725f753b15e1df520e6",
+        "filename": "38b759d7b0d212669d495466b79200ba_thumbnail.jpg"
+      },
+      {
+        "file": "/Users/fernando.reyes/Dropbox/work/workspace/exhibits/storage_v1/642bbd319b780725f753b15e1df520e6/4985efa41ead92c40c96667c0b938e2a.jpg",
+        "exhibit_uuid": "642bbd319b780725f753b15e1df520e6",
+        "filename": "4985efa41ead92c40c96667c0b938e2a.jpg"
+      },
+      {
+        "file": "/Users/fernando.reyes/Dropbox/work/workspace/exhibits/storage_v1/642bbd319b780725f753b15e1df520e6/4ed4afb562beaf2a001103425d51b80c.jpg",
+        "exhibit_uuid": "642bbd319b780725f753b15e1df520e6",
+        "filename": "4ed4afb562beaf2a001103425d51b80c.jpg"
+      },
+      {
+        "file": "/Users/fernando.reyes/Dropbox/work/workspace/exhibits/storage_v1/642bbd319b780725f753b15e1df520e6/53db5147ecb655a245af43a31c53680a.jpg",
+        "exhibit_uuid": "642bbd319b780725f753b15e1df520e6",
+        "filename": "53db5147ecb655a245af43a31c53680a.jpg"
+      },
+      {
+        "file": "/Users/fernando.reyes/Dropbox/work/workspace/exhibits/storage_v1/642bbd319b780725f753b15e1df520e6/53db5147ecb655a245af43a31c53680a_thumbnail.jpg",
+        "exhibit_uuid": "642bbd319b780725f753b15e1df520e6",
+        "filename": "53db5147ecb655a245af43a31c53680a_thumbnail.jpg"
+      },
+      {
+        "file": "/Users/fernando.reyes/Dropbox/work/workspace/exhibits/storage_v1/642bbd319b780725f753b15e1df520e6/551e72040bba049c3fc6b88e27cf0396.jpg",
+        "exhibit_uuid": "642bbd319b780725f753b15e1df520e6",
+        "filename": "551e72040bba049c3fc6b88e27cf0396.jpg"
+      },
+      {
+        "file": "/Users/fernando.reyes/Dropbox/work/workspace/exhibits/storage_v1/642bbd319b780725f753b15e1df520e6/57490714858f4d5fa5ecf905486ea809.jpg",
+        "exhibit_uuid": "642bbd319b780725f753b15e1df520e6",
+        "filename": "57490714858f4d5fa5ecf905486ea809.jpg"
+      },
+      {
+        "file": "/Users/fernando.reyes/Dropbox/work/workspace/exhibits/storage_v1/642bbd319b780725f753b15e1df520e6/57490714858f4d5fa5ecf905486ea809_thumbnail.jpg",
+        "exhibit_uuid": "642bbd319b780725f753b15e1df520e6",
+        "filename": "57490714858f4d5fa5ecf905486ea809_thumbnail.jpg"
+      },
+      {
+        "file": "/Users/fernando.reyes/Dropbox/work/workspace/exhibits/storage_v1/642bbd319b780725f753b15e1df520e6/58ae3b5c7c112963e18efa6200ba0f52.jpg",
+        "exhibit_uuid": "642bbd319b780725f753b15e1df520e6",
+        "filename": "58ae3b5c7c112963e18efa6200ba0f52.jpg"
+      },
+      {
+        "file": "/Users/fernando.reyes/Dropbox/work/workspace/exhibits/storage_v1/642bbd319b780725f753b15e1df520e6/58ae3b5c7c112963e18efa6200ba0f52_thumbnail.jpg",
+        "exhibit_uuid": "642bbd319b780725f753b15e1df520e6",
+        "filename": "58ae3b5c7c112963e18efa6200ba0f52_thumbnail.jpg"
+      },
+      {
+        "file": "/Users/fernando.reyes/Dropbox/work/workspace/exhibits/storage_v1/642bbd319b780725f753b15e1df520e6/70cab42868fef125b821195d70c69973.jpg",
+        "exhibit_uuid": "642bbd319b780725f753b15e1df520e6",
+        "filename": "70cab42868fef125b821195d70c69973.jpg"
+      },
+      {
+        "file": "/Users/fernando.reyes/Dropbox/work/workspace/exhibits/storage_v1/642bbd319b780725f753b15e1df520e6/70cab42868fef125b821195d70c69973_thumbnail.jpg",
+        "exhibit_uuid": "642bbd319b780725f753b15e1df520e6",
+        "filename": "70cab42868fef125b821195d70c69973_thumbnail.jpg"
+      },
+      {
+        "file": "/Users/fernando.reyes/Dropbox/work/workspace/exhibits/storage_v1/642bbd319b780725f753b15e1df520e6/712145dc6230b4dec142cf338f77bc16.jpg",
+        "exhibit_uuid": "642bbd319b780725f753b15e1df520e6",
+        "filename": "712145dc6230b4dec142cf338f77bc16.jpg"
+      },
+      {
+        "file": "/Users/fernando.reyes/Dropbox/work/workspace/exhibits/storage_v1/642bbd319b780725f753b15e1df520e6/712145dc6230b4dec142cf338f77bc16_thumbnail.jpg",
+        "exhibit_uuid": "642bbd319b780725f753b15e1df520e6",
+        "filename": "712145dc6230b4dec142cf338f77bc16_thumbnail.jpg"
+      },
+      {
+        "file": "/Users/fernando.reyes/Dropbox/work/workspace/exhibits/storage_v1/642bbd319b780725f753b15e1df520e6/752ad7e7a8bf26193d1c73ff2daa9078.jpg",
+        "exhibit_uuid": "642bbd319b780725f753b15e1df520e6",
+        "filename": "752ad7e7a8bf26193d1c73ff2daa9078.jpg"
+      },
+      {
+        "file": "/Users/fernando.reyes/Dropbox/work/workspace/exhibits/storage_v1/642bbd319b780725f753b15e1df520e6/752ad7e7a8bf26193d1c73ff2daa9078_thumbnail.jpg",
+        "exhibit_uuid": "642bbd319b780725f753b15e1df520e6",
+        "filename": "752ad7e7a8bf26193d1c73ff2daa9078_thumbnail.jpg"
+      },
+      {
+        "file": "/Users/fernando.reyes/Dropbox/work/workspace/exhibits/storage_v1/642bbd319b780725f753b15e1df520e6/754e4e59f72c4f84b8dd05e14c9c6f70.jpg",
+        "exhibit_uuid": "642bbd319b780725f753b15e1df520e6",
+        "filename": "754e4e59f72c4f84b8dd05e14c9c6f70.jpg"
+      },
+      {
+        "file": "/Users/fernando.reyes/Dropbox/work/workspace/exhibits/storage_v1/642bbd319b780725f753b15e1df520e6/7f96a75a86a80b1620e266bcdc2e694c.jpg",
+        "exhibit_uuid": "642bbd319b780725f753b15e1df520e6",
+        "filename": "7f96a75a86a80b1620e266bcdc2e694c.jpg"
+      },
+      {
+        "file": "/Users/fernando.reyes/Dropbox/work/workspace/exhibits/storage_v1/642bbd319b780725f753b15e1df520e6/7f96a75a86a80b1620e266bcdc2e694c_thumbnail.jpg",
+        "exhibit_uuid": "642bbd319b780725f753b15e1df520e6",
+        "filename": "7f96a75a86a80b1620e266bcdc2e694c_thumbnail.jpg"
+      },
+      {
+        "file": "/Users/fernando.reyes/Dropbox/work/workspace/exhibits/storage_v1/642bbd319b780725f753b15e1df520e6/813f9bf984800fb2f570baeecff23fd3.jpg",
+        "exhibit_uuid": "642bbd319b780725f753b15e1df520e6",
+        "filename": "813f9bf984800fb2f570baeecff23fd3.jpg"
+      },
+      {
+        "file": "/Users/fernando.reyes/Dropbox/work/workspace/exhibits/storage_v1/642bbd319b780725f753b15e1df520e6/87abcb010c903891d8c752e0a21d5bad.jpg",
+        "exhibit_uuid": "642bbd319b780725f753b15e1df520e6",
+        "filename": "87abcb010c903891d8c752e0a21d5bad.jpg"
+      },
+      {
+        "file": "/Users/fernando.reyes/Dropbox/work/workspace/exhibits/storage_v1/642bbd319b780725f753b15e1df520e6/87abcb010c903891d8c752e0a21d5bad_thumbnail.jpg",
+        "exhibit_uuid": "642bbd319b780725f753b15e1df520e6",
+        "filename": "87abcb010c903891d8c752e0a21d5bad_thumbnail.jpg"
+      },
+      {
+        "file": "/Users/fernando.reyes/Dropbox/work/workspace/exhibits/storage_v1/642bbd319b780725f753b15e1df520e6/8924cc9ca4832409cff69133a9633324.jpg",
+        "exhibit_uuid": "642bbd319b780725f753b15e1df520e6",
+        "filename": "8924cc9ca4832409cff69133a9633324.jpg"
+      },
+      {
+        "file": "/Users/fernando.reyes/Dropbox/work/workspace/exhibits/storage_v1/642bbd319b780725f753b15e1df520e6/8924cc9ca4832409cff69133a9633324_thumbnail.jpg",
+        "exhibit_uuid": "642bbd319b780725f753b15e1df520e6",
+        "filename": "8924cc9ca4832409cff69133a9633324_thumbnail.jpg"
+      },
+      {
+        "file": "/Users/fernando.reyes/Dropbox/work/workspace/exhibits/storage_v1/642bbd319b780725f753b15e1df520e6/8c08d80b649e63b42ed247693dfaee85.jpg",
+        "exhibit_uuid": "642bbd319b780725f753b15e1df520e6",
+        "filename": "8c08d80b649e63b42ed247693dfaee85.jpg"
+      },
+      {
+        "file": "/Users/fernando.reyes/Dropbox/work/workspace/exhibits/storage_v1/642bbd319b780725f753b15e1df520e6/8c08d80b649e63b42ed247693dfaee85_thumbnail.jpg",
+        "exhibit_uuid": "642bbd319b780725f753b15e1df520e6",
+        "filename": "8c08d80b649e63b42ed247693dfaee85_thumbnail.jpg"
+      },
+      {
+        "file": "/Users/fernando.reyes/Dropbox/work/workspace/exhibits/storage_v1/642bbd319b780725f753b15e1df520e6/8e358a3f6374e0eeddb1c68384fe7b63.jpg",
+        "exhibit_uuid": "642bbd319b780725f753b15e1df520e6",
+        "filename": "8e358a3f6374e0eeddb1c68384fe7b63.jpg"
+      },
+      {
+        "file": "/Users/fernando.reyes/Dropbox/work/workspace/exhibits/storage_v1/642bbd319b780725f753b15e1df520e6/970090255a7ff0d477cef3055d023e29.jpg",
+        "exhibit_uuid": "642bbd319b780725f753b15e1df520e6",
+        "filename": "970090255a7ff0d477cef3055d023e29.jpg"
+      },
+      {
+        "file": "/Users/fernando.reyes/Dropbox/work/workspace/exhibits/storage_v1/642bbd319b780725f753b15e1df520e6/970090255a7ff0d477cef3055d023e29_thumbnail.jpg",
+        "exhibit_uuid": "642bbd319b780725f753b15e1df520e6",
+        "filename": "970090255a7ff0d477cef3055d023e29_thumbnail.jpg"
+      },
+      {
+        "file": "/Users/fernando.reyes/Dropbox/work/workspace/exhibits/storage_v1/642bbd319b780725f753b15e1df520e6/9b8e67a588b15512be5a10c5965b2d03.jpg",
+        "exhibit_uuid": "642bbd319b780725f753b15e1df520e6",
+        "filename": "9b8e67a588b15512be5a10c5965b2d03.jpg"
+      },
+      {
+        "file": "/Users/fernando.reyes/Dropbox/work/workspace/exhibits/storage_v1/642bbd319b780725f753b15e1df520e6/9d8dca4be5c1ec722cb999aee7c41c30.jpg",
+        "exhibit_uuid": "642bbd319b780725f753b15e1df520e6",
+        "filename": "9d8dca4be5c1ec722cb999aee7c41c30.jpg"
+      },
+      {
+        "file": "/Users/fernando.reyes/Dropbox/work/workspace/exhibits/storage_v1/642bbd319b780725f753b15e1df520e6/9d8dca4be5c1ec722cb999aee7c41c30_thumbnail.jpg",
+        "exhibit_uuid": "642bbd319b780725f753b15e1df520e6",
+        "filename": "9d8dca4be5c1ec722cb999aee7c41c30_thumbnail.jpg"
+      },
+      {
+        "file": "/Users/fernando.reyes/Dropbox/work/workspace/exhibits/storage_v1/642bbd319b780725f753b15e1df520e6/a0494efce4628c9f09cb150359f03183.jpg",
+        "exhibit_uuid": "642bbd319b780725f753b15e1df520e6",
+        "filename": "a0494efce4628c9f09cb150359f03183.jpg"
+      },
+      {
+        "file": "/Users/fernando.reyes/Dropbox/work/workspace/exhibits/storage_v1/642bbd319b780725f753b15e1df520e6/a24f99e877cd460fa6cb4a1ac6b27ab2.jpg",
+        "exhibit_uuid": "642bbd319b780725f753b15e1df520e6",
+        "filename": "a24f99e877cd460fa6cb4a1ac6b27ab2.jpg"
+      },
+      {
+        "file": "/Users/fernando.reyes/Dropbox/work/workspace/exhibits/storage_v1/642bbd319b780725f753b15e1df520e6/a4242f67b5251b76880be436d232b3a7.jpg",
+        "exhibit_uuid": "642bbd319b780725f753b15e1df520e6",
+        "filename": "a4242f67b5251b76880be436d232b3a7.jpg"
+      },
+      {
+        "file": "/Users/fernando.reyes/Dropbox/work/workspace/exhibits/storage_v1/642bbd319b780725f753b15e1df520e6/a4242f67b5251b76880be436d232b3a7_thumbnail.jpg",
+        "exhibit_uuid": "642bbd319b780725f753b15e1df520e6",
+        "filename": "a4242f67b5251b76880be436d232b3a7_thumbnail.jpg"
+      },
+      {
+        "file": "/Users/fernando.reyes/Dropbox/work/workspace/exhibits/storage_v1/642bbd319b780725f753b15e1df520e6/ab09e73e2f7d7183b8103f6314547b23.jpg",
+        "exhibit_uuid": "642bbd319b780725f753b15e1df520e6",
+        "filename": "ab09e73e2f7d7183b8103f6314547b23.jpg"
+      },
+      {
+        "file": "/Users/fernando.reyes/Dropbox/work/workspace/exhibits/storage_v1/642bbd319b780725f753b15e1df520e6/ab09e73e2f7d7183b8103f6314547b23_thumbnail.jpg",
+        "exhibit_uuid": "642bbd319b780725f753b15e1df520e6",
+        "filename": "ab09e73e2f7d7183b8103f6314547b23_thumbnail.jpg"
+      },
+      {
+        "file": "/Users/fernando.reyes/Dropbox/work/workspace/exhibits/storage_v1/642bbd319b780725f753b15e1df520e6/ab497485f287c2e3d5950d6739a1e4c3.jpg",
+        "exhibit_uuid": "642bbd319b780725f753b15e1df520e6",
+        "filename": "ab497485f287c2e3d5950d6739a1e4c3.jpg"
+      },
+      {
+        "file": "/Users/fernando.reyes/Dropbox/work/workspace/exhibits/storage_v1/642bbd319b780725f753b15e1df520e6/acef71bac830941fede13896fa1ae5f0.jpg",
+        "exhibit_uuid": "642bbd319b780725f753b15e1df520e6",
+        "filename": "acef71bac830941fede13896fa1ae5f0.jpg"
+      },
+      {
+        "file": "/Users/fernando.reyes/Dropbox/work/workspace/exhibits/storage_v1/642bbd319b780725f753b15e1df520e6/acef71bac830941fede13896fa1ae5f0_thumbnail.jpg",
+        "exhibit_uuid": "642bbd319b780725f753b15e1df520e6",
+        "filename": "acef71bac830941fede13896fa1ae5f0_thumbnail.jpg"
+      },
+      {
+        "file": "/Users/fernando.reyes/Dropbox/work/workspace/exhibits/storage_v1/642bbd319b780725f753b15e1df520e6/c51a4a07ae5ccc5111165828c2627e17.jpg",
+        "exhibit_uuid": "642bbd319b780725f753b15e1df520e6",
+        "filename": "c51a4a07ae5ccc5111165828c2627e17.jpg"
+      },
+      {
+        "file": "/Users/fernando.reyes/Dropbox/work/workspace/exhibits/storage_v1/642bbd319b780725f753b15e1df520e6/c51a4a07ae5ccc5111165828c2627e17_thumbnail.jpg",
+        "exhibit_uuid": "642bbd319b780725f753b15e1df520e6",
+        "filename": "c51a4a07ae5ccc5111165828c2627e17_thumbnail.jpg"
+      },
+      {
+        "file": "/Users/fernando.reyes/Dropbox/work/workspace/exhibits/storage_v1/642bbd319b780725f753b15e1df520e6/c7c46bec90e13bbaf8becc24d41e4c0b.jpg",
+        "exhibit_uuid": "642bbd319b780725f753b15e1df520e6",
+        "filename": "c7c46bec90e13bbaf8becc24d41e4c0b.jpg"
+      },
+      {
+        "file": "/Users/fernando.reyes/Dropbox/work/workspace/exhibits/storage_v1/642bbd319b780725f753b15e1df520e6/c7c46bec90e13bbaf8becc24d41e4c0b_thumbnail.jpg",
+        "exhibit_uuid": "642bbd319b780725f753b15e1df520e6",
+        "filename": "c7c46bec90e13bbaf8becc24d41e4c0b_thumbnail.jpg"
+      },
+      {
+        "file": "/Users/fernando.reyes/Dropbox/work/workspace/exhibits/storage_v1/642bbd319b780725f753b15e1df520e6/cf8ad1c875cdc0e031d751a6237aee26.jpg",
+        "exhibit_uuid": "642bbd319b780725f753b15e1df520e6",
+        "filename": "cf8ad1c875cdc0e031d751a6237aee26.jpg"
+      },
+      {
+        "file": "/Users/fernando.reyes/Dropbox/work/workspace/exhibits/storage_v1/642bbd319b780725f753b15e1df520e6/cf8ad1c875cdc0e031d751a6237aee26_thumbnail.jpg",
+        "exhibit_uuid": "642bbd319b780725f753b15e1df520e6",
+        "filename": "cf8ad1c875cdc0e031d751a6237aee26_thumbnail.jpg"
+      },
+      {
+        "file": "/Users/fernando.reyes/Dropbox/work/workspace/exhibits/storage_v1/642bbd319b780725f753b15e1df520e6/d0362879647f8fd6957b86dbd63a2e6a.jpg",
+        "exhibit_uuid": "642bbd319b780725f753b15e1df520e6",
+        "filename": "d0362879647f8fd6957b86dbd63a2e6a.jpg"
+      },
+      {
+        "file": "/Users/fernando.reyes/Dropbox/work/workspace/exhibits/storage_v1/642bbd319b780725f753b15e1df520e6/dbd3754709ccc69dfe4d448e1060db5f.jpg",
+        "exhibit_uuid": "642bbd319b780725f753b15e1df520e6",
+        "filename": "dbd3754709ccc69dfe4d448e1060db5f.jpg"
+      },
+      {
+        "file": "/Users/fernando.reyes/Dropbox/work/workspace/exhibits/storage_v1/642bbd319b780725f753b15e1df520e6/dbd3754709ccc69dfe4d448e1060db5f_thumbnail.jpg",
+        "exhibit_uuid": "642bbd319b780725f753b15e1df520e6",
+        "filename": "dbd3754709ccc69dfe4d448e1060db5f_thumbnail.jpg"
+      },
+      {
+        "file": "/Users/fernando.reyes/Dropbox/work/workspace/exhibits/storage_v1/642bbd319b780725f753b15e1df520e6/e9700f45a7ef6ddeeb0c3498a20271e7.jpg",
+        "exhibit_uuid": "642bbd319b780725f753b15e1df520e6",
+        "filename": "e9700f45a7ef6ddeeb0c3498a20271e7.jpg"
+      },
+      {
+        "file": "/Users/fernando.reyes/Dropbox/work/workspace/exhibits/storage_v1/642bbd319b780725f753b15e1df520e6/f071bf073de862e6143bb5ff1922ca73.jpg",
+        "exhibit_uuid": "642bbd319b780725f753b15e1df520e6",
+        "filename": "f071bf073de862e6143bb5ff1922ca73.jpg"
+      },
+      {
+        "file": "/Users/fernando.reyes/Dropbox/work/workspace/exhibits/storage_v1/642bbd319b780725f753b15e1df520e6/f071bf073de862e6143bb5ff1922ca73_thumbnail.jpg",
+        "exhibit_uuid": "642bbd319b780725f753b15e1df520e6",
+        "filename": "f071bf073de862e6143bb5ff1922ca73_thumbnail.jpg"
+      },
+      {
+        "file": "/Users/fernando.reyes/Dropbox/work/workspace/exhibits/storage_v1/642bbd319b780725f753b15e1df520e6/f443a8662d25aa592870b4427d29fd06.jpg",
+        "exhibit_uuid": "642bbd319b780725f753b15e1df520e6",
+        "filename": "f443a8662d25aa592870b4427d29fd06.jpg"
+      },
+      {
+        "file": "/Users/fernando.reyes/Dropbox/work/workspace/exhibits/storage_v1/642bbd319b780725f753b15e1df520e6/f443a8662d25aa592870b4427d29fd06_thumbnail.jpg",
+        "exhibit_uuid": "642bbd319b780725f753b15e1df520e6",
+        "filename": "f443a8662d25aa592870b4427d29fd06_thumbnail.jpg"
+      },
+      {
+        "file": "/Users/fernando.reyes/Dropbox/work/workspace/exhibits/storage_v1/642bbd319b780725f753b15e1df520e6/f74f588886a267de3850bd30277111ff.jpg",
+        "exhibit_uuid": "642bbd319b780725f753b15e1df520e6",
+        "filename": "f74f588886a267de3850bd30277111ff.jpg"
+      },
+      {
+        "file": "/Users/fernando.reyes/Dropbox/work/workspace/exhibits/storage_v1/642bbd319b780725f753b15e1df520e6/f74f588886a267de3850bd30277111ff_thumbnail.jpg",
+        "exhibit_uuid": "642bbd319b780725f753b15e1df520e6",
+        "filename": "f74f588886a267de3850bd30277111ff_thumbnail.jpg"
+      },
+      {
+        "file": "/Users/fernando.reyes/Dropbox/work/workspace/exhibits/storage_v1/642bbd319b780725f753b15e1df520e6/f7df8944da8863fe45085177ec165ad4.jpg",
+        "exhibit_uuid": "642bbd319b780725f753b15e1df520e6",
+        "filename": "f7df8944da8863fe45085177ec165ad4.jpg"
+      },
+      {
+        "file": "/Users/fernando.reyes/Dropbox/work/workspace/exhibits/storage_v1/642bbd319b780725f753b15e1df520e6/f7df8944da8863fe45085177ec165ad4_thumbnail.jpg",
+        "exhibit_uuid": "642bbd319b780725f753b15e1df520e6",
+        "filename": "f7df8944da8863fe45085177ec165ad4_thumbnail.jpg"
+      },
+      {
+        "file": "/Users/fernando.reyes/Dropbox/work/workspace/exhibits/storage_v1/642bbd319b780725f753b15e1df520e6/hanya_holm_hero.jpg",
+        "exhibit_uuid": "642bbd319b780725f753b15e1df520e6",
+        "filename": "hanya_holm_hero.jpg"
+      },
+      {
+        "file": "/Users/fernando.reyes/Dropbox/work/workspace/exhibits/storage_v1/642bbd319b780725f753b15e1df520e6/hanya_holm_hero_thumbnail.jpg",
+        "exhibit_uuid": "642bbd319b780725f753b15e1df520e6",
+        "filename": "hanya_holm_hero_thumbnail.jpg"
+      },
+      {
+        "file": "/Users/fernando.reyes/Dropbox/work/workspace/exhibits/storage_v1/69a96c10-a37c-42e3-b31b-bc6c59ddea77/2120f4e9-5e1b-4447-b1da-196536beb0ba_1743801991262_item_media.jpg",
+        "exhibit_uuid": "69a96c10-a37c-42e3-b31b-bc6c59ddea77",
+        "filename": "2120f4e9-5e1b-4447-b1da-196536beb0ba_1743801991262_item_media.jpg"
+      },
+      {
+        "file": "/Users/fernando.reyes/Dropbox/work/workspace/exhibits/storage_v1/69a96c10-a37c-42e3-b31b-bc6c59ddea77/69a96c10-a37c-42e3-b31b-bc6c59ddea77_1738701953338_exhibit_hero.jpg",
+        "exhibit_uuid": "69a96c10-a37c-42e3-b31b-bc6c59ddea77",
+        "filename": "69a96c10-a37c-42e3-b31b-bc6c59ddea77_1738701953338_exhibit_hero.jpg"
+      },
+      {
+        "file": "/Users/fernando.reyes/Dropbox/work/workspace/exhibits/storage_v1/69a96c10-a37c-42e3-b31b-bc6c59ddea77/69a96c10-a37c-42e3-b31b-bc6c59ddea77_1738703900133_exhibit_thumbnail.jpg",
+        "exhibit_uuid": "69a96c10-a37c-42e3-b31b-bc6c59ddea77",
+        "filename": "69a96c10-a37c-42e3-b31b-bc6c59ddea77_1738703900133_exhibit_thumbnail.jpg"
+      },
+      {
+        "file": "/Users/fernando.reyes/Dropbox/work/workspace/exhibits/storage_v1/69a96c10-a37c-42e3-b31b-bc6c59ddea77/a27132d2-78e0-47ac-8fce-7f93f8213eae_1764876759161_item_media.jpg",
+        "exhibit_uuid": "69a96c10-a37c-42e3-b31b-bc6c59ddea77",
+        "filename": "a27132d2-78e0-47ac-8fce-7f93f8213eae_1764876759161_item_media.jpg"
+      },
+      {
+        "file": "/Users/fernando.reyes/Dropbox/work/workspace/exhibits/storage_v1/69a96c10-a37c-42e3-b31b-bc6c59ddea77/b55d1a46-ea83-4304-973c-43c86cf7a437_1764876377625_item_media.jpg",
+        "exhibit_uuid": "69a96c10-a37c-42e3-b31b-bc6c59ddea77",
+        "filename": "b55d1a46-ea83-4304-973c-43c86cf7a437_1764876377625_item_media.jpg"
+      },
+      {
+        "file": "/Users/fernando.reyes/Dropbox/work/workspace/exhibits/storage_v1/6e2c870481f9cb1a275025b04ed2b005/example-exhibit-short_hero.jpg",
+        "exhibit_uuid": "6e2c870481f9cb1a275025b04ed2b005",
+        "filename": "example-exhibit-short_hero.jpg"
+      },
+      {
+        "file": "/Users/fernando.reyes/Dropbox/work/workspace/exhibits/storage_v1/6e2c870481f9cb1a275025b04ed2b005/example-exhibit_3_tn.jpg",
+        "exhibit_uuid": "6e2c870481f9cb1a275025b04ed2b005",
+        "filename": "example-exhibit_3_tn.jpg"
+      },
+      {
+        "file": "/Users/fernando.reyes/Dropbox/work/workspace/exhibits/storage_v1/798a7820-65d3-49cc-b388-9f62428dcd0a/798a7820-65d3-49cc-b388-9f62428dcd0a_1737308850963_exhibit_hero.jpg",
+        "exhibit_uuid": "798a7820-65d3-49cc-b388-9f62428dcd0a",
+        "filename": "798a7820-65d3-49cc-b388-9f62428dcd0a_1737308850963_exhibit_hero.jpg"
+      },
+      {
+        "file": "/Users/fernando.reyes/Dropbox/work/workspace/exhibits/storage_v1/798a7820-65d3-49cc-b388-9f62428dcd0a/798a7820-65d3-49cc-b388-9f62428dcd0a_1737308854806_exhibit_thumbnail.jpg",
+        "exhibit_uuid": "798a7820-65d3-49cc-b388-9f62428dcd0a",
+        "filename": "798a7820-65d3-49cc-b388-9f62428dcd0a_1737308854806_exhibit_thumbnail.jpg"
+      },
+      {
+        "file": "/Users/fernando.reyes/Dropbox/work/workspace/exhibits/storage_v1/7b6be54c-8cff-4ee6-89aa-b66362ef5de8/7003ece7-af36-48b1-b621-3b32a56590df_1780075233026_item_media.jpg",
+        "exhibit_uuid": "7b6be54c-8cff-4ee6-89aa-b66362ef5de8",
+        "filename": "7003ece7-af36-48b1-b621-3b32a56590df_1780075233026_item_media.jpg"
+      },
+      {
+        "file": "/Users/fernando.reyes/Dropbox/work/workspace/exhibits/storage_v1/7b843505f749e10f8702eab4c1ec135f/02980675789dfc884662c2d93b51d65d.pdf",
+        "exhibit_uuid": "7b843505f749e10f8702eab4c1ec135f",
+        "filename": "02980675789dfc884662c2d93b51d65d.pdf"
+      },
+      {
+        "file": "/Users/fernando.reyes/Dropbox/work/workspace/exhibits/storage_v1/7b843505f749e10f8702eab4c1ec135f/05589dfdd8da819da6509f6054e85d27.jpg",
+        "exhibit_uuid": "7b843505f749e10f8702eab4c1ec135f",
+        "filename": "05589dfdd8da819da6509f6054e85d27.jpg"
+      },
+      {
+        "file": "/Users/fernando.reyes/Dropbox/work/workspace/exhibits/storage_v1/7b843505f749e10f8702eab4c1ec135f/068b8125347c75b7fe4a5cc10be397cf.jpg",
+        "exhibit_uuid": "7b843505f749e10f8702eab4c1ec135f",
+        "filename": "068b8125347c75b7fe4a5cc10be397cf.jpg"
+      },
+      {
+        "file": "/Users/fernando.reyes/Dropbox/work/workspace/exhibits/storage_v1/7b843505f749e10f8702eab4c1ec135f/08846873e2aed98aab3d7ba4eb978ef7.jpg",
+        "exhibit_uuid": "7b843505f749e10f8702eab4c1ec135f",
+        "filename": "08846873e2aed98aab3d7ba4eb978ef7.jpg"
+      },
+      {
+        "file": "/Users/fernando.reyes/Dropbox/work/workspace/exhibits/storage_v1/7b843505f749e10f8702eab4c1ec135f/08cc2789598f46146026100dfdfb4407.jpg",
+        "exhibit_uuid": "7b843505f749e10f8702eab4c1ec135f",
+        "filename": "08cc2789598f46146026100dfdfb4407.jpg"
+      },
+      {
+        "file": "/Users/fernando.reyes/Dropbox/work/workspace/exhibits/storage_v1/7b843505f749e10f8702eab4c1ec135f/0bc01c7a1dc9b6f630d0e52778391fc2.jpg",
+        "exhibit_uuid": "7b843505f749e10f8702eab4c1ec135f",
+        "filename": "0bc01c7a1dc9b6f630d0e52778391fc2.jpg"
+      },
+      {
+        "file": "/Users/fernando.reyes/Dropbox/work/workspace/exhibits/storage_v1/7b843505f749e10f8702eab4c1ec135f/0e5c0fa0d7ff657086b167f7ce9f53df.jpg",
+        "exhibit_uuid": "7b843505f749e10f8702eab4c1ec135f",
+        "filename": "0e5c0fa0d7ff657086b167f7ce9f53df.jpg"
+      },
+      {
+        "file": "/Users/fernando.reyes/Dropbox/work/workspace/exhibits/storage_v1/7b843505f749e10f8702eab4c1ec135f/108a9d6507e59694ee8fc5adfd882839.jpg",
+        "exhibit_uuid": "7b843505f749e10f8702eab4c1ec135f",
+        "filename": "108a9d6507e59694ee8fc5adfd882839.jpg"
+      },
+      {
+        "file": "/Users/fernando.reyes/Dropbox/work/workspace/exhibits/storage_v1/7b843505f749e10f8702eab4c1ec135f/1141bb1fb03f14159c8a785e91632c2b.jpg",
+        "exhibit_uuid": "7b843505f749e10f8702eab4c1ec135f",
+        "filename": "1141bb1fb03f14159c8a785e91632c2b.jpg"
+      },
+      {
+        "file": "/Users/fernando.reyes/Dropbox/work/workspace/exhibits/storage_v1/7b843505f749e10f8702eab4c1ec135f/13e53fc9eba4405bd2e3709f8dfe8798.jpg",
+        "exhibit_uuid": "7b843505f749e10f8702eab4c1ec135f",
+        "filename": "13e53fc9eba4405bd2e3709f8dfe8798.jpg"
+      },
+      {
+        "file": "/Users/fernando.reyes/Dropbox/work/workspace/exhibits/storage_v1/7b843505f749e10f8702eab4c1ec135f/1f1c1e0e0898c2075a630a2f31cea1dd.jpg",
+        "exhibit_uuid": "7b843505f749e10f8702eab4c1ec135f",
+        "filename": "1f1c1e0e0898c2075a630a2f31cea1dd.jpg"
+      },
+      {
+        "file": "/Users/fernando.reyes/Dropbox/work/workspace/exhibits/storage_v1/7b843505f749e10f8702eab4c1ec135f/2403302e33145f6905657842ef65ec10.jpg",
+        "exhibit_uuid": "7b843505f749e10f8702eab4c1ec135f",
+        "filename": "2403302e33145f6905657842ef65ec10.jpg"
+      },
+      {
+        "file": "/Users/fernando.reyes/Dropbox/work/workspace/exhibits/storage_v1/7b843505f749e10f8702eab4c1ec135f/248244a7979c407d3fbd32cbb037a713.jpg",
+        "exhibit_uuid": "7b843505f749e10f8702eab4c1ec135f",
+        "filename": "248244a7979c407d3fbd32cbb037a713.jpg"
+      },
+      {
+        "file": "/Users/fernando.reyes/Dropbox/work/workspace/exhibits/storage_v1/7b843505f749e10f8702eab4c1ec135f/24dfc21fb83a6dc55929f37ad54de189.jpg",
+        "exhibit_uuid": "7b843505f749e10f8702eab4c1ec135f",
+        "filename": "24dfc21fb83a6dc55929f37ad54de189.jpg"
+      },
+      {
+        "file": "/Users/fernando.reyes/Dropbox/work/workspace/exhibits/storage_v1/7b843505f749e10f8702eab4c1ec135f/26ec8696535338e76f91a48ac95f6b16.jpg",
+        "exhibit_uuid": "7b843505f749e10f8702eab4c1ec135f",
+        "filename": "26ec8696535338e76f91a48ac95f6b16.jpg"
+      },
+      {
+        "file": "/Users/fernando.reyes/Dropbox/work/workspace/exhibits/storage_v1/7b843505f749e10f8702eab4c1ec135f/26ec8696535338e76f91a48ac95f6b16_thumbnail.jpg",
+        "exhibit_uuid": "7b843505f749e10f8702eab4c1ec135f",
+        "filename": "26ec8696535338e76f91a48ac95f6b16_thumbnail.jpg"
+      },
+      {
+        "file": "/Users/fernando.reyes/Dropbox/work/workspace/exhibits/storage_v1/7b843505f749e10f8702eab4c1ec135f/27421952d39071578cf79cd4c578001b.jpg",
+        "exhibit_uuid": "7b843505f749e10f8702eab4c1ec135f",
+        "filename": "27421952d39071578cf79cd4c578001b.jpg"
+      },
+      {
+        "file": "/Users/fernando.reyes/Dropbox/work/workspace/exhibits/storage_v1/7b843505f749e10f8702eab4c1ec135f/2d715d48af94b465d1b9afcc4a79151e.jpg",
+        "exhibit_uuid": "7b843505f749e10f8702eab4c1ec135f",
+        "filename": "2d715d48af94b465d1b9afcc4a79151e.jpg"
+      },
+      {
+        "file": "/Users/fernando.reyes/Dropbox/work/workspace/exhibits/storage_v1/7b843505f749e10f8702eab4c1ec135f/2e50b77165e330ecd0f46f95dc1e5086.jpg",
+        "exhibit_uuid": "7b843505f749e10f8702eab4c1ec135f",
+        "filename": "2e50b77165e330ecd0f46f95dc1e5086.jpg"
+      },
+      {
+        "file": "/Users/fernando.reyes/Dropbox/work/workspace/exhibits/storage_v1/7b843505f749e10f8702eab4c1ec135f/2e54ea0f2272eebba9f0f63dbd74d36b.pdf",
+        "exhibit_uuid": "7b843505f749e10f8702eab4c1ec135f",
+        "filename": "2e54ea0f2272eebba9f0f63dbd74d36b.pdf"
+      },
+      {
+        "file": "/Users/fernando.reyes/Dropbox/work/workspace/exhibits/storage_v1/7b843505f749e10f8702eab4c1ec135f/30ee62a971761848dd4e4b92a5b8088c.jpg",
+        "exhibit_uuid": "7b843505f749e10f8702eab4c1ec135f",
+        "filename": "30ee62a971761848dd4e4b92a5b8088c.jpg"
+      },
+      {
+        "file": "/Users/fernando.reyes/Dropbox/work/workspace/exhibits/storage_v1/7b843505f749e10f8702eab4c1ec135f/34179d46fb51de3388c322ffe8d2d34c.jpg",
+        "exhibit_uuid": "7b843505f749e10f8702eab4c1ec135f",
+        "filename": "34179d46fb51de3388c322ffe8d2d34c.jpg"
+      },
+      {
+        "file": "/Users/fernando.reyes/Dropbox/work/workspace/exhibits/storage_v1/7b843505f749e10f8702eab4c1ec135f/3abe96f18abc82b51db609b95788ae3a.jpg",
+        "exhibit_uuid": "7b843505f749e10f8702eab4c1ec135f",
+        "filename": "3abe96f18abc82b51db609b95788ae3a.jpg"
+      },
+      {
+        "file": "/Users/fernando.reyes/Dropbox/work/workspace/exhibits/storage_v1/7b843505f749e10f8702eab4c1ec135f/41f9d1696a13e70fcf4d841774015b04.jpg",
+        "exhibit_uuid": "7b843505f749e10f8702eab4c1ec135f",
+        "filename": "41f9d1696a13e70fcf4d841774015b04.jpg"
+      },
+      {
+        "file": "/Users/fernando.reyes/Dropbox/work/workspace/exhibits/storage_v1/7b843505f749e10f8702eab4c1ec135f/43229f563bed039a4b3e9e99e8c2b43e.jpg",
+        "exhibit_uuid": "7b843505f749e10f8702eab4c1ec135f",
+        "filename": "43229f563bed039a4b3e9e99e8c2b43e.jpg"
+      },
+      {
+        "file": "/Users/fernando.reyes/Dropbox/work/workspace/exhibits/storage_v1/7b843505f749e10f8702eab4c1ec135f/436724dcacd8d850cf832fd64d63c1c4.jpg",
+        "exhibit_uuid": "7b843505f749e10f8702eab4c1ec135f",
+        "filename": "436724dcacd8d850cf832fd64d63c1c4.jpg"
+      },
+      {
+        "file": "/Users/fernando.reyes/Dropbox/work/workspace/exhibits/storage_v1/7b843505f749e10f8702eab4c1ec135f/47f29e2a166e0f677bc37b7af1517984.jpg",
+        "exhibit_uuid": "7b843505f749e10f8702eab4c1ec135f",
+        "filename": "47f29e2a166e0f677bc37b7af1517984.jpg"
+      },
+      {
+        "file": "/Users/fernando.reyes/Dropbox/work/workspace/exhibits/storage_v1/7b843505f749e10f8702eab4c1ec135f/48c93959382a1752112d7326f169a6e9.jpg",
+        "exhibit_uuid": "7b843505f749e10f8702eab4c1ec135f",
+        "filename": "48c93959382a1752112d7326f169a6e9.jpg"
+      },
+      {
+        "file": "/Users/fernando.reyes/Dropbox/work/workspace/exhibits/storage_v1/7b843505f749e10f8702eab4c1ec135f/4ad3a4bf0ed392f769c4246d71db60f3.jpg",
+        "exhibit_uuid": "7b843505f749e10f8702eab4c1ec135f",
+        "filename": "4ad3a4bf0ed392f769c4246d71db60f3.jpg"
+      },
+      {
+        "file": "/Users/fernando.reyes/Dropbox/work/workspace/exhibits/storage_v1/7b843505f749e10f8702eab4c1ec135f/4c48f9e099c83a4228be5b311ce26f4a.jpg",
+        "exhibit_uuid": "7b843505f749e10f8702eab4c1ec135f",
+        "filename": "4c48f9e099c83a4228be5b311ce26f4a.jpg"
+      },
+      {
+        "file": "/Users/fernando.reyes/Dropbox/work/workspace/exhibits/storage_v1/7b843505f749e10f8702eab4c1ec135f/4c7bd3a1d70295292ef8fa71c40b81cf.jpg",
+        "exhibit_uuid": "7b843505f749e10f8702eab4c1ec135f",
+        "filename": "4c7bd3a1d70295292ef8fa71c40b81cf.jpg"
+      },
+      {
+        "file": "/Users/fernando.reyes/Dropbox/work/workspace/exhibits/storage_v1/7b843505f749e10f8702eab4c1ec135f/4e144eaa1fc26c4422204a85480d9823.jpg",
+        "exhibit_uuid": "7b843505f749e10f8702eab4c1ec135f",
+        "filename": "4e144eaa1fc26c4422204a85480d9823.jpg"
+      },
+      {
+        "file": "/Users/fernando.reyes/Dropbox/work/workspace/exhibits/storage_v1/7b843505f749e10f8702eab4c1ec135f/4f91ba07d0bace47fb152cb8b7ab1156.jpg",
+        "exhibit_uuid": "7b843505f749e10f8702eab4c1ec135f",
+        "filename": "4f91ba07d0bace47fb152cb8b7ab1156.jpg"
+      },
+      {
+        "file": "/Users/fernando.reyes/Dropbox/work/workspace/exhibits/storage_v1/7b843505f749e10f8702eab4c1ec135f/4fbe802265dd62d8c3e34ced5200ad14.jpg",
+        "exhibit_uuid": "7b843505f749e10f8702eab4c1ec135f",
+        "filename": "4fbe802265dd62d8c3e34ced5200ad14.jpg"
+      },
+      {
+        "file": "/Users/fernando.reyes/Dropbox/work/workspace/exhibits/storage_v1/7b843505f749e10f8702eab4c1ec135f/4fe7d9b4c6168130362d2c935ac1a7a9.jpg",
+        "exhibit_uuid": "7b843505f749e10f8702eab4c1ec135f",
+        "filename": "4fe7d9b4c6168130362d2c935ac1a7a9.jpg"
+      },
+      {
+        "file": "/Users/fernando.reyes/Dropbox/work/workspace/exhibits/storage_v1/7b843505f749e10f8702eab4c1ec135f/5298dc7f86d4dd3dae413d6e4dbe08de.jpg",
+        "exhibit_uuid": "7b843505f749e10f8702eab4c1ec135f",
+        "filename": "5298dc7f86d4dd3dae413d6e4dbe08de.jpg"
+      },
+      {
+        "file": "/Users/fernando.reyes/Dropbox/work/workspace/exhibits/storage_v1/7b843505f749e10f8702eab4c1ec135f/54a0b3aacec70149e8c5cce63a4f9254.jpg",
+        "exhibit_uuid": "7b843505f749e10f8702eab4c1ec135f",
+        "filename": "54a0b3aacec70149e8c5cce63a4f9254.jpg"
+      },
+      {
+        "file": "/Users/fernando.reyes/Dropbox/work/workspace/exhibits/storage_v1/7b843505f749e10f8702eab4c1ec135f/54c6b999eebdb2c67f63df23c3779c2b.jpg",
+        "exhibit_uuid": "7b843505f749e10f8702eab4c1ec135f",
+        "filename": "54c6b999eebdb2c67f63df23c3779c2b.jpg"
+      },
+      {
+        "file": "/Users/fernando.reyes/Dropbox/work/workspace/exhibits/storage_v1/7b843505f749e10f8702eab4c1ec135f/563e842b1cbeca3cb0e9b3e329dc6025.jpg",
+        "exhibit_uuid": "7b843505f749e10f8702eab4c1ec135f",
+        "filename": "563e842b1cbeca3cb0e9b3e329dc6025.jpg"
+      },
+      {
+        "file": "/Users/fernando.reyes/Dropbox/work/workspace/exhibits/storage_v1/7b843505f749e10f8702eab4c1ec135f/5f790bb8faeaeb736d05a5b434477f1b.jpg",
+        "exhibit_uuid": "7b843505f749e10f8702eab4c1ec135f",
+        "filename": "5f790bb8faeaeb736d05a5b434477f1b.jpg"
+      },
+      {
+        "file": "/Users/fernando.reyes/Dropbox/work/workspace/exhibits/storage_v1/7b843505f749e10f8702eab4c1ec135f/63c3fa856f68b9c302f68c208707a199.jpg",
+        "exhibit_uuid": "7b843505f749e10f8702eab4c1ec135f",
+        "filename": "63c3fa856f68b9c302f68c208707a199.jpg"
+      },
+      {
+        "file": "/Users/fernando.reyes/Dropbox/work/workspace/exhibits/storage_v1/7b843505f749e10f8702eab4c1ec135f/6a9c450a1fd8d73454fb63e01c15dd56.jpg",
+        "exhibit_uuid": "7b843505f749e10f8702eab4c1ec135f",
+        "filename": "6a9c450a1fd8d73454fb63e01c15dd56.jpg"
+      },
+      {
+        "file": "/Users/fernando.reyes/Dropbox/work/workspace/exhibits/storage_v1/7b843505f749e10f8702eab4c1ec135f/6de42a353693fd0dd67486e6d6edeea8.jpg",
+        "exhibit_uuid": "7b843505f749e10f8702eab4c1ec135f",
+        "filename": "6de42a353693fd0dd67486e6d6edeea8.jpg"
+      },
+      {
+        "file": "/Users/fernando.reyes/Dropbox/work/workspace/exhibits/storage_v1/7b843505f749e10f8702eab4c1ec135f/6f1be6e68e037447a3261dc0b54006f5.jpg",
+        "exhibit_uuid": "7b843505f749e10f8702eab4c1ec135f",
+        "filename": "6f1be6e68e037447a3261dc0b54006f5.jpg"
+      },
+      {
+        "file": "/Users/fernando.reyes/Dropbox/work/workspace/exhibits/storage_v1/7b843505f749e10f8702eab4c1ec135f/7d1307f836354ae59798b3744acd25e3.jpg",
+        "exhibit_uuid": "7b843505f749e10f8702eab4c1ec135f",
+        "filename": "7d1307f836354ae59798b3744acd25e3.jpg"
+      },
+      {
+        "file": "/Users/fernando.reyes/Dropbox/work/workspace/exhibits/storage_v1/7b843505f749e10f8702eab4c1ec135f/7f238b86cdb465b20c943f381df85c67.jpg",
+        "exhibit_uuid": "7b843505f749e10f8702eab4c1ec135f",
+        "filename": "7f238b86cdb465b20c943f381df85c67.jpg"
+      },
+      {
+        "file": "/Users/fernando.reyes/Dropbox/work/workspace/exhibits/storage_v1/7b843505f749e10f8702eab4c1ec135f/800e619f4f563354f30e6b7217b7ecdd.jpg",
+        "exhibit_uuid": "7b843505f749e10f8702eab4c1ec135f",
+        "filename": "800e619f4f563354f30e6b7217b7ecdd.jpg"
+      },
+      {
+        "file": "/Users/fernando.reyes/Dropbox/work/workspace/exhibits/storage_v1/7b843505f749e10f8702eab4c1ec135f/80b7ab0e9372433b9b78e76a1d6ccfa5.jpg",
+        "exhibit_uuid": "7b843505f749e10f8702eab4c1ec135f",
+        "filename": "80b7ab0e9372433b9b78e76a1d6ccfa5.jpg"
+      },
+      {
+        "file": "/Users/fernando.reyes/Dropbox/work/workspace/exhibits/storage_v1/7b843505f749e10f8702eab4c1ec135f/84cf22489d7f91299146f4d9dcb07333.jpg",
+        "exhibit_uuid": "7b843505f749e10f8702eab4c1ec135f",
+        "filename": "84cf22489d7f91299146f4d9dcb07333.jpg"
+      },
+      {
+        "file": "/Users/fernando.reyes/Dropbox/work/workspace/exhibits/storage_v1/7b843505f749e10f8702eab4c1ec135f/874e76a195f1ece4868f1fc88c99fca9.jpg",
+        "exhibit_uuid": "7b843505f749e10f8702eab4c1ec135f",
+        "filename": "874e76a195f1ece4868f1fc88c99fca9.jpg"
+      },
+      {
+        "file": "/Users/fernando.reyes/Dropbox/work/workspace/exhibits/storage_v1/7b843505f749e10f8702eab4c1ec135f/9175a114317a808613d175dc001394d7.jpg",
+        "exhibit_uuid": "7b843505f749e10f8702eab4c1ec135f",
+        "filename": "9175a114317a808613d175dc001394d7.jpg"
+      },
+      {
+        "file": "/Users/fernando.reyes/Dropbox/work/workspace/exhibits/storage_v1/7b843505f749e10f8702eab4c1ec135f/94e2ad77ed753865eb95422330d467d4.jpg",
+        "exhibit_uuid": "7b843505f749e10f8702eab4c1ec135f",
+        "filename": "94e2ad77ed753865eb95422330d467d4.jpg"
+      },
+      {
+        "file": "/Users/fernando.reyes/Dropbox/work/workspace/exhibits/storage_v1/7b843505f749e10f8702eab4c1ec135f/965228f76882fe340699c6cc364c572e.jpg",
+        "exhibit_uuid": "7b843505f749e10f8702eab4c1ec135f",
+        "filename": "965228f76882fe340699c6cc364c572e.jpg"
+      },
+      {
+        "file": "/Users/fernando.reyes/Dropbox/work/workspace/exhibits/storage_v1/7b843505f749e10f8702eab4c1ec135f/97dd0f8e622a8757ecc78543e31f7753.jpg",
+        "exhibit_uuid": "7b843505f749e10f8702eab4c1ec135f",
+        "filename": "97dd0f8e622a8757ecc78543e31f7753.jpg"
+      },
+      {
+        "file": "/Users/fernando.reyes/Dropbox/work/workspace/exhibits/storage_v1/7b843505f749e10f8702eab4c1ec135f/97dd0f8e622a8757ecc78543e31f7753_thumbnail.jpg",
+        "exhibit_uuid": "7b843505f749e10f8702eab4c1ec135f",
+        "filename": "97dd0f8e622a8757ecc78543e31f7753_thumbnail.jpg"
+      },
+      {
+        "file": "/Users/fernando.reyes/Dropbox/work/workspace/exhibits/storage_v1/7b843505f749e10f8702eab4c1ec135f/98af014e3988ee6ef1787eda982be01f.jpg",
+        "exhibit_uuid": "7b843505f749e10f8702eab4c1ec135f",
+        "filename": "98af014e3988ee6ef1787eda982be01f.jpg"
+      },
+      {
+        "file": "/Users/fernando.reyes/Dropbox/work/workspace/exhibits/storage_v1/7b843505f749e10f8702eab4c1ec135f/a017a17b7b284eaceac2b7707dcfcaa6.jpg",
+        "exhibit_uuid": "7b843505f749e10f8702eab4c1ec135f",
+        "filename": "a017a17b7b284eaceac2b7707dcfcaa6.jpg"
+      },
+      {
+        "file": "/Users/fernando.reyes/Dropbox/work/workspace/exhibits/storage_v1/7b843505f749e10f8702eab4c1ec135f/a542298fbdad35473a33e055831c2cbc.jpg",
+        "exhibit_uuid": "7b843505f749e10f8702eab4c1ec135f",
+        "filename": "a542298fbdad35473a33e055831c2cbc.jpg"
+      },
+      {
+        "file": "/Users/fernando.reyes/Dropbox/work/workspace/exhibits/storage_v1/7b843505f749e10f8702eab4c1ec135f/a5cbc468b029f428466b68240a95ae1e.pdf",
+        "exhibit_uuid": "7b843505f749e10f8702eab4c1ec135f",
+        "filename": "a5cbc468b029f428466b68240a95ae1e.pdf"
+      },
+      {
+        "file": "/Users/fernando.reyes/Dropbox/work/workspace/exhibits/storage_v1/7b843505f749e10f8702eab4c1ec135f/abbe0f70059e99253fdae96fff5d64bd.jpg",
+        "exhibit_uuid": "7b843505f749e10f8702eab4c1ec135f",
+        "filename": "abbe0f70059e99253fdae96fff5d64bd.jpg"
+      },
+      {
+        "file": "/Users/fernando.reyes/Dropbox/work/workspace/exhibits/storage_v1/7b843505f749e10f8702eab4c1ec135f/ae0b763711b6721cf5a2f45c0df155e3.jpg",
+        "exhibit_uuid": "7b843505f749e10f8702eab4c1ec135f",
+        "filename": "ae0b763711b6721cf5a2f45c0df155e3.jpg"
+      },
+      {
+        "file": "/Users/fernando.reyes/Dropbox/work/workspace/exhibits/storage_v1/7b843505f749e10f8702eab4c1ec135f/b3f894eb8631913c126b769e67127320.jpg",
+        "exhibit_uuid": "7b843505f749e10f8702eab4c1ec135f",
+        "filename": "b3f894eb8631913c126b769e67127320.jpg"
+      },
+      {
+        "file": "/Users/fernando.reyes/Dropbox/work/workspace/exhibits/storage_v1/7b843505f749e10f8702eab4c1ec135f/b3f894eb8631913c126b769e67127320_thumbnail.jpg",
+        "exhibit_uuid": "7b843505f749e10f8702eab4c1ec135f",
+        "filename": "b3f894eb8631913c126b769e67127320_thumbnail.jpg"
+      },
+      {
+        "file": "/Users/fernando.reyes/Dropbox/work/workspace/exhibits/storage_v1/7b843505f749e10f8702eab4c1ec135f/b4b00ef33f2ecd866bd69a537f8a206c.jpg",
+        "exhibit_uuid": "7b843505f749e10f8702eab4c1ec135f",
+        "filename": "b4b00ef33f2ecd866bd69a537f8a206c.jpg"
+      },
+      {
+        "file": "/Users/fernando.reyes/Dropbox/work/workspace/exhibits/storage_v1/7b843505f749e10f8702eab4c1ec135f/b68e90f10736deb2b944c7910d2239bc.jpg",
+        "exhibit_uuid": "7b843505f749e10f8702eab4c1ec135f",
+        "filename": "b68e90f10736deb2b944c7910d2239bc.jpg"
+      },
+      {
+        "file": "/Users/fernando.reyes/Dropbox/work/workspace/exhibits/storage_v1/7b843505f749e10f8702eab4c1ec135f/b7a3ba2af70afbf48dbca57d8e4fbb5b.jpg",
+        "exhibit_uuid": "7b843505f749e10f8702eab4c1ec135f",
+        "filename": "b7a3ba2af70afbf48dbca57d8e4fbb5b.jpg"
+      },
+      {
+        "file": "/Users/fernando.reyes/Dropbox/work/workspace/exhibits/storage_v1/7b843505f749e10f8702eab4c1ec135f/bd53c78ba68e31a77c3ff40096860bf2.jpg",
+        "exhibit_uuid": "7b843505f749e10f8702eab4c1ec135f",
+        "filename": "bd53c78ba68e31a77c3ff40096860bf2.jpg"
+      },
+      {
+        "file": "/Users/fernando.reyes/Dropbox/work/workspace/exhibits/storage_v1/7b843505f749e10f8702eab4c1ec135f/bd53c78ba68e31a77c3ff40096860bf2_thumbnail.jpg",
+        "exhibit_uuid": "7b843505f749e10f8702eab4c1ec135f",
+        "filename": "bd53c78ba68e31a77c3ff40096860bf2_thumbnail.jpg"
+      },
+      {
+        "file": "/Users/fernando.reyes/Dropbox/work/workspace/exhibits/storage_v1/7b843505f749e10f8702eab4c1ec135f/bdaa770807cb3b0c515315d082d07a4b.jpg",
+        "exhibit_uuid": "7b843505f749e10f8702eab4c1ec135f",
+        "filename": "bdaa770807cb3b0c515315d082d07a4b.jpg"
+      },
+      {
+        "file": "/Users/fernando.reyes/Dropbox/work/workspace/exhibits/storage_v1/7b843505f749e10f8702eab4c1ec135f/c1421c9e5db1f5707943855153757215.jpg",
+        "exhibit_uuid": "7b843505f749e10f8702eab4c1ec135f",
+        "filename": "c1421c9e5db1f5707943855153757215.jpg"
+      },
+      {
+        "file": "/Users/fernando.reyes/Dropbox/work/workspace/exhibits/storage_v1/7b843505f749e10f8702eab4c1ec135f/c358c46ae2896629857ddd1a44608c64.jpg",
+        "exhibit_uuid": "7b843505f749e10f8702eab4c1ec135f",
+        "filename": "c358c46ae2896629857ddd1a44608c64.jpg"
+      },
+      {
+        "file": "/Users/fernando.reyes/Dropbox/work/workspace/exhibits/storage_v1/7b843505f749e10f8702eab4c1ec135f/c8ae93a2ca524579dd46d76e0ad81d60.jpg",
+        "exhibit_uuid": "7b843505f749e10f8702eab4c1ec135f",
+        "filename": "c8ae93a2ca524579dd46d76e0ad81d60.jpg"
+      },
+      {
+        "file": "/Users/fernando.reyes/Dropbox/work/workspace/exhibits/storage_v1/7b843505f749e10f8702eab4c1ec135f/cfb0eca6d22a372f6c3758d6ce38f8a0.jpg",
+        "exhibit_uuid": "7b843505f749e10f8702eab4c1ec135f",
+        "filename": "cfb0eca6d22a372f6c3758d6ce38f8a0.jpg"
+      },
+      {
+        "file": "/Users/fernando.reyes/Dropbox/work/workspace/exhibits/storage_v1/7b843505f749e10f8702eab4c1ec135f/cfb0eca6d22a372f6c3758d6ce38f8a0_thumbnail.jpg",
+        "exhibit_uuid": "7b843505f749e10f8702eab4c1ec135f",
+        "filename": "cfb0eca6d22a372f6c3758d6ce38f8a0_thumbnail.jpg"
+      },
+      {
+        "file": "/Users/fernando.reyes/Dropbox/work/workspace/exhibits/storage_v1/7b843505f749e10f8702eab4c1ec135f/d6e3d82a4e9dd8e25bce1dded4c9c94c.jpg",
+        "exhibit_uuid": "7b843505f749e10f8702eab4c1ec135f",
+        "filename": "d6e3d82a4e9dd8e25bce1dded4c9c94c.jpg"
+      },
+      {
+        "file": "/Users/fernando.reyes/Dropbox/work/workspace/exhibits/storage_v1/7b843505f749e10f8702eab4c1ec135f/db3af578a79e1562a5db1866a9a17fdb.jpg",
+        "exhibit_uuid": "7b843505f749e10f8702eab4c1ec135f",
+        "filename": "db3af578a79e1562a5db1866a9a17fdb.jpg"
+      },
+      {
+        "file": "/Users/fernando.reyes/Dropbox/work/workspace/exhibits/storage_v1/7b843505f749e10f8702eab4c1ec135f/db3af578a79e1562a5db1866a9a17fdb_thumbnail.jpg",
+        "exhibit_uuid": "7b843505f749e10f8702eab4c1ec135f",
+        "filename": "db3af578a79e1562a5db1866a9a17fdb_thumbnail.jpg"
+      },
+      {
+        "file": "/Users/fernando.reyes/Dropbox/work/workspace/exhibits/storage_v1/7b843505f749e10f8702eab4c1ec135f/deff7888b865e8fc1efadb9fc2f56149.jpg",
+        "exhibit_uuid": "7b843505f749e10f8702eab4c1ec135f",
+        "filename": "deff7888b865e8fc1efadb9fc2f56149.jpg"
+      },
+      {
+        "file": "/Users/fernando.reyes/Dropbox/work/workspace/exhibits/storage_v1/7b843505f749e10f8702eab4c1ec135f/e61ace24ab8d2a038360c72e2a3521d4.jpg",
+        "exhibit_uuid": "7b843505f749e10f8702eab4c1ec135f",
+        "filename": "e61ace24ab8d2a038360c72e2a3521d4.jpg"
+      },
+      {
+        "file": "/Users/fernando.reyes/Dropbox/work/workspace/exhibits/storage_v1/7b843505f749e10f8702eab4c1ec135f/e830f11a909862e254f1a5aeb367b7ed.jpg",
+        "exhibit_uuid": "7b843505f749e10f8702eab4c1ec135f",
+        "filename": "e830f11a909862e254f1a5aeb367b7ed.jpg"
+      },
+      {
+        "file": "/Users/fernando.reyes/Dropbox/work/workspace/exhibits/storage_v1/7b843505f749e10f8702eab4c1ec135f/ea9e8648865bab7a0718973913127e93.jpg",
+        "exhibit_uuid": "7b843505f749e10f8702eab4c1ec135f",
+        "filename": "ea9e8648865bab7a0718973913127e93.jpg"
+      },
+      {
+        "file": "/Users/fernando.reyes/Dropbox/work/workspace/exhibits/storage_v1/7b843505f749e10f8702eab4c1ec135f/f17229d5a3a992b0fd55c955f1acac48.jpg",
+        "exhibit_uuid": "7b843505f749e10f8702eab4c1ec135f",
+        "filename": "f17229d5a3a992b0fd55c955f1acac48.jpg"
+      },
+      {
+        "file": "/Users/fernando.reyes/Dropbox/work/workspace/exhibits/storage_v1/7b843505f749e10f8702eab4c1ec135f/f970c4c62d1652f97befee9dcfd744cd.jpg",
+        "exhibit_uuid": "7b843505f749e10f8702eab4c1ec135f",
+        "filename": "f970c4c62d1652f97befee9dcfd744cd.jpg"
+      },
+      {
+        "file": "/Users/fernando.reyes/Dropbox/work/workspace/exhibits/storage_v1/7b843505f749e10f8702eab4c1ec135f/fed94b031e95794fbc2ee81b238ebcdd.jpg",
+        "exhibit_uuid": "7b843505f749e10f8702eab4c1ec135f",
+        "filename": "fed94b031e95794fbc2ee81b238ebcdd.jpg"
+      },
+      {
+        "file": "/Users/fernando.reyes/Dropbox/work/workspace/exhibits/storage_v1/7b843505f749e10f8702eab4c1ec135f/loewenstein_hero.jpg",
+        "exhibit_uuid": "7b843505f749e10f8702eab4c1ec135f",
+        "filename": "loewenstein_hero.jpg"
+      },
+      {
+        "file": "/Users/fernando.reyes/Dropbox/work/workspace/exhibits/storage_v1/7b843505f749e10f8702eab4c1ec135f/loewenstein_hero_thumbnail.jpeg",
+        "exhibit_uuid": "7b843505f749e10f8702eab4c1ec135f",
+        "filename": "loewenstein_hero_thumbnail.jpeg"
+      },
+      {
+        "file": "/Users/fernando.reyes/Dropbox/work/workspace/exhibits/storage_v1/811c7fc9ed4f91b837b4f49ae8901c93/0c83c8a80e5054d101a3f4594ad88006_thumbnail.jpg",
+        "exhibit_uuid": "811c7fc9ed4f91b837b4f49ae8901c93",
+        "filename": "0c83c8a80e5054d101a3f4594ad88006_thumbnail.jpg"
+      },
+      {
+        "file": "/Users/fernando.reyes/Dropbox/work/workspace/exhibits/storage_v1/811c7fc9ed4f91b837b4f49ae8901c93/26372155203510647e34e7bb0b87975b.jpg",
+        "exhibit_uuid": "811c7fc9ed4f91b837b4f49ae8901c93",
+        "filename": "26372155203510647e34e7bb0b87975b.jpg"
+      },
+      {
+        "file": "/Users/fernando.reyes/Dropbox/work/workspace/exhibits/storage_v1/811c7fc9ed4f91b837b4f49ae8901c93/4a78fea86613e1e374deb5429ecaf733.jpg",
+        "exhibit_uuid": "811c7fc9ed4f91b837b4f49ae8901c93",
+        "filename": "4a78fea86613e1e374deb5429ecaf733.jpg"
+      },
+      {
+        "file": "/Users/fernando.reyes/Dropbox/work/workspace/exhibits/storage_v1/811c7fc9ed4f91b837b4f49ae8901c93/5c1fe9241db559d8560c21d6aba4713c.jpg",
+        "exhibit_uuid": "811c7fc9ed4f91b837b4f49ae8901c93",
+        "filename": "5c1fe9241db559d8560c21d6aba4713c.jpg"
+      },
+      {
+        "file": "/Users/fernando.reyes/Dropbox/work/workspace/exhibits/storage_v1/811c7fc9ed4f91b837b4f49ae8901c93/6780f71efaff2c434fd31a9f7799e41e_thumbnail.jpg",
+        "exhibit_uuid": "811c7fc9ed4f91b837b4f49ae8901c93",
+        "filename": "6780f71efaff2c434fd31a9f7799e41e_thumbnail.jpg"
+      },
+      {
+        "file": "/Users/fernando.reyes/Dropbox/work/workspace/exhibits/storage_v1/811c7fc9ed4f91b837b4f49ae8901c93/7dac3ced3fd0b0ee3de9e71332e6dc0b.jpg",
+        "exhibit_uuid": "811c7fc9ed4f91b837b4f49ae8901c93",
+        "filename": "7dac3ced3fd0b0ee3de9e71332e6dc0b.jpg"
+      },
+      {
+        "file": "/Users/fernando.reyes/Dropbox/work/workspace/exhibits/storage_v1/811c7fc9ed4f91b837b4f49ae8901c93/a371474e02e855ba46f6f0a529e1a692.jpg",
+        "exhibit_uuid": "811c7fc9ed4f91b837b4f49ae8901c93",
+        "filename": "a371474e02e855ba46f6f0a529e1a692.jpg"
+      },
+      {
+        "file": "/Users/fernando.reyes/Dropbox/work/workspace/exhibits/storage_v1/811c7fc9ed4f91b837b4f49ae8901c93/cc941b2bbb364c8a9be1028bcaf13ef3.jpg",
+        "exhibit_uuid": "811c7fc9ed4f91b837b4f49ae8901c93",
+        "filename": "cc941b2bbb364c8a9be1028bcaf13ef3.jpg"
+      },
+      {
+        "file": "/Users/fernando.reyes/Dropbox/work/workspace/exhibits/storage_v1/811c7fc9ed4f91b837b4f49ae8901c93/cef6355356386250e33f264664dcdace.jpg",
+        "exhibit_uuid": "811c7fc9ed4f91b837b4f49ae8901c93",
+        "filename": "cef6355356386250e33f264664dcdace.jpg"
+      },
+      {
+        "file": "/Users/fernando.reyes/Dropbox/work/workspace/exhibits/storage_v1/811c7fc9ed4f91b837b4f49ae8901c93/hylaea_hero.jpg",
+        "exhibit_uuid": "811c7fc9ed4f91b837b4f49ae8901c93",
+        "filename": "hylaea_hero.jpg"
+      },
+      {
+        "file": "/Users/fernando.reyes/Dropbox/work/workspace/exhibits/storage_v1/811c7fc9ed4f91b837b4f49ae8901c93/hylaea_hero_thumbnail.jpg",
+        "exhibit_uuid": "811c7fc9ed4f91b837b4f49ae8901c93",
+        "filename": "hylaea_hero_thumbnail.jpg"
+      },
+      {
+        "file": "/Users/fernando.reyes/Dropbox/work/workspace/exhibits/storage_v1/854efac7-10d5-4c27-a59e-e5b34b70efb9/854efac7-10d5-4c27-a59e-e5b34b70efb9_1753905552278_exhibit_thumbnail.png",
+        "exhibit_uuid": "854efac7-10d5-4c27-a59e-e5b34b70efb9",
+        "filename": "854efac7-10d5-4c27-a59e-e5b34b70efb9_1753905552278_exhibit_thumbnail.png"
+      },
+      {
+        "file": "/Users/fernando.reyes/Dropbox/work/workspace/exhibits/storage_v1/8de914b0e79b33458d4eaa0d2b5c0089/example-exhibit-short_hero.jpg",
+        "exhibit_uuid": "8de914b0e79b33458d4eaa0d2b5c0089",
+        "filename": "example-exhibit-short_hero.jpg"
+      },
+      {
+        "file": "/Users/fernando.reyes/Dropbox/work/workspace/exhibits/storage_v1/8de914b0e79b33458d4eaa0d2b5c0089/example-exhibit_4_tn.jpg",
+        "exhibit_uuid": "8de914b0e79b33458d4eaa0d2b5c0089",
+        "filename": "example-exhibit_4_tn.jpg"
+      },
+      {
+        "file": "/Users/fernando.reyes/Dropbox/work/workspace/exhibits/storage_v1/98f05d47-39e8-4ea1-ac8c-f7c12cefd243/98f05d47-39e8-4ea1-ac8c-f7c12cefd243_1737317520149_exhibit_hero.jpg",
+        "exhibit_uuid": "98f05d47-39e8-4ea1-ac8c-f7c12cefd243",
+        "filename": "98f05d47-39e8-4ea1-ac8c-f7c12cefd243_1737317520149_exhibit_hero.jpg"
+      },
+      {
+        "file": "/Users/fernando.reyes/Dropbox/work/workspace/exhibits/storage_v1/98f05d47-39e8-4ea1-ac8c-f7c12cefd243/98f05d47-39e8-4ea1-ac8c-f7c12cefd243_1737317526609_exhibit_thumbnail.jpg",
+        "exhibit_uuid": "98f05d47-39e8-4ea1-ac8c-f7c12cefd243",
+        "filename": "98f05d47-39e8-4ea1-ac8c-f7c12cefd243_1737317526609_exhibit_thumbnail.jpg"
+      },
+      {
+        "file": "/Users/fernando.reyes/Dropbox/work/workspace/exhibits/storage_v1/9b0427e5-10e3-413e-b61e-9e2f4668d546/8ed23775-e34a-43db-991e-3fd18ce372b5_1732647320826_item_media.jpg",
+        "exhibit_uuid": "9b0427e5-10e3-413e-b61e-9e2f4668d546",
+        "filename": "8ed23775-e34a-43db-991e-3fd18ce372b5_1732647320826_item_media.jpg"
+      },
+      {
+        "file": "/Users/fernando.reyes/Dropbox/work/workspace/exhibits/storage_v1/9b0427e5-10e3-413e-b61e-9e2f4668d546/9b0427e5-10e3-413e-b61e-9e2f4668d546_1732647201933_exhibit_hero.jpg",
+        "exhibit_uuid": "9b0427e5-10e3-413e-b61e-9e2f4668d546",
+        "filename": "9b0427e5-10e3-413e-b61e-9e2f4668d546_1732647201933_exhibit_hero.jpg"
+      },
+      {
+        "file": "/Users/fernando.reyes/Dropbox/work/workspace/exhibits/storage_v1/9d7b810b-47ff-4558-af74-3af1f6e13214/9d7b810b-47ff-4558-af74-3af1f6e13214_1737477064060_exhibit_hero.png",
+        "exhibit_uuid": "9d7b810b-47ff-4558-af74-3af1f6e13214",
+        "filename": "9d7b810b-47ff-4558-af74-3af1f6e13214_1737477064060_exhibit_hero.png"
+      },
+      {
+        "file": "/Users/fernando.reyes/Dropbox/work/workspace/exhibits/storage_v1/9d7b810b-47ff-4558-af74-3af1f6e13214/9d7b810b-47ff-4558-af74-3af1f6e13214_1738682273080_exhibit_thumbnail.jpg",
+        "exhibit_uuid": "9d7b810b-47ff-4558-af74-3af1f6e13214",
+        "filename": "9d7b810b-47ff-4558-af74-3af1f6e13214_1738682273080_exhibit_thumbnail.jpg"
+      },
+      {
+        "file": "/Users/fernando.reyes/Dropbox/work/workspace/exhibits/storage_v1/9d7b810b-47ff-4558-af74-3af1f6e13214/9d7b810b-47ff-4558-af74-3af1f6e13214_1739821021607_exhibit_thumbnail.jpg",
+        "exhibit_uuid": "9d7b810b-47ff-4558-af74-3af1f6e13214",
+        "filename": "9d7b810b-47ff-4558-af74-3af1f6e13214_1739821021607_exhibit_thumbnail.jpg"
+      },
+      {
+        "file": "/Users/fernando.reyes/Dropbox/work/workspace/exhibits/storage_v1/a96f8f4e-2530-4d62-b544-390aab99152d/a96f8f4e-2530-4d62-b544-390aab99152d_1754422526258_exhibit_hero.png",
+        "exhibit_uuid": "a96f8f4e-2530-4d62-b544-390aab99152d",
+        "filename": "a96f8f4e-2530-4d62-b544-390aab99152d_1754422526258_exhibit_hero.png"
+      },
+      {
+        "file": "/Users/fernando.reyes/Dropbox/work/workspace/exhibits/storage_v1/bb17d5ca-5061-47f8-8674-8495b4d89c31/bb17d5ca-5061-47f8-8674-8495b4d89c31_1734637609380_exhibit_hero.jpg",
+        "exhibit_uuid": "bb17d5ca-5061-47f8-8674-8495b4d89c31",
+        "filename": "bb17d5ca-5061-47f8-8674-8495b4d89c31_1734637609380_exhibit_hero.jpg"
+      },
+      {
+        "file": "/Users/fernando.reyes/Dropbox/work/workspace/exhibits/storage_v1/bb17d5ca-5061-47f8-8674-8495b4d89c31/bb17d5ca-5061-47f8-8674-8495b4d89c31_1734637633863_exhibit_thumbnail.jpg",
+        "exhibit_uuid": "bb17d5ca-5061-47f8-8674-8495b4d89c31",
+        "filename": "bb17d5ca-5061-47f8-8674-8495b4d89c31_1734637633863_exhibit_thumbnail.jpg"
+      },
+      {
+        "file": "/Users/fernando.reyes/Dropbox/work/workspace/exhibits/storage_v1/bea561ce-5746-4adb-b7d2-b9f997fbcd37/0112d4c5-fb3a-410a-8058-cc762052c197_1736974625912_item_media.jpg",
+        "exhibit_uuid": "bea561ce-5746-4adb-b7d2-b9f997fbcd37",
+        "filename": "0112d4c5-fb3a-410a-8058-cc762052c197_1736974625912_item_media.jpg"
+      },
+      {
+        "file": "/Users/fernando.reyes/Dropbox/work/workspace/exhibits/storage_v1/bea561ce-5746-4adb-b7d2-b9f997fbcd37/01462b6f-1434-471b-9e92-bda5b36b9b74_1736972412306_item_media.jpg",
+        "exhibit_uuid": "bea561ce-5746-4adb-b7d2-b9f997fbcd37",
+        "filename": "01462b6f-1434-471b-9e92-bda5b36b9b74_1736972412306_item_media.jpg"
+      },
+      {
+        "file": "/Users/fernando.reyes/Dropbox/work/workspace/exhibits/storage_v1/bea561ce-5746-4adb-b7d2-b9f997fbcd37/1373f757-7e0e-4cce-9fab-99a90d90c84c_1737506188023_item_media.jpg",
+        "exhibit_uuid": "bea561ce-5746-4adb-b7d2-b9f997fbcd37",
+        "filename": "1373f757-7e0e-4cce-9fab-99a90d90c84c_1737506188023_item_media.jpg"
+      },
+      {
+        "file": "/Users/fernando.reyes/Dropbox/work/workspace/exhibits/storage_v1/bea561ce-5746-4adb-b7d2-b9f997fbcd37/13bd5afe-2872-433d-ae3e-771a3ecd646b_1736974376711_item_media.jpg",
+        "exhibit_uuid": "bea561ce-5746-4adb-b7d2-b9f997fbcd37",
+        "filename": "13bd5afe-2872-433d-ae3e-771a3ecd646b_1736974376711_item_media.jpg"
+      },
+      {
+        "file": "/Users/fernando.reyes/Dropbox/work/workspace/exhibits/storage_v1/bea561ce-5746-4adb-b7d2-b9f997fbcd37/152e8083-8581-4d11-a714-e88aed606251_1736966346722_item_media.jpg",
+        "exhibit_uuid": "bea561ce-5746-4adb-b7d2-b9f997fbcd37",
+        "filename": "152e8083-8581-4d11-a714-e88aed606251_1736966346722_item_media.jpg"
+      },
+      {
+        "file": "/Users/fernando.reyes/Dropbox/work/workspace/exhibits/storage_v1/bea561ce-5746-4adb-b7d2-b9f997fbcd37/161fecd5-860d-4fdf-a48e-15c6ba2ab0a3_1736808471756_item_media.jpg",
+        "exhibit_uuid": "bea561ce-5746-4adb-b7d2-b9f997fbcd37",
+        "filename": "161fecd5-860d-4fdf-a48e-15c6ba2ab0a3_1736808471756_item_media.jpg"
+      },
+      {
+        "file": "/Users/fernando.reyes/Dropbox/work/workspace/exhibits/storage_v1/bea561ce-5746-4adb-b7d2-b9f997fbcd37/19ac4949-f3e8-46df-b0b9-12bb372b9b56_1736980866636_item_media.pdf",
+        "exhibit_uuid": "bea561ce-5746-4adb-b7d2-b9f997fbcd37",
+        "filename": "19ac4949-f3e8-46df-b0b9-12bb372b9b56_1736980866636_item_media.pdf"
+      },
+      {
+        "file": "/Users/fernando.reyes/Dropbox/work/workspace/exhibits/storage_v1/bea561ce-5746-4adb-b7d2-b9f997fbcd37/1a811139-bc6f-49eb-953e-4a277d24b2e5_1736979781192_item_media.jpg",
+        "exhibit_uuid": "bea561ce-5746-4adb-b7d2-b9f997fbcd37",
+        "filename": "1a811139-bc6f-49eb-953e-4a277d24b2e5_1736979781192_item_media.jpg"
+      },
+      {
+        "file": "/Users/fernando.reyes/Dropbox/work/workspace/exhibits/storage_v1/bea561ce-5746-4adb-b7d2-b9f997fbcd37/2d5760e1-57a3-457a-95f0-a65318f9577f_1737506113545_item_media.jpg",
+        "exhibit_uuid": "bea561ce-5746-4adb-b7d2-b9f997fbcd37",
+        "filename": "2d5760e1-57a3-457a-95f0-a65318f9577f_1737506113545_item_media.jpg"
+      },
+      {
+        "file": "/Users/fernando.reyes/Dropbox/work/workspace/exhibits/storage_v1/bea561ce-5746-4adb-b7d2-b9f997fbcd37/312f7e46-fff6-48be-a1f6-a97a0071fe0b_1737506512299_item_media.jpg",
+        "exhibit_uuid": "bea561ce-5746-4adb-b7d2-b9f997fbcd37",
+        "filename": "312f7e46-fff6-48be-a1f6-a97a0071fe0b_1737506512299_item_media.jpg"
+      },
+      {
+        "file": "/Users/fernando.reyes/Dropbox/work/workspace/exhibits/storage_v1/bea561ce-5746-4adb-b7d2-b9f997fbcd37/3b64d4f6-9ca7-4db9-8409-d0957285dea0_1736803138080_item_media.jpg",
+        "exhibit_uuid": "bea561ce-5746-4adb-b7d2-b9f997fbcd37",
+        "filename": "3b64d4f6-9ca7-4db9-8409-d0957285dea0_1736803138080_item_media.jpg"
+      },
+      {
+        "file": "/Users/fernando.reyes/Dropbox/work/workspace/exhibits/storage_v1/bea561ce-5746-4adb-b7d2-b9f997fbcd37/3b6c6fda-d105-4893-b0c3-ba3032486c25_1736981034323_item_media.jpg",
+        "exhibit_uuid": "bea561ce-5746-4adb-b7d2-b9f997fbcd37",
+        "filename": "3b6c6fda-d105-4893-b0c3-ba3032486c25_1736981034323_item_media.jpg"
+      },
+      {
+        "file": "/Users/fernando.reyes/Dropbox/work/workspace/exhibits/storage_v1/bea561ce-5746-4adb-b7d2-b9f997fbcd37/3b6c6fda-d105-4893-b0c3-ba3032486c25_1740001246738_item_media.jpg",
+        "exhibit_uuid": "bea561ce-5746-4adb-b7d2-b9f997fbcd37",
+        "filename": "3b6c6fda-d105-4893-b0c3-ba3032486c25_1740001246738_item_media.jpg"
+      },
+      {
+        "file": "/Users/fernando.reyes/Dropbox/work/workspace/exhibits/storage_v1/bea561ce-5746-4adb-b7d2-b9f997fbcd37/3e2ae882-3a5d-4a78-8eba-9d9fc5aa58ab_1736974310873_item_media.jpg",
+        "exhibit_uuid": "bea561ce-5746-4adb-b7d2-b9f997fbcd37",
+        "filename": "3e2ae882-3a5d-4a78-8eba-9d9fc5aa58ab_1736974310873_item_media.jpg"
+      },
+      {
+        "file": "/Users/fernando.reyes/Dropbox/work/workspace/exhibits/storage_v1/bea561ce-5746-4adb-b7d2-b9f997fbcd37/433e955f-9f11-4b11-86cc-db0a9ce057eb_1736979863191_item_media.jpg",
+        "exhibit_uuid": "bea561ce-5746-4adb-b7d2-b9f997fbcd37",
+        "filename": "433e955f-9f11-4b11-86cc-db0a9ce057eb_1736979863191_item_media.jpg"
+      },
+      {
+        "file": "/Users/fernando.reyes/Dropbox/work/workspace/exhibits/storage_v1/bea561ce-5746-4adb-b7d2-b9f997fbcd37/440399d5-6af6-4be2-9b0b-fdb7ed3840bd_1736808422571_item_media.jpg",
+        "exhibit_uuid": "bea561ce-5746-4adb-b7d2-b9f997fbcd37",
+        "filename": "440399d5-6af6-4be2-9b0b-fdb7ed3840bd_1736808422571_item_media.jpg"
+      },
+      {
+        "file": "/Users/fernando.reyes/Dropbox/work/workspace/exhibits/storage_v1/bea561ce-5746-4adb-b7d2-b9f997fbcd37/450f50fd-9196-4a2c-9a5a-5287696ce03d_1736982948790_item_media.jpg",
+        "exhibit_uuid": "bea561ce-5746-4adb-b7d2-b9f997fbcd37",
+        "filename": "450f50fd-9196-4a2c-9a5a-5287696ce03d_1736982948790_item_media.jpg"
+      },
+      {
+        "file": "/Users/fernando.reyes/Dropbox/work/workspace/exhibits/storage_v1/bea561ce-5746-4adb-b7d2-b9f997fbcd37/469150c1-e5a9-4172-92d1-2906243c2b73_1736959054219_item_media.jpg",
+        "exhibit_uuid": "bea561ce-5746-4adb-b7d2-b9f997fbcd37",
+        "filename": "469150c1-e5a9-4172-92d1-2906243c2b73_1736959054219_item_media.jpg"
+      },
+      {
+        "file": "/Users/fernando.reyes/Dropbox/work/workspace/exhibits/storage_v1/bea561ce-5746-4adb-b7d2-b9f997fbcd37/5ad7637a-3ab3-4abd-8dda-66bf4b5984e8_1736972375334_item_media.jpg",
+        "exhibit_uuid": "bea561ce-5746-4adb-b7d2-b9f997fbcd37",
+        "filename": "5ad7637a-3ab3-4abd-8dda-66bf4b5984e8_1736972375334_item_media.jpg"
+      },
+      {
+        "file": "/Users/fernando.reyes/Dropbox/work/workspace/exhibits/storage_v1/bea561ce-5746-4adb-b7d2-b9f997fbcd37/60fa98f0-fc53-4e13-b190-a48afcd69bfe_1736803383685_item_media.jpg",
+        "exhibit_uuid": "bea561ce-5746-4adb-b7d2-b9f997fbcd37",
+        "filename": "60fa98f0-fc53-4e13-b190-a48afcd69bfe_1736803383685_item_media.jpg"
+      },
+      {
+        "file": "/Users/fernando.reyes/Dropbox/work/workspace/exhibits/storage_v1/bea561ce-5746-4adb-b7d2-b9f997fbcd37/65ed13e0-ed21-453c-8af1-29eea0dc25f3_1737506480674_item_media.jpg",
+        "exhibit_uuid": "bea561ce-5746-4adb-b7d2-b9f997fbcd37",
+        "filename": "65ed13e0-ed21-453c-8af1-29eea0dc25f3_1737506480674_item_media.jpg"
+      },
+      {
+        "file": "/Users/fernando.reyes/Dropbox/work/workspace/exhibits/storage_v1/bea561ce-5746-4adb-b7d2-b9f997fbcd37/6d1828df-ec12-42e9-ad15-f0d705ba054b_1736961208768_item_media.jpg",
+        "exhibit_uuid": "bea561ce-5746-4adb-b7d2-b9f997fbcd37",
+        "filename": "6d1828df-ec12-42e9-ad15-f0d705ba054b_1736961208768_item_media.jpg"
+      },
+      {
+        "file": "/Users/fernando.reyes/Dropbox/work/workspace/exhibits/storage_v1/bea561ce-5746-4adb-b7d2-b9f997fbcd37/7804f791-42e0-46a8-975c-8c77335021b4_1736808663244_item_media.jpg",
+        "exhibit_uuid": "bea561ce-5746-4adb-b7d2-b9f997fbcd37",
+        "filename": "7804f791-42e0-46a8-975c-8c77335021b4_1736808663244_item_media.jpg"
+      },
+      {
+        "file": "/Users/fernando.reyes/Dropbox/work/workspace/exhibits/storage_v1/bea561ce-5746-4adb-b7d2-b9f997fbcd37/798cf3ab1-5b3c-4e84-95e2-fb1085f077179.pdf",
+        "exhibit_uuid": "bea561ce-5746-4adb-b7d2-b9f997fbcd37",
+        "filename": "798cf3ab1-5b3c-4e84-95e2-fb1085f077179.pdf"
+      },
+      {
+        "file": "/Users/fernando.reyes/Dropbox/work/workspace/exhibits/storage_v1/bea561ce-5746-4adb-b7d2-b9f997fbcd37/798cf3ab1-5b3c-4e84-95e2-fb1085f077179_repository_item_media.pdf",
+        "exhibit_uuid": "bea561ce-5746-4adb-b7d2-b9f997fbcd37",
+        "filename": "798cf3ab1-5b3c-4e84-95e2-fb1085f077179_repository_item_media.pdf"
+      },
+      {
+        "file": "/Users/fernando.reyes/Dropbox/work/workspace/exhibits/storage_v1/bea561ce-5746-4adb-b7d2-b9f997fbcd37/7c7df6bd-0399-4798-9422-28c974a4f930_1737506291545_item_media.jpg",
+        "exhibit_uuid": "bea561ce-5746-4adb-b7d2-b9f997fbcd37",
+        "filename": "7c7df6bd-0399-4798-9422-28c974a4f930_1737506291545_item_media.jpg"
+      },
+      {
+        "file": "/Users/fernando.reyes/Dropbox/work/workspace/exhibits/storage_v1/bea561ce-5746-4adb-b7d2-b9f997fbcd37/7e4664f7-f55e-46e5-b5cb-c1fb5a81d3de_1736961171736_item_media.jpg",
+        "exhibit_uuid": "bea561ce-5746-4adb-b7d2-b9f997fbcd37",
+        "filename": "7e4664f7-f55e-46e5-b5cb-c1fb5a81d3de_1736961171736_item_media.jpg"
+      },
+      {
+        "file": "/Users/fernando.reyes/Dropbox/work/workspace/exhibits/storage_v1/bea561ce-5746-4adb-b7d2-b9f997fbcd37/83909d7e-be2d-4f71-a245-a7286c7bf9ab_1736975695731_item_media.jpg",
+        "exhibit_uuid": "bea561ce-5746-4adb-b7d2-b9f997fbcd37",
+        "filename": "83909d7e-be2d-4f71-a245-a7286c7bf9ab_1736975695731_item_media.jpg"
+      },
+      {
+        "file": "/Users/fernando.reyes/Dropbox/work/workspace/exhibits/storage_v1/bea561ce-5746-4adb-b7d2-b9f997fbcd37/8684b9ba-8328-4a7f-a9a9-e6cc25afd909_1736982673308_item_media.jpg",
+        "exhibit_uuid": "bea561ce-5746-4adb-b7d2-b9f997fbcd37",
+        "filename": "8684b9ba-8328-4a7f-a9a9-e6cc25afd909_1736982673308_item_media.jpg"
+      },
+      {
+        "file": "/Users/fernando.reyes/Dropbox/work/workspace/exhibits/storage_v1/bea561ce-5746-4adb-b7d2-b9f997fbcd37/8fbe9af0-1c46-4095-8285-9e0b06a54176_1737506543851_item_media.jpg",
+        "exhibit_uuid": "bea561ce-5746-4adb-b7d2-b9f997fbcd37",
+        "filename": "8fbe9af0-1c46-4095-8285-9e0b06a54176_1737506543851_item_media.jpg"
+      },
+      {
+        "file": "/Users/fernando.reyes/Dropbox/work/workspace/exhibits/storage_v1/bea561ce-5746-4adb-b7d2-b9f997fbcd37/8fc934ac-fcfa-4203-91f8-974021f3768a_1736790757308_item_media.jpg",
+        "exhibit_uuid": "bea561ce-5746-4adb-b7d2-b9f997fbcd37",
+        "filename": "8fc934ac-fcfa-4203-91f8-974021f3768a_1736790757308_item_media.jpg"
+      },
+      {
+        "file": "/Users/fernando.reyes/Dropbox/work/workspace/exhibits/storage_v1/bea561ce-5746-4adb-b7d2-b9f997fbcd37/8fc934ac-fcfa-4203-91f8-974021f3768a_1739998860164_item_media.jpg",
+        "exhibit_uuid": "bea561ce-5746-4adb-b7d2-b9f997fbcd37",
+        "filename": "8fc934ac-fcfa-4203-91f8-974021f3768a_1739998860164_item_media.jpg"
+      },
+      {
+        "file": "/Users/fernando.reyes/Dropbox/work/workspace/exhibits/storage_v1/bea561ce-5746-4adb-b7d2-b9f997fbcd37/9315ae53-a158-4e57-8664-f7792857a424_1740001672669_item_media.jpg",
+        "exhibit_uuid": "bea561ce-5746-4adb-b7d2-b9f997fbcd37",
+        "filename": "9315ae53-a158-4e57-8664-f7792857a424_1740001672669_item_media.jpg"
+      },
+      {
+        "file": "/Users/fernando.reyes/Dropbox/work/workspace/exhibits/storage_v1/bea561ce-5746-4adb-b7d2-b9f997fbcd37/98cf3ab1-5b3c-4e84-95e2-fb1085f07717.pdf",
+        "exhibit_uuid": "bea561ce-5746-4adb-b7d2-b9f997fbcd37",
+        "filename": "98cf3ab1-5b3c-4e84-95e2-fb1085f07717.pdf"
+      },
+      {
+        "file": "/Users/fernando.reyes/Dropbox/work/workspace/exhibits/storage_v1/bea561ce-5746-4adb-b7d2-b9f997fbcd37/9a7cef91-f81f-490f-b99d-19e0958e52b4_1736972274744_item_media.jpg",
+        "exhibit_uuid": "bea561ce-5746-4adb-b7d2-b9f997fbcd37",
+        "filename": "9a7cef91-f81f-490f-b99d-19e0958e52b4_1736972274744_item_media.jpg"
+      },
+      {
+        "file": "/Users/fernando.reyes/Dropbox/work/workspace/exhibits/storage_v1/bea561ce-5746-4adb-b7d2-b9f997fbcd37/9c1d67e3-3f7b-4515-b2a8-1975af604942_1737506398866_item_media.jpg",
+        "exhibit_uuid": "bea561ce-5746-4adb-b7d2-b9f997fbcd37",
+        "filename": "9c1d67e3-3f7b-4515-b2a8-1975af604942_1737506398866_item_media.jpg"
+      },
+      {
+        "file": "/Users/fernando.reyes/Dropbox/work/workspace/exhibits/storage_v1/bea561ce-5746-4adb-b7d2-b9f997fbcd37/9f17167f-9adf-420b-ab18-e712126a96de_1736808398501_item_media.jpg",
+        "exhibit_uuid": "bea561ce-5746-4adb-b7d2-b9f997fbcd37",
+        "filename": "9f17167f-9adf-420b-ab18-e712126a96de_1736808398501_item_media.jpg"
+      },
+      {
+        "file": "/Users/fernando.reyes/Dropbox/work/workspace/exhibits/storage_v1/bea561ce-5746-4adb-b7d2-b9f997fbcd37/a0c7e419-4dda-4b73-b44d-c9e1d818ffa8_1736981191893_item_media.jpg",
+        "exhibit_uuid": "bea561ce-5746-4adb-b7d2-b9f997fbcd37",
+        "filename": "a0c7e419-4dda-4b73-b44d-c9e1d818ffa8_1736981191893_item_media.jpg"
+      },
+      {
+        "file": "/Users/fernando.reyes/Dropbox/work/workspace/exhibits/storage_v1/bea561ce-5746-4adb-b7d2-b9f997fbcd37/a0c7e419-4dda-4b73-b44d-c9e1d818ffa8_1740001298946_item_media.jpg",
+        "exhibit_uuid": "bea561ce-5746-4adb-b7d2-b9f997fbcd37",
+        "filename": "a0c7e419-4dda-4b73-b44d-c9e1d818ffa8_1740001298946_item_media.jpg"
+      },
+      {
+        "file": "/Users/fernando.reyes/Dropbox/work/workspace/exhibits/storage_v1/bea561ce-5746-4adb-b7d2-b9f997fbcd37/a0f00d49-c74c-4cdc-a0c5-f9e599ca2337_1740002124673_item_media.jpg",
+        "exhibit_uuid": "bea561ce-5746-4adb-b7d2-b9f997fbcd37",
+        "filename": "a0f00d49-c74c-4cdc-a0c5-f9e599ca2337_1740002124673_item_media.jpg"
+      },
+      {
+        "file": "/Users/fernando.reyes/Dropbox/work/workspace/exhibits/storage_v1/bea561ce-5746-4adb-b7d2-b9f997fbcd37/a2d56e73-963f-4209-81e5-b9622a112c16_1736965726839_item_media.jpg",
+        "exhibit_uuid": "bea561ce-5746-4adb-b7d2-b9f997fbcd37",
+        "filename": "a2d56e73-963f-4209-81e5-b9622a112c16_1736965726839_item_media.jpg"
+      },
+      {
+        "file": "/Users/fernando.reyes/Dropbox/work/workspace/exhibits/storage_v1/bea561ce-5746-4adb-b7d2-b9f997fbcd37/a2d56e73-963f-4209-81e5-b9622a112c16_1740000826117_item_media.jpg",
+        "exhibit_uuid": "bea561ce-5746-4adb-b7d2-b9f997fbcd37",
+        "filename": "a2d56e73-963f-4209-81e5-b9622a112c16_1740000826117_item_media.jpg"
+      },
+      {
+        "file": "/Users/fernando.reyes/Dropbox/work/workspace/exhibits/storage_v1/bea561ce-5746-4adb-b7d2-b9f997fbcd37/a7f69dd8-a53d-4aab-83f8-265e36762ba2_1737506340832_item_media.jpg",
+        "exhibit_uuid": "bea561ce-5746-4adb-b7d2-b9f997fbcd37",
+        "filename": "a7f69dd8-a53d-4aab-83f8-265e36762ba2_1737506340832_item_media.jpg"
+      },
+      {
+        "file": "/Users/fernando.reyes/Dropbox/work/workspace/exhibits/storage_v1/bea561ce-5746-4adb-b7d2-b9f997fbcd37/ade6578b-546d-49d3-9762-c608094eb0d2_1736966586251_item_media.jpg",
+        "exhibit_uuid": "bea561ce-5746-4adb-b7d2-b9f997fbcd37",
+        "filename": "ade6578b-546d-49d3-9762-c608094eb0d2_1736966586251_item_media.jpg"
+      },
+      {
+        "file": "/Users/fernando.reyes/Dropbox/work/workspace/exhibits/storage_v1/bea561ce-5746-4adb-b7d2-b9f997fbcd37/ade6578b-546d-49d3-9762-c608094eb0d2_1740001056132_item_media.jpg",
+        "exhibit_uuid": "bea561ce-5746-4adb-b7d2-b9f997fbcd37",
+        "filename": "ade6578b-546d-49d3-9762-c608094eb0d2_1740001056132_item_media.jpg"
+      },
+      {
+        "file": "/Users/fernando.reyes/Dropbox/work/workspace/exhibits/storage_v1/bea561ce-5746-4adb-b7d2-b9f997fbcd37/b02913b1-03d7-417f-9487-1a5882368c8e_1736975490281_item_media.jpg",
+        "exhibit_uuid": "bea561ce-5746-4adb-b7d2-b9f997fbcd37",
+        "filename": "b02913b1-03d7-417f-9487-1a5882368c8e_1736975490281_item_media.jpg"
+      },
+      {
+        "file": "/Users/fernando.reyes/Dropbox/work/workspace/exhibits/storage_v1/bea561ce-5746-4adb-b7d2-b9f997fbcd37/b0bc70fa-7e06-4bda-8dcd-b35ba86d2474_1736808694030_item_media.jpg",
+        "exhibit_uuid": "bea561ce-5746-4adb-b7d2-b9f997fbcd37",
+        "filename": "b0bc70fa-7e06-4bda-8dcd-b35ba86d2474_1736808694030_item_media.jpg"
+      },
+      {
+        "file": "/Users/fernando.reyes/Dropbox/work/workspace/exhibits/storage_v1/bea561ce-5746-4adb-b7d2-b9f997fbcd37/b113c3b5-bd61-4e20-bb45-56d0e7c4e6d3_1736789958155_item_media.jpg",
+        "exhibit_uuid": "bea561ce-5746-4adb-b7d2-b9f997fbcd37",
+        "filename": "b113c3b5-bd61-4e20-bb45-56d0e7c4e6d3_1736789958155_item_media.jpg"
+      },
+      {
+        "file": "/Users/fernando.reyes/Dropbox/work/workspace/exhibits/storage_v1/bea561ce-5746-4adb-b7d2-b9f997fbcd37/b113c3b5-bd61-4e20-bb45-56d0e7c4e6d3_1748538084643_item_media.pdf",
+        "exhibit_uuid": "bea561ce-5746-4adb-b7d2-b9f997fbcd37",
+        "filename": "b113c3b5-bd61-4e20-bb45-56d0e7c4e6d3_1748538084643_item_media.pdf"
+      },
+      {
+        "file": "/Users/fernando.reyes/Dropbox/work/workspace/exhibits/storage_v1/bea561ce-5746-4adb-b7d2-b9f997fbcd37/b2031c0e-3be1-4703-bea1-2a665353c38c_1736974523599_item_media.jpg",
+        "exhibit_uuid": "bea561ce-5746-4adb-b7d2-b9f997fbcd37",
+        "filename": "b2031c0e-3be1-4703-bea1-2a665353c38c_1736974523599_item_media.jpg"
+      },
+      {
+        "file": "/Users/fernando.reyes/Dropbox/work/workspace/exhibits/storage_v1/bea561ce-5746-4adb-b7d2-b9f997fbcd37/b50b6b6a-f97b-42bb-81c2-36309969799c_1736975280743_item_media.jpg",
+        "exhibit_uuid": "bea561ce-5746-4adb-b7d2-b9f997fbcd37",
+        "filename": "b50b6b6a-f97b-42bb-81c2-36309969799c_1736975280743_item_media.jpg"
+      },
+      {
+        "file": "/Users/fernando.reyes/Dropbox/work/workspace/exhibits/storage_v1/bea561ce-5746-4adb-b7d2-b9f997fbcd37/b6f32cd8-971d-4c00-ae2e-48ab47f335f2_1736965536799_item_media.jpg",
+        "exhibit_uuid": "bea561ce-5746-4adb-b7d2-b9f997fbcd37",
+        "filename": "b6f32cd8-971d-4c00-ae2e-48ab47f335f2_1736965536799_item_media.jpg"
+      },
+      {
+        "file": "/Users/fernando.reyes/Dropbox/work/workspace/exhibits/storage_v1/bea561ce-5746-4adb-b7d2-b9f997fbcd37/b76d7320-c45d-4164-b6cf-9da1f8552682_1736808304118_item_media.jpg",
+        "exhibit_uuid": "bea561ce-5746-4adb-b7d2-b9f997fbcd37",
+        "filename": "b76d7320-c45d-4164-b6cf-9da1f8552682_1736808304118_item_media.jpg"
+      },
+      {
+        "file": "/Users/fernando.reyes/Dropbox/work/workspace/exhibits/storage_v1/bea561ce-5746-4adb-b7d2-b9f997fbcd37/bd116c4c-e76f-4311-8512-80a2041dc8e5_1736808446319_item_media.jpg",
+        "exhibit_uuid": "bea561ce-5746-4adb-b7d2-b9f997fbcd37",
+        "filename": "bd116c4c-e76f-4311-8512-80a2041dc8e5_1736808446319_item_media.jpg"
+      },
+      {
+        "file": "/Users/fernando.reyes/Dropbox/work/workspace/exhibits/storage_v1/bea561ce-5746-4adb-b7d2-b9f997fbcd37/bea561ce-5746-4adb-b7d2-b9f997fbcd37_1736464795972_exhibit_thumbnail.jpeg",
+        "exhibit_uuid": "bea561ce-5746-4adb-b7d2-b9f997fbcd37",
+        "filename": "bea561ce-5746-4adb-b7d2-b9f997fbcd37_1736464795972_exhibit_thumbnail.jpeg"
+      },
+      {
+        "file": "/Users/fernando.reyes/Dropbox/work/workspace/exhibits/storage_v1/bea561ce-5746-4adb-b7d2-b9f997fbcd37/bea561ce-5746-4adb-b7d2-b9f997fbcd37_1736791271279_exhibit_hero.jpg",
+        "exhibit_uuid": "bea561ce-5746-4adb-b7d2-b9f997fbcd37",
+        "filename": "bea561ce-5746-4adb-b7d2-b9f997fbcd37_1736791271279_exhibit_hero.jpg"
+      },
+      {
+        "file": "/Users/fernando.reyes/Dropbox/work/workspace/exhibits/storage_v1/bea561ce-5746-4adb-b7d2-b9f997fbcd37/bea561ce-5746-4adb-b7d2-b9f997fbcd37_1739734780646_exhibit_thumbnail.jpeg",
+        "exhibit_uuid": "bea561ce-5746-4adb-b7d2-b9f997fbcd37",
+        "filename": "bea561ce-5746-4adb-b7d2-b9f997fbcd37_1739734780646_exhibit_thumbnail.jpeg"
+      },
+      {
+        "file": "/Users/fernando.reyes/Dropbox/work/workspace/exhibits/storage_v1/bea561ce-5746-4adb-b7d2-b9f997fbcd37/c3edf4d9-c147-4988-8bec-f4c5690daba9_1736808634352_item_media.jpg",
+        "exhibit_uuid": "bea561ce-5746-4adb-b7d2-b9f997fbcd37",
+        "filename": "c3edf4d9-c147-4988-8bec-f4c5690daba9_1736808634352_item_media.jpg"
+      },
+      {
+        "file": "/Users/fernando.reyes/Dropbox/work/workspace/exhibits/storage_v1/bea561ce-5746-4adb-b7d2-b9f997fbcd37/c891389f-e642-42b6-afe7-9e86a2e36e56_1736806391002_item_media.jpg",
+        "exhibit_uuid": "bea561ce-5746-4adb-b7d2-b9f997fbcd37",
+        "filename": "c891389f-e642-42b6-afe7-9e86a2e36e56_1736806391002_item_media.jpg"
+      },
+      {
+        "file": "/Users/fernando.reyes/Dropbox/work/workspace/exhibits/storage_v1/bea561ce-5746-4adb-b7d2-b9f997fbcd37/c891389f-e642-42b6-afe7-9e86a2e36e56_1740000569775_item_media.jpg",
+        "exhibit_uuid": "bea561ce-5746-4adb-b7d2-b9f997fbcd37",
+        "filename": "c891389f-e642-42b6-afe7-9e86a2e36e56_1740000569775_item_media.jpg"
+      },
+      {
+        "file": "/Users/fernando.reyes/Dropbox/work/workspace/exhibits/storage_v1/bea561ce-5746-4adb-b7d2-b9f997fbcd37/ce593173-2047-4768-818a-0c92ddce546b_1736980214286_item_media.jpg",
+        "exhibit_uuid": "bea561ce-5746-4adb-b7d2-b9f997fbcd37",
+        "filename": "ce593173-2047-4768-818a-0c92ddce546b_1736980214286_item_media.jpg"
+      },
+      {
+        "file": "/Users/fernando.reyes/Dropbox/work/workspace/exhibits/storage_v1/bea561ce-5746-4adb-b7d2-b9f997fbcd37/ced25389-735e-497e-b192-48400f9161d4_1736979647010_item_media.jpg",
+        "exhibit_uuid": "bea561ce-5746-4adb-b7d2-b9f997fbcd37",
+        "filename": "ced25389-735e-497e-b192-48400f9161d4_1736979647010_item_media.jpg"
+      },
+      {
+        "file": "/Users/fernando.reyes/Dropbox/work/workspace/exhibits/storage_v1/bea561ce-5746-4adb-b7d2-b9f997fbcd37/d1e7bd10-8c96-4c31-8639-ab19a8061ffd_1736790946743_item_media.jpg",
+        "exhibit_uuid": "bea561ce-5746-4adb-b7d2-b9f997fbcd37",
+        "filename": "d1e7bd10-8c96-4c31-8639-ab19a8061ffd_1736790946743_item_media.jpg"
+      },
+      {
+        "file": "/Users/fernando.reyes/Dropbox/work/workspace/exhibits/storage_v1/bea561ce-5746-4adb-b7d2-b9f997fbcd37/d1e7bd10-8c96-4c31-8639-ab19a8061ffd_1740000085738_item_media.jpg",
+        "exhibit_uuid": "bea561ce-5746-4adb-b7d2-b9f997fbcd37",
+        "filename": "d1e7bd10-8c96-4c31-8639-ab19a8061ffd_1740000085738_item_media.jpg"
+      },
+      {
+        "file": "/Users/fernando.reyes/Dropbox/work/workspace/exhibits/storage_v1/bea561ce-5746-4adb-b7d2-b9f997fbcd37/d2413e08-1fd5-4dec-b76f-2e9953e32cd1_1736961105309_item_media.jpg",
+        "exhibit_uuid": "bea561ce-5746-4adb-b7d2-b9f997fbcd37",
+        "filename": "d2413e08-1fd5-4dec-b76f-2e9953e32cd1_1736961105309_item_media.jpg"
+      },
+      {
+        "file": "/Users/fernando.reyes/Dropbox/work/workspace/exhibits/storage_v1/bea561ce-5746-4adb-b7d2-b9f997fbcd37/d51a1ada-e656-4509-8bd4-d20ad3eb8320_1736975623868_item_media.jpg",
+        "exhibit_uuid": "bea561ce-5746-4adb-b7d2-b9f997fbcd37",
+        "filename": "d51a1ada-e656-4509-8bd4-d20ad3eb8320_1736975623868_item_media.jpg"
+      },
+      {
+        "file": "/Users/fernando.reyes/Dropbox/work/workspace/exhibits/storage_v1/bea561ce-5746-4adb-b7d2-b9f997fbcd37/d85b3562-900c-42a6-b62a-1f3324f0dc83.pdf",
+        "exhibit_uuid": "bea561ce-5746-4adb-b7d2-b9f997fbcd37",
+        "filename": "d85b3562-900c-42a6-b62a-1f3324f0dc83.pdf"
+      },
+      {
+        "file": "/Users/fernando.reyes/Dropbox/work/workspace/exhibits/storage_v1/bea561ce-5746-4adb-b7d2-b9f997fbcd37/ddc1bc92-146c-49f5-af64-b7cf3718a86c_1736806181532_item_media.jpg",
+        "exhibit_uuid": "bea561ce-5746-4adb-b7d2-b9f997fbcd37",
+        "filename": "ddc1bc92-146c-49f5-af64-b7cf3718a86c_1736806181532_item_media.jpg"
+      },
+      {
+        "file": "/Users/fernando.reyes/Dropbox/work/workspace/exhibits/storage_v1/bea561ce-5746-4adb-b7d2-b9f997fbcd37/e0d4cf5a-fc07-4dfd-83be-29750228b807_1736961265931_item_media.jpg",
+        "exhibit_uuid": "bea561ce-5746-4adb-b7d2-b9f997fbcd37",
+        "filename": "e0d4cf5a-fc07-4dfd-83be-29750228b807_1736961265931_item_media.jpg"
+      },
+      {
+        "file": "/Users/fernando.reyes/Dropbox/work/workspace/exhibits/storage_v1/bea561ce-5746-4adb-b7d2-b9f997fbcd37/e162653a-28da-4b7e-a719-3e4cfd46327a_1736808370014_item_media.jpg",
+        "exhibit_uuid": "bea561ce-5746-4adb-b7d2-b9f997fbcd37",
+        "filename": "e162653a-28da-4b7e-a719-3e4cfd46327a_1736808370014_item_media.jpg"
+      },
+      {
+        "file": "/Users/fernando.reyes/Dropbox/work/workspace/exhibits/storage_v1/bea561ce-5746-4adb-b7d2-b9f997fbcd37/e32d67a5-14c4-41ee-9569-5cfc0ca05482_1736964733789_item_media.jpg",
+        "exhibit_uuid": "bea561ce-5746-4adb-b7d2-b9f997fbcd37",
+        "filename": "e32d67a5-14c4-41ee-9569-5cfc0ca05482_1736964733789_item_media.jpg"
+      },
+      {
+        "file": "/Users/fernando.reyes/Dropbox/work/workspace/exhibits/storage_v1/bea561ce-5746-4adb-b7d2-b9f997fbcd37/e6f8c019-efd0-4c7c-b43a-ca39eeced8e4_1736981827872_item_media.pdf",
+        "exhibit_uuid": "bea561ce-5746-4adb-b7d2-b9f997fbcd37",
+        "filename": "e6f8c019-efd0-4c7c-b43a-ca39eeced8e4_1736981827872_item_media.pdf"
+      },
+      {
+        "file": "/Users/fernando.reyes/Dropbox/work/workspace/exhibits/storage_v1/bea561ce-5746-4adb-b7d2-b9f997fbcd37/e6f8c019-efd0-4c7c-b43a-ca39eeced8e4_1740001351949_item_media.pdf",
+        "exhibit_uuid": "bea561ce-5746-4adb-b7d2-b9f997fbcd37",
+        "filename": "e6f8c019-efd0-4c7c-b43a-ca39eeced8e4_1740001351949_item_media.pdf"
+      },
+      {
+        "file": "/Users/fernando.reyes/Dropbox/work/workspace/exhibits/storage_v1/bea561ce-5746-4adb-b7d2-b9f997fbcd37/ee30e4f2-e5ee-4013-9c47-de343451d001_1737506448282_item_media.jpg",
+        "exhibit_uuid": "bea561ce-5746-4adb-b7d2-b9f997fbcd37",
+        "filename": "ee30e4f2-e5ee-4013-9c47-de343451d001_1737506448282_item_media.jpg"
+      },
+      {
+        "file": "/Users/fernando.reyes/Dropbox/work/workspace/exhibits/storage_v1/bea561ce-5746-4adb-b7d2-b9f997fbcd37/f6650789-ad33-425c-bcc9-d26eed09c1df_1737506236009_item_media.jpg",
+        "exhibit_uuid": "bea561ce-5746-4adb-b7d2-b9f997fbcd37",
+        "filename": "f6650789-ad33-425c-bcc9-d26eed09c1df_1737506236009_item_media.jpg"
+      },
+      {
+        "file": "/Users/fernando.reyes/Dropbox/work/workspace/exhibits/storage_v1/bea561ce-5746-4adb-b7d2-b9f997fbcd37/f74a3686-b253-4299-a870-e79e5948a4b7_1737506371696_item_media.jpg",
+        "exhibit_uuid": "bea561ce-5746-4adb-b7d2-b9f997fbcd37",
+        "filename": "f74a3686-b253-4299-a870-e79e5948a4b7_1737506371696_item_media.jpg"
+      },
+      {
+        "file": "/Users/fernando.reyes/Dropbox/work/workspace/exhibits/storage_v1/bea561ce-5746-4adb-b7d2-b9f997fbcd37/fbcb11a0-fd61-49b9-97f2-d007a0b12ece_1736974233825_item_media.jpg",
+        "exhibit_uuid": "bea561ce-5746-4adb-b7d2-b9f997fbcd37",
+        "filename": "fbcb11a0-fd61-49b9-97f2-d007a0b12ece_1736974233825_item_media.jpg"
+      },
+      {
+        "file": "/Users/fernando.reyes/Dropbox/work/workspace/exhibits/storage_v1/c39724f6-0291-4341-ab6b-ca3e59ff0d3a/c39724f6-0291-4341-ab6b-ca3e59ff0d3a_1736362634733_exhibit_hero.jpg",
+        "exhibit_uuid": "c39724f6-0291-4341-ab6b-ca3e59ff0d3a",
+        "filename": "c39724f6-0291-4341-ab6b-ca3e59ff0d3a_1736362634733_exhibit_hero.jpg"
+      },
+      {
+        "file": "/Users/fernando.reyes/Dropbox/work/workspace/exhibits/storage_v1/cd1c36f45f1fa9e80b060ea9e893bab6/078d45304bace91673f87edd23405f9c.jpg",
+        "exhibit_uuid": "cd1c36f45f1fa9e80b060ea9e893bab6",
+        "filename": "078d45304bace91673f87edd23405f9c.jpg"
+      },
+      {
+        "file": "/Users/fernando.reyes/Dropbox/work/workspace/exhibits/storage_v1/cd1c36f45f1fa9e80b060ea9e893bab6/0a1577c13dbc91442ad563be0f3be928.png",
+        "exhibit_uuid": "cd1c36f45f1fa9e80b060ea9e893bab6",
+        "filename": "0a1577c13dbc91442ad563be0f3be928.png"
+      },
+      {
+        "file": "/Users/fernando.reyes/Dropbox/work/workspace/exhibits/storage_v1/cd1c36f45f1fa9e80b060ea9e893bab6/1816949e04d902746324fd66de077233.jpg",
+        "exhibit_uuid": "cd1c36f45f1fa9e80b060ea9e893bab6",
+        "filename": "1816949e04d902746324fd66de077233.jpg"
+      },
+      {
+        "file": "/Users/fernando.reyes/Dropbox/work/workspace/exhibits/storage_v1/cd1c36f45f1fa9e80b060ea9e893bab6/22ea0c2d0383bb3c251f2a92304a57e6.png",
+        "exhibit_uuid": "cd1c36f45f1fa9e80b060ea9e893bab6",
+        "filename": "22ea0c2d0383bb3c251f2a92304a57e6.png"
+      },
+      {
+        "file": "/Users/fernando.reyes/Dropbox/work/workspace/exhibits/storage_v1/cd1c36f45f1fa9e80b060ea9e893bab6/237c3dd7c3597909f6a30376c81f4162.pdf",
+        "exhibit_uuid": "cd1c36f45f1fa9e80b060ea9e893bab6",
+        "filename": "237c3dd7c3597909f6a30376c81f4162.pdf"
+      },
+      {
+        "file": "/Users/fernando.reyes/Dropbox/work/workspace/exhibits/storage_v1/cd1c36f45f1fa9e80b060ea9e893bab6/237c3dd7c3597909f6a30376c81f4162_thumbnail.png",
+        "exhibit_uuid": "cd1c36f45f1fa9e80b060ea9e893bab6",
+        "filename": "237c3dd7c3597909f6a30376c81f4162_thumbnail.png"
+      },
+      {
+        "file": "/Users/fernando.reyes/Dropbox/work/workspace/exhibits/storage_v1/cd1c36f45f1fa9e80b060ea9e893bab6/33abf2863e5a5d389eecfa014306c445.png",
+        "exhibit_uuid": "cd1c36f45f1fa9e80b060ea9e893bab6",
+        "filename": "33abf2863e5a5d389eecfa014306c445.png"
+      },
+      {
+        "file": "/Users/fernando.reyes/Dropbox/work/workspace/exhibits/storage_v1/cd1c36f45f1fa9e80b060ea9e893bab6/36f03598cb7ab6e47b2c55f783b374d7.jpg",
+        "exhibit_uuid": "cd1c36f45f1fa9e80b060ea9e893bab6",
+        "filename": "36f03598cb7ab6e47b2c55f783b374d7.jpg"
+      },
+      {
+        "file": "/Users/fernando.reyes/Dropbox/work/workspace/exhibits/storage_v1/cd1c36f45f1fa9e80b060ea9e893bab6/420e7eea51d5814ebf4e4d34f9b1b181.jpg",
+        "exhibit_uuid": "cd1c36f45f1fa9e80b060ea9e893bab6",
+        "filename": "420e7eea51d5814ebf4e4d34f9b1b181.jpg"
+      },
+      {
+        "file": "/Users/fernando.reyes/Dropbox/work/workspace/exhibits/storage_v1/cd1c36f45f1fa9e80b060ea9e893bab6/53c475922d3d1e68ddca7039c9bdeb0a.png",
+        "exhibit_uuid": "cd1c36f45f1fa9e80b060ea9e893bab6",
+        "filename": "53c475922d3d1e68ddca7039c9bdeb0a.png"
+      },
+      {
+        "file": "/Users/fernando.reyes/Dropbox/work/workspace/exhibits/storage_v1/cd1c36f45f1fa9e80b060ea9e893bab6/5756a7a16134dfbaccd752418e923c9d.jpg",
+        "exhibit_uuid": "cd1c36f45f1fa9e80b060ea9e893bab6",
+        "filename": "5756a7a16134dfbaccd752418e923c9d.jpg"
+      },
+      {
+        "file": "/Users/fernando.reyes/Dropbox/work/workspace/exhibits/storage_v1/cd1c36f45f1fa9e80b060ea9e893bab6/57b325a7f779a5ad1558340205e052ab.jpg",
+        "exhibit_uuid": "cd1c36f45f1fa9e80b060ea9e893bab6",
+        "filename": "57b325a7f779a5ad1558340205e052ab.jpg"
+      },
+      {
+        "file": "/Users/fernando.reyes/Dropbox/work/workspace/exhibits/storage_v1/cd1c36f45f1fa9e80b060ea9e893bab6/58b097c45da054513cf95f7c7e1180ef.pdf",
+        "exhibit_uuid": "cd1c36f45f1fa9e80b060ea9e893bab6",
+        "filename": "58b097c45da054513cf95f7c7e1180ef.pdf"
+      },
+      {
+        "file": "/Users/fernando.reyes/Dropbox/work/workspace/exhibits/storage_v1/cd1c36f45f1fa9e80b060ea9e893bab6/6a33dba349e42a3187fa377bcddd19e5.pdf",
+        "exhibit_uuid": "cd1c36f45f1fa9e80b060ea9e893bab6",
+        "filename": "6a33dba349e42a3187fa377bcddd19e5.pdf"
+      },
+      {
+        "file": "/Users/fernando.reyes/Dropbox/work/workspace/exhibits/storage_v1/cd1c36f45f1fa9e80b060ea9e893bab6/6db40678cbf0dfdc297780ca07e26dc8.jpg",
+        "exhibit_uuid": "cd1c36f45f1fa9e80b060ea9e893bab6",
+        "filename": "6db40678cbf0dfdc297780ca07e26dc8.jpg"
+      },
+      {
+        "file": "/Users/fernando.reyes/Dropbox/work/workspace/exhibits/storage_v1/cd1c36f45f1fa9e80b060ea9e893bab6/7122c66abe6e0a43453ccc227a2029b5.jpg",
+        "exhibit_uuid": "cd1c36f45f1fa9e80b060ea9e893bab6",
+        "filename": "7122c66abe6e0a43453ccc227a2029b5.jpg"
+      },
+      {
+        "file": "/Users/fernando.reyes/Dropbox/work/workspace/exhibits/storage_v1/cd1c36f45f1fa9e80b060ea9e893bab6/77d4137d354ae026bb023b9fa081598e.jpg",
+        "exhibit_uuid": "cd1c36f45f1fa9e80b060ea9e893bab6",
+        "filename": "77d4137d354ae026bb023b9fa081598e.jpg"
+      },
+      {
+        "file": "/Users/fernando.reyes/Dropbox/work/workspace/exhibits/storage_v1/cd1c36f45f1fa9e80b060ea9e893bab6/8119b5f5a23193bc59bf60882a3e889e.jpg",
+        "exhibit_uuid": "cd1c36f45f1fa9e80b060ea9e893bab6",
+        "filename": "8119b5f5a23193bc59bf60882a3e889e.jpg"
+      },
+      {
+        "file": "/Users/fernando.reyes/Dropbox/work/workspace/exhibits/storage_v1/cd1c36f45f1fa9e80b060ea9e893bab6/8becd515687b3240407a141155591d4e.png",
+        "exhibit_uuid": "cd1c36f45f1fa9e80b060ea9e893bab6",
+        "filename": "8becd515687b3240407a141155591d4e.png"
+      },
+      {
+        "file": "/Users/fernando.reyes/Dropbox/work/workspace/exhibits/storage_v1/cd1c36f45f1fa9e80b060ea9e893bab6/8d6a19a529125f1f7a944cdc42ffb4c1.png",
+        "exhibit_uuid": "cd1c36f45f1fa9e80b060ea9e893bab6",
+        "filename": "8d6a19a529125f1f7a944cdc42ffb4c1.png"
+      },
+      {
+        "file": "/Users/fernando.reyes/Dropbox/work/workspace/exhibits/storage_v1/cd1c36f45f1fa9e80b060ea9e893bab6/aa3311f526f69ba6e5abb3bf482be75a.jpg",
+        "exhibit_uuid": "cd1c36f45f1fa9e80b060ea9e893bab6",
+        "filename": "aa3311f526f69ba6e5abb3bf482be75a.jpg"
+      },
+      {
+        "file": "/Users/fernando.reyes/Dropbox/work/workspace/exhibits/storage_v1/cd1c36f45f1fa9e80b060ea9e893bab6/c59e55e43496b9ad8bf81a3b67d03c47.png",
+        "exhibit_uuid": "cd1c36f45f1fa9e80b060ea9e893bab6",
+        "filename": "c59e55e43496b9ad8bf81a3b67d03c47.png"
+      },
+      {
+        "file": "/Users/fernando.reyes/Dropbox/work/workspace/exhibits/storage_v1/cd1c36f45f1fa9e80b060ea9e893bab6/caa32742b7c272af19b15218c04376fc.jpg",
+        "exhibit_uuid": "cd1c36f45f1fa9e80b060ea9e893bab6",
+        "filename": "caa32742b7c272af19b15218c04376fc.jpg"
+      },
+      {
+        "file": "/Users/fernando.reyes/Dropbox/work/workspace/exhibits/storage_v1/cd1c36f45f1fa9e80b060ea9e893bab6/cc27482e5eb49479bca4b37ff00e1848.jpg",
+        "exhibit_uuid": "cd1c36f45f1fa9e80b060ea9e893bab6",
+        "filename": "cc27482e5eb49479bca4b37ff00e1848.jpg"
+      },
+      {
+        "file": "/Users/fernando.reyes/Dropbox/work/workspace/exhibits/storage_v1/cd1c36f45f1fa9e80b060ea9e893bab6/d79c62ebc2ee3289cd13277e48ff7b6f.jpg",
+        "exhibit_uuid": "cd1c36f45f1fa9e80b060ea9e893bab6",
+        "filename": "d79c62ebc2ee3289cd13277e48ff7b6f.jpg"
+      },
+      {
+        "file": "/Users/fernando.reyes/Dropbox/work/workspace/exhibits/storage_v1/cd1c36f45f1fa9e80b060ea9e893bab6/d7a6f5bd80cf063a33ac925160ca7ac9.jpg",
+        "exhibit_uuid": "cd1c36f45f1fa9e80b060ea9e893bab6",
+        "filename": "d7a6f5bd80cf063a33ac925160ca7ac9.jpg"
+      },
+      {
+        "file": "/Users/fernando.reyes/Dropbox/work/workspace/exhibits/storage_v1/cd1c36f45f1fa9e80b060ea9e893bab6/d94eea928db27bc7b55d0b2875fee94d.jpg",
+        "exhibit_uuid": "cd1c36f45f1fa9e80b060ea9e893bab6",
+        "filename": "d94eea928db27bc7b55d0b2875fee94d.jpg"
+      },
+      {
+        "file": "/Users/fernando.reyes/Dropbox/work/workspace/exhibits/storage_v1/cd1c36f45f1fa9e80b060ea9e893bab6/dad70c0a4e9ff51fa838c6d03488fa17.png",
+        "exhibit_uuid": "cd1c36f45f1fa9e80b060ea9e893bab6",
+        "filename": "dad70c0a4e9ff51fa838c6d03488fa17.png"
+      },
+      {
+        "file": "/Users/fernando.reyes/Dropbox/work/workspace/exhibits/storage_v1/cd1c36f45f1fa9e80b060ea9e893bab6/e366566d5444cfd8e74e5e57c67b497e.pdf",
+        "exhibit_uuid": "cd1c36f45f1fa9e80b060ea9e893bab6",
+        "filename": "e366566d5444cfd8e74e5e57c67b497e.pdf"
+      },
+      {
+        "file": "/Users/fernando.reyes/Dropbox/work/workspace/exhibits/storage_v1/cd1c36f45f1fa9e80b060ea9e893bab6/e3ac681469f3cde0f5e45129b1ae3cce.pdf",
+        "exhibit_uuid": "cd1c36f45f1fa9e80b060ea9e893bab6",
+        "filename": "e3ac681469f3cde0f5e45129b1ae3cce.pdf"
+      },
+      {
+        "file": "/Users/fernando.reyes/Dropbox/work/workspace/exhibits/storage_v1/cd1c36f45f1fa9e80b060ea9e893bab6/e4d7eab69954844dc2c5b767ff7dd60b.png",
+        "exhibit_uuid": "cd1c36f45f1fa9e80b060ea9e893bab6",
+        "filename": "e4d7eab69954844dc2c5b767ff7dd60b.png"
+      },
+      {
+        "file": "/Users/fernando.reyes/Dropbox/work/workspace/exhibits/storage_v1/cd1c36f45f1fa9e80b060ea9e893bab6/e75694b7dcc4fa137d3ee36df32045b5.jpg",
+        "exhibit_uuid": "cd1c36f45f1fa9e80b060ea9e893bab6",
+        "filename": "e75694b7dcc4fa137d3ee36df32045b5.jpg"
+      },
+      {
+        "file": "/Users/fernando.reyes/Dropbox/work/workspace/exhibits/storage_v1/cd1c36f45f1fa9e80b060ea9e893bab6/ed099cd4004d2ca5a4a747a72c800ae2.jpg",
+        "exhibit_uuid": "cd1c36f45f1fa9e80b060ea9e893bab6",
+        "filename": "ed099cd4004d2ca5a4a747a72c800ae2.jpg"
+      },
+      {
+        "file": "/Users/fernando.reyes/Dropbox/work/workspace/exhibits/storage_v1/cd1c36f45f1fa9e80b060ea9e893bab6/f30b0a9c40668b49a67b0d784b7d77dc.png",
+        "exhibit_uuid": "cd1c36f45f1fa9e80b060ea9e893bab6",
+        "filename": "f30b0a9c40668b49a67b0d784b7d77dc.png"
+      },
+      {
+        "file": "/Users/fernando.reyes/Dropbox/work/workspace/exhibits/storage_v1/cd1c36f45f1fa9e80b060ea9e893bab6/f65dae10a97ff14248cbd5d209ff21fe.jpg",
+        "exhibit_uuid": "cd1c36f45f1fa9e80b060ea9e893bab6",
+        "filename": "f65dae10a97ff14248cbd5d209ff21fe.jpg"
+      },
+      {
+        "file": "/Users/fernando.reyes/Dropbox/work/workspace/exhibits/storage_v1/cd1c36f45f1fa9e80b060ea9e893bab6/no-more-pios_hero_2.jpg",
+        "exhibit_uuid": "cd1c36f45f1fa9e80b060ea9e893bab6",
+        "filename": "no-more-pios_hero_2.jpg"
+      },
+      {
+        "file": "/Users/fernando.reyes/Dropbox/work/workspace/exhibits/storage_v1/cd1c36f45f1fa9e80b060ea9e893bab6/no-more-pios_hero_2_thumbnail.jpg",
+        "exhibit_uuid": "cd1c36f45f1fa9e80b060ea9e893bab6",
+        "filename": "no-more-pios_hero_2_thumbnail.jpg"
+      },
+      {
+        "file": "/Users/fernando.reyes/Dropbox/work/workspace/exhibits/storage_v1/cd1c36f45f1fa9e80b060ea9e893bab6/no-more-pios_overlay_hero_2.jpg",
+        "exhibit_uuid": "cd1c36f45f1fa9e80b060ea9e893bab6",
+        "filename": "no-more-pios_overlay_hero_2.jpg"
+      },
+      {
+        "file": "/Users/fernando.reyes/Dropbox/work/workspace/exhibits/storage_v1/ce8c91ee-3a3f-402b-91eb-5b81fee2deb0/ce8c91ee-3a3f-402b-91eb-5b81fee2deb0_1738703889738_exhibit_thumbnail.png",
+        "exhibit_uuid": "ce8c91ee-3a3f-402b-91eb-5b81fee2deb0",
+        "filename": "ce8c91ee-3a3f-402b-91eb-5b81fee2deb0_1738703889738_exhibit_thumbnail.png"
+      },
+      {
+        "file": "/Users/fernando.reyes/Dropbox/work/workspace/exhibits/storage_v1/ce8c91ee-3a3f-402b-91eb-5b81fee2deb0/ce8c91ee-3a3f-402b-91eb-5b81fee2deb0_1738705344216_exhibit_hero.png",
+        "exhibit_uuid": "ce8c91ee-3a3f-402b-91eb-5b81fee2deb0",
+        "filename": "ce8c91ee-3a3f-402b-91eb-5b81fee2deb0_1738705344216_exhibit_hero.png"
+      },
+      {
+        "file": "/Users/fernando.reyes/Dropbox/work/workspace/exhibits/storage_v1/cee2e3c0-cffb-4aab-8d4c-de8c968e5932/cee2e3c0-cffb-4aab-8d4c-de8c968e5932_1741644285950_exhibit_hero.jpg",
+        "exhibit_uuid": "cee2e3c0-cffb-4aab-8d4c-de8c968e5932",
+        "filename": "cee2e3c0-cffb-4aab-8d4c-de8c968e5932_1741644285950_exhibit_hero.jpg"
+      },
+      {
+        "file": "/Users/fernando.reyes/Dropbox/work/workspace/exhibits/storage_v1/d1d0361b-8449-47a7-b5a7-94ce599b3eb0/d1d0361b-8449-47a7-b5a7-94ce599b3eb0_1734650102632_exhibit_hero.jpg",
+        "exhibit_uuid": "d1d0361b-8449-47a7-b5a7-94ce599b3eb0",
+        "filename": "d1d0361b-8449-47a7-b5a7-94ce599b3eb0_1734650102632_exhibit_hero.jpg"
+      },
+      {
+        "file": "/Users/fernando.reyes/Dropbox/work/workspace/exhibits/storage_v1/d878a277-472d-423a-97ee-53daab25144b/d878a277-472d-423a-97ee-53daab25144b_1737305506562_exhibit_hero.jpg",
+        "exhibit_uuid": "d878a277-472d-423a-97ee-53daab25144b",
+        "filename": "d878a277-472d-423a-97ee-53daab25144b_1737305506562_exhibit_hero.jpg"
+      },
+      {
+        "file": "/Users/fernando.reyes/Dropbox/work/workspace/exhibits/storage_v1/d878a277-472d-423a-97ee-53daab25144b/d878a277-472d-423a-97ee-53daab25144b_1737305517251_exhibit_thumbnail.jpg",
+        "exhibit_uuid": "d878a277-472d-423a-97ee-53daab25144b",
+        "filename": "d878a277-472d-423a-97ee-53daab25144b_1737305517251_exhibit_thumbnail.jpg"
+      },
+      {
+        "file": "/Users/fernando.reyes/Dropbox/work/workspace/exhibits/storage_v1/dd748b2c862c71bf50c1238c62ca26f0/example-exhibit_hero.jpg",
+        "exhibit_uuid": "dd748b2c862c71bf50c1238c62ca26f0",
+        "filename": "example-exhibit_hero.jpg"
+      },
+      {
+        "file": "/Users/fernando.reyes/Dropbox/work/workspace/exhibits/storage_v1/dd748b2c862c71bf50c1238c62ca26f0/example-exhibit_tn.jpg",
+        "exhibit_uuid": "dd748b2c862c71bf50c1238c62ca26f0",
+        "filename": "example-exhibit_tn.jpg"
+      },
+      {
+        "file": "/Users/fernando.reyes/Dropbox/work/workspace/exhibits/storage_v1/e62699c5-1b40-4b60-84aa-369707b7640d/ac46fda2-e532-4e2e-8631-28ca2236aae2_1753138899723_item_media.pdf",
+        "exhibit_uuid": "e62699c5-1b40-4b60-84aa-369707b7640d",
+        "filename": "ac46fda2-e532-4e2e-8631-28ca2236aae2_1753138899723_item_media.pdf"
+      },
+      {
+        "file": "/Users/fernando.reyes/Dropbox/work/workspace/exhibits/storage_v1/e62699c5-1b40-4b60-84aa-369707b7640d/b07e8df6-b902-4e48-ab0b-f0640220bdce_1765301171354_item_media.jpg",
+        "exhibit_uuid": "e62699c5-1b40-4b60-84aa-369707b7640d",
+        "filename": "b07e8df6-b902-4e48-ab0b-f0640220bdce_1765301171354_item_media.jpg"
+      },
+      {
+        "file": "/Users/fernando.reyes/Dropbox/work/workspace/exhibits/storage_v1/ece52e37-1025-40c5-8c8f-8250aa6d16cd/ece52e37-1025-40c5-8c8f-8250aa6d16cd_1737577520893_exhibit_hero.jpg",
+        "exhibit_uuid": "ece52e37-1025-40c5-8c8f-8250aa6d16cd",
+        "filename": "ece52e37-1025-40c5-8c8f-8250aa6d16cd_1737577520893_exhibit_hero.jpg"
+      },
+      {
+        "file": "/Users/fernando.reyes/Dropbox/work/workspace/exhibits/storage_v1/ece52e37-1025-40c5-8c8f-8250aa6d16cd/ece52e37-1025-40c5-8c8f-8250aa6d16cd_1737577525078_exhibit_thumbnail.jpg",
+        "exhibit_uuid": "ece52e37-1025-40c5-8c8f-8250aa6d16cd",
+        "filename": "ece52e37-1025-40c5-8c8f-8250aa6d16cd_1737577525078_exhibit_thumbnail.jpg"
+      },
+      {
+        "file": "/Users/fernando.reyes/Dropbox/work/workspace/exhibits/storage_v1/f47dae0b-bcba-4a82-ad4f-fb7ffc3baae7/2570d9b6-6fa8-4551-a3c9-89b7bb052c6f_1776271397662_item_media.jpg",
+        "exhibit_uuid": "f47dae0b-bcba-4a82-ad4f-fb7ffc3baae7",
+        "filename": "2570d9b6-6fa8-4551-a3c9-89b7bb052c6f_1776271397662_item_media.jpg"
+      },
+      {
+        "file": "/Users/fernando.reyes/Dropbox/work/workspace/exhibits/storage_v1/f47dae0b-bcba-4a82-ad4f-fb7ffc3baae7/4e72c32d-f7d2-4a2c-a4ea-a4127b980996_1776270961489_item_media.jpg",
+        "exhibit_uuid": "f47dae0b-bcba-4a82-ad4f-fb7ffc3baae7",
+        "filename": "4e72c32d-f7d2-4a2c-a4ea-a4127b980996_1776270961489_item_media.jpg"
+      },
+      {
+        "file": "/Users/fernando.reyes/Dropbox/work/workspace/exhibits/storage_v1/f47dae0b-bcba-4a82-ad4f-fb7ffc3baae7/5d039fae-d037-4d01-a010-70602db0b513_1776444794151_item_media.jpg",
+        "exhibit_uuid": "f47dae0b-bcba-4a82-ad4f-fb7ffc3baae7",
+        "filename": "5d039fae-d037-4d01-a010-70602db0b513_1776444794151_item_media.jpg"
+      },
+      {
+        "file": "/Users/fernando.reyes/Dropbox/work/workspace/exhibits/storage_v1/f47dae0b-bcba-4a82-ad4f-fb7ffc3baae7/70a22962-143b-4436-adb2-9ec574a81453_1776270884459_item_media.jpg",
+        "exhibit_uuid": "f47dae0b-bcba-4a82-ad4f-fb7ffc3baae7",
+        "filename": "70a22962-143b-4436-adb2-9ec574a81453_1776270884459_item_media.jpg"
+      },
+      {
+        "file": "/Users/fernando.reyes/Dropbox/work/workspace/exhibits/storage_v1/f47dae0b-bcba-4a82-ad4f-fb7ffc3baae7/92d7c369-6fe3-47fa-b61e-0febffa5591d_1776271655316_item_media.jpg",
+        "exhibit_uuid": "f47dae0b-bcba-4a82-ad4f-fb7ffc3baae7",
+        "filename": "92d7c369-6fe3-47fa-b61e-0febffa5591d_1776271655316_item_media.jpg"
+      },
+      {
+        "file": "/Users/fernando.reyes/Dropbox/work/workspace/exhibits/storage_v1/f47dae0b-bcba-4a82-ad4f-fb7ffc3baae7/9709406c-6ce5-434e-820d-67b2fab6a8f3_1776271534904_item_media.jpg",
+        "exhibit_uuid": "f47dae0b-bcba-4a82-ad4f-fb7ffc3baae7",
+        "filename": "9709406c-6ce5-434e-820d-67b2fab6a8f3_1776271534904_item_media.jpg"
+      },
+      {
+        "file": "/Users/fernando.reyes/Dropbox/work/workspace/exhibits/storage_v1/f47dae0b-bcba-4a82-ad4f-fb7ffc3baae7/973d03e8-fb8d-49ad-93fa-ea3e5dc3f2f4_1776444926417_item_media.jpg",
+        "exhibit_uuid": "f47dae0b-bcba-4a82-ad4f-fb7ffc3baae7",
+        "filename": "973d03e8-fb8d-49ad-93fa-ea3e5dc3f2f4_1776444926417_item_media.jpg"
+      },
+      {
+        "file": "/Users/fernando.reyes/Dropbox/work/workspace/exhibits/storage_v1/f47dae0b-bcba-4a82-ad4f-fb7ffc3baae7/ac5b0709-ed08-4c63-9a42-26126c8fe1c5_1776271025497_item_media.jpg",
+        "exhibit_uuid": "f47dae0b-bcba-4a82-ad4f-fb7ffc3baae7",
+        "filename": "ac5b0709-ed08-4c63-9a42-26126c8fe1c5_1776271025497_item_media.jpg"
+      },
+      {
+        "file": "/Users/fernando.reyes/Dropbox/work/workspace/exhibits/storage_v1/f47dae0b-bcba-4a82-ad4f-fb7ffc3baae7/b5c998b8-765f-466e-8694-b2cbc0e1d37f_1776271174403_item_media.jpg",
+        "exhibit_uuid": "f47dae0b-bcba-4a82-ad4f-fb7ffc3baae7",
+        "filename": "b5c998b8-765f-466e-8694-b2cbc0e1d37f_1776271174403_item_media.jpg"
+      },
+      {
+        "file": "/Users/fernando.reyes/Dropbox/work/workspace/exhibits/storage_v1/f47dae0b-bcba-4a82-ad4f-fb7ffc3baae7/b5fd1d05-efee-4b5b-a0c0-1a7db18604c0_1776271352562_item_media.jpg",
+        "exhibit_uuid": "f47dae0b-bcba-4a82-ad4f-fb7ffc3baae7",
+        "filename": "b5fd1d05-efee-4b5b-a0c0-1a7db18604c0_1776271352562_item_media.jpg"
+      },
+      {
+        "file": "/Users/fernando.reyes/Dropbox/work/workspace/exhibits/storage_v1/f47dae0b-bcba-4a82-ad4f-fb7ffc3baae7/eb80d5d2-e7bf-4098-b3d9-44717aa4deaf_1776271498344_item_media.jpg",
+        "exhibit_uuid": "f47dae0b-bcba-4a82-ad4f-fb7ffc3baae7",
+        "filename": "eb80d5d2-e7bf-4098-b3d9-44717aa4deaf_1776271498344_item_media.jpg"
+      },
+      {
+        "file": "/Users/fernando.reyes/Dropbox/work/workspace/exhibits/storage_v1/f4a8ec55-1961-43ca-a805-f7ccc957479b/ab99d358-9e26-4b11-8203-81941bdc8f8b_1737669704588_item_media.jpg",
+        "exhibit_uuid": "f4a8ec55-1961-43ca-a805-f7ccc957479b",
+        "filename": "ab99d358-9e26-4b11-8203-81941bdc8f8b_1737669704588_item_media.jpg"
+      },
+      {
+        "file": "/Users/fernando.reyes/Dropbox/work/workspace/exhibits/storage_v1/fb103433-9278-4e99-b4f2-d422c8f0605f/a6038b36-25e4-4f04-b39c-6022da8dbef4_1754066734125_item_media.jpg",
+        "exhibit_uuid": "fb103433-9278-4e99-b4f2-d422c8f0605f",
+        "filename": "a6038b36-25e4-4f04-b39c-6022da8dbef4_1754066734125_item_media.jpg"
+      },
+      {
+        "file": "/Users/fernando.reyes/Dropbox/work/workspace/exhibits/storage_v1/fb103433-9278-4e99-b4f2-d422c8f0605f/fb103433-9278-4e99-b4f2-d422c8f0605f_1753911205412_exhibit_hero.jpg",
+        "exhibit_uuid": "fb103433-9278-4e99-b4f2-d422c8f0605f",
+        "filename": "fb103433-9278-4e99-b4f2-d422c8f0605f_1753911205412_exhibit_hero.jpg"
+      },
+      {
+        "file": "/Users/fernando.reyes/Dropbox/work/workspace/exhibits/storage_v1/fb103433-9278-4e99-b4f2-d422c8f0605f/fb103433-9278-4e99-b4f2-d422c8f0605f_1753912504839_exhibit_hero.jpg",
+        "exhibit_uuid": "fb103433-9278-4e99-b4f2-d422c8f0605f",
+        "filename": "fb103433-9278-4e99-b4f2-d422c8f0605f_1753912504839_exhibit_hero.jpg"
+      },
+      {
+        "file": "/Users/fernando.reyes/Dropbox/work/workspace/exhibits/storage_v1/fb103433-9278-4e99-b4f2-d422c8f0605f/fb103433-9278-4e99-b4f2-d422c8f0605f_1753912983209_exhibit_hero.jpg",
+        "exhibit_uuid": "fb103433-9278-4e99-b4f2-d422c8f0605f",
+        "filename": "fb103433-9278-4e99-b4f2-d422c8f0605f_1753912983209_exhibit_hero.jpg"
+      }
+    ],
+    "db_references_without_files": [
+      "standard item b303078a-b939-4c5b-8b86-85ff81b86f66: file not found — /Users/fernando.reyes/Dropbox/work/workspace/exhibits/storage_v1/bea561ce-5746-4adb-b7d2-b9f997fbcd37/efea2428-3ab7-4d6c-adaf-f3a68bd73d92",
+      "standard item c93000c1-2809-4313-aa20-eee0fe926862: file not found — /Users/fernando.reyes/Dropbox/work/workspace/exhibits/storage_v1/bea561ce-5746-4adb-b7d2-b9f997fbcd37/71352c4c-9ee1-46f6-9d71-6ba1494ecab8",
+      "standard item f2b0cf6e-c776-488b-bea2-c88aaa710ce3: file not found — /Users/fernando.reyes/Dropbox/work/workspace/exhibits/storage_v1/bea561ce-5746-4adb-b7d2-b9f997fbcd37/efe52cee-80b6-478f-b0df-59a88fbda09e",
+      "standard item dfc8ab01-8809-4395-864b-d7940777be6f: file not found — /Users/fernando.reyes/Dropbox/work/workspace/exhibits/storage_v1/5cd153a9-3d3d-47bb-bae7-9cf21294d922/dfc8ab01-8809-4395-864b-d7940777be6f_1745863806680_item_media.jpeg",
+      "grid item b94fb312-4710-4721-a161-b3c1b87a1ace: file not found — /Users/fernando.reyes/Dropbox/work/workspace/exhibits/storage_v1/bea561ce-5746-4adb-b7d2-b9f997fbcd37/718f2105-f4c7-436d-8f90-9d08136fa049",
+      "grid item 4327fc95-efd3-4b45-8625-9d28a4a60f52: file not found — /Users/fernando.reyes/Dropbox/work/workspace/exhibits/storage_v1/bea561ce-5746-4adb-b7d2-b9f997fbcd37/6ed58561-f90b-4555-af67-53cc1561e77a"
+    ],
+    "files_skipped_as_orphans": 0
+  }
+}
