@@ -6,7 +6,6 @@
     <main id="main" class="content" tabindex="-1">
         <div id="message"></div>
         <h1><span id="exhibit-title"></span> - Vertical Timeline Media Item</h1>
-        <%- include('partials/item-vertical-timeline-item-data-card.ejs'); %>
         <div id="item-media-card" class="card">
             <div class="card-header">
                 <strong class="card-title mb-3">Item Media</strong>
@@ -55,9 +54,12 @@
                         </button>
                     </div>
                 </div>
+                <%- include('../partials/item-caption.ejs'); %>
                 <%- include('../partials/embed-item.ejs'); %>
             </div>
         </div>
+
+        <%- include('partials/item-vertical-timeline-item-data-card.ejs'); %>
 
         <%- include('../partials/media-subjects.ejs'); %>
 

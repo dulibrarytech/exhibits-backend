@@ -220,10 +220,36 @@ const itemsCommonStandardItemFormModule = (function () {
         }
     }
 
+    // ── Smart caption auto-fill (add forms) ──────────────────────────────────
+    // Mirror the selected media's description into the Caption field, refreshing
+    // on each new selection, until the user edits the caption (then leave it).
+    let _caption_autofill_enabled = false;
+    let _caption_user_edited = false;
+
+    function autofill_caption_from_media(media, previous_media_uuid) {
+        if (!_caption_autofill_enabled || _caption_user_edited) {
+            return;
+        }
+        // Only act when the media actually changed — re-selecting the same media,
+        // or the saved media on first load of an edit form, must not overwrite the
+        // caption. On the add form the previous uuid is empty, so the first pick fills.
+        if (((media && media.uuid) || '') === (previous_media_uuid || '')) {
+            return;
+        }
+        const caption_el = document.querySelector('#item-caption-input');
+        if (!caption_el) {
+            return;
+        }
+        // description is entity-encoded at input time; decode so the caption holds
+        // real text and round-trips correctly on save.
+        caption_el.value = decode_html_entities((media && media.description) || '');
+    }
+
     /**
      * Handles media asset selection from the picker for Item Media
      */
     function handle_item_media_selected(media) {
+        const previous_media_uuid = (document.querySelector('#item-media-uuid') || {}).value || '';
         const set_val = (sel, val) => {
             const el = document.querySelector(sel);
             if (el) el.value = val;
@@ -243,6 +269,8 @@ const itemsCommonStandardItemFormModule = (function () {
 
         toggle_pdf_open_to_page(media.media_type);
         toggle_alt_text_display(media);
+
+        autofill_caption_from_media(media, previous_media_uuid);
     }
 
     /**
@@ -269,6 +297,7 @@ const itemsCommonStandardItemFormModule = (function () {
      * Clears the Item Media selection
      */
     function clear_item_media() {
+        const previous_media_uuid = (document.querySelector('#item-media-uuid') || {}).value || '';
         const set_val = (sel, val) => {
             const el = document.querySelector(sel);
             if (el) el.value = val;
@@ -298,6 +327,8 @@ const itemsCommonStandardItemFormModule = (function () {
 
         toggle_pdf_open_to_page('');
         toggle_alt_text_display(null);
+
+        autofill_caption_from_media(null, previous_media_uuid);
     }
 
     /**
@@ -336,6 +367,19 @@ const itemsCommonStandardItemFormModule = (function () {
         if (typeof mediaPickerModule === 'undefined') {
             console.error('FATAL: init_media_picker_buttons requires mediaPickerModule to be loaded');
             return;
+        }
+
+        // Smart caption auto-fill (add + edit forms): mirror the selected media's
+        // description into the Caption whenever the media changes — the add form
+        // starts empty so the first pick fills; the edit form updates when a
+        // different file is picked. The user typing in the caption turns it off so
+        // their text is never overwritten.
+        _caption_autofill_enabled = true;
+        const caption_input = document.querySelector('#item-caption-input');
+        if (caption_input) {
+            caption_input.addEventListener('input', function () {
+                _caption_user_edited = true;
+            });
         }
 
         // Select Media button — no type filter (all asset types)
@@ -766,9 +810,10 @@ const itemsCommonStandardItemFormModule = (function () {
                     exhibit_text_label.innerHTML = 'Exhibit Text <small><em>(Optional)</em></small>';
                 }
 
-                // Reveal the media-only optional fields: Pop-up Window Description
-                // and Caption. They live in the shared item-data-card partial,
-                // hidden by default so they never appear on text item forms.
+                // Reveal the media-only optional fields, hidden by default so they
+                // never appear on text item forms: Pop-up Window Description (in the
+                // shared item-data-card partial) and Caption (in the item-caption
+                // partial, inside the Media card).
                 ['#is-media-only-description', '#is-media-only-caption'].forEach(selector => {
                     const field = document.querySelector(selector);
                     if (field) field.style.display = '';
