@@ -46,6 +46,18 @@ const itemsCommonGridItemFormModule = (function () {
     }
 
     /**
+     * Strips HTML tags from a string, returning plain text. Media names can carry
+     * legacy HTML markup (e.g. "<strong>Name</strong>"); strip it so selected-media
+     * card labels show clean text, matching the picker grid.
+     */
+    function strip_html_tags(str) {
+        if (!str || typeof str !== 'string') return str;
+        const div = document.createElement('div');
+        div.innerHTML = str;
+        return div.textContent || div.innerText || '';
+    }
+
+    /**
      * Builds a thumbnail URL for a media library asset based on its ingest method
      * @param {Object} media - Object with uuid, ingest_method, kaltura_thumbnail_url, repo_uuid, thumbnail_path
      * @returns {string} Thumbnail URL or empty string
@@ -96,7 +108,7 @@ const itemsCommonGridItemFormModule = (function () {
         if (!display_el) return;
 
         const thumb_url = build_thumbnail_url(media);
-        const display_name = media.name || media.original_filename || 'Untitled';
+        const display_name = strip_html_tags(media.name || media.original_filename || 'Untitled');
 
         if (thumb_url) {
             const img = document.createElement('img');
@@ -591,10 +603,33 @@ const itemsCommonGridItemFormModule = (function () {
                 init_media_picker_buttons();
 
                 // Exhibit Text is optional on media items (only required on text
-                // items) — relabel accordingly to match the rest of the card.
+                // items) — show the plain label without the "(Optional)" hint and drop
+                // the "Preview Field" link, matching the Standard media form.
                 const exhibit_text_label = document.querySelector('#is-required-text');
                 if (exhibit_text_label) {
-                    exhibit_text_label.innerHTML = 'Exhibit Text <small><em>(Optional)</em></small>';
+                    exhibit_text_label.innerHTML = 'Exhibit Text';
+                    const exhibit_text_block = exhibit_text_label.closest('.form-text');
+                    if (exhibit_text_block) {
+                        const preview_link = exhibit_text_block.querySelector('a');
+                        if (preview_link) {
+                            preview_link.remove();
+                        }
+                    }
+                }
+
+                // Title is optional on media items — show the plain label without the
+                // "(Optional)" hint and drop the "Preview Field" link, the same treatment
+                // as Exhibit Text above. Text forms keep the static label + Preview Field.
+                const title_label = document.querySelector('#item-title-input-label');
+                if (title_label) {
+                    title_label.innerHTML = 'Title';
+                    const title_block = title_label.closest('.form-text');
+                    if (title_block) {
+                        const preview_link = title_block.querySelector('a');
+                        if (preview_link) {
+                            preview_link.remove();
+                        }
+                    }
                 }
 
                 // Reveal the media-only optional fields, hidden by default so they
@@ -607,15 +642,12 @@ const itemsCommonGridItemFormModule = (function () {
                 });
 
                 // Group the Embed Item control with the Pop-up Window Description:
-                // relocate the checkbox up next to the description label. Embedded
-                // audio/video skip the pop-up viewer, so the two belong together.
+                // relocate the checkbox to directly below the description text box.
+                // Embedded audio/video skip the pop-up viewer, so the two belong together.
                 const embed_group = document.querySelector('#embed-item-group');
-                const description_label = document.querySelector('#item-description-input-label');
-                if (embed_group && description_label) {
-                    const label_block = description_label.closest('.form-text');
-                    if (label_block) {
-                        label_block.insertAdjacentElement('afterend', embed_group);
-                    }
+                const description_box = document.querySelector('#item-description-input');
+                if (embed_group && description_box) {
+                    description_box.insertAdjacentElement('afterend', embed_group);
                 }
 
                 // Disable the Pop-up Window Description while Embed Item is checked

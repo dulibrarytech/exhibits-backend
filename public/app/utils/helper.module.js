@@ -1210,7 +1210,42 @@ const helperModule = (function () {
         }
     };
 
+    /**
+     * Removes editing-only field hints from the current page: "(Optional)" label
+     * markers and "Preview Field" links (with their preview_html trigger). Used on
+     * read-only details pages — the shared data-card partials still render these
+     * affordances for the add/edit forms, where they belong.
+     */
+    obj.remove_field_hints = function () {
+        try {
+            // "Preview Field" links open the HTML preview modal — an edit affordance.
+            document.querySelectorAll('a[onclick*="preview_html"]').forEach(function (link) {
+                link.remove();
+            });
+            // "(Optional)" markers, rendered as <small><em>(Optional)</em></small>.
+            document.querySelectorAll('small').forEach(function (small) {
+                if (small.textContent.trim() === '(Optional)') {
+                    small.remove();
+                }
+            });
+        } catch (error) {
+            console.error('Error in remove_field_hints:', error.message);
+        }
+    };
+
     obj.init = function () {
+        // On read-only details pages, strip the "(Optional)" markers and "Preview
+        // Field" links the shared data-card partials carry for the add/edit forms.
+        // Gated by URL so add/edit forms are untouched; deferred if the DOM is still
+        // parsing so all fields are present when it runs.
+        if (window.location.pathname.indexOf('details') === -1) {
+            return;
+        }
+        if (document.readyState === 'loading') {
+            document.addEventListener('DOMContentLoaded', obj.remove_field_hints);
+        } else {
+            obj.remove_field_hints();
+        }
     };
 
     return obj;

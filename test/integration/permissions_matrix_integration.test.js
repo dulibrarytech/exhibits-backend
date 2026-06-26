@@ -72,16 +72,20 @@ const ALL_PERMISSIONS = [
 ];
 
 // ENFORCED per-role permission sets (ctbl_role_permissions), source of truth.
+// Mirrors db/seeds/03_role_permissions.js (the owner-confirmed grant matrix, 2026-06-22):
+// the v2 media `can_*` grants track each role's item perms (can_*_any_media ~ *_any_item),
+// so Power User holds can_delete_any_media (has delete_any_item) and Student holds
+// can_delete_media (has delete_item).
 const EXPECTED_ROLE_PERMISSIONS = {
     1: [...ALL_PERMISSIONS], // Administrator: all 36
-    2: [ // Power User: 28
+    2: [ // Power User: 29
         'add_exhibit', 'add_item', 'update_item', 'update_exhibit', 'publish_exhibit',
         'suppress_exhibit', 'publish_item', 'suppress_item', 'add_item_to_any_exhibit',
         'delete_exhibit', 'delete_item', 'transfer_exhibit', 'delete_any_item',
         'add_items_to_any_published_exhibit', 'publish_any_exhibit', 'suppress_any_exhibit',
         'update_any_exhibit', 'update_any_item', 'publish_any_item', 'suppress_any_item',
         'add_users', 'update_users', 'view_users', 'update_user', 'can_create_media',
-        'can_update_media', 'can_delete_media', 'can_update_any_media'
+        'can_update_media', 'can_delete_media', 'can_update_any_media', 'can_delete_any_media'
     ],
     3: [ // General User: 17
         'add_exhibit', 'add_item', 'update_item', 'update_exhibit', 'publish_exhibit',
@@ -89,10 +93,11 @@ const EXPECTED_ROLE_PERMISSIONS = {
         'delete_exhibit', 'delete_item', 'transfer_exhibit', 'view_users', 'update_user',
         'can_create_media', 'can_update_media', 'can_delete_media'
     ],
-    4: [ // Student: 14
+    4: [ // Student: 15
         'add_exhibit', 'add_item', 'update_item', 'update_exhibit', 'publish_exhibit',
         'suppress_exhibit', 'publish_item', 'suppress_item', 'delete_exhibit',
-        'delete_item', 'view_users', 'update_user', 'can_create_media', 'can_update_media'
+        'delete_item', 'view_users', 'update_user', 'can_create_media', 'can_update_media',
+        'can_delete_media'
     ]
 };
 
@@ -210,14 +215,14 @@ describe('exhibitsv2 — ENFORCED role -> permission matrix', () => {
         expect(has(2, 'can_update_any_media')).toBe(true);
         expect(has(3, 'can_update_any_media')).toBe(false);
         expect(has(4, 'can_update_any_media')).toBe(false);
-        // delete own: admin, power, general — NOT student
+        // delete own: every role (media mirrors delete_item, which all roles hold)
         expect(has(1, 'can_delete_media')).toBe(true);
         expect(has(2, 'can_delete_media')).toBe(true);
         expect(has(3, 'can_delete_media')).toBe(true);
-        expect(has(4, 'can_delete_media')).toBe(false);
-        // delete ANY: admin only
+        expect(has(4, 'can_delete_media')).toBe(true);
+        // delete ANY: admin + power (media mirrors delete_any_item, which both hold)
         expect(has(1, 'can_delete_any_media')).toBe(true);
-        expect(has(2, 'can_delete_any_media')).toBe(false);
+        expect(has(2, 'can_delete_any_media')).toBe(true);
         expect(has(3, 'can_delete_any_media')).toBe(false);
         expect(has(4, 'can_delete_any_media')).toBe(false);
     });
