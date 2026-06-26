@@ -49,6 +49,12 @@ describe('exhibitsModule', () => {
             },
         });
 
+        // The module captures `const APP_PATH = endpointsModule.get_app_path()` at
+        // eval time, before beforeEach re-stubs the full endpointsModule.
+        globalThis.endpointsModule = {
+            get_app_path: () => window.localStorage.getItem('exhibits_app_path') || '/exhibits-dashboard',
+        };
+
         const src = readFileSync(MODULE_PATH, 'utf8');
         const patched = src.replace(
             /^const\s+exhibitsModule\s*=/m,
@@ -74,6 +80,7 @@ describe('exhibitsModule', () => {
                     },
                 },
             }),
+            get_app_path: () => window.localStorage.getItem('exhibits_app_path') || '/exhibits-dashboard',
         };
         globalThis.authModule = {
             get_user_token: () => 'test-token',

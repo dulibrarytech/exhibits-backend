@@ -82,6 +82,12 @@ describe('itemsCommonGridItemFormModule', () => {
             value: fake_storage,
         });
 
+        // The module captures `const APP_PATH = endpointsModule.get_app_path()` at
+        // eval time; stub it to resolve from the fake localStorage seeded above.
+        globalThis.endpointsModule = {
+            get_app_path: () => window.localStorage.getItem('exhibits_app_path') || '/exhibits-dashboard',
+        };
+
         const src = readFileSync(MODULE_PATH, 'utf8');
         const patched = src.replace(
             /^const\s+itemsCommonGridItemFormModule\s*=/m,

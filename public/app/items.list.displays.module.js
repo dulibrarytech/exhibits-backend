@@ -25,7 +25,7 @@ const itemsListDisplayModule = (function() {
      */
     const get_app_path = () => {
         try {
-            const app_path = window.localStorage.getItem('exhibits_app_path');
+            const app_path = endpointsModule.get_app_path();
             if (!app_path) {
                 console.error('App path not found in localStorage');
                 return '';

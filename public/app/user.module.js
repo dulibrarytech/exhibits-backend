@@ -20,7 +20,7 @@ const userModule = (function () {
 
     'use strict';
 
-    const APP_PATH = window.localStorage.getItem('exhibits_app_path');
+    const APP_PATH = endpointsModule.get_app_path();
     const USER_ENDPOINTS = endpointsModule.get_users_endpoints();
     const MESSAGE_SELECTOR = '#message';
 

@@ -20,7 +20,7 @@ const exhibitsAddFormModule = (function () {
 
     'use strict';
 
-    const APP_PATH = window.localStorage.getItem('exhibits_app_path');
+    const APP_PATH = endpointsModule.get_app_path();
     const EXHIBITS_ENDPOINTS = endpointsModule.get_exhibits_endpoints();
     const MESSAGE_SELECTOR = '#add-exhibit-message';
     let obj = {};

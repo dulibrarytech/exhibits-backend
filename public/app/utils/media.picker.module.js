@@ -39,7 +39,7 @@ const mediaPickerModule = (function () {
 
     // ==================== CONSTANTS ====================
 
-    const APP_PATH = window.localStorage.getItem('exhibits_app_path');
+    const APP_PATH = endpointsModule.get_app_path();
     // Exhibits endpoints are fetched lazily at call time — capturing them
     // at IIFE parse time runs before authModule.save_user_auth_data() has
     // populated localStorage, leaving the value null on first page load.

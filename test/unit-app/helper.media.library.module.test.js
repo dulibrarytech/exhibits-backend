@@ -56,6 +56,7 @@ describe('helperMediaLibraryModule', () => {
         // Initial global stubs — individual tests override as needed.
         globalThis.endpointsModule = {
             get_media_library_endpoints: () => fresh_endpoints(),
+            get_app_path: () => window.localStorage.getItem('exhibits_app_path') || '/exhibits-dashboard',
         };
         globalThis.authModule = {
             get_user_token: () => 'unit-test-token',
@@ -83,6 +84,7 @@ describe('helperMediaLibraryModule', () => {
         // these on every call, so swapping mid-test is safe.
         globalThis.endpointsModule = {
             get_media_library_endpoints: () => fresh_endpoints(),
+            get_app_path: () => window.localStorage.getItem('exhibits_app_path') || '/exhibits-dashboard',
         };
         globalThis.authModule = {
             get_user_token: () => 'unit-test-token',

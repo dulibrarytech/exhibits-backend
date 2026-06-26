@@ -167,7 +167,7 @@ const helperMediaLibraryModule = (function() {
      */
     obj.get_app_path = () => {
         try {
-            const app_path = window.localStorage.getItem('exhibits_app_path');
+            const app_path = endpointsModule.get_app_path();
             if (!app_path) {
                 return '/exhibits-dashboard';
             }

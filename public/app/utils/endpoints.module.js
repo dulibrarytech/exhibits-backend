@@ -499,7 +499,15 @@ const endpointsModule = (function() {
      * Get app path
      */
     obj.get_app_path = function() {
-        return APP_PATH;
+        // Single source of truth for the app path. Prefer the localStorage cache when
+        // present (lets tests/e2e override the base), else the hardcoded APP_PATH.
+        // Consumers call this instead of reading the cache directly, so a cold cache
+        // (first login) can never yield null → no broken `null/...` redirects.
+        try {
+            return window.localStorage.getItem('exhibits_app_path') || APP_PATH;
+        } catch (error) {
+            return APP_PATH;
+        }
     };
 
     /**

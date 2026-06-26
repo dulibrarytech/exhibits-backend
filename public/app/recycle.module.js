@@ -20,7 +20,7 @@ const recycleModule = (function () {
 
     'use strict';
 
-    const APP_PATH = window.localStorage.getItem('exhibits_app_path');
+    const APP_PATH = endpointsModule.get_app_path();
     // Built directly from APP_PATH (same approach as index.management.module.js) so
     // the page does not depend on the cached endpoints map carrying recycled_records.
     const LIST_ENDPOINT = APP_PATH + '/api/v1/recycle';

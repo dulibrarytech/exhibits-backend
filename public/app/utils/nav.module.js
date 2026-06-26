@@ -20,7 +20,7 @@ const navModule = (function () {
 
     'use strict';
 
-    const APP_PATH = window.localStorage.getItem('exhibits_app_path');
+    const APP_PATH = endpointsModule.get_app_path();
     const SIDEBAR_STORAGE_KEY = 'exhibits_sidebar_collapsed';
     let obj = {};
 

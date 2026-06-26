@@ -58,6 +58,7 @@ function setup_module_globals() {
     // dereferenced (legacy image-thumbnail path); seed it so that
     // branch doesn't TypeError if a future test exercises it.
     globalThis.endpointsModule = {
+        get_app_path: () => window.localStorage.getItem('exhibits_app_path') || '/exhibits-dashboard',
         get_exhibits_endpoints: () => ({
             exhibits: {
                 exhibit_media: {

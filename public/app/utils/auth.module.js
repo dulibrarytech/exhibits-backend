@@ -20,7 +20,10 @@ const authModule = (function () {
 
     'use strict';
 
-    const APP_PATH = window.localStorage.getItem('exhibits_app_path');
+    // App path comes from endpoints.module (the single source). get_app_path()
+    // resolves the localStorage cache with a hardcoded fallback, so APP_PATH is never
+    // null even on a cold cache (first login) — no broken `null/...` redirects.
+    const APP_PATH = endpointsModule.get_app_path();
     const init_endpoints = endpointsModule.init();
     let obj = {};
 

@@ -20,7 +20,7 @@ const exhibitsStylesFormModule = (function () {
 
     'use strict';
 
-    const APP_PATH = window.localStorage.getItem('exhibits_app_path');
+    const APP_PATH = endpointsModule.get_app_path();
     const EXHIBITS_ENDPOINTS = endpointsModule.get_exhibits_endpoints();
     const REQUEST_TIMEOUT = 30000;
     const MESSAGE_CLEAR_DELAY = 3000;

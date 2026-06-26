@@ -153,6 +153,7 @@ describe('exhibitsAddFormModule.reset_form', () => {
 
         globalThis.endpointsModule = {
             get_exhibits_endpoints: () => ({}),
+            get_app_path: () => window.localStorage.getItem('exhibits_app_path') || '/exhibits-dashboard',
         };
 
         const src = readFileSync(MODULE_PATH, 'utf8');

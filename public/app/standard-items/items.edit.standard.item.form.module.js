@@ -20,7 +20,7 @@ const itemsEditStandardItemFormModule = (function () {
 
     'use strict';
 
-    const APP_PATH = window.localStorage.getItem('exhibits_app_path');
+    const APP_PATH = endpointsModule.get_app_path();
     let obj = {};
 
     async function get_item_record() {
