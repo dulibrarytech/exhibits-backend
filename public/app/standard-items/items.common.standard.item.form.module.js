@@ -815,6 +815,17 @@ const itemsCommonStandardItemFormModule = (function () {
             if (window.location.pathname.indexOf('media') !== -1) {
                 init_media_picker_buttons();
 
+                // Move the created/updated metadata ("Created by ... | Last updated by ...")
+                // from the Item Data card header to the Media card header. It is populated
+                // later by the edit/details module via #created; relocating the element
+                // (with its float-right wrapper) preserves that wiring. Scoped to media
+                // paths, so the shared text form keeps it in the Item Data card.
+                const created_meta = document.querySelector('#created');
+                const media_card_header = document.querySelector('#item-media-card .card-header');
+                if (created_meta && media_card_header) {
+                    media_card_header.appendChild(created_meta.closest('.btn-group') || created_meta);
+                }
+
                 // Exhibit Text is optional on media items (only required on text
                 // items) — relabel, drop the "Preview Field" link, and move the Wrap
                 // Text checkbox to sit directly under this label (above the text box).
