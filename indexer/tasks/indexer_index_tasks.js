@@ -38,6 +38,7 @@ const Indexer_index_tasks = class {
         this.UUID_REGEX = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
         this.INDEX_TIMEOUT = 30000; // 30 seconds for index operations
         this.GET_TIMEOUT = 10000;    // 10 seconds for get operations
+        this.BULK_CHUNK_SIZE = 100;  // docs per bulk request (caps payload size on large exhibits)
 
         // Validate dependencies on construction
         this._validate_dependencies();
@@ -300,6 +301,99 @@ const Indexer_index_tasks = class {
                 status_code: error.meta?.statusCode
             };
         }
+    }
+
+    /**
+     * Bulk-indexes many records in chunked `client.bulk` requests instead of one
+     * `client.index` round trip per doc. Used by the full-reindex paths (an exhibit
+     * publish/reindex re-indexes ~200 component docs). Each record is validated and
+     * sanitized exactly as in index_record; an `index` action upserts by `_id: uuid`,
+     * so this is idempotent like index_record. Per-doc failures (validation or ES
+     * item errors) are counted, not thrown — one bad doc never sinks the batch.
+     * @param {Object[]} records - Records to index (each must contain uuid)
+     * @param {Object} [options={}] - { refresh?: boolean, timeout?: string, chunk_size?: number }
+     * @returns {Promise<Object>} { success, failed, total, errors: [{uuid, error}] }
+     */
+    async bulk_index_records(records, options = {}) {
+
+        if (!Array.isArray(records) || records.length === 0) {
+            return {success: 0, failed: 0, total: 0, errors: []};
+        }
+
+        const results = {success: 0, failed: 0, total: records.length, errors: []};
+        const refresh = options.refresh === true;
+        const chunk_size = options.chunk_size > 0 ? options.chunk_size : this.BULK_CHUNK_SIZE;
+
+        for (let i = 0; i < records.length; i += chunk_size) {
+            const chunk = records.slice(i, i + chunk_size);
+
+            // Build the bulk operations array (action line + doc line per record).
+            // Records that fail validation/sanitization are recorded as failed and
+            // simply omitted from the request.
+            const operations = [];
+            const chunk_uuids = [];
+
+            for (const record of chunk) {
+                try {
+                    this._validate_record(record);
+                    const uuid_trimmed = this._validate_uuid(record.uuid, 'record UUID');
+                    const sanitized_record = this._sanitize_record(record);
+
+                    operations.push({index: {_index: this.INDEX, _id: uuid_trimmed}});
+                    operations.push(sanitized_record);
+                    chunk_uuids.push(uuid_trimmed);
+                } catch (error) {
+                    results.failed++;
+                    results.errors.push({uuid: record?.uuid, error: error.message});
+                    this._handle_error(error, 'bulk_index_records', {uuid: record?.uuid});
+                }
+            }
+
+            if (operations.length === 0) {
+                continue;
+            }
+
+            try {
+                const response = await this._with_timeout(
+                    this.CLIENT.bulk({operations, refresh, timeout: options.timeout || '30s'}),
+                    this.INDEX_TIMEOUT
+                );
+
+                const items = (response && response.items) || [];
+
+                for (let j = 0; j < items.length; j++) {
+                    const action = items[j].index || items[j].create || {};
+                    const is_success = action.error === undefined
+                        && ['created', 'updated'].includes(action.result);
+
+                    if (is_success) {
+                        results.success++;
+                    } else {
+                        results.failed++;
+                        const reason = action.error
+                            ? (action.error.reason || action.error.type)
+                            : `unexpected result: ${action.result} (status ${action.status})`;
+                        results.errors.push({uuid: action._id || chunk_uuids[j], error: reason});
+                    }
+                }
+            } catch (error) {
+                // Whole-chunk failure (transport/timeout) — every doc in the chunk failed.
+                results.failed += chunk_uuids.length;
+                chunk_uuids.forEach((uuid) => results.errors.push({uuid, error: error.message}));
+                this._handle_error(error, 'bulk_index_records', {
+                    chunk_start: i,
+                    chunk_size: chunk_uuids.length
+                });
+            }
+        }
+
+        this._log_success('Bulk indexing complete', {
+            success: results.success,
+            failed: results.failed,
+            total: results.total
+        });
+
+        return results;
     }
 
     /**

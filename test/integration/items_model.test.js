@@ -44,10 +44,27 @@ jest.mock('../../config/kaltura_config', () => () => ({
     kaltura_partner_id: 12345
 }));
 
-// Mock DB Config
-jest.mock('../../config/db_config', () => () => ({
-    query: jest.fn()
-}));
+// Mock DB Config — rich enough to exercise reorder_exhibit_items' transaction +
+// bulk CASE update. Existing tests delegate to mocked tasks and never touch DB
+// directly, so this only adds capability (transaction / fn / callable builder).
+jest.mock('../../config/db_config', () => {
+    const mock_trx_update = jest.fn().mockResolvedValue(1);
+    const mock_trx = jest.fn(() => ({
+        where: jest.fn().mockReturnThis(),
+        whereIn: jest.fn().mockReturnThis(),
+        update: mock_trx_update
+    }));
+    mock_trx.raw = jest.fn((sql, bindings) => ({ __raw: sql, bindings }));
+    mock_trx.fn = { now: jest.fn(() => 'NOW()') };
+
+    const mock_db = jest.fn(() => ({ query: jest.fn() }));
+    mock_db.transaction = jest.fn(async (callback) => callback(mock_trx));
+    mock_db.fn = { now: jest.fn(() => 'NOW()') };
+    mock_db.__trx = mock_trx;             // exposed for assertions
+    mock_db.__trx_update = mock_trx_update;
+
+    return () => mock_db;
+});
 
 // Mock DB Tables Config
 jest.mock('../../config/db_tables_config', () => () => ({
@@ -56,6 +73,7 @@ jest.mock('../../config/db_tables_config', () => () => ({
         item_records: 'tbl_exhibits_item_records',
         heading_records: 'tbl_exhibits_heading_records',
         grid_records: 'tbl_exhibits_grid_records',
+        grid_item_records: 'tbl_exhibits_grid_item_records',
         timeline_records: 'tbl_exhibits_timeline_records'
     }
 }));
@@ -155,11 +173,23 @@ jest.mock('../../exhibits/tasks/exhibit_record_tasks', () => {
 // Mock Indexer Model
 const mockIndexerModel = {
     index_item_record: jest.fn().mockResolvedValue(true),
+    index_heading_record: jest.fn().mockResolvedValue(true),
+    index_grid_record: jest.fn().mockResolvedValue(true),
+    index_timeline_record: jest.fn().mockResolvedValue(true),
     delete_record: jest.fn().mockResolvedValue({ status: 204 }),
     get_indexed_record: jest.fn().mockResolvedValue({ status: 404 })
 };
 
 jest.mock('../../indexer/model', () => mockIndexerModel);
+
+// Mock the re-index coalescer to run scheduled tasks immediately, so reorder
+// re-index mapping can be asserted without driving timers.
+const mockCoalescer = {
+    schedule_reindex: jest.fn((key, task) => { task(); }),
+    DEFAULT_DEBOUNCE_MS: 1000,
+    _timers: new Map()
+};
+jest.mock('../../exhibits/reindex_coalescer', () => mockCoalescer);
 
 // Mock HTTP (axios)
 const mockHttp = jest.fn().mockResolvedValue({ status: 200, data: {} });
@@ -687,6 +717,178 @@ describe('Items Model Integration Tests', () => {
             const result = await ITEMS_MODEL.reorder_items(TEST_EXHIBIT_UUID, { order: 1 });
 
             expect(result).toBe(false);
+        });
+    });
+
+    // ============ REORDER EXHIBIT ITEMS (atomic batch — S1 + S2 + S4) ============
+
+    describe('reorder_exhibit_items', () => {
+
+        const DB = require('../../config/db_config')();
+        const EXHIBIT = TEST_EXHIBIT_UUID;
+        // distinct, valid-format v4 uuids keyed by n
+        const u = (n) => `${n}${n}${n}e8400-e29b-41d4-a716-44665544000${n}`;
+
+        beforeEach(() => {
+            DB.transaction.mockClear();
+            DB.__trx.mockClear();
+            DB.__trx.raw.mockClear();
+            DB.__trx_update.mockClear();
+            DB.__trx_update.mockResolvedValue(1);
+        });
+
+        test('S1+S2: one transaction, one bulk CASE update per table (not N)', async () => {
+            const order = [
+                { type: 'item', uuid: u(1), order: 1 },
+                { type: 'heading', uuid: u(2), order: 2 },
+                { type: 'item', uuid: u(3), order: 3 }
+            ];
+
+            const result = await ITEMS_MODEL.reorder_exhibit_items(EXHIBIT, order);
+
+            expect(result).toBe(true);
+            expect(DB.transaction).toHaveBeenCalledTimes(1);     // S1: atomic
+            // 2 tables (item_records, heading_records) -> 2 updates, not 3 (N) -> S2: bulk
+            expect(DB.__trx_update).toHaveBeenCalledTimes(2);
+            // each update built a bound CASE (no string interpolation)
+            const raw = DB.__trx.raw.mock.calls[0];
+            expect(raw[0]).toContain('CASE ??');
+            expect(raw[1][0]).toBe('uuid');                       // ?? binds the column id
+        });
+
+        test('grid items scope to their grid: one update per distinct grid_id', async () => {
+            const order = [
+                { type: 'griditem', grid_id: u(4), uuid: u(6), order: 1 },
+                { type: 'griditem', grid_id: u(4), uuid: u(7), order: 2 },
+                { type: 'griditem', grid_id: u(5), uuid: u(8), order: 1 }
+            ];
+
+            const result = await ITEMS_MODEL.reorder_exhibit_items(EXHIBIT, order);
+
+            expect(result).toBe(true);
+            expect(DB.__trx_update).toHaveBeenCalledTimes(2);     // one per grid
+        });
+
+        test('atomic: a mid-batch failure rolls back and returns false', async () => {
+            DB.__trx_update.mockRejectedValueOnce(new Error('constraint'));
+
+            const result = await ITEMS_MODEL.reorder_exhibit_items(EXHIBIT, [
+                { type: 'item', uuid: u(1), order: 1 }
+            ]);
+
+            expect(result).toBe(false);                           // knex rolls back the trx
+            expect(DB.transaction).toHaveBeenCalledTimes(1);
+        });
+
+        test('rejects invalid input without opening a transaction', async () => {
+            expect(await ITEMS_MODEL.reorder_exhibit_items('', [{ type: 'item', uuid: u(1), order: 1 }])).toBe(false);
+            expect(await ITEMS_MODEL.reorder_exhibit_items(EXHIBIT, [])).toBe(false);
+            expect(await ITEMS_MODEL.reorder_exhibit_items(EXHIBIT, [{ type: 'bogus', uuid: u(1), order: 1 }])).toBe(false);
+            expect(DB.transaction).not.toHaveBeenCalled();
+        });
+
+        test('S4: rejects duplicate uuid or duplicate order within a scope', async () => {
+            const dup_uuid = [
+                { type: 'item', uuid: u(1), order: 1 },
+                { type: 'item', uuid: u(1), order: 2 }
+            ];
+            const dup_order = [
+                { type: 'item', uuid: u(1), order: 1 },
+                { type: 'item', uuid: u(2), order: 1 }
+            ];
+            expect(await ITEMS_MODEL.reorder_exhibit_items(EXHIBIT, dup_uuid)).toBe(false);
+            expect(await ITEMS_MODEL.reorder_exhibit_items(EXHIBIT, dup_order)).toBe(false);
+            expect(DB.transaction).not.toHaveBeenCalled();
+        });
+    });
+
+    // ==================== SCHEDULE REORDER REINDEX ====================
+
+    describe('schedule_reorder_reindex', () => {
+
+        const EXHIBIT = TEST_EXHIBIT_UUID;
+        const u = (n) => `${n}${n}${n}e8400-e29b-41d4-a716-44665544000${n}`;
+
+        beforeEach(() => {
+            // Re-establish impls wiped by restoreMocks. The coalescer mock runs the
+            // scheduled task immediately so the mapping can be asserted synchronously.
+            mockCoalescer.schedule_reindex.mockImplementation((key, task) => { task(); });
+            mockIndexerModel.index_item_record.mockResolvedValue(true);
+            mockIndexerModel.index_heading_record.mockResolvedValue(true);
+            mockIndexerModel.index_grid_record.mockResolvedValue(true);
+            mockIndexerModel.index_timeline_record.mockResolvedValue(true);
+        });
+
+        test('maps each top-level component type to its own targeted index function', async () => {
+            ITEMS_MODEL.schedule_reorder_reindex(EXHIBIT, [
+                { type: 'item', uuid: u(1), order: 1 },
+                { type: 'heading', uuid: u(2), order: 2 },
+                { type: 'subheading', uuid: u(3), order: 3 },
+                { type: 'grid', uuid: u(4), order: 4 },
+                { type: 'timeline', uuid: u(5), order: 5 }
+            ]);
+            await Promise.resolve();
+
+            expect(mockIndexerModel.index_item_record).toHaveBeenCalledWith(EXHIBIT, u(1));
+            expect(mockIndexerModel.index_heading_record).toHaveBeenCalledWith(EXHIBIT, u(2));
+            expect(mockIndexerModel.index_heading_record).toHaveBeenCalledWith(EXHIBIT, u(3)); // subheading -> heading doc
+            expect(mockIndexerModel.index_grid_record).toHaveBeenCalledWith(EXHIBIT, u(4));
+            expect(mockIndexerModel.index_timeline_record).toHaveBeenCalledWith(EXHIBIT, u(5));
+        });
+
+        test('grid items re-index their parent grid doc, deduped to one call per grid', async () => {
+            ITEMS_MODEL.schedule_reorder_reindex(EXHIBIT, [
+                { type: 'griditem', grid_id: u(4), uuid: u(6), order: 1 },
+                { type: 'griditem', grid_id: u(4), uuid: u(7), order: 2 },  // same grid
+                { type: 'griditem', grid_id: u(5), uuid: u(8), order: 1 }   // different grid
+            ]);
+            await Promise.resolve();
+
+            expect(mockIndexerModel.index_grid_record).toHaveBeenCalledTimes(2);   // per distinct grid, not per item
+            expect(mockIndexerModel.index_grid_record).toHaveBeenCalledWith(EXHIBIT, u(4));
+            expect(mockIndexerModel.index_grid_record).toHaveBeenCalledWith(EXHIBIT, u(5));
+        });
+
+        test('a moved grid and grid items within it collapse to a single grid re-index', async () => {
+            ITEMS_MODEL.schedule_reorder_reindex(EXHIBIT, [
+                { type: 'grid', uuid: u(4), order: 1 },
+                { type: 'griditem', grid_id: u(4), uuid: u(6), order: 1 }
+            ]);
+            await Promise.resolve();
+
+            expect(mockIndexerModel.index_grid_record).toHaveBeenCalledTimes(1);
+            expect(mockIndexerModel.index_grid_record).toHaveBeenCalledWith(EXHIBIT, u(4));
+        });
+
+        test('schedules one coalesced re-index per distinct component', () => {
+            ITEMS_MODEL.schedule_reorder_reindex(EXHIBIT, [
+                { type: 'item', uuid: u(1), order: 1 },
+                { type: 'item', uuid: u(1), order: 1 },   // duplicate component
+                { type: 'grid', uuid: u(4), order: 2 }
+            ]);
+
+            expect(mockCoalescer.schedule_reindex).toHaveBeenCalledTimes(2); // item:u1 (deduped) + grid:u4
+        });
+
+        test('no-ops on an invalid exhibit id or a non-array payload', () => {
+            ITEMS_MODEL.schedule_reorder_reindex('not-a-uuid', [{ type: 'item', uuid: u(1), order: 1 }]);
+            ITEMS_MODEL.schedule_reorder_reindex(EXHIBIT, null);
+
+            expect(mockCoalescer.schedule_reindex).not.toHaveBeenCalled();
+            expect(mockIndexerModel.index_item_record).not.toHaveBeenCalled();
+        });
+
+        test('skips entries with an invalid uuid or a grid item missing its grid id', async () => {
+            ITEMS_MODEL.schedule_reorder_reindex(EXHIBIT, [
+                { type: 'item', uuid: 'bad', order: 1 },
+                { type: 'griditem', uuid: u(6), order: 1 },   // no grid_id
+                { type: 'item', uuid: u(1), order: 2 }        // the only valid entry
+            ]);
+            await Promise.resolve();
+
+            expect(mockIndexerModel.index_item_record).toHaveBeenCalledTimes(1);
+            expect(mockIndexerModel.index_item_record).toHaveBeenCalledWith(EXHIBIT, u(1));
+            expect(mockIndexerModel.index_grid_record).not.toHaveBeenCalled();
         });
     });
 

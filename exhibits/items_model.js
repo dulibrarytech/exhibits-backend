@@ -36,6 +36,7 @@ const VALIDATOR = require('../libs/validate');
 const EXHIBIT_RECORD_TASKS = require('./tasks/exhibit_record_tasks');
 const INDEXER_MODEL = require('../indexer/model');
 const LOGGER = require('../libs/log4');
+const REINDEX_COALESCER = require('./reindex_coalescer');
 const {
     is_valid_uuid,
     is_valid_user_id,    build_response,
@@ -65,7 +66,6 @@ const CONSTANTS = {
         PUBLISHED: 1,
         UNPUBLISHED: 0
     },
-    REPUBLISH_DELAY_MS: 5000,
     HTTP_TIMEOUT_MS: 45000,
     KALTURA_SESSION_EXPIRY: 86400
 };
@@ -306,27 +306,20 @@ const handle_item_republish = async (is_member_of_exhibit, item_id) => {
 
     try {
 
-        const suppress_result = await suppress_item_record(is_member_of_exhibit, item_id);
+        // Re-index just this item in place — no suppress. ES index upserts by id, so
+        // re-indexing overwrites; suppressing would only blank the item from public
+        // search for the delay window. (publish_item_record re-indexes just this item.)
+        // Coalesced per item: a burst of edits collapses to one near-real-time
+        // re-index (was a flat 5s delay + one independent timer per edit).
+        REINDEX_COALESCER.schedule_reindex(`item:${item_id}`, async () => {
+            const publish_result = await publish_item_record(is_member_of_exhibit, item_id);
 
-        if (suppress_result && suppress_result.status === true) {
-            setTimeout(async () => {
-                try {
-                    const publish_result = await publish_item_record(is_member_of_exhibit, item_id);
-
-                    if (publish_result && publish_result.status === true) {
-                        LOGGER.module().info('INFO: [/exhibits/items_model (handle_item_republish)] Item re-published successfully.');
-                    } else {
-                        LOGGER.module().error('ERROR: [/exhibits/items_model (handle_item_republish)] Failed to re-publish item');
-                    }
-                } catch (error) {
-                    LOGGER.module().error(`ERROR: [/exhibits/items_model (handle_item_republish)] ${error.message}`, {
-                        is_member_of_exhibit,
-                        item_id,
-                        stack: error.stack
-                    });
-                }
-            }, CONSTANTS.REPUBLISH_DELAY_MS);
-        }
+            if (publish_result && publish_result.status === true) {
+                LOGGER.module().info('INFO: [/exhibits/items_model (handle_item_republish)] Item re-indexed after edit.');
+            } else {
+                LOGGER.module().error('ERROR: [/exhibits/items_model (handle_item_republish)] Failed to re-index item');
+            }
+        });
     } catch (error) {
         LOGGER.module().error(`ERROR: [/exhibits/items_model (handle_item_republish)] ${error.message}`, {
             is_member_of_exhibit,
@@ -880,6 +873,191 @@ exports.reorder_items = async (exhibit_id, item) => {
         });
 
         return false;
+    }
+};
+
+/**
+ * Reorders all of an exhibit's items in ONE atomic transaction, using a single
+ * bulk CASE update per target table — replacing the controller's per-item loop of
+ * N non-atomic single-row UPDATEs (each on its own connection). A mixed top-level
+ * drag becomes <= 4 statements (item / heading / grid / timeline), plus one per
+ * distinct grid for grid-item reorders, all-or-nothing inside one transaction.
+ * Mirrors the gap-healer `helper.apply_reorder` (also transactional, also bumps
+ * `updated`); the `{ type, uuid, order, [grid_id] }` payload is unchanged.
+ *
+ * @param {string} exhibit_id - Exhibit UUID (scope for top-level items)
+ * @param {Array<Object>} updated_order - [{ type, uuid, order, [grid_id] }, ...]
+ * @param {string} [updated_by=null] - User id; bumps updated_by when provided
+ * @returns {Promise<boolean>} true on success; false on validation/DB failure
+ */
+exports.reorder_exhibit_items = async (exhibit_id, updated_order, updated_by = null) => {
+
+    try {
+
+        if (!is_valid_uuid(exhibit_id)) {
+            LOGGER.module().error('ERROR: [/exhibits/items_model (reorder_exhibit_items)] Invalid exhibit UUID provided');
+            return false;
+        }
+
+        if (!Array.isArray(updated_order) || updated_order.length === 0) {
+            LOGGER.module().error('ERROR: [/exhibits/items_model (reorder_exhibit_items)] Invalid or empty order data');
+            return false;
+        }
+
+        // type -> { table, scope_column }. heading + subheading share heading_records;
+        // grid items scope to their grid (is_member_of_grid), everything else to the
+        // exhibit (is_member_of_exhibit).
+        const TYPE_MAP = {
+            item:       { table: TABLES.item_records,      scope_column: 'is_member_of_exhibit' },
+            grid:       { table: TABLES.grid_records,      scope_column: 'is_member_of_exhibit' },
+            heading:    { table: TABLES.heading_records,   scope_column: 'is_member_of_exhibit' },
+            subheading: { table: TABLES.heading_records,   scope_column: 'is_member_of_exhibit' },
+            timeline:   { table: TABLES.timeline_records,  scope_column: 'is_member_of_exhibit' },
+            griditem:   { table: TABLES.grid_item_records, scope_column: 'is_member_of_grid' }
+        };
+
+        // Group rows by (table, scope value).
+        const groups = new Map();
+
+        for (const row of updated_order) {
+
+            const mapping = TYPE_MAP[row && row.type];
+
+            if (!mapping) {
+                LOGGER.module().error(`ERROR: [/exhibits/items_model (reorder_exhibit_items)] Unknown item type: ${row && row.type}`);
+                return false;
+            }
+
+            const scope_value = mapping.scope_column === 'is_member_of_grid' ? row.grid_id : exhibit_id;
+
+            if (!is_valid_uuid(row.uuid) || !is_valid_uuid(scope_value) || typeof row.order !== 'number') {
+                LOGGER.module().error('ERROR: [/exhibits/items_model (reorder_exhibit_items)] Invalid uuid, scope, or order in payload');
+                return false;
+            }
+
+            const key = `${mapping.table}::${scope_value}`;
+
+            if (!groups.has(key)) {
+                groups.set(key, { table: mapping.table, scope_column: mapping.scope_column, scope_value, items: [] });
+            }
+
+            groups.get(key).items.push({ uuid: row.uuid, order: row.order });
+        }
+
+        // Reject duplicate uuids or duplicate order values within a scope — either
+        // corrupts the ordering (ambiguous CASE / two rows in the same slot).
+        for (const group of groups.values()) {
+            const seen_uuids = new Set();
+            const seen_orders = new Set();
+            for (const it of group.items) {
+                if (seen_uuids.has(it.uuid) || seen_orders.has(it.order)) {
+                    LOGGER.module().error('ERROR: [/exhibits/items_model (reorder_exhibit_items)] Duplicate uuid or order in reorder payload');
+                    return false;
+                }
+                seen_uuids.add(it.uuid);
+                seen_orders.add(it.order);
+            }
+        }
+
+        // Apply every group inside one transaction: a single CASE update per table.
+        // Any failure throws -> knex auto-rolls back -> no half-reordered exhibit.
+        await DB.transaction(async (trx) => {
+            for (const group of groups.values()) {
+
+                const uuids = group.items.map((it) => it.uuid);
+                const when = group.items.map(() => 'WHEN ? THEN ?').join(' ');
+                // `??` binds the `uuid` column identifier (quoted by knex); the `?`s
+                // bind each uuid/order value — never string-interpolated.
+                const bindings = ['uuid'];
+                group.items.forEach((it) => bindings.push(it.uuid, it.order));
+
+                const update_data = {
+                    order: trx.raw(`CASE ?? ${when} END`, bindings),
+                    updated: trx.fn.now()
+                };
+
+                if (updated_by) {
+                    update_data.updated_by = updated_by;
+                }
+
+                await trx(group.table)
+                    .where(group.scope_column, group.scope_value)
+                    .whereIn('uuid', uuids)
+                    .update(update_data);
+            }
+        });
+
+        return true;
+
+    } catch (error) {
+        LOGGER.module().error(`ERROR: [/exhibits/items_model (reorder_exhibit_items)] ${error.message}`, {
+            exhibit_id,
+            stack: error.stack
+        });
+
+        return false;
+    }
+};
+
+/**
+ * Targeted re-index after a reorder. Re-indexes ONLY the components named in the
+ * reorder payload — each top-level component is its own ES doc, and grid items are
+ * re-indexed via their parent grid's doc — instead of a full `index_exhibit` over
+ * every component. Re-indexing reads the fresh DB order, so re-indexing per the
+ * payload reflects the new ordering.
+ *
+ * Each op is debounced per component by reindex_coalescer, which both coalesces a
+ * burst of drags (per component) AND covers the union across the burst: a component
+ * appearing in any drag of the burst gets a pending re-index that re-reads the DB.
+ * Grid items collapse to ONE re-index of their parent grid doc (rebuilt with all
+ * items in their new order) — avoiding a per-item read-modify-write race on the
+ * shared grid doc.
+ *
+ * Fire-and-forget: schedules timers and returns. The caller must have confirmed the
+ * exhibit is published (an unpublished exhibit must not be added to the public index).
+ *
+ * @param {string} exhibit_id - Exhibit UUID
+ * @param {Array<{type:string, uuid:string, order:number, grid_id?:string}>} updated_order
+ */
+exports.schedule_reorder_reindex = (exhibit_id, updated_order) => {
+
+    if (!is_valid_uuid(exhibit_id) || !Array.isArray(updated_order)) {
+        return;
+    }
+
+    // Dedupe to one op per component. Grid items (and a moved grid) collapse to a
+    // single re-index of the grid doc, keyed `grid:<grid_uuid>`.
+    const ops = new Map();
+
+    for (const row of updated_order) {
+
+        if (!row || typeof row !== 'object') {
+            continue;
+        }
+
+        if (row.type === 'item' && is_valid_uuid(row.uuid)) {
+            ops.set(`item:${row.uuid}`, () => INDEXER_MODEL.index_item_record(exhibit_id, row.uuid));
+        } else if ((row.type === 'heading' || row.type === 'subheading') && is_valid_uuid(row.uuid)) {
+            ops.set(`heading:${row.uuid}`, () => INDEXER_MODEL.index_heading_record(exhibit_id, row.uuid));
+        } else if (row.type === 'grid' && is_valid_uuid(row.uuid)) {
+            ops.set(`grid:${row.uuid}`, () => INDEXER_MODEL.index_grid_record(exhibit_id, row.uuid));
+        } else if (row.type === 'timeline' && is_valid_uuid(row.uuid)) {
+            ops.set(`timeline:${row.uuid}`, () => INDEXER_MODEL.index_timeline_record(exhibit_id, row.uuid));
+        } else if (row.type === 'griditem' && is_valid_uuid(row.grid_id)) {
+            ops.set(`grid:${row.grid_id}`, () => INDEXER_MODEL.index_grid_record(exhibit_id, row.grid_id));
+        }
+    }
+
+    for (const [key, run] of ops) {
+        REINDEX_COALESCER.schedule_reindex(key, async () => {
+            const indexed = await run();
+
+            if (indexed === true) {
+                LOGGER.module().info(`INFO: [/exhibits/items_model (schedule_reorder_reindex)] Re-indexed ${key} after reorder.`);
+            } else {
+                LOGGER.module().error(`ERROR: [/exhibits/items_model (schedule_reorder_reindex)] Failed to re-index ${key} after reorder.`);
+            }
+        });
     }
 };
 

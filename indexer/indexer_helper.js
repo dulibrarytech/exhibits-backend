@@ -452,6 +452,19 @@ const batch_index_records = async (records, record_type, index_tasks) => {
         return {success: 0, failed: 0, total: 0};
     }
 
+    // Preferred path: one chunked ES bulk request per ~BULK_CHUNK_SIZE docs instead
+    // of one round trip per doc. An exhibit reindex (~200 component docs) goes from
+    // ~200 sequential index calls to a couple of bulk calls. Falls back to the
+    // per-doc loop below if the tasks layer predates bulk (e.g. a test double).
+    if (typeof index_tasks.bulk_index_records === 'function') {
+        const bulk = await index_tasks.bulk_index_records(records);
+        LOGGER.module().info(
+            `INFO: [/indexer/indexer_helper (batch_index_records)] ${record_type} indexing complete (bulk). ` +
+            `Success: ${bulk.success}, Failed: ${bulk.failed}, Total: ${bulk.total}`
+        );
+        return {success: bulk.success, failed: bulk.failed, total: bulk.total};
+    }
+
     const results = {
         success: 0,
         failed: 0,
@@ -623,7 +636,15 @@ const index_container_child_record = async (config) => {
             return false;
         }
 
-        const items = indexed_record.data.source.items || [];
+        // Replace-by-id (idempotent upsert): drop any existing copy of this child
+        // before appending the fresh one, so re-indexing the same child never
+        // duplicates it in the parent doc's items[]. Previously this appended
+        // unconditionally and relied on a preceding suppress/delete to avoid dups;
+        // making it idempotent lets a republish-after-edit re-index in place
+        // (no suppress, no public blackout) while a brand-new child still appends.
+        const items = (indexed_record.data.source.items || []).filter((existing) => {
+            return existing.uuid !== child_id;
+        });
         child_index_record.is_published = 1;
 
         const updated_items = [...items, child_index_record].sort((a, b) => {

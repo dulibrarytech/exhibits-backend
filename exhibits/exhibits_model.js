@@ -36,12 +36,12 @@ const ITEMS_MODEL = require('../exhibits/items_model');
 const GRIDS_MODEL = require('../exhibits/grid_model');
 const TIMELINES_MODEL = require('../exhibits/timelines_model');
 const LOGGER = require('../libs/log4');
+const REINDEX_COALESCER = require('./reindex_coalescer');
 const { validate_string_param } = require('../exhibits/exhibits_helper');
 const { build_response, validate_input, prepare_styles } = require('../exhibits/common_helper');
 
 // Constants
 const CONSTANTS = {
-    REPUBLISH_DELAY_MS: 5000,
     DEFAULT_STYLES: {},
     STATUS_CODES: {
         OK: 200,
@@ -306,26 +306,24 @@ const handle_republish = async (uuid) => {
 
     try {
 
-        const suppress_result = await suppress_exhibit(uuid);
+        // Re-index ONLY the exhibit's own doc, in place. An exhibit-metadata edit
+        // (title/subtitle/description/styles/hero) changes only that doc; component
+        // docs reference the exhibit by uuid and don't denormalize its fields, so a
+        // full re-index is unnecessary. No suppress: ES index upserts by id, so
+        // re-indexing overwrites — suppressing would only blank the exhibit from
+        // public search for the delay window. (Structural changes / publish-from-
+        // scratch still go through publish_exhibit -> index_exhibit.)
+        // Coalesced per exhibit: a burst of edits collapses to one near-real-time
+        // re-index (was a flat 5s delay + one independent timer per edit).
+        REINDEX_COALESCER.schedule_reindex(`exhibit:${uuid}`, async () => {
+            const indexed = await INDEXER_MODEL.index_exhibit_record(uuid);
 
-        if (suppress_result && suppress_result.status === true) {
-            setTimeout(async () => {
-                try {
-                    const publish_result = await publish_exhibit(uuid);
-
-                    if (publish_result && publish_result.status === true) {
-                        LOGGER.module().info('INFO: [/exhibits/model (handle_republish)] Exhibit re-published successfully.');
-                    } else {
-                        LOGGER.module().error('ERROR: [/exhibits/model (handle_republish)] Failed to re-publish exhibit');
-                    }
-                } catch (error) {
-                    LOGGER.module().error(`ERROR: [/exhibits/model (handle_republish)] ${error.message}`, {
-                        uuid,
-                        stack: error.stack
-                    });
-                }
-            }, CONSTANTS.REPUBLISH_DELAY_MS);
-        }
+            if (indexed === true) {
+                LOGGER.module().info('INFO: [/exhibits/model (handle_republish)] Exhibit re-indexed after edit.');
+            } else {
+                LOGGER.module().error('ERROR: [/exhibits/model (handle_republish)] Failed to re-index exhibit after edit.');
+            }
+        });
     } catch (error) {
         LOGGER.module().error(`ERROR: [/exhibits/model (handle_republish)] ${error.message}`, {
             uuid,

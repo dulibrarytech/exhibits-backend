@@ -31,6 +31,9 @@ const {
     handle_error
 } = require('../exhibits/items_helper');
 
+// A reorder of a published exhibit re-indexes only the reordered components
+// (ITEMS_MODEL.schedule_reorder_reindex), coalesced per component by reindex_coalescer.
+
 exports.create_item_record = async function (req, res) {
 
     try {
@@ -413,20 +416,7 @@ exports.reorder_items = async function (req, res) {
             return;
         }
 
-        // Define reorder handlers
-        const reorder_handlers = {
-            item: (item) => ITEMS_MODEL.reorder_items(exhibit_id, item),
-            grid: (item) => GRIDS_MODEL.reorder_grids(exhibit_id, item),
-            heading: (item) => HEADINGS_MODEL.reorder_headings(exhibit_id, item),
-            subheading: (item) => HEADINGS_MODEL.reorder_headings(exhibit_id, item),
-            timeline: (item) => TIMELINES_MODEL.reorder_timelines(exhibit_id, item),
-            griditem: (item) => {
-                const {grid_id, ...item_data} = item;
-                return GRIDS_MODEL.reorder_grid_items(grid_id, item_data);
-            }
-        };
-
-        const valid_types = Object.keys(reorder_handlers);
+        const valid_types = ['item', 'grid', 'heading', 'subheading', 'timeline', 'griditem'];
 
         // Validate all items before processing
         for (const item of updated_order) {
@@ -453,47 +443,28 @@ exports.reorder_items = async function (req, res) {
             }
         }
 
-        // Process reorder operations
-        let error_count = 0;
+        // Apply the entire reorder atomically — one transaction, one bulk CASE update
+        // per table — instead of N non-atomic single-row UPDATEs. A mid-batch failure
+        // rolls back, so the exhibit is never left half-reordered.
+        const is_reordered = await ITEMS_MODEL.reorder_exhibit_items(exhibit_id, updated_order);
 
-        for (const item of updated_order) {
-            const handler = reorder_handlers[item.type];
-            const is_reordered = await handler(item);
-
-            if (!is_reordered) {
-                error_count++;
-            }
-        }
-
-        if (error_count > 0) {
+        if (is_reordered !== true) {
             res.status(422).send({
-                message: 'Unable to reorder some exhibit items.'
+                message: 'Unable to reorder exhibit items.'
             });
             return;
         }
 
-        // Handle republishing if exhibit is published
+        // Re-index if the exhibit is published. A reorder changes only `order`, so do
+        // NOT suppress (the old path deleted the exhibit from the public index and
+        // re-added it 5s later, blanking the live exhibit from search/preview). And do
+        // NOT re-index the whole exhibit — re-index ONLY the reordered components in
+        // place (each its own ES doc; grid items via their parent grid doc), coalesced
+        // per component so a burst of drags settles into one re-index per component.
         const exhibit_data = await EXHIBITS_MODEL.get_exhibit_record(exhibit_id);
 
         if (exhibit_data.data && exhibit_data.data.is_published === 1) {
-            const suppress_result = await EXHIBITS_MODEL.suppress_exhibit(exhibit_id);
-
-            if (suppress_result.status === true) {
-
-                setTimeout(async () => {
-                    try {
-                        const publish_result = await EXHIBITS_MODEL.publish_exhibit(exhibit_id);
-
-                        if (publish_result.status === true) {
-                            LOGGER.module().info('INFO: [/items/controller (reorder_items)] Exhibit re-published successfully.');
-                        } else {
-                            LOGGER.module().error('ERROR: [/items/controller (reorder_items)] Failed to re-publish exhibit.');
-                        }
-                    } catch (publish_error) {
-                        LOGGER.module().error('ERROR: [/items/controller (reorder_items)] Re-publish exception: ' + publish_error.message);
-                    }
-                }, 5000);
-            }
+            ITEMS_MODEL.schedule_reorder_reindex(exhibit_id, updated_order);
         }
 
         res.status(200).send({

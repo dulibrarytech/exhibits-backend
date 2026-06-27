@@ -360,6 +360,42 @@ exports.delete_record = async (uuid) => {
 };
 
 /**
+ * Indexes ONLY the exhibit's own doc (not its components) — an upsert by id.
+ * Used for exhibit-metadata edits, which change only the exhibit doc (components
+ * reference the exhibit by uuid and don't denormalize its fields), so a full
+ * index_exhibit is unnecessary.
+ * @param {string} uuid - Exhibit UUID
+ * @returns {Promise<boolean>} Success status
+ */
+exports.index_exhibit_record = async (uuid) => {
+
+    try {
+
+        const exhibit_record = await exhibit_record_task.get_exhibit_record(uuid);
+
+        if (!exhibit_record || !exhibit_record.uuid) {
+            LOGGER.module().error(`ERROR: [/indexer/model (index_exhibit_record)] Exhibit ${uuid} not found`);
+            return false;
+        }
+
+        const exhibit_index_record = construct_exhibit_index_record(exhibit_record);
+        const response = await index_tasks.index_record(exhibit_index_record);
+
+        if (response && response.success === true) {
+            LOGGER.module().info(`INFO: [/indexer/model (index_exhibit_record)] Exhibit record ${uuid} indexed.`);
+            return true;
+        }
+
+        LOGGER.module().error(`ERROR: [/indexer/model (index_exhibit_record)] Unable to index exhibit record ${uuid}.`);
+        return false;
+
+    } catch (error) {
+        LOGGER.module().error(`ERROR: [/indexer/model (index_exhibit_record)] ${error.message}`, {uuid, stack: error.stack});
+        return false;
+    }
+};
+
+/**
  * Indexes a single item record
  * @param {string} exhibit_id - Exhibit UUID
  * @param {string} item_id - Item UUID

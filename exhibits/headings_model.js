@@ -29,6 +29,7 @@ const VALIDATOR = require('../libs/validate');
 const EXHIBIT_RECORD_TASKS = require('./tasks/exhibit_record_tasks');
 const INDEXER_MODEL = require('../indexer/model');
 const LOGGER = require('../libs/log4');
+const REINDEX_COALESCER = require('./reindex_coalescer');
 const {
     is_valid_uuid,
     is_valid_user_id,    build_response,
@@ -48,8 +49,7 @@ const CONSTANTS = {
     PUBLICATION_STATUS: {
         PUBLISHED: 1,
         UNPUBLISHED: 0
-    },
-    REPUBLISH_DELAY_MS: 5000
+    }
 };
 
 // Initialize task instances
@@ -69,27 +69,20 @@ const handle_heading_republish = async (is_member_of_exhibit, uuid) => {
 
     try {
 
-        const suppress_result = await suppress_heading_record(is_member_of_exhibit, uuid);
+        // Re-index just this heading in place — no suppress. ES index upserts by id,
+        // so re-indexing overwrites; suppressing would only blank it from public
+        // search for the delay window. (publish_heading_record re-indexes just this.)
+        // Coalesced per heading: a burst of edits collapses to one near-real-time
+        // re-index (was a flat 5s delay + one independent timer per edit).
+        REINDEX_COALESCER.schedule_reindex(`heading:${uuid}`, async () => {
+            const publish_result = await publish_heading_record(is_member_of_exhibit, uuid);
 
-        if (suppress_result && suppress_result.status === true) {
-            setTimeout(async () => {
-                try {
-                    const publish_result = await publish_heading_record(is_member_of_exhibit, uuid);
-
-                    if (publish_result && publish_result.status === true) {
-                        LOGGER.module().info('INFO: [/exhibits/headings_model (handle_heading_republish)] Heading record re-published successfully.');
-                    } else {
-                        LOGGER.module().error('ERROR: [/exhibits/headings_model (handle_heading_republish)] Failed to re-publish heading');
-                    }
-                } catch (error) {
-                    LOGGER.module().error(`ERROR: [/exhibits/headings_model (handle_heading_republish)] ${error.message}`, {
-                        is_member_of_exhibit,
-                        uuid,
-                        stack: error.stack
-                    });
-                }
-            }, CONSTANTS.REPUBLISH_DELAY_MS);
-        }
+            if (publish_result && publish_result.status === true) {
+                LOGGER.module().info('INFO: [/exhibits/headings_model (handle_heading_republish)] Heading record re-indexed after edit.');
+            } else {
+                LOGGER.module().error('ERROR: [/exhibits/headings_model (handle_heading_republish)] Failed to re-index heading');
+            }
+        });
     } catch (error) {
         LOGGER.module().error(`ERROR: [/exhibits/headings_model (handle_heading_republish)] ${error.message}`, {
             is_member_of_exhibit,

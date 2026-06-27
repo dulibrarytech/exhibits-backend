@@ -54,6 +54,8 @@ const mockItemsModel = {
     suppress_item_record: jest.fn(),
     unlock_item_record: jest.fn(),
     reorder_items: jest.fn(),
+    reorder_exhibit_items: jest.fn(),
+    schedule_reorder_reindex: jest.fn(),
     get_repo_item_record: jest.fn(),
     get_repo_tn: jest.fn(),
     get_kaltura_item_record: jest.fn(),
@@ -178,6 +180,7 @@ describe('Items Integration Tests', () => {
         mockItemsModel.suppress_item_record.mockResolvedValue({ status: true, message: 'Suppressed' });
         mockItemsModel.unlock_item_record.mockResolvedValue({ status: true });
         mockItemsModel.reorder_items.mockResolvedValue(true);
+        mockItemsModel.reorder_exhibit_items.mockResolvedValue(true);
         mockItemsModel.get_repo_item_record.mockResolvedValue({ status: 200, data: {} });
         mockItemsModel.get_repo_tn.mockResolvedValue(null);
         mockItemsModel.get_kaltura_item_record.mockImplementation((id, cb) => cb(null));
@@ -766,7 +769,7 @@ describe('Items Integration Tests', () => {
         describe('POST /api/items/exhibit/:exhibit_id/reorder (Reorder Items)', () => {
 
             test('should reorder items successfully', async () => {
-                mockItemsModel.reorder_items.mockResolvedValue(true);
+                mockItemsModel.reorder_exhibit_items.mockResolvedValue(true);
 
                 const orderData = [
                     { type: 'item', uuid: TEST_ITEM_ID, order: 1 },
@@ -783,7 +786,7 @@ describe('Items Integration Tests', () => {
             });
 
             test('should handle grid items reorder', async () => {
-                mockGridsModel.reorder_grid_items.mockResolvedValue(true);
+                mockItemsModel.reorder_exhibit_items.mockResolvedValue(true);
 
                 const orderData = [
                     { type: 'griditem', grid_id: TEST_GRID_ID, uuid: TEST_ITEM_ID, order: 1 }
@@ -794,7 +797,7 @@ describe('Items Integration Tests', () => {
                     .send(orderData)
                     .expect(200);
 
-                expect(mockGridsModel.reorder_grid_items).toHaveBeenCalled();
+                expect(mockItemsModel.reorder_exhibit_items).toHaveBeenCalled();
             });
 
             test('should return 400 when order data is empty', async () => {
@@ -841,8 +844,8 @@ describe('Items Integration Tests', () => {
                 expect(response.body.message).toBe('Bad request. Missing or invalid grid ID for grid item.');
             });
 
-            test('should return 422 when some reorder operations fail', async () => {
-                mockItemsModel.reorder_items.mockResolvedValue(false);
+            test('should return 422 when the reorder fails', async () => {
+                mockItemsModel.reorder_exhibit_items.mockResolvedValue(false);
 
                 const orderData = [
                     { type: 'item', uuid: TEST_ITEM_ID, order: 1 }
@@ -853,7 +856,41 @@ describe('Items Integration Tests', () => {
                     .send(orderData)
                     .expect(422);
 
-                expect(response.body.message).toBe('Unable to reorder some exhibit items.');
+                expect(response.body.message).toBe('Unable to reorder exhibit items.');
+            });
+        });
+
+        describe('Reorder re-index (targeted: only the reordered components)', () => {
+
+            const make_req = () => ({
+                params: { exhibit_id: TEST_EXHIBIT_ID },
+                body: [{ type: 'item', uuid: TEST_ITEM_ID, order: 1 }]
+            });
+            const make_res = () => ({ status: jest.fn().mockReturnThis(), send: jest.fn() });
+
+            test('published exhibit: re-indexes only the reordered components, never suppresses or full-reindexes', async () => {
+                mockExhibitsModel.get_exhibit_record.mockResolvedValue({ data: { is_published: 1 } });
+
+                const req = make_req();
+                await CONTROLLER.reorder_items(req, make_res());
+
+                // never blanks the live exhibit (no suppress) and never full-reindexes it
+                expect(mockExhibitsModel.suppress_exhibit).not.toHaveBeenCalled();
+                expect(mockExhibitsModel.publish_exhibit).not.toHaveBeenCalled();
+
+                // targeted: hand the reordered payload to the per-component re-indexer
+                expect(mockItemsModel.schedule_reorder_reindex).toHaveBeenCalledTimes(1);
+                expect(mockItemsModel.schedule_reorder_reindex).toHaveBeenCalledWith(TEST_EXHIBIT_ID, req.body);
+            });
+
+            test('unpublished exhibit: schedules no re-index and never suppresses', async () => {
+                mockExhibitsModel.get_exhibit_record.mockResolvedValue({ data: { is_published: 0 } });
+
+                await CONTROLLER.reorder_items(make_req(), make_res());
+
+                expect(mockExhibitsModel.suppress_exhibit).not.toHaveBeenCalled();
+                expect(mockExhibitsModel.publish_exhibit).not.toHaveBeenCalled();
+                expect(mockItemsModel.schedule_reorder_reindex).not.toHaveBeenCalled();
             });
         });
     });

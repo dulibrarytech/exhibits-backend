@@ -1396,8 +1396,6 @@ const Exhibit_grid_record_tasks = class extends Base_tasks {
         try {
 
             const grid_uuid = this._validate_uuid(is_member_of_grid, 'grid UUID');
-            console.log('GRID UUID', grid_uuid);
-            console.log('GRIDS ', grids)
             await this._reorder_items(
                 'grid_item_records',
                 {is_member_of_grid: grid_uuid},
