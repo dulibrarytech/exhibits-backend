@@ -47,6 +47,36 @@ const build_response = (success, message, data = null) => {
     };
 };
 
+// Square thumbnail size requested from Kaltura (px). The same stored URL is reused
+// across the media list (small) and the larger preview/picker; 400 keeps it crisp
+// and the CSS scales it down.
+const KALTURA_THUMBNAIL_SIZE = 400;
+
+/**
+ * Builds Kaltura's public, on-demand thumbnail URL deterministically from the entry
+ * id — the same CDN/partner pattern iiif-service uses for the playManifest/embed URLs.
+ * We construct this ourselves instead of snapshotting the Kaltura API's
+ * `response.thumbnailUrl` (which is frequently empty/stale, leaving the generic
+ * placeholder), so every audio/video entry resolves a thumbnail and existing rows can
+ * be backfilled from their stored entry id.
+ * @param {string} entry_id - Kaltura entry ID
+ * @returns {string} Thumbnail URL, or '' if config/entry_id is missing
+ */
+const build_kaltura_thumbnail_url = (entry_id) => {
+
+    const cdn = KALTURA_CONFIG.kaltura_cdn;
+    const partner_id = KALTURA_CONFIG.kaltura_partner_id;
+
+    if (!cdn || !partner_id || !entry_id) {
+        return '';
+    }
+
+    return `${cdn}/p/${partner_id}/sp/${partner_id}00/thumbnail/entry_id/${entry_id}` +
+        `/width/${KALTURA_THUMBNAIL_SIZE}/height/${KALTURA_THUMBNAIL_SIZE}`;
+};
+
+exports.build_kaltura_thumbnail_url = build_kaltura_thumbnail_url;
+
 /**
  * Validates a Kaltura entry ID
  * Entry IDs are alphanumeric strings with underscores, typically 10 characters
@@ -191,7 +221,7 @@ exports.get_kaltura_media = async function (entry_id) {
                 item_type: item_type,
                 title: response.name || '',
                 description: response.description || '',
-                thumbnail: (response.thumbnailUrl || '').replace(/^http:\/\//i, 'https://'),
+                thumbnail: build_kaltura_thumbnail_url(validation.entry_id),
                 media_width: response.width || '',
                 media_height: response.height || '',
                 ms_duration: response.msDuration || ''
