@@ -45,6 +45,23 @@
     text-overflow: ellipsis;
     vertical-align: middle;
     cursor: default;
+    font-weight: 600;            /* the name is the prominent element */
+}
+
+/* Ingest-method pill shown under the media name. Deliberately smaller and lighter
+   than the (bold) name so it reads as secondary metadata and doesn't compete. */
+.media-name-cell .media-ingest-badge {
+    display: inline-block;
+    margin-top: 2px;
+    padding: 0 6px;
+    font-size: 0.625rem;
+    font-weight: 500;
+    line-height: 1.45;
+    letter-spacing: 0.02em;
+    color: #5a6268;
+    background-color: #e9ecef;
+    border-radius: 10rem;
+    white-space: nowrap;
 }
 
 /* Truncate long filenames in the File Name column */

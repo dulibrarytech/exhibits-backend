@@ -27,6 +27,16 @@ const mediaLibraryModule = (function() {
     const get_repo_thumbnail_url = helperMediaLibraryModule.get_repo_thumbnail_url;
     const get_media_library_endpoints = endpointsModule.get_media_library_endpoints;
 
+    // Friendly label for the ingest-method pill shown under the media name in the
+    // Name column. Falls back to a capitalized version of any unexpected value.
+    function format_ingest_method(method) {
+        if (!method || typeof method !== 'string') {
+            return '';
+        }
+        const labels = { upload: 'Uploaded', repository: 'Repository', kaltura: 'Kaltura' };
+        return labels[method] || (method.charAt(0).toUpperCase() + method.slice(1));
+    }
+
     /**
      * Strip HTML tags from a string
      * @param {string} value - String potentially containing HTML
@@ -1325,11 +1335,19 @@ const mediaLibraryModule = (function() {
                                              ${is_upload_viewable ? `data-uuid="${row.uuid}" data-name="${sanitize_html(row.name)}" data-filename="${sanitize_html(row.filename)}" data-size="${row.size_display}" data-media-type="${row.media_type}" data-ingest-method="${row.ingest_method}" title="Click to view"` : ''}>`;
                                 }
 
-                                // Combine thumbnail and name
+                                // Combine the thumbnail with the name + ingest-method pill,
+                                // stacked vertically to the right of the thumbnail.
+                                const ingest_label = format_ingest_method(row.ingest_method);
+                                const ingest_badge_html = ingest_label
+                                    ? `<span class="media-ingest-badge">${sanitize_html(ingest_label)}</span>`
+                                    : '';
                                 return `
                                     <div class="media-name-cell" style="display: flex; align-items: center;">
                                         ${thumbnail_html}
-                                        <small class="media-name" title="${sanitize_html(display_name)}">${sanitize_html(display_name)}</small>
+                                        <div class="media-name-meta" style="display: flex; flex-direction: column; align-items: flex-start; min-width: 0;">
+                                            <small class="media-name" title="${sanitize_html(display_name)}">${sanitize_html(display_name)}</small>
+                                            ${ingest_badge_html}
+                                        </div>
                                     </div>`;
                             }
                             return data;
