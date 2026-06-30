@@ -40,17 +40,6 @@ const render_targets = () => {
     return [...targets];
 };
 
-// Pre-existing ORPHANED render targets: routes + controller fns that render a view
-// which no longer exists AND that nothing in the SPA navigates to — superseded by the
-// per-type `.../text/details` and `.../media/details` routes (whose views DO exist).
-// Surfaced 2026-06-29 while restoring the timeline delete form; flagged for a separate
-// decision (remove the dead routes vs. rebuild the pages). Do NOT add a newly-deleted
-// view here to silence this test — fix the view instead.
-const KNOWN_ORPHANED = new Set([
-    'dist/standard-items/dashboard-item-standard-details', // route: /items/standard/details
-    'dist/grid-items/dashboard-grid-item-details'          // route: /items/grid/item/details
-]);
-
 describe('dashboard controller view targets', () => {
 
     const targets = render_targets();
@@ -61,20 +50,10 @@ describe('dashboard controller view targets', () => {
 
     test('every res.render() target resolves to a source view on disk', () => {
         const missing = targets
-            .filter((target) => !KNOWN_ORPHANED.has(target))
             .filter((target) => !fs.existsSync(target_to_source(target)))
             .map((target) => `${target}  ->  ${path.relative(BACKEND_ROOT, target_to_source(target))} (missing)`);
 
         expect(missing).toEqual([]);
-    });
-
-    test('the KNOWN_ORPHANED allowlist is not stale (each is still referenced and still missing)', () => {
-        for (const target of KNOWN_ORPHANED) {
-            // still referenced by the controller — else remove it from the allowlist
-            expect(targets).toContain(target);
-            // still missing — else it was fixed; remove it from the allowlist
-            expect(fs.existsSync(target_to_source(target))).toBe(false);
-        }
     });
 
     test('the timeline-items delete form specifically exists (regression)', () => {

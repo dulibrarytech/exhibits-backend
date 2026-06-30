@@ -64,9 +64,6 @@ module.exports = function (app) {
     app.route(APP_PATH + '/items/standard/text/edit')
         .get(PAGE_AUTH, CONTROLLER.get_dashboard_items_standard_text_edit_form);
 
-    app.route(APP_PATH + '/items/standard/details')
-        .get(PAGE_AUTH, CONTROLLER.get_dashboard_items_standard_details);
-
     app.route(APP_PATH + '/items/standard/media/details')
         .get(PAGE_AUTH, CONTROLLER.get_dashboard_items_standard_media_details);
 
@@ -98,9 +95,6 @@ module.exports = function (app) {
 
     app.route(APP_PATH + '/items/grid/item/text')
         .get(PAGE_AUTH, CONTROLLER.get_dashboard_grid_add_text_item_form);
-
-    app.route(APP_PATH + '/items/grid/item/details')
-        .get(PAGE_AUTH, CONTROLLER.get_dashboard_grid_item_details);
 
     app.route(APP_PATH + '/items/grid/item/media/details')
         .get(PAGE_AUTH, CONTROLLER.get_dashboard_grid_item_media_details);

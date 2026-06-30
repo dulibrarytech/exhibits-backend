@@ -30,7 +30,6 @@ const recycleModule = (function () {
     let pending_delete = null;   // { exhibit_id, uuid, type } staged by the confirm modal
     let all_records = [];        // full result set (paginated client-side)
     let current_page = 1;
-    let load_failed = false;     // last fetch errored (vs a genuinely empty bin)
 
     function el(id) {
         return document.getElementById(id);
@@ -272,7 +271,6 @@ const recycleModule = (function () {
         const table_wrap = el('recycled-table-wrap');
         const empty_state = el('recycle-empty-state');
         const pager = el('recycle-pager');
-        const refresh = el('refresh-recycle');
         if (!tbody) {
             return;
         }
@@ -283,15 +281,11 @@ const recycleModule = (function () {
             if (table_wrap) table_wrap.style.display = 'none';
             if (empty_state) empty_state.style.display = '';
             if (pager) pager.style.display = 'none';
-            // Prev/Next and Refresh are pointless on an empty bin, so hide them.
-            // On a failed load keep Refresh visible so the user can retry.
-            if (refresh) refresh.style.display = load_failed ? '' : 'none';
             return;
         }
 
         if (table_wrap) table_wrap.style.display = '';
         if (empty_state) empty_state.style.display = 'none';
-        if (refresh) refresh.style.display = '';
 
         const pages = total_pages();
         if (current_page > pages) current_page = pages;
@@ -306,10 +300,9 @@ const recycleModule = (function () {
     }
 
     // Replace the result set and re-render. current_page is preserved (and clamped
-    // by render_page) so a refresh after a delete keeps you near where you were.
-    function set_records(records, failed) {
+    // by render_page) so a reload after a delete keeps you near where you were.
+    function set_records(records) {
         all_records = Array.isArray(records) ? records : [];
-        load_failed = failed === true;
         render_page();
     }
 
@@ -334,15 +327,15 @@ const recycleModule = (function () {
                 set_records(response.data.data || []);
             } else if (response !== undefined && response.status === 403) {
                 set_alert('danger', 'You are not authorized to view the recycle bin.');
-                set_records([], true);
+                set_records([]);
             } else {
                 set_alert('danger', 'Unable to load recycled records.');
-                set_records([], true);
+                set_records([]);
             }
 
         } catch (error) {
             set_alert('danger', 'Unable to load recycled records.');
-            set_records([], true);
+            set_records([]);
         }
     }
 
@@ -546,13 +539,6 @@ const recycleModule = (function () {
     }
 
     function wire_controls() {
-
-        const refresh = el('refresh-recycle');
-        if (refresh) {
-            refresh.addEventListener('click', function () {
-                load_records();
-            });
-        }
 
         const prev = el('recycle-prev');
         if (prev) {

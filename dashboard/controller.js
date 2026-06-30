@@ -134,14 +134,6 @@ const NAV_CONFIGS = {
         }
     },
 
-    standard_item_details: {
-        back: {
-            id: 'back-to-items',
-            label: 'Back to Exhibit Items',
-            nav_path: '/items?exhibit_id={exhibit_id}'
-        }
-    },
-
     items_delete_form: {
         back: {
             id: 'back-to-items',
@@ -427,13 +419,6 @@ exports.get_dashboard_items = function (req, res) {
     });
 };
 
-exports.get_dashboard_items_standard_details = function (req, res) {
-    res.render('dist/standard-items/dashboard-item-standard-details', {
-        ...template_config,
-        nav: NAV_CONFIGS.standard_item_details
-    });
-};
-
 exports.get_dashboard_items_standard_media_details = function (req, res) {
     res.render('dist/standard-items/dashboard-item-standard-media-details', {
         ...template_config,
@@ -530,13 +515,6 @@ exports.get_dashboard_grid_edit_text_item_form = function (req, res) {
     res.render('dist/grid-items/dashboard-grid-edit-text-item-form', {
         ...template_config,
         nav: NAV_CONFIGS.grid_item_form
-    });
-};
-
-exports.get_dashboard_grid_item_details = function (req, res) {
-    res.render('dist/grid-items/dashboard-grid-item-details', {
-        ...template_config,
-        nav: NAV_CONFIGS.grid_item_details
     });
 };
 

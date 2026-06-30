@@ -81,8 +81,8 @@ exports.create_index = async (req, res) => {
 
         // On a successful rebuild, repopulate the fresh (empty) index with the
         // currently-published exhibits in the background. Publish state is NOT
-        // changed; the index self-heals over the next moments (watch the document
-        // count via the status endpoint / Refresh).
+        // changed; the index self-heals over the next moments (the management view
+        // polls the status endpoint and updates the document count automatically).
         if (result.status === 201) {
             setImmediate(() => {
                 MODEL.reindex_published_exhibits().catch((reindex_error) => {

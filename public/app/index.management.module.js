@@ -24,6 +24,12 @@ const indexManagementModule = (function () {
     const ENDPOINT = APP_PATH + '/api/v1/indexer/manage';
     let obj = {};
 
+    // Status auto-refresh after a rebuild (background reindex → live count climbs).
+    const POLL_INTERVAL_MS = 2000;
+    const POLL_MAX_ATTEMPTS = 90;   // ~3 min safety ceiling
+    const STABLE_POLLS = 3;         // count unchanged this many polls in a row => settled
+    let poll_timer = null;
+
     function el(id) {
         return document.getElementById(id);
     }
@@ -61,7 +67,7 @@ const indexManagementModule = (function () {
 
             const token = authModule.get_user_token();
             if (token === false) {
-                return;
+                return null;
             }
 
             const response = await httpModule.req({
@@ -72,13 +78,71 @@ const indexManagementModule = (function () {
 
             if (response !== undefined && response.status === 200 && response.data && response.data.data) {
                 render_status(response.data.data);
-            } else {
-                render_status_unavailable();
+                return response.data.data;
             }
+
+            render_status_unavailable();
+            return null;
 
         } catch (error) {
             render_status_unavailable();
+            return null;
         }
+    }
+
+    // After a rebuild the reindex runs in the background (see create_index), so the
+    // live document count climbs over the next moments. Poll the status endpoint until
+    // the count settles, updating the view automatically — no manual refresh needed.
+    function stop_status_polling() {
+        if (poll_timer !== null) {
+            clearTimeout(poll_timer);
+            poll_timer = null;
+        }
+    }
+
+    function poll_status_until_settled() {
+
+        stop_status_polling();
+
+        let attempts = 0;
+        let last_count = null;
+        let stable = 0;
+
+        const tick = async () => {
+
+            poll_timer = null;
+            attempts++;
+
+            const data = await load_status();
+            const count = (data && typeof data.count === 'number') ? data.count : null;
+            const no_work = !!(data && data.published_exhibits === 0);
+
+            // Only treat the count as settled once it has actually been written
+            // (count > 0), or when there are no published exhibits to index at all —
+            // the brief count === 0 window before the background reindex starts must
+            // not be mistaken for completion.
+            if (count !== null && count === last_count && (count > 0 || no_work)) {
+                stable++;
+            } else {
+                stable = 0;
+            }
+            last_count = count;
+
+            if (stable >= STABLE_POLLS) {
+                const n = (count !== null) ? count : 0;
+                set_alert('success', 'Reindex complete — ' + n + ' document' + (n === 1 ? '' : 's') + ' indexed.');
+                return;
+            }
+
+            if (attempts >= POLL_MAX_ATTEMPTS) {
+                set_alert('info', 'Reindexing is still finishing; the document count above will keep updating.');
+                return;
+            }
+
+            poll_timer = setTimeout(tick, POLL_INTERVAL_MS);
+        };
+
+        poll_timer = setTimeout(tick, POLL_INTERVAL_MS);
     }
 
     function close_confirm_modal() {
@@ -121,7 +185,8 @@ const indexManagementModule = (function () {
             });
 
             if (response !== undefined && (response.status === 200 || response.status === 201)) {
-                set_alert('success', 'Index rebuilt — reindexing published exhibits in the background. Use Refresh to watch the document count populate.');
+                set_alert('info', 'Index rebuilt — reindexing published exhibits…');
+                poll_status_until_settled();
             } else if (response !== undefined && response.status === 403) {
                 set_alert('danger', 'You do not have permission to rebuild the index.');
             } else {
@@ -153,13 +218,6 @@ const indexManagementModule = (function () {
                 if (input.value.trim().toUpperCase() === 'REBUILD') {
                     rebuild_index();
                 }
-            });
-        }
-
-        const refresh = el('refresh-status');
-        if (refresh) {
-            refresh.addEventListener('click', function () {
-                load_status();
             });
         }
     }
