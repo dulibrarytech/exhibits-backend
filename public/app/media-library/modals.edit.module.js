@@ -364,6 +364,13 @@ const mediaEditModalModule = (function() {
         html += '<textarea class="form-control" id="edit-file-description" name="description" rows="3" placeholder="Enter a description (optional)">' + escape_html(record.description || '') + '</textarea>';
         html += '</div></div>';
         
+        // Subjects section — Topics, Genre/Form, Places, Item Type. A single instruction
+        // introduces the group and is programmatically associated with it (role="group"
+        // + aria-describedby) so assistive tech announces it and sighted users see it
+        // (WCAG 1.3.1 / 3.3.2), consistent with the upload and import modals.
+        html += '<div role="group" aria-label="Subjects" aria-describedby="edit-subjects-help">';
+        html += '<p id="edit-subjects-help" class="form-text text-muted mt-0 mb-2">Choose 2–4 of the following tags to support search.</p>';
+
         // Row 3: Topics, Genre/Form dropdowns
         html += '<div class="row">';
         html += '<div class="col-md-6 mb-3">';
@@ -393,6 +400,7 @@ const mediaEditModalModule = (function() {
         html += '<option value="">Select item type...</option>';
         html += '</select>';
         html += '</div></div>';
+        html += '</div>'; // close Subjects group
 
         // Hidden fields
         html += '<input type="hidden" id="edit-file-uuid" name="uuid" value="' + escape_html(record.uuid || '') + '">';

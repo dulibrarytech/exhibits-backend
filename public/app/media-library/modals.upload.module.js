@@ -429,6 +429,13 @@ const mediaModalsModule = (function() {
         html += '<textarea class="form-control file-description" id="file-description-' + index + '" name="description" rows="2" placeholder="Enter a description (optional)"></textarea>';
         html += '</div></div>';
         
+        // Subjects section — Topics, Genre/Form, Places, Item Type. A single instruction
+        // introduces the group and is programmatically associated with it (role="group"
+        // + aria-describedby) so assistive tech announces it and sighted users see it
+        // (WCAG 1.3.1 / 3.3.2). Replaces the old per-Topics "choose 2-3" hint.
+        html += '<div role="group" aria-label="Subjects" aria-describedby="file-subjects-help-' + index + '">';
+        html += '<p id="file-subjects-help-' + index + '" class="form-text text-muted mt-0 mb-2">Choose 2–4 of the following tags to support search.</p>';
+
         // Row 3: Topics, Genre/Form dropdowns
         html += '<div class="row">';
         html += '<div class="col-md-6 mb-3">';
@@ -436,7 +443,6 @@ const mediaModalsModule = (function() {
         html += '<select class="form-control form-select custom-select file-topics" id="file-topics-' + index + '" name="topics_subjects" required>';
         html += '<option value="">Select a topic...</option>';
         html += '</select>';
-        html += '<small class="form-text text-muted">Recommended to choose 2-3</small>';
         html += '</div>';
         html += '<div class="col-md-6 mb-3">';
         html += '<label class="form-label" for="file-genre-form-' + index + '">Genre/Form <span class="badge badge-required">Required</span></label>';
@@ -459,6 +465,7 @@ const mediaModalsModule = (function() {
         html += '<option value="">Select item type...</option>';
         html += '</select>';
         html += '</div></div>';
+        html += '</div>'; // close Subjects group
         
         // Hidden fields
         html += '<input type="hidden" class="file-storage-path" name="storage_path" value="' + escape_html(file_data.storage_path || '') + '">';
