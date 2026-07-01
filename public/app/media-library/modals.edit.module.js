@@ -311,6 +311,19 @@ const mediaEditModalModule = (function() {
             ? record.ingest_method.charAt(0).toUpperCase() + record.ingest_method.slice(1)
             : 'N/A';
         html += '<div class="mb-1"><strong>Ingest Method:</strong> ' + escape_html(ingest_method_label) + '</div>';
+        // Exhibit(s) — resolve the media's exhibit UUIDs → titles via the shared resolver
+        // (uses the list's warm title cache) and show them as a stacked list beneath
+        // Ingest Method, consistent with the media details view modals. Omitted when the
+        // media isn't in any exhibit.
+        if (typeof mediaLibraryModule !== 'undefined' && typeof mediaLibraryModule.resolve_exhibit_names === 'function') {
+            mediaLibraryModule.resolve_exhibit_names(record);
+        }
+        if (Array.isArray(record.exhibit_names) && record.exhibit_names.length > 0) {
+            html += '<div class="mb-1"><strong>Exhibit(s):</strong></div>';
+            html += '<div class="mb-1">' + record.exhibit_names.map(function (n) {
+                return '<div>' + escape_html(String(n)) + '</div>';
+            }).join('') + '</div>';
+        }
         html += '<div class="mb-1"><strong>Date Created:</strong> ' + format_edit_date(record.created) + '</div>';
         html += '<div class="mb-1"><strong>Added By:</strong> ' + escape_html(record.created_by || 'N/A') + '</div>';
         // Hide "Updated By" when there's no real user attribution:

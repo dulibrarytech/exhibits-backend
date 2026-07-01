@@ -817,6 +817,8 @@ const kalturaModalsModule = (function() {
         const added_by_el = document.getElementById('kaltura-player-added-by');
         const updated_by_row_el = document.getElementById('kaltura-player-updated-by-row');
         const updated_by_el = document.getElementById('kaltura-player-updated-by');
+        const exhibits_row_el = document.getElementById('kaltura-player-exhibits-row');
+        const exhibits_el = document.getElementById('kaltura-player-exhibits');
         const header_text = document.getElementById('kaltura-player-header-text');
         const type_icon = document.getElementById('kaltura-player-type-icon');
         const responsive_container = document.getElementById('kaltura-player-responsive');
@@ -873,6 +875,20 @@ const kalturaModalsModule = (function() {
                 updated_by_row_el.style.display = '';
             } else {
                 updated_by_row_el.style.display = 'none';
+            }
+        }
+
+        // Exhibit associations (resolved to titles in handle_view_click) — stacked list
+        // beneath the label; hide the row when the media isn't in any exhibit.
+        if (exhibits_el && exhibits_row_el) {
+            if (Array.isArray(record.exhibit_names) && record.exhibit_names.length > 0) {
+                exhibits_el.innerHTML = record.exhibit_names
+                    .map(n => '<div>' + escape_html(String(n)) + '</div>')
+                    .join('');
+                exhibits_row_el.style.display = '';
+            } else {
+                exhibits_el.innerHTML = '';
+                exhibits_row_el.style.display = 'none';
             }
         }
 

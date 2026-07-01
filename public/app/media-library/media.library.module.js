@@ -67,6 +67,36 @@ const mediaLibraryModule = (function() {
     let exhibit_titles_cache = null;   // Map<uuid, title>
     let selected_exhibit_uuid = null;  // Currently selected exhibit UUID for filtering
 
+    // Resolve a media row's exhibit UUIDs → titles from the warm cache (loaded with
+    // the list, see fetch_exhibit_titles) so every media modal — the upload, repo, and
+    // Kaltura view modals AND the edit modal — can show which exhibit(s) the media has
+    // been added to. Mutates the record with `exhibit_names` (unresolvable ids dropped)
+    // and returns it. Shared so all entry points stay consistent.
+    //
+    // `exhibits` is a longtext (JSON) column: the list flow pre-parses it to an array
+    // before caching, but the single-record fetch used by the edit modal returns it as
+    // a raw JSON string. Normalize both shapes here so callers don't have to.
+    const resolve_exhibit_names = (record) => {
+        if (!record || !exhibit_titles_cache) return record;
+        let exhibits = record.exhibits;
+        if (typeof exhibits === 'string') {
+            try {
+                const parsed = JSON.parse(exhibits);
+                exhibits = Array.isArray(parsed) ? parsed : [];
+            } catch (e) {
+                exhibits = [];
+            }
+        }
+        if (Array.isArray(exhibits) && exhibits.length > 0) {
+            record.exhibit_names = exhibits
+                .map(id => exhibit_titles_cache.get(id))
+                .filter(Boolean);
+        }
+        return record;
+    };
+    // Exposed so the edit modal (a separate module) can resolve titles the same way.
+    obj.resolve_exhibit_names = resolve_exhibit_names;
+
     // Image file extensions for thumbnail display
     const IMAGE_EXTENSIONS = ['.jpg', '.jpeg', '.png', '.gif', '.webp', '.svg'];
 
@@ -472,6 +502,10 @@ const mediaLibraryModule = (function() {
         // Falls through to the legacy positional args when the lookup misses.
         const record = view_record_map.get(uuid) || null;
 
+        // Resolve the media's exhibit UUIDs → titles so the view modals can show which
+        // exhibit(s) the media has been added to (shared helper; see above).
+        resolve_exhibit_names(record);
+
         // Kaltura items: open player modal directly
         if (ingest_method === 'kaltura') {
 
@@ -744,6 +778,10 @@ const mediaLibraryModule = (function() {
                     name: this.getAttribute('data-name'),
                     item_type: this.getAttribute('data-media-type') || ''
                 };
+
+                // Resolve exhibit titles so the player modal's Exhibit(s) row shows here
+                // too (same as the click-dispatch path).
+                resolve_exhibit_names(record);
 
                 if (typeof kalturaModalsModule !== 'undefined' && typeof kalturaModalsModule.open_kaltura_player_modal === 'function') {
                     kalturaModalsModule.open_kaltura_player_modal(record);
@@ -1309,30 +1347,36 @@ const mediaLibraryModule = (function() {
                                              style="width: ${THUMBNAIL_SIZE.width}px; height: ${THUMBNAIL_SIZE.height}px; object-fit: cover; border-radius: 4px; margin-right: 10px; vertical-align: middle; cursor: pointer;"
                                              data-uuid="${row.uuid}" data-name="${sanitize_html(row.name)}" data-ingest-method="${row.ingest_method}" data-media-type="${row.media_type || ''}" data-kaltura-thumbnail-url="" data-kaltura-entry-id="${row.kaltura_entry_id || ''}" title="Click to view">`;
                                 } else if (row.has_thumbnail && row.thumbnail_url) {
-                                    // Uploaded item with server-generated thumbnail (images and PDFs)
-                                    const is_viewable = row.ingest_method === 'upload' && (row.is_image || row.media_type === 'pdf');
-                                    const tn_cursor_style = is_viewable ? 'cursor: pointer;' : '';
-                                    const tn_clickable_class = is_viewable ? 'media-thumbnail-clickable' : '';
+                                    // Uploaded image/PDF with a server-generated thumbnail, or a repository
+                                    // item that has one. Both are clickable to open their details modal —
+                                    // repo rows dispatch to the repo view modal, keyed off the media uuid
+                                    // (they reach this branch when they carry a local thumbnail but no repo_uuid).
+                                    const is_clickable = row.ingest_method === 'repository'
+                                        || (row.ingest_method === 'upload' && (row.is_image || row.media_type === 'pdf'));
+                                    const tn_cursor_style = is_clickable ? 'cursor: pointer;' : '';
+                                    const tn_clickable_class = is_clickable ? 'media-thumbnail-clickable' : '';
                                     const img_url = row.thumbnail_url + (row.thumbnail_url.includes('?') ? '&' : '?') + 'token=' + encodeURIComponent(token || '');
                                     thumbnail_html = `
-                                        <img src="${img_url}" 
+                                        <img src="${img_url}"
                                              alt="Thumbnail for ${display_name}"
                                              class="media-thumbnail ${tn_clickable_class}"
                                              style="width: ${THUMBNAIL_SIZE.width}px; height: ${THUMBNAIL_SIZE.height}px; object-fit: cover; border-radius: 4px; margin-right: 10px; vertical-align: middle; ${tn_cursor_style}"
                                              loading="lazy"
-                                             ${is_viewable ? `data-uuid="${row.uuid}" data-name="${sanitize_html(row.name)}" data-filename="${sanitize_html(row.filename)}" data-size="${row.size_display}" data-media-type="${row.media_type}" data-ingest-method="${row.ingest_method}" title="Click to view"` : ''}
+                                             ${is_clickable ? `data-uuid="${row.uuid}" data-name="${sanitize_html(row.name)}" data-filename="${sanitize_html(row.filename)}" data-size="${row.size_display}" data-media-type="${row.media_type}" data-ingest-method="${row.ingest_method}" data-repo-uuid="${row.repo_uuid || ''}" data-repo-handle="${row.repo_handle || ''}" data-call-number="${sanitize_html(row.call_number || '')}" title="Click to view"` : ''}
                                              data-fallback="placeholder" data-fallback-src="${PLACEHOLDER_IMAGE}">`;
                                 } else {
-                                    // Placeholder image for items without thumbnails
-                                    const is_upload_viewable = row.ingest_method === 'upload' && (row.is_image || row.media_type === 'pdf');
-                                    const placeholder_clickable_class = is_upload_viewable ? 'media-thumbnail-clickable' : '';
-                                    const placeholder_cursor_style = is_upload_viewable ? 'cursor: pointer;' : '';
+                                    // Placeholder for items without a thumbnail. Clickable for repo items
+                                    // (open their details modal) and for uploaded images/PDFs.
+                                    const is_clickable = row.ingest_method === 'repository'
+                                        || (row.ingest_method === 'upload' && (row.is_image || row.media_type === 'pdf'));
+                                    const placeholder_clickable_class = is_clickable ? 'media-thumbnail-clickable' : '';
+                                    const placeholder_cursor_style = is_clickable ? 'cursor: pointer;' : '';
                                     thumbnail_html = `
-                                        <img src="${PLACEHOLDER_IMAGE}" 
+                                        <img src="${PLACEHOLDER_IMAGE}"
                                              alt="Placeholder for ${display_name}"
                                              class="media-thumbnail-placeholder ${placeholder_clickable_class}"
                                              style="width: ${THUMBNAIL_SIZE.width}px; height: ${THUMBNAIL_SIZE.height}px; object-fit: cover; border-radius: 4px; margin-right: 10px; vertical-align: middle; ${placeholder_cursor_style}"
-                                             ${is_upload_viewable ? `data-uuid="${row.uuid}" data-name="${sanitize_html(row.name)}" data-filename="${sanitize_html(row.filename)}" data-size="${row.size_display}" data-media-type="${row.media_type}" data-ingest-method="${row.ingest_method}" title="Click to view"` : ''}>`;
+                                             ${is_clickable ? `data-uuid="${row.uuid}" data-name="${sanitize_html(row.name)}" data-filename="${sanitize_html(row.filename)}" data-size="${row.size_display}" data-media-type="${row.media_type}" data-ingest-method="${row.ingest_method}" data-repo-uuid="${row.repo_uuid || ''}" data-repo-handle="${row.repo_handle || ''}" data-call-number="${sanitize_html(row.call_number || '')}" title="Click to view"` : ''}>`;
                                 }
 
                                 // Combine the thumbnail with the name + ingest-method pill,

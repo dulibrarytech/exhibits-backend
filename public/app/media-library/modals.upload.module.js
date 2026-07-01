@@ -989,6 +989,13 @@ const mediaModalsModule = (function() {
                 : 'N/A';
             rows.push(['Ingest Method', ingest_method_cap]);
 
+            // Exhibit associations (resolved to titles by the list module) — shown as a
+            // stacked list beneath the label; special-cased in the render below. Only
+            // shown when the media has been added to at least one exhibit.
+            if (record && Array.isArray(record.exhibit_names) && record.exhibit_names.length > 0) {
+                rows.push(['__exhibits__', record.exhibit_names]);
+            }
+
             // Audit rows — only when the full record was passed through
             if (record && record.created_display) rows.push(['Date Created', record.created_display]);
             if (record && record.created_by) rows.push(['Added By', record.created_by]);
@@ -1002,6 +1009,13 @@ const mediaModalsModule = (function() {
 
             info_el.innerHTML = rows.map((row, idx) => {
                 const cls = idx === rows.length - 1 ? 'mb-0' : 'mb-1';
+                if (row[0] === '__exhibits__') {
+                    const names_html = row[1]
+                        .map(n => '<div>' + escape_html(String(n)) + '</div>')
+                        .join('');
+                    return '<p class="mb-1"><strong>Exhibit(s):</strong></p>'
+                        + '<div class="' + cls + '">' + names_html + '</div>';
+                }
                 return '<p class="' + cls + '"><strong>' + row[0] + ':</strong> <span>' + escape_html(String(row[1])) + '</span></p>';
             }).join('');
         }
