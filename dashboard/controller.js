@@ -39,6 +39,18 @@ const template_config = {
 const APP_PATH = CONFIG.app_path;
 
 /**
+ * Admin Utils sub-navigation — the tools nested under the top-level "Admin Utils"
+ * item. Spread into each admin page's nav config so you can move between Users /
+ * Index Management / Recycle Bin without leaving the area. All admin-gated: revealed
+ * by navModule.gate_admin_links for administrators, hidden otherwise (fail closed).
+ */
+const ADMIN_UTILS_LINKS = [
+    { id: 'admin-users-link', label: 'Users', icon: 'bi bi-people-fill', href: APP_PATH + '/users', admin_only: true },
+    { id: 'admin-index-management-link', label: 'Index Management', icon: 'bi bi-database-gear', href: APP_PATH + '/index-management', admin_only: true },
+    { id: 'admin-recycle-bin-link', label: 'Recycle Bin', icon: 'bi bi-trash', href: APP_PATH + '/recycle', admin_only: true }
+];
+
+/**
  * Nav configurations for the exhibits family.
  * Static links use `href` (fully qualified).
  * Dynamic links use `nav_path` (relative; resolved client-side by navModule.wire_nav_links).
@@ -49,9 +61,10 @@ const NAV_CONFIGS = {
         links: [
             { label: 'Add Exhibit', icon: 'ti-layout', modal: '#add-exhibit-modal' },
             { label: 'Media Library', icon: 'bi bi-collection-play-fill', href: APP_PATH + '/media/library' },
-            { label: 'Users', icon: 'bi bi-people-fill', href: APP_PATH + '/users' },
-            { id: 'index-management-link', label: 'Index Management', icon: 'bi bi-database-gear', href: APP_PATH + '/index-management', admin_only: true },
-            { id: 'recycle-bin-link', label: 'Recycle Bin', icon: 'bi bi-trash', href: APP_PATH + '/recycle', admin_only: true }
+            // Users / Index Management / Recycle Bin are nested under Admin Utils, which
+            // opens the Users view by default; the sub-tools appear as its sub-nav on the
+            // admin pages (see ADMIN_UTILS_LINKS).
+            { id: 'admin-utils-link', label: 'Admin Utils', icon: 'fa fa-cogs', href: APP_PATH + '/users', admin_only: true }
         ]
     },
 
@@ -294,8 +307,13 @@ const NAV_CONFIGS = {
             label: 'Exhibit Builder',
             href: APP_PATH + '/exhibits'
         },
+        // Add User sits directly under Users (its parent tool), ahead of the other
+        // admin tools. Users is the first/default entry in ADMIN_UTILS_LINKS, so insert
+        // Add User right after it, then the remaining tools (Index Management, Recycle Bin).
         links: [
-            { label: 'Add User', icon: 'fa fa-user', href: APP_PATH + '/users/add', wrapper_id: 'add-user' }
+            ADMIN_UTILS_LINKS[0],
+            { label: 'Add User', icon: 'fa fa-user', href: APP_PATH + '/users/add', wrapper_id: 'add-user' },
+            ...ADMIN_UTILS_LINKS.slice(1)
         ]
     },
 
@@ -339,17 +357,19 @@ const NAV_CONFIGS = {
     index_management: {
         back: {
             id: 'back-to-exhibits',
-            label: 'Back to Exhibits',
+            label: 'Exhibit Builder',
             href: APP_PATH + '/exhibits'
-        }
+        },
+        links: [...ADMIN_UTILS_LINKS]
     },
 
     recycle: {
         back: {
             id: 'back-to-exhibits',
-            label: 'Back to Exhibits',
+            label: 'Exhibit Builder',
             href: APP_PATH + '/exhibits'
-        }
+        },
+        links: [...ADMIN_UTILS_LINKS]
     }
 };
 
