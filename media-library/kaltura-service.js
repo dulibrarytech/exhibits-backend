@@ -20,6 +20,7 @@
 
 const KALTURA = require('kaltura-client');
 const KALTURA_CONFIG = require('../config/kaltura_config')();
+const KALTURA_THUMBNAIL = require('./kaltura_thumbnail');
 const LOGGER = require('../libs/log4');
 
 // Kaltura media type mapping (video and audio only)
@@ -47,35 +48,14 @@ const build_response = (success, message, data = null) => {
     };
 };
 
-// Square thumbnail size requested from Kaltura (px). The same stored URL is reused
-// across the media list (small) and the larger preview/picker; 400 keeps it crisp
-// and the CSS scales it down.
-const KALTURA_THUMBNAIL_SIZE = 400;
-
-/**
- * Builds Kaltura's public, on-demand thumbnail URL deterministically from the entry
- * id — the same CDN/partner pattern iiif-service uses for the playManifest/embed URLs.
- * We construct this ourselves instead of snapshotting the Kaltura API's
- * `response.thumbnailUrl` (which is frequently empty/stale, leaving the generic
- * placeholder), so every audio/video entry resolves a thumbnail and existing rows can
- * be backfilled from their stored entry id.
- * @param {string} entry_id - Kaltura entry ID
- * @returns {string} Thumbnail URL, or '' if config/entry_id is missing
- */
-const build_kaltura_thumbnail_url = (entry_id) => {
-
-    const cdn = KALTURA_CONFIG.kaltura_cdn;
-    const partner_id = KALTURA_CONFIG.kaltura_partner_id;
-
-    if (!cdn || !partner_id || !entry_id) {
-        return '';
-    }
-
-    return `${cdn}/p/${partner_id}/sp/${partner_id}00/thumbnail/entry_id/${entry_id}` +
-        `/width/${KALTURA_THUMBNAIL_SIZE}/height/${KALTURA_THUMBNAIL_SIZE}`;
-};
-
+// Thumbnail URL derivation lives in a dependency-free module (media-library/
+// kaltura_thumbnail.js, reads process.env directly) so read-path query builders can
+// require it without pulling in this service's Kaltura SDK + config-validator load.
+// Re-exported here for existing callers; `build_kaltura_thumbnail_url` is also used
+// internally by get_kaltura_media below.
+const build_kaltura_thumbnail_url = KALTURA_THUMBNAIL.build_kaltura_thumbnail_url;
 exports.build_kaltura_thumbnail_url = build_kaltura_thumbnail_url;
+exports.kaltura_thumbnail_url_sql = KALTURA_THUMBNAIL.kaltura_thumbnail_url_sql;
 
 /**
  * Validates a Kaltura entry ID

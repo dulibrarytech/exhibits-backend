@@ -20,6 +20,7 @@
 
 const LOGGER = require('../../libs/log4');
 const Base_tasks = require('./tasks_helper');
+const KALTURA_THUMBNAIL = require('../../media-library/kaltura_thumbnail');
 
 /**
  * Tasks for managing exhibit ↔ media library bindings via tbl_exhibit_media
@@ -229,7 +230,7 @@ const Exhibit_media_library_tasks = class extends Base_tasks {
                         `${this.TABLE.media_library_records}.original_filename`,
                         `${this.TABLE.media_library_records}.ingest_method`,
                         `${this.TABLE.media_library_records}.repo_uuid`,
-                        `${this.TABLE.media_library_records}.kaltura_thumbnail_url`,
+                        KALTURA_THUMBNAIL.kaltura_thumbnail_url_sql(this.DB, this.TABLE.media_library_records, 'kaltura_thumbnail_url'),
                         `${this.TABLE.media_library_records}.thumbnail_path`,
                         `${this.TABLE.media_library_records}.storage_path`,
                         `${this.TABLE.media_library_records}.media_width`,

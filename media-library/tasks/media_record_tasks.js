@@ -19,6 +19,7 @@
 'use strict';
 
 const LOGGER = require('../../libs/log4');
+const KALTURA_THUMBNAIL = require('../kaltura_thumbnail');
 
 /**
  * Object contains tasks used to manage media records
@@ -32,6 +33,24 @@ const Media_record_tasks = class {
         this.DB = DB;
         this.TABLE = TABLE;
         this.QUERY_TIMEOUT = 10000;
+    }
+
+    /**
+     * Derive a record's Kaltura thumbnail URL at read time from its stored
+     * `kaltura_entry_id`, rather than trusting the stored `kaltura_thumbnail_url`
+     * snapshot (which goes stale and is overwritten by the v1->v2 migration). Mutates
+     * and returns the record. No-op for non-Kaltura rows, a missing entry id, or when
+     * Kaltura config is absent (build_kaltura_thumbnail_url returns '' → keep stored).
+     * @private
+     */
+    _derive_kaltura_thumbnail(record) {
+        if (record && record.ingest_method === 'kaltura' && record.kaltura_entry_id) {
+            const derived = KALTURA_THUMBNAIL.build_kaltura_thumbnail_url(record.kaltura_entry_id);
+            if (derived) {
+                record.kaltura_thumbnail_url = derived;
+            }
+        }
+        return record;
     }
 
     /**
@@ -224,6 +243,8 @@ const Media_record_tasks = class {
                 .orderBy('created', 'desc')
                 .timeout(this.QUERY_TIMEOUT);
 
+            records.forEach((record) => this._derive_kaltura_thumbnail(record));
+
             this._log_success('Media records retrieved successfully', {
                 count: records.length
             });
@@ -308,6 +329,8 @@ const Media_record_tasks = class {
             build_where(records_query);
             const records = await records_query.timeout(this.QUERY_TIMEOUT);
 
+            records.forEach((record) => this._derive_kaltura_thumbnail(record));
+
             this._log_success('Media records browse query completed', {
                 page,
                 limit,
@@ -363,6 +386,8 @@ const Media_record_tasks = class {
                     message: 'Media record not found'
                 };
             }
+
+            this._derive_kaltura_thumbnail(record);
 
             this._log_success('Media record retrieved successfully', {uuid: validated_uuid});
 

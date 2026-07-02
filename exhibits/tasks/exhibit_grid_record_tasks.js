@@ -21,6 +21,7 @@
 const LOGGER = require('../../libs/log4');
 const HELPER = require('../../libs/helper');
 const Base_tasks = require('./tasks_helper');
+const KALTURA_THUMBNAIL = require('../../media-library/kaltura_thumbnail');
 
 /**
  * Object contains tasks used to manage exhibit grid and grid item records
@@ -532,7 +533,7 @@ const Exhibit_grid_record_tasks = class extends Base_tasks {
                     // Media library metadata for the primary media asset
                     `media_lib.name as media_name`,
                     `media_lib.ingest_method as media_ingest_method`,
-                    `media_lib.kaltura_thumbnail_url as media_kaltura_thumbnail_url`,
+                    KALTURA_THUMBNAIL.kaltura_thumbnail_url_sql(this.DB, 'media_lib', 'media_kaltura_thumbnail_url'),
                     `media_lib.repo_uuid as media_repo_uuid`,
                     `media_lib.thumbnail_path as media_thumbnail_path`,
                     `media_lib.alt_text as media_alt_text`,
@@ -550,7 +551,7 @@ const Exhibit_grid_record_tasks = class extends Base_tasks {
                     // Media library metadata for the thumbnail asset
                     `thumb_lib.name as thumbnail_media_name`,
                     `thumb_lib.ingest_method as thumbnail_ingest_method`,
-                    `thumb_lib.kaltura_thumbnail_url as thumbnail_media_kaltura_thumbnail_url`,
+                    KALTURA_THUMBNAIL.kaltura_thumbnail_url_sql(this.DB, 'thumb_lib', 'thumbnail_media_kaltura_thumbnail_url'),
                     `thumb_lib.repo_uuid as thumbnail_media_repo_uuid`,
                     `thumb_lib.thumbnail_path as thumbnail_media_thumbnail_path`,
                     `thumb_lib.uuid as thumb_lib_uuid`
@@ -762,7 +763,7 @@ const Exhibit_grid_record_tasks = class extends Base_tasks {
                     // Media library metadata for the primary media asset
                     `media_lib.name as media_name`,
                     `media_lib.ingest_method as media_ingest_method`,
-                    `media_lib.kaltura_thumbnail_url as media_kaltura_thumbnail_url`,
+                    KALTURA_THUMBNAIL.kaltura_thumbnail_url_sql(this.DB, 'media_lib', 'media_kaltura_thumbnail_url'),
                     `media_lib.repo_uuid as media_repo_uuid`,
                     `media_lib.thumbnail_path as media_thumbnail_path`,
                     `media_lib.alt_text as media_alt_text`,
@@ -875,7 +876,7 @@ const Exhibit_grid_record_tasks = class extends Base_tasks {
                     // Media library metadata for the primary media asset
                     `media_lib.name as media_name`,
                     `media_lib.ingest_method as media_ingest_method`,
-                    `media_lib.kaltura_thumbnail_url as media_kaltura_thumbnail_url`,
+                    KALTURA_THUMBNAIL.kaltura_thumbnail_url_sql(this.DB, 'media_lib', 'media_kaltura_thumbnail_url'),
                     `media_lib.repo_uuid as media_repo_uuid`,
                     `media_lib.thumbnail_path as media_thumbnail_path`,
                     `media_lib.alt_text as media_alt_text`,

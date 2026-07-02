@@ -21,6 +21,7 @@
 const HELPER = require('../../libs/helper');
 const LOGGER = require('../../libs/log4');
 const Base_tasks = require('./tasks_helper');
+const KALTURA_THUMBNAIL = require('../../media-library/kaltura_thumbnail');
 
 /**
  * Object contains tasks used to manage exhibit records
@@ -339,7 +340,7 @@ const Exhibit_record_tasks = class extends Base_tasks {
                             ...qualified_fields,
                             `${binding_table}.media_uuid as media_library_thumbnail_uuid`,
                             `${media_table}.ingest_method as media_library_thumbnail_ingest_method`,
-                            `${media_table}.kaltura_thumbnail_url as media_library_thumbnail_kaltura_url`
+                            KALTURA_THUMBNAIL.kaltura_thumbnail_url_sql(this.DB, media_table, 'media_library_thumbnail_kaltura_url')
                         )
                         .leftJoin(binding_table, function () {
                             this.on(`${exhibit_table}.uuid`, '=', `${binding_table}.exhibit_uuid`)
@@ -430,7 +431,7 @@ const Exhibit_record_tasks = class extends Base_tasks {
                         // Hero image media library metadata
                         `hero_lib.uuid as hero_lib_uuid`,
                         `hero_lib.kaltura_entry_id as hero_kaltura_entry_id`,
-                        `hero_lib.kaltura_thumbnail_url as hero_kaltura_thumbnail_url`,
+                        KALTURA_THUMBNAIL.kaltura_thumbnail_url_sql(this.DB, 'hero_lib', 'hero_kaltura_thumbnail_url'),
                         `hero_lib.media_width as hero_media_width`,
                         `hero_lib.media_height as hero_media_height`,
                         `hero_lib.thumbnail_path as hero_thumbnail_path`,
