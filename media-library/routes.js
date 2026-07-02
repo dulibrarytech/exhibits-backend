@@ -266,7 +266,9 @@ module.exports = function (app) {
     // NOTE: Must be registered LAST among IIIF routes due to multi-param path capture
     app.route(ENDPOINTS.iiif_image.get.endpoint)
         .get(
-            rate_limits.read_operations,
+            // OWASP A04/H3 — this is the on-demand transcode endpoint; use the
+            // stricter IIIF image limiter rather than the generic read tier.
+            rate_limits.iiif_image_operations,
             // TOKEN.verify_with_query || TOKEN.verify,
             async_handler(CONTROLLER.get_iiif_image)
         );

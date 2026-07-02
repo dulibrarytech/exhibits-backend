@@ -52,7 +52,7 @@ const itemsAddGridFormModule = (function () {
             const message_element = document.querySelector('#message');
 
             // Scroll to top for user feedback
-            window.scrollTo({ top: 0, behavior: 'smooth' });
+            window.scrollTo({ top: 0, left: 0, behavior: 'instant' });
 
             // Validate required parameters
             const exhibit_id = helperModule.get_parameter_by_name('exhibit_id');
@@ -118,7 +118,7 @@ const itemsAddGridFormModule = (function () {
                 display_status_message(message_element, 'success', 'Grid record created successfully. Redirecting to edit page...');
 
                 // Scroll to top to show success message
-                window.scrollTo({ top: 0, behavior: 'smooth' });
+                window.scrollTo({ top: 0, left: 0, behavior: 'instant' });
 
                 // Gracefully redirect to edit page after showing success message
                 setTimeout(() => {
@@ -319,7 +319,7 @@ const itemsAddGridFormModule = (function () {
             const message_element = document.querySelector('#message');
 
             // Scroll to top for user feedback
-            window.scrollTo({ top: 0, behavior: 'smooth' });
+            window.scrollTo({ top: 0, left: 0, behavior: 'instant' });
 
             // Validate required parameters
             const exhibit_id = helperModule.get_parameter_by_name('exhibit_id');
@@ -380,7 +380,7 @@ const itemsAddGridFormModule = (function () {
                 }
 
                 // Scroll to top for success message
-                window.scrollTo({ top: 0, behavior: 'smooth' });
+                window.scrollTo({ top: 0, left: 0, behavior: 'instant' });
 
                 display_status_message(message_element, 'success', 'Grid record created successfully');
 

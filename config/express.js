@@ -25,10 +25,25 @@ const BODYPARSER = require('body-parser');
 const METHODOVERRIDE = require('method-override');
 const HELMET = require('helmet');
 const HELMET_CONFIG = require('../config/helmet_config')();
+const CSRF_GUARD = require('../config/csrf_guard');
 const XSS = require('../libs/dom');
 const LOGGER = require('../libs/log4');
 const FS = require('fs');
 const {rate_limits} = require('../config/rate_limits_loader');
+
+// OWASP A09 — never write session tokens or API keys into the access log.
+// Media/thumbnail/IIIF requests still carry the JWT as a ?token= (or ?t=) query
+// param, so the raw originalUrl would otherwise persist live credentials to
+// logs/exhibits.log (session-hijack risk). Redact the value of any sensitive
+// query param before logging. Order the alternation longest-first so 'token'
+// isn't shadowed by 't'.
+const REDACT_QUERY_PARAMS = /([?&](?:access_token|token|apikey|api_key|key|t)=)[^&#\s]+/gi;
+function redact_url(url) {
+    if (typeof url !== 'string') {
+        return url;
+    }
+    return url.replace(REDACT_QUERY_PARAMS, '$1[REDACTED]');
+}
 
 module.exports = function() {
 
@@ -56,6 +71,11 @@ module.exports = function() {
     APP.use(BODYPARSER.json());
     APP.use(METHODOVERRIDE());
     APP.use(HELMET(HELMET_CONFIG));
+    // OWASP A04 (H4) — CSRF defense: reject cross-origin state-changing requests
+    // (Origin/Referer must be first-party). Mounted after method-override so the
+    // effective req.method is checked, and before the routes so every mutation is
+    // covered by default. Static assets are GET, so they are unaffected.
+    APP.use(CSRF_GUARD);
     APP.use('/exhibits-dashboard/static', EXPRESS.static('./public'));
     APP.use(XSS.sanitize_req_query);
     APP.use(XSS.sanitize_req_body);
@@ -69,7 +89,7 @@ module.exports = function() {
         if (req.path.indexOf('/api/') !== -1 || req.path.indexOf('/iiif') !== -1) {
             const start = Date.now();
             res.on('finish', function () {
-                LOGGER.module().info(`INFO: [${req.method}] ${req.originalUrl} - ${res.statusCode} - ${Date.now() - start}ms - ${req.ip}`);
+                LOGGER.module().info(`INFO: [${req.method}] ${redact_url(req.originalUrl)} - ${res.statusCode} - ${Date.now() - start}ms - ${req.ip}`);
             });
         }
         next();
@@ -123,10 +143,10 @@ module.exports = function() {
     // eslint-disable-next-line no-unused-vars
     APP.use(function (err, req, res, next) {
         if (err instanceof SyntaxError && err.status === 400 && 'body' in err) {
-            LOGGER.module().warn(`WARNING: [JSON parse error] ${req.method} ${req.originalUrl}`);
+            LOGGER.module().warn(`WARNING: [JSON parse error] ${req.method} ${redact_url(req.originalUrl)}`);
             return res.status(400).json({ success: false, message: 'Invalid JSON in request body', data: null });
         }
-        LOGGER.module().error(`ERROR: [global error handler] ${err.message} - ${req.method} ${req.originalUrl}`);
+        LOGGER.module().error(`ERROR: [global error handler] ${err.message} - ${req.method} ${redact_url(req.originalUrl)}`);
         const error_message = process.env.NODE_ENV === 'production' ? 'Internal server error' : err.message;
         if (req.path.indexOf('/api/') !== -1) {
             return res.status(err.status || 500).json({ success: false, message: error_message, data: null });
@@ -134,7 +154,16 @@ module.exports = function() {
         res.status(err.status || 500).send(error_message);
     });
 
-    SERVER.listen(process.env.APP_PORT);
+    // OWASP A07 (C2) — bind to loopback by default so the app is reachable only
+    // through the local reverse proxy (nginx), never directly on all interfaces.
+    // This makes nginx the single ingress, which is what lets the /auth/sso
+    // gateway controls (shared secret / IP allowlist injected by nginx) actually
+    // bound the attack surface — a client cannot skip the proxy and POST the SSO
+    // callback straight to Node. Override with APP_BIND (e.g. 0.0.0.0) only if a
+    // non-loopback bind is genuinely required (e.g. the proxy connects over a LAN
+    // address rather than 127.0.0.1).
+    const APP_BIND = process.env.APP_BIND || '127.0.0.1';
+    SERVER.listen(process.env.APP_PORT, APP_BIND);
 
     return APP;
 };

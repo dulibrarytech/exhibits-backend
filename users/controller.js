@@ -45,7 +45,7 @@ exports.get_users = async function (req, res) {
 
         if (!is_authorized) {
             LOGGER.module().warn(
-                `WARNING: [/user/controller (get_users)] unauthorized attempt to view users by ${req.user?.id || 'unknown'}`
+                `WARNING: [/user/controller (get_users)] unauthorized attempt to view users by ${req.decoded?.sub || 'unknown'}`
             );
             return res.status(403).json({
                 message: 'Unauthorized request'
@@ -257,7 +257,7 @@ exports.update_user = async function (req, res) {
 
         if (!is_authorized) {
             LOGGER.module().warn(
-                `WARNING: [/user/controller (update_user)] unauthorized attempt to update user ${parsed_user_id} by ${req.user?.id || 'unknown'}`
+                `WARNING: [/user/controller (update_user)] unauthorized attempt to update user ${parsed_user_id} by ${req.decoded?.sub || 'unknown'}`
             );
             return res.status(403).json({
                 message: 'Unauthorized request'
@@ -292,6 +292,11 @@ exports.update_user = async function (req, res) {
                 message: 'Invalid server response.'
             });
         }
+
+        // OWASP A09 — audit successful update (actor + affected id).
+        LOGGER.module().info(
+            `INFO: [/user/controller (update_user)] user updated (id: ${parsed_user_id}) by ${req.decoded?.sub || 'unknown'}`
+        );
 
         // Return successful response with updated user data
         return res.status(201).json({
@@ -360,7 +365,7 @@ exports.save_user = async function (req, res) {
 
         if (!is_authorized) {
             LOGGER.module().warn(
-                `WARNING: [/user/controller (save_user)] unauthorized attempt to add user by ${req.user?.id || 'unknown'}`
+                `WARNING: [/user/controller (save_user)] unauthorized attempt to add user by ${req.decoded?.sub || 'unknown'}`
             );
             return res.status(403).json({
                 message: 'Unauthorized request'
@@ -369,7 +374,6 @@ exports.save_user = async function (req, res) {
 
         // Save user to database
         const saved_user = await MODEL.save_user(user_data);
-        console.log('saved user: ', saved_user);
         // Validate model response
         if (saved_user.data === null || saved_user.data === undefined) {
             LOGGER.module().error(
@@ -386,6 +390,12 @@ exports.save_user = async function (req, res) {
                 message: 'User already exists'
             });
         }
+
+        // OWASP A09 — audit successful user administration (actor + affected id,
+        // no PII record dump).
+        LOGGER.module().info(
+            `INFO: [/user/controller (save_user)] user created (id: ${saved_user.data}) by ${req.decoded?.sub || 'unknown'}`
+        );
 
         // Return successful response with saved user data
         return res.status(201).json({
@@ -451,7 +461,7 @@ exports.delete_user = async function (req, res) {
 
         if (!is_authorized) {
             LOGGER.module().warn(
-                `WARNING: [/user/controller (delete_user)] unauthorized attempt to delete user ${parsed_user_id} by ${req.user?.id || 'unknown'}`
+                `WARNING: [/user/controller (delete_user)] unauthorized attempt to delete user ${parsed_user_id} by ${req.decoded?.sub || 'unknown'}`
             );
             return res.status(403).json({
                 message: 'Unauthorized request'
@@ -483,6 +493,11 @@ exports.delete_user = async function (req, res) {
                 message: delete_result.message || 'User cannot be deleted due to existing dependencies.'
             });
         }
+
+        // OWASP A09 — audit successful deletion (actor + affected id).
+        LOGGER.module().info(
+            `INFO: [/user/controller (delete_user)] user deleted (id: ${parsed_user_id}) by ${req.decoded?.sub || 'unknown'}`
+        );
 
         // Return successful response (204 No Content for DELETE operations)
         return res.status(204).send();
@@ -562,7 +577,7 @@ exports.update_status = async function (req, res) {
 
         if (!is_authorized) {
             LOGGER.module().warn(
-                `WARNING: [/user/controller (update_status)] unauthorized attempt to update status for user ${parsed_user_id} by ${req.user?.id || 'unknown'}`
+                `WARNING: [/user/controller (update_status)] unauthorized attempt to update status for user ${parsed_user_id} by ${req.decoded?.sub || 'unknown'}`
             );
             return res.status(403).json({
                 message: 'Unauthorized request'
@@ -597,6 +612,11 @@ exports.update_status = async function (req, res) {
                 message: 'Invalid server response.'
             });
         }
+
+        // OWASP A09 — audit successful status change (actor + affected id + new state).
+        LOGGER.module().info(
+            `INFO: [/user/controller (update_status)] user status changed (id: ${parsed_user_id}, is_active: ${parsed_is_active}) by ${req.decoded?.sub || 'unknown'}`
+        );
 
         // Return successful response
         return res.status(200).json({

@@ -19,7 +19,8 @@
 const path = require('path');
 const multer = require('multer');
 const fs = require('fs').promises;
-const { v4: uuidv4 } = require('uuid');
+// OWASP A06 — Node built-in v4 UUID (drops the `uuid` dependency; same output).
+const { randomUUID: uuidv4 } = require('crypto');
 const sharp = require('sharp');
 const { exiftool } = require('exiftool-vendored');
 const LOGGER = require('../libs/log4');

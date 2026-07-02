@@ -131,7 +131,17 @@ exports.sso = async function (req, res) {
         // now authenticate via this cookie instead of a URL query string.
         TOKEN.set_auth_cookie(res, token);
 
+        // OWASP A09 — record successful authentication (who + source IP) so the
+        // audit trail has login events, not only failures.
+        LOGGER.module().info(
+            `INFO: [/auth/controller (sso)] successful login for user: ${sanitized_username} from IP: ${req.ip}`
+        );
+
         // Successful authentication - redirect with token
+        // NOTE (OWASP A09 follow-up): the JWT is still passed in this redirect URL
+        // because the SPA bootstraps its session from the ?t= param (auth.module
+        // save_token) into sessionStorage. Removing it requires the frontend to
+        // read the session from the HttpOnly cookie instead — tracked separately.
         const redirect_url = `${APP_PATH}/exhibits?t=${encoded_token}&id=${auth_result.data}`;
         res.redirect(redirect_url);
 
@@ -349,13 +359,15 @@ exports.check_permissions = async function (req, res) {
 
         // Handle authorization result
         if (is_authorized === true) {
-            console.log('auth controller ', is_authorized);
             return res.status(200).json({
                 message: 'Authorized'
             });
         } else if (is_authorized === false) {
-            console.log('AUTHORIZE', is_authorized);
-            // Authorization failed
+            // OWASP A09 — log permission denials with actor/permission/resource
+            // so privilege-probing is visible (replaces prior debug console.log).
+            LOGGER.module().warn(
+                `WARNING: [/auth/controller (check_permissions)] permission denied for user: ${req.decoded?.sub || 'unknown'} — permissions: ${Array.isArray(permissions) ? permissions.join(',') : permissions}, record_type: ${record_type || 'n/a'}`
+            );
             return res.status(403).json({
                 message: 'Unauthorized request'
             });

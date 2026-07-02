@@ -52,6 +52,8 @@ npm run test:e2e
 npm run test
 npx vitest run (only runs the vitest suite)
 
+npm run test:predeploy
+npm run test:e2e:live:external
 ```
 
 ### Maintainers

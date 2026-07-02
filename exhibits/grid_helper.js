@@ -105,7 +105,7 @@ const check_authorization = async (req, res, permissions, record_type, parent_id
 
     if (!is_authorized) {
         LOGGER.module().error(`${context}: Unauthorized attempt`, {
-            user_id: req.user?.id,
+            user_id: req.decoded?.sub,
             permissions,
             ...log_meta
         });

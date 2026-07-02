@@ -110,6 +110,47 @@ describe('get_image — failure statuses', () => {
         expect(r.success).toBe(true);
         expect(r.status).toBeUndefined();
     });
+
+    // OWASP A04/H3 — oversized output dimensions are rejected before any source
+    // read/transcode (default cap 2000px per dimension).
+    it('oversized best-fit size (!50000,50000) -> 400', async () => {
+        const r = await IIIF_SERVICE.get_image(UUID, 'full', '!50000,50000', '0', 'default.jpg');
+        expect(r.success).toBe(false);
+        expect(r.status).toBe(400);
+    });
+
+    it('oversized exact size (5000,5000) -> 400', async () => {
+        const r = await IIIF_SERVICE.get_image(UUID, 'full', '5000,5000', '0', 'default.jpg');
+        expect(r.status).toBe(400);
+    });
+
+    it('oversized width-only size (9999,) -> 400', async () => {
+        const r = await IIIF_SERVICE.get_image(UUID, 'full', '9999,', '0', 'default.jpg');
+        expect(r.status).toBe(400);
+    });
+
+    it('oversized height-only size (,9999) -> 400', async () => {
+        const r = await IIIF_SERVICE.get_image(UUID, 'full', ',9999', '0', 'default.jpg');
+        expect(r.status).toBe(400);
+    });
+
+    it('the cap is enforced before the record lookup', async () => {
+        set_record(not_found());
+        const r = await IIIF_SERVICE.get_image(UUID, 'full', '!50000,50000', '0', 'default.jpg');
+        expect(r.status).toBe(400);
+    });
+
+    it('size at the cap (2000,2000) is allowed', async () => {
+        const r = await IIIF_SERVICE.get_image(UUID, 'full', '2000,2000', '0', 'default.jpg');
+        expect(r.success).toBe(true);
+        expect(r.status).toBeUndefined();
+    });
+
+    it('max size is not dimension-capped (serves source-bounded original)', async () => {
+        const r = await IIIF_SERVICE.get_image(UUID, 'full', 'max', '0', 'default.jpg');
+        expect(r.success).toBe(true);
+        expect(r.status).toBeUndefined();
+    });
 });
 
 describe('build_manifest_for_uuid — failure statuses', () => {

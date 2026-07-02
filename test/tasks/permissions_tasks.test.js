@@ -65,56 +65,34 @@ describe('Permissions_tasks', () => {
             permissions_tasks = new Permissions_tasks(mockDB, mockTable);
         });
 
-        it('should log the role parameter', async () => {
-            // The method is a TODO that just logs
+        // get_role_permissions is a TODO stub. It must not leak the role to
+        // stdout via console.log (OWASP A09 — removed). These tests assert the
+        // stub resolves without throwing and writes nothing to the console.
+        it('should not log the role parameter to the console', async () => {
             const consoleSpy = jest.spyOn(console, 'log').mockImplementation();
 
             await permissions_tasks.get_role_permissions('admin');
 
-            expect(consoleSpy).toHaveBeenCalledWith('admin');
+            expect(consoleSpy).not.toHaveBeenCalled();
 
             consoleSpy.mockRestore();
         });
 
-        it('should handle null role', async () => {
-            const consoleSpy = jest.spyOn(console, 'log').mockImplementation();
-
-            await permissions_tasks.get_role_permissions(null);
-
-            expect(consoleSpy).toHaveBeenCalledWith(null);
-
-            consoleSpy.mockRestore();
+        it('should handle null role without throwing', async () => {
+            await expect(permissions_tasks.get_role_permissions(null)).resolves.not.toThrow();
         });
 
-        it('should handle undefined role', async () => {
-            const consoleSpy = jest.spyOn(console, 'log').mockImplementation();
-
-            await permissions_tasks.get_role_permissions(undefined);
-
-            expect(consoleSpy).toHaveBeenCalledWith(undefined);
-
-            consoleSpy.mockRestore();
+        it('should handle undefined role without throwing', async () => {
+            await expect(permissions_tasks.get_role_permissions(undefined)).resolves.not.toThrow();
         });
 
-        it('should handle numeric role', async () => {
-            const consoleSpy = jest.spyOn(console, 'log').mockImplementation();
-
-            await permissions_tasks.get_role_permissions(1);
-
-            expect(consoleSpy).toHaveBeenCalledWith(1);
-
-            consoleSpy.mockRestore();
+        it('should handle numeric role without throwing', async () => {
+            await expect(permissions_tasks.get_role_permissions(1)).resolves.not.toThrow();
         });
 
-        it('should handle object role', async () => {
-            const consoleSpy = jest.spyOn(console, 'log').mockImplementation();
-
+        it('should handle object role without throwing', async () => {
             const roleObj = { id: 1, name: 'admin' };
-            await permissions_tasks.get_role_permissions(roleObj);
-
-            expect(consoleSpy).toHaveBeenCalledWith(roleObj);
-
-            consoleSpy.mockRestore();
+            await expect(permissions_tasks.get_role_permissions(roleObj)).resolves.not.toThrow();
         });
     });
 

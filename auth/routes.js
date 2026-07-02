@@ -22,6 +22,7 @@ const APP_CONFIG = require('../config/app_config')();
 const CONTROLLER = require('../auth/controller');
 const ENDPOINTS = require('../auth/endpoints');
 const TOKENS = require('../libs/tokens');
+const SSO_GUARD = require('../auth/sso_guard');
 const {rate_limits} = require('../config/rate_limits_loader');
 const APP_PATH = APP_CONFIG.app_path;
 
@@ -42,8 +43,13 @@ module.exports = function (app) {
     // collectively, so /auth/sso is keyed ONLY by the submitted employeeID
     // (auth_identity_operations); the global IP-keyed backstop still caps total
     // SSO throughput from the proxy.
+    //
+    // OWASP A07 (C2): SSO_GUARD runs first — it authenticates the request PATH
+    // (shared-secret header injected by the local proxy and/or a source-IP
+    // allowlist) so the body-only auth cannot be replayed by an arbitrary
+    // client. Fails closed in production when unconfigured. See auth/sso_guard.js.
     app.route(`${APP_PATH}/auth/sso`)
-        .post(rate_limits.auth_identity_operations, CONTROLLER.sso);
+        .post(SSO_GUARD, rate_limits.auth_identity_operations, CONTROLLER.sso);
 
     app.route(`${APP_PATH}/auth/permissions`)
         .post(TOKENS.verify, CONTROLLER.check_permissions);

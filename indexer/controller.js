@@ -99,7 +99,7 @@ exports.create_index = async (req, res) => {
         LOGGER.module().error('ERROR: [/indexer/controller (create_index)]', {
             error: error.message,
             stack: error.stack,
-            userId: req.user?.id
+            userId: req.decoded?.sub
         });
 
         if (!res.headersSent) {
@@ -184,7 +184,7 @@ exports.index_exhibit = async (req, res) => {
             error: error.message,
             stack: error.stack,
             uuid: req.params.uuid,
-            userId: req.user?.id
+            userId: req.decoded?.sub
         });
 
         if (!res.headersSent) {
@@ -239,7 +239,7 @@ exports.get_indexed_record = async (req, res) => {
             error: error.message,
             stack: error.stack,
             uuid: req.params.uuid,
-            userId: req.user?.id
+            userId: req.decoded?.sub
         });
 
         if (!res.headersSent) {
@@ -285,7 +285,7 @@ exports.delete_record = async (req, res) => {
             error: error.message,
             stack: error.stack,
             uuid: req.params.uuid,
-            userId: req.user?.id
+            userId: req.decoded?.sub
         });
 
         if (!res.headersSent) {
@@ -350,7 +350,7 @@ exports.index_record = async (req, res) => {
             stack: error.stack,
             uuid: req.params.uuid,
             type: req.query.type,
-            userId: req.user?.id
+            userId: req.decoded?.sub
         });
 
         if (!res.headersSent) {

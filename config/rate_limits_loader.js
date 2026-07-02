@@ -90,6 +90,20 @@ const rate_limit_configs = {
         message: 'Too many public media requests'
     },
 
+    // Stricter limit for the public IIIF image endpoint (OWASP A04/H3). This is
+    // the only route that transcodes on demand (Sharp region/resize/format), so
+    // it warrants a tighter per-client ceiling than generic reads — while still
+    // generous enough for an exhibit page that displays many images (derivatives
+    // are cached, so repeat loads are cheap). Manifest/info.json/thumbnail stay
+    // on read_operations. Tune IIIF_IMAGE_RATE_MAX against real traffic.
+    iiif_image_operations: {
+        window_ms: 15 * 60 * 1000, // 15 minutes
+        max_requests: parseInt(process.env.IIIF_IMAGE_RATE_MAX, 10) > 0
+            ? parseInt(process.env.IIIF_IMAGE_RATE_MAX, 10)
+            : 300,
+        message: 'Too many image requests'
+    },
+
     // Authentication/login attempts (IP-keyed)
     auth_operations: {
         window_ms: 15 * 60 * 1000, // 15 minutes
@@ -174,6 +188,7 @@ const rate_limits = {
     preview_operations: create_rate_limiter('preview_operations'),
     index_operations: create_rate_limiter('index_operations'),
     public_media_access: create_rate_limiter('public_media_access'),
+    iiif_image_operations: create_rate_limiter('iiif_image_operations'),
     auth_operations: create_rate_limiter('auth_operations'),
     // Keyed by the submitted username (req.body.employeeID), lower-cased; skipped
     // when no identity is present so the IP-keyed auth_operations still applies.

@@ -51,6 +51,29 @@ const SUPPORTED_FORMATS = {
 // Default JPEG quality for IIIF image responses
 const IIIF_IMAGE_QUALITY = 80;
 
+// OWASP A04 (H3) — cap the requested IIIF output dimensions. A request such as
+// `/iiif/{uuid}/full/!50000,50000/0/default.jpg` would otherwise ask Sharp for a
+// huge allocation and let an attacker cache-bust the derivative store with an
+// unbounded set of distinct sizes. Requests whose explicit width/height exceed
+// the cap are rejected with HTTP 400 (a size larger than the server supports is
+// an error per the IIIF Image API) before any source read or transcode. The
+// `max`/`full` forms are unaffected — they serve the source-bounded original.
+// Configurable via IIIF_MAX_DIMENSION (default 2000px per dimension).
+const IIIF_MAX_DIMENSION = (() => {
+    const v = parseInt(process.env.IIIF_MAX_DIMENSION, 10);
+    return Number.isFinite(v) && v > 0 ? v : 2000;
+})();
+
+// Defense-in-depth: bound the SOURCE decode as well, since peak memory is driven
+// by the full-resolution source, not the output. Defaults to Sharp's own
+// built-in limit (~268 megapixels) so existing library assets are unaffected;
+// lower via IIIF_MAX_SOURCE_PIXELS to tighten. Applied to every SHARP() instance
+// in the image pipeline so an oversized source is rejected rather than decoded.
+const IIIF_MAX_SOURCE_PIXELS = (() => {
+    const v = parseInt(process.env.IIIF_MAX_SOURCE_PIXELS, 10);
+    return Number.isFinite(v) && v > 0 ? v : 268402689;
+})();
+
 // ---------------------------------------------------------------------------
 // Helpers
 // ---------------------------------------------------------------------------
@@ -881,6 +904,37 @@ const parse_region = (region, source_width, source_height) => {
  * @param {string} size - IIIF size parameter
  * @returns {Object|null} Sharp resize options or null for max/original
  */
+/**
+ * Extracts the explicit output dimensions a size parameter requests, for cap
+ * enforcement (OWASP A04/H3). Only the numeric IIIF size forms carry explicit
+ * dimensions: "w,", ",h", "w,h", "!w,h". "max"/"full" (and any unparseable
+ * value) carry none, so they return { width: null, height: null }.
+ *
+ * @param {string} size - IIIF size parameter
+ * @returns {{width: (number|null), height: (number|null)}}
+ */
+const requested_size_dimensions = (size) => {
+
+    if (typeof size !== 'string' || size === 'max' || size === 'full') {
+        return { width: null, height: null };
+    }
+
+    const body = size.startsWith('!') ? size.substring(1) : size;
+    const parts = body.split(',');
+
+    if (parts.length !== 2) {
+        return { width: null, height: null };
+    }
+
+    const w = parts[0] !== '' ? parseInt(parts[0], 10) : null;
+    const h = parts[1] !== '' ? parseInt(parts[1], 10) : null;
+
+    return {
+        width: Number.isFinite(w) ? w : null,
+        height: Number.isFinite(h) ? h : null
+    };
+};
+
 const parse_size = (size) => {
 
     if (size === 'max' || size === 'full') {
@@ -1025,6 +1079,19 @@ exports.get_image = async function (uuid, region, size, rotation, quality_format
             return build_response(false, 'Only rotation value of 0 is supported', { image: null, status: 400 });
         }
 
+        // H3 (A04) — reject oversized output requests before any source read or
+        // transcode, so a request like `!50000,50000` can't force a huge Sharp
+        // allocation or bust the derivative cache with unbounded distinct sizes.
+        const requested = requested_size_dimensions(size);
+
+        if ((requested.width !== null && requested.width > IIIF_MAX_DIMENSION) ||
+            (requested.height !== null && requested.height > IIIF_MAX_DIMENSION)) {
+            return build_response(false, `Requested size exceeds the maximum of ${IIIF_MAX_DIMENSION}px per dimension`, {
+                image: null,
+                status: 400
+            });
+        }
+
         // Fetch the media record (cheap indexed lookup; also yields the version
         // token that keys the cache and the ETag)
         const result = await MEDIA_MODEL.get_media_record(uuid);
@@ -1070,14 +1137,16 @@ exports.get_image = async function (uuid, region, size, rotation, quality_format
             return build_response(false, 'Image source not available', { image: null, status: 404 });
         }
 
-        // Build the Sharp pipeline
-        let pipeline = SHARP(source_buffer);
+        // Build the Sharp pipeline. limitInputPixels bounds the source decode
+        // (defense-in-depth for H3 — an oversized source is rejected, not
+        // buffered into memory).
+        let pipeline = SHARP(source_buffer, { limitInputPixels: IIIF_MAX_SOURCE_PIXELS });
 
         // 1. Region extraction — source dimensions are only needed for a
         //    non-"full" region, so the extra metadata decode is skipped otherwise
         if (region !== 'full') {
 
-            const source_metadata = await SHARP(source_buffer).metadata();
+            const source_metadata = await SHARP(source_buffer, { limitInputPixels: IIIF_MAX_SOURCE_PIXELS }).metadata();
             const region_opts = parse_region(region, source_metadata.width, source_metadata.height);
 
             if (region_opts) {

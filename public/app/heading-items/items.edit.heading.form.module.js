@@ -427,7 +427,7 @@ const itemsEditHeadingFormModule = (function () {
             const message_element = document.querySelector('#message');
 
             // Scroll to top for user feedback
-            window.scrollTo({ top: 0, behavior: 'smooth' });
+            window.scrollTo({ top: 0, left: 0, behavior: 'instant' });
 
             // Show loading state
             display_status_message(message_element, 'info', 'Updating heading record...');

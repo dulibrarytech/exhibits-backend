@@ -648,7 +648,7 @@ const itemsEditVerticalTimelineItemFormModule = (function () {
 
         try {
             // Scroll to top for user feedback
-            window.scrollTo({ top: 0, behavior: 'smooth' });
+            window.scrollTo({ top: 0, left: 0, behavior: 'instant' });
 
             // Get and validate parameters
             const exhibit_id = helperModule.get_parameter_by_name('exhibit_id');
