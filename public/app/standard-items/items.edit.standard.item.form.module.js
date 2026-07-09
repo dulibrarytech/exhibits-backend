@@ -272,6 +272,9 @@ const itemsEditStandardItemFormModule = (function () {
                 itemsCommonStandardItemFormModule.set_item_style(record.styles);
             }
 
+            set_element_value('#margins', record.margins ?? 'medium');
+            set_element_value('#text-align', record.text_alignment ?? 'left');
+
             return false;
 
         } catch (error) {

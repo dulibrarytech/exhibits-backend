@@ -354,6 +354,8 @@ const construct_item_index_record = (record) => {
         is_repo_item: record.is_repo_item,
         is_kaltura_item: record.is_kaltura_item,
         created: record.created,
+        margins: record.margins,
+        text_alignment: record.text_alignment,
         // Legacy media filename preserved for backward compatibility
         media: record.media,
         // v2: resolved media IIIF URLs (media library manifest, or repo import fallback)

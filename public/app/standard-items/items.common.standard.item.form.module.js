@@ -741,6 +741,9 @@ const itemsCommonStandardItemFormModule = (function () {
             // Collect the selected style preset (radio "swatch chooser"); None → null.
             item.styles = helperModule.get_checked_radio_button(document.getElementsByName('styles'));
 
+            item.margins = getElementValue('#margins');
+            item.text_alignment = getElementValue('#text-align');
+
             // Handle media-specific logic
             if (isMediaPath) {
 
