@@ -20,10 +20,7 @@
                             <div class="col-12">
                                 <div class="form-text text-muted" style="font-size: 17px"><span id="is-required-text">Exhibit Text
                             <span class="badge badge-required">Required</span></span>
-                                    &nbsp;&nbsp;<a onclick="helperModule.preview_html('item-text-input');return false;"
-                                                   data-toggle="modal" data-target=".preview-html"
-                                                   class="btn-xs btn-light"><span style="padding: 5px"><i
-                                                    class="fa fa-code" aria-hidden="true"></i> <small>Preview Field</small></span></a>
+                                    
                                 </div>
                                 <textarea disabled id="item-text-input" class="form-control" name="item_text_input"
                                           rows="4"></textarea>
@@ -50,11 +47,7 @@
                         <div class="row form-group">
                             <div class="col-12">
                                 <div class="form-text text-muted" style="font-size: 17px">Caption
-                                    &nbsp;&nbsp;<a
-                                            onclick="helperModule.preview_html('item-caption-input');return false;"
-                                            data-toggle="modal" data-target=".preview-html"
-                                            class="btn-xs btn-light"><span style="padding: 5px"><i
-                                                    class="fa fa-code" aria-hidden="true"></i> <small>Preview Field</small></span></a>
+                                    
                                 </div>
                                 <textarea disabled id="item-caption-input" class="form-control"
                                           name="item_caption_input"
@@ -84,7 +77,6 @@
     </main>
     <div class="clearfix"></div>
     <%- include('../partials/footer.ejs'); %>
-    <%- include('../partials/preview-html-modal.ejs'); %>
 </div>
 <!-- libs -->
 <%- include('../partials/exhibits-libs-common.ejs'); %>

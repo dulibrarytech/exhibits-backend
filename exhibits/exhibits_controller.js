@@ -551,25 +551,6 @@ exports.build_exhibit_preview = async function (req, res) {
     }
 };
 
-// TODO: Helper function to generate secure preview tokens
-async function generate_preview_token(exhibit_uuid, user_id) {
-    const crypto = require('crypto');
-
-    // Generate a random token
-    const token = crypto.randomBytes(32).toString('hex');
-
-    // Store token with expiration (e.g., 1 hour)
-    const token_data = {
-        token: token,
-        exhibit_uuid: exhibit_uuid,
-        user_id: user_id,
-        created_at: new Date().toISOString(),
-        expires_at: new Date(Date.now() + (60 * 60 * 1000)).toISOString() // 1 hour
-    };
-
-    return token;
-}
-
 exports.publish_exhibit = async function (req, res) {
 
     try {

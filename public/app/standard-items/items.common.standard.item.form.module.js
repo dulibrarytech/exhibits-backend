@@ -697,7 +697,7 @@ const itemsCommonStandardItemFormModule = (function () {
                 return el?.value?.trim() ?? defaultValue;
             };
 
-            // Phase 3b — showError now optionally accepts a field
+            // ShowError now optionally accepts a field
             // selector. When provided, the message is associated with
             // the field via domModule.set_field_error (aria-invalid +
             // aria-describedby) in addition to the page-level alert.
@@ -712,7 +712,7 @@ const itemsCommonStandardItemFormModule = (function () {
                 }
             };
 
-            // Phase 3b — clear any prior field-level error state from a
+            // Clear any prior field-level error state from a
             // previous submission so the now-valid fields lose their
             // aria-invalid="true" and the stale message is removed.
             ['#item-text-input', '#item-media-uuid'].forEach(s => {

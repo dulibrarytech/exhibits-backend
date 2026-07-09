@@ -116,10 +116,6 @@ const handle_error = (res, context, error, message, detail = '') => {
     });
 };
 
-// process_media_files moved to common_helper
-
-// clean_media_fields moved to common_helper
-
 module.exports = {
     is_valid_string,
     validate_param,

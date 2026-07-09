@@ -22,8 +22,9 @@ const MODULE_PATH = resolve(
     '../../public/app/exhibits/exhibits.styles.module.js',
 );
 
+// 'template' ("Exhibit") section removed 2026-07-02 — mirrors STYLE_SECTIONS /
+// REQUIRED_SECTIONS in exhibits.styles.module.js.
 const STYLE_SECTIONS = [
-    'template',
     'introduction',
     'navigation',
     'heading1',
@@ -35,7 +36,6 @@ const STYLE_SECTIONS = [
 ];
 
 const REQUIRED_SECTIONS = [
-    'template',
     'introduction',
     'navigation',
     'heading1',

@@ -306,6 +306,7 @@ const itemsAddHeadingFormModule = (function () {
         return 'Unable to create heading record. Please try again.';
     }
 
+    /* TODO: REMOVE
     obj.create_heading_record__ = async function() {
         // Prevent duplicate submissions
         if (this._is_creating) {
@@ -412,8 +413,9 @@ const itemsAddHeadingFormModule = (function () {
             this._is_creating = false;
         }
     };
+    */
 
-    /**
+    /** TODO: REMOVE
      * Transition from create mode to edit mode without page reload
      */
     async function transition_to_edit_mode(exhibit_id, item_id) {

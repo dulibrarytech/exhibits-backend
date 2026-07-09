@@ -790,60 +790,6 @@ const Exhibit_timeline_record_tasks = class extends Base_tasks {
     }
 
     /**
-     * Locks a timeline item record
-     * @param {string} item_uuid - The timeline item UUID
-     * @param {string} user_id - The user ID locking the record
-     * @returns {Promise<Object>} Lock result
-     */
-    async lock_timeline_item_record(item_uuid, user_id) {
-
-        try {
-
-            this._validate_database();
-            this._validate_table('timeline_item_records');
-
-            const lock_data = {
-                is_locked: 1,
-                locked_by_user: user_id.trim(),
-                locked_at: this.DB.fn.now(),
-                updated: this.DB.fn.now(),
-                updated_by: user_id.trim()
-            };
-
-            const affected_rows = await this.DB(this.TABLE.timeline_item_records)
-                .where({
-                    uuid: item_uuid.trim(),
-                    is_deleted: 0,
-                    is_locked: 0
-                })
-                .update(lock_data)
-                .timeout(this.QUERY_TIMEOUT);
-
-            if (affected_rows === 0) {
-                throw new Error('Failed to lock record - may be locked by another user');
-            }
-
-            this._log_success('Timeline item record locked', {
-                item_uuid: item_uuid.trim(),
-                user_id: user_id.trim()
-            });
-
-            return {
-                success: true,
-                item_uuid: item_uuid.trim(),
-                locked_by_user: user_id.trim(),
-                message: 'Record locked successfully'
-            };
-
-        } catch (error) {
-            this._handle_error(error, 'lock_timeline_item_record', {
-                item_uuid,
-                user_id
-            });
-        }
-    }
-
-    /**
      * Updates a timeline item record
      * @param {Object} data - Timeline item data to update
      * @param {string} [updated_by=null] - User ID performing the update
@@ -1122,6 +1068,11 @@ const Exhibit_timeline_record_tasks = class extends Base_tasks {
      * @param {string} uuid - Timeline item UUID
      * @param {string} [updated_by=null] - User ID
      * @returns {Promise<Object>} Update result
+     *
+     * NOTE: no static call sites — the indexer invokes this DYNAMICALLY via
+     * config string (indexer/model.js `set_publish_method:
+     * 'set_timeline_item_to_publish'` → indexer_helper
+     * `record_task[set_publish_method](item.uuid)`). Do not remove.
      */
     async set_timeline_item_to_publish(uuid, updated_by = null) {
 

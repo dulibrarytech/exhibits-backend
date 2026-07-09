@@ -136,11 +136,7 @@ const exhibitsCommonFormModule = (function () {
             const description = helperModule.clean_html(get_element_value(selectors.description));
             const about_curators = helperModule.clean_html(get_element_value(selectors.curators));
 
-            // Validate required field. Phase 3b — set_field_error sets
-            // aria-invalid="true" on the field, inserts a sibling
-            // <div role="alert" id="<TITLE_ERROR_ID>"> and wires the
-            // field's aria-describedby. Bootstrap's `.is-invalid` class
-            // remains for visual styling alongside the aria semantics.
+            // Validate required field.
             if (!title) {
 
                 if (title_el) {

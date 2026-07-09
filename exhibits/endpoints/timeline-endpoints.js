@@ -69,11 +69,5 @@ module.exports = {
             endpoint: `${APP_PATH}${PREFIX}${VERSION}${ENDPOINT}/:exhibit_id/timelines/:timeline_id/items/:item_id`,
             params: 'token or api_key, is_member_of_exhibit, timeline_id, item_id'
         }
-    },
-    timeline_item_media: {
-        delete: {
-            description: 'Deletes timeline item media',
-            endpoint: `${APP_PATH}${PREFIX}${VERSION}${ENDPOINT}/:exhibit_id/timelines/:timeline_id/items/:item_id/media/:media`
-        }
     }
 };

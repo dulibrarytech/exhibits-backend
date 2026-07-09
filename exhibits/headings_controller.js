@@ -174,27 +174,6 @@ exports.unlock_heading_record = async function (req, res) {
             options.force = false;
         }
 
-        // TODO: add permissions for all to unlock
-        /*
-        const permissions = ['update_item', 'update_any_item'];
-        let options = {};
-        options.req = req;
-        options.permissions = permissions;
-        options.record_type = 'heading';
-        options.parent_id = exhibit_id;
-        options.child_id = heading_id;
-
-        const is_authorized = await AUTHORIZE.check_permission(options);
-
-        if (is_authorized === false) {
-            res.status(403).send({
-                message: 'Unauthorized request'
-            });
-
-            return false;
-        }
-        */
-
         const result = await HEADINGS_MODEL.unlock_heading_record(uid, heading_id, options);
 
         if (result === true) {

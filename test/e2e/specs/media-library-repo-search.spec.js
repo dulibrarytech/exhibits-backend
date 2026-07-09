@@ -243,16 +243,15 @@ test.describe('Media library repo-search flow (repo.service.module.js)', () => {
         expect(net_listeners).toBe(1);
     });
 
-    test('clicking a pagination link does not jump the window scroll', async ({ page }) => {
-        // Regression: pagination uses <a href="#"> elements. On a real
-        // mouse click, the browser focuses the anchor BEFORE the
-        // delegated click handler runs. If the anchor is near the
-        // viewport edge, the browser's "scroll focused element fully
-        // into view" behavior jumps the page — far enough to bring
-        // the Media List card below into view, away from the search
-        // results the user was looking at. The fix preventDefaults
-        // mousedown on the page-link so focus is never applied,
-        // leaving the click event itself to do the page-change work.
+    test('clicking a pagination link anchors the viewport at the top of the results', async ({ page }) => {
+        // Regression history: pagination once jumped the window on click —
+        // first via href="#" fragment navigation, then via focus-induced
+        // scroll-into-view (both fixed), and finally via scroll CLAMPING:
+        // a partial last page renders fewer cards, the document shrinks,
+        // and a restore-previous-position strategy gets clamped by the
+        // browser ("jump to the middle"). The current behavior is a
+        // deterministic INSTANT anchor: every page change scrolls the top
+        // of #repo-search-results to the top of the viewport.
         const records = [];
         for (let i = 0; i < 35; i += 1) {
             records.push(repoSearchItemFixture({
@@ -269,25 +268,28 @@ test.describe('Media library repo-search flow (repo.service.module.js)', () => {
         await page.click('#repo-uuid-btn');
         await expect(page.locator('.repo-result-item')).toHaveCount(10);
 
-        // Pre-scroll so the page-3 anchor sits near the bottom edge
-        // of the viewport. With the anchor partially-visible, the
-        // focus-into-view that fires on real mouse-click would jump
-        // the scroll. Playwright's own actionability scroll-into-view
-        // is a no-op here because the anchor passes its visibility
-        // check (any visible portion satisfies it).
+        // Scroll deep, as a user does to reach the pagination bar below
+        // the results grid, then jump to the PARTIAL last page — the
+        // clamp trigger (35 records → page 4 renders 5 cards and the
+        // document shrinks).
         await page.evaluate(() => {
-            const a = document.querySelector('.repo-page-link[data-page="3"]');
+            const a = document.querySelector('.repo-page-link[data-page="4"]');
             const target = a.getBoundingClientRect().top + window.scrollY -
                 (window.innerHeight - a.getBoundingClientRect().height - 4);
             window.scrollTo(0, target);
         });
-        const scroll_before = await page.evaluate(() => window.scrollY);
 
-        await page.locator('.repo-page-link[data-page="3"]').first().click();
-        await expect(page.locator('.repo-result-item').first()).toContainText(/Item 2[0-9]/);
+        await page.locator('.repo-page-link[data-page="4"]').first().click();
+        await expect(page.locator('.repo-result-item').first()).toContainText(/Item 3[0-4]/);
+        await expect(page.locator('.repo-result-item')).toHaveCount(5);
 
-        const scroll_after = await page.evaluate(() => window.scrollY);
-        // Window must not have jumped. Allow small rounding only.
-        expect(Math.abs(scroll_after - scroll_before)).toBeLessThan(10);
+        // The results container's top is anchored at the viewport top,
+        // honoring the theme's scroll-padding-top (4.5rem = 72px headroom,
+        // exhibits.common.css) — no clamped mid-page landing.
+        const results_top = await page.evaluate(() =>
+            document.getElementById('repo-search-results').getBoundingClientRect().top
+        );
+        expect(results_top).toBeGreaterThanOrEqual(0);
+        expect(results_top).toBeLessThan(100);
     });
 });

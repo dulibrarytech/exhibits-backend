@@ -20,7 +20,7 @@ const itemsDetailsHeadingModule = (function () {
 
     'use strict';
 
-    const APP_PATH = endpointsModule.get_app_path();
+    // const APP_PATH = endpointsModule.get_app_path();
     const EXHIBITS_ENDPOINTS = endpointsModule.get_exhibits_endpoints();
     let obj = {};
 
@@ -100,7 +100,7 @@ const itemsDetailsHeadingModule = (function () {
         return false;
     }
 
-    /*
+    /* TODO: REMOVE
     obj.update_item_heading_record = async function () {
 
         try {

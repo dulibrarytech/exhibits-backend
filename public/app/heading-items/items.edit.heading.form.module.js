@@ -687,67 +687,6 @@ const itemsEditHeadingFormModule = (function () {
         return 'Unable to update heading record. Please try again.';
     }
 
-    /*
-    obj.update_item_heading_record__ = async function () {
-
-        try {
-
-            scrollTo(0, 0);
-            domModule.set_alert(document.querySelector('#message'), 'info', 'Updating heading record...');
-            let exhibit_id = helperModule.get_parameter_by_name('exhibit_id');
-            let item_id = helperModule.get_parameter_by_name('item_id');
-            let token = authModule.get_user_token();
-            let data = itemsCommonHeadingFormModule.get_common_heading_form_fields(rich_text_data);
-            let response;
-
-            if (data === false) {
-                return false;
-            }
-
-            if (exhibit_id === undefined || item_id === undefined) {
-                domModule.set_alert(document.querySelector('#message'), 'danger', 'Unable to get record ID');
-                return false;
-            }
-
-            if (token === false) {
-                setTimeout(() => {
-                    domModule.set_alert(document.querySelector('#message'), 'danger', 'Unable to get session token');
-                    authModule.logout();
-                }, 1000);
-
-                return false;
-            }
-
-            data.updated_by = helperModule.get_user_name();
-
-            let tmp = EXHIBITS_ENDPOINTS.exhibits.heading_records.put.endpoint.replace(':exhibit_id', exhibit_id);
-            let endpoint = tmp.replace(':heading_id', item_id);
-
-            response = await httpModule.req({
-                method: 'PUT',
-                url: endpoint,
-                data: data,
-                headers: {
-                    'Content-Type': 'application/json',
-                    'x-access-token': token
-                }
-            });
-
-            if (response !== undefined && response.status === 201) {
-
-                domModule.set_alert(document.querySelector('#message'), 'success', 'Heading record updated');
-
-                setTimeout(() => {
-                    window.location.reload();
-                }, 900);
-            }
-
-        } catch (error) {
-            domModule.set_alert(document.querySelector('#message'), 'danger', error.message);
-        }
-    };
-    */
-
     obj.init = async function () {
 
         try {

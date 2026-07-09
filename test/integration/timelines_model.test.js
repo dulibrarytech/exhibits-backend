@@ -41,27 +41,6 @@ jest.mock('../../config/db_tables_config', () => () => ({
     }
 }));
 
-// Mock Schemas
-jest.mock('../../exhibits/schemas/exhibit_timeline_create_record_schema', () => () => ({
-    type: 'object',
-    properties: {}
-}));
-
-jest.mock('../../exhibits/schemas/exhibit_timeline_update_record_schema', () => () => ({
-    type: 'object',
-    properties: {}
-}));
-
-jest.mock('../../exhibits/schemas/exhibit_timeline_item_create_record_schema', () => () => ({
-    type: 'object',
-    properties: {}
-}));
-
-jest.mock('../../exhibits/schemas/exhibit_timeline_item_update_record_schema', () => () => ({
-    type: 'object',
-    properties: {}
-}));
-
 // Mock Helper instance
 const mockHelperInstance = {
     create_uuid: jest.fn().mockReturnValue(TEST_TIMELINE_UUID),
@@ -74,14 +53,6 @@ const mockHelperInstance = {
 
 jest.mock('../../libs/helper', () => {
     return jest.fn().mockImplementation(() => mockHelperInstance);
-});
-
-// Mock Validator
-const mockValidate = jest.fn().mockReturnValue(true);
-jest.mock('../../libs/validate', () => {
-    return jest.fn().mockImplementation(() => ({
-        validate: mockValidate
-    }));
 });
 
 // Mock Timeline Record Tasks
@@ -141,7 +112,6 @@ describe('Timelines Model Integration Tests', () => {
         jest.clearAllMocks();
 
         // Reset mock implementations
-        mockValidate.mockReturnValue(true);
         mockHelperInstance.create_uuid.mockReturnValue(TEST_TIMELINE_UUID);
         mockHelperInstance.order_exhibit_items.mockResolvedValue(1);
         mockHelperInstance.order_timeline_items.mockResolvedValue(1);
@@ -210,16 +180,6 @@ describe('Timelines Model Integration Tests', () => {
 
             expect(result.status).toBe(400);
             expect(result.message).toBe('Invalid data provided');
-        });
-
-        test('should return 400 when validation fails', async () => {
-            mockValidate.mockReturnValue([
-                { message: 'Title is required' }
-            ]);
-
-            const result = await TIMELINES_MODEL.create_timeline_record(TEST_EXHIBIT_UUID, {});
-
-            expect(result.status).toBe(400);
         });
 
         test('should return 500 when database operation fails', async () => {
@@ -303,20 +263,6 @@ describe('Timelines Model Integration Tests', () => {
 
             expect(result.status).toBe(400);
             expect(result.message).toBe('Invalid data provided');
-        });
-
-        test('should return 400 when validation fails', async () => {
-            mockValidate.mockReturnValue([
-                { message: 'Invalid field' }
-            ]);
-
-            const result = await TIMELINES_MODEL.update_timeline_record(
-                TEST_EXHIBIT_UUID,
-                TEST_TIMELINE_UUID,
-                { invalid: 'data' }
-            );
-
-            expect(result.status).toBe(400);
         });
 
         test('should return 500 when database operation fails', async () => {

@@ -19,37 +19,6 @@
 'use strict';
 
 // OWASP A04 (H4) — CSRF defense for state-changing requests.
-//
-// Auth (libs/tokens verify / verify_with_query) accepts the session token from
-// either the `x-access-token` header (what the SPA sends on every mutation) OR
-// the `exhibits_token` cookie. The cookie is *ambient* — the browser attaches it
-// automatically — so a cross-site page could drive a state-changing request on a
-// logged-in victim's behalf using the cookie alone. The cookie is already
-// SameSite=Lax (which blocks it on cross-site POST/PUT/DELETE in modern
-// browsers); this middleware adds an explicit, stateless second layer that does
-// not depend on the browser's SameSite behavior: for unsafe methods it verifies
-// the request is first-party by matching the Origin/Referer against the app's
-// own host. This is the OWASP "verify origin with standard headers" pattern.
-//
-// Why this is safe for existing callers:
-//   - Safe methods (GET/HEAD/OPTIONS) are never checked.
-//   - The dashboard SPA calls the API same-origin; browsers set `Origin` on all
-//     unsafe fetch/XHR requests, so those match and pass.
-//   - Server-to-server `api_key` callers (repo/subjects/preview integrations,
-//     curl) send no Origin/Referer; a request with neither is allowed, because
-//     a non-browser client carries no ambient victim cookie and so is not a CSRF
-//     vector.
-//   - The SSO callback (`/auth/sso`) is a legitimate cross-origin POST-back from
-//     the identity provider and is exempt (it has its own auth model).
-//   - The e2e/test harness (EXHIBITS_TEST_AUTH_BYPASS) is skipped, matching the
-//     rate-limiter skip.
-//
-// Deployment note: behind a reverse proxy the browser's Origin is the PUBLIC
-// host. This checks the Origin host against both the raw Host header and
-// req.hostname (which honors X-Forwarded-Host when `trust proxy` is set), so it
-// works whether nginx passes the public Host through or rewrites it and sets
-// X-Forwarded-Host. If a proxy does neither, add the public origin(s) to
-// CSRF_TRUSTED_ORIGINS. Extra exempt paths can be set via CSRF_EXEMPT_PATHS.
 
 const LOGGER = require('../libs/log4');
 

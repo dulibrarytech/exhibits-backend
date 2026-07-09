@@ -19,7 +19,7 @@
 'use strict';
 
 const FS = require('fs');
-const PATH = require('path');
+// const PATH = require('path');
 const SHARP = require('sharp');
 const MEDIA_MODEL = require('../media-library/model');
 const UPLOADS = require('../media-library/uploads');

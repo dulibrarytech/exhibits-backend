@@ -35,9 +35,6 @@ const itemsCommonStandardGridFormModule = (function () {
                 return el?.value?.trim() ?? default_value;
             };
 
-            // Phase 3b — show_error now optionally accepts a field
-            // selector to associate the error with the offending input
-            // via domModule.set_field_error (aria-invalid + aria-describedby).
             const show_error = (message, field_selector) => {
                 const message_el = document.querySelector('#message');
                 if (message_el) {
@@ -49,7 +46,7 @@ const itemsCommonStandardGridFormModule = (function () {
                 }
             };
 
-            // Phase 3b — clear any prior field-level error state.
+            // Clear any prior field-level error state.
             domModule.clear_field_error('#grid-columns', 'grid-columns-error');
 
             // Get grid metadata

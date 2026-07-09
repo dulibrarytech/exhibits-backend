@@ -360,8 +360,9 @@ const mediaEditModalModule = (function() {
         // Row 2: Description
         html += '<div class="row">';
         html += '<div class="col-12 mb-3">';
-        html += '<label class="form-label" for="edit-file-description">Description</label>';
-        html += '<textarea class="form-control" id="edit-file-description" name="description" rows="3" placeholder="Enter a description (optional)">' + escape_html(record.description || '') + '</textarea>';
+        html += '<label class="form-label" for="edit-file-description">Description <span class="badge badge-required">Required</span></label>';
+        html += '<textarea class="form-control" id="edit-file-description" name="description" rows="3" placeholder="Enter a description" required aria-required="true">' + escape_html(record.description || '') + '</textarea>';
+        html += '<div class="invalid-feedback">Please provide a description.</div>';
         html += '</div></div>';
         
         // Subjects section — Topics, Genre/Form, Places, Item Type. A single instruction

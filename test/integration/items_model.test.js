@@ -78,17 +78,6 @@ jest.mock('../../config/db_tables_config', () => () => ({
     }
 }));
 
-// Mock Schemas
-jest.mock('../../exhibits/schemas/exhibit_item_create_record_schema', () => () => ({
-    type: 'object',
-    properties: {}
-}));
-
-jest.mock('../../exhibits/schemas/exhibit_item_update_record_schema', () => () => ({
-    type: 'object',
-    properties: {}
-}));
-
 // Mock Helper instance
 const mockHelperInstance = {
     create_uuid: jest.fn().mockReturnValue(TEST_ITEM_UUID),
@@ -105,14 +94,6 @@ jest.mock('../../libs/helper', () => {
     return jest.fn().mockImplementation(() => mockHelperInstance);
 });
 
-// Mock Validator
-const mockValidate = jest.fn().mockReturnValue(true);
-jest.mock('../../libs/validate', () => {
-    return jest.fn().mockImplementation(() => ({
-        validate: mockValidate
-    }));
-});
-
 // Mock Item Record Tasks
 const mockItemRecordTask = {
     create_item_record: jest.fn().mockResolvedValue(true),
@@ -123,8 +104,7 @@ const mockItemRecordTask = {
     delete_item_record: jest.fn().mockResolvedValue(true),
     set_item_to_publish: jest.fn().mockResolvedValue(true),
     set_item_to_suppress: jest.fn().mockResolvedValue(true),
-    reorder_items: jest.fn().mockResolvedValue(true),
-    delete_media_value: jest.fn().mockResolvedValue(true)
+    reorder_items: jest.fn().mockResolvedValue(true)
 };
 
 jest.mock('../../exhibits/tasks/exhibit_item_record_tasks', () => {
@@ -235,7 +215,6 @@ describe('Items Model Integration Tests', () => {
         jest.clearAllMocks();
 
         // Reset mock implementations
-        mockValidate.mockReturnValue(true);
         mockHelperInstance.create_uuid.mockReturnValue(TEST_ITEM_UUID);
         mockHelperInstance.order_exhibit_items.mockResolvedValue(1);
         mockHelperInstance.unlock_record.mockResolvedValue(true);
@@ -304,16 +283,6 @@ describe('Items Model Integration Tests', () => {
 
             expect(result.status).toBe(400);
             expect(result.message).toBe('Invalid data provided');
-        });
-
-        test('should return 400 when validation fails', async () => {
-            mockValidate.mockReturnValue([
-                { message: 'Title is required' }
-            ]);
-
-            const result = await ITEMS_MODEL.create_item_record(TEST_EXHIBIT_UUID, { item_type: 'image' });
-
-            expect(result.status).toBe(400);
         });
 
         test('should return 500 when database operation fails', async () => {
@@ -513,20 +482,6 @@ describe('Items Model Integration Tests', () => {
 
             expect(result.status).toBe(400);
             expect(result.message).toBe('Invalid data provided');
-        });
-
-        test('should return 400 when validation fails', async () => {
-            mockValidate.mockReturnValue([
-                { message: 'Invalid field' }
-            ]);
-
-            const result = await ITEMS_MODEL.update_item_record(
-                TEST_EXHIBIT_UUID,
-                TEST_ITEM_UUID,
-                { invalid: 'data' }
-            );
-
-            expect(result.status).toBe(400);
         });
 
         test('should return 400 when database operation fails', async () => {
@@ -931,129 +886,6 @@ describe('Items Model Integration Tests', () => {
             const result = await ITEMS_MODEL.unlock_item_record(TEST_USER_UID, TEST_ITEM_UUID, {});
 
             expect(result).toBe(false);
-        });
-    });
-
-    // ==================== GET REPO ITEM RECORD ====================
-
-    describe('get_repo_item_record', () => {
-
-        test('should get repo item record successfully', async () => {
-            mockHttp.mockResolvedValue({
-                status: 200,
-                data: { uuid: TEST_REPO_UUID, title: 'Repo Item' }
-            });
-
-            const result = await ITEMS_MODEL.get_repo_item_record(TEST_REPO_UUID);
-
-            expect(result.status).toBe(200);
-        });
-
-        test('should return null for invalid UUID', async () => {
-            const result = await ITEMS_MODEL.get_repo_item_record('');
-
-            expect(result).toBeNull();
-        });
-
-        test('should return null on HTTP error', async () => {
-            mockHttp.mockRejectedValue(new Error('Network error'));
-
-            const result = await ITEMS_MODEL.get_repo_item_record(TEST_REPO_UUID);
-
-            expect(result).toBeNull();
-        });
-    });
-
-    // ==================== GET REPO THUMBNAIL ====================
-
-    describe('get_repo_tn', () => {
-
-        test('should get repo thumbnail successfully', async () => {
-            const mockThumbnail = Buffer.from('thumbnail-data');
-            mockHttp.get.mockResolvedValue({
-                status: 200,
-                data: mockThumbnail
-            });
-
-            const result = await ITEMS_MODEL.get_repo_tn(TEST_REPO_UUID);
-
-            expect(result).toEqual(mockThumbnail);
-        });
-
-        test('should return null for invalid UUID', async () => {
-            const result = await ITEMS_MODEL.get_repo_tn('');
-
-            expect(result).toBeNull();
-        });
-
-        test('should return null on HTTP error', async () => {
-            mockHttp.get.mockRejectedValue(new Error('Network error'));
-
-            const result = await ITEMS_MODEL.get_repo_tn(TEST_REPO_UUID);
-
-            expect(result).toBeNull();
-        });
-
-        test('should return null for non-200 status', async () => {
-            mockHttp.get.mockResolvedValue({ status: 404 });
-
-            const result = await ITEMS_MODEL.get_repo_tn(TEST_REPO_UUID);
-
-            expect(result).toBeNull();
-        });
-    });
-
-    // ==================== GET ITEM SUBJECTS ====================
-
-    describe('get_item_subjects', () => {
-
-        test('should get item subjects successfully', async () => {
-            const mockSubjects = [
-                { id: 1, name: 'History' },
-                { id: 2, name: 'Science' }
-            ];
-            mockHttp.mockResolvedValue({
-                status: 200,
-                data: mockSubjects
-            });
-
-            const result = await ITEMS_MODEL.get_item_subjects();
-
-            expect(result).toEqual(mockSubjects);
-        });
-
-        test('should return null on HTTP error', async () => {
-            mockHttp.mockRejectedValue(new Error('API error'));
-
-            const result = await ITEMS_MODEL.get_item_subjects();
-
-            expect(result).toBeNull();
-        });
-    });
-
-    // ==================== GET KALTURA ITEM RECORD ====================
-
-    describe('get_kaltura_item_record', () => {
-
-        test('should call callback with result', (done) => {
-            ITEMS_MODEL.get_kaltura_item_record('test-entry-id', (result) => {
-                expect(result).toBeDefined();
-                done();
-            });
-        });
-
-        test('should call callback with error for invalid entry_id', (done) => {
-            ITEMS_MODEL.get_kaltura_item_record('', (result) => {
-                expect(result).toBe('Invalid entry ID provided');
-                done();
-            });
-        });
-
-        test('should call callback with error for null entry_id', (done) => {
-            ITEMS_MODEL.get_kaltura_item_record(null, (result) => {
-                expect(result).toBe('Invalid entry ID provided');
-                done();
-            });
         });
     });
 

@@ -256,11 +256,13 @@ const kalturaModalsModule = (function() {
         html += '<div class="invalid-feedback">Name is required</div>';
         html += '</div></div>';
 
-        // Description field - pre-populated from Kaltura description
+        // Description field - pre-populated from Kaltura description; required
+        // (matches the upload/repo/edit forms).
         html += '<div class="row">';
         html += '<div class="col-12 mb-3">';
-        html += '<label class="form-label">Description</label>';
-        html += '<textarea class="form-control kaltura-description" name="description" rows="3">' + description + '</textarea>';
+        html += '<label class="form-label">Description <span class="badge badge-required">Required</span></label>';
+        html += '<textarea class="form-control kaltura-description" name="description" rows="3" placeholder="Enter a description" required aria-required="true">' + description + '</textarea>';
+        html += '<div class="invalid-feedback">Please provide a description.</div>';
         html += '</div></div>';
 
         // Subjects and Item Type dropdowns (two-column layout via helper module)

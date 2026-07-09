@@ -21,13 +21,8 @@
 const DB = require('../config/db_config')();
 const DB_TABLES = require('../config/db_tables_config')();
 const TABLES = DB_TABLES.exhibits;
-const EXHIBITS_CREATE_GRID_SCHEMA = require('../exhibits/schemas/exhibit_create_grid_record_schema')();
-const EXHIBITS_UPDATE_GRID_SCHEMA = require('../exhibits/schemas/exhibit_grid_update_record_schema')();
-const EXHIBITS_CREATE_GRID_ITEM_SCHEMA = require('../exhibits/schemas/exhibit_grid_item_create_record_schema')();
-const EXHIBITS_UPDATE_GRID_ITEM_SCHEMA = require('../exhibits/schemas/exhibit_grid_item_update_record_schema')();
 const EXHIBIT_GRID_RECORD_TASKS = require('./tasks/exhibit_grid_record_tasks');
 const HELPER = require('../libs/helper');
-const VALIDATOR = require('../libs/validate');
 const EXHIBIT_RECORD_TASKS = require('./tasks/exhibit_record_tasks');
 const INDEXER_MODEL = require('../indexer/model');
 const LOGGER = require('../libs/log4');
@@ -35,7 +30,6 @@ const REINDEX_COALESCER = require('./reindex_coalescer');
 const {
     is_valid_uuid,
     is_valid_user_id,    build_response,
-    validate_input,
     prepare_styles
 } = require('../exhibits/common_helper');
 
@@ -62,10 +56,6 @@ const CONSTANTS = {
 
 // Initialize task instances
 const helper_task = new HELPER();
-const validate_create_grid_task = new VALIDATOR(EXHIBITS_CREATE_GRID_SCHEMA);
-const validate_update_grid_task = new VALIDATOR(EXHIBITS_UPDATE_GRID_SCHEMA);
-const validate_create_grid_item_task = new VALIDATOR(EXHIBITS_CREATE_GRID_ITEM_SCHEMA);
-const validate_update_grid_item_task = new VALIDATOR(EXHIBITS_UPDATE_GRID_ITEM_SCHEMA);
 const grid_record_task = new EXHIBIT_GRID_RECORD_TASKS(DB, TABLES);
 const exhibit_tasks = new EXHIBIT_RECORD_TASKS(DB, TABLES);
 
@@ -110,15 +100,9 @@ exports.create_grid_record = async (is_member_of_exhibit, data) => {
         data.styles = prepare_styles(data.styles);
         data.columns = safe_parse_int(data.columns, 1);
 
-        // Validate
-        const validation_result = validate_input(data, validate_create_grid_task, 'grid_model (create_grid_record)');
-
-        if (validation_result !== true) {
-            return build_response(
-                CONSTANTS.STATUS_CODES.BAD_REQUEST,
-                validation_result
-            );
-        }
+        // The former ajv create schema only re-checked fields injected or
+        // defaulted above (identity from validated params, styles/columns
+        // defaulted) — provably unreachable as a guard — so it was removed.
 
         // Get order
         data.order = await helper_task.order_exhibit_items(data.is_member_of_exhibit, DB, TABLES);
@@ -191,15 +175,10 @@ exports.update_grid_record = async (is_member_of_exhibit, grid_id, data) => {
         data.styles = prepare_styles(data.styles);
         data.columns = safe_parse_int(data.columns, 1);
 
-        // Validate
-        const validation_result = validate_input(data, validate_update_grid_task, 'grid_model (update_grid_record)');
-
-        if (validation_result !== true) {
-            return build_response(
-                CONSTANTS.STATUS_CODES.BAD_REQUEST,
-                validation_result
-            );
-        }
+        // The former ajv update schema only re-checked fields injected or
+        // defaulted above (identity from validated params, columns defaulted) —
+        // provably unreachable as a guard — so it was removed. Field-level
+        // protection lives in the task layer (UPDATABLE_FIELDS whitelist).
 
         // Update record
         const result = await grid_record_task.update_grid_record(data);
@@ -306,15 +285,9 @@ exports.create_grid_item_record = async (is_member_of_exhibit, grid_id, data) =>
         data.is_member_of_exhibit = is_member_of_exhibit;
         data.is_member_of_grid = grid_id;
 
-        // Validate
-        const validation_result = validate_input(data, validate_create_grid_item_task, 'grid_model (create_grid_item_record)');
-
-        if (validation_result !== true) {
-            return build_response(
-                CONSTANTS.STATUS_CODES.BAD_REQUEST,
-                validation_result
-            );
-        }
+        // The former ajv create schema only re-checked the two identity fields
+        // injected above from already-validated route params — provably
+        // unreachable as a guard — so it was removed.
 
         // Prepare styles and get order
         data.styles = prepare_styles(data.styles);
@@ -616,16 +589,14 @@ exports.update_grid_item_record = async (is_member_of_exhibit, is_member_of_grid
         const is_published = data.is_published;
         delete data.is_published;
 
-        // Validate
         data.styles = prepare_styles(data.styles);
-        const validation_result = validate_input(data, validate_update_grid_item_task, 'grid_model (update_grid_item_record)');
 
-        if (validation_result !== true) {
-            return build_response(
-                CONSTANTS.STATUS_CODES.BAD_REQUEST,
-                validation_result
-            );
-        }
+        // Field-level validation happens in the task layer (update_grid_item_record:
+        // UPDATABLE_FIELDS whitelist via _sanitize_data + _validate_uuids +
+        // exists/lock checks). The former ajv update schema only re-checked the
+        // three identity fields injected above from already-validated route
+        // params — provably unreachable as a guard — so it was removed
+        // (same rationale as the standard-item schema removal).
 
         // Update record
         const result = await grid_record_task.update_grid_item_record(data);

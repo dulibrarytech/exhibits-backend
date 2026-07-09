@@ -292,113 +292,6 @@ exports.suppress_item_record = async function (req, res) {
     }
 };
 
-// TODO: deprecate - moved to media library module
-exports.get_repo_item_record = async function (req, res) {
-
-    try {
-
-        const uuid = req.params.uuid;
-
-        if (!validate_param(res, uuid, 'UUID')) return;
-
-        // Fetch item record and thumbnail in parallel
-        const [response, thumbnail] = await Promise.all([
-            ITEMS_MODEL.get_repo_item_record(uuid),
-            ITEMS_MODEL.get_repo_tn(uuid)
-        ]);
-
-        // Validate response structure
-        if (!response || typeof response !== 'object' || !response.data) {
-            res.status(404).send({
-                message: 'Repo item not found.'
-            });
-            return;
-        }
-
-        // Replace thumbnail in response data
-        response.data.thumbnail = thumbnail;
-
-        if (response.status === 200) {
-            res.status(200).send({
-                message: 'Repo item metadata retrieved.',
-                data: response.data
-            });
-        } else {
-            res.status(404).send({
-                message: 'Unable to get repo item metadata.'
-            });
-        }
-
-    } catch (error) {
-        handle_error(res, 'get_repo_item_record', error,
-            'Unable to get repo item record.',
-            req.params.uuid);
-    }
-};
-
-// TODO: Deprecate - move to media library module
-exports.get_kaltura_item_record = async function (req, res) {
-
-    try {
-
-        const entry_id = req.params.entry_id;
-
-        if (!validate_param(res, entry_id, 'entry ID')) return;
-
-        // Kaltura media type mapping (video and audio only)
-        // https://developer.kaltura.com/api-docs/service/media/action/get
-        const media_type_map = {
-            1: 'video',
-            5: 'audio'
-        };
-
-        // Promisify the callback-based model method
-        const response = await new Promise((resolve, reject) => {
-            ITEMS_MODEL.get_kaltura_item_record(entry_id, (result) => {
-                if (result && result.objectType === 'KalturaAPIException') {
-                    reject(new Error(result.message || 'Kaltura API error'));
-                    return;
-                }
-                resolve(result);
-            });
-        });
-
-        // Validate response has required media type
-        if (!response || response.mediaType === undefined) {
-            res.status(404).send({
-                message: 'Unable to get Kaltura item metadata.'
-            });
-            return;
-        }
-
-        // Look up item type from media type (video and audio only)
-        const item_type = media_type_map[response.mediaType];
-
-        if (!item_type) {
-            res.status(422).send({
-                message: 'Unsupported media type. Only video and audio are supported.'
-            });
-            return;
-        }
-
-        res.status(200).send({
-            message: 'Kaltura item metadata retrieved.',
-            data: {
-                entry_id: response.id,
-                item_type: item_type,
-                title: response.name || '',
-                description: response.description || '',
-                thumbnail: response.thumbnailUrl || ''
-            }
-        });
-
-    } catch (error) {
-        handle_error(res, 'get_kaltura_item_record', error,
-            'Unable to get Kaltura item record.',
-            req.params.entry_id);
-    }
-};
-
 exports.reorder_items = async function (req, res) {
 
     try {
@@ -455,12 +348,7 @@ exports.reorder_items = async function (req, res) {
             return;
         }
 
-        // Re-index if the exhibit is published. A reorder changes only `order`, so do
-        // NOT suppress (the old path deleted the exhibit from the public index and
-        // re-added it 5s later, blanking the live exhibit from search/preview). And do
-        // NOT re-index the whole exhibit — re-index ONLY the reordered components in
-        // place (each its own ES doc; grid items via their parent grid doc), coalesced
-        // per component so a burst of drags settles into one re-index per component.
+        // Re-index if the exhibit is published.
         const exhibit_data = await EXHIBITS_MODEL.get_exhibit_record(exhibit_id);
 
         if (exhibit_data.data && exhibit_data.data.is_published === 1) {
@@ -515,26 +403,3 @@ exports.unlock_item_record = async function (req, res) {
     }
 };
 
-exports.get_item_subjects = async function (req, res) {
-
-    try {
-
-        const subjects = await ITEMS_MODEL.get_item_subjects();
-
-        if (!subjects) {
-            res.status(404).send({
-                message: 'No item subjects found.'
-            });
-            return;
-        }
-
-        res.status(200).send({
-            message: 'Item subjects retrieved.',
-            data: subjects
-        });
-
-    } catch (error) {
-        handle_error(res, 'get_item_subjects', error,
-            'Unable to get item subjects.');
-    }
-};

@@ -157,7 +157,7 @@ const exhibitsDetailsModule = (function () {
                 throw new Error(`Server returned status ${response.status}`);
             }
 
-            if (!response.data || !response.data.data) {  // || !Array.isArray(response.data.data)
+            if (!response.data || !response.data.data) {
                 throw new Error('Invalid response structure from server');
             }
 

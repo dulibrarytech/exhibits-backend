@@ -35,7 +35,6 @@
                         <div class="col-12">
                             <div class="form-text text-muted" style="font-size: 17px">
                                 <span id="item-heading-text-input-label">Heading Text <span class="badge badge-required">Required</span></span>
-                                &nbsp;&nbsp;<a onclick="helperModule.preview_html('item-heading-text-input');return false;" data-toggle="modal" data-target=".preview-html" class="btn-xs btn-light"><span style="padding: 5px"><i class="fa fa-code" aria-hidden="true"></i> <small>Preview Field</small></span></a>
                             </div>
                             <span id="item-heading-text-error" class="is-error"></span>
                             <textarea <%= (typeof is_details !== 'undefined' && is_details) ? 'disabled' : '' %> id="item-heading-text-input" aria-labelledby="item-heading-text-input-label" class="form-control" name="item_heading_text_input"

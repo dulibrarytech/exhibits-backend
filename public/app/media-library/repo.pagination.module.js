@@ -361,36 +361,25 @@ const repoPaginationModule = (function() {
                 const page = parseInt(page_link.dataset.page, 10);
 
                 if (page && obj.go_to_page(page)) {
-                    // Capture scroll position BEFORE the page-change
-                    // callback runs. The callback re-renders the
-                    // results container, which destroys the focused
-                    // page-link anchor. Browsers — and possibly
-                    // intermediate tab/focus logic — can react to that
-                    // by scrolling another element into view (in
-                    // particular, the Media List card below). Restore
-                    // scrollY synchronously after the callback to
-                    // anchor the user where they were. We use rAF +
-                    // a fallback restore to catch any deferred scroll
-                    // that runs after layout settles.
-                    const scroll_x = window.scrollX;
-                    const scroll_y = window.scrollY;
 
                     if (typeof on_page_change_callback === 'function') {
                         on_page_change_callback(page, obj.get_current_page_results());
                     }
 
-                    // Synchronous restore (in case a scroll already
-                    // happened during the re-render).
-                    if (window.scrollX !== scroll_x || window.scrollY !== scroll_y) {
-                        window.scrollTo(scroll_x, scroll_y);
+                    // Anchor the viewport at the top of the re-rendered
+                    // results — deterministic for every page. The previous
+                    // capture/restore strategy could not survive a PARTIAL
+                    // last page: fewer cards make the document SHRINK, the
+                    // old scroll offset exceeds the new maximum, and the
+                    // browser CLAMPS the restore — the "jump to the middle"
+                    // bug. Anchoring is height-immune and standard
+                    // pagination UX. Instant, per the no-smooth-scroll
+                    // convention for form/message navigation.
+                    const results_container = document.getElementById('repo-search-results');
+
+                    if (results_container) {
+                        results_container.scrollIntoView({ behavior: 'instant', block: 'start' });
                     }
-                    // Deferred restore covers any post-layout focus or
-                    // smooth-scroll that fires on the next frame.
-                    requestAnimationFrame(() => {
-                        if (window.scrollX !== scroll_x || window.scrollY !== scroll_y) {
-                            window.scrollTo(scroll_x, scroll_y);
-                        }
-                    });
 
                     // Announce page change for screen readers
                     announce_page_change();

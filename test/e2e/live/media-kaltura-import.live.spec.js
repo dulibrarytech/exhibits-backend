@@ -14,7 +14,7 @@
 
 const { test, expect } = require('@playwright/test');
 const { loginAs } = require('./fixtures/live-auth');
-const { setSubjectsWidget, ensureSelectValue } = require('./fixtures/live-ui');
+const { setSubjectsWidget, ensureSelectValue, fillIfPresent } = require('./fixtures/live-ui');
 const { APP_PATH, apiFindMediaByName, apiDeleteMediaRecord } = require('./fixtures/live-api');
 
 // An entry id already present in the account (imported by the dev instance).
@@ -55,6 +55,9 @@ test.describe('Kaltura import (live) @external', () => {
         await expect(name_input).not.toHaveValue('', { timeout: 15_000 });
 
         await name_input.fill(marker);
+        // Description is required; the Kaltura entry description usually
+        // prefills it — fill only when the entry had none.
+        await fillIfPresent(page, '#kaltura-media-modal .kaltura-description', 'PW live kaltura import description');
         await setSubjectsWidget(page, '#kaltura-media-modal', 'topics_subjects', 'PW Topic');
         await setSubjectsWidget(page, '#kaltura-media-modal', 'genre_form_subjects', 'PW Genre');
         await ensureSelectValue(page, '#kaltura-media-modal select[name="item_type"]');

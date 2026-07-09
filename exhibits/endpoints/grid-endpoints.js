@@ -64,11 +64,5 @@ module.exports = {
             endpoint: `${APP_PATH}${PREFIX}${VERSION}${ENDPOINT}/:exhibit_id/grids/:grid_id/items/:item_id`,
             params: 'token or api_key, is_member_of_exhibit, grid_id, item_id'
         }
-    },
-    grid_item_media: {
-        delete: {
-            description: 'Deletes grid item media',
-            endpoint: `${APP_PATH}${PREFIX}${VERSION}${ENDPOINT}/:exhibit_id/grids/:grid_id/items/:item_id/media/:media`
-        }
     }
 };

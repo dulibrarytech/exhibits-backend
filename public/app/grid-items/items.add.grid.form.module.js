@@ -306,6 +306,7 @@ const itemsAddGridFormModule = (function () {
         return 'Unable to create grid record. Please try again.';
     }
 
+    /*
     obj.create_grid_record__ = async function() {
         // Prevent duplicate submissions
         if (this._is_creating_grid) {
@@ -415,8 +416,9 @@ const itemsAddGridFormModule = (function () {
             this._is_creating_grid = false;
         }
     };
+    */
 
-    /**
+    /** TODO: REMOVED
      * Transition from create mode to edit mode for grid records
      */
     async function transition_to_grid_edit_mode(exhibit_id, grid_id) {
@@ -653,7 +655,7 @@ const itemsAddGridFormModule = (function () {
         element.appendChild(alert_div);
     }
 
-    /**
+    /** TODO: REMOVED
      * Clear status message with fade effect
      */
     function clear_status_message(element) {

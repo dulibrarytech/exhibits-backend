@@ -49,17 +49,12 @@ const mockItemsModel = {
     get_item_edit_record: jest.fn(),
     update_item_record: jest.fn(),
     delete_item_record: jest.fn(),
-    delete_media_value: jest.fn(),
     publish_item_record: jest.fn(),
     suppress_item_record: jest.fn(),
     unlock_item_record: jest.fn(),
     reorder_items: jest.fn(),
     reorder_exhibit_items: jest.fn(),
-    schedule_reorder_reindex: jest.fn(),
-    get_repo_item_record: jest.fn(),
-    get_repo_tn: jest.fn(),
-    get_kaltura_item_record: jest.fn(),
-    get_item_subjects: jest.fn()
+    schedule_reorder_reindex: jest.fn()
 };
 jest.mock('../../exhibits/items_model', () => mockItemsModel);
 
@@ -147,13 +142,6 @@ describe('Items Integration Tests', () => {
         // Item Ordering
         app.post('/api/items/exhibit/:exhibit_id/reorder', mockTokenVerify, CONTROLLER.reorder_items);
 
-        // External Repository Integrations
-        app.get('/api/items/repo/:uuid', mockTokenVerify, CONTROLLER.get_repo_item_record);
-        app.get('/api/items/kaltura/:entry_id', mockTokenVerify, CONTROLLER.get_kaltura_item_record);
-
-        // Item Metadata
-        app.get('/api/items/subjects', mockTokenVerify, CONTROLLER.get_item_subjects);
-
         // 404 handler
         app.use('/api/items/*', (req, res) => {
             res.status(404).json({
@@ -175,16 +163,11 @@ describe('Items Integration Tests', () => {
         mockItemsModel.get_item_edit_record.mockResolvedValue({ status: 200, data: {} });
         mockItemsModel.update_item_record.mockResolvedValue({ status: 201, message: 'Updated' });
         mockItemsModel.delete_item_record.mockResolvedValue({ status: 204, message: 'Deleted' });
-        mockItemsModel.delete_media_value.mockResolvedValue(true);
         mockItemsModel.publish_item_record.mockResolvedValue({ status: true, message: 'Published' });
         mockItemsModel.suppress_item_record.mockResolvedValue({ status: true, message: 'Suppressed' });
         mockItemsModel.unlock_item_record.mockResolvedValue({ status: true });
         mockItemsModel.reorder_items.mockResolvedValue(true);
         mockItemsModel.reorder_exhibit_items.mockResolvedValue(true);
-        mockItemsModel.get_repo_item_record.mockResolvedValue({ status: 200, data: {} });
-        mockItemsModel.get_repo_tn.mockResolvedValue(null);
-        mockItemsModel.get_kaltura_item_record.mockImplementation((id, cb) => cb(null));
-        mockItemsModel.get_item_subjects.mockResolvedValue([]);
         
         // Reset grid model mocks
         mockGridsModel.reorder_grids.mockResolvedValue(true);
@@ -891,191 +874,6 @@ describe('Items Integration Tests', () => {
                 expect(mockExhibitsModel.suppress_exhibit).not.toHaveBeenCalled();
                 expect(mockExhibitsModel.publish_exhibit).not.toHaveBeenCalled();
                 expect(mockItemsModel.schedule_reorder_reindex).not.toHaveBeenCalled();
-            });
-        });
-    });
-
-    // ==================== EXTERNAL REPOSITORY INTEGRATIONS ====================
-
-    describe('External Repository Integrations', () => {
-
-        // ---------- REPO ITEM ----------
-        describe('GET /api/items/repo/:uuid (Get Repo Item)', () => {
-
-            test('should return repo item successfully', async () => {
-                mockItemsModel.get_repo_item_record.mockResolvedValue({
-                    status: 200,
-                    data: {
-                        uuid: TEST_REPO_UUID,
-                        title: 'Test Repo Item'
-                    }
-                });
-                mockItemsModel.get_repo_tn.mockResolvedValue('thumbnail-data');
-
-                const response = await request(app)
-                    .get(`/api/items/repo/${TEST_REPO_UUID}`)
-                    .expect('Content-Type', /json/)
-                    .expect(200);
-
-                expect(response.body.message).toBe('Repo item metadata retrieved.');
-                expect(response.body.data.thumbnail).toBe('thumbnail-data');
-            });
-
-            test('should return 400 when uuid is missing', async () => {
-                const response = await request(app)
-                    .get('/api/items/repo/%20')
-                    .expect(400);
-
-                expect(response.body.message).toBe('Bad request. Missing or invalid UUID.');
-            });
-
-            test('should return 404 when repo item not found', async () => {
-                mockItemsModel.get_repo_item_record.mockResolvedValue(null);
-                mockItemsModel.get_repo_tn.mockResolvedValue(null);
-
-                const response = await request(app)
-                    .get(`/api/items/repo/${TEST_REPO_UUID}`)
-                    .expect(404);
-
-                expect(response.body.message).toBe('Repo item not found.');
-            });
-        });
-
-        // ---------- KALTURA ITEM ----------
-        describe('GET /api/items/kaltura/:entry_id (Get Kaltura Item)', () => {
-
-            test('should return kaltura video item successfully', async () => {
-                mockItemsModel.get_kaltura_item_record.mockImplementation((entry_id, callback) => {
-                    callback({
-                        id: TEST_KALTURA_ENTRY_ID,
-                        mediaType: 1, // video
-                        name: 'Test Video',
-                        description: 'Test description',
-                        thumbnailUrl: 'http://example.com/thumb.jpg'
-                    });
-                });
-
-                const response = await request(app)
-                    .get(`/api/items/kaltura/${TEST_KALTURA_ENTRY_ID}`)
-                    .expect('Content-Type', /json/)
-                    .expect(200);
-
-                expect(response.body.message).toBe('Kaltura item metadata retrieved.');
-                expect(response.body.data.item_type).toBe('video');
-            });
-
-            test('should return kaltura audio item successfully', async () => {
-                mockItemsModel.get_kaltura_item_record.mockImplementation((entry_id, callback) => {
-                    callback({
-                        id: TEST_KALTURA_ENTRY_ID,
-                        mediaType: 5, // audio
-                        name: 'Test Audio',
-                        description: 'Test description',
-                        thumbnailUrl: 'http://example.com/thumb.jpg'
-                    });
-                });
-
-                const response = await request(app)
-                    .get(`/api/items/kaltura/${TEST_KALTURA_ENTRY_ID}`)
-                    .expect(200);
-
-                expect(response.body.data.item_type).toBe('audio');
-            });
-
-            test('should return 400 when entry_id is missing', async () => {
-                const response = await request(app)
-                    .get('/api/items/kaltura/%20')
-                    .expect(400);
-
-                expect(response.body.message).toBe('Bad request. Missing or invalid entry ID.');
-            });
-
-            test('should return 404 when kaltura item not found', async () => {
-                mockItemsModel.get_kaltura_item_record.mockImplementation((entry_id, callback) => {
-                    callback(null);
-                });
-
-                const response = await request(app)
-                    .get(`/api/items/kaltura/${TEST_KALTURA_ENTRY_ID}`)
-                    .expect(404);
-
-                expect(response.body.message).toBe('Unable to get Kaltura item metadata.');
-            });
-
-            test('should return 422 for unsupported media type', async () => {
-                mockItemsModel.get_kaltura_item_record.mockImplementation((entry_id, callback) => {
-                    callback({
-                        id: TEST_KALTURA_ENTRY_ID,
-                        mediaType: 2, // image - not supported
-                        name: 'Test Image'
-                    });
-                });
-
-                const response = await request(app)
-                    .get(`/api/items/kaltura/${TEST_KALTURA_ENTRY_ID}`)
-                    .expect(422);
-
-                expect(response.body.message).toBe('Unsupported media type. Only video and audio are supported.');
-            });
-
-            test('should return 500 on Kaltura API error', async () => {
-                mockItemsModel.get_kaltura_item_record.mockImplementation((entry_id, callback) => {
-                    callback({
-                        objectType: 'KalturaAPIException',
-                        message: 'Invalid entry'
-                    });
-                });
-
-                const response = await request(app)
-                    .get(`/api/items/kaltura/${TEST_KALTURA_ENTRY_ID}`)
-                    .expect(500);
-
-                expect(response.body.message).toBe('Unable to get Kaltura item record.');
-            });
-        });
-    });
-
-    // ==================== ITEM METADATA ====================
-
-    describe('Item Metadata', () => {
-
-        describe('GET /api/items/subjects (Get Item Subjects)', () => {
-
-            test('should return item subjects successfully', async () => {
-                const mockSubjects = [
-                    { id: 1, name: 'History' },
-                    { id: 2, name: 'Science' }
-                ];
-
-                mockItemsModel.get_item_subjects.mockResolvedValue(mockSubjects);
-
-                const response = await request(app)
-                    .get('/api/items/subjects')
-                    .expect('Content-Type', /json/)
-                    .expect(200);
-
-                expect(response.body.message).toBe('Item subjects retrieved.');
-                expect(response.body.data).toHaveLength(2);
-            });
-
-            test('should return 404 when no subjects found', async () => {
-                mockItemsModel.get_item_subjects.mockResolvedValue(null);
-
-                const response = await request(app)
-                    .get('/api/items/subjects')
-                    .expect(404);
-
-                expect(response.body.message).toBe('No item subjects found.');
-            });
-
-            test('should return 500 on error', async () => {
-                mockItemsModel.get_item_subjects.mockRejectedValue(new Error('API error'));
-
-                const response = await request(app)
-                    .get('/api/items/subjects')
-                    .expect(500);
-
-                expect(response.body.message).toBe('Unable to get item subjects.');
             });
         });
     });

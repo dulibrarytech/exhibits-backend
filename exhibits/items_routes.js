@@ -85,7 +85,6 @@ module.exports = function (app) {
     // ========================================
 
     // Publish item record
-    // SECURITY FIX: Added TOKEN.verify - was missing authentication!
     app.route(endpoints.exhibits.item_records.item_publish.post.endpoint)
         .post(
             rate_limits.state_change_operations,
@@ -119,38 +118,6 @@ module.exports = function (app) {
             rate_limits.write_operations,
             TOKEN.verify,
             async_handler(CONTROLLER.reorder_items)
-        );
-
-    // ========================================
-    // EXTERNAL REPOSITORY INTEGRATIONS
-    // ========================================
-
-    // Get repository item record
-    app.route(endpoints.exhibits.repo_items.endpoint)
-        .get(
-            rate_limits.read_operations,
-            TOKEN.verify,
-            async_handler(CONTROLLER.get_repo_item_record)
-        );
-
-    // Get Kaltura item record
-    app.route(endpoints.exhibits.kaltura_items.endpoint)
-        .get(
-            rate_limits.read_operations,
-            TOKEN.verify,
-            async_handler(CONTROLLER.get_kaltura_item_record)
-        );
-
-    // ========================================
-    // ITEM METADATA
-    // ========================================
-
-    // Get item subjects/tags
-    app.route(endpoints.exhibits.item_subjects.endpoint)
-        .get(
-            rate_limits.read_operations,
-            TOKEN.verify,
-            async_handler(CONTROLLER.get_item_subjects)
         );
 
 };

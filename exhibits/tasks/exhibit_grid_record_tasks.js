@@ -1177,6 +1177,11 @@ const Exhibit_grid_record_tasks = class extends Base_tasks {
      * @param {string} uuid - Grid item UUID
      * @param {string} [published_by=null] - User ID
      * @returns {Promise<Object>} Publish result
+     *
+     * NOTE: no static call sites — the indexer invokes this DYNAMICALLY via
+     * config string (indexer/model.js `set_publish_method:
+     * 'set_grid_item_to_publish'` → indexer_helper
+     * `record_task[set_publish_method](item.uuid)`). Do not remove.
      */
     async set_grid_item_to_publish(uuid, published_by = null) {
 

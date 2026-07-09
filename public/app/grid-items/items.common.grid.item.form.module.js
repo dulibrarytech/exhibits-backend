@@ -479,7 +479,7 @@ const itemsCommonGridItemFormModule = (function () {
                 return el?.value?.trim() ?? default_value;
             };
 
-            // Phase 3b — show_error now optionally accepts a field
+            // Show_error now optionally accepts a field
             // selector to associate the error with the offending input.
             const show_error = (message, field_selector) => {
                 const message_el = document.querySelector('#message');
@@ -492,7 +492,7 @@ const itemsCommonGridItemFormModule = (function () {
                 }
             };
 
-            // Phase 3b — clear any prior field-level error state.
+            // Clear any prior field-level error state.
             ['#item-text-input', '#item-media-uuid'].forEach(s => {
                 domModule.clear_field_error(s, s.replace('#', '') + '-error');
             });

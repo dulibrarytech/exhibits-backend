@@ -31,19 +31,9 @@ module.exports = function (app) {
     app.route(`${APP_PATH}/auth`)
         .get(CONTROLLER.get_auth_landing);
 
-    // Brute-force protection on the authentication surface.
-    // /auth/login is requested by the browser directly, so auth_operations
-    // (IP-keyed, 5/15min) is correct there.
     app.route(`${APP_PATH}/auth/login`)
         .get(rate_limits.auth_operations, CONTROLLER.initiate_login);
 
-    // /auth/sso is POSTed server-side by the SSO auth proxy (it carries
-    // HTTP_HOST/employeeID in the body), so its req.ip is the proxy's address —
-    // the SAME for every login. IP-keying here would throttle everyone's login
-    // collectively, so /auth/sso is keyed ONLY by the submitted employeeID
-    // (auth_identity_operations); the global IP-keyed backstop still caps total
-    // SSO throughput from the proxy.
-    //
     // OWASP A07 (C2): SSO_GUARD runs first — it authenticates the request PATH
     // (shared-secret header injected by the local proxy and/or a source-IP
     // allowlist) so the body-only auth cannot be replayed by an arbitrary

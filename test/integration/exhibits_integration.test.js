@@ -80,7 +80,6 @@ const mockExhibitsModel = {
     get_exhibit_edit_record: jest.fn(),
     update_exhibit_record: jest.fn(),
     delete_exhibit_record: jest.fn(),
-    delete_media_value: jest.fn(),
     publish_exhibit: jest.fn(),
     suppress_exhibit: jest.fn(),
     check_preview: jest.fn(),

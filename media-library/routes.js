@@ -234,7 +234,6 @@ module.exports = function (app) {
     app.route(ENDPOINTS.iiif_manifest.get.endpoint)
         .get(
             rate_limits.read_operations,
-            // TOKEN.verify,
             async_handler(CONTROLLER.get_iiif_manifest)
         );
 
@@ -257,7 +256,6 @@ module.exports = function (app) {
     app.route(ENDPOINTS.iiif_info.get.endpoint)
         .get(
             rate_limits.read_operations,
-            // TOKEN.verify,
             async_handler(CONTROLLER.get_iiif_info)
         );
 
@@ -269,8 +267,6 @@ module.exports = function (app) {
             // OWASP A04/H3 — this is the on-demand transcode endpoint; use the
             // stricter IIIF image limiter rather than the generic read tier.
             rate_limits.iiif_image_operations,
-            // TOKEN.verify_with_query || TOKEN.verify,
             async_handler(CONTROLLER.get_iiif_image)
         );
-
 };

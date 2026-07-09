@@ -64,6 +64,9 @@ test.describe('Repository import (live) @external', () => {
         // defensively — subjects/Item Type are usually prefilled from the repo.
         await name_input.fill(marker);
         await fillIfPresent(page, '#repo-alt-text-0', 'PW live repo import');
+        // Description is required; the repo abstract usually prefills it —
+        // fill only when the payload had none.
+        await fillIfPresent(page, '#repo-description-0', 'PW live repo import description');
         await setSubjectsWidget(page, '#repo-media-modal', 'genre_form_subjects', 'PW Genre');
         await ensureSelectValue(page, '#repo-item-type-0');
 

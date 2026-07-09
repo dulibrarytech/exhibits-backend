@@ -28,7 +28,6 @@ const mediaModalsModule = (function() {
     const build_media_url = helperMediaLibraryModule.build_media_url;
     const get_thumbnail_url_for_media = helperMediaLibraryModule.get_thumbnail_url_for_media;
     const HTTP_STATUS = helperMediaLibraryModule.HTTP_STATUS;
-
     const EXHIBITS_ENDPOINTS = endpointsModule.get_media_library_endpoints();
 
     /**
@@ -425,8 +424,9 @@ const mediaModalsModule = (function() {
         // Row 2: Description
         html += '<div class="row">';
         html += '<div class="col-12 mb-3">';
-        html += '<label class="form-label" for="file-description-' + index + '">Description</label>';
-        html += '<textarea class="form-control file-description" id="file-description-' + index + '" name="description" rows="2" placeholder="Enter a description (optional)"></textarea>';
+        html += '<label class="form-label" for="file-description-' + index + '">Description <span class="badge badge-required">Required</span></label>';
+        html += '<textarea class="form-control file-description" id="file-description-' + index + '" name="description" rows="2" placeholder="Enter a description" required aria-required="true"></textarea>';
+        html += '<div class="invalid-feedback">Please provide a description.</div>';
         html += '</div></div>';
         
         // Subjects section — Topics, Genre/Form, Places, Item Type. A single instruction

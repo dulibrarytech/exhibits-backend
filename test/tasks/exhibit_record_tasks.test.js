@@ -521,64 +521,6 @@ describe('Exhibit_record_tasks', () => {
         });
     });
 
-    // ==================== DELETE_MEDIA_VALUE TESTS ====================
-    describe('delete_media_value', () => {
-        test('should delete thumbnail', async () => {
-            const mockRecord = { uuid: validUUID, is_deleted: 0, thumbnail: 'image.jpg' };
-
-            // First call: _validate_record_exists
-            const selectQuery = createMockQuery();
-            selectQuery.select.mockReturnThis();
-            selectQuery.where.mockReturnThis();
-            selectQuery.first.mockResolvedValue(mockRecord);
-
-            // Second call: _perform_update
-            const updateQuery = createMockQuery();
-            updateQuery.where.mockReturnThis();
-            updateQuery.update.mockResolvedValue(1);
-
-            let callCount = 0;
-            mockDB.mockImplementation(() => {
-                callCount++;
-                return callCount === 1 ? selectQuery : updateQuery;
-            });
-
-            const result = await exhibitTasks.delete_media_value(validUUID, 'thumbnail');
-            expect(result).toBe(true);
-        });
-
-        test('should return true if thumbnail already empty', async () => {
-            const mockRecord = { uuid: validUUID, is_deleted: 0, thumbnail: null };
-
-            const selectQuery = createMockQuery();
-            selectQuery.select.mockReturnThis();
-            selectQuery.where.mockReturnThis();
-            selectQuery.first.mockResolvedValue(mockRecord);
-
-            mockDB.mockReturnValue(selectQuery);
-
-            const result = await exhibitTasks.delete_media_value(validUUID, 'thumbnail');
-            expect(result).toBe(true);
-        });
-
-        test('should throw error for invalid media parameter', async () => {
-            await expect(exhibitTasks.delete_media_value(validUUID, null))
-                .rejects.toThrow('Media parameter is required and must be a string');
-        });
-
-        test('should throw error for unsupported media field', async () => {
-            await expect(exhibitTasks.delete_media_value(validUUID, 'invalid_field'))
-                .rejects.toThrow('Invalid or unsupported media field');
-        });
-
-        test('should throw error for hero_image (parsing gives image not hero)', async () => {
-            // Source code: media.split('_').pop() gives 'image' for 'hero_image'
-            // 'image'.includes('hero') is false, so it throws
-            await expect(exhibitTasks.delete_media_value(validUUID, 'hero_image'))
-                .rejects.toThrow('Invalid or unsupported media field');
-        });
-    });
-
     // ==================== REORDER_EXHIBITS TESTS ====================
     describe('reorder_exhibits', () => {
         test('should successfully reorder exhibit', async () => {

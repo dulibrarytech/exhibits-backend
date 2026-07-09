@@ -1295,6 +1295,13 @@ const mediaLibraryModule = (function() {
                 }
             });
 
+            // Warm the exhibit-titles cache BEFORE the table renders: the
+            // Exhibits column resolves each row's exhibit UUIDs -> titles at
+            // render time (same cache the Details/Edit modals use). Idempotent
+            // and failure-tolerant (returns null on error) — the list still
+            // renders without titles if the exhibits API is unavailable.
+            const exhibit_titles_map = await fetch_exhibit_titles();
+
             // Initialize DataTable with configuration
             media_data_table = new DataTable('#items', {
                 data: table_data,
@@ -1457,6 +1464,28 @@ const mediaLibraryModule = (function() {
                         }
                     },
                     {
+                        data: 'exhibits',
+                        title: 'Exhibits',
+                        render: function(data, type, row) {
+                            // Resolve the row's exhibit UUIDs -> titles from the
+                            // warm cache — the same source the Details/Edit modals
+                            // use. Unresolvable ids are dropped; stacked one per
+                            // line, matching the modals' Exhibit(s) display.
+                            const names = (Array.isArray(data) ? data : [])
+                                .map(id => exhibit_titles_cache ? exhibit_titles_cache.get(id) : null)
+                                .filter(Boolean);
+
+                            if (type === 'display') {
+                                if (!names.length) {
+                                    return '';
+                                }
+                                return '<small>' + names.map(n => '<div>' + sanitize_html(n) + '</div>').join('') + '</small>';
+                            }
+                            // sort / filter: plain joined text
+                            return names.join(', ');
+                        }
+                    },
+                    {
                         data: 'created',
                         title: 'Date Added',
                         render: function(data, type, row) {
@@ -1554,18 +1583,15 @@ const mediaLibraryModule = (function() {
             // Register the exhibit custom search filter (idempotent)
             register_exhibit_search_filter();
 
-            // Fetch exhibit titles and build the filter dropdown
-            fetch_exhibit_titles().then(titles_map => {
-                if (titles_map && titles_map.size > 0) {
-                    build_exhibit_filter(titles_map);
-                    // Re-apply filter if a selection was preserved from previous load
-                    if (selected_exhibit_uuid && media_data_table) {
-                        media_data_table.draw();
-                    }
+            // Build the filter dropdown from the titles map warmed above
+            // (before table init) for the Exhibits column.
+            if (exhibit_titles_map && exhibit_titles_map.size > 0) {
+                build_exhibit_filter(exhibit_titles_map);
+                // Re-apply filter if a selection was preserved from previous load
+                if (selected_exhibit_uuid && media_data_table) {
+                    media_data_table.draw();
                 }
-            }).catch(err => {
-                console.warn('Could not load exhibit filter:', err);
-            });
+            }
 
             return true;
 

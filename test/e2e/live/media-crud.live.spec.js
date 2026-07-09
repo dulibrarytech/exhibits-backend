@@ -67,6 +67,7 @@ test.describe('Media library CRUD (live)', () => {
         // media type — ensured non-empty).
         await page.fill('#file-name-0', marker);
         await fillIfPresent(page, '#file-alt-text-0', 'PW live upload fixture image');
+        await page.fill('#file-description-0', 'PW live upload description');
         await setSubjectsWidget(page, '#uploaded-media-modal', 'topics_subjects', 'PW Topic');
         await setSubjectsWidget(page, '#uploaded-media-modal', 'genre_form_subjects', 'PW Genre');
         await ensureSelectValue(page, '#file-item-type-0');
@@ -119,7 +120,8 @@ test.describe('Media library CRUD (live)', () => {
         await expect(name_input).toHaveValue(original, { timeout: 15_000 });
 
         await name_input.fill(updated);
-        // Genre/Form + Item Type gate the save on the edit form too.
+        // Description, Genre/Form + Item Type gate the save on the edit form too.
+        await page.fill('#edit-file-description', 'PW live edit description');
         await setSubjectsWidget(page, '#edit-media-modal', 'genre_form_subjects', 'PW Genre');
         await ensureSelectValue(page, '#edit-file-item-type');
 

@@ -19,37 +19,6 @@
 'use strict';
 
 // OWASP A07 (C2) — gate the SSO callback (POST /auth/sso).
-//
-// The callback authenticates a user purely from body fields (employeeID +
-// HTTP_HOST), both caller-controlled, so anyone who can reach the endpoint can
-// mint a session by replaying that body. The strong long-term fix (an HMAC/
-// shared-secret from the DU auth proxy) is owned by another team. Until then
-// this middleware authenticates the *request path* with the controls the app
-// team DOES control. Two layers, either or both configurable via env; when both
-// are set both must pass:
-//
-//   1. Shared-secret header (PRIMARY).  Independent of source IP, so it works
-//      even though the callback reaches this app as 127.0.0.1 (the proxy posts
-//      over the co-located loopback hop, collapsing the real source). Have the
-//      LOCAL reverse proxy inject a secret header on the /auth/sso location and
-//      set SSO_GATEWAY_SECRET to the same value here; nginx must also STRIP any
-//      client-supplied copy of that header so it cannot be forged from outside.
-//      See NOTES.md for the nginx snippet. Compared in constant time.
-//
-//   2. Source-IP allowlist (SECONDARY).  Only meaningful if the real client IP
-//      survives to req.ip, or to a trusted header nginx sets (X-Real-IP). By
-//      default it checks req.ip; set SSO_CLIENT_IP_HEADER to read the source
-//      from a proxy-set header instead. Given the observed 127.0.0.1, prefer the
-//      shared-secret layer and treat this as defense-in-depth.
-//
-// req.ip trust: this relies on `trust proxy` being scoped to the local proxy in
-// config/express.js (TRUSTED_PROXY='loopback'). NEVER set `trust proxy` to
-// `true`, or req.ip / X-Forwarded-For become client-controlled.
-//
-// FAIL MODE: if NEITHER control is configured we fail CLOSED in production
-// (refuse the callback) and stay permissive in development so local SSO
-// simulation still works.
-
 const CRYPTO = require('crypto');
 const LOGGER = require('../libs/log4');
 

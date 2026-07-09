@@ -17,7 +17,8 @@
  */
 async function fillRequiredStyles(page) {
     await page.evaluate(() => {
-        const sections = ['template', 'introduction', 'navigation', 'heading1', 'item1'];
+        // 'template' ("Exhibit") section removed 2026-07-02 — required sections only.
+        const sections = ['introduction', 'navigation', 'heading1', 'item1'];
         const fields = [
             { suffix: '-background-color', value: '#ffffff' },
             { suffix: '-font-color', value: '#111111' },

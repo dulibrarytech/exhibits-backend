@@ -38,7 +38,7 @@ const itemsCommonHeadingFormModule = (function () {
                 return el?.value?.trim() ?? default_value;
             };
 
-            // Phase 3b — show_error now optionally accepts a field
+            // Show_error now optionally accepts a field
             // selector. When provided, the message is associated with
             // the field via domModule.set_field_error (aria-invalid +
             // aria-describedby) in addition to the page-level alert,
@@ -58,7 +58,7 @@ const itemsCommonHeadingFormModule = (function () {
                 }
             };
 
-            // Phase 3b — clear any prior field-level error state from
+            // Clear any prior field-level error state from
             // a previous submission so resubmitting after fixing one
             // field doesn't leave aria-invalid on the now-valid field.
             ['#item-heading-text-input', '#item-heading-type-input'].forEach(s => {

@@ -19,8 +19,7 @@
 'use strict';
 
 const FS = require('fs');
-// OWASP A06 — use Node's built-in v4 UUID generator instead of the `uuid`
-// package. Same RFC 4122 v4 output, drops a dependency (and its CVE / ESM churn).
+// OWASP A06 — use Node's built-in v4 UUID generator instead of the `uuid` package.
 const {randomUUID} = require('crypto');
 const VALIDATOR = require('validator');
 const LOGGER = require('../libs/log4');

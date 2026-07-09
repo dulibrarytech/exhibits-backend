@@ -3,14 +3,6 @@
 const { APP_PATH, PREFIX, VERSION, ENDPOINT } = require('./endpoints_config');
 
 module.exports = {
-    reorder_exhibits_records: {
-        post: {
-            description: 'reorders exhibits',
-            endpoint: `${APP_PATH}${PREFIX}${VERSION}${ENDPOINT}/reorder`,
-            params: 'token or api_key',
-            body: 'item array of objects'
-        }
-    },
     reorder_records: {
         post: {
             description: 'reorders items in exhibit',

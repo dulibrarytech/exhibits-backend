@@ -8,6 +8,7 @@ const {
     stubExhibitsApi,
     stubMediaLibraryListApi,
     mediaRecordFixture,
+    exhibitFixture,
 } = require('../fixtures/api-stubs');
 
 const APP_PATH = process.env.APP_PATH || '/exhibits-dashboard';
@@ -254,4 +255,26 @@ test.describe('Media library list page (media.library.module.js — display_medi
         await expect(page.locator('a.btn-delete-media[data-uuid="u-quote"]'))
             .toHaveAttribute('data-name', tricky_name);
     });
+
+    test('shows associated exhibit names in the Exhibits column', async ({ page }) => {
+        // Re-stub the exhibits list (last-registered route wins) so the
+        // titles cache resolves the record's exhibit UUID -> 'Test Exhibit'.
+        await stubExhibitsApi(page, { records: [exhibitFixture()] });
+        await stubMediaLibraryListApi(page, {
+            records: [
+                mediaRecordFixture({ exhibits: ['550e8400-e29b-41d4-a716-446655440000'] }),
+            ],
+        });
+
+        await page.goto(`${APP_PATH}/media/library`);
+
+        // Header sits between File Name and Date Added.
+        await expect(page.locator('#items thead th').nth(2)).toHaveText('Exhibits');
+
+        // The row resolves and displays the exhibit title, same source as
+        // the Details/Edit modals.
+        const row = page.locator('#media-data tr', { hasText: 'Sample image' });
+        await expect(row).toContainText('Test Exhibit');
+    });
+
 });

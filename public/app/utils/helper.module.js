@@ -1177,11 +1177,22 @@ const helperModule = (function () {
             row.appendChild(name);
             container.appendChild(row);
         });
+
+        // There is no "None" option — default-check the first preset (e.g.
+        // "Item Style 1") so the radiogroup always has a selection. Edit forms
+        // re-check the saved preset afterwards via check_item_style_option.
+        const preset_radios = container.querySelectorAll('input[name="styles"]');
+
+        if (preset_radios.length && !container.querySelector('input[name="styles"]:checked')) {
+            preset_radios[0].checked = true;
+        }
     };
 
     /**
-     * Checks the item-style radio matching the saved value (or "None" when the
-     * value is empty/unknown). Replaces the old <select>.value assignment.
+     * Checks the item-style radio matching the saved value. Empty/unknown
+     * values (legacy records saved before presets were required) fall back to
+     * the FIRST preset — the same default the builder applies; there is no
+     * "None" option. Replaces the old <select>.value assignment.
      * @param {string|null} value - saved style key (e.g. 'item1') or null
      */
     obj.check_item_style_option = function (value) {
@@ -1194,20 +1205,17 @@ const helperModule = (function () {
 
         const target = value || '';
 
-        for (let i = 0; i < radios.length; i++) {
-            if (radios[i].value === target) {
-                radios[i].checked = true;
-                return;
+        if (target) {
+            for (let i = 0; i < radios.length; i++) {
+                if (radios[i].value === target) {
+                    radios[i].checked = true;
+                    return;
+                }
             }
         }
 
-        // Unknown value — fall back to "None".
-        for (let i = 0; i < radios.length; i++) {
-            if (radios[i].value === '') {
-                radios[i].checked = true;
-                return;
-            }
-        }
+        // Empty or unknown value — fall back to the first preset.
+        radios[0].checked = true;
     };
 
     /**
@@ -1236,15 +1244,38 @@ const helperModule = (function () {
     obj.init = function () {
         // On read-only details pages, strip the "(Optional)" markers and "Preview
         // Field" links the shared data-card partials carry for the add/edit forms.
-        // Gated by URL so add/edit forms are untouched; deferred if the DOM is still
-        // parsing so all fields are present when it runs.
+        // Gated by URL so add/edit forms are untouched.
         if (window.location.pathname.indexOf('details') === -1) {
             return;
         }
-        if (document.readyState === 'loading') {
-            document.addEventListener('DOMContentLoaded', obj.remove_field_hints);
-        } else {
+
+        const clean_and_watch = function () {
             obj.remove_field_hints();
+            // Some item form modules relabel fields *asynchronously* — their init
+            // awaits an auth check, then sets innerHTML (e.g. the grid module re-adds
+            // "Exhibit Text (Optional)") — which lands after this first pass. Watch for
+            // any such additions and strip them too, so details pages stay clean
+            // regardless of timing. Only genuine node additions trigger a re-scan, so
+            // our own removals never loop.
+            try {
+                const observer = new MutationObserver(function (mutations) {
+                    const has_additions = mutations.some(function (m) {
+                        return m.addedNodes.length > 0;
+                    });
+                    if (has_additions) {
+                        obj.remove_field_hints();
+                    }
+                });
+                observer.observe(document.body, { childList: true, subtree: true });
+            } catch (error) {
+                console.error('Error wiring field-hint observer:', error.message);
+            }
+        };
+
+        if (document.readyState === 'loading') {
+            document.addEventListener('DOMContentLoaded', clean_and_watch);
+        } else {
+            clean_and_watch();
         }
     };
 

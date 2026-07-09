@@ -6,12 +6,10 @@
         <div class="row">
             <div class="col-sm-6">
                 <small class="form-text text-muted"><i class="fa fa-exclamation-circle" aria-hidden="true"></i> <em>Applies an exhibit style preset to this item</em></small>
+                <%# Preset options are built by helperModule.build_item_style_swatch_options,
+                    which default-checks the first preset — there is no "None" option;
+                    every item carries a style preset. -%>
                 <div id="item-style-options" class="item-style-chooser" role="radiogroup" aria-label="Item style preset">
-                    <label class="item-style-option" for="item-style-none">
-                        <input type="radio" id="item-style-none" name="styles" value="" checked>
-                        <span class="item-style-swatches"></span>
-                        <span class="item-style-name">None</span>
-                    </label>
                 </div>
             </div>
         </div>

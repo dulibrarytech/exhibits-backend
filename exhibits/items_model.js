@@ -18,21 +18,14 @@
 
 'use strict';
 
-const HTTP = require('axios');
-const KALTURA = require('kaltura-client');
-const CONFIG = require('../config/webservices_config')();
-const KALTURA_CONFIG = require('../config/kaltura_config')();
 const DB = require('../config/db_config')();
 const DB_TABLES = require('../config/db_tables_config')();
 const TABLES = DB_TABLES.exhibits;
-const EXHIBITS_CREATE_ITEM_SCHEMA = require('../exhibits/schemas/exhibit_item_create_record_schema')();
-const EXHIBITS_UPDATE_ITEM_SCHEMA = require('../exhibits/schemas/exhibit_item_update_record_schema')();
 const EXHIBIT_ITEM_RECORD_TASKS = require('../exhibits/tasks/exhibit_item_record_tasks');
 const EXHIBIT_HEADING_RECORD_TASKS = require('./tasks/exhibit_heading_record_tasks');
 const EXHIBIT_GRID_RECORD_TASKS = require('./tasks/exhibit_grid_record_tasks');
 const EXHIBIT_TIMELINE_RECORD_TASKS = require('./tasks/exhibit_timeline_record_tasks');
 const HELPER = require('../libs/helper');
-const VALIDATOR = require('../libs/validate');
 const EXHIBIT_RECORD_TASKS = require('./tasks/exhibit_record_tasks');
 const INDEXER_MODEL = require('../indexer/model');
 const LOGGER = require('../libs/log4');
@@ -40,7 +33,6 @@ const REINDEX_COALESCER = require('./reindex_coalescer');
 const {
     is_valid_uuid,
     is_valid_user_id,    build_response,
-    validate_input,
     prepare_styles
 } = require('../exhibits/common_helper');
 
@@ -65,15 +57,11 @@ const CONSTANTS = {
     PUBLICATION_STATUS: {
         PUBLISHED: 1,
         UNPUBLISHED: 0
-    },
-    HTTP_TIMEOUT_MS: 45000,
-    KALTURA_SESSION_EXPIRY: 86400
+    }
 };
 
 // Initialize task instances
 const helper_task = new HELPER();
-const validate_create_item_task = new VALIDATOR(EXHIBITS_CREATE_ITEM_SCHEMA);
-const validate_update_item_task = new VALIDATOR(EXHIBITS_UPDATE_ITEM_SCHEMA);
 const exhibit_tasks = new EXHIBIT_RECORD_TASKS(DB, TABLES);
 const item_task = new EXHIBIT_ITEM_RECORD_TASKS(DB, TABLES);
 const heading_task = new EXHIBIT_HEADING_RECORD_TASKS(DB, TABLES);
@@ -246,15 +234,11 @@ exports.create_item_record = async (is_member_of_exhibit, data) => {
         data.uuid = helper_task.create_uuid();
         data.is_member_of_exhibit = is_member_of_exhibit;
 
-        // Validate
-        const validation_result = validate_input(data, validate_create_item_task, 'items_model (create_item_record)');
-
-        if (validation_result !== true) {
-            return build_response(
-                CONSTANTS.STATUS_CODES.BAD_REQUEST,
-                validation_result
-            );
-        }
+        // The former ajv create schema only re-checked is_member_of_exhibit,
+        // injected above from the already-validated route param — provably
+        // unreachable as a guard — so it was removed (same rationale as the
+        // update-schema removals; field-level protection lives in the task
+        // layer and the client form gates).
 
         // Prepare styles and get order
         data.styles = prepare_styles(data.styles);
@@ -358,19 +342,18 @@ exports.update_item_record = async (is_member_of_exhibit, item_id, data) => {
         data.is_member_of_exhibit = is_member_of_exhibit;
         data.uuid = item_id;
 
-        // Extract is_published before validation
+        // Extract is_published (handled separately from the record update)
         const is_published = data.is_published;
         delete data.is_published;
 
-        // Validate
-        const validation_result = validate_input(data, validate_update_item_task, 'items_model (update_item_record)');
-
-        if (validation_result !== true) {
-            return build_response(
-                CONSTANTS.STATUS_CODES.BAD_REQUEST,
-                validation_result
-            );
-        }
+        // Field-level validation happens in the task layer:
+        // exhibit_item_record_tasks.update_item_record whitelists updatable
+        // fields (_sanitize_data + UPDATABLE_FIELDS), validates UUIDs, and
+        // checks lock/exists state. The former ajv schema for updates
+        // (exhibit_item_update_record_schema) had been emptied to a no-op —
+        // the wrapper requires every listed property, which can't model the
+        // text-vs-media form variants — so it was removed rather than left
+        // as dead weight.
 
         // Prepare styles
         data.styles = prepare_styles(data.styles);
@@ -726,124 +709,6 @@ const suppress_item_record = async (exhibit_id, item_id) => {
     }
 };
 
-/** TODO: deprecate - moved to media library module
- * Gets repository item metadata
- * @param {string} uuid - Repository item UUID
- * @returns {Promise<*>} HTTP response
- */
-exports.get_repo_item_record = async (uuid) => {
-
-    try {
-
-        if (!is_valid_uuid(uuid)) {
-            LOGGER.module().error('ERROR: [/exhibits/items_model (get_repo_item_record)] Invalid UUID provided');
-            return null;
-        }
-
-        const response = await HTTP({
-            method: 'GET',
-            url: `${CONFIG.repo_item_api_url}${uuid}?key=${CONFIG.repo_item_api_key}`,
-            headers: {
-                'Content-Type': 'application/json'
-            },
-            timeout: CONSTANTS.HTTP_TIMEOUT_MS
-        });
-
-        return response;
-
-    } catch (error) {
-        LOGGER.module().error(`ERROR: [/exhibits/items_model (get_repo_item_record)] ${error.message}`, {
-            uuid,
-            stack: error.stack
-        });
-        return null;
-    }
-};
-
-/** TODO: move to media library module
- * Gets Kaltura session (promisified)
- * @param {Object} config - Kaltura configuration
- * @param {Object} client - Kaltura client
- * @returns {Promise<string>} Session token
- */
-const get_kaltura_session_async = (config, client) => {
-    return new Promise((resolve, reject) => {
-
-        try {
-
-            const secret = KALTURA_CONFIG.kaltura_secret_key;
-            const user_id = KALTURA_CONFIG.kaltura_user_id;
-            const type = KALTURA.enums.SessionType.USER;
-            const partner_id = KALTURA_CONFIG.kaltura_partner_id;
-            const expiry = CONSTANTS.KALTURA_SESSION_EXPIRY;
-            const privileges = KALTURA.enums.SessionType.ADMIN;
-
-            KALTURA.services.session.start(secret, user_id, type, partner_id, expiry, privileges)
-                .execute(client)
-                .then(result => resolve(result))
-                .catch(error => reject(error));
-
-        } catch (error) {
-            LOGGER.module().error(`ERROR: [/exhibits/items_model (get_kaltura_session_async)] ${error.message}`, {
-                stack: error.stack
-            });
-            reject(error);
-        }
-    });
-};
-
-/**
- * Gets Kaltura item metadata (callback-based for backward compatibility)
- * @param {string} entry_id - Kaltura entry ID
- * @param {Function} callback - Callback function
- */
-exports.get_kaltura_item_record = (entry_id, callback) => {
-
-    try {
-
-        if (!entry_id || typeof entry_id !== 'string') {
-            const error_msg = 'Invalid entry ID provided';
-            LOGGER.module().error(`ERROR: [/exhibits/items_model (get_kaltura_item_record)] ${error_msg}`);
-            callback(error_msg);
-            return;
-        }
-
-        const config = new KALTURA.Configuration();
-        const client = new KALTURA.Client(config);
-
-        get_kaltura_session_async(config, client)
-            .then(session => {
-                client.setKs(session);
-                const version = -1;
-
-                KALTURA.services.media.get(entry_id, version)
-                    .execute(client)
-                    .then(result => callback(result))
-                    .catch(error => {
-                        LOGGER.module().error(
-                            `ERROR: [/exhibits/items_model (get_kaltura_item_record)] ${error.message}`,
-                            {entry_id, stack: error.stack}
-                        );
-                        callback(error.message);
-                    });
-            })
-            .catch(error => {
-                LOGGER.module().error(
-                    `ERROR: [/exhibits/items_model (get_kaltura_item_record)] ${error.message}`,
-                    {entry_id, stack: error.stack}
-                );
-                callback(error.message);
-            });
-
-    } catch (error) {
-        LOGGER.module().error(`ERROR: [/exhibits/items_model (get_kaltura_item_record)] ${error.message}`, {
-            entry_id,
-            stack: error.stack
-        });
-        callback(error.message);
-    }
-};
-
 /**
  * Reorders items in exhibit
  * @param {string} exhibit_id - Exhibit UUID
@@ -1062,42 +927,6 @@ exports.schedule_reorder_reindex = (exhibit_id, updated_order) => {
 };
 
 /**
- * Gets thumbnail from repository
- * @param {string} uuid - Repository item UUID
- * @returns {Promise<Buffer|null>} Thumbnail data or null
- */
-exports.get_repo_tn = async (uuid) => {
-
-    try {
-
-        if (!is_valid_uuid(uuid)) {
-            LOGGER.module().error('ERROR: [/exhibits/items_model (get_repo_tn)] Invalid UUID provided');
-            return null;
-        }
-
-        const endpoint = `${CONFIG.tn_service}datastream/${uuid}/tn?key=${CONFIG.tn_service_api_key}`;
-        const response = await HTTP.get(endpoint, {
-            timeout: CONSTANTS.HTTP_TIMEOUT_MS,
-            responseType: 'arraybuffer'
-        });
-
-        if (response.status === CONSTANTS.STATUS_CODES.OK) {
-            return response.data;
-        }
-
-        return null;
-
-    } catch (error) {
-        LOGGER.module().error(`ERROR: [/exhibits/items_model (get_repo_tn)] ${error.message}`, {
-            uuid,
-            stack: error.stack
-        });
-
-        return null;
-    }
-};
-
-/**
  * Unlocks item record for editing
  * @param {string} uid - User ID
  * @param {string} uuid - Item UUID
@@ -1123,34 +952,6 @@ exports.unlock_item_record = async (uid, uuid, options) => {
         });
 
         return false;
-    }
-};
-
-/** TODO: deprecate - moved to media library module
- * Gets item subjects from external API
- * @returns {Promise<*>} Subjects data
- */
-exports.get_item_subjects = async () => {
-
-    try {
-
-        const response = await HTTP({
-            method: 'GET',
-            url: `${CONFIG.item_subjects_api_url}?key=${CONFIG.item_subjects_api_key}`,
-            headers: {
-                'Content-Type': 'application/json'
-            },
-            timeout: CONSTANTS.HTTP_TIMEOUT_MS
-        });
-
-        return response.data;
-
-    } catch (error) {
-        LOGGER.module().error(`ERROR: [/exhibits/items_model (get_item_subjects)] ${error.message}`, {
-            stack: error.stack
-        });
-
-        return null;
     }
 };
 

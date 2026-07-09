@@ -516,7 +516,6 @@ const batch_index_records = async (records, record_type, index_tasks) => {
 
 /**
  * Processes container records (grid or timeline) with their child items.
- * Replaces the formerly duplicated process_grid_records / process_timeline_records.
  *
  * @param {Object} config
  * @param {Array}  config.records              - Parent container records

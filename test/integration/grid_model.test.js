@@ -41,27 +41,6 @@ jest.mock('../../config/db_tables_config', () => () => ({
     }
 }));
 
-// Mock Schemas
-jest.mock('../../exhibits/schemas/exhibit_create_grid_record_schema', () => () => ({
-    type: 'object',
-    properties: {}
-}));
-
-jest.mock('../../exhibits/schemas/exhibit_grid_update_record_schema', () => () => ({
-    type: 'object',
-    properties: {}
-}));
-
-jest.mock('../../exhibits/schemas/exhibit_grid_item_create_record_schema', () => () => ({
-    type: 'object',
-    properties: {}
-}));
-
-jest.mock('../../exhibits/schemas/exhibit_grid_item_update_record_schema', () => () => ({
-    type: 'object',
-    properties: {}
-}));
-
 // Mock Helper instance
 const mockHelperInstance = {
     create_uuid: jest.fn().mockReturnValue(TEST_GRID_UUID),
@@ -74,14 +53,6 @@ const mockHelperInstance = {
 
 jest.mock('../../libs/helper', () => {
     return jest.fn().mockImplementation(() => mockHelperInstance);
-});
-
-// Mock Validator
-const mockValidate = jest.fn().mockReturnValue(true);
-jest.mock('../../libs/validate', () => {
-    return jest.fn().mockImplementation(() => ({
-        validate: mockValidate
-    }));
 });
 
 // Mock Grid Record Tasks
@@ -137,7 +108,6 @@ describe('Grid Model Integration Tests', () => {
         jest.clearAllMocks();
         
         // Reset mock implementations
-        mockValidate.mockReturnValue(true);
         mockHelperInstance.create_uuid.mockReturnValue(TEST_GRID_UUID);
         mockHelperInstance.order_exhibit_items.mockResolvedValue(1);
         mockHelperInstance.order_grid_items.mockResolvedValue(1);
@@ -194,16 +164,6 @@ describe('Grid Model Integration Tests', () => {
 
             expect(result.status).toBe(400);
             expect(result.message).toBe('Invalid data provided');
-        });
-
-        test('should return 400 when validation fails', async () => {
-            mockValidate.mockReturnValue([
-                { message: 'Title is required' }
-            ]);
-
-            const result = await GRID_MODEL.create_grid_record(TEST_EXHIBIT_UUID, { columns: 3 });
-
-            expect(result.status).toBe(400);
         });
 
         test('should return 500 when database operation fails', async () => {
@@ -297,16 +257,6 @@ describe('Grid Model Integration Tests', () => {
 
             expect(result.status).toBe(400);
             expect(result.message).toBe('Invalid data provided');
-        });
-
-        test('should return 400 when validation fails', async () => {
-            mockValidate.mockReturnValue([
-                { message: 'Invalid field' }
-            ]);
-
-            const result = await GRID_MODEL.update_grid_record(TEST_EXHIBIT_UUID, TEST_GRID_UUID, { invalid: 'data' });
-
-            expect(result.status).toBe(400);
         });
 
         test('should return 500 when database operation fails', async () => {

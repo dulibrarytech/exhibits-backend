@@ -33,8 +33,6 @@ exports.get_auth_landing = function (req, res) {
         appversion: CONFIG.app_version,
         organization: CONFIG.organization,
         build_version: CONFIG.build_version,
-        // Server-side flag replaces the old client-side hostname check so
-        // no internal hostnames need to appear in browser-shipped JS.
         is_dev_env: process.env.NODE_ENV !== 'production'
     });
 };
@@ -138,10 +136,6 @@ exports.sso = async function (req, res) {
         );
 
         // Successful authentication - redirect with token
-        // NOTE (OWASP A09 follow-up): the JWT is still passed in this redirect URL
-        // because the SPA bootstraps its session from the ?t= param (auth.module
-        // save_token) into sessionStorage. Removing it requires the frontend to
-        // read the session from the HttpOnly cookie instead — tracked separately.
         const redirect_url = `${APP_PATH}/exhibits?t=${encoded_token}&id=${auth_result.data}`;
         res.redirect(redirect_url);
 

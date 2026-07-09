@@ -96,10 +96,14 @@
                     <caption class="sr-only">List of media files in the library</caption>
                     <thead>
                         <tr>
+                            <%# Column set must match the DataTable `columns` config in
+                                media.library.module.js (its titles overwrite these labels
+                                at init; the COUNT must agree). -%>
                             <th scope="col">Name</th>
                             <th scope="col">File Name</th>
-                            <th scope="col">Import Type</th>
+                            <th scope="col">Exhibits</th>
                             <th scope="col">Date Added</th>
+                            <th scope="col">Added By</th>
                             <th scope="col">Actions</th>
                         </tr>
                     </thead>

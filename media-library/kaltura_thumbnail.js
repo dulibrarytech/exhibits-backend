@@ -1,8 +1,6 @@
 'use strict';
 
 /**
- * Deterministic Kaltura thumbnail URL derivation from an entry id + CDN/partner.
- *
  * Reads KALTURA_CDN / KALTURA_PARTNER_ID from `process.env` DIRECTLY (the same values
  * config/kaltura_config maps, and the same approach the backfill migration takes), so
  * this module has NO heavy dependencies — no kaltura_config validator, no kaltura-client

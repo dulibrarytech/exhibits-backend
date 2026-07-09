@@ -15,11 +15,7 @@
                     <div class="col-12 col-md-12">
                         <div class="row form-group">
                             <div class="col-12">
-                                <div class="form-text text-muted" style="font-size: 17px">Text &nbsp;&nbsp;<a
-                                            onclick="helperModule.preview_html('timeline-text-input');return false;"
-                                            data-toggle="modal" data-target=".preview-html"
-                                            class="btn-xs btn-light"><span style="padding: 5px"><i
-                                                    class="fa fa-code" aria-hidden="true"></i> <small>Preview Field</small></span></a>
+                                <div class="form-text text-muted" style="font-size: 17px">Text 
                                 </div>
                                 <textarea disabled="disabled" id="timeline-text-input" class="form-control"
                                           name="timeline_text_input" rows="4"></textarea></div>
@@ -112,7 +108,7 @@
             <div class="card-footer text-muted"><small>Vertical Timeline</small></div>
         </div>
     </main>
-    <div class="clearfix"></div> <%- include('../partials/footer.ejs'); %> <%- include('../partials/preview-html-modal.ejs'); %>
+    <div class="clearfix"></div> <%- include('../partials/footer.ejs'); %>
 </div><!-- libs --> <%- include('../partials/exhibits-libs-common.ejs'); %>
 <!-- app --> <%- include('../partials/exhibits-app-common.ejs'); %>
 <script src="/exhibits-dashboard/static/app/dist/exhibits.module.min.js?<%= build_version %>"></script>

@@ -30,11 +30,6 @@ module.exports = function (app) {
 
     const endpoints = ENDPOINTS();
 
-    // NOTE: security headers are applied globally by Helmet (config/express.js),
-    // so no per-route header middleware is needed here. Every operation below is
-    // authenticated (TOKEN.verify) and authorized inside the controller
-    // (AUTHORIZE.check_permission); see recycle_controller.js.
-
     // List recycled records (owner-scoped; manage_recycle_bin sees all).
     app.route(endpoints.exhibits.recycled_records.get.endpoint)
         .get(

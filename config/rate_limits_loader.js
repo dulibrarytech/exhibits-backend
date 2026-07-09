@@ -90,12 +90,7 @@ const rate_limit_configs = {
         message: 'Too many public media requests'
     },
 
-    // Stricter limit for the public IIIF image endpoint (OWASP A04/H3). This is
-    // the only route that transcodes on demand (Sharp region/resize/format), so
-    // it warrants a tighter per-client ceiling than generic reads — while still
-    // generous enough for an exhibit page that displays many images (derivatives
-    // are cached, so repeat loads are cheap). Manifest/info.json/thumbnail stay
-    // on read_operations. Tune IIIF_IMAGE_RATE_MAX against real traffic.
+    // Stricter limit for the public IIIF image endpoint (OWASP A04/H3).
     iiif_image_operations: {
         window_ms: 15 * 60 * 1000, // 15 minutes
         max_requests: parseInt(process.env.IIIF_IMAGE_RATE_MAX, 10) > 0

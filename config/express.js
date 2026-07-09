@@ -32,11 +32,6 @@ const FS = require('fs');
 const {rate_limits} = require('../config/rate_limits_loader');
 
 // OWASP A09 — never write session tokens or API keys into the access log.
-// Media/thumbnail/IIIF requests still carry the JWT as a ?token= (or ?t=) query
-// param, so the raw originalUrl would otherwise persist live credentials to
-// logs/exhibits.log (session-hijack risk). Redact the value of any sensitive
-// query param before logging. Order the alternation longest-first so 'token'
-// isn't shadowed by 't'.
 const REDACT_QUERY_PARAMS = /([?&](?:access_token|token|apikey|api_key|key|t)=)[^&#\s]+/gi;
 function redact_url(url) {
     if (typeof url !== 'string') {
@@ -51,11 +46,7 @@ module.exports = function() {
         SERVER = HTTP.createServer(APP);
 
     // The app runs behind a loopback reverse proxy (TRUSTED_PROXY, default
-    // 'loopback'), so the real client IP is in X-Forwarded-For. Without this,
-    // req.ip is the proxy address (127.0.0.1) for every request and all IP-keyed
-    // rate limiters would share one bucket. 'loopback' trusts only the local proxy,
-    // so X-Forwarded-For from the internet can't be spoofed past it. A numeric value
-    // is treated as a proxy hop count.
+    // 'loopback'), so the real client IP is in X-Forwarded-For.
     const TRUSTED_PROXY = process.env.TRUSTED_PROXY || 'loopback';
     APP.set('trust proxy', /^\d+$/.test(TRUSTED_PROXY) ? parseInt(TRUSTED_PROXY, 10) : TRUSTED_PROXY);
 
@@ -72,9 +63,6 @@ module.exports = function() {
     APP.use(METHODOVERRIDE());
     APP.use(HELMET(HELMET_CONFIG));
     // OWASP A04 (H4) — CSRF defense: reject cross-origin state-changing requests
-    // (Origin/Referer must be first-party). Mounted after method-override so the
-    // effective req.method is checked, and before the routes so every mutation is
-    // covered by default. Static assets are GET, so they are unaffected.
     APP.use(CSRF_GUARD);
     APP.use('/exhibits-dashboard/static', EXPRESS.static('./public'));
     APP.use(XSS.sanitize_req_query);
@@ -117,7 +105,6 @@ module.exports = function() {
     require('../exhibits/recycle_routes')(APP);
     require('../media-library/routes')(APP);
     require('../media-library/uploads')(APP);
-    // require('../exhibits/uploads')(APP);
 
     if (!FS.existsSync(`./storage`)){
         FS.mkdirSync(`./storage`);
@@ -140,7 +127,6 @@ module.exports = function() {
     // treat it as one). Consolidates the per-route handlers that never ran: a JSON
     // 400 for a malformed request body, then JSON 500s for API paths and plain text
     // elsewhere. Error details are hidden in production.
-    // eslint-disable-next-line no-unused-vars
     APP.use(function (err, req, res, next) {
         if (err instanceof SyntaxError && err.status === 400 && 'body' in err) {
             LOGGER.module().warn(`WARNING: [JSON parse error] ${req.method} ${redact_url(req.originalUrl)}`);
@@ -156,12 +142,6 @@ module.exports = function() {
 
     // OWASP A07 (C2) — bind to loopback by default so the app is reachable only
     // through the local reverse proxy (nginx), never directly on all interfaces.
-    // This makes nginx the single ingress, which is what lets the /auth/sso
-    // gateway controls (shared secret / IP allowlist injected by nginx) actually
-    // bound the attack surface — a client cannot skip the proxy and POST the SSO
-    // callback straight to Node. Override with APP_BIND (e.g. 0.0.0.0) only if a
-    // non-loopback bind is genuinely required (e.g. the proxy connects over a LAN
-    // address rather than 127.0.0.1).
     const APP_BIND = process.env.APP_BIND || '127.0.0.1';
     SERVER.listen(process.env.APP_PORT, APP_BIND);
 

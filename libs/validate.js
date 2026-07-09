@@ -61,16 +61,6 @@ const Validator = class {
         }
     }
 
-    /** TODO: Deprecate
-     * Unescapes strings
-     * @param data
-     * @return {*}
-     */
-    /*
-    validator_unescape(data) {
-        return VALIDATOR.unescape(data);
-    }
-     */
 };
 
 module.exports = Validator;

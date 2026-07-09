@@ -6,7 +6,9 @@
  * whether it is required, and the accordion group it belongs to.
  */
 const styleSections = [
-    { key: 'template', label: 'Exhibit', required: true, group: 'required' },
+    // 'template' ("Exhibit") section removed 2026-07-02 — exhibit-level styles are
+    // no longer collected; Exhibit Introduction is now first (and default-open,
+    // since the accordion opens index 0 of the required group).
     { key: 'introduction', label: 'Exhibit Introduction', required: true, group: 'required' },
     { key: 'navigation', label: 'Navigation Menu', required: true, group: 'required' },
     { key: 'heading1', label: 'Heading Style 1', required: true, group: 'required' },

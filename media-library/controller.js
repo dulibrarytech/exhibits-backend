@@ -18,32 +18,6 @@
 
 'use strict';
 
-/*
- * ─── Known wire-format divergences from the rest of the app ───
- *
- * These are intentional inconsistencies tracked for a future
- * "harmonize response shapes" pass; do not propagate them to new
- * endpoints in this controller.
- *
- *   1. Envelope: every endpoint here wraps its payload in
- *        { success: true|false, data: …, message?: … }
- *      Other controllers in this app (exhibits, items, headings,
- *      users) return bare { data: … } / { error: … } and signal
- *      success via the HTTP status alone. The client modules in
- *      public/app/media-library/* read `response.data?.success` and
- *      will not render media if a bare envelope is returned.
- *
- *   2. DELETE record/<media_id> returns 200 + { success: true }.
- *      Items DELETE (/api/v1/exhibits/<eid>/items/<id>) returns 204
- *      with no body. modals.delete.module.js's handle_delete_confirm
- *      reads `status === 200 && data.success`; switching this to 204
- *      is a coordinated change with that client + its e2e stub.
- *
- * Either keep the envelope (and 200-with-body DELETE) when adding
- * new endpoints OR commit to a full sweep across the controller, all
- * client modules, and every Playwright stub. Don't half-migrate.
- */
-
 const FS = require('fs');
 const PATH = require('path');
 const MEDIA_MODEL = require('../media-library/model');
@@ -54,8 +28,6 @@ const KALTURA_CONFIG = require('../config/kaltura_config')();
 const UPLOADS = require('../media-library/uploads');
 const AUTHORIZE = require('../auth/authorize');
 const LOGGER = require('../libs/log4');
-// const VALIDATOR = require("validator");
-
 
 // Allowed MIME types for media files
 const ALLOWED_MIME_TYPES = {
@@ -928,12 +900,6 @@ exports.delete_uploaded_file = async function (req, res) {
  * until the curator clicks Save (and is then keyed by a different,
  * freshly-generated uuid). The thumbnail itself is generated at upload time.
  *
- * Read-only, low-sensitivity (same bytes the record endpoint serves
- * post-save), auth'd. Safety: fast-fail hostile paths, then
- * UPLOADS.resolve_storage_path enforces containment within STORAGE_PATH and
- * that the file exists (the modified-29 hardening also hard-guards every
- * delete_stored_file caller). No DB lookup needed.
- *
  * GET /api/v1/media/library/upload/thumbnail?path=<relative>&token=<jwt>
  *
  * @param {Object} req - Express request object
@@ -1121,7 +1087,7 @@ exports.search_repository = async function (req, res) {
     try {
 
         // Extract search term from query parameter
-        const term = req.query.q; // TODO || req.query.term || req.query.search;
+        const term = req.query.q;
 
         // Validate search term is provided
         if (!term) {

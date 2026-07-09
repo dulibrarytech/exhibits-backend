@@ -590,8 +590,9 @@ const repoModalsModule = (function() {
         // Row 2: Description - populated from abstract
         html += '<div class="row">';
         html += '<div class="col-12 mb-3">';
-        html += '<label class="form-label" for="repo-description-' + index + '">Description</label>';
-        html += '<textarea class="form-control repo-description" id="repo-description-' + index + '" name="description" rows="2" placeholder="Enter a description (optional)">' + abstract + '</textarea>';
+        html += '<label class="form-label" for="repo-description-' + index + '">Description <span class="badge badge-required">Required</span></label>';
+        html += '<textarea class="form-control repo-description" id="repo-description-' + index + '" name="description" rows="2" placeholder="Enter a description" required aria-required="true">' + abstract + '</textarea>';
+        html += '<div class="invalid-feedback">Please provide a description.</div>';
         html += '</div></div>';
 
         // Subjects section — Topics, Genre/Form, Places, Item Type. A single instruction

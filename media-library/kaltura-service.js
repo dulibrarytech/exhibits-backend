@@ -114,7 +114,6 @@ const get_kaltura_session = async () => {
 
         const config = new KALTURA.Configuration();
         const client = new KALTURA.Client(config);
-
         const secret = KALTURA_CONFIG.kaltura_secret_key;
         const user_id = KALTURA_CONFIG.kaltura_user_id;
         const type = KALTURA.enums.SessionType.USER;
