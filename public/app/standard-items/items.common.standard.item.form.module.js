@@ -762,6 +762,12 @@ const itemsCommonStandardItemFormModule = (function () {
                 const embed_item_el = document.querySelector('#embed-item');
                 item.is_embedded = (embed_item_el && embed_item_el.checked) ? 1 : 0;
 
+                const media_padding_el = document.querySelector('#media-padding');
+                item.media_padding = (media_padding_el && media_padding_el.checked) ? 0 : 1;
+
+                const wrap_text_el = document.querySelector('#wrap-text');
+                item.wrap_text = (wrap_text_el && !wrap_text_el.checked) ? 0 : 1;
+
                 // Collect PDF open-to-page value when media type is PDF
                 if (item.item_type.toLowerCase() === 'pdf') {
                     const page_val = parseInt(getElementValue('#pdf-open-to-page', '1'), 10);

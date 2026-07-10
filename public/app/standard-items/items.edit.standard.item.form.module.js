@@ -248,6 +248,16 @@ const itemsEditStandardItemFormModule = (function () {
                     embed_item_el.checked = record.is_embedded === 1;
                     embed_item_el.dispatchEvent(new Event('change'));
                 }
+
+                const media_padding_el = document.getElementById('media-padding');
+                if (media_padding_el) {
+                    media_padding_el.checked = record.media_padding === 0;
+                }
+
+                const wrap_text_el = document.getElementById('wrap-text');
+                if (wrap_text_el) {
+                    wrap_text_el.checked = record.wrap_text !== 0;
+                }
             }
 
             // Set radio button selections

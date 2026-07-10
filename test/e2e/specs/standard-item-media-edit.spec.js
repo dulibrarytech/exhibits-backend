@@ -84,4 +84,39 @@ test.describe('Edit standard media item form (items.edit.standard.item.form.modu
 
         await expect(page.locator('#message .alert-success')).toBeVisible();
     });
+
+    test('populates media_padding/wrap_text checkboxes from the record and round-trips them on save', async ({ page }) => {
+        const state = await stubStandardItemApi(page, {
+            exhibitId: EXHIBIT_UUID,
+            record: standardItemRecordFixture({
+                uuid: ITEM_UUID,
+                text: 'Padded off, wrap off',
+                item_type: 'image',
+                mime_type: 'image/jpeg',
+                media_uuid: 'media-uuid-existing',
+                media_padding: 0,
+                wrap_text: 0,
+            }),
+        });
+
+        await page.goto(
+            `${APP_PATH}/items/standard/media/edit?exhibit_id=${EXHIBIT_UUID}&item_id=${ITEM_UUID}`
+        );
+        await expect(page.locator('#item-media-uuid')).toHaveValue('media-uuid-existing');
+
+        // media_padding 0 = "Remove Media Padding" CHECKED; wrap_text 0 = unchecked.
+        await expect(page.locator('#media-padding')).toBeChecked();
+        await expect(page.locator('#wrap-text')).not.toBeChecked();
+
+        const putPromise = page.waitForRequest((req) =>
+            req.url().includes(`/exhibits/${EXHIBIT_UUID}/items/${ITEM_UUID}`)
+            && req.method() === 'PUT'
+        );
+        await page.click('#save-item-btn');
+        await putPromise;
+
+        await expect.poll(() => state.lastUpdatePayload).not.toBeNull();
+        expect(state.lastUpdatePayload.media_padding).toBe(0);
+        expect(state.lastUpdatePayload.wrap_text).toBe(0);
+    });
 });

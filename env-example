@@ -1,0 +1,94 @@
+#================ APP_CONFIG ================#
+APP_NAME=DU Exhibits
+APP_VERSION=v2.0.0 (DEV)
+ORGANIZATION=University of Denver
+HOST=http://localhost:8004/
+APP_HOST=localhost
+APP_PORT=8004
+APP_PATH=/exhibits-dashboard
+API_URL=http://localhost:8004
+API_KEY=<your-api-key>
+NODE_ENV=development
+BUILD_VERSION=1
+TRUSTED_PROXY=<your-proxy-ip-or-blank>
+STORAGE_PATH=./media-library/storage
+UPLOAD_MAX=100000000
+
+#================ PUBLIC_SITE ================#
+EXHIBIT_URL=<public-exhibits-frontend-url>
+DU_EXHIBITS_PUBLIC=<public-exhibits-frontend-url>
+DU_LIBRARY=<du-library-url>
+EXHIBIT_PREVIEW_API_KEY=<your-preview-api-key>
+
+#================ SSO_CONFIG ================#
+SSO_HOST=<your-sso-host>
+SSO_URL=<your-sso-url>
+SSO_RESPONSE_URL=<your-sso-response-url>
+SSO_LOGOUT_URL=<your-sso-logout-url>
+
+#================ DB_CONFIG ================#
+DB_HOST=127.0.0.1
+DB_USER=root
+DB_PASSWORD=<your-password>
+DB_NAME=exhibitsv2
+
+#================ DB_TABLES ================#
+EXHIBIT_RECORDS=tbl_exhibits
+ITEM_RECORDS=tbl_standard_items
+HEADING_RECORDS=tbl_heading_items
+GRID_RECORDS=tbl_grids
+GRID_ITEM_RECORDS=tbl_grid_items
+TIMELINE_RECORDS=tbl_timelines
+TIMELINE_ITEM_RECORDS=tbl_timeline_items
+MEDIA_LIBRARY_RECORDS=tbl_media_library
+EXHIBIT_MEDIA_RECORDS=tbl_exhibit_media
+USER_RECORDS=tbl_users
+ROLES_RECORDS=tbl_user_roles
+USERS_ROLES=ctbl_user_roles
+
+#================ TOKEN_CONFIG ================#
+TOKEN_SECRET=<your-token-secret>
+TOKEN_ALGO=HS512
+TOKEN_EXPIRES=48h
+TOKEN_ISSUER=<your-token-issuer>
+
+#================ ELASTICSEARCH ================#
+ELASTICSEARCH_HOST=<your-elasticsearch-host>
+ELASTICSEARCH_INDEX=<your-exhibits-index>
+ELASTICSEARCH_SHARDS=1
+ELASTICSEARCH_REPLICAS=0
+REPO_ELASTICSEARCH_INDEX=<your-repository-index>
+
+#================ REPOSITORY_API ================#
+REPO_ITEM_API_URL=<your-repository-api-url>
+REPO_ITEM_API_KEY=<your-repository-api-key>
+REPO_IIIF_ENDPOINT=<your-repository-iiif-endpoint>
+
+#================ SUBJECTS_API ================#
+ITEM_SUBJECTS_API_URL=<your-subjects-api-url>
+ITEM_SUBJECTS_API_KEY=<your-subjects-api-key>
+
+#================ KALTURA ================#
+KALTURA_CDN=<your-kaltura-cdn-host>
+KALTURA_PARTNER_ID=<your-kaltura-partner-id>
+KALTURA_SECRET_KEY=<your-kaltura-admin-secret>
+KALTURA_USER_ID=<your-kaltura-user-id>
+KALTURA_CONF_UI_ID=<your-kaltura-player-ui-conf-id>
+KALTURA_EXHIBIT_CATEGORY_ID=<your-kaltura-category-id>
+KALTURA_METADATA_PROFILE_ID=<your-kaltura-metadata-profile-id>
+KALTURA_VOD=<your-kaltura-vod-url>
+KALTURA_ANALYTICS=<your-kaltura-analytics-url>
+KALTURA_STATS=<your-kaltura-stats-url>
+
+#================ THUMBNAIL_SERVICE ================#
+TN_SERVICE=<your-thumbnail-service-url>
+TN_SERVICE_API_KEY=<your-thumbnail-service-api-key>
+
+#================ CDN / FONTS (SRI-pinned client assets) ================#
+CLOUDFLARE_CDN=<cloudflare-cdn-base-url>
+JQUERY_CDN=<jquery-cdn-base-url>
+JSDELIVR=<jsdelivr-base-url>
+UNPKG=<unpkg-base-url>
+IMGUR=<imgur-base-url>
+GOOGLE_FONTS_CSS=<google-fonts-css-url>
+GOOGLE_FONTS_FILES=<google-fonts-files-url>

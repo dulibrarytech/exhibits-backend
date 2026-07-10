@@ -109,6 +109,40 @@ test.describe('Add standard media item form (items.add.standard.item.form.module
         expect(url.searchParams.get('item_id')).toBe('standard-item-uuid-new');
     });
 
+    test('POSTs media_padding and wrap_text from the checkboxes (regression: fields were never collected)', async ({ page }) => {
+        const state = await stubStandardItemApi(page, {
+            exhibitId: EXHIBIT_UUID,
+            newItemId: 'standard-item-uuid-new',
+        });
+
+        await page.goto(`${APP_PATH}/items/standard/media?exhibit_id=${EXHIBIT_UUID}`);
+
+        await page.click('#pick-item-media-btn');
+        await expect(page.locator('#media-picker-modal .media-card').first()).toBeVisible();
+        await page.locator('#media-picker-modal .media-card').first().click();
+        await page.click('#media-picker-confirm-btn');
+        await expect(page.locator('#item-media-uuid')).toHaveValue('media-uuid-1');
+
+        // Defaults on the add form: padding on (unchecked), wrap on (checked).
+        await expect(page.locator('#media-padding')).not.toBeChecked();
+        await expect(page.locator('#wrap-text')).toBeChecked();
+
+        // "Remove Media Padding" checked → media_padding must be 0.
+        await page.check('#media-padding');
+
+        const postPromise = page.waitForRequest((req) => {
+            const u = new URL(req.url());
+            return u.pathname === `${APP_PATH}/api/v1/exhibits/${EXHIBIT_UUID}/items`
+                && req.method() === 'POST';
+        });
+        await page.click('#save-item-btn');
+        await postPromise;
+
+        await expect.poll(() => state.lastCreatePayload).not.toBeNull();
+        expect(state.lastCreatePayload.media_padding).toBe(0);
+        expect(state.lastCreatePayload.wrap_text).toBe(1);
+    });
+
     test('does not POST when item_id is already present (edit mode guard)', async ({ page }) => {
         const state = await stubStandardItemApi(page, { exhibitId: EXHIBIT_UUID });
 
