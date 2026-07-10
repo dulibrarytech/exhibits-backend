@@ -275,6 +275,16 @@ const itemsEditHeadingFormModule = (function () {
                 itemsCommonHeadingFormModule.set_item_style(record.styles);
             }
 
+            const set_element_value = (selector, value) => {
+                const el = document.querySelector(selector);
+                if (el) {
+                    el.value = value;
+                }
+            };
+
+            set_element_value('#margins', record.margins ?? 'medium');
+            set_element_value('#text-align', record.text_alignment ?? 'left');
+
             return false;
 
         } catch (error) {

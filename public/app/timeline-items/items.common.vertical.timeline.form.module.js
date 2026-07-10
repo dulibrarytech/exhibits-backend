@@ -41,6 +41,9 @@ const itemsCommonVerticalTimelineFormModule = (function () {
             // Collect the selected style preset (radio "swatch chooser"); None → null.
             timeline.styles = helperModule.get_checked_radio_button(document.getElementsByName('styles'));
 
+            timeline.margins = get_element_value('#margins');
+            timeline.text_alignment = get_element_value('#text-align');
+
             return timeline;
 
         } catch (error) {

@@ -71,6 +71,9 @@ const itemsCommonStandardGridFormModule = (function () {
             // Collect the selected style preset (radio "swatch chooser"); None → null.
             grid.styles = helperModule.get_checked_radio_button(document.getElementsByName('styles'));
 
+            grid.margins = get_element_value('#margins');
+            grid.text_alignment = get_element_value('#text-align');
+
             return grid;
 
         } catch (error) {

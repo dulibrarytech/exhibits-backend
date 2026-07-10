@@ -53,15 +53,8 @@ const Exhibit_timeline_record_tasks = class extends Base_tasks {
         // `title` intentionally omitted — dropped from tbl_timelines by the
         // titles-to-subheadings migration (timeline containers no longer carry a title).
         const ALLOWED_FIELDS = [
-            'uuid',
-            'is_member_of_exhibit',
-            'type',
-            'text',
-            'styles',
-            'order',
-            'is_deleted',
-            'is_published',
-            'owner'
+            'uuid', 'is_member_of_exhibit', 'type', 'text', 'styles', 'order',
+            'is_deleted', 'is_published', 'owner', 'margins', 'text_alignment'
         ];
 
         try {
@@ -237,12 +230,8 @@ const Exhibit_timeline_record_tasks = class extends Base_tasks {
     async update_timeline_record(data, updated_by = null) {
 
         const UPDATABLE_FIELDS = [
-            'type',
-            'text',
-            'styles',
-            'order',
-            'is_published',
-            'owner'
+            'type', 'text', 'styles', 'order', 'is_published',
+            'owner', 'margins', 'text_alignment'
         ];
 
         try {
@@ -468,7 +457,9 @@ const Exhibit_timeline_record_tasks = class extends Base_tasks {
                 is_locked: 0,
                 locked_by_user: 0,
                 is_deleted: 0,
-                owner: 0
+                owner: 0,
+                margins: 'medium',
+                text_alignment: 'left'
             };
 
             for (const [key, default_value] of Object.entries(defaults)) {

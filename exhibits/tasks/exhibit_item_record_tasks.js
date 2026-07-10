@@ -60,7 +60,9 @@ const Exhibit_item_record_tasks = class extends Base_tasks {
             locked_by_user: 0,
             locked_at: null,
             is_deleted: 0,
-            owner: 0
+            owner: 0,
+            margins: 'medium',
+            text_alignment: 'left'
         };
 
         for (const [key, default_value] of Object.entries(defaults)) {
@@ -151,7 +153,7 @@ const Exhibit_item_record_tasks = class extends Base_tasks {
             const optional_fields = [
                 'wrap_text', 'media_width', 'media_padding', 'is_alt_text_decorative',
                 'pdf_open_to_page', 'order', 'is_repo_item', 'is_kaltura_item',
-                'is_embedded', 'is_published', 'owner', 'type', 'layout'
+                'is_embedded', 'is_published', 'owner', 'type', 'layout', 'margins', 'text_alignment'
             ];
 
             optional_fields.forEach(field => {
@@ -562,7 +564,7 @@ const Exhibit_item_record_tasks = class extends Base_tasks {
             'media_width', 'media_padding', 'alt_text', 'is_alt_text_decorative',
             'pdf_open_to_page', 'item_subjects', 'styles', 'order', 'is_repo_item',
             'is_kaltura_item', 'is_embedded', 'is_published', 'is_locked', 'locked_by_user',
-            'locked_at', 'owner'
+            'locked_at', 'owner', 'margins', 'text_alignment'
         ];
 
         try {

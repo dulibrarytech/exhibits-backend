@@ -81,7 +81,7 @@ const Exhibit_heading_record_tasks = class extends Base_tasks {
         const ALLOWED_FIELDS = [
             'is_member_of_exhibit', 'uuid', 'type', 'text', 'order', 'styles',
             'is_visible', 'is_anchor', 'is_published', 'is_locked', 'locked_by_user',
-            'locked_at', 'is_indexed', 'is_deleted', 'owner'
+            'locked_at', 'is_indexed', 'is_deleted', 'owner', 'margins', 'text_alignment'
         ];
 
         try {
@@ -334,7 +334,7 @@ const Exhibit_heading_record_tasks = class extends Base_tasks {
         const UPDATABLE_FIELDS = [
             'type', 'text', 'order', 'styles', 'is_visible', 'is_anchor',
             'is_published', 'is_locked', 'locked_by_user', 'locked_at',
-            'is_indexed', 'owner'
+            'is_indexed', 'owner', 'margins', 'text_alignment'
         ];
 
         try {

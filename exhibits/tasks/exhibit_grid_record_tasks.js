@@ -62,7 +62,9 @@ const Exhibit_grid_record_tasks = class extends Base_tasks {
             is_locked: 0,
             locked_by_user: 0,
             is_deleted: 0,
-            owner: 0
+            owner: 0,
+            margins: 'medium',
+            text_alignment: 'left'
         };
 
         for (const [key, default_value] of Object.entries(defaults)) {
@@ -250,8 +252,8 @@ const Exhibit_grid_record_tasks = class extends Base_tasks {
         // `title` intentionally omitted — dropped from tbl_grids by the
         // titles-to-subheadings migration (grid containers no longer carry a title).
         const ALLOWED_FIELDS = [
-            'uuid', 'is_member_of_exhibit', 'type', 'columns',
-            'text', 'styles', 'order', 'is_published', 'owner', 'created_by'
+            'uuid', 'is_member_of_exhibit', 'type', 'columns', 'margins', 'text_alignment',
+            'text', 'styles', 'order', 'is_published', 'owner', 'created_by', 'margins', 'text_alignment'
         ];
 
         try {
@@ -404,8 +406,8 @@ const Exhibit_grid_record_tasks = class extends Base_tasks {
         // `title` intentionally omitted — dropped from tbl_grids by the
         // titles-to-subheadings migration (grid containers no longer carry a title).
         const UPDATABLE_FIELDS = [
-            'type', 'columns', 'text', 'styles',
-            'order', 'is_deleted', 'is_published', 'updated_by'
+            'type', 'columns', 'text', 'styles', 'margins', 'text_alignment',
+            'order', 'is_deleted', 'is_published', 'updated_by', 'margins', 'text_alignment'
         ];
 
         try {

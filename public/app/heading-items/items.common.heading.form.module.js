@@ -92,6 +92,9 @@ const itemsCommonHeadingFormModule = (function () {
 
             // Collect the selected style preset (radio "swatch chooser"); None → null.
             item_heading.styles = helperModule.get_checked_radio_button(document.getElementsByName('styles'));
+            
+            item_heading.margins = get_element_value('#margins');
+            item_heading.text_alignment = get_element_value('#text-align');
 
             return item_heading;
 
