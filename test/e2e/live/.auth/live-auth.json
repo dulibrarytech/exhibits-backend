@@ -1,10 +1,10 @@
 {
-  "created": "2026-07-10T02:57:23.661Z",
+  "created": "2026-07-10T05:22:18.387Z",
   "database": "exhibits_e2e",
   "roles": {
     "administrator": {
-      "token": "eyJhbGciOiJIUzUxMiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJwdy1lMmUtYWRtaW4iLCJpc3MiOiJodHRwczovL2V4aGliaXRzLmRldiIsInR5cGUiOiJzZXNzaW9uIiwiaWF0IjoxNzgzNjUyMjQzLCJleHAiOjE3ODM4MjUwNDN9.2jaty4binoW8MxN-jRjdrBKFufmYu9bgkn7dH11v8kQIsiyEv1HtPof2z8U7vBsCOaoYhd7okcQHbdKpZ1VjgQ",
-      "expires": 1783825043000,
+      "token": "eyJhbGciOiJIUzUxMiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJwdy1lMmUtYWRtaW4iLCJpc3MiOiJodHRwczovL2V4aGliaXRzLmRldiIsInR5cGUiOiJzZXNzaW9uIiwiaWF0IjoxNzgzNjYwOTM4LCJleHAiOjE3ODM4MzM3Mzh9.MeHOXHVbLg9uYnYfXOG6bjaRid6yiVgeAloyqfmnfbDCmKOnMpdhEyq6Ga_IPsJ_Mq-oQlUPo3a24zJRCmH_JA",
+      "expires": 1783833738000,
       "user": {
         "id": "1",
         "uid": "1",
@@ -15,8 +15,8 @@
       }
     },
     "power": {
-      "token": "eyJhbGciOiJIUzUxMiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJwdy1lMmUtcG93ZXIiLCJpc3MiOiJodHRwczovL2V4aGliaXRzLmRldiIsInR5cGUiOiJzZXNzaW9uIiwiaWF0IjoxNzgzNjUyMjQzLCJleHAiOjE3ODM4MjUwNDN9.z3AglPwYlNWmn308b97R5Tb2QAGEaVfXtHVu8DT70dk5nE3bNX-rAs0wKwN_Tlk0oEFQH7MS0yjs330JnhrZZQ",
-      "expires": 1783825043000,
+      "token": "eyJhbGciOiJIUzUxMiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJwdy1lMmUtcG93ZXIiLCJpc3MiOiJodHRwczovL2V4aGliaXRzLmRldiIsInR5cGUiOiJzZXNzaW9uIiwiaWF0IjoxNzgzNjYwOTM4LCJleHAiOjE3ODM4MzM3Mzh9.8xEGwB11t-1u9JX-fxgSHV8APYG8hoPjwpSItpVKlL3HoS0uvqaYdjBbDepK75oBM7x0sfsnx-9kdO7KHehLLg",
+      "expires": 1783833738000,
       "user": {
         "id": "2",
         "uid": "2",
@@ -27,8 +27,8 @@
       }
     },
     "general": {
-      "token": "eyJhbGciOiJIUzUxMiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJwdy1lMmUtZ2VuZXJhbCIsImlzcyI6Imh0dHBzOi8vZXhoaWJpdHMuZGV2IiwidHlwZSI6InNlc3Npb24iLCJpYXQiOjE3ODM2NTIyNDMsImV4cCI6MTc4MzgyNTA0M30.t2H6kjIvGWt_S9VF6uWlXCxBQxcx59gDcLO7KUrpwyt0UAeyfz1cigOxQTHCSafaOXqGkXAQRn27s3L2LiA0Ug",
-      "expires": 1783825043000,
+      "token": "eyJhbGciOiJIUzUxMiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJwdy1lMmUtZ2VuZXJhbCIsImlzcyI6Imh0dHBzOi8vZXhoaWJpdHMuZGV2IiwidHlwZSI6InNlc3Npb24iLCJpYXQiOjE3ODM2NjA5MzgsImV4cCI6MTc4MzgzMzczOH0.eL_obcYV-y1nYN_wX_FEyfRV-jPs5T3U4-CY5OUVKpzYbeet8W8tzxNTluWNmUqsLyOI1SCS5Taw0Tyqmix1vQ",
+      "expires": 1783833738000,
       "user": {
         "id": "3",
         "uid": "3",
@@ -39,8 +39,8 @@
       }
     },
     "student": {
-      "token": "eyJhbGciOiJIUzUxMiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJwdy1lMmUtc3R1ZGVudCIsImlzcyI6Imh0dHBzOi8vZXhoaWJpdHMuZGV2IiwidHlwZSI6InNlc3Npb24iLCJpYXQiOjE3ODM2NTIyNDMsImV4cCI6MTc4MzgyNTA0M30.8meVU4rQzkR4tK7mOy3QOOeXf19jxesw54V_kkqIYe3Y5Hn4Mw7P3u2hAIvWc0W1OlBm1XXScr_oqZrYx0JeiQ",
-      "expires": 1783825043000,
+      "token": "eyJhbGciOiJIUzUxMiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJwdy1lMmUtc3R1ZGVudCIsImlzcyI6Imh0dHBzOi8vZXhoaWJpdHMuZGV2IiwidHlwZSI6InNlc3Npb24iLCJpYXQiOjE3ODM2NjA5MzgsImV4cCI6MTc4MzgzMzczOH0.yzqcG8QPgVJGM4v0fp330MjpYqjA5yK37-BOjM_eqXA2Qnr_4nidyqi8O1ceQcP4Y3Tkw8yNz4qQcdE5rzEELQ",
+      "expires": 1783833738000,
       "user": {
         "id": "4",
         "uid": "4",

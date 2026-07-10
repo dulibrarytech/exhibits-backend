@@ -457,9 +457,7 @@ const Exhibit_timeline_record_tasks = class extends Base_tasks {
                 is_locked: 0,
                 locked_by_user: 0,
                 is_deleted: 0,
-                owner: 0,
-                margins: 'medium',
-                text_alignment: 'left'
+                owner: 0
             };
 
             for (const [key, default_value] of Object.entries(defaults)) {
