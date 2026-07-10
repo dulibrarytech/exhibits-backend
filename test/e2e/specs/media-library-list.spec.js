@@ -277,4 +277,26 @@ test.describe('Media library list page (media.library.module.js — display_medi
         await expect(row).toContainText('Test Exhibit');
     });
 
+    test('orders the list by Date Added, most recent first', async ({ page }) => {
+        // Payload deliberately delivers oldest → newest so the assertion can
+        // only pass if the DataTable order config does the work (index 3 =
+        // Date Added; a past regression sorted by the Exhibits column after
+        // the modified-111 column insertion shifted the indices).
+        await stubMediaLibraryListApi(page, {
+            records: [
+                mediaRecordFixture({ uuid: 'm-old', name: 'Oldest record', created: '2026-01-05T00:00:00Z' }),
+                mediaRecordFixture({ uuid: 'm-mid', name: 'Middle record', created: '2026-03-15T00:00:00Z' }),
+                mediaRecordFixture({ uuid: 'm-new', name: 'Newest record', created: '2026-07-01T00:00:00Z' }),
+            ],
+        });
+
+        await page.goto(`${APP_PATH}/media/library`);
+
+        const rows = page.locator('#media-data tr');
+        await expect(rows).toHaveCount(3);
+        await expect(rows.nth(0)).toContainText('Newest record');
+        await expect(rows.nth(1)).toContainText('Middle record');
+        await expect(rows.nth(2)).toContainText('Oldest record');
+    });
+
 });

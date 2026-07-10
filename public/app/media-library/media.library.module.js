@@ -1533,7 +1533,7 @@ const mediaLibraryModule = (function() {
                         orderable: false
                     }
                 ],
-                order: [[2, 'desc']], // Sort by created date descending
+                order: [[3, 'desc']], // Date Added descending (most recent first); index 3 must track the column list above
                 pageLength: 25,
                 lengthMenu: [[10, 25, 50, 100, -1], [10, 25, 50, 100, 'All']],
                 responsive: true,
