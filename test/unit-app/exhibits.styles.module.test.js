@@ -67,6 +67,20 @@ function build_section_fragment(key) {
                     <option value="Georgia">Georgia</option>
                 </select>
             </div>
+            <div class="field-row">
+                <select id="${key}-margins">
+                    <option value="small">Small</option>
+                    <option value="medium" selected>Medium</option>
+                    <option value="large">Large</option>
+                </select>
+            </div>
+            <div class="field-row">
+                <select id="${key}-text-align">
+                    <option value="left" selected>Left</option>
+                    <option value="center">Center</option>
+                    <option value="right">Right</option>
+                </select>
+            </div>
             <span id="swatch-${key}-bg"></span>
             <span id="swatch-${key}-font"></span>
         </div>
@@ -140,19 +154,27 @@ describe('exhibitsStylesModule', () => {
             set_value('#heading1-background-color', '  #abcdef  ');
             set_value('#heading1-font-color', '#123456');
             set_value('#heading1-font', 'Georgia');
+            set_value('#heading1-margins', 'large');
+            set_value('#heading1-text-align', 'center');
             const result = globalThis.exhibitsStylesModule.get_styles();
             expect(result.exhibit.heading1.backgroundColor).toBe('#abcdef');
             expect(result.exhibit.heading1.color).toBe('#123456');
             expect(result.exhibit.heading1.fontFamily).toBe('Georgia');
+            expect(result.exhibit.heading1.margins).toBe('large');
+            expect(result.exhibit.heading1.textAlign).toBe('center');
         });
 
-        it('returns empty strings for sections whose fields are blank', () => {
+        it('returns empty strings for untouched text fields; margins/textAlign carry the select defaults', () => {
+            // The margins and text-alignment selects have medium/left pre-selected
+            // in the view, so an untouched section still reports those values.
             const result = globalThis.exhibitsStylesModule.get_styles();
             expect(result.exhibit.heading2).toEqual({
                 backgroundColor: '',
                 color: '',
                 fontSize: '',
                 fontFamily: '',
+                margins: 'medium',
+                textAlign: 'left',
             });
         });
     });
@@ -167,6 +189,8 @@ describe('exhibitsStylesModule', () => {
                         color: '#00ff00',
                         fontSize: '20px',
                         fontFamily: 'Arial',
+                        margins: 'large',
+                        textAlign: 'center',
                     },
                 },
             });
@@ -178,6 +202,8 @@ describe('exhibitsStylesModule', () => {
             // fontSize should be stripped of the px suffix for the number input
             expect(document.querySelector('#introduction-font-size').value).toBe('20');
             expect(document.querySelector('#introduction-font').value).toBe('Arial');
+            expect(document.querySelector('#introduction-margins').value).toBe('large');
+            expect(document.querySelector('#introduction-text-align').value).toBe('center');
 
             // Header swatches reflect the chosen colors
             expect(document.querySelector('#swatch-introduction-bg').style.backgroundColor)

@@ -236,6 +236,8 @@ describe('Exhibit_item_record_tasks', () => {
                 expect(data.locked_by_user).toBe(0);
                 expect(data.is_deleted).toBe(0);
                 expect(data.owner).toBe(0);
+                expect(data.margins).toBe('medium');
+                expect(data.text_alignment).toBe('left');
             });
         });
 

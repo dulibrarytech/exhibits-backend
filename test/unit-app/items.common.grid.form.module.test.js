@@ -22,6 +22,16 @@ function build_form() {
         <div id="message"></div>
         <input type="text" id="grid-text-input" />
         <input type="number" id="grid-columns" />
+        <select id="margins">
+            <option value="small">Small</option>
+            <option value="medium" selected>Medium</option>
+            <option value="large">Large</option>
+        </select>
+        <select id="text-align">
+            <option value="left" selected>Left</option>
+            <option value="center">Center</option>
+            <option value="right">Right</option>
+        </select>
         <div id="item-style-options" role="radiogroup">
             <label class="item-style-option"><input type="radio" name="styles" id="item-style-none" value="" checked> None</label>
             <label class="item-style-option"><input type="radio" name="styles" id="item-style-item1" value="item1"> Item Style 1</label>
@@ -135,6 +145,8 @@ describe('itemsCommonStandardGridFormModule', () => {
         it('returns the assembled grid object on a fully valid form', () => {
             set_value('#grid-text-input', 'Some grid copy');
             set_value('#grid-columns', '4');
+            set_value('#margins', 'large');
+            set_value('#text-align', 'center');
             select_style('item2');
 
             const result = globalThis.itemsCommonStandardGridFormModule
@@ -144,6 +156,8 @@ describe('itemsCommonStandardGridFormModule', () => {
                 text: 'Some grid copy',
                 columns: '4',
                 styles: 'item2',
+                margins: 'large',
+                text_alignment: 'center',
             });
         });
 

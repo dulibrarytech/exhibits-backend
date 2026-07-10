@@ -6,18 +6,15 @@ exports.up = function(knex) {
   return knex.schema.alterTable('tbl_grids', table => {
     table.string('text_alignment');
     table.string('margins');
-    table.text('title', 'longtext').nullable().alter();
   }).then(() => knex.schema.alterTable('tbl_standard_items', table => {
     table.string('text_alignment');
     table.string('margins');
-    table.text('title', 'longtext').nullable().alter();
   }).then(() => knex.schema.alterTable('tbl_heading_items', table => {
     table.string('text_alignment');
     table.string('margins');
   })).then(() => knex.schema.alterTable('tbl_timelines', table => {
     table.string('text_alignment');
     table.string('margins');
-    table.text('title', 'longtext').nullable().alter();
   })));
 };
 /**

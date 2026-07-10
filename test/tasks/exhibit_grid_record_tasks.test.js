@@ -265,6 +265,8 @@ describe('Exhibit_grid_record_tasks', () => {
                 gridTasks._set_grid_item_defaults(data);
                 expect(data.item_type).toBe('image');
                 expect(data.type).toBe('item');
+                expect(data.margins).toBe('medium');
+                expect(data.text_alignment).toBe('left');
             });
 
             test('should not override existing grid item values', () => {
