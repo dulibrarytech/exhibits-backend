@@ -312,6 +312,8 @@ const construct_heading_index_record = (record) => {
         is_visible: record.is_visible,
         is_anchor: record.is_anchor,
         is_published: record.is_published,
+        margins: record.margins,
+        text_alignment: record.text_alignment,
         created: record.created
     });
 };
@@ -376,7 +378,8 @@ const construct_item_index_record = (record) => {
         alt_text: record.media_alt_text || record.alt_text,
         is_alt_text_decorative: record.media_is_alt_text_decorative ?? record.is_alt_text_decorative,
         // v2: media dimensions from library (fall back to item-level)
-        media_width: record.ml_media_width || record.media_width,
+        media_item_width: record.media_width,
+        media_width: record.ml_media_width || null,
         media_height: record.ml_media_height || null,
         // v2: item-level subjects + media-bound subjects
         subjects: process_subjects(record.item_subjects),
@@ -410,6 +413,8 @@ const construct_grid_index_record = (record) => {
         order: record.order,
         is_published: record.is_published,
         created: record.created,
+        margins: record.margins,
+        text_alignment: record.text_alignment,
         items: record.items
     });
 };
@@ -435,6 +440,8 @@ const construct_timeline_index_record = (record) => {
         order: record.order,
         is_published: record.is_published,
         created: record.created,
+        margins: record.margins,
+        text_alignment: record.text_alignment,
         items: record.items
     });
 };

@@ -55,7 +55,9 @@ const Exhibit_heading_record_tasks = class extends Base_tasks {
             locked_by_user: 0,
             is_indexed: 0,
             is_deleted: 0,
-            owner: 0
+            owner: 0,
+            margins: 'medium',
+            text_alignment: 'left'
         };
 
         for (const [key, default_value] of Object.entries(defaults)) {
