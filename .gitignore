@@ -81,4 +81,4 @@ public/assets/dist/%
 # Live e2e artifacts (minted tokens + scratch upload storage)
 test/e2e/live/.auth/
 test/e2e/live/.storage/
-test-results/*
+test-results
