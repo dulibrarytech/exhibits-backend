@@ -20,14 +20,37 @@
 
 const { Client } = require("@elastic/elasticsearch");
 const ES_CONFIG = require('../config/elasticsearch_config')();
+const WEBSERVICES_CONFIG = require('../config/webservices_config')();
+const HTTP = require('axios');
 const LOGGER = require('../libs/log4');
 const REPO_SERVICE_TASKS = require("../media-library/tasks/repo_service_tasks");
-const ITEM_MODEL = require('../exhibits/items_model');
 const CLIENT = new Client({
     node: ES_CONFIG.elasticsearch_host
 });
 
 const repo_tasks = new REPO_SERVICE_TASKS(CLIENT, ES_CONFIG.repo_elasticsearch_index);
+
+const REPO_TN_TIMEOUT_MS = 15000;
+
+/**
+ * Fetches a thumbnail image from the repository thumbnail service
+ * @param {string} uuid - Repository item UUID
+ * @returns {Promise<Buffer|null>} Thumbnail image data or null
+ */
+const fetch_repo_tn = async (uuid) => {
+
+    const endpoint = `${WEBSERVICES_CONFIG.tn_service}datastream/${uuid}/tn?key=${WEBSERVICES_CONFIG.tn_service_api_key}`;
+    const response = await HTTP.get(endpoint, {
+        timeout: REPO_TN_TIMEOUT_MS,
+        responseType: 'arraybuffer'
+    });
+
+    if (response.status === 200 && response.data) {
+        return Buffer.from(response.data);
+    }
+
+    return null;
+};
 
 /**
  * Builds a standardized response object
@@ -177,9 +200,7 @@ exports.get_repo_tn = async function (uuid) {
 
         LOGGER.module().info(`INFO: [/media-library/repo-service (get_repo_tn)] Fetching thumbnail for UUID: ${trimmed_uuid}`);
 
-        // Call items model to get repository thumbnail
-        // items_model.get_repo_tn returns a Buffer (arraybuffer) containing the image data, or null on failure
-        const thumbnail_data = await ITEM_MODEL.get_repo_tn(trimmed_uuid);
+        const thumbnail_data = await fetch_repo_tn(trimmed_uuid);
 
         // Check if we received valid thumbnail data
         if (!thumbnail_data) {

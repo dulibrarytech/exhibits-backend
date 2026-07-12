@@ -3,13 +3,36 @@
 ## Table of Contents
 
 * [README](#readme)
-* [Project Documentation](#project-documentation)
+* [Architecture Overview](#architecture-overview)
 * [Releases](#releases)
 * [Contact](#contact)
 
 ## README
 
 ### Background
+
+Backend and dashboard for the University of Denver Libraries' online exhibits platform — exhibits are built from a central media library (uploads with IIIF 3.0, DU Digital Repository imports, Kaltura A/V), managed under role-based access, and published via Elasticsearch to a public frontend ([exhibits-frontend](https://github.com/dulibrarytech/exhibits-frontend)).
+
+### Screenshots
+
+**Exhibits list**
+![Exhibits list](docs/screenshots/01-exhibits-list.png)
+
+**Exhibit edit form**
+![Exhibit edit form](docs/screenshots/02-exhibit-edit-form.png)
+
+**Exhibit item list — standard items, grids, and timelines**
+![Item list](docs/screenshots/03-items-list.png)
+
+**Media Library — upload, repository import, and Kaltura import**
+![Media Library](docs/screenshots/04-media-library.png)
+
+**Media picker on the item form**
+![Media picker](docs/screenshots/05-media-picker.png)
+
+**Vertical timeline items**
+![Timeline items](docs/screenshots/06-timeline-items.png)
+
 
 ### Contributing
 
@@ -87,11 +110,31 @@ committed; a fresh clone does not need it.)
 
 ### Acknowledgments
 
-## Project Documentation
+@bethmaw - Project Manager — UI/UX design
 
+## Architecture Overview
+
+The Exhibits Builder backend is an Express application serving two things: the server-rendered
+dashboard (EJS + vanilla-JS modules) and the REST API it talks to. Content lives in MySQL/MariaDB; published
+exhibits are indexed into Elasticsearch, where the
+[exhibits-frontend](https://github.com/dulibrarytech/exhibits-frontend) reads them.
+
+```
+Curator ──▶ dashboard (EJS views + public/app modules)
+                 │  REST (JWT)
+                 ▼
+                routes ──▶ controller ──▶ model ──▶ tasks ──▶ MySQL/MariaDB
+                                        │
+                                        ▼
+                                     indexer ──▶ Elasticsearch ──▶ exhibits-frontend
+                                     
+External: DU SSO (auth) · DU Digital Repository API (imports) · Kaltura (A/V) · IIIF 3.0 (media delivery)
+
+```
 
 ## Releases
 * v1.2.14-build-73
+* v2.0.0-build-234
 
 
 ## Contact
