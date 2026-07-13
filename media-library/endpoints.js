@@ -164,6 +164,13 @@ const ENDPOINTS = {
             params: 'token or api_key, media_id (UUID)'
         }
     },
+    iiif_file: {
+        get: {
+            description: 'Serves the original stored PDF for a media record (manifest "rendering" resource)',
+            endpoint: `${IIIF_PATH}/:media_id/file`,
+            params: 'media_id (UUID)'
+        }
+    },
     iiif_image: {
         get: {
             description: 'Serves image via IIIF Image API 3.0 (region/size/rotation/quality.format)',

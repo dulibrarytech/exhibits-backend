@@ -259,6 +259,16 @@ module.exports = function (app) {
             async_handler(CONTROLLER.get_iiif_info)
         );
 
+    // Serve the original stored PDF for a media record (public-facing)
+    // GET <APP_PATH>/iiif/:media_id/file
+    // PDF manifests reference this as the canvas "rendering" (Download PDF)
+    // resource, so it carries the same public/CORS posture as the manifest.
+    app.route(ENDPOINTS.iiif_file.get.endpoint)
+        .get(
+            rate_limits.read_operations,
+            async_handler(CONTROLLER.get_iiif_file)
+        );
+
     // Serve image via IIIF Image API 3.0 (public-facing)
     // GET <APP_PATH>/iiif/:media_id/:region/:size/:rotation/:quality_format
     // NOTE: Must be registered LAST among IIIF routes due to multi-param path capture

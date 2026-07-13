@@ -461,7 +461,7 @@ const build_pdf_canvas = (record, canvas_id, base_url, file_base) => {
             }]
         }],
         rendering: [{
-            id: `${file_base}/api/v1/media/library/file/${record.uuid}`,
+            id: `${file_base}/iiif/${record.uuid}/file`,
             type: 'Text',
             label: { en: ['Download PDF'] },
             format: 'application/pdf'

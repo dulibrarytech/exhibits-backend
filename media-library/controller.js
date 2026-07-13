@@ -1620,6 +1620,119 @@ exports.remove_kaltura_category = async function (req, res) {
 // ========================================
 
 /**
+ * Serves the original stored PDF for a media record (public-facing)
+ * PDF manifests reference this route as the canvas "rendering" resource, so it
+ * carries the same public/CORS posture as the manifest itself. Restricted to
+ * uploaded PDFs — repository items are served by the repository's own IIIF
+ * endpoint, and other media types are delivered via the IIIF Image API.
+ *
+ * GET <APP_PATH>/iiif/:media_id/file
+ *
+ * @param {Object} req - Express request object
+ * @param {Object} res - Express response object
+ * @returns {Promise<void>}
+ */
+exports.get_iiif_file = async function (req, res) {
+
+    try {
+
+        const media_id = req.params.media_id;
+
+        if (!is_valid_uuid(media_id)) {
+            LOGGER.module().warn(`WARNING: [/media-library/controller (get_iiif_file)] Invalid media ID: ${media_id}`);
+            return res.status(400).json({
+                success: false,
+                message: 'Invalid media ID',
+                data: null
+            });
+        }
+
+        const result = await MEDIA_MODEL.get_media_record(media_id);
+
+        if (!result || !result.success || !result.record) {
+            LOGGER.module().warn(`WARNING: [/media-library/controller (get_iiif_file)] Media record not found: ${media_id}`);
+            return res.status(404).json({
+                success: false,
+                message: 'Media not found',
+                data: null
+            });
+        }
+
+        const record = result.record;
+        const stored_mime = record.mime_type ? decode_html_entities(record.mime_type) : null;
+
+        if (record.ingest_method !== 'upload' || stored_mime !== 'application/pdf' || !record.storage_path) {
+            LOGGER.module().warn(`WARNING: [/media-library/controller (get_iiif_file)] File delivery not available for: ${media_id}`);
+            return res.status(404).json({
+                success: false,
+                message: 'File delivery not available for this record',
+                data: null
+            });
+        }
+
+        let resolved_path;
+
+        try {
+            resolved_path = await UPLOADS.resolve_storage_path(decode_html_entities(record.storage_path));
+        } catch (error) {
+            LOGGER.module().warn(`WARNING: [/media-library/controller (get_iiif_file)] File not found on disk: ${record.storage_path}`);
+            return res.status(404).json({
+                success: false,
+                message: 'File not found',
+                data: null
+            });
+        }
+
+        const stats = FS.statSync(resolved_path);
+
+        if (!stats.isFile()) {
+            return res.status(400).json({
+                success: false,
+                message: 'Invalid file type',
+                data: null
+            });
+        }
+
+        res.set({
+            'Content-Type': 'application/pdf',
+            'Content-Length': stats.size,
+            'Content-Disposition': build_content_disposition(record.original_filename || record.filename || 'download.pdf'),
+            'Cache-Control': 'public, max-age=86400',
+            'X-Content-Type-Options': 'nosniff',
+            'Access-Control-Allow-Origin': '*',
+            'Access-Control-Allow-Methods': 'GET, OPTIONS',
+            'Access-Control-Allow-Headers': 'Origin, Content-Type, Accept'
+        });
+
+        const read_stream = FS.createReadStream(resolved_path);
+
+        read_stream.on('error', (error) => {
+            LOGGER.module().error(`ERROR: [/media-library/controller (get_iiif_file)] Stream error: ${error.message}`);
+            if (!res.headersSent) {
+                res.status(500).json({
+                    success: false,
+                    message: 'Error reading file',
+                    data: null
+                });
+            }
+        });
+
+        read_stream.pipe(res);
+
+    } catch (error) {
+        LOGGER.module().error(`ERROR: [/media-library/controller (get_iiif_file)] ${error.message}`);
+
+        if (!res.headersSent) {
+            res.status(500).json({
+                success: false,
+                message: 'Unable to retrieve file',
+                data: null
+            });
+        }
+    }
+};
+
+/**
  * Gets the IIIF Presentation 3.0 manifest for a media record
  * Built on demand from the live DB row; URLs derived from the request host
  * so the manifest is portable across servers.
