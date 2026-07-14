@@ -1168,7 +1168,7 @@ exports.get_image = async function (uuid, region, size, rotation, quality_format
 
         // 4. Output format
         if (qf.sharp_method === 'jpeg') {
-            pipeline = pipeline.jpeg({ quality: IIIF_IMAGE_QUALITY });
+            pipeline = pipeline.flatten({ background: '#ffffff' }).jpeg({ quality: IIIF_IMAGE_QUALITY });
         } else if (qf.sharp_method === 'png') {
             pipeline = pipeline.png();
         } else if (qf.sharp_method === 'webp') {

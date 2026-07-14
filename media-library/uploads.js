@@ -245,6 +245,7 @@ const generate_image_thumbnail = async (image_buffer, uuid) => {
                 fit: 'inside',
                 withoutEnlargement: true
             })
+            .flatten({ background: '#ffffff' })
             .jpeg({ quality: THUMBNAIL_CONFIG.quality })
             .toFile(thumbnail_path);
 
@@ -320,6 +321,7 @@ const generate_pdf_thumbnail = async (pdf_buffer, uuid, source_path) => {
                 fit: 'inside',
                 withoutEnlargement: true
             })
+            .flatten({ background: '#ffffff' })
             .jpeg({ quality: THUMBNAIL_CONFIG.quality })
             .toFile(thumbnail_path);
 
@@ -848,4 +850,5 @@ module.exports = (app) => {
 module.exports.resolve_storage_path = resolve_storage_path;
 module.exports.delete_stored_file = delete_stored_file;
 module.exports.shutdown_exiftool = shutdown_exiftool;
+module.exports.generate_image_thumbnail = generate_image_thumbnail;
 module.exports.STORAGE_PATH = STORAGE_PATH;

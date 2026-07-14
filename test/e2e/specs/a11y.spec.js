@@ -140,6 +140,10 @@ test.describe('axe-core a11y scans (WCAG 2.0/2.1/2.2 AA)', () => {
     test('Media library list page has no axe violations', async ({ page }) => {
         await seedAuth(page);
         await stubDashboardDeps(page);
+        // The media page awaits the exhibit-titles fetch before rendering the
+        // table; stub it (like media-library-list.spec does) so the row render
+        // is hermetic instead of a real DB query that starves under parallel load.
+        await stubExhibitsApi(page, { records: [] });
         await stubMediaLibraryListApi(page, {
             records: [mediaRecordFixture({ uuid: 'media-1', ingest_method: 'upload' })],
         });
