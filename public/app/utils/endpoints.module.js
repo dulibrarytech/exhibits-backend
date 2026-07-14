@@ -180,6 +180,38 @@ const endpointsModule = (function() {
     };
 
     /**
+     * Resolves the build-time endpoint templates (endpoints.templates.js,
+     * generated from the server endpoint modules) against the runtime
+     * APP_PATH. Synchronous and storage-free, so it cannot be cold or null.
+     * Memoized per resolved path.
+     */
+    let resolved_templates = null;
+    let resolved_templates_app_path = null;
+
+    const get_endpoint_templates = () => {
+
+        if (typeof ENDPOINT_TEMPLATES === 'undefined' || !ENDPOINT_TEMPLATES) {
+            return null;
+        }
+
+        const app_path = obj.get_app_path();
+
+        if (resolved_templates && resolved_templates_app_path === app_path) {
+            return resolved_templates;
+        }
+
+        try {
+            const raw = JSON.stringify(ENDPOINT_TEMPLATES);
+            resolved_templates = JSON.parse(raw.split('__APP_PATH__').join(app_path));
+            resolved_templates_app_path = app_path;
+            return resolved_templates;
+        } catch (error) {
+            console.error('Error resolving endpoint templates:', error);
+            return null;
+        }
+    };
+
+    /**
      * Get cached or fetch from localStorage
      */
     const get_cached_endpoints = (type, storage_key) => {
@@ -276,6 +308,10 @@ const endpointsModule = (function() {
      */
     obj.get_users_endpoints = function() {
         try {
+            const templates = get_endpoint_templates();
+            if (templates && templates.users) {
+                return templates.users;
+            }
             return get_cached_endpoints('users', 'exhibits_endpoints_users');
         } catch (error) {
             console.error('Error getting users endpoints:', error);
@@ -288,6 +324,10 @@ const endpointsModule = (function() {
      */
     obj.get_indexer_endpoints = function() {
         try {
+            const templates = get_endpoint_templates();
+            if (templates && templates.indexer) {
+                return templates.indexer;
+            }
             return get_cached_endpoints('indexer', 'exhibits_endpoints_indexer');
         } catch (error) {
             console.error('Error getting indexer endpoints:', error);
@@ -300,6 +340,10 @@ const endpointsModule = (function() {
      */
     obj.get_media_library_endpoints = function() {
         try {
+            const templates = get_endpoint_templates();
+            if (templates && templates.media_library) {
+                return templates.media_library;
+            }
             return get_cached_endpoints('media_library', 'exhibits_endpoints_media_library');
         } catch (error) {
             console.error('Error getting media library endpoints:', error);
@@ -312,6 +356,10 @@ const endpointsModule = (function() {
      */
     obj.get_exhibits_endpoints = function() {
         try {
+            const templates = get_endpoint_templates();
+            if (templates && templates.exhibits) {
+                return templates.exhibits;
+            }
             return get_cached_endpoints('exhibits', 'exhibits_endpoints');
         } catch (error) {
             console.error('Error getting exhibits endpoints:', error);

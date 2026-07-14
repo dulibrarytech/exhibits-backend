@@ -21,7 +21,6 @@ const exhibitsAddFormModule = (function () {
     'use strict';
 
     const APP_PATH = endpointsModule.get_app_path();
-    const EXHIBITS_ENDPOINTS = endpointsModule.get_exhibits_endpoints();
     const MESSAGE_SELECTOR = '#add-exhibit-message';
     let obj = {};
 
@@ -208,6 +207,13 @@ const exhibitsAddFormModule = (function () {
                 return false;
             }
 
+            const endpoints = endpointsModule.get_exhibits_endpoints();
+
+            if (!endpoints || !endpoints.exhibits || !endpoints.exhibits.exhibit_records) {
+                show_message('error', 'Session data could not be loaded. Please reload the page and try again.');
+                return false;
+            }
+
             // Validate exhibit data
             const data = get_exhibit_data();
 
@@ -225,7 +231,7 @@ const exhibitsAddFormModule = (function () {
             // Make API request with timeout
             const response = await httpModule.req({
                 method: 'POST',
-                url: EXHIBITS_ENDPOINTS.exhibits.exhibit_records.endpoint,
+                url: endpoints.exhibits.exhibit_records.endpoint,
                 data: data,
                 headers: {
                     'Content-Type': 'application/json',
@@ -253,7 +259,7 @@ const exhibitsAddFormModule = (function () {
 
             if (hero_media_uuid || thumbnail_media_uuid) {
                 try {
-                    const bind_endpoint = EXHIBITS_ENDPOINTS.exhibits?.exhibit_media_library?.post?.endpoint;
+                    const bind_endpoint = endpoints.exhibits?.exhibit_media_library?.post?.endpoint;
 
                     if (bind_endpoint) {
                         const bind_url = bind_endpoint.replace(':exhibit_id', encodeURIComponent(exhibit_uuid));

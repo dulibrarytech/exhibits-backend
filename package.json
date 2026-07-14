@@ -13,8 +13,8 @@
     "test:e2e:install": "playwright install --with-deps chromium",
     "test:views": "node test/smoke-views.js",
     "start": "node exhibits-backend.js",
-    "build": "node esbuild.config.js && gulp",
-    "build:js": "node esbuild.config.js",
+    "build": "npm run build:js && gulp",
+    "build:js": "node tools/generate-client-endpoints.js && node esbuild.config.js",
     "build:views": "gulp",
     "migrate:latest": "knex migrate:latest",
     "migrate:up": "knex migrate:up",
@@ -24,7 +24,8 @@
     "test:e2e:live": "PW_MODE=live playwright test",
     "test:e2e:live:ui": "PW_MODE=live playwright test --ui",
     "test:e2e:live:external": "PW_MODE=live PW_EXTERNAL=1 playwright test --grep @external",
-    "test:predeploy": "npm run test:unit && npm run test:integration && npm run test:e2e && npm run test:e2e:live"
+    "test:predeploy": "npm run test:unit && npm run test:integration && npm run test:e2e && npm run test:e2e:live",
+    "screenshots": "PW_MODE=live PW_SCREENSHOTS=1 playwright test --grep @screenshots"
   },
   "author": "fernando.reyes@du.edu",
   "license": "Apache",

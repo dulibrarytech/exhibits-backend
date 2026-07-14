@@ -73,6 +73,7 @@ const sources = [
     // utils
     'public/app/utils/auth.module.js',
     'public/app/utils/dom.module.js',
+    'public/app/utils/endpoints.templates.js',
     'public/app/utils/endpoints.module.js',
     'public/app/utils/helper.module.js',
     'public/app/utils/http.module.js',

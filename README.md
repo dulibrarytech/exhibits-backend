@@ -11,7 +11,7 @@
 
 ### Background
 
-Backend and dashboard for the University of Denver Libraries' online exhibits platform — exhibits are built from a central media library (uploads with IIIF 3.0, DU Digital Repository imports, Kaltura A/V), managed under role-based access, and published via Elasticsearch to a public frontend ([exhibits-frontend](https://github.com/dulibrarytech/exhibits-frontend)).
+Backend and dashboard for the University of Denver Libraries' online exhibits platform — exhibits are built from a central media library (uploads with IIIF 3.0, DU Digital Repository imports, Kaltura A/V), managed under role-based access, and published via Elasticsearch to a public frontend ([exhibits-frontend](https://github.com/dulibrarytech/exhibits-frontend)) | ([exhibits-api](https://github.com/dulibrarytech/exhibits-api)).
 
 ### Screenshots
 

@@ -417,10 +417,13 @@ const Exhibit_record_tasks = class extends Base_tasks {
             this._validate_database();
             this._validate_table('exhibit_records');
             this._validate_table('media_library_records');
+            this._validate_table('exhibit_media_records');
             const uuid_validated = this._validate_uuid(uuid, 'exhibit UUID');
 
             const exhibit_table = this.TABLE.exhibit_records;
             const media_table = this.TABLE.media_library_records;
+            const exhibit_media_table = this.TABLE.exhibit_media_records;
+            const db = this.DB;
 
             const qualified_fields = this.FIELDS.map(f => `${exhibit_table}.${f}`);
 
@@ -445,18 +448,30 @@ const Exhibit_record_tasks = class extends Base_tasks {
                         `thumb_lib.genre_form_subjects as thumb_genre_form_subjects`,
                         `thumb_lib.places_subjects as thumb_places_subjects`
                     )
-                    .leftJoin(
-                        `${media_table} as hero_lib`,
-                        `${exhibit_table}.hero_image_media_uuid`,
-                        '=',
-                        `hero_lib.uuid`
-                    )
-                    .leftJoin(
-                        `${media_table} as thumb_lib`,
-                        `${exhibit_table}.thumbnail_media_uuid`,
-                        '=',
-                        `thumb_lib.uuid`
-                    )
+                    .leftJoin(`${exhibit_media_table} as hero_bind`, function () {
+                        this.on('hero_bind.exhibit_uuid', '=', `${exhibit_table}.uuid`)
+                            .andOnVal('hero_bind.media_role', '=', 'hero_image')
+                            .andOnVal('hero_bind.is_deleted', '=', 0);
+                    })
+                    .leftJoin(`${exhibit_media_table} as thumb_bind`, function () {
+                        this.on('thumb_bind.exhibit_uuid', '=', `${exhibit_table}.uuid`)
+                            .andOnVal('thumb_bind.media_role', '=', 'thumbnail')
+                            .andOnVal('thumb_bind.is_deleted', '=', 0);
+                    })
+                    .leftJoin(`${media_table} as hero_lib`, function () {
+                        this.on(
+                            'hero_lib.uuid',
+                            '=',
+                            db.raw('COALESCE(hero_bind.media_uuid, ??)', [`${exhibit_table}.hero_image_media_uuid`])
+                        );
+                    })
+                    .leftJoin(`${media_table} as thumb_lib`, function () {
+                        this.on(
+                            'thumb_lib.uuid',
+                            '=',
+                            db.raw('COALESCE(thumb_bind.media_uuid, ??)', [`${exhibit_table}.thumbnail_media_uuid`])
+                        );
+                    })
                     .where({
                         [`${exhibit_table}.uuid`]: uuid_validated,
                         [`${exhibit_table}.is_deleted`]: 0

@@ -89,4 +89,39 @@ test.describe('Add Exhibit modal', () => {
         // resolves either way (the element is gone after navigation).
         await waitForModalHidden(page, 'add-exhibit-modal');
     });
+
+    test('submits successfully even when every endpoints cache layer is cleared (storage-free endpoint map)', async ({ page }) => {
+        // Regression lineage: the form once captured get_exhibits_endpoints()
+        // at page load, and a cold/cleared cache made submit throw "Cannot
+        // read properties of null (reading 'exhibits')" (hit in production).
+        // Endpoints are now resolved from build-time templates generated from
+        // the server endpoint modules — storage cannot make them null, so a
+        // fully cleared cache must not affect submission at all.
+        await openModal(page, 'add-exhibit-modal');
+
+        await page.evaluate(() => {
+            exhibitsStylesModule.validate_required = () => ({ valid: true });
+            exhibitsStylesModule.get_styles = () => ({});
+            // The worst possible cache state: no localStorage copy, no
+            // in-memory copy.
+            window.localStorage.removeItem('exhibits_endpoints');
+            endpointsModule.refresh_cache();
+        });
+
+        const page_errors = [];
+        page.on('pageerror', (e) => page_errors.push(e.message));
+
+        const postPromise = page.waitForRequest((req) => {
+            const u = new URL(req.url());
+            return u.pathname === `${APP_PATH}/api/v1/exhibits` && req.method() === 'POST';
+        });
+
+        await page.fill('#exhibit-title-input', 'Cold cache exhibit');
+        await page.fill('#exhibit-description-input', 'A description');
+        await page.click('#save-exhibit-btn');
+
+        const request = await postPromise;
+        expect(request.postDataJSON().title).toBe('Cold cache exhibit');
+        expect(page_errors).toEqual([]);
+    });
 });
