@@ -147,17 +147,6 @@ const process_media_files = (data, helper_task, storage_path) => {
     }
 };
 
-/**
- * Cleans up temporary media fields after processing
- * @param {Object} data - Item data (mutated in place)
- */
-const clean_media_fields = (data) => {
-    delete data.kaltura;
-    delete data.repo_uuid;
-    delete data.media_prev;
-    delete data.thumbnail_prev;
-};
-
 // ==================== EXPORTS ====================
 
 module.exports = {
@@ -166,6 +155,5 @@ module.exports = {
     validate_input,
     prepare_styles,
     build_response,
-    process_media_files,
-    clean_media_fields
+    process_media_files
 };

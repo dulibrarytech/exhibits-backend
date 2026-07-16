@@ -33,6 +33,7 @@ const LOCAL_IIIF_BASE = 'http://localhost:8004/exhibits-dashboard/iiif';
 const {
     build_repo_iiif_urls,
     resolve_repo_media_uuid,
+    resolve_kaltura_entry_id,
     construct_item_index_record,
     construct_exhibit_index_record
 } = require('../../indexer/indexer_helper');
@@ -137,6 +138,47 @@ describe('construct_item_index_record — repository imports', () => {
         expect(doc.media_iiif.service_url).toBe(`${REPO_IMAGE_BASE}${REPO_UUID}`);
     });
 
+    test('v2 repo item gets the repo uuid derived into media (exhibits-api contract)', () => {
+        const record = base_item({
+            media: null,
+            media_uuid: MEDIA_LIB_UUID,
+            media_lib_uuid: MEDIA_LIB_UUID,
+            media_ingest_method: 'repository',
+            media_repo_uuid: REPO_UUID
+        });
+
+        const doc = construct_item_index_record(record);
+
+        /* exhibits-api reads the repository id out of `media` when is_repo_item = 1;
+           without this the API builds .../iiif/3/null/... URLs */
+        expect(doc.media).toBe(REPO_UUID);
+        expect(doc.is_repo_item).toBe(1);
+    });
+
+    test('v1-migrated repo item keeps the repo uuid already stored in media', () => {
+        const record = base_item({
+            is_repo_item: 1,
+            media: REPO_UUID,
+            media_lib_uuid: null
+        });
+
+        expect(construct_item_index_record(record).media).toBe(REPO_UUID);
+    });
+
+    test('upload item keeps its legacy media filename in media', () => {
+        const record = base_item({
+            media: 'legacy-filename.jpg',
+            media_uuid: MEDIA_LIB_UUID,
+            media_lib_uuid: MEDIA_LIB_UUID,
+            media_ingest_method: 'upload'
+        });
+
+        const doc = construct_item_index_record(record);
+
+        expect(doc.media).toBe('legacy-filename.jpg');
+        expect(doc.is_repo_item).toBe(0);
+    });
+
     test('upload item keeps local IIIF URLs and is_repo_item = 0', () => {
         const record = base_item({
             media_uuid: MEDIA_LIB_UUID,
@@ -172,6 +214,110 @@ describe('construct_item_index_record — repository imports', () => {
             thumbnail_url: `${REPO_IMAGE_BASE}${thumb_repo_uuid}/full/!400,400/0/default.jpg`
         });
         expect(doc.thumbnail).toBe(`${REPO_IMAGE_BASE}${thumb_repo_uuid}/full/!400,400/0/default.jpg`);
+    });
+});
+
+describe('resolve_kaltura_entry_id', () => {
+
+    const ENTRY_ID = '1_j4x6lqo4';
+
+    test('media library join is the source of truth (v2 items, stale flag = 0)', () => {
+        const record = base_item({
+            media_uuid: MEDIA_LIB_UUID,
+            media_lib_uuid: MEDIA_LIB_UUID,
+            media_ingest_method: 'kaltura',
+            kaltura_entry_id: ENTRY_ID
+        });
+        expect(resolve_kaltura_entry_id(record)).toBe(ENTRY_ID);
+    });
+
+    test('legacy v1 rows without a library record fall back to flag + media column', () => {
+        const record = base_item({
+            is_kaltura_item: 1,
+            media: ENTRY_ID,
+            media_lib_uuid: null
+        });
+        expect(resolve_kaltura_entry_id(record)).toBe(ENTRY_ID);
+    });
+
+    test('upload media never resolves as kaltura, even with a stale flag', () => {
+        const record = base_item({
+            is_kaltura_item: 1,
+            media: 'legacy-filename.jpg',
+            media_lib_uuid: MEDIA_LIB_UUID,
+            media_ingest_method: 'upload'
+        });
+        expect(resolve_kaltura_entry_id(record)).toBeNull();
+    });
+});
+
+describe('construct_item_index_record — kaltura items', () => {
+
+    const ENTRY_ID = '1_j4x6lqo4';
+    const KALTURA_THUMB = 'https://cdn.kaltura.com/thumbnail/1_j4x6lqo4.jpg';
+
+    test('v2 kaltura item gets a derived is_kaltura_item = 1 alongside kaltura data', () => {
+        const record = base_item({
+            item_type: 'video',
+            media_uuid: MEDIA_LIB_UUID,
+            media_lib_uuid: MEDIA_LIB_UUID,
+            media_ingest_method: 'kaltura',
+            kaltura_entry_id: ENTRY_ID,
+            media_kaltura_thumbnail_url: KALTURA_THUMB
+        });
+
+        const doc = construct_item_index_record(record);
+
+        expect(doc.is_kaltura_item).toBe(1);
+        expect(doc.is_repo_item).toBe(0);
+        expect(doc.kaltura).toEqual({
+            kaltura_id: ENTRY_ID,
+            kaltura_stream_url: ENTRY_ID,
+            kaltura_thumbnail: KALTURA_THUMB
+        });
+    });
+
+    test('v1-migrated kaltura item (flag + media column, no library record) keeps flag and data', () => {
+        const record = base_item({
+            item_type: 'video',
+            is_kaltura_item: 1,
+            media: ENTRY_ID,
+            media_lib_uuid: null
+        });
+
+        const doc = construct_item_index_record(record);
+
+        expect(doc.is_kaltura_item).toBe(1);
+        expect(doc.kaltura.kaltura_id).toBe(ENTRY_ID);
+    });
+
+    test('non-kaltura item gets is_kaltura_item = 0 and null kaltura', () => {
+        const record = base_item({
+            media_uuid: MEDIA_LIB_UUID,
+            media_lib_uuid: MEDIA_LIB_UUID,
+            media_ingest_method: 'upload'
+        });
+
+        const doc = construct_item_index_record(record);
+
+        expect(doc.is_kaltura_item).toBe(0);
+        expect(doc.kaltura).toBeNull();
+    });
+
+    test('repo item with a stale kaltura flag does not resolve as kaltura', () => {
+        const record = base_item({
+            is_kaltura_item: 1,
+            media_uuid: MEDIA_LIB_UUID,
+            media_lib_uuid: MEDIA_LIB_UUID,
+            media_ingest_method: 'repository',
+            media_repo_uuid: REPO_UUID
+        });
+
+        const doc = construct_item_index_record(record);
+
+        expect(doc.is_repo_item).toBe(1);
+        expect(doc.is_kaltura_item).toBe(0);
+        expect(doc.kaltura).toBeNull();
     });
 });
 

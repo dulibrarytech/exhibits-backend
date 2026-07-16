@@ -234,6 +234,29 @@ const resolve_repo_media_uuid = (record) => {
 };
 
 /**
+ * Resolves the Kaltura entry id for an item's primary media. Mirrors
+ * resolve_repo_media_uuid: the media library join is the source of truth
+ * (ingest_method = 'kaltura' + kaltura_entry_id), with a fallback for
+ * v1-migrated rows that have no media library record and stored the entry id
+ * directly in `media`. The stored is_kaltura_item column is NOT authoritative —
+ * the v2 dashboard never sets it.
+ * @param {Object} record - Item record with media library join fields
+ * @returns {string|null} Kaltura entry id or null
+ */
+const resolve_kaltura_entry_id = (record) => {
+
+    if (record.kaltura_entry_id) {
+        return record.kaltura_entry_id;
+    }
+
+    if (record.is_kaltura_item === 1 && !record.media_lib_uuid && record.media) {
+        return record.media;
+    }
+
+    return null;
+};
+
+/**
  * Resolves the repository UUID for an item's thumbnail media when that media is
  * a repository import. The item/grid/timeline queries alias these fields
  * inconsistently, so both variants are read.
@@ -399,7 +422,7 @@ const construct_item_index_record = (record) => {
     const thumb_iiif = repo_thumb_uuid
         ? build_repo_iiif_urls(repo_thumb_uuid)
         : build_iiif_urls(record.thumb_lib_uuid);
-    const kaltura = resolve_kaltura(record.kaltura_entry_id, record.media_kaltura_thumbnail_url);
+    const kaltura = resolve_kaltura(resolve_kaltura_entry_id(record), record.media_kaltura_thumbnail_url);
 
     const index_record = {
         uuid: record.uuid,
@@ -417,14 +440,20 @@ const construct_item_index_record = (record) => {
         order: record.order,
         is_published: record.is_published,
         is_embedded: record.is_embedded,
-        // Derived: the stored column is only reliable on v1-migrated rows
+        // Derived: the stored columns are only reliable on v1-migrated rows, so
+        // both flags are resolved from the same source as the data they describe
         is_repo_item: repo_media_uuid ? 1 : 0,
-        is_kaltura_item: record.is_kaltura_item,
+        is_kaltura_item: kaltura ? 1 : 0,
         created: record.created,
         margins: record.margins,
         text_alignment: record.text_alignment,
-        // Legacy media filename preserved for backward compatibility
-        media: record.media,
+        // For repo items `media` carries the repository UUID: exhibits-api reads the
+        // id out of this field (addRepositoryData) to fetch repository_data and to
+        // build its own IIIF URLs, so `is_repo_item = 1` + `media` = repo UUID is a
+        // contract. v1-migrated rows store it; the v2 dashboard does not, so it is
+        // derived here from the same media library join as the flag. Non-repo items
+        // keep the legacy media filename for backward compatibility.
+        media: repo_media_uuid || record.media,
         // v2: resolved media IIIF URLs (repo endpoints for repository imports,
         // local IIIF service for everything else)
         media_iiif: media_iiif ? {
@@ -891,6 +920,7 @@ module.exports = {
     resolve_repo_media_uuid,
     resolve_repo_thumbnail_uuid,
     resolve_kaltura,
+    resolve_kaltura_entry_id,
     merge_media_subjects,
     normalize_empty_to_null,
     construct_exhibit_index_record,
