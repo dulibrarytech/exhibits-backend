@@ -28,7 +28,7 @@ test.describe('Edit grid form (items.edit.grid.form.module)', () => {
             record: gridRecordFixture({
                 uuid: GRID_UUID,
                 text: 'Existing grid text',
-                columns: 6,
+                columns: 3,
                 created_by: 'tester',
                 created: '2026-04-01T00:00:00Z',
             }),
@@ -37,8 +37,42 @@ test.describe('Edit grid form (items.edit.grid.form.module)', () => {
         await page.goto(`${APP_PATH}/items/grid/edit?exhibit_id=${EXHIBIT_UUID}&item_id=${GRID_UUID}`);
 
         await expect(page.locator('#grid-text-input')).toHaveValue('Existing grid text');
-        await expect(page.locator('#grid-columns')).toHaveValue('6');
+        await expect(page.locator('#grid-columns')).toHaveValue('3');
         await expect(page.locator('#created')).toContainText(/Created by tester/);
+    });
+
+    test('forces re-selection when the saved columns value predates the dropdown', async ({ page }) => {
+        await stubDashboardDeps(page, {
+            exhibit: { record: exhibitFixture({ uuid: EXHIBIT_UUID }) },
+        });
+        const state = await stubGridRecordApi(page, {
+            exhibitId: EXHIBIT_UUID,
+            record: gridRecordFixture({
+                uuid: GRID_UUID,
+                text: 'Legacy grid',
+                columns: 6,
+            }),
+        });
+
+        await page.goto(`${APP_PATH}/items/grid/edit?exhibit_id=${EXHIBIT_UUID}&item_id=${GRID_UUID}`);
+        await expect(page.locator('#grid-text-input')).toHaveValue('Legacy grid');
+
+        // 6 isn't offered by the dropdown — a disabled placeholder is
+        // inserted and selected (it can't be re-picked once a real value is
+        // chosen) and the hint explains why a new value must be chosen.
+        await expect(page.locator('#grid-columns')).toHaveValue('');
+        await expect(page.locator('#grid-columns option[value=""]')).toBeDisabled();
+        await expect(page.locator('#grid-columns-hint')).toContainText(
+            /saved with 6 columns/i
+        );
+
+        // Saving without picking a value is blocked by the required-field
+        // validation — the legacy value can't be silently resubmitted.
+        await page.click('#save-item-btn');
+        await expect(page.locator('#message .alert-danger')).toContainText(
+            /please select the number of columns/i
+        );
+        expect(state.updateCount).toBe(0);
     });
 
     test('PUTs updated payload and shows success alert on 201', async ({ page }) => {
@@ -58,7 +92,7 @@ test.describe('Edit grid form (items.edit.grid.form.module)', () => {
         await expect(page.locator('#grid-text-input')).toHaveValue('Original');
 
         await page.fill('#grid-text-input', 'Edited grid');
-        await page.fill('#grid-columns', '6');
+        await page.selectOption('#grid-columns', '2');
 
         const putPromise = page.waitForRequest((req) =>
             req.url().includes(`/api/v1/exhibits/${EXHIBIT_UUID}/grids/${GRID_UUID}`)
@@ -70,7 +104,7 @@ test.describe('Edit grid form (items.edit.grid.form.module)', () => {
 
         await expect.poll(() => state.lastUpdatePayload).not.toBeNull();
         expect(state.lastUpdatePayload.text).toBe('Edited grid');
-        expect(state.lastUpdatePayload.columns).toBe('6');
+        expect(state.lastUpdatePayload.columns).toBe('2');
 
         // update_grid_record refreshes the form in place (no reload),
         // setting the success alert and auto-dismissing it after 3s.

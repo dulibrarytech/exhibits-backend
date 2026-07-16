@@ -28,30 +28,16 @@ test.describe('Add grid form (items.add.grid.form.module)', () => {
         await page.goto(`${APP_PATH}/items/grid?exhibit_id=${EXHIBIT_UUID}`);
 
         await expect(page.locator('#grid-text-input')).toBeVisible();
-        // The columns input has value="4" baked into the EJS — pre-filled
-        // so a default save click would pass validation.
+        // The columns <select> offers 2/3/4 and defaults to 4, so a default
+        // save click passes validation. The empty-selection state only
+        // exists for legacy records on the edit form (see grid-edit.spec).
         await expect(page.locator('#grid-columns')).toHaveValue('4');
+        await expect(page.locator('#grid-columns option')).toHaveText(['2', '3', '4']);
+        await expect(page.locator('#grid-columns-hint')).toContainText(
+            /select the number of columns/i
+        );
         await expect(page.locator('#save-item-btn')).toBeEnabled();
         await expect(page.locator('#exhibit-title')).toContainText('Grid host exhibit');
-    });
-
-    test('blocks submit when columns is empty', async ({ page }) => {
-        const state = await stubGridRecordApi(page, { exhibitId: EXHIBIT_UUID });
-
-        await page.goto(`${APP_PATH}/items/grid?exhibit_id=${EXHIBIT_UUID}`);
-
-        // Clear the pre-filled columns value to trigger the only required-
-        // field validation in items.common.grid.form.module.
-        await page.fill('#grid-columns', '');
-        await page.click('#save-item-btn');
-
-        // The common module's per-field validation message is now the
-        // user-visible final state (create_grid_record no longer clobbers
-        // it with a generic banner).
-        await expect(page.locator('#message .alert-danger')).toContainText(
-            /please enter the number of columns/i
-        );
-        expect(state.createCount).toBe(0);
     });
 
     test('POSTs serialized payload and redirects to edit on 201', async ({ page }) => {
