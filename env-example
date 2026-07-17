@@ -63,6 +63,7 @@ REPO_ELASTICSEARCH_INDEX=<your-repository-index>
 REPO_ITEM_API_URL=<your-repository-api-url>
 REPO_ITEM_API_KEY=<your-repository-api-key>
 REPO_IIIF_ENDPOINT=<your-repository-iiif-endpoint>
+REPO_IIIF_IMAGE_ENDPOINT=<your-repository-iiif-image-server-endpoint>
 
 #================ SUBJECTS_API ================#
 ITEM_SUBJECTS_API_URL=<your-subjects-api-url>

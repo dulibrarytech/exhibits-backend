@@ -178,26 +178,100 @@ const merge_media_subjects = (record) => {
 };
 
 /**
- * Builds a IIIF manifest URL for repository import items using the external repo endpoint
- * @param {Object} record - Item record with is_repo_item and media fields
- * @returns {Object|null} Object with manifest_url only, or null if not a repo item
+ * Builds IIIF URLs for a repository-imported media asset using the external
+ * repo endpoints: REPO_IIIF_ENDPOINT for the presentation manifest and
+ * REPO_IIIF_IMAGE_ENDPOINT (Cantaloupe) for image/service/thumbnail URLs.
+ * @param {string|null} repo_uuid - Repository object UUID
+ * @returns {Object|null} URLs or null
  */
-const resolve_repo_iiif = (record) => {
+const build_repo_iiif_urls = (repo_uuid) => {
 
-    if (record.is_repo_item !== 1 || !record.media) {
+    if (!repo_uuid) {
         return null;
     }
 
-    const endpoint = WEBSERVICES_CONFIG.repo_iiif_endpoint;
+    const manifest_endpoint = WEBSERVICES_CONFIG.repo_iiif_endpoint;
+    const image_endpoint = WEBSERVICES_CONFIG.repo_iiif_image_endpoint;
 
-    if (!endpoint) {
-        LOGGER.module().error('ERROR: [/indexer/indexer_helper (resolve_repo_iiif)] REPO_IIIF_ENDPOINT is not configured');
+    if (!manifest_endpoint) {
+        LOGGER.module().error('ERROR: [/indexer/indexer_helper (build_repo_iiif_urls)] REPO_IIIF_ENDPOINT is not configured');
         return null;
+    }
+
+    if (!image_endpoint) {
+        LOGGER.module().error('ERROR: [/indexer/indexer_helper (build_repo_iiif_urls)] REPO_IIIF_IMAGE_ENDPOINT is not configured');
     }
 
     return {
-        manifest_url: endpoint + record.media
+        manifest_url: `${manifest_endpoint}${repo_uuid}`,
+        image_url: image_endpoint ? `${image_endpoint}${repo_uuid}/full/max/0/default.jpg` : null,
+        service_url: image_endpoint ? `${image_endpoint}${repo_uuid}` : null,
+        thumbnail_url: image_endpoint ? `${image_endpoint}${repo_uuid}/full/!400,400/0/default.jpg` : null
     };
+};
+
+/**
+ * Resolves the repository UUID for an item's primary media when that media is a
+ * repository import. The media library join is the source of truth
+ * (ingest_method = 'repository' + repo_uuid); the legacy is_repo_item flag with
+ * the repo UUID stored directly in `media` covers v1-migrated rows that have no
+ * media library record. The stored is_repo_item column is NOT authoritative —
+ * the v2 dashboard never sets it.
+ * @param {Object} record - Item record with media library join fields
+ * @returns {string|null} Repository UUID or null
+ */
+const resolve_repo_media_uuid = (record) => {
+
+    if (record.media_ingest_method === 'repository' && record.media_repo_uuid) {
+        return record.media_repo_uuid;
+    }
+
+    if (record.is_repo_item === 1 && !record.media_lib_uuid && record.media) {
+        return record.media;
+    }
+
+    return null;
+};
+
+/**
+ * Resolves the Kaltura entry id for an item's primary media. Mirrors
+ * resolve_repo_media_uuid: the media library join is the source of truth
+ * (ingest_method = 'kaltura' + kaltura_entry_id), with a fallback for
+ * v1-migrated rows that have no media library record and stored the entry id
+ * directly in `media`. The stored is_kaltura_item column is NOT authoritative —
+ * the v2 dashboard never sets it.
+ * @param {Object} record - Item record with media library join fields
+ * @returns {string|null} Kaltura entry id or null
+ */
+const resolve_kaltura_entry_id = (record) => {
+
+    if (record.kaltura_entry_id) {
+        return record.kaltura_entry_id;
+    }
+
+    if (record.is_kaltura_item === 1 && !record.media_lib_uuid && record.media) {
+        return record.media;
+    }
+
+    return null;
+};
+
+/**
+ * Resolves the repository UUID for an item's thumbnail media when that media is
+ * a repository import. The item/grid/timeline queries alias these fields
+ * inconsistently, so both variants are read.
+ * @param {Object} record - Item record with thumbnail library join fields
+ * @returns {string|null} Repository UUID or null
+ */
+const resolve_repo_thumbnail_uuid = (record) => {
+
+    const ingest_method = record.thumbnail_ingest_method || record.thumb_ingest_method;
+
+    if (ingest_method === 'repository') {
+        return record.thumbnail_media_repo_uuid || record.thumbnail_repo_uuid || null;
+    }
+
+    return null;
 };
 
 /**
@@ -241,9 +315,20 @@ const construct_exhibit_index_record = (record) => {
         throw new Error('Invalid record provided');
     }
 
-    // Build IIIF URLs from hero and thumbnail media library UUIDs
-    const hero_iiif = build_iiif_urls(record.hero_lib_uuid);
-    const thumb_iiif = build_iiif_urls(record.thumb_lib_uuid);
+    // Build IIIF URLs from hero and thumbnail media library UUIDs; repository
+    // imports resolve to the external repo IIIF endpoints instead
+    const hero_repo_uuid = record.hero_ingest_method === 'repository' && record.hero_repo_uuid
+        ? record.hero_repo_uuid
+        : null;
+    const thumb_repo_uuid = record.thumb_ingest_method === 'repository' && record.thumb_repo_uuid
+        ? record.thumb_repo_uuid
+        : null;
+    const hero_iiif = hero_repo_uuid
+        ? build_repo_iiif_urls(hero_repo_uuid)
+        : build_iiif_urls(record.hero_lib_uuid);
+    const thumb_iiif = thumb_repo_uuid
+        ? build_repo_iiif_urls(thumb_repo_uuid)
+        : build_iiif_urls(record.thumb_lib_uuid);
     const hero_kaltura = resolve_kaltura(record.hero_kaltura_entry_id, record.hero_kaltura_thumbnail_url);
 
     return normalize_empty_to_null({
@@ -312,8 +397,6 @@ const construct_heading_index_record = (record) => {
         is_visible: record.is_visible,
         is_anchor: record.is_anchor,
         is_published: record.is_published,
-        margins: record.margins,
-        text_alignment: record.text_alignment,
         created: record.created
     });
 };
@@ -329,13 +412,17 @@ const construct_item_index_record = (record) => {
         throw new Error('Invalid record provided');
     }
 
-    // Build IIIF URLs from media library UUIDs
-    const media_iiif = build_iiif_urls(record.media_lib_uuid);
-    const thumb_iiif = build_iiif_urls(record.thumb_lib_uuid);
-    const kaltura = resolve_kaltura(record.kaltura_entry_id, record.media_kaltura_thumbnail_url);
-
-    // Repo import fallback: construct IIIF manifest URL from the repo endpoint + media UUID
-    const repo_iiif = !media_iiif ? resolve_repo_iiif(record) : null;
+    // Repository imports resolve to the external repo IIIF endpoints; all other
+    // media resolves to this app's IIIF service via the media library UUID.
+    const repo_media_uuid = resolve_repo_media_uuid(record);
+    const repo_thumb_uuid = resolve_repo_thumbnail_uuid(record);
+    const media_iiif = repo_media_uuid
+        ? build_repo_iiif_urls(repo_media_uuid)
+        : build_iiif_urls(record.media_lib_uuid);
+    const thumb_iiif = repo_thumb_uuid
+        ? build_repo_iiif_urls(repo_thumb_uuid)
+        : build_iiif_urls(record.thumb_lib_uuid);
+    const kaltura = resolve_kaltura(resolve_kaltura_entry_id(record), record.media_kaltura_thumbnail_url);
 
     const index_record = {
         uuid: record.uuid,
@@ -353,19 +440,27 @@ const construct_item_index_record = (record) => {
         order: record.order,
         is_published: record.is_published,
         is_embedded: record.is_embedded,
-        is_repo_item: record.is_repo_item,
-        is_kaltura_item: record.is_kaltura_item,
+        // Derived: the stored columns are only reliable on v1-migrated rows, so
+        // both flags are resolved from the same source as the data they describe
+        is_repo_item: repo_media_uuid ? 1 : 0,
+        is_kaltura_item: kaltura ? 1 : 0,
         created: record.created,
         margins: record.margins,
         text_alignment: record.text_alignment,
-        // Legacy media filename preserved for backward compatibility
-        media: record.media,
-        // v2: resolved media IIIF URLs (media library manifest, or repo import fallback)
+        // For repo items `media` carries the repository UUID: exhibits-api reads the
+        // id out of this field (addRepositoryData) to fetch repository_data and to
+        // build its own IIIF URLs, so `is_repo_item = 1` + `media` = repo UUID is a
+        // contract. v1-migrated rows store it; the v2 dashboard does not, so it is
+        // derived here from the same media library join as the flag. Non-repo items
+        // keep the legacy media filename for backward compatibility.
+        media: repo_media_uuid || record.media,
+        // v2: resolved media IIIF URLs (repo endpoints for repository imports,
+        // local IIIF service for everything else)
         media_iiif: media_iiif ? {
             manifest_url: media_iiif.manifest_url,
             image_url: media_iiif.image_url,
             service_url: media_iiif.service_url
-        } : repo_iiif,
+        } : null,
         // v2: resolved thumbnail — prefer IIIF thumbnail URL, fall back to legacy
         thumbnail: thumb_iiif?.thumbnail_url || record.thumbnail,
         thumbnail_iiif: thumb_iiif ? {
@@ -378,8 +473,7 @@ const construct_item_index_record = (record) => {
         alt_text: record.media_alt_text || record.alt_text,
         is_alt_text_decorative: record.media_is_alt_text_decorative ?? record.is_alt_text_decorative,
         // v2: media dimensions from library (fall back to item-level)
-        media_item_width: record.media_width,
-        media_width: record.ml_media_width || null,
+        media_width: record.ml_media_width || record.media_width,
         media_height: record.ml_media_height || null,
         // v2: item-level subjects + media-bound subjects
         subjects: process_subjects(record.item_subjects),
@@ -413,8 +507,6 @@ const construct_grid_index_record = (record) => {
         order: record.order,
         is_published: record.is_published,
         created: record.created,
-        margins: record.margins,
-        text_alignment: record.text_alignment,
         items: record.items
     });
 };
@@ -440,8 +532,6 @@ const construct_timeline_index_record = (record) => {
         order: record.order,
         is_published: record.is_published,
         created: record.created,
-        margins: record.margins,
-        text_alignment: record.text_alignment,
         items: record.items
     });
 };
@@ -826,8 +916,11 @@ module.exports = {
     build_response,
     process_subjects,
     build_iiif_urls,
-    resolve_repo_iiif,
+    build_repo_iiif_urls,
+    resolve_repo_media_uuid,
+    resolve_repo_thumbnail_uuid,
     resolve_kaltura,
+    resolve_kaltura_entry_id,
     merge_media_subjects,
     normalize_empty_to_null,
     construct_exhibit_index_record,

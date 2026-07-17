@@ -600,7 +600,7 @@ const Exhibit_grid_record_tasks = class extends Base_tasks {
     async create_grid_item_record(data, created_by = null) {
 
         const ALLOWED_FIELDS = [
-            'uuid', 'is_member_of_grid', 'is_member_of_exhibit', 'repo_uuid',
+            'uuid', 'is_member_of_grid', 'is_member_of_exhibit',
             'thumbnail', 'thumbnail_media_uuid', 'title', 'caption', 'item_type',
             'mime_type', 'media', 'media_uuid', 'text', 'wrap_text', 'description',
             'type', 'layout', 'media_width', 'media_padding', 'alt_text',
@@ -942,7 +942,7 @@ const Exhibit_grid_record_tasks = class extends Base_tasks {
     async update_grid_item_record(data, updated_by = null) {
 
         const UPDATABLE_FIELDS = [
-            'repo_uuid', 'thumbnail', 'thumbnail_media_uuid', 'title', 'caption',
+            'thumbnail', 'thumbnail_media_uuid', 'title', 'caption',
             'item_type', 'mime_type', 'media', 'media_uuid', 'text', 'wrap_text',
             'description', 'type', 'layout', 'media_width', 'media_padding', 'alt_text',
             'is_alt_text_decorative', 'pdf_open_to_page', 'item_subjects', 'styles',
