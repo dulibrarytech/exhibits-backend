@@ -1243,6 +1243,72 @@ const Exhibit_timeline_record_tasks = class extends Base_tasks {
         }
     }
 
+    /**
+     * Publishes every timeline item belonging to an exhibit
+     * Exhibit-scoped counterpart to set_to_publish_timeline_items (which takes
+     * a TIMELINE uuid); used by the exhibit-level publish flow.
+     * @param {string} uuid - Exhibit UUID
+     * @param {string} [updated_by=null] - User ID
+     * @returns {Promise<Object>} Publish result
+     */
+    async set_exhibit_timeline_items_to_publish(uuid, updated_by = null) {
+
+        try {
+
+            const exhibit_uuid = this._validate_uuid(uuid, 'exhibit UUID');
+
+            const result = await this._update_publish_status(
+                'timeline_item_records',
+                {is_member_of_exhibit: exhibit_uuid},
+                1,
+                updated_by
+            );
+
+            this._log_success('Exhibit timeline item records published', {
+                exhibit_uuid,
+                affected_rows: result.affected_rows
+            });
+
+            return result;
+
+        } catch (error) {
+            this._handle_error(error, 'set_exhibit_timeline_items_to_publish', {uuid});
+        }
+    }
+
+    /**
+     * Suppresses every timeline item belonging to an exhibit
+     * Exhibit-scoped counterpart to set_to_suppressed_timeline_items (which
+     * takes a TIMELINE uuid); used by the exhibit-level suppress flow.
+     * @param {string} uuid - Exhibit UUID
+     * @param {string} [updated_by=null] - User ID
+     * @returns {Promise<Object>} Suppress result
+     */
+    async set_exhibit_timeline_items_to_suppress(uuid, updated_by = null) {
+
+        try {
+
+            const exhibit_uuid = this._validate_uuid(uuid, 'exhibit UUID');
+
+            const result = await this._update_publish_status(
+                'timeline_item_records',
+                {is_member_of_exhibit: exhibit_uuid},
+                0,
+                updated_by
+            );
+
+            this._log_success('Exhibit timeline item records suppressed', {
+                exhibit_uuid,
+                affected_rows: result.affected_rows
+            });
+
+            return result;
+
+        } catch (error) {
+            this._handle_error(error, 'set_exhibit_timeline_items_to_suppress', {uuid});
+        }
+    }
+
     // ==================== REORDERING ====================
 
     /**

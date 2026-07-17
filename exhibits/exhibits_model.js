@@ -732,8 +732,8 @@ const set_all_to_publish = async (uuid) => {
         heading_record_task.set_to_publish(uuid),
         grid_record_task.set_to_publish(uuid),
         timeline_record_task.set_to_publish(uuid),
-        grid_record_task.set_to_publish_grid_items(uuid),
-        timeline_record_task.set_to_publish_timeline_items(uuid)
+        grid_record_task.set_exhibit_grid_items_to_publish(uuid),
+        timeline_record_task.set_exhibit_timeline_items_to_publish(uuid)
     ]);
 };
 
@@ -818,7 +818,9 @@ const set_all_to_suppress = async (uuid) => {
         item_record_task.set_to_suppress(uuid),
         heading_record_task.set_to_suppress(uuid),
         grid_record_task.set_to_suppress(uuid),
-        timeline_record_task.set_to_suppress(uuid)
+        timeline_record_task.set_to_suppress(uuid),
+        grid_record_task.set_exhibit_grid_items_to_suppress(uuid),
+        timeline_record_task.set_exhibit_timeline_items_to_suppress(uuid)
     ]);
 };
 
@@ -886,7 +888,6 @@ const delete_grids_from_index = async (grids) => {
 
         try {
 
-            await grid_record_task.set_to_suppressed_grid_items(grid.uuid);
             const delete_result = await INDEXER_MODEL.delete_record(grid.uuid);
 
             if (delete_result.status !== CONSTANTS.STATUS_CODES.NO_CONTENT) {
@@ -920,7 +921,6 @@ const delete_timelines_from_index = async (timelines) => {
 
         try {
 
-            await timeline_record_task.set_to_suppressed_timeline_items(timeline.uuid);
             const delete_result = await INDEXER_MODEL.delete_record(timeline.uuid);
 
             if (delete_result.status !== CONSTANTS.STATUS_CODES.NO_CONTENT) {
