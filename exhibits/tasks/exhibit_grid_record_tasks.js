@@ -1237,6 +1237,70 @@ const Exhibit_grid_record_tasks = class extends Base_tasks {
     }
 
     /**
+     * Publishes every grid item belonging to an exhibit
+     * Exhibit-scoped counterpart to set_to_publish_grid_items (which takes a
+     * GRID uuid); used by the exhibit-level publish flow.
+     * @param {string} uuid - Exhibit UUID
+     * @param {string} [published_by=null] - User ID
+     * @returns {Promise<Object>} Publish result
+     */
+    async set_exhibit_grid_items_to_publish(uuid, published_by = null) {
+
+        try {
+
+            const exhibit_uuid = this._validate_uuid(uuid, 'exhibit UUID');
+            const result = await this._update_publish_status(
+                'grid_item_records',
+                {is_member_of_exhibit: exhibit_uuid},
+                1,
+                published_by
+            );
+
+            this._log_success('Exhibit grid item records published', {
+                exhibit_uuid,
+                affected_rows: result.affected_rows
+            });
+
+            return result;
+
+        } catch (error) {
+            this._handle_error(error, 'set_exhibit_grid_items_to_publish', {uuid});
+        }
+    }
+
+    /**
+     * Suppresses every grid item belonging to an exhibit
+     * Exhibit-scoped counterpart to set_to_suppressed_grid_items (which takes a
+     * GRID uuid); used by the exhibit-level suppress flow.
+     * @param {string} uuid - Exhibit UUID
+     * @param {string} [unpublished_by=null] - User ID
+     * @returns {Promise<Object>} Suppress result
+     */
+    async set_exhibit_grid_items_to_suppress(uuid, unpublished_by = null) {
+
+        try {
+
+            const exhibit_uuid = this._validate_uuid(uuid, 'exhibit UUID');
+            const result = await this._update_publish_status(
+                'grid_item_records',
+                {is_member_of_exhibit: exhibit_uuid},
+                0,
+                unpublished_by
+            );
+
+            this._log_success('Exhibit grid item records suppressed', {
+                exhibit_uuid,
+                affected_rows: result.affected_rows
+            });
+
+            return result;
+
+        } catch (error) {
+            this._handle_error(error, 'set_exhibit_grid_items_to_suppress', {uuid});
+        }
+    }
+
+    /**
      * Publishes a single grid
      * @param {string} uuid - Grid UUID
      * @param {string} [published_by=null] - User ID
