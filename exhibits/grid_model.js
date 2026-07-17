@@ -70,6 +70,11 @@ const safe_parse_int = (value, default_value = 0) => {
     return isNaN(parsed) ? default_value : parsed;
 };
 
+// Column counts the dashboard's Grid Columns dropdown offers. Keep in sync
+// with views/grid-items/partials/item-grid-data-card.ejs and
+// public/app/grid-items/items.common.grid.form.module.js.
+const ALLOWED_COLUMNS = [2, 3, 4];
+
 /**
  * Creates grid record
  * @param {string} is_member_of_exhibit - Exhibit UUID
@@ -98,7 +103,21 @@ exports.create_grid_record = async (is_member_of_exhibit, data) => {
         data.uuid = helper_task.create_uuid();
         data.is_member_of_exhibit = is_member_of_exhibit;
         data.styles = prepare_styles(data.styles);
-        data.columns = safe_parse_int(data.columns, 1);
+
+        // Missing columns falls back to the task-layer default (4); a
+        // supplied value must be one of the dropdown's allowed counts.
+        if (data.columns === undefined || data.columns === null || data.columns === '') {
+            data.columns = 4;
+        } else {
+            data.columns = safe_parse_int(data.columns, 0);
+        }
+
+        if (!ALLOWED_COLUMNS.includes(data.columns)) {
+            return build_response(
+                CONSTANTS.STATUS_CODES.BAD_REQUEST,
+                'Grid columns must be 2, 3, or 4'
+            );
+        }
 
         // The former ajv create schema only re-checked fields injected or
         // defaulted above (identity from validated params, styles/columns
@@ -173,10 +192,24 @@ exports.update_grid_record = async (is_member_of_exhibit, grid_id, data) => {
         data.is_member_of_exhibit = is_member_of_exhibit;
         data.uuid = grid_id;
         data.styles = prepare_styles(data.styles);
-        data.columns = safe_parse_int(data.columns, 1);
+
+        // Omitted columns leaves the stored value untouched (partial update);
+        // a supplied value must be one of the dropdown's allowed counts.
+        if (data.columns === undefined || data.columns === null || data.columns === '') {
+            delete data.columns;
+        } else {
+            data.columns = safe_parse_int(data.columns, 0);
+
+            if (!ALLOWED_COLUMNS.includes(data.columns)) {
+                return build_response(
+                    CONSTANTS.STATUS_CODES.BAD_REQUEST,
+                    'Grid columns must be 2, 3, or 4'
+                );
+            }
+        }
 
         // The former ajv update schema only re-checked fields injected or
-        // defaulted above (identity from validated params, columns defaulted) —
+        // defaulted above (identity from validated params, columns validated) —
         // provably unreachable as a guard — so it was removed. Field-level
         // protection lives in the task layer (UPDATABLE_FIELDS whitelist).
 

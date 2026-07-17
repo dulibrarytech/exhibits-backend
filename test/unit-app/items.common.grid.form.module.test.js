@@ -21,7 +21,12 @@ function build_form() {
     document.body.innerHTML = `
         <div id="message"></div>
         <input type="text" id="grid-text-input" />
-        <input type="number" id="grid-columns" />
+        <select id="grid-columns">
+            <option value="2">2</option>
+            <option value="3">3</option>
+            <option value="4" selected>4</option>
+        </select>
+        <small id="grid-columns-hint">Select the number of columns to display (2–4).</small>
         <select id="margins">
             <option value="small">Small</option>
             <option value="medium" selected>Medium</option>
@@ -104,7 +109,18 @@ describe('itemsCommonStandardGridFormModule', () => {
 
     describe('get_common_grid_form_fields', () => {
 
-        it('returns false and shows an alert when columns is empty', () => {
+        it('defaults to 4 columns when the form is untouched', () => {
+            const result = globalThis.itemsCommonStandardGridFormModule
+                .get_common_grid_form_fields();
+
+            expect(result).toMatchObject({ columns: '4' });
+        });
+
+        it('returns false and shows an alert when a legacy record left no option selected', () => {
+            // The only empty-selection state: a legacy out-of-range value
+            // inserted the disabled placeholder via set_grid_columns.
+            globalThis.itemsCommonStandardGridFormModule.set_grid_columns(6);
+
             const result = globalThis.itemsCommonStandardGridFormModule
                 .get_common_grid_form_fields();
 
@@ -112,13 +128,18 @@ describe('itemsCommonStandardGridFormModule', () => {
             expect(globalThis.domModule.set_alert).toHaveBeenCalledWith(
                 document.querySelector('#message'),
                 'danger',
-                'Please enter the number of columns',
+                'Please select the number of columns',
             );
         });
 
-        it('returns false when columns is not a positive integer in [1,12]', () => {
-            for (const bad of ['0', '13', '-1', '3.5', 'abc']) {
+        it('returns false when columns is outside the allowed set (2-4)', () => {
+            // The real <select> only offers 2/3/4; a rogue option simulates a
+            // tampered DOM (dev tools) or a stale cached form.
+            for (const bad of ['1', '5', '12', 'abc']) {
                 build_form();
+                const rogue = document.createElement('option');
+                rogue.value = bad;
+                document.querySelector('#grid-columns').appendChild(rogue);
                 set_value('#grid-columns', bad);
 
                 const result = globalThis.itemsCommonStandardGridFormModule
@@ -126,20 +147,23 @@ describe('itemsCommonStandardGridFormModule', () => {
 
                 expect(result, `expected '${bad}' to be rejected`).toBe(false);
             }
-            expect(globalThis.domModule.set_alert).toHaveBeenCalled();
+            expect(globalThis.domModule.set_alert).toHaveBeenCalledWith(
+                expect.anything(),
+                'danger',
+                'Please select 2, 3, or 4 columns',
+            );
         });
 
-        it('accepts integer columns at the boundary values 1 and 12', () => {
-            set_value('#grid-columns', '1');
-            const r1 = globalThis.itemsCommonStandardGridFormModule
-                .get_common_grid_form_fields();
-            expect(r1).toMatchObject({ columns: '1' });
+        it('accepts every value the dropdown offers (2, 3, 4)', () => {
+            for (const good of ['2', '3', '4']) {
+                build_form();
+                set_value('#grid-columns', good);
 
-            build_form();
-            set_value('#grid-columns', '12');
-            const r12 = globalThis.itemsCommonStandardGridFormModule
-                .get_common_grid_form_fields();
-            expect(r12).toMatchObject({ columns: '12' });
+                const result = globalThis.itemsCommonStandardGridFormModule
+                    .get_common_grid_form_fields();
+
+                expect(result, `expected '${good}' to be accepted`).toMatchObject({ columns: good });
+            }
         });
 
         it('returns the assembled grid object on a fully valid form', () => {
@@ -162,13 +186,13 @@ describe('itemsCommonStandardGridFormModule', () => {
         });
 
         it('serializes columns as a string (server coerces to number)', () => {
-            set_value('#grid-columns', '6');
+            set_value('#grid-columns', '2');
 
             const result = globalThis.itemsCommonStandardGridFormModule
                 .get_common_grid_form_fields();
 
             expect(typeof result.columns).toBe('string');
-            expect(result.columns).toBe('6');
+            expect(result.columns).toBe('2');
         });
 
         it('sets styles to null when no preset is selected (empty option)', () => {
@@ -242,6 +266,64 @@ describe('itemsCommonStandardGridFormModule', () => {
                 globalThis.itemsCommonStandardGridFormModule.set_item_style(undefined);
             }).not.toThrow();
             expect(document.querySelector('#item-style-none').checked).toBe(true);
+        });
+    });
+
+    describe('set_grid_columns', () => {
+
+        it('selects the saved value when it is one of the allowed options', () => {
+            globalThis.itemsCommonStandardGridFormModule.set_grid_columns(3);
+
+            expect(document.querySelector('#grid-columns').value).toBe('3');
+        });
+
+        it('accepts string values (record.columns may arrive either way)', () => {
+            globalThis.itemsCommonStandardGridFormModule.set_grid_columns('2');
+
+            expect(document.querySelector('#grid-columns').value).toBe('2');
+        });
+
+        it('inserts a disabled placeholder and explains via the hint for legacy values', () => {
+            globalThis.itemsCommonStandardGridFormModule.set_grid_columns(6);
+
+            const select_el = document.querySelector('#grid-columns');
+            const placeholder_el = select_el.querySelector('option[value=""]');
+
+            expect(select_el.value).toBe('');
+            expect(placeholder_el).not.toBeNull();
+            expect(placeholder_el.disabled).toBe(true);
+            expect(placeholder_el.selected).toBe(true);
+            expect(document.querySelector('#grid-columns-hint').textContent)
+                .toMatch(/saved with 6 columns.*no longer supported/i);
+        });
+
+        it('does not duplicate the placeholder when called twice for legacy values', () => {
+            globalThis.itemsCommonStandardGridFormModule.set_grid_columns(6);
+            globalThis.itemsCommonStandardGridFormModule.set_grid_columns(5);
+
+            const placeholders = document.querySelectorAll('#grid-columns option[value=""]');
+
+            expect(placeholders.length).toBe(1);
+            expect(document.querySelector('#grid-columns-hint').textContent)
+                .toMatch(/saved with 5 columns/i);
+        });
+
+        it('keeps the default selection and hint when columns is null', () => {
+            const default_hint = document.querySelector('#grid-columns-hint').textContent;
+
+            globalThis.itemsCommonStandardGridFormModule.set_grid_columns(null);
+
+            expect(document.querySelector('#grid-columns').value).toBe('4');
+            expect(document.querySelector('#grid-columns option[value=""]')).toBeNull();
+            expect(document.querySelector('#grid-columns-hint').textContent).toBe(default_hint);
+        });
+
+        it('is a no-op when the select is missing from the DOM', () => {
+            document.getElementById('grid-columns').remove();
+
+            expect(() =>
+                globalThis.itemsCommonStandardGridFormModule.set_grid_columns(3),
+            ).not.toThrow();
         });
     });
 

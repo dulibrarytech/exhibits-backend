@@ -72,6 +72,12 @@ const itemsEditGridFormModule = (function () {
             const grid_id = helperModule.get_parameter_by_name('item_id');
             const data = itemsCommonStandardGridFormModule.get_common_grid_form_fields();
 
+            // Validation failure — the common module has already rendered the
+            // field-level error and #message alert; bail before clobbering it.
+            if (data === false) {
+                return false;
+            }
+
             if (exhibit_id === undefined || grid_id === undefined) {
                 domModule.set_alert(document.querySelector('#message'), 'warning', 'Unable to update grid record.');
                 return false;
@@ -139,7 +145,7 @@ const itemsEditGridFormModule = (function () {
 
         domModule.html('#created', item_created);
         domModule.set_value('#grid-text-input', helperModule.unescape(record.text));
-        domModule.set_value('#grid-columns', record.columns);
+        itemsCommonStandardGridFormModule.set_grid_columns(record.columns);
 
         // Set saved style selection after dropdown is populated
         // Style keys are simple strings like "item1"; skip "{}" (prepare_styles default) and legacy JSON blobs
