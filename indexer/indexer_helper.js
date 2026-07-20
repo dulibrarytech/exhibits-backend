@@ -427,6 +427,11 @@ const construct_item_index_record = (record) => {
     const index_record = {
         uuid: record.uuid,
         is_member_of_exhibit: record.is_member_of_exhibit,
+        // Grid/timeline item tables still carry `title` (only tbl_grids,
+        // tbl_timelines and tbl_standard_items lost it in the titles-to-subheadings
+        // migration). The frontend builds nav subheadings from item.title, so it
+        // must ride into the index doc. Standard items have no title column → null.
+        title: record.title,
         caption: record.caption,
         item_type: record.item_type,
         text: record.text,
