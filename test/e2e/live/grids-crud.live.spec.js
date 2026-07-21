@@ -73,7 +73,7 @@ test.describe('Grids and grid items CRUD (live)', () => {
         await expect(text_input).toHaveValue(new RegExp(original), { timeout: 10_000 });
 
         await text_input.fill(updated);
-        await page.fill('#grid-columns', '6');
+        await page.selectOption('#grid-columns', '3');
 
         const put_response = page.waitForResponse((resp) => {
             const u = new URL(resp.url());

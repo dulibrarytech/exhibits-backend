@@ -23,29 +23,21 @@
  * Includes Content Security Policy directives for Kaltura player iframe embedding
  * and all external CDN resources used in dashboard partials.
  *
- * External resource origins (from partials):
+ * All front-end libraries (jQuery, Popper, Bootstrap JS+CSS, Dropzone,
+ * normalize, Font Awesome, Themify Icons) and the Open Sans webfont are
+ * self-hosted under public/libs and public/assets/fonts, so script/style/font
+ * are locked to 'self'. The only remaining external origins are functional
+ * third-party services, not swappable static assets:
  *
- *   header.ejs:
- *     - cdn.jsdelivr.net      (CSS: normalize, bootstrap, font-awesome, themify-icons, pixeden-stroke)
- *     - unpkg.com             (CSS: dropzone)
- *     - i.imgur.com           (IMG: apple-touch-icon, shortcut icon)
- *     - library.du.edu        (IMG: favicon SVG)
- *
- *   Kaltura services:
+ *   Kaltura services (media playback — cannot be self-hosted):
  *     - cdnapisec.kaltura.com (JS/CSS/IMG/MEDIA: player embed, API, thumbnails)
  *     - cfvod.kaltura.com     (IMG: Kaltura record thumbnails served via HTTP)
  *     - stats.kaltura.com     (CONNECT: player analytics)
  *     - analytics.kaltura.com (CONNECT: player analytics)
  *
- *   exhibits-libs-common.ejs:
- *     - code.jquery.com       (JS: jQuery)
- *     - cdn.jsdelivr.net      (JS: popper, bootstrap)
- *
- *   dashboard-media-home.ejs:
- *     - cdnjs.cloudflare.com  (JS+CSS: dropzone)
- *
- *   Font files (loaded by Font Awesome & Themify Icons CSS via relative paths):
- *     - cdn.jsdelivr.net      (WOFF/WOFF2/TTF/EOT font files)
+ *   Images (favicons / logo, not render-critical):
+ *     - i.imgur.com           (IMG: apple-touch-icon, shortcut icon)
+ *     - library.du.edu        (IMG: favicon SVG)
  *
  * Usage in Express app:
  *   const helmet = require('helmet');
@@ -59,19 +51,10 @@ const KALTURA_VOD = process.env.KALTURA_VOD;
 const KALTURA_STATS = process.env.KALTURA_STATS;
 const KALTURA_ANALYTICS = process.env.KALTURA_ANALYTICS;
 
-// CDN domains (from partials)
-const JSDELIVR = process.env.JSDELIVR;
-const UNPKG = process.env.UNPKG;
-const CLOUDFLARE_CDN = process.env.CLOUDFLARE_CDN;
-const JQUERY_CDN = process.env.JQUERY_CDN;
-
 // Image domains (from header.ejs favicons)
 const IMGUR = process.env.IMGUR;
 const DU_LIBRARY = process.env.DU_LIBRARY;
 const DU_EXHIBITS_PUBLIC = process.env.DU_EXHIBITS_PUBLIC;
-
-const GOOGLE_FONTS_CSS = process.env.GOOGLE_FONTS_CSS;
-const GOOGLE_FONTS_FILES = process.env.GOOGLE_FONTS_FILES;
 
 module.exports = function () {
 
@@ -82,30 +65,26 @@ module.exports = function () {
             directives: {
                 defaultSrc: ["'self'"],
 
-                // Scripts: self + all CDN origins serving JS
+                // Scripts: self + Kaltura player embed. All front-end libraries
+                // (jQuery, Popper, Bootstrap, Dropzone) are self-hosted under
+                // public/libs, so no general-purpose CDN origin is allowed.
                 // unsafe-inline: required for inline <script> blocks in EJS templates
                 // unsafe-eval: required for DataTables internal eval patterns
                 scriptSrc: [
                     "'self'",
                     "'unsafe-inline'",
                     "'unsafe-eval'",
-                    JQUERY_CDN,
-                    JSDELIVR,
-                    CLOUDFLARE_CDN,
-                    KALTURA_CDN,
-                    UNPKG
+                    KALTURA_CDN
                 ],
 
-                // Styles: self + all CDN origins serving CSS
+                // Styles: self + Kaltura player embed. Bootstrap/Font Awesome/
+                // Themify/normalize/Dropzone CSS and the Open Sans webfont are all
+                // self-hosted, so no CSS CDN origin is allowed.
                 // unsafe-inline: required for inline styles and Bootstrap style attributes
                 styleSrc: [
                     "'self'",
                     "'unsafe-inline'",
-                    JSDELIVR,
-                    UNPKG,
-                    CLOUDFLARE_CDN,
-                    KALTURA_CDN,
-                    GOOGLE_FONTS_CSS
+                    KALTURA_CDN
                 ],
 
                 // Images: self + Kaltura thumbnails + favicon sources + data URIs
@@ -131,17 +110,14 @@ module.exports = function () {
                     KALTURA_CDN,
                     KALTURA_STATS,
                     KALTURA_ANALYTICS,
-                    JSDELIVR,
                     DU_EXHIBITS_PUBLIC
                 ],
 
-                // Fonts: CDN-hosted webfonts (Font Awesome, Themify Icons, Pixeden)
-                // loaded via relative paths in their respective CSS files on jsdelivr
+                // Fonts: self only. Font Awesome, Themify Icons and Open Sans font
+                // files are self-hosted and loaded via relative paths from their
+                // (self-hosted) CSS. data: retained for any inline font URIs.
                 fontSrc: [
                     "'self'",
-                    JSDELIVR,
-                    CLOUDFLARE_CDN,
-                    GOOGLE_FONTS_FILES,
                     'data:'
                 ],
 

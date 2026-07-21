@@ -209,16 +209,29 @@ describe('Grid Model Integration Tests', () => {
             expect(callArg.columns).toBe(4);
         });
 
-        test('should default columns to 1 for invalid value', async () => {
+        test('should default columns to 4 when omitted', async () => {
             const gridData = {
-                title: 'Test Grid',
-                columns: 'invalid'
+                title: 'Test Grid'
             };
 
             await GRID_MODEL.create_grid_record(TEST_EXHIBIT_UUID, gridData);
 
             const callArg = mockGridRecordTask.create_grid_record.mock.calls[0][0];
-            expect(callArg.columns).toBe(1);
+            expect(callArg.columns).toBe(4);
+        });
+
+        test('should return 400 for columns outside the allowed set (2-4)', async () => {
+            for (const bad of [1, 5, 12, 'invalid']) {
+                const result = await GRID_MODEL.create_grid_record(TEST_EXHIBIT_UUID, {
+                    title: 'Test Grid',
+                    columns: bad
+                });
+
+                expect(result.status).toBe(400);
+                expect(result.message).toBe('Grid columns must be 2, 3, or 4');
+            }
+
+            expect(mockGridRecordTask.create_grid_record).not.toHaveBeenCalled();
         });
     });
 
@@ -266,6 +279,39 @@ describe('Grid Model Integration Tests', () => {
 
             expect(result.status).toBe(500);
             expect(result.message).toBe('Unable to update grid record');
+        });
+
+        test('should parse columns as integer on update', async () => {
+            await GRID_MODEL.update_grid_record(TEST_EXHIBIT_UUID, TEST_GRID_UUID, {
+                title: 'Updated Grid',
+                columns: '3'
+            });
+
+            const callArg = mockGridRecordTask.update_grid_record.mock.calls[0][0];
+            expect(callArg.columns).toBe(3);
+        });
+
+        test('should leave stored columns untouched when omitted on update', async () => {
+            await GRID_MODEL.update_grid_record(TEST_EXHIBIT_UUID, TEST_GRID_UUID, {
+                title: 'Updated Grid'
+            });
+
+            const callArg = mockGridRecordTask.update_grid_record.mock.calls[0][0];
+            expect(callArg).not.toHaveProperty('columns');
+        });
+
+        test('should return 400 for columns outside the allowed set (2-4) on update', async () => {
+            for (const bad of [1, 5, 12, 'invalid']) {
+                const result = await GRID_MODEL.update_grid_record(TEST_EXHIBIT_UUID, TEST_GRID_UUID, {
+                    title: 'Updated Grid',
+                    columns: bad
+                });
+
+                expect(result.status).toBe(400);
+                expect(result.message).toBe('Grid columns must be 2, 3, or 4');
+            }
+
+            expect(mockGridRecordTask.update_grid_record).not.toHaveBeenCalled();
         });
     });
 

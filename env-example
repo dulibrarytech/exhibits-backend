@@ -85,11 +85,8 @@ KALTURA_STATS=<your-kaltura-stats-url>
 TN_SERVICE=<your-thumbnail-service-url>
 TN_SERVICE_API_KEY=<your-thumbnail-service-api-key>
 
-#================ CDN / FONTS (SRI-pinned client assets) ================#
-CLOUDFLARE_CDN=<cloudflare-cdn-base-url>
-JQUERY_CDN=<jquery-cdn-base-url>
-JSDELIVR=<jsdelivr-base-url>
-UNPKG=<unpkg-base-url>
+#================ FAVICON IMAGE HOST (CSP img-src) ================#
+# All other vendor assets (Bootstrap, jQuery, Font Awesome, Dropzone, fonts)
+# are self-hosted under public/libs and public/assets/fonts — no CDN env
+# vars are needed for them.
 IMGUR=<imgur-base-url>
-GOOGLE_FONTS_CSS=<google-fonts-css-url>
-GOOGLE_FONTS_FILES=<google-fonts-files-url>

@@ -24,9 +24,14 @@
                     <div class="col-12">
                         <label for="grid-columns" class="form-text text-muted" style="font-size: 17px">Grid Columns <span class="badge badge-required">Required</span>
                         </label>
-                        <input type="number" id="grid-columns" name="grid_columns"
-                               class="form-control" min="1"
-                               style="width: 150px" value="4"><small class="form-text text-muted"></small>
+                        <select id="grid-columns" name="grid_columns"
+                                class="form-control" required
+                                aria-describedby="grid-columns-hint">
+                            <option value="2">2</option>
+                            <option value="3">3</option>
+                            <option value="4" selected>4</option>
+                        </select>
+                        <small id="grid-columns-hint" class="form-text text-muted">Select the number of columns to display (2&ndash;4).</small>
                     </div>
                 </div>
             </div>
