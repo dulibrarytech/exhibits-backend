@@ -397,7 +397,9 @@ const construct_heading_index_record = (record) => {
         is_visible: record.is_visible,
         is_anchor: record.is_anchor,
         is_published: record.is_published,
-        created: record.created
+        created: record.created,
+        margins: record.margins,
+        text_alignment: record.text_alignment
     });
 };
 
@@ -427,6 +429,7 @@ const construct_item_index_record = (record) => {
     const index_record = {
         uuid: record.uuid,
         is_member_of_exhibit: record.is_member_of_exhibit,
+        title: record.title,
         caption: record.caption,
         item_type: record.item_type,
         text: record.text,
@@ -507,6 +510,8 @@ const construct_grid_index_record = (record) => {
         order: record.order,
         is_published: record.is_published,
         created: record.created,
+        margins: record.margins,
+        text_alignment: record.text_alignment,
         items: record.items
     });
 };
@@ -532,6 +537,8 @@ const construct_timeline_index_record = (record) => {
         order: record.order,
         is_published: record.is_published,
         created: record.created,
+        margins: record.margins,
+        text_alignment: record.text_alignment,
         items: record.items
     });
 };
