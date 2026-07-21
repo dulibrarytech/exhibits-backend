@@ -422,7 +422,11 @@ const construct_item_index_record = (record) => {
         ? build_repo_iiif_urls(repo_media_uuid)
         : build_iiif_urls(record.media_lib_uuid);
     const thumb_iiif = repo_thumb_uuid
-        ?    const index_record = {
+        ? build_repo_iiif_urls(repo_thumb_uuid)
+        : build_iiif_urls(record.thumb_lib_uuid);
+    const kaltura = resolve_kaltura(resolve_kaltura_entry_id(record), record.media_kaltura_thumbnail_url);
+
+    const index_record = {
         uuid: record.uuid,
         is_member_of_exhibit: record.is_member_of_exhibit,
         // Grid/timeline item tables still carry `title` (only tbl_grids,
@@ -447,11 +451,7 @@ const construct_item_index_record = (record) => {
         // both flags are resolved from the same source as the data they describe
         is_repo_item: repo_media_uuid ? 1 : 0,
         is_kaltura_item: kaltura ? 1 : 0,
-        created: record.created, build_repo_iiif_urls(repo_thumb_uuid)
-        : build_iiif_urls(record.thumb_lib_uuid);
-    const kaltura = resolve_kaltura(resolve_kaltura_entry_id(record), record.media_kaltura_thumbnail_url);
-
-
+        created: record.created,
         margins: record.margins,
         text_alignment: record.text_alignment,
         // For repo items `media` carries the repository UUID: exhibits-api reads the
