@@ -108,6 +108,7 @@ const NAV_CONFIGS = {
     },
 
     styles_form: {
+        show_preview: true,
         back: {
             id: 'back-to-exhibits',
             label: 'Back to Exhibit Details',
