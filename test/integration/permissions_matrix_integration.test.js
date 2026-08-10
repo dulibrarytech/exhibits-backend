@@ -2,8 +2,10 @@
  * Integration Test: User / Role / Permission Matrix (LIVE DB, read-only)
  *
  * Audits the real `exhibitsv2` MariaDB that backs the exhibits application.
- * This suite performs ONLY SELECT queries — it never writes, so it is safe to
- * run against the connected development database.
+ * This suite never commits writes — checks run as SELECT queries, except the
+ * is_active gate test, which probes with a temporary user inside a transaction
+ * that is always rolled back. It is safe to run against the connected
+ * development database.
  *
  * What it verifies:
  *   1. The four canonical roles exist with the expected ids/names.
@@ -264,12 +266,45 @@ describe('exhibitsv2 — is_active gate (inactive users resolve to no permission
     });
 
     test('inactive users get an empty permission set via username lookup', async () => {
+        // Audit any real inactive users first. The live DB's user set drifts
+        // (accounts get activated/deleted via the dashboard), so their presence
+        // cannot be a precondition — a probe row below keeps the gate check
+        // from ever going vacuous when none exist.
         const inactive = await db('tbl_users').where('is_active', 0).select('du_id');
-        expect(inactive.length).toBeGreaterThan(0); // guard: fixture must contain inactive users
         for (const row of inactive) {
             const perms = await auth.get_user_permissions_by_username(row.du_id);
             expect(Array.isArray(perms)).toBe(true);
             expect(perms.length).toBe(0);
+        }
+
+        // Exercise the gate with a temporary inactive administrator inside a
+        // transaction that is always rolled back — the row never commits, so
+        // the suite stays side-effect free on the connected database.
+        const trx = await db.transaction();
+        try {
+            const [probe_id] = await trx('tbl_users').insert({
+                du_id: 'jest-inactive-gate-probe',
+                email: 'jest-inactive-gate-probe@du.edu',
+                first_name: 'Jest',
+                last_name: 'InactiveProbe',
+                is_active: 0
+            });
+            // Grant a real role so an empty result can only come from the
+            // is_active gate, not from a missing role assignment.
+            await trx('ctbl_user_roles').insert({ user_id: probe_id, role_id: 1 });
+
+            const trx_auth = new Auth_tasks(trx, { user_records: 'tbl_users' });
+            const gated = await trx_auth.get_user_permissions_by_username('jest-inactive-gate-probe');
+            expect(Array.isArray(gated)).toBe(true);
+            expect(gated.length).toBe(0);
+
+            // Control: the same row flipped active resolves to the full
+            // Administrator set, proving the empty result above was the gate.
+            await trx('tbl_users').where({ id: probe_id }).update({ is_active: 1 });
+            const ungated = await trx_auth.get_user_permissions_by_username('jest-inactive-gate-probe');
+            expect(ungated.length).toBe(ALL_PERMISSIONS.length);
+        } finally {
+            await trx.rollback();
         }
     });
 
