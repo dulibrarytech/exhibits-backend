@@ -216,6 +216,7 @@ const NAV_CONFIGS = {
     },
 
     grid_item_details: {
+        show_preview: true,
         back: {
             id: 'back-to-items',
             label: 'Back to Grid Items',
