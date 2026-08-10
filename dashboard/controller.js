@@ -77,6 +77,7 @@ const NAV_CONFIGS = {
     },
 
     exhibits_details: {
+        show_preview: true,
         back: {
             id: 'back-to-exhibits',
             label: 'Back to Exhibits',
