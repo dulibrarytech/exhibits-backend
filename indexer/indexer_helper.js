@@ -454,6 +454,7 @@ const construct_item_index_record = (record) => {
         created: record.created,
         margins: record.margins,
         text_alignment: record.text_alignment,
+        media_item_width: record.media_width,
         // For repo items `media` carries the repository UUID: exhibits-api reads the
         // id out of this field (addRepositoryData) to fetch repository_data and to
         // build its own IIIF URLs, so `is_repo_item = 1` + `media` = repo UUID is a
@@ -479,8 +480,8 @@ const construct_item_index_record = (record) => {
         // v2: prefer media library alt_text over item-level
         alt_text: record.media_alt_text || record.alt_text,
         is_alt_text_decorative: record.media_is_alt_text_decorative ?? record.is_alt_text_decorative,
-        // v2: media dimensions from library (fall back to item-level)
-        media_width: record.ml_media_width || record.media_width,
+        // v2: media dimensions from library
+        media_width: record.ml_media_width || null,
         media_height: record.ml_media_height || null,
         // v2: item-level subjects + media-bound subjects
         subjects: process_subjects(record.item_subjects),
