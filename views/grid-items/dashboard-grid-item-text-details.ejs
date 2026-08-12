@@ -1,31 +1,6 @@
 <%- include('../partials/header.ejs'); %>
 <body>
-<aside id="left-panel" class="left-panel">
-    <nav class="navbar navbar-expand-sm navbar-default">
-        <div id="main-menu" class="main-menu">
-            <ul class="nav navbar-nav">
-                <li class="menu-title">Menu</li>
-            </ul>
-            <ul class="nav navbar-nav">
-                <li id="preview-link"></li>
-            </ul>
-            <ul class="nav navbar-nav">
-                <li>
-                    <a id="back-to-items" href="#" data-keyboard="false">
-                        <i class=" menu-icon fa fa-arrow-left" aria-hidden="true"></i>Back to Grid Items</a>
-                </li>
-            </ul>
-            <ul id="items-menu" class="nav navbar-nav"></ul>
-            <ul class="nav navbar-nav">
-                <li>
-                    <a href="#" id="logout" data-keyboard="false">
-                        <i class="menu-icon fa fa-sign-out" aria-hidden="true"></i>Logout
-                    </a>
-                </li>
-            </ul>
-        </div>
-    </nav>
-</aside>
+<%- include('../partials/nav-dashboard.ejs'); %>
 <div id="right-panel" class="right-panel">
     <%- include('../partials/main-header.ejs'); %>
     <main id="main" class="content" tabindex="-1">
@@ -185,6 +160,8 @@
 <script src="/exhibits-dashboard/static/app/dist/items.common.grid.item.form.module.min.js?<%=build_version%>"></script>
 <script src="/exhibits-dashboard/static/app/dist/items.details.grid.item.module.min.js?<%=build_version%>"></script>
 <script>
+    navModule.init();
+    navModule.wire_nav_links();
     itemsCommonGridItemFormModule.init();
     itemsDetailsGridItemModule.init();
     document.querySelector('#edit-item-btn').addEventListener('click', (event) => {

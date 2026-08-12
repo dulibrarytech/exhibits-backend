@@ -77,6 +77,7 @@ const NAV_CONFIGS = {
     },
 
     exhibits_details: {
+        show_preview: true,
         back: {
             id: 'back-to-exhibits',
             label: 'Back to Exhibits',
@@ -89,6 +90,7 @@ const NAV_CONFIGS = {
     },
 
     exhibits_edit_form: {
+        show_preview: true,
         back: {
             id: 'back-to-exhibits',
             label: 'Back to Exhibits',
@@ -108,6 +110,7 @@ const NAV_CONFIGS = {
     },
 
     styles_form: {
+        show_preview: true,
         back: {
             id: 'back-to-exhibits',
             label: 'Back to Exhibit Details',
@@ -213,6 +216,7 @@ const NAV_CONFIGS = {
     },
 
     grid_item_details: {
+        show_preview: true,
         back: {
             id: 'back-to-items',
             label: 'Back to Grid Items',
@@ -252,6 +256,7 @@ const NAV_CONFIGS = {
     },
 
     timeline_details: {
+        show_preview: true,
         back: {
             id: 'back-to-items',
             label: 'Back to Exhibit Items',

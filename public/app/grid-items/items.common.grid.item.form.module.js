@@ -598,9 +598,14 @@ const itemsCommonGridItemFormModule = (function () {
 
             helperModule.show_form();
 
-            // Wire up media picker buttons on media paths
+            // Wire up media picker buttons on media paths. Details views are
+            // read-only — they hide the picker buttons and don't load
+            // mediaPickerModule — so skip the wiring there.
             if (window.location.pathname.indexOf('media') !== -1) {
-                init_media_picker_buttons();
+
+                if (window.location.pathname.indexOf('details') === -1) {
+                    init_media_picker_buttons();
+                }
 
                 // Move the created/updated metadata ("Created by ... | Last updated by ...")
                 // from the Item Data card header to the Media card header. It is populated
