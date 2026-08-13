@@ -331,8 +331,9 @@ const itemsEditVerticalTimelineFormModule = (function () {
             // Get and validate form data
             const form_data = itemsCommonVerticalTimelineFormModule.get_common_timeline_form_fields(rich_text_data);
 
+            // Validation failure — the common module has already rendered the
+            // field-level error and #message alert; bail before clobbering it.
             if (!form_data || form_data === false) {
-                display_message(message_element, 'danger', 'Unable to get form field values. Please check all required fields.');
                 return false;
             }
 
@@ -474,6 +475,7 @@ const itemsEditVerticalTimelineFormModule = (function () {
             return {
                 created: document.querySelector('#created'),
                 timeline_text: document.querySelector('#timeline-text-input'),
+                timeline_internal_name: document.querySelector('#timeline-internal-name-input'),
                 timeline_bg_color: document.querySelector('#timeline-background-color'),
                 timeline_bg_color_picker: document.querySelector('#timeline-background-color-picker'),
                 timeline_font_color: document.querySelector('#timeline-font-color'),
@@ -692,6 +694,10 @@ const itemsEditVerticalTimelineFormModule = (function () {
 
             // Set timeline form fields
             set_timeline_text(record.text, elements.timeline_text);
+            // Reuses set_timeline_text: same unescape + null-to-empty handling.
+            // Legacy timelines predate the internal_name column — the required
+            // field stays empty so the save-time validation forces a value.
+            set_timeline_text(record.internal_name, elements.timeline_internal_name);
 
             // Apply style settings
             apply_style_settings(record.styles, elements);

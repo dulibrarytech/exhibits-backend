@@ -15,6 +15,11 @@ lib-cov
 
 .DS_store
 
+# macOS custom-folder-icon artifact ("Icon" + carriage return, stamped by
+# Dropbox on synced folders). The ? matches the trailing \r, which can't be
+# written literally here.
+Icon?
+
 # Coverage directory used by tools like istanbul
 coverage
 

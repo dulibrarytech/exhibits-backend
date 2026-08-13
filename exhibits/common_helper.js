@@ -109,6 +109,45 @@ const build_response = (status, message, data = null) => {
     return response;
 };
 
+// tbl_grids.internal_name / tbl_timelines.internal_name are varchar(255)
+const INTERNAL_NAME_MAX_LENGTH = 255;
+
+/**
+ * Validates internal_name in place on a container (grid/timeline) payload
+ * (trims it) and returns an error response when invalid, null when OK.
+ * internal_name is a required, staff-facing dashboard label that is never
+ * indexed (each container's index-record constructor whitelist excludes it).
+ * @param {Object} data - Request payload (mutated: internal_name trimmed)
+ * @param {boolean} required - true on create; on update an omitted value
+ *                             leaves the stored one untouched (partial update)
+ * @param {string} label - Container label for error messages ('Grid'/'Timeline')
+ * @returns {Object|null} build_response error or null
+ */
+const validate_internal_name = (data, required, label) => {
+
+    if (data.internal_name === undefined || data.internal_name === null) {
+
+        if (required) {
+            return build_response(400, `${label} internal name is required`);
+        }
+
+        delete data.internal_name;
+        return null;
+    }
+
+    if (typeof data.internal_name !== 'string' || data.internal_name.trim() === '') {
+        return build_response(400, `${label} internal name is required`);
+    }
+
+    data.internal_name = data.internal_name.trim();
+
+    if (data.internal_name.length > INTERNAL_NAME_MAX_LENGTH) {
+        return build_response(400, `${label} internal name must be ${INTERNAL_NAME_MAX_LENGTH} characters or fewer`);
+    }
+
+    return null;
+};
+
 // ==================== MEDIA HELPERS ====================
 
 /**
@@ -155,5 +194,6 @@ module.exports = {
     validate_input,
     prepare_styles,
     build_response,
+    validate_internal_name,
     process_media_files
 };

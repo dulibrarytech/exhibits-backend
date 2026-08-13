@@ -35,8 +35,33 @@ const itemsCommonVerticalTimelineFormModule = (function () {
                 return el?.value?.trim() ?? default_value;
             };
 
+            const show_error = (message, field_selector) => {
+                const message_el = document.querySelector('#message');
+                if (message_el) {
+                    domModule.set_alert(message_el, 'danger', message);
+                }
+                if (field_selector) {
+                    const error_id = field_selector.replace('#', '') + '-error';
+                    domModule.set_field_error(field_selector, error_id, message);
+                }
+            };
+
+            // Clear any prior field-level error state.
+            domModule.clear_field_error('#timeline-internal-name-input', 'timeline-internal-name-input-error');
+
             // Get timeline metadata
             timeline.text = get_element_value('#timeline-text-input');
+
+            // Internal name — required; dashboard-only label, never indexed
+            // (see indexer_helper construct_timeline_index_record).
+            const internal_name_value = get_element_value('#timeline-internal-name-input');
+
+            if (internal_name_value === '') {
+                show_error('Please enter an internal name', '#timeline-internal-name-input');
+                return false;
+            }
+
+            timeline.internal_name = internal_name_value;
 
             // Collect the selected style preset (radio "swatch chooser"); None → null.
             timeline.styles = helperModule.get_checked_radio_button(document.getElementsByName('styles'));

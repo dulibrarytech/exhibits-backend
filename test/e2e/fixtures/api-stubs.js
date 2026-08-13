@@ -157,6 +157,7 @@ function timelineRecordFixture(overrides = {}) {
         uuid: 'timeline-uuid-1',
         title: '',
         text: 'Sample timeline text',
+        internal_name: 'Sample timeline internal name',
         is_published: 0,
         styles: '',
         created_by: 'tester',

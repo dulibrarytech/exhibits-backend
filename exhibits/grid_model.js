@@ -30,7 +30,8 @@ const REINDEX_COALESCER = require('./reindex_coalescer');
 const {
     is_valid_uuid,
     is_valid_user_id,    build_response,
-    prepare_styles
+    prepare_styles,
+    validate_internal_name
 } = require('../exhibits/common_helper');
 
 // Constants
@@ -74,51 +75,6 @@ const safe_parse_int = (value, default_value = 0) => {
 // with views/grid-items/partials/item-grid-data-card.ejs and
 // public/app/grid-items/items.common.grid.form.module.js.
 const ALLOWED_COLUMNS = [2, 3, 4];
-
-// tbl_grids.internal_name is varchar(255)
-const INTERNAL_NAME_MAX_LENGTH = 255;
-
-/**
- * Validates internal_name in place on the payload (trims it) and returns an
- * error response when invalid, null when OK.
- * @param {Object} data - Request payload (mutated: internal_name trimmed)
- * @param {boolean} required - true on create; on update an omitted value
- *                             leaves the stored one untouched (partial update)
- * @returns {Object|null} build_response error or null
- */
-const validate_internal_name = (data, required) => {
-
-    if (data.internal_name === undefined || data.internal_name === null) {
-
-        if (required) {
-            return build_response(
-                CONSTANTS.STATUS_CODES.BAD_REQUEST,
-                'Grid internal name is required'
-            );
-        }
-
-        delete data.internal_name;
-        return null;
-    }
-
-    if (typeof data.internal_name !== 'string' || data.internal_name.trim() === '') {
-        return build_response(
-            CONSTANTS.STATUS_CODES.BAD_REQUEST,
-            'Grid internal name is required'
-        );
-    }
-
-    data.internal_name = data.internal_name.trim();
-
-    if (data.internal_name.length > INTERNAL_NAME_MAX_LENGTH) {
-        return build_response(
-            CONSTANTS.STATUS_CODES.BAD_REQUEST,
-            `Grid internal name must be ${INTERNAL_NAME_MAX_LENGTH} characters or fewer`
-        );
-    }
-
-    return null;
-};
 
 /**
  * Creates grid record
@@ -164,7 +120,7 @@ exports.create_grid_record = async (is_member_of_exhibit, data) => {
             );
         }
 
-        const internal_name_error = validate_internal_name(data, true);
+        const internal_name_error = validate_internal_name(data, true, 'Grid');
 
         if (internal_name_error !== null) {
             return internal_name_error;
@@ -262,7 +218,7 @@ exports.update_grid_record = async (is_member_of_exhibit, grid_id, data) => {
         // Omitted internal_name leaves the stored value untouched (the
         // publish/suppress flows send partial updates); a supplied value
         // must be a non-empty string.
-        const internal_name_error = validate_internal_name(data, false);
+        const internal_name_error = validate_internal_name(data, false, 'Grid');
 
         if (internal_name_error !== null) {
             return internal_name_error;

@@ -39,7 +39,35 @@ test.describe('Edit timeline form (items.edit.vertical.timeline.form.module)', (
         );
 
         await expect(page.locator('#timeline-text-input')).toHaveValue('Existing timeline text');
+        await expect(page.locator('#timeline-internal-name-input')).toHaveValue('Sample timeline internal name');
         await expect(page.locator('#created')).toContainText(/Created by tester/);
+    });
+
+    test('legacy timelines without internal_name must supply one before saving', async ({ page }) => {
+        await stubDashboardDeps(page, {
+            exhibit: { record: exhibitFixture({ uuid: EXHIBIT_UUID }) },
+        });
+        const state = await stubTimelineRecordApi(page, {
+            exhibitId: EXHIBIT_UUID,
+            record: timelineRecordFixture({
+                uuid: TIMELINE_UUID,
+                internal_name: null,
+            }),
+        });
+
+        await page.goto(
+            `${APP_PATH}/items/vertical-timeline/edit?exhibit_id=${EXHIBIT_UUID}&item_id=${TIMELINE_UUID}`
+        );
+
+        // Pre-internal_name rows populate the field empty; the required
+        // validation blocks the save until a value is entered.
+        await expect(page.locator('#timeline-internal-name-input')).toHaveValue('');
+
+        await page.click('#save-timeline-btn');
+        await expect(page.locator('#message .alert-danger')).toContainText(
+            /please enter an internal name/i
+        );
+        expect(state.updateCount).toBe(0);
     });
 
     test('PUTs updated payload via #save-timeline-btn and shows success', async ({ page }) => {
@@ -60,6 +88,7 @@ test.describe('Edit timeline form (items.edit.vertical.timeline.form.module)', (
         await expect(page.locator('#timeline-text-input')).toHaveValue('Original timeline text');
 
         await page.fill('#timeline-text-input', 'Edited timeline text');
+        await page.fill('#timeline-internal-name-input', 'Renamed staff label');
 
         const putPromise = page.waitForRequest((req) =>
             req.url().includes(`/exhibits/${EXHIBIT_UUID}/timelines/${TIMELINE_UUID}`)
@@ -71,6 +100,7 @@ test.describe('Edit timeline form (items.edit.vertical.timeline.form.module)', (
 
         await expect.poll(() => state.lastUpdatePayload).not.toBeNull();
         expect(state.lastUpdatePayload.text).toBe('Edited timeline text');
+        expect(state.lastUpdatePayload.internal_name).toBe('Renamed staff label');
 
         await expect(page.locator('#message .alert-success')).toBeVisible();
     });

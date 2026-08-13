@@ -52,8 +52,9 @@ const Exhibit_timeline_record_tasks = class extends Base_tasks {
 
         // `title` intentionally omitted — dropped from tbl_timelines by the
         // titles-to-subheadings migration (timeline containers no longer carry a title).
+        // `internal_name` is dashboard-only: stored and listed, never indexed.
         const ALLOWED_FIELDS = [
-            'uuid', 'is_member_of_exhibit', 'type', 'text', 'styles', 'order',
+            'uuid', 'is_member_of_exhibit', 'type', 'text', 'internal_name', 'styles', 'order',
             'is_deleted', 'is_published', 'owner', 'margins', 'text_alignment'
         ];
 
@@ -229,8 +230,9 @@ const Exhibit_timeline_record_tasks = class extends Base_tasks {
      */
     async update_timeline_record(data, updated_by = null) {
 
+        // `internal_name` is dashboard-only: stored and listed, never indexed.
         const UPDATABLE_FIELDS = [
-            'type', 'text', 'styles', 'order', 'is_published',
+            'type', 'text', 'internal_name', 'styles', 'order', 'is_published',
             'owner', 'margins', 'text_alignment'
         ];
 

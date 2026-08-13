@@ -12,10 +12,19 @@
                     <div class="col-12">
                         <div class="form-text text-muted" style="font-size: 17px"><span id="timeline-text-input-label">Text
                             <small><em>(Optional)</em></small></span>
-                            
+
                         </div>
                         <textarea id="timeline-text-input" aria-labelledby="timeline-text-input-label" class="form-control" name="timeline_text_input"
                                   rows="4"></textarea>
+                    </div>
+                </div>
+                <div class="row form-group">
+                    <div class="col-12">
+                        <label for="timeline-internal-name-input" class="form-text text-muted" style="font-size: 17px">Internal Name <span class="badge badge-required">Required</span>
+                        </label>
+                        <small id="timeline-internal-name-hint" class="form-text text-muted"><i class="fa fa-exclamation-circle" aria-hidden="true"></i> <em>Does not display on the exhibit; for internal use only.</em></small>
+                        <input type="text" id="timeline-internal-name-input" name="timeline_internal_name" class="form-control"
+                               required maxlength="255" aria-describedby="timeline-internal-name-hint">
                     </div>
                 </div>
             </div>

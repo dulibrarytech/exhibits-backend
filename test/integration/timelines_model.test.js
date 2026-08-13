@@ -150,7 +150,7 @@ describe('Timelines Model Integration Tests', () => {
 
         test('should create timeline record successfully', async () => {
             const timelineData = {
-                title: 'Test Timeline'
+                internal_name: 'Test Timeline'
             };
 
             const result = await TIMELINES_MODEL.create_timeline_record(TEST_EXHIBIT_UUID, timelineData);
@@ -159,6 +159,35 @@ describe('Timelines Model Integration Tests', () => {
             expect(result.message).toBe('Timeline record created');
             expect(result.data).toBe(TEST_TIMELINE_UUID);
             expect(mockTimelineRecordTask.create_timeline_record).toHaveBeenCalled();
+        });
+
+        test('should return 400 when internal_name is missing or empty', async () => {
+            for (const bad of [undefined, null, '', '   ', 42]) {
+                const result = await TIMELINES_MODEL.create_timeline_record(TEST_EXHIBIT_UUID, {
+                    internal_name: bad
+                });
+
+                expect(result.status).toBe(400);
+                expect(result.message).toBe('Timeline internal name is required');
+            }
+
+            expect(mockTimelineRecordTask.create_timeline_record).not.toHaveBeenCalled();
+        });
+
+        test('should trim internal_name and reject values over 255 characters', async () => {
+            await TIMELINES_MODEL.create_timeline_record(TEST_EXHIBIT_UUID, {
+                internal_name: '  Padded name  '
+            });
+
+            const callArg = mockTimelineRecordTask.create_timeline_record.mock.calls[0][0];
+            expect(callArg.internal_name).toBe('Padded name');
+
+            const result = await TIMELINES_MODEL.create_timeline_record(TEST_EXHIBIT_UUID, {
+                internal_name: 'x'.repeat(256)
+            });
+
+            expect(result.status).toBe(400);
+            expect(result.message).toBe('Timeline internal name must be 255 characters or fewer');
         });
 
         test('should return 400 for invalid exhibit UUID', async () => {
@@ -185,21 +214,21 @@ describe('Timelines Model Integration Tests', () => {
         test('should return 500 when database operation fails', async () => {
             mockTimelineRecordTask.create_timeline_record.mockResolvedValue(false);
 
-            const result = await TIMELINES_MODEL.create_timeline_record(TEST_EXHIBIT_UUID, { title: 'Test' });
+            const result = await TIMELINES_MODEL.create_timeline_record(TEST_EXHIBIT_UUID, { internal_name: 'Test' });
 
             expect(result.status).toBe(500);
             expect(result.message).toBe('Unable to create timeline record');
         });
 
         test('should generate UUID for new timeline', async () => {
-            await TIMELINES_MODEL.create_timeline_record(TEST_EXHIBIT_UUID, { title: 'Test' });
+            await TIMELINES_MODEL.create_timeline_record(TEST_EXHIBIT_UUID, { internal_name: 'Test' });
 
             expect(mockHelperInstance.create_uuid).toHaveBeenCalled();
         });
 
         test('should handle styles as object', async () => {
             const timelineData = {
-                title: 'Test Timeline',
+                internal_name: 'Test Timeline',
                 styles: { color: 'blue' }
             };
 
@@ -210,7 +239,7 @@ describe('Timelines Model Integration Tests', () => {
 
         test('should handle styles as string', async () => {
             const timelineData = {
-                title: 'Test Timeline',
+                internal_name: 'Test Timeline',
                 styles: '{"color": "blue"}'
             };
 
@@ -223,6 +252,27 @@ describe('Timelines Model Integration Tests', () => {
     // ==================== UPDATE TIMELINE RECORD ====================
 
     describe('update_timeline_record', () => {
+
+        test('should return 400 for empty internal_name on update, pass through omitted', async () => {
+            const result = await TIMELINES_MODEL.update_timeline_record(
+                TEST_EXHIBIT_UUID,
+                TEST_TIMELINE_UUID,
+                { internal_name: '   ' }
+            );
+
+            expect(result.status).toBe(400);
+            expect(result.message).toBe('Timeline internal name is required');
+
+            const omitted = await TIMELINES_MODEL.update_timeline_record(
+                TEST_EXHIBIT_UUID,
+                TEST_TIMELINE_UUID,
+                { text: 'no name supplied' }
+            );
+
+            expect(omitted.status).toBe(201);
+            const callArg = mockTimelineRecordTask.update_timeline_record.mock.calls.at(-1)[0];
+            expect(callArg).not.toHaveProperty('internal_name');
+        });
 
         test('should update timeline record successfully', async () => {
             const updateData = {
@@ -1071,7 +1121,7 @@ describe('Timelines Model Integration Tests', () => {
         test('should handle database errors in create_timeline_record', async () => {
             mockTimelineRecordTask.create_timeline_record.mockRejectedValue(new Error('Database error'));
 
-            const result = await TIMELINES_MODEL.create_timeline_record(TEST_EXHIBIT_UUID, { title: 'Test' });
+            const result = await TIMELINES_MODEL.create_timeline_record(TEST_EXHIBIT_UUID, { internal_name: 'Test' });
 
             expect(result.status).toBe(500);
             expect(result.message).toContain('Unable to create timeline record');
