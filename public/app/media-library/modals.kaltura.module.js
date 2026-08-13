@@ -733,27 +733,6 @@ const kalturaModalsModule = (function() {
     let current_view_record = null;
 
     /**
-     * Set the record data for the view modal's Play button
-     * Call this when opening the view modal for a Kaltura record
-     * @param {Object} record - Media record with kaltura_entry_id, name, item_type
-     */
-    obj.set_view_modal_record = function(record) {
-
-        current_view_record = record || null;
-
-        const play_btn = document.getElementById('view-kaltura-media-play-btn');
-
-        if (play_btn) {
-            // Show the Play button only when the record has a kaltura_entry_id
-            if (record && record.kaltura_entry_id) {
-                play_btn.style.display = 'inline-block';
-            } else {
-                play_btn.style.display = 'none';
-            }
-        }
-    };
-
-    /**
      * Open the Kaltura player modal to play audio/video
      * @param {Object} record - Media record object containing kaltura_entry_id, name, item_type/media_type
      */

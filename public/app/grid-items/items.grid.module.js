@@ -638,43 +638,6 @@ const itemsGridModule = (function () {
         }, 900);
     }
 
-    obj.delete_grid_item__ = async function () {
-
-        try {
-
-            domModule.set_text('#delete-message', 'Deleting grid item...');
-            domModule.hide('#delete-card');
-            const exhibit_id = helperModule.get_parameter_by_name('exhibit_id');
-            const grid_id = helperModule.get_parameter_by_name('grid_id');
-            const grid_item_id = helperModule.get_parameter_by_name('item_id');
-            const type = 'grid_item';
-            const etmp = EXHIBITS_ENDPOINTS.exhibits.grid_item_records.delete.endpoint.replace(':exhibit_id', exhibit_id);
-            const gtmp = etmp.replace(':grid_id', grid_id);
-            const endpoint = gtmp.replace(':item_id', grid_item_id);
-            const token = authModule.get_user_token();
-            const response = await httpModule.req({
-                method: 'DELETE',
-                url: endpoint + '?type=' + type,
-                headers: {
-                    'Content-Type': 'application/json',
-                    'x-access-token': token
-                }
-            });
-
-            if (response !== undefined && response.status === 204) {
-
-                setTimeout(() => {
-                    window.location.replace(`${APP_PATH}/items/grid/items?exhibit_id=${exhibit_id}&grid_id=${grid_id}`);
-                }, 900);
-            } else if (response === undefined) {
-                domModule.set_alert(document.querySelector('#message'), 'danger', 'You do not have permission to delete this item.');
-            }
-
-        } catch (error) {
-            domModule.set_alert(document.querySelector('#message'), 'danger', error.message);
-        }
-    };
-
     obj.init = async function () {
 
         try {

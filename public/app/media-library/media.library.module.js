@@ -389,68 +389,6 @@ const mediaLibraryModule = (function() {
     };
 
     /**
-     * Open the Kaltura view media modal
-     * @param {string} name - Media record name
-     * @param {string} kaltura_entry_id - Kaltura entry ID
-     * @param {string} ingest_method - Ingest method label
-     * @param {string} kaltura_thumbnail_url - Kaltura thumbnail URL
-     * @param {string} media_type - Media type (audio or video)
-     */
-    const open_kaltura_view_modal = (name, kaltura_entry_id, ingest_method, kaltura_thumbnail_url, media_type) => {
-
-        const modal = document.getElementById('view-kaltura-media-modal');
-
-        if (!modal) {
-            console.error('Kaltura view media modal not found');
-            return;
-        }
-
-        // Set the record data for the player Play button bridge
-        if (typeof kalturaModalsModule !== 'undefined' && typeof kalturaModalsModule.set_view_modal_record === 'function') {
-            kalturaModalsModule.set_view_modal_record({
-                kaltura_entry_id: kaltura_entry_id || '',
-                name: name || '',
-                item_type: media_type || ''
-            });
-        }
-
-        // Populate modal fields
-        const name_el = document.getElementById('view-kaltura-media-name');
-        const entry_id_el = document.getElementById('view-kaltura-media-entry-id');
-        const ingest_method_el = document.getElementById('view-kaltura-media-ingest-method');
-        const image_el = document.getElementById('view-kaltura-media-image');
-        const placeholder_el = document.getElementById('view-kaltura-media-placeholder');
-
-        if (name_el) name_el.textContent = name || '-';
-        if (entry_id_el) entry_id_el.textContent = kaltura_entry_id || '-';
-        if (ingest_method_el) ingest_method_el.textContent = ingest_method || 'Kaltura';
-
-        // Show thumbnail or placeholder
-        if (kaltura_thumbnail_url && image_el) {
-            image_el.src = kaltura_thumbnail_url;
-            image_el.alt = 'Thumbnail for ' + (name || 'Kaltura media');
-            image_el.style.display = 'block';
-            if (placeholder_el) placeholder_el.style.display = 'none';
-
-            image_el.onerror = function() {
-                this.style.display = 'none';
-                if (placeholder_el) placeholder_el.style.display = 'block';
-            };
-        } else {
-            if (image_el) image_el.style.display = 'none';
-            if (placeholder_el) placeholder_el.style.display = 'block';
-        }
-
-        // Show modal (Bootstrap 4)
-        if (typeof $ !== 'undefined' && typeof $.fn.modal !== 'undefined') {
-            $(modal).modal('show');
-        } else if (typeof bootstrap !== 'undefined' && bootstrap.Modal) {
-            const bs_modal = new bootstrap.Modal(modal);
-            bs_modal.show();
-        }
-    };
-
-    /**
      * Initialize Kaltura view modal close handlers
      */
     const init_kaltura_view_modal = () => {

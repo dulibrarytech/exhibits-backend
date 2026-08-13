@@ -53,19 +53,6 @@ const mediaUploadsModule = (function() {
     let obj = {};
 
     /**
-     * Display filename safely with text content
-     */
-    const display_filename = (element, filename) => {
-        if (!element) return;
-        const span = document.createElement('span');
-        span.style.fontSize = '11px';
-        span.className = 'uploaded-filename';
-        span.textContent = filename;
-        element.textContent = '';
-        element.appendChild(span);
-    };
-
-    /**
      * Display multiple filenames
      */
     const display_multiple_filenames = (element, filenames) => {
@@ -167,27 +154,6 @@ const mediaUploadsModule = (function() {
         if (element) {
             element.style.display = 'none';
         }
-    };
-
-    /**
-     * Validate file extension against allowed types
-     */
-    const validate_file_extension = (filename, allowed_extensions) => {
-        const extension = filename.split('.').pop().toLowerCase();
-        return allowed_extensions.includes(extension);
-    };
-
-    /**
-     * Get media type from MIME type
-     */
-    const get_media_type_from_mime = (mime_type) => {
-        if (!mime_type) return 'unknown';
-        const mime_lower = mime_type.toLowerCase();
-        if (mime_lower.startsWith('image/')) return 'image';
-        if (mime_lower.startsWith('video/')) return 'video';
-        if (mime_lower.startsWith('audio/')) return 'audio';
-        if (mime_lower.includes('pdf')) return 'pdf';
-        return 'unknown';
     };
 
     /**
