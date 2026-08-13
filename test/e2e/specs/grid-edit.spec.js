@@ -37,8 +37,35 @@ test.describe('Edit grid form (items.edit.grid.form.module)', () => {
         await page.goto(`${APP_PATH}/items/grid/edit?exhibit_id=${EXHIBIT_UUID}&item_id=${GRID_UUID}`);
 
         await expect(page.locator('#grid-text-input')).toHaveValue('Existing grid text');
+        await expect(page.locator('#grid-internal-name-input')).toHaveValue('Sample grid internal name');
         await expect(page.locator('#grid-columns')).toHaveValue('3');
         await expect(page.locator('#created')).toContainText(/Created by tester/);
+    });
+
+    test('legacy grids without internal_name must supply one before saving', async ({ page }) => {
+        await stubDashboardDeps(page, {
+            exhibit: { record: exhibitFixture({ uuid: EXHIBIT_UUID }) },
+        });
+        const state = await stubGridRecordApi(page, {
+            exhibitId: EXHIBIT_UUID,
+            record: gridRecordFixture({
+                uuid: GRID_UUID,
+                internal_name: null,
+                columns: 3,
+            }),
+        });
+
+        await page.goto(`${APP_PATH}/items/grid/edit?exhibit_id=${EXHIBIT_UUID}&item_id=${GRID_UUID}`);
+
+        // Pre-internal_name rows populate the field empty; the required
+        // validation blocks the save until a value is entered.
+        await expect(page.locator('#grid-internal-name-input')).toHaveValue('');
+
+        await page.click('#save-item-btn');
+        await expect(page.locator('#message .alert-danger')).toContainText(
+            /please enter an internal name/i
+        );
+        expect(state.updateCount).toBe(0);
     });
 
     test('forces re-selection when the saved columns value predates the dropdown', async ({ page }) => {
@@ -92,6 +119,7 @@ test.describe('Edit grid form (items.edit.grid.form.module)', () => {
         await expect(page.locator('#grid-text-input')).toHaveValue('Original');
 
         await page.fill('#grid-text-input', 'Edited grid');
+        await page.fill('#grid-internal-name-input', 'Renamed staff label');
         await page.selectOption('#grid-columns', '2');
 
         const putPromise = page.waitForRequest((req) =>
@@ -104,6 +132,7 @@ test.describe('Edit grid form (items.edit.grid.form.module)', () => {
 
         await expect.poll(() => state.lastUpdatePayload).not.toBeNull();
         expect(state.lastUpdatePayload.text).toBe('Edited grid');
+        expect(state.lastUpdatePayload.internal_name).toBe('Renamed staff label');
         expect(state.lastUpdatePayload.columns).toBe('2');
 
         // update_grid_record refreshes the form in place (no reload),

@@ -28,6 +28,12 @@ test.describe('Add grid form (items.add.grid.form.module)', () => {
         await page.goto(`${APP_PATH}/items/grid?exhibit_id=${EXHIBIT_UUID}`);
 
         await expect(page.locator('#grid-text-input')).toBeVisible();
+        // Internal Name sits below Text: required, staff-facing only, with
+        // its help text between the label and the input (Item Data card style).
+        await expect(page.locator('#grid-internal-name-input')).toBeVisible();
+        await expect(page.locator('#grid-internal-name-hint')).toContainText(
+            /does not display on the exhibit; for internal use only/i
+        );
         // The columns <select> offers 2/3/4 and defaults to 4, so a default
         // save click passes validation. The empty-selection state only
         // exists for legacy records on the edit form (see grid-edit.spec).
@@ -50,6 +56,7 @@ test.describe('Add grid form (items.add.grid.form.module)', () => {
         await expect(page.locator('#save-item-btn')).toBeEnabled();
 
         await page.fill('#grid-text-input', 'My new grid');
+        await page.fill('#grid-internal-name-input', 'Staff grid label');
 
         const postPromise = page.waitForRequest((req) => {
             const u = new URL(req.url());
@@ -62,6 +69,7 @@ test.describe('Add grid form (items.add.grid.form.module)', () => {
 
         await expect.poll(() => state.lastCreatePayload).not.toBeNull();
         expect(state.lastCreatePayload.text).toBe('My new grid');
+        expect(state.lastCreatePayload.internal_name).toBe('Staff grid label');
         // Common form serializes columns as a string per
         // get_common_grid_form_fields (the `.toString()` call there).
         expect(state.lastCreatePayload.columns).toBe('4');
@@ -75,6 +83,22 @@ test.describe('Add grid form (items.add.grid.form.module)', () => {
         const url = new URL(page.url());
         expect(url.searchParams.get('exhibit_id')).toBe(EXHIBIT_UUID);
         expect(url.searchParams.get('item_id')).toBe('grid-uuid-new');
+    });
+
+    test('blocks the save and shows an alert when internal name is empty', async ({ page }) => {
+        const state = await stubGridRecordApi(page, { exhibitId: EXHIBIT_UUID });
+
+        await page.goto(`${APP_PATH}/items/grid?exhibit_id=${EXHIBIT_UUID}`);
+        await expect(page.locator('#save-item-btn')).toBeEnabled();
+
+        // Internal Name is the only required field without a default —
+        // saving the untouched form must fail on it.
+        await page.click('#save-item-btn');
+
+        await expect(page.locator('#message .alert-danger')).toContainText(
+            /please enter an internal name/i
+        );
+        expect(state.createCount).toBe(0);
     });
 
     test('does not POST when item_id is already present (edit mode guard)', async ({ page }) => {

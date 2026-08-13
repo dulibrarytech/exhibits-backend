@@ -91,6 +91,7 @@ function gridRecordFixture(overrides = {}) {
         uuid: 'grid-uuid-1',
         title: '',
         text: 'Sample grid text',
+        internal_name: 'Sample grid internal name',
         columns: 4,
         is_published: 0,
         styles: '',

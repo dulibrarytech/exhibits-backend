@@ -21,6 +21,7 @@ function build_form() {
     document.body.innerHTML = `
         <div id="message"></div>
         <input type="text" id="grid-text-input" />
+        <input type="text" id="grid-internal-name-input" value="Staff grid name" />
         <select id="grid-columns">
             <option value="2">2</option>
             <option value="3">3</option>
@@ -178,11 +179,43 @@ describe('itemsCommonStandardGridFormModule', () => {
 
             expect(result).toEqual({
                 text: 'Some grid copy',
+                internal_name: 'Staff grid name',
                 columns: '4',
                 styles: 'item2',
                 margins: 'large',
                 text_alignment: 'center',
             });
+        });
+
+        it('returns false and flags the field when internal name is empty', () => {
+            for (const empty of ['', '   ', '\t\n']) {
+                build_form();
+                set_value('#grid-internal-name-input', empty);
+
+                const result = globalThis.itemsCommonStandardGridFormModule
+                    .get_common_grid_form_fields();
+
+                expect(result, `expected '${JSON.stringify(empty)}' to be rejected`).toBe(false);
+            }
+            expect(globalThis.domModule.set_alert).toHaveBeenCalledWith(
+                expect.anything(),
+                'danger',
+                'Please enter an internal name',
+            );
+            expect(globalThis.domModule.set_field_error).toHaveBeenCalledWith(
+                '#grid-internal-name-input',
+                'grid-internal-name-input-error',
+                'Please enter an internal name',
+            );
+        });
+
+        it('trims surrounding whitespace from internal name', () => {
+            set_value('#grid-internal-name-input', '  Homesteading grid  ');
+
+            const result = globalThis.itemsCommonStandardGridFormModule
+                .get_common_grid_form_fields();
+
+            expect(result.internal_name).toBe('Homesteading grid');
         });
 
         it('serializes columns as a string (server coerces to number)', () => {

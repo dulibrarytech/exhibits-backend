@@ -306,118 +306,6 @@ const itemsAddGridFormModule = (function () {
         return 'Unable to create grid record. Please try again.';
     }
 
-    /*
-    obj.create_grid_record__ = async function() {
-        // Prevent duplicate submissions
-        if (this._is_creating_grid) {
-            return false;
-        }
-
-        this._is_creating_grid = true;
-
-        try {
-            // Cache DOM element
-            const message_element = document.querySelector('#message');
-
-            // Scroll to top for user feedback
-            window.scrollTo({ top: 0, left: 0, behavior: 'instant' });
-
-            // Validate required parameters
-            const exhibit_id = helperModule.get_parameter_by_name('exhibit_id');
-
-            if (!exhibit_id) {
-                display_status_message(message_element, 'warning', 'Missing exhibit ID. Cannot create grid record.');
-                return false;
-            }
-
-            // Show loading state
-            display_status_message(message_element, 'info', 'Creating grid record...');
-
-            // Validate authentication
-            const token = authModule.get_user_token();
-
-            if (!token || token === false) {
-                display_status_message(message_element, 'danger', 'Session expired. Please log in again.');
-
-                setTimeout(() => {
-                    authModule.logout();
-                }, 1000);
-
-                return false;
-            }
-
-            // Get and validate form data
-            const form_data = itemsCommonStandardGridFormModule.get_common_grid_form_fields();
-
-            if (!form_data || form_data === false) {
-                // display_status_message(message_element, 'danger', 'Invalid form data. Please check all required fields.');
-                return false;
-            }
-
-            // Add metadata
-            const user_name = helperModule.get_user_name();
-            const owner = helperModule.get_owner();
-
-            if (user_name) {
-                form_data.created_by = user_name;
-            }
-
-            if (owner) {
-                form_data.owner = owner;
-            }
-
-            // Construct endpoint with URL encoding
-            const endpoint = construct_grid_create_endpoint(exhibit_id);
-
-            // Make API request
-            const response = await make_grid_create_request(endpoint, form_data, token);
-
-            // Handle successful response
-            if (response && response.status === 201) {
-                const new_grid_id = response.data?.data;
-
-                if (!new_grid_id) {
-                    throw new Error('Server did not return a valid grid ID');
-                }
-
-                // Scroll to top for success message
-                window.scrollTo({ top: 0, left: 0, behavior: 'instant' });
-
-                display_status_message(message_element, 'success', 'Grid record created successfully');
-
-                // Transition to edit mode without page reload
-                await transition_to_grid_edit_mode(exhibit_id, new_grid_id);
-
-                // Auto-dismiss success message after a delay
-                setTimeout(() => {
-                    clear_status_message(message_element);
-                }, 3000);
-
-                return true;
-
-            } else if (!response) {
-                display_status_message(message_element, 'danger', 'Permission denied. You do not have access to add items to this exhibit.');
-                return false;
-            } else {
-                throw new Error('Unexpected response from server');
-            }
-
-        } catch (error) {
-            console.error('Error creating grid record:', error);
-
-            const message_element = document.querySelector('#message');
-            const error_message = get_user_friendly_error_message(error);
-            display_status_message(message_element, 'danger', error_message);
-
-            return false;
-
-        } finally {
-            // Reset submission flag
-            this._is_creating_grid = false;
-        }
-    };
-    */
-
     /** TODO: REMOVED
      * Transition from create mode to edit mode for grid records
      */
@@ -625,7 +513,7 @@ const itemsAddGridFormModule = (function () {
     }
 
     /**
-     * Display status message to user (XSS-safe)
+     * Display status message to user 
      */
     function display_status_message(element, type, message) {
         if (!element) {
@@ -727,7 +615,6 @@ const itemsAddGridFormModule = (function () {
         const exhibit_id = helperModule.get_parameter_by_name('exhibit_id');
         const redirect = '/items?exhibit_id=' + exhibit_id + '&status=403';
         await authModule.check_permissions(['add_item', 'add_item_to_any_exhibit'], 'grid', exhibit_id, null, redirect);
-        // Note: #back-to-items href is now wired by navModule.wire_nav_links()
         exhibitsModule.set_exhibit_title(exhibit_id);
         domModule.on('#save-item-btn', 'click', itemsAddGridFormModule.create_grid_record);
     };

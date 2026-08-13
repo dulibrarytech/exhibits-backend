@@ -173,6 +173,7 @@ const itemsDetailsGridFormModule = (function () {
             return {
                 created: document.querySelector('#created'),
                 grid_text: document.querySelector('#grid-text-input'),
+                grid_internal_name: document.querySelector('#grid-internal-name-input'),
                 grid_columns: document.querySelector('#grid-columns')
             };
         };
@@ -301,6 +302,9 @@ const itemsDetailsGridFormModule = (function () {
 
             // Set form field values
             set_grid_text(record.text, dom_elements.grid_text);
+            // Reuses set_grid_text: same unescape + null-to-empty handling
+            // (legacy grids predate the internal_name column).
+            set_grid_text(record.internal_name, dom_elements.grid_internal_name);
             set_grid_columns(record.columns, dom_elements.grid_columns);
 
             return false;

@@ -249,9 +249,10 @@ const Exhibit_grid_record_tasks = class extends Base_tasks {
 
         // `title` intentionally omitted — dropped from tbl_grids by the
         // titles-to-subheadings migration (grid containers no longer carry a title).
+        // `internal_name` is dashboard-only: stored and listed, never indexed.
         const ALLOWED_FIELDS = [
             'uuid', 'is_member_of_exhibit', 'type', 'columns', 'margins', 'text_alignment',
-            'text', 'styles', 'order', 'is_published', 'owner', 'created_by', 'margins', 'text_alignment'
+            'text', 'internal_name', 'styles', 'order', 'is_published', 'owner', 'created_by'
         ];
 
         try {
@@ -403,9 +404,10 @@ const Exhibit_grid_record_tasks = class extends Base_tasks {
 
         // `title` intentionally omitted — dropped from tbl_grids by the
         // titles-to-subheadings migration (grid containers no longer carry a title).
+        // `internal_name` is dashboard-only: stored and listed, never indexed.
         const UPDATABLE_FIELDS = [
-            'type', 'columns', 'text', 'styles', 'margins', 'text_alignment',
-            'order', 'is_deleted', 'is_published', 'updated_by', 'margins', 'text_alignment'
+            'type', 'columns', 'text', 'internal_name', 'styles', 'margins', 'text_alignment',
+            'order', 'is_deleted', 'is_published', 'updated_by'
         ];
 
         try {

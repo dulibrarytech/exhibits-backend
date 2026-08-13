@@ -12,10 +12,19 @@
                     <div class="col-12">
                         <div class="form-text text-muted" style="font-size: 17px"><span id="grid-text-input-label">Text
                             <small><em>(Optional)</em></small></span>
-                            
+
                         </div>
                         <textarea id="grid-text-input" aria-labelledby="grid-text-input-label" class="form-control" name="grid_text_input"
                                   rows="4"></textarea>
+                    </div>
+                </div>
+                <div class="row form-group">
+                    <div class="col-12">
+                        <label for="grid-internal-name-input" class="form-text text-muted" style="font-size: 17px">Internal Name <span class="badge badge-required">Required</span>
+                        </label>
+                        <small id="grid-internal-name-hint" class="form-text text-muted"><i class="fa fa-exclamation-circle" aria-hidden="true"></i> <em>Does not display on the exhibit; for internal use only.</em></small>
+                        <input type="text" id="grid-internal-name-input" name="grid_internal_name" class="form-control"
+                               required maxlength="255" aria-describedby="grid-internal-name-hint">
                     </div>
                 </div>
             </div>

@@ -586,8 +586,11 @@ const itemsListDisplayModule = (function() {
             // Order cell
             tr.appendChild(create_order_cell(item.order));
 
-            // Compact item cell
-            const title = helperModule.strip_html(helperModule.unescape(item.title || ''));
+            // Compact item cell — grids carry no title (dropped by the
+            // titles-to-subheadings migration); the staff-facing internal_name
+            // fills the title slot. Legacy grids saved before the column
+            // existed render with no name until re-saved.
+            const title = helperModule.strip_html(helperModule.unescape(item.internal_name || ''));
             const exhibit_id = encodeURIComponent(item.is_member_of_exhibit);
             const item_id = encodeURIComponent(item.uuid);
             const details_url = `${APP_PATH}/items/grid/details?exhibit_id=${exhibit_id}&item_id=${item_id}`;

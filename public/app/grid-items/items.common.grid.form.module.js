@@ -53,9 +53,21 @@ const itemsCommonStandardGridFormModule = (function () {
 
             // Clear any prior field-level error state.
             domModule.clear_field_error('#grid-columns', 'grid-columns-error');
+            domModule.clear_field_error('#grid-internal-name-input', 'grid-internal-name-input-error');
 
             // Get grid metadata
             grid.text = get_element_value('#grid-text-input');
+
+            // Internal name — required; dashboard-only label, never indexed
+            // (see indexer_helper construct_grid_index_record).
+            const internal_name_value = get_element_value('#grid-internal-name-input');
+
+            if (internal_name_value === '') {
+                show_error('Please enter an internal name', '#grid-internal-name-input');
+                return false;
+            }
+
+            grid.internal_name = internal_name_value;
 
             const columns_value = get_element_value('#grid-columns');
 

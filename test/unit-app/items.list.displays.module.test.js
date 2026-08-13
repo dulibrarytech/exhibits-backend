@@ -102,7 +102,7 @@ function grid_item(overrides = {}) {
     return {
         uuid: 'grid-uuid-1',
         type: 'grid',
-        title: 'Sample grid',
+        internal_name: 'Sample grid',
         order: 2,
         is_published: 0,
         is_locked: 0,
@@ -266,7 +266,7 @@ describe('itemsListDisplayModule', () => {
 
         it('renders a grid with a child-items link and type=grid in the delete URL', async () => {
             const html = await itemsListDisplayModule.display_grids(
-                grid_item({ title: 'My grid' })
+                grid_item({ internal_name: 'My grid' })
             );
             expect(html).toContain('My grid');
             expect(html).toContain('fa fa-th');
@@ -278,6 +278,24 @@ describe('itemsListDisplayModule', () => {
             expect(html).toContain(
                 '/items/delete?exhibit_id=exhibit-uuid-1&amp;item_id=grid-uuid-1&amp;type=grid'
             );
+        });
+
+        it('uses internal_name (not title) for the row title', async () => {
+            // tbl_grids lost `title` in the titles-to-subheadings migration;
+            // the staff-facing internal_name fills the title slot.
+            const html = await itemsListDisplayModule.display_grids(
+                grid_item({ internal_name: 'Internal label', title: 'Stale title' })
+            );
+            expect(html).toContain('Internal label');
+            expect(html).not.toContain('Stale title');
+        });
+
+        it('renders without a title for legacy grids that predate internal_name', async () => {
+            const html = await itemsListDisplayModule.display_grids(
+                grid_item({ internal_name: null })
+            );
+            expect(html).toContain('fa fa-th');
+            expect(html).not.toContain('item-title-link');
         });
     });
 

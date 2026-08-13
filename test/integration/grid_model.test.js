@@ -133,7 +133,7 @@ describe('Grid Model Integration Tests', () => {
 
         test('should create grid record successfully', async () => {
             const gridData = {
-                title: 'Test Grid',
+                internal_name: 'Test Grid',
                 columns: 3
             };
 
@@ -143,6 +143,38 @@ describe('Grid Model Integration Tests', () => {
             expect(result.message).toBe('Grid record created');
             expect(result.data).toBe(TEST_GRID_UUID);
             expect(mockGridRecordTask.create_grid_record).toHaveBeenCalled();
+        });
+
+        test('should return 400 when internal_name is missing or empty', async () => {
+            for (const bad of [undefined, null, '', '   ', 42]) {
+                const result = await GRID_MODEL.create_grid_record(TEST_EXHIBIT_UUID, {
+                    columns: 3,
+                    internal_name: bad
+                });
+
+                expect(result.status).toBe(400);
+                expect(result.message).toBe('Grid internal name is required');
+            }
+
+            expect(mockGridRecordTask.create_grid_record).not.toHaveBeenCalled();
+        });
+
+        test('should trim internal_name and reject values over 255 characters', async () => {
+            await GRID_MODEL.create_grid_record(TEST_EXHIBIT_UUID, {
+                columns: 3,
+                internal_name: '  Padded name  '
+            });
+
+            const callArg = mockGridRecordTask.create_grid_record.mock.calls[0][0];
+            expect(callArg.internal_name).toBe('Padded name');
+
+            const result = await GRID_MODEL.create_grid_record(TEST_EXHIBIT_UUID, {
+                columns: 3,
+                internal_name: 'x'.repeat(256)
+            });
+
+            expect(result.status).toBe(400);
+            expect(result.message).toBe('Grid internal name must be 255 characters or fewer');
         });
 
         test('should return 400 for invalid exhibit UUID', async () => {
@@ -169,7 +201,7 @@ describe('Grid Model Integration Tests', () => {
         test('should return 500 when database operation fails', async () => {
             mockGridRecordTask.create_grid_record.mockResolvedValue(false);
 
-            const result = await GRID_MODEL.create_grid_record(TEST_EXHIBIT_UUID, { title: 'Test' });
+            const result = await GRID_MODEL.create_grid_record(TEST_EXHIBIT_UUID, { internal_name: 'Test' });
 
             expect(result.status).toBe(500);
             expect(result.message).toBe('Unable to create grid record');
@@ -177,7 +209,7 @@ describe('Grid Model Integration Tests', () => {
 
         test('should handle styles object', async () => {
             const gridData = {
-                title: 'Test Grid',
+                internal_name: 'Test Grid',
                 styles: { backgroundColor: '#fff' }
             };
 
@@ -188,7 +220,7 @@ describe('Grid Model Integration Tests', () => {
 
         test('should handle styles string', async () => {
             const gridData = {
-                title: 'Test Grid',
+                internal_name: 'Test Grid',
                 styles: '{"backgroundColor": "#fff"}'
             };
 
@@ -199,7 +231,7 @@ describe('Grid Model Integration Tests', () => {
 
         test('should parse columns as integer', async () => {
             const gridData = {
-                title: 'Test Grid',
+                internal_name: 'Test Grid',
                 columns: '4'
             };
 
@@ -211,7 +243,7 @@ describe('Grid Model Integration Tests', () => {
 
         test('should default columns to 4 when omitted', async () => {
             const gridData = {
-                title: 'Test Grid'
+                internal_name: 'Test Grid'
             };
 
             await GRID_MODEL.create_grid_record(TEST_EXHIBIT_UUID, gridData);
@@ -620,7 +652,7 @@ describe('Grid Model Integration Tests', () => {
         test('should handle database errors in create_grid_record', async () => {
             mockGridRecordTask.create_grid_record.mockRejectedValue(new Error('Database error'));
 
-            const result = await GRID_MODEL.create_grid_record(TEST_EXHIBIT_UUID, { title: 'Test' });
+            const result = await GRID_MODEL.create_grid_record(TEST_EXHIBIT_UUID, { internal_name: 'Test' });
 
             expect(result.status).toBe(500);
             expect(result.message).toContain('Unable to create grid record');
