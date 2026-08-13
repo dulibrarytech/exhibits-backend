@@ -586,10 +586,7 @@ const itemsListDisplayModule = (function() {
             // Order cell
             tr.appendChild(create_order_cell(item.order));
 
-            // Compact item cell — grids carry no title (dropped by the
-            // titles-to-subheadings migration); the staff-facing internal_name
-            // fills the title slot. Legacy grids saved before the column
-            // existed render with no name until re-saved.
+            // Grids carry no title; the staff-facing internal_name fills the title slot.
             const title = helperModule.strip_html(helperModule.unescape(item.internal_name || ''));
             const exhibit_id = encodeURIComponent(item.is_member_of_exhibit);
             const item_id = encodeURIComponent(item.uuid);
@@ -848,10 +845,7 @@ const itemsListDisplayModule = (function() {
             // Order cell
             tr.appendChild(create_order_cell(item.order));
 
-            // Compact item cell — timelines carry no title (dropped by the
-            // titles-to-subheadings migration); the staff-facing internal_name
-            // fills the title slot. Legacy timelines saved before the column
-            // existed render with no name until re-saved.
+            // Timelines carry no title; the staff-facing internal_name fills the title slot.
             const title = helperModule.strip_html(helperModule.unescape(item.internal_name || ''));
             const exhibit_id = encodeURIComponent(item.is_member_of_exhibit);
             const item_id = encodeURIComponent(item.uuid);
@@ -1178,11 +1172,6 @@ const itemsListDisplayModule = (function() {
                     </a>`;
         }
 
-        // Phase 5b': keyboard-reorder controls relocated from the order
-        // cell into the actions dropdown. Both items render enabled;
-        // reorderModule.update_reorder_button_states adds .disabled +
-        // aria-disabled="true" + tabindex="-1" to boundary buttons after
-        // each table render.
         const safe_title = escape_attr(
             (opts.item_title && String(opts.item_title).trim()) || 'item'
         );

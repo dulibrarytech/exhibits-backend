@@ -320,14 +320,6 @@ const itemsModule = (function() {
             }
 
             // Initialize DataTable with row reordering.
-            // Phase 4: extend RowReorder's `excludedChildren` default
-            // (`'a'`) so it also excludes the keyboard-reorder buttons
-            // rendered by create_order_cell. Without this, mousedown on
-            // a button initiates drag tracking — which captures pointer
-            // events at the document level and prevents `click` from
-            // firing on the button. RowReorder source:
-            //   if ($(e.target).is(excludedChildren)) { return true; }
-            // short-circuits drag-init when the descendant matches.
             const ITEM_LIST = new DataTable('#items', {
                 paging: false,
                 rowReorder: {
@@ -351,10 +343,7 @@ const itemsModule = (function() {
                 await reorderModule.reorder_items(e, reordered_items);
             });
 
-            // Phase 4 — wire keyboard reorder buttons (Move up / Move down).
-            // Idempotent via dataset flag; safe to call after each redraw.
-            // Sets initial boundary-button states so the first row's
-            // Move up and the last row's Move down render disabled.
+            // Wire keyboard reorder buttons (Move up / Move down).
             if (typeof reorderModule.attach_keyboard_reorder_handlers === 'function') {
                 reorderModule.attach_keyboard_reorder_handlers('#items');
             }
@@ -364,8 +353,6 @@ const itemsModule = (function() {
                 }
             });
 
-            // Use event delegation for publish/suppress buttons (vanilla JS)
-            // This is more efficient than binding individual event listeners to each button
             const items_tbody = document.querySelector('#items tbody');
 
             if (items_tbody) {
@@ -1011,9 +998,6 @@ const itemsModule = (function() {
             const token = authModule.get_user_token();
             await authModule.check_auth(token);
 
-            // Initialize page. Nav links (including preview and logout)
-            // are wired by navModule.wire_nav_links() from the view
-            // using data-nav-path + NAV_CONFIGS.items_list.
             exhibitsModule.set_exhibit_title(exhibit_id);
             await obj.display_items();
             helperModule.show_form();

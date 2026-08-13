@@ -281,8 +281,6 @@ const itemsDetailsVerticalTimelineModule = (function () {
 
             // Set timeline form fields
             set_timeline_text(record.text, elements.timeline_text);
-            // Reuses set_timeline_text: same unescape + null-to-empty handling
-            // (legacy timelines predate the internal_name column).
             set_timeline_text(record.internal_name, elements.timeline_internal_name);
 
             return false;

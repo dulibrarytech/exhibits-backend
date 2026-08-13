@@ -377,10 +377,7 @@ const mediaLibraryModule = (function() {
             return;
         }
 
-        // Open edit modal directly via mediaEditModalModule. The
-        // mediaModalsModule.open_edit_media_modal shim was a deprecated
-        // delegate; routing through it added a stack frame for no
-        // benefit and obscured the actual owning module.
+        // Open the edit modal directly via mediaEditModalModule.
         if (typeof mediaEditModalModule !== 'undefined' && typeof mediaEditModalModule.open_edit_media_modal === 'function') {
             await mediaEditModalModule.open_edit_media_modal(uuid, async () => {
                 // Refresh the data table after edit
@@ -1728,8 +1725,6 @@ const mediaLibraryModule = (function() {
             // Initialize page - display media records in DataTable
             await obj.display_media_records();
 
-            // Show form. Logout/preview wiring runs automatically on
-            // DOMContentLoaded via nav.module.js auto-init.
             helperModule.show_form();
 
             console.debug('Media library module initialized');

@@ -118,10 +118,7 @@ const exhibitsCommonFormModule = (function () {
         };
 
         try {
-            // Clear any previous title validation state. Phase 3b — the
-            // bespoke `.title-validation-feedback` lookup is replaced by
-            // domModule.clear_field_error which removes the message node
-            // by id and unwires aria-describedby in one call.
+            // Clear any previous title validation state.
             const title_el = document.querySelector(selectors.title);
             const TITLE_ERROR_ID = 'exhibit-title-input-error';
 

@@ -598,7 +598,7 @@ const repoModalsModule = (function() {
         // Subjects section — Topics, Genre/Form, Places, Item Type. A single instruction
         // introduces the group and is programmatically associated with it (role="group"
         // + aria-describedby) so assistive tech announces it and sighted users see it
-        // (WCAG 1.3.1 / 3.3.2). Replaces the old per-Topics "choose 2-3" hint.
+        // (WCAG 1.3.1 / 3.3.2).
         html += '<div role="group" aria-label="Subjects" aria-describedby="repo-subjects-help-' + index + '">';
         html += '<p id="repo-subjects-help-' + index + '" class="form-text text-muted mt-0 mb-2">Choose 2–4 of the following tags to support search.</p>';
 
@@ -1005,8 +1005,8 @@ const repoModalsModule = (function() {
         }
 
         // Edit button: closes the preview and opens the edit form for the
-        // currently-displayed record. Mirrors the wiring in modals.upload.module.js
-        // (both modules share the same view-media-modal DOM element).
+        // currently-displayed record (both dispatch modules share the same
+        // view-media-modal DOM element).
         const edit_btn = document.getElementById('view-media-edit-btn');
         if (edit_btn) {
             const new_edit_btn = edit_btn.cloneNode(true);

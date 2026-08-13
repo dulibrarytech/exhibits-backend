@@ -222,9 +222,7 @@ const itemsCommonStandardGridFormModule = (function () {
                 return;
             }
 
-            // Render the style presets as a radio "swatch chooser" — each option
-            // shows the preset's background + font colors as circles (mirrors the
-            // exhibit Styles form). Reuses helperModule + the .color-swatch visual.
+            // Render the style presets as a radio swatch chooser.
             const sorted_keys = Object.keys(exhibit_style_map).sort();
             helperModule.build_item_style_swatch_options('#item-style-options', sorted_keys, exhibit_style_map, STYLE_KEY_LABELS);
 

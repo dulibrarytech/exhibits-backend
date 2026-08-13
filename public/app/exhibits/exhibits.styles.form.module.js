@@ -582,9 +582,6 @@ const exhibitsStylesFormModule = (function () {
                 navModule.init();
             }
 
-            // Note: #item-list and #edit-exhibit hrefs are now wired by
-            // navModule.wire_nav_links() via data-nav-path attributes
-            // set in the unified nav partial (see NAV_CONFIGS.styles_form).
 
             // Show form
             if (helperModule && typeof helperModule.show_form === 'function') {

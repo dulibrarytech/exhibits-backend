@@ -278,8 +278,6 @@ const helperModule = (function () {
                 return '';
             }
 
-            // Remove HTML tags using comprehensive regex pattern
-            // This handles: <tag>, <tag/>, <tag attr="value">, etc.
             let stripped = html.replace(/<[^>]*>/g, '');
 
             // Remove multiple consecutive spaces
@@ -357,8 +355,6 @@ const helperModule = (function () {
                 return '';
             }
 
-            // Use DOMPurify for comprehensive and secure HTML sanitization
-            // This is the gold standard for HTML cleaning
             if (typeof DOMPurify !== 'undefined') {
                 try {
                     const cleaned = DOMPurify.sanitize(html, {

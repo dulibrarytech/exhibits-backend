@@ -1071,7 +1071,6 @@ const itemsEditGridItemFormModule = (function () {
             await authModule.check_permissions(['update_item', 'update_any_item'], 'grid_item', exhibit_id, item_id, redirect);
 
             exhibitsModule.set_exhibit_title(exhibit_id);
-            // Note: #back-to-items href is now wired by navModule.wire_nav_links()
             await display_edit_record();
             domModule.on('#save-item-btn', 'click', itemsEditGridItemFormModule.update_grid_item_record);
 

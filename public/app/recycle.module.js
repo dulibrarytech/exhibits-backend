@@ -21,8 +21,6 @@ const recycleModule = (function () {
     'use strict';
 
     const APP_PATH = endpointsModule.get_app_path();
-    // Built directly from APP_PATH (same approach as index.management.module.js) so
-    // the page does not depend on the cached endpoints map carrying recycled_records.
     const LIST_ENDPOINT = APP_PATH + '/api/v1/recycle';
     const PAGE_SIZE = 25;
 
@@ -69,8 +67,7 @@ const recycleModule = (function () {
 
     // ---- Rendering (DOM-built, never innerHTML with record data → XSS-safe) ----
 
-    // Font Awesome icon class for a record's type, mirroring the item list
-    // (heading → header "H", grid → th, timeline → clock; items by item_type).
+    // Font Awesome icon class for a record's type.
     function type_icon_class(record) {
         switch (record.type) {
             case 'heading': return 'fa fa-header';
@@ -90,11 +87,6 @@ const recycleModule = (function () {
         }
     }
 
-    // Title cell modelled on the item list's "Item" cell: thumbnail (or a type-icon
-    // placeholder) on the left, then the bold title with the type + its icon below.
-    // Thumbnails use the existing media-library thumbnail-by-UUID endpoint (no API
-    // change); a missing/unsupported thumbnail falls back to the standard placeholder
-    // image, and records without media get the gray type-icon box.
     function build_title_cell(record, token) {
 
         const td = document.createElement('td');
@@ -172,10 +164,7 @@ const recycleModule = (function () {
         return tr;
     }
 
-    // Kebab (⋮) actions menu — mirrors the item list's `item-actions` dropdown
-    // (fa-ellipsis-v toggle + Bootstrap dropdown-menu). The Restore / Permanently
-    // Delete items keep the recycle-restore / recycle-delete classes + data-*
-    // attributes the delegated tbody click handler reads.
+    // Kebab (⋮) actions menu. The Restore / Permanently Delete items keep the recycle-restore / recycle-delete classes + data-* attributes the delegated tbody click handler reads.
     function dropdown_item(extra_class, icon_class, text, record, exhibit_id, label) {
         const btn = document.createElement('button');
         btn.type = 'button';
@@ -227,9 +216,7 @@ const recycleModule = (function () {
         return wrapper;
     }
 
-    // The kebab menus are driven manually (no Bootstrap dropdown JS / Popper) so
-    // positioning and close-on-outside-click are fully predictable. Close any open
-    // menu by removing the `.show` class Bootstrap's CSS keys its display off.
+    // Kebab menus are driven manually (no Bootstrap dropdown JS / Popper); close a menu by removing the .show class.
     function close_all_menus() {
         document.querySelectorAll('#recycled .recycle-actions-menu.show').forEach((menu) => {
             menu.classList.remove('show');
@@ -299,8 +286,6 @@ const recycleModule = (function () {
         render_pager(pages, start_index, slice.length);
     }
 
-    // Replace the result set and re-render. current_page is preserved (and clamped
-    // by render_page) so a reload after a delete keeps you near where you were.
     function set_records(records) {
         all_records = Array.isArray(records) ? records : [];
         render_page();

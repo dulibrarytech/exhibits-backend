@@ -349,8 +349,7 @@ const itemsTimelineModule = (function () {
                 items.map(item => itemsListDisplayModule.display_timeline_items(item))
             );
 
-            // Insert all rows at once via a DocumentFragment — matches the
-            // bulk batching pattern used in exhibits.module.js.
+            // Insert all rows at once via a DocumentFragment.
             const timeline_template = document.createElement('template');
             timeline_template.innerHTML = item_html_array.join('');
             elements.timeline_item_list.textContent = '';
@@ -761,8 +760,6 @@ const itemsTimelineModule = (function () {
             const token = authModule.get_user_token();
             await authModule.check_auth(token);
 
-            // Nav links wired by navModule.wire_nav_links() from the view
-            // using data-nav-path + NAV_CONFIGS.timeline_items_list.
             navModule.init();
             helperModule.show_form();
 

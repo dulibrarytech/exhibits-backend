@@ -694,9 +694,7 @@ const itemsEditVerticalTimelineFormModule = (function () {
 
             // Set timeline form fields
             set_timeline_text(record.text, elements.timeline_text);
-            // Reuses set_timeline_text: same unescape + null-to-empty handling.
-            // Legacy timelines predate the internal_name column — the required
-            // field stays empty so the save-time validation forces a value.
+            // Legacy timelines predate the internal_name column — the required field stays empty so the save-time validation forces a value.
             set_timeline_text(record.internal_name, elements.timeline_internal_name);
 
             // Apply style settings
@@ -738,8 +736,6 @@ const itemsEditVerticalTimelineFormModule = (function () {
 
         exhibitsModule.set_exhibit_title(exhibit_id);
         domModule.on('#save-timeline-btn', 'click', itemsEditVerticalTimelineFormModule.update_timeline_record);
-        // Nav links wired by navModule.wire_nav_links() from the view
-        // using data-nav-path + NAV_CONFIGS.timeline_edit_form.
         await display_edit_record();
     };
 

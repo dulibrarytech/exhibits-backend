@@ -424,7 +424,6 @@ const itemsEditVerticalTimelineItemFormModule = (function () {
             }
 
             // Style application code would go here
-            // Currently commented out in original function
         };
 
         /**
@@ -764,8 +763,6 @@ const itemsEditVerticalTimelineItemFormModule = (function () {
             await authModule.check_permissions(['update_item', 'update_any_item'], 'timeline_item', exhibit_id, item_id, redirect);
 
             await exhibitsModule.set_exhibit_title(exhibit_id);
-            // Nav links wired by navModule.wire_nav_links() from the view
-            // using data-nav-path + NAV_CONFIGS.timeline_item_form.
             await display_edit_record();
             domModule.on('#save-item-btn', 'click', itemsEditVerticalTimelineItemFormModule.update_timeline_item_record);
 

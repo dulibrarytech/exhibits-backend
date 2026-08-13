@@ -189,7 +189,6 @@ const itemsAddStandardItemFormModule = (function () {
         console.debug('Note: Back button will NOT return to create page');
 
         // Use window.location.replace() to prevent back button to create page
-        // This replaces the current history entry instead of adding a new one
         window.location.replace(edit_url);
     }
 
