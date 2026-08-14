@@ -419,6 +419,15 @@ const lockModule = (function () {
 
             if (response.status === 200) {
                 show_message('Record unlocked successfully', 'success', 'fa-check');
+
+                /*
+                 * Reload so the form re-fetches the now-unlocked record —
+                 * fields were disabled and the submit card hidden at load time
+                 */
+                setTimeout(() => {
+                    window.location.reload();
+                }, 1000);
+
                 return true;
             } else {
                 show_message('Failed to unlock record. Please try again.', 'danger', 'fa-exclamation');
