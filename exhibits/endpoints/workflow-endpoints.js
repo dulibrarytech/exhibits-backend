@@ -42,7 +42,7 @@ module.exports = {
     timeline_item_unlock_record: {
         post: {
             description: 'Unlock timeline item record',
-            endpoint: `${APP_PATH}${PREFIX}${VERSION}${ENDPOINT}/:exhibit_id/timelines/:timeline_id/items/:item_id`
+            endpoint: `${APP_PATH}${PREFIX}${VERSION}${ENDPOINT}/:exhibit_id/timelines/:timeline_id/items/:item_id/unlock`
         }
     }
 };
