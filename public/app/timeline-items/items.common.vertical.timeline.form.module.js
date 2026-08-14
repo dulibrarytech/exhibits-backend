@@ -35,8 +35,33 @@ const itemsCommonVerticalTimelineFormModule = (function () {
                 return el?.value?.trim() ?? default_value;
             };
 
+            const show_error = (message, field_selector) => {
+                const message_el = document.querySelector('#message');
+                if (message_el) {
+                    domModule.set_alert(message_el, 'danger', message);
+                }
+                if (field_selector) {
+                    const error_id = field_selector.replace('#', '') + '-error';
+                    domModule.set_field_error(field_selector, error_id, message);
+                }
+            };
+
+            // Clear any prior field-level error state.
+            domModule.clear_field_error('#timeline-internal-name-input', 'timeline-internal-name-input-error');
+
             // Get timeline metadata
             timeline.text = get_element_value('#timeline-text-input');
+
+            // Internal name — required; dashboard-only label, never indexed
+            // (see indexer_helper construct_timeline_index_record).
+            const internal_name_value = get_element_value('#timeline-internal-name-input');
+
+            if (internal_name_value === '') {
+                show_error('Please enter an internal name', '#timeline-internal-name-input');
+                return false;
+            }
+
+            timeline.internal_name = internal_name_value;
 
             // Collect the selected style preset (radio "swatch chooser"); None → null.
             timeline.styles = helperModule.get_checked_radio_button(document.getElementsByName('styles'));
@@ -176,9 +201,7 @@ const itemsCommonVerticalTimelineFormModule = (function () {
                 return;
             }
 
-            // Render the style presets as a radio "swatch chooser" — each option
-            // shows the preset's background + font colors as circles (mirrors the
-            // exhibit Styles form). Reuses helperModule + the .color-swatch visual.
+            // Render the style presets as a radio swatch chooser.
             const sorted_keys = Object.keys(exhibit_style_map).sort();
             helperModule.build_item_style_swatch_options('#item-style-options', sorted_keys, exhibit_style_map, STYLE_KEY_LABELS);
 
@@ -217,8 +240,6 @@ const itemsCommonVerticalTimelineFormModule = (function () {
             const token = authModule.get_user_token();
             await authModule.check_auth(token);
 
-            // Nav links wired by navModule.wire_nav_links() from the view
-            // using data-nav-path + NAV_CONFIGS.timeline_{add,edit}_form / _details.
             navModule.init();
 
             domModule.on('#timeline-background-color-picker', 'input', () => {

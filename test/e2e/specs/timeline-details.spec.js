@@ -40,7 +40,30 @@ test.describe('Timeline details page (items.details.vertical.timeline.module)', 
         );
 
         await expect(page.locator('#timeline-text-input')).toHaveValue('Read-only timeline text');
+        await expect(page.locator('#timeline-internal-name-input')).toHaveValue('Sample timeline internal name');
+
+        // The details EJS renders the inputs with the disabled attribute set.
+        await expect(page.locator('#timeline-text-input')).toBeDisabled();
+        await expect(page.locator('#timeline-internal-name-input')).toBeDisabled();
+
+        // Staff-only hint rides along on the read-only view too.
+        await expect(page.locator('#timeline-internal-name-hint')).toContainText(
+            /does not display on the exhibit; for internal use only/i
+        );
         await expect(page.locator('#edit-item-btn')).toBeVisible();
+    });
+
+    test('renders an empty internal name for legacy timelines that predate the column', async ({ page }) => {
+        await stubTimelineRecordApi(page, {
+            exhibitId: EXHIBIT_UUID,
+            record: timelineRecordFixture({ uuid: TIMELINE_UUID, internal_name: null }),
+        });
+
+        await page.goto(
+            `${APP_PATH}/items/vertical-timeline/details?exhibit_id=${EXHIBIT_UUID}&item_id=${TIMELINE_UUID}`
+        );
+
+        await expect(page.locator('#timeline-internal-name-input')).toHaveValue('');
     });
 
     test('clicking Edit navigates to the timeline edit page with the same ids', async ({ page }) => {

@@ -187,8 +187,6 @@ const itemsCommonGridItemFormModule = (function () {
     // ==================== MEDIA SELECTION HANDLERS ====================
 
     // ── Smart caption auto-fill (add forms) ──────────────────────────────────
-    // Mirror the selected media's description into the Caption field, refreshing
-    // on each new selection, until the user edits the caption (then leave it).
     let _caption_autofill_enabled = false;
     let _caption_user_edited = false;
 
@@ -329,11 +327,7 @@ const itemsCommonGridItemFormModule = (function () {
             return;
         }
 
-        // Smart caption auto-fill (add + edit forms): mirror the selected media's
-        // description into the Caption whenever the media changes — the add form
-        // starts empty so the first pick fills; the edit form updates when a
-        // different file is picked. The user typing in the caption turns it off so
-        // their text is never overwritten.
+        // Smart caption auto-fill: mirror the selected media's description into the Caption until the user edits it.
         _caption_autofill_enabled = true;
         const caption_input = document.querySelector('#item-caption-input');
         if (caption_input) {
@@ -479,8 +473,6 @@ const itemsCommonGridItemFormModule = (function () {
                 return el?.value?.trim() ?? default_value;
             };
 
-            // Show_error now optionally accepts a field
-            // selector to associate the error with the offending input.
             const show_error = (message, field_selector) => {
                 const message_el = document.querySelector('#message');
                 if (message_el) {
@@ -607,20 +599,12 @@ const itemsCommonGridItemFormModule = (function () {
                     init_media_picker_buttons();
                 }
 
-                // Move the created/updated metadata ("Created by ... | Last updated by ...")
-                // from the Item Data card header to the Media card header. It is populated
-                // later by the edit/details module via #created; relocating the element
-                // (with its float-right wrapper) preserves that wiring. Scoped to media
-                // paths, so the shared text form keeps it in the Item Data card.
                 const created_meta = document.querySelector('#created');
                 const media_card_header = document.querySelector('#item-media-card .card-header');
                 if (created_meta && media_card_header) {
                     media_card_header.appendChild(created_meta.closest('.btn-group') || created_meta);
                 }
 
-                // Exhibit Text is optional on media items (only required on text
-                // items) — show the plain label without the "(Optional)" hint and drop
-                // the "Preview Field" link, matching the Standard media form.
                 const exhibit_text_label = document.querySelector('#is-required-text');
                 if (exhibit_text_label) {
                     exhibit_text_label.innerHTML = 'Exhibit Text';
@@ -633,9 +617,6 @@ const itemsCommonGridItemFormModule = (function () {
                     }
                 }
 
-                // Title is optional on media items — show the plain label without the
-                // "(Optional)" hint and drop the "Preview Field" link, the same treatment
-                // as Exhibit Text above. Text forms keep the static label + Preview Field.
                 const title_label = document.querySelector('#item-title-input-label');
                 if (title_label) {
                     title_label.innerHTML = 'Title';
@@ -648,18 +629,11 @@ const itemsCommonGridItemFormModule = (function () {
                     }
                 }
 
-                // Reveal the media-only optional fields, hidden by default so they
-                // never appear on text item forms: Pop-up Window Description (in the
-                // shared item-data-card partial) and Caption (in the item-caption
-                // partial, inside the Media card).
                 ['#is-media-only-description', '#is-media-only-caption'].forEach(selector => {
                     const field = document.querySelector(selector);
                     if (field) field.style.display = '';
                 });
 
-                // Group the Embed Item control with the Pop-up Window Description:
-                // relocate the checkbox to directly below the description text box.
-                // Embedded audio/video skip the pop-up viewer, so the two belong together.
                 const embed_group = document.querySelector('#embed-item-group');
                 const description_box = document.querySelector('#item-description-input');
                 if (embed_group && description_box) {

@@ -199,7 +199,6 @@ const itemsAddVerticalTimelineItemFormModule = (function () {
         console.debug('Note: Back button will NOT return to create page');
 
         // Use window.location.replace() to prevent back button to create page
-        // This replaces the current history entry instead of adding a new one
         window.location.replace(edit_url);
     }
 
@@ -247,84 +246,6 @@ const itemsAddVerticalTimelineItemFormModule = (function () {
 
         return icon_map[alert_type] || 'fa fa-info';
     }
-
-    obj.create_timeline_item_record__ = async function () {
-
-        try {
-
-            window.scrollTo(0, 0);
-            const exhibit_id = helperModule.get_parameter_by_name('exhibit_id');
-            const timeline_id = helperModule.get_parameter_by_name('timeline_id');
-
-            if (timeline_id === undefined) {
-                domModule.set_alert(document.querySelector('#message'), 'warning', 'Unable to create timeline item record.');
-                return false;
-            }
-
-            domModule.set_alert(document.querySelector('#message'), 'info', 'Creating timeline item record...');
-
-            let data = itemsCommonVerticalTimelineItemFormModule.get_common_timeline_item_form_fields();
-
-            if (data === undefined) {
-                domModule.set_alert(document.querySelector('#message'), 'danger', 'Unable to get form field values');
-                return false;
-            } else if (data === false) {
-                return false;
-            }
-
-            // Add metadata
-            const user_name = helperModule.get_user_name();
-            const owner = helperModule.get_owner();
-
-            if (user_name) {
-                data.created_by = user_name;
-            }
-
-            if (owner) {
-                data.owner = owner;
-            }
-
-            data.created_by = user_name;
-
-            let tmp = EXHIBITS_ENDPOINTS.exhibits.timeline_item_records.post.endpoint.replace(':exhibit_id', exhibit_id);
-            let endpoint = tmp.replace(':timeline_id', timeline_id);
-            let token = authModule.get_user_token();
-            let response = await httpModule.req({
-                method: 'POST',
-                url: endpoint,
-                data: data,
-                headers: {
-                    'Content-Type': 'application/json',
-                    'x-access-token': token
-                }
-            });
-
-            if (response !== undefined && response.status === 201) {
-
-                let message = 'Timeline item record created';
-                domModule.set_alert(document.querySelector('#message'), 'success', message);
-
-                const timeline_item_id = response.data.data;
-
-                setTimeout(() => {
-
-                    let item_form = 'text';
-
-                    if (window.location.pathname.indexOf('media') !== -1) {
-                        item_form = 'media';
-                    }
-
-                    window.location.replace(`${APP_PATH}/items/vertical-timeline/item/${item_form}/edit?exhibit_id=${exhibit_id}&timeline_id=${timeline_id}&item_id=${timeline_item_id}`);
-
-                }, 900);
-            } else if (response === undefined) {
-                domModule.set_alert(document.querySelector('#message'), 'danger', 'You do not have permission to add item to this exhibit.');
-            }
-
-        } catch (error) {
-            domModule.set_alert(document.querySelector('#message'), 'danger', error.message);
-        }
-    };
 
     obj.init = async function () {
 

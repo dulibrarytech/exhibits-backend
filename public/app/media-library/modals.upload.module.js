@@ -432,7 +432,7 @@ const mediaModalsModule = (function() {
         // Subjects section — Topics, Genre/Form, Places, Item Type. A single instruction
         // introduces the group and is programmatically associated with it (role="group"
         // + aria-describedby) so assistive tech announces it and sighted users see it
-        // (WCAG 1.3.1 / 3.3.2). Replaces the old per-Topics "choose 2-3" hint.
+        // (WCAG 1.3.1 / 3.3.2).
         html += '<div role="group" aria-label="Subjects" aria-describedby="file-subjects-help-' + index + '">';
         html += '<p id="file-subjects-help-' + index + '" class="form-text text-muted mt-0 mb-2">Choose 2–4 of the following tags to support search.</p>';
 
@@ -906,8 +906,7 @@ const mediaModalsModule = (function() {
                 close_view_modal();
                 if (uuid && typeof mediaEditModalModule !== 'undefined' && typeof mediaEditModalModule.open_edit_media_modal === 'function') {
                     // Small delay so the preview modal's close animation finishes
-                    // before the edit modal opens. Matches the pattern used in the
-                    // Kaltura view→player handoff.
+                    // before the edit modal opens.
                     setTimeout(() => { mediaEditModalModule.open_edit_media_modal(uuid); }, 200);
                 }
             });

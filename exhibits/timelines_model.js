@@ -29,7 +29,8 @@ const LOGGER = require('../libs/log4');
 const {
     is_valid_uuid,
     is_valid_user_id,    build_response,
-    prepare_styles
+    prepare_styles,
+    validate_internal_name
 } = require('../exhibits/common_helper');
 
 // Constants
@@ -83,6 +84,12 @@ exports.create_timeline_record = async (is_member_of_exhibit, data) => {
         data.uuid = helper_task.create_uuid();
         data.is_member_of_exhibit = is_member_of_exhibit;
         data.styles = prepare_styles(data.styles);
+
+        const internal_name_error = validate_internal_name(data, true, 'Timeline');
+
+        if (internal_name_error !== null) {
+            return internal_name_error;
+        }
 
         // The former ajv create schema only re-checked is_member_of_exhibit,
         // injected above from the already-validated route param — provably
@@ -156,6 +163,15 @@ exports.update_timeline_record = async (is_member_of_exhibit, timeline_id, data)
         data.is_member_of_exhibit = is_member_of_exhibit;
         data.uuid = timeline_id;
         data.styles = prepare_styles(data.styles);
+
+        // Omitted internal_name leaves the stored value untouched (the
+        // publish/suppress flows send partial updates); a supplied value
+        // must be a non-empty string.
+        const internal_name_error = validate_internal_name(data, false, 'Timeline');
+
+        if (internal_name_error !== null) {
+            return internal_name_error;
+        }
 
         // The former ajv update schema only re-checked the two identity fields
         // injected above from already-validated route params — provably

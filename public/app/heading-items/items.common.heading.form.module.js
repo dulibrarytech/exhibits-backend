@@ -38,12 +38,6 @@ const itemsCommonHeadingFormModule = (function () {
                 return el?.value?.trim() ?? default_value;
             };
 
-            // Show_error now optionally accepts a field
-            // selector. When provided, the message is associated with
-            // the field via domModule.set_field_error (aria-invalid +
-            // aria-describedby) in addition to the page-level alert,
-            // so screen readers announce the error when focus enters
-            // the offending input.
             const show_error = (message, field_selector) => {
 
                 const message_el = document.querySelector('#message');
@@ -58,9 +52,6 @@ const itemsCommonHeadingFormModule = (function () {
                 }
             };
 
-            // Clear any prior field-level error state from
-            // a previous submission so resubmitting after fixing one
-            // field doesn't leave aria-invalid on the now-valid field.
             ['#item-heading-text-input', '#item-heading-type-input'].forEach(s => {
                 domModule.clear_field_error(s, s.replace('#', '') + '-error');
             });
@@ -221,9 +212,7 @@ const itemsCommonHeadingFormModule = (function () {
                 return;
             }
 
-            // Render the style presets as a radio "swatch chooser" — each option
-            // shows the preset's background + font colors as circles (mirrors the
-            // exhibit Styles form). Reuses helperModule + the .color-swatch visual.
+            // Render the style presets as a radio swatch chooser.
             const sorted_keys = Object.keys(exhibit_style_map).sort();
             helperModule.build_item_style_swatch_options('#item-style-options', sorted_keys, exhibit_style_map, STYLE_KEY_LABELS);
 
@@ -266,9 +255,6 @@ const itemsCommonHeadingFormModule = (function () {
             await authModule.check_auth(token);
 
             navModule.init();
-            // Note: #back-to-items href is now wired by navModule.wire_nav_links()
-            // via data-nav-path attributes set in the unified nav partial.
-            // set_preview_link() is already called inside init().
 
             helperModule.show_form();
 

@@ -331,8 +331,9 @@ const itemsEditVerticalTimelineFormModule = (function () {
             // Get and validate form data
             const form_data = itemsCommonVerticalTimelineFormModule.get_common_timeline_form_fields(rich_text_data);
 
+            // Validation failure — the common module has already rendered the
+            // field-level error and #message alert; bail before clobbering it.
             if (!form_data || form_data === false) {
-                display_message(message_element, 'danger', 'Unable to get form field values. Please check all required fields.');
                 return false;
             }
 
@@ -407,64 +408,6 @@ const itemsEditVerticalTimelineFormModule = (function () {
         }
     };
 
-    obj.update_timeline_record_ = async function () {
-
-        try {
-
-            window.scrollTo(0, 0);
-            const exhibit_id = helperModule.get_parameter_by_name('exhibit_id');
-            const timeline_id = helperModule.get_parameter_by_name('item_id');
-
-            if (exhibit_id === undefined || timeline_id === undefined) {
-                domModule.set_alert(document.querySelector('#message'), 'warning', 'Unable to update timeline record.');
-                return false;
-            }
-
-            domModule.set_alert(document.querySelector('#message'), 'info', 'Updating timeline record...');
-
-            const data = itemsCommonVerticalTimelineFormModule.get_common_timeline_form_fields(rich_text_data);
-
-            if (data === false) {
-                return false;
-            }
-
-            data.updated_by = helperModule.get_user_name();
-
-            let tmp = EXHIBITS_ENDPOINTS.exhibits.timeline_records.put.endpoint.replace(':exhibit_id', exhibit_id);
-            let endpoint = tmp.replace(':timeline_id', timeline_id);
-            const token = authModule.get_user_token();
-            const response = await httpModule.req({
-                method: 'PUT',
-                url: endpoint,
-                data: data,
-                headers: {
-                    'Content-Type': 'application/json',
-                    'x-access-token': token
-                }
-            });
-
-            if (response !== undefined && response.status === 201) {
-
-                window.scrollTo(0, 0);
-                domModule.set_alert(document.querySelector('#message'), 'success', 'Timeline record updated');
-
-                // Refresh the display with updated data instead of reloading
-                await display_edit_record();
-
-                // Auto-dismiss success message after a delay
-                setTimeout(() => {
-                    const message_el = document.querySelector('#message');
-                    if (message_el) {
-                        message_el.innerHTML = '';
-                    }
-                }, 3000);
-            }
-
-        } catch (error) {
-            domModule.set_alert(document.querySelector('#message'), 'danger', error.message);
-        }
-    };
-
     async function display_edit_record() {
 
         /**
@@ -474,6 +417,7 @@ const itemsEditVerticalTimelineFormModule = (function () {
             return {
                 created: document.querySelector('#created'),
                 timeline_text: document.querySelector('#timeline-text-input'),
+                timeline_internal_name: document.querySelector('#timeline-internal-name-input'),
                 timeline_bg_color: document.querySelector('#timeline-background-color'),
                 timeline_bg_color_picker: document.querySelector('#timeline-background-color-picker'),
                 timeline_font_color: document.querySelector('#timeline-font-color'),
@@ -692,6 +636,8 @@ const itemsEditVerticalTimelineFormModule = (function () {
 
             // Set timeline form fields
             set_timeline_text(record.text, elements.timeline_text);
+            // Legacy timelines predate the internal_name column — the required field stays empty so the save-time validation forces a value.
+            set_timeline_text(record.internal_name, elements.timeline_internal_name);
 
             // Apply style settings
             apply_style_settings(record.styles, elements);
@@ -732,8 +678,6 @@ const itemsEditVerticalTimelineFormModule = (function () {
 
         exhibitsModule.set_exhibit_title(exhibit_id);
         domModule.on('#save-timeline-btn', 'click', itemsEditVerticalTimelineFormModule.update_timeline_record);
-        // Nav links wired by navModule.wire_nav_links() from the view
-        // using data-nav-path + NAV_CONFIGS.timeline_edit_form.
         await display_edit_record();
     };
 

@@ -441,10 +441,7 @@ const reorderModule = (function () {
         const rows = tbody.querySelectorAll('tr');
         const total = rows.length;
 
-        // Apply disabled state to a move button. Phase 5b': handles both
-        // the original .btn-link form (the disabled DOM attribute alone
-        // is enough) and the dropdown-item form, which Bootstrap styles
-        // via the .disabled class.
+        // Apply disabled state to a move button; handles both the .btn-link form and the dropdown-item form.
         const set_state = (btn, is_disabled) => {
             if (!btn) return;
             btn.disabled = is_disabled;
@@ -648,9 +645,6 @@ const reorderModule = (function () {
             if (!btn || !tbody.contains(btn)) return;
 
             // Don't let DataTables RowReorder interpret this as a drag.
-            // (The pointerdown/mousedown stoppers in items.list.displays.module.js
-            // create_order_cell prevent RowReorder from initiating drag tracking
-            // in the first place; this is a belt-and-suspenders guard.)
             event.preventDefault();
             event.stopPropagation();
 

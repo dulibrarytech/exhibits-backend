@@ -30,7 +30,8 @@ const REINDEX_COALESCER = require('./reindex_coalescer');
 const {
     is_valid_uuid,
     is_valid_user_id,    build_response,
-    prepare_styles
+    prepare_styles,
+    validate_internal_name
 } = require('../exhibits/common_helper');
 
 // Constants
@@ -117,6 +118,12 @@ exports.create_grid_record = async (is_member_of_exhibit, data) => {
                 CONSTANTS.STATUS_CODES.BAD_REQUEST,
                 'Grid columns must be 2, 3, or 4'
             );
+        }
+
+        const internal_name_error = validate_internal_name(data, true, 'Grid');
+
+        if (internal_name_error !== null) {
+            return internal_name_error;
         }
 
         // The former ajv create schema only re-checked fields injected or
@@ -206,6 +213,15 @@ exports.update_grid_record = async (is_member_of_exhibit, grid_id, data) => {
                     'Grid columns must be 2, 3, or 4'
                 );
             }
+        }
+
+        // Omitted internal_name leaves the stored value untouched (the
+        // publish/suppress flows send partial updates); a supplied value
+        // must be a non-empty string.
+        const internal_name_error = validate_internal_name(data, false, 'Grid');
+
+        if (internal_name_error !== null) {
+            return internal_name_error;
         }
 
         // The former ajv update schema only re-checked fields injected or

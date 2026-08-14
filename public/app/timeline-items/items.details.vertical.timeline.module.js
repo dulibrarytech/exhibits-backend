@@ -171,7 +171,8 @@ const itemsDetailsVerticalTimelineModule = (function () {
         const cache_dom_elements = () => {
             return {
                 created: document.querySelector('#created'),
-                timeline_text: document.querySelector('#timeline-text-input')
+                timeline_text: document.querySelector('#timeline-text-input'),
+                timeline_internal_name: document.querySelector('#timeline-internal-name-input')
             };
         };
 
@@ -280,6 +281,7 @@ const itemsDetailsVerticalTimelineModule = (function () {
 
             // Set timeline form fields
             set_timeline_text(record.text, elements.timeline_text);
+            set_timeline_text(record.internal_name, elements.timeline_internal_name);
 
             return false;
 

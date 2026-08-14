@@ -39,14 +39,32 @@ test.describe('Grid details page (items.details.grid.module)', () => {
         await page.goto(`${APP_PATH}/items/grid/details?exhibit_id=${EXHIBIT_UUID}&item_id=${GRID_UUID}`);
 
         await expect(page.locator('#grid-text-input')).toHaveValue('Read-only grid');
+        await expect(page.locator('#grid-internal-name-input')).toHaveValue('Sample grid internal name');
         await expect(page.locator('#grid-columns')).toHaveValue('5');
 
-        // The details EJS renders both inputs with the disabled attribute set.
+        // The details EJS renders all inputs with the disabled attribute set.
         await expect(page.locator('#grid-text-input')).toBeDisabled();
+        await expect(page.locator('#grid-internal-name-input')).toBeDisabled();
         await expect(page.locator('#grid-columns')).toBeDisabled();
+
+        // Staff-only hint rides along on the read-only view too.
+        await expect(page.locator('#grid-internal-name-hint')).toContainText(
+            /does not display on the exhibit; for internal use only/i
+        );
 
         // Save button is hidden in details mode; Edit is the primary action.
         await expect(page.locator('#edit-item-btn')).toBeVisible();
+    });
+
+    test('renders an empty internal name for legacy grids that predate the column', async ({ page }) => {
+        await stubGridRecordApi(page, {
+            exhibitId: EXHIBIT_UUID,
+            record: gridRecordFixture({ uuid: GRID_UUID, internal_name: null }),
+        });
+
+        await page.goto(`${APP_PATH}/items/grid/details?exhibit_id=${EXHIBIT_UUID}&item_id=${GRID_UUID}`);
+
+        await expect(page.locator('#grid-internal-name-input')).toHaveValue('');
     });
 
     test('clicking Edit navigates to the edit page with the same ids', async ({ page }) => {

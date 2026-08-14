@@ -145,6 +145,9 @@ const itemsEditGridFormModule = (function () {
 
         domModule.html('#created', item_created);
         domModule.set_value('#grid-text-input', helperModule.unescape(record.text));
+        // Legacy grids predate internal_name (nullable column) — leave the
+        // required field empty so the save-time validation forces a value.
+        domModule.set_value('#grid-internal-name-input', helperModule.unescape(record.internal_name || ''));
         itemsCommonStandardGridFormModule.set_grid_columns(record.columns);
 
         // Set saved style selection after dropdown is populated
@@ -210,7 +213,6 @@ const itemsEditGridFormModule = (function () {
         const item_id = helperModule.get_parameter_by_name('item_id');
         const redirect = '/items/grid/details?exhibit_id=' + exhibit_id + '&item_id=' + item_id + '&status=403';
         await authModule.check_permissions(['update_item', 'update_any_item'], 'grid', exhibit_id, item_id, redirect);
-        // Note: #back-to-items and #grid-items hrefs are now wired by navModule.wire_nav_links()
         exhibitsModule.set_exhibit_title(exhibit_id);
         domModule.on('#save-item-btn', 'click', itemsEditGridFormModule.update_grid_record);
         await display_edit_record();

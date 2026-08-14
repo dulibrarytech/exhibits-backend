@@ -586,8 +586,8 @@ const itemsListDisplayModule = (function() {
             // Order cell
             tr.appendChild(create_order_cell(item.order));
 
-            // Compact item cell
-            const title = helperModule.strip_html(helperModule.unescape(item.title || ''));
+            // Grids carry no title; the staff-facing internal_name fills the title slot.
+            const title = helperModule.strip_html(helperModule.unescape(item.internal_name || ''));
             const exhibit_id = encodeURIComponent(item.is_member_of_exhibit);
             const item_id = encodeURIComponent(item.uuid);
             const details_url = `${APP_PATH}/items/grid/details?exhibit_id=${exhibit_id}&item_id=${item_id}`;
@@ -845,8 +845,8 @@ const itemsListDisplayModule = (function() {
             // Order cell
             tr.appendChild(create_order_cell(item.order));
 
-            // Compact item cell
-            const title = helperModule.strip_html(helperModule.unescape(item.title || ''));
+            // Timelines carry no title; the staff-facing internal_name fills the title slot.
+            const title = helperModule.strip_html(helperModule.unescape(item.internal_name || ''));
             const exhibit_id = encodeURIComponent(item.is_member_of_exhibit);
             const item_id = encodeURIComponent(item.uuid);
             const details_url = `${APP_PATH}/items/vertical-timeline/details?exhibit_id=${exhibit_id}&item_id=${item_id}`;
@@ -1172,11 +1172,6 @@ const itemsListDisplayModule = (function() {
                     </a>`;
         }
 
-        // Phase 5b': keyboard-reorder controls relocated from the order
-        // cell into the actions dropdown. Both items render enabled;
-        // reorderModule.update_reorder_button_states adds .disabled +
-        // aria-disabled="true" + tabindex="-1" to boundary buttons after
-        // each table render.
         const safe_title = escape_attr(
             (opts.item_title && String(opts.item_title).trim()) || 'item'
         );

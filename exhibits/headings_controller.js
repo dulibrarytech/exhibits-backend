@@ -176,7 +176,8 @@ exports.unlock_heading_record = async function (req, res) {
 
         const result = await HEADINGS_MODEL.unlock_heading_record(uid, heading_id, options);
 
-        if (result === true) {
+        /* helper unlock_record resolves to the unlocked record row, not a boolean */
+        if (result && typeof result === 'object') {
             res.status(200).send({
                 message: 'Heading record unlocked.'
             });

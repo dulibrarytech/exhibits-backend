@@ -382,10 +382,6 @@ const mediaPickerModule = (function () {
 
         _current_page = page || 1;
 
-        // Determine whether we already have content on screen.
-        // If the container only holds the initial loading spinner (or is empty)
-        // show the full spinner; otherwise keep existing cards visible and dim
-        // them to signal a refresh without a jarring flash.
         const has_existing_content = container.querySelector('.media-grid') || container.querySelector('.media-empty');
 
         if (has_existing_content) {

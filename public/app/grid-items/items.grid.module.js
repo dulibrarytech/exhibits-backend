@@ -176,8 +176,7 @@ const itemsGridModule = (function () {
             item_data += await itemsListDisplayModule.display_grid_items(items[i]);
         }
 
-        // Insert all rows at once via a DocumentFragment — matches the bulk
-        // batching pattern used in exhibits.module.js.
+        // Insert all rows at once via a DocumentFragment.
         const grid_item_list = document.querySelector('#grid-item-list');
         const grid_template = document.createElement('template');
         grid_template.innerHTML = item_data;
@@ -190,10 +189,6 @@ const itemsGridModule = (function () {
         }
 
         // Initialize DataTable.
-        // Phase 4: extend RowReorder's `excludedChildren` default (`'a'`)
-        // so it also skips drag handling when the user clicks the
-        // keyboard-reorder buttons inside .grabbable. See items.module.js
-        // for the full rationale.
         const GRID_ITEM_LIST = new DataTable('#grid-items', {
             paging: false,
             rowReorder: {
@@ -213,10 +208,7 @@ const itemsGridModule = (function () {
             await reorderModule.reorder_grid_items(e, reordered_items);
         });
 
-        // Phase 4 — wire keyboard reorder buttons. The grid_id is always
-        // present for grid-item lists; pass it explicitly so the
-        // keyboard-built reorder array carries grid_id and type:'griditem'
-        // exactly as the drag flow does.
+        // Wire keyboard reorder buttons (Move up / Move down).
         const grid_id_for_reorder = helperModule.get_parameter_by_name('grid_id');
         if (typeof reorderModule.attach_keyboard_reorder_handlers === 'function') {
             reorderModule.attach_keyboard_reorder_handlers('#grid-items', { grid_id: grid_id_for_reorder });
@@ -646,43 +638,6 @@ const itemsGridModule = (function () {
         }, 900);
     }
 
-    obj.delete_grid_item__ = async function () {
-
-        try {
-
-            domModule.set_text('#delete-message', 'Deleting grid item...');
-            domModule.hide('#delete-card');
-            const exhibit_id = helperModule.get_parameter_by_name('exhibit_id');
-            const grid_id = helperModule.get_parameter_by_name('grid_id');
-            const grid_item_id = helperModule.get_parameter_by_name('item_id');
-            const type = 'grid_item';
-            const etmp = EXHIBITS_ENDPOINTS.exhibits.grid_item_records.delete.endpoint.replace(':exhibit_id', exhibit_id);
-            const gtmp = etmp.replace(':grid_id', grid_id);
-            const endpoint = gtmp.replace(':item_id', grid_item_id);
-            const token = authModule.get_user_token();
-            const response = await httpModule.req({
-                method: 'DELETE',
-                url: endpoint + '?type=' + type,
-                headers: {
-                    'Content-Type': 'application/json',
-                    'x-access-token': token
-                }
-            });
-
-            if (response !== undefined && response.status === 204) {
-
-                setTimeout(() => {
-                    window.location.replace(`${APP_PATH}/items/grid/items?exhibit_id=${exhibit_id}&grid_id=${grid_id}`);
-                }, 900);
-            } else if (response === undefined) {
-                domModule.set_alert(document.querySelector('#message'), 'danger', 'You do not have permission to delete this item.');
-            }
-
-        } catch (error) {
-            domModule.set_alert(document.querySelector('#message'), 'danger', error.message);
-        }
-    };
-
     obj.init = async function () {
 
         try {
@@ -706,8 +661,6 @@ const itemsGridModule = (function () {
             const token = authModule.get_user_token();
             await authModule.check_auth(token);
 
-            // Nav links wired by navModule.wire_nav_links() from the view
-            // using data-nav-path + NAV_CONFIGS.grid_items_list.
             helperModule.show_form();
 
         } catch (error) {

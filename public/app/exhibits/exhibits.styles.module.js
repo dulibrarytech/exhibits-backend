@@ -28,8 +28,7 @@ const exhibitsStylesModule = (function () {
      * @type {string[]}
      */
     const STYLE_SECTIONS = [
-        // 'template' ("Exhibit") removed 2026-07-02 — exhibit-level styles are no
-        // longer collected/validated; get_styles omits the key from the payload.
+        // Exhibit-level styles are no longer collected; get_styles omits the 'template' key from the payload.
         'introduction',
         'navigation',
         'heading1',
