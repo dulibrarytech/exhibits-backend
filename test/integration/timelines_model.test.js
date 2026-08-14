@@ -46,7 +46,8 @@ const mockHelperInstance = {
     create_uuid: jest.fn().mockReturnValue(TEST_TIMELINE_UUID),
     order_exhibit_items: jest.fn().mockResolvedValue(1),
     order_timeline_items: jest.fn().mockResolvedValue(1),
-    unlock_record: jest.fn().mockResolvedValue(true),
+    /* real helper resolves to the unlocked record row, not a boolean */
+    unlock_record: jest.fn().mockResolvedValue({ uuid: TEST_TIMELINE_ITEM_UUID, is_locked: 0, locked_by_user: null }),
     check_storage_path: jest.fn(),
     process_uploaded_media: jest.fn().mockReturnValue('processed-media.jpg')
 };
@@ -115,7 +116,7 @@ describe('Timelines Model Integration Tests', () => {
         mockHelperInstance.create_uuid.mockReturnValue(TEST_TIMELINE_UUID);
         mockHelperInstance.order_exhibit_items.mockResolvedValue(1);
         mockHelperInstance.order_timeline_items.mockResolvedValue(1);
-        mockHelperInstance.unlock_record.mockResolvedValue(true);
+        mockHelperInstance.unlock_record.mockResolvedValue({ uuid: TEST_TIMELINE_ITEM_UUID, is_locked: 0, locked_by_user: null });
         mockTimelineRecordTask.create_timeline_record.mockResolvedValue(true);
         mockTimelineRecordTask.update_timeline_record.mockResolvedValue(true);
         mockTimelineRecordTask.get_timeline_record.mockResolvedValue({});
@@ -1067,7 +1068,7 @@ describe('Timelines Model Integration Tests', () => {
                 {}
             );
 
-            expect(result).toBe(true);
+            expect(result).toEqual({ uuid: TEST_TIMELINE_ITEM_UUID, is_locked: 0, locked_by_user: null });
             expect(mockHelperInstance.unlock_record).toHaveBeenCalled();
         });
 
@@ -1078,7 +1079,7 @@ describe('Timelines Model Integration Tests', () => {
                 { force: true }
             );
 
-            expect(result).toBe(true);
+            expect(result).toEqual({ uuid: TEST_TIMELINE_ITEM_UUID, is_locked: 0, locked_by_user: null });
         });
 
         test('should return false for invalid user UID', async () => {

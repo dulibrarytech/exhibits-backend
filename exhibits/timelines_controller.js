@@ -348,7 +348,8 @@ exports.unlock_timeline_item_record = async function (req, res) {
 
         const result = await TIMELINES_MODEL.unlock_timeline_item_record(uid, item_id, options);
 
-        if (result === true) {
+        /* helper unlock_record resolves to the unlocked record row, not a boolean */
+        if (result && typeof result === 'object') {
             res.status(200).send({
                 message: 'Timeline item record unlocked.'
             });
