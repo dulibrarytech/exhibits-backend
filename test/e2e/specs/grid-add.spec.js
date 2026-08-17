@@ -55,7 +55,7 @@ test.describe('Add grid form (items.add.grid.form.module)', () => {
         await page.goto(`${APP_PATH}/items/grid?exhibit_id=${EXHIBIT_UUID}`);
         await expect(page.locator('#save-item-btn')).toBeEnabled();
 
-        await page.fill('#grid-text-input', 'My new grid');
+        await page.fill('#grid-text-input .ql-editor', 'My new grid');
         await page.fill('#grid-internal-name-input', 'Staff grid label');
 
         const postPromise = page.waitForRequest((req) => {
@@ -68,7 +68,7 @@ test.describe('Add grid form (items.add.grid.form.module)', () => {
         await postPromise;
 
         await expect.poll(() => state.lastCreatePayload).not.toBeNull();
-        expect(state.lastCreatePayload.text).toBe('My new grid');
+        expect(state.lastCreatePayload.text).toBe('<p>My new grid</p>');
         expect(state.lastCreatePayload.internal_name).toBe('Staff grid label');
         // Common form serializes columns as a string per
         // get_common_grid_form_fields (the `.toString()` call there).

@@ -81,6 +81,7 @@ const sources = [
     'public/app/utils/reorder.module.js',
     'public/app/utils/media.picker.module.js',
     'public/app/utils/nav.module.js',
+    'public/app/utils/rte.module.js',
 
     // top-level modules
     'public/app/home.module.js',

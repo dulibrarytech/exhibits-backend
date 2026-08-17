@@ -99,9 +99,10 @@ test.describe('Media library Kaltura entry lookup (kaltura.service.module.js —
         await expect(page.locator('#kaltura-media-modal')).toBeVisible();
         await expect(page.locator('#kaltura-media-modal .kaltura-name'))
             .toHaveValue('My Test Video');
-        // Description textarea also pre-populated.
-        await expect(page.locator('#kaltura-media-modal .kaltura-description'))
-            .toHaveValue('My test description');
+        // Description rich text editor also pre-populated (seeded from the
+        // hidden synced .kaltura-description textarea).
+        await expect(page.locator('#kaltura-media-modal #kaltura-description-0-rte .ql-editor'))
+            .toHaveText('My test description');
         // Hidden entry-id field carries what the user typed.
         await expect(page.locator('#kaltura-media-modal .kaltura-entry-id'))
             .toHaveValue('0_abc123xy');

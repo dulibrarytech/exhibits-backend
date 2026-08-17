@@ -88,7 +88,7 @@ const itemsDetailsHeadingModule = (function () {
         }
 
         domModule.html('#created', item_created);
-        domModule.set_value('#item-heading-text-input', helperModule.unescape(record.text));
+        rteModule.set_html('item-heading-text-input', helperModule.unescape(record.text));
         domModule.set_value('#item-heading-type-input', record.type);
 
         if (is_published === 1) {

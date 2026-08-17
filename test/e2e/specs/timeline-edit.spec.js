@@ -38,7 +38,7 @@ test.describe('Edit timeline form (items.edit.vertical.timeline.form.module)', (
             `${APP_PATH}/items/vertical-timeline/edit?exhibit_id=${EXHIBIT_UUID}&item_id=${TIMELINE_UUID}`
         );
 
-        await expect(page.locator('#timeline-text-input')).toHaveValue('Existing timeline text');
+        await expect(page.locator('#timeline-text-input .ql-editor')).toHaveText('Existing timeline text');
         await expect(page.locator('#timeline-internal-name-input')).toHaveValue('Sample timeline internal name');
         await expect(page.locator('#created')).toContainText(/Created by tester/);
     });
@@ -85,9 +85,9 @@ test.describe('Edit timeline form (items.edit.vertical.timeline.form.module)', (
         await page.goto(
             `${APP_PATH}/items/vertical-timeline/edit?exhibit_id=${EXHIBIT_UUID}&item_id=${TIMELINE_UUID}`
         );
-        await expect(page.locator('#timeline-text-input')).toHaveValue('Original timeline text');
+        await expect(page.locator('#timeline-text-input .ql-editor')).toHaveText('Original timeline text');
 
-        await page.fill('#timeline-text-input', 'Edited timeline text');
+        await page.fill('#timeline-text-input .ql-editor', 'Edited timeline text');
         await page.fill('#timeline-internal-name-input', 'Renamed staff label');
 
         const putPromise = page.waitForRequest((req) =>
@@ -99,7 +99,7 @@ test.describe('Edit timeline form (items.edit.vertical.timeline.form.module)', (
         await putPromise;
 
         await expect.poll(() => state.lastUpdatePayload).not.toBeNull();
-        expect(state.lastUpdatePayload.text).toBe('Edited timeline text');
+        expect(state.lastUpdatePayload.text).toBe('<p>Edited timeline text</p>');
         expect(state.lastUpdatePayload.internal_name).toBe('Renamed staff label');
 
         await expect(page.locator('#message .alert-success')).toBeVisible();

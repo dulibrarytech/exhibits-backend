@@ -35,8 +35,8 @@ test.describe('Exhibits CRUD (live)', () => {
         await page.goto(`${APP_PATH}/exhibits`);
         await openModal(page, 'add-exhibit-modal');
 
-        await page.fill('#exhibit-title-input', marker);
-        await page.fill('#exhibit-description-input', 'Live create description');
+        await page.fill('#exhibit-title-input .ql-editor', marker);
+        await page.fill('#exhibit-description-input .ql-editor', 'Live create description');
         await fillRequiredStyles(page);
 
         const create_response = page.waitForResponse((resp) => {
@@ -67,8 +67,8 @@ test.describe('Exhibits CRUD (live)', () => {
         await page.goto(`${APP_PATH}/exhibits/exhibit/edit?exhibit_id=${exhibit_uuid}`);
 
         // Form is populated from the real record before we edit it.
-        const title_input = page.locator('#exhibit-title-input');
-        await expect(title_input).toHaveValue(original, { timeout: 10_000 });
+        const title_input = page.locator('#exhibit-title-input .ql-editor');
+        await expect(title_input).toHaveText(original, { timeout: 10_000 });
 
         await title_input.fill(updated);
         await fillRequiredStyles(page);

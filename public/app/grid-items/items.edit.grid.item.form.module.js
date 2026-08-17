@@ -216,6 +216,11 @@ const itemsEditGridItemFormModule = (function () {
                 'input:not([type="hidden"]), textarea, select, button[type="submit"], button[type="button"]'
             );
 
+            // Rich text editors are div-based and not caught by the selector above
+            if (typeof rteModule !== 'undefined') {
+                rteModule.set_all_enabled(false);
+            }
+
             let disabled_count = 0;
 
             form_elements.forEach(element => {
@@ -355,16 +360,10 @@ const itemsEditGridItemFormModule = (function () {
          */
         const set_basic_fields = (record, elements) => {
             // Set title
-            if (elements.item_title) {
-                const title = record.title ? helperModule.unescape(record.title) : '';
-                elements.item_title.value = title;
-            }
+            rteModule.set_html('item-title-input', record.title ? helperModule.unescape(record.title) : '');
 
             // Set text
-            if (elements.item_text) {
-                const text = record.text ? helperModule.unescape(record.text) : '';
-                elements.item_text.value = text;
-            }
+            rteModule.set_html('item-text-input', record.text ? helperModule.unescape(record.text) : '');
         };
 
         /**
@@ -580,8 +579,8 @@ const itemsEditGridItemFormModule = (function () {
                 itemsCommonGridItemFormModule.populate_media_previews(record);
 
                 // Populate optional Pop-up Window Description + Caption fields
-                domModule.set_value('#item-description-input', helperModule.unescape(record.description));
-                domModule.set_value('#item-caption-input', helperModule.unescape(record.caption));
+                rteModule.set_html('item-description-input', helperModule.unescape(record.description));
+                rteModule.set_html('item-caption-input', helperModule.unescape(record.caption));
             }
 
             // Set layout selection
@@ -721,11 +720,6 @@ const itemsEditGridItemFormModule = (function () {
          * Reset form state after update
          */
         const reset_form_state = () => {
-            // Mark form as clean if tracking dirty state
-            if (typeof rich_text_data !== 'undefined' && rich_text_data?.setDirty) {
-                rich_text_data.setDirty(false);
-            }
-
             // Temporarily disable submit button
             const submit_button = document.querySelector('#item-submit-card button[type="submit"], button[type="submit"]');
             if (submit_button) {

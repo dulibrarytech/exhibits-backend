@@ -98,6 +98,22 @@ describe('mediaModalsModule — staged thumbnail preview', () => {
     });
 
     beforeEach(() => {
+        // Rich text fields read through rteModule; back the stub with the
+        // same DOM elements the fixtures populate via .value.
+        globalThis.rteModule = {
+            get_html: (id) => document.getElementById(id)?.value?.trim() ?? '',
+            set_html: (id, html) => {
+                const el = document.getElementById(id);
+                if (el) el.value = html;
+            },
+            is_empty: (id) => (document.getElementById(id)?.value?.trim() ?? '') === '',
+            init: () => null,
+            init_all: () => {},
+            set_enabled: () => {},
+            set_all_enabled: () => {},
+            on_change: () => {},
+            is_dirty: () => false,
+        };
         vi.spyOn(console, 'warn').mockImplementation(() => {});
         vi.spyOn(console, 'error').mockImplementation(() => {});
         vi.spyOn(console, 'debug').mockImplementation(() => {});

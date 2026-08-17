@@ -5,7 +5,11 @@
             <div class="col-12">
                 <div class="form-text text-muted" style="font-size: 17px"><span id="item-caption-input-label">Caption</span>
                 </div>
-                <textarea id="item-caption-input" aria-labelledby="item-caption-input-label" class="form-control" name="item_caption_input" rows="4"></textarea>
+                <% if (typeof is_details !== 'undefined' && is_details) { %>
+                <div id="item-caption-input" aria-labelledby="item-caption-input-label" class="rte-readonly"></div>
+                <% } else { %>
+                <div id="item-caption-input" aria-labelledby="item-caption-input-label" class="rte-container" data-rte="full"></div>
+                <% } %>
             </div>
         </div>
     </div>

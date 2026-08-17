@@ -44,13 +44,13 @@ test.describe('Timeline text item details page (items.details.vertical.timeline.
             + `?exhibit_id=${EXHIBIT_UUID}&timeline_id=${TIMELINE_UUID}&item_id=${ITEM_UUID}`
         );
 
-        await expect(page.locator('#item-title-input')).toHaveValue('Read-only title');
-        await expect(page.locator('#item-text-input')).toHaveValue('Read-only text');
+        await expect(page.locator('#item-title-input')).toHaveText('Read-only title');
+        await expect(page.locator('#item-text-input')).toHaveText('Read-only text');
         await expect(page.locator('#item-date-input')).toHaveValue('2026-04-15');
 
         // Both EJS-baked and runtime disable.
-        await expect(page.locator('#item-title-input')).toBeDisabled();
-        await expect(page.locator('#item-text-input')).toBeDisabled();
+        await expect(page.locator('#item-title-input')).toHaveClass(/rte-readonly/);
+        await expect(page.locator('#item-text-input')).toHaveClass(/rte-readonly/);
 
         await expect(page.locator('#edit-item-btn')).toBeVisible();
     });

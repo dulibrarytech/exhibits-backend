@@ -50,8 +50,8 @@ test.describe('Edit timeline media item form (items.edit.vertical.timeline.item.
         // populate_media_previews writes record.media_uuid into the hidden
         // #item-media-uuid input.
         await expect(page.locator('#item-media-uuid')).toHaveValue('media-uuid-existing');
-        await expect(page.locator('#item-title-input')).toHaveValue('Existing media item');
-        await expect(page.locator('#item-text-input')).toHaveValue('Existing caption');
+        await expect(page.locator('#item-title-input .ql-editor')).toHaveText('Existing media item');
+        await expect(page.locator('#item-text-input .ql-editor')).toHaveText('Existing caption');
         await expect(page.locator('#item-date-input')).toHaveValue('2026-04-15');
         await expect(page.locator('#created')).toContainText(/Created by tester/);
     });
@@ -77,7 +77,7 @@ test.describe('Edit timeline media item form (items.edit.vertical.timeline.item.
         );
         await expect(page.locator('#item-media-uuid')).toHaveValue('media-uuid-existing');
 
-        await page.fill('#item-text-input', 'Edited caption');
+        await page.fill('#item-text-input .ql-editor', 'Edited caption');
 
         const putPromise = page.waitForRequest((req) =>
             req.url().includes(`/timelines/${TIMELINE_UUID}/items/${ITEM_UUID}`)
@@ -88,7 +88,7 @@ test.describe('Edit timeline media item form (items.edit.vertical.timeline.item.
         await putPromise;
 
         await expect.poll(() => state.lastUpdatePayload).not.toBeNull();
-        expect(state.lastUpdatePayload.text).toBe('Edited caption');
+        expect(state.lastUpdatePayload.text).toBe('<p>Edited caption</p>');
         expect(state.lastUpdatePayload.media_uuid).toBe('media-uuid-existing');
         expect(state.lastUpdatePayload.item_type).toBe('image');
         expect(state.lastUpdatePayload.mime_type).toBe('image/jpeg');

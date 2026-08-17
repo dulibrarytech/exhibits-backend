@@ -511,6 +511,11 @@ const exhibitsEditFormModule = (function () {
                 'input:not([type="hidden"]), textarea, select, button[type="submit"], button[type="button"]'
             );
 
+            // Rich text editors are div-based and not caught by the selector above
+            if (typeof rteModule !== 'undefined') {
+                rteModule.set_all_enabled(false);
+            }
+
             let disabled_count = 0;
 
             form_elements.forEach(element => {
@@ -608,10 +613,10 @@ const exhibitsEditFormModule = (function () {
             set_element_value('#is-published', is_published);
 
             // Set basic exhibit data with proper unescaping
-            set_element_value('#exhibit-title-input', helperModule.unescape(record.title || ''));
-            set_element_value('#exhibit-sub-title-input', helperModule.unescape(record.subtitle || ''));
-            set_element_value('#exhibit-description-input', helperModule.unescape(record.description || ''));
-            set_element_value('#exhibit-about-the-curators-input', helperModule.unescape(record.about_the_curators || ''));
+            rteModule.set_html('exhibit-title-input', helperModule.unescape(record.title || ''));
+            rteModule.set_html('exhibit-sub-title-input', helperModule.unescape(record.subtitle || ''));
+            rteModule.set_html('exhibit-description-input', helperModule.unescape(record.description || ''));
+            rteModule.set_html('exhibit-about-the-curators-input', helperModule.unescape(record.about_the_curators || ''));
             set_element_value('#exhibit-owner', record.owner);
 
             // Set checkboxes

@@ -424,8 +424,9 @@ const mediaModalsModule = (function() {
         // Row 2: Description
         html += '<div class="row">';
         html += '<div class="col-12 mb-3">';
-        html += '<label class="form-label" for="file-description-' + index + '">Description <span class="badge badge-required">Required</span></label>';
-        html += '<textarea class="form-control file-description" id="file-description-' + index + '" name="description" rows="2" placeholder="Enter a description" required aria-required="true"></textarea>';
+        html += '<label class="form-label" for="file-description-' + index + '-rte">Description <span class="badge badge-required">Required</span></label>';
+        html += '<div class="rte-container rte-modal" id="file-description-' + index + '-rte" data-rte="full" data-rte-sync="file-description-' + index + '"></div>';
+        html += '<textarea class="form-control file-description" id="file-description-' + index + '" name="description" hidden required aria-required="true"></textarea>';
         html += '<div class="invalid-feedback">Please provide a description.</div>';
         html += '</div></div>';
         
@@ -684,6 +685,9 @@ const mediaModalsModule = (function() {
 
         // Insert HTML
         forms_container.innerHTML = all_html;
+
+        // Instantiate description rich text editors (sync to hidden textareas)
+        rteModule.init_all();
 
         // Setup individual save handlers
         setup_individual_save_handlers();

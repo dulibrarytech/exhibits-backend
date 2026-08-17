@@ -15,6 +15,19 @@ const TEST_UUID = '550e8400-e29b-41d4-a716-446655440000';
 const TEST_USER_UID = '660e8400-e29b-41d4-a716-446655440001';
 
 // Mock Logger - must be before require
+/*
+ * libs/rte_vocabulary requires jsdom, whose dependency tree ships untranspiled
+ * ESM that jest cannot parse (node_modules is not transformed). The vocabulary
+ * itself is unit-tested in vitest (test/tasks/rte_vocabulary.test.js); here it
+ * is a pass-through so model orchestration is tested unchanged.
+ */
+jest.mock('../../libs/rte_vocabulary', () => ({
+    apply: jest.fn((record) => record),
+    sanitize_rich_full: jest.fn((value) => value),
+    sanitize_rich_reduced: jest.fn((value) => value),
+    sanitize_plain: jest.fn((value) => value),
+}));
+
 jest.mock('../../libs/log4', () => ({
     module: () => ({
         error: jest.fn(),

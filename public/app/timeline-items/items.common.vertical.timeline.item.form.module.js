@@ -476,9 +476,9 @@ const itemsCommonVerticalTimelineItemFormModule = (function () {
                 domModule.clear_field_error(s, s.replace('#', '') + '-error');
             });
 
-            // Get item metadata
-            item.title = get_element_value('#item-title-input');
-            item.text = get_element_value('#item-text-input');
+            // Get item metadata (rich text; serialized HTML, '' when empty)
+            item.title = rteModule.get_html('item-title-input');
+            item.text = rteModule.get_html('item-text-input');
             item.date = get_element_value('input[type="date"]');
 
             // Validate required date field
@@ -528,8 +528,8 @@ const itemsCommonVerticalTimelineItemFormModule = (function () {
                 }
 
                 // Collect optional Pop-up Window Description + Caption (media items only)
-                item.description = get_element_value('#item-description-input');
-                item.caption = get_element_value('#item-caption-input');
+                item.description = rteModule.get_html('item-description-input');
+                item.caption = rteModule.get_html('item-caption-input');
 
             } else {
                 // Default to text type for non-media paths

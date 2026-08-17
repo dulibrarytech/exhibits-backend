@@ -101,8 +101,10 @@ test.describe('Media library edit modal (modals.edit.module.js — open_edit_med
         // the GET resolves — wait for the name input to exist and carry
         // the record value before asserting on anything else.
         await expect(page.locator('#edit-file-name')).toHaveValue('Original record name');
-        await expect(page.locator('#edit-file-description'))
-            .toHaveValue('Original description');
+        // Description is a rich text editor seeded from (and synced back to)
+        // the hidden #edit-file-description textarea — assert on the editor.
+        await expect(page.locator('#edit-file-description-rte .ql-editor'))
+            .toHaveText('Original description');
 
         // The hidden uuid field is populated from record.uuid; this is
         // what the submit handler reads back via current_edit_uuid.
@@ -123,7 +125,7 @@ test.describe('Media library edit modal (modals.edit.module.js — open_edit_med
 
         // Mutate the name + description so the assertions are concrete.
         await page.fill('#edit-file-name', 'Renamed record');
-        await page.fill('#edit-file-description', 'Updated description');
+        await page.fill('#edit-file-description-rte .ql-editor', 'Updated description');
 
         await page.locator('#edit-media-save-btn').click();
 
@@ -134,7 +136,7 @@ test.describe('Media library edit modal (modals.edit.module.js — open_edit_med
         expect(recordState.lastPutUrl).toContain(`/api/v1/media/library/record/${TARGET_UUID}`);
         expect(recordState.lastPutPayload).toMatchObject({
             name: 'Renamed record',
-            description: 'Updated description',
+            description: '<p>Updated description</p>',
         });
         // `uuid` is in the URL path, not the body. Lock that down.
         expect(recordState.lastPutPayload).not.toHaveProperty('uuid');

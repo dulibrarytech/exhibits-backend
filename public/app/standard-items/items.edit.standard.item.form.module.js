@@ -98,6 +98,11 @@ const itemsEditStandardItemFormModule = (function () {
                 'input:not([type="hidden"]), textarea, select, button[type="submit"], button[type="button"]'
             );
 
+            // Rich text editors are div-based and not caught by the selector above
+            if (typeof rteModule !== 'undefined') {
+                rteModule.set_all_enabled(false);
+            }
+
             let disabled_count = 0;
 
             form_elements.forEach(element => {
@@ -231,15 +236,15 @@ const itemsEditStandardItemFormModule = (function () {
             }
 
             // Set basic item data
-            set_element_value('#item-text-input', helperModule.unescape(record.text));
+            rteModule.set_html('item-text-input', helperModule.unescape(record.text));
 
             // Handle media-specific fields
             if (is_media_path) {
                 itemsCommonStandardItemFormModule.populate_media_previews(record);
 
                 // Populate optional Pop-up Window Description + Caption fields
-                set_element_value('#item-description-input', helperModule.unescape(record.description));
-                set_element_value('#item-caption-input', helperModule.unescape(record.caption));
+                rteModule.set_html('item-description-input', helperModule.unescape(record.description));
+                rteModule.set_html('item-caption-input', helperModule.unescape(record.caption));
 
                 // Populate the Embed Item flag and sync the description's enabled
                 // state (dispatch 'change' so the common module's listener runs).
@@ -407,11 +412,6 @@ const itemsEditStandardItemFormModule = (function () {
          * Reset form state after update
          */
         const reset_form_state = () => {
-            // Mark form as clean if tracking dirty state
-            if (typeof rich_text_data !== 'undefined' && rich_text_data?.setDirty) {
-                rich_text_data.setDirty(false);
-            }
-
             // Temporarily disable submit button
             const submit_button = document.querySelector('#item-submit-card button[type="submit"], button[type="submit"]');
             if (submit_button) {

@@ -75,13 +75,13 @@ test.describe('Add Exhibit modal', () => {
             return u.pathname === `${APP_PATH}/api/v1/exhibits` && req.method() === 'POST';
         });
 
-        await page.fill('#exhibit-title-input', 'My new exhibit');
-        await page.fill('#exhibit-description-input', 'A description');
+        await page.fill('#exhibit-title-input .ql-editor', 'My new exhibit');
+        await page.fill('#exhibit-description-input .ql-editor', 'A description');
         await page.click('#save-exhibit-btn');
 
         const request = await postPromise;
         const body = request.postDataJSON();
-        expect(body.title).toBe('My new exhibit');
+        expect(body.title).toBe('<p>My new exhibit</p>');
         expect(body.exhibit_template).toBe('vertical_scroll');
 
         // create_exhibit_record redirects via window.location.href on
@@ -116,12 +116,12 @@ test.describe('Add Exhibit modal', () => {
             return u.pathname === `${APP_PATH}/api/v1/exhibits` && req.method() === 'POST';
         });
 
-        await page.fill('#exhibit-title-input', 'Cold cache exhibit');
-        await page.fill('#exhibit-description-input', 'A description');
+        await page.fill('#exhibit-title-input .ql-editor', 'Cold cache exhibit');
+        await page.fill('#exhibit-description-input .ql-editor', 'A description');
         await page.click('#save-exhibit-btn');
 
         const request = await postPromise;
-        expect(request.postDataJSON().title).toBe('Cold cache exhibit');
+        expect(request.postDataJSON().title).toBe('<p>Cold cache exhibit</p>');
         expect(page_errors).toEqual([]);
     });
 });

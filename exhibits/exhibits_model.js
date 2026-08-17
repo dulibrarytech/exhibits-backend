@@ -75,7 +75,23 @@ const exhibit_media_library_task = new EXHIBIT_MEDIA_LIBRARY_TASKS(DB, TABLES);
  * @param {Object} data - Exhibit data
  * @returns {Promise<Object>} Response object
  */
+const RTE_VOCABULARY = require('../libs/rte_vocabulary');
+
+/*
+ * Field → rich-text profile map enforced on create/update. Mirrors the
+ * dashboard editor configuration (public/app/utils/rte.module.js).
+ */
+const EXHIBIT_RTE_PROFILES = {
+    title: 'reduced',
+    subtitle: 'reduced',
+    description: 'full',
+    about_the_curators: 'full',
+    alert_text: 'plain'
+};
+
 exports.create_exhibit_record = async (data) => {
+
+    RTE_VOCABULARY.apply(data, EXHIBIT_RTE_PROFILES);
 
     try {
         // Generate UUID
@@ -339,6 +355,8 @@ const handle_republish = async (uuid) => {
  * @returns {Promise<Object>} Response object
  */
 exports.update_exhibit_record = async (uuid, data) => {
+
+    RTE_VOCABULARY.apply(data, EXHIBIT_RTE_PROFILES);
 
     try {
 

@@ -37,7 +37,7 @@ test.describe('Edit standard text item form (items.edit.standard.item.form.modul
             `${APP_PATH}/items/standard/text/edit?exhibit_id=${EXHIBIT_UUID}&item_id=${ITEM_UUID}`
         );
 
-        await expect(page.locator('#item-text-input')).toHaveValue('Existing item text');
+        await expect(page.locator('#item-text-input .ql-editor')).toHaveText('Existing item text');
         await expect(page.locator('#created')).toContainText(/Created by tester/);
     });
 
@@ -56,9 +56,9 @@ test.describe('Edit standard text item form (items.edit.standard.item.form.modul
         await page.goto(
             `${APP_PATH}/items/standard/text/edit?exhibit_id=${EXHIBIT_UUID}&item_id=${ITEM_UUID}`
         );
-        await expect(page.locator('#item-text-input')).toHaveValue('Original');
+        await expect(page.locator('#item-text-input .ql-editor')).toHaveText('Original');
 
-        await page.fill('#item-text-input', 'Edited item text');
+        await page.fill('#item-text-input .ql-editor', 'Edited item text');
 
         const putPromise = page.waitForRequest((req) =>
             req.url().includes(`/exhibits/${EXHIBIT_UUID}/items/${ITEM_UUID}`)
@@ -69,7 +69,7 @@ test.describe('Edit standard text item form (items.edit.standard.item.form.modul
         await putPromise;
 
         await expect.poll(() => state.lastUpdatePayload).not.toBeNull();
-        expect(state.lastUpdatePayload.text).toBe('Edited item text');
+        expect(state.lastUpdatePayload.text).toBe('<p>Edited item text</p>');
         expect(state.lastUpdatePayload.item_type).toBe('text');
 
         await expect(page.locator('#message .alert-success')).toBeVisible();
@@ -93,6 +93,6 @@ test.describe('Edit standard text item form (items.edit.standard.item.form.modul
         );
 
         // Same lock-detection mechanic as heading-edit/grid-item-edit.
-        await expect(page.locator('#item-text-input')).toBeDisabled();
+        await expect(page.locator('#item-text-input .ql-editor')).toHaveAttribute('contenteditable', 'false');
     });
 });

@@ -43,14 +43,14 @@ test.describe('Grid text item details page (items.details.grid.item.module)', ()
             + `?exhibit_id=${EXHIBIT_UUID}&grid_id=${GRID_UUID}&item_id=${ITEM_UUID}`
         );
 
-        await expect(page.locator('#item-title-input')).toHaveValue('Read-only title');
-        await expect(page.locator('#item-text-input')).toHaveValue('Read-only text');
+        await expect(page.locator('#item-title-input')).toHaveText('Read-only title');
+        await expect(page.locator('#item-text-input')).toHaveText('Read-only text');
 
         // The text-details EJS renders fields with `disabled` baked in
         // AND display_details_record() runs disable_all_fields() after
         // populating, so the inputs are disabled at both layers.
-        await expect(page.locator('#item-title-input')).toBeDisabled();
-        await expect(page.locator('#item-text-input')).toBeDisabled();
+        await expect(page.locator('#item-title-input')).toHaveClass(/rte-readonly/);
+        await expect(page.locator('#item-text-input')).toHaveClass(/rte-readonly/);
 
         // Edit is the primary action on details mode.
         await expect(page.locator('#edit-item-btn')).toBeVisible();

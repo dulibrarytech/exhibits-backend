@@ -360,8 +360,9 @@ const mediaEditModalModule = (function() {
         // Row 2: Description
         html += '<div class="row">';
         html += '<div class="col-12 mb-3">';
-        html += '<label class="form-label" for="edit-file-description">Description <span class="badge badge-required">Required</span></label>';
-        html += '<textarea class="form-control" id="edit-file-description" name="description" rows="3" placeholder="Enter a description" required aria-required="true">' + escape_html(record.description || '') + '</textarea>';
+        html += '<label class="form-label" for="edit-file-description-rte">Description <span class="badge badge-required">Required</span></label>';
+        html += '<div class="rte-container rte-modal" id="edit-file-description-rte" data-rte="full" data-rte-sync="edit-file-description"></div>';
+        html += '<textarea class="form-control" id="edit-file-description" name="description" hidden required aria-required="true">' + escape_html(record.description || '') + '</textarea>';
         html += '<div class="invalid-feedback">Please provide a description.</div>';
         html += '</div></div>';
         
@@ -607,6 +608,10 @@ const mediaEditModalModule = (function() {
 
         // Build and display edit form
         form_container.innerHTML = build_edit_form_html(record);
+
+        // Instantiate the description rich text editor (seeds from the hidden
+        // synced textarea that carries name="description" for FormData/validation)
+        rteModule.init_all();
 
         // Wire CSP-safe <img> error handlers on the preview thumbnail.
         // Preview <img>s carry data-fallback="hide-show-next" instead of

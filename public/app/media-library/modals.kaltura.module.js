@@ -260,8 +260,9 @@ const kalturaModalsModule = (function() {
         // (matches the upload/repo/edit forms).
         html += '<div class="row">';
         html += '<div class="col-12 mb-3">';
-        html += '<label class="form-label">Description <span class="badge badge-required">Required</span></label>';
-        html += '<textarea class="form-control kaltura-description" name="description" rows="3" placeholder="Enter a description" required aria-required="true">' + description + '</textarea>';
+        html += '<label class="form-label" for="kaltura-description-0-rte">Description <span class="badge badge-required">Required</span></label>';
+        html += '<div class="rte-container rte-modal" id="kaltura-description-0-rte" data-rte="full" data-rte-sync="kaltura-description-0"></div>';
+        html += '<textarea class="form-control kaltura-description" id="kaltura-description-0" name="description" hidden required aria-required="true">' + description + '</textarea>';
         html += '<div class="invalid-feedback">Please provide a description.</div>';
         html += '</div></div>';
 
@@ -660,6 +661,9 @@ const kalturaModalsModule = (function() {
         // Build the form HTML
         const form_html = build_kaltura_form_html(kaltura_media_data);
         forms_container.innerHTML = form_html;
+
+        // Instantiate the description rich text editor (sync to hidden textarea)
+        rteModule.init_all();
 
         // Wire CSP-safe <img> error handlers on the freshly injected
         // thumbnail markup. The thumbnail <img> carries data-fallback="icon"

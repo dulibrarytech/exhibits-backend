@@ -230,7 +230,13 @@ const itemsDetailsVerticalTimelineModule = (function () {
             }
 
             const unescaped_text = text ? helperModule.unescape(text) : '';
-            element.value = unescaped_text;
+
+            /* the text field is a rich text editor; internal name is a plain input */
+            if (element.dataset.rte !== undefined) {
+                rteModule.set_html(element.id, unescaped_text);
+            } else {
+                element.value = unescaped_text;
+            }
         };
 
         /**

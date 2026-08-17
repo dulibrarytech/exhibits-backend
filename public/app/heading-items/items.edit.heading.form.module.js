@@ -23,7 +23,6 @@ const itemsEditHeadingFormModule = (function () {
     const APP_PATH = endpointsModule.get_app_path();
     const EXHIBITS_ENDPOINTS = endpointsModule.get_exhibits_endpoints();
     let obj = {};
-    let rich_text_data = {};
 
     async function get_item_heading_record() {
 
@@ -159,6 +158,11 @@ const itemsEditHeadingFormModule = (function () {
             const form_elements = document.querySelectorAll(
                 'input:not([type="hidden"]), textarea, select, button[type="submit"], button[type="button"]'
             );
+
+            // Rich text editors are div-based and not caught by the selector above
+            if (typeof rteModule !== 'undefined') {
+                rteModule.set_all_enabled(false);
+            }
 
             let disabled_count = 0;
 
@@ -356,12 +360,7 @@ const itemsEditHeadingFormModule = (function () {
      * Set heading text input value
      */
     function set_heading_text(text, element) {
-        if (!element) {
-            return;
-        }
-
-        const unescaped_text = text ? helperModule.unescape(text) : '';
-        element.value = unescaped_text;
+        rteModule.set_html('item-heading-text-input', text ? helperModule.unescape(text) : '');
     }
 
     /**
@@ -465,7 +464,7 @@ const itemsEditHeadingFormModule = (function () {
             }
 
             // Get and validate form data
-            const form_data = itemsCommonHeadingFormModule.get_common_heading_form_fields(rich_text_data);
+            const form_data = itemsCommonHeadingFormModule.get_common_heading_form_fields();
 
             if (!form_data || form_data === false) {
                 display_status_message(message_element, 'danger', 'Invalid form data. Please check all required fields.');
@@ -539,14 +538,6 @@ const itemsEditHeadingFormModule = (function () {
      * Reset form states after successful update
      */
     function reset_form_states() {
-        // Reset any dirty/modified flags if you're tracking them
-        if (typeof rich_text_data !== 'undefined' && rich_text_data) {
-            // Mark form as clean/unmodified
-            if (rich_text_data.setDirty && typeof rich_text_data.setDirty === 'function') {
-                rich_text_data.setDirty(false);
-            }
-        }
-
         // Disable save button temporarily to prevent duplicate saves
         const submit_button = document.querySelector('#item-submit-card button[type="submit"]');
         if (submit_button) {

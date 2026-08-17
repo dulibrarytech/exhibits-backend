@@ -135,6 +135,19 @@ const is_valid_uuid = (uuid) => {
  * @param {string} field_value - Value to search for
  * @returns {Promise<Object>} Result with exists flag and matching record info
  */
+const RTE_VOCABULARY = require('../libs/rte_vocabulary');
+
+/*
+ * Field → rich-text profile map enforced on create/update. Description is
+ * rich text (dashboard modals use the shared editor); name and alt text are
+ * plain strings.
+ */
+const MEDIA_RTE_PROFILES = {
+    name: 'plain',
+    description: 'full',
+    alt_text: 'plain'
+};
+
 exports.check_duplicate = async (field_name, field_value) => {
 
     try {
@@ -173,6 +186,8 @@ exports.check_duplicate = async (field_name, field_value) => {
  * @returns {Promise<Object>} Result object with success status
  */
 exports.create_media_record = async (data) => {
+
+    RTE_VOCABULARY.apply(data, MEDIA_RTE_PROFILES);
 
     try {
 
@@ -343,6 +358,8 @@ exports.get_media_record = async (media_id) => {
  * @returns {Promise<Object>} Result object with updated record
  */
 exports.update_media_record = async (media_id, data) => {
+
+    RTE_VOCABULARY.apply(data, MEDIA_RTE_PROFILES);
 
     try {
 

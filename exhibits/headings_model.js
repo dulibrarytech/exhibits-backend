@@ -98,7 +98,16 @@ const handle_heading_republish = async (is_member_of_exhibit, uuid) => {
  * @param {Object} data - Heading data
  * @returns {Promise<Object>} Response object
  */
+const RTE_VOCABULARY = require('../libs/rte_vocabulary');
+
+/* heading text renders inside <h2>/<h3> on the public site — inline formats only */
+const HEADING_RTE_PROFILES = {
+    text: 'reduced'
+};
+
 exports.create_heading_record = async (is_member_of_exhibit, data) => {
+
+    RTE_VOCABULARY.apply(data, HEADING_RTE_PROFILES);
 
     try {
         // Validate inputs
@@ -258,6 +267,8 @@ exports.get_heading_edit_record = async (uid, is_member_of_exhibit, uuid) => {
  * @returns {Promise<Object>} Response object
  */
 exports.update_heading_record = async (is_member_of_exhibit, uuid, data) => {
+
+    RTE_VOCABULARY.apply(data, HEADING_RTE_PROFILES);
 
     try {
         // Validate inputs

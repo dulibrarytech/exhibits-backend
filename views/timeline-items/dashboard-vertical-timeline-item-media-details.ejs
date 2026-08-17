@@ -54,12 +54,12 @@
                         </button>
                     </div>
                 </div>
-                <%- include('../partials/item-caption.ejs'); %>
+                <%- include('../partials/item-caption.ejs', { is_details: true }); %>
                 <%- include('../partials/embed-item.ejs'); %>
             </div>
         </div>
 
-        <%- include('partials/item-vertical-timeline-item-data-card.ejs'); %>
+        <%- include('partials/item-vertical-timeline-item-data-card.ejs', { is_details: true }); %>
 
         <input type="hidden" id="is-published" name="is_published">
         <div id="item-submit-card" class="card">

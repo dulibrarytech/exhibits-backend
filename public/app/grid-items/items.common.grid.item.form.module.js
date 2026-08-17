@@ -496,9 +496,9 @@ const itemsCommonGridItemFormModule = (function () {
                 return false;
             }
 
-            // Get item metadata
-            item.title = get_element_value('#item-title-input');
-            item.text = get_element_value('#item-text-input');
+            // Get item metadata (rich text; serialized HTML, '' when empty)
+            item.title = rteModule.get_html('item-title-input');
+            item.text = rteModule.get_html('item-text-input');
 
             // Validate text content for text paths
             if (is_text_path && item.text.length === 0) {
@@ -523,8 +523,8 @@ const itemsCommonGridItemFormModule = (function () {
                 item.thumbnail_media_uuid = get_element_value('#thumbnail-media-uuid');
 
                 // Collect optional Pop-up Window Description + Caption (media items only)
-                item.description = get_element_value('#item-description-input');
-                item.caption = get_element_value('#item-caption-input');
+                item.description = rteModule.get_html('item-description-input');
+                item.caption = rteModule.get_html('item-caption-input');
 
                 // Validate media content
                 if (!item.media_uuid) {
@@ -608,25 +608,11 @@ const itemsCommonGridItemFormModule = (function () {
                 const exhibit_text_label = document.querySelector('#is-required-text');
                 if (exhibit_text_label) {
                     exhibit_text_label.innerHTML = 'Exhibit Text';
-                    const exhibit_text_block = exhibit_text_label.closest('.form-text');
-                    if (exhibit_text_block) {
-                        const preview_link = exhibit_text_block.querySelector('a');
-                        if (preview_link) {
-                            preview_link.remove();
-                        }
-                    }
                 }
 
                 const title_label = document.querySelector('#item-title-input-label');
                 if (title_label) {
                     title_label.innerHTML = 'Title';
-                    const title_block = title_label.closest('.form-text');
-                    if (title_block) {
-                        const preview_link = title_block.querySelector('a');
-                        if (preview_link) {
-                            preview_link.remove();
-                        }
-                    }
                 }
 
                 ['#is-media-only-description', '#is-media-only-caption'].forEach(selector => {

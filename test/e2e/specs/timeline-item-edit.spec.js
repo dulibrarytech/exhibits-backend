@@ -42,8 +42,8 @@ test.describe('Edit timeline text item form (items.edit.vertical.timeline.item.f
             + `?exhibit_id=${EXHIBIT_UUID}&timeline_id=${TIMELINE_UUID}&item_id=${ITEM_UUID}`
         );
 
-        await expect(page.locator('#item-title-input')).toHaveValue('Existing item title');
-        await expect(page.locator('#item-text-input')).toHaveValue('Existing item text');
+        await expect(page.locator('#item-title-input .ql-editor')).toHaveText('Existing item title');
+        await expect(page.locator('#item-text-input .ql-editor')).toHaveText('Existing item text');
         await expect(page.locator('#item-date-input')).toHaveValue('2026-04-15');
         await expect(page.locator('#created')).toContainText(/Created by tester/);
     });
@@ -67,10 +67,10 @@ test.describe('Edit timeline text item form (items.edit.vertical.timeline.item.f
             `${APP_PATH}/items/vertical-timeline/item/text/edit`
             + `?exhibit_id=${EXHIBIT_UUID}&timeline_id=${TIMELINE_UUID}&item_id=${ITEM_UUID}`
         );
-        await expect(page.locator('#item-title-input')).toHaveValue('Original');
+        await expect(page.locator('#item-title-input .ql-editor')).toHaveText('Original');
 
-        await page.fill('#item-title-input', 'Edited title');
-        await page.fill('#item-text-input', 'Edited text');
+        await page.fill('#item-title-input .ql-editor', 'Edited title');
+        await page.fill('#item-text-input .ql-editor', 'Edited text');
 
         const putPromise = page.waitForRequest((req) =>
             req.url().includes(`/timelines/${TIMELINE_UUID}/items/${ITEM_UUID}`)
@@ -81,8 +81,8 @@ test.describe('Edit timeline text item form (items.edit.vertical.timeline.item.f
         await putPromise;
 
         await expect.poll(() => state.lastUpdatePayload).not.toBeNull();
-        expect(state.lastUpdatePayload.title).toBe('Edited title');
-        expect(state.lastUpdatePayload.text).toBe('Edited text');
+        expect(state.lastUpdatePayload.title).toBe('<p>Edited title</p>');
+        expect(state.lastUpdatePayload.text).toBe('<p>Edited text</p>');
         expect(state.lastUpdatePayload.date).toBe('2026-04-15');
         expect(state.lastUpdatePayload.item_type).toBe('text');
 
@@ -111,7 +111,7 @@ test.describe('Edit timeline text item form (items.edit.vertical.timeline.item.f
 
         // Same lock-detection mechanic as heading-edit / grid-item-edit /
         // standard-item-edit.
-        await expect(page.locator('#item-title-input')).toBeDisabled();
-        await expect(page.locator('#item-text-input')).toBeDisabled();
+        await expect(page.locator('#item-title-input .ql-editor')).toHaveAttribute('contenteditable', 'false');
+        await expect(page.locator('#item-text-input .ql-editor')).toHaveAttribute('contenteditable', 'false');
     });
 });

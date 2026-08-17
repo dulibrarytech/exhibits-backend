@@ -144,7 +144,7 @@ const itemsEditGridFormModule = (function () {
         }
 
         domModule.html('#created', item_created);
-        domModule.set_value('#grid-text-input', helperModule.unescape(record.text));
+        rteModule.set_html('grid-text-input', helperModule.unescape(record.text));
         // Legacy grids predate internal_name (nullable column) — leave the
         // required field empty so the save-time validation forces a value.
         domModule.set_value('#grid-internal-name-input', helperModule.unescape(record.internal_name || ''));

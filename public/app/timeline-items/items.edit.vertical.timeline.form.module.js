@@ -23,7 +23,6 @@ const itemsEditVerticalTimelineFormModule = (function () {
     const APP_PATH = endpointsModule.get_app_path();
     const EXHIBITS_ENDPOINTS = endpointsModule.get_exhibits_endpoints();
     let obj = {};
-    let rich_text_data = {};
 
     async function get_timeline_record() {
 
@@ -277,11 +276,6 @@ const itemsEditVerticalTimelineFormModule = (function () {
          * Reset form state after update
          */
         const reset_form_state = () => {
-            // Mark form as clean if tracking dirty state
-            if (typeof rich_text_data !== 'undefined' && rich_text_data?.setDirty) {
-                rich_text_data.setDirty(false);
-            }
-
             // Temporarily disable submit button
             const submit_button = document.querySelector('#item-submit-card button[type="submit"], button[type="submit"]');
             if (submit_button) {
@@ -329,7 +323,7 @@ const itemsEditVerticalTimelineFormModule = (function () {
             }
 
             // Get and validate form data
-            const form_data = itemsCommonVerticalTimelineFormModule.get_common_timeline_form_fields(rich_text_data);
+            const form_data = itemsCommonVerticalTimelineFormModule.get_common_timeline_form_fields();
 
             // Validation failure — the common module has already rendered the
             // field-level error and #message alert; bail before clobbering it.
@@ -481,7 +475,13 @@ const itemsEditVerticalTimelineFormModule = (function () {
             }
 
             const unescaped_text = text ? helperModule.unescape(text) : '';
-            element.value = unescaped_text;
+
+            /* the text field is a rich text editor; internal name is a plain input */
+            if (element.dataset.rte !== undefined) {
+                rteModule.set_html(element.id, unescaped_text);
+            } else {
+                element.value = unescaped_text;
+            }
         };
 
         /**

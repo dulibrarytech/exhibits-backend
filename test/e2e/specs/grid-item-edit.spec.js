@@ -41,8 +41,8 @@ test.describe('Edit grid text item form (items.edit.grid.item.form.module)', () 
             + `?exhibit_id=${EXHIBIT_UUID}&grid_id=${GRID_UUID}&item_id=${ITEM_UUID}`
         );
 
-        await expect(page.locator('#item-title-input')).toHaveValue('Existing item title');
-        await expect(page.locator('#item-text-input')).toHaveValue('Existing item text');
+        await expect(page.locator('#item-title-input .ql-editor')).toHaveText('Existing item title');
+        await expect(page.locator('#item-text-input .ql-editor')).toHaveText('Existing item text');
         await expect(page.locator('#created')).toContainText(/Created by tester/);
     });
 
@@ -63,9 +63,9 @@ test.describe('Edit grid text item form (items.edit.grid.item.form.module)', () 
             `${APP_PATH}/items/grid/item/text/edit`
             + `?exhibit_id=${EXHIBIT_UUID}&grid_id=${GRID_UUID}&item_id=${ITEM_UUID}`
         );
-        await expect(page.locator('#item-text-input')).toHaveValue('Original');
+        await expect(page.locator('#item-text-input .ql-editor')).toHaveText('Original');
 
-        await page.fill('#item-text-input', 'Edited item text');
+        await page.fill('#item-text-input .ql-editor', 'Edited item text');
 
         const putPromise = page.waitForRequest((req) =>
             req.url().includes(`/grids/${GRID_UUID}/items/${ITEM_UUID}`)
@@ -76,7 +76,7 @@ test.describe('Edit grid text item form (items.edit.grid.item.form.module)', () 
         await putPromise;
 
         await expect.poll(() => state.lastUpdatePayload).not.toBeNull();
-        expect(state.lastUpdatePayload.text).toBe('Edited item text');
+        expect(state.lastUpdatePayload.text).toBe('<p>Edited item text</p>');
         expect(state.lastUpdatePayload.item_type).toBe('text');
 
         // update_grid_item_record sets a success alert before the
@@ -106,7 +106,7 @@ test.describe('Edit grid text item form (items.edit.grid.item.form.module)', () 
         // Same lock-detection mechanic as heading-edit: parseInt of
         // profile.uid ('1' from the seeded user) vs locked_by_user
         // ('999') → asymmetric → disable_form_fields runs.
-        await expect(page.locator('#item-title-input')).toBeDisabled();
-        await expect(page.locator('#item-text-input')).toBeDisabled();
+        await expect(page.locator('#item-title-input .ql-editor')).toHaveAttribute('contenteditable', 'false');
+        await expect(page.locator('#item-text-input .ql-editor')).toHaveAttribute('contenteditable', 'false');
     });
 });

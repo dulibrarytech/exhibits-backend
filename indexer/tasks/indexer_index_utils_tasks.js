@@ -344,6 +344,23 @@ const Indexer_index_utils_tasks = class {
                     number_of_shards: this.CONFIG.number_of_shards,
                     number_of_replicas: this.CONFIG.number_of_replicas,
                     ...options.settings // Allow additional settings
+                },
+                /*
+                 * html_text strips markup at tokenization time so stored HTML
+                 * (rich text fields) never pollutes search tokens; _source is
+                 * untouched. Referenced by "analyzer": "html_text" entries in
+                 * mappings.json — indexes created without this analyzer will
+                 * reject those mappings.
+                 */
+                analysis: {
+                    analyzer: {
+                        html_text: {
+                            type: 'custom',
+                            char_filter: ['html_strip'],
+                            tokenizer: 'standard',
+                            filter: ['lowercase']
+                        }
+                    }
                 }
             };
 

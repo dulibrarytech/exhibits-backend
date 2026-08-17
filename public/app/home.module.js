@@ -25,7 +25,17 @@ const homeModule = (function () {
 
     obj.init = async function() {
 
-        if (authModule.check_user_auth_data() === false) {
+        /*
+         * A token in the URL means an auth handshake just completed —
+         * always process it. The profile in sessionStorage may belong to
+         * an EXPIRED session (re-auth lands back here with ?t=&id= while
+         * the old profile is still stored); gating the handshake on the
+         * profile alone discards the fresh token, so the next check_auth
+         * 401s and immediately logs the new session out again.
+         */
+        const handshake_token = helperModule.get_parameter_by_name('t');
+
+        if ((handshake_token !== null && handshake_token !== '') || authModule.check_user_auth_data() === false) {
             await authModule.get_auth_user_data();
         }
 

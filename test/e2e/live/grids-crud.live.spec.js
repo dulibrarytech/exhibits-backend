@@ -40,7 +40,7 @@ test.describe('Grids and grid items CRUD (live)', () => {
         await page.goto(`${APP_PATH}/items/grid?exhibit_id=${exhibit_uuid}`);
         await expect(page.locator('#save-item-btn')).toBeEnabled();
 
-        await page.fill('#grid-text-input', marker);
+        await page.fill('#grid-text-input .ql-editor', marker);
 
         const create_response = page.waitForResponse((resp) => {
             const u = new URL(resp.url());
@@ -69,8 +69,8 @@ test.describe('Grids and grid items CRUD (live)', () => {
             `${APP_PATH}/items/grid/edit?exhibit_id=${exhibit_uuid}&item_id=${grid_uuid}`
         );
 
-        const text_input = page.locator('#grid-text-input');
-        await expect(text_input).toHaveValue(new RegExp(original), { timeout: 10_000 });
+        const text_input = page.locator('#grid-text-input .ql-editor');
+        await expect(text_input).toHaveText(new RegExp(original), { timeout: 10_000 });
 
         await text_input.fill(updated);
         await page.selectOption('#grid-columns', '3');
@@ -127,7 +127,7 @@ test.describe('Grids and grid items CRUD (live)', () => {
         );
         await expect(page.locator('#save-item-btn')).toBeEnabled();
 
-        await page.fill('#item-text-input', marker);
+        await page.fill('#item-text-input .ql-editor', marker);
 
         const create_response = page.waitForResponse((resp) => {
             const u = new URL(resp.url());
@@ -161,8 +161,8 @@ test.describe('Grids and grid items CRUD (live)', () => {
             + `?exhibit_id=${exhibit_uuid}&grid_id=${grid_uuid}&item_id=${item_uuid}`
         );
 
-        const text_input = page.locator('#item-text-input');
-        await expect(text_input).toHaveValue(new RegExp(original), { timeout: 10_000 });
+        const text_input = page.locator('#item-text-input .ql-editor');
+        await expect(text_input).toHaveText(new RegExp(original), { timeout: 10_000 });
 
         await text_input.fill(updated);
 

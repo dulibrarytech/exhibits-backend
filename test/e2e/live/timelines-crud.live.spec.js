@@ -40,7 +40,7 @@ test.describe('Timelines and timeline items CRUD (live)', () => {
         await page.goto(`${APP_PATH}/items/vertical-timeline?exhibit_id=${exhibit_uuid}`);
         await expect(page.locator('#save-timeline-btn')).toBeEnabled();
 
-        await page.fill('#timeline-text-input', marker);
+        await page.fill('#timeline-text-input .ql-editor', marker);
 
         const create_response = page.waitForResponse((resp) => {
             const u = new URL(resp.url());
@@ -69,8 +69,8 @@ test.describe('Timelines and timeline items CRUD (live)', () => {
             `${APP_PATH}/items/vertical-timeline/edit?exhibit_id=${exhibit_uuid}&item_id=${timeline_uuid}`
         );
 
-        const text_input = page.locator('#timeline-text-input');
-        await expect(text_input).toHaveValue(new RegExp(original), { timeout: 10_000 });
+        const text_input = page.locator('#timeline-text-input .ql-editor');
+        await expect(text_input).toHaveText(new RegExp(original), { timeout: 10_000 });
 
         await text_input.fill(updated);
 
@@ -127,9 +127,9 @@ test.describe('Timelines and timeline items CRUD (live)', () => {
         );
         await expect(page.locator('#save-item-btn')).toBeEnabled();
 
-        await page.fill('#item-title-input', marker);
+        await page.fill('#item-title-input .ql-editor', marker);
         await page.fill('#item-date-input', '2026-04-15');
-        await page.fill('#item-text-input', `${marker}-text`);
+        await page.fill('#item-text-input .ql-editor', `${marker}-text`);
 
         const create_response = page.waitForResponse((resp) => {
             const u = new URL(resp.url());
@@ -165,8 +165,8 @@ test.describe('Timelines and timeline items CRUD (live)', () => {
             + `?exhibit_id=${exhibit_uuid}&timeline_id=${timeline_uuid}&item_id=${item_uuid}`
         );
 
-        const title_input = page.locator('#item-title-input');
-        await expect(title_input).toHaveValue(new RegExp(original), { timeout: 10_000 });
+        const title_input = page.locator('#item-title-input .ql-editor');
+        await expect(title_input).toHaveText(new RegExp(original), { timeout: 10_000 });
 
         await title_input.fill(updated);
 

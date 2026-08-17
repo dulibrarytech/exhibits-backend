@@ -37,8 +37,7 @@
                                 <span id="item-heading-text-input-label">Heading Text <span class="badge badge-required">Required</span></span>
                             </div>
                             <span id="item-heading-text-error" class="is-error"></span>
-                            <textarea <%= (typeof is_details !== 'undefined' && is_details) ? 'disabled' : '' %> id="item-heading-text-input" aria-labelledby="item-heading-text-input-label" class="form-control" name="item_heading_text_input"
-                                      rows="4"></textarea>
+                            <div id="item-heading-text-input" aria-labelledby="item-heading-text-input-label" class="rte-container rte-single-line" data-rte="reduced" data-rte-disabled="<%= (typeof is_details !== 'undefined' && is_details) ? 'true' : 'false' %>"></div>
                         </div>
                     </div>
                 </div>

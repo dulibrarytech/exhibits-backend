@@ -80,9 +80,9 @@ test.describe('Add timeline text item form (items.add.vertical.timeline.item.for
         );
         await expect(page.locator('#save-item-btn')).toBeEnabled();
 
-        await page.fill('#item-title-input', 'New timeline item');
+        await page.fill('#item-title-input .ql-editor', 'New timeline item');
         await page.fill('#item-date-input', '2026-04-15');
-        await page.fill('#item-text-input', 'Some description text');
+        await page.fill('#item-text-input .ql-editor', 'Some description text');
 
         const postPromise = page.waitForRequest((req) => {
             const u = new URL(req.url());
@@ -94,8 +94,8 @@ test.describe('Add timeline text item form (items.add.vertical.timeline.item.for
         await postPromise;
 
         await expect.poll(() => state.lastCreatePayload).not.toBeNull();
-        expect(state.lastCreatePayload.title).toBe('New timeline item');
-        expect(state.lastCreatePayload.text).toBe('Some description text');
+        expect(state.lastCreatePayload.title).toBe('<p>New timeline item</p>');
+        expect(state.lastCreatePayload.text).toBe('<p>Some description text</p>');
         expect(state.lastCreatePayload.date).toBe('2026-04-15');
         // Common form sets these for the text path.
         expect(state.lastCreatePayload.item_type).toBe('text');

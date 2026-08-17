@@ -127,11 +127,11 @@ const exhibitsCommonFormModule = (function () {
                 domModule.clear_field_error(title_el, TITLE_ERROR_ID);
             }
 
-            // Get and clean text inputs
-            const title = helperModule.clean_html(get_element_value(selectors.title));
-            const subtitle = helperModule.clean_html(get_element_value(selectors.subtitle));
-            const description = helperModule.clean_html(get_element_value(selectors.description));
-            const about_curators = helperModule.clean_html(get_element_value(selectors.curators));
+            // Get rich text field values (serialized HTML; '' when empty)
+            const title = rteModule.get_html('exhibit-title-input');
+            const subtitle = rteModule.get_html('exhibit-sub-title-input');
+            const description = rteModule.get_html('exhibit-description-input');
+            const about_curators = rteModule.get_html('exhibit-about-the-curators-input');
 
             // Validate required field.
             if (!title) {
@@ -150,9 +150,9 @@ const exhibitsCommonFormModule = (function () {
             const is_student_curated = get_checkbox_value(selectors.is_student_curated);
             const is_content_advisory = get_checkbox_value(selectors.is_content_advisory);
 
-            // Get conditional alert text
+            // Get conditional alert text (fixed boilerplate in a hidden input)
             const alert_text = is_content_advisory
-                ? helperModule.clean_html(get_element_value(selectors.alert_text))
+                ? get_element_value(selectors.alert_text)
                 : '';
 
             // Get optional fields (may not exist in all forms)

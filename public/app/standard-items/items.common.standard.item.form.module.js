@@ -704,8 +704,8 @@ const itemsCommonStandardItemFormModule = (function () {
                 domModule.clear_field_error(s, s.replace('#', '') + '-error');
             });
 
-            // Get item metadata
-            item.text = getElementValue('#item-text-input');
+            // Get item metadata (rich text; serialized HTML, '' when empty)
+            item.text = rteModule.get_html('item-text-input');
 
             // Validate text content for text paths
             if (isTextPath && item.text.length === 0) {
@@ -739,8 +739,8 @@ const itemsCommonStandardItemFormModule = (function () {
                 item.thumbnail_media_uuid = getElementValue('#thumbnail-media-uuid');
 
                 // Collect optional Pop-up Window Description + Caption (media items only)
-                item.description = getElementValue('#item-description-input');
-                item.caption = getElementValue('#item-caption-input');
+                item.description = rteModule.get_html('item-description-input');
+                item.caption = rteModule.get_html('item-caption-input');
 
                 // Collect Embed Item flag (embedded audio/video skip the pop-up viewer).
                 const embed_item_el = document.querySelector('#embed-item');
@@ -817,12 +817,6 @@ const itemsCommonStandardItemFormModule = (function () {
 
                     const exhibit_text_block = exhibit_text_label.closest('.form-text');
                     if (exhibit_text_block) {
-                        // Remove the "Preview Field" link beside the Exhibit Text label.
-                        const preview_link = exhibit_text_block.querySelector('a');
-                        if (preview_link) {
-                            preview_link.remove();
-                        }
-
                         const text_box = document.querySelector('#item-text-input');
                         const wrap_text_group = document.querySelector('#wrap-text-group');
                         if (text_box && wrap_text_group) {

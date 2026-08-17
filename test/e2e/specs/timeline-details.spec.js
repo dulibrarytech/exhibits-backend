@@ -39,11 +39,11 @@ test.describe('Timeline details page (items.details.vertical.timeline.module)', 
             `${APP_PATH}/items/vertical-timeline/details?exhibit_id=${EXHIBIT_UUID}&item_id=${TIMELINE_UUID}`
         );
 
-        await expect(page.locator('#timeline-text-input')).toHaveValue('Read-only timeline text');
+        await expect(page.locator('#timeline-text-input .ql-editor')).toHaveText('Read-only timeline text');
         await expect(page.locator('#timeline-internal-name-input')).toHaveValue('Sample timeline internal name');
 
         // The details EJS renders the inputs with the disabled attribute set.
-        await expect(page.locator('#timeline-text-input')).toBeDisabled();
+        await expect(page.locator('#timeline-text-input .ql-editor')).toHaveAttribute('contenteditable', 'false');
         await expect(page.locator('#timeline-internal-name-input')).toBeDisabled();
 
         // Staff-only hint rides along on the read-only view too.

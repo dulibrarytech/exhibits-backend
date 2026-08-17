@@ -36,7 +36,7 @@ test.describe('Edit grid form (items.edit.grid.form.module)', () => {
 
         await page.goto(`${APP_PATH}/items/grid/edit?exhibit_id=${EXHIBIT_UUID}&item_id=${GRID_UUID}`);
 
-        await expect(page.locator('#grid-text-input')).toHaveValue('Existing grid text');
+        await expect(page.locator('#grid-text-input .ql-editor')).toHaveText('Existing grid text');
         await expect(page.locator('#grid-internal-name-input')).toHaveValue('Sample grid internal name');
         await expect(page.locator('#grid-columns')).toHaveValue('3');
         await expect(page.locator('#created')).toContainText(/Created by tester/);
@@ -82,7 +82,7 @@ test.describe('Edit grid form (items.edit.grid.form.module)', () => {
         });
 
         await page.goto(`${APP_PATH}/items/grid/edit?exhibit_id=${EXHIBIT_UUID}&item_id=${GRID_UUID}`);
-        await expect(page.locator('#grid-text-input')).toHaveValue('Legacy grid');
+        await expect(page.locator('#grid-text-input .ql-editor')).toHaveText('Legacy grid');
 
         // 6 isn't offered by the dropdown — a disabled placeholder is
         // inserted and selected (it can't be re-picked once a real value is
@@ -116,9 +116,9 @@ test.describe('Edit grid form (items.edit.grid.form.module)', () => {
         });
 
         await page.goto(`${APP_PATH}/items/grid/edit?exhibit_id=${EXHIBIT_UUID}&item_id=${GRID_UUID}`);
-        await expect(page.locator('#grid-text-input')).toHaveValue('Original');
+        await expect(page.locator('#grid-text-input .ql-editor')).toHaveText('Original');
 
-        await page.fill('#grid-text-input', 'Edited grid');
+        await page.fill('#grid-text-input .ql-editor', 'Edited grid');
         await page.fill('#grid-internal-name-input', 'Renamed staff label');
         await page.selectOption('#grid-columns', '2');
 
@@ -131,7 +131,7 @@ test.describe('Edit grid form (items.edit.grid.form.module)', () => {
         await putPromise;
 
         await expect.poll(() => state.lastUpdatePayload).not.toBeNull();
-        expect(state.lastUpdatePayload.text).toBe('Edited grid');
+        expect(state.lastUpdatePayload.text).toBe('<p>Edited grid</p>');
         expect(state.lastUpdatePayload.internal_name).toBe('Renamed staff label');
         expect(state.lastUpdatePayload.columns).toBe('2');
 

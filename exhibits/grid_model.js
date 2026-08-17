@@ -82,7 +82,28 @@ const ALLOWED_COLUMNS = [2, 3, 4];
  * @param {Object} data - Grid data
  * @returns {Promise<Object>} Response object
  */
+const RTE_VOCABULARY = require('../libs/rte_vocabulary');
+
+/*
+ * Field → rich-text profile maps enforced on create/update. Mirror the
+ * dashboard editor configuration (public/app/utils/rte.module.js).
+ */
+const GRID_RTE_PROFILES = {
+    text: 'full',
+    internal_name: 'plain'
+};
+
+const GRID_ITEM_RTE_PROFILES = {
+    title: 'reduced',
+    text: 'full',
+    description: 'full',
+    caption: 'full',
+    alt_text: 'plain'
+};
+
 exports.create_grid_record = async (is_member_of_exhibit, data) => {
+
+    RTE_VOCABULARY.apply(data, GRID_RTE_PROFILES);
 
     try {
         // Validate inputs
@@ -125,10 +146,6 @@ exports.create_grid_record = async (is_member_of_exhibit, data) => {
         if (internal_name_error !== null) {
             return internal_name_error;
         }
-
-        // The former ajv create schema only re-checked fields injected or
-        // defaulted above (identity from validated params, styles/columns
-        // defaulted) — provably unreachable as a guard — so it was removed.
 
         // Get order
         data.order = await helper_task.order_exhibit_items(data.is_member_of_exhibit, DB, TABLES);
@@ -179,6 +196,8 @@ exports.create_grid_record = async (is_member_of_exhibit, data) => {
  */
 exports.update_grid_record = async (is_member_of_exhibit, grid_id, data) => {
 
+    RTE_VOCABULARY.apply(data, GRID_RTE_PROFILES);
+
     try {
         // Validate inputs
         if (!is_valid_uuid(is_member_of_exhibit) || !is_valid_uuid(grid_id)) {
@@ -223,11 +242,6 @@ exports.update_grid_record = async (is_member_of_exhibit, grid_id, data) => {
         if (internal_name_error !== null) {
             return internal_name_error;
         }
-
-        // The former ajv update schema only re-checked fields injected or
-        // defaulted above (identity from validated params, columns validated) —
-        // provably unreachable as a guard — so it was removed. Field-level
-        // protection lives in the task layer (UPDATABLE_FIELDS whitelist).
 
         // Update record
         const result = await grid_record_task.update_grid_record(data);
@@ -313,6 +327,8 @@ exports.get_grid_record = async (is_member_of_exhibit, grid_id) => {
  */
 exports.create_grid_item_record = async (is_member_of_exhibit, grid_id, data) => {
 
+    RTE_VOCABULARY.apply(data, GRID_ITEM_RTE_PROFILES);
+
     try {
         // Validate inputs
         if (!is_valid_uuid(is_member_of_exhibit) || !is_valid_uuid(grid_id)) {
@@ -333,10 +349,6 @@ exports.create_grid_item_record = async (is_member_of_exhibit, grid_id, data) =>
         data.uuid = helper_task.create_uuid();
         data.is_member_of_exhibit = is_member_of_exhibit;
         data.is_member_of_grid = grid_id;
-
-        // The former ajv create schema only re-checked the two identity fields
-        // injected above from already-validated route params — provably
-        // unreachable as a guard — so it was removed.
 
         // Prepare styles and get order
         data.styles = prepare_styles(data.styles);
@@ -611,6 +623,8 @@ const handle_grid_item_republish = async (is_member_of_exhibit, is_member_of_gri
  */
 exports.update_grid_item_record = async (is_member_of_exhibit, is_member_of_grid, item_id, data) => {
 
+    RTE_VOCABULARY.apply(data, GRID_ITEM_RTE_PROFILES);
+
     try {
         // Validate inputs
         if (!is_valid_uuid(is_member_of_exhibit) ||
@@ -639,13 +653,6 @@ exports.update_grid_item_record = async (is_member_of_exhibit, is_member_of_grid
         delete data.is_published;
 
         data.styles = prepare_styles(data.styles);
-
-        // Field-level validation happens in the task layer (update_grid_item_record:
-        // UPDATABLE_FIELDS whitelist via _sanitize_data + _validate_uuids +
-        // exists/lock checks). The former ajv update schema only re-checked the
-        // three identity fields injected above from already-validated route
-        // params — provably unreachable as a guard — so it was removed
-        // (same rationale as the standard-item schema removal).
 
         // Update record
         const result = await grid_record_task.update_grid_item_record(data);
