@@ -186,6 +186,26 @@ const itemsCommonGridItemFormModule = (function () {
 
     // ==================== MEDIA SELECTION HANDLERS ====================
 
+    /**
+     * Shows or hides the read-only Media Name display for the selected media asset
+     * @param {Object|null} media - Media object (null to hide)
+     */
+    function toggle_media_name_display(media) {
+        const group = document.querySelector('#item-media-name-display-group');
+        if (!group) return;
+
+        const display_el = document.querySelector('#item-media-name-display');
+        const name = decode_html_entities((media && media.name) || '').trim();
+
+        if (name.length > 0) {
+            if (display_el) display_el.value = name;
+            group.style.display = '';
+        } else {
+            if (display_el) display_el.value = '';
+            group.style.display = 'none';
+        }
+    }
+
     // ── Smart caption auto-fill (add forms) ──────────────────────────────────
     let _caption_autofill_enabled = false;
     let _caption_user_edited = false;
@@ -230,6 +250,8 @@ const itemsCommonGridItemFormModule = (function () {
             '#item-media-trash',
             media
         );
+
+        toggle_media_name_display(media);
 
         autofill_caption_from_media(media, previous_media_uuid);
     }
@@ -285,6 +307,8 @@ const itemsCommonGridItemFormModule = (function () {
             'fa-file-o',
             'No media selected'
         );
+
+        toggle_media_name_display(null);
 
         autofill_caption_from_media(null, previous_media_uuid);
     }
@@ -427,6 +451,8 @@ const itemsCommonGridItemFormModule = (function () {
                 '#item-media-trash',
                 media_obj
             );
+
+            toggle_media_name_display(media_obj);
         }
 
         // Thumbnail preview

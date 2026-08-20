@@ -232,6 +232,26 @@ const itemsCommonStandardItemFormModule = (function () {
         }
     }
 
+    /**
+     * Shows or hides the read-only Media Name display for the selected media asset
+     * @param {Object|null} media - Media object (null to hide)
+     */
+    function toggle_media_name_display(media) {
+        const group = document.querySelector('#item-media-name-display-group');
+        if (!group) return;
+
+        const display_el = document.querySelector('#item-media-name-display');
+        const name = decode_html_entities((media && media.name) || '').trim();
+
+        if (name.length > 0) {
+            if (display_el) display_el.value = name;
+            group.style.display = '';
+        } else {
+            if (display_el) display_el.value = '';
+            group.style.display = 'none';
+        }
+    }
+
     // ── Smart caption auto-fill (add forms) ──────────────────────────────────
     let _caption_autofill_enabled = false;
     let _caption_user_edited = false;
@@ -279,6 +299,7 @@ const itemsCommonStandardItemFormModule = (function () {
 
         toggle_pdf_open_to_page(media.media_type);
         toggle_alt_text_display(media);
+        toggle_media_name_display(media);
 
         autofill_caption_from_media(media, previous_media_uuid);
     }
@@ -337,6 +358,7 @@ const itemsCommonStandardItemFormModule = (function () {
 
         toggle_pdf_open_to_page('');
         toggle_alt_text_display(null);
+        toggle_media_name_display(null);
 
         autofill_caption_from_media(null, previous_media_uuid);
     }
@@ -624,8 +646,9 @@ const itemsCommonStandardItemFormModule = (function () {
                 if (page_input) page_input.value = record.pdf_open_to_page;
             }
 
-            // Show read-only alt text from the media library asset
+            // Show read-only alt text and media name from the media library asset
             toggle_alt_text_display(media_obj);
+            toggle_media_name_display(media_obj);
         }
 
         // Thumbnail preview

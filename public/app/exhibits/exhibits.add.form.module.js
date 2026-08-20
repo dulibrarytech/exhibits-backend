@@ -593,6 +593,19 @@ const exhibitsAddFormModule = (function () {
             if (el) el.style.display = 'inline';
         };
 
+        /*
+         * Populates (or hides, when name is empty) a read-only Media Name display.
+         * input_selector targets the input; its wrapper is `${input_selector}-group`.
+         */
+        const set_media_name_display = (input_selector, name) => {
+            const group = document.querySelector(`${input_selector}-group`);
+            const input_el = document.querySelector(input_selector);
+            const decoded = helperModule.unescape(name || '').trim();
+
+            if (input_el) input_el.value = decoded;
+            if (group) group.style.display = decoded.length > 0 ? '' : 'none';
+        };
+
         // Helper function to restore placeholder inside a media preview area
         const restore_placeholder = (display_selector) => {
             const display_el = document.querySelector(display_selector);
@@ -631,6 +644,8 @@ const exhibitsAddFormModule = (function () {
             const filename_el = document.querySelector('#hero-image-filename-display');
             if (filename_el) filename_el.textContent = '';
 
+            set_media_name_display('#hero-image-media-name-display', '');
+
             const trash_el = document.querySelector('#hero-trash');
             if (trash_el) trash_el.style.display = 'none';
         };
@@ -651,6 +666,8 @@ const exhibitsAddFormModule = (function () {
 
             const filename_el = document.querySelector('#thumbnail-filename-display');
             if (filename_el) filename_el.textContent = '';
+
+            set_media_name_display('#thumbnail-media-name-display', '');
 
             const trash_el = document.querySelector('#thumbnail-trash');
             if (trash_el) trash_el.style.display = 'none';
@@ -728,6 +745,7 @@ const exhibitsAddFormModule = (function () {
                             if (prev_track) prev_track.value = media.uuid;
                             render_media_preview('#hero-image-display', media);
                             render_filename('#hero-image-filename-display', media.name || media.original_filename);
+                            set_media_name_display('#hero-image-media-name-display', media.name);
                             show_element('#hero-trash');
                         }
                     });
@@ -750,6 +768,7 @@ const exhibitsAddFormModule = (function () {
                             if (prev_track) prev_track.value = media.uuid;
                             render_media_preview('#thumbnail-image-display', media);
                             render_filename('#thumbnail-filename-display', media.name || media.original_filename);
+                            set_media_name_display('#thumbnail-media-name-display', media.name);
                             show_element('#thumbnail-trash');
                         }
                     });

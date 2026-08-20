@@ -372,7 +372,9 @@ const construct_exhibit_index_record = (record) => {
         },
         // v2: media dimensions
         media_width: record.hero_media_width || null,
-        media_height: record.hero_media_height || null
+        media_height: record.hero_media_height || null,
+        // v2: hero image media library name
+        media_name: record.hero_media_name || null
     });
 };
 
@@ -483,6 +485,8 @@ const construct_item_index_record = (record) => {
         // v2: media dimensions from library
         media_width: record.ml_media_width || null,
         media_height: record.ml_media_height || null,
+        // v2: media library name
+        media_name: record.media_name || null,
         // v2: item-level subjects + media-bound subjects
         subjects: process_subjects(record.item_subjects),
         media_subjects: merge_media_subjects(record),

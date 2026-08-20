@@ -39,6 +39,7 @@
                         <small id="hero-legacy-migrate" class="form-text text-muted" style="display:none">
                             <i class="fa fa-info-circle" aria-hidden="true"></i> Using legacy file. Select a media library asset to migrate.
                         </small>
+                        <%- include('../partials/media-name-display.ejs', { input_id: 'hero-image-media-name-display' }); %>
                     </div>
                     <div class="col-6 col-md-6">
                         <div id="thumbnail-image-display" class="media-preview-area">
@@ -65,6 +66,7 @@
                         <small id="thumbnail-legacy-migrate" class="form-text text-muted" style="display:none">
                             <i class="fa fa-info-circle" aria-hidden="true"></i> Using legacy file. Select a media library asset to migrate.
                         </small>
+                        <%- include('../partials/media-name-display.ejs', { input_id: 'thumbnail-media-name-display' }); %>
                     </div>
                 </div>
             </div>
