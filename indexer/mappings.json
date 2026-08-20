@@ -273,6 +273,15 @@
         "type": "object",
         "enabled": false
       },
+      "media_name": {
+        "type": "text",
+        "fields": {
+          "keyword": {
+            "type": "keyword",
+            "ignore_above": 256
+          }
+        }
+      },
       "media_padding": {
         "type": "long"
       },
@@ -431,6 +440,15 @@
   "media_iiif": {
     "type": "object",
     "enabled": false
+  },
+  "media_name": {
+    "type": "text",
+    "fields": {
+      "keyword": {
+        "type": "keyword",
+        "ignore_above": 256
+      }
+    }
   },
   "media_padding": {
     "type": "long"

@@ -433,6 +433,7 @@ const Exhibit_record_tasks = class extends Base_tasks {
                         ...qualified_fields,
                         // Hero image media library metadata
                         `hero_lib.uuid as hero_lib_uuid`,
+                        `hero_lib.name as hero_media_name`,
                         `hero_lib.ingest_method as hero_ingest_method`,
                         `hero_lib.repo_uuid as hero_repo_uuid`,
                         `hero_lib.kaltura_entry_id as hero_kaltura_entry_id`,
