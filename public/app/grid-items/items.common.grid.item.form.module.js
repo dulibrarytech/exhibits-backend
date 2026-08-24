@@ -186,6 +186,26 @@ const itemsCommonGridItemFormModule = (function () {
 
     // ==================== MEDIA SELECTION HANDLERS ====================
 
+    /**
+     * Shows or hides the read-only Media Name display for the selected media asset
+     * @param {Object|null} media - Media object (null to hide)
+     */
+    function toggle_media_name_display(media) {
+        const group = document.querySelector('#item-media-name-display-group');
+        if (!group) return;
+
+        const display_el = document.querySelector('#item-media-name-display');
+        const name = decode_html_entities((media && media.name) || '').trim();
+
+        if (name.length > 0) {
+            if (display_el) display_el.value = name;
+            group.style.display = '';
+        } else {
+            if (display_el) display_el.value = '';
+            group.style.display = 'none';
+        }
+    }
+
     // ── Smart caption auto-fill (add forms) ──────────────────────────────────
     let _caption_autofill_enabled = false;
     let _caption_user_edited = false;
@@ -230,6 +250,8 @@ const itemsCommonGridItemFormModule = (function () {
             '#item-media-trash',
             media
         );
+
+        toggle_media_name_display(media);
 
         autofill_caption_from_media(media, previous_media_uuid);
     }
@@ -285,6 +307,8 @@ const itemsCommonGridItemFormModule = (function () {
             'fa-file-o',
             'No media selected'
         );
+
+        toggle_media_name_display(null);
 
         autofill_caption_from_media(null, previous_media_uuid);
     }
@@ -427,6 +451,8 @@ const itemsCommonGridItemFormModule = (function () {
                 '#item-media-trash',
                 media_obj
             );
+
+            toggle_media_name_display(media_obj);
         }
 
         // Thumbnail preview
@@ -496,9 +522,9 @@ const itemsCommonGridItemFormModule = (function () {
                 return false;
             }
 
-            // Get item metadata
-            item.title = get_element_value('#item-title-input');
-            item.text = get_element_value('#item-text-input');
+            // Get item metadata (rich text; serialized HTML, '' when empty)
+            item.title = rteModule.get_html('item-title-input');
+            item.text = rteModule.get_html('item-text-input');
 
             // Validate text content for text paths
             if (is_text_path && item.text.length === 0) {
@@ -523,8 +549,8 @@ const itemsCommonGridItemFormModule = (function () {
                 item.thumbnail_media_uuid = get_element_value('#thumbnail-media-uuid');
 
                 // Collect optional Pop-up Window Description + Caption (media items only)
-                item.description = get_element_value('#item-description-input');
-                item.caption = get_element_value('#item-caption-input');
+                item.description = rteModule.get_html('item-description-input');
+                item.caption = rteModule.get_html('item-caption-input');
 
                 // Validate media content
                 if (!item.media_uuid) {
@@ -608,25 +634,11 @@ const itemsCommonGridItemFormModule = (function () {
                 const exhibit_text_label = document.querySelector('#is-required-text');
                 if (exhibit_text_label) {
                     exhibit_text_label.innerHTML = 'Exhibit Text';
-                    const exhibit_text_block = exhibit_text_label.closest('.form-text');
-                    if (exhibit_text_block) {
-                        const preview_link = exhibit_text_block.querySelector('a');
-                        if (preview_link) {
-                            preview_link.remove();
-                        }
-                    }
                 }
 
                 const title_label = document.querySelector('#item-title-input-label');
                 if (title_label) {
                     title_label.innerHTML = 'Title';
-                    const title_block = title_label.closest('.form-text');
-                    if (title_block) {
-                        const preview_link = title_block.querySelector('a');
-                        if (preview_link) {
-                            preview_link.remove();
-                        }
-                    }
                 }
 
                 ['#is-media-only-description', '#is-media-only-caption'].forEach(selector => {

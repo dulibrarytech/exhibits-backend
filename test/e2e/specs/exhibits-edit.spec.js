@@ -38,10 +38,10 @@ test.describe('Edit exhibit form (exhibits.edit.form.module)', () => {
 
         await page.goto(`${APP_PATH}/exhibits/exhibit/edit?exhibit_id=${EXHIBIT_UUID}`);
 
-        await expect(page.locator('#exhibit-title-input')).toHaveValue('Existing exhibit title');
-        await expect(page.locator('#exhibit-sub-title-input')).toHaveValue('Existing subtitle');
-        await expect(page.locator('#exhibit-description-input')).toHaveValue('Existing description');
-        await expect(page.locator('#exhibit-about-the-curators-input')).toHaveValue('Existing curators copy');
+        await expect(page.locator('#exhibit-title-input .ql-editor')).toHaveText('Existing exhibit title');
+        await expect(page.locator('#exhibit-sub-title-input .ql-editor')).toHaveText('Existing subtitle');
+        await expect(page.locator('#exhibit-description-input .ql-editor')).toHaveText('Existing description');
+        await expect(page.locator('#exhibit-about-the-curators-input .ql-editor')).toHaveText('Existing curators copy');
 
         // is_featured: 1 in the fixture → checkbox checked.
         await expect(page.locator('#is-featured')).toBeChecked();
@@ -60,10 +60,10 @@ test.describe('Edit exhibit form (exhibits.edit.form.module)', () => {
         await stubExhibitMediaBindingsApi(page);
 
         await page.goto(`${APP_PATH}/exhibits/exhibit/edit?exhibit_id=${EXHIBIT_UUID}`);
-        await expect(page.locator('#exhibit-title-input')).toHaveValue('Original title');
+        await expect(page.locator('#exhibit-title-input .ql-editor')).toHaveText('Original title');
 
-        await page.fill('#exhibit-title-input', 'Edited exhibit title');
-        await page.fill('#exhibit-description-input', 'Edited description');
+        await page.fill('#exhibit-title-input .ql-editor', 'Edited exhibit title');
+        await page.fill('#exhibit-description-input .ql-editor', 'Edited description');
 
         const putPromise = page.waitForRequest((req) => {
             const u = new URL(req.url());
@@ -75,8 +75,8 @@ test.describe('Edit exhibit form (exhibits.edit.form.module)', () => {
         await putPromise;
 
         await expect.poll(() => state.lastUpdatePayload).not.toBeNull();
-        expect(state.lastUpdatePayload.title).toBe('Edited exhibit title');
-        expect(state.lastUpdatePayload.description).toBe('Edited description');
+        expect(state.lastUpdatePayload.title).toBe('<p>Edited exhibit title</p>');
+        expect(state.lastUpdatePayload.description).toBe('<p>Edited description</p>');
         // Common form serializes these from hidden EJS inputs.
         expect(state.lastUpdatePayload.exhibit_template).toBe('vertical_scroll');
 
@@ -101,7 +101,7 @@ test.describe('Edit exhibit form (exhibits.edit.form.module)', () => {
         // Lock detection mirrors the heading/grid/standard/timeline modules:
         // parseInt of profile.uid ('1' from seeded user) vs locked_by_user
         // ('999') → asymmetric → disable_form_fields runs.
-        await expect(page.locator('#exhibit-title-input')).toBeDisabled();
-        await expect(page.locator('#exhibit-description-input')).toBeDisabled();
+        await expect(page.locator('#exhibit-title-input .ql-editor')).toHaveAttribute('contenteditable', 'false');
+        await expect(page.locator('#exhibit-description-input .ql-editor')).toHaveAttribute('contenteditable', 'false');
     });
 });

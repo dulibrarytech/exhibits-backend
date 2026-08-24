@@ -48,15 +48,15 @@ test.describe('Grid media item details page (items.details.grid.item.module — 
             + `?exhibit_id=${EXHIBIT_UUID}&grid_id=${GRID_UUID}&item_id=${ITEM_UUID}`
         );
 
-        await expect(page.locator('#item-title-input')).toHaveValue('Read-only media item');
-        await expect(page.locator('#item-text-input')).toHaveValue('Read-only caption');
+        await expect(page.locator('#item-title-input')).toHaveText('Read-only media item');
+        await expect(page.locator('#item-text-input')).toHaveText('Read-only caption');
         // Media path: details module calls populate_media_previews which
         // writes the hidden media uuid input alongside the visible preview.
         await expect(page.locator('#item-media-uuid')).toHaveValue('media-uuid-existing');
 
         // disable_all_fields runs after population.
-        await expect(page.locator('#item-title-input')).toBeDisabled();
-        await expect(page.locator('#item-text-input')).toBeDisabled();
+        await expect(page.locator('#item-title-input')).toHaveClass(/rte-readonly/);
+        await expect(page.locator('#item-text-input')).toHaveClass(/rte-readonly/);
 
         // Edit is the primary action; save button is hidden in details mode.
         await expect(page.locator('#edit-item-btn')).toBeVisible();

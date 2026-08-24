@@ -75,7 +75,23 @@ const exhibit_media_library_task = new EXHIBIT_MEDIA_LIBRARY_TASKS(DB, TABLES);
  * @param {Object} data - Exhibit data
  * @returns {Promise<Object>} Response object
  */
+const RTE_VOCABULARY = require('../libs/rte_vocabulary');
+
+/*
+ * Field → rich-text profile map enforced on create/update. Mirrors the
+ * dashboard editor configuration (public/app/utils/rte.module.js).
+ */
+const EXHIBIT_RTE_PROFILES = {
+    title: 'reduced',
+    subtitle: 'reduced',
+    description: 'full',
+    about_the_curators: 'full',
+    alert_text: 'plain'
+};
+
 exports.create_exhibit_record = async (data) => {
+
+    RTE_VOCABULARY.apply(data, EXHIBIT_RTE_PROFILES);
 
     try {
         // Generate UUID
@@ -339,6 +355,8 @@ const handle_republish = async (uuid) => {
  * @returns {Promise<Object>} Response object
  */
 exports.update_exhibit_record = async (uuid, data) => {
+
+    RTE_VOCABULARY.apply(data, EXHIBIT_RTE_PROFILES);
 
     try {
 
@@ -762,6 +780,27 @@ const publish_exhibit = async (uuid) => {
             return {
                 status: 'no_items',
                 message: 'Exhibit does not have any items'
+            };
+        }
+
+        // Publishing an exhibit bulk-publishes every grid and grid item, so
+        // the per-grid minimum (items >= columns) has to be enforced here too
+        // or an under-filled grid goes live and breaks the frontend layout.
+        const under_filled_grids = await GRIDS_MODEL.get_under_filled_grids(uuid);
+
+        if (under_filled_grids.length > 0) {
+
+            const grid_list = under_filled_grids
+                .map((grid) => `"${grid.internal_name}" (${grid.item_count} of ${grid.minimum} items)`)
+                .join(', ');
+
+            LOGGER.module().info(
+                `INFO: [/exhibits/model (publish_exhibit)] Publish blocked - grids below minimum items: ${grid_list}`
+            );
+
+            return {
+                status: 'under_filled_grids',
+                message: `Cannot publish exhibit. Grids need at least as many items as columns. Add grid items, or reduce the columns, for: ${grid_list}.`
             };
         }
 

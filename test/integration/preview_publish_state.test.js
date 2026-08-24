@@ -22,6 +22,19 @@
 
 process.env.ELASTICSEARCH_HOST = process.env.ELASTICSEARCH_HOST || 'http://es.test:9200';
 
+/*
+ * libs/rte_vocabulary requires jsdom, whose dependency tree ships untranspiled
+ * ESM that jest cannot parse (node_modules is not transformed). The vocabulary
+ * itself is unit-tested in vitest (test/tasks/rte_vocabulary.test.js); here it
+ * is a pass-through so model orchestration is tested unchanged.
+ */
+jest.mock('../../libs/rte_vocabulary', () => ({
+    apply: jest.fn((record) => record),
+    sanitize_rich_full: jest.fn((value) => value),
+    sanitize_rich_reduced: jest.fn((value) => value),
+    sanitize_plain: jest.fn((value) => value),
+}));
+
 jest.mock('../../libs/log4', () => ({
     module: () => ({ info: jest.fn(), error: jest.fn(), warn: jest.fn(), debug: jest.fn() })
 }));
@@ -56,7 +69,11 @@ const mockHeadingTask = {
 
 const mockGridTask = {
     get_record_count: jest.fn().mockResolvedValue(1),
-    get_grid_records: jest.fn().mockResolvedValue([{ uuid: GRID_UUID, is_member_of_exhibit: EXHIBIT_UUID }]),
+    get_grid_records: jest.fn().mockResolvedValue([{ uuid: GRID_UUID, is_member_of_exhibit: EXHIBIT_UUID, columns: 2 }]),
+    // publish_exhibit's minimum-items gate (items >= columns) counts each
+    // grid's items via the real grid_model; satisfy the minimum so these
+    // pins keep exercising the publish path.
+    get_grid_item_count: jest.fn().mockResolvedValue(4),
     set_to_publish: jest.fn().mockResolvedValue(true),
     set_to_suppress: jest.fn().mockResolvedValue(true),
     // the grid-scoped writers — must NOT be used by preview

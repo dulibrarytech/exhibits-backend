@@ -56,7 +56,7 @@ test.describe('Add heading form (items.add.heading.form.module)', () => {
 
         await page.goto(`${APP_PATH}/items/heading?exhibit_id=${EXHIBIT_UUID}`);
 
-        await page.fill('#item-heading-text-input', 'Some heading');
+        await page.fill('#item-heading-text-input .ql-editor', 'Some heading');
         // Leave type select on the empty default option.
         await page.click('#save-heading-btn');
 
@@ -77,7 +77,7 @@ test.describe('Add heading form (items.add.heading.form.module)', () => {
         // Wait for the save button click handler to be wired (init() is async).
         await expect(page.locator('#save-heading-btn')).toBeEnabled();
 
-        await page.fill('#item-heading-text-input', 'New heading text');
+        await page.fill('#item-heading-text-input .ql-editor', 'New heading text');
         await page.selectOption('#item-heading-type-input', 'heading');
 
         const postPromise = page.waitForRequest((req) =>
@@ -88,7 +88,7 @@ test.describe('Add heading form (items.add.heading.form.module)', () => {
         await postPromise;
 
         await expect.poll(() => state.lastCreatePayload).not.toBeNull();
-        expect(state.lastCreatePayload.text).toBe('New heading text');
+        expect(state.lastCreatePayload.text).toBe('<p>New heading text</p>');
         expect(state.lastCreatePayload.type).toBe('heading');
 
         // Module redirects to /items/heading/edit?... after success. Wait
@@ -115,7 +115,7 @@ test.describe('Add heading form (items.add.heading.form.module)', () => {
         // here, so it shows a warning rather than POSTing.
         await page.goto(`${APP_PATH}/items/heading?exhibit_id=${EXHIBIT_UUID}&item_id=existing-heading-uuid`);
 
-        await page.fill('#item-heading-text-input', 'Should not be sent');
+        await page.fill('#item-heading-text-input .ql-editor', 'Should not be sent');
         await page.selectOption('#item-heading-type-input', 'heading');
         await page.click('#save-heading-btn');
 

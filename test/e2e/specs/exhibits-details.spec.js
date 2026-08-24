@@ -35,16 +35,16 @@ test.describe('Exhibit details page (exhibits.details.module)', () => {
 
         await page.goto(`${APP_PATH}/exhibits/exhibit/details?exhibit_id=${EXHIBIT_UUID}`);
 
-        await expect(page.locator('#exhibit-title-input')).toHaveValue('Read-only exhibit');
-        await expect(page.locator('#exhibit-sub-title-input')).toHaveValue('Read-only subtitle');
-        await expect(page.locator('#exhibit-description-input')).toHaveValue('Read-only description');
+        await expect(page.locator('#exhibit-title-input .ql-editor')).toHaveText('Read-only exhibit');
+        await expect(page.locator('#exhibit-sub-title-input .ql-editor')).toHaveText('Read-only subtitle');
+        await expect(page.locator('#exhibit-description-input .ql-editor')).toHaveText('Read-only description');
 
         // The details init() runs a `forEach(el => el.disabled = true)` sweep
         // over visible inputs/textareas/selects after population. The
         // partials don't have `disabled` baked in — the runtime sweep
         // is the only mechanism keeping the page read-only.
-        await expect(page.locator('#exhibit-title-input')).toBeDisabled();
-        await expect(page.locator('#exhibit-description-input')).toBeDisabled();
+        await expect(page.locator('#exhibit-title-input .ql-editor')).toHaveAttribute('contenteditable', 'false');
+        await expect(page.locator('#exhibit-description-input .ql-editor')).toHaveAttribute('contenteditable', 'false');
 
         // Save button is hidden on details mode; Edit is the primary action.
         await expect(page.locator('#edit-item-btn')).toBeVisible();

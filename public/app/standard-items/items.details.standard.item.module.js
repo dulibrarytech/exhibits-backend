@@ -73,6 +73,11 @@ const itemsDetailsStandardItemModule = (function () {
             'input:not([type="hidden"]), textarea, select, button[type="button"]:not(#edit-item-btn)'
         );
 
+        // Rich text editors are div-based and not caught by the selector above
+        if (typeof rteModule !== 'undefined') {
+            rteModule.set_all_enabled(false);
+        }
+
         form_elements.forEach(element => {
             if (!element.disabled && !element.readOnly) {
                 element.disabled = true;
@@ -129,18 +134,28 @@ const itemsDetailsStandardItemModule = (function () {
             published_el.value = record.is_published === 1;
         }
 
+        /*
+         * The media details template renders static .rte-readonly boxes
+         * (no editors); the text details template keeps read-only editors.
+         */
+        const is_media_details = window.location.pathname.indexOf('media') !== -1;
+
         // Set basic item data
-        set_element_value('#item-text-input', helperModule.unescape(record.text));
+        if (is_media_details) {
+            rteModule.render_static('item-text-input', helperModule.unescape(record.text));
+        } else {
+            rteModule.set_html('item-text-input', helperModule.unescape(record.text));
+        }
 
         // Populate media previews using the shared common module
-        if (window.location.pathname.indexOf('media') !== -1) {
+        if (is_media_details) {
             itemsCommonStandardItemFormModule.populate_media_previews(record);
 
             // Surface the popup-related fields read-only. The common form module
             // (also init'd on this page) reveals/relocates them; here we fill in
             // their values and gate the Embed Item control to audio/video media.
-            set_element_value('#item-description-input', helperModule.unescape(record.description));
-            set_element_value('#item-caption-input', helperModule.unescape(record.caption));
+            rteModule.render_static('item-description-input', helperModule.unescape(record.description));
+            rteModule.render_static('item-caption-input', helperModule.unescape(record.caption));
 
             const embed_item_el = document.getElementById('embed-item');
             if (embed_item_el) embed_item_el.checked = record.is_embedded === 1;

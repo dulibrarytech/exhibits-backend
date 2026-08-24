@@ -39,12 +39,12 @@ test.describe('Standard text item details page (items.details.standard.item.modu
             `${APP_PATH}/items/standard/text/details?exhibit_id=${EXHIBIT_UUID}&item_id=${ITEM_UUID}`
         );
 
-        await expect(page.locator('#item-text-input')).toHaveValue('Read-only standard text');
+        await expect(page.locator('#item-text-input .ql-editor')).toHaveText('Read-only standard text');
 
         // The text-details EJS renders the text field with `disabled`
         // baked in AND display_details_record() runs disable_all_fields
         // after populating.
-        await expect(page.locator('#item-text-input')).toBeDisabled();
+        await expect(page.locator('#item-text-input .ql-editor')).toHaveAttribute('contenteditable', 'false');
 
         await expect(page.locator('#edit-item-btn')).toBeVisible();
         await expect(page.locator('#edit-item-btn')).toBeEnabled();

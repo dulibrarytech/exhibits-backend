@@ -38,12 +38,12 @@ test.describe('Grid details page (items.details.grid.module)', () => {
 
         await page.goto(`${APP_PATH}/items/grid/details?exhibit_id=${EXHIBIT_UUID}&item_id=${GRID_UUID}`);
 
-        await expect(page.locator('#grid-text-input')).toHaveValue('Read-only grid');
+        await expect(page.locator('#grid-text-input .ql-editor')).toHaveText('Read-only grid');
         await expect(page.locator('#grid-internal-name-input')).toHaveValue('Sample grid internal name');
         await expect(page.locator('#grid-columns')).toHaveValue('5');
 
         // The details EJS renders all inputs with the disabled attribute set.
-        await expect(page.locator('#grid-text-input')).toBeDisabled();
+        await expect(page.locator('#grid-text-input .ql-editor')).toHaveAttribute('contenteditable', 'false');
         await expect(page.locator('#grid-internal-name-input')).toBeDisabled();
         await expect(page.locator('#grid-columns')).toBeDisabled();
 

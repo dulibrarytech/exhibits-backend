@@ -5,6 +5,11 @@
     <%- include('../partials/main-header.ejs'); %>
     <main id="main" class="content" tabindex="-1">
         <div id="message"></div>
+        <!-- Minimum-items advisory: warns while the grid holds fewer items
+             than its column count (publish is refused server-side until the
+             minimum is met). Polite live region; populated by
+             itemsGridModule.display_grid_items(). -->
+        <div id="grid-min-items-status" role="status" aria-live="polite"></div>
         <!-- Phase 4: polite live region for keyboard-reorder announcements
              ("Moved <title> to position <n> of <total>"). Visually hidden;
              populated by reorderModule on each successful keyboard move. -->

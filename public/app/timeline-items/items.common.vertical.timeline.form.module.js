@@ -49,8 +49,8 @@ const itemsCommonVerticalTimelineFormModule = (function () {
             // Clear any prior field-level error state.
             domModule.clear_field_error('#timeline-internal-name-input', 'timeline-internal-name-input-error');
 
-            // Get timeline metadata
-            timeline.text = get_element_value('#timeline-text-input');
+            // Get timeline metadata (rich text; serialized HTML, '' when empty)
+            timeline.text = rteModule.get_html('timeline-text-input');
 
             // Internal name — required; dashboard-only label, never indexed
             // (see indexer_helper construct_timeline_index_record).

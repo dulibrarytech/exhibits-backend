@@ -55,8 +55,8 @@ const itemsCommonStandardGridFormModule = (function () {
             domModule.clear_field_error('#grid-columns', 'grid-columns-error');
             domModule.clear_field_error('#grid-internal-name-input', 'grid-internal-name-input-error');
 
-            // Get grid metadata
-            grid.text = get_element_value('#grid-text-input');
+            // Get grid metadata (rich text; serialized HTML, '' when empty)
+            grid.text = rteModule.get_html('grid-text-input');
 
             // Internal name — required; dashboard-only label, never indexed
             // (see indexer_helper construct_grid_index_record).

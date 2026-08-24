@@ -213,6 +213,11 @@ const itemsEditVerticalTimelineItemFormModule = (function () {
                 'input:not([type="hidden"]), textarea, select, button[type="submit"], button[type="button"]'
             );
 
+            // Rich text editors are div-based and not caught by the selector above
+            if (typeof rteModule !== 'undefined') {
+                rteModule.set_all_enabled(false);
+            }
+
             let disabled_count = 0;
 
             form_elements.forEach(element => {
@@ -331,24 +336,14 @@ const itemsEditVerticalTimelineItemFormModule = (function () {
          * Set item title input value
          */
         const set_item_title = (title, element) => {
-            if (!element) {
-                return;
-            }
-
-            const unescaped_title = title ? helperModule.unescape(title) : '';
-            element.value = unescaped_title;
+            rteModule.set_html('item-title-input', title ? helperModule.unescape(title) : '');
         };
 
         /**
          * Set item text input value
          */
         const set_item_text = (text, element) => {
-            if (!element) {
-                return;
-            }
-
-            const unescaped_text = text ? helperModule.unescape(text) : '';
-            element.value = unescaped_text;
+            rteModule.set_html('item-text-input', text ? helperModule.unescape(text) : '');
         };
 
         /**
@@ -388,15 +383,8 @@ const itemsEditVerticalTimelineItemFormModule = (function () {
             itemsCommonVerticalTimelineItemFormModule.populate_media_previews(record);
 
             // Populate optional Pop-up Window Description + Caption fields
-            const description_el = document.querySelector('#item-description-input');
-            if (description_el) {
-                description_el.value = record.description ? helperModule.unescape(record.description) : '';
-            }
-
-            const caption_el = document.querySelector('#item-caption-input');
-            if (caption_el) {
-                caption_el.value = record.caption ? helperModule.unescape(record.caption) : '';
-            }
+            rteModule.set_html('item-description-input', record.description ? helperModule.unescape(record.description) : '');
+            rteModule.set_html('item-caption-input', record.caption ? helperModule.unescape(record.caption) : '');
         };
 
         /**
@@ -624,11 +612,6 @@ const itemsEditVerticalTimelineItemFormModule = (function () {
          * Reset form state after update
          */
         const reset_form_state = () => {
-            // Mark form as clean if tracking dirty state
-            if (typeof rich_text_data !== 'undefined' && rich_text_data?.setDirty) {
-                rich_text_data.setDirty(false);
-            }
-
             // Temporarily disable submit button
             const submit_button = document.querySelector('#item-submit-card button[type="submit"], button[type="submit"]');
             if (submit_button) {

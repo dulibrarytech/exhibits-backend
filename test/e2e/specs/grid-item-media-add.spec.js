@@ -104,7 +104,7 @@ test.describe('Add grid media item form (items.add.grid.item.form.module — med
         // synchronously inside the confirm callback.
         await expect(page.locator('#item-media-uuid')).toHaveValue('media-uuid-1');
 
-        await page.fill('#item-text-input', 'Optional caption');
+        await page.fill('#item-text-input .ql-editor', 'Optional caption');
 
         const postPromise = page.waitForRequest((req) => {
             const u = new URL(req.url());

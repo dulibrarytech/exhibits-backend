@@ -35,6 +35,7 @@
                                 data-media-type-filter="image">
                             <i class="fa fa-picture-o" aria-hidden="true"></i>&nbsp;Select Hero Image
                         </button>
+                        <%- include('../partials/media-name-display.ejs', { input_id: 'hero-image-media-name-display' }); %>
                     </div>
                     <div class="col-6 col-md-6">
                         <div id="thumbnail-image-display" class="media-preview-area">
@@ -57,6 +58,7 @@
                                 data-media-type-filter="image">
                             <i class="fa fa-picture-o" aria-hidden="true"></i>&nbsp;Select Thumbnail
                         </button>
+                        <%- include('../partials/media-name-display.ejs', { input_id: 'thumbnail-media-name-display' }); %>
                     </div>
                 </div>
             </div>

@@ -590,8 +590,9 @@ const repoModalsModule = (function() {
         // Row 2: Description - populated from abstract
         html += '<div class="row">';
         html += '<div class="col-12 mb-3">';
-        html += '<label class="form-label" for="repo-description-' + index + '">Description <span class="badge badge-required">Required</span></label>';
-        html += '<textarea class="form-control repo-description" id="repo-description-' + index + '" name="description" rows="2" placeholder="Enter a description" required aria-required="true">' + abstract + '</textarea>';
+        html += '<label class="form-label" for="repo-description-' + index + '-rte">Description <span class="badge badge-required">Required</span></label>';
+        html += '<div class="rte-container rte-modal" id="repo-description-' + index + '-rte" data-rte="full" data-rte-sync="repo-description-' + index + '"></div>';
+        html += '<textarea class="form-control repo-description" id="repo-description-' + index + '" name="description" hidden required aria-required="true">' + abstract + '</textarea>';
         html += '<div class="invalid-feedback">Please provide a description.</div>';
         html += '</div></div>';
 
@@ -690,6 +691,9 @@ const repoModalsModule = (function() {
 
         // Insert HTML
         forms_container.innerHTML = all_html;
+
+        // Instantiate description rich text editors (sync to hidden textareas)
+        rteModule.init_all();
 
         // Setup individual save handlers
         setup_repo_individual_save_handlers();

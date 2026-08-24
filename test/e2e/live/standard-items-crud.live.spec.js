@@ -33,7 +33,7 @@ test.describe('Standard items CRUD (live)', () => {
         await page.goto(`${APP_PATH}/items/standard/text?exhibit_id=${exhibit_uuid}`);
         await expect(page.locator('#save-item-btn')).toBeEnabled();
 
-        await page.fill('#item-text-input', marker);
+        await page.fill('#item-text-input .ql-editor', marker);
 
         const create_response = page.waitForResponse((resp) => {
             const u = new URL(resp.url());
@@ -63,8 +63,8 @@ test.describe('Standard items CRUD (live)', () => {
         );
 
         // Form is populated from the real record before we edit it.
-        const text_input = page.locator('#item-text-input');
-        await expect(text_input).toHaveValue(new RegExp(original), { timeout: 10_000 });
+        const text_input = page.locator('#item-text-input .ql-editor');
+        await expect(text_input).toHaveText(new RegExp(original), { timeout: 10_000 });
 
         await text_input.fill(updated);
 

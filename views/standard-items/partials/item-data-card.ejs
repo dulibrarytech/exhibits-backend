@@ -1,3 +1,4 @@
+<% const _is_details = typeof is_details !== 'undefined' && is_details; %>
 <div id="item-data-card" class="card">
     <div class="card-header">
         <strong class="card-title mb-3">Item Data</strong>
@@ -15,8 +16,11 @@
                             
                         </div>
                         <small class="form-text text-muted"><i class="fa fa-exclamation-circle" aria-hidden="true"></i> <em>This text is displayed directly on the exhibit template</em></small>
-                        <textarea id="item-text-input" aria-labelledby="is-required-text" class="form-control" name="item_text_input"
-                                  rows="4"></textarea>
+                        <% if (_is_details) { %>
+                        <div id="item-text-input" aria-labelledby="is-required-text" class="rte-readonly"></div>
+                        <% } else { %>
+                        <div id="item-text-input" aria-labelledby="is-required-text" class="rte-container" data-rte="full"></div>
+                        <% } %>
                     </div>
                 </div>
             </div>
@@ -27,8 +31,11 @@
                     <div class="col-12">
                         <div class="form-text text-muted" style="font-size: 17px"><span id="item-description-input-label">Pop-up Window Description</span>
                         </div>
-                        <textarea id="item-description-input" aria-labelledby="item-description-input-label" class="form-control" name="item_description_input"
-                                  rows="4"></textarea>
+                        <% if (_is_details) { %>
+                        <div id="item-description-input" aria-labelledby="item-description-input-label" class="rte-readonly"></div>
+                        <% } else { %>
+                        <div id="item-description-input" aria-labelledby="item-description-input-label" class="rte-container" data-rte="full"></div>
+                        <% } %>
                     </div>
                 </div>
             </div>

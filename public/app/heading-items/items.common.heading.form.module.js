@@ -56,8 +56,8 @@ const itemsCommonHeadingFormModule = (function () {
                 domModule.clear_field_error(s, s.replace('#', '') + '-error');
             });
 
-            // Get heading text
-            item_heading.text = get_element_value('#item-heading-text-input');
+            // Get heading text (rich text; serialized HTML, '' when empty)
+            item_heading.text = rteModule.get_html('item-heading-text-input');
 
             // Validate required heading text
             if (!item_heading.text || item_heading.text.length === 0) {

@@ -73,6 +73,22 @@ describe('itemsCommonStandardGridFormModule', () => {
     });
 
     beforeEach(() => {
+        // Rich text fields read through rteModule; back the stub with the
+        // same DOM elements the fixtures populate via .value.
+        globalThis.rteModule = {
+            get_html: (id) => document.getElementById(id)?.value?.trim() ?? '',
+            set_html: (id, html) => {
+                const el = document.getElementById(id);
+                if (el) el.value = html;
+            },
+            is_empty: (id) => (document.getElementById(id)?.value?.trim() ?? '') === '',
+            init: () => null,
+            init_all: () => {},
+            set_enabled: () => {},
+            set_all_enabled: () => {},
+            on_change: () => {},
+            is_dirty: () => false,
+        };
         vi.spyOn(console, 'warn').mockImplementation(() => {});
         vi.spyOn(console, 'error').mockImplementation(() => {});
         // The methods reach for domModule.set_alert when reporting validation
@@ -249,11 +265,9 @@ describe('itemsCommonStandardGridFormModule', () => {
         });
 
         it('returns false and renders an alert when an unexpected error is thrown', () => {
-            // Force querySelector to throw after the form is in the DOM
-            const original_qs = document.querySelector.bind(document);
-            document.querySelector = vi.fn((sel) => {
-                if (sel === '#grid-text-input') throw new Error('boom');
-                return original_qs(sel);
+            // Force the rich text read to throw after the form is in the DOM
+            globalThis.rteModule.get_html = vi.fn(() => {
+                throw new Error('boom');
             });
 
             const result = globalThis.itemsCommonStandardGridFormModule
@@ -266,8 +280,6 @@ describe('itemsCommonStandardGridFormModule', () => {
                 'danger',
                 'boom',
             );
-
-            document.querySelector = original_qs;
         });
     });
 

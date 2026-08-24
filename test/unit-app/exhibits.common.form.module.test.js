@@ -91,13 +91,28 @@ describe('exhibitsCommonFormModule', () => {
         // each test so individual tests can override behavior to drive the
         // catch-path or the radio-selection path.
         globalThis.helperModule = {
-            clean_html: (s) => s,
             get_checked_radio_button: (els) => {
                 for (const el of els) {
                     if (el.checked) return el.value;
                 }
                 return '';
             },
+        };
+        // Rich text fields read through rteModule.get_html; back the stub
+        // with the same DOM elements the fixtures populate via .value.
+        globalThis.rteModule = {
+            get_html: (id) => document.getElementById(id)?.value?.trim() ?? '',
+            set_html: vi.fn((id, html) => {
+                const el = document.getElementById(id);
+                if (el) el.value = html;
+            }),
+            is_empty: (id) => (document.getElementById(id)?.value?.trim() ?? '') === '',
+            init: () => null,
+            init_all: () => {},
+            set_enabled: () => {},
+            set_all_enabled: () => {},
+            on_change: () => {},
+            is_dirty: () => false,
         };
         // Phase 3b refactored exhibits.common.form.module to use
         // domModule.set_field_error / clear_field_error for title
@@ -353,27 +368,30 @@ describe('exhibitsCommonFormModule', () => {
             expect(result.banner_template).toBe('banner_from_spy');
         });
 
-        it('runs every text input through helperModule.clean_html', () => {
-            const clean_calls = [];
-            globalThis.helperModule.clean_html = (s) => {
-                clean_calls.push(s);
-                return s + '_cleaned';
+        it('reads the rich text fields through rteModule.get_html', () => {
+            const get_calls = [];
+            globalThis.rteModule.get_html = (id) => {
+                get_calls.push(id);
+                return (document.getElementById(id)?.value ?? '') + '_from_rte';
             };
             fill_minimum_valid_form();
             document.querySelector('#exhibit-sub-title-input').value = 'Sub';
             document.querySelector('#exhibit-description-input').value = 'Desc';
             document.querySelector('#exhibit-about-the-curators-input').value = 'About';
-            document.querySelector('#is-content-advisory').checked = true;
-            document.querySelector('#exhibit-alert-text-input').value = 'Alert';
 
             const result = globalThis.exhibitsCommonFormModule.get_common_form_fields();
 
-            expect(clean_calls).toEqual(
-                expect.arrayContaining(['Minimum Title', 'Sub', 'Desc', 'About', 'Alert']),
+            expect(get_calls).toEqual(
+                expect.arrayContaining([
+                    'exhibit-title-input',
+                    'exhibit-sub-title-input',
+                    'exhibit-description-input',
+                    'exhibit-about-the-curators-input',
+                ]),
             );
-            expect(result.title).toBe('Minimum Title_cleaned');
-            expect(result.subtitle).toBe('Sub_cleaned');
-            expect(result.alert_text).toBe('Alert_cleaned');
+            expect(result.title).toBe('Minimum Title_from_rte');
+            expect(result.subtitle).toBe('Sub_from_rte');
+            expect(result.description).toBe('Desc_from_rte');
         });
 
         it('returns false and renders an alert when an unexpected error is thrown', () => {

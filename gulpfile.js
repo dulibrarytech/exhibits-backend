@@ -26,7 +26,8 @@ gulp.task('minify-css', function () {
         'public/assets/css/datatables.overrides.css',
         'public/assets/css/sidebar-overrides.css',
         'public/assets/css/exhibits.common.css',
-        'public/assets/css/media.library.css'
+        'public/assets/css/media.library.css',
+        'public/assets/css/rte.css'
     ])
         .pipe(concat('dashboard.min.css'))
         .pipe(cleanCSS())

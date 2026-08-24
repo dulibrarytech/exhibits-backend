@@ -24,6 +24,19 @@ const exhibitsEditFormModule = (function () {
     const EXHIBITS_ENDPOINTS = endpointsModule.get_exhibits_endpoints();
     let obj = {};
 
+    /*
+     * Populates (or hides, when name is empty) a read-only Media Name display.
+     * input_selector targets the input; its wrapper is `${input_selector}-group`.
+     */
+    function set_media_name_display(input_selector, name) {
+        const group = document.querySelector(`${input_selector}-group`);
+        const input_el = document.querySelector(input_selector);
+        const decoded = helperModule.unescape(name || '').trim();
+
+        if (input_el) input_el.value = decoded;
+        if (group) group.style.display = decoded.length > 0 ? '' : 'none';
+    }
+
     async function get_exhibit_record() {
 
         // Constants
@@ -398,7 +411,7 @@ const exhibitsEditFormModule = (function () {
         };
 
         // Helper function to display media from a media library binding
-        const set_media_binding_display = (binding, display_selector, filename_selector, uuid_input_selector, trash_selector) => {
+        const set_media_binding_display = (binding, display_selector, filename_selector, uuid_input_selector, trash_selector, name_input_selector) => {
 
             if (!binding) return;
 
@@ -429,6 +442,10 @@ const exhibitsEditFormModule = (function () {
             // Set the -prev tracking field for replace/clear operations
             const prev_el = document.querySelector(uuid_input_selector + '-prev');
             if (prev_el) prev_el.value = binding.media_uuid;
+
+            if (name_input_selector) {
+                set_media_name_display(name_input_selector, binding.name);
+            }
 
             set_element_display(trash_selector, 'inline');
         };
@@ -510,6 +527,11 @@ const exhibitsEditFormModule = (function () {
             const form_elements = document.querySelectorAll(
                 'input:not([type="hidden"]), textarea, select, button[type="submit"], button[type="button"]'
             );
+
+            // Rich text editors are div-based and not caught by the selector above
+            if (typeof rteModule !== 'undefined') {
+                rteModule.set_all_enabled(false);
+            }
 
             let disabled_count = 0;
 
@@ -608,10 +630,10 @@ const exhibitsEditFormModule = (function () {
             set_element_value('#is-published', is_published);
 
             // Set basic exhibit data with proper unescaping
-            set_element_value('#exhibit-title-input', helperModule.unescape(record.title || ''));
-            set_element_value('#exhibit-sub-title-input', helperModule.unescape(record.subtitle || ''));
-            set_element_value('#exhibit-description-input', helperModule.unescape(record.description || ''));
-            set_element_value('#exhibit-about-the-curators-input', helperModule.unescape(record.about_the_curators || ''));
+            rteModule.set_html('exhibit-title-input', helperModule.unescape(record.title || ''));
+            rteModule.set_html('exhibit-sub-title-input', helperModule.unescape(record.subtitle || ''));
+            rteModule.set_html('exhibit-description-input', helperModule.unescape(record.description || ''));
+            rteModule.set_html('exhibit-about-the-curators-input', helperModule.unescape(record.about_the_curators || ''));
             set_element_value('#exhibit-owner', record.owner);
 
             // Set checkboxes
@@ -636,7 +658,8 @@ const exhibitsEditFormModule = (function () {
                     '#hero-image-display',
                     '#hero-image-filename-display',
                     '#hero-image-media-uuid',
-                    '#hero-trash'
+                    '#hero-trash',
+                    '#hero-image-media-name-display'
                 );
             } else if (record.hero_image) {
                 set_media_display(
@@ -659,7 +682,8 @@ const exhibitsEditFormModule = (function () {
                     '#thumbnail-image-display',
                     '#thumbnail-filename-display',
                     '#thumbnail-media-uuid',
-                    '#thumbnail-trash'
+                    '#thumbnail-trash',
+                    '#thumbnail-media-name-display'
                 );
             } else if (record.thumbnail) {
                 set_media_display(
@@ -882,6 +906,7 @@ const exhibitsEditFormModule = (function () {
             clear_element('#hero-image-filename-display');
             clear_element('#hero-image-display');
             clear_element('#hero-image-media-uuid');
+            set_media_name_display('#hero-image-media-name-display', '');
             set_element_display('#hero-trash', 'none');
             set_element_display('#hero-legacy-migrate', 'none');
         };
@@ -1043,6 +1068,7 @@ const exhibitsEditFormModule = (function () {
             clear_element('#thumbnail-filename-display');
             clear_element('#thumbnail-image-display');
             clear_element('#thumbnail-media-uuid');
+            set_media_name_display('#thumbnail-media-name-display', '');
             set_element_display('#thumbnail-trash', 'none');
             set_element_display('#thumbnail-legacy-migrate', 'none');
         };
@@ -1218,6 +1244,9 @@ const exhibitsEditFormModule = (function () {
 
             const filename_el = document.querySelector(filename_selector);
             if (filename_el) filename_el.textContent = '';
+
+            // Both slots follow the `<slot>-media-uuid` / `<slot>-media-name-display` id pairing
+            set_media_name_display(uuid_selector.replace('-media-uuid', '-media-name-display'), '');
 
             const trash_el = document.querySelector(trash_selector);
             if (trash_el) trash_el.style.display = 'none';
@@ -1399,6 +1428,8 @@ const exhibitsEditFormModule = (function () {
                                 filename_el.appendChild(span);
                             }
 
+                            set_media_name_display('#hero-image-media-name-display', media.name);
+
                             const trash_el = document.querySelector('#hero-trash');
                             if (trash_el) trash_el.style.display = 'inline';
 
@@ -1455,6 +1486,8 @@ const exhibitsEditFormModule = (function () {
                                 span.textContent = media.name || media.original_filename || '';
                                 filename_el.appendChild(span);
                             }
+
+                            set_media_name_display('#thumbnail-media-name-display', media.name);
 
                             const trash_el = document.querySelector('#thumbnail-trash');
                             if (trash_el) trash_el.style.display = 'inline';

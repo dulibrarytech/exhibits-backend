@@ -48,7 +48,7 @@ test.describe('Add timeline form (items.add.vertical.timeline.form.module)', () 
         await page.goto(`${APP_PATH}/items/vertical-timeline?exhibit_id=${EXHIBIT_UUID}`);
         await expect(page.locator('#save-timeline-btn')).toBeEnabled();
 
-        await page.fill('#timeline-text-input', 'My new timeline');
+        await page.fill('#timeline-text-input .ql-editor', 'My new timeline');
         await page.fill('#timeline-internal-name-input', 'Staff timeline label');
 
         const postPromise = page.waitForRequest((req) => {
@@ -61,7 +61,7 @@ test.describe('Add timeline form (items.add.vertical.timeline.form.module)', () 
         await postPromise;
 
         await expect.poll(() => state.lastCreatePayload).not.toBeNull();
-        expect(state.lastCreatePayload.text).toBe('My new timeline');
+        expect(state.lastCreatePayload.text).toBe('<p>My new timeline</p>');
         expect(state.lastCreatePayload.internal_name).toBe('Staff timeline label');
 
         // Module redirects to /items/vertical-timeline/edit?... after

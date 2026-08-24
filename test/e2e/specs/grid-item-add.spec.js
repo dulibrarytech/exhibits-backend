@@ -75,7 +75,7 @@ test.describe('Add grid text item form (items.add.grid.item.form.module)', () =>
         );
         await expect(page.locator('#save-item-btn')).toBeEnabled();
 
-        await page.fill('#item-text-input', 'A new text item');
+        await page.fill('#item-text-input .ql-editor', 'A new text item');
 
         const postPromise = page.waitForRequest((req) => {
             const u = new URL(req.url());
@@ -87,7 +87,7 @@ test.describe('Add grid text item form (items.add.grid.item.form.module)', () =>
         await postPromise;
 
         await expect.poll(() => state.lastCreatePayload).not.toBeNull();
-        expect(state.lastCreatePayload.text).toBe('A new text item');
+        expect(state.lastCreatePayload.text).toBe('<p>A new text item</p>');
         // Common form forces these for the text path.
         expect(state.lastCreatePayload.item_type).toBe('text');
         expect(state.lastCreatePayload.mime_type).toBe('text/plain');
@@ -120,7 +120,7 @@ test.describe('Add grid text item form (items.add.grid.item.form.module)', () =>
             + `?exhibit_id=${EXHIBIT_UUID}&grid_id=${GRID_UUID}&item_id=existing-grid-item`
         );
 
-        await page.fill('#item-text-input', 'Should not be sent');
+        await page.fill('#item-text-input .ql-editor', 'Should not be sent');
         await page.click('#save-item-btn');
         await page.waitForTimeout(250);
 

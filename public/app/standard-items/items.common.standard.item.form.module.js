@@ -232,6 +232,26 @@ const itemsCommonStandardItemFormModule = (function () {
         }
     }
 
+    /**
+     * Shows or hides the read-only Media Name display for the selected media asset
+     * @param {Object|null} media - Media object (null to hide)
+     */
+    function toggle_media_name_display(media) {
+        const group = document.querySelector('#item-media-name-display-group');
+        if (!group) return;
+
+        const display_el = document.querySelector('#item-media-name-display');
+        const name = decode_html_entities((media && media.name) || '').trim();
+
+        if (name.length > 0) {
+            if (display_el) display_el.value = name;
+            group.style.display = '';
+        } else {
+            if (display_el) display_el.value = '';
+            group.style.display = 'none';
+        }
+    }
+
     // ── Smart caption auto-fill (add forms) ──────────────────────────────────
     let _caption_autofill_enabled = false;
     let _caption_user_edited = false;
@@ -279,6 +299,7 @@ const itemsCommonStandardItemFormModule = (function () {
 
         toggle_pdf_open_to_page(media.media_type);
         toggle_alt_text_display(media);
+        toggle_media_name_display(media);
 
         autofill_caption_from_media(media, previous_media_uuid);
     }
@@ -337,6 +358,7 @@ const itemsCommonStandardItemFormModule = (function () {
 
         toggle_pdf_open_to_page('');
         toggle_alt_text_display(null);
+        toggle_media_name_display(null);
 
         autofill_caption_from_media(null, previous_media_uuid);
     }
@@ -624,8 +646,9 @@ const itemsCommonStandardItemFormModule = (function () {
                 if (page_input) page_input.value = record.pdf_open_to_page;
             }
 
-            // Show read-only alt text from the media library asset
+            // Show read-only alt text and media name from the media library asset
             toggle_alt_text_display(media_obj);
+            toggle_media_name_display(media_obj);
         }
 
         // Thumbnail preview
@@ -704,8 +727,8 @@ const itemsCommonStandardItemFormModule = (function () {
                 domModule.clear_field_error(s, s.replace('#', '') + '-error');
             });
 
-            // Get item metadata
-            item.text = getElementValue('#item-text-input');
+            // Get item metadata (rich text; serialized HTML, '' when empty)
+            item.text = rteModule.get_html('item-text-input');
 
             // Validate text content for text paths
             if (isTextPath && item.text.length === 0) {
@@ -739,8 +762,8 @@ const itemsCommonStandardItemFormModule = (function () {
                 item.thumbnail_media_uuid = getElementValue('#thumbnail-media-uuid');
 
                 // Collect optional Pop-up Window Description + Caption (media items only)
-                item.description = getElementValue('#item-description-input');
-                item.caption = getElementValue('#item-caption-input');
+                item.description = rteModule.get_html('item-description-input');
+                item.caption = rteModule.get_html('item-caption-input');
 
                 // Collect Embed Item flag (embedded audio/video skip the pop-up viewer).
                 const embed_item_el = document.querySelector('#embed-item');
@@ -817,12 +840,6 @@ const itemsCommonStandardItemFormModule = (function () {
 
                     const exhibit_text_block = exhibit_text_label.closest('.form-text');
                     if (exhibit_text_block) {
-                        // Remove the "Preview Field" link beside the Exhibit Text label.
-                        const preview_link = exhibit_text_block.querySelector('a');
-                        if (preview_link) {
-                            preview_link.remove();
-                        }
-
                         const text_box = document.querySelector('#item-text-input');
                         const wrap_text_group = document.querySelector('#wrap-text-group');
                         if (text_box && wrap_text_group) {

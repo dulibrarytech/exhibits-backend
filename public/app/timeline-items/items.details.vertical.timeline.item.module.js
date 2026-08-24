@@ -156,6 +156,11 @@ const itemsDetailsVerticalTimelineItemModule = (function () {
             'input:not([type="hidden"]), textarea, select, button[type="button"]:not(#edit-item-btn)'
         );
 
+        // Rich text editors are div-based and not caught by the selector above
+        if (typeof rteModule !== 'undefined') {
+            rteModule.set_all_enabled(false);
+        }
+
         form_elements.forEach(element => {
             if (!element.disabled && !element.readOnly) {
                 element.disabled = true;
@@ -252,8 +257,8 @@ const itemsDetailsVerticalTimelineItemModule = (function () {
             }
 
             // Set basic form fields
-            set_element_value('#item-title-input', record.title ? helperModule.unescape(record.title) : '');
-            set_element_value('#item-text-input', record.text ? helperModule.unescape(record.text) : '');
+            rteModule.render_static('item-title-input', record.title ? helperModule.unescape(record.title) : '');
+            rteModule.render_static('item-text-input', record.text ? helperModule.unescape(record.text) : '');
 
             // Set date field (extract date portion from ISO string)
             if (record.date) {
@@ -269,8 +274,8 @@ const itemsDetailsVerticalTimelineItemModule = (function () {
                 itemsCommonVerticalTimelineItemFormModule.populate_media_previews(record);
 
                 // Surface the Pop-up Window Description + Caption read-only.
-                set_element_value('#item-description-input', record.description ? helperModule.unescape(record.description) : '');
-                set_element_value('#item-caption-input', record.caption ? helperModule.unescape(record.caption) : '');
+                rteModule.render_static('item-description-input', record.description ? helperModule.unescape(record.description) : '');
+                rteModule.render_static('item-caption-input', record.caption ? helperModule.unescape(record.caption) : '');
             }
 
             // Set embed item checkbox from record

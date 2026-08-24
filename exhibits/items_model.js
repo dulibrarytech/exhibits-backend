@@ -132,6 +132,19 @@ const fetch_timeline_items = async (is_member_of_exhibit, timelines) => {
  * @param {string} is_member_of_exhibit - Exhibit UUID
  * @returns {Promise<Object>} Response object with records
  */
+const RTE_VOCABULARY = require('../libs/rte_vocabulary');
+
+/*
+ * Field → rich-text profile map enforced on create/update. Mirrors the
+ * dashboard editor configuration (public/app/utils/rte.module.js).
+ */
+const ITEM_RTE_PROFILES = {
+    text: 'full',
+    description: 'full',
+    caption: 'full',
+    alt_text: 'plain'
+};
+
 exports.get_item_records = async (is_member_of_exhibit) => {
 
     try {
@@ -213,6 +226,8 @@ exports.get_item_records = async (is_member_of_exhibit) => {
  * @returns {Promise<Object>} Response object
  */
 exports.create_item_record = async (is_member_of_exhibit, data) => {
+
+    RTE_VOCABULARY.apply(data, ITEM_RTE_PROFILES);
 
     try {
         // Validate inputs
@@ -321,6 +336,8 @@ const handle_item_republish = async (is_member_of_exhibit, item_id) => {
  * @returns {Promise<Object>} Response object
  */
 exports.update_item_record = async (is_member_of_exhibit, item_id, data) => {
+
+    RTE_VOCABULARY.apply(data, ITEM_RTE_PROFILES);
 
     try {
         // Validate inputs

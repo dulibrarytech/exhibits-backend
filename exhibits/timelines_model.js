@@ -62,7 +62,29 @@ const exhibit_tasks = new EXHIBIT_RECORD_TASKS(DB, TABLES);
  * @param {Object} data - Timeline data
  * @returns {Promise<Object>} Response object
  */
+const RTE_VOCABULARY = require('../libs/rte_vocabulary');
+
+/*
+ * Field → rich-text profile maps enforced on create/update. Mirror the
+ * dashboard editor configuration (public/app/utils/rte.module.js).
+ */
+const TIMELINE_RTE_PROFILES = {
+    text: 'full',
+    internal_name: 'plain'
+};
+
+const TIMELINE_ITEM_RTE_PROFILES = {
+    title: 'reduced',
+    text: 'full',
+    description: 'full',
+    caption: 'full',
+    alt_text: 'plain',
+    date: 'plain'
+};
+
 exports.create_timeline_record = async (is_member_of_exhibit, data) => {
+
+    RTE_VOCABULARY.apply(data, TIMELINE_RTE_PROFILES);
 
     try {
         // Validate inputs
@@ -142,6 +164,8 @@ exports.create_timeline_record = async (is_member_of_exhibit, data) => {
  * @returns {Promise<Object>} Response object
  */
 exports.update_timeline_record = async (is_member_of_exhibit, timeline_id, data) => {
+
+    RTE_VOCABULARY.apply(data, TIMELINE_RTE_PROFILES);
 
     try {
         // Validate inputs
@@ -261,6 +285,8 @@ exports.get_timeline_record = async (is_member_of_exhibit, timeline_id) => {
  * @returns {Promise<Object>} Response object
  */
 exports.create_timeline_item_record = async (is_member_of_exhibit, timeline_id, data) => {
+
+    RTE_VOCABULARY.apply(data, TIMELINE_ITEM_RTE_PROFILES);
 
     try {
         // Validate inputs
@@ -523,6 +549,8 @@ exports.get_timeline_item_details_record = async (is_member_of_exhibit, is_membe
  * @returns {Promise<Object>} Response object
  */
 exports.update_timeline_item_record = async (is_member_of_exhibit, is_member_of_timeline, item_id, data) => {
+
+    RTE_VOCABULARY.apply(data, TIMELINE_ITEM_RTE_PROFILES);
 
     try {
         // Validate inputs

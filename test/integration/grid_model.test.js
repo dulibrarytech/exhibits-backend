@@ -18,6 +18,19 @@ const TEST_USER_UID = '1'; // numeric tbl_users.id (the lock owner), NOT a UUID
 // ==================== MOCK SETUP ====================
 
 // Mock Logger
+/*
+ * libs/rte_vocabulary requires jsdom, whose dependency tree ships untranspiled
+ * ESM that jest cannot parse (node_modules is not transformed). The vocabulary
+ * itself is unit-tested in vitest (test/tasks/rte_vocabulary.test.js); here it
+ * is a pass-through so model orchestration is tested unchanged.
+ */
+jest.mock('../../libs/rte_vocabulary', () => ({
+    apply: jest.fn((record) => record),
+    sanitize_rich_full: jest.fn((value) => value),
+    sanitize_rich_reduced: jest.fn((value) => value),
+    sanitize_plain: jest.fn((value) => value),
+}));
+
 jest.mock('../../libs/log4', () => ({
     module: () => ({
         error: jest.fn(),
@@ -642,6 +655,174 @@ describe('Grid Model Integration Tests', () => {
             const result = await GRID_MODEL.unlock_grid_item_record(TEST_USER_UID, '', {});
 
             expect(result).toBe(false);
+        });
+    });
+
+    // ==================== MINIMUM ITEMS RULE (items >= columns) ====================
+
+    describe('publish_grid_record minimum-items gate', () => {
+
+        const INDEXER_MODEL = require('../../indexer/model');
+
+        beforeEach(() => {
+            mockExhibitRecordTask.get_exhibit_record = jest.fn().mockResolvedValue({ is_published: 1 });
+            mockGridRecordTask.set_grid_to_publish = jest.fn().mockResolvedValue(true);
+            mockGridRecordTask.get_grid_item_count = jest.fn().mockResolvedValue(4);
+            mockGridRecordTask.get_grid_record.mockResolvedValue({
+                uuid: TEST_GRID_UUID,
+                columns: 4,
+                internal_name: 'Staff grid name'
+            });
+        });
+
+        test('refuses to publish a grid with fewer items than columns', async () => {
+            mockGridRecordTask.get_grid_item_count.mockResolvedValue(1);
+
+            const result = await GRID_MODEL.publish_grid_record(TEST_EXHIBIT_UUID, TEST_GRID_UUID);
+
+            expect(result.status).toBe(false);
+            expect(result.message).toContain('set to 4 columns');
+            expect(result.message).toContain('Add at least 4 grid items');
+            expect(mockGridRecordTask.set_grid_to_publish).not.toHaveBeenCalled();
+            expect(INDEXER_MODEL.index_grid_record).not.toHaveBeenCalled();
+        });
+
+        test('publishes a grid whose item count meets the column count', async () => {
+            mockGridRecordTask.get_grid_item_count.mockResolvedValue(4);
+
+            const result = await GRID_MODEL.publish_grid_record(TEST_EXHIBIT_UUID, TEST_GRID_UUID);
+
+            expect(result.status).toBe(true);
+            expect(mockGridRecordTask.set_grid_to_publish).toHaveBeenCalledWith(TEST_GRID_UUID);
+        });
+
+        test('legacy column values outside 2-4 fall back to a minimum of 2', async () => {
+            mockGridRecordTask.get_grid_record.mockResolvedValue({
+                uuid: TEST_GRID_UUID,
+                columns: 6,
+                internal_name: 'Legacy grid'
+            });
+            mockGridRecordTask.get_grid_item_count.mockResolvedValue(1);
+
+            const blocked = await GRID_MODEL.publish_grid_record(TEST_EXHIBIT_UUID, TEST_GRID_UUID);
+            expect(blocked.status).toBe(false);
+
+            mockGridRecordTask.get_grid_item_count.mockResolvedValue(2);
+            const allowed = await GRID_MODEL.publish_grid_record(TEST_EXHIBIT_UUID, TEST_GRID_UUID);
+            expect(allowed.status).toBe(true);
+        });
+    });
+
+    describe('suppress_grid_item_record minimum-items gate', () => {
+
+        const INDEXER_MODEL = require('../../indexer/model');
+
+        beforeEach(() => {
+            mockGridRecordTask.get_grid_item_count = jest.fn().mockResolvedValue(4);
+            mockGridRecordTask.get_grid_record.mockResolvedValue({
+                uuid: TEST_GRID_UUID,
+                columns: 3,
+                is_published: 1
+            });
+            mockGridRecordTask.get_grid_item_record.mockResolvedValue({
+                uuid: TEST_GRID_ITEM_UUID,
+                is_published: 1
+            });
+        });
+
+        test('refuses to unpublish an item that would drop a published grid below its minimum', async () => {
+            mockGridRecordTask.get_grid_item_count.mockResolvedValue(3);
+
+            const result = await GRID_MODEL.suppress_grid_item_record(
+                TEST_EXHIBIT_UUID,
+                TEST_GRID_UUID,
+                TEST_GRID_ITEM_UUID
+            );
+
+            expect(result.status).toBe(false);
+            expect(result.message).toContain('Unpublish the grid first');
+            expect(mockGridRecordTask.get_grid_item_count).toHaveBeenCalledWith(
+                TEST_EXHIBIT_UUID,
+                TEST_GRID_UUID,
+                { published_only: true }
+            );
+            expect(INDEXER_MODEL.delete_record).not.toHaveBeenCalled();
+        });
+
+        test('allows unpublishing an item when the grid keeps its minimum', async () => {
+            mockGridRecordTask.get_grid_item_count.mockResolvedValue(4);
+
+            const result = await GRID_MODEL.suppress_grid_item_record(
+                TEST_EXHIBIT_UUID,
+                TEST_GRID_UUID,
+                TEST_GRID_ITEM_UUID
+            );
+
+            expect(result.status).toBe(true);
+        });
+
+        test('skips the gate when the grid is not published', async () => {
+            mockGridRecordTask.get_grid_record.mockResolvedValue({
+                uuid: TEST_GRID_UUID,
+                columns: 3,
+                is_published: 0
+            });
+            mockGridRecordTask.get_grid_item_count.mockResolvedValue(0);
+
+            const result = await GRID_MODEL.suppress_grid_item_record(
+                TEST_EXHIBIT_UUID,
+                TEST_GRID_UUID,
+                TEST_GRID_ITEM_UUID
+            );
+
+            expect(result.status).toBe(true);
+        });
+    });
+
+    describe('get_under_filled_grids', () => {
+
+        beforeEach(() => {
+            mockGridRecordTask.get_grid_records = jest.fn();
+            mockGridRecordTask.get_grid_item_count = jest.fn();
+        });
+
+        test('returns only grids whose item count is below their column count', async () => {
+            mockGridRecordTask.get_grid_records.mockResolvedValue([
+                { uuid: 'aaaaaaaa-1111-4111-8111-111111111111', columns: 4, internal_name: 'Under-filled' },
+                { uuid: 'bbbbbbbb-2222-4222-8222-222222222222', columns: 2, internal_name: 'Full' }
+            ]);
+            mockGridRecordTask.get_grid_item_count
+                .mockResolvedValueOnce(1)
+                .mockResolvedValueOnce(2);
+
+            const result = await GRID_MODEL.get_under_filled_grids(TEST_EXHIBIT_UUID);
+
+            expect(result).toHaveLength(1);
+            expect(result[0]).toEqual({
+                uuid: 'aaaaaaaa-1111-4111-8111-111111111111',
+                internal_name: 'Under-filled',
+                minimum: 4,
+                item_count: 1
+            });
+        });
+
+        test('labels grids without an internal name as "Untitled grid"', async () => {
+            mockGridRecordTask.get_grid_records.mockResolvedValue([
+                { uuid: 'cccccccc-3333-4333-8333-333333333333', columns: 3, internal_name: null }
+            ]);
+            mockGridRecordTask.get_grid_item_count.mockResolvedValue(0);
+
+            const result = await GRID_MODEL.get_under_filled_grids(TEST_EXHIBIT_UUID);
+
+            expect(result[0].internal_name).toBe('Untitled grid');
+        });
+
+        test('returns an empty array when the exhibit has no grids', async () => {
+            mockGridRecordTask.get_grid_records.mockResolvedValue([]);
+
+            const result = await GRID_MODEL.get_under_filled_grids(TEST_EXHIBIT_UUID);
+
+            expect(result).toEqual([]);
         });
     });
 

@@ -177,6 +177,26 @@ const itemsCommonVerticalTimelineItemFormModule = (function () {
 
     // ==================== MEDIA SELECTION HANDLERS ====================
 
+    /**
+     * Shows or hides the read-only Media Name display for the selected media asset
+     * @param {Object|null} media - Media object (null to hide)
+     */
+    function toggle_media_name_display(media) {
+        const group = document.querySelector('#item-media-name-display-group');
+        if (!group) return;
+
+        const display_el = document.querySelector('#item-media-name-display');
+        const name = decode_html_entities((media && media.name) || '').trim();
+
+        if (name.length > 0) {
+            if (display_el) display_el.value = name;
+            group.style.display = '';
+        } else {
+            if (display_el) display_el.value = '';
+            group.style.display = 'none';
+        }
+    }
+
     // ── Smart caption auto-fill (add forms) ──────────────────────────────────
     let _caption_autofill_enabled = false;
     let _caption_user_edited = false;
@@ -221,6 +241,8 @@ const itemsCommonVerticalTimelineItemFormModule = (function () {
             '#item-media-trash',
             media
         );
+
+        toggle_media_name_display(media);
 
         autofill_caption_from_media(media, previous_media_uuid);
     }
@@ -276,6 +298,8 @@ const itemsCommonVerticalTimelineItemFormModule = (function () {
             'fa-file-o',
             'No media selected'
         );
+
+        toggle_media_name_display(null);
 
         autofill_caption_from_media(null, previous_media_uuid);
     }
@@ -417,6 +441,8 @@ const itemsCommonVerticalTimelineItemFormModule = (function () {
                 '#item-media-trash',
                 media_obj
             );
+
+            toggle_media_name_display(media_obj);
         }
 
         // Thumbnail preview
@@ -476,9 +502,9 @@ const itemsCommonVerticalTimelineItemFormModule = (function () {
                 domModule.clear_field_error(s, s.replace('#', '') + '-error');
             });
 
-            // Get item metadata
-            item.title = get_element_value('#item-title-input');
-            item.text = get_element_value('#item-text-input');
+            // Get item metadata (rich text; serialized HTML, '' when empty)
+            item.title = rteModule.get_html('item-title-input');
+            item.text = rteModule.get_html('item-text-input');
             item.date = get_element_value('input[type="date"]');
 
             // Validate required date field
@@ -528,8 +554,8 @@ const itemsCommonVerticalTimelineItemFormModule = (function () {
                 }
 
                 // Collect optional Pop-up Window Description + Caption (media items only)
-                item.description = get_element_value('#item-description-input');
-                item.caption = get_element_value('#item-caption-input');
+                item.description = rteModule.get_html('item-description-input');
+                item.caption = rteModule.get_html('item-caption-input');
 
             } else {
                 // Default to text type for non-media paths

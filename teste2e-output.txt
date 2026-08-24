@@ -1,0 +1,1615 @@
+
+> exhibits-builder@2.0.0 test:e2e
+> playwright test
+
+
+Running 165 tests using 4 workers
+
+  ✓    1 [chromium] › test/e2e/specs/a11y.spec.js:107:5 › axe-core a11y scans (WCAG 2.0/2.1/2.2 AA) › Grid items list page has no axe violations (1.6s)
+  ✓    3 [chromium] › test/e2e/specs/a11y.spec.js:88:5 › axe-core a11y scans (WCAG 2.0/2.1/2.2 AA) › Items list page has no axe violations (1.7s)
+  ✓    4 [chromium] › test/e2e/specs/a11y.spec.js:140:5 › axe-core a11y scans (WCAG 2.0/2.1/2.2 AA) › Media library list page has no axe violations (1.9s)
+  ✓    2 [chromium] › test/e2e/specs/a11y.spec.js:127:5 › axe-core a11y scans (WCAG 2.0/2.1/2.2 AA) › Exhibits list page has no axe violations (2.0s)
+  ✓    5 [chromium] › test/e2e/specs/exhibits-add.spec.js:18:5 › Add Exhibit modal › opens modal and initializes the add-form module (634ms)
+  ✓    6 [chromium] › test/e2e/specs/exhibits-add.spec.js:34:5 › Add Exhibit modal › blocks save when required fields are empty (960ms)
+  ✘    7 [chromium] › test/e2e/specs/exhibits-add.spec.js:56:5 › Add Exhibit modal › POSTs payload and closes modal on success (977ms)
+  ✓   10 [chromium] › test/e2e/specs/exhibits-details.spec.js:53:5 › Exhibit details page (exhibits.details.module) › clicking Edit navigates to the edit page with the same exhibit_id (345ms)
+  ✘    8 [chromium] › test/e2e/specs/exhibits-add.spec.js:93:5 › Add Exhibit modal › submits successfully even when every endpoints cache layer is cleared (storage-free endpoint map) (1.1s)
+  ✓   11 [chromium] › test/e2e/specs/exhibits-edit.spec.js:20:5 › Edit exhibit form (exhibits.edit.form.module) › populates form fields from the fetched record (256ms)
+  ✓   13 [chromium] › test/e2e/specs/exhibits-details.spec.js:71:5 › Exhibit details page (exhibits.details.module) › shows permission-denied alert when status=403 is in the URL (304ms)
+  ✓   15 [chromium] › test/e2e/specs/exhibits-list.spec.js:23:5 › Exhibits list page › renders DataTables rows from API (338ms)
+  ✓   16 [chromium] › test/e2e/specs/exhibits-list.spec.js:38:5 › Exhibits list page › shows empty-state when API returns no records (196ms)
+  ✘   14 [chromium] › test/e2e/specs/exhibits-edit.spec.js:50:5 › Edit exhibit form (exhibits.edit.form.module) › PUTs updated payload and shows success alert on 201 (518ms)
+  ✓   17 [chromium] › test/e2e/specs/grid-add.spec.js:25:5 › Add grid form (items.add.grid.form.module) › renders the grid data card with required fields (207ms)
+  ✓   18 [chromium] › test/e2e/specs/grid-add.spec.js:88:5 › Add grid form (items.add.grid.form.module) › blocks the save and shows an alert when internal name is empty (304ms)
+  ✘   19 [chromium] › test/e2e/specs/grid-add.spec.js:49:5 › Add grid form (items.add.grid.form.module) › POSTs serialized payload and redirects to edit on 201 (386ms)
+  ✓   20 [chromium] › test/e2e/specs/grid-add.spec.js:104:5 › Add grid form (items.add.grid.form.module) › does not POST when item_id is already present (edit mode guard) (482ms)
+  ✓   21 [chromium] › test/e2e/specs/grid-details.spec.js:59:5 › Grid details page (items.details.grid.module) › renders an empty internal name for legacy grids that predate the column (204ms)
+  ✓   23 [chromium] › test/e2e/specs/grid-details.spec.js:70:5 › Grid details page (items.details.grid.module) › clicking Edit navigates to the edit page with the same ids (332ms)
+  ✓   24 [chromium] › test/e2e/specs/grid-details.spec.js:89:5 › Grid details page (items.details.grid.module) › shows permission-denied alert when status=403 is in the URL (166ms)
+  ✓   25 [chromium] › test/e2e/specs/grid-edit.spec.js:22:5 › Edit grid form (items.edit.grid.form.module) › populates form fields from the fetched record (200ms)
+  ✓   26 [chromium] › test/e2e/specs/grid-edit.spec.js:45:5 › Edit grid form (items.edit.grid.form.module) › legacy grids without internal_name must supply one before saving (236ms)
+  ✓   27 [chromium] › test/e2e/specs/grid-edit.spec.js:71:5 › Edit grid form (items.edit.grid.form.module) › forces re-selection when the saved columns value predates the dropdown (247ms)
+  ✘   28 [chromium] › test/e2e/specs/grid-edit.spec.js:105:5 › Edit grid form (items.edit.grid.form.module) › PUTs updated payload and shows success alert on 201 (286ms)
+  ✓   29 [chromium] › test/e2e/specs/grid-edit.spec.js:143:5 › Edit grid form (items.edit.grid.form.module) › applies a saved style preset to the styles chooser (234ms)
+  ✘    9 [chromium] › test/e2e/specs/exhibits-details.spec.js:20:5 › Exhibit details page (exhibits.details.module) › renders record fields and disables them after population (5.4s)
+  ✓   30 [chromium] › test/e2e/specs/grid-item-add.spec.js:26:5 › Add grid text item form (items.add.grid.item.form.module) › renders the item data card with the text input (194ms)
+  ✘   31 [chromium] › test/e2e/specs/grid-item-add.spec.js:66:5 › Add grid text item form (items.add.grid.item.form.module) › POSTs serialized payload and redirects to text edit on 201 (314ms)
+  ✓   32 [chromium] › test/e2e/specs/grid-item-add.spec.js:42:5 › Add grid text item form (items.add.grid.item.form.module) › blocks submit when text is empty (text path) (289ms)
+  ✘   12 [chromium] › test/e2e/specs/exhibits-edit.spec.js:86:5 › Edit exhibit form (exhibits.edit.form.module) › disables form fields when record is locked by another user (5.4s)
+  ✓   34 [chromium] › test/e2e/specs/grid-item-add.spec.js:111:5 › Add grid text item form (items.add.grid.item.form.module) › does not POST when item_id is already present (edit mode guard) (527ms)
+  ✓   36 [chromium] › test/e2e/specs/grid-item-details.spec.js:84:5 › Grid text item details page (items.details.grid.item.module) › shows permission-denied alert when status=403 is in the URL (220ms)
+  ✓   35 [chromium] › test/e2e/specs/grid-item-details.spec.js:60:5 › Grid text item details page (items.details.grid.item.module) › clicking Edit navigates to the text edit page with the same ids (295ms)
+  ✓   37 [chromium] › test/e2e/specs/grid-item-edit.spec.js:23:5 › Edit grid text item form (items.edit.grid.item.form.module) › populates form fields from the fetched record (217ms)
+  ✘   38 [chromium] › test/e2e/specs/grid-item-edit.spec.js:49:5 › Edit grid text item form (items.edit.grid.item.form.module) › PUTs updated payload and shows success alert on 201 (365ms)
+  ✓   40 [chromium] › test/e2e/specs/grid-item-media-add.spec.js:40:5 › Add grid media item form (items.add.grid.item.form.module — media path) › renders the item data card with media picker button (241ms)
+  ✓   41 [chromium] › test/e2e/specs/grid-item-media-add.spec.js:59:5 › Add grid media item form (items.add.grid.item.form.module — media path) › blocks submit when media is not selected (media path) (277ms)
+  ✘   22 [chromium] › test/e2e/specs/grid-details.spec.js:27:5 › Grid details page (items.details.grid.module) › renders record fields read-only (5.4s)
+  ✓   43 [chromium] › test/e2e/specs/grid-item-media-add.spec.js:137:5 › Add grid media item form (items.add.grid.item.form.module — media path) › does not POST when item_id is already present (edit mode guard) (508ms)
+  ✓   42 [chromium] › test/e2e/specs/grid-item-media-add.spec.js:81:5 › Add grid media item form (items.add.grid.item.form.module — media path) › selecting media via picker → POST → redirect to media edit (2.5s)
+  ✓   45 [chromium] › test/e2e/specs/grid-item-media-details.spec.js:65:5 › Grid media item details page (items.details.grid.item.module — media path) › clicking Edit navigates to the media edit page with the same ids (266ms)
+  ✓   46 [chromium] › test/e2e/specs/grid-item-media-edit.spec.js:28:5 › Edit grid media item form (items.edit.grid.item.form.module — media path) › populates media fields and preview from the fetched record (191ms)
+  ✘   33 [chromium] › test/e2e/specs/grid-item-details.spec.js:28:5 › Grid text item details page (items.details.grid.item.module) › renders record fields and disables them after population (5.3s)
+  ✘   47 [chromium] › test/e2e/specs/grid-item-media-edit.spec.js:57:5 › Edit grid media item form (items.edit.grid.item.form.module — media path) › PUTs payload preserving media_uuid and shows success alert (292ms)
+  ✓   49 [chromium] › test/e2e/specs/grid-reorder.spec.js:81:5 › Grid items — row reorder › Move down on first grid row (via dropdown) swaps rows and POSTs entries tagged with grid_id and type=griditem (449ms)
+  ✘   39 [chromium] › test/e2e/specs/grid-item-edit.spec.js:87:5 › Edit grid text item form (items.edit.grid.item.form.module) › disables form fields when record is locked by another user (5.3s)
+  ✓   50 [chromium] › test/e2e/specs/heading-add.spec.js:25:5 › Add heading form (items.add.heading.form.module) › renders the heading data card with required fields (173ms)
+  ✓   48 [chromium] › test/e2e/specs/grid-reorder.spec.js:18:5 › Grid items — row reorder › drags a row and POSTs new order to reorder endpoint (1.1s)
+  ✓   51 [chromium] › test/e2e/specs/heading-add.spec.js:54:5 › Add heading form (items.add.heading.form.module) › blocks submit when heading type is empty (254ms)
+  ✘   52 [chromium] › test/e2e/specs/heading-add.spec.js:69:5 › Add heading form (items.add.heading.form.module) › POSTs serialized payload and redirects to edit on 201 (398ms)
+  ✓   53 [chromium] › test/e2e/specs/heading-add.spec.js:36:5 › Add heading form (items.add.heading.form.module) › blocks submit when heading text is empty (339ms)
+  ✓   54 [chromium] › test/e2e/specs/heading-add.spec.js:110:5 › Add heading form (items.add.heading.form.module) › does not POST when item_id is already present (edit mode guard) (563ms)
+  ✓   55 [chromium] › test/e2e/specs/heading-details.spec.js:53:5 › Heading details page (items.details.heading.item.module) › clicking Edit navigates to the edit page with the same ids (273ms)
+  ✓   56 [chromium] › test/e2e/specs/heading-details.spec.js:78:5 › Heading details page (items.details.heading.item.module) › shows permission-denied alert when status=403 is in the URL (213ms)
+  ✓   57 [chromium] › test/e2e/specs/heading-edit.spec.js:22:5 › Edit heading form (items.edit.heading.form.module) › populates heading text and type from the fetched record (283ms)
+  ✘   58 [chromium] › test/e2e/specs/heading-edit.spec.js:47:5 › Edit heading form (items.edit.heading.form.module) › PUTs updated payload and shows success alert on 201 (404ms)
+  ✓   61 [chromium] › test/e2e/specs/heading-edit.spec.js:105:5 › Edit heading form (items.edit.heading.form.module) › applies a saved style preset to the styles chooser (230ms)
+  ✘   44 [chromium] › test/e2e/specs/grid-item-media-details.spec.js:30:5 › Grid media item details page (items.details.grid.item.module — media path) › renders read-only fields and populates the media preview (5.4s)
+  ✓   62 [chromium] › test/e2e/specs/items-delete.spec.js:23:5 › Items delete confirmation page (items.module.js — delete_item) › renders the delete confirmation card with delete button enabled (260ms)
+  ✓   63 [chromium] › test/e2e/specs/items-delete.spec.js:76:5 › Items delete confirmation page (items.module.js — delete_item) › shows permission-denied alert when status=403 is in the URL (170ms)
+  ✓   65 [chromium] › test/e2e/specs/items-list.spec.js:41:5 › Items list page (items.module.js) › renders items returned from the API (239ms)
+  ✓   66 [chromium] › test/e2e/specs/items-list.spec.js:59:5 › Items list page (items.module.js) › shows empty-state alert when API returns no items (169ms)
+  ✓   67 [chromium] › test/e2e/specs/items-list.spec.js:74:5 › Items list page (items.module.js) › shows permission-denied alert when status=403 is in the URL (186ms)
+  ✓   68 [chromium] › test/e2e/specs/items-list.spec.js:93:5 › Items list page (items.module.js) › clicking a publish button POSTs to the publish endpoint (254ms)
+  ✓   64 [chromium] › test/e2e/specs/items-delete.spec.js:34:5 › Items delete confirmation page (items.module.js — delete_item) › clicking Delete fires DELETE with type query param and redirects on 204 (1.2s)
+  ✓   70 [chromium] › test/e2e/specs/items-reorder.spec.js:93:5 › Items list page — row reorder (items.module.js + reorder.module.js) › renders Move up / Move down dropdown items in each row actions menu with boundary disabling (259ms)
+  ✓   71 [chromium] › test/e2e/specs/items-reorder.spec.js:145:5 › Items list page — row reorder (items.module.js + reorder.module.js) › clicking Move down on the first row (via the actions dropdown) swaps rows, POSTs the new order, and announces via #reorder-status (376ms)
+  ✓   69 [chromium] › test/e2e/specs/items-reorder.spec.js:38:5 › Items list page — row reorder (items.module.js + reorder.module.js) › drags a row and POSTs new order to /items/reorder (1.1s)
+  ✓   72 [chromium] › test/e2e/specs/items-reorder.spec.js:199:5 › Items list page — row reorder (items.module.js + reorder.module.js) › clicking a disabled boundary dropdown item is a no-op (no POST) (468ms)
+  ✓   73 [chromium] › test/e2e/specs/media-library-delete.spec.js:61:5 › Media library delete modal (modals.delete.module.js — open_delete_media_modal / handle_delete_confirm) › clicking the row Delete dropdown item opens the modal populated with the record name + filename (622ms)
+  ✓   74 [chromium] › test/e2e/specs/media-library-delete.spec.js:84:5 › Media library delete modal (modals.delete.module.js — open_delete_media_modal / handle_delete_confirm) › clicking Delete fires DELETE, closes the modal, and refreshes the list (1.1s)
+  ✓   75 [chromium] › test/e2e/specs/media-library-delete.spec.js:123:5 › Media library delete modal (modals.delete.module.js — open_delete_media_modal / handle_delete_confirm) › DELETE failure shows danger alert in modal and re-enables the Delete button (818ms)
+  ✘   59 [chromium] › test/e2e/specs/heading-details.spec.js:27:5 › Heading details page (items.details.heading.item.module) › renders record fields read-only (5.4s)
+  ✘   60 [chromium] › test/e2e/specs/heading-edit.spec.js:81:5 › Edit heading form (items.edit.heading.form.module) › disables form fields when record is locked by another user (5.3s)
+  ✓   76 [chromium] › test/e2e/specs/media-library-delete.spec.js:156:5 › Media library delete modal (modals.delete.module.js — open_delete_media_modal / handle_delete_confirm) › rapid double-click on confirm fires only one DELETE (1.0s)
+  ✓   78 [chromium] › test/e2e/specs/media-library-edit.spec.js:172:5 › Media library edit modal (modals.edit.module.js — open_edit_media_modal / update_media_record) › GET 403 shows a permission-denied message distinct from the 404 path (369ms)
+  ✓   80 [chromium] › test/e2e/specs/media-library-edit.spec.js:151:5 › Media library edit modal (modals.edit.module.js — open_edit_media_modal / update_media_record) › GET 404 shows a "not found" message in the form container (486ms)
+  ✓   81 [chromium] › test/e2e/specs/media-library-edit.spec.js:195:5 › Media library edit modal (modals.edit.module.js — open_edit_media_modal / update_media_record) › PUT failure shows an error in the modal message area without closing (1.3s)
+  ✓   82 [chromium] › test/e2e/specs/media-library-edit.spec.js:227:5 › Media library edit modal (modals.edit.module.js — open_edit_media_modal / update_media_record) › Save with missing alt_text on an image record surfaces a danger alert instead of silently no-op-ing (1.3s)
+  ✓   83 [chromium] › test/e2e/specs/media-library-edit.spec.js:264:5 › Media library edit modal (modals.edit.module.js — open_edit_media_modal / update_media_record) › record name containing a literal double-quote round-trips into the edit form value (282ms)
+  ✓   85 [chromium] › test/e2e/specs/media-library-kaltura.spec.js:118:5 › Media library Kaltura entry lookup (kaltura.service.module.js — get_kaltura_media) › Empty entry id shows a warning without firing the GET (695ms)
+  ✓   86 [chromium] › test/e2e/specs/media-library-kaltura.spec.js:139:5 › Media library Kaltura entry lookup (kaltura.service.module.js — get_kaltura_media) › Duplicate-check `exists: true` short-circuits with a warning (776ms)
+  ✓   87 [chromium] › test/e2e/specs/media-library-kaltura.spec.js:163:5 › Media library Kaltura entry lookup (kaltura.service.module.js — get_kaltura_media) › Server error (500) shows a danger alert and the modal stays closed (784ms)
+  ✘   77 [chromium] › test/e2e/specs/media-library-edit.spec.js:94:5 › Media library edit modal (modals.edit.module.js — open_edit_media_modal / update_media_record) › clicking the row Edit dropdown item opens the modal and populates fields from the GET (5.5s)
+  ✓   88 [chromium] › test/e2e/specs/media-library-kaltura.spec.js:180:5 › Media library Kaltura entry lookup (kaltura.service.module.js — get_kaltura_media) › Modal entry_id falls back to the typed value when the response omits entry_id (1.1s)
+  ✓   90 [chromium] › test/e2e/specs/media-library-list.spec.js:65:5 › Media library list page (media.library.module.js — display_media_records) › renders mixed-ingest records with the correct row count (294ms)
+  ✓   89 [chromium] › test/e2e/specs/media-library-kaltura.spec.js:212:5 › Media library Kaltura entry lookup (kaltura.service.module.js — get_kaltura_media) › thumbnail is hidden when the modal-open hop throws after a successful lookup (869ms)
+  ✓   91 [chromium] › test/e2e/specs/media-library-list.spec.js:109:5 › Media library list page (media.library.module.js — display_media_records) › renders the three filename-column variants per ingest method (307ms)
+  ✓   92 [chromium] › test/e2e/specs/media-library-list.spec.js:170:5 › Media library list page (media.library.module.js — display_media_records) › shows the DataTable empty-state when the API returns no records (277ms)
+  ✓   93 [chromium] › test/e2e/specs/media-library-list.spec.js:181:5 › Media library list page (media.library.module.js — display_media_records) › shows permission-denied alert when the list endpoint returns 403 (247ms)
+  ✓   94 [chromium] › test/e2e/specs/media-library-list.spec.js:194:5 › Media library list page (media.library.module.js — display_media_records) › renders the action dropdown on each row with edit/delete and Play for Kaltura (285ms)
+  ✓   95 [chromium] › test/e2e/specs/media-library-list.spec.js:230:5 › Media library list page (media.library.module.js — display_media_records) › record name with double-quotes does not break the action dropdown markup (281ms)
+  ✓   96 [chromium] › test/e2e/specs/media-library-list.spec.js:259:5 › Media library list page (media.library.module.js — display_media_records) › shows associated exhibit names in the Exhibits column (277ms)
+  ✓   97 [chromium] › test/e2e/specs/media-library-list.spec.js:280:5 › Media library list page (media.library.module.js — display_media_records) › orders the list by Date Added, most recent first (297ms)
+  ✓   98 [chromium] › test/e2e/specs/media-library-repo-search.spec.js:58:5 › Media library repo-search flow (repo.service.module.js) › search button issues GET /repo/search and renders one card per result (361ms)
+  ✓  100 [chromium] › test/e2e/specs/media-library-repo-search.spec.js:137:5 › Media library repo-search flow (repo.service.module.js) › search returning zero records shows the no-results info message (399ms)
+  ✓   99 [chromium] › test/e2e/specs/media-library-repo-search.spec.js:108:5 › Media library repo-search flow (repo.service.module.js) › checking a result reveals the Import button with the selected count (711ms)
+  ✘   84 [chromium] › test/e2e/specs/media-library-kaltura.spec.js:62:5 › Media library Kaltura entry lookup (kaltura.service.module.js — get_kaltura_media) › Get-metadata fires GET /kaltura/<entry_id>, shows the thumbnail, opens the modal pre-populated with title (6.1s)
+  ✓  102 [chromium] › test/e2e/specs/media-library-repo-search.spec.js:185:5 › Media library repo-search flow (repo.service.module.js) › repeated searches do not stack pagination click listeners on the results container (704ms)
+  ✓  101 [chromium] › test/e2e/specs/media-library-repo-search.spec.js:155:5 › Media library repo-search flow (repo.service.module.js) › Import Selected opens the repo-media-modal with the selected items (967ms)
+  ✓  104 [chromium] › test/e2e/specs/standard-item-add.spec.js:25:5 › Add standard text item form (items.add.standard.item.form.module) › renders the item data card with the text input (227ms)
+  ✓  106 [chromium] › test/e2e/specs/standard-item-add.spec.js:37:5 › Add standard text item form (items.add.standard.item.form.module) › blocks submit when text is empty (text path) (327ms)
+  ✓  105 [chromium] › test/e2e/specs/media-library-repo-search.spec.js:246:5 › Media library repo-search flow (repo.service.module.js) › clicking a pagination link anchors the viewport at the top of the results (530ms)
+  ✘  107 [chromium] › test/e2e/specs/standard-item-add.spec.js:54:5 › Add standard text item form (items.add.standard.item.form.module) › POSTs serialized payload and redirects to text edit on 201 (419ms)
+  ✓  103 [chromium] › test/e2e/specs/media-picker.spec.js:15:5 › Media picker — hero image selection › selecting a media item populates hidden hero-image inputs (1.3s)
+  ✓  108 [chromium] › test/e2e/specs/standard-item-add.spec.js:93:5 › Add standard text item form (items.add.standard.item.form.module) › does not POST when item_id is already present (edit mode guard) (596ms)
+  ✓  109 [chromium] › test/e2e/specs/standard-item-details.spec.js:53:5 › Standard text item details page (items.details.standard.item.module) › clicking Edit navigates to the text edit page with the same ids (311ms)
+  ✓  110 [chromium] › test/e2e/specs/standard-item-details.spec.js:74:5 › Standard text item details page (items.details.standard.item.module) › shows permission-denied alert when status=403 is in the URL (209ms)
+  ✓  112 [chromium] › test/e2e/specs/standard-item-edit.spec.js:22:5 › Edit standard text item form (items.edit.standard.item.form.module) › populates text field from the fetched record (279ms)
+  ✘  113 [chromium] › test/e2e/specs/standard-item-edit.spec.js:44:5 › Edit standard text item form (items.edit.standard.item.form.module) › PUTs updated payload via #save-item-btn and shows success (389ms)
+  ✓  115 [chromium] › test/e2e/specs/standard-item-media-add.spec.js:37:5 › Add standard media item form (items.add.standard.item.form.module — media path) › renders the item data card with media picker button (253ms)
+  ✘   79 [chromium] › test/e2e/specs/media-library-edit.spec.js:117:5 › Media library edit modal (modals.edit.module.js — open_edit_media_modal / update_media_record) › Save fires PUT with the form payload and closes the modal on success (10.9s)
+  ✓  116 [chromium] › test/e2e/specs/standard-item-media-add.spec.js:49:5 › Add standard media item form (items.add.standard.item.form.module — media path) › blocks submit when media is not selected (media path) (280ms)
+  ✓  117 [chromium] › test/e2e/specs/standard-item-media-add.spec.js:112:5 › Add standard media item form (items.add.standard.item.form.module — media path) › POSTs media_padding and wrap_text from the checkboxes (regression: fields were never collected) (1.1s)
+  ✓  119 [chromium] › test/e2e/specs/standard-item-media-add.spec.js:146:5 › Add standard media item form (items.add.standard.item.form.module — media path) › does not POST when item_id is already present (edit mode guard) (459ms)
+  ✓  118 [chromium] › test/e2e/specs/standard-item-media-add.spec.js:66:5 › Add standard media item form (items.add.standard.item.form.module — media path) › selecting media via picker → POST → redirect to media edit (2.4s)
+  ✓  121 [chromium] › test/e2e/specs/standard-item-media-details.spec.js:56:5 › Standard media item details page (items.details.standard.item.module — media path) › clicking Edit navigates to the media edit page with the same ids (267ms)
+  ✓  122 [chromium] › test/e2e/specs/standard-item-media-edit.spec.js:27:5 › Edit standard media item form (items.edit.standard.item.form.module — media path) › populates media fields and preview from the fetched record (195ms)
+  ✘  123 [chromium] › test/e2e/specs/standard-item-media-edit.spec.js:52:5 › Edit standard media item form (items.edit.standard.item.form.module — media path) › PUTs payload preserving media_uuid via #save-item-btn (303ms)
+  ✘  111 [chromium] › test/e2e/specs/standard-item-details.spec.js:27:5 › Standard text item details page (items.details.standard.item.module) › renders text field and disables it after population (5.5s)
+  ✓  124 [chromium] › test/e2e/specs/standard-item-media-edit.spec.js:88:5 › Edit standard media item form (items.edit.standard.item.form.module — media path) › populates media_padding/wrap_text checkboxes from the record and round-trips them on save (358ms)
+  ✘  114 [chromium] › test/e2e/specs/standard-item-edit.spec.js:78:5 › Edit standard text item form (items.edit.standard.item.form.module) › disables form fields when record is locked by another user (5.4s)
+  ✘  125 [chromium] › test/e2e/specs/timeline-add.spec.js:42:5 › Add timeline form (items.add.vertical.timeline.form.module) › POSTs and redirects to edit on 201 (311ms)
+  ✓  126 [chromium] › test/e2e/specs/timeline-add.spec.js:25:5 › Add timeline form (items.add.vertical.timeline.form.module) › renders the timeline data card and save button (269ms)
+  ✓  127 [chromium] › test/e2e/specs/timeline-add.spec.js:78:5 › Add timeline form (items.add.vertical.timeline.form.module) › blocks the save and shows an alert when internal name is empty (373ms)
+  ✓  130 [chromium] › test/e2e/specs/timeline-details.spec.js:56:5 › Timeline details page (items.details.vertical.timeline.module) › renders an empty internal name for legacy timelines that predate the column (219ms)
+  ✓  131 [chromium] › test/e2e/specs/timeline-details.spec.js:69:5 › Timeline details page (items.details.vertical.timeline.module) › clicking Edit navigates to the timeline edit page with the same ids (263ms)
+  ✓  129 [chromium] › test/e2e/specs/timeline-add.spec.js:94:5 › Add timeline form (items.add.vertical.timeline.form.module) › does not POST when item_id is already present (edit mode guard) (572ms)
+  ✓  132 [chromium] › test/e2e/specs/timeline-details.spec.js:90:5 › Timeline details page (items.details.vertical.timeline.module) › shows permission-denied alert when status=403 is in the URL (219ms)
+  ✓  133 [chromium] › test/e2e/specs/timeline-edit.spec.js:22:5 › Edit timeline form (items.edit.vertical.timeline.form.module) › populates text field from the fetched record (219ms)
+  ✓  134 [chromium] › test/e2e/specs/timeline-edit.spec.js:46:5 › Edit timeline form (items.edit.vertical.timeline.form.module) › legacy timelines without internal_name must supply one before saving (246ms)
+  ✘  135 [chromium] › test/e2e/specs/timeline-edit.spec.js:73:5 › Edit timeline form (items.edit.vertical.timeline.form.module) › PUTs updated payload via #save-timeline-btn and shows success (341ms)
+  ✓  136 [chromium] › test/e2e/specs/timeline-item-add.spec.js:26:5 › Add timeline text item form (items.add.vertical.timeline.item.form.module) › renders the item data card with title, date, and text inputs (222ms)
+  ✘  137 [chromium] › test/e2e/specs/timeline-item-add.spec.js:70:5 › Add timeline text item form (items.add.vertical.timeline.item.form.module) › POSTs serialized payload and redirects to text edit on 201 (314ms)
+  ✓  138 [chromium] › test/e2e/specs/timeline-item-add.spec.js:44:5 › Add timeline text item form (items.add.vertical.timeline.item.form.module) › blocks submit when date is empty (314ms)
+  ✘  120 [chromium] › test/e2e/specs/standard-item-media-details.spec.js:29:5 › Standard media item details page (items.details.standard.item.module — media path) › renders read-only fields and populates the media preview (5.4s)
+  ✓  141 [chromium] › test/e2e/specs/timeline-item-details.spec.js:58:5 › Timeline text item details page (items.details.vertical.timeline.item.module) › clicking Edit navigates to the text edit page with the same ids (294ms)
+  ✓  140 [chromium] › test/e2e/specs/timeline-item-add.spec.js:116:5 › Add timeline text item form (items.add.vertical.timeline.item.form.module) › does not POST when item_id is already present (edit mode guard) (545ms)
+  ✓  142 [chromium] › test/e2e/specs/timeline-item-details.spec.js:85:5 › Timeline text item details page (items.details.vertical.timeline.item.module) › shows permission-denied alert when status=403 is in the URL (208ms)
+  ✓  143 [chromium] › test/e2e/specs/timeline-item-edit.spec.js:23:5 › Edit timeline text item form (items.edit.vertical.timeline.item.form.module) › populates form fields from the fetched record (252ms)
+  ✘  144 [chromium] › test/e2e/specs/timeline-item-edit.spec.js:51:5 › Edit timeline text item form (items.edit.vertical.timeline.item.form.module) › PUTs updated payload and shows success alert on 201 (339ms)
+  ✓  146 [chromium] › test/e2e/specs/timeline-item-media-add.spec.js:38:5 › Add timeline media item form (items.add.vertical.timeline.item.form.module — media path) › renders the item data card with media picker button (233ms)
+  ✓  147 [chromium] › test/e2e/specs/timeline-item-media-add.spec.js:57:5 › Add timeline media item form (items.add.vertical.timeline.item.form.module — media path) › blocks submit when media is not selected (media path) (251ms)
+  ✘  128 [chromium] › test/e2e/specs/timeline-details.spec.js:27:5 › Timeline details page (items.details.vertical.timeline.module) › renders text field populated from the fetched record (5.4s)
+  ✓  149 [chromium] › test/e2e/specs/timeline-item-media-add.spec.js:130:5 › Add timeline media item form (items.add.vertical.timeline.item.form.module — media path) › does not POST when item_id is already present (edit mode guard) (529ms)
+  ✓  148 [chromium] › test/e2e/specs/timeline-item-media-add.spec.js:79:5 › Add timeline media item form (items.add.vertical.timeline.item.form.module — media path) › selecting media via picker → POST → redirect to media edit (2.4s)
+  ✓  151 [chromium] › test/e2e/specs/timeline-item-media-details.spec.js:64:5 › Timeline media item details page (items.details.vertical.timeline.item.module — media path) › clicking Edit navigates to the media edit page with the same ids (304ms)
+  ✓  152 [chromium] › test/e2e/specs/timeline-item-media-edit.spec.js:28:5 › Edit timeline media item form (items.edit.vertical.timeline.item.form.module — media path) › populates media fields and preview from the fetched record (203ms)
+  ✘  153 [chromium] › test/e2e/specs/timeline-item-media-edit.spec.js:59:5 › Edit timeline media item form (items.edit.vertical.timeline.item.form.module — media path) › PUTs payload preserving media_uuid via #save-item-btn (289ms)
+  ✘  139 [chromium] › test/e2e/specs/timeline-item-details.spec.js:28:5 › Timeline text item details page (items.details.vertical.timeline.item.module) › renders record fields and disables them after population (5.4s)
+  ✓  154 [chromium] › test/e2e/specs/users-add.spec.js:30:5 › Users add page (user.module.js — save_user_record) › renders the empty form when current user is an Administrator (361ms)
+  ✓  156 [chromium] › test/e2e/specs/users-add.spec.js:80:5 › Users add page (user.module.js — save_user_record) › shows permission-denied alert when current user is not an Administrator (167ms)
+  ✘  145 [chromium] › test/e2e/specs/timeline-item-edit.spec.js:92:5 › Edit timeline text item form (items.edit.vertical.timeline.item.form.module) › disables form fields when record is locked by another user (5.3s)
+  ✓  157 [chromium] › test/e2e/specs/users-delete.spec.js:28:5 › Users delete page (user.module.js — display_user / delete_user) › renders the delete confirmation card with the target user name (164ms)
+  ✓  158 [chromium] › test/e2e/specs/users-edit.spec.js:34:5 › Users edit page (user.module.js — display_user_record / update_user_record) › GET populates the form with the record fields (166ms)
+  ✓  159 [chromium] › test/e2e/specs/users-edit.spec.js:57:5 › Users edit page (user.module.js — display_user_record / update_user_record) › clicking Save fires PUT with the form payload (279ms)
+  ✓  155 [chromium] › test/e2e/specs/users-add.spec.js:46:5 › Users add page (user.module.js — save_user_record) › Save POSTs the form payload and redirects to the new edit page (1.3s)
+  ✓  162 [chromium] › test/e2e/specs/users-list.spec.js:32:5 › Users list page (user.module.js — display_user_records) › renders user rows returned from the API (229ms)
+  ✓  163 [chromium] › test/e2e/specs/users-list.spec.js:53:5 › Users list page (user.module.js — display_user_records) › shows empty-state info alert when API returns no users (161ms)
+  ✓  164 [chromium] › test/e2e/specs/users-list.spec.js:65:5 › Users list page (user.module.js — display_user_records) › shows permission-denied alert when API returns 403 (141ms)
+  ✓  165 [chromium] › test/e2e/specs/users-list.spec.js:78:5 › Users list page (user.module.js — display_user_records) › clicking the deactivate link PUTs to the user-status endpoint (230ms)
+  ✓  160 [chromium] › test/e2e/specs/users-delete.spec.js:48:5 › Users delete page (user.module.js — display_user / delete_user) › clicking Delete fires DELETE and redirects to /users on 204 (1.2s)
+  ✓  161 [chromium] › test/e2e/specs/users-edit.spec.js:101:5 › Users edit page (user.module.js — display_user_record / update_user_record) › redirects to /users when the record GET returns 404 (1.2s)
+  ✘  150 [chromium] › test/e2e/specs/timeline-item-media-details.spec.js:30:5 › Timeline media item details page (items.details.vertical.timeline.item.module — media path) › renders read-only fields and populates the media preview (5.3s)
+
+
+  1) [chromium] › test/e2e/specs/exhibits-add.spec.js:56:5 › Add Exhibit modal › POSTs payload and closes modal on success 
+
+    Error: [2mexpect([22m[31mreceived[39m[2m).[22mtoBe[2m([22m[32mexpected[39m[2m) // Object.is equality[22m
+
+    Expected: [32m"My new exhibit"[39m
+    Received: [31m"[7m<p>[27mMy new exhibit[7m</p>[27m"[39m
+
+      82 |         const request = await postPromise;
+      83 |         const body = request.postDataJSON();
+    > 84 |         expect(body.title).toBe('My new exhibit');
+         |                            ^
+      85 |         expect(body.exhibit_template).toBe('vertical_scroll');
+      86 |
+      87 |         // create_exhibit_record redirects via window.location.href on
+        at /Users/fcr/Dropbox/work/workspace/exhibits/exhibits-backend/test/e2e/specs/exhibits-add.spec.js:84:28
+
+    attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
+    test-results/exhibits-add-Add-Exhibit-m-28b51-and-closes-modal-on-success-chromium/test-failed-1.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    attachment #2: video (video/webm) ──────────────────────────────────────────────────────────────
+    test-results/exhibits-add-Add-Exhibit-m-28b51-and-closes-modal-on-success-chromium/video.webm
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Error Context: test-results/exhibits-add-Add-Exhibit-m-28b51-and-closes-modal-on-success-chromium/error-context.md
+
+    attachment #4: trace (application/zip) ─────────────────────────────────────────────────────────
+    test-results/exhibits-add-Add-Exhibit-m-28b51-and-closes-modal-on-success-chromium/trace.zip
+    Usage:
+
+        npx playwright show-trace test-results/exhibits-add-Add-Exhibit-m-28b51-and-closes-modal-on-success-chromium/trace.zip
+
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+  2) [chromium] › test/e2e/specs/exhibits-add.spec.js:93:5 › Add Exhibit modal › submits successfully even when every endpoints cache layer is cleared (storage-free endpoint map) 
+
+    Error: [2mexpect([22m[31mreceived[39m[2m).[22mtoBe[2m([22m[32mexpected[39m[2m) // Object.is equality[22m
+
+    Expected: [32m"Cold cache exhibit"[39m
+    Received: [31m"[7m<p>[27mCold cache exhibit[7m</p>[27m"[39m
+
+      122 |
+      123 |         const request = await postPromise;
+    > 124 |         expect(request.postDataJSON().title).toBe('Cold cache exhibit');
+          |                                              ^
+      125 |         expect(page_errors).toEqual([]);
+      126 |     });
+      127 | });
+        at /Users/fcr/Dropbox/work/workspace/exhibits/exhibits-backend/test/e2e/specs/exhibits-add.spec.js:124:46
+
+    attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
+    test-results/exhibits-add-Add-Exhibit-m-a982d--storage-free-endpoint-map--chromium/test-failed-1.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    attachment #2: video (video/webm) ──────────────────────────────────────────────────────────────
+    test-results/exhibits-add-Add-Exhibit-m-a982d--storage-free-endpoint-map--chromium/video.webm
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Error Context: test-results/exhibits-add-Add-Exhibit-m-a982d--storage-free-endpoint-map--chromium/error-context.md
+
+    attachment #4: trace (application/zip) ─────────────────────────────────────────────────────────
+    test-results/exhibits-add-Add-Exhibit-m-a982d--storage-free-endpoint-map--chromium/trace.zip
+    Usage:
+
+        npx playwright show-trace test-results/exhibits-add-Add-Exhibit-m-a982d--storage-free-endpoint-map--chromium/trace.zip
+
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+  3) [chromium] › test/e2e/specs/exhibits-details.spec.js:20:5 › Exhibit details page (exhibits.details.module) › renders record fields and disables them after population 
+
+    Error: [2mexpect([22m[31mlocator[39m[2m).[22mtoBeDisabled[2m([22m[2m)[22m failed
+
+    Locator:  locator('#exhibit-title-input')
+    Expected: disabled
+    Received: enabled
+    Timeout:  5000ms
+
+    Call log:
+    [2m  - Expect "toBeDisabled" with timeout 5000ms[22m
+    [2m  - waiting for locator('#exhibit-title-input')[22m
+    [2m    9 × locator resolved to <div data-rte="reduced" id="exhibit-title-input" data-rte-disabled="true" aria-labelledby="exhibit-title-input-label" class="rte-container rte-single-line ql-container ql-snow ql-disabled">…</div>[22m
+    [2m      - unexpected value "enabled"[22m
+
+
+      44 |         // partials don't have `disabled` baked in — the runtime sweep
+      45 |         // is the only mechanism keeping the page read-only.
+    > 46 |         await expect(page.locator('#exhibit-title-input')).toBeDisabled();
+         |                                                            ^
+      47 |         await expect(page.locator('#exhibit-description-input')).toBeDisabled();
+      48 |
+      49 |         // Save button is hidden on details mode; Edit is the primary action.
+        at /Users/fcr/Dropbox/work/workspace/exhibits/exhibits-backend/test/e2e/specs/exhibits-details.spec.js:46:60
+
+    attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
+    test-results/exhibits-details-Exhibit-d-53d1f-ables-them-after-population-chromium/test-failed-1.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    attachment #2: video (video/webm) ──────────────────────────────────────────────────────────────
+    test-results/exhibits-details-Exhibit-d-53d1f-ables-them-after-population-chromium/video.webm
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Error Context: test-results/exhibits-details-Exhibit-d-53d1f-ables-them-after-population-chromium/error-context.md
+
+    attachment #4: trace (application/zip) ─────────────────────────────────────────────────────────
+    test-results/exhibits-details-Exhibit-d-53d1f-ables-them-after-population-chromium/trace.zip
+    Usage:
+
+        npx playwright show-trace test-results/exhibits-details-Exhibit-d-53d1f-ables-them-after-population-chromium/trace.zip
+
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+  4) [chromium] › test/e2e/specs/exhibits-edit.spec.js:50:5 › Edit exhibit form (exhibits.edit.form.module) › PUTs updated payload and shows success alert on 201 
+
+    Error: [2mexpect([22m[31mreceived[39m[2m).[22mtoBe[2m([22m[32mexpected[39m[2m) // Object.is equality[22m
+
+    Expected: [32m"Edited exhibit title"[39m
+    Received: [31m"[7m<p>[27mEdited exhibit title[7m</p>[27m"[39m
+
+      76 |
+      77 |         await expect.poll(() => state.lastUpdatePayload).not.toBeNull();
+    > 78 |         expect(state.lastUpdatePayload.title).toBe('Edited exhibit title');
+         |                                               ^
+      79 |         expect(state.lastUpdatePayload.description).toBe('Edited description');
+      80 |         // Common form serializes these from hidden EJS inputs.
+      81 |         expect(state.lastUpdatePayload.exhibit_template).toBe('vertical_scroll');
+        at /Users/fcr/Dropbox/work/workspace/exhibits/exhibits-backend/test/e2e/specs/exhibits-edit.spec.js:78:47
+
+    attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
+    test-results/exhibits-edit-Edit-exhibit-3f484--shows-success-alert-on-201-chromium/test-failed-1.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    attachment #2: video (video/webm) ──────────────────────────────────────────────────────────────
+    test-results/exhibits-edit-Edit-exhibit-3f484--shows-success-alert-on-201-chromium/video.webm
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Error Context: test-results/exhibits-edit-Edit-exhibit-3f484--shows-success-alert-on-201-chromium/error-context.md
+
+    attachment #4: trace (application/zip) ─────────────────────────────────────────────────────────
+    test-results/exhibits-edit-Edit-exhibit-3f484--shows-success-alert-on-201-chromium/trace.zip
+    Usage:
+
+        npx playwright show-trace test-results/exhibits-edit-Edit-exhibit-3f484--shows-success-alert-on-201-chromium/trace.zip
+
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+  5) [chromium] › test/e2e/specs/exhibits-edit.spec.js:86:5 › Edit exhibit form (exhibits.edit.form.module) › disables form fields when record is locked by another user 
+
+    Error: [2mexpect([22m[31mlocator[39m[2m).[22mtoBeDisabled[2m([22m[2m)[22m failed
+
+    Locator:  locator('#exhibit-title-input')
+    Expected: disabled
+    Received: enabled
+    Timeout:  5000ms
+
+    Call log:
+    [2m  - Expect "toBeDisabled" with timeout 5000ms[22m
+    [2m  - waiting for locator('#exhibit-title-input')[22m
+    [2m    - locator resolved to <div data-rte="reduced" id="exhibit-title-input" data-rte-disabled="false" aria-labelledby="exhibit-title-input-label" class="rte-container rte-single-line ql-container ql-snow">…</div>[22m
+    [2m    8 × unexpected value "enabled"[22m
+    [2m      - locator resolved to <div data-rte="reduced" id="exhibit-title-input" data-rte-disabled="false" aria-labelledby="exhibit-title-input-label" class="rte-container rte-single-line ql-container ql-snow ql-disabled">…</div>[22m
+    [2m    - unexpected value "enabled"[22m
+
+
+      102 |         // parseInt of profile.uid ('1' from seeded user) vs locked_by_user
+      103 |         // ('999') → asymmetric → disable_form_fields runs.
+    > 104 |         await expect(page.locator('#exhibit-title-input')).toBeDisabled();
+          |                                                            ^
+      105 |         await expect(page.locator('#exhibit-description-input')).toBeDisabled();
+      106 |     });
+      107 | });
+        at /Users/fcr/Dropbox/work/workspace/exhibits/exhibits-backend/test/e2e/specs/exhibits-edit.spec.js:104:60
+
+    attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
+    test-results/exhibits-edit-Edit-exhibit-c469e-d-is-locked-by-another-user-chromium/test-failed-1.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    attachment #2: video (video/webm) ──────────────────────────────────────────────────────────────
+    test-results/exhibits-edit-Edit-exhibit-c469e-d-is-locked-by-another-user-chromium/video.webm
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Error Context: test-results/exhibits-edit-Edit-exhibit-c469e-d-is-locked-by-another-user-chromium/error-context.md
+
+    attachment #4: trace (application/zip) ─────────────────────────────────────────────────────────
+    test-results/exhibits-edit-Edit-exhibit-c469e-d-is-locked-by-another-user-chromium/trace.zip
+    Usage:
+
+        npx playwright show-trace test-results/exhibits-edit-Edit-exhibit-c469e-d-is-locked-by-another-user-chromium/trace.zip
+
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+  6) [chromium] › test/e2e/specs/grid-add.spec.js:49:5 › Add grid form (items.add.grid.form.module) › POSTs serialized payload and redirects to edit on 201 
+
+    Error: [2mexpect([22m[31mreceived[39m[2m).[22mtoBe[2m([22m[32mexpected[39m[2m) // Object.is equality[22m
+
+    Expected: [32m"My new grid"[39m
+    Received: [31m"[7m<p>[27mMy new grid[7m</p>[27m"[39m
+
+      69 |
+      70 |         await expect.poll(() => state.lastCreatePayload).not.toBeNull();
+    > 71 |         expect(state.lastCreatePayload.text).toBe('My new grid');
+         |                                              ^
+      72 |         expect(state.lastCreatePayload.internal_name).toBe('Staff grid label');
+      73 |         // Common form serializes columns as a string per
+      74 |         // get_common_grid_form_fields (the `.toString()` call there).
+        at /Users/fcr/Dropbox/work/workspace/exhibits/exhibits-backend/test/e2e/specs/grid-add.spec.js:71:46
+
+    attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
+    test-results/grid-add-Add-grid-form-ite-5a153-nd-redirects-to-edit-on-201-chromium/test-failed-1.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    attachment #2: video (video/webm) ──────────────────────────────────────────────────────────────
+    test-results/grid-add-Add-grid-form-ite-5a153-nd-redirects-to-edit-on-201-chromium/video.webm
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Error Context: test-results/grid-add-Add-grid-form-ite-5a153-nd-redirects-to-edit-on-201-chromium/error-context.md
+
+    attachment #4: trace (application/zip) ─────────────────────────────────────────────────────────
+    test-results/grid-add-Add-grid-form-ite-5a153-nd-redirects-to-edit-on-201-chromium/trace.zip
+    Usage:
+
+        npx playwright show-trace test-results/grid-add-Add-grid-form-ite-5a153-nd-redirects-to-edit-on-201-chromium/trace.zip
+
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+  7) [chromium] › test/e2e/specs/grid-details.spec.js:27:5 › Grid details page (items.details.grid.module) › renders record fields read-only 
+
+    Error: [2mexpect([22m[31mlocator[39m[2m).[22mtoBeDisabled[2m([22m[2m)[22m failed
+
+    Locator:  locator('#grid-text-input')
+    Expected: disabled
+    Received: enabled
+    Timeout:  5000ms
+
+    Call log:
+    [2m  - Expect "toBeDisabled" with timeout 5000ms[22m
+    [2m  - waiting for locator('#grid-text-input')[22m
+    [2m    9 × locator resolved to <div data-rte="full" id="grid-text-input" data-rte-disabled="true" class="rte-container ql-container ql-snow ql-disabled">…</div>[22m
+    [2m      - unexpected value "enabled"[22m
+
+
+      44 |
+      45 |         // The details EJS renders all inputs with the disabled attribute set.
+    > 46 |         await expect(page.locator('#grid-text-input')).toBeDisabled();
+         |                                                        ^
+      47 |         await expect(page.locator('#grid-internal-name-input')).toBeDisabled();
+      48 |         await expect(page.locator('#grid-columns')).toBeDisabled();
+      49 |
+        at /Users/fcr/Dropbox/work/workspace/exhibits/exhibits-backend/test/e2e/specs/grid-details.spec.js:46:56
+
+    attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
+    test-results/grid-details-Grid-details--8efa4-ers-record-fields-read-only-chromium/test-failed-1.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    attachment #2: video (video/webm) ──────────────────────────────────────────────────────────────
+    test-results/grid-details-Grid-details--8efa4-ers-record-fields-read-only-chromium/video.webm
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Error Context: test-results/grid-details-Grid-details--8efa4-ers-record-fields-read-only-chromium/error-context.md
+
+    attachment #4: trace (application/zip) ─────────────────────────────────────────────────────────
+    test-results/grid-details-Grid-details--8efa4-ers-record-fields-read-only-chromium/trace.zip
+    Usage:
+
+        npx playwright show-trace test-results/grid-details-Grid-details--8efa4-ers-record-fields-read-only-chromium/trace.zip
+
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+  8) [chromium] › test/e2e/specs/grid-edit.spec.js:105:5 › Edit grid form (items.edit.grid.form.module) › PUTs updated payload and shows success alert on 201 
+
+    Error: [2mexpect([22m[31mreceived[39m[2m).[22mtoBe[2m([22m[32mexpected[39m[2m) // Object.is equality[22m
+
+    Expected: [32m"Edited grid"[39m
+    Received: [31m"[7m<p>[27mEdited grid[7m</p>[27m"[39m
+
+      132 |
+      133 |         await expect.poll(() => state.lastUpdatePayload).not.toBeNull();
+    > 134 |         expect(state.lastUpdatePayload.text).toBe('Edited grid');
+          |                                              ^
+      135 |         expect(state.lastUpdatePayload.internal_name).toBe('Renamed staff label');
+      136 |         expect(state.lastUpdatePayload.columns).toBe('2');
+      137 |
+        at /Users/fcr/Dropbox/work/workspace/exhibits/exhibits-backend/test/e2e/specs/grid-edit.spec.js:134:46
+
+    attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
+    test-results/grid-edit-Edit-grid-form-i-4e202--shows-success-alert-on-201-chromium/test-failed-1.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    attachment #2: video (video/webm) ──────────────────────────────────────────────────────────────
+    test-results/grid-edit-Edit-grid-form-i-4e202--shows-success-alert-on-201-chromium/video.webm
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Error Context: test-results/grid-edit-Edit-grid-form-i-4e202--shows-success-alert-on-201-chromium/error-context.md
+
+    attachment #4: trace (application/zip) ─────────────────────────────────────────────────────────
+    test-results/grid-edit-Edit-grid-form-i-4e202--shows-success-alert-on-201-chromium/trace.zip
+    Usage:
+
+        npx playwright show-trace test-results/grid-edit-Edit-grid-form-i-4e202--shows-success-alert-on-201-chromium/trace.zip
+
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+  9) [chromium] › test/e2e/specs/grid-item-add.spec.js:66:5 › Add grid text item form (items.add.grid.item.form.module) › POSTs serialized payload and redirects to text edit on 201 
+
+    Error: [2mexpect([22m[31mreceived[39m[2m).[22mtoBe[2m([22m[32mexpected[39m[2m) // Object.is equality[22m
+
+    Expected: [32m"A new text item"[39m
+    Received: [31m"[7m<p>[27mA new text item[7m</p>[27m"[39m
+
+      88 |
+      89 |         await expect.poll(() => state.lastCreatePayload).not.toBeNull();
+    > 90 |         expect(state.lastCreatePayload.text).toBe('A new text item');
+         |                                              ^
+      91 |         // Common form forces these for the text path.
+      92 |         expect(state.lastCreatePayload.item_type).toBe('text');
+      93 |         expect(state.lastCreatePayload.mime_type).toBe('text/plain');
+        at /Users/fcr/Dropbox/work/workspace/exhibits/exhibits-backend/test/e2e/specs/grid-item-add.spec.js:90:46
+
+    attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
+    test-results/grid-item-add-Add-grid-tex-c779e-directs-to-text-edit-on-201-chromium/test-failed-1.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    attachment #2: video (video/webm) ──────────────────────────────────────────────────────────────
+    test-results/grid-item-add-Add-grid-tex-c779e-directs-to-text-edit-on-201-chromium/video.webm
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Error Context: test-results/grid-item-add-Add-grid-tex-c779e-directs-to-text-edit-on-201-chromium/error-context.md
+
+    attachment #4: trace (application/zip) ─────────────────────────────────────────────────────────
+    test-results/grid-item-add-Add-grid-tex-c779e-directs-to-text-edit-on-201-chromium/trace.zip
+    Usage:
+
+        npx playwright show-trace test-results/grid-item-add-Add-grid-tex-c779e-directs-to-text-edit-on-201-chromium/trace.zip
+
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+  10) [chromium] › test/e2e/specs/grid-item-details.spec.js:28:5 › Grid text item details page (items.details.grid.item.module) › renders record fields and disables them after population 
+
+    Error: [2mexpect([22m[31mlocator[39m[2m).[22mtoBeDisabled[2m([22m[2m)[22m failed
+
+    Locator:  locator('#item-title-input')
+    Expected: disabled
+    Received: enabled
+    Timeout:  5000ms
+
+    Call log:
+    [2m  - Expect "toBeDisabled" with timeout 5000ms[22m
+    [2m  - waiting for locator('#item-title-input')[22m
+    [2m    9 × locator resolved to <div data-rte="reduced" id="item-title-input" data-rte-disabled="true" class="rte-container rte-single-line ql-container ql-snow ql-disabled">…</div>[22m
+    [2m      - unexpected value "enabled"[22m
+
+
+      50 |         // AND display_details_record() runs disable_all_fields() after
+      51 |         // populating, so the inputs are disabled at both layers.
+    > 52 |         await expect(page.locator('#item-title-input')).toBeDisabled();
+         |                                                         ^
+      53 |         await expect(page.locator('#item-text-input')).toBeDisabled();
+      54 |
+      55 |         // Edit is the primary action on details mode.
+        at /Users/fcr/Dropbox/work/workspace/exhibits/exhibits-backend/test/e2e/specs/grid-item-details.spec.js:52:57
+
+    attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
+    test-results/grid-item-details-Grid-tex-3286c-ables-them-after-population-chromium/test-failed-1.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    attachment #2: video (video/webm) ──────────────────────────────────────────────────────────────
+    test-results/grid-item-details-Grid-tex-3286c-ables-them-after-population-chromium/video.webm
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Error Context: test-results/grid-item-details-Grid-tex-3286c-ables-them-after-population-chromium/error-context.md
+
+    attachment #4: trace (application/zip) ─────────────────────────────────────────────────────────
+    test-results/grid-item-details-Grid-tex-3286c-ables-them-after-population-chromium/trace.zip
+    Usage:
+
+        npx playwright show-trace test-results/grid-item-details-Grid-tex-3286c-ables-them-after-population-chromium/trace.zip
+
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+  11) [chromium] › test/e2e/specs/grid-item-edit.spec.js:49:5 › Edit grid text item form (items.edit.grid.item.form.module) › PUTs updated payload and shows success alert on 201 
+
+    Error: [2mexpect([22m[31mreceived[39m[2m).[22mtoBe[2m([22m[32mexpected[39m[2m) // Object.is equality[22m
+
+    Expected: [32m"Edited item text"[39m
+    Received: [31m"[7m<p>[27mEdited item text[7m</p>[27m"[39m
+
+      77 |
+      78 |         await expect.poll(() => state.lastUpdatePayload).not.toBeNull();
+    > 79 |         expect(state.lastUpdatePayload.text).toBe('Edited item text');
+         |                                              ^
+      80 |         expect(state.lastUpdatePayload.item_type).toBe('text');
+      81 |
+      82 |         // update_grid_item_record sets a success alert before the
+        at /Users/fcr/Dropbox/work/workspace/exhibits/exhibits-backend/test/e2e/specs/grid-item-edit.spec.js:79:46
+
+    attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
+    test-results/grid-item-edit-Edit-grid-t-d3e1c--shows-success-alert-on-201-chromium/test-failed-1.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    attachment #2: video (video/webm) ──────────────────────────────────────────────────────────────
+    test-results/grid-item-edit-Edit-grid-t-d3e1c--shows-success-alert-on-201-chromium/video.webm
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Error Context: test-results/grid-item-edit-Edit-grid-t-d3e1c--shows-success-alert-on-201-chromium/error-context.md
+
+    attachment #4: trace (application/zip) ─────────────────────────────────────────────────────────
+    test-results/grid-item-edit-Edit-grid-t-d3e1c--shows-success-alert-on-201-chromium/trace.zip
+    Usage:
+
+        npx playwright show-trace test-results/grid-item-edit-Edit-grid-t-d3e1c--shows-success-alert-on-201-chromium/trace.zip
+
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+  12) [chromium] › test/e2e/specs/grid-item-edit.spec.js:87:5 › Edit grid text item form (items.edit.grid.item.form.module) › disables form fields when record is locked by another user 
+
+    Error: [2mexpect([22m[31mlocator[39m[2m).[22mtoBeDisabled[2m([22m[2m)[22m failed
+
+    Locator:  locator('#item-title-input')
+    Expected: disabled
+    Received: enabled
+    Timeout:  5000ms
+
+    Call log:
+    [2m  - Expect "toBeDisabled" with timeout 5000ms[22m
+    [2m  - waiting for locator('#item-title-input')[22m
+    [2m    9 × locator resolved to <div data-rte="reduced" id="item-title-input" aria-labelledby="item-title-input-label" class="rte-container rte-single-line ql-container ql-snow ql-disabled">…</div>[22m
+    [2m      - unexpected value "enabled"[22m
+
+
+      107 |         // profile.uid ('1' from the seeded user) vs locked_by_user
+      108 |         // ('999') → asymmetric → disable_form_fields runs.
+    > 109 |         await expect(page.locator('#item-title-input')).toBeDisabled();
+          |                                                         ^
+      110 |         await expect(page.locator('#item-text-input')).toBeDisabled();
+      111 |     });
+      112 | });
+        at /Users/fcr/Dropbox/work/workspace/exhibits/exhibits-backend/test/e2e/specs/grid-item-edit.spec.js:109:57
+
+    attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
+    test-results/grid-item-edit-Edit-grid-t-30c89-d-is-locked-by-another-user-chromium/test-failed-1.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    attachment #2: video (video/webm) ──────────────────────────────────────────────────────────────
+    test-results/grid-item-edit-Edit-grid-t-30c89-d-is-locked-by-another-user-chromium/video.webm
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Error Context: test-results/grid-item-edit-Edit-grid-t-30c89-d-is-locked-by-another-user-chromium/error-context.md
+
+    attachment #4: trace (application/zip) ─────────────────────────────────────────────────────────
+    test-results/grid-item-edit-Edit-grid-t-30c89-d-is-locked-by-another-user-chromium/trace.zip
+    Usage:
+
+        npx playwright show-trace test-results/grid-item-edit-Edit-grid-t-30c89-d-is-locked-by-another-user-chromium/trace.zip
+
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+  13) [chromium] › test/e2e/specs/grid-item-media-details.spec.js:30:5 › Grid media item details page (items.details.grid.item.module — media path) › renders read-only fields and populates the media preview 
+
+    Error: [2mexpect([22m[31mlocator[39m[2m).[22mtoBeDisabled[2m([22m[2m)[22m failed
+
+    Locator:  locator('#item-title-input')
+    Expected: disabled
+    Received: enabled
+    Timeout:  5000ms
+
+    Call log:
+    [2m  - Expect "toBeDisabled" with timeout 5000ms[22m
+    [2m  - waiting for locator('#item-title-input')[22m
+    [2m    9 × locator resolved to <div data-rte="reduced" id="item-title-input" aria-labelledby="item-title-input-label" class="rte-container rte-single-line ql-container ql-snow ql-disabled">…</div>[22m
+    [2m      - unexpected value "enabled"[22m
+
+
+      56 |
+      57 |         // disable_all_fields runs after population.
+    > 58 |         await expect(page.locator('#item-title-input')).toBeDisabled();
+         |                                                         ^
+      59 |         await expect(page.locator('#item-text-input')).toBeDisabled();
+      60 |
+      61 |         // Edit is the primary action; save button is hidden in details mode.
+        at /Users/fcr/Dropbox/work/workspace/exhibits/exhibits-backend/test/e2e/specs/grid-item-media-details.spec.js:58:57
+
+    attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
+    test-results/grid-item-media-details-Gr-060cc-populates-the-media-preview-chromium/test-failed-1.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    attachment #2: video (video/webm) ──────────────────────────────────────────────────────────────
+    test-results/grid-item-media-details-Gr-060cc-populates-the-media-preview-chromium/video.webm
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Error Context: test-results/grid-item-media-details-Gr-060cc-populates-the-media-preview-chromium/error-context.md
+
+    attachment #4: trace (application/zip) ─────────────────────────────────────────────────────────
+    test-results/grid-item-media-details-Gr-060cc-populates-the-media-preview-chromium/trace.zip
+    Usage:
+
+        npx playwright show-trace test-results/grid-item-media-details-Gr-060cc-populates-the-media-preview-chromium/trace.zip
+
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+  14) [chromium] › test/e2e/specs/grid-item-media-edit.spec.js:57:5 › Edit grid media item form (items.edit.grid.item.form.module — media path) › PUTs payload preserving media_uuid and shows success alert 
+
+    Error: [2mexpect([22m[31mreceived[39m[2m).[22mtoBe[2m([22m[32mexpected[39m[2m) // Object.is equality[22m
+
+    Expected: [32m"Edited caption"[39m
+    Received: [31m"[7m<p>[27mEdited caption[7m</p>[27m"[39m
+
+      85 |
+      86 |         await expect.poll(() => state.lastUpdatePayload).not.toBeNull();
+    > 87 |         expect(state.lastUpdatePayload.text).toBe('Edited caption');
+         |                                              ^
+      88 |         expect(state.lastUpdatePayload.media_uuid).toBe('media-uuid-existing');
+      89 |         expect(state.lastUpdatePayload.item_type).toBe('image');
+      90 |         expect(state.lastUpdatePayload.mime_type).toBe('image/jpeg');
+        at /Users/fcr/Dropbox/work/workspace/exhibits/exhibits-backend/test/e2e/specs/grid-item-media-edit.spec.js:87:46
+
+    attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
+    test-results/grid-item-media-edit-Edit--17dec-uid-and-shows-success-alert-chromium/test-failed-1.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    attachment #2: video (video/webm) ──────────────────────────────────────────────────────────────
+    test-results/grid-item-media-edit-Edit--17dec-uid-and-shows-success-alert-chromium/video.webm
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Error Context: test-results/grid-item-media-edit-Edit--17dec-uid-and-shows-success-alert-chromium/error-context.md
+
+    attachment #4: trace (application/zip) ─────────────────────────────────────────────────────────
+    test-results/grid-item-media-edit-Edit--17dec-uid-and-shows-success-alert-chromium/trace.zip
+    Usage:
+
+        npx playwright show-trace test-results/grid-item-media-edit-Edit--17dec-uid-and-shows-success-alert-chromium/trace.zip
+
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+  15) [chromium] › test/e2e/specs/heading-add.spec.js:69:5 › Add heading form (items.add.heading.form.module) › POSTs serialized payload and redirects to edit on 201 
+
+    Error: [2mexpect([22m[31mreceived[39m[2m).[22mtoBe[2m([22m[32mexpected[39m[2m) // Object.is equality[22m
+
+    Expected: [32m"New heading text"[39m
+    Received: [31m"[7m<p>[27mNew heading text[7m</p>[27m"[39m
+
+      89 |
+      90 |         await expect.poll(() => state.lastCreatePayload).not.toBeNull();
+    > 91 |         expect(state.lastCreatePayload.text).toBe('New heading text');
+         |                                              ^
+      92 |         expect(state.lastCreatePayload.type).toBe('heading');
+      93 |
+      94 |         // Module redirects to /items/heading/edit?... after success. Wait
+        at /Users/fcr/Dropbox/work/workspace/exhibits/exhibits-backend/test/e2e/specs/heading-add.spec.js:91:46
+
+    attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
+    test-results/heading-add-Add-heading-fo-8af5c-nd-redirects-to-edit-on-201-chromium/test-failed-1.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    attachment #2: video (video/webm) ──────────────────────────────────────────────────────────────
+    test-results/heading-add-Add-heading-fo-8af5c-nd-redirects-to-edit-on-201-chromium/video.webm
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Error Context: test-results/heading-add-Add-heading-fo-8af5c-nd-redirects-to-edit-on-201-chromium/error-context.md
+
+    attachment #4: trace (application/zip) ─────────────────────────────────────────────────────────
+    test-results/heading-add-Add-heading-fo-8af5c-nd-redirects-to-edit-on-201-chromium/trace.zip
+    Usage:
+
+        npx playwright show-trace test-results/heading-add-Add-heading-fo-8af5c-nd-redirects-to-edit-on-201-chromium/trace.zip
+
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+  16) [chromium] › test/e2e/specs/heading-details.spec.js:27:5 › Heading details page (items.details.heading.item.module) › renders record fields read-only 
+
+    Error: [2mexpect([22m[31mlocator[39m[2m).[22mtoBeDisabled[2m([22m[2m)[22m failed
+
+    Locator:  locator('#item-heading-text-input')
+    Expected: disabled
+    Received: enabled
+    Timeout:  5000ms
+
+    Call log:
+    [2m  - Expect "toBeDisabled" with timeout 5000ms[22m
+    [2m  - waiting for locator('#item-heading-text-input')[22m
+    [2m    9 × locator resolved to <div data-rte="reduced" data-rte-disabled="true" id="item-heading-text-input" aria-labelledby="item-heading-text-input-label" class="rte-container rte-single-line ql-container ql-snow ql-disabled">…</div>[22m
+    [2m      - unexpected value "enabled"[22m
+
+
+      44 |
+      45 |         // The details EJS renders inputs with the disabled attribute set.
+    > 46 |         await expect(page.locator('#item-heading-text-input')).toBeDisabled();
+         |                                                                ^
+      47 |         await expect(page.locator('#item-heading-type-input')).toBeDisabled();
+      48 |
+      49 |         // Save button is hidden in details mode; Edit is the primary action.
+        at /Users/fcr/Dropbox/work/workspace/exhibits/exhibits-backend/test/e2e/specs/heading-details.spec.js:46:64
+
+    attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
+    test-results/heading-details-Heading-de-b2c56-ers-record-fields-read-only-chromium/test-failed-1.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    attachment #2: video (video/webm) ──────────────────────────────────────────────────────────────
+    test-results/heading-details-Heading-de-b2c56-ers-record-fields-read-only-chromium/video.webm
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Error Context: test-results/heading-details-Heading-de-b2c56-ers-record-fields-read-only-chromium/error-context.md
+
+    attachment #4: trace (application/zip) ─────────────────────────────────────────────────────────
+    test-results/heading-details-Heading-de-b2c56-ers-record-fields-read-only-chromium/trace.zip
+    Usage:
+
+        npx playwright show-trace test-results/heading-details-Heading-de-b2c56-ers-record-fields-read-only-chromium/trace.zip
+
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+  17) [chromium] › test/e2e/specs/heading-edit.spec.js:47:5 › Edit heading form (items.edit.heading.form.module) › PUTs updated payload and shows success alert on 201 
+
+    Error: [2mexpect([22m[31mreceived[39m[2m).[22mtoBe[2m([22m[32mexpected[39m[2m) // Object.is equality[22m
+
+    Expected: [32m"Edited heading"[39m
+    Received: [31m"[7m<p>[27mEdited heading[7m</p>[27m"[39m
+
+      73 |
+      74 |         await expect.poll(() => state.lastUpdatePayload).not.toBeNull();
+    > 75 |         expect(state.lastUpdatePayload.text).toBe('Edited heading');
+         |                                              ^
+      76 |         expect(state.lastUpdatePayload.type).toBe('subheading');
+      77 |
+      78 |         await expect(page.locator('#message .alert-success')).toBeVisible();
+        at /Users/fcr/Dropbox/work/workspace/exhibits/exhibits-backend/test/e2e/specs/heading-edit.spec.js:75:46
+
+    attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
+    test-results/heading-edit-Edit-heading--f4ff3--shows-success-alert-on-201-chromium/test-failed-1.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    attachment #2: video (video/webm) ──────────────────────────────────────────────────────────────
+    test-results/heading-edit-Edit-heading--f4ff3--shows-success-alert-on-201-chromium/video.webm
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Error Context: test-results/heading-edit-Edit-heading--f4ff3--shows-success-alert-on-201-chromium/error-context.md
+
+    attachment #4: trace (application/zip) ─────────────────────────────────────────────────────────
+    test-results/heading-edit-Edit-heading--f4ff3--shows-success-alert-on-201-chromium/trace.zip
+    Usage:
+
+        npx playwright show-trace test-results/heading-edit-Edit-heading--f4ff3--shows-success-alert-on-201-chromium/trace.zip
+
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+  18) [chromium] › test/e2e/specs/heading-edit.spec.js:81:5 › Edit heading form (items.edit.heading.form.module) › disables form fields when record is locked by another user 
+
+    Error: [2mexpect([22m[31mlocator[39m[2m).[22mtoBeDisabled[2m([22m[2m)[22m failed
+
+    Locator:  locator('#item-heading-text-input')
+    Expected: disabled
+    Received: enabled
+    Timeout:  5000ms
+
+    Call log:
+    [2m  - Expect "toBeDisabled" with timeout 5000ms[22m
+    [2m  - waiting for locator('#item-heading-text-input')[22m
+    [2m    2 × locator resolved to <div data-rte="reduced" data-rte-disabled="false" id="item-heading-text-input" aria-labelledby="item-heading-text-input-label" class="rte-container rte-single-line ql-container ql-snow">…</div>[22m
+    [2m      - unexpected value "enabled"[22m
+    [2m    7 × locator resolved to <div data-rte="reduced" data-rte-disabled="false" id="item-heading-text-input" aria-labelledby="item-heading-text-input-label" class="rte-container rte-single-line ql-container ql-snow ql-disabled">…</div>[22m
+    [2m      - unexpected value "enabled"[22m
+
+
+       99 |         // Wait until the record has been applied to the form before
+      100 |         // asserting on the disable side-effect.
+    > 101 |         await expect(page.locator('#item-heading-text-input')).toBeDisabled();
+          |                                                                ^
+      102 |         await expect(page.locator('#item-heading-type-input')).toBeDisabled();
+      103 |     });
+      104 |
+        at /Users/fcr/Dropbox/work/workspace/exhibits/exhibits-backend/test/e2e/specs/heading-edit.spec.js:101:64
+
+    attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
+    test-results/heading-edit-Edit-heading--1d2d2-d-is-locked-by-another-user-chromium/test-failed-1.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    attachment #2: video (video/webm) ──────────────────────────────────────────────────────────────
+    test-results/heading-edit-Edit-heading--1d2d2-d-is-locked-by-another-user-chromium/video.webm
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Error Context: test-results/heading-edit-Edit-heading--1d2d2-d-is-locked-by-another-user-chromium/error-context.md
+
+    attachment #4: trace (application/zip) ─────────────────────────────────────────────────────────
+    test-results/heading-edit-Edit-heading--1d2d2-d-is-locked-by-another-user-chromium/trace.zip
+    Usage:
+
+        npx playwright show-trace test-results/heading-edit-Edit-heading--1d2d2-d-is-locked-by-another-user-chromium/trace.zip
+
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+  19) [chromium] › test/e2e/specs/media-library-edit.spec.js:94:5 › Media library edit modal (modals.edit.module.js — open_edit_media_modal / update_media_record) › clicking the row Edit dropdown item opens the modal and populates fields from the GET 
+
+    Error: [2mexpect([22m[31mlocator[39m[2m).[22mtoHaveValue[2m([22m[32mexpected[39m[2m)[22m failed
+
+    Locator:  locator('#edit-file-description')
+    Expected: [32m"Original description"[39m
+    Received: [31m"[7m<p>[27mOriginal description[7m</p>[27m"[39m
+    Timeout:  5000ms
+
+    Call log:
+    [2m  - Expect "toHaveValue" with timeout 5000ms[22m
+    [2m  - waiting for locator('#edit-file-description')[22m
+    [2m    9 × locator resolved to <textarea hidden="" required="" name="description" class="form-control" aria-required="true" id="edit-file-description">Original description</textarea>[22m
+    [2m      - unexpected value "<p>Original description</p>"[22m
+
+
+      103 |         await expect(page.locator('#edit-file-name')).toHaveValue('Original record name');
+      104 |         await expect(page.locator('#edit-file-description'))
+    > 105 |             .toHaveValue('Original description');
+          |              ^
+      106 |
+      107 |         // The hidden uuid field is populated from record.uuid; this is
+      108 |         // what the submit handler reads back via current_edit_uuid.
+        at /Users/fcr/Dropbox/work/workspace/exhibits/exhibits-backend/test/e2e/specs/media-library-edit.spec.js:105:14
+
+    attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
+    test-results/media-library-edit-Media-l-de145-pulates-fields-from-the-GET-chromium/test-failed-1.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    attachment #2: video (video/webm) ──────────────────────────────────────────────────────────────
+    test-results/media-library-edit-Media-l-de145-pulates-fields-from-the-GET-chromium/video.webm
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Error Context: test-results/media-library-edit-Media-l-de145-pulates-fields-from-the-GET-chromium/error-context.md
+
+    attachment #4: trace (application/zip) ─────────────────────────────────────────────────────────
+    test-results/media-library-edit-Media-l-de145-pulates-fields-from-the-GET-chromium/trace.zip
+    Usage:
+
+        npx playwright show-trace test-results/media-library-edit-Media-l-de145-pulates-fields-from-the-GET-chromium/trace.zip
+
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+  20) [chromium] › test/e2e/specs/media-library-edit.spec.js:117:5 › Media library edit modal (modals.edit.module.js — open_edit_media_modal / update_media_record) › Save fires PUT with the form payload and closes the modal on success 
+
+    TimeoutError: page.fill: Timeout 10000ms exceeded.
+    Call log:
+    [2m  - waiting for locator('#edit-file-description')[22m
+    [2m    - locator resolved to <textarea hidden="" required="" name="description" class="form-control" aria-required="true" id="edit-file-description">Original description</textarea>[22m
+    [2m    - fill("Updated description")[22m
+    [2m  - attempting fill action[22m
+    [2m    2 × waiting for element to be visible, enabled and editable[22m
+    [2m      - element is not visible[22m
+    [2m    - retrying fill action[22m
+    [2m    - waiting 20ms[22m
+    [2m    2 × waiting for element to be visible, enabled and editable[22m
+    [2m      - element is not visible[22m
+    [2m    - retrying fill action[22m
+    [2m      - waiting 100ms[22m
+    [2m    20 × waiting for element to be visible, enabled and editable[22m
+    [2m       - element is not visible[22m
+    [2m     - retrying fill action[22m
+    [2m       - waiting 500ms[22m
+
+
+      124 |         // Mutate the name + description so the assertions are concrete.
+      125 |         await page.fill('#edit-file-name', 'Renamed record');
+    > 126 |         await page.fill('#edit-file-description', 'Updated description');
+          |                    ^
+      127 |
+      128 |         await page.locator('#edit-media-save-btn').click();
+      129 |
+        at /Users/fcr/Dropbox/work/workspace/exhibits/exhibits-backend/test/e2e/specs/media-library-edit.spec.js:126:20
+
+    attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
+    test-results/media-library-edit-Media-l-b78b0-closes-the-modal-on-success-chromium/test-failed-1.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    attachment #2: video (video/webm) ──────────────────────────────────────────────────────────────
+    test-results/media-library-edit-Media-l-b78b0-closes-the-modal-on-success-chromium/video.webm
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Error Context: test-results/media-library-edit-Media-l-b78b0-closes-the-modal-on-success-chromium/error-context.md
+
+    attachment #4: trace (application/zip) ─────────────────────────────────────────────────────────
+    test-results/media-library-edit-Media-l-b78b0-closes-the-modal-on-success-chromium/trace.zip
+    Usage:
+
+        npx playwright show-trace test-results/media-library-edit-Media-l-b78b0-closes-the-modal-on-success-chromium/trace.zip
+
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+  21) [chromium] › test/e2e/specs/media-library-kaltura.spec.js:62:5 › Media library Kaltura entry lookup (kaltura.service.module.js — get_kaltura_media) › Get-metadata fires GET /kaltura/<entry_id>, shows the thumbnail, opens the modal pre-populated with title 
+
+    Error: [2mexpect([22m[31mlocator[39m[2m).[22mtoHaveValue[2m([22m[32mexpected[39m[2m)[22m failed
+
+    Locator:  locator('#kaltura-media-modal .kaltura-description')
+    Expected: [32m"My test description"[39m
+    Received: [31m"[7m<p>[27mMy test description[7m</p>[27m"[39m
+    Timeout:  5000ms
+
+    Call log:
+    [2m  - Expect "toHaveValue" with timeout 5000ms[22m
+    [2m  - waiting for locator('#kaltura-media-modal .kaltura-description')[22m
+    [2m    9 × locator resolved to <textarea hidden="" required="" name="description" aria-required="true" id="kaltura-description-0" class="form-control kaltura-description">My test description</textarea>[22m
+    [2m      - unexpected value "<p>My test description</p>"[22m
+
+
+      102 |         // Description textarea also pre-populated.
+      103 |         await expect(page.locator('#kaltura-media-modal .kaltura-description'))
+    > 104 |             .toHaveValue('My test description');
+          |              ^
+      105 |         // Hidden entry-id field carries what the user typed.
+      106 |         await expect(page.locator('#kaltura-media-modal .kaltura-entry-id'))
+      107 |             .toHaveValue('0_abc123xy');
+        at /Users/fcr/Dropbox/work/workspace/exhibits/exhibits-backend/test/e2e/specs/media-library-kaltura.spec.js:104:14
+
+    attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
+    test-results/media-library-kaltura-Medi-dfb92-al-pre-populated-with-title-chromium/test-failed-1.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    attachment #2: video (video/webm) ──────────────────────────────────────────────────────────────
+    test-results/media-library-kaltura-Medi-dfb92-al-pre-populated-with-title-chromium/video.webm
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Error Context: test-results/media-library-kaltura-Medi-dfb92-al-pre-populated-with-title-chromium/error-context.md
+
+    attachment #4: trace (application/zip) ─────────────────────────────────────────────────────────
+    test-results/media-library-kaltura-Medi-dfb92-al-pre-populated-with-title-chromium/trace.zip
+    Usage:
+
+        npx playwright show-trace test-results/media-library-kaltura-Medi-dfb92-al-pre-populated-with-title-chromium/trace.zip
+
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+  22) [chromium] › test/e2e/specs/standard-item-add.spec.js:54:5 › Add standard text item form (items.add.standard.item.form.module) › POSTs serialized payload and redirects to text edit on 201 
+
+    Error: [2mexpect([22m[31mreceived[39m[2m).[22mtoBe[2m([22m[32mexpected[39m[2m) // Object.is equality[22m
+
+    Expected: [32m"A new standard text item"[39m
+    Received: [31m"[7m<p>[27mA new standard text item[7m</p>[27m"[39m
+
+      73 |
+      74 |         await expect.poll(() => state.lastCreatePayload).not.toBeNull();
+    > 75 |         expect(state.lastCreatePayload.text).toBe('A new standard text item');
+         |                                              ^
+      76 |         expect(state.lastCreatePayload.item_type).toBe('text');
+      77 |         expect(state.lastCreatePayload.mime_type).toBe('text/plain');
+      78 |         // Pre-checked radios in the EJS.
+        at /Users/fcr/Dropbox/work/workspace/exhibits/exhibits-backend/test/e2e/specs/standard-item-add.spec.js:75:46
+
+    attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
+    test-results/standard-item-add-Add-stan-bb23b-directs-to-text-edit-on-201-chromium/test-failed-1.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    attachment #2: video (video/webm) ──────────────────────────────────────────────────────────────
+    test-results/standard-item-add-Add-stan-bb23b-directs-to-text-edit-on-201-chromium/video.webm
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Error Context: test-results/standard-item-add-Add-stan-bb23b-directs-to-text-edit-on-201-chromium/error-context.md
+
+    attachment #4: trace (application/zip) ─────────────────────────────────────────────────────────
+    test-results/standard-item-add-Add-stan-bb23b-directs-to-text-edit-on-201-chromium/trace.zip
+    Usage:
+
+        npx playwright show-trace test-results/standard-item-add-Add-stan-bb23b-directs-to-text-edit-on-201-chromium/trace.zip
+
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+  23) [chromium] › test/e2e/specs/standard-item-details.spec.js:27:5 › Standard text item details page (items.details.standard.item.module) › renders text field and disables it after population 
+
+    Error: [2mexpect([22m[31mlocator[39m[2m).[22mtoBeDisabled[2m([22m[2m)[22m failed
+
+    Locator:  locator('#item-text-input')
+    Expected: disabled
+    Received: enabled
+    Timeout:  5000ms
+
+    Call log:
+    [2m  - Expect "toBeDisabled" with timeout 5000ms[22m
+    [2m  - waiting for locator('#item-text-input')[22m
+    [2m    9 × locator resolved to <div data-rte="full" id="item-text-input" data-rte-disabled="true" class="rte-container ql-container ql-snow ql-disabled">…</div>[22m
+    [2m      - unexpected value "enabled"[22m
+
+
+      45 |         // baked in AND display_details_record() runs disable_all_fields
+      46 |         // after populating.
+    > 47 |         await expect(page.locator('#item-text-input')).toBeDisabled();
+         |                                                        ^
+      48 |
+      49 |         await expect(page.locator('#edit-item-btn')).toBeVisible();
+      50 |         await expect(page.locator('#edit-item-btn')).toBeEnabled();
+        at /Users/fcr/Dropbox/work/workspace/exhibits/exhibits-backend/test/e2e/specs/standard-item-details.spec.js:47:56
+
+    attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
+    test-results/standard-item-details-Stan-1ed05-isables-it-after-population-chromium/test-failed-1.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    attachment #2: video (video/webm) ──────────────────────────────────────────────────────────────
+    test-results/standard-item-details-Stan-1ed05-isables-it-after-population-chromium/video.webm
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Error Context: test-results/standard-item-details-Stan-1ed05-isables-it-after-population-chromium/error-context.md
+
+    attachment #4: trace (application/zip) ─────────────────────────────────────────────────────────
+    test-results/standard-item-details-Stan-1ed05-isables-it-after-population-chromium/trace.zip
+    Usage:
+
+        npx playwright show-trace test-results/standard-item-details-Stan-1ed05-isables-it-after-population-chromium/trace.zip
+
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+  24) [chromium] › test/e2e/specs/standard-item-edit.spec.js:44:5 › Edit standard text item form (items.edit.standard.item.form.module) › PUTs updated payload via #save-item-btn and shows success 
+
+    Error: [2mexpect([22m[31mreceived[39m[2m).[22mtoBe[2m([22m[32mexpected[39m[2m) // Object.is equality[22m
+
+    Expected: [32m"Edited item text"[39m
+    Received: [31m"[7m<p>[27mEdited item text[7m</p>[27m"[39m
+
+      70 |
+      71 |         await expect.poll(() => state.lastUpdatePayload).not.toBeNull();
+    > 72 |         expect(state.lastUpdatePayload.text).toBe('Edited item text');
+         |                                              ^
+      73 |         expect(state.lastUpdatePayload.item_type).toBe('text');
+      74 |
+      75 |         await expect(page.locator('#message .alert-success')).toBeVisible();
+        at /Users/fcr/Dropbox/work/workspace/exhibits/exhibits-backend/test/e2e/specs/standard-item-edit.spec.js:72:46
+
+    attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
+    test-results/standard-item-edit-Edit-st-5733b--item-btn-and-shows-success-chromium/test-failed-1.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    attachment #2: video (video/webm) ──────────────────────────────────────────────────────────────
+    test-results/standard-item-edit-Edit-st-5733b--item-btn-and-shows-success-chromium/video.webm
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Error Context: test-results/standard-item-edit-Edit-st-5733b--item-btn-and-shows-success-chromium/error-context.md
+
+    attachment #4: trace (application/zip) ─────────────────────────────────────────────────────────
+    test-results/standard-item-edit-Edit-st-5733b--item-btn-and-shows-success-chromium/trace.zip
+    Usage:
+
+        npx playwright show-trace test-results/standard-item-edit-Edit-st-5733b--item-btn-and-shows-success-chromium/trace.zip
+
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+  25) [chromium] › test/e2e/specs/standard-item-edit.spec.js:78:5 › Edit standard text item form (items.edit.standard.item.form.module) › disables form fields when record is locked by another user 
+
+    Error: [2mexpect([22m[31mlocator[39m[2m).[22mtoBeDisabled[2m([22m[2m)[22m failed
+
+    Locator:  locator('#item-text-input')
+    Expected: disabled
+    Received: enabled
+    Timeout:  5000ms
+
+    Call log:
+    [2m  - Expect "toBeDisabled" with timeout 5000ms[22m
+    [2m  - waiting for locator('#item-text-input')[22m
+    [2m    9 × locator resolved to <div data-rte="full" id="item-text-input" aria-labelledby="is-required-text" class="rte-container ql-container ql-snow ql-disabled">…</div>[22m
+    [2m      - unexpected value "enabled"[22m
+
+
+      94 |
+      95 |         // Same lock-detection mechanic as heading-edit/grid-item-edit.
+    > 96 |         await expect(page.locator('#item-text-input')).toBeDisabled();
+         |                                                        ^
+      97 |     });
+      98 | });
+      99 |
+        at /Users/fcr/Dropbox/work/workspace/exhibits/exhibits-backend/test/e2e/specs/standard-item-edit.spec.js:96:56
+
+    attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
+    test-results/standard-item-edit-Edit-st-fd70b-d-is-locked-by-another-user-chromium/test-failed-1.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    attachment #2: video (video/webm) ──────────────────────────────────────────────────────────────
+    test-results/standard-item-edit-Edit-st-fd70b-d-is-locked-by-another-user-chromium/video.webm
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Error Context: test-results/standard-item-edit-Edit-st-fd70b-d-is-locked-by-another-user-chromium/error-context.md
+
+    attachment #4: trace (application/zip) ─────────────────────────────────────────────────────────
+    test-results/standard-item-edit-Edit-st-fd70b-d-is-locked-by-another-user-chromium/trace.zip
+    Usage:
+
+        npx playwright show-trace test-results/standard-item-edit-Edit-st-fd70b-d-is-locked-by-another-user-chromium/trace.zip
+
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+  26) [chromium] › test/e2e/specs/standard-item-media-details.spec.js:29:5 › Standard media item details page (items.details.standard.item.module — media path) › renders read-only fields and populates the media preview 
+
+    Error: [2mexpect([22m[31mlocator[39m[2m).[22mtoBeDisabled[2m([22m[2m)[22m failed
+
+    Locator:  locator('#item-text-input')
+    Expected: disabled
+    Received: enabled
+    Timeout:  5000ms
+
+    Call log:
+    [2m  - Expect "toBeDisabled" with timeout 5000ms[22m
+    [2m  - waiting for locator('#item-text-input')[22m
+    [2m    9 × locator resolved to <div data-rte="full" id="item-text-input" aria-labelledby="is-required-text" class="rte-container ql-container ql-snow ql-disabled">…</div>[22m
+    [2m      - unexpected value "enabled"[22m
+
+
+      49 |         await expect(page.locator('#item-media-uuid')).toHaveValue('media-uuid-existing');
+      50 |
+    > 51 |         await expect(page.locator('#item-text-input')).toBeDisabled();
+         |                                                        ^
+      52 |
+      53 |         await expect(page.locator('#edit-item-btn')).toBeVisible();
+      54 |     });
+        at /Users/fcr/Dropbox/work/workspace/exhibits/exhibits-backend/test/e2e/specs/standard-item-media-details.spec.js:51:56
+
+    attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
+    test-results/standard-item-media-detail-9d1f2-populates-the-media-preview-chromium/test-failed-1.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    attachment #2: video (video/webm) ──────────────────────────────────────────────────────────────
+    test-results/standard-item-media-detail-9d1f2-populates-the-media-preview-chromium/video.webm
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Error Context: test-results/standard-item-media-detail-9d1f2-populates-the-media-preview-chromium/error-context.md
+
+    attachment #4: trace (application/zip) ─────────────────────────────────────────────────────────
+    test-results/standard-item-media-detail-9d1f2-populates-the-media-preview-chromium/trace.zip
+    Usage:
+
+        npx playwright show-trace test-results/standard-item-media-detail-9d1f2-populates-the-media-preview-chromium/trace.zip
+
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+  27) [chromium] › test/e2e/specs/standard-item-media-edit.spec.js:52:5 › Edit standard media item form (items.edit.standard.item.form.module — media path) › PUTs payload preserving media_uuid via #save-item-btn 
+
+    Error: [2mexpect([22m[31mreceived[39m[2m).[22mtoBe[2m([22m[32mexpected[39m[2m) // Object.is equality[22m
+
+    Expected: [32m"Edited caption"[39m
+    Received: [31m"[7m<p>[27mEdited caption[7m</p>[27m"[39m
+
+      78 |
+      79 |         await expect.poll(() => state.lastUpdatePayload).not.toBeNull();
+    > 80 |         expect(state.lastUpdatePayload.text).toBe('Edited caption');
+         |                                              ^
+      81 |         expect(state.lastUpdatePayload.media_uuid).toBe('media-uuid-existing');
+      82 |         expect(state.lastUpdatePayload.item_type).toBe('image');
+      83 |         expect(state.lastUpdatePayload.mime_type).toBe('image/jpeg');
+        at /Users/fcr/Dropbox/work/workspace/exhibits/exhibits-backend/test/e2e/specs/standard-item-media-edit.spec.js:80:46
+
+    attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
+    test-results/standard-item-media-edit-E-00d41-edia-uuid-via-save-item-btn-chromium/test-failed-1.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    attachment #2: video (video/webm) ──────────────────────────────────────────────────────────────
+    test-results/standard-item-media-edit-E-00d41-edia-uuid-via-save-item-btn-chromium/video.webm
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Error Context: test-results/standard-item-media-edit-E-00d41-edia-uuid-via-save-item-btn-chromium/error-context.md
+
+    attachment #4: trace (application/zip) ─────────────────────────────────────────────────────────
+    test-results/standard-item-media-edit-E-00d41-edia-uuid-via-save-item-btn-chromium/trace.zip
+    Usage:
+
+        npx playwright show-trace test-results/standard-item-media-edit-E-00d41-edia-uuid-via-save-item-btn-chromium/trace.zip
+
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+  28) [chromium] › test/e2e/specs/timeline-add.spec.js:42:5 › Add timeline form (items.add.vertical.timeline.form.module) › POSTs and redirects to edit on 201 
+
+    Error: [2mexpect([22m[31mreceived[39m[2m).[22mtoBe[2m([22m[32mexpected[39m[2m) // Object.is equality[22m
+
+    Expected: [32m"My new timeline"[39m
+    Received: [31m"[7m<p>[27mMy new timeline[7m</p>[27m"[39m
+
+      62 |
+      63 |         await expect.poll(() => state.lastCreatePayload).not.toBeNull();
+    > 64 |         expect(state.lastCreatePayload.text).toBe('My new timeline');
+         |                                              ^
+      65 |         expect(state.lastCreatePayload.internal_name).toBe('Staff timeline label');
+      66 |
+      67 |         // Module redirects to /items/vertical-timeline/edit?... after
+        at /Users/fcr/Dropbox/work/workspace/exhibits/exhibits-backend/test/e2e/specs/timeline-add.spec.js:64:46
+
+    attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
+    test-results/timeline-add-Add-timeline--b60fb-nd-redirects-to-edit-on-201-chromium/test-failed-1.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    attachment #2: video (video/webm) ──────────────────────────────────────────────────────────────
+    test-results/timeline-add-Add-timeline--b60fb-nd-redirects-to-edit-on-201-chromium/video.webm
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Error Context: test-results/timeline-add-Add-timeline--b60fb-nd-redirects-to-edit-on-201-chromium/error-context.md
+
+    attachment #4: trace (application/zip) ─────────────────────────────────────────────────────────
+    test-results/timeline-add-Add-timeline--b60fb-nd-redirects-to-edit-on-201-chromium/trace.zip
+    Usage:
+
+        npx playwright show-trace test-results/timeline-add-Add-timeline--b60fb-nd-redirects-to-edit-on-201-chromium/trace.zip
+
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+  29) [chromium] › test/e2e/specs/timeline-details.spec.js:27:5 › Timeline details page (items.details.vertical.timeline.module) › renders text field populated from the fetched record 
+
+    Error: [2mexpect([22m[31mlocator[39m[2m).[22mtoBeDisabled[2m([22m[2m)[22m failed
+
+    Locator:  locator('#timeline-text-input')
+    Expected: disabled
+    Received: enabled
+    Timeout:  5000ms
+
+    Call log:
+    [2m  - Expect "toBeDisabled" with timeout 5000ms[22m
+    [2m  - waiting for locator('#timeline-text-input')[22m
+    [2m    9 × locator resolved to <div data-rte="full" id="timeline-text-input" data-rte-disabled="true" class="rte-container ql-container ql-snow ql-disabled">…</div>[22m
+    [2m      - unexpected value "enabled"[22m
+
+
+      44 |
+      45 |         // The details EJS renders the inputs with the disabled attribute set.
+    > 46 |         await expect(page.locator('#timeline-text-input')).toBeDisabled();
+         |                                                            ^
+      47 |         await expect(page.locator('#timeline-internal-name-input')).toBeDisabled();
+      48 |
+      49 |         // Staff-only hint rides along on the read-only view too.
+        at /Users/fcr/Dropbox/work/workspace/exhibits/exhibits-backend/test/e2e/specs/timeline-details.spec.js:46:60
+
+    attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
+    test-results/timeline-details-Timeline--9cc13-ted-from-the-fetched-record-chromium/test-failed-1.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    attachment #2: video (video/webm) ──────────────────────────────────────────────────────────────
+    test-results/timeline-details-Timeline--9cc13-ted-from-the-fetched-record-chromium/video.webm
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Error Context: test-results/timeline-details-Timeline--9cc13-ted-from-the-fetched-record-chromium/error-context.md
+
+    attachment #4: trace (application/zip) ─────────────────────────────────────────────────────────
+    test-results/timeline-details-Timeline--9cc13-ted-from-the-fetched-record-chromium/trace.zip
+    Usage:
+
+        npx playwright show-trace test-results/timeline-details-Timeline--9cc13-ted-from-the-fetched-record-chromium/trace.zip
+
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+  30) [chromium] › test/e2e/specs/timeline-edit.spec.js:73:5 › Edit timeline form (items.edit.vertical.timeline.form.module) › PUTs updated payload via #save-timeline-btn and shows success 
+
+    Error: [2mexpect([22m[31mreceived[39m[2m).[22mtoBe[2m([22m[32mexpected[39m[2m) // Object.is equality[22m
+
+    Expected: [32m"Edited timeline text"[39m
+    Received: [31m"[7m<p>[27mEdited timeline text[7m</p>[27m"[39m
+
+      100 |
+      101 |         await expect.poll(() => state.lastUpdatePayload).not.toBeNull();
+    > 102 |         expect(state.lastUpdatePayload.text).toBe('Edited timeline text');
+          |                                              ^
+      103 |         expect(state.lastUpdatePayload.internal_name).toBe('Renamed staff label');
+      104 |
+      105 |         await expect(page.locator('#message .alert-success')).toBeVisible();
+        at /Users/fcr/Dropbox/work/workspace/exhibits/exhibits-backend/test/e2e/specs/timeline-edit.spec.js:102:46
+
+    attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
+    test-results/timeline-edit-Edit-timelin-95bae-eline-btn-and-shows-success-chromium/test-failed-1.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    attachment #2: video (video/webm) ──────────────────────────────────────────────────────────────
+    test-results/timeline-edit-Edit-timelin-95bae-eline-btn-and-shows-success-chromium/video.webm
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Error Context: test-results/timeline-edit-Edit-timelin-95bae-eline-btn-and-shows-success-chromium/error-context.md
+
+    attachment #4: trace (application/zip) ─────────────────────────────────────────────────────────
+    test-results/timeline-edit-Edit-timelin-95bae-eline-btn-and-shows-success-chromium/trace.zip
+    Usage:
+
+        npx playwright show-trace test-results/timeline-edit-Edit-timelin-95bae-eline-btn-and-shows-success-chromium/trace.zip
+
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+  31) [chromium] › test/e2e/specs/timeline-item-add.spec.js:70:5 › Add timeline text item form (items.add.vertical.timeline.item.form.module) › POSTs serialized payload and redirects to text edit on 201 
+
+    Error: [2mexpect([22m[31mreceived[39m[2m).[22mtoBe[2m([22m[32mexpected[39m[2m) // Object.is equality[22m
+
+    Expected: [32m"New timeline item"[39m
+    Received: [31m"[7m<p>[27mNew timeline item[7m</p>[27m"[39m
+
+       95 |
+       96 |         await expect.poll(() => state.lastCreatePayload).not.toBeNull();
+    >  97 |         expect(state.lastCreatePayload.title).toBe('New timeline item');
+          |                                               ^
+       98 |         expect(state.lastCreatePayload.text).toBe('Some description text');
+       99 |         expect(state.lastCreatePayload.date).toBe('2026-04-15');
+      100 |         // Common form sets these for the text path.
+        at /Users/fcr/Dropbox/work/workspace/exhibits/exhibits-backend/test/e2e/specs/timeline-item-add.spec.js:97:47
+
+    attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
+    test-results/timeline-item-add-Add-time-67d90-directs-to-text-edit-on-201-chromium/test-failed-1.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    attachment #2: video (video/webm) ──────────────────────────────────────────────────────────────
+    test-results/timeline-item-add-Add-time-67d90-directs-to-text-edit-on-201-chromium/video.webm
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Error Context: test-results/timeline-item-add-Add-time-67d90-directs-to-text-edit-on-201-chromium/error-context.md
+
+    attachment #4: trace (application/zip) ─────────────────────────────────────────────────────────
+    test-results/timeline-item-add-Add-time-67d90-directs-to-text-edit-on-201-chromium/trace.zip
+    Usage:
+
+        npx playwright show-trace test-results/timeline-item-add-Add-time-67d90-directs-to-text-edit-on-201-chromium/trace.zip
+
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+  32) [chromium] › test/e2e/specs/timeline-item-details.spec.js:28:5 › Timeline text item details page (items.details.vertical.timeline.item.module) › renders record fields and disables them after population 
+
+    Error: [2mexpect([22m[31mlocator[39m[2m).[22mtoBeDisabled[2m([22m[2m)[22m failed
+
+    Locator:  locator('#item-title-input')
+    Expected: disabled
+    Received: enabled
+    Timeout:  5000ms
+
+    Call log:
+    [2m  - Expect "toBeDisabled" with timeout 5000ms[22m
+    [2m  - waiting for locator('#item-title-input')[22m
+    [2m    9 × locator resolved to <div data-rte="reduced" id="item-title-input" data-rte-disabled="true" class="rte-container rte-single-line ql-container ql-snow ql-disabled">…</div>[22m
+    [2m      - unexpected value "enabled"[22m
+
+
+      50 |
+      51 |         // Both EJS-baked and runtime disable.
+    > 52 |         await expect(page.locator('#item-title-input')).toBeDisabled();
+         |                                                         ^
+      53 |         await expect(page.locator('#item-text-input')).toBeDisabled();
+      54 |
+      55 |         await expect(page.locator('#edit-item-btn')).toBeVisible();
+        at /Users/fcr/Dropbox/work/workspace/exhibits/exhibits-backend/test/e2e/specs/timeline-item-details.spec.js:52:57
+
+    attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
+    test-results/timeline-item-details-Time-bab01-ables-them-after-population-chromium/test-failed-1.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    attachment #2: video (video/webm) ──────────────────────────────────────────────────────────────
+    test-results/timeline-item-details-Time-bab01-ables-them-after-population-chromium/video.webm
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Error Context: test-results/timeline-item-details-Time-bab01-ables-them-after-population-chromium/error-context.md
+
+    attachment #4: trace (application/zip) ─────────────────────────────────────────────────────────
+    test-results/timeline-item-details-Time-bab01-ables-them-after-population-chromium/trace.zip
+    Usage:
+
+        npx playwright show-trace test-results/timeline-item-details-Time-bab01-ables-them-after-population-chromium/trace.zip
+
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+  33) [chromium] › test/e2e/specs/timeline-item-edit.spec.js:51:5 › Edit timeline text item form (items.edit.vertical.timeline.item.form.module) › PUTs updated payload and shows success alert on 201 
+
+    Error: [2mexpect([22m[31mreceived[39m[2m).[22mtoBe[2m([22m[32mexpected[39m[2m) // Object.is equality[22m
+
+    Expected: [32m"Edited title"[39m
+    Received: [31m"[7m<p>[27mEdited title[7m</p>[27m"[39m
+
+      82 |
+      83 |         await expect.poll(() => state.lastUpdatePayload).not.toBeNull();
+    > 84 |         expect(state.lastUpdatePayload.title).toBe('Edited title');
+         |                                               ^
+      85 |         expect(state.lastUpdatePayload.text).toBe('Edited text');
+      86 |         expect(state.lastUpdatePayload.date).toBe('2026-04-15');
+      87 |         expect(state.lastUpdatePayload.item_type).toBe('text');
+        at /Users/fcr/Dropbox/work/workspace/exhibits/exhibits-backend/test/e2e/specs/timeline-item-edit.spec.js:84:47
+
+    attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
+    test-results/timeline-item-edit-Edit-ti-33c40--shows-success-alert-on-201-chromium/test-failed-1.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    attachment #2: video (video/webm) ──────────────────────────────────────────────────────────────
+    test-results/timeline-item-edit-Edit-ti-33c40--shows-success-alert-on-201-chromium/video.webm
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Error Context: test-results/timeline-item-edit-Edit-ti-33c40--shows-success-alert-on-201-chromium/error-context.md
+
+    attachment #4: trace (application/zip) ─────────────────────────────────────────────────────────
+    test-results/timeline-item-edit-Edit-ti-33c40--shows-success-alert-on-201-chromium/trace.zip
+    Usage:
+
+        npx playwright show-trace test-results/timeline-item-edit-Edit-ti-33c40--shows-success-alert-on-201-chromium/trace.zip
+
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+  34) [chromium] › test/e2e/specs/timeline-item-edit.spec.js:92:5 › Edit timeline text item form (items.edit.vertical.timeline.item.form.module) › disables form fields when record is locked by another user 
+
+    Error: [2mexpect([22m[31mlocator[39m[2m).[22mtoBeDisabled[2m([22m[2m)[22m failed
+
+    Locator:  locator('#item-title-input')
+    Expected: disabled
+    Received: enabled
+    Timeout:  5000ms
+
+    Call log:
+    [2m  - Expect "toBeDisabled" with timeout 5000ms[22m
+    [2m  - waiting for locator('#item-title-input')[22m
+    [2m    - locator resolved to <div data-rte="reduced" id="item-title-input" aria-labelledby="item-title-input-label" class="rte-container rte-single-line ql-container ql-snow">…</div>[22m
+    [2m    8 × unexpected value "enabled"[22m
+    [2m      - locator resolved to <div data-rte="reduced" id="item-title-input" aria-labelledby="item-title-input-label" class="rte-container rte-single-line ql-container ql-snow ql-disabled">…</div>[22m
+    [2m    - unexpected value "enabled"[22m
+
+
+      112 |         // Same lock-detection mechanic as heading-edit / grid-item-edit /
+      113 |         // standard-item-edit.
+    > 114 |         await expect(page.locator('#item-title-input')).toBeDisabled();
+          |                                                         ^
+      115 |         await expect(page.locator('#item-text-input')).toBeDisabled();
+      116 |     });
+      117 | });
+        at /Users/fcr/Dropbox/work/workspace/exhibits/exhibits-backend/test/e2e/specs/timeline-item-edit.spec.js:114:57
+
+    attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
+    test-results/timeline-item-edit-Edit-ti-62dcb-d-is-locked-by-another-user-chromium/test-failed-1.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    attachment #2: video (video/webm) ──────────────────────────────────────────────────────────────
+    test-results/timeline-item-edit-Edit-ti-62dcb-d-is-locked-by-another-user-chromium/video.webm
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Error Context: test-results/timeline-item-edit-Edit-ti-62dcb-d-is-locked-by-another-user-chromium/error-context.md
+
+    attachment #4: trace (application/zip) ─────────────────────────────────────────────────────────
+    test-results/timeline-item-edit-Edit-ti-62dcb-d-is-locked-by-another-user-chromium/trace.zip
+    Usage:
+
+        npx playwright show-trace test-results/timeline-item-edit-Edit-ti-62dcb-d-is-locked-by-another-user-chromium/trace.zip
+
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+  35) [chromium] › test/e2e/specs/timeline-item-media-details.spec.js:30:5 › Timeline media item details page (items.details.vertical.timeline.item.module — media path) › renders read-only fields and populates the media preview 
+
+    Error: [2mexpect([22m[31mlocator[39m[2m).[22mtoBeDisabled[2m([22m[2m)[22m failed
+
+    Locator:  locator('#item-title-input')
+    Expected: disabled
+    Received: enabled
+    Timeout:  5000ms
+
+    Call log:
+    [2m  - Expect "toBeDisabled" with timeout 5000ms[22m
+    [2m  - waiting for locator('#item-title-input')[22m
+    [2m    9 × locator resolved to <div data-rte="reduced" id="item-title-input" aria-labelledby="item-title-input-label" class="rte-container rte-single-line ql-container ql-snow ql-disabled">…</div>[22m
+    [2m      - unexpected value "enabled"[22m
+
+
+      56 |         await expect(page.locator('#item-media-uuid')).toHaveValue('media-uuid-existing');
+      57 |
+    > 58 |         await expect(page.locator('#item-title-input')).toBeDisabled();
+         |                                                         ^
+      59 |         await expect(page.locator('#item-text-input')).toBeDisabled();
+      60 |
+      61 |         await expect(page.locator('#edit-item-btn')).toBeVisible();
+        at /Users/fcr/Dropbox/work/workspace/exhibits/exhibits-backend/test/e2e/specs/timeline-item-media-details.spec.js:58:57
+
+    attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
+    test-results/timeline-item-media-detail-ea4a6-populates-the-media-preview-chromium/test-failed-1.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    attachment #2: video (video/webm) ──────────────────────────────────────────────────────────────
+    test-results/timeline-item-media-detail-ea4a6-populates-the-media-preview-chromium/video.webm
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Error Context: test-results/timeline-item-media-detail-ea4a6-populates-the-media-preview-chromium/error-context.md
+
+    attachment #4: trace (application/zip) ─────────────────────────────────────────────────────────
+    test-results/timeline-item-media-detail-ea4a6-populates-the-media-preview-chromium/trace.zip
+    Usage:
+
+        npx playwright show-trace test-results/timeline-item-media-detail-ea4a6-populates-the-media-preview-chromium/trace.zip
+
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+  36) [chromium] › test/e2e/specs/timeline-item-media-edit.spec.js:59:5 › Edit timeline media item form (items.edit.vertical.timeline.item.form.module — media path) › PUTs payload preserving media_uuid via #save-item-btn 
+
+    Error: [2mexpect([22m[31mreceived[39m[2m).[22mtoBe[2m([22m[32mexpected[39m[2m) // Object.is equality[22m
+
+    Expected: [32m"Edited caption"[39m
+    Received: [31m"[7m<p>[27mEdited caption[7m</p>[27m"[39m
+
+      89 |
+      90 |         await expect.poll(() => state.lastUpdatePayload).not.toBeNull();
+    > 91 |         expect(state.lastUpdatePayload.text).toBe('Edited caption');
+         |                                              ^
+      92 |         expect(state.lastUpdatePayload.media_uuid).toBe('media-uuid-existing');
+      93 |         expect(state.lastUpdatePayload.item_type).toBe('image');
+      94 |         expect(state.lastUpdatePayload.mime_type).toBe('image/jpeg');
+        at /Users/fcr/Dropbox/work/workspace/exhibits/exhibits-backend/test/e2e/specs/timeline-item-media-edit.spec.js:91:46
+
+    attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
+    test-results/timeline-item-media-edit-E-1734f-edia-uuid-via-save-item-btn-chromium/test-failed-1.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    attachment #2: video (video/webm) ──────────────────────────────────────────────────────────────
+    test-results/timeline-item-media-edit-E-1734f-edia-uuid-via-save-item-btn-chromium/video.webm
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Error Context: test-results/timeline-item-media-edit-E-1734f-edia-uuid-via-save-item-btn-chromium/error-context.md
+
+    attachment #4: trace (application/zip) ─────────────────────────────────────────────────────────
+    test-results/timeline-item-media-edit-E-1734f-edia-uuid-via-save-item-btn-chromium/trace.zip
+    Usage:
+
+        npx playwright show-trace test-results/timeline-item-media-edit-E-1734f-edia-uuid-via-save-item-btn-chromium/trace.zip
+
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+  36 failed
+    [chromium] › test/e2e/specs/exhibits-add.spec.js:56:5 › Add Exhibit modal › POSTs payload and closes modal on success 
+    [chromium] › test/e2e/specs/exhibits-add.spec.js:93:5 › Add Exhibit modal › submits successfully even when every endpoints cache layer is cleared (storage-free endpoint map) 
+    [chromium] › test/e2e/specs/exhibits-details.spec.js:20:5 › Exhibit details page (exhibits.details.module) › renders record fields and disables them after population 
+    [chromium] › test/e2e/specs/exhibits-edit.spec.js:50:5 › Edit exhibit form (exhibits.edit.form.module) › PUTs updated payload and shows success alert on 201 
+    [chromium] › test/e2e/specs/exhibits-edit.spec.js:86:5 › Edit exhibit form (exhibits.edit.form.module) › disables form fields when record is locked by another user 
+    [chromium] › test/e2e/specs/grid-add.spec.js:49:5 › Add grid form (items.add.grid.form.module) › POSTs serialized payload and redirects to edit on 201 
+    [chromium] › test/e2e/specs/grid-details.spec.js:27:5 › Grid details page (items.details.grid.module) › renders record fields read-only 
+    [chromium] › test/e2e/specs/grid-edit.spec.js:105:5 › Edit grid form (items.edit.grid.form.module) › PUTs updated payload and shows success alert on 201 
+    [chromium] › test/e2e/specs/grid-item-add.spec.js:66:5 › Add grid text item form (items.add.grid.item.form.module) › POSTs serialized payload and redirects to text edit on 201 
+    [chromium] › test/e2e/specs/grid-item-details.spec.js:28:5 › Grid text item details page (items.details.grid.item.module) › renders record fields and disables them after population 
+    [chromium] › test/e2e/specs/grid-item-edit.spec.js:49:5 › Edit grid text item form (items.edit.grid.item.form.module) › PUTs updated payload and shows success alert on 201 
+    [chromium] › test/e2e/specs/grid-item-edit.spec.js:87:5 › Edit grid text item form (items.edit.grid.item.form.module) › disables form fields when record is locked by another user 
+    [chromium] › test/e2e/specs/grid-item-media-details.spec.js:30:5 › Grid media item details page (items.details.grid.item.module — media path) › renders read-only fields and populates the media preview 
+    [chromium] › test/e2e/specs/grid-item-media-edit.spec.js:57:5 › Edit grid media item form (items.edit.grid.item.form.module — media path) › PUTs payload preserving media_uuid and shows success alert 
+    [chromium] › test/e2e/specs/heading-add.spec.js:69:5 › Add heading form (items.add.heading.form.module) › POSTs serialized payload and redirects to edit on 201 
+    [chromium] › test/e2e/specs/heading-details.spec.js:27:5 › Heading details page (items.details.heading.item.module) › renders record fields read-only 
+    [chromium] › test/e2e/specs/heading-edit.spec.js:47:5 › Edit heading form (items.edit.heading.form.module) › PUTs updated payload and shows success alert on 201 
+    [chromium] › test/e2e/specs/heading-edit.spec.js:81:5 › Edit heading form (items.edit.heading.form.module) › disables form fields when record is locked by another user 
+    [chromium] › test/e2e/specs/media-library-edit.spec.js:94:5 › Media library edit modal (modals.edit.module.js — open_edit_media_modal / update_media_record) › clicking the row Edit dropdown item opens the modal and populates fields from the GET 
+    [chromium] › test/e2e/specs/media-library-edit.spec.js:117:5 › Media library edit modal (modals.edit.module.js — open_edit_media_modal / update_media_record) › Save fires PUT with the form payload and closes the modal on success 
+    [chromium] › test/e2e/specs/media-library-kaltura.spec.js:62:5 › Media library Kaltura entry lookup (kaltura.service.module.js — get_kaltura_media) › Get-metadata fires GET /kaltura/<entry_id>, shows the thumbnail, opens the modal pre-populated with title 
+    [chromium] › test/e2e/specs/standard-item-add.spec.js:54:5 › Add standard text item form (items.add.standard.item.form.module) › POSTs serialized payload and redirects to text edit on 201 
+    [chromium] › test/e2e/specs/standard-item-details.spec.js:27:5 › Standard text item details page (items.details.standard.item.module) › renders text field and disables it after population 
+    [chromium] › test/e2e/specs/standard-item-edit.spec.js:44:5 › Edit standard text item form (items.edit.standard.item.form.module) › PUTs updated payload via #save-item-btn and shows success 
+    [chromium] › test/e2e/specs/standard-item-edit.spec.js:78:5 › Edit standard text item form (items.edit.standard.item.form.module) › disables form fields when record is locked by another user 
+    [chromium] › test/e2e/specs/standard-item-media-details.spec.js:29:5 › Standard media item details page (items.details.standard.item.module — media path) › renders read-only fields and populates the media preview 
+    [chromium] › test/e2e/specs/standard-item-media-edit.spec.js:52:5 › Edit standard media item form (items.edit.standard.item.form.module — media path) › PUTs payload preserving media_uuid via #save-item-btn 
+    [chromium] › test/e2e/specs/timeline-add.spec.js:42:5 › Add timeline form (items.add.vertical.timeline.form.module) › POSTs and redirects to edit on 201 
+    [chromium] › test/e2e/specs/timeline-details.spec.js:27:5 › Timeline details page (items.details.vertical.timeline.module) › renders text field populated from the fetched record 
+    [chromium] › test/e2e/specs/timeline-edit.spec.js:73:5 › Edit timeline form (items.edit.vertical.timeline.form.module) › PUTs updated payload via #save-timeline-btn and shows success 
+    [chromium] › test/e2e/specs/timeline-item-add.spec.js:70:5 › Add timeline text item form (items.add.vertical.timeline.item.form.module) › POSTs serialized payload and redirects to text edit on 201 
+    [chromium] › test/e2e/specs/timeline-item-details.spec.js:28:5 › Timeline text item details page (items.details.vertical.timeline.item.module) › renders record fields and disables them after population 
+    [chromium] › test/e2e/specs/timeline-item-edit.spec.js:51:5 › Edit timeline text item form (items.edit.vertical.timeline.item.form.module) › PUTs updated payload and shows success alert on 201 
+    [chromium] › test/e2e/specs/timeline-item-edit.spec.js:92:5 › Edit timeline text item form (items.edit.vertical.timeline.item.form.module) › disables form fields when record is locked by another user 
+    [chromium] › test/e2e/specs/timeline-item-media-details.spec.js:30:5 › Timeline media item details page (items.details.vertical.timeline.item.module — media path) › renders read-only fields and populates the media preview 
+    [chromium] › test/e2e/specs/timeline-item-media-edit.spec.js:59:5 › Edit timeline media item form (items.edit.vertical.timeline.item.form.module — media path) › PUTs payload preserving media_uuid via #save-item-btn 
+  129 passed (53.1s)
+
+To open last HTML report run:
+[36m[39m
+[36m  npx playwright show-report[39m
+[36m[39m

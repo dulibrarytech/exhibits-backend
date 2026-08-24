@@ -39,7 +39,7 @@ test.describe('Edit heading form (items.edit.heading.form.module)', () => {
 
         await page.goto(`${APP_PATH}/items/heading/edit?exhibit_id=${EXHIBIT_UUID}&item_id=${HEADING_UUID}`);
 
-        await expect(page.locator('#item-heading-text-input')).toHaveValue('Existing heading copy');
+        await expect(page.locator('#item-heading-text-input .ql-editor')).toHaveText('Existing heading copy');
         await expect(page.locator('#item-heading-type-input')).toHaveValue('subheading');
         await expect(page.locator('#created')).toContainText(/Created by tester/);
     });
@@ -58,9 +58,9 @@ test.describe('Edit heading form (items.edit.heading.form.module)', () => {
         });
 
         await page.goto(`${APP_PATH}/items/heading/edit?exhibit_id=${EXHIBIT_UUID}&item_id=${HEADING_UUID}`);
-        await expect(page.locator('#item-heading-text-input')).toHaveValue('Original');
+        await expect(page.locator('#item-heading-text-input .ql-editor')).toHaveText('Original');
 
-        await page.fill('#item-heading-text-input', 'Edited heading');
+        await page.fill('#item-heading-text-input .ql-editor', 'Edited heading');
         await page.selectOption('#item-heading-type-input', 'subheading');
 
         const putPromise = page.waitForRequest((req) =>
@@ -72,7 +72,7 @@ test.describe('Edit heading form (items.edit.heading.form.module)', () => {
         await putPromise;
 
         await expect.poll(() => state.lastUpdatePayload).not.toBeNull();
-        expect(state.lastUpdatePayload.text).toBe('Edited heading');
+        expect(state.lastUpdatePayload.text).toBe('<p>Edited heading</p>');
         expect(state.lastUpdatePayload.type).toBe('subheading');
 
         await expect(page.locator('#message .alert-success')).toBeVisible();
@@ -98,7 +98,7 @@ test.describe('Edit heading form (items.edit.heading.form.module)', () => {
 
         // Wait until the record has been applied to the form before
         // asserting on the disable side-effect.
-        await expect(page.locator('#item-heading-text-input')).toBeDisabled();
+        await expect(page.locator('#item-heading-text-input .ql-editor')).toHaveAttribute('contenteditable', 'false');
         await expect(page.locator('#item-heading-type-input')).toBeDisabled();
     });
 

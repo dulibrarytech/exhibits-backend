@@ -625,11 +625,21 @@ const itemsModule = (function() {
             return true;
         }
 
-        // Handle 422 Unprocessable Entity - exhibit must contain at least one item
+        // Handle 422 Unprocessable Entity - publish rejected by a server-side
+        // rule (exhibit not published, grid below its minimum item count, ...).
+        // Surface the server's message: it names the rule and the remedy.
         if (response?.status === 422) {
             window.scrollTo({ top: 0, behavior: 'smooth' });
             const message_element = document.querySelector('#message');
-            display_message(message_element, 'warning', 'Cannot publish item. Exhibit must be published.');
+            const server_message = response.data?.message ?? 'Cannot publish item. Exhibit must be published.';
+            display_message(message_element, 'warning', server_message);
+
+            // Move focus to the explanation so keyboard/screen-reader users land on it
+            if (message_element) {
+                message_element.setAttribute('tabindex', '-1');
+                message_element.focus();
+            }
+
             return false;
         }
 

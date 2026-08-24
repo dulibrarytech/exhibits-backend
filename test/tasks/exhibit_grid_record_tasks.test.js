@@ -425,6 +425,51 @@ describe('Exhibit_grid_record_tasks', () => {
         });
     });
 
+    describe('get_grid_item_count', () => {
+        test('should return correct count for non-deleted items', async () => {
+            mockQuery.count.mockReturnThis();
+            mockQuery.where.mockReturnThis();
+            mockQuery.timeout.mockResolvedValue([{ count: 3 }]);
+
+            const count = await gridTasks.get_grid_item_count(exhibitUUID, gridUUID);
+
+            expect(count).toBe(3);
+            expect(mockQuery.where).toHaveBeenCalledWith({
+                is_member_of_exhibit: exhibitUUID,
+                is_member_of_grid: gridUUID,
+                is_deleted: 0
+            });
+            // No published_only option: no is_published filter
+            expect(mockQuery.where).not.toHaveBeenCalledWith({ is_published: 1 });
+        });
+
+        test('should filter to published items when published_only is set', async () => {
+            mockQuery.count.mockReturnThis();
+            mockQuery.where.mockReturnThis();
+            mockQuery.timeout.mockResolvedValue([{ count: 2 }]);
+
+            const count = await gridTasks.get_grid_item_count(exhibitUUID, gridUUID, { published_only: true });
+
+            expect(count).toBe(2);
+            expect(mockQuery.where).toHaveBeenCalledWith({ is_published: 1 });
+        });
+
+        test('should return 0 for null result', async () => {
+            mockQuery.count.mockReturnThis();
+            mockQuery.where.mockReturnThis();
+            mockQuery.timeout.mockResolvedValue(null);
+
+            const count = await gridTasks.get_grid_item_count(exhibitUUID, gridUUID);
+
+            expect(count).toBe(0);
+        });
+
+        test('should throw error for invalid UUID', async () => {
+            await expect(gridTasks.get_grid_item_count('invalid', gridUUID))
+                .rejects.toThrow();
+        });
+    });
+
     // ==================== UPDATE_GRID_RECORD TESTS ====================
     describe('update_grid_record', () => {
         test('should successfully update grid record', async () => {

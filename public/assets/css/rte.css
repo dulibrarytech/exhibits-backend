@@ -1,0 +1,83 @@
+/*
+ * Rich text editor (Quill) dashboard styles.
+ * Containers are declared as <div class="rte-container" data-rte="...">
+ * and instantiated by rte.module.js. Quill injects .ql-toolbar before the
+ * container and .ql-editor inside it.
+ */
+
+/*
+ * quill.snow.css sets .ql-container { height: 100% }, which balloons the
+ * editor to its ancestor's resolved height inside Bootstrap grid rows.
+ * Size the widget from the editor instead: auto container, min/max on the
+ * editable region with internal scrolling.
+ */
+.rte-container.ql-container {
+    height: auto;
+    background-color: #ffffff;
+}
+
+.rte-container .ql-editor {
+    min-height: 120px;
+    max-height: 400px;
+    overflow-y: auto;
+    font-size: 0.875rem;
+}
+
+/* title / subtitle / heading fields — visually one-to-two lines */
+.rte-single-line .ql-editor {
+    min-height: 44px;
+    max-height: 160px;
+}
+
+/* modal forms (media library) — tighter vertical budget */
+.rte-modal .ql-editor {
+    min-height: 80px;
+    max-height: 240px;
+}
+
+/* toolbar sits on white regardless of card background */
+.ql-toolbar.ql-snow {
+    background-color: #ffffff;
+}
+
+/* breathing room before the next label/field (the textareas these replace
+   sat inside .form-group rows that supplied it via the control itself) */
+.rte-container.ql-container {
+    margin-bottom: 0.75rem;
+}
+
+/* read-only mode (details pages, locked records): no toolbar is rendered,
+   so restore the rounded top corners Quill reserves for it */
+.rte-container.ql-container.ql-snow:first-child {
+    border-top-left-radius: 4px;
+    border-top-right-radius: 4px;
+    border-top: 1px solid #ccc;
+}
+
+/* match the muted look of disabled form controls */
+.rte-container.ql-disabled {
+    background-color: #e9ecef;
+}
+
+/* keep palette swatches visible against the toolbar background */
+.ql-snow .ql-color .ql-picker-options [data-value=""] {
+    border: 1px solid #ccc;
+}
+
+/* static read-only rich text display (details pages without an editor);
+   populated by rteModule.render_static() */
+.rte-readonly {
+    background-color: #f8f9fa;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+    padding: 12px 15px;
+    min-height: 44px;
+    max-height: 400px;
+    overflow-y: auto;
+    font-size: 0.875rem;
+    margin-bottom: 0.75rem;
+}
+
+.rte-readonly > :last-child {
+    margin-bottom: 0;
+}

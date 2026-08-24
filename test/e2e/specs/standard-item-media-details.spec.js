@@ -44,11 +44,11 @@ test.describe('Standard media item details page (items.details.standard.item.mod
             `${APP_PATH}/items/standard/media/details?exhibit_id=${EXHIBIT_UUID}&item_id=${ITEM_UUID}`
         );
 
-        await expect(page.locator('#item-text-input')).toHaveValue('Read-only caption');
+        await expect(page.locator('#item-text-input')).toHaveText('Read-only caption');
         // Media path → details module calls populate_media_previews.
         await expect(page.locator('#item-media-uuid')).toHaveValue('media-uuid-existing');
 
-        await expect(page.locator('#item-text-input')).toBeDisabled();
+        await expect(page.locator('#item-text-input')).toHaveClass(/rte-readonly/);
 
         await expect(page.locator('#edit-item-btn')).toBeVisible();
     });
