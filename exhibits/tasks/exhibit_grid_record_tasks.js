@@ -594,6 +594,59 @@ const Exhibit_grid_record_tasks = class extends Base_tasks {
     }
 
     /**
+     * Gets the count of grid item records for a grid
+     * @param {string} is_member_of_exhibit - The exhibit UUID
+     * @param {string} is_member_of_grid - The grid UUID
+     * @param {Object} [options={}] - Count options
+     * @param {boolean} [options.published_only=false] - Count only published items
+     * @returns {Promise<number>} Count of grid item records
+     */
+    async get_grid_item_count(is_member_of_exhibit, is_member_of_grid, options = {}) {
+
+        const {published_only = false} = options;
+
+        try {
+
+            this._validate_database();
+            this._validate_table('grid_item_records');
+
+            const validated = this._validate_uuids({
+                [is_member_of_exhibit]: 'exhibit UUID',
+                [is_member_of_grid]: 'grid UUID'
+            });
+
+            let query = this.DB(this.TABLE.grid_item_records)
+                .count('id as count')
+                .where({
+                    is_member_of_exhibit: validated['exhibit UUID'],
+                    is_member_of_grid: validated['grid UUID'],
+                    is_deleted: 0
+                });
+
+            if (published_only) {
+                query = query.where({is_published: 1});
+            }
+
+            const result = await query.timeout(this.QUERY_TIMEOUT);
+            const count = result?.[0]?.count ? parseInt(result[0].count, 10) : 0;
+
+            this._log_success('Grid item count retrieved', {
+                ...validated,
+                published_only,
+                count
+            });
+
+            return count;
+
+        } catch (error) {
+            this._handle_error(error, 'get_grid_item_count', {
+                is_member_of_exhibit,
+                is_member_of_grid
+            });
+        }
+    }
+
+    /**
      * Creates a new grid item record
      * @param {Object} data - Grid item record data
      * @param {string} [created_by=null] - User ID creating the record

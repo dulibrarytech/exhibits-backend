@@ -77,6 +77,86 @@ const safe_parse_int = (value, default_value = 0) => {
 const ALLOWED_COLUMNS = [2, 3, 4];
 
 /**
+ * Returns the minimum number of grid items a grid must hold before it can
+ * be published: one full row, i.e. the selected column count. Legacy grids
+ * saved with a column value outside the allowed set fall back to the
+ * smallest allowed count so they aren't blocked harder than the edit form
+ * (which forces a re-selection) would require.
+ * @param {*} columns - Stored column value
+ * @returns {number} Minimum required grid items
+ */
+const get_minimum_grid_items = (columns) => {
+    const parsed = safe_parse_int(columns, 0);
+    return ALLOWED_COLUMNS.includes(parsed) ? parsed : Math.min(...ALLOWED_COLUMNS);
+};
+
+/**
+ * Checks a grid against the minimum-items rule (items >= columns).
+ * @param {string} exhibit_id - Exhibit UUID
+ * @param {Object} grid_record - Grid DB record (uuid, columns, internal_name)
+ * @param {Object} [count_options] - Passed to get_grid_item_count
+ * @returns {Promise<Object|null>} Violation {uuid, internal_name, minimum, item_count} or null
+ */
+const check_grid_minimum_items = async (exhibit_id, grid_record, count_options = {}) => {
+
+    const minimum = get_minimum_grid_items(grid_record.columns);
+    const item_count = await grid_record_task.get_grid_item_count(
+        exhibit_id,
+        grid_record.uuid,
+        count_options
+    );
+
+    if (item_count >= minimum) {
+        return null;
+    }
+
+    return {
+        uuid: grid_record.uuid,
+        internal_name: grid_record.internal_name || 'Untitled grid',
+        minimum,
+        item_count
+    };
+};
+
+/**
+ * Builds the user-facing message for a minimum-items violation. Written for
+ * non-technical staff: states the problem and both remedies.
+ * @param {Object} violation - {minimum, item_count}
+ * @returns {string} Message
+ */
+const build_minimum_items_message = (violation) => {
+
+    const {minimum, item_count} = violation;
+    const have = item_count === 0
+        ? 'has no grid items yet'
+        : `has only ${item_count} grid item${item_count === 1 ? '' : 's'}`;
+
+    return `This grid is set to ${minimum} columns but ${have}. ` +
+        `Add at least ${minimum} grid items, or reduce the number of columns, before publishing.`;
+};
+
+/**
+ * Returns grids in an exhibit that hold fewer items than their selected
+ * column count. Used by the exhibit publish gate in exhibits_model.
+ * @param {string} exhibit_id - Exhibit UUID
+ * @returns {Promise<Array>} Violations ({uuid, internal_name, minimum, item_count})
+ */
+exports.get_under_filled_grids = async (exhibit_id) => {
+
+    const grid_records = await grid_record_task.get_grid_records(exhibit_id);
+
+    if (!Array.isArray(grid_records) || grid_records.length === 0) {
+        return [];
+    }
+
+    const checks = await Promise.all(
+        grid_records.map((grid_record) => check_grid_minimum_items(exhibit_id, grid_record))
+    );
+
+    return checks.filter((violation) => violation !== null);
+};
+
+/**
  * Creates grid record
  * @param {string} is_member_of_exhibit - Exhibit UUID
  * @param {Object} data - Grid data
@@ -778,6 +858,32 @@ const publish_grid_record = async (exhibit_id, grid_id) => {
             };
         }
 
+        // A grid must fill at least one full row (items >= columns) before
+        // it can go public — fewer items breaks the frontend grid layout.
+        const grid_record = await grid_record_task.get_grid_record(exhibit_id, grid_id);
+
+        if (!grid_record) {
+            LOGGER.module().error('ERROR: [/exhibits/grid_model (publish_grid_record)] Grid record not found');
+
+            return {
+                status: false,
+                message: 'Unable to publish grid'
+            };
+        }
+
+        const violation = await check_grid_minimum_items(exhibit_id, grid_record);
+
+        if (violation !== null) {
+            LOGGER.module().info(
+                `INFO: [/exhibits/grid_model (publish_grid_record)] Grid ${grid_id} has ${violation.item_count} item(s); minimum is ${violation.minimum}`
+            );
+
+            return {
+                status: false,
+                message: build_minimum_items_message(violation)
+            };
+        }
+
         // Set grid to published
         const is_grid_published = await grid_record_task.set_grid_to_publish(grid_id);
 
@@ -1037,6 +1143,36 @@ const suppress_grid_item_record = async (exhibit_id, grid_id, grid_item_id) => {
                 status: false,
                 message: 'Invalid UUID provided'
             };
+        }
+
+        // A published grid must keep at least one full row (items >= columns)
+        // on the live site — refuse to unpublish an item that would drop it
+        // below that minimum.
+        const parent_grid_record = await grid_record_task.get_grid_record(exhibit_id, grid_id);
+
+        if (parent_grid_record && parent_grid_record.is_published === CONSTANTS.PUBLICATION_STATUS.PUBLISHED) {
+
+            const minimum = get_minimum_grid_items(parent_grid_record.columns);
+            const published_count = await grid_record_task.get_grid_item_count(
+                exhibit_id,
+                grid_id,
+                {published_only: true}
+            );
+            const item_record = await grid_record_task.get_grid_item_record(exhibit_id, grid_id, grid_item_id);
+            const remaining_count = item_record && item_record.is_published === CONSTANTS.PUBLICATION_STATUS.PUBLISHED
+                ? published_count - 1
+                : published_count;
+
+            if (remaining_count < minimum) {
+                LOGGER.module().info(
+                    `INFO: [/exhibits/grid_model (suppress_grid_item_record)] Suppressing item ${grid_item_id} would leave grid ${grid_id} with ${remaining_count} published item(s); minimum is ${minimum}`
+                );
+
+                return {
+                    status: false,
+                    message: `Cannot unpublish this grid item. The grid is published and needs at least ${minimum} items for its ${minimum} columns. Unpublish the grid first.`
+                };
+            }
         }
 
         // Get indexed record

@@ -69,7 +69,11 @@ const mockHeadingTask = {
 
 const mockGridTask = {
     get_record_count: jest.fn().mockResolvedValue(1),
-    get_grid_records: jest.fn().mockResolvedValue([{ uuid: GRID_UUID, is_member_of_exhibit: EXHIBIT_UUID }]),
+    get_grid_records: jest.fn().mockResolvedValue([{ uuid: GRID_UUID, is_member_of_exhibit: EXHIBIT_UUID, columns: 2 }]),
+    // publish_exhibit's minimum-items gate (items >= columns) counts each
+    // grid's items via the real grid_model; satisfy the minimum so these
+    // pins keep exercising the publish path.
+    get_grid_item_count: jest.fn().mockResolvedValue(4),
     set_to_publish: jest.fn().mockResolvedValue(true),
     set_to_suppress: jest.fn().mockResolvedValue(true),
     // the grid-scoped writers — must NOT be used by preview

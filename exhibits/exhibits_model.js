@@ -783,6 +783,27 @@ const publish_exhibit = async (uuid) => {
             };
         }
 
+        // Publishing an exhibit bulk-publishes every grid and grid item, so
+        // the per-grid minimum (items >= columns) has to be enforced here too
+        // or an under-filled grid goes live and breaks the frontend layout.
+        const under_filled_grids = await GRIDS_MODEL.get_under_filled_grids(uuid);
+
+        if (under_filled_grids.length > 0) {
+
+            const grid_list = under_filled_grids
+                .map((grid) => `"${grid.internal_name}" (${grid.item_count} of ${grid.minimum} items)`)
+                .join(', ');
+
+            LOGGER.module().info(
+                `INFO: [/exhibits/model (publish_exhibit)] Publish blocked - grids below minimum items: ${grid_list}`
+            );
+
+            return {
+                status: 'under_filled_grids',
+                message: `Cannot publish exhibit. Grids need at least as many items as columns. Add grid items, or reduce the columns, for: ${grid_list}.`
+            };
+        }
+
         // Set all components to published
         const publish_results = await set_all_to_publish(uuid);
 

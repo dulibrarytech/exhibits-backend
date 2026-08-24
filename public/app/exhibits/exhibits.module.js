@@ -1218,9 +1218,13 @@ const exhibitsModule = (function () {
                 return false;
             }
 
-            // Handle 422 Unprocessable Entity - exhibit must contain at least one item
+            // Handle 422 Unprocessable Entity - publish rejected by a server-side
+            // rule (no items, or a grid below its minimum item count). Show the
+            // server's message and keep it up long enough to act on — the
+            // default 5s flash is too short for a message naming grids to fix.
             if (response?.status === EXHIBIT_CONSTANTS.HTTP_UNPROCESSABLE_ENTITY) {
-                flash_message('warning', 'Exhibit must contain at least one item to publish');
+                const server_message = response.data?.message ?? 'Exhibit must contain at least one item to publish';
+                flash_message('warning', server_message, '#message', 300000);
                 return false;
             }
 

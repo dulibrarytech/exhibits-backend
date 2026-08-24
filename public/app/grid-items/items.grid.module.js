@@ -92,6 +92,123 @@ const itemsGridModule = (function () {
     }
 
     /**
+     * Fetches the grid record (for the columns value used by the
+     * minimum-items advisory). Returns null on any failure — the advisory
+     * is guidance only, so errors here must not block the item list.
+     * @param {string} exhibit_id - The exhibit identifier
+     * @param {string} grid_id - The grid identifier
+     * @returns {Promise<Object|null>} Grid record or null
+     */
+    async function get_grid_record(exhibit_id, grid_id) {
+
+        try {
+
+            const token = authModule.get_user_token();
+
+            if (token === null || token.length === 0) {
+                return null;
+            }
+
+            const endpoint = EXHIBITS_ENDPOINTS.exhibits.grid_records.get.endpoint
+                .replace(':exhibit_id', encodeURIComponent(exhibit_id))
+                .replace(':grid_id', encodeURIComponent(grid_id));
+
+            const response = await httpModule.req({
+                method: 'GET',
+                url: endpoint,
+                headers: {
+                    'Content-Type': 'application/json',
+                    'x-access-token': token
+                },
+                timeout: 30000
+            });
+
+            if (response !== undefined && response !== null && response.status === 200) {
+                return response.data?.data ?? null;
+            }
+
+            return null;
+
+        } catch (error) {
+            return null;
+        }
+    }
+
+    // Column counts the Grid form's dropdown offers — keep in sync with
+    // ALLOWED_COLUMNS in exhibits/grid_model.js, which enforces the same
+    // minimum-items rule at publish time.
+    const ALLOWED_COLUMN_COUNTS = [2, 3, 4];
+
+    /**
+     * Builds the minimum-items advisory for the grid item list. A grid must
+     * hold at least one full row (items >= columns) before it can be
+     * published; the server refuses to publish it otherwise. Legacy grids
+     * saved with a column value outside the allowed set fall back to the
+     * smallest allowed count, matching the server rule.
+     * @param {*} columns - The grid's saved column count
+     * @param {number} item_count - Number of grid items in the list
+     * @returns {string|null} Advisory text, or null when the minimum is met
+     */
+    obj.build_min_items_notice = function (columns, item_count) {
+
+        const parsed_columns = parseInt(columns, 10);
+        const minimum = ALLOWED_COLUMN_COUNTS.includes(parsed_columns)
+            ? parsed_columns
+            : Math.min(...ALLOWED_COLUMN_COUNTS);
+
+        if (item_count >= minimum) {
+            return null;
+        }
+
+        const needed = minimum - item_count;
+        const intro = ALLOWED_COLUMN_COUNTS.includes(parsed_columns)
+            ? `This grid is set to ${minimum} columns and needs at least ${minimum} grid items — `
+            : `Grids need at least ${minimum} grid items — `;
+
+        return `${intro}${item_count} of ${minimum} added. ` +
+            `Add ${needed} more grid item${needed === 1 ? '' : 's'}, or reduce the number of columns, before publishing this grid.`;
+    };
+
+    /**
+     * Shows or clears the minimum-items advisory above the item list. The
+     * container is a polite live region (role="status" in the view), so the
+     * notice is announced without interrupting, and the shortfall is stated
+     * in text — never by color alone.
+     * @param {Object|null} grid_record - Grid record (null skips the notice)
+     * @param {number} item_count - Number of grid items in the list
+     */
+    function render_min_items_notice(grid_record, item_count) {
+
+        const status_el = document.querySelector('#grid-min-items-status');
+
+        if (status_el === null) {
+            return;
+        }
+
+        const notice = grid_record === null
+            ? null
+            : obj.build_min_items_notice(grid_record.columns, item_count);
+
+        if (notice === null) {
+            status_el.textContent = '';
+            return;
+        }
+
+        const alert_div = document.createElement('div');
+        alert_div.className = 'alert alert-warning';
+
+        const icon = document.createElement('i');
+        icon.className = 'fa fa-exclamation-triangle';
+        icon.setAttribute('aria-hidden', 'true');
+
+        alert_div.appendChild(icon);
+        alert_div.appendChild(document.createTextNode(` ${notice}`));
+
+        status_el.textContent = '';
+        status_el.appendChild(alert_div);
+    }
+
+    /**
      * Displays sanitized error message
      * @param {Element|null} element - Target DOM element
      * @param {string} message - Error message to display
@@ -150,6 +267,11 @@ const itemsGridModule = (function () {
             }
             return false;
         }
+
+        // Advisory: warn while the grid holds fewer items than its column
+        // count — publishing is refused server-side until the minimum is met.
+        const grid_record = await get_grid_record(exhibit_id, grid_id);
+        render_min_items_notice(grid_record, items.length);
 
         if (items.length === 0) {
             const item_card = document.querySelector('#item-card');
@@ -360,6 +482,15 @@ const itemsGridModule = (function () {
                 }, 5000);
             }
 
+            // 422: publish refused by a server-side rule (e.g. the parent
+            // grid is not published). Show the server's message and leave it
+            // on screen — it is actionable, not a passing notice.
+            if (response.status === 422) {
+                scrollTo(0, 0);
+                const server_message = response.data?.message ?? 'Unable to publish grid item';
+                domModule.set_alert(document.querySelector('#message'), 'warning', server_message);
+            }
+
             if (response.status === 500) {
                 scrollTo(0, 0);
                 domModule.set_alert(document.querySelector('#message'), 'danger', response.data.message);
@@ -396,8 +527,34 @@ const itemsGridModule = (function () {
                 headers: {
                     'Content-Type': 'application/json',
                     'x-access-token': token
+                },
+                timeout: 10000,
+                validateStatus: function (status) {
+                    return status >= 200 && status < 600; // Accept any status code
                 }
             });
+
+            if (response !== undefined && response.status === 403) {
+                scrollTo(0, 0);
+                domModule.set_alert(document.querySelector('#message'), 'danger', 'You do not have permission to unpublish this record.');
+
+                setTimeout(() => {
+                    domModule.empty('#message');
+                }, 5000);
+
+                return false;
+            }
+
+            // 422: unpublish refused by a server-side rule (e.g. the grid is
+            // published and would drop below its minimum item count). Show the
+            // server's message — it names the rule and the remedy — and keep
+            // it on screen: it is actionable, not a passing notice.
+            if (response !== undefined && response.status === 422) {
+                scrollTo(0, 0);
+                const server_message = response.data?.message ?? 'Unable to unpublish grid item';
+                domModule.set_alert(document.querySelector('#message'), 'warning', server_message);
+                return false;
+            }
 
             if (response !== undefined && response.status === 200) {
 
