@@ -130,7 +130,10 @@ test.describe('Users CRUD (live)', () => {
         user_id = created.id;
 
         await page.goto(`${APP_PATH}/users/delete?user_id=${user_id}`);
-        await expect(page.locator('#delete-user-btn')).toBeEnabled();
+        // The Delete listener is attached only after the view's async init
+        // resolves; show_form() reveals the card strictly after the attach,
+        // so a visible card proves the click below will be heard.
+        await expect(page.locator('#delete-card')).toBeVisible();
 
         const delete_response = page.waitForResponse((resp) =>
             resp.url().includes(`/api/v1/users/${user_id}`)

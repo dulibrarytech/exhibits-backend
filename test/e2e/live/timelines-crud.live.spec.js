@@ -106,7 +106,10 @@ test.describe('Timelines and timeline items CRUD (live)', () => {
             `${APP_PATH}/items/delete`
             + `?exhibit_id=${exhibit_uuid}&item_id=${timeline_uuid}&type=timeline`
         );
-        await expect(page.locator('#delete-item-btn')).toBeEnabled();
+        // The Delete listener is attached only after the view's async init
+        // resolves; show_form() reveals the card strictly after the attach,
+        // so a visible card proves the click below will be heard.
+        await expect(page.locator('#delete-card')).toBeVisible();
 
         const delete_response = page.waitForResponse((resp) => {
             const u = new URL(resp.url());
@@ -213,7 +216,10 @@ test.describe('Timelines and timeline items CRUD (live)', () => {
             `${APP_PATH}/items/timeline/item/delete`
             + `?exhibit_id=${exhibit_uuid}&timeline_id=${timeline_uuid}&item_id=${item_uuid}`
         );
-        await expect(page.locator('#delete-item-btn')).toBeEnabled();
+        // The Delete listener is attached only after the view's async init
+        // resolves; show_form() reveals the card strictly after the attach,
+        // so a visible card proves the click below will be heard.
+        await expect(page.locator('#delete-card')).toBeVisible();
 
         const delete_response = page.waitForResponse((resp) => {
             const u = new URL(resp.url());

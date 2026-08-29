@@ -96,8 +96,11 @@ test.describe('Exhibits CRUD (live)', () => {
 
         await page.goto(`${APP_PATH}/exhibits/exhibit/delete?exhibit_id=${exhibit_uuid}`);
 
+        // The Delete listener is attached only after the view's async init
+        // resolves; show_form() reveals the card strictly after the attach,
+        // so a visible card proves the click below will be heard.
+        await expect(page.locator('#delete-card')).toBeVisible();
         const delete_button = page.locator('#delete-exhibit-btn');
-        await expect(delete_button).toBeEnabled();
 
         const delete_response = page.waitForResponse((resp) => {
             const u = new URL(resp.url());
