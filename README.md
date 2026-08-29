@@ -57,7 +57,7 @@ All other content is released under [CC-BY-4.0](https://creativecommons.org/lice
 ```
 cd exhibits-backend
 npm ci                        # always npm ci — never ad-hoc npm install on a shared checkout
-cp .env-example .env          # then fill in values
+cp env-example .env           # then fill in values
 mkdir -p logs                 # gitignored; the logger does not create it
 ```
 
