@@ -14,7 +14,7 @@ export default defineConfig({
             'test/tasks/**/*.test.js',
             'test/unit-app/**/*.test.js',
         ],
-        exclude: ['public/**', 'node_modules/**', 'test/**/node_modules/**', 'test/integration/**', 'test/**/*._todo.js'],
+        exclude: ['public/**', 'node_modules/**', 'test/**/node_modules/**', 'test/integration/**'],
         setupFiles: ['test/setup.js'],
         testTimeout: 30000,
         clearMocks: true,

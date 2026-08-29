@@ -109,6 +109,17 @@ jest.mock('../../exhibits/tasks/exhibit_record_tasks', () => {
     return jest.fn().mockImplementation(() => mockExhibitRecordTask);
 });
 
+// Mock Media Library Task Class
+const mockExhibitMediaLibraryTask = {
+    bind_media: jest.fn().mockResolvedValue(true),
+    unbind_media: jest.fn().mockResolvedValue(true),
+    get_exhibit_media_bindings: jest.fn().mockResolvedValue([])
+};
+
+jest.mock('../../exhibits/tasks/exhibit_media_library_tasks', () => {
+    return jest.fn().mockImplementation(() => mockExhibitMediaLibraryTask);
+});
+
 // Mock other task classes
 jest.mock('../../exhibits/tasks/exhibit_item_record_tasks', () => {
     return jest.fn().mockImplementation(() => ({
@@ -240,22 +251,35 @@ describe('Exhibits Model Integration Tests', () => {
             expect(result.message).toBe('Unable to create exhibit record');
         });
 
-        // SKIPPED: media handling was refactored. exhibits_model.create_exhibit_record
-        // no longer calls helper_task.process_uploaded_media — hero_image/thumbnail
-        // are now bound via separate bind_hero_image/bind_thumbnail steps after
-        // record creation. Rewrite this test to assert on the new bind_* path.
-        test.skip('should process media files when provided', async () => {
+        test('should bind hero image and thumbnail media when provided', async () => {
             const exhibitData = {
                 title: 'Test Exhibit',
-                hero_image: 'hero.jpg',
-                thumbnail: 'thumb.jpg'
+                hero_image_media_uuid: 'hero-media-uuid',
+                thumbnail_media_uuid: 'thumb-media-uuid',
+                created_by: TEST_USER_UID
             };
 
             mockExhibitRecordTask.create_exhibit_record.mockResolvedValue(true);
 
-            await EXHIBITS_MODEL.create_exhibit_record(exhibitData);
+            const result = await EXHIBITS_MODEL.create_exhibit_record(exhibitData);
 
-            expect(mockHelperInstance.process_uploaded_media).toHaveBeenCalledTimes(2);
+            expect(result.status).toBe(201);
+            expect(mockExhibitMediaLibraryTask.bind_media).toHaveBeenCalledTimes(2);
+            expect(mockExhibitMediaLibraryTask.bind_media).toHaveBeenCalledWith(TEST_UUID, 'hero-media-uuid', 'hero_image', TEST_USER_UID);
+            expect(mockExhibitMediaLibraryTask.bind_media).toHaveBeenCalledWith(TEST_UUID, 'thumb-media-uuid', 'thumbnail', TEST_USER_UID);
+        });
+
+        test('should not bind media when no media uuids are provided', async () => {
+            const exhibitData = {
+                title: 'Test Exhibit'
+            };
+
+            mockExhibitRecordTask.create_exhibit_record.mockResolvedValue(true);
+
+            const result = await EXHIBITS_MODEL.create_exhibit_record(exhibitData);
+
+            expect(result.status).toBe(201);
+            expect(mockExhibitMediaLibraryTask.bind_media).not.toHaveBeenCalled();
         });
 
         test('should handle exception gracefully', async () => {

@@ -18,22 +18,14 @@ See `test/README.md` for the runner-architecture overview.
 
 ## Layout
 
-```
-test/integration/
-├── README.md                        # this file
-├── exhibits_integration.test.js
-├── exhibits_model.test.js
-├── grid_integration.test.js
-├── grid_model.test.js
-├── headings_integration.test.js
-├── headings_model.test.js
-├── items_integration.test.js
-├── items_model.test.js
-├── timelines_integration.test.js
-└── timelines_model.test.js
-```
+Two naming conventions, one file per area (`ls test/integration` for the current list):
 
-Configuration lives at the project root (the `test/` directory is gitignored, so anything Jest needs at startup must live outside it):
+- `*_integration.test.js` — drive real HTTP requests through the routes with supertest (e.g. `exhibits_integration.test.js`, `items_integration.test.js`, `headings_controller_integration.test.js`).
+- `*_model.test.js` — call model functions directly with the task classes mocked (e.g. `exhibits_model.test.js`, `grid_model.test.js`, `items_model.test.js`, `timelines_model.test.js`).
+
+Plus focused suites for cross-cutting concerns: auth and page auth (`dashboard_page_auth`, `auth_rate_limit`), permissions (`permissions_matrix_integration`, `authorize_check_permission_integration`, `media_library_permissions_integration`), media handling (`media_upload_route`, `media_uploaded_thumbnail`, `transparent_png_flatten`), publish state (`preview_publish_state`, `publish_suppress_item_integration`), and services (`indexer_manage_route`, `repo_service_tn`, `iiif_pdf_rendering`, `recycle_route`, `client_endpoints_parity`).
+
+Configuration lives at the project root:
 
 - `jest.integration.config.js` — Jest config, scopes to `test/integration/**/*.test.js`.
 - `jest.integration.setup.js` — `setupFilesAfterEnv` file (custom matchers, globals, hooks).
@@ -68,8 +60,7 @@ npx jest --config jest.integration.config.js --watch
 - Publish, suppress, unlock.
 
 ### Media Operations
-- Get and delete media on exhibits.
-- Item-level media-delete tests are currently skipped — see "Skipped Tests" below.
+- Get and delete media on exhibits; media-library binding (`bind_media`), upload routes, and thumbnail handling.
 
 ### Token Verification
 - `POST /api/exhibits/v2/token/verify`
@@ -118,11 +109,7 @@ expect(uuid).toBeValidUUID()
 
 ## Skipped Tests
 
-7 tests are currently skipped, all with documented reasons:
-
-- **`items_integration.test.js` (5 tests)** — covered `CONTROLLER.delete_item_media`, which has been removed from `items_controller.js`. The corresponding route registration was removed and the `describe` block is `describe.skip`'d pending a replacement endpoint or test deletion.
-- **`exhibits_model.test.js` (1 test)** — `should process media files when provided`. The media pipeline was refactored from `process_uploaded_media` to `bind_hero_image` / `bind_thumbnail`; the original assertion no longer matches the source.
-- **`grid_model.test.js` (1 test)** — `should process media files`. Same media-pipeline refactor.
+None. If a source refactor invalidates a test, rewrite it against the new code path in the same change rather than leaving it `.skip`'d — long-lived skips in this suite have historically outlived the comments explaining them.
 
 ## Common Patterns
 

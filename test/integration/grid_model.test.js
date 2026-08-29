@@ -444,19 +444,21 @@ describe('Grid Model Integration Tests', () => {
             expect(result.status).toBe(201);
         });
 
-        // SKIPPED: media handling refactored. grid_model.create_grid_item_record
-        // no longer calls helper_task.process_uploaded_media directly. Rewrite
-        // this test to assert on the current media-binding path.
-        test.skip('should process media files', async () => {
+        // Media is no longer processed inline (the old process_uploaded_media
+        // path); it rides through to the record task as a plain field.
+        test('should pass media field through to the record task', async () => {
             const itemData = {
                 title: 'Media Item',
                 item_type: 'image',
-                media: 'test-image.jpg'
+                media: 'test-media-uuid'
             };
 
-            await GRID_MODEL.create_grid_item_record(TEST_EXHIBIT_UUID, TEST_GRID_UUID, itemData);
+            const result = await GRID_MODEL.create_grid_item_record(TEST_EXHIBIT_UUID, TEST_GRID_UUID, itemData);
 
-            expect(mockHelperInstance.process_uploaded_media).toHaveBeenCalled();
+            expect(result.status).toBe(201);
+            expect(mockGridRecordTask.create_grid_item_record).toHaveBeenCalledWith(
+                expect.objectContaining({ media: 'test-media-uuid' })
+            );
         });
 
         test('should handle Kaltura items', async () => {

@@ -484,59 +484,6 @@ describe('Items Integration Tests', () => {
         });
     });
 
-    // ==================== ITEM MEDIA OPERATIONS ====================
-
-    // SKIPPED: controller.delete_item_media was removed from the source.
-    // Restore these tests when/if the endpoint is reintroduced.
-    describe.skip('Item Media Operations', () => {
-
-        describe('DELETE /api/items/exhibit/:exhibit_id/item/:item_id/media/:media (Delete Item Media)', () => {
-
-            // Note: Full media deletion tests require fs mocking which breaks Express
-            // These tests focus on validation that occurs before file operations
-
-            test('should return 400 when media filename is missing', async () => {
-                const response = await request(app)
-                    .delete(`/api/items/exhibit/${TEST_EXHIBIT_ID}/item/${TEST_ITEM_ID}/media/%20`)
-                    .expect(400);
-
-                expect(response.body.message).toBe('Bad request. Missing or invalid media filename.');
-            });
-
-            test('should return 400 when exhibit_id is missing', async () => {
-                const response = await request(app)
-                    .delete(`/api/items/exhibit/%20/item/${TEST_ITEM_ID}/media/test.jpg`)
-                    .expect(400);
-
-                expect(response.body.message).toBe('Bad request. Missing or invalid exhibit ID.');
-            });
-
-            test('should return 400 when item_id is missing', async () => {
-                const response = await request(app)
-                    .delete(`/api/items/exhibit/${TEST_EXHIBIT_ID}/item/%20/media/test.jpg`)
-                    .expect(400);
-
-                expect(response.body.message).toBe('Bad request. Missing or invalid item ID.');
-            });
-
-            test('should return 400 for path traversal attempt in exhibit_id', async () => {
-                const response = await request(app)
-                    .delete(`/api/items/exhibit/..%2Fetc/item/${TEST_ITEM_ID}/media/test.jpg`)
-                    .expect(400);
-
-                expect(response.body.message).toBe('Bad request. Invalid path characters.');
-            });
-
-            test('should return 400 for path traversal attempt in media filename', async () => {
-                const response = await request(app)
-                    .delete(`/api/items/exhibit/${TEST_EXHIBIT_ID}/item/${TEST_ITEM_ID}/media/..%2Fetc%2Fpasswd`)
-                    .expect(400);
-
-                expect(response.body.message).toBe('Bad request. Invalid path characters.');
-            });
-        });
-    });
-
     // ==================== ITEM STATE MANAGEMENT ====================
 
     describe('Item State Management', () => {
