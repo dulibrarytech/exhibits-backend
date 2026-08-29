@@ -64,8 +64,8 @@ As of 2026-08-28:
 | Runner | Files | Pass | Skip |
 |--------|------:|-----:|-----:|
 | Vitest (unit: tasks 34 + unit-app 19) | 53 | 1021 | 0 |
-| Jest (integration)                    | 30 | 661 | 0 |
-| **Total**                             | **83** | **1682** | **0** |
+| Jest (integration)                    | 31 | 699 | 0 |
+| **Total**                             | **84** | **1720** | **0** |
 
 Playwright adds 54 stubbed specs plus 10 live specs (run separately; not part of `npm test`).
 
