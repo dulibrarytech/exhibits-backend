@@ -86,6 +86,16 @@ async function open_list_with_target_record(page, recordOverrides = {}) {
 
 test.describe('Media library edit modal (modals.edit.module.js — open_edit_media_modal / update_media_record)', () => {
 
+    /*
+     * This is the heaviest stub spec (DataTable init + modal construction +
+     * Quill seeding + a wide stub-route set) and has twice been the victim
+     * of transient worker starvation under full-suite load, running out the
+     * default 30s test clock mid-assertion with the app in a correct state.
+     * Double the per-test budget here only — real regressions still fail
+     * fast via the 5s expect timeout; this just absorbs machine stalls.
+     */
+    test.describe.configure({ timeout: 60_000 });
+
     test.beforeEach(async ({ page }) => {
         await seedAuth(page);
         await stubMediaPageDeps(page);
