@@ -67,7 +67,9 @@ test.describe('Media library CRUD (live)', () => {
         // media type — ensured non-empty).
         await page.fill('#file-name-0', marker);
         await fillIfPresent(page, '#file-alt-text-0', 'PW live upload fixture image');
-        await page.fill('#file-description-0', 'PW live upload description');
+        // Description is a rich text editor synced to the hidden
+        // #file-description-0 textarea — fill the editor, not the textarea.
+        await page.fill('#file-description-0-rte .ql-editor', 'PW live upload description');
         await setSubjectsWidget(page, '#uploaded-media-modal', 'topics_subjects', 'PW Topic');
         await setSubjectsWidget(page, '#uploaded-media-modal', 'genre_form_subjects', 'PW Genre');
         await ensureSelectValue(page, '#file-item-type-0');
@@ -121,7 +123,9 @@ test.describe('Media library CRUD (live)', () => {
 
         await name_input.fill(updated);
         // Description, Genre/Form + Item Type gate the save on the edit form too.
-        await page.fill('#edit-file-description', 'PW live edit description');
+        // Description is a rich text editor synced to the hidden
+        // #edit-file-description textarea — fill the editor, not the textarea.
+        await page.fill('#edit-file-description-rte .ql-editor', 'PW live edit description');
         await setSubjectsWidget(page, '#edit-media-modal', 'genre_form_subjects', 'PW Genre');
         await ensureSelectValue(page, '#edit-file-item-type');
 

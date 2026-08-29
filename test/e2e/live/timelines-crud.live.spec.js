@@ -41,6 +41,8 @@ test.describe('Timelines and timeline items CRUD (live)', () => {
         await expect(page.locator('#save-timeline-btn')).toBeEnabled();
 
         await page.fill('#timeline-text-input .ql-editor', marker);
+        // Internal name is required — the form blocks the save without it.
+        await page.fill('#timeline-internal-name-input', `${marker}-internal`);
 
         const create_response = page.waitForResponse((resp) => {
             const u = new URL(resp.url());

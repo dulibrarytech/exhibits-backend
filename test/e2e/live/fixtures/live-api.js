@@ -88,6 +88,8 @@ async function apiCreateGrid(request, exhibit_id, text) {
         is_member_of_exhibit: exhibit_id,
         type: 'grid',
         columns: 4,
+        // Required staff-only label (same rule the Grid form enforces).
+        internal_name: 'PW live grid internal name',
         text,
         styles: {},
         created_by: 'pw-e2e-admin'
@@ -120,6 +122,8 @@ async function apiCreateTimeline(request, exhibit_id, text) {
     const json = await post_json(request, `${API}/exhibits/${exhibit_id}/timelines`, {
         is_member_of_exhibit: exhibit_id,
         type: 'vertical_timeline',
+        // Required staff-only label (same rule the Timeline form enforces).
+        internal_name: 'PW live timeline internal name',
         text,
         styles: {},
         created_by: 'pw-e2e-admin'

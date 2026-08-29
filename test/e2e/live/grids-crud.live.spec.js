@@ -41,6 +41,8 @@ test.describe('Grids and grid items CRUD (live)', () => {
         await expect(page.locator('#save-item-btn')).toBeEnabled();
 
         await page.fill('#grid-text-input .ql-editor', marker);
+        // Internal name is required — the form blocks the save without it.
+        await page.fill('#grid-internal-name-input', `${marker}-internal`);
 
         const create_response = page.waitForResponse((resp) => {
             const u = new URL(resp.url());
