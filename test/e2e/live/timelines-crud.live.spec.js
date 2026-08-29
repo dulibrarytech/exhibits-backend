@@ -38,7 +38,12 @@ test.describe('Timelines and timeline items CRUD (live)', () => {
         const marker = `pw2-timeline-create-${Date.now()}-${test.info().workerIndex}`;
 
         await page.goto(`${APP_PATH}/items/vertical-timeline?exhibit_id=${exhibit_uuid}`);
-        await expect(page.locator('#save-timeline-btn')).toBeEnabled();
+        // The Save listener is attached only after the page's async init
+        // resolves (permissions POST, then a synchronous attach before the
+        // title fetch can land) — so a populated exhibit title proves the
+        // click below will be heard. toBeEnabled is a weak gate: the button
+        // is enabled in markup before the listener exists.
+        await expect(page.locator('#exhibit-title')).not.toBeEmpty();
 
         await page.fill('#timeline-text-input .ql-editor', marker);
         // Internal name is required — the form blocks the save without it.
@@ -127,7 +132,12 @@ test.describe('Timelines and timeline items CRUD (live)', () => {
             `${APP_PATH}/items/vertical-timeline/item/text`
             + `?exhibit_id=${exhibit_uuid}&timeline_id=${timeline_uuid}`
         );
-        await expect(page.locator('#save-item-btn')).toBeEnabled();
+        // The Save listener is attached only after the page's async init
+        // resolves (permissions POST, then a synchronous attach before the
+        // title fetch can land) — so a populated exhibit title proves the
+        // click below will be heard. toBeEnabled is a weak gate: the button
+        // is enabled in markup before the listener exists.
+        await expect(page.locator('#exhibit-title')).not.toBeEmpty();
 
         await page.fill('#item-title-input .ql-editor', marker);
         await page.fill('#item-date-input', '2026-04-15');

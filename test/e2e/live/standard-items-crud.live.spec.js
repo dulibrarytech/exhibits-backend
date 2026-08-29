@@ -31,7 +31,12 @@ test.describe('Standard items CRUD (live)', () => {
         const marker = `pw2-item-create-${Date.now()}-${test.info().workerIndex}`;
 
         await page.goto(`${APP_PATH}/items/standard/text?exhibit_id=${exhibit_uuid}`);
-        await expect(page.locator('#save-item-btn')).toBeEnabled();
+        // The Save listener is attached only after the page's async init
+        // resolves (permissions POST, then a synchronous attach before the
+        // title fetch can land) — so a populated exhibit title proves the
+        // click below will be heard. toBeEnabled is a weak gate: the button
+        // is enabled in markup before the listener exists.
+        await expect(page.locator('#exhibit-title')).not.toBeEmpty();
 
         await page.fill('#item-text-input .ql-editor', marker);
 
