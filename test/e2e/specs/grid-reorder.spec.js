@@ -5,8 +5,10 @@ const { seedAuth } = require('../fixtures/auth');
 const {
     stubDashboardDeps,
     stubGridItemsApi,
+    stubGridRecordApi,
     exhibitFixture,
     gridItemFixture,
+    gridRecordFixture,
 } = require('../fixtures/api-stubs');
 const { dragRow } = require('../helpers/bootstrap');
 
@@ -37,6 +39,13 @@ test.describe('Grid items — row reorder', () => {
                     is_member_of_exhibit: EXHIBIT_UUID, is_member_of_grid: GRID_UUID,
                 }),
             ],
+        });
+        // The list page fetches the grid record for the min-items advisory —
+        // stub it so the request can't escape to the real server and stall
+        // row rendering (columns: 3 with 3 items keeps the advisory hidden).
+        await stubGridRecordApi(page, {
+            exhibitId: EXHIBIT_UUID,
+            record: gridRecordFixture({ uuid: GRID_UUID, columns: 3 }),
         });
 
         await page.goto(
@@ -100,6 +109,13 @@ test.describe('Grid items — row reorder', () => {
                     is_member_of_exhibit: EXHIBIT_UUID, is_member_of_grid: GRID_UUID,
                 }),
             ],
+        });
+        // The list page fetches the grid record for the min-items advisory —
+        // stub it so the request can't escape to the real server and stall
+        // row rendering (columns: 3 with 3 items keeps the advisory hidden).
+        await stubGridRecordApi(page, {
+            exhibitId: EXHIBIT_UUID,
+            record: gridRecordFixture({ uuid: GRID_UUID, columns: 3 }),
         });
 
         await page.goto(

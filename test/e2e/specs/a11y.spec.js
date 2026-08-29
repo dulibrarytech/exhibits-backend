@@ -27,9 +27,11 @@ const {
     stubExhibitsApi,
     stubMixedItemsListApi,
     stubGridItemsApi,
+    stubGridRecordApi,
     stubMediaLibraryListApi,
     exhibitFixture,
     gridItemFixture,
+    gridRecordFixture,
     mediaRecordFixture,
 } = require('../fixtures/api-stubs');
 
@@ -116,6 +118,14 @@ test.describe('axe-core a11y scans (WCAG 2.0/2.1/2.2 AA)', () => {
                 gridItemFixture({ uuid: 'g1', order: 1, title: 'First',  is_member_of_exhibit: EXHIBIT_UUID, is_member_of_grid: GRID_UUID }),
                 gridItemFixture({ uuid: 'g2', order: 2, title: 'Second', is_member_of_exhibit: EXHIBIT_UUID, is_member_of_grid: GRID_UUID }),
             ],
+        });
+        // The list page fetches the grid record for the min-items advisory;
+        // left unstubbed the request escapes to the real server and can stall
+        // row rendering past the expect timeout. columns: 2 with 2 items keeps
+        // the advisory hidden so the scan covers the plain populated list.
+        await stubGridRecordApi(page, {
+            exhibitId: EXHIBIT_UUID,
+            record: gridRecordFixture({ uuid: GRID_UUID, columns: 2 }),
         });
 
         await page.goto(`${APP_PATH}/items/grid/items?exhibit_id=${EXHIBIT_UUID}&grid_id=${GRID_UUID}`);
