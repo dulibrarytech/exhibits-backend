@@ -83,11 +83,16 @@ async function apiCreateItem(request, exhibit_id, text) {
 }
 
 /** @returns {Promise<string>} grid uuid */
-async function apiCreateGrid(request, exhibit_id, text) {
+/*
+ * columns is overridable because the publish gate requires each grid to
+ * hold at least as many items as columns — lifecycle tests that publish
+ * want columns: 2 so two arranged grid items satisfy the minimum.
+ */
+async function apiCreateGrid(request, exhibit_id, text, columns = 4) {
     const json = await post_json(request, `${API}/exhibits/${exhibit_id}/grids`, {
         is_member_of_exhibit: exhibit_id,
         type: 'grid',
-        columns: 4,
+        columns,
         // Required staff-only label (same rule the Grid form enforces).
         internal_name: 'PW live grid internal name',
         text,
@@ -158,6 +163,19 @@ async function apiDeleteExhibit(request, exhibit_id) {
         return;
     }
     await request.delete(`${API}/exhibits/${exhibit_id}`, { headers: admin_headers() });
+}
+
+/**
+ * Suppresses an exhibit. Cleanup for tests that publish or preview: both
+ * index into the local Elasticsearch index, and suppression deletes the
+ * exhibit and its components from the index again. Tolerates failures —
+ * this is teardown hygiene, not an assertion.
+ */
+async function apiSuppressExhibit(request, exhibit_id) {
+    if (!exhibit_id) {
+        return;
+    }
+    await request.post(`${API}/exhibits/${exhibit_id}/suppress`, { headers: admin_headers() });
 }
 
 /**
@@ -294,6 +312,7 @@ module.exports = {
     apiCreateTimeline,
     apiCreateTimelineItem,
     apiDeleteExhibit,
+    apiSuppressExhibit,
     apiGet,
     apiCreateMediaRecord,
     apiFindMediaByName,

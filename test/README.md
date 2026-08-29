@@ -67,7 +67,7 @@ As of 2026-08-28:
 | Jest (integration)                    | 31 | 699 | 0 |
 | **Total**                             | **84** | **1720** | **0** |
 
-Playwright adds 54 stubbed specs plus 10 live specs (run separately; not part of `npm test`).
+Playwright adds 54 stubbed specs plus 11 live specs (run separately; not part of `npm test`).
 
 There are no unconditionally skipped tests. The only conditional skips are the two `@external` live e2e specs (`media-kaltura-import`, `media-repo-import`), which skip unless `PW_EXTERNAL=1` because they need VPN-reachable external services — run them via `npm run test:e2e:live:external`.
 

@@ -16,7 +16,7 @@ As of 2026-08-28:
 | Jest — `test/integration/`                | 31 | 699 | 0 |
 | **`npm test` total**                      | **84** | **1720** | **0** |
 
-Playwright (not part of `npm test`): 54 stubbed specs in `test/e2e/specs/`, 10 live specs in `test/e2e/live/`. The two `@external` live specs skip unless `PW_EXTERNAL=1` (VPN-reachable Kaltura / repository services).
+Playwright (not part of `npm test`): 54 stubbed specs in `test/e2e/specs/`, 11 live specs in `test/e2e/live/` (incl. the full create→publish→preview exhibit lifecycle). The two `@external` live specs skip unless `PW_EXTERNAL=1` (VPN-reachable Kaltura / repository services). Live publish/preview index into the LOCAL Elasticsearch index — lifecycle-style tests must suppress in teardown (apiSuppressExhibit) so those documents are removed again.
 
 ## Unit Tests (Vitest — `test/tasks/`)
 
