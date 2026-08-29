@@ -13,8 +13,8 @@ As of 2026-08-28:
 | Vitest — `test/tasks/` (server unit)      | 34 | —   | 0 |
 | Vitest — `test/unit-app/` (client unit)   | 19 | —   | 0 |
 | Vitest total                              | 53 | 1021 | 0 |
-| Jest — `test/integration/`                | 29 | 613 | 0 |
-| **`npm test` total**                      | **82** | **1634** | **0** |
+| Jest — `test/integration/`                | 30 | 661 | 0 |
+| **`npm test` total**                      | **83** | **1682** | **0** |
 
 Playwright (not part of `npm test`): 54 stubbed specs in `test/e2e/specs/`, 10 live specs in `test/e2e/live/`. The two `@external` live specs skip unless `PW_EXTERNAL=1` (VPN-reachable Kaltura / repository services).
 
@@ -34,7 +34,7 @@ Browser-side `public/app/*` client modules (helper, dom, exhibits form modules, 
 
 Full route → controller → model flows (`*_integration.test.js`) and model-layer orchestration with mocked task classes (`*_model.test.js`), plus focused suites for auth, permissions matrices, media upload/thumbnails/PNG flattening, preview/publish state, recycle bin, indexer manage route, repo thumbnail service, IIIF PDF rendering, and client-endpoint parity. See `integration/README.md` for the mocking strategy.
 
-Route-mounting suites (`*_routes_integration.test.js` — grids, timelines, headings, users, auth) mount the REAL route files with the real endpoints module and controllers (models mocked), covering route registration, path-param mapping, and middleware ordering (rate limit → token verify → validation → authorize → model). Every route file they cover sits at 100% coverage; prefer extending them over hand-wiring an Express app when adding route-level tests.
+Route-mounting suites (`*_routes_integration.test.js` — grids, timelines, headings, users, auth, media library) mount the REAL route files with the real endpoints module and controllers (models mocked), covering route registration, path-param mapping, and middleware ordering (rate limit → token verify → validation → authorize → model). Every route file they cover sits at 100% coverage; prefer extending them over hand-wiring an Express app when adding route-level tests.
 
 ### Coverage Areas
 
