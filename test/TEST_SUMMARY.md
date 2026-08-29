@@ -13,8 +13,8 @@ As of 2026-08-28:
 | Vitest — `test/tasks/` (server unit)      | 33 | —   | 0 |
 | Vitest — `test/unit-app/` (client unit)   | 15 | —   | 0 |
 | Vitest total                              | 48 | 956 | 0 |
-| Jest — `test/integration/`                | 22 | 453 | 0 |
-| **`npm test` total**                      | **70** | **1409** | **0** |
+| Jest — `test/integration/`                | 27 | 562 | 0 |
+| **`npm test` total**                      | **75** | **1518** | **0** |
 
 Playwright (not part of `npm test`): 48 stubbed specs in `test/e2e/specs/`, 10 live specs in `test/e2e/live/`. The two `@external` live specs skip unless `PW_EXTERNAL=1` (VPN-reachable Kaltura / repository services).
 
@@ -33,6 +33,8 @@ Browser-side `public/app/*` client modules (helper, dom, exhibits form modules, 
 ## Integration Tests (Jest — `test/integration/`)
 
 Full route → controller → model flows (`*_integration.test.js`) and model-layer orchestration with mocked task classes (`*_model.test.js`), plus focused suites for auth, permissions matrices, media upload/thumbnails/PNG flattening, preview/publish state, recycle bin, indexer manage route, repo thumbnail service, IIIF PDF rendering, and client-endpoint parity. See `integration/README.md` for the mocking strategy.
+
+Route-mounting suites (`*_routes_integration.test.js` — grids, timelines, headings, users, auth) mount the REAL route files with the real endpoints module and controllers (models mocked), covering route registration, path-param mapping, and middleware ordering (rate limit → token verify → validation → authorize → model). Every route file they cover sits at 100% coverage; prefer extending them over hand-wiring an Express app when adding route-level tests.
 
 ### Coverage Areas
 
