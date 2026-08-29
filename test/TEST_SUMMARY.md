@@ -13,8 +13,8 @@ As of 2026-08-28:
 | Vitest — `test/tasks/` (server unit)      | 34 | —   | 0 |
 | Vitest — `test/unit-app/` (client unit)   | 19 | —   | 0 |
 | Vitest total                              | 53 | 1021 | 0 |
-| Jest — `test/integration/`                | 28 | 577 | 0 |
-| **`npm test` total**                      | **81** | **1598** | **0** |
+| Jest — `test/integration/`                | 29 | 613 | 0 |
+| **`npm test` total**                      | **82** | **1634** | **0** |
 
 Playwright (not part of `npm test`): 54 stubbed specs in `test/e2e/specs/`, 10 live specs in `test/e2e/live/`. The two `@external` live specs skip unless `PW_EXTERNAL=1` (VPN-reachable Kaltura / repository services).
 
