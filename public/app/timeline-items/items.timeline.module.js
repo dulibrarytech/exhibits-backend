@@ -730,6 +730,11 @@ const itemsTimelineModule = (function () {
                 setTimeout(() => {
                     window.location.replace(`${APP_PATH}/items/timeline/items?exhibit_id=${exhibit_id}&timeline_id=${timeline_id}`);
                 }, 900);
+            } else if (response !== undefined && response.status === 403) {
+                domModule.set_alert(document.querySelector('#message'), 'danger', 'You do not have permission to delete this item.');
+            } else {
+                const status_text = response !== undefined ? ` (status ${response.status})` : '';
+                domModule.set_alert(document.querySelector('#message'), 'danger', `Unable to delete timeline item${status_text}.`);
             }
 
         } catch (error) {

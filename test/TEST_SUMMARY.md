@@ -16,7 +16,7 @@ As of 2026-08-28:
 | Jest — `test/integration/`                | 28 | 577 | 0 |
 | **`npm test` total**                      | **81** | **1598** | **0** |
 
-Playwright (not part of `npm test`): 48 stubbed specs in `test/e2e/specs/`, 10 live specs in `test/e2e/live/`. The two `@external` live specs skip unless `PW_EXTERNAL=1` (VPN-reachable Kaltura / repository services).
+Playwright (not part of `npm test`): 54 stubbed specs in `test/e2e/specs/`, 10 live specs in `test/e2e/live/`. The two `@external` live specs skip unless `PW_EXTERNAL=1` (VPN-reachable Kaltura / repository services).
 
 ## Unit Tests (Vitest — `test/tasks/`)
 

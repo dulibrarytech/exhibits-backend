@@ -770,12 +770,13 @@ const itemsGridModule = (function () {
      */
     function restore_delete_card(elements) {
 
+        /*
+         * Restores the card only — every caller writes an error message via
+         * display_error_message immediately before this runs, so clearing
+         * #message here would erase the explanation the user needs to see.
+         */
         if (elements.delete_card !== null) {
             elements.delete_card.style.display = '';
-        }
-
-        if (elements.message !== null) {
-            elements.message.innerHTML = '';
         }
     }
 
