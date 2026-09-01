@@ -27,6 +27,7 @@ const mediaEditModalModule = (function() {
     const format_file_size = helperMediaLibraryModule.format_file_size;
     const build_thumbnail_url = helperMediaLibraryModule.build_thumbnail_url;
     const build_media_url = helperMediaLibraryModule.build_media_url;
+    const append_cache_version = helperMediaLibraryModule.append_cache_version;
     const get_repo_thumbnail_url = helperMediaLibraryModule.get_repo_thumbnail_url;
 
     const EXHIBITS_ENDPOINTS = endpointsModule.get_media_library_endpoints();
@@ -229,12 +230,12 @@ const mediaEditModalModule = (function() {
                 preview_html = '<i class="fa ' + type_icon + '" style="font-size: 80px; color: #6c757d;" aria-hidden="true"></i>';
             }
         } else if (is_image && record.uuid) {
-            const media_url = build_media_url(record.uuid);
+            const media_url = append_cache_version(build_media_url(record.uuid), record.updated);
             const img_url = media_url + (media_url.includes('?') ? '&' : '?') + 'token=' + encodeURIComponent(token || '');
             preview_html = '<img src="' + img_url + '" alt="' + display_name + '" class="img-fluid" style="max-width:100%;max-height:300px;object-fit:contain;">';
         } else if (is_pdf && record.uuid && record.thumbnail_path) {
             // PDF with server-generated thumbnail
-            const tn_url = build_thumbnail_url(record.uuid);
+            const tn_url = append_cache_version(build_thumbnail_url(record.uuid), record.updated);
             const tn_img_url = tn_url + (tn_url.includes('?') ? '&' : '?') + 'token=' + encodeURIComponent(token || '');
             preview_html = '<img src="' + tn_img_url + '" alt="' + display_name + '" class="img-fluid" style="max-width:100%;max-height:300px;object-fit:contain;" data-fallback="hide-show-next">' +
                 '<i class="fa ' + type_icon + '" style="font-size: 80px; color: #6c757d; display: none;" aria-hidden="true"></i>';

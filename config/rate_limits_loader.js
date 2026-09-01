@@ -174,6 +174,16 @@ const create_rate_limiter = (config_name, extra_options = {}) => {
     });
 };
 
+/*
+ * Identity-keyed auth limiter wiring, exported so the rate-limit tests
+ * exercise THIS wiring rather than a mirrored copy that could drift:
+ * keyed by the submitted username (req.body.employeeID), lower-cased;
+ * skipped when no identity is present so the IP-keyed auth_operations
+ * still applies.
+ */
+const auth_identity_key_generator = (req) => 'id:' + String((req.body && req.body.employeeID) || '').trim().toLowerCase();
+const auth_identity_skip = (req) => !(req.body && typeof req.body.employeeID === 'string' && req.body.employeeID.trim() !== '');
+
 // Create all rate limiters
 const rate_limits = {
     write_operations: create_rate_limiter('write_operations'),
@@ -185,11 +195,9 @@ const rate_limits = {
     public_media_access: create_rate_limiter('public_media_access'),
     iiif_image_operations: create_rate_limiter('iiif_image_operations'),
     auth_operations: create_rate_limiter('auth_operations'),
-    // Keyed by the submitted username (req.body.employeeID), lower-cased; skipped
-    // when no identity is present so the IP-keyed auth_operations still applies.
     auth_identity_operations: create_rate_limiter('auth_identity_operations', {
-        keyGenerator: (req) => 'id:' + String((req.body && req.body.employeeID) || '').trim().toLowerCase(),
-        skip: (req) => !(req.body && typeof req.body.employeeID === 'string' && req.body.employeeID.trim() !== '')
+        keyGenerator: auth_identity_key_generator,
+        skip: auth_identity_skip
     }),
     general_operations: create_rate_limiter('general_operations')
 };
@@ -198,5 +206,7 @@ const rate_limits = {
 module.exports = {
     rate_limits,
     rate_limit_configs,
-    create_rate_limiter
+    create_rate_limiter,
+    auth_identity_key_generator,
+    auth_identity_skip
 };

@@ -24,6 +24,7 @@ const mediaLibraryModule = (function() {
     const format_file_size = helperMediaLibraryModule.format_file_size;
     const build_thumbnail_url = helperMediaLibraryModule.build_thumbnail_url;
     const build_media_url = helperMediaLibraryModule.build_media_url;
+    const append_cache_version = helperMediaLibraryModule.append_cache_version;
     const get_repo_thumbnail_url = helperMediaLibraryModule.get_repo_thumbnail_url;
     const get_media_library_endpoints = endpointsModule.get_media_library_endpoints;
 
@@ -475,6 +476,46 @@ const mediaLibraryModule = (function() {
     };
 
     /**
+     * Handle replace-file button click. Uploaded records only — repository
+     * and Kaltura rows have no local file to replace.
+     * @param {string} uuid - Media record UUID
+     */
+    const handle_replace_click = (uuid) => {
+        if (!uuid) {
+            console.error('No UUID provided for replace');
+            return;
+        }
+
+        const message_element = document.querySelector('#message');
+
+        if (typeof mediaReplaceModalModule === 'undefined' || typeof mediaReplaceModalModule.open_replace_media_modal !== 'function') {
+            console.error('mediaReplaceModalModule.open_replace_media_modal not available');
+            display_message(message_element, 'danger', 'Replace dialog is not available. Please refresh the page.');
+            return;
+        }
+
+        const record = view_record_map.get(uuid);
+
+        if (!record) {
+            console.error('Media record not found for replace: ' + uuid);
+            display_message(message_element, 'danger', 'Media record not found. Please refresh the page.');
+            return;
+        }
+
+        mediaReplaceModalModule.open_replace_media_modal(record, async (success, message) => {
+            if (success) {
+                display_message(message_element, 'success', message || 'File replaced successfully.');
+
+                await obj.refresh_media_records();
+
+                setTimeout(() => {
+                    clear_message(message_element);
+                }, 3000);
+            }
+        });
+    };
+
+    /**
      * Handle delete button click
      * @param {string} uuid - Media record UUID
      * @param {string} name - Media record name for confirmation
@@ -555,14 +596,22 @@ const mediaLibraryModule = (function() {
                 </button>
                 <div class="dropdown-menu media-actions-menu" aria-label="Actions menu for ${escaped_name}">
                     ${play_action_html}
-                    <a class="dropdown-item btn-edit-media" 
-                       href="#" 
+                    <a class="dropdown-item btn-edit-media"
+                       href="#"
                        data-uuid="${uuid}"
                        style="font-size: 0.875rem;">
                         <i class="fa fa-edit mr-2" aria-hidden="true" style="width: 16px;"></i>
                         Edit
                     </a>
-                    <a class="dropdown-item btn-delete-media text-danger" 
+                    ${row.ingest_method === 'upload' ? `
+                    <a class="dropdown-item btn-replace-media"
+                       href="#"
+                       data-uuid="${uuid}"
+                       style="font-size: 0.875rem;">
+                        <i class="fa fa-exchange mr-2" aria-hidden="true" style="width: 16px;"></i>
+                        Replace file
+                    </a>` : ''}
+                    <a class="dropdown-item btn-delete-media text-danger"
                        href="#" 
                        data-uuid="${uuid}"
                        data-name="${escaped_name}"
@@ -723,6 +772,17 @@ const mediaLibraryModule = (function() {
                 } else {
                     console.error('kalturaModalsModule.open_kaltura_player_modal not available');
                 }
+            });
+        });
+
+        // Replace-file button handlers (dropdown items; uploaded rows only)
+        document.querySelectorAll('.btn-replace-media').forEach(btn => {
+            btn.addEventListener('click', function(e) {
+                e.preventDefault();
+                e.stopPropagation();
+                close_open_dropdowns();
+                const uuid = this.getAttribute('data-uuid');
+                handle_replace_click(uuid);
             });
         });
 
@@ -1172,8 +1232,9 @@ const mediaLibraryModule = (function() {
                     uuid: record.uuid || null,
                     name: strip_html(record.name) || 'Untitled',
                     filename: record.original_filename || 'N/A',
-                    thumbnail_url: has_thumbnail ? build_thumbnail_url(record.uuid) : null,
-                    media_url: record.uuid ? build_media_url(record.uuid) : null,
+                    thumbnail_url: has_thumbnail ? append_cache_version(build_thumbnail_url(record.uuid), record.updated) : null,
+                    media_url: record.uuid ? append_cache_version(build_media_url(record.uuid), record.updated) : null,
+                    updated: record.updated || null,
                     has_thumbnail: has_thumbnail,
                     is_image: is_image_file(record.original_filename),
                     media_type: sanitize_html(record.media_type) || 'N/A',
@@ -1199,7 +1260,7 @@ const mediaLibraryModule = (function() {
                             return record.kaltura_thumbnail_url;
                         }
                         if (has_thumbnail && record.uuid) {
-                            const tn_url = build_thumbnail_url(record.uuid);
+                            const tn_url = append_cache_version(build_thumbnail_url(record.uuid), record.updated);
                             if (tn_url) {
                                 return tn_url + (tn_url.includes('?') ? '&' : '?') + 'token=' + encodeURIComponent(token || '');
                             }

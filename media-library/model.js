@@ -25,6 +25,7 @@ const HELPER = require('../libs/helper');
 const MEDIA_TASKS = require('./tasks/media_record_tasks');
 const UPLOADS = require('./uploads');
 const IIIF_CACHE = require('./iiif-cache');
+const REINDEX_COALESCER = require('../exhibits/reindex_coalescer');
 const PATH = require('path');
 const LOGGER = require('../libs/log4');
 const VALIDATOR = require('../libs/validate');
@@ -412,6 +413,175 @@ exports.update_media_record = async (media_id, data) => {
     } catch (error) {
         LOGGER.module().error('ERROR: [/media-library/model (update_media_record)] ' + error.message);
         return build_response(false, 'Error updating media record: ' + error.message);
+    }
+};
+
+/**
+ * Schedules a coalesced re-index of every currently published exhibit that
+ * references the media record, so publicly indexed copies of file-derived
+ * fields (dimensions, mime type) refresh without waiting for the next manual
+ * publish. Fire-and-forget: failures are logged, never propagated, and
+ * unpublished exhibits are skipped so a replace can never push one into the
+ * public index.
+ * @param {Object} record - The media record whose exhibits should re-index
+ * @returns {Promise<void>}
+ */
+const schedule_exhibit_reindex = async (record) => {
+
+    try {
+
+        let exhibits = record?.exhibits;
+
+        if (typeof exhibits === 'string') {
+            exhibits = JSON.parse(exhibits);
+        }
+
+        if (!Array.isArray(exhibits) || exhibits.length === 0) {
+            return;
+        }
+
+        const published_uuids = await media_task.get_published_exhibit_uuids(exhibits);
+
+        if (published_uuids.length === 0) {
+            return;
+        }
+
+        // Required lazily: the indexer model validates Elasticsearch config at
+        // require time, which must not be a precondition for loading this
+        // module (it isn't for any other media-library flow).
+        const INDEXER_MODEL = require('../indexer/model');
+
+        for (const exhibit_uuid of published_uuids) {
+            REINDEX_COALESCER.schedule_reindex(`exhibit:${exhibit_uuid}`, async () => {
+                await INDEXER_MODEL.index_exhibit(exhibit_uuid, 'publish');
+            });
+        }
+
+    } catch (error) {
+        LOGGER.module().error('ERROR: [/media-library/model (schedule_exhibit_reindex)] ' + error.message);
+    }
+};
+
+/**
+ * Replaces the stored file behind an uploaded media record while preserving
+ * all descriptive metadata (name, alt text, description, subjects, exhibit
+ * links). The new file is written under a fresh on-disk uuid first; the DB
+ * row is repointed only after the write succeeds, and the superseded file is
+ * removed best-effort afterwards (the orphaned-files sweep is the backstop).
+ * @param {string} media_id - Media record UUID
+ * @param {Object} file - Multer file object (buffer, originalname, mimetype)
+ * @param {string|null} username - Username (du_id) performing the replace
+ * @returns {Promise<Object>} Result object with the updated record
+ */
+exports.replace_media_file = async (media_id, file, username = null) => {
+
+    try {
+
+        if (!is_valid_uuid(media_id)) {
+            return build_response(false, 'Invalid media ID format');
+        }
+
+        if (!file || !file.buffer || !file.originalname || !file.mimetype) {
+            return build_response(false, 'No replacement file provided');
+        }
+
+        const record_result = await media_task.get_media_record(media_id);
+
+        if (!record_result || !record_result.success || !record_result.record) {
+            return build_response(false, 'Media record not found');
+        }
+
+        const record = record_result.record;
+
+        if (record.ingest_method !== 'upload') {
+            return build_response(false, 'Only uploaded media files can be replaced');
+        }
+
+        const new_media_type = UPLOADS.get_media_type(file.mimetype);
+        const current_media_type = UPLOADS.get_media_type(record.mime_type);
+
+        if (new_media_type === 'unknown' || new_media_type !== current_media_type) {
+            return build_response(false, 'Replacement file must be the same media type as the original (' + (current_media_type === 'pdf' ? 'PDF' : 'image') + ')');
+        }
+
+        const store_result = await UPLOADS.store_file(file.buffer, file.originalname, file.mimetype);
+        const metadata = await UPLOADS.extract_metadata(store_result.file_path, store_result.media_type);
+
+        let updated_by = null;
+
+        if (username) {
+            const user_result = await media_task.get_user_by_username(username);
+
+            if (user_result.success && user_result.full_name) {
+                updated_by = user_result.full_name;
+            }
+        }
+
+        const replace_data = {
+            storage_path: store_result.storage_path,
+            thumbnail_path: store_result.thumbnail_path,
+            mime_type: store_result.mime_type,
+            original_filename: store_result.original_name,
+            size: store_result.file_size,
+            exif_data: JSON.stringify(metadata),
+            media_width: store_result.media_width,
+            media_height: store_result.media_height
+        };
+
+        if (updated_by) {
+            replace_data.updated_by = updated_by;
+        }
+
+        let result;
+
+        try {
+            result = await media_task.replace_media_file(media_id, replace_data);
+        } catch (task_error) {
+            result = { success: false, message: task_error.message };
+        }
+
+        if (!result || !result.success) {
+            // The DB row was never repointed, so the freshly written file is
+            // the orphan — remove it, keeping the live asset untouched.
+            try {
+                await UPLOADS.delete_stored_file(store_result.storage_path, store_result.thumbnail_path);
+            } catch (cleanup_error) {
+                LOGGER.module().warn('WARNING: [/media-library/model (replace_media_file)] Failed to clean up replacement file after aborted replace: ' + cleanup_error.message);
+            }
+
+            return build_response(false, result?.message || 'Failed to replace media file');
+        }
+
+        // Invalidate cached IIIF derivatives — the source file changed, so
+        // superseded derivatives must not be reused.
+        await IIIF_CACHE.purge(media_id);
+
+        // The row now points at the new file; the old one is unreferenced.
+        // Best-effort removal — on failure the weekly orphaned-files sweep
+        // reclaims it.
+        if (record.storage_path && record.storage_path !== store_result.storage_path) {
+            try {
+                await UPLOADS.delete_stored_file(record.storage_path, record.thumbnail_path || null);
+            } catch (old_file_error) {
+                LOGGER.module().warn('WARNING: [/media-library/model (replace_media_file)] Failed to remove superseded file ' + record.storage_path + ': ' + old_file_error.message);
+            }
+        }
+
+        await schedule_exhibit_reindex(result.record || record);
+
+        LOGGER.module().info('INFO: [/media-library/model (replace_media_file)] Media file replaced successfully: ' + media_id);
+
+        if (result.record) {
+            format_subjects_for_display(result.record);
+        }
+
+        return build_response(true, 'File replaced successfully', {
+            record: result.record
+        });
+
+    } catch (error) {
+        LOGGER.module().error('ERROR: [/media-library/model (replace_media_file)] ' + error.message);
+        return build_response(false, 'Error replacing media file: ' + error.message);
     }
 };
 

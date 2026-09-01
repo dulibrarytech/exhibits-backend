@@ -98,6 +98,7 @@ const sources = [
     'public/app/media-library/media.library.module.js',
     'public/app/media-library/modals.delete.module.js',
     'public/app/media-library/modals.edit.module.js',
+    'public/app/media-library/modals.replace.module.js',
     'public/app/media-library/modals.kaltura.module.js',
     'public/app/media-library/modals.repo.module.js',
     'public/app/media-library/modals.upload.module.js',

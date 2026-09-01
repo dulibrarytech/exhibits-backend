@@ -15,7 +15,8 @@ const endpointsModule = (function() {
     // so the new registry is refetched. History:
     //   '1' — baseline
     //   '2' — added media_library.upload.get / upload.delete
-    const ENDPOINTS_REGISTRY_VERSION = '2';
+    //   '3' — added media_library.media_file_replace.post
+    const ENDPOINTS_REGISTRY_VERSION = '3';
     const ENDPOINTS_VERSION_KEY = 'exhibits_endpoints_version';
     // sessionStorage one-shot guard so a failed/no-op re-auth can't loop.
     const ENDPOINTS_REFRESH_GUARD = 'exhibits_endpoints_refresh_attempted';

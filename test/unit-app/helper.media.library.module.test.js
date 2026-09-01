@@ -265,6 +265,28 @@ describe('helperMediaLibraryModule', () => {
         });
     });
 
+    describe('append_cache_version', () => {
+        it('appends v=<epoch> derived from the updated timestamp', () => {
+            const updated = '2026-08-31T12:00:00.000Z';
+            const epoch = new Date(updated).getTime();
+            expect(helperMediaLibraryModule.append_cache_version('/x/thumb', updated))
+                .toBe(`/x/thumb?v=${epoch}`);
+        });
+
+        it('uses & when the URL already has a query string', () => {
+            const updated = '2026-08-31T12:00:00.000Z';
+            const epoch = new Date(updated).getTime();
+            expect(helperMediaLibraryModule.append_cache_version('/x/thumb?token=t', updated))
+                .toBe(`/x/thumb?token=t&v=${epoch}`);
+        });
+
+        it('is a no-op when the URL or timestamp is missing/unparseable', () => {
+            expect(helperMediaLibraryModule.append_cache_version(null, '2026-08-31')).toBeNull();
+            expect(helperMediaLibraryModule.append_cache_version('/x', null)).toBe('/x');
+            expect(helperMediaLibraryModule.append_cache_version('/x', 'not-a-date')).toBe('/x');
+        });
+    });
+
     describe('build_thumbnail_url', () => {
         it('substitutes :media_id and URL-encodes it', () => {
             expect(helperMediaLibraryModule.build_thumbnail_url('abc-123'))

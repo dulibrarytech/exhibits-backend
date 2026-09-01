@@ -517,6 +517,148 @@ const Media_record_tasks = class {
     }
 
     /**
+     * Replaces the stored file behind a media record. Separate from
+     * update_media_record on purpose: storage_path/thumbnail_path are
+     * deliberately excluded from UPDATABLE_FIELDS (the generic PUT must
+     * never repoint a record at an arbitrary path), so the replace flow
+     * gets its own whitelist limited to file-derived columns.
+     * @param {string} uuid - Media record UUID
+     * @param {Object} data - File-derived column values
+     * @returns {Promise<Object>} Update result with the refreshed record
+     */
+    async replace_media_file(uuid, data) {
+
+        const REPLACEABLE_FIELDS = [
+            'storage_path', 'thumbnail_path', 'mime_type', 'original_filename',
+            'size', 'exif_data', 'media_width', 'media_height', 'updated_by'
+        ];
+
+        try {
+
+            this._validate_database();
+            this._validate_table('media_library_records');
+
+            const validated_uuid = this._validate_uuid(uuid, 'media UUID');
+
+            if (!data || typeof data !== 'object') {
+                throw new Error('Invalid replace data: must be an object');
+            }
+
+            const existing = await this.DB(this.TABLE.media_library_records)
+                .select('id', 'uuid', 'is_deleted', 'ingest_method')
+                .where({uuid: validated_uuid})
+                .first()
+                .timeout(this.QUERY_TIMEOUT);
+
+            if (!existing) {
+                return {
+                    success: false,
+                    message: 'Media record not found'
+                };
+            }
+
+            if (existing.is_deleted === 1) {
+                return {
+                    success: false,
+                    message: 'Cannot replace the file of a deleted media record'
+                };
+            }
+
+            if (existing.ingest_method !== 'upload') {
+                return {
+                    success: false,
+                    message: 'Only uploaded media files can be replaced'
+                };
+            }
+
+            const update_data = {};
+            for (const field of REPLACEABLE_FIELDS) {
+                if (data.hasOwnProperty(field) && data[field] !== undefined) {
+                    update_data[field] = data[field];
+                }
+            }
+
+            if (!update_data.storage_path) {
+                return {
+                    success: false,
+                    message: 'Replacement storage_path is required'
+                };
+            }
+
+            update_data.updated = this.DB.fn.now();
+
+            const affected_rows = await this.DB(this.TABLE.media_library_records)
+                .where({
+                    uuid: validated_uuid,
+                    is_deleted: 0
+                })
+                .update(update_data)
+                .timeout(this.QUERY_TIMEOUT);
+
+            if (affected_rows === 0) {
+                throw new Error('Replace failed: No rows affected');
+            }
+
+            const updated_record = await this.DB(this.TABLE.media_library_records)
+                .select('*')
+                .where({uuid: validated_uuid})
+                .first()
+                .timeout(this.QUERY_TIMEOUT);
+
+            this._log_success('Media file replaced successfully', {
+                uuid: validated_uuid,
+                fields_updated: Object.keys(update_data),
+                affected_rows
+            });
+
+            return {
+                success: true,
+                uuid: validated_uuid,
+                record: updated_record,
+                affected_rows,
+                message: 'Media file replaced successfully'
+            };
+
+        } catch (error) {
+            this._handle_error(error, 'replace_media_file', {uuid});
+        }
+    }
+
+    /**
+     * Gets the uuids of currently published exhibits among the given set.
+     * Used by the replace-file flow to re-index only exhibits whose public
+     * documents embed data from the replaced media record.
+     * @param {string[]} exhibit_uuids - Candidate exhibit UUIDs
+     * @returns {Promise<string[]>} Published, non-deleted exhibit uuids
+     */
+    async get_published_exhibit_uuids(exhibit_uuids) {
+
+        try {
+
+            this._validate_database();
+            this._validate_table('exhibit_records');
+
+            if (!Array.isArray(exhibit_uuids) || exhibit_uuids.length === 0) {
+                return [];
+            }
+
+            const records = await this.DB(this.TABLE.exhibit_records)
+                .select('uuid')
+                .whereIn('uuid', exhibit_uuids)
+                .where({
+                    is_published: 1,
+                    is_deleted: 0
+                })
+                .timeout(this.QUERY_TIMEOUT);
+
+            return records.map((record) => record.uuid);
+
+        } catch (error) {
+            this._handle_error(error, 'get_published_exhibit_uuids', {exhibit_uuids});
+        }
+    }
+
+    /**
      * Deletes a media record (soft delete)
      * @param {string} uuid - Media record UUID
      * @param {string|number} [deleted_by=null] - User ID performing deletion

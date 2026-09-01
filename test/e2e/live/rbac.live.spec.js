@@ -14,6 +14,9 @@
  *                                           Student may not (ownership-scoped)
  *   delete_any_exhibit    — Admin only:     Power may NOT delete another's
  *                                           exhibit
+ *   publish_any_exhibit   — Admin+Power:    Power publishes another's exhibit,
+ *                                           Student is denied (publish_exhibit
+ *                                           is ownership-scoped)
  *
  * (Nav-level gating — Admin Utils visible only to Administrator — is covered
  * per role in auth-roles.live.spec.js.)
@@ -24,9 +27,12 @@ const {
     APP_PATH,
     role_headers,
     apiCreateExhibit,
+    apiCreateItem,
     apiDeleteExhibit,
+    apiSuppressExhibit,
     apiCreateUser,
-    apiDeleteUser
+    apiDeleteUser,
+    apiGet
 } = require('./fixtures/live-api');
 
 const API = `${APP_PATH}/api/v1`;
@@ -104,6 +110,46 @@ test.describe('RBAC enforcement (live)', () => {
             expect(power_delete.status(), 'power must not delete another\'s exhibit').toBe(403);
 
         } finally {
+            await apiDeleteExhibit(request, exhibit_id);
+        }
+    });
+
+    test('publish: Student is denied on another\'s exhibit; Power (publish_any_exhibit) succeeds', async ({ request }) => {
+
+        // Admin-owned exhibit WITH an item, so the only thing standing
+        // between a publish request and success is authorization — not the
+        // no-items gate.
+        const marker = `pw4-rbac-publish-${Date.now()}`;
+        const exhibit_id = await apiCreateExhibit(request, marker);
+        await apiCreateItem(request, exhibit_id, `${marker}-item`);
+
+        try {
+            // Student holds ownership-scoped publish_exhibit but NOT
+            // publish_any_exhibit — publishing another's exhibit is denied.
+            const student_publish = await request.post(`${API}/exhibits/${exhibit_id}/publish`, {
+                headers: role_headers('student')
+            });
+            expect(student_publish.status(), 'student must not publish another\'s exhibit').toBe(403);
+
+            // And the denial had no side effects — the exhibit is still unpublished.
+            const after_denied = await apiGet(request, `/exhibits/${exhibit_id}`);
+            expect(after_denied.body).toContain('"is_published":0');
+
+            // Power User HAS publish_any_exhibit — the same request succeeds,
+            // proving the Student 403 above was the ownership scope and not an
+            // unrelated failure of the publish route.
+            const power_publish = await request.post(`${API}/exhibits/${exhibit_id}/publish`, {
+                headers: role_headers('power')
+            });
+            expect(power_publish.status(), 'power may publish any exhibit').toBe(200);
+
+            const after_published = await apiGet(request, `/exhibits/${exhibit_id}`);
+            expect(after_published.body).toContain('"is_published":1');
+
+        } finally {
+            // Publishing indexed into the local ES index — suppress to remove
+            // those documents before deleting the exhibit.
+            await apiSuppressExhibit(request, exhibit_id);
             await apiDeleteExhibit(request, exhibit_id);
         }
     });
