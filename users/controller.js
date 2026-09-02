@@ -243,17 +243,45 @@ exports.update_user = async function (req, res) {
             }
         }
 
-        // Check authorization to update users
-        const auth_options = {
+        /*
+         * Authorization is split into two decisions, because the two
+         * permissions mean different things (see db/seeds/03_role_permissions.js):
+         *
+         *   update_users — edit ANY user's profile (Administrator, Power User)
+         *   update_user  — edit YOUR OWN profile (every role, including Student)
+         *
+         * Checking them as one list with the `users` short-circuit let any
+         * holder of update_user edit any target, and (because role_id rides on
+         * the same PUT) promote themselves to Administrator. So: resolve the
+         * actor from the JWT, allow update_user only when target === actor,
+         * and gate any role CHANGE behind the Administrator-only
+         * update_user_role regardless of which path admitted the request.
+         */
+        const actor_id = await AUTHORIZE.get_actor_id(req);
+
+        if (actor_id === null) {
+            LOGGER.module().warn(
+                `WARNING: [/user/controller (update_user)] unable to resolve actor for ${req.decoded?.sub || 'unknown'}`
+            );
+            return res.status(403).json({
+                message: 'Unauthorized request'
+            });
+        }
+
+        const permission_options = (permission) => ({
             req,
-            permissions: ['update_users', 'update_user'],
+            permissions: [permission],
             record_type: null,
             parent_id: null,
             child_id: null,
             users: true
-        };
+        });
 
-        const is_authorized = await AUTHORIZE.check_permission(auth_options);
+        let is_authorized = await AUTHORIZE.check_permission(permission_options('update_users'));
+
+        if (!is_authorized && actor_id === parsed_user_id) {
+            is_authorized = await AUTHORIZE.check_permission(permission_options('update_user'));
+        }
 
         if (!is_authorized) {
             LOGGER.module().warn(
@@ -262,6 +290,32 @@ exports.update_user = async function (req, res) {
             return res.status(403).json({
                 message: 'Unauthorized request'
             });
+        }
+
+        /*
+         * The edit form always posts role_id, so only a DIFFERENT role counts
+         * as a role change. A user with no role row counts as a change too —
+         * assigning a first role is the same privilege as changing one.
+         */
+        if (user_data.role_id !== undefined) {
+
+            const requested_role_id = Number(user_data.role_id);
+            const current_role_id = await MODEL.get_user_role_id(parsed_user_id);
+            const is_role_change = current_role_id === null || requested_role_id !== current_role_id;
+
+            if (is_role_change) {
+
+                const can_change_role = await AUTHORIZE.check_permission(permission_options('update_user_role'));
+
+                if (!can_change_role) {
+                    LOGGER.module().warn(
+                        `WARNING: [/user/controller (update_user)] unauthorized role change on user ${parsed_user_id} (${current_role_id} -> ${requested_role_id}) by ${req.decoded?.sub || 'unknown'}`
+                    );
+                    return res.status(403).json({
+                        message: 'Unauthorized request'
+                    });
+                }
+            }
         }
 
         // Update user in database

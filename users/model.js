@@ -214,6 +214,41 @@ exports.get_user = async function (id) {
 };
 
 /**
+ * Gets the current role id for a user (null when the user has no role row).
+ * Used by the controller to decide whether an update is a role CHANGE, which
+ * is gated separately (update_user_role) from a profile edit.
+ * @param {number|string} id - User ID
+ * @returns {Promise<number|null>}
+ */
+exports.get_user_role_id = async function (id) {
+
+    try {
+        const numeric_id = Number(id);
+        if (!Number.isInteger(numeric_id) || numeric_id <= 0) {
+            return null;
+        }
+
+        const ROLE_TASK = get_role_tasks_instance();
+        if (!ROLE_TASK || typeof ROLE_TASK.get_user_role !== 'function') {
+            LOGGER.module().error('ERROR: [/users/model (get_user_role_id)] failed to get ROLE_TASKS instance');
+            return null;
+        }
+
+        const role = await ROLE_TASK.get_user_role(numeric_id);
+        if (!Array.isArray(role) || role.length === 0 || !role[0]) {
+            return null;
+        }
+
+        const role_id = Number(role[0].role_id);
+        return Number.isInteger(role_id) && role_id > 0 ? role_id : null;
+
+    } catch (error) {
+        LOGGER.module().error(`ERROR: [/users/model (get_user_role_id)] unable to get role for user id ${id}: ${error.message}`);
+        return null;
+    }
+};
+
+/**
  * Updates user profile and role (optimized)
  * @param {number|string} id - User ID to update
  * @param {Object} user - User data object containing fields to update

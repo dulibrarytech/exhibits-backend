@@ -219,3 +219,26 @@ describe('check_permission — no matching permission denies outright', () => {
         expect(auth.check_ownership).not.toHaveBeenCalled();
     });
 });
+
+describe('get_actor_id — resolves the caller from the JWT subject', () => {
+
+    test('returns the numeric user id for the decoded sub', async () => {
+        auth.get_user_id_by_username.mockResolvedValue(USER_ID);
+        expect(await AUTHORIZE.get_actor_id(req('871095226'))).toBe(USER_ID);
+        expect(auth.get_user_id_by_username).toHaveBeenCalledWith('871095226');
+    });
+
+    test('returns null when req.decoded.sub is missing or not a string', async () => {
+        expect(await AUTHORIZE.get_actor_id({})).toBeNull();
+        expect(await AUTHORIZE.get_actor_id({ decoded: { sub: 42 } })).toBeNull();
+        expect(auth.get_user_id_by_username).not.toHaveBeenCalled();
+    });
+
+    test('returns null when the lookup finds no active user or throws', async () => {
+        auth.get_user_id_by_username.mockResolvedValue(null);
+        expect(await AUTHORIZE.get_actor_id(req())).toBeNull();
+
+        auth.get_user_id_by_username.mockRejectedValue(new Error('db down'));
+        expect(await AUTHORIZE.get_actor_id(req())).toBeNull();
+    });
+});

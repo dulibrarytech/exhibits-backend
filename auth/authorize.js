@@ -25,6 +25,34 @@ const AUTH = require('../auth/tasks/auth_tasks');
 const AUTH_TASKS = new AUTH(DB, TABLE);
 const LOGGER = require('../libs/log4');
 
+/**
+ * Resolves the numeric tbl_users.id of the request's actor from the JWT
+ * subject (du_id). Lets controllers compare "who is calling" with "which
+ * record is being changed" without trusting a client-supplied id.
+ * @param {Object} req - Express request with req.decoded set by TOKEN.verify
+ * @returns {Promise<number|null>} user id, or null when unresolvable
+ */
+exports.get_actor_id = async function (req) {
+
+    try {
+
+        const username = req?.decoded?.sub;
+
+        if (!username || typeof username !== 'string') {
+            return null;
+        }
+
+        const user_id = await AUTH_TASKS.get_user_id_by_username(username);
+        return Number.isInteger(user_id) && user_id > 0 ? user_id : null;
+
+    } catch (error) {
+        LOGGER.module().error(
+            `ERROR: [/auth/authorize lib (get_actor_id)] unable to resolve actor: ${error.message}`
+        );
+        return null;
+    }
+};
+
 exports.check_permission = async function (options) {
 
     try {

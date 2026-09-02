@@ -25,12 +25,14 @@
 const { test, expect } = require('@playwright/test');
 const {
     APP_PATH,
+    role_auth,
     role_headers,
     apiCreateExhibit,
     apiCreateItem,
     apiDeleteExhibit,
     apiSuppressExhibit,
     apiCreateUser,
+    apiFindUserByDuid,
     apiDeleteUser,
     apiGet
 } = require('./fixtures/live-api');
@@ -65,6 +67,55 @@ test.describe('RBAC enforcement (live)', () => {
                 headers: role_headers('power')
             });
             expect(res.status(), 'power must not delete users').toBe(403);
+        } finally {
+            await apiDeleteUser(request, throwaway.id);
+        }
+    });
+
+    test('update_user_role: Student cannot promote self; Power cannot change roles; Admin can', async ({ request }) => {
+
+        const student = role_auth('student').user;
+        const profile = { first_name: student.name.split(' ')[0], last_name: student.name.split(' ').slice(1).join(' '), email: student.email };
+
+        /* Self-promotion (code review 2026-09-02, C1): own record + role_id=Administrator. */
+        const promote = await request.put(`${API}/users/${student.id}`, {
+            headers: role_headers('student'),
+            data: { ...profile, role_id: 1 }
+        });
+        expect(promote.status(), 'student must not change own role').toBe(403);
+
+        /* Same PUT with the role UNCHANGED is an ordinary self profile edit. */
+        const self_edit = await request.put(`${API}/users/${student.id}`, {
+            headers: role_headers('student'),
+            data: { ...profile, role_id: 4 }
+        });
+        expect(self_edit.status(), 'student may edit own profile').toBe(201);
+
+        /* update_user does not reach other users' records. */
+        const admin = role_auth('administrator').user;
+        const cross_edit = await request.put(`${API}/users/${admin.id}`, {
+            headers: role_headers('student'),
+            data: { first_name: 'Hijacked', last_name: 'Admin', email: admin.email }
+        });
+        expect(cross_edit.status(), 'student must not edit another user').toBe(403);
+
+        const throwaway = await apiCreateUser(request, { du_id: `9role${String(Date.now()).slice(-6)}` });
+
+        try {
+            const power_promote = await request.put(`${API}/users/${throwaway.id}`, {
+                headers: role_headers('power'),
+                data: { first_name: 'PW', last_name: 'Throwaway', email: throwaway.email, role_id: 1 }
+            });
+            expect(power_promote.status(), 'power (no update_user_role) must not change a role').toBe(403);
+
+            const admin_promote = await request.put(`${API}/users/${throwaway.id}`, {
+                headers: role_headers('administrator'),
+                data: { first_name: 'PW', last_name: 'Throwaway', email: throwaway.email, role_id: 3 }
+            });
+            expect(admin_promote.status(), 'administrator may change a role').toBe(201);
+
+            const after = await apiFindUserByDuid(request, throwaway.du_id);
+            expect(after && after.role, 'role change persisted').toBe('General User');
         } finally {
             await apiDeleteUser(request, throwaway.id);
         }

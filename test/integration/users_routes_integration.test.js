@@ -41,7 +41,8 @@ jest.mock('../../libs/tokens', () => ({
 }));
 
 jest.mock('../../auth/authorize', () => ({
-    check_permission: jest.fn().mockResolvedValue(true)
+    check_permission: jest.fn().mockResolvedValue(true),
+    get_actor_id: jest.fn()
 }));
 
 jest.mock('../../config/rate_limits_loader', () => ({
@@ -56,6 +57,7 @@ const mockUsersModel = {
     get_user: jest.fn(),
     save_user: jest.fn(),
     update_user: jest.fn(),
+    get_user_role_id: jest.fn(),
     delete_user: jest.fn(),
     update_status: jest.fn()
 };
@@ -100,6 +102,9 @@ describe('Users Routes Integration (real router)', () => {
         jest.clearAllMocks();
 
         AUTHORIZE.check_permission.mockResolvedValue(true);
+        /* Default: the actor IS the target (self-edit) and holds role 4 (Student). */
+        AUTHORIZE.get_actor_id.mockResolvedValue(TEST_USER_ID);
+        mockUsersModel.get_user_role_id.mockResolvedValue(4);
         TOKEN.verify.mockImplementation((req, res, next) => {
             req.decoded = { sub: TEST_USER_UID };
             next();
@@ -250,6 +255,115 @@ describe('Users Routes Integration (real router)', () => {
             const response = await request(app)
                 .put(path_for(ENDPOINTS.update_user.put.endpoint, { user_id: TEST_USER_ID }))
                 .send(VALID_USER);
+
+            expect(response.status).toBe(403);
+            expect(mockUsersModel.update_user).not.toHaveBeenCalled();
+        });
+    });
+
+    /*
+     * Self-promotion regression (code review 2026-09-02, C1): update_user is
+     * granted to every role, so it must only admit edits to the caller's OWN
+     * record, and a role CHANGE must additionally require update_user_role.
+     * check_permission is driven by which single permission is asked for.
+     */
+    describe('PUT user — self-scoping and role-change gating', () => {
+
+        const OTHER_USER_ID = 99;
+        const put_user = (user_id, body) => request(app)
+            .put(path_for(ENDPOINTS.update_user.put.endpoint, { user_id }))
+            .send(body);
+        const grant = (...permissions) => {
+            AUTHORIZE.check_permission.mockImplementation(({ permissions: asked }) =>
+                Promise.resolve(asked.length === 1 && permissions.includes(asked[0])));
+        };
+
+        beforeEach(() => {
+            mockUsersModel.update_user.mockResolvedValue({ data: { id: TEST_USER_ID } });
+        });
+
+        test('update_user alone cannot edit ANOTHER user', async () => {
+            grant('update_user');
+            AUTHORIZE.get_actor_id.mockResolvedValue(OTHER_USER_ID);
+
+            const response = await put_user(TEST_USER_ID, VALID_USER);
+
+            expect(response.status).toBe(403);
+            expect(mockUsersModel.update_user).not.toHaveBeenCalled();
+        });
+
+        test('update_user alone can edit the caller\'s OWN profile', async () => {
+            grant('update_user');
+
+            const response = await put_user(TEST_USER_ID, VALID_USER);
+
+            expect(response.status).toBe(201);
+            expect(mockUsersModel.update_user).toHaveBeenCalledWith(TEST_USER_ID, expect.objectContaining(VALID_USER));
+        });
+
+        test('update_users can edit another user', async () => {
+            grant('update_users');
+            AUTHORIZE.get_actor_id.mockResolvedValue(OTHER_USER_ID);
+
+            const response = await put_user(TEST_USER_ID, VALID_USER);
+
+            expect(response.status).toBe(201);
+            expect(mockUsersModel.update_user).toHaveBeenCalledTimes(1);
+        });
+
+        test('re-posting the UNCHANGED role_id is not a role change', async () => {
+            grant('update_user');
+
+            const response = await put_user(TEST_USER_ID, { ...VALID_USER, role_id: 4 });
+
+            expect(response.status).toBe(201);
+            expect(mockUsersModel.update_user).toHaveBeenCalledTimes(1);
+        });
+
+        test('self-promotion: role change without update_user_role is denied', async () => {
+            grant('update_user');
+
+            const response = await put_user(TEST_USER_ID, { ...VALID_USER, role_id: 1 });
+
+            expect(response.status).toBe(403);
+            expect(mockUsersModel.update_user).not.toHaveBeenCalled();
+        });
+
+        test('update_users without update_user_role cannot change a role either', async () => {
+            grant('update_users');
+            AUTHORIZE.get_actor_id.mockResolvedValue(OTHER_USER_ID);
+
+            const response = await put_user(TEST_USER_ID, { ...VALID_USER, role_id: 1 });
+
+            expect(response.status).toBe(403);
+            expect(mockUsersModel.update_user).not.toHaveBeenCalled();
+        });
+
+        test('assigning a first role to a role-less user counts as a role change', async () => {
+            grant('update_users');
+            mockUsersModel.get_user_role_id.mockResolvedValue(null);
+
+            const response = await put_user(TEST_USER_ID, { ...VALID_USER, role_id: 4 });
+
+            expect(response.status).toBe(403);
+            expect(mockUsersModel.update_user).not.toHaveBeenCalled();
+        });
+
+        test('update_users + update_user_role can change a role', async () => {
+            grant('update_users', 'update_user_role');
+            AUTHORIZE.get_actor_id.mockResolvedValue(OTHER_USER_ID);
+
+            const response = await put_user(TEST_USER_ID, { ...VALID_USER, role_id: 1 });
+
+            expect(response.status).toBe(201);
+            expect(mockUsersModel.update_user).toHaveBeenCalledWith(TEST_USER_ID, expect.objectContaining({ role_id: 1 }));
+        });
+
+        test('unresolvable actor is denied', async () => {
+            grant('update_users', 'update_user', 'update_user_role');
+            AUTHORIZE.get_actor_id.mockResolvedValue(null);
+
+            const response = await put_user(TEST_USER_ID, VALID_USER);
 
             expect(response.status).toBe(403);
             expect(mockUsersModel.update_user).not.toHaveBeenCalled();
