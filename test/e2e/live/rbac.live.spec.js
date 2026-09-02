@@ -45,7 +45,21 @@ test.describe('RBAC enforcement (live)', () => {
         for (const role of ['administrator', 'power', 'general', 'student']) {
             const res = await request.get(`${API}/users`, { headers: role_headers(role) });
             expect(res.status(), `${role} should read the users list`).toBe(200);
+
+            /* C2 (code review 2026-09-02): the list must never carry session JWTs. */
+            const users = (await res.json()).data;
+            expect(users.length, 'list has the seeded role users').toBeGreaterThan(0);
+            for (const user of users) {
+                expect(user, `user ${user.id} must not expose token`).not.toHaveProperty('token');
+            }
         }
+    });
+
+    test('get_user requires view_users and never exposes the session token', async ({ request }) => {
+        const admin = role_auth('administrator').user;
+        const res = await request.get(`${API}/users/${admin.id}`, { headers: role_headers('student') });
+        expect(res.status(), 'student holds view_users').toBe(200);
+        expect((await res.json()).data).not.toHaveProperty('token');
     });
 
     test('add_users is denied to General User and Student', async ({ request }) => {

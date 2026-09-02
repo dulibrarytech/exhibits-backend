@@ -20,6 +20,14 @@
 
 const LOGGER = require('../../libs/log4');
 
+/*
+ * Columns the users API may return. tbl_users.token holds each user's LIVE
+ * session JWT (written at login by auth/tasks save_token); a `select('*')`
+ * handed every Administrator's session to any view_users holder. Never add
+ * `token` here.
+ */
+const USER_PROFILE_COLUMNS = ['id', 'du_id', 'email', 'first_name', 'last_name', 'is_active', 'created', 'last_login'];
+
 /**
  * User record tasks
  * @type {User_tasks}
@@ -37,7 +45,7 @@ const User_tasks = class {
     async get_users() {
 
         try {
-            return await this.DB(this.TABLE).select('*');
+            return await this.DB(this.TABLE).select(USER_PROFILE_COLUMNS);
         } catch (error) {
             LOGGER.module().error('ERROR: [/users/tasks (get_users)] unable to get users ' + error.message);
         }
@@ -51,7 +59,7 @@ const User_tasks = class {
 
         try {
 
-            return await this.DB(this.TABLE).select('*')
+            return await this.DB(this.TABLE).select(USER_PROFILE_COLUMNS)
             .where({
                 id: id
             })

@@ -453,4 +453,22 @@ describe('Users Routes Integration (real router)', () => {
             expect(mockUsersModel.update_status).not.toHaveBeenCalled();
         });
     });
+    /*
+     * C2 (code review 2026-09-02): get_user had no permission gate at all.
+     */
+    describe('GET user — view_users gate', () => {
+
+        test('returns 403 when view_users is denied and never touches the model', async () => {
+            AUTHORIZE.check_permission.mockResolvedValue(false);
+
+            const response = await request(app)
+                .get(path_for(ENDPOINTS.get_user.endpoint, { user_id: TEST_USER_ID }));
+
+            expect(response.status).toBe(403);
+            expect(AUTHORIZE.check_permission).toHaveBeenCalledWith(
+                expect.objectContaining({ permissions: ['view_users'] })
+            );
+            expect(mockUsersModel.get_user).not.toHaveBeenCalled();
+        });
+    });
 });

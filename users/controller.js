@@ -127,6 +127,28 @@ exports.get_user = async function (req, res) {
             });
         }
 
+        /*
+         * Same gate as get_users: reading a profile is a view_users action.
+         * This handler had no permission check at all (code review 2026-09-02, C2).
+         */
+        const is_authorized = await AUTHORIZE.check_permission({
+            req,
+            permissions: ['view_users'],
+            record_type: null,
+            parent_id: null,
+            child_id: null,
+            users: true
+        });
+
+        if (!is_authorized) {
+            LOGGER.module().warn(
+                `WARNING: [/user/controller (get_user)] unauthorized attempt to view user ${parsed_user_id} by ${req.decoded?.sub || 'unknown'}`
+            );
+            return res.status(403).json({
+                message: 'Unauthorized request'
+            });
+        }
+
         // Fetch user from model
         const response = await MODEL.get_user(parsed_user_id);
 

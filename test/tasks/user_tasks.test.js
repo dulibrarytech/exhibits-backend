@@ -99,7 +99,7 @@ describe('User_tasks', () => {
 
     // ==================== GET_USERS TESTS ====================
     describe('get_users', () => {
-        test('should return all users with all schema fields', async () => {
+        test('should return all users with the profile columns only', async () => {
             const mockUsers = [
                 createMockUser({ id: 1, du_id: 'jdoe', email: 'john@example.com' }),
                 createMockUser({ id: 2, du_id: 'jsmith', email: 'jane@example.com', first_name: 'Jane', last_name: 'Smith' })
@@ -110,10 +110,11 @@ describe('User_tasks', () => {
             const result = await userTasks.get_users();
 
             expect(mockDB).toHaveBeenCalledWith('tbl_users');
-            expect(mockQuery.select).toHaveBeenCalledWith('*');
+            /* Explicit column list — must never include `token` (live session JWT). */
+            expect(mockQuery.select).toHaveBeenCalledWith(['id', 'du_id', 'email', 'first_name', 'last_name', 'is_active', 'created', 'last_login']);
+            expect(mockQuery.select.mock.calls[0][0]).not.toContain('token');
             expect(result).toEqual(mockUsers);
             expect(result[0]).toHaveProperty('du_id');
-            expect(result[0]).toHaveProperty('token');
             expect(result[0]).toHaveProperty('created');
             expect(result[0]).toHaveProperty('last_login');
         });
@@ -151,7 +152,7 @@ describe('User_tasks', () => {
 
     // ==================== GET_USER TESTS ====================
     describe('get_user', () => {
-        test('should return user by id with all schema fields', async () => {
+        test('should return user by id with the profile columns only', async () => {
             const mockUser = createMockUser();
 
             mockQuery.select.mockReturnThis();
@@ -161,12 +162,12 @@ describe('User_tasks', () => {
             const result = await userTasks.get_user(1);
 
             expect(mockDB).toHaveBeenCalledWith('tbl_users');
-            expect(mockQuery.select).toHaveBeenCalledWith('*');
+            expect(mockQuery.select).toHaveBeenCalledWith(['id', 'du_id', 'email', 'first_name', 'last_name', 'is_active', 'created', 'last_login']);
+            expect(mockQuery.select.mock.calls[0][0]).not.toContain('token');
             expect(mockQuery.where).toHaveBeenCalledWith({ id: 1 });
             expect(result).toEqual(mockUser);
             expect(result).toHaveProperty('du_id');
             expect(result).toHaveProperty('email');
-            expect(result).toHaveProperty('token');
         });
 
         test('should return undefined when user not found', async () => {
@@ -763,7 +764,6 @@ describe('User_tasks', () => {
             expect(result).toHaveLength(3);
             expect(result[0].du_id).toBe('user1');
             expect(result[2].is_active).toBe(0);
-            expect(result[0]).toHaveProperty('token');
             expect(result[0]).toHaveProperty('created');
             expect(result[0]).toHaveProperty('last_login');
         });
