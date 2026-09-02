@@ -312,11 +312,20 @@ exports.refresh_token = function (username) {
 
 /**
  * Verifies JWT token from request
+ *
+ * Every token this module mints (session, shared, refresh) is signed with the
+ * same secret and issuer, so signature + issuer alone cannot tell them apart.
+ * The `type` claim is therefore part of the contract: a verifier must state
+ * which kind it accepts, and a token of any other kind (or with no type) is
+ * rejected. Without this, a 7-day shared-preview token from a share URL was
+ * accepted by the session verifiers as a login (code review 2026-09-02, C3).
+ *
  * @param {string} token - JWT token to verify
+ * @param {string} expected_type - TOKEN_TYPES value the caller accepts
  * @param {Function} callback - Callback function (error, decoded)
  * @private
  */
-function verify_jwt_token(token, callback) {
+function verify_jwt_token(token, expected_type, callback) {
 
     if (!token || !VALIDATOR.isJWT(token)) {
         return callback(new Error('Invalid token format'), null);
@@ -337,6 +346,11 @@ function verify_jwt_token(token, callback) {
         // Verify issuer matches
         if (decoded.iss !== TOKEN_CONFIG.token_issuer) {
             return callback(new Error('Invalid token issuer'), null);
+        }
+
+        // Verify the token is the KIND this verifier accepts
+        if (decoded.type !== expected_type) {
+            return callback(new Error(`Invalid token type: expected ${expected_type}`), null);
         }
 
         callback(null, decoded);
@@ -405,7 +419,7 @@ exports.verify = function (req, res, next) {
 
     // Verify JWT token
     if (token) {
-        verify_jwt_token(token, function (error, decoded) {
+        verify_jwt_token(token, TOKEN_TYPES.SESSION, function (error, decoded) {
             if (error) {
                 const sanitized_error = sanitize_for_logging(error.message);
                 LOGGER.module().error('ERROR: [/libs/tokens lib (verify)] token verification failed: ' + sanitized_error);
@@ -488,7 +502,7 @@ exports.verify_page = function (req, res, next) {
         return redirect_to_sso();
     }
 
-    verify_jwt_token(token, function (error, decoded) {
+    verify_jwt_token(token, TOKEN_TYPES.SESSION, function (error, decoded) {
         if (error) {
             return redirect_to_sso();
         }
@@ -528,7 +542,7 @@ exports.verify_with_query = function (req, res, next) {
 
     // Verify JWT token
     if (token) {
-        verify_jwt_token(token, function (error, decoded) {
+        verify_jwt_token(token, TOKEN_TYPES.SESSION, function (error, decoded) {
             if (error) {
                 const sanitized_error = sanitize_for_logging(error.message);
                 LOGGER.module().error('ERROR: [/libs/tokens lib (verify_with_query)] token verification failed: ' + sanitized_error);
@@ -601,7 +615,7 @@ exports.verify_shared = function (req, res, next) {
         });
     }
 
-    verify_jwt_token(token, function (error, decoded) {
+    verify_jwt_token(token, TOKEN_TYPES.SHARED, function (error, decoded) {
 
         if (error) {
             const sanitized_error = sanitize_for_logging(error.message);
@@ -609,15 +623,6 @@ exports.verify_shared = function (req, res, next) {
 
             return res.status(403).send({
                 message: 'Exhibit preview URL has expired or is invalid.'
-            });
-        }
-
-        // Validate token type if present
-        if (decoded.type && decoded.type !== TOKEN_TYPES.SHARED) {
-            LOGGER.module().error('ERROR: [/libs/tokens lib (verify_shared)] invalid token type');
-
-            return res.status(403).send({
-                message: 'Invalid preview URL.'
             });
         }
 

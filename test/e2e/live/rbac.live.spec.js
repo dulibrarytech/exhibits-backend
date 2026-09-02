@@ -164,6 +164,34 @@ test.describe('RBAC enforcement (live)', () => {
         }
     });
 
+    test('a shared-preview token is not a session token (C3, review 2026-09-02)', async ({ request }) => {
+
+        const exhibit_id = await apiCreateExhibit(request, `PW share-token ${Date.now()}`);
+
+        try {
+            /* Mint a share link as an authenticated user and pull its t= token. */
+            const minted = await request.post(`${API.replace('/api/v1', '')}/shared?uuid=${exhibit_id}`, {
+                headers: role_headers('administrator')
+            });
+            expect(minted.status(), 'share link minted').toBe(201);
+            const shared_token = new URL((await minted.json()).shared_url).searchParams.get('t');
+            expect(shared_token, 'share URL carries a token').toBeTruthy();
+
+            /* The share token must NOT open any session-authenticated API... */
+            const as_header = await request.get(`${API}/exhibits`, { headers: { 'x-access-token': shared_token } });
+            expect(as_header.status(), 'shared token as x-access-token').toBe(401);
+
+            const as_cookie = await request.get(`${API}/exhibits`, { headers: { cookie: `exhibits_token=${shared_token}` } });
+            expect(as_cookie.status(), 'shared token as session cookie').toBe(401);
+
+            /* ...and a session token must not open the share endpoint. */
+            const session_as_share = await request.get(`${API.replace('/api/v1', '')}/shared?uuid=${exhibit_id}&t=${role_auth('administrator').token}`);
+            expect(session_as_share.status(), 'session token on /shared').toBe(403);
+        } finally {
+            await apiDeleteExhibit(request, exhibit_id);
+        }
+    });
+
     test('exhibit ownership: update_any vs delete_any enforced per role', async ({ request }) => {
 
         // Admin-owned exhibit — the other roles are NOT the owner.

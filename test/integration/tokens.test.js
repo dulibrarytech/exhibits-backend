@@ -310,6 +310,49 @@ describe('libs/tokens', () => {
 
     // ==================== verify_page() ====================
 
+    describe('verify middleware — token type is enforced (C3, review 2026-09-02)', () => {
+
+        it('rejects a shared-preview token presented as a session with 401', async () => {
+            const shared = TOKENS.create_shared('550e8400-e29b-41d4-a716-446655440000');
+
+            const { res } = await run_middleware(TOKENS.verify, {
+                headers: { 'x-access-token': shared }
+            });
+
+            expect(res.status_code).toBe(401);
+        });
+
+        it('rejects a shared-preview token delivered via the session cookie', async () => {
+            const shared = TOKENS.create_shared('550e8400-e29b-41d4-a716-446655440000');
+
+            const { res } = await run_middleware(TOKENS.verify, {
+                headers: { cookie: `exhibits_token=${encodeURIComponent(shared)}` }
+            });
+
+            expect(res.status_code).toBe(401);
+        });
+
+        it('rejects a correctly signed token that carries no type claim', async () => {
+            const untyped = JWT.sign({ sub: 'test.user', iss: TEST_ISSUER }, TEST_SECRET, { algorithm: TEST_ALGO, expiresIn: '1h' });
+
+            const { res } = await run_middleware(TOKENS.verify, {
+                headers: { 'x-access-token': untyped }
+            });
+
+            expect(res.status_code).toBe(401);
+        });
+
+        it('rejects a refresh-type token presented as a session', async () => {
+            const refresh = sign_token({ type: 'refresh' });
+
+            const { res } = await run_middleware(TOKENS.verify, {
+                headers: { 'x-access-token': refresh }
+            });
+
+            expect(res.status_code).toBe(401);
+        });
+    });
+
     describe('verify_page middleware', () => {
 
         it('accepts a valid cookie token', async () => {
@@ -343,6 +386,20 @@ describe('libs/tokens', () => {
     });
 
     // ==================== verify_with_query() ====================
+
+    describe('verify_page middleware — token type is enforced', () => {
+
+        it('redirects to SSO when a shared-preview token is used as a page session', async () => {
+            const shared = TOKENS.create_shared('550e8400-e29b-41d4-a716-446655440000');
+
+            const { outcome, res } = await run_middleware(TOKENS.verify_page, {
+                headers: { cookie: `exhibits_token=${encodeURIComponent(shared)}` }
+            });
+
+            expect(outcome).toBe('redirect');
+            expect(res.redirect_url.startsWith(SSO_URL)).toBe(true);
+        });
+    });
 
     describe('verify_with_query middleware', () => {
 
@@ -387,6 +444,19 @@ describe('libs/tokens', () => {
 
     // ==================== verify_shared() ====================
 
+    describe('verify_with_query middleware — token type is enforced', () => {
+
+        it('rejects a shared-preview token in the t query parameter with 401', async () => {
+            const shared = TOKENS.create_shared('550e8400-e29b-41d4-a716-446655440000');
+
+            const { res } = await run_middleware(TOKENS.verify_with_query, {
+                query: { t: shared }
+            });
+
+            expect(res.status_code).toBe(401);
+        });
+    });
+
     describe('verify_shared middleware', () => {
 
         it('accepts a shared-type token from the t query parameter', async () => {
@@ -408,7 +478,18 @@ describe('libs/tokens', () => {
             });
 
             expect(res.status_code).toBe(403);
-            expect(res.body.message).toBe('Invalid preview URL.');
+            /* Type mismatch is reported like any other invalid share token — no hint which check failed. */
+            expect(res.body.message).toBe('Exhibit preview URL has expired or is invalid.');
+        });
+
+        it('rejects a token with NO type claim (type is required, not optional)', async () => {
+            const untyped = JWT.sign({ sub: '550e8400-e29b-41d4-a716-446655440000', iss: TEST_ISSUER }, TEST_SECRET, { algorithm: TEST_ALGO, expiresIn: '1h' });
+
+            const { res } = await run_middleware(TOKENS.verify_shared, {
+                query: { t: untyped }
+            });
+
+            expect(res.status_code).toBe(403);
         });
 
         it('rejects a missing token with 403', async () => {
