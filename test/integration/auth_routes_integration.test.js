@@ -77,7 +77,6 @@ jest.mock('../../config/webservices_config', () => () => ({
 const mockAuthModel = {
     check_auth_user: jest.fn(),
     get_auth_user_data: jest.fn(),
-    save_token: jest.fn(),
     get_roles: jest.fn(),
     get_user_role: jest.fn()
 };
@@ -196,12 +195,11 @@ describe('Auth Routes Integration (real router)', () => {
                 .send(VALID_SSO_BODY);
 
             expect(response.status).toBe(401);
-            expect(mockAuthModel.save_token).not.toHaveBeenCalled();
+            expect(TOKEN.set_auth_cookie).not.toHaveBeenCalled();
         });
 
-        test('authenticates a known user, saves the token, and redirects with it', async () => {
+        test('authenticates a known user, sets the cookie, and redirects — without persisting the JWT', async () => {
             mockAuthModel.check_auth_user.mockResolvedValue({ auth: true, data: TEST_USER_ID });
-            mockAuthModel.save_token.mockResolvedValue(true);
 
             const response = await request(app)
                 .post(`${APP_PATH}/auth/sso`)
@@ -210,8 +208,9 @@ describe('Auth Routes Integration (real router)', () => {
             expect(response.status).toBe(302);
             expect(response.headers.location).toContain(`${APP_PATH}/exhibits?t=`);
             expect(response.headers.location).toContain(`id=${TEST_USER_ID}`);
-            expect(mockAuthModel.save_token).toHaveBeenCalledWith(TEST_USER_ID, 'test-token');
             expect(TOKEN.set_auth_cookie).toHaveBeenCalledWith(expect.anything(), 'test-token');
+            /* The JWT must never reach the model/DB (code review 2026-09-02, C2 follow-up). */
+            expect(mockAuthModel.save_token).toBeUndefined();
         });
     });
 

@@ -16,7 +16,7 @@ const { stubDashboardDeps, stubExhibitsApi } = require('../fixtures/api-stubs');
 
 const APP_PATH = process.env.APP_PATH || '/exhibits-dashboard';
 
-// Long enough to pass save_token's 20-char minimum.
+// Long enough to look like a real signed token to the client-side checks.
 const FRESH_TOKEN = 'fresh-token-after-reauth-1234567890';
 
 function stubAuthenticate(page) {

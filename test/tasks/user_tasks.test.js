@@ -468,7 +468,7 @@ describe('User_tasks', () => {
         test('does NOT insert client-supplied privileged fields (mass-assignment guard)', async () => {
             // A caller that smuggles id/is_active/token/created into the body must not
             // have them written — save_user inserts only the whitelisted columns. The
-            // session token in particular is set only at login (save_token), never here.
+            // session JWT in particular is never persisted at all (see migration 20260902120000).
             const userData = {
                 du_id: 'testuser',
                 first_name: 'Test',

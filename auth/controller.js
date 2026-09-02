@@ -102,19 +102,14 @@ exports.sso = async function (req, res) {
             return res.status(500).json({ message: 'Authentication failed.' });
         }
 
-        // Save raw token to database (not URL-encoded)
-        // URL encoding is only needed for the redirect URL query parameter
-        const is_token_saved = await MODEL.save_token(auth_result.data, token);
-
-        // URL-encode for safe use in redirect URL
+        /*
+         * The session JWT is NOT persisted. It used to be written to
+         * tbl_users.token (dropped by migration 20260902120000), which put a
+         * live credential for every user at rest in the database; nothing ever
+         * read it back — authorization resolves the user from the verified
+         * JWT subject (du_id) on every request.
+         */
         const encoded_token = encodeURIComponent(token);
-
-        if (!is_token_saved) {
-            LOGGER.module().error(
-                `Failed to save token for user: ${sanitized_username}`
-            );
-            return res.status(500).json({ message: 'Authentication failed.' });
-        }
 
         // Validate user ID is numeric to prevent injection in redirect
         if (!Number.isInteger(auth_result.data)) {
