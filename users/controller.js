@@ -426,6 +426,27 @@ exports.save_user = async function (req, res) {
             });
         }
 
+        /*
+         * add_users says the actor may create accounts; it says nothing about
+         * WHICH role. Without this gate a Power User could create an
+         * Administrator. The rule (auth/authorize.can_assign_role): assign any
+         * role with update_user_role, otherwise only a role that grants nothing
+         * the actor lacks. (A missing role_id is rejected by the model.)
+         */
+        if (user_data.role_id !== undefined) {
+
+            const can_assign_role = await AUTHORIZE.can_assign_role(req, user_data.role_id);
+
+            if (!can_assign_role) {
+                LOGGER.module().warn(
+                    `WARNING: [/user/controller (save_user)] unauthorized role assignment (role_id: ${user_data.role_id}) by ${req.decoded?.sub || 'unknown'}`
+                );
+                return res.status(403).json({
+                    message: 'Unauthorized request'
+                });
+            }
+        }
+
         // Save user to database
         const saved_user = await MODEL.save_user(user_data);
         // Validate model response

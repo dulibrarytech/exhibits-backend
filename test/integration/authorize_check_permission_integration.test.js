@@ -53,6 +53,7 @@ jest.mock('../../auth/tasks/auth_tasks', () => {
         get_user_id_by_username: jest.fn(),
         get_user_permissions_by_username: jest.fn(),
         get_permissions: jest.fn(),
+        get_role_permission_ids: jest.fn(),
         check_ownership: jest.fn()
     };
     const MockAuth = jest.fn(() => instance);
@@ -240,5 +241,48 @@ describe('get_actor_id — resolves the caller from the JWT subject', () => {
 
         auth.get_user_id_by_username.mockRejectedValue(new Error('db down'));
         expect(await AUTHORIZE.get_actor_id(req())).toBeNull();
+    });
+});
+
+describe('can_assign_role — no escalation without update_user_role', () => {
+
+    /* Catalog above has no update_user_role, so no fixture role holds it. */
+    const ROLE_ID = { Administrator: 1, PowerUser: 2, GeneralUser: 3, Student: 4 };
+    const roleIds = (role) => ROLE_PERMISSION_IDS[role];
+
+    test('a role that grants only what the actor holds may be assigned', async () => {
+        asUser('PowerUser');
+        auth.get_role_permission_ids.mockResolvedValue(roleIds('Student'));
+        expect(await AUTHORIZE.can_assign_role(req(), ROLE_ID.Student)).toBe(true);
+    });
+
+    test('a peer role (identical grants) may be assigned', async () => {
+        asUser('PowerUser');
+        auth.get_role_permission_ids.mockResolvedValue(roleIds('PowerUser'));
+        expect(await AUTHORIZE.can_assign_role(req(), ROLE_ID.PowerUser)).toBe(true);
+    });
+
+    test('a role granting permissions the actor lacks is denied (Power → Administrator)', async () => {
+        asUser('PowerUser');
+        auth.get_role_permission_ids.mockResolvedValue(roleIds('Administrator'));
+        expect(await AUTHORIZE.can_assign_role(req(), ROLE_ID.Administrator)).toBe(false);
+    });
+
+    test('update_user_role holders may assign any role', async () => {
+        const catalog = [...CATALOG, { id: 99, permission: 'update_user_role' }];
+        auth.get_user_id_by_username.mockResolvedValue(USER_ID);
+        auth.get_permissions.mockResolvedValue(catalog);
+        auth.get_user_permissions_by_username.mockResolvedValue([{ permission_id: 99 }]);
+        auth.get_role_permission_ids.mockResolvedValue(roleIds('Administrator'));
+        expect(await AUTHORIZE.can_assign_role(req(), ROLE_ID.Administrator)).toBe(true);
+    });
+
+    test('denies on a bad role id, a missing subject, or a data-layer failure', async () => {
+        asUser('PowerUser');
+        expect(await AUTHORIZE.can_assign_role(req(), 'admin')).toBe(false);
+        expect(await AUTHORIZE.can_assign_role({}, ROLE_ID.Student)).toBe(false);
+
+        auth.get_role_permission_ids.mockResolvedValue(null);
+        expect(await AUTHORIZE.can_assign_role(req(), ROLE_ID.Student)).toBe(false);
     });
 });

@@ -53,6 +53,75 @@ exports.get_actor_id = async function (req) {
     }
 };
 
+/**
+ * Decides whether the request's actor may assign a role to a user record.
+ *
+ * Holders of update_user_role (Administrator) may assign any role. Anyone
+ * else may assign a role only if it grants NOTHING the actor does not already
+ * hold — i.e. the role's permission set is a subset of the actor's. That lets
+ * add_users holders (Power User) create peers and lesser accounts while making
+ * escalation (creating an Administrator) impossible without update_user_role.
+ * Data-driven from ctbl_role_permissions, so it needs no role-name constants.
+ *
+ * @param {Object} req    - Express request with req.decoded set by TOKEN.verify
+ * @param {number} role_id - Requested tbl_user_roles.id
+ * @returns {Promise<boolean>}
+ */
+exports.can_assign_role = async function (req, role_id) {
+
+    try {
+
+        const username = req?.decoded?.sub;
+        const parsed_role_id = Number(role_id);
+
+        if (!username || typeof username !== 'string' || !Number.isInteger(parsed_role_id) || parsed_role_id <= 0) {
+            return false;
+        }
+
+        const may_assign_any = await exports.check_permission({
+            req,
+            permissions: ['update_user_role'],
+            record_type: null,
+            parent_id: null,
+            child_id: null,
+            users: true
+        });
+
+        if (may_assign_any === true) {
+            return true;
+        }
+
+        const [actor_permissions, role_permission_ids] = await Promise.all([
+            AUTH_TASKS.get_user_permissions_by_username(username),
+            AUTH_TASKS.get_role_permission_ids(parsed_role_id)
+        ]);
+
+        if (!Array.isArray(actor_permissions) || !Array.isArray(role_permission_ids)) {
+            return false;
+        }
+
+        const actor_permission_ids = new Set(
+            actor_permissions.map(p => Number(p.permission_id)).filter(id => Number.isInteger(id) && id > 0)
+        );
+
+        const escalates = role_permission_ids.some(id => !actor_permission_ids.has(id));
+
+        if (escalates) {
+            LOGGER.module().warn(
+                `WARNING: [/auth/authorize lib (can_assign_role)] denied — user: ${username} may not assign role ${parsed_role_id} (grants permissions the actor lacks)`
+            );
+        }
+
+        return !escalates;
+
+    } catch (error) {
+        LOGGER.module().error(
+            `ERROR: [/auth/authorize lib (can_assign_role)] unable to check role assignment: ${error.message}`
+        );
+        return false;
+    }
+};
+
 exports.check_permission = async function (options) {
 
     try {

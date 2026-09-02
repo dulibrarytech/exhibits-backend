@@ -42,7 +42,8 @@ jest.mock('../../libs/tokens', () => ({
 
 jest.mock('../../auth/authorize', () => ({
     check_permission: jest.fn().mockResolvedValue(true),
-    get_actor_id: jest.fn()
+    get_actor_id: jest.fn(),
+    can_assign_role: jest.fn()
 }));
 
 jest.mock('../../config/rate_limits_loader', () => ({
@@ -104,6 +105,7 @@ describe('Users Routes Integration (real router)', () => {
         AUTHORIZE.check_permission.mockResolvedValue(true);
         /* Default: the actor IS the target (self-edit) and holds role 4 (Student). */
         AUTHORIZE.get_actor_id.mockResolvedValue(TEST_USER_ID);
+        AUTHORIZE.can_assign_role.mockResolvedValue(true);
         mockUsersModel.get_user_role_id.mockResolvedValue(4);
         TOKEN.verify.mockImplementation((req, res, next) => {
             req.decoded = { sub: TEST_USER_UID };
@@ -227,6 +229,34 @@ describe('Users Routes Integration (real router)', () => {
 
             expect(response.status).toBe(403);
             expect(mockUsersModel.save_user).not.toHaveBeenCalled();
+        });
+
+        /*
+         * Role-escalation on create (code review 2026-09-02, H11): add_users
+         * alone must not let the creator hand out a role above their own.
+         */
+        test('returns 403 when the requested role may not be assigned by the actor', async () => {
+            AUTHORIZE.can_assign_role.mockResolvedValue(false);
+
+            const response = await request(app)
+                .post(ENDPOINTS.endpoint)
+                .send({ ...VALID_USER, role_id: 1 });
+
+            expect(response.status).toBe(403);
+            expect(AUTHORIZE.can_assign_role).toHaveBeenCalledWith(expect.anything(), 1);
+            expect(mockUsersModel.save_user).not.toHaveBeenCalled();
+        });
+
+        test('creates the user when the role assignment is allowed', async () => {
+            mockUsersModel.save_user.mockResolvedValue({ data: TEST_USER_ID });
+
+            const response = await request(app)
+                .post(ENDPOINTS.endpoint)
+                .send({ ...VALID_USER, role_id: 4 });
+
+            expect(response.status).toBe(201);
+            expect(AUTHORIZE.can_assign_role).toHaveBeenCalledWith(expect.anything(), 4);
+            expect(mockUsersModel.save_user).toHaveBeenCalledWith(expect.objectContaining({ role_id: 4 }));
         });
     });
 

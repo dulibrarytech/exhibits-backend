@@ -72,6 +72,35 @@ test.describe('RBAC enforcement (live)', () => {
         }
     });
 
+    test('add_users: Power may create a Student but not an Administrator', async ({ request }) => {
+
+        const stamp = String(Date.now()).slice(-6);
+        const payload = (du_id, role_id) => ({
+            du_id, email: `${du_id}@du.edu`, first_name: 'PW', last_name: 'Throwaway', is_active: 1, role_id
+        });
+
+        /* Escalation on create (code review 2026-09-02, H11). */
+        const escalate = await request.post(`${API}/users`, {
+            headers: role_headers('power'),
+            data: payload(`9esc${stamp}`, 1)
+        });
+        expect(escalate.status(), 'power must not create an Administrator').toBe(403);
+        expect(await apiFindUserByDuid(request, `9esc${stamp}`), 'no account was created').toBeNull();
+
+        const ok = await request.post(`${API}/users`, {
+            headers: role_headers('power'),
+            data: payload(`9std${stamp}`, 4)
+        });
+        expect(ok.status(), 'power may create a Student').toBe(201);
+
+        const created = await apiFindUserByDuid(request, `9std${stamp}`);
+        try {
+            expect(created && created.role, 'created with the requested role').toBe('Student');
+        } finally {
+            await apiDeleteUser(request, created && created.id);
+        }
+    });
+
     test('update_user_role: Student cannot promote self; Power cannot change roles; Admin can', async ({ request }) => {
 
         const student = role_auth('student').user;

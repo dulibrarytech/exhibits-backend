@@ -674,6 +674,41 @@ const Auth_tasks = class {
     }
 
     /**
+     * Gets the permission ids granted to a role.
+     * @param {number} role_id - tbl_user_roles.id
+     * @returns {Array<number>|null} - permission ids ([] for an unknown or empty role), null on error
+     */
+    async get_role_permission_ids(role_id) {
+
+        try {
+
+            const parsed_role_id = Number(role_id);
+
+            if (!Number.isInteger(parsed_role_id) || parsed_role_id <= 0) {
+                LOGGER.module().warn(`WARNING: [/auth/tasks (get_role_permission_ids)] invalid role_id: ${role_id}`);
+                return null;
+            }
+
+            const rows = await this.DB('ctbl_role_permissions')
+                .select('permission_id')
+                .where({ role_id: parsed_role_id });
+
+            if (!Array.isArray(rows)) {
+                LOGGER.module().error('ERROR: [/auth/tasks (get_role_permission_ids)] invalid query result format');
+                return null;
+            }
+
+            return rows
+                .map(row => Number(row.permission_id))
+                .filter(id => Number.isInteger(id) && id > 0);
+
+        } catch (error) {
+            LOGGER.module().error(`ERROR: [/auth/tasks (get_role_permission_ids)] unable to get role permissions: ${error.message}`);
+            return null;
+        }
+    }
+
+    /**
      * Gets user permissions by username (du_id from decoded JWT sub claim)
      * Replaces token-based lookup to avoid encoding mismatch and token rotation issues
      * @param {string} username - Username from decoded JWT (req.decoded.sub)
