@@ -19,10 +19,22 @@
 /**
  * Orphaned File Cleanup Script
  *
- * Scans the hash-bucketed storage directories for files whose UUIDs
- * do not have a corresponding record in the media_library_records table.
- * Orphaned files and their thumbnails are deleted, and empty hash-bucket
- * directories are pruned.
+ * Scans the hash-bucketed storage directories for files that no row of the
+ * media_library_records table references, and (with --delete) removes them
+ * and prunes empty hash-bucket directories.
+ *
+ * What "referenced" means (code review 2026-09-02, C5):
+ *   A file is referenced when its storage-relative path equals some row's
+ *   storage_path or thumbnail_path — ANY row, soft-deleted ones included, so
+ *   recycle-bin restores keep working. Files are NOT matched by the UUID in
+ *   their filename: v2 uploads name the file by the upload uuid while the
+ *   record gets a different uuid (uploads.js store_file / model.js create),
+ *   so a uuid-keyed sweep would delete every v2 upload. IIIF derivative-cache
+ *   directories ARE keyed by the record uuid (iiif-cache.js) and are matched
+ *   against the rows' uuid column.
+ *
+ * Fail-closed: if the reference query fails, or returns no rows while files
+ * exist, the run aborts and deletes nothing.
  *
  * Usage:
  *   node media-library/tasks/cleanup_orphaned_files.js              (dry run — default)
@@ -73,7 +85,12 @@ try {
 // Load application modules (now that CWD is project root)
 const DB = require('../../config/db_config')();
 const DB_TABLES = require('../../config/db_tables_config')();
-const TABLES = DB_TABLES.media_library_records;
+/*
+ * db_tables_config exports { exhibits: { media_library_records, ... } }. The
+ * previous `DB_TABLES.media_library_records` was undefined, which made every
+ * reference lookup throw and the sweep silently treat every file as "in DB".
+ */
+const MEDIA_TABLE = DB_TABLES.exhibits.media_library_records;
 const STORAGE_CONFIG = require('../../media-library/storage_config')();
 const LOGGER = require('../../libs/log4');
 
@@ -111,22 +128,21 @@ const MEDIA_TYPE_DIRS = STORAGE_CONFIG.media_type_dirs || {
     thumbnails: 'thumbnails'
 };
 
-// Only scan primary file directories — thumbnails are handled as dependents
+/* Primary file directories; thumbnails are scanned too, as their own dir type. */
 const PRIMARY_DIRS = [
     MEDIA_TYPE_DIRS.image,      // 'images'
     MEDIA_TYPE_DIRS.pdf,        // 'documents'
     MEDIA_TYPE_DIRS.video,      // 'video'
     MEDIA_TYPE_DIRS.audio       // 'audio'
 ].filter(Boolean);
+const THUMBNAIL_DIR = MEDIA_TYPE_DIRS.thumbnails || 'thumbnails';
+const SCANNED_DIRS = [...PRIMARY_DIRS, THUMBNAIL_DIR];
 
 // IIIF derivative-cache subtree (see media-library/iiif-cache.js). Its layout is
 // iiif_cache/<b1>/<b2>/<uuid>/<version>/<variant>.<ext>, so each record's
 // derivatives live under one <uuid> directory that is swept whole when the
 // UUID no longer has a DB record.
 const IIIF_CACHE_DIR = 'iiif_cache';
-
-// Batch size for DB lookups — keeps queries manageable
-const DB_BATCH_SIZE = 200;
 
 // UUID pattern: standard v1–v5 UUID in a filename
 const UUID_REGEX = /^([0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12})/i;
@@ -172,15 +188,49 @@ const walk_directory = async (dir_path) => {
 };
 
 /**
- * Extracts the UUID from a storage filename
- * Handles both primary files (uuid.ext) and thumbnails (uuid_thumb.jpg)
- * @param {string} file_path - Absolute file path
- * @returns {string|null} Extracted UUID or null if not a UUID-named file
+ * Storage-relative, forward-slash, lower-cased key for a file on disk — the
+ * form in which storage_path / thumbnail_path are stored in the DB.
+ * @param {string} absolute_path
+ * @returns {string}
  */
-const extract_uuid_from_path = (file_path) => {
-    const basename = path.basename(file_path);
+const to_storage_key = (absolute_path) => {
+    return path.relative(STORAGE_PATH, absolute_path).split(path.sep).join('/').toLowerCase();
+};
+
+/**
+ * Normalizes a DB path value to the same key form, or null when empty.
+ * @param {*} value - storage_path / thumbnail_path column value
+ * @returns {string|null}
+ */
+const normalize_reference = (value) => {
+
+    if (typeof value !== 'string') {
+        return null;
+    }
+
+    const trimmed = value.trim().replace(/\\/g, '/').replace(/^\.?\//, '');
+    return trimmed === '' ? null : trimmed.toLowerCase();
+};
+
+/**
+ * The thumbnail path uploads.js would have written for a stored file, derived
+ * from the FILE's uuid (not the record's). Protects a thumbnail on disk even
+ * for a row whose thumbnail_path column is empty.
+ * @param {string} storage_key - normalized storage_path
+ * @returns {string|null}
+ */
+const conventional_thumbnail_key = (storage_key) => {
+
+    const basename = storage_key.split('/').pop();
     const match = basename.match(UUID_REGEX);
-    return match ? match[1].toLowerCase() : null;
+
+    if (!match) {
+        return null;
+    }
+
+    const uuid = match[1].toLowerCase();
+    const clean = uuid.replace(/-/g, '');
+    return `${THUMBNAIL_DIR}/${clean.substring(0, 2)}/${clean.substring(2, 4)}/${uuid}_thumb.jpg`.toLowerCase();
 };
 
 /**
@@ -247,42 +297,44 @@ const scan_iiif_cache_uuid_dirs = async (cache_root) => {
 // ---------------------------------------------------------------------------
 
 /**
- * Checks which UUIDs from a list exist in the media_library_records table
- * Includes both active and soft-deleted records to avoid deleting files
- * that are soft-deleted but may need recovery
+ * Loads every reference the database holds on the storage tree, from ALL rows
+ * (active and soft-deleted alike).
  *
- * @param {string[]} uuids - Array of UUIDs to check
- * @returns {Promise<Set<string>>} Set of UUIDs that DO exist in the DB
+ * @returns {Promise<{paths: Set<string>, uuids: Set<string>, rows: number}>}
+ *   paths — normalized storage_path / thumbnail_path values (+ the conventional
+ *           thumbnail for each storage_path); uuids — record uuids (IIIF cache)
+ * @throws when the query fails — callers must treat that as "abort"
  */
-const get_existing_uuids = async (uuids) => {
+const load_references = async () => {
 
-    const existing = new Set();
+    const rows = await DB(MEDIA_TABLE).select('uuid', 'storage_path', 'thumbnail_path');
 
-    // Process in batches to avoid overly large IN clauses
-    for (let i = 0; i < uuids.length; i += DB_BATCH_SIZE) {
-        const batch = uuids.slice(i, i + DB_BATCH_SIZE);
+    const paths = new Set();
+    const uuids = new Set();
 
-        try {
+    for (const row of rows) {
 
-            const rows = await DB(TABLES.media_library_records)
-                .select('uuid')
-                .whereIn('uuid', batch)
-                .timeout(15000);
+        const storage_key = normalize_reference(row.storage_path);
+        const thumbnail_key = normalize_reference(row.thumbnail_path);
 
-            for (const row of rows) {
-                existing.add(row.uuid.toLowerCase());
+        if (storage_key) {
+            paths.add(storage_key);
+            const derived = conventional_thumbnail_key(storage_key);
+            if (derived) {
+                paths.add(derived);
             }
+        }
 
-        } catch (error) {
-            LOGGER.module().error(`ERROR: [cleanup] DB lookup failed for batch starting at index ${i}: ${error.message}`);
-            // On DB error, assume all UUIDs in this batch exist — safer to skip than to delete
-            for (const uuid of batch) {
-                existing.add(uuid);
-            }
+        if (thumbnail_key) {
+            paths.add(thumbnail_key);
+        }
+
+        if (typeof row.uuid === 'string' && row.uuid.trim() !== '') {
+            uuids.add(row.uuid.trim().toLowerCase());
         }
     }
 
-    return existing;
+    return { paths, uuids, rows: rows.length };
 };
 
 // ---------------------------------------------------------------------------
@@ -344,19 +396,6 @@ const prune_empty_parents = async (dir_path) => {
     }
 };
 
-/**
- * Builds the expected thumbnail path for a given UUID
- * Mirrors the logic in uploads.js build_thumbnail_path()
- * @param {string} uuid - File UUID
- * @returns {string} Absolute path to expected thumbnail
- */
-const get_thumbnail_path = (uuid) => {
-    const clean = uuid.replace(/-/g, '');
-    const bucket1 = clean.substring(0, 2);
-    const bucket2 = clean.substring(2, 4);
-    return path.join(STORAGE_PATH, MEDIA_TYPE_DIRS.thumbnails, bucket1, bucket2, `${uuid}_thumb.jpg`);
-};
-
 // ---------------------------------------------------------------------------
 // Age Check
 // ---------------------------------------------------------------------------
@@ -396,12 +435,12 @@ const run_cleanup = async (dry_run = true) => {
     console.log(`========================================`);
     console.log(`Storage path: ${STORAGE_PATH}`);
     console.log(`Min file age: ${MIN_AGE_HOURS} hours`);
-    console.log(`Scanning:     ${PRIMARY_DIRS.join(', ')}\n`);
+    console.log(`Scanning:     ${SCANNED_DIRS.join(', ')}, ${IIIF_CACHE_DIR}\n`);
 
     const stats = {
         files_scanned: 0,
-        uuids_found: 0,
-        uuids_in_db: 0,
+        files_referenced: 0,
+        db_rows: 0,
         orphaned_files: 0,
         orphaned_thumbnails: 0,
         files_deleted: 0,
@@ -411,83 +450,102 @@ const run_cleanup = async (dry_run = true) => {
         orphaned_cache_dirs: 0,
         cache_dirs_deleted: 0,
         errors: 0,
-        bytes_recovered: 0
+        bytes_recovered: 0,
+        aborted: null
     };
 
-    // Step 1: Scan primary storage directories for all files
+    // Step 1: Scan storage directories (primary files AND thumbnails)
     console.log('Step 1: Scanning storage directories...');
 
-    const file_map = new Map(); // uuid → { file_path, dir_type }
+    const scanned = []; // { file_path, key, dir_type }
 
-    for (const dir_name of PRIMARY_DIRS) {
+    for (const dir_name of SCANNED_DIRS) {
         const dir_path = path.join(STORAGE_PATH, dir_name);
         const files = await walk_directory(dir_path);
 
         for (const file_path of files) {
             stats.files_scanned++;
-            const uuid = extract_uuid_from_path(file_path);
-
-            if (uuid) {
-                file_map.set(uuid, {
-                    file_path,
-                    dir_type: dir_name
-                });
-            }
+            scanned.push({ file_path, key: to_storage_key(file_path), dir_type: dir_name });
         }
     }
 
-    stats.uuids_found = file_map.size;
-    console.log(`  Found ${stats.files_scanned} files (${stats.uuids_found} unique UUIDs)\n`);
+    const cache_root = path.join(STORAGE_PATH, IIIF_CACHE_DIR);
+    const cache_uuid_dirs = await scan_iiif_cache_uuid_dirs(cache_root);
+    stats.cache_uuids_found = cache_uuid_dirs.size;
 
-    if (stats.uuids_found === 0) {
+    console.log(`  Found ${stats.files_scanned} file(s) and ${stats.cache_uuids_found} cached derivative set(s)\n`);
+
+    if (stats.files_scanned === 0 && stats.cache_uuids_found === 0) {
         console.log('No files found in storage. Nothing to clean up.');
         return stats;
     }
 
-    // Step 2: Check which UUIDs exist in the database
-    console.log('Step 2: Checking UUIDs against database...');
+    // Step 2: Load every path/uuid the database references — fail closed
+    console.log('Step 2: Loading database references...');
 
-    const all_uuids = Array.from(file_map.keys());
-    const existing_uuids = await get_existing_uuids(all_uuids);
+    let references;
 
-    stats.uuids_in_db = existing_uuids.size;
-    console.log(`  ${stats.uuids_in_db} of ${stats.uuids_found} UUIDs have DB records\n`);
-
-    // Step 3: Identify and process orphans
-    const orphaned_uuids = all_uuids.filter(uuid => !existing_uuids.has(uuid));
-
-    if (orphaned_uuids.length === 0) {
-        console.log('No orphaned primary files found.\n');
-        LOGGER.module().info('INFO: [cleanup] No orphaned primary files found');
-    } else {
-        console.log(`Step 3: Processing ${orphaned_uuids.length} orphaned file(s)...`);
+    try {
+        references = await load_references();
+    } catch (error) {
+        stats.errors++;
+        stats.aborted = 'db-error';
+        LOGGER.module().error(`ERROR: [cleanup] reference query failed — aborting, nothing deleted: ${error.message}`);
+        console.log(`  ABORT: could not load references from the database (${error.message}). Nothing deleted.\n`);
+        return stats;
     }
 
-    for (const uuid of orphaned_uuids) {
-        const entry = file_map.get(uuid);
+    stats.db_rows = references.rows;
 
-        // Check age threshold — don't delete files that may be mid-upload
+    if (references.rows === 0) {
+        stats.errors++;
+        stats.aborted = 'no-references';
+        LOGGER.module().error('ERROR: [cleanup] media table returned no rows while storage has files — aborting, nothing deleted');
+        console.log('  ABORT: the media table has no rows; refusing to treat every file as an orphan. Nothing deleted.\n');
+        return stats;
+    }
+
+    console.log(`  ${references.rows} row(s) reference ${references.paths.size} path(s) and ${references.uuids.size} uuid(s)\n`);
+
+    // Step 3: Files not referenced by any row are orphans (age-gated)
+    const orphans = scanned.filter(entry => !references.paths.has(entry.key));
+    stats.files_referenced = scanned.length - orphans.length;
+
+    if (orphans.length === 0) {
+        console.log('No orphaned files found.\n');
+        LOGGER.module().info('INFO: [cleanup] No orphaned files found');
+    } else {
+        console.log(`Step 3: Processing ${orphans.length} unreferenced file(s)...`);
+    }
+
+    for (const entry of orphans) {
+
+        const is_thumbnail = entry.dir_type === THUMBNAIL_DIR;
+
+        // Age threshold — a staged upload awaiting its record has no row yet
         const old_enough = await is_old_enough(entry.file_path);
 
         if (!old_enough) {
             stats.skipped_too_new++;
-            console.log(`  SKIP (too new): ${entry.dir_type}/${uuid}`);
+            console.log(`  SKIP (too new): ${entry.key}`);
             continue;
         }
 
-        stats.orphaned_files++;
+        if (is_thumbnail) {
+            stats.orphaned_thumbnails++;
+        } else {
+            stats.orphaned_files++;
+        }
 
-        // Get file size for reporting
         let file_size = 0;
 
         try {
-            const file_stats = await fs.stat(entry.file_path);
-            file_size = file_stats.size;
+            file_size = (await fs.stat(entry.file_path)).size;
         } catch {
             // File may have been removed between scan and now
         }
 
-        console.log(`  ORPHAN: ${entry.dir_type}/${uuid} (${format_bytes(file_size)})`);
+        console.log(`  ORPHAN${is_thumbnail ? ' (thumbnail)' : ''}: ${entry.key} (${format_bytes(file_size)})`);
         LOGGER.module().info(`INFO: [cleanup] Orphaned file: ${entry.file_path} (${format_bytes(file_size)})`);
 
         if (!dry_run) {
@@ -495,68 +553,29 @@ const run_cleanup = async (dry_run = true) => {
             const deleted = await delete_file(entry.file_path);
 
             if (deleted) {
-                stats.files_deleted++;
+                if (is_thumbnail) {
+                    stats.thumbnails_deleted++;
+                } else {
+                    stats.files_deleted++;
+                }
                 stats.bytes_recovered += file_size;
                 LOGGER.module().info(`INFO: [cleanup] Deleted orphaned file: ${entry.file_path}`);
             } else {
                 stats.errors++;
             }
         }
-
-        // Check for and handle the corresponding thumbnail
-        const thumbnail_path = get_thumbnail_path(uuid);
-
-        try {
-
-            await fs.access(thumbnail_path);
-            stats.orphaned_thumbnails++;
-
-            let thumb_size = 0;
-
-            try {
-                const thumb_stats = await fs.stat(thumbnail_path);
-                thumb_size = thumb_stats.size;
-            } catch {
-                // Non-critical
-            }
-
-            console.log(`  ORPHAN (thumbnail): thumbnails/${uuid}_thumb.jpg (${format_bytes(thumb_size)})`);
-
-            if (!dry_run) {
-
-                const deleted = await delete_file(thumbnail_path);
-
-                if (deleted) {
-                    stats.thumbnails_deleted++;
-                    stats.bytes_recovered += thumb_size;
-                    LOGGER.module().info(`INFO: [cleanup] Deleted orphaned thumbnail: ${thumbnail_path}`);
-                } else {
-                    stats.errors++;
-                }
-            }
-
-        } catch {
-            // No thumbnail exists for this UUID — that's fine
-        }
     }
 
-    // Step 4: Sweep orphaned IIIF derivative-cache directories
-    // A cached UUID with no DB record (e.g. a hard-deleted record whose purge
-    // was missed) is removed whole. Soft-deleted records still have a DB row,
-    // so their derivatives are retained — matching how their source files are.
+    // Step 4: IIIF derivative-cache directories are keyed by RECORD uuid.
+    // A cached uuid with no row (hard-deleted record whose purge was missed) is
+    // removed whole; soft-deleted rows still exist, so their derivatives stay.
     console.log('Step 4: Sweeping IIIF derivative cache...');
-
-    const cache_root = path.join(STORAGE_PATH, IIIF_CACHE_DIR);
-    const cache_uuid_dirs = await scan_iiif_cache_uuid_dirs(cache_root);
-    stats.cache_uuids_found = cache_uuid_dirs.size;
 
     if (cache_uuid_dirs.size === 0) {
         console.log('  No cached derivatives found.\n');
     } else {
 
-        const cache_uuids = Array.from(cache_uuid_dirs.keys());
-        const cache_existing = await get_existing_uuids(cache_uuids);
-        const cache_orphans = cache_uuids.filter(uuid => !cache_existing.has(uuid));
+        const cache_orphans = Array.from(cache_uuid_dirs.keys()).filter(uuid => !references.uuids.has(uuid));
 
         console.log(`  ${cache_uuid_dirs.size} cached UUID(s); ${cache_orphans.length} orphaned\n`);
 
@@ -603,8 +622,8 @@ const run_cleanup = async (dry_run = true) => {
     console.log(`  Cleanup Summary — ${mode_label}`);
     console.log(`========================================`);
     console.log(`  Files scanned:         ${stats.files_scanned}`);
-    console.log(`  UUIDs found:           ${stats.uuids_found}`);
-    console.log(`  UUIDs in database:     ${stats.uuids_in_db}`);
+    console.log(`  Files referenced:      ${stats.files_referenced}`);
+    console.log(`  DB rows consulted:     ${stats.db_rows}`);
     console.log(`  Orphaned files:        ${stats.orphaned_files}`);
     console.log(`  Orphaned thumbnails:   ${stats.orphaned_thumbnails}`);
     console.log(`  Skipped (too new):     ${stats.skipped_too_new}`);
@@ -661,8 +680,9 @@ const main = async () => {
         console.log(`
 Usage: node media-library/tasks/cleanup_orphaned_files.js [options]
 
-Scans storage for files whose UUIDs have no matching database record
-and optionally deletes them. Can be run from any working directory.
+Scans storage for files that no media_library row references (by
+storage_path / thumbnail_path, across active AND soft-deleted rows) and
+optionally deletes them. Can be run from any working directory.
 
 Options:
   --delete    Actually delete orphaned files (default is dry run)
@@ -697,4 +717,4 @@ if (require.main === module) {
 }
 
 // Export for testing or programmatic use from a controller endpoint
-module.exports = { run_cleanup };
+module.exports = { run_cleanup, load_references, normalize_reference, conventional_thumbnail_key };
