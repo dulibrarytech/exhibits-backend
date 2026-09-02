@@ -192,6 +192,34 @@ test.describe('RBAC enforcement (live)', () => {
         }
     });
 
+    test('a share token opens ONLY the exhibit it was minted for (C4, review 2026-09-02)', async ({ request }) => {
+
+        const SHARED = `${API.replace('/api/v1', '')}/shared`;
+        const exhibit_a = await apiCreateExhibit(request, `PW share-bind A ${Date.now()}`);
+        const exhibit_b = await apiCreateExhibit(request, `PW share-bind B ${Date.now()}`);
+
+        try {
+            /* Minting requires edit rights on the exhibit: Student is not an editor of the admin's exhibit. */
+            const denied = await request.post(`${SHARED}?uuid=${exhibit_a}`, { headers: role_headers('student') });
+            expect(denied.status(), 'student cannot mint a share link for another\'s exhibit').toBe(403);
+
+            const minted = await request.post(`${SHARED}?uuid=${exhibit_a}`, { headers: role_headers('administrator') });
+            expect(minted.status(), 'editor mints a share link').toBe(201);
+            const t = new URL((await minted.json()).shared_url).searchParams.get('t');
+
+            const own = await request.get(`${SHARED}?uuid=${exhibit_a}&t=${t}`);
+            expect(own.status(), 'the link renders its own exhibit').toBe(200);
+            expect(await own.text()).toContain('<iframe');
+
+            const other = await request.get(`${SHARED}?uuid=${exhibit_b}&t=${t}`);
+            expect(other.status(), 'the same token must not preview a different exhibit').toBe(403);
+        } finally {
+            await apiSuppressExhibit(request, exhibit_a);
+            await apiDeleteExhibit(request, exhibit_a);
+            await apiDeleteExhibit(request, exhibit_b);
+        }
+    });
+
     test('exhibit ownership: update_any vs delete_any enforced per role', async ({ request }) => {
 
         // Admin-owned exhibit — the other roles are NOT the owner.
