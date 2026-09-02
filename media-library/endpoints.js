@@ -142,6 +142,14 @@ const ENDPOINTS = {
             params: 'token or api_key, entry_id (path parameter)'
         }
     },
+    media_file_replace: {
+        post: {
+            description: 'Replaces the stored file behind an uploaded media record, preserving its metadata',
+            endpoint: `${APP_PATH}${PREFIX}${VERSION}${ENDPOINT}/record/:media_id/file`,
+            params: 'token or api_key, media_id (UUID)',
+            body: 'multipart/form-data with a single "file" field'
+        }
+    },
     media_exhibits: {
         put: {
             description: 'Adds or removes an exhibit UUID from a media record exhibits array',

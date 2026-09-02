@@ -25,7 +25,7 @@ const MODULE_PATH = resolve(
 const APP_PATH = '/exhibits-dashboard';
 const VERSION_KEY = 'exhibits_endpoints_version';
 const GUARD_KEY = 'exhibits_endpoints_refresh_attempted';
-const CURRENT_VERSION = '2';
+const CURRENT_VERSION = '3';
 
 const EP_KEYS = [
     'exhibits_endpoints_users',

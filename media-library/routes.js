@@ -21,6 +21,7 @@
 const CONTROLLER = require('../media-library/controller');
 const ENDPOINTS = require('../media-library/endpoints')();
 const TOKEN = require('../libs/tokens');
+const UPLOADS = require('../media-library/uploads');
 const { rate_limits } = require('../config/rate_limits_loader');
 
 // Wrap an async handler so a rejected promise reaches the global error handler.
@@ -98,6 +99,21 @@ module.exports = function (app) {
             rate_limits.write_operations,
             TOKEN.verify,
             async_handler(CONTROLLER.delete_uploaded_file)
+        );
+
+    // Replace the stored file behind an uploaded media record (metadata preserved).
+    // Permission middleware runs before multer so unauthorized requests are
+    // rejected before any file is parsed; multer errors fall through to
+    // handle_upload_error (a 4-arity route-level error handler).
+    // POST /api/v1/media/library/record/:media_id/file  multipart field: file
+    app.route(ENDPOINTS.media_file_replace.post.endpoint)
+        .post(
+            rate_limits.media_operations,
+            TOKEN.verify,
+            UPLOADS.require_update_media_permission,
+            UPLOADS.upload_single,
+            async_handler(CONTROLLER.replace_media_file),
+            UPLOADS.handle_upload_error
         );
 
     // Add or remove exhibit UUID from media record's exhibits array

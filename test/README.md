@@ -63,11 +63,11 @@ As of 2026-08-28:
 
 | Runner | Files | Pass | Skip |
 |--------|------:|-----:|-----:|
-| Vitest (unit: tasks 34 + unit-app 19) | 53 | 1021 | 0 |
-| Jest (integration)                    | 31 | 699 | 0 |
-| **Total**                             | **84** | **1720** | **0** |
+| Vitest (unit: tasks 35 + unit-app 19) | 54 | 1031 | 0 |
+| Jest (integration)                    | 31 | 704 | 0 |
+| **Total**                             | **85** | **1735** | **0** |
 
-Playwright adds 54 stubbed specs plus 11 live specs (run separately; not part of `npm test`).
+Playwright adds 56 stubbed specs plus 11 live specs (run separately; not part of `npm test`).
 
 There are no unconditionally skipped tests. The only conditional skips are the two `@external` live e2e specs (`media-kaltura-import`, `media-repo-import`), which skip unless `PW_EXTERNAL=1` because they need VPN-reachable external services — run them via `npm run test:e2e:live:external`.
 

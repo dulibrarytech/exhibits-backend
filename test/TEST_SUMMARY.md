@@ -12,11 +12,11 @@ As of 2026-08-28:
 |--------|------:|-----:|-----:|
 | Vitest — `test/tasks/` (server unit)      | 34 | —   | 0 |
 | Vitest — `test/unit-app/` (client unit)   | 19 | —   | 0 |
-| Vitest total                              | 53 | 1021 | 0 |
-| Jest — `test/integration/`                | 31 | 699 | 0 |
-| **`npm test` total**                      | **84** | **1720** | **0** |
+| Vitest total                              | 54 | 1031 | 0 |
+| Jest — `test/integration/`                | 31 | 704 | 0 |
+| **`npm test` total**                      | **85** | **1735** | **0** |
 
-Playwright (not part of `npm test`): 54 stubbed specs in `test/e2e/specs/`, 11 live specs in `test/e2e/live/` (incl. the full create→publish→preview exhibit lifecycle). The two `@external` live specs skip unless `PW_EXTERNAL=1` (VPN-reachable Kaltura / repository services). Live publish/preview index into the LOCAL Elasticsearch index — lifecycle-style tests must suppress in teardown (apiSuppressExhibit) so those documents are removed again.
+Playwright (not part of `npm test`): 56 stubbed specs in `test/e2e/specs/`, 11 live specs in `test/e2e/live/` (incl. the full create→publish→preview exhibit lifecycle). The two `@external` live specs skip unless `PW_EXTERNAL=1` (VPN-reachable Kaltura / repository services). Live publish/preview index into the LOCAL Elasticsearch index — lifecycle-style tests must suppress in teardown (apiSuppressExhibit) so those documents are removed again.
 
 ## Unit Tests (Vitest — `test/tasks/`)
 

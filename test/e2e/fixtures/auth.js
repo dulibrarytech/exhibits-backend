@@ -10,7 +10,7 @@ const DEFAULT_APP_PATH = process.env.APP_PATH || '/exhibits-dashboard';
 // seeded client as a stale/legacy registry, wipes it, and redirects to the
 // auth entry on every page (breaking every spec). Bump in lockstep with
 // ENDPOINTS_REGISTRY_VERSION whenever the endpoint set changes.
-const DEFAULT_ENDPOINTS_VERSION = '2';
+const DEFAULT_ENDPOINTS_VERSION = '3';
 
 const DEFAULT_TOKEN = {
     token: 'pw-test-token',

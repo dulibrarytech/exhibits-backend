@@ -60,6 +60,7 @@ jest.mock('../../config/rate_limits_loader', () => ({
     rate_limits: {
         read_operations: (req, res, next) => next(),
         write_operations: (req, res, next) => next(),
+        media_operations: (req, res, next) => next(),
         iiif_image_operations: (req, res, next) => next()
     }
 }));
@@ -75,6 +76,7 @@ const mockMediaModel = {
     get_media_record: jest.fn(),
     create_media_record: jest.fn(),
     update_media_record: jest.fn(),
+    replace_media_file: jest.fn(),
     delete_media_record: jest.fn(),
     delete_uploaded_file: jest.fn(),
     check_duplicate: jest.fn(),
@@ -113,7 +115,28 @@ const mockIiifService = {
 jest.mock('../../media-library/iiif-service', () => mockIiifService);
 
 const mockUploads = {
-    resolve_storage_path: jest.fn()
+    resolve_storage_path: jest.fn(),
+    // The replace route pulls its permission gate, single-file multer parser,
+    // and multer error handler from the uploads module at registration time.
+    // The permission gate mirrors the real middleware's contract (delegates
+    // to authorize with the update-media permissions and the path media_id)
+    // so route tests can drive it through the shared authorize mock.
+    require_update_media_permission: jest.fn(async (req, res, next) => {
+        const AUTHORIZE = require('../../auth/authorize');
+        const is_authorized = await AUTHORIZE.check_permission({
+            req,
+            permissions: ['can_update_any_media', 'can_update_media'],
+            record_type: 'media',
+            parent_id: req.params.media_id || null,
+            child_id: null
+        });
+        if (is_authorized !== true) {
+            return res.status(403).json({ success: false, message: 'Unauthorized request', data: null });
+        }
+        return next();
+    }),
+    upload_single: jest.fn((req, res, next) => next()),
+    handle_upload_error: jest.fn((err, req, res, next) => res.status(500).json({ error: 'Upload failed', code: 'UPLOAD_ERROR' }))
 };
 
 jest.mock('../../media-library/uploads', () => mockUploads);
@@ -170,6 +193,7 @@ describe('Media Library Routes Integration (real router)', () => {
         });
         mockIiifService.derive_iiif_base.mockReturnValue('http://test.host/exhibits-dashboard/iiif');
         mockIiifService.derive_file_base.mockReturnValue('http://test.host/exhibits-dashboard/iiif');
+        mockUploads.upload_single.mockImplementation((req, res, next) => next());
     });
 
     // ==================== AUTH TRANSPORT SPLIT ====================
@@ -421,6 +445,91 @@ describe('Media Library Routes Integration (real router)', () => {
     });
 
     // ==================== EXHIBIT ASSOCIATIONS ====================
+
+    describe('Replace file route', () => {
+
+        const replace_path = () => path_for(ENDPOINTS.media_file_replace.post.endpoint, { media_id: TEST_MEDIA_ID });
+
+        const attach_file = () => {
+            mockUploads.upload_single.mockImplementation((req, res, next) => {
+                req.file = {
+                    buffer: Buffer.from('new-file-bytes'),
+                    originalname: 'better-version.jpg',
+                    mimetype: 'image/jpeg'
+                };
+                next();
+            });
+        };
+
+        test('POST replace authorizes, parses the file, and passes id/file/actor to the model', async () => {
+            attach_file();
+            mockMediaModel.replace_media_file.mockResolvedValue({
+                success: true,
+                message: 'File replaced successfully',
+                record: { uuid: TEST_MEDIA_ID, original_filename: 'better-version.jpg' }
+            });
+
+            const response = await request(app).post(replace_path());
+
+            expect(response.status).toBe(200);
+            expect(response.body.success).toBe(true);
+            expect(response.body.message).toBe('File replaced successfully');
+            expect(mockMediaModel.replace_media_file).toHaveBeenCalledTimes(1);
+
+            const [media_id, file, username] = mockMediaModel.replace_media_file.mock.calls[0];
+            expect(media_id).toBe(TEST_MEDIA_ID);
+            expect(file.originalname).toBe('better-version.jpg');
+            expect(username).toBe(TEST_USER_UID);
+        });
+
+        test('POST replace gates on the update-media permission BEFORE the file is parsed', async () => {
+            AUTHORIZE.check_permission.mockResolvedValue(false);
+            attach_file();
+
+            const response = await request(app).post(replace_path());
+
+            expect(response.status).toBe(403);
+            expect(AUTHORIZE.check_permission).toHaveBeenCalledWith(expect.objectContaining({
+                permissions: ['can_update_any_media', 'can_update_media'],
+                parent_id: TEST_MEDIA_ID
+            }));
+            expect(mockUploads.upload_single).not.toHaveBeenCalled();
+            expect(mockMediaModel.replace_media_file).not.toHaveBeenCalled();
+        });
+
+        test('POST replace rejects a request with no file with 400 before reaching the model', async () => {
+            const response = await request(app).post(replace_path());
+
+            expect(response.status).toBe(400);
+            expect(response.body.message).toMatch(/No replacement file/);
+            expect(mockMediaModel.replace_media_file).not.toHaveBeenCalled();
+        });
+
+        test('POST replace maps a missing record to 404', async () => {
+            attach_file();
+            mockMediaModel.replace_media_file.mockResolvedValue({
+                success: false,
+                message: 'Media record not found'
+            });
+
+            const response = await request(app).post(replace_path());
+
+            expect(response.status).toBe(404);
+        });
+
+        test('POST replace maps a guard rejection (wrong type / non-upload) to 400', async () => {
+            attach_file();
+            mockMediaModel.replace_media_file.mockResolvedValue({
+                success: false,
+                message: 'Only uploaded media files can be replaced'
+            });
+
+            const response = await request(app).post(replace_path());
+
+            expect(response.status).toBe(400);
+            expect(response.body.message).toBe('Only uploaded media files can be replaced');
+        });
+    });
 
     describe('Media exhibits route', () => {
 

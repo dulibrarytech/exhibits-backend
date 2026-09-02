@@ -1043,8 +1043,10 @@ const mediaModalsModule = (function() {
         if (loading_el) loading_el.style.display = 'block';
         if (error_el) error_el.style.display = 'none';
 
-        // Build media URL using UUID
-        const media_url = build_media_url(uuid);
+        // Build media URL using UUID (versioned by the record's updated
+        // timestamp so a freshly replaced file isn't served from the
+        // browser's long-lived cache of the previous one)
+        const media_url = helperMediaLibraryModule.append_cache_version(build_media_url(uuid), record?.updated);
         
         if (!media_url) {
             if (loading_el) loading_el.style.display = 'none';

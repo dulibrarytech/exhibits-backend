@@ -1,0 +1,78 @@
+<!-- Replace Media File Modal -->
+<div class="modal fade"
+     id="replace-media-modal"
+     tabindex="-1"
+     role="dialog"
+     aria-labelledby="replace-media-modal-title"
+     aria-hidden="true"
+     data-backdrop="static"
+     data-keyboard="false">
+    <div class="modal-dialog modal-dialog-centered" role="document" style="display: flex; align-items: center; min-height: calc(100% - 1rem);">
+        <div class="modal-content">
+            <div class="modal-header py-2" style="display: flex; align-items: center; justify-content: space-between;">
+                <h5 class="modal-title mb-0" id="replace-media-modal-title">
+                    <i class="fa fa-exchange" style="margin-right: 8px;" aria-hidden="true"></i>
+                    Replace File
+                </h5>
+                <button type="button"
+                        class="close ml-auto"
+                        data-dismiss="modal"
+                        aria-label="Close"
+                        id="replace-media-close-btn"
+                        style="margin: 0; padding: 0;">
+                    <span aria-hidden="true" style="font-size: 1.5rem;">&times;</span>
+                </button>
+            </div>
+            <div class="modal-body">
+                <!-- Message container for success/errors -->
+                <div id="replace-media-message" role="status" aria-live="polite"></div>
+
+                <p class="mb-3">Upload a new file to replace the current one.</p>
+
+                <div class="card bg-light mb-3">
+                    <div class="card-body py-2">
+                        <div class="d-flex align-items-center">
+                            <img id="replace-media-thumbnail"
+                                 src=""
+                                 alt=""
+                                 style="width: 50px; height: 50px; object-fit: cover; border-radius: 4px; margin-right: 12px; display: none;">
+                            <i class="fa fa-file-o fa-2x text-muted" id="replace-media-icon" style="margin-right: 12px;" aria-hidden="true"></i>
+                            <div>
+                                <strong id="replace-media-name" class="d-block">Media Name</strong>
+                                <small id="replace-media-filename" class="text-muted">filename.jpg</small>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="alert alert-info mb-3" role="alert" id="replace-media-type-hint">
+                    <i class="fa fa-info-circle" style="margin-right: 6px;" aria-hidden="true"></i>
+                    <span id="replace-media-type-hint-text">The replacement must be the same media type as the original.</span>
+                </div>
+
+                <div class="dropzone-wrapper">
+                    <form class="dropzone"
+                          id="replace-media-dropzone"
+                          method="post"
+                          enctype="multipart/form-data"
+                          aria-label="Upload replacement file">
+                        <div class="dz-message" data-dz-message>
+                            <i class="fa fa-cloud-upload fa-3x text-muted mb-3" aria-hidden="true"></i>
+                            <p class="mb-0"><em>Drag and Drop the replacement file here or Click to Upload</em></p>
+                            <span class="sr-only">Drag and drop a file here or click to select the replacement file. One file allowed.</span>
+                        </div>
+                    </form>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button"
+                        class="btn btn-secondary"
+                        id="replace-media-cancel-btn"
+                        data-dismiss="modal">
+                    <i class="fa fa-times" style="margin-right: 6px;" aria-hidden="true"></i>
+                    Close
+                </button>
+            </div>
+        </div>
+    </div>
+</div>

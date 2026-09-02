@@ -14,12 +14,17 @@ jest.mock('../../libs/log4', () => ({
 
 const express = require('express');
 const request = require('supertest');
-const { create_rate_limiter } = require('../../config/rate_limits_loader');
+const {
+    create_rate_limiter,
+    auth_identity_key_generator,
+    auth_identity_skip
+} = require('../../config/rate_limits_loader');
 
-// Mirrors the SSO identity limiter wiring in the loader.
+// The loader's OWN identity wiring — imported, not mirrored, so a change
+// to the keying or skip logic in the loader is exercised here.
 const IDENTITY_OPTS = {
-    keyGenerator: (req) => 'id:' + String((req.body && req.body.employeeID) || '').trim().toLowerCase(),
-    skip: (req) => !(req.body && typeof req.body.employeeID === 'string' && req.body.employeeID.trim() !== '')
+    keyGenerator: auth_identity_key_generator,
+    skip: auth_identity_skip
 };
 
 function build(...middleware) {

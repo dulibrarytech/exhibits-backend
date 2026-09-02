@@ -746,6 +746,74 @@ exports.update_media_record = async function (req, res) {
 };
 
 /**
+ * Replaces the stored file behind an uploaded media record while preserving
+ * its descriptive metadata. Authorization (update-media, ownership-scoped)
+ * is enforced by route middleware before the multipart body is parsed.
+ * @param {Object} req - Express request object
+ * @param {Object} res - Express response object
+ */
+exports.replace_media_file = async function (req, res) {
+
+    try {
+
+        const media_id = req.params.media_id;
+
+        // Validate required path parameter
+        if (!media_id || typeof media_id !== 'string' || media_id.trim() === '') {
+            res.status(400).json({
+                success: false,
+                message: 'Bad request. Missing or invalid media ID.',
+                data: null
+            });
+            return;
+        }
+
+        // Validate uploaded file (multer single-file middleware sets req.file)
+        if (!req.file || !req.file.buffer) {
+            res.status(400).json({
+                success: false,
+                message: 'Bad request. No replacement file provided.',
+                data: null
+            });
+            return;
+        }
+
+        // Pass username from verified token for updated_by name lookup
+        // (req.decoded is set by TOKEN.verify middleware)
+        const username = req.decoded?.sub || null;
+
+        const result = await MEDIA_MODEL.replace_media_file(media_id, req.file, username);
+
+        if (!result || !result.success) {
+
+            const message = result?.message || 'Failed to replace media file.';
+            const status = message === 'Media record not found' ? 404 : 400;
+
+            res.status(status).json({
+                success: false,
+                message: message,
+                data: null
+            });
+            return;
+        }
+
+        res.status(200).json({
+            success: true,
+            message: result.message,
+            data: result.record
+        });
+
+    } catch (error) {
+        LOGGER.module().error('ERROR: [/media-library/controller (replace_media_file)] Unable to replace media file ' + req.params.media_id + ': ' + error.message);
+        res.status(500).json({
+            success: false,
+            message: 'Unable to replace media file.',
+            data: null
+        });
+    }
+};
+
+/**
  * Deletes a media record (soft delete)
  * @param {Object} req - Express request object
  * @param {Object} res - Express response object

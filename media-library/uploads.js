@@ -831,6 +831,48 @@ const require_create_media_permission = async (req, res, next) => {
 };
 
 /**
+ * Authorization guard for the replace-file route. Requires the update-media
+ * capability (ownership-scoped via parent_id) — replacing the file behind an
+ * existing record is an update, not a create. Runs after TOKEN.verify and
+ * before multer, so an unauthorized request is rejected before any file is
+ * parsed or written to disk.
+ * @param {Object} req - Express request object
+ * @param {Object} res - Express response object
+ * @param {Function} next - Express next middleware function
+ */
+const require_update_media_permission = async (req, res, next) => {
+
+    try {
+
+        const is_authorized = await AUTHORIZE.check_permission({
+            req,
+            permissions: ['can_update_any_media', 'can_update_media'],
+            record_type: 'media',
+            parent_id: req.params.media_id || null,
+            child_id: null
+        });
+
+        if (is_authorized !== true) {
+            return res.status(403).json({
+                success: false,
+                message: 'Unauthorized request',
+                data: null
+            });
+        }
+
+        return next();
+
+    } catch (error) {
+        LOGGER.module().error(`ERROR: [/media-library/uploads (require_update_media_permission)] ${error.message}`);
+        return res.status(403).json({
+            success: false,
+            message: 'Unauthorized request',
+            data: null
+        });
+    }
+};
+
+/**
  * Register upload routes
  * @param {Object} app - Express application instance
  */
@@ -852,3 +894,9 @@ module.exports.delete_stored_file = delete_stored_file;
 module.exports.shutdown_exiftool = shutdown_exiftool;
 module.exports.generate_image_thumbnail = generate_image_thumbnail;
 module.exports.STORAGE_PATH = STORAGE_PATH;
+module.exports.store_file = store_file;
+module.exports.extract_metadata = extract_metadata;
+module.exports.get_media_type = get_media_type;
+module.exports.upload_single = upload.single('file');
+module.exports.require_update_media_permission = require_update_media_permission;
+module.exports.handle_upload_error = handle_upload_error;

@@ -51,7 +51,13 @@ jest.mock('../../media-library/iiif-service', () => ({
 // The one dependency the new handler actually uses.
 const mockResolve = jest.fn();
 jest.mock('../../media-library/uploads', () => ({
-    resolve_storage_path: (...a) => mockResolve(...a)
+    resolve_storage_path: (...a) => mockResolve(...a),
+    // Route-registration dependencies of the replace-file route (this suite
+    // mounts the whole real router, so these must exist even though the
+    // thumbnail tests never exercise them).
+    require_update_media_permission: (req, res, next) => next(),
+    upload_single: (req, res, next) => next(),
+    handle_upload_error: (err, req, res, next) => res.status(500).json({ error: 'Upload failed' })
 }));
 
 const ROUTES = require('../../media-library/routes');

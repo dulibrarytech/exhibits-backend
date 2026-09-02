@@ -289,6 +289,27 @@ const helperMediaLibraryModule = (function() {
     };
 
     /**
+     * Appends a cache-busting version parameter derived from a record's
+     * `updated` timestamp. The file/thumbnail endpoints serve long-lived
+     * Cache-Control headers keyed only by uuid + token, so after a file
+     * replace the browser would show the superseded image for up to a day;
+     * versioning the URL by `updated` busts the cache exactly when the
+     * record changes. No-op when either value is missing/unparseable.
+     * @param {string|null} url - Endpoint URL (with or without a query string)
+     * @param {string|Date|null} updated - The record's updated timestamp
+     * @returns {string|null} Versioned URL, or the input unchanged
+     */
+    obj.append_cache_version = (url, updated) => {
+        if (!url || !updated) return url;
+
+        const version = new Date(updated).getTime();
+
+        if (!Number.isFinite(version)) return url;
+
+        return url + (url.includes('?') ? '&' : '?') + 'v=' + version;
+    };
+
+    /**
      * Build the URL for a STAGED (not-yet-saved) uploaded thumbnail, served
      * by its on-disk storage-relative path.
      *
