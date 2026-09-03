@@ -331,7 +331,8 @@ describe('Timeline Routes Integration (real router)', () => {
         });
 
         test('POST suppress maps params to the model and returns 200 on success', async () => {
-            mockTimelinesModel.suppress_timeline_item_record.mockResolvedValue(true);
+            /* Model resolves to {status, message}, same contract as grid items */
+            mockTimelinesModel.suppress_timeline_item_record.mockResolvedValue({ status: true, message: 'Timeline item suppressed' });
 
             const response = await request(app)
                 .post(path_for(ENDPOINTS.timeline_item_records.timeline_item_suppress.post.endpoint, IDS));

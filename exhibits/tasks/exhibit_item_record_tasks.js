@@ -578,11 +578,6 @@ const Exhibit_item_record_tasks = class extends Base_tasks {
             });
 
             // Check record exists
-            // NOTE: `title` was dropped from tbl_standard_items by the
-            // 20260403200926_titles-to-subheadings migration (standard items
-            // no longer carry a title). Do NOT select it here — an explicit
-            // reference to the missing column makes MySQL throw
-            // "Unknown column 'title'", which surfaced as a 400 on every update.
             const existing = await this.DB(this.TABLE.item_records)
                 .select('id', 'uuid', 'is_deleted')
                 .where({
@@ -790,7 +785,7 @@ const Exhibit_item_record_tasks = class extends Base_tasks {
 
             const exhibit_uuid = this._validate_uuid(uuid, 'exhibit UUID');
 
-            /* Recycled rows are not content: the publish gate must not count them (review M3). */
+            /* Recycled rows are not content: the publish gate must not count them. */
             const result = await this.DB(this.TABLE.item_records)
                 .count('id as count')
                 .where({is_member_of_exhibit: exhibit_uuid, is_deleted: 0})
@@ -810,7 +805,8 @@ const Exhibit_item_record_tasks = class extends Base_tasks {
      * Publishes all items for an exhibit
      * @param {string} uuid - Exhibit UUID
      * @param {string} [published_by=null] - User ID
-     * @returns {Promise<boolean>} Success status
+     * @returns {Promise<Object>} Update result ({success, affected_rows, ...});
+     *   throws on failure (same contract as the grid/timeline task classes)
      */
     async set_to_publish(uuid, published_by = null) {
 
@@ -830,11 +826,10 @@ const Exhibit_item_record_tasks = class extends Base_tasks {
                 affected_rows: result.affected_rows
             });
 
-            return true;
+            return result;
 
         } catch (error) {
-            LOGGER.module().error('Failed to publish item records: ' + error.message);
-            return false;
+            this._handle_error(error, 'set_to_publish', {uuid});
         }
     }
 
@@ -872,7 +867,8 @@ const Exhibit_item_record_tasks = class extends Base_tasks {
      * Suppresses all items for an exhibit
      * @param {string} uuid - Exhibit UUID
      * @param {string} [unpublished_by=null] - User ID
-     * @returns {Promise<boolean>} Success status
+     * @returns {Promise<Object>} Update result ({success, affected_rows, ...});
+     *   throws on failure (same contract as the grid/timeline task classes)
      */
     async set_to_suppress(uuid, unpublished_by = null) {
 
@@ -892,11 +888,10 @@ const Exhibit_item_record_tasks = class extends Base_tasks {
                 affected_rows: result.affected_rows
             });
 
-            return true;
+            return result;
 
         } catch (error) {
-            LOGGER.module().error('Failed to suppress item records: ' + error.message);
-            return false;
+            this._handle_error(error, 'set_to_suppress', {uuid});
         }
     }
 

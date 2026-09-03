@@ -113,6 +113,13 @@ const mockIndexerModel = {
 
 jest.mock('../../indexer/model', () => mockIndexerModel);
 
+// Mock Reindex Coalescer (post-edit republish of published timeline items)
+const mockReindexCoalescer = {
+    schedule_reindex: jest.fn()
+};
+
+jest.mock('../../exhibits/reindex_coalescer', () => mockReindexCoalescer);
+
 // ==================== TESTS ====================
 
 describe('Timelines Model Integration Tests', () => {
@@ -608,6 +615,58 @@ describe('Timelines Model Integration Tests', () => {
             expect(result.message).toBe('Timeline item record updated');
         });
 
+        /*
+         * Drift fixes (DRY review 2026-09-03, Phase 0 #1/#2): the timeline-item
+         * update used to skip the post-edit republish the other three item
+         * types perform, and it recomputed `order` through the exhibit-scoped
+         * helper with a timeline uuid, moving the item on every edit.
+         */
+        test('schedules a coalesced re-index when the edited item is published (parity with grid items)', async () => {
+            const result = await TIMELINES_MODEL.update_timeline_item_record(
+                TEST_EXHIBIT_UUID,
+                TEST_TIMELINE_UUID,
+                TEST_TIMELINE_ITEM_UUID,
+                { title: 'Edited', is_published: 1 }
+            );
+
+            expect(result.status).toBe(201);
+
+            await new Promise(resolve => setImmediate(resolve));
+
+            expect(mockReindexCoalescer.schedule_reindex).toHaveBeenCalledWith(
+                `timeline_item:${TEST_TIMELINE_ITEM_UUID}`,
+                expect.any(Function)
+            );
+        });
+
+        test('does not schedule a re-index for an unpublished item', async () => {
+            await TIMELINES_MODEL.update_timeline_item_record(
+                TEST_EXHIBIT_UUID,
+                TEST_TIMELINE_UUID,
+                TEST_TIMELINE_ITEM_UUID,
+                { title: 'Edited', is_published: 0 }
+            );
+
+            await new Promise(resolve => setImmediate(resolve));
+
+            expect(mockReindexCoalescer.schedule_reindex).not.toHaveBeenCalled();
+        });
+
+        test('strips is_published from the DB write and never recomputes order', async () => {
+            await TIMELINES_MODEL.update_timeline_item_record(
+                TEST_EXHIBIT_UUID,
+                TEST_TIMELINE_UUID,
+                TEST_TIMELINE_ITEM_UUID,
+                { title: 'Edited', is_published: 1 }
+            );
+
+            const written = mockTimelineRecordTask.update_timeline_item_record.mock.calls[0][0];
+            expect(written).not.toHaveProperty('is_published');
+            expect(written).not.toHaveProperty('order');
+            expect(mockHelperInstance.order_exhibit_items).not.toHaveBeenCalled();
+            expect(mockHelperInstance.order_timeline_items).not.toHaveBeenCalled();
+        });
+
         test('should return 400 for invalid exhibit UUID', async () => {
             const result = await TIMELINES_MODEL.update_timeline_item_record(
                 '',
@@ -931,40 +990,41 @@ describe('Timelines Model Integration Tests', () => {
                 TEST_TIMELINE_ITEM_UUID
             );
 
-            expect(result).toBe(true);
+            /* Same {status, message} contract as suppress_grid_item_record */
+            expect(result).toEqual({ status: true, message: 'Timeline item suppressed' });
         });
 
-        test('should return false for invalid exhibit UUID', async () => {
+        test('should return status false for invalid exhibit UUID', async () => {
             const result = await TIMELINES_MODEL.suppress_timeline_item_record(
                 '',
                 TEST_TIMELINE_UUID,
                 TEST_TIMELINE_ITEM_UUID
             );
 
-            expect(result).toBe(false);
+            expect(result).toEqual({ status: false, message: 'Invalid UUID provided' });
         });
 
-        test('should return false for invalid timeline UUID', async () => {
+        test('should return status false for invalid timeline UUID', async () => {
             const result = await TIMELINES_MODEL.suppress_timeline_item_record(
                 TEST_EXHIBIT_UUID,
                 '',
                 TEST_TIMELINE_ITEM_UUID
             );
 
-            expect(result).toBe(false);
+            expect(result.status).toBe(false);
         });
 
-        test('should return false for invalid item UUID', async () => {
+        test('should return status false for invalid item UUID', async () => {
             const result = await TIMELINES_MODEL.suppress_timeline_item_record(
                 TEST_EXHIBIT_UUID,
                 TEST_TIMELINE_UUID,
                 ''
             );
 
-            expect(result).toBe(false);
+            expect(result.status).toBe(false);
         });
 
-        test('should return false when timeline not found in index', async () => {
+        test('should return status false when timeline not found in index', async () => {
             mockIndexerModel.get_indexed_record.mockResolvedValue({
                 status: 200,
                 data: null
@@ -976,10 +1036,10 @@ describe('Timelines Model Integration Tests', () => {
                 TEST_TIMELINE_ITEM_UUID
             );
 
-            expect(result).toBe(false);
+            expect(result).toEqual({ status: false, message: 'Timeline not found in index' });
         });
 
-        test('should return false when delete from index fails', async () => {
+        test('should return status false when delete from index fails', async () => {
             mockIndexerModel.get_indexed_record.mockResolvedValue({
                 status: 200,
                 data: { source: { items: [] } }
@@ -992,7 +1052,19 @@ describe('Timelines Model Integration Tests', () => {
                 TEST_TIMELINE_ITEM_UUID
             );
 
-            expect(result).toBe(false);
+            expect(result.status).toBe(false);
+        });
+
+        test('never resolves to a bare boolean (controller relies on result.status)', async () => {
+            const result = await TIMELINES_MODEL.suppress_timeline_item_record(
+                TEST_EXHIBIT_UUID,
+                TEST_TIMELINE_UUID,
+                TEST_TIMELINE_ITEM_UUID
+            );
+
+            expect(typeof result).toBe('object');
+            expect(typeof result.status).toBe('boolean');
+            expect(typeof result.message).toBe('string');
         });
     });
 
@@ -1200,7 +1272,7 @@ describe('Timelines Model Integration Tests', () => {
 
             const result = await TIMELINES_MODEL.suppress_timeline_item_record(TEST_EXHIBIT_UUID, TEST_TIMELINE_UUID, TEST_TIMELINE_ITEM_UUID);
 
-            expect(result).toBe(false);
+            expect(result.status).toBe(false);
             expect(INDEXER_MODEL.get_indexed_record).not.toHaveBeenCalled();
             expect(INDEXER_MODEL.delete_record).not.toHaveBeenCalled();
         });

@@ -827,4 +827,28 @@ describe('Exhibit_timeline_record_tasks', () => {
                 .toThrow('Valid field is required');
         });
     });
+    /*
+     * Lock and recycle-bin state is server-owned. A create request must not be
+     * able to set it (DRY review 2026-09-03, Phase 0 #6). The whitelist is a
+     * method-local const, so it is captured via the sanitizer call.
+     */
+    describe('create_timeline_item_record whitelist excludes server-owned state', () => {
+        test('does not accept is_locked / locked_by_user / locked_at / is_deleted', async () => {
+            const spy = jest.spyOn(timelineTasks, '_sanitize_data').mockImplementation(() => {
+                throw new Error('stop after whitelist capture');
+            });
+
+            await expect(timelineTasks.create_timeline_item_record({ uuid: timelineItemUUID, is_member_of_timeline: timelineUUID, is_member_of_exhibit: exhibitUUID, title: 'x' })).rejects.toThrow();
+
+            expect(spy).toHaveBeenCalled();
+            const allowed = spy.mock.calls[0][1];
+            expect(Array.isArray(allowed)).toBe(true);
+            expect(allowed).not.toContain('is_locked');
+            expect(allowed).not.toContain('locked_by_user');
+            expect(allowed).not.toContain('locked_at');
+            expect(allowed).not.toContain('is_deleted');
+
+            spy.mockRestore();
+        });
+    });
 });

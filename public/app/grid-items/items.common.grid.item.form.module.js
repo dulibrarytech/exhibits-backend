@@ -66,8 +66,6 @@ const itemsCommonGridItemFormModule = (function () {
 
         if (!media || !media.uuid) return '';
 
-        const token = authModule.get_user_token();
-
         // Kaltura assets use their own thumbnail URL
         if (media.ingest_method === 'kaltura' && media.kaltura_thumbnail_url) {
             let url = decode_html_entities(media.kaltura_thumbnail_url);
@@ -77,14 +75,15 @@ const itemsCommonGridItemFormModule = (function () {
             return url;
         }
 
-        // Repository imports: repo thumbnail endpoint
+        // Same-origin thumbnail requests rely on the HttpOnly exhibits_token
+        // cookie for authentication, so the JWT is never embedded in <img src>.
         if (media.ingest_method === 'repository' && media.repo_uuid) {
-            return `${APP_PATH}/api/v1/media/library/repo/thumbnail?uuid=${encodeURIComponent(media.repo_uuid)}&token=${encodeURIComponent(token)}`;
+            return `${APP_PATH}/api/v1/media/library/repo/thumbnail?uuid=${encodeURIComponent(media.repo_uuid)}`;
         }
 
         // Uploaded files: media library thumbnail endpoint
         if (media.thumbnail_path) {
-            return `${APP_PATH}/api/v1/media/library/thumbnail/${media.uuid}?token=${encodeURIComponent(token)}`;
+            return `${APP_PATH}/api/v1/media/library/thumbnail/${encodeURIComponent(media.uuid)}`;
         }
 
         return '';

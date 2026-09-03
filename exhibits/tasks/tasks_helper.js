@@ -236,7 +236,15 @@ const Base_tasks = class {
             throw new Error('Status must be 0 or 1');
         }
 
-        const update_data = {is_published: status};
+        /*
+         * A publish-state change is an edit: bump `updated` so list sorting and
+         * the "last updated" display reflect it for every record type, not
+         * only grids (which used to be the sole subclass doing this).
+         */
+        const update_data = {
+            is_published: status,
+            updated: this.DB.fn.now()
+        };
         if (updated_by) {
             update_data.updated_by = updated_by;
         }
@@ -279,7 +287,10 @@ const Base_tasks = class {
             throw new Error('Status must be 0 or 1');
         }
 
-        const update_data = {is_published: status};
+        const update_data = {
+            is_published: status,
+            updated: this.DB.fn.now()
+        };
         if (updated_by) {
             update_data.updated_by = updated_by;
         }

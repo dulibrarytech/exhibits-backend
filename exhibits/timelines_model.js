@@ -26,6 +26,7 @@ const HELPER = require('../libs/helper');
 const EXHIBIT_RECORD_TASKS = require('./tasks/exhibit_record_tasks');
 const INDEXER_MODEL = require('../indexer/model');
 const LOGGER = require('../libs/log4');
+const REINDEX_COALESCER = require('./reindex_coalescer');
 const {
     is_valid_uuid,
     is_valid_user_id,    build_response,
@@ -582,9 +583,22 @@ exports.update_timeline_item_record = async (is_member_of_exhibit, is_member_of_
         // params — provably unreachable as a guard — so it was removed
         // (same rationale as the standard-item schema removal).
 
-        // Prepare styles and get order
+        /*
+         * `is_published` is a publish-state flag, not an editable field: it is
+         * pulled out before the update so the DB write cannot flip it, and used
+         * afterwards to decide whether the live index copy must be refreshed
+         * (same contract as update_grid_item_record).
+         */
+        const is_published = data.is_published;
+        delete data.is_published;
+
+        /*
+         * `order` is deliberately NOT recomputed here. The former call to
+         * order_exhibit_items(is_member_of_timeline) passed a timeline uuid to
+         * the exhibit-scoped helper and moved the item to the end of the
+         * timeline on every edit. Order is set on create and by reorder.
+         */
         data.styles = prepare_styles(data.styles);
-        data.order = await helper_task.order_exhibit_items(data.is_member_of_timeline, DB, TABLES);
 
         // Update record
         const result = await timeline_record_task.update_timeline_item_record(data);
@@ -596,10 +610,14 @@ exports.update_timeline_item_record = async (is_member_of_exhibit, is_member_of_
             );
         }
 
+        if (is_published === 'true' || is_published === true || is_published === 1) {
+            setImmediate(() => handle_timeline_item_republish(is_member_of_exhibit, is_member_of_timeline, item_id));
+        }
+
         const is_updated = await exhibit_tasks.update_exhibit_timestamp(is_member_of_exhibit);
 
         if (is_updated === true) {
-            LOGGER.module().info('INFO: [/exhibits/items_model - Exhibit timestamp updated successfully.');
+            LOGGER.module().info('INFO: [/exhibits/timelines_model - Exhibit timestamp updated successfully.');
         }
 
         return build_response(
@@ -620,6 +638,43 @@ exports.update_timeline_item_record = async (is_member_of_exhibit, is_member_of_
             CONSTANTS.STATUS_CODES.INTERNAL_SERVER_ERROR,
             `Unable to update timeline item record: ${error.message}`
         );
+    }
+};
+
+/**
+ * Handles post-update republishing for timeline items
+ * @param {string} is_member_of_exhibit - Exhibit UUID
+ * @param {string} is_member_of_timeline - Timeline UUID
+ * @param {string} item_id - Timeline item UUID
+ * @returns {Promise<void>}
+ */
+const handle_timeline_item_republish = async (is_member_of_exhibit, is_member_of_timeline, item_id) => {
+
+    try {
+
+        /*
+         * Re-index just this timeline item in place. The nested-child indexer
+         * upserts by id, so the fresh copy replaces the stale one in the
+         * timeline doc's items[] without a delete. Coalesced per item so a
+         * burst of edits collapses to one re-index (mirrors
+         * handle_grid_item_republish).
+         */
+        REINDEX_COALESCER.schedule_reindex(`timeline_item:${item_id}`, async () => {
+            const publish_result = await exports.publish_timeline_item_record(is_member_of_exhibit, is_member_of_timeline, item_id);
+
+            if (publish_result && publish_result.status === true) {
+                LOGGER.module().info('INFO: [/exhibits/timelines_model (handle_timeline_item_republish)] Timeline item re-indexed after edit.');
+            } else {
+                LOGGER.module().error('ERROR: [/exhibits/timelines_model (handle_timeline_item_republish)] Failed to re-index timeline item');
+            }
+        });
+    } catch (error) {
+        LOGGER.module().error(`ERROR: [/exhibits/timelines_model (handle_timeline_item_republish)] ${error.message}`, {
+            is_member_of_exhibit,
+            is_member_of_timeline,
+            item_id,
+            stack: error.stack
+        });
     }
 };
 
@@ -972,7 +1027,8 @@ exports.publish_timeline_item_record = async (exhibit_id, timeline_id, timeline_
  * @param {string} exhibit_id - Exhibit UUID
  * @param {string} timeline_id - Timeline UUID
  * @param {string} timeline_item_id - Timeline item UUID
- * @returns {Promise<boolean>} Success status
+ * @returns {Promise<{status: boolean, message: string}>} Result object
+ *   (same contract as suppress_grid_item_record)
  */
 exports.suppress_timeline_item_record = async (exhibit_id, timeline_id, timeline_item_id) => {
 
@@ -982,10 +1038,12 @@ exports.suppress_timeline_item_record = async (exhibit_id, timeline_id, timeline
             !is_valid_uuid(timeline_id) ||
             !is_valid_uuid(timeline_item_id)) {
             LOGGER.module().error('ERROR: [/exhibits/timelines_model (suppress_timeline_item_record)] Invalid UUID provided');
-            return false;
+            return {
+                status: false,
+                message: 'Invalid UUID provided'
+            };
         }
 
-        // Get indexed record
         /*
          * Both the timeline and the item must belong to THIS exhibit before the
          * container doc is touched (code review 2026-09-02, H3).
@@ -993,14 +1051,20 @@ exports.suppress_timeline_item_record = async (exhibit_id, timeline_id, timeline
         const member_item_record = await timeline_record_task.get_timeline_item_record(exhibit_id, timeline_id, timeline_item_id);
 
         if (!member_item_record) {
-            return false;
+            return {
+                status: false,
+                message: 'Timeline item not found'
+            };
         }
 
         const indexed_record = await INDEXER_MODEL.get_indexed_record(timeline_id);
 
         if (!indexed_record.data || !indexed_record.data.source) {
             LOGGER.module().error('ERROR: [/exhibits/timelines_model (suppress_timeline_item_record)] Timeline not found in index');
-            return false;
+            return {
+                status: false,
+                message: 'Timeline not found in index'
+            };
         }
 
         // Filter out the timeline item being suppressed
@@ -1014,7 +1078,10 @@ exports.suppress_timeline_item_record = async (exhibit_id, timeline_id, timeline
 
         if (delete_result.status !== CONSTANTS.STATUS_CODES.NO_CONTENT) {
             LOGGER.module().error('ERROR: [/exhibits/timelines_model (suppress_timeline_item_record)] Unable to delete timeline from index');
-            return false;
+            return {
+                status: false,
+                message: 'Unable to suppress timeline item'
+            };
         }
 
         // Update timeline item record in database
@@ -1030,7 +1097,17 @@ exports.suppress_timeline_item_record = async (exhibit_id, timeline_id, timeline
         // Re-index timeline with updated items
         const is_indexed = await INDEXER_MODEL.index_record(indexed_record.data.source);
 
-        return is_indexed === true;
+        if (is_indexed === true) {
+            return {
+                status: true,
+                message: 'Timeline item suppressed'
+            };
+        }
+
+        return {
+            status: false,
+            message: 'Unable to suppress timeline item'
+        };
 
     } catch (error) {
         LOGGER.module().error(`ERROR: [/exhibits/timelines_model (suppress_timeline_item_record)] ${error.message}`, {
@@ -1040,7 +1117,10 @@ exports.suppress_timeline_item_record = async (exhibit_id, timeline_id, timeline
             stack: error.stack
         });
 
-        return false;
+        return {
+            status: false,
+            message: error.message
+        };
     }
 };
 

@@ -111,25 +111,25 @@
             }
         };
 
-        var panel = document.getElementById('left-panel');
+        const panel = document.getElementById('left-panel');
         if (!panel) return;
 
-        var styles = window.__EXHIBITS_NAV_STYLES__[panel.offsetWidth <= 83 ? 'collapsed' : 'expanded'];
+        const styles = window.__EXHIBITS_NAV_STYLES__[panel.offsetWidth <= 83 ? 'collapsed' : 'expanded'];
 
-        var navbar   = panel.querySelector('.navbar');
-        var mainMenu = panel.querySelector('#main-menu');
-        var navUl    = panel.querySelector('#main-menu .navbar-nav');
-        var items    = panel.querySelectorAll('.navbar-nav > li');
-        var links    = panel.querySelectorAll('.navbar-nav > li > a');
-        var icons    = panel.querySelectorAll('.navbar-nav > li > a > .menu-icon');
-        var labels   = panel.querySelectorAll('.nav-label');
+        const navbar   = panel.querySelector('.navbar');
+        const mainMenu = panel.querySelector('#main-menu');
+        const navUl    = panel.querySelector('#main-menu .navbar-nav');
+        const items    = panel.querySelectorAll('.navbar-nav > li');
+        const links    = panel.querySelectorAll('.navbar-nav > li > a');
+        const icons    = panel.querySelectorAll('.navbar-nav > li > a > .menu-icon');
+        const labels   = panel.querySelectorAll('.nav-label');
 
         if (navbar)   navbar.style.cssText   = styles.navbar;
         if (mainMenu) mainMenu.style.cssText = styles.main_menu;
         if (navUl)    navUl.style.cssText    = styles.nav_ul;
-        for (var i = 0; i < items.length;  i++) items[i].style.cssText  = styles.item;
-        for (var j = 0; j < links.length;  j++) links[j].style.cssText  = styles.link;
-        for (var k = 0; k < icons.length;  k++) icons[k].style.cssText  = styles.icon;
-        for (var m = 0; m < labels.length; m++) labels[m].style.cssText = styles.label;
+        for (let i = 0; i < items.length;  i++) items[i].style.cssText  = styles.item;
+        for (let j = 0; j < links.length;  j++) links[j].style.cssText  = styles.link;
+        for (let k = 0; k < icons.length;  k++) icons[k].style.cssText  = styles.icon;
+        for (let m = 0; m < labels.length; m++) labels[m].style.cssText = styles.label;
     })();
 </script>

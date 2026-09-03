@@ -548,16 +548,27 @@ describe('Exhibit_item_record_tasks', () => {
                 mockQuery.timeout.mockResolvedValue(2);
 
                 const result = await itemTasks.set_to_publish(exhibitUUID);
-                expect(result).toBe(true);
+                /* Same contract as grid/timeline tasks: result object, not a boolean */
+                expect(result).toEqual(expect.objectContaining({ success: true, affected_rows: 2 }));
             });
 
-            test('should return false on error', async () => {
+            test('should throw on error', async () => {
                 mockQuery.where.mockReturnThis();
                 mockQuery.update.mockReturnThis();
                 mockQuery.timeout.mockRejectedValue(new Error('DB Error'));
 
-                const result = await itemTasks.set_to_publish(exhibitUUID);
-                expect(result).toBe(false);
+                await expect(itemTasks.set_to_publish(exhibitUUID)).rejects.toThrow('DB Error');
+            });
+
+            test('should bump the updated timestamp on publish', async () => {
+                mockQuery.where.mockReturnThis();
+                mockQuery.update.mockReturnThis();
+                mockQuery.timeout.mockResolvedValue(1);
+
+                await itemTasks.set_to_publish(exhibitUUID);
+                expect(mockQuery.update).toHaveBeenCalledWith(
+                    expect.objectContaining({ is_published: 1, updated: 'NOW()' })
+                );
             });
         });
 
@@ -597,16 +608,15 @@ describe('Exhibit_item_record_tasks', () => {
                 mockQuery.timeout.mockResolvedValue(2);
 
                 const result = await itemTasks.set_to_suppress(exhibitUUID);
-                expect(result).toBe(true);
+                expect(result).toEqual(expect.objectContaining({ success: true, affected_rows: 2 }));
             });
 
-            test('should return false on error', async () => {
+            test('should throw on error', async () => {
                 mockQuery.where.mockReturnThis();
                 mockQuery.update.mockReturnThis();
                 mockQuery.timeout.mockRejectedValue(new Error('DB Error'));
 
-                const result = await itemTasks.set_to_suppress(exhibitUUID);
-                expect(result).toBe(false);
+                await expect(itemTasks.set_to_suppress(exhibitUUID)).rejects.toThrow('DB Error');
             });
         });
 

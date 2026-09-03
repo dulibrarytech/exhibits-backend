@@ -26,11 +26,7 @@ const Base_tasks = require('./tasks_helper');
  * Construct with the full tables config object (`DB_TABLES.exhibits`); read
  * methods resolve their own table from `this.TABLE.<key>`, and write methods
  * take the resolved table NAME as their first argument. A record is "recycled"
- * when `is_deleted = 1` (regardless of publish state, so a record deleted while
- * published is still visible/purgeable here rather than becoming an orphan).
- *
- * Errors are NOT swallowed here — they propagate to the model so a failed
- * delete/restore can never be reported as success.
+ * when `is_deleted = 1`
  *
  * @type {Recycled_record_tasks}
  */

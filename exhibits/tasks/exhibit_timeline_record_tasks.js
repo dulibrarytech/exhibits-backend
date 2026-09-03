@@ -423,9 +423,14 @@ const Exhibit_timeline_record_tasks = class extends Base_tasks {
             'type', 'layout', 'media_width', 'media_padding', 'alt_text',
             'is_alt_text_decorative', 'pdf_open_to_page', 'item_subjects', 'styles',
             'order', 'date', 'is_repo_item', 'is_kaltura_item', 'is_embedded',
-            'is_published', 'is_locked', 'locked_by_user', 'locked_at',
-            'is_deleted', 'owner'
+            'is_published', 'owner'
         ];
+
+        /*
+         * Lock and recycle-bin state (`is_locked`, `locked_by_user`,
+         * `locked_at`, `is_deleted`) is owned by the server; a create request
+         * must not be able to set it. Defaults are applied below.
+         */
 
         try {
 

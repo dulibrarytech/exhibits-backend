@@ -23,7 +23,7 @@
 <%- include('../partials/exhibits-libs-common.ejs'); %>
 <!-- app -->
 <%- include('../partials/exhibits-app-common.ejs'); %>
-<script src="/exhibits-dashboard/static/app/user.module.js"></script>
+<script src="/exhibits-dashboard/static/app/dist/user.module.min.js?<%=build_version%>"></script>
 <script>
     navModule.init();
     navModule.wire_nav_links();

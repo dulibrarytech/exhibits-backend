@@ -764,6 +764,17 @@ const get_exhibit_counts = async (uuid) => {
 };
 
 /**
+ * Detects a failed component publish/suppress result. Component task classes
+ * (item/heading/grid/timeline) resolve to {success: true, ...} and throw on
+ * failure; exhibit_record_tasks resolves to a boolean.
+ * @param {boolean|Object} result - One entry from set_all_to_publish/suppress
+ * @returns {boolean} True when the component operation failed
+ */
+const is_failed_component_result = (result) => {
+    return result === false || (result !== null && typeof result === 'object' && result.success === false);
+};
+
+/**
  * Sets all exhibit components to published state
  * @param {string} uuid - Exhibit UUID
  * @returns {Promise<Array>} Array of publish results
@@ -832,8 +843,11 @@ const publish_exhibit = async (uuid) => {
         // Set all components to published
         const publish_results = await set_all_to_publish(uuid);
 
-        // Check for errors
-        const has_errors = publish_results.some(result => result === false);
+        /*
+         * Component tasks either return {success: true, ...} or throw (caught
+         * below); exhibit_record_tasks returns a boolean. Treat both shapes.
+         */
+        const has_errors = publish_results.some(is_failed_component_result);
 
         if (has_errors) {
             LOGGER.module().error('ERROR: [/exhibits/model (publish_exhibit)] Unable to publish exhibit components');
@@ -1056,8 +1070,8 @@ const suppress_exhibit = async (uuid) => {
         // Set all components to suppressed
         const suppress_results = await set_all_to_suppress(uuid);
 
-        // Check for errors
-        const has_errors = suppress_results.some(result => result === false);
+        // Check for errors (see publish_exhibit for the two result shapes)
+        const has_errors = suppress_results.some(is_failed_component_result);
 
         if (has_errors) {
             LOGGER.module().error('ERROR: [/exhibits/model (suppress_exhibit)] Unable to suppress exhibit components');

@@ -767,7 +767,7 @@ const repoServiceModule = (function() {
 
             // Open the repo import modal with selected items
             // The modal will handle individual saves and show the Done button when complete
-            repoModalsModule.open_repo_media_modal(items, (saved_count) => {
+            repoModalsModule.open_repo_media_modal(items, async (saved_count) => {
                 // Callback when modal is closed via Done button
                 if (saved_count > 0) {
                     // Show a single success message in the search message area
@@ -783,8 +783,8 @@ const repoServiceModule = (function() {
                     update_clear_button();
 
                     // Refresh media library table if available
-                    if (typeof mediaLibraryModule !== 'undefined' && mediaLibraryModule.refresh_media_table) {
-                        mediaLibraryModule.refresh_media_table();
+                    if (typeof mediaLibraryModule !== 'undefined' && typeof mediaLibraryModule.refresh_media_records === 'function') {
+                        await mediaLibraryModule.refresh_media_records();
                     }
                 }
             });

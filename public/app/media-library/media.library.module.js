@@ -1696,7 +1696,7 @@ const mediaLibraryModule = (function() {
 
             // Initialize dropzone if not already initialized
             if (dropzone_el && !dropzone_el.dropzone && typeof mediaUploadsModule !== 'undefined') {
-                mediaUploadsModule.upload_item_media();
+                mediaUploadsModule.upload_media();
             }
         });
     };

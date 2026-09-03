@@ -486,16 +486,16 @@ describe('Exhibit_heading_record_tasks', () => {
                 mockQuery.timeout.mockResolvedValue(2);
 
                 const result = await headingTasks.set_to_publish(exhibitUUID);
-                expect(result).toBe(true);
+                /* Same contract as grid/timeline tasks: result object, not a boolean */
+                expect(result).toEqual(expect.objectContaining({ success: true, affected_rows: 2 }));
             });
 
-            test('should return false on error', async () => {
+            test('should throw on error', async () => {
                 mockQuery.where.mockReturnThis();
                 mockQuery.update.mockReturnThis();
                 mockQuery.timeout.mockRejectedValue(new Error('DB Error'));
 
-                const result = await headingTasks.set_to_publish(exhibitUUID);
-                expect(result).toBe(false);
+                await expect(headingTasks.set_to_publish(exhibitUUID)).rejects.toThrow('DB Error');
             });
 
             test('should pass updated_by parameter', async () => {
@@ -505,6 +505,17 @@ describe('Exhibit_heading_record_tasks', () => {
 
                 await headingTasks.set_to_publish(exhibitUUID, 'user123');
                 expect(mockQuery.update).toHaveBeenCalled();
+            });
+
+            test('should bump the updated timestamp on publish (all record types, not only grids)', async () => {
+                mockQuery.where.mockReturnThis();
+                mockQuery.update.mockReturnThis();
+                mockQuery.timeout.mockResolvedValue(1);
+
+                await headingTasks.set_to_publish(exhibitUUID);
+                expect(mockQuery.update).toHaveBeenCalledWith(
+                    expect.objectContaining({ is_published: 1, updated: 'NOW()' })
+                );
             });
         });
 
@@ -545,16 +556,15 @@ describe('Exhibit_heading_record_tasks', () => {
                 mockQuery.timeout.mockResolvedValue(2);
 
                 const result = await headingTasks.set_to_suppress(exhibitUUID);
-                expect(result).toBe(true);
+                expect(result).toEqual(expect.objectContaining({ success: true, affected_rows: 2 }));
             });
 
-            test('should return false on error', async () => {
+            test('should throw on error', async () => {
                 mockQuery.where.mockReturnThis();
                 mockQuery.update.mockReturnThis();
                 mockQuery.timeout.mockRejectedValue(new Error('DB Error'));
 
-                const result = await headingTasks.set_to_suppress(exhibitUUID);
-                expect(result).toBe(false);
+                await expect(headingTasks.set_to_suppress(exhibitUUID)).rejects.toThrow('DB Error');
             });
         });
 
@@ -700,6 +710,30 @@ describe('Exhibit_heading_record_tasks', () => {
                 text: 'Updated Heading Text'
             });
             expect(updateResult.success).toBe(true);
+        });
+    });
+    /*
+     * Lock and recycle-bin state is server-owned. A create request must not be
+     * able to set it (DRY review 2026-09-03, Phase 0 #6). The whitelist is a
+     * method-local const, so it is captured via the sanitizer call.
+     */
+    describe('create_heading_record whitelist excludes server-owned state', () => {
+        test('does not accept is_locked / locked_by_user / locked_at / is_deleted', async () => {
+            const spy = jest.spyOn(headingTasks, '_sanitize_data').mockImplementation(() => {
+                throw new Error('stop after whitelist capture');
+            });
+
+            await expect(headingTasks.create_heading_record({ uuid: headingUUID, is_member_of_exhibit: exhibitUUID, text: 'x' })).rejects.toThrow();
+
+            expect(spy).toHaveBeenCalled();
+            const allowed = spy.mock.calls[0][1];
+            expect(Array.isArray(allowed)).toBe(true);
+            expect(allowed).not.toContain('is_locked');
+            expect(allowed).not.toContain('locked_by_user');
+            expect(allowed).not.toContain('locked_at');
+            expect(allowed).not.toContain('is_deleted');
+
+            spy.mockRestore();
         });
     });
 });

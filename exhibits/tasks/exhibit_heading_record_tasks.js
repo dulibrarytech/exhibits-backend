@@ -82,9 +82,15 @@ const Exhibit_heading_record_tasks = class extends Base_tasks {
 
         const ALLOWED_FIELDS = [
             'is_member_of_exhibit', 'uuid', 'type', 'text', 'order', 'styles',
-            'is_visible', 'is_anchor', 'is_published', 'is_locked', 'locked_by_user',
-            'locked_at', 'is_indexed', 'is_deleted', 'owner', 'margins', 'text_alignment'
+            'is_visible', 'is_anchor', 'is_published', 'is_indexed', 'owner',
+            'margins', 'text_alignment'
         ];
+
+        /*
+         * Lock and recycle-bin state (`is_locked`, `locked_by_user`,
+         * `locked_at`, `is_deleted`) is owned by the server; a create request
+         * must not be able to set it. Defaults are applied below.
+         */
 
         try {
 
@@ -462,7 +468,8 @@ const Exhibit_heading_record_tasks = class extends Base_tasks {
      * Publishes all headings for an exhibit
      * @param {string} uuid - Exhibit UUID
      * @param {string} [published_by=null] - User ID
-     * @returns {Promise<boolean>} Success status
+     * @returns {Promise<Object>} Update result ({success, affected_rows, ...});
+     *   throws on failure (same contract as the grid/timeline task classes)
      */
     async set_to_publish(uuid, published_by = null) {
 
@@ -481,11 +488,10 @@ const Exhibit_heading_record_tasks = class extends Base_tasks {
                 affected_rows: result.affected_rows
             });
 
-            return true;
+            return result;
 
         } catch (error) {
-            LOGGER.module().error('Failed to publish heading records: ' + error.message);
-            return false;
+            this._handle_error(error, 'set_to_publish', {uuid});
         }
     }
 
@@ -521,7 +527,8 @@ const Exhibit_heading_record_tasks = class extends Base_tasks {
      * Suppresses all headings for an exhibit
      * @param {string} uuid - Exhibit UUID
      * @param {string} [unpublished_by=null] - User ID
-     * @returns {Promise<boolean>} Success status
+     * @returns {Promise<Object>} Update result ({success, affected_rows, ...});
+     *   throws on failure (same contract as the grid/timeline task classes)
      */
     async set_to_suppress(uuid, unpublished_by = null) {
 
@@ -540,11 +547,10 @@ const Exhibit_heading_record_tasks = class extends Base_tasks {
                 affected_rows: result.affected_rows
             });
 
-            return true;
+            return result;
 
         } catch (error) {
-            LOGGER.module().error('Failed to suppress heading records: ' + error.message);
-            return false;
+            this._handle_error(error, 'set_to_suppress', {uuid});
         }
     }
 

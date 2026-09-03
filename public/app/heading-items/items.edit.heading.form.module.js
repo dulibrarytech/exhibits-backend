@@ -49,8 +49,7 @@ const itemsEditHeadingFormModule = (function () {
                 }
 
                 setTimeout(() => {
-                    const login_url = `${APP_PATH}/login`;
-                    window.location.replace(login_url);
+                    authModule.redirect_to_auth();
                 }, 1000);
 
                 return null;
@@ -255,9 +254,6 @@ const itemsEditHeadingFormModule = (function () {
 
             // Cache all DOM elements once
             const dom_elements = cache_dom_elements();
-
-            // Validate and check record lock status
-            await lockModule.check_if_locked(record, '#item-submit-card');
 
             // Display metadata (creation/update info)
             display_metadata_info(record, dom_elements.created);

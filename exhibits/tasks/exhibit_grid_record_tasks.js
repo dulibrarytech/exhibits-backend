@@ -180,10 +180,6 @@ const Exhibit_grid_record_tasks = class extends Base_tasks {
         }
 
         // Check if record exists
-        // NOTE: `title` was dropped from tbl_grids/tbl_timelines (container tables)
-        // by 20260403200926_titles-to-subheadings; this generic helper runs for
-        // grid_records too, so selecting `title` threw "Unknown column 'title'"
-        // when publishing/suppressing a grid. `existing.title` is never used here.
         const existing = await this.DB(this.TABLE[table_name])
             .select('id', 'uuid', 'is_published', 'is_deleted')
             .where({uuid: uuid_trimmed})
@@ -247,8 +243,6 @@ const Exhibit_grid_record_tasks = class extends Base_tasks {
      */
     async create_grid_record(data, created_by = null) {
 
-        // `title` intentionally omitted — dropped from tbl_grids by the
-        // titles-to-subheadings migration (grid containers no longer carry a title).
         // `internal_name` is dashboard-only: stored and listed, never indexed.
         const ALLOWED_FIELDS = [
             'uuid', 'is_member_of_exhibit', 'type', 'columns', 'margins', 'text_alignment',
@@ -402,8 +396,6 @@ const Exhibit_grid_record_tasks = class extends Base_tasks {
      */
     async update_grid_record(data) {
 
-        // `title` intentionally omitted — dropped from tbl_grids by the
-        // titles-to-subheadings migration (grid containers no longer carry a title).
         // `internal_name` is dashboard-only: stored and listed, never indexed.
         const UPDATABLE_FIELDS = [
             'type', 'columns', 'text', 'internal_name', 'styles', 'margins', 'text_alignment',
@@ -661,9 +653,14 @@ const Exhibit_grid_record_tasks = class extends Base_tasks {
             'type', 'layout', 'media_width', 'media_padding', 'alt_text',
             'is_alt_text_decorative', 'pdf_open_to_page', 'item_subjects', 'styles',
             'order', 'date', 'is_repo_item', 'is_kaltura_item', 'is_embedded',
-            'is_published', 'is_locked', 'locked_by_user', 'locked_at', 'is_deleted',
-            'owner'
+            'is_published', 'owner'
         ];
+
+        /*
+         * Lock and recycle-bin state (`is_locked`, `locked_by_user`,
+         * `locked_at`, `is_deleted`) is owned by the server; a create request
+         * must not be able to set it. Defaults are applied below.
+         */
 
         try {
 

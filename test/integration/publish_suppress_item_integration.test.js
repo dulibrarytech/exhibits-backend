@@ -122,14 +122,22 @@ describe('Publish/Suppress item endpoints — consistent error statuses', () => 
             expect(r.status).toBe(422);
         });
 
-        test('suppress success -> 200 (raw boolean true)', async () => {
-            mockTimelinesModel.suppress_timeline_item_record.mockResolvedValue(true);
+        /* The model resolves to {status, message} (same contract as grid items) */
+        test('suppress success -> 200', async () => {
+            mockTimelinesModel.suppress_timeline_item_record.mockResolvedValue({ status: true, message: 'Timeline item suppressed' });
             const r = await request(app).post(`/timeline/${EX}/${PID}/${IID}/suppress`);
             expect(r.status).toBe(200);
         });
 
-        test('suppress failure -> 422 (was 204; raw boolean false)', async () => {
-            mockTimelinesModel.suppress_timeline_item_record.mockResolvedValue(false);
+        test('suppress failure -> 422 with the model message', async () => {
+            mockTimelinesModel.suppress_timeline_item_record.mockResolvedValue({ status: false, message: 'Timeline not found in index' });
+            const r = await request(app).post(`/timeline/${EX}/${PID}/${IID}/suppress`);
+            expect(r.status).toBe(422);
+            expect(r.body.message).toBe('Timeline not found in index');
+        });
+
+        test('suppress: a legacy raw boolean is treated as failure, never a 200', async () => {
+            mockTimelinesModel.suppress_timeline_item_record.mockResolvedValue(true);
             const r = await request(app).post(`/timeline/${EX}/${PID}/${IID}/suppress`);
             expect(r.status).toBe(422);
         });

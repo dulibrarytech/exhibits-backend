@@ -23,7 +23,7 @@ const Base_tasks = require('./tasks_helper');
 const KALTURA_THUMBNAIL = require('../../media-library/kaltura_thumbnail');
 
 /**
- * Tasks for managing exhibit ↔ media library bindings via tbl_exhibit_media
+ * Tasks for managing exhibit media library bindings via tbl_exhibit_media
  * @param DB - Knex database instance
  * @param TABLE - Table name configuration object
  * @type {Exhibit_media_library_tasks}

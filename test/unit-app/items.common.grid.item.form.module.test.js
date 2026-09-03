@@ -188,9 +188,9 @@ describe('itemsCommonGridItemFormModule', () => {
             const display = document.querySelector('#item-media-display');
             const img = display.querySelector('img');
             expect(img).not.toBeNull();
-            // Uploaded path uses the media-library thumbnail endpoint with token
+            // Uploaded path uses the media-library thumbnail endpoint; auth rides the HttpOnly cookie, never the URL
             expect(img.src).toContain(`${APP_PATH}/api/v1/media/library/thumbnail/media-uuid-1`);
-            expect(img.src).toContain('token=test-token');
+            expect(img.src).not.toContain('token=');
             expect(img.alt).toBe('My photo');
 
             expect(document.querySelector('#item-media-filename-display').textContent)
@@ -221,7 +221,7 @@ describe('itemsCommonGridItemFormModule', () => {
             const img = document.querySelector('#item-media-display img');
             expect(img.src).toContain(`${APP_PATH}/api/v1/media/library/repo/thumbnail`);
             expect(img.src).toContain('uuid=repo-xyz');
-            expect(img.src).toContain('token=test-token');
+            expect(img.src).not.toContain('token=');
         });
 
         it('falls back to a placeholder icon when no thumbnail URL can be built', () => {

@@ -40,7 +40,7 @@ const itemsEditStandardItemFormModule = (function () {
                 domModule.set_alert('#message', 'danger', 'Unable to get API endpoints');
 
                 setTimeout(() => {
-                    window.location.replace(APP_PATH + '/exhibits-dashboard/auth');
+                    authModule.redirect_to_auth();
                 }, 1000);
 
                 return false;
@@ -177,7 +177,7 @@ const itemsEditStandardItemFormModule = (function () {
             }
 
             // Check if record is locked
-            await lockModule.check_if_locked(record, '#item-submit-card');
+            await lockModule.check_if_locked(record, '#exhibit-submit-card');
 
             // Disable form fields if locked by another user
             if (is_locked_by_other_user(record)) {
@@ -225,9 +225,6 @@ const itemsEditStandardItemFormModule = (function () {
             if (created_el) {
                 created_el.innerHTML = metadata_parts.join(' | ');
             }
-
-            // Check if record is locked
-            await lockModule.check_if_locked(record, '#exhibit-submit-card');
 
             // Set published status
             const published_el = document.querySelector('#is-published');
