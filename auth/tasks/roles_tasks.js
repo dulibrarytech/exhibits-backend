@@ -68,14 +68,7 @@ const Roles_tasks = class {
     }
 
     /**
-     * Saves user role data (upsert).
-     *
-     * One role per user is the intended model and is enforced by
-     * UNIQUE(user_id) on ctbl_user_roles (migration
-     * 20260518120000_add_rbac_integrity_constraints). A plain insert here would
-     * accrue a second role row on re-save, making get_user_role()[0] / role
-     * resolution nondeterministic — so this inserts or, on the existing
-     * user_id, updates the role in place.
+     * Saves user role data (upsert)
      *
      * @param user_id
      * @param role_id

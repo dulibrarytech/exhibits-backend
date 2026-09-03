@@ -157,7 +157,7 @@ exports.check_permission = async function (options) {
             user_permissions.map(p => p.permission_id).filter(Boolean)
         );
 
-        // Find user permissions with O(n) lookup using Set
+        // Find user permissions
         const user_permissions_found = all_permissions.filter(
             perm => user_permission_ids.has(perm.id)
         );
@@ -175,7 +175,6 @@ exports.check_permission = async function (options) {
 
         // No permissions granted
         if (matching_permissions.length === 0) {
-            // OWASP A09 — permission denials must be auditable, not silent.
             LOGGER.module().warn(
                 `WARNING: [/auth/authorize lib (check_permission)] permission denied (no matching grant) — user: ${username}, required: ${actions.join(',')}, record_type: ${record_type || 'n/a'}, parent_id: ${parent_id || 'n/a'}`
             );
@@ -203,7 +202,6 @@ exports.check_permission = async function (options) {
         // Safely compare IDs (handle string/number conversion)
         const is_owner = String(user_id) === String(record_owner);
         if (!is_owner) {
-            // OWASP A09 — log ownership-based denials so cross-tenant access
             // attempts on non-admin partial permissions are auditable.
             LOGGER.module().warn(
                 `WARNING: [/auth/authorize lib (check_permission)] permission denied (not record owner) — user: ${username}, record_type: ${record_type || 'n/a'}, parent_id: ${parent_id || 'n/a'}`

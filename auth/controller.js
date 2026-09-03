@@ -103,10 +103,7 @@ exports.sso = async function (req, res) {
         }
 
         /*
-         * The session JWT is NOT persisted. It used to be written to
-         * tbl_users.token (dropped by migration 20260902120000), which put a
-         * live credential for every user at rest in the database; nothing ever
-         * read it back — authorization resolves the user from the verified
+         * The session JWT is NOT persisted. Authorization resolves the user from the verified
          * JWT subject (du_id) on every request.
          */
         const encoded_token = encodeURIComponent(token);
@@ -124,7 +121,7 @@ exports.sso = async function (req, res) {
         // now authenticate via this cookie instead of a URL query string.
         TOKEN.set_auth_cookie(res, token);
 
-        // OWASP A09 — record successful authentication (who + source IP) so the
+        // Record successful authentication (who + source IP) so the
         // audit trail has login events, not only failures.
         LOGGER.module().info(
             `INFO: [/auth/controller (sso)] successful login for user: ${sanitized_username} from IP: ${req.ip}`
@@ -352,8 +349,8 @@ exports.check_permissions = async function (req, res) {
                 message: 'Authorized'
             });
         } else if (is_authorized === false) {
-            // OWASP A09 — log permission denials with actor/permission/resource
-            // so privilege-probing is visible (replaces prior debug console.log).
+            // Log permission denials with actor/permission/resource
+            // so privilege-probing is visible.
             LOGGER.module().warn(
                 `WARNING: [/auth/controller (check_permissions)] permission denied for user: ${req.decoded?.sub || 'unknown'} — permissions: ${Array.isArray(permissions) ? permissions.join(',') : permissions}, record_type: ${record_type || 'n/a'}`
             );

@@ -18,7 +18,7 @@
 
 'use strict';
 
-// OWASP A07 (C2) — gate the SSO callback (POST /auth/sso).
+// Gate the SSO callback (POST /auth/sso).
 const CRYPTO = require('crypto');
 const LOGGER = require('../libs/log4');
 

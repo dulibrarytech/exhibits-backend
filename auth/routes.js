@@ -34,7 +34,7 @@ module.exports = function (app) {
     app.route(`${APP_PATH}/auth/login`)
         .get(rate_limits.auth_operations, CONTROLLER.initiate_login);
 
-    // OWASP A07 (C2): SSO_GUARD runs first — it authenticates the request PATH
+    // SSO_GUARD runs first — it authenticates the request PATH
     // (shared-secret header injected by the local proxy and/or a source-IP
     // allowlist) so the body-only auth cannot be replayed by an arbitrary
     // client. Fails closed in production when unconfigured. See auth/sso_guard.js.

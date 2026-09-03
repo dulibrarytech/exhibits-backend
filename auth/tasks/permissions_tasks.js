@@ -31,22 +31,6 @@ const Permissions_tasks = class {
         this.TABLE = TABLE;
     }
 
-    /** TODO
-     * Gets role permissions
-     * @param role
-     */
-    async get_role_permissions(role) {
-
-        try {
-
-            // TODO: implement role-permission lookup for `role`.
-            // (Removed a debug console.log(role) that leaked role data to stdout — OWASP A09.)
-
-        } catch (error) {
-            LOGGER.module().error('ERROR: [/auth/tasks (get_role_permissions)] unable to get role permissions ' + error.message);
-        }
-    };
-
     /**
      * Gets user data
      * @param id
