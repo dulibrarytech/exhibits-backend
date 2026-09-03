@@ -624,6 +624,19 @@ const publish_item_record = async (exhibit_id, item_id) => {
         }
 
         // Set item to published
+        /*
+         * The item must belong to THIS exhibit before it is flagged or indexed: set_item_to_publish keys on uuid alone.
+         * (code review 2026-09-02, H3)
+         */
+        const member_item_record = await item_task.get_item_record(exhibit_id, item_id);
+
+        if (!member_item_record) {
+            return {
+                status: false,
+                message: 'Item not found in exhibit'
+            };
+        }
+
         const is_item_published = await item_task.set_item_to_publish(item_id);
 
         if (is_item_published === false) {
@@ -684,6 +697,19 @@ const suppress_item_record = async (exhibit_id, item_id) => {
         }
 
         // Delete from index
+        /*
+         * Membership guard BEFORE the index delete: the item must belong to THIS exhibit.
+         * (code review 2026-09-02, H3)
+         */
+        const member_item_record = await item_task.get_item_record(exhibit_id, item_id);
+
+        if (!member_item_record) {
+            return {
+                status: false,
+                message: 'Item not found in exhibit'
+            };
+        }
+
         const delete_result = await INDEXER_MODEL.delete_record(item_id);
 
         if (delete_result.status !== CONSTANTS.STATUS_CODES.NO_CONTENT) {

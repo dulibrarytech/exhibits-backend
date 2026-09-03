@@ -87,11 +87,13 @@ const Recycled_record_tasks = class extends Base_tasks {
      * live (non-recycled) record can never be hard-deleted through this path.
      * @param {string} table - resolved table name
      * @param {string} uuid - record uuid
+     * @param {Object} [scope={}] - extra WHERE columns, e.g. { is_member_of_exhibit } so a
+     *        child can only be purged under the exhibit named in the request (review H3)
      * @returns {Promise<number>} affected row count
      */
-    async delete_recycled_record(table, uuid) {
+    async delete_recycled_record(table, uuid, scope = {}) {
         return this.DB(table)
-            .where({ uuid: uuid, is_deleted: 1 })
+            .where({ ...scope, uuid: uuid, is_deleted: 1 })
             .delete()
             .timeout(this.QUERY_TIMEOUT);
     }
@@ -117,11 +119,12 @@ const Recycled_record_tasks = class extends Base_tasks {
      * Restore a single recycled row (clears is_deleted). Scoped to `is_deleted = 1`.
      * @param {string} table - resolved table name
      * @param {string} uuid - record uuid
+     * @param {Object} [scope={}] - extra WHERE columns (see delete_recycled_record)
      * @returns {Promise<number>} affected row count
      */
-    async restore_recycled_record(table, uuid) {
+    async restore_recycled_record(table, uuid, scope = {}) {
         return this.DB(table)
-            .where({ uuid: uuid, is_deleted: 1 })
+            .where({ ...scope, uuid: uuid, is_deleted: 1 })
             .update({ is_deleted: 0 })
             .timeout(this.QUERY_TIMEOUT);
     }

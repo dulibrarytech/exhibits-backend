@@ -105,7 +105,7 @@ exports.restore_recycled_record = async function (req, res) {
             return deny(res);
         }
 
-        const result = await RECYCLE_MODEL.restore_recycled_record(type, uuid);
+        const result = await RECYCLE_MODEL.restore_recycled_record(type, uuid, exhibit_id);
         return res.status(result.status).send(result);
 
     } catch (error) {
@@ -139,7 +139,7 @@ exports.delete_recycled_record = async function (req, res) {
             return deny(res);
         }
 
-        const result = await RECYCLE_MODEL.delete_recycled_record(type, uuid);
+        const result = await RECYCLE_MODEL.delete_recycled_record(type, uuid, exhibit_id);
         return res.status(result.status).send(result);
 
     } catch (error) {

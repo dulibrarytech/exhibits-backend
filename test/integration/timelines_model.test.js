@@ -1172,4 +1172,87 @@ describe('Timelines Model Integration Tests', () => {
             expect(result.status).toBe(false);
         });
     });
+    describe('membership guard (H3)', () => {
+
+        test('publishing a timeline that is not in the exhibit flags nothing', async () => {
+            mockExhibitRecordTask.get_exhibit_record.mockResolvedValue({ is_published: 1 });
+            mockTimelineRecordTask.get_timeline_record.mockResolvedValue(null);
+
+            const result = await TIMELINES_MODEL.publish_timeline_record(TEST_EXHIBIT_UUID, TEST_TIMELINE_UUID);
+
+            expect(result.status).toBe(false);
+            expect(mockTimelineRecordTask.set_timeline_to_publish).not.toHaveBeenCalled();
+        });
+
+        test('suppressing a timeline that is not in the exhibit leaves its index doc alone', async () => {
+            const INDEXER_MODEL = require('../../indexer/model');
+            mockTimelineRecordTask.get_timeline_record.mockResolvedValue(null);
+
+            const result = await TIMELINES_MODEL.suppress_timeline_record(TEST_EXHIBIT_UUID, TEST_TIMELINE_UUID);
+
+            expect(result.status).toBe(false);
+            expect(INDEXER_MODEL.delete_record).not.toHaveBeenCalled();
+        });
+
+        test('suppressing a timeline item that is not in the exhibit never touches the container doc', async () => {
+            const INDEXER_MODEL = require('../../indexer/model');
+            mockTimelineRecordTask.get_timeline_item_record.mockResolvedValue(null);
+
+            const result = await TIMELINES_MODEL.suppress_timeline_item_record(TEST_EXHIBIT_UUID, TEST_TIMELINE_UUID, TEST_TIMELINE_ITEM_UUID);
+
+            expect(result).toBe(false);
+            expect(INDEXER_MODEL.get_indexed_record).not.toHaveBeenCalled();
+            expect(INDEXER_MODEL.delete_record).not.toHaveBeenCalled();
+        });
+    });
+    describe('suppress_timeline_record scope (H8)', () => {
+
+        test('suppresses exactly this timeline\'s items, once, keyed by the timeline uuid', async () => {
+            const INDEXER_MODEL = require('../../indexer/model');
+            INDEXER_MODEL.delete_record.mockResolvedValue({ status: 204 });
+            mockTimelineRecordTask.get_timeline_record.mockResolvedValue({ uuid: TEST_TIMELINE_UUID, is_member_of_exhibit: TEST_EXHIBIT_UUID });
+            mockTimelineRecordTask.set_timeline_to_suppress.mockResolvedValue(true);
+
+            const result = await TIMELINES_MODEL.suppress_timeline_record(TEST_EXHIBIT_UUID, TEST_TIMELINE_UUID);
+
+            expect(result.status).toBe(true);
+            expect(mockTimelineRecordTask.set_to_suppressed_timeline_items).toHaveBeenCalledTimes(1);
+            expect(mockTimelineRecordTask.set_to_suppressed_timeline_items).toHaveBeenCalledWith(TEST_TIMELINE_UUID);
+            expect(mockTimelineRecordTask.get_timeline_records).not.toHaveBeenCalled();
+        });
+    });
+    describe('delete_timeline_item_record — index consistency (M4)', () => {
+
+        const INDEXER_MODEL = require('../../indexer/model');
+        const OTHER_ITEM = '990e8400-e29b-41d4-a716-446655440009';
+
+        beforeEach(() => {
+            mockTimelineRecordTask.delete_timeline_item_record.mockResolvedValue(true);
+            INDEXER_MODEL.index_record.mockResolvedValue(true);
+        });
+
+        test('drops the item from the indexed timeline doc before deleting the row', async () => {
+            const source = { uuid: TEST_TIMELINE_UUID, items: [{ uuid: TEST_TIMELINE_ITEM_UUID }, { uuid: OTHER_ITEM }] };
+            INDEXER_MODEL.get_indexed_record.mockResolvedValue({ status: 200, data: { source } });
+
+            const result = await TIMELINES_MODEL.delete_timeline_item_record(TEST_EXHIBIT_UUID, TEST_TIMELINE_UUID, TEST_TIMELINE_ITEM_UUID);
+
+            expect(result.status).toBe(204);
+            expect(INDEXER_MODEL.index_record).toHaveBeenCalledWith(expect.objectContaining({ items: [{ uuid: OTHER_ITEM }] }));
+            expect(INDEXER_MODEL.index_record.mock.invocationCallOrder[0])
+                .toBeLessThan(mockTimelineRecordTask.delete_timeline_item_record.mock.invocationCallOrder[0]);
+        });
+
+        test('an unindexed timeline needs no index write; a failed upsert refuses the delete', async () => {
+            INDEXER_MODEL.get_indexed_record.mockResolvedValue({ status: 404 });
+            expect((await TIMELINES_MODEL.delete_timeline_item_record(TEST_EXHIBIT_UUID, TEST_TIMELINE_UUID, TEST_TIMELINE_ITEM_UUID)).status).toBe(204);
+            expect(INDEXER_MODEL.index_record).not.toHaveBeenCalled();
+
+            INDEXER_MODEL.get_indexed_record.mockResolvedValue({ status: 200, data: { source: { items: [{ uuid: TEST_TIMELINE_ITEM_UUID }] } } });
+            INDEXER_MODEL.index_record.mockResolvedValue(false);
+            mockTimelineRecordTask.delete_timeline_item_record.mockClear();
+            expect((await TIMELINES_MODEL.delete_timeline_item_record(TEST_EXHIBIT_UUID, TEST_TIMELINE_UUID, TEST_TIMELINE_ITEM_UUID)).status).toBe(500);
+            expect(mockTimelineRecordTask.delete_timeline_item_record).not.toHaveBeenCalled();
+        });
+    });
 });

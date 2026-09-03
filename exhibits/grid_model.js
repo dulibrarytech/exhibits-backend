@@ -783,6 +783,31 @@ exports.update_grid_item_record = async (is_member_of_exhibit, is_member_of_grid
  * @param {string} grid_item_id - Grid item UUID
  * @returns {Promise<Object>} Response object
  */
+/*
+ * Drops one item from its grid's PUBLIC index doc (the grid doc embeds its
+ * items). No-op when the grid is not indexed. Used on item delete so a
+ * soft-deleted item does not stay visible until the next full re-index
+ * (code review 2026-09-02, M4). Upserts the doc in place — no delete gap.
+ * @returns {Promise<boolean>} false only when the doc exists and the upsert failed
+ */
+const remove_grid_item_from_index = async (grid_id, grid_item_id) => {
+    const indexed = await INDEXER_MODEL.get_indexed_record(grid_id);
+
+    if (!indexed || indexed.status !== CONSTANTS.STATUS_CODES.OK || !indexed.data || !indexed.data.source) {
+        return true;
+    }
+
+    const source = indexed.data.source;
+    const items = Array.isArray(source.items) ? source.items : [];
+
+    if (!items.some(item => item.uuid === grid_item_id)) {
+        return true;
+    }
+
+    source.items = items.filter(item => item.uuid !== grid_item_id);
+    return await INDEXER_MODEL.index_record(source) === true;
+};
+
 exports.delete_grid_item_record = async (is_member_of_exhibit, grid_id, grid_item_id) => {
 
     try {
@@ -796,17 +821,57 @@ exports.delete_grid_item_record = async (is_member_of_exhibit, grid_id, grid_ite
             );
         }
 
+        /*
+         * Minimum-items rule on delete (code review 2026-09-02, M4): a
+         * PUBLISHED grid must keep at least `columns` published items, the
+         * same gate publish and suppress enforce. Deleting a published item
+         * that would take it below that is refused; unpublish the grid first.
+         */
+        const parent_grid_record = await grid_record_task.get_grid_record(is_member_of_exhibit, grid_id);
+
+        if (parent_grid_record && parent_grid_record.is_published === CONSTANTS.PUBLICATION_STATUS.PUBLISHED) {
+
+            const item_record = await grid_record_task.get_grid_item_record(is_member_of_exhibit, grid_id, grid_item_id);
+
+            if (item_record && item_record.is_published === CONSTANTS.PUBLICATION_STATUS.PUBLISHED) {
+
+                const minimum = get_minimum_grid_items(parent_grid_record.columns);
+                const published_count = await grid_record_task.get_grid_item_count(
+                    is_member_of_exhibit,
+                    grid_id,
+                    {published_only: true}
+                );
+
+                if (published_count - 1 < minimum) {
+                    return build_response(
+                        CONSTANTS.STATUS_CODES.BAD_REQUEST,
+                        `Cannot delete this grid item. The grid is published and needs at least ${minimum} items for its ${minimum} columns. Unpublish the grid first.`
+                    );
+                }
+            }
+        }
+
+        /*
+         * Index BEFORE the row: if the DB delete then fails the item is
+         * merely missing from the public grid until its next publish, whereas
+         * the reverse order would leave a deleted item live (the H7 class).
+         */
+        const index_updated = await remove_grid_item_from_index(grid_id, grid_item_id);
+
+        if (index_updated === false) {
+            return build_response(
+                CONSTANTS.STATUS_CODES.INTERNAL_SERVER_ERROR,
+                'Unable to remove the grid item from the public index; item not deleted'
+            );
+        }
+
         const result = await grid_record_task.delete_grid_item_record(
             is_member_of_exhibit,
             grid_id,
             grid_item_id
         );
 
-        const is_updated = await exhibit_tasks.update_exhibit_timestamp(is_member_of_exhibit);
-
-        if (is_updated === true) {
-            LOGGER.module().info('INFO: [/exhibits/items_model - Exhibit timestamp updated successfully.');
-        }
+        await exhibit_tasks.update_exhibit_timestamp(is_member_of_exhibit);
 
         return build_response(
             CONSTANTS.STATUS_CODES.NO_CONTENT,
@@ -821,7 +886,6 @@ exports.delete_grid_item_record = async (is_member_of_exhibit, grid_id, grid_ite
             grid_item_id,
             stack: error.stack
         });
-
         return build_response(
             CONSTANTS.STATUS_CODES.BAD_REQUEST,
             error.message
@@ -927,44 +991,6 @@ const publish_grid_record = async (exhibit_id, grid_id) => {
     }
 };
 
-/**
- * Suppresses grid items in parallel
- * @param {Array} grid_records - Grid records
- * @returns {Promise<void>}
- */
-const suppress_grid_items_parallel = async (grid_records) => {
-
-    if (!Array.isArray(grid_records) || grid_records.length === 0) {
-        return;
-    }
-
-    const suppress_promises = grid_records.map(async (grid_record) => {
-
-        try {
-
-            await grid_record_task.set_to_suppressed_grid_items(grid_record.is_member_of_exhibit);
-
-            const items = await grid_record_task.get_grid_item_records(
-                grid_record.is_member_of_exhibit,
-                grid_record.uuid
-            );
-
-            if (items && items.length > 0) {
-                const item_promises = items.map(item =>
-                    grid_record_task.set_to_suppressed_grid_items(item.is_member_of_grid)
-                );
-                await Promise.allSettled(item_promises);
-            }
-        } catch (error) {
-            LOGGER.module().error(
-                `ERROR: [/exhibits/grid_model (suppress_grid_items_parallel)] ${error.message}`,
-                {grid_uuid: grid_record.uuid, stack: error.stack}
-            );
-        }
-    });
-
-    await Promise.allSettled(suppress_promises);
-};
 
 /**
  * Suppresses grid record
@@ -984,6 +1010,19 @@ const suppress_grid_record = async (exhibit_id, item_id) => {
         }
 
         // Delete from index
+        /*
+         * The grid must belong to THIS exhibit before its index doc is removed.
+         * (code review 2026-09-02, H3)
+         */
+        const member_grid_record = await grid_record_task.get_grid_record(exhibit_id, item_id);
+
+        if (!member_grid_record) {
+            return {
+                status: false,
+                message: 'Grid not found in exhibit'
+            };
+        }
+
         const delete_result = await INDEXER_MODEL.delete_record(item_id);
 
         if (delete_result.status !== CONSTANTS.STATUS_CODES.NO_CONTENT) {
@@ -999,8 +1038,13 @@ const suppress_grid_record = async (exhibit_id, item_id) => {
         const is_grid_suppressed = await grid_record_task.set_grid_to_suppress(item_id);
 
         // Get and suppress grid items
-        const grid_records = await grid_record_task.get_grid_records(exhibit_id, item_id);
-        await suppress_grid_items_parallel(grid_records);
+        /*
+         * Suppress THIS grid's items only. This used to call get_grid_records
+         * with two arguments — the task takes one and returned every grid in
+         * the exhibit — and then flagged every item of every grid (code review
+         * 2026-09-02, H8). set_to_suppressed_grid_items is keyed by grid uuid.
+         */
+        await grid_record_task.set_to_suppressed_grid_items(item_id);
 
         if (is_grid_suppressed === false) {
             LOGGER.module().error('ERROR: [/exhibits/grid_model (suppress_grid_record)] Unable to set grid to suppressed');
@@ -1150,7 +1194,28 @@ const suppress_grid_item_record = async (exhibit_id, grid_id, grid_item_id) => {
         // below that minimum.
         const parent_grid_record = await grid_record_task.get_grid_record(exhibit_id, grid_id);
 
-        if (parent_grid_record && parent_grid_record.is_published === CONSTANTS.PUBLICATION_STATUS.PUBLISHED) {
+        /*
+         * Both the grid and the item must belong to THIS exhibit. A foreign grid
+         * used to skip the minimum-items gate (null record) and then lose its
+         * index doc before the scoped DB update threw (code review 2026-09-02, H3).
+         */
+        if (!parent_grid_record) {
+            return {
+                status: false,
+                message: 'Grid not found in exhibit'
+            };
+        }
+
+        const member_item_record = await grid_record_task.get_grid_item_record(exhibit_id, grid_id, grid_item_id);
+
+        if (!member_item_record) {
+            return {
+                status: false,
+                message: 'Grid item not found'
+            };
+        }
+
+        if (parent_grid_record.is_published === CONSTANTS.PUBLICATION_STATUS.PUBLISHED) {
 
             const minimum = get_minimum_grid_items(parent_grid_record.columns);
             const published_count = await grid_record_task.get_grid_item_count(

@@ -65,7 +65,7 @@ As of 2026-08-28:
 |--------|------:|-----:|-----:|
 | Vitest (unit: tasks 35 + unit-app 19) | 54 | 997 | 0 |
 | Jest (integration)                    | 38 | 898 | 0 |
-| Jest (`test:db`, needs MariaDB)       | 4  | 42  | 0 |
+| Jest (`test:db`, needs MariaDB)       | 6  | 49  | 0 |
 | **Total**                             | **85** | **1735** | **0** |
 
 Playwright adds 56 stubbed specs plus 11 live specs (run separately; not part of `npm test`).

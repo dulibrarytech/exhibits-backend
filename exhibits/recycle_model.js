@@ -33,6 +33,20 @@ const TYPE_TABLE = {
     timeline: TABLES.timeline_records
 };
 
+/*
+ * Scope a per-record recycle operation to the exhibit named in the request
+ * (review 2026-09-02, H3): a child row is only reachable under ITS exhibit,
+ * and an exhibit row only under its own uuid. Returns null when the pair
+ * cannot be valid, so the caller can 404 without touching the DB. A missing
+ * exhibit_id for a child type is refused too (fail closed).
+ */
+function record_scope(type, uuid, exhibit_id) {
+    if (type === 'exhibit') {
+        return exhibit_id && exhibit_id !== uuid ? null : {};
+    }
+    return exhibit_id ? { is_member_of_exhibit: exhibit_id } : null;
+}
+
 /**
  * Get recycled records across all five record types.
  * @param {string|null} created_by - when set, only that owner's records are
@@ -70,7 +84,7 @@ exports.get_recycled_records = async function (created_by = null) {
  * @param {string} type - exhibit|heading|item|grid|timeline
  * @param {string} uuid - record uuid
  */
-exports.delete_recycled_record = async function (type, uuid) {
+exports.delete_recycled_record = async function (type, uuid, exhibit_id = null) {
 
     try {
 
@@ -80,7 +94,11 @@ exports.delete_recycled_record = async function (type, uuid) {
         }
 
         const TASKS = new EXHIBIT_RECYCLED_RECORD_TASKS(DB, TABLES);
-        const affected = await TASKS.delete_recycled_record(table, uuid);
+        const scope = record_scope(type, uuid, exhibit_id);
+        if (scope === null) {
+            return { status: 404, message: 'Recycled record not found' };
+        }
+        const affected = await TASKS.delete_recycled_record(table, uuid, scope);
 
         if (!affected) {
             return { status: 404, message: 'Recycled record not found' };
@@ -124,7 +142,7 @@ exports.delete_all_recycled_records = async function (created_by = null) {
  * @param {string} type - exhibit|heading|item|grid|timeline
  * @param {string} uuid - record uuid
  */
-exports.restore_recycled_record = async function (type, uuid) {
+exports.restore_recycled_record = async function (type, uuid, exhibit_id = null) {
 
     try {
 
@@ -134,7 +152,11 @@ exports.restore_recycled_record = async function (type, uuid) {
         }
 
         const TASKS = new EXHIBIT_RECYCLED_RECORD_TASKS(DB, TABLES);
-        const affected = await TASKS.restore_recycled_record(table, uuid);
+        const scope = record_scope(type, uuid, exhibit_id);
+        if (scope === null) {
+            return { status: 404, message: 'Recycled record not found' };
+        }
+        const affected = await TASKS.restore_recycled_record(table, uuid, scope);
 
         if (!affected) {
             return { status: 404, message: 'Recycled record not found' };

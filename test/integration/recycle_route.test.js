@@ -149,7 +149,7 @@ describe('PUT /recycle/:exhibit_id/:uuid/:type — restore', () => {
             parent_id: EXHIBIT_UUID,
             child_id: ITEM_UUID
         });
-        expect(mockRestore).toHaveBeenCalledWith('item', ITEM_UUID);
+        expect(mockRestore).toHaveBeenCalledWith('item', ITEM_UUID, EXHIBIT_UUID);
     });
 
     test('exhibit record uses delete_exhibit / delete_any_exhibit + exhibit ownership', async () => {
@@ -164,7 +164,7 @@ describe('PUT /recycle/:exhibit_id/:uuid/:type — restore', () => {
             record_type: 'exhibit',
             parent_id: EXHIBIT_UUID
         });
-        expect(mockRestore).toHaveBeenCalledWith('exhibit', EXHIBIT_UUID);
+        expect(mockRestore).toHaveBeenCalledWith('exhibit', EXHIBIT_UUID, EXHIBIT_UUID);
     });
 
     test('400 on an unknown record type; authz and model never run', async () => {
@@ -200,14 +200,14 @@ describe('DELETE /recycle/:exhibit_id/:uuid/:type — permanent delete', () => {
         expect(mockDelete).not.toHaveBeenCalled();
     });
 
-    test('authorized permanent delete reaches the model with (type, uuid)', async () => {
+    test('authorized permanent delete reaches the model with (type, uuid, exhibit_id)', async () => {
         mockCheckPermission.mockResolvedValue(true);
         mockDelete.mockResolvedValue({ status: 200, message: 'Record permanently deleted' });
 
         const res = await request(app).delete(`${BASE}/${EXHIBIT_UUID}/${ITEM_UUID}/item`).set('x-access-token', 'jwt');
 
         expect(res.status).toBe(200);
-        expect(mockDelete).toHaveBeenCalledWith('item', ITEM_UUID);
+        expect(mockDelete).toHaveBeenCalledWith('item', ITEM_UUID, EXHIBIT_UUID);
     });
 });
 

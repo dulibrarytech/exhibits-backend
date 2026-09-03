@@ -559,12 +559,12 @@ const delete_all_exhibit_items = async (uuid) => {
 
     try {
 
-        const item_records = await item_record_task.get_item_records(uuid);
-
-        if (!item_records || item_records.length === 0) {
-            return;
-        }
-
+        /*
+         * ITEMS_MODEL.get_item_records aggregates EVERY component type. The old
+         * pre-check on standard items alone returned early for exhibits made of
+         * headings, grids and timelines only, so those children were never
+         * cascaded (code review 2026-09-02, H7).
+         */
         const items_result = await ITEMS_MODEL.get_item_records(uuid);
 
         if (!items_result.data || items_result.data.length === 0) {
@@ -633,6 +633,31 @@ exports.delete_exhibit_record = async (uuid) => {
         }
 
         // Delete all exhibit items
+        /*
+         * A published exhibit must leave the public index when it is deleted
+         * (moved to the recycle bin). The dashboard sends a plain DELETE with no
+         * prior suppress, so this used to leave every doc live (code review
+         * 2026-09-02, H7). suppress_exhibit removes the exhibit doc and all
+         * component docs and clears the publish flags; if the exhibit doc cannot
+         * be removed the delete is refused rather than leaving DB and index
+         * disagreeing. Preview docs (unpublished exhibit) are purged best-effort.
+         */
+        const exhibit_record = await exhibit_record_task.get_exhibit_record(uuid);
+
+        if (exhibit_record && Number(exhibit_record.is_published) === 1) {
+
+            const suppress_result = await suppress_exhibit(uuid);
+
+            if (!suppress_result || suppress_result.status !== true) {
+                return build_response(
+                    CONSTANTS.STATUS_CODES.INTERNAL_SERVER_ERROR,
+                    'Unable to remove the exhibit from the public index; exhibit not deleted'
+                );
+            }
+        } else if (await exports.check_preview(uuid) === true) {
+            await exports.delete_exhibit_preview(uuid);
+        }
+
         await delete_all_exhibit_items(uuid);
 
         // Delete the exhibit record itself

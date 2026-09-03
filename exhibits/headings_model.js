@@ -377,6 +377,19 @@ const publish_heading_record = async (exhibit_id, heading_id) => {
         }
 
         // Set heading to published and index (order matters: publish first, then index)
+        /*
+         * The heading must belong to THIS exhibit before it is flagged or indexed.
+         * (code review 2026-09-02, H3)
+         */
+        const member_heading_record = await heading_record_task.get_heading_record(exhibit_id, heading_id);
+
+        if (!member_heading_record) {
+            return {
+                status: false,
+                message: 'Heading not found in exhibit'
+            };
+        }
+
         const is_heading_published = await heading_record_task.set_heading_to_publish(heading_id);
         const is_indexed = await INDEXER_MODEL.index_heading_record(exhibit_id, heading_id);
 
@@ -435,6 +448,19 @@ const suppress_heading_record = async (exhibit_id, item_id) => {
         }
 
         // Delete from index
+        /*
+         * Membership guard BEFORE the index delete: the heading must belong to THIS exhibit.
+         * (code review 2026-09-02, H3)
+         */
+        const member_heading_record = await heading_record_task.get_heading_record(exhibit_id, item_id);
+
+        if (!member_heading_record) {
+            return {
+                status: false,
+                message: 'Heading not found in exhibit'
+            };
+        }
+
         const delete_result = await INDEXER_MODEL.delete_record(item_id);
 
         if (delete_result.status !== CONSTANTS.STATUS_CODES.NO_CONTENT) {

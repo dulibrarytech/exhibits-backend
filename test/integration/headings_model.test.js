@@ -308,4 +308,25 @@ describe('Headings Model', () => {
             expect(mockHelper.unlock_record).not.toHaveBeenCalled();
         });
     });
+    describe('membership guard (H3)', () => {
+
+        test('publish refuses a heading that is not in the exhibit — nothing flagged or indexed', async () => {
+            mockHeadingTasks.get_heading_record.mockResolvedValue(null);
+
+            const result = await HEADINGS_MODEL.publish_heading_record(EXHIBIT_UUID, HEADING_UUID);
+
+            expect(result.status).toBe(false);
+            expect(mockHeadingTasks.set_heading_to_publish).not.toHaveBeenCalled();
+            expect(INDEXER_MODEL.index_heading_record).not.toHaveBeenCalled();
+        });
+
+        test('suppress refuses a heading that is not in the exhibit — the index doc survives', async () => {
+            mockHeadingTasks.get_heading_record.mockResolvedValue(null);
+
+            const result = await HEADINGS_MODEL.suppress_heading_record(EXHIBIT_UUID, HEADING_UUID);
+
+            expect(result.status).toBe(false);
+            expect(INDEXER_MODEL.delete_record).not.toHaveBeenCalled();
+        });
+    });
 });

@@ -15,6 +15,7 @@
 
 const TEST_UUID = '550e8400-e29b-41d4-a716-446655440000';
 const TEST_OWNER = 'owner-du-id';
+const EXHIBIT_UUID = '770e8400-e29b-41d4-a716-446655440002';
 
 jest.mock('../../libs/log4', () => ({
     module: () => ({
@@ -114,10 +115,10 @@ describe('Recycle Model', () => {
         test('resolves the type to its physical table', async () => {
             mockRecycledTasks.delete_recycled_record.mockResolvedValue(1);
 
-            const result = await RECYCLE_MODEL.delete_recycled_record('grid', TEST_UUID);
+            const result = await RECYCLE_MODEL.delete_recycled_record('grid', TEST_UUID, EXHIBIT_UUID);
 
             expect(result.status).toBe(200);
-            expect(mockRecycledTasks.delete_recycled_record).toHaveBeenCalledWith('tbl_grids', TEST_UUID);
+            expect(mockRecycledTasks.delete_recycled_record).toHaveBeenCalledWith('tbl_grids', TEST_UUID, { is_member_of_exhibit: EXHIBIT_UUID });
         });
 
         test('rejects an unknown type with 400 and never touches the task layer', async () => {
@@ -187,10 +188,10 @@ describe('Recycle Model', () => {
         test('resolves the type to its physical table', async () => {
             mockRecycledTasks.restore_recycled_record.mockResolvedValue(1);
 
-            const result = await RECYCLE_MODEL.restore_recycled_record('timeline', TEST_UUID);
+            const result = await RECYCLE_MODEL.restore_recycled_record('timeline', TEST_UUID, EXHIBIT_UUID);
 
             expect(result.status).toBe(200);
-            expect(mockRecycledTasks.restore_recycled_record).toHaveBeenCalledWith('tbl_timelines', TEST_UUID);
+            expect(mockRecycledTasks.restore_recycled_record).toHaveBeenCalledWith('tbl_timelines', TEST_UUID, { is_member_of_exhibit: EXHIBIT_UUID });
         });
 
         test('rejects an unknown type with 400', async () => {
@@ -203,7 +204,7 @@ describe('Recycle Model', () => {
         test('returns 404 when no recycled row matched', async () => {
             mockRecycledTasks.restore_recycled_record.mockResolvedValue(0);
 
-            const result = await RECYCLE_MODEL.restore_recycled_record('item', TEST_UUID);
+            const result = await RECYCLE_MODEL.restore_recycled_record('item', TEST_UUID, EXHIBIT_UUID);
 
             expect(result.status).toBe(404);
         });
@@ -211,9 +212,42 @@ describe('Recycle Model', () => {
         test('returns 500 when the task layer throws', async () => {
             mockRecycledTasks.restore_recycled_record.mockRejectedValue(new Error('db down'));
 
-            const result = await RECYCLE_MODEL.restore_recycled_record('item', TEST_UUID);
+            const result = await RECYCLE_MODEL.restore_recycled_record('item', TEST_UUID, EXHIBIT_UUID);
 
             expect(result.status).toBe(500);
+        });
+    });
+    /*
+     * H3 (code review 2026-09-02): a per-record recycle op is confined to the
+     * exhibit named in the request; the model derives the task scope from it.
+     */
+    describe('per-record scope (H3)', () => {
+
+        test('a child type without an exhibit id is refused with 404 before the task runs', async () => {
+            const result = await RECYCLE_MODEL.delete_recycled_record('item', TEST_UUID);
+
+            expect(result.status).toBe(404);
+            expect(mockRecycledTasks.delete_recycled_record).not.toHaveBeenCalled();
+        });
+
+        test('an exhibit row is only reachable under its own uuid', async () => {
+            const mismatch = await RECYCLE_MODEL.restore_recycled_record('exhibit', TEST_UUID, EXHIBIT_UUID);
+            expect(mismatch.status).toBe(404);
+            expect(mockRecycledTasks.restore_recycled_record).not.toHaveBeenCalled();
+
+            mockRecycledTasks.restore_recycled_record.mockResolvedValue(1);
+            const ok = await RECYCLE_MODEL.restore_recycled_record('exhibit', TEST_UUID, TEST_UUID);
+            expect(ok.status).toBe(200);
+            expect(mockRecycledTasks.restore_recycled_record).toHaveBeenCalledWith('tbl_exhibits', TEST_UUID, {});
+        });
+
+        test('the exhibit scope reaches the task as is_member_of_exhibit', async () => {
+            mockRecycledTasks.delete_recycled_record.mockResolvedValue(0);
+
+            const result = await RECYCLE_MODEL.delete_recycled_record('heading', TEST_UUID, EXHIBIT_UUID);
+
+            expect(result.status).toBe(404);
+            expect(mockRecycledTasks.delete_recycled_record).toHaveBeenCalledWith('tbl_heading_items', TEST_UUID, { is_member_of_exhibit: EXHIBIT_UUID });
         });
     });
 });

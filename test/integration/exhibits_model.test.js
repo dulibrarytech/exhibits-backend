@@ -120,37 +120,50 @@ jest.mock('../../exhibits/tasks/exhibit_media_library_tasks', () => {
     return jest.fn().mockImplementation(() => mockExhibitMediaLibraryTask);
 });
 
-// Mock other task classes
+// Mock other task classes — named so tests can assert on the cascade / index paths
+const mockItemRecordTask = {
+    get_exhibit_items: jest.fn().mockResolvedValue([]),
+    get_item_records: jest.fn().mockResolvedValue([]),
+    delete_item_record: jest.fn().mockResolvedValue(true),
+    set_to_suppress: jest.fn().mockResolvedValue(true),
+    set_to_publish: jest.fn().mockResolvedValue(true)
+};
 jest.mock('../../exhibits/tasks/exhibit_item_record_tasks', () => {
-    return jest.fn().mockImplementation(() => ({
-        get_exhibit_items: jest.fn().mockResolvedValue([]),
-        set_to_suppress: jest.fn().mockResolvedValue(true),
-        set_to_publish: jest.fn().mockResolvedValue(true)
-    }));
+    return jest.fn().mockImplementation(() => mockItemRecordTask);
 });
 
+const mockHeadingRecordTask = {
+    get_exhibit_headings: jest.fn().mockResolvedValue([]),
+    get_heading_records: jest.fn().mockResolvedValue([]),
+    set_to_suppress: jest.fn().mockResolvedValue(true),
+    set_to_publish: jest.fn().mockResolvedValue(true)
+};
 jest.mock('../../exhibits/tasks/exhibit_heading_record_tasks', () => {
-    return jest.fn().mockImplementation(() => ({
-        get_exhibit_headings: jest.fn().mockResolvedValue([]),
-        set_to_suppress: jest.fn().mockResolvedValue(true),
-        set_to_publish: jest.fn().mockResolvedValue(true)
-    }));
+    return jest.fn().mockImplementation(() => mockHeadingRecordTask);
 });
 
+const mockGridRecordTask = {
+    get_exhibit_grids: jest.fn().mockResolvedValue([]),
+    get_grid_records: jest.fn().mockResolvedValue([]),
+    set_to_suppress: jest.fn().mockResolvedValue(true),
+    set_to_publish: jest.fn().mockResolvedValue(true),
+    set_exhibit_grid_items_to_suppress: jest.fn().mockResolvedValue(true),
+    set_exhibit_grid_items_to_publish: jest.fn().mockResolvedValue(true)
+};
 jest.mock('../../exhibits/tasks/exhibit_grid_record_tasks', () => {
-    return jest.fn().mockImplementation(() => ({
-        get_exhibit_grids: jest.fn().mockResolvedValue([]),
-        set_to_suppress: jest.fn().mockResolvedValue(true),
-        set_to_publish: jest.fn().mockResolvedValue(true)
-    }));
+    return jest.fn().mockImplementation(() => mockGridRecordTask);
 });
 
+const mockTimelineRecordTask = {
+    get_exhibit_timelines: jest.fn().mockResolvedValue([]),
+    get_timeline_records: jest.fn().mockResolvedValue([]),
+    set_to_suppress: jest.fn().mockResolvedValue(true),
+    set_to_publish: jest.fn().mockResolvedValue(true),
+    set_exhibit_timeline_items_to_suppress: jest.fn().mockResolvedValue(true),
+    set_exhibit_timeline_items_to_publish: jest.fn().mockResolvedValue(true)
+};
 jest.mock('../../exhibits/tasks/exhibit_timeline_record_tasks', () => {
-    return jest.fn().mockImplementation(() => ({
-        get_exhibit_timelines: jest.fn().mockResolvedValue([]),
-        set_to_suppress: jest.fn().mockResolvedValue(true),
-        set_to_publish: jest.fn().mockResolvedValue(true)
-    }));
+    return jest.fn().mockImplementation(() => mockTimelineRecordTask);
 });
 
 // Mock Indexer Model
@@ -162,7 +175,8 @@ jest.mock('../../indexer/model', () => ({
 
 // Mock Items Model
 jest.mock('../../exhibits/items_model', () => ({
-    get_item_record: jest.fn().mockResolvedValue({ status: 200, data: {} })
+    get_item_record: jest.fn().mockResolvedValue({ status: 200, data: {} }),
+    get_item_records: jest.fn().mockResolvedValue({ status: 200, data: [] })
 }));
 
 // Mock Grids Model
@@ -602,6 +616,75 @@ describe('Exhibits Model Integration Tests', () => {
             const result = await EXHIBITS_MODEL.reorder_exhibits(orderData);
 
             expect(result).toBe(false);
+        });
+    });
+    /*
+     * H7 (code review 2026-09-02): deleting (recycling) an exhibit must take
+     * it out of the public index, and the cascade must reach every component
+     * type, not only exhibits that happen to have standard items.
+     */
+    describe('delete_exhibit_record — index consistency (H7)', () => {
+
+        const INDEXER_MODEL = require('../../indexer/model');
+        const ITEMS_MODEL = require('../../exhibits/items_model');
+
+        beforeEach(() => {
+            mockExhibitRecordTask.delete_exhibit_record.mockResolvedValue(true);
+            INDEXER_MODEL.delete_record.mockResolvedValue({ status: 204 });
+            INDEXER_MODEL.get_indexed_record.mockResolvedValue({ data: { found: false } });
+        });
+
+        test('a PUBLISHED exhibit is suppressed (flags cleared, docs removed) before the soft delete', async () => {
+            mockExhibitRecordTask.get_exhibit_record.mockResolvedValue({ uuid: TEST_UUID, is_published: 1 });
+
+            const result = await EXHIBITS_MODEL.delete_exhibit_record(TEST_UUID);
+
+            expect(result.status).toBe(204);
+            expect(mockExhibitRecordTask.set_to_suppress).toHaveBeenCalledWith(TEST_UUID);
+            expect(INDEXER_MODEL.delete_record).toHaveBeenCalledWith(TEST_UUID);
+            expect(mockExhibitRecordTask.delete_exhibit_record).toHaveBeenCalledWith(TEST_UUID);
+        });
+
+        test('refuses the delete (500) when the exhibit doc cannot be removed from the index', async () => {
+            mockExhibitRecordTask.get_exhibit_record.mockResolvedValue({ uuid: TEST_UUID, is_published: 1 });
+            INDEXER_MODEL.delete_record.mockResolvedValue({ status: 200, message: 'Unable to delete record' });
+
+            const result = await EXHIBITS_MODEL.delete_exhibit_record(TEST_UUID);
+
+            expect(result.status).toBe(500);
+            expect(mockExhibitRecordTask.delete_exhibit_record).not.toHaveBeenCalled();
+        });
+
+        test('an UNPUBLISHED exhibit with preview docs has them purged, without touching publish flags', async () => {
+            mockExhibitRecordTask.get_exhibit_record.mockResolvedValue({ uuid: TEST_UUID, is_published: 0 });
+            INDEXER_MODEL.get_indexed_record.mockResolvedValue({ data: { found: true } });
+
+            const result = await EXHIBITS_MODEL.delete_exhibit_record(TEST_UUID);
+
+            expect(result.status).toBe(204);
+            expect(mockExhibitRecordTask.unset_preview).toHaveBeenCalledWith(TEST_UUID);
+            expect(INDEXER_MODEL.delete_record).toHaveBeenCalledWith(TEST_UUID);
+            expect(mockExhibitRecordTask.set_to_suppress).not.toHaveBeenCalled();
+        });
+
+        test('an unpublished exhibit with nothing indexed never touches the index', async () => {
+            mockExhibitRecordTask.get_exhibit_record.mockResolvedValue({ uuid: TEST_UUID, is_published: 0 });
+
+            const result = await EXHIBITS_MODEL.delete_exhibit_record(TEST_UUID);
+
+            expect(result.status).toBe(204);
+            expect(INDEXER_MODEL.delete_record).not.toHaveBeenCalled();
+        });
+
+        test('the cascade reaches an exhibit made only of headings (no standard items)', async () => {
+            mockExhibitRecordTask.get_exhibit_record.mockResolvedValue({ uuid: TEST_UUID, is_published: 0 });
+            ITEMS_MODEL.get_item_records.mockResolvedValue({ status: 200, data: [
+                { uuid: 'h-1', is_member_of_exhibit: TEST_UUID, type: 'heading' }
+            ] });
+
+            await EXHIBITS_MODEL.delete_exhibit_record(TEST_UUID);
+
+            expect(mockItemRecordTask.delete_item_record).toHaveBeenCalledWith(TEST_UUID, 'h-1', 'heading');
         });
     });
 });

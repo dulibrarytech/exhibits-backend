@@ -956,4 +956,33 @@ describe('Items Model Integration Tests', () => {
             expect(result.status).toBe(400);
         });
     });
+    /*
+     * H3 (code review 2026-09-02): publish/suppress act on the item uuid, so the
+     * item must be proven a member of the exhibit in the URL before any index
+     * or DB write.
+     */
+    describe('membership guard (H3)', () => {
+
+        test('publish refuses an item that is not in the exhibit — nothing flagged or indexed', async () => {
+            mockExhibitRecordTask.get_exhibit_record.mockResolvedValue({ is_published: 1 });
+            mockItemRecordTask.get_item_record.mockResolvedValue(null);
+
+            const result = await ITEMS_MODEL.publish_item_record(TEST_EXHIBIT_UUID, TEST_ITEM_UUID);
+
+            expect(result.status).toBe(false);
+            expect(mockItemRecordTask.get_item_record).toHaveBeenCalledWith(TEST_EXHIBIT_UUID, TEST_ITEM_UUID);
+            expect(mockItemRecordTask.set_item_to_publish).not.toHaveBeenCalled();
+        });
+
+        test('suppress refuses an item that is not in the exhibit — the index doc survives', async () => {
+            const INDEXER_MODEL = require('../../indexer/model');
+            mockItemRecordTask.get_item_record.mockResolvedValue(null);
+
+            const result = await ITEMS_MODEL.suppress_item_record(TEST_EXHIBIT_UUID, TEST_ITEM_UUID);
+
+            expect(result.status).toBe(false);
+            expect(INDEXER_MODEL.delete_record).not.toHaveBeenCalled();
+            expect(mockItemRecordTask.set_item_to_suppress).not.toHaveBeenCalled();
+        });
+    });
 });

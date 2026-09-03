@@ -630,6 +630,31 @@ exports.update_timeline_item_record = async (is_member_of_exhibit, is_member_of_
  * @param {string} timeline_item_id - Timeline item UUID
  * @returns {Promise<Object>} Response object
  */
+/*
+ * Drops one item from its timeline's PUBLIC index doc (the timeline doc
+ * embeds its items). No-op when the timeline is not indexed. Used on item
+ * delete so a soft-deleted item does not stay visible until the next full
+ * re-index (code review 2026-09-02, M4). Upserts in place — no delete gap.
+ * @returns {Promise<boolean>} false only when the doc exists and the upsert failed
+ */
+const remove_timeline_item_from_index = async (timeline_id, timeline_item_id) => {
+    const indexed = await INDEXER_MODEL.get_indexed_record(timeline_id);
+
+    if (!indexed || indexed.status !== CONSTANTS.STATUS_CODES.OK || !indexed.data || !indexed.data.source) {
+        return true;
+    }
+
+    const source = indexed.data.source;
+    const items = Array.isArray(source.items) ? source.items : [];
+
+    if (!items.some(item => item.uuid === timeline_item_id)) {
+        return true;
+    }
+
+    source.items = items.filter(item => item.uuid !== timeline_item_id);
+    return await INDEXER_MODEL.index_record(source) === true;
+};
+
 exports.delete_timeline_item_record = async (is_member_of_exhibit, timeline_id, timeline_item_id) => {
 
     try {
@@ -643,17 +668,23 @@ exports.delete_timeline_item_record = async (is_member_of_exhibit, timeline_id, 
             );
         }
 
+        /* Index BEFORE the row — see grid_model.delete_grid_item_record (M4). */
+        const index_updated = await remove_timeline_item_from_index(timeline_id, timeline_item_id);
+
+        if (index_updated === false) {
+            return build_response(
+                CONSTANTS.STATUS_CODES.INTERNAL_SERVER_ERROR,
+                'Unable to remove the timeline item from the public index; item not deleted'
+            );
+        }
+
         const result = await timeline_record_task.delete_timeline_item_record(
             is_member_of_exhibit,
             timeline_id,
             timeline_item_id
         );
 
-        const is_updated = await exhibit_tasks.update_exhibit_timestamp(is_member_of_exhibit);
-
-        if (is_updated === true) {
-            LOGGER.module().info('INFO: [/exhibits/items_model - Exhibit timestamp updated successfully.');
-        }
+        await exhibit_tasks.update_exhibit_timestamp(is_member_of_exhibit);
 
         return build_response(
             CONSTANTS.STATUS_CODES.NO_CONTENT,
@@ -668,7 +699,6 @@ exports.delete_timeline_item_record = async (is_member_of_exhibit, timeline_id, 
             timeline_item_id,
             stack: error.stack
         });
-
         return build_response(
             CONSTANTS.STATUS_CODES.BAD_REQUEST,
             error.message
@@ -706,6 +736,19 @@ exports.publish_timeline_record = async (exhibit_id, timeline_id) => {
         }
 
         // Set timeline to published
+        /*
+         * The timeline must belong to THIS exhibit before it is flagged or indexed.
+         * (code review 2026-09-02, H3)
+         */
+        const member_timeline_record = await timeline_record_task.get_timeline_record(exhibit_id, timeline_id);
+
+        if (!member_timeline_record) {
+            return {
+                status: false,
+                message: 'Timeline not found in exhibit'
+            };
+        }
+
         const is_timeline_published = await timeline_record_task.set_timeline_to_publish(timeline_id);
 
         if (is_timeline_published === false) {
@@ -748,44 +791,6 @@ exports.publish_timeline_record = async (exhibit_id, timeline_id) => {
     }
 };
 
-/**
- * Suppresses timeline items in parallel
- * @param {Array} timeline_records - Timeline records
- * @returns {Promise<void>}
- */
-const suppress_timeline_items_parallel = async (timeline_records) => {
-
-    if (!Array.isArray(timeline_records) || timeline_records.length === 0) {
-        return;
-    }
-
-    const suppress_promises = timeline_records.map(async (timeline_record) => {
-
-        try {
-
-            await timeline_record_task.set_to_suppressed_timeline_items(timeline_record.is_member_of_exhibit);
-
-            const items = await timeline_record_task.get_timeline_item_records(
-                timeline_record.is_member_of_exhibit,
-                timeline_record.uuid
-            );
-
-            if (items && items.length > 0) {
-                const item_promises = items.map(item =>
-                    timeline_record_task.set_to_suppressed_timeline_items(item.is_member_of_timeline)
-                );
-                await Promise.allSettled(item_promises);
-            }
-        } catch (error) {
-            LOGGER.module().error(
-                `ERROR: [/exhibits/timelines_model (suppress_timeline_items_parallel)] ${error.message}`,
-                {timeline_uuid: timeline_record.uuid, stack: error.stack}
-            );
-        }
-    });
-
-    await Promise.allSettled(suppress_promises);
-};
 
 /**
  * Suppresses timeline record
@@ -805,6 +810,19 @@ exports.suppress_timeline_record = async (exhibit_id, item_id) => {
         }
 
         // Delete from index
+        /*
+         * The timeline must belong to THIS exhibit before its index doc is removed.
+         * (code review 2026-09-02, H3)
+         */
+        const member_timeline_record = await timeline_record_task.get_timeline_record(exhibit_id, item_id);
+
+        if (!member_timeline_record) {
+            return {
+                status: false,
+                message: 'Timeline not found in exhibit'
+            };
+        }
+
         const delete_result = await INDEXER_MODEL.delete_record(item_id);
 
         if (delete_result.status !== CONSTANTS.STATUS_CODES.NO_CONTENT) {
@@ -820,8 +838,12 @@ exports.suppress_timeline_record = async (exhibit_id, item_id) => {
         const is_timeline_suppressed = await timeline_record_task.set_timeline_to_suppress(item_id);
 
         // Get and suppress timeline items
-        const timeline_records = await timeline_record_task.get_timeline_records(exhibit_id, item_id);
-        await suppress_timeline_items_parallel(timeline_records);
+        /*
+         * Suppress THIS timeline's items only (code review 2026-09-02, H8 —
+         * same shape as the grid bug: a one-argument task called with two
+         * returned every timeline, and every timeline's items were flagged).
+         */
+        await timeline_record_task.set_to_suppressed_timeline_items(item_id);
 
         if (is_timeline_suppressed === false) {
             LOGGER.module().error('ERROR: [/exhibits/timelines_model (suppress_timeline_record)] Unable to set timeline to suppressed');
@@ -964,6 +986,16 @@ exports.suppress_timeline_item_record = async (exhibit_id, timeline_id, timeline
         }
 
         // Get indexed record
+        /*
+         * Both the timeline and the item must belong to THIS exhibit before the
+         * container doc is touched (code review 2026-09-02, H3).
+         */
+        const member_item_record = await timeline_record_task.get_timeline_item_record(exhibit_id, timeline_id, timeline_item_id);
+
+        if (!member_item_record) {
+            return false;
+        }
+
         const indexed_record = await INDEXER_MODEL.get_indexed_record(timeline_id);
 
         if (!indexed_record.data || !indexed_record.data.source) {

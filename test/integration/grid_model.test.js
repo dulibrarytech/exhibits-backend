@@ -80,6 +80,8 @@ const mockGridRecordTask = {
     update_grid_item_record: jest.fn().mockResolvedValue(true),
     delete_grid_item_record: jest.fn().mockResolvedValue(true),
     reorder_grids: jest.fn().mockResolvedValue(true),
+    set_grid_to_suppress: jest.fn().mockResolvedValue(true),
+    set_to_suppressed_grid_items: jest.fn().mockResolvedValue({ affected_rows: 0 }),
     reorder_grid_items: jest.fn().mockResolvedValue(true)
 };
 
@@ -885,6 +887,139 @@ describe('Grid Model Integration Tests', () => {
             const result = await GRID_MODEL.reorder_grids(TEST_EXHIBIT_UUID, { order: [] });
 
             expect(result).toBe(false);
+        });
+    });
+    describe('membership guard (H3)', () => {
+
+        test('suppressing a grid that is not in the exhibit leaves its index doc alone', async () => {
+            const INDEXER_MODEL = require('../../indexer/model');
+            mockGridRecordTask.get_grid_record.mockResolvedValue(null);
+
+            const result = await GRID_MODEL.suppress_grid_record(TEST_EXHIBIT_UUID, TEST_GRID_UUID);
+
+            expect(result.status).toBe(false);
+            expect(INDEXER_MODEL.delete_record).not.toHaveBeenCalled();
+        });
+
+        test('suppressing a grid item under a foreign grid is refused before the minimum-items gate or the index', async () => {
+            const INDEXER_MODEL = require('../../indexer/model');
+            mockGridRecordTask.get_grid_record.mockResolvedValue(null);
+
+            const result = await GRID_MODEL.suppress_grid_item_record(TEST_EXHIBIT_UUID, TEST_GRID_UUID, TEST_GRID_ITEM_UUID);
+
+            expect(result.status).toBe(false);
+            expect(result.message).toBe('Grid not found in exhibit');
+            expect(INDEXER_MODEL.get_indexed_record).not.toHaveBeenCalled();
+            expect(INDEXER_MODEL.delete_record).not.toHaveBeenCalled();
+        });
+
+        test('suppressing a grid item that is not in the grid is refused', async () => {
+            const INDEXER_MODEL = require('../../indexer/model');
+            mockGridRecordTask.get_grid_record.mockResolvedValue({ uuid: TEST_GRID_UUID, is_published: 0, columns: 4 });
+            mockGridRecordTask.get_grid_item_record.mockResolvedValue(null);
+
+            const result = await GRID_MODEL.suppress_grid_item_record(TEST_EXHIBIT_UUID, TEST_GRID_UUID, TEST_GRID_ITEM_UUID);
+
+            expect(result.status).toBe(false);
+            expect(result.message).toBe('Grid item not found');
+            expect(INDEXER_MODEL.delete_record).not.toHaveBeenCalled();
+        });
+    });
+    /*
+     * H8 (code review 2026-09-02): suppressing one grid must flag only THAT
+     * grid's items — never every grid in the exhibit.
+     */
+    describe('suppress_grid_record scope (H8)', () => {
+
+        test('suppresses exactly this grid\'s items, once, keyed by the grid uuid', async () => {
+            const INDEXER_MODEL = require('../../indexer/model');
+            INDEXER_MODEL.delete_record.mockResolvedValue({ status: 204 });
+            mockGridRecordTask.get_grid_record.mockResolvedValue({ uuid: TEST_GRID_UUID, is_member_of_exhibit: TEST_EXHIBIT_UUID });
+            mockGridRecordTask.set_grid_to_suppress.mockResolvedValue(true);
+
+            const result = await GRID_MODEL.suppress_grid_record(TEST_EXHIBIT_UUID, TEST_GRID_UUID);
+
+            expect(result.status).toBe(true);
+            expect(mockGridRecordTask.set_to_suppressed_grid_items).toHaveBeenCalledTimes(1);
+            expect(mockGridRecordTask.set_to_suppressed_grid_items).toHaveBeenCalledWith(TEST_GRID_UUID);
+            /* the old path enumerated every grid; nothing should list grids here */
+            expect(mockGridRecordTask.get_grid_records).not.toHaveBeenCalled();
+        });
+    });
+    /*
+     * M4 (code review 2026-09-02): deleting a grid item must drop it from the
+     * grid's public index doc, and a published grid may not be deleted below
+     * its column minimum.
+     */
+    describe('delete_grid_item_record — index + minimum-items (M4)', () => {
+
+        const INDEXER_MODEL = require('../../indexer/model');
+        const OTHER_ITEM = '990e8400-e29b-41d4-a716-446655440009';
+
+        beforeEach(() => {
+            mockGridRecordTask.get_grid_record.mockResolvedValue({ uuid: TEST_GRID_UUID, is_published: 0, columns: 2 });
+            mockGridRecordTask.get_grid_item_record.mockResolvedValue({ uuid: TEST_GRID_ITEM_UUID, is_published: 1 });
+            mockGridRecordTask.get_grid_item_count = jest.fn().mockResolvedValue(3);
+            mockGridRecordTask.delete_grid_item_record.mockResolvedValue(true);
+            INDEXER_MODEL.index_record.mockResolvedValue(true);
+        });
+
+        test('drops the item from the indexed grid doc BEFORE deleting the row', async () => {
+            const source = { uuid: TEST_GRID_UUID, items: [{ uuid: TEST_GRID_ITEM_UUID }, { uuid: OTHER_ITEM }] };
+            INDEXER_MODEL.get_indexed_record.mockResolvedValue({ status: 200, data: { source } });
+
+            const result = await GRID_MODEL.delete_grid_item_record(TEST_EXHIBIT_UUID, TEST_GRID_UUID, TEST_GRID_ITEM_UUID);
+
+            expect(result.status).toBe(204);
+            expect(INDEXER_MODEL.index_record).toHaveBeenCalledWith(expect.objectContaining({
+                uuid: TEST_GRID_UUID, items: [{ uuid: OTHER_ITEM }]
+            }));
+            expect(INDEXER_MODEL.index_record.mock.invocationCallOrder[0])
+                .toBeLessThan(mockGridRecordTask.delete_grid_item_record.mock.invocationCallOrder[0]);
+        });
+
+        test('an unindexed grid (not published) needs no index write', async () => {
+            INDEXER_MODEL.get_indexed_record.mockResolvedValue({ status: 404, message: 'Record not found' });
+
+            const result = await GRID_MODEL.delete_grid_item_record(TEST_EXHIBIT_UUID, TEST_GRID_UUID, TEST_GRID_ITEM_UUID);
+
+            expect(result.status).toBe(204);
+            expect(INDEXER_MODEL.index_record).not.toHaveBeenCalled();
+            expect(mockGridRecordTask.delete_grid_item_record).toHaveBeenCalled();
+        });
+
+        test('refuses the delete (500) when the index upsert fails, leaving the row', async () => {
+            INDEXER_MODEL.get_indexed_record.mockResolvedValue({ status: 200, data: { source: { uuid: TEST_GRID_UUID, items: [{ uuid: TEST_GRID_ITEM_UUID }] } } });
+            INDEXER_MODEL.index_record.mockResolvedValue(false);
+
+            const result = await GRID_MODEL.delete_grid_item_record(TEST_EXHIBIT_UUID, TEST_GRID_UUID, TEST_GRID_ITEM_UUID);
+
+            expect(result.status).toBe(500);
+            expect(mockGridRecordTask.delete_grid_item_record).not.toHaveBeenCalled();
+        });
+
+        test('a PUBLISHED grid at its column minimum refuses deleting a published item', async () => {
+            mockGridRecordTask.get_grid_record.mockResolvedValue({ uuid: TEST_GRID_UUID, is_published: 1, columns: 2 });
+            mockGridRecordTask.get_grid_item_count.mockResolvedValue(2);
+            INDEXER_MODEL.get_indexed_record.mockResolvedValue({ status: 404 });
+
+            const result = await GRID_MODEL.delete_grid_item_record(TEST_EXHIBIT_UUID, TEST_GRID_UUID, TEST_GRID_ITEM_UUID);
+
+            expect(result.status).toBe(400);
+            expect(result.message).toMatch(/needs at least 2 items/);
+            expect(mockGridRecordTask.delete_grid_item_record).not.toHaveBeenCalled();
+        });
+
+        test('a published grid ABOVE its minimum, or an unpublished item, may be deleted', async () => {
+            mockGridRecordTask.get_grid_record.mockResolvedValue({ uuid: TEST_GRID_UUID, is_published: 1, columns: 2 });
+            INDEXER_MODEL.get_indexed_record.mockResolvedValue({ status: 404 });
+
+            mockGridRecordTask.get_grid_item_count.mockResolvedValue(3);
+            expect((await GRID_MODEL.delete_grid_item_record(TEST_EXHIBIT_UUID, TEST_GRID_UUID, TEST_GRID_ITEM_UUID)).status).toBe(204);
+
+            mockGridRecordTask.get_grid_item_count.mockResolvedValue(2);
+            mockGridRecordTask.get_grid_item_record.mockResolvedValue({ uuid: TEST_GRID_ITEM_UUID, is_published: 0 });
+            expect((await GRID_MODEL.delete_grid_item_record(TEST_EXHIBIT_UUID, TEST_GRID_UUID, TEST_GRID_ITEM_UUID)).status).toBe(204);
         });
     });
 });
