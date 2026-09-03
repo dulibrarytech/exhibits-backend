@@ -97,7 +97,7 @@ npm run test:e2e:install      # one-time: installs Chromium for Playwright
 npm run test:e2e              # stubbed browser suite (no DB/network dependencies)
 npm run test:e2e:live         # live full-stack suite (auto-creates + migrates the exhibits_e2e DB)
 npm run test:e2e:live:external  # @external repo + Kaltura round-trips (DU VPN required)
-npm run test:predeploy        # the full pre-deploy gate: unit + integration + stubbed + live
+npm run test:predeploy        # the full pre-deploy gate: unit + integration + db-backed tasks + stubbed + live
 ```
 
 `@playwright/test` is pinned exactly (see package.json) so local and server runs use identical browser
