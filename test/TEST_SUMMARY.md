@@ -6,15 +6,15 @@ Per-file test counts are deliberately not tracked here — they rot. Run the sui
 
 ## Current Baseline
 
-As of 2026-08-28:
+As of 2026-09-02:
 
 | Runner | Files | Pass | Skip |
 |--------|------:|-----:|-----:|
 | Vitest — `test/tasks/` (server unit)      | 34 | —   | 0 |
 | Vitest — `test/unit-app/` (client unit)   | 19 | —   | 0 |
-| Vitest total                              | 54 | 1031 | 0 |
-| Jest — `test/integration/`                | 31 | 704 | 0 |
-| **`npm test` total**                      | **85** | **1735** | **0** |
+| Vitest total                              | 54 | 997 | 0 |
+| Jest — `test/integration/`                | 38 | 898 | 0 |
+| **`npm test` total**                      | **92** | **1895** | **0** |
 
 Playwright (not part of `npm test`): 56 stubbed specs in `test/e2e/specs/`, 11 live specs in `test/e2e/live/` (incl. the full create→publish→preview exhibit lifecycle). The two `@external` live specs skip unless `PW_EXTERNAL=1` (VPN-reachable Kaltura / repository services). Live publish/preview index into the LOCAL Elasticsearch index — lifecycle-style tests must suppress in teardown (apiSuppressExhibit) so those documents are removed again.
 
@@ -34,7 +34,9 @@ Browser-side `public/app/*` client modules (helper, dom, exhibits form modules, 
 
 Full route → controller → model flows (`*_integration.test.js`) and model-layer orchestration with mocked task classes (`*_model.test.js`), plus focused suites for auth, permissions matrices, media upload/thumbnails/PNG flattening, preview/publish state, recycle bin, indexer manage route, repo thumbnail service, IIIF PDF rendering, and client-endpoint parity. See `integration/README.md` for the mocking strategy.
 
-Route-mounting suites (`*_routes_integration.test.js` — items, grids, timelines, headings, users, auth, media library) mount the REAL route files with the real endpoints module and controllers (models mocked), covering route registration, path-param mapping, and middleware ordering (rate limit → token verify → validation → authorize → model). Every route file they cover sits at 100% coverage; prefer extending them over hand-wiring an Express app when adding route-level tests.
+Every model now has a real-execution suite (`*_model.test.js`): exhibits, items, grid, timelines, recycle, and — added 2026-09-02 — users, auth, headings, indexer and media library. The model code runs for real with only the task classes (and, where needed, the upload pipeline / IIIF cache / coalescer) mocked, so status-contract bugs ("model says 404, controller sends 201") are caught without the live stack. Also added the same day: `share_routes_integration` (share-token binding) and `cleanup_orphaned_files` (the sweep against a temp storage tree with a fake DB).
+
+Route-mounting suites (`*_routes_integration.test.js` — items, grids, timelines, headings, users, auth, media library, share) mount the REAL route files with the real endpoints module and controllers (models mocked), covering route registration, path-param mapping, and middleware ordering (rate limit → token verify → validation → authorize → model). Every route file they cover sits at 100% coverage; prefer extending them over hand-wiring an Express app when adding route-level tests.
 
 ### Coverage Areas
 
