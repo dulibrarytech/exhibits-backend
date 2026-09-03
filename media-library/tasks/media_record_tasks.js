@@ -1037,10 +1037,18 @@ const Media_record_tasks = class {
 
             const trimmed_value = storage_path.trim();
 
+            /*
+             * "Claimed" means referenced by ANY row's original OR thumbnail
+             * column, soft-deleted rows included — their files must survive
+             * for recycle-bin restore, and a thumbnail is a served file too.
+             * (Review 2026-09-02, media finding 3; pinned by
+             * test/db/media_tasks_references.)
+             */
             const record = await this.DB(this.TABLE.media_library_records)
                 .select('id', 'uuid', 'name')
-                .where('storage_path', trimmed_value)
-                .andWhere({is_deleted: 0})
+                .where((builder) => builder
+                    .where('storage_path', trimmed_value)
+                    .orWhere('thumbnail_path', trimmed_value))
                 .first()
                 .timeout(this.QUERY_TIMEOUT);
 

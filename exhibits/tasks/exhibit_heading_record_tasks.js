@@ -436,9 +436,10 @@ const Exhibit_heading_record_tasks = class extends Base_tasks {
 
             const exhibit_uuid = this._validate_uuid(uuid, 'exhibit UUID');
 
+            /* Recycled rows are not content: the publish gate must not count them (review M3). */
             const result = await this.DB(this.TABLE.heading_records)
                 .count('id as count')
-                .where({is_member_of_exhibit: exhibit_uuid})
+                .where({is_member_of_exhibit: exhibit_uuid, is_deleted: 0})
                 .timeout(this.QUERY_TIMEOUT);
 
             const count = result?.[0]?.count ? parseInt(result[0].count, 10) : 0;

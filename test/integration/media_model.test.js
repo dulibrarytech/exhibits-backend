@@ -364,6 +364,29 @@ describe('Media Library Model', () => {
             expect(UPLOADS.delete_stored_file).not.toHaveBeenCalled();
         });
 
+        test('refuses when the THUMBNAIL argument is claimed by a saved record, even if the original is free', async () => {
+            mockMediaTasks.find_by_storage_path.mockImplementation(async (p) => ({ exists: p === 'thumbnails/a/b/live_thumb.jpg' }));
+
+            const result = await MEDIA_MODEL.delete_uploaded_file('images/a/b/staged.jpg', 'thumbnails/a/b/live_thumb.jpg');
+
+            expect(result.success).toBe(false);
+            expect(result.message).toMatch(/linked to a saved media record/);
+            expect(mockMediaTasks.find_by_storage_path).toHaveBeenCalledWith('images/a/b/staged.jpg');
+            expect(mockMediaTasks.find_by_storage_path).toHaveBeenCalledWith('thumbnails/a/b/live_thumb.jpg');
+            expect(UPLOADS.delete_stored_file).not.toHaveBeenCalled();
+        });
+
+        test('confines each argument to its upload subtree', async () => {
+            /* original outside the media-type dirs */
+            expect((await MEDIA_MODEL.delete_uploaded_file('iiif_cache/a/b/x/1/full.jpg')).message).toBe('Invalid file path');
+            /* a thumbnail passed as the original */
+            expect((await MEDIA_MODEL.delete_uploaded_file('thumbnails/a/b/x_thumb.jpg')).message).toBe('Invalid file path');
+            /* an original passed as the thumbnail */
+            expect((await MEDIA_MODEL.delete_uploaded_file('images/a/b/x.jpg', 'images/a/b/y.jpg')).message).toBe('Invalid file path');
+            expect(mockMediaTasks.find_by_storage_path).not.toHaveBeenCalled();
+            expect(UPLOADS.delete_stored_file).not.toHaveBeenCalled();
+        });
+
         test('deletes an unreferenced staged file and its thumbnail', async () => {
             const result = await MEDIA_MODEL.delete_uploaded_file(' images/a/b/c.jpg ', 'thumbnails/a/b/c_thumb.jpg');
 

@@ -360,16 +360,24 @@ const Auth_tasks = class {
             }
 
             // Handle child record types (child_id is provided at this point)
-
-            // Fetch exhibit and child record data in parallel
+            /*
+             * Child record types (child_id is provided at this point).
+             *
+             * The child is looked up TOGETHER with its parent column: a child
+             * row that is not `is_member_of_exhibit = parent_id` is not this
+             * exhibit's child, whatever the URL says. Without that binding,
+             * owning exhibit A resolved ownership of any child uuid in the
+             * system (code review 2026-09-02, H3) — the uuid-only suppress,
+             * publish and recycle paths then acted on it.
+             */
             const [exhibit_data, child_data] = await Promise.all([
                 this.DB(this.TABLE.exhibit_records)
                     .select('owner')
                     .where({ uuid: parent_id })
                     .limit(1),
                 this.DB(record_type_map[normalized_record_type])
-                    .select('owner')
-                    .where({ uuid: child_id })
+                    .select('owner', 'is_member_of_exhibit')
+                    .where({ uuid: child_id, is_member_of_exhibit: parent_id })
                     .limit(1)
             ]);
 
@@ -387,10 +395,12 @@ const Auth_tasks = class {
                 return 0;
             }
 
-            // If child record doesn't exist, return exhibit owner
+            // No such child under this exhibit (wrong exhibit, wrong type, or
+            // nonexistent): nobody owns it here — never fall back to the
+            // exhibit owner, that is exactly the H3 hole.
             if (!child_data || child_data.length === 0) {
-                LOGGER.module().debug(`Child record not found, returning exhibit owner: ${exhibit_owner}`);
-                return exhibit_owner;
+                LOGGER.module().warn(`WARNING: [/auth/tasks (check_ownership)] ${normalized_record_type} ${child_id} is not a member of exhibit ${parent_id}`);
+                return 0;
             }
 
             const child_owner = Number(child_data[0].owner);

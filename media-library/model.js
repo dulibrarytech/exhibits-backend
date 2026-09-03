@@ -69,6 +69,21 @@ const build_response = (success, message, data = null) => {
 // never contain a literal pipe.
 const SUBJECT_FIELDS = ['topics_subjects', 'genre_form_subjects', 'places_subjects'];
 
+/*
+ * Upload subtrees (relative to STORAGE_PATH) a staged upload may live in.
+ * Mirrors uploads.js build_file_path / build_thumbnail_path.
+ */
+const STORAGE_CONFIG = require('./storage_config')();
+const MEDIA_TYPE_DIRS = STORAGE_CONFIG.media_type_dirs || {};
+const THUMBNAIL_DIR = MEDIA_TYPE_DIRS.thumbnails || 'thumbnails';
+const UPLOAD_DIRS = ['image', 'pdf', 'video', 'audio']
+    .map((key) => MEDIA_TYPE_DIRS[key])
+    .filter(Boolean);
+
+const normalize_relative = (p) => String(p).replace(/\\/g, '/').replace(/^\.?\//, '');
+const is_in_upload_subtree = (p) => UPLOAD_DIRS.some((dir) => normalize_relative(p).startsWith(`${dir}/`));
+const is_in_thumbnail_subtree = (p) => normalize_relative(p).startsWith(`${THUMBNAIL_DIR}/`);
+
 /**
  * Normalizes incoming subject field values to the pipe-delimited storage form.
  * Input arrives pipe-joined from the multi-select widget's hidden input; this
@@ -741,11 +756,28 @@ exports.delete_uploaded_file = async (storage_path, thumbnail_path = null) => {
             return build_response(false, 'Invalid file path');
         }
 
-        // Unprocessed guard: never delete a file that belongs to a saved record.
-        const existing = await media_task.find_by_storage_path(sp);
+        /*
+         * Each argument may only name a file in the subtree an upload writes
+         * to: the original under a media-type dir, the thumbnail under the
+         * thumbnails dir. Anything else (iiif_cache/, a thumbnail passed as
+         * the original, ...) is not a staged upload and is refused up front.
+         */
+        if (!is_in_upload_subtree(sp) || (tp && !is_in_thumbnail_subtree(tp))) {
+            return build_response(false, 'Invalid file path');
+        }
 
-        if (existing && existing.exists) {
-            return build_response(false, 'This file is linked to a saved media record and cannot be removed here');
+        /*
+         * Unprocessed guard: never delete a file that belongs to a saved
+         * record — and check BOTH arguments. The thumbnail used to go
+         * unchecked, so any live record's thumbnail (or a recycled record's
+         * original, passed as the "thumbnail") could be deleted here
+         * (review 2026-09-02, media finding 3).
+         */
+        for (const candidate of [sp, tp].filter(Boolean)) {
+            const existing = await media_task.find_by_storage_path(candidate);
+            if (existing && existing.exists) {
+                return build_response(false, 'This file is linked to a saved media record and cannot be removed here');
+            }
         }
 
         await UPLOADS.delete_stored_file(sp, tp);

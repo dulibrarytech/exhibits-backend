@@ -534,7 +534,7 @@ describe('Auth_tasks', () => {
             expect(result).toBe(5);
         });
 
-        it('should return exhibit owner when child not found', async () => {
+        it('resolves to nobody (0) when the child is not a member of the named exhibit (review H3)', async () => {
             const exhibitChain = createChainableMock([{ owner: 5 }]);
             const childChain = createChainableMock([]);
 
@@ -547,7 +547,11 @@ describe('Auth_tasks', () => {
 
             const result = await auth_tasks.check_ownership(5, validUUID, validChildUUID, 'item');
 
-            expect(result).toBe(5);
+            /* Previously fell back to the exhibit owner — which let owning exhibit A
+               confer ownership of any child uuid anywhere. */
+            expect(result).toBe(0);
+            /* The child lookup is bound to the parent exhibit, not just the uuid. */
+            expect(childChain.where).toHaveBeenCalledWith({ uuid: validChildUUID, is_member_of_exhibit: validUUID });
         });
 
         it('should return 0 when no ownership match found', async () => {

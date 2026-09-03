@@ -241,8 +241,14 @@ const Base_tasks = class {
             update_data.updated_by = updated_by;
         }
 
+        /*
+         * Recycled rows are never part of a bulk publish/suppress: publishing
+         * an exhibit must not resurrect items a curator threw away, and
+         * suppressing must not rewrite the bin (review M3, pinned by
+         * test/db/publish_gate_counts). Callers pass the exhibit scope.
+         */
         const affected_rows = await this.DB(this.TABLE[table_name])
-            .where(where_clause)
+            .where({ ...where_clause, is_deleted: 0 })
             .update(update_data)
             .timeout(this.QUERY_TIMEOUT);
 
