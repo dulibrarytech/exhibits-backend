@@ -42,7 +42,7 @@ const APP_PATH = CONFIG.app_path;
  * Admin Utils sub-navigation — the tools nested under the top-level "Admin Utils"
  * item. Spread into each admin page's nav config so you can move between Users /
  * Index Management / Recycle Bin without leaving the area. All admin-gated: revealed
- * by navModule.gate_admin_links for administrators, hidden otherwise (fail closed).
+ * by navModule.gate_admin_links for administrators, hidden otherwise.
  */
 const ADMIN_UTILS_LINKS = [
     { id: 'admin-users-link', label: 'Users', icon: 'bi bi-people-fill', href: APP_PATH + '/users', admin_only: true },
