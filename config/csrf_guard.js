@@ -18,7 +18,7 @@
 
 'use strict';
 
-// OWASP A04 (H4) — CSRF defense for state-changing requests.
+// CSRF defense for state-changing requests.
 
 const LOGGER = require('../libs/log4');
 

@@ -90,7 +90,7 @@ const rate_limit_configs = {
         message: 'Too many public media requests'
     },
 
-    // Stricter limit for the public IIIF image endpoint (OWASP A04/H3).
+    // Stricter limit for the public IIIF image endpoint.
     iiif_image_operations: {
         window_ms: 15 * 60 * 1000, // 15 minutes
         max_requests: parseInt(process.env.IIIF_IMAGE_RATE_MAX, 10) > 0

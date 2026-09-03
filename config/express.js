@@ -31,7 +31,7 @@ const LOGGER = require('../libs/log4');
 const FS = require('fs');
 const {rate_limits} = require('../config/rate_limits_loader');
 
-// OWASP A09 — never write session tokens or API keys into the access log.
+// Never write session tokens or API keys into the access log.
 const REDACT_QUERY_PARAMS = /([?&](?:access_token|token|apikey|api_key|key|t)=)[^&#\s]+/gi;
 function redact_url(url) {
     if (typeof url !== 'string') {
@@ -62,7 +62,7 @@ module.exports = function() {
     APP.use(BODYPARSER.json());
     APP.use(METHODOVERRIDE());
     APP.use(HELMET(HELMET_CONFIG));
-    // OWASP A04 (H4) — CSRF defense: reject cross-origin state-changing requests
+    // CSRF defense: reject cross-origin state-changing requests
     APP.use(CSRF_GUARD);
     APP.use('/exhibits-dashboard/static', EXPRESS.static('./public'));
     APP.use(XSS.sanitize_req_query);
@@ -86,7 +86,7 @@ module.exports = function() {
     APP.set('views', './views');
     APP.set('view engine', 'ejs');
 
-    // Global rate-limit backstop: a generous per-client ceiling so any route that
+    // Global rate-limit backstop: Per-client ceiling so any route that
     // doesn't attach its own limiter (auth, users, indexer, dashboard, future
     // routes) still has a baseline. Mounted after static assets so they aren't
     // counted; per-route limiters below still apply on top of this.
@@ -140,7 +140,7 @@ module.exports = function() {
         res.status(err.status || 500).send(error_message);
     });
 
-    // OWASP A07 (C2) — bind to loopback by default so the app is reachable only
+    // Bind to loopback by default so the app is reachable only
     // through the local reverse proxy (nginx), never directly on all interfaces.
     const APP_BIND = process.env.APP_BIND || '127.0.0.1';
     SERVER.listen(process.env.APP_PORT, APP_BIND);

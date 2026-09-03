@@ -22,8 +22,7 @@
  * Global process-level safety nets for otherwise-silent async faults.
  *
  * Without these, an unhandled promise rejection or an uncaught exception leaves
- * no entry in the application log, and on Node 15+ an unhandled rejection
- * terminates the process by default with only a bare stderr dump.
+ * no entry in the application log.
  *
  * Policy:
  *   - unhandledRejection -> log it and KEEP RUNNING. A stray rejection should
