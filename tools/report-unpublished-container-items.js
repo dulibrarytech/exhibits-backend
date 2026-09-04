@@ -12,8 +12,6 @@
  * the bug from items a curator suppressed on purpose.
  *
  * Run: node tools/report-unpublished-container-items.js
- *
- * Design history and rationale: NOTES/EXHIBITS_BACKEND_CODE_NOTES.md
  */
 
 require('dotenv').config();

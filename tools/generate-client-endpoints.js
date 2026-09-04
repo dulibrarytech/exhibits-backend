@@ -14,8 +14,6 @@
  * Runs automatically as part of `npm run build:js`. A parity test
  * (test/integration/client_endpoints_parity.test.js) fails CI if the committed
  * artifact goes stale.
- *
- * Design history and rationale: NOTES/EXHIBITS_BACKEND_CODE_NOTES.md
  */
 
 require('dotenv').config();

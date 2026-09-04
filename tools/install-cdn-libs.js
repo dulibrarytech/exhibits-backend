@@ -16,8 +16,6 @@
  * in place (they're harmless; remove with `npm prune` if desired).
  *
  * Idempotent — re-running just re-copies the files.
- *
- * Design history and rationale: NOTES/EXHIBITS_BACKEND_CODE_NOTES.md
  */
 
 const fs = require('fs');

@@ -1,7 +1,5 @@
 /*
  * Single source of the client's API endpoint map and of APP_PATH.
- *
- * Design history and rationale: NOTES/EXHIBITS_BACKEND_CODE_NOTES.md
  */
 
 const endpointsModule = (function() {
