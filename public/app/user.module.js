@@ -14,6 +14,8 @@
  See the License for the specific language governing permissions and
  limitations under the License.
 
+ Design history and rationale: NOTES/EXHIBITS_BACKEND_CODE_NOTES.md
+
  */
 
 const userModule = (function () {
@@ -80,7 +82,7 @@ const userModule = (function () {
             });
 
             if (response.status === 200) {
-                /* Role rows ride in the envelope's `data` (Phase 3 item 19). */
+                /* Role rows ride in the envelope's `data`. */
                 return response.data?.data?.[0];
             }
 
@@ -1178,10 +1180,7 @@ const userModule = (function () {
             /*
              * Deep clone. A shallow clone (cloneNode(false)) drops the icon and
              * label that update_status_display just rendered into this link,
-             * leaving an empty zero-size anchor that no one can click — the row
-             * looked blank after activating or deactivating a user. This path
-             * was dead code until the list stopped using the innerHTML version,
-             * so the bug never surfaced before.
+             * leaving an empty zero-size anchor that no one can click.
              */
             const new_element = element.cloneNode(true);
 
@@ -1300,7 +1299,7 @@ const userModule = (function () {
             // Handle successful response
             if (response.status === 200) {
 
-                /* The roles list rides in the envelope's `data` (Phase 3 item 19). */
+                /* The roles list rides in the envelope's `data`. */
                 const roles = response.data?.data;
 
                 // Validate response data exists

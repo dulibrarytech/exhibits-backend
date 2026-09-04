@@ -14,6 +14,8 @@
  See the License for the specific language governing permissions and
  limitations under the License.
 
+ Design history and rationale: NOTES/EXHIBITS_BACKEND_CODE_NOTES.md
+
  */
 
 'use strict';
@@ -21,11 +23,10 @@
 const HEADINGS_MODEL = require('../exhibits/headings_model');
 
 /*
- * This controller used to inline the RBAC tuple and the 403 twice, and hand
- * write every 400/500. It now speaks the same 'plain' wire format through the
- * shared helper as timelines_controller — bare 'Bad request.' on 400,
+ * This controller speaks the same 'plain' wire format through the shared
+ * helper as timelines_controller — bare 'Bad request.' on 400,
  * {message: 'Unable to ... <error.message>'} on 500 — with
- * AUTHORIZE.check_permission still the single decision point behind
+ * AUTHORIZE.check_permission the single decision point behind
  * check_authorization. See exhibits/controller_helper.js.
  */
 const { send_model_result } = require('../exhibits/controller_helper');

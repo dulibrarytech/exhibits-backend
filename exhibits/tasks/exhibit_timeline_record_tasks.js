@@ -14,6 +14,8 @@
  See the License for the specific language governing permissions and
  limitations under the License.
 
+ Design history and rationale: NOTES/EXHIBITS_BACKEND_CODE_NOTES.md
+
  */
 
 'use strict';
@@ -30,8 +32,8 @@ const FIELDS = require('../../config/exhibit_fields');
  *
  * Note the timeline class routes even its single-record toggles through the
  * BULK helper with a `{uuid}` scope — grid uses _update_single_publish_status
- * for the same job. That difference is pre-existing and preserved: the bulk
- * helper skips the exists / already-published guards the single one applies.
+ * for the same job. The difference matters: the bulk helper skips the exists /
+ * already-published guards the single one applies.
  */
 const PUBLISH_OPS = Object.freeze([
     {
@@ -495,9 +497,8 @@ const Exhibit_timeline_record_tasks = class extends Base_tasks {
             this._validate_table('media_library_records');
 
             /*
-             * Was _validate_string + an isNaN check, which rejected a numeric
-             * user_id outright; the shared validator accepts either form and
-             * keeps both error messages. lock_record still gets a string.
+             * The shared validator accepts a user_id in either string or
+             * numeric form. lock_record must still get a string.
              */
             const user_id_trimmed = String(this._validate_user_id(user_id));
             const validated = this._validate_uuids({
@@ -731,7 +732,7 @@ const Exhibit_timeline_record_tasks = class extends Base_tasks {
 
             const exhibit_uuid = this._validate_uuid(uuid, 'exhibit UUID');
 
-            /* Recycled rows are not content: the publish gate must not count them (review M3). */
+            /* Recycled rows are not content: the publish gate must not count them. */
             return await this._get_record_count('timeline_records', {
                 is_member_of_exhibit: exhibit_uuid,
                 is_deleted: 0
@@ -747,7 +748,7 @@ const Exhibit_timeline_record_tasks = class extends Base_tasks {
      *
      * The nine publish/suppress methods are generated from PUBLISH_OPS at the
      * top of this file. All nine resolve the result object and throw via
-     * _handle_error, exactly as before.
+     * _handle_error.
      */
 
     // ==================== REORDERING ====================

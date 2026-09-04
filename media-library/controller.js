@@ -14,6 +14,8 @@
  See the License for the specific language governing permissions and
  limitations under the License.
 
+ Design history and rationale: NOTES/EXHIBITS_BACKEND_CODE_NOTES.md
+
  */
 
 'use strict';
@@ -75,9 +77,8 @@ const build_content_disposition = (filename, disposition = 'inline') => {
 };
 
 /*
- * Shared handler steps. The media-id guard, record lookup, storage-path
- * resolution, stat/stream/pipe sequence and IIIF CORS header set each existed
- * in three to six drifting copies below (DRY review 2026-09-03, cluster O6).
+ * Shared handler steps: the media-id guard, record lookup, storage-path
+ * resolution, stat/stream/pipe sequence and IIIF CORS header set.
  * The guard/lookup/resolve helpers send the failure response themselves and
  * return `null` / `false`, so the caller's next line is a bare `return`.
  */
@@ -876,7 +877,7 @@ exports.update_media_exhibits = async function (req, res) {
  * Every repository-search failure answers with the same empty payload the
  * success path shapes, so the picker's `data.records` / `data.total` reads
  * are safe on all six branches. Built fresh per call so no caller can mutate
- * a shared object (DRY review 2026-09-03, Phase 3 item 19).
+ * a shared object.
  */
 const empty_search_payload = () => ({data: {records: [], total: 0}});
 
@@ -1005,11 +1006,10 @@ exports.get_repo_tn = async function (req, res) {
 
 /**
  * Answers one of the corpus-wide repository aggregate reads (subjects,
- * resource types). Both used the same envelope — a 200 carrying
+ * resource types). Both use the same envelope — a 200 carrying
  * `success: false` when the service fails (the repo picker degrades rather
  * than erroring), and a 500 with the same empty payload on an exception —
- * differing only in the noun and the payload key (DRY review 2026-09-03,
- * cluster O7).
+ * differing only in the noun and the payload key.
  *
  * @param {Object} res - Express response object
  * @param {Object} options
@@ -1074,7 +1074,7 @@ exports.get_subjects = async function (req, res) {
         empty_payload: {},
         run: () => REPO_SERVICE.get_subjects(),
         /* read inside project() so a malformed ?type= is still caught by the
-           shared try/catch, as it was when this body was inline */
+           shared try/catch */
         project: (result) => {
 
             // If a type filter is provided, return only that type
@@ -1135,11 +1135,8 @@ exports.get_resource_types = async function (req, res) {
  * tagged on the failure (defaulting to 500 — a service failure must not be
  * reported as 200 OK), or the success payload.
  *
- * The three handlers below were the same 40 lines apart from the log wording,
- * the payload key and the success status (DRY review 2026-09-03, cluster O6).
- * The failure status used to be recovered here by string-matching the
- * service's message; kaltura-service now tags `status` itself, the way
- * iiif-service already did.
+ * The three handlers below differ only in the log wording, the payload key
+ * and the success status.
  *
  * @param {Object} req - Express request object
  * @param {Object} res - Express response object
@@ -1399,7 +1396,7 @@ exports.get_iiif_manifest = async function (req, res) {
         /* Serve manifest with IIIF-compliant content type and CORS headers.
            This body stays OUTSIDE the {success, message, data} envelope: it is a
            IIIF Presentation 3.0 document, whose shape is fixed by the spec and
-           read by third-party viewers (Phase 3 item 19). */
+           read by third-party viewers. */
         res.set({
             'Content-Type': 'application/ld+json;profile="http://iiif.io/api/presentation/3/context.json"',
             ...IIIF_CORS_HEADERS,
@@ -1468,7 +1465,7 @@ exports.get_iiif_info = async function (req, res) {
  * Serves an image via IIIF Image API 3.0
  * Parses IIIF URL parameters and applies image transformations via Sharp
  *
- * GET /api/v1/media/library/iiif/:media_id/:region/:size/:rotation/:quality_format
+ * GET <APP_PATH>/iiif/:media_id/:region/:size/:rotation/:quality_format
  *
  * Examples:
  *   .../iiif/{uuid}/full/max/0/default.jpg          full image as JPEG

@@ -14,6 +14,8 @@
  See the License for the specific language governing permissions and
  limitations under the License.
 
+ Design history and rationale: NOTES/EXHIBITS_BACKEND_CODE_NOTES.md
+
  */
 
 'use strict';
@@ -352,7 +354,7 @@ const Exhibit_heading_record_tasks = class extends Base_tasks {
 
             const exhibit_uuid = this._validate_uuid(uuid, 'exhibit UUID');
 
-            /* Recycled rows are not content: the publish gate must not count them (review M3). */
+            /* Recycled rows are not content: the publish gate must not count them. */
             const count = await this._get_record_count('heading_records', {
                 is_member_of_exhibit: exhibit_uuid,
                 is_deleted: 0
@@ -374,10 +376,10 @@ const Exhibit_heading_record_tasks = class extends Base_tasks {
      * ==================== PUBLISHING / SUPPRESSING ====================
      *
      * set_to_publish, set_to_suppress, set_heading_to_publish and
-     * set_heading_to_suppress are generated from PUBLISH_OPS at the bottom of
-     * this file. Contracts are unchanged: the two exhibit-scoped methods
-     * resolve the result object and throw; the two single-heading methods
-     * resolve true and log-and-resolve false on error.
+     * set_heading_to_suppress are generated from PUBLISH_OPS (declared at the
+     * top of this file; the generator call is at the bottom). Contracts: the
+     * two exhibit-scoped methods resolve the result object and throw; the two
+     * single-heading methods resolve true and log-and-resolve false on error.
      */
 
     // ==================== REORDERING ====================

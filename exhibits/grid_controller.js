@@ -14,6 +14,8 @@
  See the License for the specific language governing permissions and
  limitations under the License.
 
+ Design history and rationale: NOTES/EXHIBITS_BACKEND_CODE_NOTES.md
+
  */
 
 'use strict';
@@ -435,8 +437,8 @@ exports.suppress_grid_item_record = with_handler(async function (req, res) {
         return send_error(res, 500, 'Invalid response from database model');
     }
 
-    // A truthy object with status:false is still a failure — the !result
-    // guard above previously let it fall through to a 200 response.
+    // A truthy object with status:false is still a failure; the !result guard
+    // above does not catch it.
     if (!(result === true || result.status === true)) {
         LOGGER.module().error(`suppress_grid_item_record: ${result.message}`, {
             exhibit_id, grid_id, grid_item_id, result

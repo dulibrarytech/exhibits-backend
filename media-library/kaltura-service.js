@@ -14,6 +14,8 @@
  See the License for the specific language governing permissions and
  limitations under the License.
 
+ Design history and rationale: NOTES/EXHIBITS_BACKEND_CODE_NOTES.md
+
  */
 
 'use strict';
@@ -50,13 +52,10 @@ const build_response = (success, message, data = null) => {
 
 /*
  * Failure envelopes carry the HTTP status the controller should answer with,
- * the way iiif-service already did. Until the DRY review (2026-09-03, cluster
- * O6) the controller recovered the status by string-matching this service's
- * messages — `message.includes('not found') ? 404 : 500`, plus a 422 for the
- * unsupported-media-type case in get_kaltura_media. The rules below are those
- * same rules, applied where the failure is raised: a fixed status for every
- * fixed message, and the message test kept only for the two messages that are
- * not fixed (a Kaltura API exception's text, and a caught error's text).
+ * the way iiif-service does. The status is applied where the failure is
+ * raised: a fixed status for every fixed message, and the message test kept
+ * only for the two messages that are not fixed (a Kaltura API exception's
+ * text, and a caught error's text).
  */
 const STATUS_NOT_FOUND = 404;
 const STATUS_UNSUPPORTED = 422;

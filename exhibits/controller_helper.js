@@ -14,6 +14,8 @@
  See the License for the specific language governing permissions and
  limitations under the License.
 
+ Design history and rationale: NOTES/EXHIBITS_BACKEND_CODE_NOTES.md
+
  */
 
 'use strict';
@@ -23,55 +25,34 @@ const AUTHORIZE = require('../auth/authorize');
 const { send_error, send_ok } = require('../libs/http');
 
 /*
- * Single controller helper for the exhibits module (DRY review 2026-09-03,
- * cluster S1, Phase 2 item 13).
+ * Single controller helper for the exhibits module.
  *
- * It replaces four forked copies that had drifted into incompatible
- * signatures and, worse, four different 400 bodies:
+ * Every response below leaves as the shared `{success, message, data}`
+ * envelope built by `libs/http`. What varies per format is the MESSAGE
+ * WORDING and the validation PREDICATES, both of which are behaviour rather
+ * than envelope:
  *
- *   items_helper      validate_param(res, value, label)         -> {message: 'Bad request. Missing or invalid <label>.'}
- *   grid_helper       validate_id(res, value, label, context)    -> {message: 'Invalid request: <label> is required'}
- *   timelines_helper  validate_param(res, value)                 -> 'Bad request.'   (a bare string body)
- *   headings_controller (inline)                                 -> 'Bad request.'   (a bare string body)
- *   exhibits_helper   pure validators; the controller builds     -> {success:false, message, data:null}
- *                     the envelope itself
- *
- * Phase 3 item 19 finished the job on the wire: every response below now
- * leaves as the shared `{success, message, data}` envelope built by
- * `libs/http`. The bare-string 'Bad request.' body the 'plain' format used to
- * send is gone, so those 400s changed Content-Type from text/html to
- * application/json — the dashboard client and the e2e suites were updated in
- * the same pass, and the dashboard API has no other consumers.
- *
- * What survives per format is the MESSAGE WORDING and the validation
- * PREDICATES, both of which are behaviour rather than envelope:
- *
- *   'detailed' — grid_helper's wording. Structured LOGGER metadata on every
- *                branch, an ID character-class check, and `validate_model_result`.
- *                The most complete of the four, so it is the default.
- *   'labeled'  — items_helper's wording. One 400 message parameterized by a
- *                human-readable label; no per-branch logging.
- *   'plain'    — timelines_helper / headings_controller's wording: a flat
- *                'Bad request.', and a 500 whose message concatenates the
- *                caller's text with the error's.
+ *   'detailed' — structured LOGGER metadata on every branch, an ID
+ *                character-class check, and `validate_model_result`. The most
+ *                complete of the three, so it is the default.
+ *   'labeled'  — one 400 message parameterized by a human-readable label; no
+ *                per-branch logging.
+ *   'plain'    — a flat 'Bad request.', and a 500 whose message concatenates
+ *                the caller's text with the error's.
  *
  * The predicates differ too — 'plain' accepts null and 0 where 'labeled'
- * rejects them, and timelines_controller leans on that — so each format still
- * owns its predicate. Collapsing those would change WHICH requests get a 400,
- * which is a behaviour change and deliberately not part of this item.
+ * rejects them, and timelines_controller leans on that — so each format owns
+ * its own predicate. Collapsing those would change WHICH requests get a 400.
  *
- * `AUTHORIZE.check_permission` stays the single authorization decision point.
- * Every format's gate reads it as `!== true` (fail closed): the three forks
- * spelled that test three ways (`!x`, `x === false`, `x !== true`), which is
- * only distinguishable for a non-boolean return, and check_permission returns
- * a strict boolean on every path including its own catch.
+ * `AUTHORIZE.check_permission` is the single authorization decision point.
+ * Every format's gate reads it as `!== true` (fail closed); check_permission
+ * returns a strict boolean on every path including its own catch.
  */
 
 const UNAUTHORIZED_MESSAGE = 'Unauthorized request';
 const INVALID_MODEL_RESULT_MESSAGE = 'Invalid response from database model';
 
-/* The 'plain' format's single 400 wording, kept verbatim from the two forks it
-   replaced; only the envelope around it changed (Phase 3 item 19). */
+/* The 'plain' format's single 400 wording. */
 const PLAIN_BAD_REQUEST_MESSAGE = 'Bad request.';
 
 /* Safe ID character class: alphanumerics, hyphens, underscores. */
@@ -174,9 +155,8 @@ const validate_status_code = (status) => {
 
 /*
  * Each format owns its validation predicates, its 400 message wording and
- * whether the branch is logged. Every string below is reproduced verbatim from
- * the fork it replaces. The envelope is no longer per-format — all three send
- * through `libs/http`.
+ * whether the branch is logged. The envelope is not per-format — all three
+ * send through `libs/http`.
  */
 
 const FORMATS = {
@@ -198,7 +178,7 @@ const FORMATS = {
             });
 
             /* The development-only `error` detail rides alongside the envelope
-               rather than inside `data`, exactly as it did before. */
+               rather than inside `data`. */
             return send_error(res, 500, message,
                 process.env.NODE_ENV === 'development' ? {error: error.message} : undefined);
         }
@@ -248,13 +228,11 @@ const FORMATS = {
  * Forwards a model envelope as the shared HTTP envelope.
  *
  * Every exhibits model answers `{status, message, data?}` — the HTTP status
- * carried inside the body — and all seven controllers used to ship that object
- * verbatim with `res.status(result.status).send(result)`. The status now lives
- * only where it belongs, on the response, and the body is the same
- * `{success, message, data}` every other module sends (Phase 3 item 19).
+ * carried inside the body. The status is moved onto the response and the body
+ * becomes the same `{success, message, data}` every other module sends.
  *
  * `success` follows the status, so a model that reports a soft failure as a 2xx
- * still reads as a success — exactly what the wire said before.
+ * still reads as a success.
  *
  * @param {Object} res - Express response object
  * @param {Object} result - Model envelope `{status, message, data?}`

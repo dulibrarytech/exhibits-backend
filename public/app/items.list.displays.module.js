@@ -14,6 +14,8 @@
  See the License for the specific language governing permissions and
  limitations under the License.
 
+ Design history and rationale: NOTES/EXHIBITS_BACKEND_CODE_NOTES.md
+
  */
 
 const itemsListDisplayModule = (function() {
@@ -1459,8 +1461,8 @@ const itemsListDisplayModule = (function() {
 
     /**
      * Finds the list row for a uuid and classifies it from its <tr id>.
-     * Replaces the "scan every <tr> and split on '_'" loops in the list
-     * modules' publish/suppress handlers.
+     * The list modules' publish/suppress handlers call this instead of
+     * scanning every <tr> and splitting on '_' themselves.
      *
      * @param {string} uuid
      * @returns {{row_type: string, item_type: (string|null), tr: HTMLElement}|null}
@@ -1576,7 +1578,7 @@ const itemsListDisplayModule = (function() {
      * and publish state — the innerHTML of the `<uuid>-item-actions` cell.
      * Same markup the display_* builders render initially (Edit/Details,
      * Move Up / Move Down, aria-disabled Delete when published), so the
-     * post-publish/suppress rebuilds no longer hand-roll it.
+     * post-publish/suppress rebuilds must call this rather than hand-roll it.
      *
      * @param {Object} opts
      * @param {string} opts.row_type    standard|heading|grid|timeline|grid_item|timeline_item

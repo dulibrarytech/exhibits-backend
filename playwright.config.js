@@ -47,7 +47,18 @@ module.exports = defineConfig({
     fullyParallel: true,
     forbidOnly: !!process.env.CI,
     retries: process.env.CI ? 2 : (IS_LIVE ? 1 : 0),
-    workers: process.env.CI ? 2 : undefined,
+    /*
+     * Two workers everywhere, not just CI. Left at Playwright's default
+     * locally (roughly half the cores), four Chromium instances plus the dev
+     * server exceed what a development box comfortably holds, and a starved
+     * worker overruns the 10s actionTimeout. That surfaced as one or two
+     * specs failing per predeploy run — a different pair each time, every one
+     * passing in isolation. Two workers is deterministic and costs nothing:
+     * contention was the bottleneck, so the suite finishes in the same time.
+     * Retries stay at 0 here on purpose; a retry would hide a real
+     * intermittent bug rather than expose it.
+     */
+    workers: 2,
     reporter: [
         ['list'],
         ['html', { outputFolder: 'playwright-report', open: 'never' }],

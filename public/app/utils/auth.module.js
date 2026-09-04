@@ -14,6 +14,8 @@
  See the License for the specific language governing permissions and
  limitations under the License.
 
+ Design history and rationale: NOTES/EXHIBITS_BACKEND_CODE_NOTES.md
+
  */
 
 const authModule = (function () {
@@ -181,7 +183,7 @@ const authModule = (function () {
             // Handle successful authentication
             if (response.status === 200) {
 
-                /* The user record rides in the envelope's `data` (Phase 3 item 19). */
+                /* The user record rides in the envelope's `data`. */
                 const user_data = response.data?.data;
 
                 // Validate response data exists and has expected structure
@@ -320,9 +322,7 @@ const authModule = (function () {
 
             // Read the session profile WITHOUT side effects. get_user_profile_data()
             // redirects to /auth and clears the session when the profile is missing
-            // or invalid — which must never happen from a passive nav check; it
-            // caused spurious logouts to a broken URL when this ran before the
-            // post-login landing page had populated the profile.
+            // or invalid — which must never happen from a passive nav check.
             let profile = null;
 
             try {
@@ -407,7 +407,7 @@ const authModule = (function () {
             // Handle successful response
             if (response.status === 200) {
 
-                /* The role rows ride in the envelope's `data` (Phase 3 item 19). */
+                /* The role rows ride in the envelope's `data`. */
                 const role_rows = response.data?.data;
 
                 // Validate response data structure
@@ -638,11 +638,9 @@ const authModule = (function () {
                 return false;
             }
 
-            /* The endpoint registry used to ship twice — once in the
-               build-time template and again inside the /authenticate response,
-               cached here. The template always won, and the runtime copy is
-               gone (DRY review 2026-09-03, Phase 3 item 20), so there is
-               nothing left to cache and no warning to log. */
+            /* The endpoint registry is not cached here: it ships only in the
+               build-time template, and the /authenticate response carries no
+               `endpoints` key. */
 
             return true;
 

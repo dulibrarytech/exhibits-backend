@@ -14,6 +14,8 @@
  See the License for the specific language governing permissions and
  limitations under the License.
 
+ Design history and rationale: NOTES/EXHIBITS_BACKEND_CODE_NOTES.md
+
  */
 
 const exhibitsEditFormModule = (function () {
@@ -90,7 +92,7 @@ const exhibitsEditFormModule = (function () {
     /**
      * Loads the exhibit record into the edit form.
      *
-     * The record fetch, the dozen DOM helpers and the whole populate pass now
+     * The record fetch, the dozen DOM helpers and the whole populate pass
      * live in exhibitsCommonFormModule and are shared with the details page;
      * only the lock handling is edit-specific.
      *
@@ -234,8 +236,8 @@ const exhibitsEditFormModule = (function () {
 
     /**
      * Role-specific wording for the legacy media delete flow. The hero and
-     * thumbnail delete functions were byte-identical apart from these strings
-     * and the slot they clear.
+     * thumbnail delete paths differ only in these strings and the slot they
+     * clear.
      */
     const LEGACY_MEDIA_LABELS = {
         hero_image: { lower: 'hero image', title: 'Hero image' },

@@ -14,6 +14,8 @@
  See the License for the specific language governing permissions and
  limitations under the License.
 
+ Design history and rationale: NOTES/EXHIBITS_BACKEND_CODE_NOTES.md
+
  */
 
 'use strict';
@@ -29,12 +31,11 @@ const {send_error, send_ok} = require('../libs/http');
  * The indexer's model and service answer with `{status, message?, data?}` — a
  * shape that predates the shared envelope and carries the HTTP status inside
  * the body. Project it onto `{success, message, data}` here, at the edge, and
- * apply the status to the response instead (DRY review 2026-09-03, Phase 3
- * item 19).
+ * apply the status to the response instead.
  *
  * `success` is derived from the HTTP status, so a soft failure the service
- * reports as 200 still reads as a success — exactly what the wire said before,
- * and what the management view already branches on.
+ * reports as 200 still reads as a success — which is what the management view
+ * branches on.
  *
  * `create_index` reports its outcome as a bare string in `data`; every other
  * call carries a structured payload. A string payload is therefore promoted to
@@ -217,7 +218,6 @@ exports.get_indexed_record = async (req, res) => {
             return send_error(res, 404, 'Record not found', {code: 'RECORD_NOT_FOUND'});
         }
 
-        /* Was a bare model payload; now enveloped like every other response. */
         return send_ok(res, response.data === undefined ? null : response.data, response.message || 'Indexed record retrieved', response.status);
 
     } catch (error) {

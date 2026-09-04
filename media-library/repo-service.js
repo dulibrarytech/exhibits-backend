@@ -14,6 +14,8 @@
  See the License for the specific language governing permissions and
  limitations under the License.
 
+ Design history and rationale: NOTES/EXHIBITS_BACKEND_CODE_NOTES.md
+
  */
 
 'use strict';
@@ -225,9 +227,9 @@ exports.get_repo_tn = async function (uuid) {
 /*
  * The two corpus-wide aggregate reads below (subjects, resource types) are the
  * same passthrough: log, call the task, re-wrap the envelope, and turn a throw
- * into a failure envelope with an empty payload. They differed only in the noun
+ * into a failure envelope with an empty payload. They differ only in the noun
  * used in the log strings and the key carrying the payload, so the body lives
- * once in `aggregate_read` (DRY review 2026-09-03, cluster O7).
+ * once in `aggregate_read`.
  */
 
 /**

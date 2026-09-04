@@ -14,6 +14,8 @@
  See the License for the specific language governing permissions and
  limitations under the License.
 
+ Design history and rationale: NOTES/EXHIBITS_BACKEND_CODE_NOTES.md
+
  */
 
 'use strict';
@@ -25,8 +27,7 @@ const { is_valid_uuid } = require('../libs/uuid');
 
 /*
  * is_valid_uuid is re-exported from libs/uuid (strict RFC shape, version 1-5,
- * variant 8-b). It used to be a length-only no-op here, then a local copy of
- * the regex; every exhibit model imports it under this name, so the export
+ * variant 8-b). Every exhibit model imports it under this name, so the export
  * stays.
  */
 

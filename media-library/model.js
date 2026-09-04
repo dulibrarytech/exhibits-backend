@@ -14,6 +14,8 @@
  See the License for the specific language governing permissions and
  limitations under the License.
 
+ Design history and rationale: NOTES/EXHIBITS_BACKEND_CODE_NOTES.md
+
  */
 
 'use strict';
@@ -132,13 +134,6 @@ const format_subjects_for_display = (record) => {
     return record;
 };
 
-/**
- * Checks if a media record already exists with the given field value
- * Used to prevent duplicate imports for repo_uuid and kaltura_entry_id
- * @param {string} field_name - Field to check ('repo_uuid' or 'kaltura_entry_id')
- * @param {string} field_value - Value to search for
- * @returns {Promise<Object>} Result with exists flag and matching record info
- */
 const RTE_VOCABULARY = require('../libs/rte_vocabulary');
 
 /*
@@ -152,6 +147,13 @@ const MEDIA_RTE_PROFILES = {
     alt_text: 'plain'
 };
 
+/**
+ * Checks if a media record already exists with the given field value
+ * Used to prevent duplicate imports for repo_uuid and kaltura_entry_id
+ * @param {string} field_name - Field to check ('repo_uuid' or 'kaltura_entry_id')
+ * @param {string} field_value - Value to search for
+ * @returns {Promise<Object>} Result with exists flag and matching record info
+ */
 exports.check_duplicate = async (field_name, field_value) => {
 
     try {
@@ -218,7 +220,7 @@ exports.create_media_record = async (data) => {
         data.created = now;
         data.updated = now;
 
-        // Convert subject delimiters from comma to pipe for storage
+        // Normalize subject terms to the pipe-delimited storage form
         format_subjects_for_storage(data);
 
         // Get user's full name from username and assign to created_by
@@ -246,7 +248,7 @@ exports.create_media_record = async (data) => {
 
         LOGGER.module().info('INFO: [/media-library/model (create_media_record)] Media record created successfully with ID: ' + result.id);
 
-        // Convert subject delimiters from pipe to comma for display in response
+        // Normalize subject terms to the pipe-delimited display form for the response
         if (result.record) {
             format_subjects_for_display(result.record);
         }
@@ -277,7 +279,7 @@ exports.get_media_records = async () => {
             return build_response(false, 'Failed to retrieve media records');
         }
 
-        // Convert subject delimiters from pipe to comma for display
+        // Normalize subject terms to the pipe-delimited display form
         const formatted_records = (result.records || []).map(format_subjects_for_display);
 
         return build_response(true, 'Media records retrieved successfully', {
@@ -307,7 +309,7 @@ exports.get_media_records_browse = async (options = {}) => {
             return build_response(false, 'Failed to retrieve media records');
         }
 
-        // Convert subject delimiters from pipe to comma for display
+        // Normalize subject terms to the pipe-delimited display form
         const formatted_records = (result.records || []).map(format_subjects_for_display);
 
         return build_response(true, 'Media records retrieved successfully', {
@@ -342,7 +344,7 @@ exports.get_media_record = async (media_id) => {
             return build_response(false, 'Media record not found');
         }
 
-        // Convert subject delimiters from pipe to comma for display
+        // Normalize subject terms to the pipe-delimited display form
         format_subjects_for_display(result.record);
 
         return build_response(true, 'Media record retrieved successfully', {
@@ -389,7 +391,7 @@ exports.update_media_record = async (media_id, data) => {
             delete data.username;
         }
 
-        // Convert subject delimiters from comma to pipe for storage
+        // Normalize subject terms to the pipe-delimited storage form
         format_subjects_for_storage(data);
 
         const result = await media_task.update_media_record(media_id, data);
@@ -404,7 +406,7 @@ exports.update_media_record = async (media_id, data) => {
 
         LOGGER.module().info('INFO: [/media-library/model (update_media_record)] Media record updated successfully: ' + media_id);
 
-        // Convert subject delimiters from pipe to comma for display in response
+        // Normalize subject terms to the pipe-delimited display form for the response
         if (result.record) {
             format_subjects_for_display(result.record);
         }
@@ -756,10 +758,8 @@ exports.delete_uploaded_file = async (storage_path, thumbnail_path = null) => {
 
         /*
          * Unprocessed guard: never delete a file that belongs to a saved
-         * record — and check BOTH arguments. The thumbnail used to go
-         * unchecked, so any live record's thumbnail (or a recycled record's
-         * original, passed as the "thumbnail") could be deleted here
-         * (review 2026-09-02, media finding 3).
+         * record — and check BOTH arguments, since either one can name a
+         * live record's file.
          */
         for (const candidate of [sp, tp].filter(Boolean)) {
             const existing = await media_task.find_by_storage_path(candidate);

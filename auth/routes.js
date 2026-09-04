@@ -14,6 +14,8 @@
  See the License for the specific language governing permissions and
  limitations under the License.
 
+ Design history and rationale: NOTES/EXHIBITS_BACKEND_CODE_NOTES.md
+
  */
 
 'use strict';
@@ -28,7 +30,7 @@ const { async_handler } = require('../libs/http');
 module.exports = function (app) {
 
     /* Every path comes from auth/endpoints.js so the registry cannot drift
-     * from what is actually registered (it had, for /auth/sso). */
+     * from what is actually registered. */
     const endpoints = ENDPOINTS().auth;
 
     app.route(endpoints.auth_landing.get.endpoint)

@@ -14,6 +14,8 @@
  See the License for the specific language governing permissions and
  limitations under the License.
 
+ Design history and rationale: NOTES/EXHIBITS_BACKEND_CODE_NOTES.md
+
  */
 
 'use strict';
@@ -26,7 +28,7 @@ const { send_error, send_ok } = require('../libs/http');
 
 /*
  * Every gate in this controller is a user-management check (`users: true`,
- * no ownership lookup) answering in this module's `{message}` envelope.
+ * no ownership lookup).
  * @param {Object} req - Express request object
  * @param {Object} res - Express response object
  * @param {Array<string>} permissions - Required permissions
@@ -34,9 +36,8 @@ const { send_error, send_ok } = require('../libs/http');
  * @returns {Promise<boolean>} True when authorized; false after the 403 was sent
  */
 const authorize_users_request = (req, res, permissions, deny_log) => {
-    /* No `envelope` option: this controller now speaks the shared
-       {success, message, data} envelope, which is the gate's default
-       (Phase 3 item 19). */
+    /* No `envelope` option: this controller speaks the shared
+       {success, message, data} envelope, which is the gate's default. */
     return GATE.authorize_request(req, res, permissions, {
         users: true,
         deny_log
@@ -124,7 +125,6 @@ exports.get_user = async function (req, res) {
 
         /*
          * Same gate as get_users: reading a profile is a view_users action.
-         * This handler had no permission check at all (code review 2026-09-02, C2).
          */
         const is_authorized = await authorize_users_request(req, res, ['view_users'],
             `WARNING: [/user/controller (get_user)] unauthorized attempt to view user ${parsed_user_id} by ${req.decoded?.sub || 'unknown'}`
@@ -235,12 +235,11 @@ exports.update_user = async function (req, res) {
          *   update_users — edit ANY user's profile (Administrator, Power User)
          *   update_user  — edit YOUR OWN profile (every role, including Student)
          *
-         * Checking them as one list with the `users` short-circuit let any
-         * holder of update_user edit any target, and (because role_id rides on
-         * the same PUT) promote themselves to Administrator. So: resolve the
-         * actor from the JWT, allow update_user only when target === actor,
-         * and gate any role CHANGE behind the Administrator-only
-         * update_user_role regardless of which path admitted the request.
+         * They must NOT be checked as one list with the `users` short-circuit:
+         * resolve the actor from the JWT, allow update_user only when
+         * target === actor, and gate any role CHANGE behind the
+         * Administrator-only update_user_role regardless of which path
+         * admitted the request. role_id rides on this same PUT.
          */
         const actor_id = await AUTHORIZE.get_actor_id(req);
 
@@ -248,7 +247,7 @@ exports.update_user = async function (req, res) {
             LOGGER.module().warn(
                 `WARNING: [/user/controller (update_user)] unable to resolve actor for ${req.decoded?.sub || 'unknown'}`
             );
-            return GATE.send_unauthorized(res, 'message');
+            return GATE.send_unauthorized(res);
         }
 
         /*
@@ -267,7 +266,7 @@ exports.update_user = async function (req, res) {
             LOGGER.module().warn(
                 `WARNING: [/user/controller (update_user)] unauthorized attempt to update user ${parsed_user_id} by ${req.decoded?.sub || 'unknown'}`
             );
-            return GATE.send_unauthorized(res, 'message');
+            return GATE.send_unauthorized(res);
         }
 
         /*
@@ -387,7 +386,7 @@ exports.save_user = async function (req, res) {
                 LOGGER.module().warn(
                     `WARNING: [/user/controller (save_user)] unauthorized role assignment (role_id: ${user_data.role_id}) by ${req.decoded?.sub || 'unknown'}`
                 );
-                return GATE.send_unauthorized(res, 'message');
+                return GATE.send_unauthorized(res);
             }
         }
 

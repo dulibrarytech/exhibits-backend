@@ -14,6 +14,8 @@
  See the License for the specific language governing permissions and
  limitations under the License.
 
+ Design history and rationale: NOTES/EXHIBITS_BACKEND_CODE_NOTES.md
+
  */
 
 'use strict';
@@ -22,9 +24,7 @@
  * Single source of truth for UUID validation. Strict RFC 4122 shape
  * (version 1-5, variant 8-b), case-insensitive. Every record id in this
  * application is minted by the uuid library, so the strict shape is the
- * correct one; the former loose pattern in auth/ (any version, any variant)
- * accepted ids that no other layer would, and was replaced by this
- * (DRY review 2026-09-03, Phase 1).
+ * correct one.
  */
 const UUID_REGEX = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
 

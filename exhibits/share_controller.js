@@ -14,6 +14,8 @@
  See the License for the specific language governing permissions and
  limitations under the License.
 
+ Design history and rationale: NOTES/EXHIBITS_BACKEND_CODE_NOTES.md
+
  */
 
 'use strict';
@@ -29,14 +31,14 @@ const { send_error, send_ok } = require('../libs/http');
 const APP_PATH = APP_CONFIG.app_path;
 
 /*
- * The share flow (code review 2026-09-02, C4):
+ * The share flow:
  *
  *   1. An authenticated editor of the exhibit mints a share URL. The preview
  *      is (re)built HERE, behind authentication and a permission check, so
  *      the anonymous path below never writes anything.
  *   2. Anyone holding the URL renders the preview. The share token's subject
  *      is the exhibit uuid it was minted for, and it is honoured ONLY for
- *      that uuid — one link no longer previews every exhibit.
+ *      that uuid.
  */
 
 const INVALID_SHARE_MESSAGE = 'Exhibit preview URL has expired or is invalid.';

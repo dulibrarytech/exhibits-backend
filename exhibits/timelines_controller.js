@@ -14,6 +14,8 @@
  See the License for the specific language governing permissions and
  limitations under the License.
 
+ Design history and rationale: NOTES/EXHIBITS_BACKEND_CODE_NOTES.md
+
  */
 
 'use strict';
@@ -22,9 +24,8 @@ const TIMELINES_MODEL = require('../exhibits/timelines_model');
 
 /*
  * 'plain' is this controller's message wording: a flat 'Bad request.' on 400
- * and a 500 message of '<message> <error.message>'. Both now ride the shared
- * {success, message, data} envelope — the bare string body is gone (Phase 3
- * item 19). See exhibits/controller_helper.js.
+ * and a 500 message of '<message> <error.message>'. Both ride the shared
+ * {success, message, data} envelope. See exhibits/controller_helper.js.
  */
 const { send_model_result, PLAIN_BAD_REQUEST_MESSAGE } = require('../exhibits/controller_helper');
 const { send_error, send_ok } = require('../libs/http');
@@ -311,8 +312,7 @@ exports.unlock_timeline_item_record = with_handler(async function (req, res) {
 
     /*
      * No authorization gate here, matching the grid-item unlock path: a
-     * force-unlock permission check is still to be specified (DRY review
-     * follow-up), so it is not silently invented in this refactor.
+     * force-unlock permission check is still to be specified.
      */
 
     const result = await TIMELINES_MODEL.unlock_timeline_item_record(uid, item_id, options);

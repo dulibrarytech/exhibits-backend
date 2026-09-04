@@ -12,6 +12,8 @@
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
  * See the License for the specific language governing permissions and
  * limitations under the License.
+ *
+ * Design history and rationale: NOTES/EXHIBITS_BACKEND_CODE_NOTES.md
  */
 
 'use strict';
@@ -398,7 +400,7 @@ const store_file = async (file_buffer, original_name, mime_type) => {
         }
 
         // Extract pixel dimensions via Sharp
-        // works on PNG, GIF, WebP that may lack EXIF headers)
+        // (works on PNG, GIF, WebP that may lack EXIF headers)
         try {
             const img_metadata = await sharp(file_buffer).metadata();
             result.media_width = img_metadata.width || null;

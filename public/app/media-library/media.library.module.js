@@ -12,6 +12,8 @@
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
  * See the License for the specific language governing permissions and
  * limitations under the License.
+ *
+ * Design history and rationale: NOTES/EXHIBITS_BACKEND_CODE_NOTES.md
  */
 
 const mediaLibraryModule = (function() {
@@ -313,8 +315,8 @@ const mediaLibraryModule = (function() {
 
         /*
          * Routed through the shared helper so the backdrop, `modal-open` and
-         * body padding cleanup runs — the inline BS4/BS5 chain this replaced
-         * could leave a stuck backdrop behind.
+         * body padding cleanup runs. Hand-rolling an inline BS4/BS5 close
+         * chain here can leave a stuck backdrop behind.
          */
         const close_modal = () => {
             helperMediaLibraryModule.hide_bootstrap_modal(modal);

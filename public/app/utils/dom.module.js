@@ -14,6 +14,8 @@
  See the License for the specific language governing permissions and
  limitations under the License.
 
+ Design history and rationale: NOTES/EXHIBITS_BACKEND_CODE_NOTES.md
+
  */
 
 const domModule = (function () {
@@ -67,8 +69,7 @@ const domModule = (function () {
     /**
      * Gets or sets form field data. Sanitizes writes via DOMPurify and
      * returns the trimmed value. Returns empty string when the target
-     * element is not found — previously threw "Cannot read properties of
-     * null" on id.value.trim() when the selector didn't match.
+     * element is not found.
      * @param selector
      * @param data
      * @returns {*}
@@ -304,10 +305,9 @@ const domModule = (function () {
     };
 
     /**
-     * Empties contents of element. Safe no-op when the target is missing
-     * — previously threw "Cannot read properties of null" when the
-     * selector didn't match, which cascade-crashed callers that ran this
-     * inside their own error handlers. Accepts selector string or element.
+     * Empties contents of element. Safe no-op when the target is missing —
+     * callers run this inside their own error handlers, so it must never
+     * throw. Accepts selector string or element.
      * @param {string|Element} target
      */
     obj.empty = function(target) {
@@ -413,7 +413,7 @@ const domModule = (function () {
      *   - Existing aria-describedby tokens are preserved (Bootstrap form-text
      *     hints, etc.); duplicates are deduplicated.
      *
-     * Phase 3 forms call this from their validation pipelines; the page-level
+     * Forms call this from their validation pipelines; the page-level
      * set_alert summary call remains for cross-field / submission errors.
      *
      * @param {string|Element} target     - field selector or element
@@ -488,16 +488,15 @@ const domModule = (function () {
     };
 
     /**
-     * One-call replacement for the local `show_error(message, field_selector)`
-     * closures: writes a danger alert (with aria-live/aria-atomic, via
-     * set_alert) into the message container and, when a field is named,
-     * marks it invalid with a linked error message via set_field_error.
+     * Writes a danger alert (with aria-live/aria-atomic, via set_alert) into
+     * the message container and, when a field is named, marks it invalid with
+     * a linked error message via set_field_error.
      *
-     * The error node id is derived the same way the copies (and their
-     * matching clear_field_error calls) do: '#item-text-input' →
-     * 'item-text-input-error'. For a non-id selector or an Element the
-     * field's own id is used; with no usable id the field step is skipped.
-     * Does not move focus (none of the copies did).
+     * The error node id is derived as '#item-text-input' →
+     * 'item-text-input-error'; matching clear_field_error calls must derive it
+     * the same way. For a non-id selector or an Element the field's own id is
+     * used; with no usable id the field step is skipped.
+     * Does not move focus.
      *
      * @param {string}          message
      * @param {string|Element}  [field_selector]   - field to mark invalid

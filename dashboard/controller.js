@@ -14,6 +14,8 @@
  See the License for the specific language governing permissions and
  limitations under the License.
 
+ Design history and rationale: NOTES/EXHIBITS_BACKEND_CODE_NOTES.md
+
  */
 
 'use strict';
@@ -38,23 +40,21 @@ const template_config = {
 
 const APP_PATH = CONFIG.app_path;
 
+/*
+ * Media Library nav glyph — Bootstrap Icons' `collection-play-fill`, inlined
+ * as markup because the dashboard's only icon font (FontAwesome 4.7) has no
+ * equivalent. Rendered by views/partials/nav-dashboard.ejs via the `icon_svg`
+ * link property. `currentColor` so it inherits the nav's colour and hover
+ * state exactly as a font icon would.
+ */
+const MEDIA_LIBRARY_ICON_SVG = '<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" viewBox="0 0 16 16" focusable="false"><path d="M2.5 3.5a.5.5 0 0 1 0-1h11a.5.5 0 0 1 0 1zm2-2a.5.5 0 0 1 0-1h7a.5.5 0 0 1 0 1zM0 13a1.5 1.5 0 0 0 1.5 1.5h13A1.5 1.5 0 0 0 16 13V6a1.5 1.5 0 0 0-1.5-1.5h-13A1.5 1.5 0 0 0 0 6zm6.258-6.437a.5.5 0 0 1 .507.013l4 2.5a.5.5 0 0 1 0 .848l-4 2.5A.5.5 0 0 1 6 12V7a.5.5 0 0 1 .258-.437"/></svg>';
+
 /**
  * Admin Utils sub-navigation — the tools nested under the top-level "Admin Utils"
  * item. Spread into each admin page's nav config so you can move between Users /
  * Index Management / Recycle Bin without leaving the area. All admin-gated: revealed
  * by navModule.gate_admin_links for administrators, hidden otherwise.
  */
-/*
- * Media Library nav glyph. Bootstrap Icons' `collection-play-fill`, kept
- * verbatim as inline markup when that package was removed on 2026-09-04:
- * FontAwesome 4.7 has nothing equivalent (no glyph combines a collection
- * stack with a play affordance), and re-adding a 9.8 MB font for one icon
- * was not worth it. Rendered by views/partials/nav-dashboard.ejs via the
- * `icon_svg` link property. `currentColor` so it inherits the nav's colour
- * and hover state exactly as a font icon would.
- */
-const MEDIA_LIBRARY_ICON_SVG = '<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" viewBox="0 0 16 16" focusable="false"><path d="M2.5 3.5a.5.5 0 0 1 0-1h11a.5.5 0 0 1 0 1zm2-2a.5.5 0 0 1 0-1h7a.5.5 0 0 1 0 1zM0 13a1.5 1.5 0 0 0 1.5 1.5h13A1.5 1.5 0 0 0 16 13V6a1.5 1.5 0 0 0-1.5-1.5h-13A1.5 1.5 0 0 0 0 6zm6.258-6.437a.5.5 0 0 1 .507.013l4 2.5a.5.5 0 0 1 0 .848l-4 2.5A.5.5 0 0 1 6 12V7a.5.5 0 0 1 .258-.437"/></svg>';
-
 const ADMIN_UTILS_LINKS = [
     { id: 'admin-users-link', label: 'Users', icon: 'fa fa-users', href: APP_PATH + '/users', admin_only: true },
     { id: 'admin-index-management-link', label: 'Index Management', icon: 'fa fa-database', href: APP_PATH + '/index-management', admin_only: true },
@@ -394,10 +394,8 @@ const NAV_CONFIGS = {
  *
  * Each entry carries the route path (appended to APP_PATH by dashboard/routes.js),
  * the view to render, the nav config for that view, and the name the handler is
- * exported under. The controller previously held 49 six-line render functions and
- * routes.js 49 matching registrations; both are now generated from this table, so
- * a new page is one row instead of two hand-kept copies (DRY review 2026-09-03,
- * cluster O5).
+ * exported under. Both the handlers and the route registrations are generated from
+ * this table, so a new page is one row here and nothing else.
  *
  * - `public: true` marks the pages served without page auth — logout, session-out
  *   and access-denied have to render for a visitor whose session is already gone.
@@ -469,8 +467,8 @@ const PAGES = [
         view: 'dist/dashboard-logout',
         nav: NAV_CONFIGS.minimal,
         public: true,
-        // Per-render, not folded into template_config: assigning it there leaked
-        // sso_logout_url into every page rendered after the first logout.
+        // Per-render, never assigned onto the shared template_config: that object
+        // is reused by every page render, so anything set on it persists.
         locals: () => ({ sso_logout_url: SSO_CONFIG.sso_logout_url })
     },
     { handler: 'get_dashboard_access_denied', path: '/access-denied', view: 'dist/dashboard-access-denied', nav: NAV_CONFIGS.access_denied, public: true },
@@ -503,10 +501,9 @@ const render_page = (page) => {
 };
 
 /*
- * The per-page named exports (get_dashboard_exhibits, ...) are generated so the
- * module keeps the surface it had before the table existed — dashboard/routes.js
- * resolves handlers through PAGES, but any other caller referencing a page by
- * name still works.
+ * The per-page named exports (get_dashboard_exhibits, ...) are generated from
+ * PAGES. dashboard/routes.js resolves handlers through PAGES, but any other
+ * caller referencing a page by name still works.
  */
 for (const page of PAGES) {
     exports[page.handler] = render_page(page);

@@ -14,6 +14,8 @@
  See the License for the specific language governing permissions and
  limitations under the License.
 
+ Design history and rationale: NOTES/EXHIBITS_BACKEND_CODE_NOTES.md
+
  */
 
 const exhibitsCommonFormModule = (function () {
@@ -51,9 +53,9 @@ const exhibitsCommonFormModule = (function () {
 
     /* ==================== SHARED DOM HELPERS ====================
      *
-     * The edit / details / styles form modules each declared this dozen of
-     * one-liners INSIDE their display function, so they were rebuilt on every
-     * render and could not be shared. They live here now.
+     * Module-scope one-liners shared by the edit / details / styles form
+     * modules. Keep them here rather than inside a display function, where
+     * they would be rebuilt on every render and could not be shared.
      */
 
     /**
@@ -241,10 +243,9 @@ const exhibitsCommonFormModule = (function () {
     /**
      * Fetches the exhibit record named by the `exhibit_id` URL parameter.
      *
-     * Single implementation behind what were three near-identical copies
-     * (edit form, details page, styles form). The only behavioural knob is
-     * `type`: 'edit' asks the API for an edit-mode read, which acquires the
-     * record lock; 'details' does not.
+     * Shared by the edit form, the details page and the styles form. The only
+     * behavioural knob is `type`: 'edit' asks the API for an edit-mode read,
+     * which acquires the record lock; 'details' does not.
      *
      * @param {Object} [options]
      * @param {string} [options.type='edit'] - 'edit' (acquires the lock) or 'details'
@@ -346,8 +347,7 @@ const exhibitsCommonFormModule = (function () {
             /*
              * The API returns an object for a found record and an empty array
              * when the uuid matched nothing; `.length === 0` distinguishes the
-             * two (an object's `.length` is undefined). The edit form was the
-             * one copy missing this guard.
+             * two (an object's `.length` is undefined).
              */
             if (response.data.data.length === 0) {
                 throw new Error('Exhibit record not found');
@@ -518,11 +518,11 @@ const exhibitsCommonFormModule = (function () {
     /**
      * Writes a fetched exhibit record into the page's form fields.
      *
-     * Single implementation behind the ~194 shared lines the edit form and
-     * the details page each carried. `editable` is the one axis of
-     * difference: the edit form additionally writes the `-prev` trackers,
-     * the read-only media name displays, the trash affordances and the
-     * legacy-migration hints, none of which the read-only details page has.
+     * Shared by the edit form and the details page. `editable` is the one
+     * axis of difference: the edit form additionally writes the `-prev`
+     * trackers, the read-only media name displays, the trash affordances and
+     * the legacy-migration hints, none of which the read-only details page
+     * has.
      *
      * @param {Object} record - exhibit record from get_exhibit_record()
      * @param {Object} [options]
@@ -578,8 +578,7 @@ const exhibitsCommonFormModule = (function () {
          * Style fields, when the page renders the shared exhibit-styles
          * partial. exhibitsStylesModule is table-driven over
          * STYLE_SECTIONS x STYLE_PROPERTIES and no-ops on pages without
-         * those fields; the details page previously carried a hand-written
-         * three-section config here.
+         * those fields.
          *
          * The details and edit pages render no style fields and do not load
          * exhibitsStylesModule at all, hence the typeof guard.
@@ -604,8 +603,8 @@ const exhibitsCommonFormModule = (function () {
 
     /**
      * Wires one "Select Media" button to the shared media picker and applies
-     * the chosen asset to its slot. Replaces the two 59-line inline copies in
-     * the edit form and the two shorter ones in the add form.
+     * the chosen asset to its slot. Used by both the edit form and the add
+     * form.
      *
      * @param {Object} options
      * @param {string} options.button_selector - e.g. '#pick-hero-image-btn'

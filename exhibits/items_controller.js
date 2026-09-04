@@ -14,6 +14,8 @@
  See the License for the specific language governing permissions and
  limitations under the License.
 
+ Design history and rationale: NOTES/EXHIBITS_BACKEND_CODE_NOTES.md
+
  */
 
 'use strict';
@@ -307,8 +309,8 @@ exports.reorder_items = with_handler(async function (req, res) {
     }
 
     /* Apply the entire reorder atomically — one transaction, one bulk CASE update
-       per table — instead of N non-atomic single-row UPDATEs. A mid-batch failure
-       rolls back, so the exhibit is never left half-reordered. */
+       per table. A mid-batch failure rolls back, so the exhibit is never left
+       half-reordered. */
     const is_reordered = await ITEMS_MODEL.reorder_exhibit_items(exhibit_id, updated_order);
 
     if (is_reordered !== true) {

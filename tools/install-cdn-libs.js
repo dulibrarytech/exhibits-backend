@@ -3,10 +3,10 @@
 
 /**
  * Installs the jQuery / Popper.js / Bootstrap dist files into
- * `public/libs/` at the paths referenced by modified-40's
+ * `public/libs/` at the paths referenced by
  * `views/partials/exhibits-libs-common.ejs`.
  *
- * Run once after applying the modified-40 EJS patches:
+ * Run:
  *
  *     node tools/install-cdn-libs.js
  *
@@ -16,6 +16,8 @@
  * in place (they're harmless; remove with `npm prune` if desired).
  *
  * Idempotent — re-running just re-copies the files.
+ *
+ * Design history and rationale: NOTES/EXHIBITS_BACKEND_CODE_NOTES.md
  */
 
 const fs = require('fs');

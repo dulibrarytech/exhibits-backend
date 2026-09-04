@@ -14,6 +14,8 @@
  See the License for the specific language governing permissions and
  limitations under the License.
 
+ Design history and rationale: NOTES/EXHIBITS_BACKEND_CODE_NOTES.md
+
  */
 
 'use strict';
@@ -70,11 +72,6 @@ const exhibit_media_library_task = new EXHIBIT_MEDIA_LIBRARY_TASKS(DB, TABLES);
 
 // build_response, validate_input, prepare_styles imported from common_helper
 
-/**
- * Creates exhibit record
- * @param {Object} data - Exhibit data
- * @returns {Promise<Object>} Response object
- */
 const RTE_VOCABULARY = require('../libs/rte_vocabulary');
 
 /*
@@ -89,6 +86,11 @@ const EXHIBIT_RTE_PROFILES = {
     alert_text: 'plain'
 };
 
+/**
+ * Creates exhibit record
+ * @param {Object} data - Exhibit data
+ * @returns {Promise<Object>} Response object
+ */
 exports.create_exhibit_record = async (data) => {
 
     RTE_VOCABULARY.apply(data, EXHIBIT_RTE_PROFILES);
@@ -330,7 +332,7 @@ const handle_republish = async (uuid) => {
         // public search for the delay window. (Structural changes / publish-from-
         // scratch still go through publish_exhibit -> index_exhibit.)
         // Coalesced per exhibit: a burst of edits collapses to one near-real-time
-        // re-index (was a flat 5s delay + one independent timer per edit).
+        // re-index.
         REINDEX_COALESCER.schedule_reindex(`exhibit:${uuid}`, async () => {
             const indexed = await INDEXER_MODEL.index_exhibit_record(uuid);
 
@@ -451,10 +453,8 @@ exports.update_exhibit_record = async (uuid, data) => {
 };
 
 /*
- * Cascade config for the two container types (DRY review 2026-09-03, cluster
- * S8). `delete_grid_items` and `delete_timeline_items` were the same 45-line
- * function differing only in the model, the two method names, the membership
- * column and the log noun.
+ * Cascade config for the two container types. What differs per container is
+ * the model, the two method names, the membership column and the log noun.
  */
 const CONTAINER_CASCADES = Object.freeze({
     grid: Object.freeze({
@@ -476,8 +476,7 @@ const CONTAINER_CASCADES = Object.freeze({
 /**
  * Deletes every nested item of one container (a grid or a timeline).
  *
- * Best effort: a single failed child is logged and the rest still run, which
- * is what both originals did.
+ * Best effort: a single failed child is logged and the rest still run.
  *
  * @param {Object} item - The container record from the exhibit item list
  * @param {Object} cascade - One CONTAINER_CASCADES entry
@@ -536,10 +535,10 @@ const delete_all_exhibit_items = async (uuid) => {
     try {
 
         /*
-         * ITEMS_MODEL.get_item_records aggregates EVERY component type. The old
-         * pre-check on standard items alone returned early for exhibits made of
-         * headings, grids and timelines only, so those children were never
-         * cascaded (code review 2026-09-02, H7).
+         * ITEMS_MODEL.get_item_records aggregates EVERY component type — the
+         * pre-check must not be narrowed to standard items, or an exhibit made
+         * of headings, grids and timelines only returns early and its children
+         * are never cascaded.
          */
         const items_result = await ITEMS_MODEL.get_item_records(uuid);
 
@@ -612,11 +611,11 @@ exports.delete_exhibit_record = async (uuid) => {
         /*
          * A published exhibit must leave the public index when it is deleted
          * (moved to the recycle bin). The dashboard sends a plain DELETE with no
-         * prior suppress, so this used to leave every doc live (code review
-         * 2026-09-02, H7). suppress_exhibit removes the exhibit doc and all
-         * component docs and clears the publish flags; if the exhibit doc cannot
-         * be removed the delete is refused rather than leaving DB and index
-         * disagreeing. Preview docs (unpublished exhibit) are purged best-effort.
+         * prior suppress, so the suppress has to happen HERE: suppress_exhibit
+         * removes the exhibit doc and all component docs and clears the publish
+         * flags. If the exhibit doc cannot be removed the delete is refused
+         * rather than leaving DB and index disagreeing. Preview docs
+         * (unpublished exhibit) are purged best-effort.
          */
         const exhibit_record = await exhibit_record_task.get_exhibit_record(uuid);
 
@@ -895,11 +894,8 @@ const get_all_exhibit_records = async (uuid) => {
 };
 
 /**
- * Drops a list of component records from the public index.
- *
- * Replaces delete_{items,grids,timelines,headings}_from_index, which were
- * four copies of this function differing only in the log noun (DRY review
- * 2026-09-03, cluster S8). Best effort per record, as before.
+ * Drops a list of component records from the public index. Best effort per
+ * record; the component type is carried only by the log noun.
  *
  * @param {Array} records - Component records ({uuid, ...})
  * @param {string} noun - Log noun: 'item' | 'grid' | 'timeline' | 'heading'

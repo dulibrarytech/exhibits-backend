@@ -14,6 +14,8 @@
  See the License for the specific language governing permissions and
  limitations under the License.
 
+ Design history and rationale: NOTES/EXHIBITS_BACKEND_CODE_NOTES.md
+
  */
 
 'use strict';
@@ -34,11 +36,11 @@ const TYPE_TABLE = {
 };
 
 /*
- * Scope a per-record recycle operation to the exhibit named in the request
- * (review 2026-09-02, H3): a child row is only reachable under ITS exhibit,
- * and an exhibit row only under its own uuid. Returns null when the pair
- * cannot be valid, so the caller can 404 without touching the DB. A missing
- * exhibit_id for a child type is refused too (fail closed).
+ * Scope a per-record recycle operation to the exhibit named in the request:
+ * a child row is only reachable under ITS exhibit, and an exhibit row only
+ * under its own uuid. Returns null when the pair cannot be valid, so the
+ * caller can 404 without touching the DB. A missing exhibit_id for a child
+ * type is refused too (fail closed).
  */
 function record_scope(type, uuid, exhibit_id) {
     if (type === 'exhibit') {

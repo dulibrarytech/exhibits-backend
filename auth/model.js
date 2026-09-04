@@ -14,6 +14,8 @@
  See the License for the specific language governing permissions and
  limitations under the License.
 
+ Design history and rationale: NOTES/EXHIBITS_BACKEND_CODE_NOTES.md
+
  */
 
 'use strict';
@@ -195,13 +197,11 @@ exports.get_auth_user_data = async function (id) {
             return {status: 404, message: 'User not found.', data: []};
         }
 
-        /* The endpoint registry is NOT returned here any more. It ships with
-         * the client bundle instead (public/app/utils/endpoints.templates.js,
-         * generated from these same server modules by
+        /* The endpoint registry is NOT returned here. It ships with the client
+         * bundle instead (public/app/utils/endpoints.templates.js, generated
+         * from these same server modules by
          * tools/generate-client-endpoints.js during `npm run build:js`), so
-         * the map can never lag the bundle that reads it. Sending a second
-         * copy at authenticate time meant two channels for one map,
-         * reconciled by a hand-bumped ENDPOINTS_REGISTRY_VERSION string. */
+         * the map can never lag the bundle that reads it. */
         const auth_data = {user_data: data};
         LOGGER.module().debug(`DEBUG: [/auth/model (get_auth_user_data)] user data retrieved successfully for id: ${numeric_id}`);
 

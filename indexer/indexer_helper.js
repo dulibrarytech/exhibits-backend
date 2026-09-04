@@ -14,6 +14,8 @@
  See the License for the specific language governing permissions and
  limitations under the License.
 
+ Design history and rationale: NOTES/EXHIBITS_BACKEND_CODE_NOTES.md
+
  */
 
 'use strict';
@@ -70,9 +72,8 @@ const VALID_RECORD_TYPES = ['exhibit', 'collection', 'object', 'item'];
 
 /*
  * is_valid_uuid comes from libs/uuid (strict RFC shape) and is re-exported
- * below. The former local copy once carried a `|| uuid.length > 0` that made
- * it a no-op — any non-empty string passed. Every caller validates a genuine
- * record/exhibit UUID (never a user id).
+ * below. Every caller validates a genuine record/exhibit UUID (never a
+ * user id), so the strict shape is the correct one.
  */
 
 /**
@@ -117,8 +118,8 @@ const process_subjects = (subjects) => {
 
 /**
  * Builds IIIF URLs for a media record by UUID using the indexer-time base.
- * Replaces the prior approach of parsing a stored manifest blob; URLs now live
- * only in the search index and are reproducible by reindexing.
+ * The URLs live only in the search index and are reproducible by reindexing —
+ * nothing is persisted in the database.
  * @param {string|null} media_uuid - Media library record UUID
  * @returns {Object|null} URLs or null
  */
@@ -559,9 +560,8 @@ const batch_index_records = async (records, record_type, index_tasks) => {
     }
 
     // Preferred path: one chunked ES bulk request per ~BULK_CHUNK_SIZE docs instead
-    // of one round trip per doc. An exhibit reindex (~200 component docs) goes from
-    // ~200 sequential index calls to a couple of bulk calls. Falls back to the
-    // per-doc loop below if the tasks layer predates bulk (e.g. a test double).
+    // of one round trip per doc. Falls back to the per-doc loop below if the tasks
+    // layer predates bulk (e.g. a test double).
     if (typeof index_tasks.bulk_index_records === 'function') {
         const bulk = await index_tasks.bulk_index_records(records);
         LOGGER.module().info(
@@ -698,7 +698,6 @@ const process_container_records = async (config) => {
 
 /**
  * Indexes a child item within a container record (grid or timeline) that is already in the index.
- * Replaces the formerly duplicated index_grid_item_record / index_timeline_item_record.
  *
  * @param {Object} config
  * @param {string} config.parent_id        - Parent container UUID
@@ -743,10 +742,9 @@ const index_container_child_record = async (config) => {
 
         // Replace-by-id (idempotent upsert): drop any existing copy of this child
         // before appending the fresh one, so re-indexing the same child never
-        // duplicates it in the parent doc's items[]. Previously this appended
-        // unconditionally and relied on a preceding suppress/delete to avoid dups;
-        // making it idempotent lets a republish-after-edit re-index in place
-        // (no suppress, no public blackout) while a brand-new child still appends.
+        // duplicates it in the parent doc's items[]. That makes a republish-after-edit
+        // re-index in place (no suppress, no public blackout) while a brand-new child
+        // still appends.
         const items = (indexed_record.data.source.items || []).filter((existing) => {
             return existing.uuid !== child_id;
         });
@@ -782,7 +780,6 @@ const index_container_child_record = async (config) => {
 
 /**
  * Fetches, constructs, and indexes a single standalone record (item or heading).
- * Replaces the formerly duplicated index_item_record / index_heading_record.
  *
  * @param {Object} config
  * @param {string} config.exhibit_id        - Exhibit UUID
@@ -849,7 +846,6 @@ const index_standalone_record = async (config) => {
 
 /**
  * Fetches container records, processes them with child items, and batch-indexes.
- * Replaces the formerly duplicated index_grid_record / index_timeline_record.
  *
  * @param {Object} config
  * @param {string} config.exhibit_id           - Exhibit UUID

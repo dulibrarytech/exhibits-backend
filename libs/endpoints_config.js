@@ -14,6 +14,8 @@
  See the License for the specific language governing permissions and
  limitations under the License.
 
+ Design history and rationale: NOTES/EXHIBITS_BACKEND_CODE_NOTES.md
+
  */
 
 'use strict';
@@ -23,12 +25,7 @@ const APP_CONFIG = require('../config/app_config')();
 /*
  * One definition of the URL prelude every endpoint registry is built from.
  *
- * Before this module each of the five registries (exhibits, users, auth,
- * indexer, media-library) re-declared APP_CONFIG / APP_PATH / PREFIX /
- * VERSION / ENDPOINT for itself, and then repeated
- * `${APP_PATH}${PREFIX}${VERSION}${ENDPOINT}` on every entry.
- *
- * Registries now do:
+ * Registries do:
  *
  *   const { api_base } = require('../libs/endpoints_config');
  *   const BASE = api_base('/exhibits');

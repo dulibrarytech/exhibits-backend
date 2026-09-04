@@ -14,6 +14,8 @@
  See the License for the specific language governing permissions and
  limitations under the License.
 
+ Design history and rationale: NOTES/EXHIBITS_BACKEND_CODE_NOTES.md
+
  */
 
 'use strict';
@@ -70,9 +72,8 @@ module.exports = function() {
     APP.use(XSS.sanitize_req_params);
 
     // API/IIIF request access log — method, url, status, duration, IP. Applied
-    // once globally here; the per-route copies in the *_routes.js files were
-    // mounted at the wrong path and never fired. Scoped to /api/ and /iiif (what
-    // those per-route loggers covered) so static assets and page renders aren't logged.
+    // once globally here, not per route. Scoped to /api/ and /iiif so static
+    // assets and page renders aren't logged.
     APP.use(function (req, res, next) {
         if (req.path.indexOf('/api/') !== -1 || req.path.indexOf('/iiif') !== -1) {
             const start = Date.now();
@@ -114,8 +115,8 @@ module.exports = function() {
         FS.mkdirSync(`./logs`);
     }
 
-    // 404 — JSON for API paths, plain text elsewhere (replaces the per-route 404
-    // handlers that never fired). Covers all methods, not just GET.
+    // 404 — JSON for API paths, plain text elsewhere. Registered once here, for
+    // all methods, not just GET.
     APP.use(function (req, res) {
         if (req.path.indexOf('/api/') !== -1) {
             return res.status(404).json({ success: false, message: 'Endpoint not found', data: null });
@@ -124,9 +125,8 @@ module.exports = function() {
     });
 
     // Global error handler (must be last; the 4-arg signature is what makes Express
-    // treat it as one). Consolidates the per-route handlers that never ran: a JSON
-    // 400 for a malformed request body, then JSON 500s for API paths and plain text
-    // elsewhere. Error details are hidden in production.
+    // treat it as one). A JSON 400 for a malformed request body, then JSON 500s for
+    // API paths and plain text elsewhere. Error details are hidden in production.
     APP.use(function (err, req, res, next) {
         if (err instanceof SyntaxError && err.status === 400 && 'body' in err) {
             LOGGER.module().warn(`WARNING: [JSON parse error] ${req.method} ${redact_url(req.originalUrl)}`);

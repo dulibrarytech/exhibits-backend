@@ -14,6 +14,8 @@
  See the License for the specific language governing permissions and
  limitations under the License.
 
+ Design history and rationale: NOTES/EXHIBITS_BACKEND_CODE_NOTES.md
+
  */
 
 'use strict';
@@ -24,14 +26,13 @@ const TOKEN = require('../libs/tokens');
 const UPLOADS = require('../media-library/uploads');
 const { rate_limits } = require('../config/rate_limits_loader');
 
-/*
- * Security headers, request logging, JSON-parse errors, and 404/error handling
- * are applied once, globally, in config/express.js — not per route file. (The
- * global request log covers both /api/ and /iiif, matching what the per-route
- * middleware here used to cover.)
- */
 const { async_handler } = require('../libs/http');
 
+/*
+ * Security headers, request logging, JSON-parse errors, and 404/error handling
+ * are applied once, globally, in config/express.js — not per route file. The
+ * global request log covers both /api/ and /iiif.
+ */
 module.exports = function (app) {
 
     // ========================================
@@ -240,7 +241,6 @@ module.exports = function (app) {
     // IIIF MANIFEST AND IMAGE API
     // ========================================
     // Public-facing IIIF routes use <APP_PATH>/iiif/...
-    // Administrative routes (generate/batch) remain on /api/v1/...
 
     // Get IIIF manifest for a media record (public-facing)
     // GET <APP_PATH>/iiif/:media_id/manifest

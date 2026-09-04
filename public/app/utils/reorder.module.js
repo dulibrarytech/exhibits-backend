@@ -14,6 +14,8 @@
  See the License for the specific language governing permissions and
  limitations under the License.
 
+ Design history and rationale: NOTES/EXHIBITS_BACKEND_CODE_NOTES.md
+
  */
 
 const reorderModule = (function () {
@@ -358,7 +360,7 @@ const reorderModule = (function () {
     }
 
     /* ═══════════════════════════════════════════════════════════════════
-       Phase 4 — Keyboard reorder API (WCAG 2.1.1 + 2.5.7)
+       Keyboard reorder API (WCAG 2.1.1 + 2.5.7)
 
        DataTables RowReorder is mouse-drag only. Keyboard users get
        per-row Move up / Move down buttons that mutate the DOM, build a

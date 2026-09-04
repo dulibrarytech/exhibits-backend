@@ -14,6 +14,8 @@
  See the License for the specific language governing permissions and
  limitations under the License.
 
+ Design history and rationale: NOTES/EXHIBITS_BACKEND_CODE_NOTES.md
+
  */
 
 'use strict';
@@ -37,11 +39,9 @@ const {
  * shared helper's PURE validators (which return a verdict) rather than the
  * response-sending ones the item-type controllers use.
  *
- * Phase 3 item 19 removed the second failure envelope that used to coexist
- * here, which omitted the `data` key. The split was never principled; it was
- * just what the endpoints happened to return. Every failure is now
- * `send_error` -> {success: false, message, data: null} and every success
- * `send_ok` -> {success: true, message, data}.
+ * There is ONE failure envelope: every failure is `send_error` ->
+ * {success: false, message, data: null} and every success `send_ok` ->
+ * {success: true, message, data}.
  */
 
 const CONTROLLER_LABEL = '/exhibits/controller';
@@ -250,9 +250,9 @@ exports.update_exhibit_record = async (req, res) => {
     try {
 
         /*
-         * The raw path parameter, not the trimmed one, is what this handler has
-         * always forwarded to the authorization check and the model; only the
-         * 400 comes from the validator. Kept verbatim.
+         * The raw path parameter, not the trimmed one, is what this handler
+         * forwards to the authorization check and the model; only the 400
+         * comes from the validator.
          */
         const { exhibit_id: uuid } = req.params;
         const uuid_check = validate_string_param(uuid, 'exhibit ID');
@@ -361,8 +361,8 @@ exports.build_exhibit_preview = async function (req, res) {
             return send_error(res, 500, 'Unable to build exhibit preview');
         }
 
-        /* Config guard, unlike the deleted model guards, can genuinely fail:
-           these two values come from the environment. */
+        /* Config guard: these two values come from the environment, so they
+           can genuinely be missing. */
         if (!WEBSERVICES_CONFIG ||
             !WEBSERVICES_CONFIG.exhibit_preview_url ||
             !WEBSERVICES_CONFIG.exhibit_preview_api_key) {
@@ -387,10 +387,10 @@ exports.build_exhibit_preview = async function (req, res) {
 };
 
 /*
- * publish_exhibit and suppress_exhibit were ~90% identical. What actually
- * differs is captured in this table; `refusals` maps a non-boolean model
- * status to the graceful 422 it earns (publish alone has any — the grid
- * minimum-items rule and the empty-exhibit rule both refuse there).
+ * Everything that differs between publish_exhibit and suppress_exhibit is in
+ * this table; `refusals` maps a non-boolean model status to the graceful 422
+ * it earns (publish alone has any — the grid minimum-items rule and the
+ * empty-exhibit rule both refuse there).
  */
 const EXHIBIT_STATE_CHANGES = {
 

@@ -12,6 +12,8 @@
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
  * See the License for the specific language governing permissions and
  * limitations under the License.
+ *
+ * Design history and rationale: NOTES/EXHIBITS_BACKEND_CODE_NOTES.md
  */
 
 const mediaModalsModule = (function() {
@@ -332,13 +334,6 @@ const mediaModalsModule = (function() {
         });
     };
 
-    /**
-     * Remove a file's card from the batch. The file index is recorded so the
-     * effective total drops by one — other cards keep their in-progress
-     * metadata and their original data-file-index → uploaded_files_data
-     * mapping (no re-render, no re-index).
-     * @param {number} index - The file's data-file-index
-     */
     /**
      * Drop the card from the DOM and reconcile batch state. Pure UI/state —
      * called only after the staged file is confirmed gone server-side (or

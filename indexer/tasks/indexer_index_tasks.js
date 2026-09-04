@@ -14,6 +14,8 @@
  See the License for the specific language governing permissions and
  limitations under the License.
 
+ Design history and rationale: NOTES/EXHIBITS_BACKEND_CODE_NOTES.md
+
  */
 
 'use strict';
@@ -40,7 +42,7 @@ const Indexer_index_tasks = class extends Es_base_tasks {
         // Validate dependencies on construction
         this._validate_dependencies();
 
-        // Log initialization (replaced console.log)
+        // Log initialization
         LOGGER.module().info('Indexer initialized', {
             index: this.INDEX
         });
@@ -112,7 +114,6 @@ const Indexer_index_tasks = class extends Es_base_tasks {
      * @param {Object} [options={}] - Indexing options
      * @param {boolean} [options.refresh=false] - Whether to refresh immediately (default: false for efficiency)
      * @param {string} [options.timeout='30s'] - Request timeout
-     * @param {number} [options.retry_on_conflict=3] - Number of retries on version conflict
      * @returns {Promise<Object>} Result object with success status and details
      */
     async index_record(record, options = {}) {

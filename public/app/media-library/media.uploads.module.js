@@ -12,6 +12,8 @@
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
  * See the License for the specific language governing permissions and
  * limitations under the License.
+ *
+ * Design history and rationale: NOTES/EXHIBITS_BACKEND_CODE_NOTES.md
  */
 
 const mediaUploadsModule = (function() {
@@ -263,8 +265,8 @@ const mediaUploadsModule = (function() {
 
             error: options.error_handler || function(file, error_message) {
                 const error_element = document.querySelector('.upload-error');
-                /* Upload failures now speak the shared {success, message, data}
-                   envelope; `error` was the pre-Phase-3 key (Phase 3 item 19). */
+                /* Upload failures speak the shared {success, message, data}
+                   envelope. */
                 const message = typeof error_message === 'object'
                     ? (error_message.message || 'Upload failed')
                     : error_message;

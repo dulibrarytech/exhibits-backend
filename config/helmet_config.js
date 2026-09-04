@@ -14,6 +14,8 @@
  See the License for the specific language governing permissions and
  limitations under the License.
 
+ Design history and rationale: NOTES/EXHIBITS_BACKEND_CODE_NOTES.md
+
  */
 
 'use strict';
@@ -141,7 +143,8 @@ module.exports = function () {
             }
         },
 
-        // Allow cross-origin resources (required for CDN assets)
+        // Allow cross-origin resources (required for the Kaltura player embed
+        // and its thumbnails — the only external origins left)
         crossOriginEmbedderPolicy: false,
 
         // Referrer Policy

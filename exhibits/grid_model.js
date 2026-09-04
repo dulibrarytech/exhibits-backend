@@ -14,6 +14,8 @@
  See the License for the specific language governing permissions and
  limitations under the License.
 
+ Design history and rationale: NOTES/EXHIBITS_BACKEND_CODE_NOTES.md
+
  */
 
 'use strict';
@@ -242,10 +244,10 @@ const grid_publish_gate = async (exhibit_id, grid_id) => {
 /**
  * Suppress gate for a grid item.
  *
- * Both the grid and the item must belong to THIS exhibit — a foreign grid
- * used to skip the minimum-items gate (null record) and then lose its index
- * doc before the scoped DB update threw (code review 2026-09-02, H3). A
- * published grid must also keep at least one full row on the live site.
+ * Both the grid and the item must belong to THIS exhibit: a foreign grid
+ * would skip the minimum-items gate (null record) and then lose its index doc
+ * before the scoped DB update threw. A published grid must also keep at least
+ * one full row on the live site.
  *
  * @param {string} exhibit_id - Exhibit UUID
  * @param {string} grid_id - Grid UUID
@@ -295,10 +297,10 @@ const grid_item_suppress_gate = async (exhibit_id, grid_id, grid_item_id) => {
 };
 
 /**
- * Delete gate for a grid item (code review 2026-09-02, M4): a PUBLISHED grid
- * must keep at least `columns` published items, the same rule publish and
- * suppress enforce. Deleting a published item that would take it below that
- * is refused; unpublish the grid first.
+ * Delete gate for a grid item: a PUBLISHED grid must keep at least `columns`
+ * published items, the same rule publish and suppress enforce. Deleting a
+ * published item that would take it below that is refused; unpublish the grid
+ * first.
  * @param {string} exhibit_id - Exhibit UUID
  * @param {string} grid_id - Grid UUID
  * @param {string} grid_item_id - Grid item UUID
@@ -337,8 +339,7 @@ const grid_item_delete_gate = async (exhibit_id, grid_id, grid_item_id) => {
 
 /*
  * The grid container: a standalone component with its own Elasticsearch doc.
- * Suppressing it cascades to its own items only, keyed by the grid uuid
- * (code review 2026-09-02, H8).
+ * Suppressing it cascades to its own items only, keyed by the grid uuid.
  */
 const grid_model = make_component_model({
     module_name: 'grid_model',

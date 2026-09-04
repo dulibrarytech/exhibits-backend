@@ -14,6 +14,8 @@
  See the License for the specific language governing permissions and
  limitations under the License.
 
+ Design history and rationale: NOTES/EXHIBITS_BACKEND_CODE_NOTES.md
+
  */
 
 const helperModule = (function () {
@@ -837,15 +839,12 @@ const helperModule = (function () {
     };
 
     /**
-     * Fades a status/message container out and empties it. Shared replacement
-     * for the per-form `clear_message_smoothly` / `clear_status_message`
-     * copies (FADE_DURATION = 300 in each). After the fade the inline
-     * transition is reset to '' (as the copies did) so a following
-     * set_alert renders without a lingering transition.
+     * Fades a status/message container out and empties it. After the fade the
+     * inline transition is reset to '' so a following set_alert renders
+     * without a lingering transition.
      *
-     * Callers should not write a new alert into the same container inside
-     * the fade window — the pending clear would wipe it (same race the copies
-     * had).
+     * Callers must not write a new alert into the same container inside the
+     * fade window — the pending clear would wipe it.
      *
      * @param {string|Element} element  - selector or element (e.g. '#message')
      * @param {Object} [options]
@@ -884,8 +883,8 @@ const helperModule = (function () {
     /**
      * Builds the item "Styles" preset chooser as radio rows with color swatches
      * (background + font colors), mirroring the exhibit Styles form. Appends one
-     * row per preset key into the container, which already holds the static "None"
-     * row. Idempotent — clears any previously-appended preset rows first.
+     * row per preset key into the container; there is no "None" row.
+     * Idempotent — clears any previously-appended preset rows first.
      * @param {string} container_selector - e.g. '#item-style-options'
      * @param {string[]} sorted_keys - preset keys (e.g. ['item1','item2'])
      * @param {Object} style_map - key → { backgroundColor, color, ... }
@@ -954,13 +953,10 @@ const helperModule = (function () {
     };
 
     /*
-     * Style-preset loader shared by the four item/heading common form modules.
-     *
-     * Each of standard-items / grid-items / timeline-items / heading-items
-     * carried a byte-equivalent `fetch_and_populate_styles` +
-     * `has_style_values` + `STYLE_KEY_LABELS` block (~130 lines each). The
-     * only real differences were the exhibit-styles key prefix ('item' vs
-     * 'heading'), the derived human labels, and the console log tag.
+     * Style-preset loader shared by the four item/heading common form modules
+     * (standard-items / grid-items / timeline-items / heading-items). Callers
+     * differ only in the exhibit-styles key prefix ('item' vs 'heading'), the
+     * derived human labels, and the console log tag.
      */
 
     /**
@@ -981,8 +977,7 @@ const helperModule = (function () {
 
     /**
      * Derives the human label for a preset key: 'item1' -> 'Item Style 1',
-     * 'heading2' -> 'Heading Style 2'. Replaces the hard-coded
-     * STYLE_KEY_LABELS maps the four copies each carried.
+     * 'heading2' -> 'Heading Style 2'.
      * @param {string} key
      * @param {string} prefix
      * @returns {string}
@@ -1117,13 +1112,12 @@ const helperModule = (function () {
     /**
      * Renders the "Created by X on DATE | Last updated by Y on DATE" audit
      * line into a container, building DOM nodes rather than interpolating
-     * into innerHTML — the fourteen call sites this replaces were split
-     * between a safe-DOM variant and an innerHTML variant that dropped
-     * `created_by` / `updated_by` into markup unescaped.
+     * into innerHTML — `created_by` / `updated_by` are user-supplied and must
+     * never reach markup unescaped.
      *
      * A half of the line is rendered only when both its actor and its
-     * timestamp are present AND the timestamp parses; the innerHTML copies
-     * rendered "Invalid Date" for a missing/unparsable value.
+     * timestamp are present AND the timestamp parses; a missing or
+     * unparsable value renders nothing rather than "Invalid Date".
      *
      * @param {string|Element} element_or_selector - target container (e.g. '#created')
      * @param {Object} record - record carrying created_by/created/updated_by/updated
@@ -1183,7 +1177,7 @@ const helperModule = (function () {
      * Checks the item-style radio matching the saved value. Empty/unknown
      * values (legacy records saved before presets were required) fall back to
      * the FIRST preset — the same default the builder applies; there is no
-     * "None" option. Replaces the old <select>.value assignment.
+     * "None" option.
      * @param {string|null} value - saved style key (e.g. 'item1') or null
      */
     obj.check_item_style_option = function (value) {
@@ -1228,8 +1222,8 @@ const helperModule = (function () {
     };
 
     obj.init = function () {
-        // On read-only details pages, strip the "(Optional)" markers and "Preview
-        // Field" links the shared data-card partials carry for the add/edit forms.
+        // On read-only details pages, strip the "(Optional)" markers the shared
+        // data-card partials carry for the add/edit forms.
         // Gated by URL so add/edit forms are untouched.
         if (window.location.pathname.indexOf('details') === -1) {
             return;

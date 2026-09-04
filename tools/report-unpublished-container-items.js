@@ -4,8 +4,7 @@
 
 /**
  * Reports published exhibits that currently hold unpublished grid items or
- * timeline items — the footprint of the preview-unpublishes bug (fixed in
- * code-review-modified-135).
+ * timeline items.
  *
  * Read-only: this script never writes. Re-publishing an affected exhibit from
  * the dashboard restores its items (the publish flow republishes children),
@@ -13,6 +12,8 @@
  * the bug from items a curator suppressed on purpose.
  *
  * Run: node tools/report-unpublished-container-items.js
+ *
+ * Design history and rationale: NOTES/EXHIBITS_BACKEND_CODE_NOTES.md
  */
 
 require('dotenv').config();

@@ -14,27 +14,24 @@
  See the License for the specific language governing permissions and
  limitations under the License.
 
+ Design history and rationale: NOTES/EXHIBITS_BACKEND_CODE_NOTES.md
+
  */
 
 'use strict';
 
 /**
- * Field whitelists for the exhibit task classes.
- *
- * These lists used to be nine method-local `const ALLOWED_FIELDS` /
- * `UPDATABLE_FIELDS` arrays spread across five files, in three different
- * conventions. That made the one question that matters — "can a client set
- * this column?" — a nine-file review (DRY review 2026-09-03, cluster S7 and
- * bug #6). Everything a request is allowed to write now lives here.
+ * Field whitelists for the exhibit task classes. Everything a request is
+ * allowed to write lives here — one file answers "can a client set this
+ * column?".
  *
  * TWO RULES GOVERN THIS FILE:
  *
  * 1. Lock and recycle-bin state (`is_locked`, `locked_by_user`, `locked_at`,
  *    `is_deleted`) is SERVER-OWNED. It must never appear in a CREATE list.
- *    Phase 0 removed it from the grid-item, timeline-item and heading create
- *    lists; `test/tasks/exhibit_{grid,timeline,heading}_record_tasks.test.js`
+ *    `test/tasks/exhibit_{grid,timeline,heading}_record_tasks.test.js`
  *    each pin that, and `exhibit_fields.test.js` pins it for every list here.
- *    The two historical exceptions that remain are called out inline below.
+ *    The one exception that remains is called out inline below.
  *
  * 2. `internal_name` is dashboard-only: stored and listed, never indexed.
  *    See the indexer whitelist and its pin test.
@@ -46,9 +43,9 @@ const LOCK_STATE_FIELDS = Object.freeze([
 ]);
 
 /*
- * Content fields shared by grid items and timeline items. Their two create
- * whitelists were identical apart from the parent key, and their two update
- * whitelists were byte-identical, so both derive from this one list.
+ * Content fields shared by grid items and timeline items. Both create lists
+ * (which differ only in the parent key) and both update lists derive from
+ * this one list.
  */
 const CONTAINER_ITEM_CONTENT_FIELDS = Object.freeze([
     'thumbnail', 'thumbnail_media_uuid', 'title', 'caption', 'item_type',
@@ -130,25 +127,17 @@ const GRID_CREATE_FIELDS = Object.freeze([
 ]);
 
 /*
- * NOTE: `is_deleted` here is pre-existing. It is an UPDATE list, so rule 1
- * above is not violated, but it is the only container update that lets a
- * request recycle (or un-recycle) a row directly, and no model sends it —
- * grid_model never writes `is_deleted`. Preserved rather than silently
- * removed; see the report.
+ * NOTE: this is an UPDATE list, so `is_deleted` does not violate rule 1 —
+ * but it is the only container update that lets a request recycle (or
+ * un-recycle) a row directly, and no model sends it: grid_model never writes
+ * `is_deleted`.
  */
 const GRID_UPDATE_FIELDS = Object.freeze([
     'type', 'columns', 'text', 'internal_name', 'styles', 'margins', 'text_alignment',
     'order', 'is_deleted', 'is_published', 'updated_by'
 ]);
 
-/*
- * Timeline containers carry no `title` (dropped by the titles-to-subheadings
- * migration) and no `columns`.
- *
- * NOTE: `is_deleted` in the CREATE list is pre-existing drift — the grid,
- * heading and both container-item create lists dropped it in Phase 0 and this
- * one was missed. Preserved here rather than silently changed; see the report.
- */
+/* Timeline containers carry no `title` and no `columns`. */
 const TIMELINE_CREATE_FIELDS = Object.freeze([
     'uuid', 'is_member_of_exhibit', 'type', 'text', 'internal_name', 'styles', 'order',
     'is_published', 'owner', 'margins', 'text_alignment'

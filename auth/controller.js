@@ -14,6 +14,8 @@
  See the License for the specific language governing permissions and
  limitations under the License.
 
+ Design history and rationale: NOTES/EXHIBITS_BACKEND_CODE_NOTES.md
+
  */
 
 'use strict';
@@ -58,8 +60,7 @@ exports.initiate_login = function (req, res) {
         );
         /* Deliberately NOT the JSON envelope: this endpoint answers a
            top-level browser navigation from the landing page's Authenticate
-           button, so its siblings render HTML and nothing parses this body
-           (Phase 3 item 19). */
+           button, so its siblings render HTML and nothing parses this body. */
         res.status(500).send('Unable to start authentication.');
     }
 };
@@ -124,7 +125,7 @@ exports.sso = async function (req, res) {
 
         // Primary auth transport: HttpOnly cookie read by TOKEN.verify /
         // TOKEN.verify_with_query. Preview windows and media <img> requests
-        // now authenticate via this cookie instead of a URL query string.
+        // authenticate via this cookie, not a URL query string.
         TOKEN.set_auth_cookie(res, token);
 
         // Record successful authentication (who + source IP) so the

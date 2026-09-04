@@ -14,6 +14,8 @@
  See the License for the specific language governing permissions and
  limitations under the License.
 
+ Design history and rationale: NOTES/EXHIBITS_BACKEND_CODE_NOTES.md
+
  */
 
 'use strict';
@@ -47,9 +49,9 @@ const HEADING_RTE_PROFILES = {
 /**
  * Runs a heading payload through its ajv schema.
  *
- * Headings are the only component type that still has create/update schemas;
- * the other three had theirs removed as provably-unreachable guards, so the
- * factory takes schema validation as an optional hook rather than a step.
+ * Headings are the only component type that still has create/update schemas,
+ * so the factory takes schema validation as an optional hook rather than a
+ * step.
  *
  * @param {Object} validator - VALIDATOR instance
  * @param {string} context - Module/function context for the error log

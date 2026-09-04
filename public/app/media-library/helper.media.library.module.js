@@ -12,6 +12,8 @@
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
  * See the License for the specific language governing permissions and
  * limitations under the License.
+ *
+ * Design history and rationale: NOTES/EXHIBITS_BACKEND_CODE_NOTES.md
  */
 
 const helperMediaLibraryModule = (function() {
@@ -122,8 +124,7 @@ const helperMediaLibraryModule = (function() {
      * Display a status alert inside a form card (upload / repo-import /
      * Kaltura-import modals). Finds or creates the card's `.card-message`
      * container under `.card-body`, renders a non-dismissible alert with a
-     * type icon, and auto-clears success messages. Replaces the three
-     * per-modal `display_card_message` copies.
+     * type icon, and auto-clears success messages.
      *
      * @param {HTMLElement} card - The .card element
      * @param {string} type - 'success' | 'danger' | 'warning'
@@ -165,8 +166,8 @@ const helperMediaLibraryModule = (function() {
     /**
      * Create a bound message helper scoped to a specific container.
      * Returns an object with display_message and clear_message pre-bound
-     * to the given container ID, matching the original per-module
-     * function signatures: display_message(type, message), clear_message().
+     * to the given container ID, matching the per-module function
+     * signatures: display_message(type, message), clear_message().
      * @param {string} container_id - DOM element ID for the message area
      * @returns {Object} { display_message, clear_message, escape_html }
      */
@@ -481,11 +482,11 @@ const helperMediaLibraryModule = (function() {
     // CSP-SAFE <img> FALLBACK WIRING
     // ========================================
     //
-    // Several modules render thumbnail markup through innerHTML and
-    // historically used inline `onerror="..."` to swap a placeholder /
-    // hide the broken <img> / replace the parent with an icon. That
-    // pattern is hostile to a strict Content Security Policy
-    // (script-src without 'unsafe-inline'). To stay CSP-ready, modules
+    // Several modules render thumbnail markup through innerHTML. Using an
+    // inline `onerror="..."` there to swap a placeholder / hide the broken
+    // <img> / replace the parent with an icon is hostile to a strict
+    // Content Security Policy (script-src without 'unsafe-inline') and must
+    // not be reintroduced. To stay CSP-ready, modules
     // emit a sentinel `data-fallback="<strategy>"` attribute on the
     // <img> instead, then call `wire_image_fallbacks(root)` after the
     // innerHTML write. This helper attaches a single `error` listener
@@ -666,7 +667,7 @@ const helperMediaLibraryModule = (function() {
     /**
      * Creates one media library record from a per-card form.
      *
-     * Owns the flow the upload / repository / Kaltura modals each carried:
+     * Owns the flow shared by the upload / repository / Kaltura modals:
      * resolve the create endpoint, put the card's Save button into its busy
      * state, POST the payload, then map the response — no response / 403 /
      * 400 / non-201 / missing id — onto a card-level message with the button

@@ -14,6 +14,8 @@
  See the License for the specific language governing permissions and
  limitations under the License.
 
+ Design history and rationale: NOTES/EXHIBITS_BACKEND_CODE_NOTES.md
+
  */
 
 /**
@@ -23,7 +25,7 @@
  * media_library_records table references, and (with --delete) removes them
  * and prunes empty hash-bucket directories.
  *
- * What "referenced" means (code review 2026-09-02, C5):
+ * What "referenced" means:
  *   A file is referenced when its storage-relative path equals some row's
  *   storage_path or thumbnail_path — ANY row, soft-deleted ones included, so
  *   recycle-bin restores keep working. Files are NOT matched by the UUID in
@@ -86,9 +88,8 @@ try {
 const DB = require('../../config/db_config')();
 const DB_TABLES = require('../../config/db_tables_config')();
 /*
- * db_tables_config exports { exhibits: { media_library_records, ... } }. The
- * previous `DB_TABLES.media_library_records` was undefined, which made every
- * reference lookup throw and the sweep silently treat every file as "in DB".
+ * db_tables_config exports { exhibits: { media_library_records, ... } } — the
+ * table name is nested under `exhibits`, never on DB_TABLES directly.
  */
 const MEDIA_TABLE = DB_TABLES.exhibits.media_library_records;
 const STORAGE_CONFIG = require('../../media-library/storage_config')();

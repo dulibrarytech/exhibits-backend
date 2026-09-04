@@ -14,6 +14,8 @@
  See the License for the specific language governing permissions and
  limitations under the License.
 
+ Design history and rationale: NOTES/EXHIBITS_BACKEND_CODE_NOTES.md
+
  */
 
 const exhibitsAddFormModule = (function () {
@@ -344,8 +346,7 @@ const exhibitsAddFormModule = (function () {
             }
 
             // ── Style fields — cleared by the styles module, which owns the
-            //    section x property tables (was a hard-coded copy of the
-            //    section list here) ──
+            //    section x property tables ──
             exhibitsStylesModule.reset();
 
             // ── Collapse all open accordion panels ──

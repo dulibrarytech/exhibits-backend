@@ -14,6 +14,8 @@
  See the License for the specific language governing permissions and
  limitations under the License.
 
+ Design history and rationale: NOTES/EXHIBITS_BACKEND_CODE_NOTES.md
+
  */
 
 'use strict';
@@ -761,7 +763,7 @@ exports.get_info = async function (uuid, base_url) {
  * For uploaded PDFs: reads the generated thumbnail
  *
  * Reads are asynchronous (FS.promises.readFile) so a large original never
- * blocks the event loop the way the previous synchronous readFileSync did.
+ * blocks the event loop.
  * Only reached on a cache miss — a cached derivative is served without ever
  * touching the original.
  *
@@ -862,19 +864,6 @@ const parse_region = (region, source_width, source_height) => {
 };
 
 /**
- * Parses the IIIF size parameter
- *
- * Supported values (Level 1):
- *   - "max"       → original size (no resize)
- *   - "w,"        → scale to width, height proportional
- *   - ",h"        → scale to height, width proportional
- *   - "w,h"       → exact dimensions (may distort)
- *   - "!w,h"      → best fit within w×h (maintains aspect ratio)
- *
- * @param {string} size - IIIF size parameter
- * @returns {Object|null} Sharp resize options or null for max/original
- */
-/**
  * Extracts the explicit output dimensions a size parameter requests, for cap
  * enforcement (OWASP A04/H3). Only the numeric IIIF size forms carry explicit
  * dimensions: "w,", ",h", "w,h", "!w,h". "max"/"full" (and any unparseable
@@ -905,6 +894,19 @@ const requested_size_dimensions = (size) => {
     };
 };
 
+/**
+ * Parses the IIIF size parameter
+ *
+ * Supported values (Level 1):
+ *   - "max"       → original size (no resize)
+ *   - "w,"        → scale to width, height proportional
+ *   - ",h"        → scale to height, width proportional
+ *   - "w,h"       → exact dimensions (may distort)
+ *   - "!w,h"      → best fit within w×h (maintains aspect ratio)
+ *
+ * @param {string} size - IIIF size parameter
+ * @returns {Object|null} Sharp resize options or null for max/original
+ */
 const parse_size = (size) => {
 
     if (size === 'max' || size === 'full') {

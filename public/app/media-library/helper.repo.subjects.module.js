@@ -12,6 +12,8 @@
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
  * See the License for the specific language governing permissions and
  * limitations under the License.
+ *
+ * Design history and rationale: NOTES/EXHIBITS_BACKEND_CODE_NOTES.md
  */
 
 const repoSubjectsModule = (function() {
@@ -857,7 +859,7 @@ const repoSubjectsModule = (function() {
         const item_type_selects = container.querySelectorAll('select[name="item_type"]');
         item_type_selects.forEach(s => { s.disabled = true; });
 
-        // Step 1: Upgrade any native <select> elements for multi-select fields to widgets
+        // Upgrade any native <select> elements for multi-select fields to widgets
         const upgraded_widgets = [];
 
         MULTI_SELECT_NAMES.forEach(name => {
@@ -969,8 +971,8 @@ const repoSubjectsModule = (function() {
      * Emits native `<select>` elements; populate_subjects_dropdowns() upgrades
      * the three multi-value fields to `.ms-widget`s in place, carrying over the
      * `required` flag, the placeholder and any `data-selected` value. This is
-     * the single builder behind what were four hand-rolled copies (upload,
-     * repository import, edit and Kaltura modals).
+     * the single builder for all four call sites (upload, repository import,
+     * edit and Kaltura modals).
      *
      * @param {string} prefix - ID/class prefix for the form elements
      * @param {number|null|undefined} index - Optional numeric index for multi-form contexts
@@ -1015,8 +1017,7 @@ const repoSubjectsModule = (function() {
          * the Required badge but never carries the HTML `required` attribute
          * — upgrade_select_to_widget forces it required by name, and leaving
          * the attribute off keeps checkValidity() from blocking the form in
-         * the window before the widget upgrade runs. That is what all four
-         * hand-rolled copies did.
+         * the window before the widget upgrade runs.
          */
         const build_field = (name, slug, label_text, badge, attr) => {
 

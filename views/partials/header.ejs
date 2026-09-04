@@ -22,8 +22,10 @@
     <link rel="stylesheet" href="/exhibits-dashboard/static/assets/fonts/open-sans/open-sans.css" type="text/css">
     <link rel="stylesheet" href="/exhibits-dashboard/static/libs/normalize-8.x/normalize.min.css" type="text/css">
     <link rel="stylesheet" href="/exhibits-dashboard/static/libs/bootstrap-4.x/dist/css/bootstrap.min.css" type="text/css">
-    <%# FontAwesome is the dashboard's only icon font. Bootstrap Icons (0 uses)
-        and Themify (1 use, swapped for fa-columns) were removed 2026-09-04. %>
+    <%# FontAwesome is the dashboard's only icon font — no other icon font is
+        loaded, so a new glyph must come from FontAwesome 4.7 or be inlined
+        as SVG.
+        Design history and rationale: NOTES/EXHIBITS_BACKEND_CODE_NOTES.md %>
     <link rel="stylesheet" href="/exhibits-dashboard/static/libs/font-awesome-4.7.0/css/font-awesome.min.css" type="text/css">
     <link rel="stylesheet" href="/exhibits-dashboard/static/assets/dist/dashboard.min.css?<%=build_version%>" type="text/css">
     <link rel="stylesheet" href="/exhibits-dashboard/static/libs/dropzone-5.9.3/dropzone.min.css" type="text/css">

@@ -12,6 +12,8 @@
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
  * See the License for the specific language governing permissions and
  * limitations under the License.
+ *
+ * Design history and rationale: NOTES/EXHIBITS_BACKEND_CODE_NOTES.md
  */
 
 const repoServiceModule = (function() {
@@ -109,10 +111,9 @@ const repoServiceModule = (function() {
     };
 
     /**
-     * Clear the results container. Previously rendered a magnifying-glass
-     * placeholder with prompt text; the placeholder was removed for a cleaner
-     * empty state so the toolbar is the only visible affordance at rest.
-     * Name preserved for caller compatibility.
+     * Clear the results container. Renders nothing: the empty state is
+     * deliberately blank so the toolbar is the only visible affordance at
+     * rest. Name preserved for caller compatibility.
      */
     const hide_loading = () => {
         const results_container = document.getElementById('repo-search-results');
@@ -333,10 +334,10 @@ const repoServiceModule = (function() {
         // Build thumbnail HTML with inline styles for reliability.
         // Uses the repo thumbnail endpoint URL with a CSP-safe fallback:
         // data-fallback="icon" + a wrapper-style/icon-style pair that
-        // recreates the same icon-on-grey-square placeholder the inline
-        // onerror used to write. wire_image_fallbacks() (called after
-        // each innerHTML write) attaches addEventListener('error', ...)
-        // instead of an inline handler.
+        // renders the icon-on-grey-square placeholder.
+        // wire_image_fallbacks() (called after each innerHTML write)
+        // attaches addEventListener('error', ...) instead of an inline
+        // handler.
         const fallback_wrapper_style = 'width:80px;height:80px;background:#f8f9fa;display:flex;align-items:center;justify-content:center;border-radius:4px;';
         const fallback_icon_style = 'color:#6c757d;';
         let thumbnail_html;

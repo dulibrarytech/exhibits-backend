@@ -14,6 +14,8 @@
  See the License for the specific language governing permissions and
  limitations under the License.
 
+ Design history and rationale: NOTES/EXHIBITS_BACKEND_CODE_NOTES.md
+
  */
 
 /*
@@ -21,17 +23,10 @@
  * families (standard item, heading, grid + grid item, timeline + timeline
  * item).
  *
- * Before this module each family carried its own copy of the same three
- * skeletons — the DRY review measured 18 modules and ~42% redundant lines:
- *
- *   C2  edit    (6 copies): get_*_record -> display_edit_record -> update_*_record
- *   C3  add     (6 copies): create_*_record -> redirect to the edit page
- *   C4  details (6 copies): get_*_record -> display_details_record -> disable
- *
- * What genuinely differed between the copies was only: which endpoint keys to
- * use, which URL query parameters name the record's ids, the noun in the
- * status messages, and 20-60 lines of field population / collection. Those
- * are the config; everything else lives here once.
+ * A form's configuration supplies only what differs between families: which
+ * endpoint keys to use, which URL query parameters name the record's ids, the
+ * noun in the status messages, and the field population / collection hooks.
+ * Everything else lives here once.
  *
  * The RECORD_TYPES table below follows the same shape as lockModule's
  * path -> unlock-endpoint config table: one row per record type, naming the
@@ -45,8 +40,7 @@ const itemFormBaseModule = (function () {
 
     const obj = {};
 
-    /* Success alerts are cleared after this delay (the MESSAGE_CLEAR_DELAY
-     * every edit-form copy declared for itself). */
+    /* Success alerts are cleared after this delay. */
     const MESSAGE_CLEAR_DELAY = 3000;
 
     /* The add forms show their success alert this long before replacing the
@@ -57,8 +51,8 @@ const itemFormBaseModule = (function () {
      * double-click cannot fire a second PUT. */
     const SUBMIT_RELOCK_DELAY = 1000;
 
-    /* Longest accepted id; the copies rejected anything longer as
-     * "Invalid parameter length" before building a URL from it. */
+    /* Longest accepted id; anything longer is rejected as "Invalid parameter
+     * length" before a URL is built from it. */
     const MAX_ID_LENGTH = 255;
 
     const EXHIBIT_PARAM = { param: 'exhibit_id', key: 'exhibit_id' };
@@ -173,8 +167,7 @@ const itemFormBaseModule = (function () {
 
     /**
      * 'media' or 'text' for the families whose add/edit pages come in both
-     * flavours; taken from the current path exactly as the six add-form
-     * copies did.
+     * flavours; taken from the current path.
      * @returns {string}
      */
     function form_type_from_path() {
@@ -269,8 +262,7 @@ const itemFormBaseModule = (function () {
 
     /**
      * Temporarily disables the submit button and drops the unsaved-changes
-     * guard after a successful save. Shared replacement for the per-form
-     * `reset_form_state` / `reset_form_states` closures.
+     * guard after a successful save.
      * @param {string} submit_card_selector
      */
     function reset_form_state(submit_card_selector) {
@@ -292,8 +284,6 @@ const itemFormBaseModule = (function () {
 
     /**
      * Makes a details page read-only after its fields have been populated.
-     * Verbatim replacement for the three identical `disable_all_fields`
-     * copies (standard item, grid item, timeline item details).
      */
     obj.disable_all_fields = function () {
 
@@ -324,7 +314,7 @@ const itemFormBaseModule = (function () {
 
     /**
      * Scrolls the page to the top so an alert written into #message is
-     * visible. All copies did this before writing a status message.
+     * visible. Called before writing a status message.
      */
     function scroll_to_top() {
         window.scrollTo({ top: 0, left: 0, behavior: 'instant' });
@@ -383,9 +373,8 @@ const itemFormBaseModule = (function () {
             : { type: 'edit', uid: true };
         const query = Object.assign({}, query_defaults, settings.query || {});
 
-        /* Reentrancy guard. The copies hung this flag off `this`, which under
-         * addEventListener is the button element rather than the module —
-         * a closure keeps it where it was meant to be. */
+        /* Reentrancy guard. Must stay a closure variable, not a property of
+         * `this` — under addEventListener `this` is the button element. */
         let is_submitting = false;
 
         const form = {};
@@ -481,8 +470,8 @@ const itemFormBaseModule = (function () {
          * Fetches the record and paints the form: lock handling (edit), the
          * audit line, the per-type field population, and the read-only sweep
          * (details).
-         * @returns {Promise<boolean>} always false — the copies returned
-         *          false so a submit handler bound to them never submits.
+         * @returns {Promise<boolean>} always false, so a submit handler bound
+         *          to it never submits.
          */
         form.display_record = async function () {
 

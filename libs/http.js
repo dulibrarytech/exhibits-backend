@@ -14,13 +14,15 @@
  See the License for the specific language governing permissions and
  limitations under the License.
 
+ Design history and rationale: NOTES/EXHIBITS_BACKEND_CODE_NOTES.md
+
  */
 
 'use strict';
 
 /*
- * Shared Express helpers (DRY review 2026-09-03, Phase 1). `async_handler`
- * used to be pasted into eight route files; `send_error` / `send_ok` give the
+ * Shared Express helpers. `async_handler` is the one definition every route
+ * file wraps its handlers with; `send_error` / `send_ok` give the
  * `{success, message, data}` envelope a single definition for the modules
  * that already speak it (media-library, indexer, exhibits).
  */

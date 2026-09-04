@@ -14,6 +14,8 @@
  See the License for the specific language governing permissions and
  limitations under the License.
 
+ Design history and rationale: NOTES/EXHIBITS_BACKEND_CODE_NOTES.md
+
  */
 
 const exhibitsStylesModule = (function () {
@@ -28,7 +30,7 @@ const exhibitsStylesModule = (function () {
      * @type {string[]}
      */
     const STYLE_SECTIONS = [
-        // Exhibit-level styles are no longer collected; get_styles omits the 'template' key from the payload.
+        // 'template' is deliberately absent: exhibit-level styles are not collected, so get_styles omits that key from the payload.
         'introduction',
         'navigation',
         'heading1',
@@ -476,9 +478,9 @@ const exhibitsStylesModule = (function () {
      * Table-driven over STYLE_SECTIONS x STYLE_PROPERTIES: text inputs and
      * number inputs are emptied, `<select>`s go back to their first option,
      * colour pickers to '#ffffff', and the header swatches to the default
-     * checkerboard. Replaces the hard-coded eight-section list the
-     * add-exhibit modal's reset_form carried, so a new section or property
-     * added to the tables above is reset without a second edit.
+     * checkerboard. Because it is table-driven, a new section or property
+     * added to the tables above is reset without a second edit; callers such
+     * as the add-exhibit modal's reset_form must not keep their own list.
      *
      * Also clears any validation state left over from a previous open.
      */

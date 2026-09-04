@@ -14,6 +14,8 @@
  See the License for the specific language governing permissions and
  limitations under the License.
 
+ Design history and rationale: NOTES/EXHIBITS_BACKEND_CODE_NOTES.md
+
  */
 
 'use strict';
@@ -60,11 +62,9 @@ const ITEM_RTE_PROFILES = {
  *
  * Field-level validation happens in the task layer:
  * exhibit_item_record_tasks whitelists updatable fields (_sanitize_data +
- * UPDATABLE_FIELDS), validates UUIDs, and checks lock/exists state. The
- * former ajv schemas were removed: the create one only re-checked
- * is_member_of_exhibit (injected from an already-validated route param) and
- * the update one had been emptied to a no-op, because the wrapper requires
- * every listed property and cannot model the text-vs-media form variants.
+ * UPDATABLE_FIELDS), validates UUIDs, and checks lock/exists state. There is
+ * no ajv schema on this type: the ajv wrapper requires every listed property
+ * and cannot model the text-vs-media form variants.
  */
 const item_model = make_component_model({
     module_name: 'items_model',
@@ -358,12 +358,10 @@ exports.delete_item_record = async (is_member_of_exhibit, item_id, type) => {
 
 /**
  * Reorders all of an exhibit's items in ONE atomic transaction, using a single
- * bulk CASE update per target table — replacing the controller's per-item loop of
- * N non-atomic single-row UPDATEs (each on its own connection). A mixed top-level
- * drag becomes <= 4 statements (item / heading / grid / timeline), plus one per
- * distinct grid for grid-item reorders, all-or-nothing inside one transaction.
- * Mirrors the gap-healer `helper.apply_reorder` (also transactional, also bumps
- * `updated`); the `{ type, uuid, order, [grid_id] }` payload is unchanged.
+ * bulk CASE update per target table. A mixed top-level drag becomes <= 4
+ * statements (item / heading / grid / timeline), plus one per distinct grid for
+ * grid-item reorders, all-or-nothing inside one transaction. Mirrors the
+ * gap-healer `helper.apply_reorder` (also transactional, also bumps `updated`).
  *
  * @param {string} exhibit_id - Exhibit UUID (scope for top-level items)
  * @param {Array<Object>} updated_order - [{ type, uuid, order, [grid_id] }, ...]
@@ -482,9 +480,8 @@ exports.reorder_exhibit_items = async (exhibit_id, updated_order, updated_by = n
 /**
  * Targeted re-index after a reorder. Re-indexes ONLY the components named in the
  * reorder payload — each top-level component is its own ES doc, and grid items are
- * re-indexed via their parent grid's doc — instead of a full `index_exhibit` over
- * every component. Re-indexing reads the fresh DB order, so re-indexing per the
- * payload reflects the new ordering.
+ * re-indexed via their parent grid's doc. Re-indexing reads the fresh DB order, so
+ * re-indexing per the payload reflects the new ordering.
  *
  * Each op is debounced per component by reindex_coalescer, which both coalesces a
  * burst of drags (per component) AND covers the union across the burst: a component

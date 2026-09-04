@@ -14,6 +14,8 @@
  See the License for the specific language governing permissions and
  limitations under the License.
 
+ Design history and rationale: NOTES/EXHIBITS_BACKEND_CODE_NOTES.md
+
  */
 
 'use strict';
@@ -54,7 +56,7 @@ const TIMELINE_ITEM_RTE_PROFILES = {
 
 /**
  * Suppress gate for a timeline item: the item must belong to THIS exhibit and
- * timeline before the container doc is touched (code review 2026-09-02, H3).
+ * timeline before the container doc is touched.
  *
  * Timelines have no minimum-items rule — the grid equivalent of this hook
  * also enforces one — so this is the membership guard alone.
@@ -84,7 +86,7 @@ const timeline_item_suppress_gate = async (exhibit_id, timeline_id, timeline_ite
 /*
  * The timeline container: a standalone component with its own Elasticsearch
  * doc. Suppressing it cascades to its own items only, keyed by the timeline
- * uuid (code review 2026-09-02, H8).
+ * uuid.
  */
 const timeline_model = make_component_model({
     module_name: 'timelines_model',
@@ -138,8 +140,7 @@ const timeline_model = make_component_model({
 /*
  * The timeline item: a NESTED component, embedded in the timeline doc's
  * items[]. Timeline items are date-ordered on the public site, so `order` is
- * set on create and by an explicit reorder only — never recomputed on update
- * (Phase 0 #2).
+ * set on create and by an explicit reorder only — never recomputed on update.
  */
 const timeline_item_model = make_component_model({
     module_name: 'timelines_model',
@@ -173,10 +174,9 @@ const timeline_item_model = make_component_model({
     },
     messages: {
         /*
-         * Preserved divergence: where the grid says "Invalid indexed record"
-         * for a 200 with no _source, the timeline has always reported it as
-         * "not found in index" — and the controller contract test pins that
-         * string.
+         * Divergence from the grid, which says "Invalid indexed record" for a
+         * 200 with no _source: the timeline reports it as "not found in
+         * index", and the controller contract test pins that string.
          */
         index_invalid_message: 'Timeline not found in index'
     },

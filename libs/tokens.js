@@ -12,6 +12,8 @@
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
  * See the License for the specific language governing permissions and
  * limitations under the License.
+ *
+ * Design history and rationale: NOTES/EXHIBITS_BACKEND_CODE_NOTES.md
  */
 
 'use strict';
@@ -317,8 +319,7 @@ exports.refresh_token = function (username) {
  * same secret and issuer, so signature + issuer alone cannot tell them apart.
  * The `type` claim is therefore part of the contract: a verifier must state
  * which kind it accepts, and a token of any other kind (or with no type) is
- * rejected. Without this, a 7-day shared-preview token from a share URL was
- * accepted by the session verifiers as a login (code review 2026-09-02, C3).
+ * rejected.
  *
  * @param {string} token - JWT token to verify
  * @param {string} expected_type - TOKEN_TYPES value the caller accepts
@@ -395,9 +396,10 @@ function validate_api_key(key) {
  * Verifies session token
  * Supports token from:
  *   - Header: x-access-token
- *   - Query parameter: t
- *   - Query parameter: token (for img src URLs)
+ *   - Cookie: exhibits_token
  *   - API key: api_key query parameter
+ * A token in the query string is deliberately NOT accepted here; see the
+ * note in the body.
  * @param {Object} req - Express request object
  * @param {Object} res - Express response object
  * @param {Function} next - Express next middleware function
@@ -519,6 +521,7 @@ exports.verify_page = function (req, res, next) {
  *
  * Supports token from:
  *   - Header: x-access-token
+ *   - Cookie: exhibits_token
  *   - Query parameter: token (for img src URLs that cannot set headers)
  *   - Query parameter: t
  *   - API key: api_key query parameter
@@ -634,10 +637,9 @@ exports.verify_shared = function (req, res, next) {
 /**
  * Derives the cookie Max-Age from a signed JWT's `exp` claim so the
  * cookie never outlives — or, crucially, undercuts — the token it
- * carries. When the cookie Max-Age was shorter than the JWT lifetime,
- * the cookie would silently expire first and cookie-authenticated
- * requests (media <img> src, preview windows) would 401 even though
- * the user's session was still valid.
+ * carries. A cookie that expires before the JWT would 401 the
+ * cookie-authenticated requests (media <img> src, preview windows) of a
+ * session that is still valid.
  * @param {string} token - Signed JWT
  * @returns {number}     - Cookie Max-Age in seconds
  * @private

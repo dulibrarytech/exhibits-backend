@@ -14,6 +14,8 @@
  See the License for the specific language governing permissions and
  limitations under the License.
 
+ Design history and rationale: NOTES/EXHIBITS_BACKEND_CODE_NOTES.md
+
  */
 
 'use strict';
@@ -618,14 +620,13 @@ const Repo_service_tasks = class extends Es_base_tasks {
 
     /**
      * Walks every document matching an `exists` query with the scroll API and
-     * folds each page into a caller-owned accumulator.
+     * folds each page into a caller-owned accumulator. `get_subjects` and
+     * `get_resource_types` share it, differing only in the field they filter
+     * on, the `_source` projection and the per-page extractor.
      *
-     * `get_subjects` and `get_resource_types` each carried their own copy of
-     * this loop; the copies differed only in the field they filtered on, the
-     * `_source` projection and the per-page extractor (DRY review 2026-09-03,
-     * cluster O7). Failure handling stays with the callers because each of
-     * them returns a differently-shaped envelope — this method throws and
-     * `_scroll_failure` turns the throw into that envelope.
+     * Failure handling stays with the callers because each of them returns a
+     * differently-shaped envelope — this method throws and `_scroll_failure`
+     * turns the throw into that envelope.
      *
      * @param {Object} options
      * @param {string} options.exists_field - Field that must exist on a document

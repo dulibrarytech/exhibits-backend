@@ -14,6 +14,8 @@
  See the License for the specific language governing permissions and
  limitations under the License.
 
+ Design history and rationale: NOTES/EXHIBITS_BACKEND_CODE_NOTES.md
+
  */
 
 'use strict';
@@ -84,7 +86,7 @@ const Recycled_record_tasks = class extends Base_tasks {
      * @param {string} table - resolved table name
      * @param {string} uuid - record uuid
      * @param {Object} [scope={}] - extra WHERE columns, e.g. { is_member_of_exhibit } so a
-     *        child can only be purged under the exhibit named in the request (review H3)
+     *        child can only be purged under the exhibit named in the request
      * @returns {Promise<number>} affected row count
      */
     async delete_recycled_record(table, uuid, scope = {}) {

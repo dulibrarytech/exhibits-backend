@@ -14,6 +14,8 @@
  See the License for the specific language governing permissions and
  limitations under the License.
 
+ Design history and rationale: NOTES/EXHIBITS_BACKEND_CODE_NOTES.md
+
  */
 
 'use strict';
@@ -23,10 +25,9 @@ const LOGGER = require('../libs/log4');
 const { send_error } = require('../libs/http');
 
 /*
- * RBAC gate (DRY review 2026-09-03, Phase 1). Sixteen controllers used to
- * hand-build the `check_permission` option tuple and the 403 by hand; this
- * module owns both shapes. `check_permission` in auth/authorize.js stays the
- * single decision point.
+ * RBAC gate. This module owns the `check_permission` option tuple and the 403
+ * shape for every controller; `check_permission` in auth/authorize.js stays
+ * the single decision point.
  *
  * Lives beside authorize.js rather than inside it on purpose: the route
  * suites (users, indexer, media uploads, media routes) mock `auth/authorize`
@@ -34,9 +35,8 @@ const { send_error } = require('../libs/http');
  * that module would vanish under the mock. This module requires
  * `./authorize` at load, so the mock is what it calls.
  *
- * The 403 body was originally selectable, because users/ answered `{message}`
- * while media-library and indexer answered `{success, message, data}`. Phase 3
- * item 19 unified every module on the latter, so there is one shape here now.
+ * Every module answers the one `{success, message, data}` 403 body, so there
+ * is a single shape here — the body is not caller-selectable.
  */
 
 const UNAUTHORIZED_MESSAGE = 'Unauthorized request';
@@ -72,8 +72,8 @@ const build_auth_options = (req, permissions, options = {}) => {
 /**
  * Sends the 403
  *
- * Every module now speaks the one `{success, message, data}` envelope
- * (Phase 3 item 19), so this no longer branches on a caller-supplied style.
+ * Every module speaks the one `{success, message, data}` envelope, so this
+ * does not branch on a caller-supplied style. Takes `res` only.
  * @param {Object} res - Express response
  * @returns {Object} The response
  */

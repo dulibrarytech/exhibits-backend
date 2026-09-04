@@ -14,6 +14,8 @@
  See the License for the specific language governing permissions and
  limitations under the License.
 
+ Design history and rationale: NOTES/EXHIBITS_BACKEND_CODE_NOTES.md
+
  */
 
 'use strict';
@@ -70,19 +72,11 @@ const ENDPOINTS = {
  * They exist only because public/app/user.module.js is owned elsewhere and
  * still reads the old paths. Delete an entry once its reader has moved.
  *
- *   users.endpoint                      → user_records.get.endpoint
- *       public/app/user.module.js (35, 765, 771)
- *   users.get_user.endpoint             → user_record.get.endpoint
- *       public/app/user.module.js (61)
- *   users.update_user.put               → user_records.put
- *       public/app/user.module.js (704)
- *   users.delete_user.delete            → user_records.delete
- *       public/app/user.module.js (900, 906)
- *   users.user_status.endpoint          → user_status.put.endpoint
- *       public/app/user.module.js (1066)
- *
- * `get_users` and `create_user` are gone outright: they carried no `endpoint`
- * key at all, so nothing could ever have resolved a URL through them.
+ *   users.endpoint             → user_records.get.endpoint
+ *   users.get_user.endpoint    → user_record.get.endpoint
+ *   users.update_user.put      → user_records.put
+ *   users.delete_user.delete   → user_records.delete
+ *   users.user_status.endpoint → user_status.put.endpoint
  */
 ENDPOINTS.users.endpoint = ENDPOINTS.users.user_records.get.endpoint;
 ENDPOINTS.users.get_user = { endpoint: ENDPOINTS.users.user_record.get.endpoint };

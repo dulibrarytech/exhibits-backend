@@ -14,6 +14,8 @@
  See the License for the specific language governing permissions and
  limitations under the License.
 
+ Design history and rationale: NOTES/EXHIBITS_BACKEND_CODE_NOTES.md
+
  */
 
 const lockModule = (function () {
@@ -24,8 +26,8 @@ const lockModule = (function () {
 
     /*
      * Coerces a user id (numeric string or number) to an integer; NaN when
-     * absent or non-numeric. Number() is stricter than the parseInt() the
-     * per-form copies used ('12abc' is rejected instead of read as 12).
+     * absent or non-numeric. Number() is deliberately stricter than
+     * parseInt(): '12abc' is rejected rather than read as 12.
      */
     const to_user_id = (value) => {
 
@@ -38,10 +40,9 @@ const lockModule = (function () {
     };
 
     /**
-     * Shared replacement for the per-form `is_user_administrator` copies.
      * Delegates to authModule.is_administrator() (quiet: no redirect, no
-     * alert, case-insensitive role match). Falls back to the copies' own
-     * profile → get_user_role() logic only if that export is absent.
+     * alert, case-insensitive role match). Falls back to
+     * profile → get_user_role() only if that export is absent.
      * Never throws.
      * @returns {Promise<boolean>}
      */
@@ -70,7 +71,6 @@ const lockModule = (function () {
     };
 
     /**
-     * Shared replacement for the per-form `is_locked_by_other_user` copies.
      * True only when the record is locked (is_locked === 1 or true) AND
      * locked_by_user resolves to a different integer than the current user.
      * Ids are normalised with Number(), so '12' and 12 compare equal.
@@ -78,7 +78,7 @@ const lockModule = (function () {
      * @param {Object} record            - { is_locked, locked_by_user, ... }
      * @param {string|number} [current_user_id] - defaults to
      *        authModule.get_user_profile_data().uid (which redirects to auth
-     *        when the session profile is missing, as the copies did)
+     *        when the session profile is missing)
      * @returns {boolean} false for a missing/unlocked record, a missing
      *          profile, or a non-numeric id on either side
      */
@@ -120,23 +120,21 @@ const lockModule = (function () {
     };
 
     /**
-     * Shared replacement for the per-form `disable_form_fields` copies.
      * Disables (and greys out: cursor not-allowed, opacity 0.6) every
      * interactive control so a record locked by someone else is read-only.
-     * Defaults match the most common copy (5 of 6 forms).
      *
      * @param {Object}   [options]
      * @param {string|null} [options.form_selector=null] - root to scope the
-     *        sweeps to; null = whole document (what every copy did)
+     *        sweeps to; null = whole document
      * @param {boolean}  [options.include_submit=true] - also match
-     *        button[type="submit"] (styles form omitted it)
+     *        button[type="submit"] (the styles form passes false)
      * @param {boolean}  [options.disable_rte=true] - call
      *        rteModule.set_all_enabled(false) when rteModule is loaded
-     *        (styles form omitted it)
+     *        (the styles form passes false)
      * @param {boolean}  [options.disable_custom_buttons=true] - second sweep
-     *        over `.btn:not([disabled])` (every copy did it)
+     *        over `.btn:not([disabled])`
      * @param {string[]} [options.preserve_selectors=[]] - CSS selectors whose
-     *        matches are skipped in both sweeps; the copies passed
+     *        matches are skipped in both sweeps; callers pass
      *        is_admin ? ['#unlock-record'] : []
      * @returns {number} count of elements this call disabled
      */
@@ -533,8 +531,8 @@ const lockModule = (function () {
                 }
             }
 
-            /* Placeholder substitution lives in endpointsModule.build (promoted
-             * from this module); the loop above already rejects empty params. */
+            /* Placeholder substitution lives in endpointsModule.build; the
+             * loop above already rejects empty params. */
             const endpoint = endpointsModule.build(endpoint_template, endpoint_params);
             if (!endpoint) {
                 throw new Error('Failed to build endpoint URL');

@@ -14,6 +14,8 @@
  See the License for the specific language governing permissions and
  limitations under the License.
 
+ Design history and rationale: NOTES/EXHIBITS_BACKEND_CODE_NOTES.md
+
  */
 
 'use strict';
@@ -21,10 +23,8 @@
 const LOGGER = require('../../libs/log4');
 
 /*
- * Columns the users API may return. tbl_users once held each user's LIVE
- * session JWT in a `token` column (dropped by migration 20260902120000); a
- * `select('*')` handed every Administrator's session to any view_users
- * holder. Keep this list explicit so a future column is opted in, not leaked.
+ * Columns the users API may return. Keep this list explicit — never
+ * `select('*')` — so a future column is opted in, not leaked.
  */
 const USER_PROFILE_COLUMNS = ['id', 'du_id', 'email', 'first_name', 'last_name', 'is_active', 'created', 'last_login'];
 

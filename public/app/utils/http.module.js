@@ -14,6 +14,8 @@
  See the License for the specific language governing permissions and
  limitations under the License.
 
+ Design history and rationale: NOTES/EXHIBITS_BACKEND_CODE_NOTES.md
+
  */
 
 const httpModule = (function() {
@@ -69,8 +71,8 @@ const httpModule = (function() {
         }
     };
 
-    /* Dominant missing-token behaviour across the ~30 per-call guards: alert
-     * in #message, then authModule.logout() after 1000 ms. */
+    /* Missing-token behaviour: alert in #message, then authModule.logout()
+     * after 1000 ms. */
     const MISSING_TOKEN_MESSAGE = 'Session expired. Please log in again.';
     const MISSING_TOKEN_LOGOUT_DELAY_MS = 1000;
     const DEFAULT_TIMEOUT_MS = 30000;
@@ -125,11 +127,8 @@ const httpModule = (function() {
 
     /**
      * Token-injecting wrapper over obj.req for the dashboard's authenticated
-     * JSON API calls. Replaces the envelope most modules copy per call:
-     *
-     *   const token = authModule.get_user_token();
-     *   if (!token) { <alert>; setTimeout(() => authModule.logout(), 1000); return false; }
-     *   httpModule.req({ method, url, data, headers: {...}, timeout: 30000, validateStatus });
+     * JSON API calls. Modules call this instead of resolving the token and
+     * assembling headers/timeout/validateStatus per call.
      *
      * Behaviour:
      *   - Resolves the token via authModule.get_user_token(). When missing:
@@ -197,10 +196,9 @@ const httpModule = (function() {
 
         /*
          * With the permissive validateStatus a 401 resolves instead of
-         * rejecting, so obj.req's catch-block redirect never fires. Keep the
-         * session-expired contract every caller relied on before migrating:
-         * redirect and resolve undefined, exactly as obj.req does on a
-         * rejected 401.
+         * rejecting, so obj.req's catch-block redirect never fires. The
+         * session-expired contract is preserved here: redirect and resolve
+         * undefined, exactly as obj.req does on a rejected 401.
          */
         if (response && response.status === 401) {
             if (typeof authModule !== 'undefined' && typeof authModule.redirect_to_auth === 'function') {

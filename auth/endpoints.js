@@ -14,6 +14,8 @@
  See the License for the specific language governing permissions and
  limitations under the License.
 
+ Design history and rationale: NOTES/EXHIBITS_BACKEND_CODE_NOTES.md
+
  */
 
 'use strict';
@@ -36,8 +38,8 @@ const ENDPOINTS = {
                 endpoint: `${AUTH_BASE}/login`
             }
         },
-        /* `/auth/sso`, not `/sso`: the registry used to carry `${APP_PATH}/sso`,
-         * which never matched the route auth/routes.js registers. Pinned by
+        /* `/auth/sso`, not `/sso` — it must match the route auth/routes.js
+         * registers. Pinned by
          * test/integration/auth_routes_integration.test.js. */
         sso: {
             post: {

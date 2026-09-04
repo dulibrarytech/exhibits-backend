@@ -14,6 +14,8 @@
  See the License for the specific language governing permissions and
  limitations under the License.
 
+ Design history and rationale: NOTES/EXHIBITS_BACKEND_CODE_NOTES.md
+
  */
 
 'use strict';
@@ -23,8 +25,7 @@
  *
  * Stores transcoded IIIF Image API outputs on disk so an identical request is
  * served straight from the cache instead of re-reading and re-transcoding the
- * original on every hit (the "IIIF re-reads + re-transcodes originals on every
- * request, no server-side derivative cache" performance finding).
+ * original on every hit.
  *
  * Layout (parallels the hash-bucketed media storage):
  *

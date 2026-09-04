@@ -14,6 +14,8 @@
  See the License for the specific language governing permissions and
  limitations under the License.
 
+ Design history and rationale: NOTES/EXHIBITS_BACKEND_CODE_NOTES.md
+
  */
 
 'use strict';
@@ -359,16 +361,12 @@ const Auth_tasks = class {
                 return parsed_exhibit_owner;
             }
 
-            // Handle child record types (child_id is provided at this point)
             /*
              * Child record types (child_id is provided at this point).
              *
              * The child is looked up TOGETHER with its parent column: a child
              * row that is not `is_member_of_exhibit = parent_id` is not this
-             * exhibit's child, whatever the URL says. Without that binding,
-             * owning exhibit A resolved ownership of any child uuid in the
-             * system (code review 2026-09-02, H3) — the uuid-only suppress,
-             * publish and recycle paths then acted on it.
+             * exhibit's child, whatever the URL says.
              */
             const [exhibit_data, child_data] = await Promise.all([
                 this.DB(this.TABLE.exhibit_records)
@@ -397,7 +395,7 @@ const Auth_tasks = class {
 
             // No such child under this exhibit (wrong exhibit, wrong type, or
             // nonexistent): nobody owns it here — never fall back to the
-            // exhibit owner, that is exactly the H3 hole.
+            // exhibit owner.
             if (!child_data || child_data.length === 0) {
                 LOGGER.module().warn(`WARNING: [/auth/tasks (check_ownership)] ${normalized_record_type} ${child_id} is not a member of exhibit ${parent_id}`);
                 return 0;
@@ -442,7 +440,6 @@ const Auth_tasks = class {
 
     /**
      * Gets user ID by username (du_id from decoded JWT sub claim)
-     * Replaces token-based lookup to avoid encoding mismatch and token rotation issues
      * @param {string} username - Username from decoded JWT (req.decoded.sub)
      * @returns {number|null} - User ID on success, null on failure
      */
@@ -530,7 +527,6 @@ const Auth_tasks = class {
 
     /**
      * Gets user permissions by username (du_id from decoded JWT sub claim)
-     * Replaces token-based lookup to avoid encoding mismatch and token rotation issues
      * @param {string} username - Username from decoded JWT (req.decoded.sub)
      * @returns {Array|null} - Array of permission objects on success, null on failure
      */

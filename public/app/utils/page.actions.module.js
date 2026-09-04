@@ -14,11 +14,12 @@
  See the License for the specific language governing permissions and
  limitations under the License.
 
+ Design history and rationale: NOTES/EXHIBITS_BACKEND_CODE_NOTES.md
+
  */
 
 /**
- * Page-level actions that every dashboard edit / details / delete page used
- * to re-implement in an inline <script>:
+ * Page-level actions shared by the dashboard's edit / details / delete pages:
  *
  *   wire_cancel_button()  - Cancel on an edit form: confirm when the form has
  *                           unsaved changes, then go back to a list page.
@@ -54,8 +55,8 @@ const pageActionsModule = (function () {
 
     /**
      * Builds "a=1&b=2" from the named query-string parameters of the current
-     * page. A missing parameter serialises as "null" — the same thing the
-     * template-literal interpolation in the old inline scripts produced.
+     * page. A missing parameter serialises as the literal string "null";
+     * callers depend on that shape.
      * @param {string[]} params - parameter names to carry over
      * @returns {string}
      */

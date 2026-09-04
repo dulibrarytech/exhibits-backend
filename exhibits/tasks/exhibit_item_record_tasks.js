@@ -14,6 +14,8 @@
  See the License for the specific language governing permissions and
  limitations under the License.
 
+ Design history and rationale: NOTES/EXHIBITS_BACKEND_CODE_NOTES.md
+
  */
 
 'use strict';
@@ -404,11 +406,10 @@ const Exhibit_item_record_tasks = class extends Base_tasks {
             });
 
             /*
-             * Standard items used to hand-roll this with a hasOwnProperty loop
-             * over the whitelist, and to re-SELECT the row afterwards for a
-             * `record` key nothing read. Both are gone: the shared helper
-             * sanitizes (so prototype keys are dropped and rejected fields are
-             * logged, like every sibling) and returns the common envelope.
+             * The shared helper sanitizes (so prototype keys are dropped and
+             * rejected fields are logged, like every sibling) and returns the
+             * common envelope. Do not hand-roll the whitelist loop here, and do
+             * not re-SELECT the row afterwards — nothing reads it.
              */
             return await this._update_scoped(
                 'item_records',
@@ -524,10 +525,9 @@ const Exhibit_item_record_tasks = class extends Base_tasks {
     /**
      * Gets the count of item records for an exhibit
      *
-     * Errors THROW. This used to swallow them and return 0, alone among the
-     * four get_record_count implementations; since all four run under one
-     * Promise.all in the exhibit publish gate, a swallowed error here could
-     * only ever have fed the gate a wrong count (DRY review cluster S6).
+     * Errors THROW, as in the other three get_record_count implementations.
+     * All four run under one Promise.all in the exhibit publish gate, so a
+     * swallowed error here would feed the gate a wrong count.
      *
      * @param {string} uuid - The exhibit UUID
      * @returns {Promise<number>} Count of item records
@@ -556,10 +556,10 @@ const Exhibit_item_record_tasks = class extends Base_tasks {
      * ==================== PUBLISHING / SUPPRESSING ====================
      *
      * set_to_publish, set_to_suppress, set_item_to_publish and
-     * set_item_to_suppress are generated from PUBLISH_OPS at the bottom of
-     * this file. Contracts are unchanged: the two exhibit-scoped methods
-     * resolve the result object and throw; the two single-item methods
-     * resolve true and log-and-resolve false on error.
+     * set_item_to_suppress are generated from PUBLISH_OPS (declared at the top
+     * of this file; the generator call is at the bottom). Contracts: the two
+     * exhibit-scoped methods resolve the result object and throw; the two
+     * single-item methods resolve true and log-and-resolve false on error.
      */
 
     // ==================== REORDERING ====================

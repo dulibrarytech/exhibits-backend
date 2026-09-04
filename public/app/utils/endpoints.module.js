@@ -1,32 +1,28 @@
+/*
+ * Single source of the client's API endpoint map and of APP_PATH.
+ *
+ * Design history and rationale: NOTES/EXHIBITS_BACKEND_CODE_NOTES.md
+ */
+
 const endpointsModule = (function() {
 
     'use strict';
 
     const APP_PATH = '/exhibits-dashboard';
 
-    // Endpoints-registry version — LEGACY, no longer needs bumping.
+    // Endpoints-registry version — LEGACY, do NOT bump.
     //
-    // The registry used to arrive twice: once in the /api/v1/authenticate
-    // response (cached in localStorage with no TTL) and once as the
-    // build-time template below. The runtime copy is gone; the map now ships
-    // inside the client bundle (endpoints.templates.js, generated from the
-    // server endpoint modules by `npm run build:js`), so it is replaced
-    // atomically with the code that reads it and CANNOT go stale. That
-    // removes the whole failure mode this stamp defended against, so adding
-    // or changing an endpoint no longer requires bumping this string.
+    // The live map ships inside the client bundle (endpoints.templates.js,
+    // generated from the server endpoint modules by `npm run build:js`), so it
+    // is replaced atomically with the code that reads it and CANNOT go stale.
+    // Adding or changing an endpoint therefore does not require bumping this
+    // string.
     //
-    // What is left runs once per page load and evicts a pre-existing
-    // localStorage registry from a client that logged in before the change.
-    // Remove it — together with save_exhibits_endpoints and
-    // get_cached_endpoints — once auth.module.js has stopped calling
-    // save_exhibits_endpoints and test/e2e/fixtures/auth.js has stopped
-    // seeding the localStorage keys. History:
-    //   '1' — baseline
-    //   '2' — added media_library.upload.get / upload.delete
-    //   '3' — added media_library.media_file_replace.post; NOT bumped when
-    //         the registry moved to the bundle, because a bump would send
-    //         every signed-in client through a pointless re-auth redirect
-    //         for a cache nothing reads any more.
+    // The version check that remains runs once per page load and evicts a
+    // pre-existing localStorage registry from a client that logged in before
+    // the map moved into the bundle. It can be removed — together with
+    // save_exhibits_endpoints and get_cached_endpoints — once
+    // test/e2e/fixtures/auth.js has stopped seeding the localStorage keys.
     const ENDPOINTS_REGISTRY_VERSION = '3';
     const ENDPOINTS_VERSION_KEY = 'exhibits_endpoints_version';
     // sessionStorage one-shot guard so a failed/no-op re-auth can't loop.
@@ -44,10 +40,8 @@ const endpointsModule = (function() {
     let obj = {};
 
     /**
-     * Probe localStorage once at module init. Every get/set call previously
-     * performed a setItem/removeItem round-trip just to confirm availability;
-     * on a page load with ~dozens of endpoint reads, that added up. The
-     * probe runs once here and the boolean is reused.
+     * Probe localStorage once at module init; the boolean is reused by every
+     * get/set call rather than repeating a setItem/removeItem round-trip.
      */
     const LOCAL_STORAGE_AVAILABLE = (() => {
         try {
@@ -370,8 +364,7 @@ const endpointsModule = (function() {
 
     /**
      * Get auth endpoints. Bundle-only: auth is not one of the four sections
-     * the removed /authenticate payload used to carry, so there is no
-     * localStorage fallback for it.
+     * the localStorage registry carries, so there is no fallback for it.
      */
     obj.get_auth_endpoints = function() {
         try {
@@ -384,8 +377,8 @@ const endpointsModule = (function() {
     };
 
     /**
-     * The /authenticate URL, read from the generated registry instead of
-     * being hardcoded here (it was the one endpoint the client duplicated).
+     * The /authenticate URL, read from the generated registry rather than
+     * hardcoded here.
      * Falls back to the literal path on the two pages that load
      * endpoints.module.js without endpoints.templates.js
      * (views/dashboard-session-out.ejs), where the bundle-only map is absent.
@@ -615,14 +608,15 @@ const endpointsModule = (function() {
     };
 
     /**
-     * Refresh cache (force reload from localStorage)
+     * Escapes regex metacharacters so a placeholder name can be embedded in a
+     * RegExp literal safely.
      */
     const escape_regex = (value) => String(value).replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
 
     /**
      * Substitutes `:name` placeholders in an endpoint template string with
-     * URL-encoded parameter values. Promoted from lockModule's private
-     * build_endpoint_url so every `.replace(':x_id', …)` site can share it.
+     * URL-encoded parameter values. Shared by every `.replace(':x_id', …)`
+     * site.
      *
      * The registry is nested (EXHIBITS_ENDPOINTS.grid_records.get.endpoint),
      * so this takes the template STRING, not a registry key.
@@ -673,6 +667,9 @@ const endpointsModule = (function() {
         return endpoint;
     };
 
+    /**
+     * Refresh cache (force reload from localStorage)
+     */
     obj.refresh_cache = function() {
         clear_cache();
         console.debug('Endpoints cache cleared');

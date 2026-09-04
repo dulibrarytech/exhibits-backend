@@ -14,6 +14,8 @@
  See the License for the specific language governing permissions and
  limitations under the License.
 
+ Design history and rationale: NOTES/EXHIBITS_BACKEND_CODE_NOTES.md
+
  */
 
 'use strict';
@@ -23,17 +25,9 @@ const LOGGER = require('../libs/log4');
 /**
  * Coalesces (debounces) fire-and-forget re-index tasks by key.
  *
- * After Phase 1 of the publish-amplification work, an edit to a published exhibit
- * re-indexes a single doc in place (a cheap idempotent ES upsert) — there is no
- * suppress/blackout to space out anymore. So the old flat 5 s `REPUBLISH_DELAY_MS`
- * per edit just made the public index stale; and rapid edits to the same component
- * stacked one independent timer (and one re-index) each.
- *
- * This module replaces both: a per-key debounce so a burst of edits to the SAME
- * component collapses to ONE trailing re-index, run a short window after the burst
- * settles (near-real-time instead of 5 s-stale). The app is single-instance (no
- * Redis), so an in-process Map is the coalescing surface — same idiom as the
- * per-exhibit reorder coalescing introduced in modified-73, generalized.
+ * A per-key debounce: a burst of edits to the SAME component collapses to ONE
+ * trailing re-index, run a short window after the burst settles. The app is
+ * single-instance (no Redis), so an in-process Map is the coalescing surface.
  */
 
 // Default debounce window. Short enough to feel near-instant publicly, long enough

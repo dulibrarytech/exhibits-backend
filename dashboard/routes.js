@@ -14,6 +14,8 @@
  See the License for the specific language governing permissions and
  limitations under the License.
 
+ Design history and rationale: NOTES/EXHIBITS_BACKEND_CODE_NOTES.md
+
  */
 
 'use strict';
@@ -33,10 +35,9 @@ const PAGE_AUTH = TOKENS.verify_page;
 module.exports = function (app) {
 
     /*
-     * One registration per PAGES entry (dashboard/controller.js). The table is
-     * the single source of truth for a page's path, view, nav and auth posture;
-     * this file used to repeat the path and handler name for all 49 of them
-     * (DRY review 2026-09-03, cluster O5).
+     * One registration per PAGES entry (dashboard/controller.js). That table is
+     * the single source of truth for a page's path, view, nav and auth posture —
+     * add a page there, not here.
      */
     for (const page of CONTROLLER.PAGES) {
 

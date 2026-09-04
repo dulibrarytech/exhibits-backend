@@ -14,6 +14,8 @@
  See the License for the specific language governing permissions and
  limitations under the License.
 
+ Design history and rationale: NOTES/EXHIBITS_BACKEND_CODE_NOTES.md
+
  */
 
 'use strict';
@@ -27,7 +29,6 @@ const KALTURA_THUMBNAIL = require('../../media-library/kaltura_thumbnail');
 /*
  * Column projections for the media-library JOIN, one per variant.
  *
- * This SELECT was copy-pasted into ten task methods and the copies drifted.
  * The aliases are CLIENT-VISIBLE — public/app reads `media_repo_uuid`,
  * `thumbnail_repo_uuid`, `thumb_thumbnail_path` and friends off the JSON by
  * name — so the three surviving variants are kept apart rather than unified:
@@ -126,9 +127,9 @@ const Base_tasks = class {
         this.UUID_REGEX = UUID_REGEX;
         this.QUERY_TIMEOUT = 10000;
         /*
-         * One helper instance per task object. `new HELPER()` used to be
-         * called inside six methods; the class is stateless, so a member
-         * costs nothing and keeps the lock/reorder call sites to one line.
+         * One helper instance per task object. The class is stateless, so a
+         * member costs nothing and keeps the lock/reorder call sites to one
+         * line.
          */
         this.HELPER = new HELPER();
     }
@@ -366,11 +367,8 @@ const Base_tasks = class {
     }
 
     /**
-     * Inserts a row in a transaction and returns the row that was written.
-     *
-     * Replaces six copies of the same block (insert -> guard the id -> select
-     * it back -> guard the row -> log). The two error strings lived at six and
-     * five sites respectively.
+     * Inserts a row in a transaction and returns the row that was written:
+     * insert -> guard the id -> select it back -> guard the row -> log.
      *
      * @param {string} table_name - Table name key
      * @param {Object} data - Row to insert
@@ -446,9 +444,7 @@ const Base_tasks = class {
     /**
      * Locks a freshly-read record for editing, mutating it in place.
      *
-     * Replaces the ~35-line lock block in four `get_*_edit_record` methods.
-     * A failed lock is a warning, not an error — the record is still returned,
-     * exactly as before.
+     * A failed lock is a warning, not an error — the record is still returned.
      *
      * @param {Object} record - The row just read; mutated on a successful lock
      * @param {string|number} uid - User ID acquiring the lock (passed through
@@ -521,12 +517,8 @@ const Base_tasks = class {
     }
 
     /**
-     * Sanitizes, guards and applies an update scoped to one record.
-     *
-     * Replaces the exists-check -> is_deleted guard -> update -> "no rows
-     * affected" block that stood in four task methods (heading, item, grid
-     * item, timeline item container and items). The `Cannot update deleted …`
-     * string lived at five sites.
+     * Sanitizes, guards and applies an update scoped to one record:
+     * exists-check -> is_deleted guard -> update -> "no rows affected" guard.
      *
      * @param {string} table_name - Table name key
      * @param {Object} where_clause - Scope identifying the record (no is_deleted)
@@ -635,10 +627,9 @@ const Base_tasks = class {
     /**
      * Exists-check -> already-deleted short circuit -> soft delete -> row guard.
      *
-     * Replaces the body of three `delete_*_record` methods. The public result
-     * envelopes differ per type (`uuid` vs `grid_item_id`, some carry `title`
-     * or `type`), so this returns the raw outcome and each caller builds its
-     * own envelope — the SQL and the guards are what were duplicated.
+     * The public result envelopes differ per type (`uuid` vs `grid_item_id`,
+     * some carry `title` or `type`), so this returns the raw outcome and each
+     * caller builds its own envelope.
      *
      * @param {string} table_name - Table name key
      * @param {Object} where_clause - Scope identifying the record (no is_deleted)
@@ -716,8 +707,8 @@ const Base_tasks = class {
     /**
      * Adds the media-library projection and its two LEFT JOINs to a query.
      *
-     * Replaces ten copies of a ~25-column SELECT. See MEDIA_LIBRARY_PROJECTIONS
-     * above for why three variants survive instead of one.
+     * See MEDIA_LIBRARY_PROJECTIONS above for why the three variants are kept
+     * apart instead of unified.
      *
      * @param {Object} query - Knex query builder for the item table
      * @param {string} table_name - Table name key of the item table
@@ -781,8 +772,7 @@ const Base_tasks = class {
 
         /*
          * A publish-state change is an edit: bump `updated` so list sorting and
-         * the "last updated" display reflect it for every record type, not
-         * only grids (which used to be the sole subclass doing this).
+         * the "last updated" display reflect it, for EVERY record type.
          */
         const update_data = {
             is_published: status,
@@ -795,7 +785,7 @@ const Base_tasks = class {
         /*
          * Recycled rows are never part of a bulk publish/suppress: publishing
          * an exhibit must not resurrect items a curator threw away, and
-         * suppressing must not rewrite the bin (review M3, pinned by
+         * suppressing must not rewrite the bin (pinned by
          * test/db/publish_gate_counts). Callers pass the exhibit scope.
          */
         const affected_rows = await this.DB(this.TABLE[table_name])
@@ -898,17 +888,15 @@ const Base_tasks = class {
 /**
  * Defines table-driven publish/suppress methods on a task class.
  *
- * Twenty-six `set_*_to_publish` / `set_*_to_suppress` /
- * `set_exhibit_*_items_to_*` methods across four task classes were the same
- * three lines each: validate the uuid, call a publish-status helper, log.
- * Each type now declares a spec table next to its class and this generator
- * writes the methods.
+ * The `set_*_to_publish` / `set_*_to_suppress` / `set_exhibit_*_items_to_*`
+ * methods across the four task classes are the same three lines each: validate
+ * the uuid, call a publish-status helper, log. Each type declares a spec table
+ * next to its class and this generator writes the methods.
  *
  * THE METHOD NAMES ARE LOAD-BEARING. `indexer/model.js` dispatches
  * `set_grid_item_to_publish` and `set_timeline_item_to_publish` BY STRING
  * (`record_task[set_publish_method](item.uuid)`), so a rename here is a silent
- * runtime break. Names, log messages and return contracts are all preserved
- * exactly as they were.
+ * runtime break.
  *
  * Spec fields:
  *   method   - the public method name (never change one)

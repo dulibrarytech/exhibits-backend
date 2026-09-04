@@ -12,6 +12,8 @@
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
  * See the License for the specific language governing permissions and
  * limitations under the License.
+ *
+ * Design history and rationale: NOTES/EXHIBITS_BACKEND_CODE_NOTES.md
  */
 
 const repoPaginationModule = (function() {
@@ -35,13 +37,11 @@ const repoPaginationModule = (function() {
     // Callback for page changes
     let on_page_change_callback = null;
 
-    // Tracked listeners so re-bind across renders doesn't stack.
-    // Each render previously called container.addEventListener without
-    // removing the prior one — N renders meant N listeners and a single
-    // click triggered go_to_page N times (the same-page no-ops self-mask
-    // the duplicate fires). We also track mousedown (suppresses focus-
-    // induced scroll-into-view) and keydown (Enter/Space activation,
-    // since page-links no longer carry href="#").
+    // Tracked listeners so re-bind across renders doesn't stack: a render
+    // must remove the prior listener before adding its own, or N renders
+    // mean N listeners and one click fires go_to_page N times. We also
+    // track mousedown (suppresses focus-induced scroll-into-view) and
+    // keydown (Enter/Space activation, since page-links carry no href="#").
     let bound_listener = null;
     let bound_mousedown_listener = null;
     let bound_keydown_listener = null;
@@ -387,9 +387,9 @@ const repoPaginationModule = (function() {
             }
         };
 
-        // Keyboard activation. Page links no longer carry href="#"
-        // (it was the original culprit for fragment-navigation scroll
-        // jumps). Without href the anchor still focuses and click-fires
+        // Keyboard activation. Page links deliberately carry no href="#",
+        // which would cause fragment-navigation scroll jumps.
+        // Without href the anchor still focuses and click-fires
         // via mouse, but keyboard users need Enter/Space to dispatch
         // the click explicitly. role="button" + tabindex="0" already
         // make the element focusable and announced as a button.

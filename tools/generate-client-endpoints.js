@@ -6,15 +6,16 @@
  * Generates public/app/utils/endpoints.templates.js — the client-side endpoint
  * map — from the server's own endpoint modules, so the two can never drift.
  *
- * This is the ONLY channel that ships the registry to the client: the copy
- * that used to ride along in the /api/v1/authenticate response was removed,
- * so the map can never lag the bundle that reads it. APP_PATH is emitted as
- * the '__APP_PATH__' placeholder; endpoints.module.js substitutes the
- * resolved path at runtime.
+ * This is the ONLY channel that ships the registry to the client — nothing
+ * else may send a second copy, or the map can lag the bundle that reads it.
+ * APP_PATH is emitted as the '__APP_PATH__' placeholder; endpoints.module.js
+ * substitutes the resolved path at runtime.
  *
  * Runs automatically as part of `npm run build:js`. A parity test
  * (test/integration/client_endpoints_parity.test.js) fails CI if the committed
  * artifact goes stale.
+ *
+ * Design history and rationale: NOTES/EXHIBITS_BACKEND_CODE_NOTES.md
  */
 
 require('dotenv').config();

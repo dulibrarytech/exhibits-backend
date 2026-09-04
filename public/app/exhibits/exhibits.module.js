@@ -14,6 +14,8 @@
  See the License for the specific language governing permissions and
  limitations under the License.
 
+ Design history and rationale: NOTES/EXHIBITS_BACKEND_CODE_NOTES.md
+
  */
 
 const exhibitsModule = (function () {
@@ -470,8 +472,8 @@ const exhibitsModule = (function () {
 
     /**
      * Build the exhibit-actions dropdown as a DOM element. DOM construction
-     * (setAttribute + textContent) replaces the former innerHTML template
-     * so server-supplied title text cannot escape into markup.
+     * (setAttribute + textContent) is required here, never an innerHTML
+     * template, so server-supplied title text cannot escape into markup.
      *
      * @param {string} uuid         - Exhibit UUID
      * @param {string} encoded_uuid - URL-encoded UUID (used in hrefs)
@@ -924,7 +926,7 @@ const exhibitsModule = (function () {
 
         setTimeout(() => {
             // Auth travels via the HttpOnly exhibits_token cookie set at
-            // SSO callback; the JWT no longer appears in the preview URL.
+            // SSO callback; the JWT must never appear in the preview URL.
             link = window.open(preview_link, '_blank', 'location=yes,scrollbars=yes,status=yes');
             domModule.empty('#message');
         }, 900);
@@ -1298,7 +1300,7 @@ const exhibitsModule = (function () {
             return false;
         }
 
-        /* The minted URL rides in the envelope's `data` (Phase 3 item 19). */
+        /* The minted URL rides in the envelope's `data`. */
         const minted_url = response?.data?.data?.shared_url;
 
         // Handle successful response

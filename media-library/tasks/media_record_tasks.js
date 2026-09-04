@@ -14,6 +14,8 @@
  See the License for the specific language governing permissions and
  limitations under the License.
 
+ Design history and rationale: NOTES/EXHIBITS_BACKEND_CODE_NOTES.md
+
  */
 
 'use strict';
@@ -937,8 +939,7 @@ const Media_record_tasks = class extends Base_tasks {
              * "Claimed" means referenced by ANY row's original OR thumbnail
              * column, soft-deleted rows included — their files must survive
              * for recycle-bin restore, and a thumbnail is a served file too.
-             * (Review 2026-09-02, media finding 3; pinned by
-             * test/db/media_tasks_references.)
+             * Pinned by test/db/media_tasks_references.
              */
             const record = await this.DB(this.TABLE.media_library_records)
                 .select('id', 'uuid', 'name')

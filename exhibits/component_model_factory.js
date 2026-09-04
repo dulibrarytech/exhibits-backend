@@ -14,40 +14,40 @@
  See the License for the specific language governing permissions and
  limitations under the License.
 
+ Design history and rationale: NOTES/EXHIBITS_BACKEND_CODE_NOTES.md
+
  */
 
 'use strict';
 
 /*
- * Component model factory (DRY review 2026-09-03, clusters S2 + S3,
- * Phase 2 item 14).
+ * Component model factory.
  *
  * The four exhibit component types — standard item, heading, grid (+ grid
- * item) and timeline (+ timeline item) — had six near-identical model
- * verticals: create / update / publish / suppress / republish / read /
- * reorder / unlock, written by copy-paste-then-rename. This module owns the
- * shared shape; each model declares what actually differs.
+ * item) and timeline (+ timeline item) share six near-identical model
+ * verticals. This module owns the shared shape; each model declares what
+ * actually differs.
  *
  * WHAT IS SHARED (generated here)
- *   - the validate -> task -> build_response read wrapper (15 copies)
+ *   - the validate -> task -> build_response read wrapper
  *   - the create pipeline (uuid, membership, validate, styles, order, insert,
- *     exhibit timestamp) (6 copies)
+ *     exhibit timestamp)
  *   - the update pipeline (membership, is_published extraction, styles,
- *     update, coalesced republish, exhibit timestamp) (6 copies)
+ *     update, coalesced republish, exhibit timestamp)
  *   - publish / suppress for a STANDALONE component, i.e. one with its own
- *     Elasticsearch doc (4 copies each)
+ *     Elasticsearch doc
  *   - publish / suppress for a NESTED item, i.e. one embedded in its
- *     container's doc (2 copies each)
- *   - the post-edit republish scheduler (4 copies)
- *   - the nested-item index-doc removal + delete (2 copies each)
- *   - the reorder and unlock thin wrappers (11 copies)
+ *     container's doc
+ *   - the post-edit republish scheduler
+ *   - the nested-item index-doc removal + delete
+ *   - the reorder and unlock thin wrappers
  *
  * WHAT IS NOT SHARED (declared per type)
  *   `kind` is the one structural switch: 'standalone' components own an ES
  *   doc and are published/suppressed by writing or deleting it; 'nested'
  *   items live inside their container's doc and are published/suppressed by
- *   rewriting that doc's items[]. The review calls this divergence real and
- *   says to keep it, so it is a named shape, not a flag.
+ *   rewriting that doc's items[]. The divergence is real, so it is a named
+ *   shape, not a flag.
  *
  *   Everything else that differs is either a message/status string or one of
  *   the `hooks`:
@@ -62,8 +62,7 @@
  *     cascade_suppress                - suppress a container's children
  *
  * Every generated function keeps the exact name, arity, response envelope and
- * message text of the copy it replaces; the exceptions are listed in the
- * session notes and in the per-model comments.
+ * message text of the per-type function it stands in for.
  */
 
 const LOGGER = require('../libs/log4');
@@ -118,11 +117,8 @@ const log_failure = (module_name, fn_name, message) => {
 };
 
 /**
- * Bumps the parent exhibit's `updated` timestamp after a write.
- *
- * The thirteen copies of this block all logged `items_model` regardless of
- * which model they were in (DRY review bug #12); the log now names the real
- * module.
+ * Bumps the parent exhibit's `updated` timestamp after a write. The log line
+ * names the calling model, not a fixed one.
  *
  * @param {Object} ctx - Factory context
  * @param {string} exhibit_id - Exhibit UUID
@@ -164,7 +160,7 @@ const ids_are_valid = (params, args) => {
     });
 };
 
-/* ==================== READS (cluster S3) ==================== */
+/* ==================== READS ==================== */
 
 /**
  * Generates a read wrapper: validate ids -> await the task -> 200 envelope;
@@ -197,15 +193,15 @@ const make_read = (ctx, spec) => {
     };
 };
 
-/* ==================== CREATE (cluster S2) ==================== */
+/* ==================== CREATE ==================== */
 
 /**
  * Generates the create pipeline.
  *
- * Order of operations, matching all six originals: validate ids and body,
- * stamp uuid + membership, run the schema validator (headings only), run the
- * prepare hook (grid columns, container internal_name), serialize styles,
- * compute `order`, insert, bump the exhibit timestamp.
+ * Order of operations: validate ids and body, stamp uuid + membership, run
+ * the schema validator (headings only), run the prepare hook (grid columns,
+ * container internal_name), serialize styles, compute `order`, insert, bump
+ * the exhibit timestamp.
  *
  * @param {Object} ctx - Factory context
  * @returns {Function} The create function
@@ -290,7 +286,7 @@ const make_create = (ctx) => {
     };
 };
 
-/* ==================== UPDATE (cluster S2) ==================== */
+/* ==================== UPDATE ==================== */
 
 /**
  * Generates the update pipeline.
@@ -442,7 +438,8 @@ const make_handle_republish = (ctx, publish_fn) => {
 /**
  * Default gate for both publish and suppress: the record must belong to THIS
  * exhibit before it is flagged, indexed or removed from the index. The
- * publish/suppress task methods key on uuid alone (code review 2026-09-02, H3).
+ * publish/suppress task methods key on uuid alone, so this gate is the only
+ * thing binding the operation to the exhibit in the URL.
  *
  * @param {Object} ctx - Factory context
  * @returns {Function} (exhibit_id, uuid) => failure envelope | null
@@ -505,10 +502,8 @@ const make_publish = (ctx) => {
             }
 
             /*
-             * Flag first, then index. Three of the four originals did this;
-             * the heading copy awaited both and only then checked, so a
-             * heading whose DB flag failed was still indexed. Unified on the
-             * majority — and safer — order.
+             * Flag first, then index: a record whose DB flag failed must not
+             * reach the public index.
              */
             const is_flagged = await ctx.task[ctx.task_methods.set_publish](uuid);
 
@@ -572,8 +567,7 @@ const make_suppress = (ctx) => {
 
             /*
              * Containers suppress their OWN children here, keyed by the
-             * container uuid (code review 2026-09-02, H8). Runs before the
-             * flag check, exactly as the two originals did.
+             * container uuid. Runs before the flag check.
              */
             if (hooks.cascade_suppress) {
                 await hooks.cascade_suppress(uuid);
@@ -665,8 +659,7 @@ const make_publish_nested = (ctx) => {
  *
  * This is where the nested shape genuinely differs from the standalone one:
  * the item has no doc of its own, so it is removed by rewriting the
- * container doc's `items[]` and re-indexing that doc. The delete-then-index
- * sequence is preserved from both originals.
+ * container doc's `items[]` and re-indexing that doc, in that order.
  *
  * @param {Object} ctx - Factory context
  * @returns {Function} (exhibit_id, container_id, item_id) => {status, message}
@@ -745,7 +738,7 @@ const make_suppress_nested = (ctx) => {
 /**
  * Generates the "drop one item from its container's PUBLIC index doc"
  * helper. No-op when the container is not indexed. Upserts the doc in place
- * so there is no delete gap (code review 2026-09-02, M4).
+ * so there is no delete gap.
  *
  * @param {Object} ctx - Factory context
  * @returns {Function} (container_id, item_id) => Promise<boolean> — false only
@@ -779,8 +772,7 @@ const make_remove_from_container_index = (ctx) => {
  *
  * The index write happens BEFORE the row delete: if the DB delete then fails
  * the item is merely missing from the public container until its next
- * publish, whereas the reverse order would leave a deleted item live (the H7
- * class).
+ * publish, whereas the reverse order would leave a deleted item live.
  *
  * @param {Object} ctx - Factory context
  * @returns {Function} (exhibit_id, container_id, item_id) => response envelope
@@ -831,7 +823,7 @@ const make_delete_nested = (ctx) => {
     };
 };
 
-/* ==================== REORDER / UNLOCK (cluster S3) ==================== */
+/* ==================== REORDER / UNLOCK ==================== */
 
 /**
  * Generates a reorder wrapper: validate the scope uuid and the payload

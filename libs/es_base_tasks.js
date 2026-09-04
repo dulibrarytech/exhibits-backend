@@ -14,6 +14,8 @@
  See the License for the specific language governing permissions and
  limitations under the License.
 
+ Design history and rationale: NOTES/EXHIBITS_BACKEND_CODE_NOTES.md
+
  */
 
 'use strict';
@@ -25,8 +27,7 @@ const {UUID_REGEX} = require('./uuid');
  * Base class for the Elasticsearch-backed task classes (indexer index tasks,
  * indexer index-utils tasks, media-library repo-service tasks). Holds the
  * client/index pair and the dependency, UUID, timeout, and logging helpers
- * those classes used to carry as identical copies (DRY review 2026-09-03,
- * cluster O4).
+ * those classes share.
  *
  * Subclasses set their own timeout constants and call
  * `this._validate_dependencies()` at the END of their constructor — the base
