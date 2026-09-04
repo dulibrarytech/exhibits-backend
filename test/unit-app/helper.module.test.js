@@ -9,10 +9,7 @@
 
 'use strict';
 
-const { readFileSync } = require('node:fs');
-const { resolve } = require('node:path');
-
-const MODULE_PATH = resolve(__dirname, '../../public/app/utils/helper.module.js');
+const { load_browser_module } = require('./helpers/load_module');
 
 describe('helperModule.get_parameter_by_name', () => {
 
@@ -20,13 +17,7 @@ describe('helperModule.get_parameter_by_name', () => {
         const createDOMPurify = require('dompurify');
         globalThis.DOMPurify = createDOMPurify(window);
 
-        const src = readFileSync(MODULE_PATH, 'utf8');
-        // Hoist the IIFE result onto globalThis so the tests can reach it
-        // after eval — `const helperModule = ...` would be scoped to the
-        // eval block and discarded.
-        const patched = src.replace(/^const\s+helperModule\s*=/m, 'globalThis.helperModule =');
-        // eslint-disable-next-line no-eval
-        (0, eval)(patched);
+        load_browser_module('public/app/utils/helper.module.js', 'helperModule');
     });
 
     beforeEach(() => {
@@ -65,5 +56,82 @@ describe('helperModule.get_parameter_by_name', () => {
             'name', 'https://example.test/?name=' + encodeURIComponent('<script>alert(1)</script>'),
         );
         expect(result).toBe(null);
+    });
+});
+
+// ───────────────────────────── clear_status_message ─────────────────────────────
+// Phase 1 DRY (cluster C5): shared replacement for the per-form
+// `clear_message_smoothly` copies (FADE_DURATION = 300).
+
+describe('helperModule.clear_status_message', () => {
+
+    beforeAll(() => {
+        const createDOMPurify = require('dompurify');
+        globalThis.DOMPurify = createDOMPurify(window);
+
+        load_browser_module('public/app/utils/helper.module.js', 'helperModule');
+    });
+
+    beforeEach(() => {
+        vi.useFakeTimers();
+        document.body.innerHTML = '<div id="message"><div class="alert alert-success">Saved</div></div>';
+    });
+
+    afterEach(() => {
+        vi.useRealTimers();
+    });
+
+    it('fades over 300 ms by default, then empties and resets opacity/transition', () => {
+        const el = document.getElementById('message');
+        globalThis.helperModule.clear_status_message(el);
+
+        expect(el.style.transition).toBe('opacity 300ms ease-out');
+        expect(el.style.opacity).toBe('0');
+        expect(el.textContent).toBe('Saved');
+
+        vi.advanceTimersByTime(299);
+        expect(el.textContent).toBe('Saved');
+
+        vi.advanceTimersByTime(1);
+        expect(el.textContent).toBe('');
+        expect(el.style.opacity).toBe('1');
+        expect(el.style.transition).toBe('');
+    });
+
+    it('accepts a selector string', () => {
+        globalThis.helperModule.clear_status_message('#message');
+        const el = document.getElementById('message');
+        expect(el.style.opacity).toBe('0');
+        vi.advanceTimersByTime(300);
+        expect(el.textContent).toBe('');
+    });
+
+    it('honours { fade_ms }', () => {
+        const el = document.getElementById('message');
+        globalThis.helperModule.clear_status_message(el, { fade_ms: 1000 });
+        expect(el.style.transition).toBe('opacity 1000ms ease-out');
+        vi.advanceTimersByTime(300);
+        expect(el.textContent).toBe('Saved');
+        vi.advanceTimersByTime(700);
+        expect(el.textContent).toBe('');
+    });
+
+    it('fade_ms: 0 clears synchronously', () => {
+        const el = document.getElementById('message');
+        globalThis.helperModule.clear_status_message(el, { fade_ms: 0 });
+        expect(el.textContent).toBe('');
+        expect(el.style.opacity).toBe('1');
+        expect(el.style.transition).toBe('');
+    });
+
+    it('falls back to 300 ms for an invalid fade_ms', () => {
+        const el = document.getElementById('message');
+        globalThis.helperModule.clear_status_message(el, { fade_ms: 'fast' });
+        expect(el.style.transition).toBe('opacity 300ms ease-out');
+    });
+
+    it('is a no-op for a missing element / selector', () => {
+        expect(() => globalThis.helperModule.clear_status_message(null)).not.toThrow();
+        expect(() => globalThis.helperModule.clear_status_message('#nope')).not.toThrow();
     });
 });

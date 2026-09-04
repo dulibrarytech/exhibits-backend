@@ -24,26 +24,20 @@
 
 'use strict';
 
-jest.mock('../../libs/log4', () => ({
-    module: () => ({
-        error: jest.fn(), warn: jest.fn(), info: jest.fn(), debug: jest.fn()
-    })
-}));
+jest.mock('../../libs/log4', () => require('./helpers/mocks').log4_factory());
 
 jest.mock('../../config/db_config', () => () => ({}));
 
-jest.mock('../../config/db_tables_config', () => () => ({
-    exhibits: {
-        user_records: 'tbl_users',
-        exhibit_records: 'tbl_exhibits',
-        item_records: 'tbl_standard_items',
-        heading_records: 'tbl_heading_items',
-        grid_records: 'tbl_grids',
-        grid_item_records: 'tbl_grid_items',
-        timeline_records: 'tbl_timelines',
-        timeline_item_records: 'tbl_timeline_items',
-        media_library_records: 'tbl_media_library'
-    }
+jest.mock('../../config/db_tables_config', () => require('./helpers/mocks').db_tables_factory({
+    user_records: 'tbl_users',
+    exhibit_records: 'tbl_exhibits',
+    item_records: 'tbl_standard_items',
+    heading_records: 'tbl_heading_items',
+    grid_records: 'tbl_grids',
+    grid_item_records: 'tbl_grid_items',
+    timeline_records: 'tbl_timelines',
+    timeline_item_records: 'tbl_timeline_items',
+    media_library_records: 'tbl_media_library'
 }));
 
 // Mocked Auth_tasks: every instance is the same controllable object,

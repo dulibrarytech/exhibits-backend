@@ -22,22 +22,23 @@ const CONTROLLER = require('../users/controller');
 const ENDPOINTS = require('../users/endpoints');
 const TOKEN = require('../libs/tokens');
 const {rate_limits} = require('../config/rate_limits_loader');
+const { async_handler } = require('../libs/http');
 
 module.exports = function (app) {
 
     app.route(ENDPOINTS().users.endpoint)
-        .get(rate_limits.read_operations, TOKEN.verify, CONTROLLER.get_users)
-        .post(rate_limits.write_operations, TOKEN.verify, CONTROLLER.save_user);
+        .get(rate_limits.read_operations, TOKEN.verify, async_handler(CONTROLLER.get_users))
+        .post(rate_limits.write_operations, TOKEN.verify, async_handler(CONTROLLER.save_user));
 
     app.route(ENDPOINTS().users.update_user.put.endpoint)
-        .put(rate_limits.write_operations, TOKEN.verify, CONTROLLER.update_user);
+        .put(rate_limits.write_operations, TOKEN.verify, async_handler(CONTROLLER.update_user));
 
     app.route(ENDPOINTS().users.delete_user.delete.endpoint)
-        .delete(rate_limits.write_operations, TOKEN.verify, CONTROLLER.delete_user);
+        .delete(rate_limits.write_operations, TOKEN.verify, async_handler(CONTROLLER.delete_user));
 
     app.route(ENDPOINTS().users.get_user.endpoint)
-        .get(rate_limits.read_operations, TOKEN.verify, CONTROLLER.get_user);
+        .get(rate_limits.read_operations, TOKEN.verify, async_handler(CONTROLLER.get_user));
 
     app.route(ENDPOINTS().users.user_status.endpoint)
-        .put(rate_limits.write_operations, TOKEN.verify, CONTROLLER.update_status);
+        .put(rate_limits.write_operations, TOKEN.verify, async_handler(CONTROLLER.update_status));
 };

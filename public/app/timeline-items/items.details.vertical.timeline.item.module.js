@@ -27,34 +27,6 @@ const itemsDetailsVerticalTimelineItemModule = (function () {
 
         const message_element = document.querySelector('#message');
 
-        const display_message = (element, type, message) => {
-            if (!element) return;
-
-            const valid_types = ['info', 'success', 'danger', 'warning'];
-            const alert_type = valid_types.includes(type) ? type : 'danger';
-
-            const icon_map = {
-                'info': 'fa fa-info',
-                'success': 'fa fa-check',
-                'danger': 'fa fa-exclamation',
-                'warning': 'fa fa-exclamation-triangle'
-            };
-
-            const alert_div = document.createElement('div');
-            alert_div.className = `alert alert-${alert_type}`;
-            alert_div.setAttribute('role', 'alert');
-
-            const icon = document.createElement('i');
-            icon.className = icon_map[alert_type] || 'fa fa-exclamation';
-            alert_div.appendChild(icon);
-
-            const text_node = document.createTextNode(` ${message}`);
-            alert_div.appendChild(text_node);
-
-            element.textContent = '';
-            element.appendChild(alert_div);
-        };
-
         const validate_parameters = (exhibit_id, timeline_id, item_id) => {
             if (!exhibit_id || !timeline_id || !item_id) {
                 return {
@@ -81,45 +53,30 @@ const itemsDetailsVerticalTimelineItemModule = (function () {
 
             const validation = validate_parameters(exhibit_id, timeline_id, item_id);
             if (!validation.valid) {
-                display_message(message_element, 'danger', validation.error);
-                return null;
-            }
-
-            const token = authModule.get_user_token();
-
-            if (!token || token === false) {
-                display_message(message_element, 'danger', 'Authentication required. Redirecting...');
-
-                setTimeout(() => {
-                    authModule.redirect_to_auth();
-                }, 1000);
-
+                domModule.set_alert(message_element, 'danger', validation.error);
                 return null;
             }
 
             if (!EXHIBITS_ENDPOINTS?.exhibits?.timeline_item_record?.get?.endpoint) {
-                display_message(message_element, 'danger', 'API endpoint configuration missing');
+                domModule.set_alert(message_element, 'danger', 'API endpoint configuration missing');
                 return null;
             }
 
-            const endpoint = EXHIBITS_ENDPOINTS.exhibits.timeline_item_record.get.endpoint
-                .replace(':exhibit_id', encodeURIComponent(exhibit_id))
-                .replace(':timeline_id', encodeURIComponent(timeline_id))
-                .replace(':item_id', encodeURIComponent(item_id));
+            const endpoint = endpointsModule.build(EXHIBITS_ENDPOINTS.exhibits.timeline_item_record.get.endpoint, {
+                exhibit_id: exhibit_id,
+                timeline_id: timeline_id,
+                item_id: item_id
+            });
 
             const params = new URLSearchParams({
                 type: 'details'
             });
             const full_url = `${endpoint}?${params.toString()}`;
 
-            const response = await httpModule.req({
+            /* null = missing token; httpModule.api has alerted and scheduled the logout */
+            const response = await httpModule.api({
                 method: 'GET',
-                url: full_url,
-                headers: {
-                    'Content-Type': 'application/json',
-                    'x-access-token': token
-                },
-                timeout: 30000
+                url: full_url
             });
 
             if (!response) {
@@ -140,7 +97,7 @@ const itemsDetailsVerticalTimelineItemModule = (function () {
             console.error('Error in get_timeline_item_record:', error);
 
             const error_message = error.user_message || 'Unable to load the timeline item record. Please try again.';
-            display_message(message_element, 'danger', error_message);
+            domModule.set_alert(message_element, 'danger', error_message);
 
             return null;
         }
@@ -188,28 +145,6 @@ const itemsDetailsVerticalTimelineItemModule = (function () {
             return date instanceof Date && !isNaN(date.getTime());
         };
 
-        /**
-         * Display error message
-         */
-        const display_error_message = (message) => {
-            const message_element = document.querySelector('#message');
-            if (!message_element) return;
-
-            const alert_div = document.createElement('div');
-            alert_div.className = 'alert alert-danger';
-            alert_div.setAttribute('role', 'alert');
-
-            const icon = document.createElement('i');
-            icon.className = 'fa fa-exclamation';
-            alert_div.appendChild(icon);
-
-            const text_node = document.createTextNode(` ${message}`);
-            alert_div.appendChild(text_node);
-
-            message_element.textContent = '';
-            message_element.appendChild(alert_div);
-        };
-
         try {
 
             const record = await get_timeline_item_record();
@@ -217,12 +152,6 @@ const itemsDetailsVerticalTimelineItemModule = (function () {
             if (!record) {
                 throw new Error('Failed to load timeline item record data');
             }
-
-            // Helper for safe DOM value setting
-            const set_element_value = (selector, value) => {
-                const el = document.querySelector(selector);
-                if (el) el.value = value;
-            };
 
             // Display creation/update metadata
             const created_el = document.querySelector('#created');
@@ -264,9 +193,9 @@ const itemsDetailsVerticalTimelineItemModule = (function () {
             if (record.date) {
                 const date_str = String(record.date);
                 const date_parts = date_str.split('T');
-                set_element_value('#item-date-input', date_parts.length > 0 ? date_parts[0] : '');
+                domModule.set_value('#item-date-input', date_parts.length > 0 ? date_parts[0] : '');
             } else {
-                set_element_value('#item-date-input', '');
+                domModule.set_value('#item-date-input', '');
             }
 
             // Populate media previews using the shared common module
@@ -291,7 +220,7 @@ const itemsDetailsVerticalTimelineItemModule = (function () {
 
         } catch (error) {
             console.error('Error in display_details_record:', error);
-            display_error_message('Unable to display the timeline item record. Please try again.');
+            domModule.set_alert('#message', 'danger', 'Unable to display the timeline item record. Please try again.');
             return false;
         }
     }

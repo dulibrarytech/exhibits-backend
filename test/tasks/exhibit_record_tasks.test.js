@@ -8,6 +8,7 @@
 'use strict';
 
 const Exhibit_record_tasks = require('../../exhibits/tasks/exhibit_record_tasks');
+const { make_query, make_db, TABLES } = require('./helpers/mock_knex');
 
 // Mock dependencies - MUST be identical across all test files to avoid conflicts
 jest.mock('../../libs/log4', () => ({
@@ -36,19 +37,10 @@ describe('Exhibit_record_tasks', () => {
     // Helper to create fresh mock query with proper chaining
     // Key insight: Source code uses _with_timeout(DB().where().update())
     // where update() returns a Promise directly (no .timeout() call)
-    const createMockQuery = () => {
-        const query = {
-            select: jest.fn().mockReturnThis(),
-            where: jest.fn().mockReturnThis(),
-            first: jest.fn().mockResolvedValue(null),
-            insert: jest.fn().mockResolvedValue([1]),
-            update: jest.fn().mockResolvedValue(1),
-            delete: jest.fn().mockResolvedValue(1),
-            orderBy: jest.fn().mockReturnThis(),
-            count: jest.fn().mockReturnThis()
-        };
-        return query;
-    };
+    const createMockQuery = () => make_query({
+        chain: ['select', 'where', 'orderBy', 'count'],
+        resolves: { first: null, insert: [1], update: 1, delete: 1 }
+    });
 
     beforeEach(() => {
         jest.clearAllMocks();
@@ -57,19 +49,9 @@ describe('Exhibit_record_tasks', () => {
         mockQuery = createMockQuery();
 
         // Mock database function
-        mockDB = jest.fn(() => mockQuery);
+        mockDB = make_db(mockQuery);
 
-        // Add fn.now() mock for timestamp operations
-        mockDB.fn = {
-            now: jest.fn(() => 'NOW()')
-        };
-
-        // Mock TABLE configuration
-        mockTABLE = {
-            exhibit_records: 'tbl_exhibit_records',
-            heading_records: 'tbl_heading_records',
-            item_records: 'tbl_item_records'
-        };
+        mockTABLE = TABLES;
 
         exhibitTasks = new Exhibit_record_tasks(mockDB, mockTABLE);
     });

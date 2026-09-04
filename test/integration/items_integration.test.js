@@ -12,8 +12,10 @@
 const express = require('express');
 const request = require('supertest');
 
+const { TEST_UUID, mock_model } = require('./helpers/mocks');
+
 // ==================== TEST CONSTANTS ====================
-const TEST_EXHIBIT_ID = '550e8400-e29b-41d4-a716-446655440000';
+const TEST_EXHIBIT_ID = TEST_UUID;
 const TEST_ITEM_ID = '660e8400-e29b-41d4-a716-446655440001';
 const TEST_USER_UID = '770e8400-e29b-41d4-a716-446655440002';
 const TEST_GRID_ID = '880e8400-e29b-41d4-a716-446655440003';
@@ -23,72 +25,63 @@ const TEST_KALTURA_ENTRY_ID = '1_abc123xyz';
 // ==================== MOCK SETUP ====================
 
 // Mock Logger
-jest.mock('../../libs/log4', () => ({
-    module: () => ({
-        error: jest.fn(),
-        warn: jest.fn(),
-        info: jest.fn(),
-        debug: jest.fn()
-    })
-}));
+jest.mock('../../libs/log4', () => require('./helpers/mocks').log4_factory());
 
 // Mock Authorization
-const mockAuthorize = {
-    check_permission: jest.fn().mockResolvedValue(true)
-};
+const mockAuthorize = mock_model({ check_permission: true });
 jest.mock('../../auth/authorize', () => mockAuthorize);
 
 // We'll mock fs.promises.unlink inline in tests that need it
 // Don't globally mock fs as it breaks Express
 
 // Mock Items Model
-const mockItemsModel = {
-    create_item_record: jest.fn(),
-    get_item_records: jest.fn(),
-    get_item_record: jest.fn(),
-    get_item_edit_record: jest.fn(),
-    update_item_record: jest.fn(),
-    delete_item_record: jest.fn(),
-    publish_item_record: jest.fn(),
-    suppress_item_record: jest.fn(),
-    unlock_item_record: jest.fn(),
-    reorder_items: jest.fn(),
-    reorder_exhibit_items: jest.fn(),
-    schedule_reorder_reindex: jest.fn()
-};
+const mockItemsModel = mock_model([
+    'create_item_record',
+    'get_item_records',
+    'get_item_record',
+    'get_item_edit_record',
+    'update_item_record',
+    'delete_item_record',
+    'publish_item_record',
+    'suppress_item_record',
+    'unlock_item_record',
+    'reorder_items',
+    'reorder_exhibit_items',
+    'schedule_reorder_reindex'
+]);
 jest.mock('../../exhibits/items_model', () => mockItemsModel);
 
 // Mock Headings Model
-const mockHeadingsModel = {
-    reorder_headings: jest.fn().mockResolvedValue(true),
-    publish_heading_record: jest.fn().mockResolvedValue({ status: true }),
-    suppress_heading_record: jest.fn().mockResolvedValue({ status: true })
-};
+const mockHeadingsModel = mock_model({
+    reorder_headings: true,
+    publish_heading_record: { status: true },
+    suppress_heading_record: { status: true }
+});
 jest.mock('../../exhibits/headings_model', () => mockHeadingsModel);
 
 // Mock Grids Model
-const mockGridsModel = {
-    reorder_grids: jest.fn().mockResolvedValue(true),
-    reorder_grid_items: jest.fn().mockResolvedValue(true),
-    publish_grid_record: jest.fn().mockResolvedValue({ status: true }),
-    suppress_grid_record: jest.fn().mockResolvedValue({ status: true })
-};
+const mockGridsModel = mock_model({
+    reorder_grids: true,
+    reorder_grid_items: true,
+    publish_grid_record: { status: true },
+    suppress_grid_record: { status: true }
+});
 jest.mock('../../exhibits/grid_model', () => mockGridsModel);
 
 // Mock Timelines Model
-const mockTimelinesModel = {
-    reorder_timelines: jest.fn().mockResolvedValue(true),
-    publish_timeline_record: jest.fn().mockResolvedValue({ status: true }),
-    suppress_timeline_record: jest.fn().mockResolvedValue({ status: true })
-};
+const mockTimelinesModel = mock_model({
+    reorder_timelines: true,
+    publish_timeline_record: { status: true },
+    suppress_timeline_record: { status: true }
+});
 jest.mock('../../exhibits/timelines_model', () => mockTimelinesModel);
 
 // Mock Exhibits Model
-const mockExhibitsModel = {
-    get_exhibit_record: jest.fn().mockResolvedValue({ data: { is_published: 0 } }),
-    suppress_exhibit: jest.fn().mockResolvedValue({ status: true }),
-    publish_exhibit: jest.fn().mockResolvedValue({ status: true })
-};
+const mockExhibitsModel = mock_model({
+    get_exhibit_record: { data: { is_published: 0 } },
+    suppress_exhibit: { status: true },
+    publish_exhibit: { status: true }
+});
 jest.mock('../../exhibits/exhibits_model', () => mockExhibitsModel);
 
 // ==================== TEST SETUP ====================

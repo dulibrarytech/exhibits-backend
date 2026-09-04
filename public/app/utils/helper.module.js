@@ -836,22 +836,50 @@ const helperModule = (function () {
         }
     };
 
-    obj.clear_status_message = function (element) {
+    /**
+     * Fades a status/message container out and empties it. Shared replacement
+     * for the per-form `clear_message_smoothly` / `clear_status_message`
+     * copies (FADE_DURATION = 300 in each). After the fade the inline
+     * transition is reset to '' (as the copies did) so a following
+     * set_alert renders without a lingering transition.
+     *
+     * Callers should not write a new alert into the same container inside
+     * the fade window — the pending clear would wipe it (same race the copies
+     * had).
+     *
+     * @param {string|Element} element  - selector or element (e.g. '#message')
+     * @param {Object} [options]
+     * @param {number} [options.fade_ms=300] - fade duration; 0 clears at once
+     */
+    obj.clear_status_message = function (element, options = {}) {
 
-        if (!element) {
+        const el = (typeof element === 'string') ? document.querySelector(element) : element;
+
+        if (!el) {
             return;
         }
 
-        // Fade out effect
-        element.style.transition = 'opacity 0.3s ease-out';
-        element.style.opacity = '0';
+        const requested = options && options.fade_ms;
+        const fade_ms = (typeof requested === 'number' && Number.isFinite(requested) && requested >= 0)
+            ? requested
+            : 300;
 
-        setTimeout(() => {
-            element.textContent = '';
-            element.style.opacity = '1';
-        }, 300);
+        const finish = () => {
+            el.textContent = '';
+            el.style.opacity = '1';
+            el.style.transition = '';
+        };
 
-    }
+        if (fade_ms === 0) {
+            finish();
+            return;
+        }
+
+        el.style.transition = `opacity ${fade_ms}ms ease-out`;
+        el.style.opacity = '0';
+
+        setTimeout(finish, fade_ms);
+    };
 
     /**
      * Builds the item "Styles" preset chooser as radio rows with color swatches

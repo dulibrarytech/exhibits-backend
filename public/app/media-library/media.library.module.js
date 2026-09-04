@@ -156,62 +156,6 @@ const mediaLibraryModule = (function() {
     };
 
     /**
-     * Get icon class for alert type
-     * @param {string} alert_type - Type of alert
-     * @returns {string} Font Awesome icon class
-     */
-    const get_icon_class = (alert_type) => {
-        const icon_map = {
-            'info': 'fa fa-info',
-            'success': 'fa fa-check',
-            'danger': 'fa fa-exclamation',
-            'warning': 'fa fa-exclamation-triangle'
-        };
-        return icon_map[alert_type] || 'fa fa-exclamation';
-    };
-
-    /**
-     * Display message to user
-     * @param {HTMLElement} element - Element to display message in
-     * @param {string} type - Message type (info, success, danger, warning)
-     * @param {string} message - Message text
-     */
-    const display_message = (element, type, message) => {
-        if (!element) {
-            console.error('Message element not found:', message);
-            return;
-        }
-
-        const valid_types = ['info', 'success', 'danger', 'warning'];
-        const alert_type = valid_types.includes(type) ? type : 'danger';
-
-        const alert_div = document.createElement('div');
-        alert_div.className = `alert alert-${alert_type}`;
-        alert_div.setAttribute('role', 'alert');
-
-        const icon = document.createElement('i');
-        icon.className = get_icon_class(alert_type);
-        icon.setAttribute('aria-hidden', 'true');
-        alert_div.appendChild(icon);
-
-        const text = document.createTextNode(` ${message}`);
-        alert_div.appendChild(text);
-
-        element.textContent = '';
-        element.appendChild(alert_div);
-    };
-
-    /**
-     * Clear message display
-     * @param {HTMLElement} element - Element to clear
-     */
-    const clear_message = (element) => {
-        if (element) {
-            element.textContent = '';
-        }
-    };
-
-    /**
      * Get media records from API
      * @returns {Promise<Array|boolean>} Array of media records or false on failure
      */
@@ -224,42 +168,24 @@ const mediaLibraryModule = (function() {
             const MEDIA_ENDPOINTS = get_media_library_endpoints();
 
             if (!MEDIA_ENDPOINTS?.media_records?.get?.endpoint) {
-                display_message(message_element, 'danger', 'Media records endpoint not configured');
+                domModule.set_alert(message_element, 'danger', 'Media records endpoint not configured');
                 return false;
             }
 
-            // Validate authentication
-            const token = authModule.get_user_token();
-
-            if (!token || token === false) {
-                display_message(message_element, 'danger', 'Session expired. Please log in again.');
-                return false;
-            }
-
-            // Construct endpoint
-            const endpoint = MEDIA_ENDPOINTS.media_records.get.endpoint;
-
-            // Make API request
-            const response = await httpModule.req({
+            const response = await httpModule.api({
                 method: 'GET',
-                url: endpoint,
-                headers: {
-                    'Content-Type': 'application/json',
-                    'x-access-token': token
-                },
-                timeout: 30000,
-                validateStatus: (status) => status >= 200 && status < 600
+                url: MEDIA_ENDPOINTS.media_records.get.endpoint
             });
 
             // Handle undefined response (network/server error)
             if (!response) {
-                display_message(message_element, 'danger', 'Unable to retrieve media records. Please check your connection and try again.');
+                domModule.set_alert(message_element, 'danger', 'Unable to retrieve media records. Please check your connection and try again.');
                 return false;
             }
 
             // Handle 403 Forbidden
             if (response.status === HTTP_STATUS.FORBIDDEN) {
-                display_message(message_element, 'danger', 'You do not have permission to view media records');
+                domModule.set_alert(message_element, 'danger', 'You do not have permission to view media records');
                 return false;
             }
 
@@ -280,19 +206,19 @@ const mediaLibraryModule = (function() {
                     existing_alert.classList.contains('alert-info')
                 );
                 if (!preserve) {
-                    clear_message(message_element);
+                    domModule.empty(message_element);
                 }
                 return response.data.data || [];
             }
 
             // Handle other error responses
             const error_message = response.data?.message || 'Failed to retrieve media records. Please try again.';
-            display_message(message_element, 'danger', error_message);
+            domModule.set_alert(message_element, 'danger', error_message);
             return false;
 
         } catch (error) {
             console.error('Error fetching media records:', error);
-            display_message(message_element, 'danger', 'An unexpected error occurred while retrieving media records.');
+            domModule.set_alert(message_element, 'danger', 'An unexpected error occurred while retrieving media records.');
             return false;
         }
     };
@@ -326,27 +252,11 @@ const mediaLibraryModule = (function() {
                 return { record: null, status: null };
             }
 
-            // Validate authentication
-            const token = authModule.get_user_token();
+            const endpoint = endpointsModule.build(MEDIA_ENDPOINTS.media_record.get.endpoint, { media_id: uuid });
 
-            if (!token || token === false) {
-                console.error('Session expired');
-                return { record: null, status: null };
-            }
-
-            // Construct endpoint with media_id
-            const endpoint = MEDIA_ENDPOINTS.media_record.get.endpoint.replace(':media_id', uuid);
-
-            // Make API request
-            const response = await httpModule.req({
+            const response = await httpModule.api({
                 method: 'GET',
-                url: endpoint,
-                headers: {
-                    'Content-Type': 'application/json',
-                    'x-access-token': token
-                },
-                timeout: 30000,
-                validateStatus: (status) => status >= 200 && status < 600
+                url: endpoint
             });
 
             // Handle response
@@ -490,7 +400,7 @@ const mediaLibraryModule = (function() {
 
         if (typeof mediaReplaceModalModule === 'undefined' || typeof mediaReplaceModalModule.open_replace_media_modal !== 'function') {
             console.error('mediaReplaceModalModule.open_replace_media_modal not available');
-            display_message(message_element, 'danger', 'Replace dialog is not available. Please refresh the page.');
+            domModule.set_alert(message_element, 'danger', 'Replace dialog is not available. Please refresh the page.');
             return;
         }
 
@@ -498,18 +408,18 @@ const mediaLibraryModule = (function() {
 
         if (!record) {
             console.error('Media record not found for replace: ' + uuid);
-            display_message(message_element, 'danger', 'Media record not found. Please refresh the page.');
+            domModule.set_alert(message_element, 'danger', 'Media record not found. Please refresh the page.');
             return;
         }
 
         mediaReplaceModalModule.open_replace_media_modal(record, async (success, message) => {
             if (success) {
-                display_message(message_element, 'success', message || 'File replaced successfully.');
+                domModule.set_alert(message_element, 'success', message || 'File replaced successfully.');
 
                 await obj.refresh_media_records();
 
                 setTimeout(() => {
-                    clear_message(message_element);
+                    domModule.empty(message_element);
                 }, 3000);
             }
         });
@@ -533,18 +443,18 @@ const mediaLibraryModule = (function() {
 
         if (typeof mediaDeleteModalModule === 'undefined' || typeof mediaDeleteModalModule.open_delete_media_modal !== 'function') {
             console.error('mediaDeleteModalModule.open_delete_media_modal not available');
-            display_message(message_element, 'danger', 'Delete dialog is not available. Please refresh the page.');
+            domModule.set_alert(message_element, 'danger', 'Delete dialog is not available. Please refresh the page.');
             return;
         }
 
         mediaDeleteModalModule.open_delete_media_modal(uuid, name, filename, item_type, thumbnail_url, async (success, message) => {
             if (success) {
-                display_message(message_element, 'success', message || 'Media record deleted successfully.');
+                domModule.set_alert(message_element, 'success', message || 'Media record deleted successfully.');
 
                 await obj.refresh_media_records();
 
                 setTimeout(() => {
-                    clear_message(message_element);
+                    domModule.empty(message_element);
                 }, 3000);
             }
         });
@@ -836,12 +746,6 @@ const mediaLibraryModule = (function() {
 
         try {
 
-            const token = authModule.get_user_token();
-
-            if (!token) {
-                return null;
-            }
-
             let endpoint = null;
 
             if (typeof endpointsModule !== 'undefined' && typeof endpointsModule.get_exhibits_endpoints === 'function') {
@@ -854,15 +758,11 @@ const mediaLibraryModule = (function() {
                 return null;
             }
 
-            const response = await httpModule.req({
+            /* Filter data only — a missing session must not trigger a logout here */
+            const response = await httpModule.api({
                 method: 'GET',
                 url: endpoint,
-                headers: {
-                    'Content-Type': 'application/json',
-                    'x-access-token': token
-                },
-                timeout: 15000,
-                validateStatus: (status) => status >= 200 && status < 600
+                logout_on_missing_token: false
             });
 
             if (!response || response.status !== HTTP_STATUS.OK || !response.data) {
@@ -1213,7 +1113,7 @@ const mediaLibraryModule = (function() {
             // Check if DataTable library is available
             if (typeof DataTable === 'undefined' && typeof $.fn.DataTable === 'undefined') {
                 console.error('DataTable library not loaded');
-                display_message(message_element, 'danger', 'Unable to display media records. Please refresh the page.');
+                domModule.set_alert(message_element, 'danger', 'Unable to display media records. Please refresh the page.');
                 return false;
             }
 
@@ -1593,7 +1493,7 @@ const mediaLibraryModule = (function() {
 
         } catch (error) {
             console.error('Error displaying media records:', error);
-            display_message(message_element, 'danger', 'An unexpected error occurred while displaying media records.');
+            domModule.set_alert(message_element, 'danger', 'An unexpected error occurred while displaying media records.');
             return false;
         }
     };
@@ -1732,9 +1632,7 @@ const mediaLibraryModule = (function() {
             console.error('Error initializing media library module:', error);
             const message_element = document.querySelector('#message');
 
-            if (message_element) {
-                message_element.innerHTML = '<div class="alert alert-danger">Error initializing media library. Please refresh the page.</div>';
-            }
+            domModule.set_alert(message_element, 'danger', 'Error initializing media library. Please refresh the page.');
         }
     };
 

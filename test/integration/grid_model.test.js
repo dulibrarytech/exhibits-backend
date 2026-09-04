@@ -9,6 +9,8 @@
 
 'use strict';
 
+const { mock_model } = require('./helpers/mocks');
+
 // ==================== TEST CONSTANTS ====================
 const TEST_EXHIBIT_UUID = '550e8400-e29b-41d4-a716-446655440000';
 const TEST_GRID_UUID = '660e8400-e29b-41d4-a716-446655440001';
@@ -31,14 +33,7 @@ jest.mock('../../libs/rte_vocabulary', () => ({
     sanitize_plain: jest.fn((value) => value),
 }));
 
-jest.mock('../../libs/log4', () => ({
-    module: () => ({
-        error: jest.fn(),
-        warn: jest.fn(),
-        info: jest.fn(),
-        debug: jest.fn()
-    })
-}));
+jest.mock('../../libs/log4', () => require('./helpers/mocks').log4_factory());
 
 // Mock DB Config
 jest.mock('../../config/db_config', () => () => ({
@@ -46,12 +41,10 @@ jest.mock('../../config/db_config', () => () => ({
 }));
 
 // Mock DB Tables Config
-jest.mock('../../config/db_tables_config', () => () => ({
-    exhibits: {
-        exhibit_records: 'tbl_exhibits_exhibit_records',
-        grid_records: 'tbl_exhibits_grid_records',
-        grid_item_records: 'tbl_exhibits_grid_item_records'
-    }
+jest.mock('../../config/db_tables_config', () => require('./helpers/mocks').db_tables_factory({
+    exhibit_records: 'tbl_exhibits_exhibit_records',
+    grid_records: 'tbl_exhibits_grid_records',
+    grid_item_records: 'tbl_exhibits_grid_item_records'
 }));
 
 // Mock Helper instance
@@ -69,30 +62,28 @@ jest.mock('../../libs/helper', () => {
 });
 
 // Mock Grid Record Tasks
-const mockGridRecordTask = {
-    create_grid_record: jest.fn().mockResolvedValue(true),
-    update_grid_record: jest.fn().mockResolvedValue(true),
-    get_grid_record: jest.fn().mockResolvedValue({}),
-    create_grid_item_record: jest.fn().mockResolvedValue(true),
-    get_grid_item_records: jest.fn().mockResolvedValue([]),
-    get_grid_item_record: jest.fn().mockResolvedValue({}),
-    get_grid_item_edit_record: jest.fn().mockResolvedValue({}),
-    update_grid_item_record: jest.fn().mockResolvedValue(true),
-    delete_grid_item_record: jest.fn().mockResolvedValue(true),
-    reorder_grids: jest.fn().mockResolvedValue(true),
-    set_grid_to_suppress: jest.fn().mockResolvedValue(true),
-    set_to_suppressed_grid_items: jest.fn().mockResolvedValue({ affected_rows: 0 }),
-    reorder_grid_items: jest.fn().mockResolvedValue(true)
-};
+const mockGridRecordTask = mock_model({
+    create_grid_record: true,
+    update_grid_record: true,
+    get_grid_record: {},
+    create_grid_item_record: true,
+    get_grid_item_records: [],
+    get_grid_item_record: {},
+    get_grid_item_edit_record: {},
+    update_grid_item_record: true,
+    delete_grid_item_record: true,
+    reorder_grids: true,
+    set_grid_to_suppress: true,
+    set_to_suppressed_grid_items: { affected_rows: 0 },
+    reorder_grid_items: true
+});
 
 jest.mock('../../exhibits/tasks/exhibit_grid_record_tasks', () => {
     return jest.fn().mockImplementation(() => mockGridRecordTask);
 });
 
 // Mock Exhibit Record Tasks
-const mockExhibitRecordTask = {
-    update_exhibit_timestamp: jest.fn().mockResolvedValue(true)
-};
+const mockExhibitRecordTask = mock_model({ update_exhibit_timestamp: true });
 
 jest.mock('../../exhibits/tasks/exhibit_record_tasks', () => {
     return jest.fn().mockImplementation(() => mockExhibitRecordTask);

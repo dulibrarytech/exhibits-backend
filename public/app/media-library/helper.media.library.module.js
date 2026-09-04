@@ -119,6 +119,50 @@ const helperMediaLibraryModule = (function() {
     };
 
     /**
+     * Display a status alert inside a form card (upload / repo-import /
+     * Kaltura-import modals). Finds or creates the card's `.card-message`
+     * container under `.card-body`, renders a non-dismissible alert with a
+     * type icon, and auto-clears success messages. Replaces the three
+     * per-modal `display_card_message` copies.
+     *
+     * @param {HTMLElement} card - The .card element
+     * @param {string} type - 'success' | 'danger' | 'warning'
+     * @param {string} message - Message text (HTML-escaped before render)
+     * @param {Object} [options]
+     * @param {number} [options.success_hide_ms=3000] - Auto-clear delay for success messages
+     */
+    obj.display_card_message = (card, type, message, options = {}) => {
+        if (!card || typeof card.querySelector !== 'function') return;
+
+        let message_container = card.querySelector('.card-message');
+
+        if (!message_container) {
+            message_container = document.createElement('div');
+            message_container.className = 'card-message mt-2';
+            const card_body = card.querySelector('.card-body');
+            if (card_body) {
+                card_body.appendChild(message_container);
+            }
+        }
+
+        const icon = ICON_MAP[type] || ICON_MAP.warning;
+        const success_hide_ms = (typeof options.success_hide_ms === 'number') ? options.success_hide_ms : 3000;
+
+        message_container.innerHTML = '<div class="alert alert-' + type + ' mb-0" role="alert">' +
+            '<i class="fa ' + icon + '" style="margin-right: 6px;" aria-hidden="true"></i>' +
+            obj.escape_html(message) +
+            '</div>';
+
+        if (type === 'success') {
+            setTimeout(() => {
+                if (message_container.parentNode) {
+                    message_container.innerHTML = '';
+                }
+            }, success_hide_ms);
+        }
+    };
+
+    /**
      * Create a bound message helper scoped to a specific container.
      * Returns an object with display_message and clear_message pre-bound
      * to the given container ID, matching the original per-module
@@ -285,7 +329,7 @@ const helperMediaLibraryModule = (function() {
             return null;
         }
 
-        return endpoints.media_thumbnail.get.endpoint.replace(':media_id', encodeURIComponent(media_id));
+        return endpointsModule.build(endpoints.media_thumbnail.get.endpoint, { media_id: media_id });
     };
 
     /**
@@ -364,7 +408,7 @@ const helperMediaLibraryModule = (function() {
             return null;
         }
 
-        return endpoints.media_file.get.endpoint.replace(':media_id', encodeURIComponent(media_id));
+        return endpointsModule.build(endpoints.media_file.get.endpoint, { media_id: media_id });
     };
 
     /**

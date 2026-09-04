@@ -23,6 +23,7 @@ const FS = require('fs');
 const {randomUUID} = require('crypto');
 const VALIDATOR = require('validator');
 const LOGGER = require('../libs/log4');
+const { is_valid_uuid } = require('./uuid');
 
 /**
  * Object contains helper tasks
@@ -74,8 +75,7 @@ const Helper = class {
             }
 
             // Validate UUID format
-            const uuid_regex = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
-            if (!uuid_regex.test(uuid.trim())) {
+            if (!is_valid_uuid(uuid.trim())) {
                 throw new Error('Invalid UUID format');
             }
 
@@ -260,8 +260,7 @@ const Helper = class {
             }
 
             // Validate UUID format
-            const uuid_regex = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
-            if (!uuid_regex.test(uuid.trim())) {
+            if (!is_valid_uuid(uuid.trim())) {
                 throw new Error('Invalid UUID format');
             }
 
@@ -509,8 +508,7 @@ const Helper = class {
 
             // ===== UUID VALIDATION =====
 
-            const uuid_regex = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
-            if (!uuid_regex.test(uuid.trim())) {
+            if (!is_valid_uuid(uuid.trim())) {
                 throw new Error('Invalid exhibit UUID format');
             }
 
@@ -685,8 +683,7 @@ const Helper = class {
 
             // ===== UUID VALIDATION =====
 
-            const uuid_regex = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
-            if (!uuid_regex.test(uuid.trim())) {
+            if (!is_valid_uuid(uuid.trim())) {
                 throw new Error('Invalid exhibit UUID format');
             }
 

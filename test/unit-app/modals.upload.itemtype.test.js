@@ -14,13 +14,8 @@
 
 'use strict';
 
-const { readFileSync } = require('node:fs');
-const { resolve } = require('node:path');
-
-const MODULE_PATH = resolve(
-    __dirname,
-    '../../public/app/media-library/modals.upload.module.js',
-);
+const { load_browser_module } = require('./helpers/load_module');
+const { auth_stub, rte_stub } = require('./helpers/stubs');
 
 function fresh_endpoints() {
     return {
@@ -70,41 +65,28 @@ describe('mediaModalsModule — Item Type auto-population', () => {
     beforeAll(() => {
         globalThis.endpointsModule = { get_media_library_endpoints: () => fresh_endpoints() };
         globalThis.helperMediaLibraryModule = fresh_helper();
-        globalThis.authModule = { get_user_token: () => 'tok', logout: () => {} };
+        globalThis.authModule = auth_stub('tok', { logout: () => {} });
         globalThis.httpModule = { req: () => Promise.resolve({ status: 200, data: { success: true } }) };
         globalThis.repoSubjectsModule = {
             populate_subjects_dropdowns: () => {},
             validate_required_fields: () => true,
         };
-        const src = readFileSync(MODULE_PATH, 'utf8');
-        const patched = src.replace(/^const\s+mediaModalsModule\s*=/m, 'globalThis.mediaModalsModule =');
-        // eslint-disable-next-line no-eval
-        (0, eval)(patched);
+        load_browser_module(
+            'public/app/media-library/modals.upload.module.js',
+            'mediaModalsModule',
+        );
     });
 
     beforeEach(() => {
         // Rich text fields read through rteModule; back the stub with the
         // same DOM elements the fixtures populate via .value.
-        globalThis.rteModule = {
-            get_html: (id) => document.getElementById(id)?.value?.trim() ?? '',
-            set_html: (id, html) => {
-                const el = document.getElementById(id);
-                if (el) el.value = html;
-            },
-            is_empty: (id) => (document.getElementById(id)?.value?.trim() ?? '') === '',
-            init: () => null,
-            init_all: () => {},
-            set_enabled: () => {},
-            set_all_enabled: () => {},
-            on_change: () => {},
-            is_dirty: () => false,
-        };
+        globalThis.rteModule = rte_stub();
         vi.spyOn(console, 'warn').mockImplementation(() => {});
         vi.spyOn(console, 'error').mockImplementation(() => {});
         vi.spyOn(console, 'debug').mockImplementation(() => {});
         globalThis.endpointsModule = { get_media_library_endpoints: () => fresh_endpoints() };
         globalThis.helperMediaLibraryModule = fresh_helper();
-        globalThis.authModule = { get_user_token: () => 'tok', logout: () => {} };
+        globalThis.authModule = auth_stub('tok', { logout: () => {} });
         globalThis.repoSubjectsModule = {
             populate_subjects_dropdowns: () => {},
             validate_required_fields: () => true,

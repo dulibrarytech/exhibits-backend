@@ -34,10 +34,6 @@ const indexManagementModule = (function () {
         return document.getElementById(id);
     }
 
-    function set_alert(type, message) {
-        domModule.set_alert(document.querySelector('#message'), type, message);
-    }
-
     function render_status(data) {
         const idx = el('status-index');
         const exists = el('status-exists');
@@ -65,15 +61,9 @@ const indexManagementModule = (function () {
 
         try {
 
-            const token = authModule.get_user_token();
-            if (token === false) {
-                return null;
-            }
-
-            const response = await httpModule.req({
+            const response = await httpModule.api({
                 method: 'GET',
-                url: ENDPOINT,
-                headers: { 'x-access-token': token }
+                url: ENDPOINT
             });
 
             if (response !== undefined && response.status === 200 && response.data && response.data.data) {
@@ -130,12 +120,12 @@ const indexManagementModule = (function () {
 
             if (stable >= STABLE_POLLS) {
                 const n = (count !== null) ? count : 0;
-                set_alert('success', 'Reindex complete — ' + n + ' document' + (n === 1 ? '' : 's') + ' indexed.');
+                domModule.set_alert('#message', 'success', 'Reindex complete — ' + n + ' document' + (n === 1 ? '' : 's') + ' indexed.');
                 return;
             }
 
             if (attempts >= POLL_MAX_ATTEMPTS) {
-                set_alert('info', 'Reindexing is still finishing; the document count above will keep updating.');
+                domModule.set_alert('#message', 'info', 'Reindexing is still finishing; the document count above will keep updating.');
                 return;
             }
 
@@ -167,34 +157,28 @@ const indexManagementModule = (function () {
 
         try {
 
-            const token = authModule.get_user_token();
-            if (token === false) {
-                return;
-            }
-
             if (confirm_btn) {
                 confirm_btn.disabled = true;
                 confirm_btn.textContent = 'Rebuilding…';
             }
-            set_alert('info', 'Rebuilding the search index…');
+            domModule.set_alert('#message', 'info', 'Rebuilding the search index…');
 
-            const response = await httpModule.req({
+            const response = await httpModule.api({
                 method: 'POST',
-                url: ENDPOINT,
-                headers: { 'x-access-token': token }
+                url: ENDPOINT
             });
 
             if (response !== undefined && (response.status === 200 || response.status === 201)) {
-                set_alert('info', 'Index rebuilt — reindexing published exhibits…');
+                domModule.set_alert('#message', 'info', 'Index rebuilt — reindexing published exhibits…');
                 poll_status_until_settled();
             } else if (response !== undefined && response.status === 403) {
-                set_alert('danger', 'You do not have permission to rebuild the index.');
+                domModule.set_alert('#message', 'danger', 'You do not have permission to rebuild the index.');
             } else {
-                set_alert('danger', 'Unable to rebuild the search index.');
+                domModule.set_alert('#message', 'danger', 'Unable to rebuild the search index.');
             }
 
         } catch (error) {
-            set_alert('danger', 'Unable to rebuild the search index.');
+            domModule.set_alert('#message', 'danger', 'Unable to rebuild the search index.');
         } finally {
             if (confirm_btn) {
                 confirm_btn.textContent = 'Rebuild Index';

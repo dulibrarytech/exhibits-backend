@@ -8,6 +8,7 @@
 'use strict';
 
 const Exhibit_heading_record_tasks = require('../../exhibits/tasks/exhibit_heading_record_tasks');
+const { make_query, make_db, TABLES } = require('./helpers/mock_knex');
 
 // Mock dependencies - MUST be identical across all test files to avoid conflicts
 jest.mock('../../libs/log4', () => ({
@@ -36,20 +37,7 @@ describe('Exhibit_heading_record_tasks', () => {
 
     // Helper to create fresh mock query with proper chaining
     // Source code uses .timeout() on queries which returns a promise
-    const createMockQuery = () => {
-        const query = {
-            select: jest.fn().mockReturnThis(),
-            where: jest.fn().mockReturnThis(),
-            first: jest.fn().mockReturnThis(),
-            insert: jest.fn().mockReturnThis(),
-            update: jest.fn().mockReturnThis(),
-            delete: jest.fn().mockReturnThis(),
-            orderBy: jest.fn().mockReturnThis(),
-            timeout: jest.fn().mockResolvedValue(null),
-            count: jest.fn().mockReturnThis()
-        };
-        return query;
-    };
+    const createMockQuery = () => make_query({ resolves: { timeout: null } });
 
     beforeEach(() => {
         jest.clearAllMocks();
@@ -57,14 +45,9 @@ describe('Exhibit_heading_record_tasks', () => {
 
         mockQuery = createMockQuery();
 
-        mockDB = jest.fn(() => mockQuery);
-        mockDB.fn = { now: jest.fn(() => 'NOW()') };
+        mockDB = make_db(mockQuery);
 
-        mockTABLE = {
-            exhibit_records: 'tbl_exhibit_records',
-            heading_records: 'tbl_heading_records',
-            item_records: 'tbl_item_records'
-        };
+        mockTABLE = TABLES;
 
         headingTasks = new Exhibit_heading_record_tasks(mockDB, mockTABLE);
     });

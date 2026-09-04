@@ -30,43 +30,12 @@
 <script src="/exhibits-dashboard/static/app/dist/exhibits.module.min.js?<%=build_version%>"></script>
 <script src="/exhibits-dashboard/static/app/dist/items.grid.module.min.js?<%=build_version%>"></script>
 <script>
-    (async function() {
-
-        try {
-
-            const status = helperModule.get_parameter_by_name('status');
-            const exhibit_id = helperModule.get_parameter_by_name('exhibit_id');
-            const grid_id = helperModule.get_parameter_by_name('grid_id');
-            const item_id = helperModule.get_parameter_by_name('item_id');
-
-            if (status !== null && status === '403') {
-
-                domModule.set_alert('#message', 'danger', 'You do not have permission to delete this item.');
-
-                setTimeout(() => {
-                    window.history.replaceState({page: 'items'}, '', '/exhibits-dashboard/items/grid/item/delete?exhibit_id=' + exhibit_id + '&grid_id=' + grid_id + '&item_id=' + item_id);
-                }, 0);
-
-            } else {
-
-                const redirect = '/items/grid/item/delete?exhibit_id=' + exhibit_id + '&grid_id=' + grid_id + '&item_id=' + item_id + '&status=403';
-                await authModule.check_permissions(['delete_item', 'delete_any_item'], 'item', exhibit_id, item_id, redirect);
-                await exhibitsModule.set_exhibit_title(exhibit_id);
-                const delete_btn = document.querySelector('#delete-item-btn');
-                if (delete_btn) {
-                    delete_btn.addEventListener('click', itemsGridModule.delete_grid_item);
-                }
-                helperModule.show_form();
-            }
-
-            navModule.wire_nav_links();
-
-        } catch (error) {
-            domModule.set_alert('#message', 'danger', error.message);
-            console.error('grid-items delete form init failed:', error);
-        }
-
-    })();
+    pageActionsModule.init_delete_form({
+        delete_path: '/items/grid/item/delete',
+        url_params: ['exhibit_id', 'grid_id', 'item_id'],
+        on_delete: itemsGridModule.delete_grid_item,
+        label: 'grid-items delete form'
+    });
 </script>
 </body>
 </html>

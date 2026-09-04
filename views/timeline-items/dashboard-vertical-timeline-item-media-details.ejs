@@ -6,59 +6,7 @@
     <main id="main" class="content" tabindex="-1">
         <div id="message"></div>
         <h1><span id="exhibit-title"></span> - Vertical Timeline Media Item</h1>
-        <div id="item-media-card" class="card">
-            <div class="card-header">
-                <strong class="card-title mb-3">Item Media</strong>
-            </div>
-            <div class="card-body">
-                <div class="row">
-                    <div class="col-6 col-md-6">
-                        <div id="item-media-display" class="media-preview-area">
-                            <div class="media-placeholder">
-                                <i class="fa fa-file-o" aria-hidden="true"></i>
-                                <span>No media selected</span>
-                            </div>
-                        </div>
-                        <p>
-                            <span id="item-media-filename-display"></span>&nbsp;&nbsp;
-                            <span><a id="item-media-trash" title="Remove media" href="#"
-                                     style="display:none"><i class="fa fa-trash" aria-hidden="true"></i></a></span>
-                        </p>
-                        <input type="hidden" id="item-media-uuid" name="item_media_uuid">
-                        <input type="hidden" id="item-media-uuid-prev" name="item_media_uuid_prev">
-                        <input type="hidden" id="item-media-type" name="item_media_type">
-                        <input type="hidden" id="item-mime-type" name="item_mime_type">
-                        <button type="button" class="btn btn-outline-primary"
-                                id="pick-item-media-btn">
-                            <i class="fa fa-file-o" aria-hidden="true"></i>&nbsp;Select Media
-                        </button>
-                        <%- include('../partials/media-name-display.ejs', { input_id: 'item-media-name-display' }); %>
-                    </div>
-                    <div class="col-6 col-md-6">
-                        <div id="thumbnail-image-display" class="media-preview-area">
-                            <div class="media-placeholder">
-                                <i class="fa fa-picture-o" aria-hidden="true"></i>
-                                <span>No image selected</span>
-                            </div>
-                        </div>
-                        <p>
-                            <span id="thumbnail-filename-display"></span>&nbsp;&nbsp;
-                            <span><a id="thumbnail-trash" title="Remove thumbnail" href="#"
-                                     style="display:none"><i class="fa fa-trash" aria-hidden="true"></i></a></span>
-                        </p>
-                        <input type="hidden" id="thumbnail-media-uuid" name="thumbnail_media_uuid">
-                        <input type="hidden" id="thumbnail-media-uuid-prev" name="thumbnail_media_uuid_prev">
-                        <button type="button" class="btn btn-outline-primary"
-                                id="pick-thumbnail-btn"
-                                data-media-type-filter="image">
-                            <i class="fa fa-picture-o" aria-hidden="true"></i>&nbsp;Select Thumbnail
-                        </button>
-                    </div>
-                </div>
-                <%- include('../partials/item-caption.ejs', { is_details: true }); %>
-                <%- include('../partials/embed-item.ejs'); %>
-            </div>
-        </div>
+        <%- include('../partials/item-media-card.ejs', { is_details: true }); %>
 
         <%- include('partials/item-vertical-timeline-item-data-card.ejs', { is_details: true }); %>
 
@@ -89,14 +37,9 @@
     itemsCommonVerticalTimelineItemFormModule.init();
     itemsDetailsVerticalTimelineItemModule.init();
 
-    document.querySelector('#edit-item-btn').addEventListener('click', (event) => {
-        event.preventDefault();
-        document.querySelector('.content').style.visibility = 'hidden';
-        const exhibit_id = helperModule.get_parameter_by_name('exhibit_id');
-        const timeline_id = helperModule.get_parameter_by_name('timeline_id');
-        const item_id = helperModule.get_parameter_by_name('item_id');
-        window.location.replace(`/exhibits-dashboard/items/vertical-timeline/item/media/edit?exhibit_id=${exhibit_id}&timeline_id=${timeline_id}&item_id=${item_id}`);
-        return false;
+    pageActionsModule.wire_edit_button({
+        edit_path: '/items/vertical-timeline/item/media/edit',
+        params: ['exhibit_id', 'timeline_id', 'item_id']
     });
 </script>
 </body>

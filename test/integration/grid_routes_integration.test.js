@@ -14,83 +14,45 @@
 
 'use strict';
 
-/*
- * The real endpoints modules build paths from APP_PATH at require time —
- * ensure it is defined before anything is loaded.
- */
-process.env.APP_PATH = process.env.APP_PATH || '/exhibits-dashboard';
-
 const express = require('express');
 const request = require('supertest');
 
-const TEST_EXHIBIT_ID = '550e8400-e29b-41d4-a716-446655440000';
+/*
+ * Requiring the shared mocks pins APP_PATH before any endpoints module is
+ * loaded; the jest.mock factories below are hoisted and resolve it lazily.
+ */
+const { TEST_UUID, TEST_USER_UID, path_for, mock_model } = require('./helpers/mocks');
+
+const TEST_EXHIBIT_ID = TEST_UUID;
 const TEST_GRID_ID = '660e8400-e29b-41d4-a716-446655440100';
 const TEST_ITEM_ID = '770e8400-e29b-41d4-a716-446655440200';
-const TEST_USER_UID = '660e8400-e29b-41d4-a716-446655440001';
 
-jest.mock('../../libs/log4', () => ({
-    module: () => ({
-        error: jest.fn(),
-        warn: jest.fn(),
-        info: jest.fn(),
-        debug: jest.fn()
-    })
-}));
+jest.mock('../../libs/log4', () => require('./helpers/mocks').log4_factory());
+jest.mock('../../libs/tokens', () => require('./helpers/mocks').tokens_factory());
+jest.mock('../../auth/authorize', () => require('./helpers/mocks').authorize_factory());
+jest.mock('../../config/rate_limits_loader', () => require('./helpers/mocks').rate_limits_factory([
+    'read_operations', 'write_operations', 'state_change_operations'
+]));
 
-jest.mock('../../libs/tokens', () => ({
-    verify: jest.fn((req, res, next) => {
-        req.decoded = { sub: TEST_USER_UID };
-        next();
-    })
-}));
-
-jest.mock('../../auth/authorize', () => ({
-    check_permission: jest.fn().mockResolvedValue(true)
-}));
-
-jest.mock('../../config/rate_limits_loader', () => ({
-    rate_limits: {
-        read_operations: (req, res, next) => next(),
-        write_operations: (req, res, next) => next(),
-        state_change_operations: (req, res, next) => next()
-    }
-}));
-
-const mockGridsModel = {
-    create_grid_record: jest.fn(),
-    get_grid_record: jest.fn(),
-    update_grid_record: jest.fn(),
-    create_grid_item_record: jest.fn(),
-    get_grid_item_records: jest.fn(),
-    get_grid_item_record: jest.fn(),
-    get_grid_item_edit_record: jest.fn(),
-    get_grid_item_details_record: jest.fn(),
-    update_grid_item_record: jest.fn(),
-    delete_grid_item_record: jest.fn(),
-    publish_grid_item_record: jest.fn(),
-    suppress_grid_item_record: jest.fn(),
-    unlock_grid_item_record: jest.fn()
-};
+const mockGridsModel = mock_model([
+    'create_grid_record',
+    'get_grid_record',
+    'update_grid_record',
+    'create_grid_item_record',
+    'get_grid_item_records',
+    'get_grid_item_record',
+    'get_grid_item_edit_record',
+    'get_grid_item_details_record',
+    'update_grid_item_record',
+    'delete_grid_item_record',
+    'publish_grid_item_record',
+    'suppress_grid_item_record',
+    'unlock_grid_item_record'
+]);
 
 jest.mock('../../exhibits/grid_model', () => mockGridsModel);
 
 const ENDPOINTS = require('../../exhibits/endpoints/index')().exhibits;
-
-/*
- * Builds a request path from a registered endpoint template so the tests
- * exercise exactly the strings the router was mounted with.
- */
-const path_for = (template, params = {}) => {
-    let path = template;
-    for (const [key, value] of Object.entries(params)) {
-        /*
-         * Anchor on the following segment boundary so a short key never
-         * corrupts a longer one (":grid_id" vs ":grid_item_id").
-         */
-        path = path.replace(new RegExp(`:${key}(?=/|$)`, 'g'), value);
-    }
-    return path;
-};
 
 const IDS = {
     exhibit_id: TEST_EXHIBIT_ID,

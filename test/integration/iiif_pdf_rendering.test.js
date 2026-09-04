@@ -10,9 +10,7 @@
  * serves uploaded PDFs with the same public/CORS posture as the manifest.
  */
 
-jest.mock('../../libs/log4', () => ({
-    module: () => ({ info: jest.fn(), error: jest.fn(), warn: jest.fn(), debug: jest.fn() })
-}));
+jest.mock('../../libs/log4', () => require('./helpers/mocks').log4_factory());
 
 jest.mock('../../media-library/model', () => ({
     get_media_record: jest.fn()

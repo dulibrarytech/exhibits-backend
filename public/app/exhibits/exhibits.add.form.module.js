@@ -50,30 +50,6 @@ const exhibitsAddFormModule = (function () {
             return isNaN(num) ? default_value : num;
         };
 
-        // Helper function to display error messages
-        const show_error = (message) => {
-            const message_el = document.querySelector(MESSAGE_SELECTOR);
-            if (!message_el) {
-                console.error('Message element not found');
-                return;
-            }
-
-            const alert_div = document.createElement('div');
-            alert_div.className = 'alert alert-danger';
-            alert_div.setAttribute('role', 'alert');
-
-            const icon = document.createElement('i');
-            icon.className = 'fa fa-exclamation';
-
-            const text = document.createTextNode(` ${message}`);
-
-            alert_div.appendChild(icon);
-            alert_div.appendChild(text);
-
-            message_el.innerHTML = '';
-            message_el.appendChild(alert_div);
-        };
-
         // Helper function to validate module exists and has required methods
         const validate_module = (module, required_methods = []) => {
             if (!module || typeof module !== 'object') {
@@ -150,7 +126,7 @@ const exhibitsAddFormModule = (function () {
 
             // Display user-friendly error message
             const error_message = error.message || 'An error occurred while processing exhibit data';
-            show_error(error_message);
+            domModule.set_alert(MESSAGE_SELECTOR, 'danger', error_message);
 
             return false;
         }
@@ -158,35 +134,7 @@ const exhibitsAddFormModule = (function () {
 
     obj.create_exhibit_record = async function () {
 
-        // Cache DOM element and constants
-        const message_el = document.querySelector(MESSAGE_SELECTOR);
         const REDIRECT_DELAY = 900;
-        const TOKEN_ERROR_DELAY = 1000;
-
-        // Helper function to safely display messages (prevents XSS)
-        const show_message = (type, message, icon = 'fa-info') => {
-            if (!message_el) {
-                console.error('Message element not found');
-                return;
-            }
-
-            // Use textContent for security, create elements programmatically
-            const alert_div = document.createElement('div');
-            alert_div.className = `alert alert-${type}`;
-            alert_div.setAttribute('role', 'alert');
-
-            const icon_el = document.createElement('i');
-            icon_el.className = `fa ${icon}`;
-
-            const text_node = document.createTextNode(` ${message}`);
-
-            alert_div.appendChild(icon_el);
-            alert_div.appendChild(text_node);
-
-            // Clear and append
-            message_el.innerHTML = '';
-            message_el.appendChild(alert_div);
-        };
 
         // Store timeout IDs for cleanup
         let timeout_id = null;
@@ -195,22 +143,10 @@ const exhibitsAddFormModule = (function () {
             // Scroll modal body to top so message area is visible
             scroll_modal_to_top();
 
-            // Validate token early
-            const token = authModule.get_user_token();
-            if (!token) {
-                show_message('warning', 'Unable to get session token');
-
-                timeout_id = setTimeout(() => {
-                    authModule.logout();
-                }, TOKEN_ERROR_DELAY);
-
-                return false;
-            }
-
             const endpoints = endpointsModule.get_exhibits_endpoints();
 
             if (!endpoints || !endpoints.exhibits || !endpoints.exhibits.exhibit_records) {
-                show_message('error', 'Session data could not be loaded. Please reload the page and try again.');
+                domModule.set_alert(MESSAGE_SELECTOR, 'danger', 'Session data could not be loaded. Please reload the page and try again.');
                 return false;
             }
 
@@ -222,22 +158,16 @@ const exhibitsAddFormModule = (function () {
             }
 
             // Show loading state
-            show_message('info', 'Creating exhibit record...');
+            domModule.set_alert(MESSAGE_SELECTOR, 'info', 'Creating exhibit record...');
 
             // Add user metadata
             data.created_by = helperModule.get_user_name();
             data.owner = helperModule.get_owner();
 
-            // Make API request with timeout
-            const response = await httpModule.req({
+            const response = await httpModule.api({
                 method: 'POST',
                 url: endpoints.exhibits.exhibit_records.endpoint,
-                data: data,
-                headers: {
-                    'Content-Type': 'application/json',
-                    'x-access-token': token
-                },
-                timeout: 30000
+                data: data
             });
 
             // Validate response structure
@@ -250,7 +180,7 @@ const exhibitsAddFormModule = (function () {
             }
 
             // Show success message
-            show_message('success', 'Exhibit record created');
+            domModule.set_alert(MESSAGE_SELECTOR, 'success', 'Exhibit record created');
 
             // Bind media library assets if selected
             const exhibit_uuid = response.data.data; // the new exhibit UUID
@@ -260,31 +190,25 @@ const exhibitsAddFormModule = (function () {
             if (hero_media_uuid || thumbnail_media_uuid) {
                 try {
                     const bind_endpoint = endpoints.exhibits?.exhibit_media_library?.post?.endpoint;
+                    const bind_url = bind_endpoint
+                        ? endpointsModule.build(bind_endpoint, { exhibit_id: exhibit_uuid })
+                        : null;
 
-                    if (bind_endpoint) {
-                        const bind_url = bind_endpoint.replace(':exhibit_id', encodeURIComponent(exhibit_uuid));
+                    if (bind_url) {
 
                         if (hero_media_uuid) {
-                            await httpModule.req({
+                            await httpModule.api({
                                 method: 'POST',
                                 url: bind_url,
-                                data: { media_uuid: hero_media_uuid, media_role: 'hero_image' },
-                                headers: {
-                                    'Content-Type': 'application/json',
-                                    'x-access-token': token
-                                }
+                                data: { media_uuid: hero_media_uuid, media_role: 'hero_image' }
                             });
                         }
 
                         if (thumbnail_media_uuid) {
-                            await httpModule.req({
+                            await httpModule.api({
                                 method: 'POST',
                                 url: bind_url,
-                                data: { media_uuid: thumbnail_media_uuid, media_role: 'thumbnail' },
-                                headers: {
-                                    'Content-Type': 'application/json',
-                                    'x-access-token': token
-                                }
+                                data: { media_uuid: thumbnail_media_uuid, media_role: 'thumbnail' }
                             });
                         }
                     }
@@ -298,30 +222,22 @@ const exhibitsAddFormModule = (function () {
                     const exhibits_field_endpoint = APP_PATH + '/api/v1/media/library/record/:media_id/exhibits';
 
                     if (hero_media_uuid) {
-                        const hero_url = exhibits_field_endpoint.replace(':media_id', encodeURIComponent(hero_media_uuid));
-                        httpModule.req({
+                        const hero_url = endpointsModule.build(exhibits_field_endpoint, { media_id: hero_media_uuid });
+                        httpModule.api({
                             method: 'PUT',
                             url: hero_url,
-                            data: { exhibit_uuid: exhibit_uuid, action: 'add', media_role: 'hero_image' },
-                            headers: {
-                                'Content-Type': 'application/json',
-                                'x-access-token': token
-                            }
+                            data: { exhibit_uuid: exhibit_uuid, action: 'add', media_role: 'hero_image' }
                         }).catch(function (err) {
                             console.error('Error adding exhibit to hero image media record:', err);
                         });
                     }
 
                     if (thumbnail_media_uuid) {
-                        const thumb_url = exhibits_field_endpoint.replace(':media_id', encodeURIComponent(thumbnail_media_uuid));
-                        httpModule.req({
+                        const thumb_url = endpointsModule.build(exhibits_field_endpoint, { media_id: thumbnail_media_uuid });
+                        httpModule.api({
                             method: 'PUT',
                             url: thumb_url,
-                            data: { exhibit_uuid: exhibit_uuid, action: 'add', media_role: 'thumbnail' },
-                            headers: {
-                                'Content-Type': 'application/json',
-                                'x-access-token': token
-                            }
+                            data: { exhibit_uuid: exhibit_uuid, action: 'add', media_role: 'thumbnail' }
                         }).catch(function (err) {
                             console.error('Error adding exhibit to thumbnail media record:', err);
                         });
@@ -351,7 +267,7 @@ const exhibitsAddFormModule = (function () {
 
             // Display user-friendly error message
             const error_message = error.message || 'An unexpected error occurred';
-            show_message('danger', error_message, 'fa-exclamation');
+            domModule.set_alert(MESSAGE_SELECTOR, 'danger', error_message);
 
             return false;
         }
@@ -500,30 +416,6 @@ const exhibitsAddFormModule = (function () {
     };
 
     obj.init = async function () {
-
-        // Helper function to safely display error messages (prevents XSS)
-        const show_error = (message) => {
-            const message_el = document.querySelector(MESSAGE_SELECTOR);
-            if (!message_el) {
-                console.error('Message element not found');
-                return;
-            }
-
-            const alert_div = document.createElement('div');
-            alert_div.className = 'alert alert-danger';
-            alert_div.setAttribute('role', 'alert');
-
-            const icon = document.createElement('i');
-            icon.className = 'fa fa-exclamation';
-
-            const text = document.createTextNode(` ${message}`);
-
-            alert_div.appendChild(icon);
-            alert_div.appendChild(text);
-
-            message_el.innerHTML = '';
-            message_el.appendChild(alert_div);
-        };
 
         // Helper function to safely add event listener
         const add_event_listener = (selector, event, handler, handler_name) => {
@@ -741,7 +633,7 @@ const exhibitsAddFormModule = (function () {
                         media_type_filter: 'image',
                         on_select: function (media) {
                             domModule.set_value('#hero-image-media-uuid', media.uuid);
-                            var prev_track = document.querySelector('#hero-image-media-uuid-prev');
+                            const prev_track = document.querySelector('#hero-image-media-uuid-prev');
                             if (prev_track) prev_track.value = media.uuid;
                             render_media_preview('#hero-image-display', media);
                             render_filename('#hero-image-filename-display', media.name || media.original_filename);
@@ -764,7 +656,7 @@ const exhibitsAddFormModule = (function () {
                         media_type_filter: 'image',
                         on_select: function (media) {
                             domModule.set_value('#thumbnail-media-uuid', media.uuid);
-                            var prev_track = document.querySelector('#thumbnail-media-uuid-prev');
+                            const prev_track = document.querySelector('#thumbnail-media-uuid-prev');
                             if (prev_track) prev_track.value = media.uuid;
                             render_media_preview('#thumbnail-image-display', media);
                             render_filename('#thumbnail-filename-display', media.name || media.original_filename);
@@ -790,7 +682,7 @@ const exhibitsAddFormModule = (function () {
 
             // Display user-friendly error message
             const error_message = error.message || 'An error occurred during initialization';
-            show_error(error_message);
+            domModule.set_alert(MESSAGE_SELECTOR, 'danger', error_message);
 
             return false;
         }

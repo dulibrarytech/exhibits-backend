@@ -24,16 +24,13 @@ const TOKEN = require('../libs/tokens');
 const UPLOADS = require('../media-library/uploads');
 const { rate_limits } = require('../config/rate_limits_loader');
 
-// Wrap an async handler so a rejected promise reaches the global error handler.
-// Security headers, request logging, JSON-parse errors, and 404/error handling
-// are applied once, globally, in config/express.js — not per route file. (The
-// global request log covers both /api/ and /iiif, matching what the per-route
-// middleware here used to cover.)
-const async_handler = (fn) => {
-    return (req, res, next) => {
-        Promise.resolve(fn(req, res, next)).catch(next);
-    };
-};
+/*
+ * Security headers, request logging, JSON-parse errors, and 404/error handling
+ * are applied once, globally, in config/express.js — not per route file. (The
+ * global request log covers both /api/ and /iiif, matching what the per-route
+ * middleware here used to cover.)
+ */
+const { async_handler } = require('../libs/http');
 
 module.exports = function (app) {
 
@@ -134,7 +131,7 @@ module.exports = function (app) {
     app.route(ENDPOINTS.media_file.get.endpoint)
         .get(
             rate_limits.read_operations,
-            TOKEN.verify_with_query || TOKEN.verify,
+            TOKEN.verify_with_query,
             async_handler(CONTROLLER.get_media)
         );
 
@@ -143,7 +140,7 @@ module.exports = function (app) {
     app.route(ENDPOINTS.media_thumbnail.get.endpoint)
         .get(
             rate_limits.read_operations,
-            TOKEN.verify_with_query || TOKEN.verify,
+            TOKEN.verify_with_query,
             async_handler(CONTROLLER.get_thumbnail)
         );
 
@@ -156,7 +153,7 @@ module.exports = function (app) {
     app.route(ENDPOINTS.upload.get.endpoint)
         .get(
             rate_limits.read_operations,
-            TOKEN.verify_with_query || TOKEN.verify,
+            TOKEN.verify_with_query,
             async_handler(CONTROLLER.get_uploaded_thumbnail)
         );
 
@@ -177,7 +174,7 @@ module.exports = function (app) {
     app.route(ENDPOINTS.repo_thumbnail.get.endpoint)
         .get(
             rate_limits.read_operations,
-            TOKEN.verify_with_query || TOKEN.verify,
+            TOKEN.verify_with_query,
             async_handler(CONTROLLER.get_repo_tn)
         );
 

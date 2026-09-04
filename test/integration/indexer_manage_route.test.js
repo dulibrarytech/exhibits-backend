@@ -17,26 +17,18 @@ const request = require('supertest');
 
 // ==================== MOCKS ====================
 
-jest.mock('../../libs/log4', () => ({
-    module: () => ({ error: jest.fn(), warn: jest.fn(), info: jest.fn(), debug: jest.fn() })
-}));
+jest.mock('../../libs/log4', () => require('./helpers/mocks').log4_factory());
 
 jest.mock('../../config/app_config', () => () => ({ app_path: '/exhibits-dashboard' }));
 
 // TOKEN.verify: 401 unless an x-access-token is present; sets req.decoded like the real one.
-jest.mock('../../libs/tokens', () => ({
-    verify: (req, res, next) => {
-        if (req.headers['x-access-token']) {
-            req.decoded = { sub: 'admin' };
-            return next();
-        }
-        return res.status(401).json({ message: 'Unauthorized request' });
-    }
-}));
+jest.mock('../../libs/tokens', () => require('./helpers/mocks').tokens_factory({ decoded: { sub: 'admin' }, require_header: true, wrap: false }));
 
 // Controllable authorization. (jest requires mock-factory vars to be `mock`-prefixed.)
 const mockCheckPermission = jest.fn();
-jest.mock('../../auth/authorize', () => ({ check_permission: (...args) => mockCheckPermission(...args) }));
+jest.mock('../../auth/authorize', () => require('./helpers/mocks').authorize_factory({
+    check_permission: (...args) => mockCheckPermission(...args)
+}));
 
 // Stub the ES service + model + helper so requiring the controller does not load
 // Elasticsearch or the knex/DB config.

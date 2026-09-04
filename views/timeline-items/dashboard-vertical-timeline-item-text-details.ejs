@@ -7,64 +7,7 @@
         <div id="message"></div>
         <h1><span id="exhibit-title"></span> - Vertical Timeline Text Item</h1>
         <!-- item data card -->
-        <div id="item-data-card" class="card">
-            <div class="card-header">
-                <strong class="card-title mb-3">Item Data</strong>
-                <div class="btn-group float-right">
-                    <span id="created" style="text-align: right; font-size: x-small"></span>
-                </div>
-            </div>
-            <div class="card-body">
-                <div class="row">
-                    <div class="col-12 col-md-12">
-                        <div class="row form-group">
-                            <div class="col-12">
-                                <div class="form-text text-muted" style="font-size: 17px">
-                                    Title <small><em>(Optional)</em></small>
-                                    
-                                </div>
-                                <span id="item-title-error" class="is-error"></span>
-                                <div id="item-title-input" class="rte-readonly"></div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-                <div class="row">
-                    <div class="col-12 col-md-12">
-                        <div class="row form-group">
-                            <div class="col-12">
-                                <div class="form-text text-muted" style="font-size: 17px"><span style="color: darkred">*</span>Date</div>
-                                <input disabled class="form-control" id="item-date-input" type="date" />
-                            </div>
-                        </div>
-                    </div>
-                </div>
-                <div class="row">
-                    <div class="col-12 col-md-12">
-                        <div class="row form-group">
-                            <div class="col-12">
-                                <div class="form-text text-muted" style="font-size: 17px">Exhibit Text <small><em>(Optional)</em></small>
-                                    
-                                </div>
-                                <div id="item-text-input" class="rte-readonly"></div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-                <div class="row">
-                    <div class="col-12 col-md-12">
-                        <div class="row form-group">
-                            <div class="col-12">
-                                <div class="form-text text-muted" style="font-size: 17px">Pop-up Window Description <small><em>(Optional)</em></small>
-                                    
-                                </div>
-                                <div id="item-description-input" class="rte-readonly"></div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
+        <%- include('partials/item-vertical-timeline-item-data-card.ejs', { is_details: true }); %>
         <div id="item-submit-card" class="card">
             <div class="card-body">
                 <button class="btn btn-primary" type="button" id="edit-item-btn">
@@ -95,14 +38,9 @@
     navModule.wire_nav_links();
     itemsCommonVerticalTimelineItemFormModule.init();
     itemsDetailsVerticalTimelineItemModule.init();
-    document.querySelector('#edit-item-btn').addEventListener('click', (event) => {
-        event.preventDefault();
-        document.querySelector('.content').style.visibility = 'hidden';
-        const exhibit_id = helperModule.get_parameter_by_name('exhibit_id');
-        const timeline_id = helperModule.get_parameter_by_name('timeline_id');
-        const item_id = helperModule.get_parameter_by_name('item_id');
-        window.location.replace(`/exhibits-dashboard/items/vertical-timeline/item/text/edit?exhibit_id=${exhibit_id}&timeline_id=${timeline_id}&item_id=${item_id}`);
-        return false;
+    pageActionsModule.wire_edit_button({
+        edit_path: '/items/vertical-timeline/item/text/edit',
+        params: ['exhibit_id', 'timeline_id', 'item_id']
     });
 </script>
 </body>

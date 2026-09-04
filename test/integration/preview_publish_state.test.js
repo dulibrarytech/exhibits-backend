@@ -1,5 +1,7 @@
 'use strict';
 
+const { mock_model } = require('./helpers/mocks');
+
 /**
  * Preview / publish / suppress — DB publish-state pins.
  *
@@ -35,9 +37,7 @@ jest.mock('../../libs/rte_vocabulary', () => ({
     sanitize_plain: jest.fn((value) => value),
 }));
 
-jest.mock('../../libs/log4', () => ({
-    module: () => ({ info: jest.fn(), error: jest.fn(), warn: jest.fn(), debug: jest.fn() })
-}));
+jest.mock('../../libs/log4', () => require('./helpers/mocks').log4_factory());
 
 jest.mock('../../config/db_config', () => () => jest.fn(() => ({})));
 
@@ -45,27 +45,27 @@ const EXHIBIT_UUID = '9a8403ea-6016-4942-a611-a07140106c4f';
 const GRID_UUID = 'ffffffff-6666-4666-8666-666666666666';
 const TIMELINE_UUID = 'ffffffff-6666-4666-8666-666666666667';
 
-const mockExhibitTask = {
-    set_to_publish: jest.fn().mockResolvedValue(true),
-    set_to_suppress: jest.fn().mockResolvedValue(true),
-    set_preview: jest.fn().mockResolvedValue(true),
-    unset_preview: jest.fn().mockResolvedValue(true),
-    get_exhibit_record: jest.fn().mockResolvedValue({ uuid: EXHIBIT_UUID })
-};
+const mockExhibitTask = mock_model({
+    set_to_publish: true,
+    set_to_suppress: true,
+    set_preview: true,
+    unset_preview: true,
+    get_exhibit_record: { uuid: EXHIBIT_UUID }
+});
 
-const mockItemTask = {
-    get_item_records: jest.fn().mockResolvedValue([]),
-    get_record_count: jest.fn().mockResolvedValue(1),
-    set_to_publish: jest.fn().mockResolvedValue(true),
-    set_to_suppress: jest.fn().mockResolvedValue(true)
-};
+const mockItemTask = mock_model({
+    get_item_records: [],
+    get_record_count: 1,
+    set_to_publish: true,
+    set_to_suppress: true
+});
 
-const mockHeadingTask = {
-    get_heading_records: jest.fn().mockResolvedValue([]),
-    get_record_count: jest.fn().mockResolvedValue(1),
-    set_to_publish: jest.fn().mockResolvedValue(true),
-    set_to_suppress: jest.fn().mockResolvedValue(true)
-};
+const mockHeadingTask = mock_model({
+    get_heading_records: [],
+    get_record_count: 1,
+    set_to_publish: true,
+    set_to_suppress: true
+});
 
 const mockGridTask = {
     get_record_count: jest.fn().mockResolvedValue(1),
@@ -84,16 +84,16 @@ const mockGridTask = {
     set_exhibit_grid_items_to_publish: jest.fn().mockResolvedValue({ success: true })
 };
 
-const mockTimelineTask = {
-    get_record_count: jest.fn().mockResolvedValue(1),
-    get_timeline_records: jest.fn().mockResolvedValue([{ uuid: TIMELINE_UUID, is_member_of_exhibit: EXHIBIT_UUID }]),
-    set_to_publish: jest.fn().mockResolvedValue(true),
-    set_to_suppress: jest.fn().mockResolvedValue(true),
-    set_to_suppressed_timeline_items: jest.fn().mockResolvedValue({ success: true }),
-    set_to_publish_timeline_items: jest.fn().mockResolvedValue({ success: true }),
-    set_exhibit_timeline_items_to_suppress: jest.fn().mockResolvedValue({ success: true }),
-    set_exhibit_timeline_items_to_publish: jest.fn().mockResolvedValue({ success: true })
-};
+const mockTimelineTask = mock_model({
+    get_record_count: 1,
+    get_timeline_records: [{ uuid: TIMELINE_UUID, is_member_of_exhibit: EXHIBIT_UUID }],
+    set_to_publish: true,
+    set_to_suppress: true,
+    set_to_suppressed_timeline_items: { success: true },
+    set_to_publish_timeline_items: { success: true },
+    set_exhibit_timeline_items_to_suppress: { success: true },
+    set_exhibit_timeline_items_to_publish: { success: true }
+});
 
 jest.mock('../../exhibits/tasks/exhibit_record_tasks', () => jest.fn().mockImplementation(() => mockExhibitTask));
 jest.mock('../../exhibits/tasks/exhibit_item_record_tasks', () => jest.fn().mockImplementation(() => mockItemTask));

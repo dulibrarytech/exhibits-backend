@@ -30,31 +30,21 @@ const itemsEditGridFormModule = (function () {
 
             const exhibit_id = helperModule.get_parameter_by_name('exhibit_id');
             const grid_id = helperModule.get_parameter_by_name('item_id');
-            const token = authModule.get_user_token();
-            let tmp = EXHIBITS_ENDPOINTS.exhibits.grid_records.get.endpoint.replace(':exhibit_id', exhibit_id);
-            let endpoint = tmp.replace(':grid_id', grid_id);
-
-            if (token === false) {
-
-                domModule.set_alert('#message', 'danger', 'Unable to get API endpoints');
-
-                setTimeout(() => {
-                    authModule.redirect_to_auth();
-                }, 1000);
-
-                return false;
-            }
-
-            let response = await httpModule.req({
-                method: 'GET',
-                url: endpoint,
-                headers: {
-                    'Content-Type': 'application/json',
-                    'x-access-token': token
-                }
+            const endpoint = endpointsModule.build(EXHIBITS_ENDPOINTS.exhibits.grid_records.get.endpoint, {
+                exhibit_id: exhibit_id,
+                grid_id: grid_id
             });
 
-            if (response !== undefined && response.status === 200) {
+            if (!endpoint) {
+                throw new Error('Missing required parameters: exhibit_id or item_id');
+            }
+
+            const response = await httpModule.api({
+                method: 'GET',
+                url: endpoint
+            });
+
+            if (response && response.status === 200) {
                 return response.data.data;
             }
 
@@ -87,20 +77,23 @@ const itemsEditGridFormModule = (function () {
 
             data.updated_by = helperModule.get_user_name();
 
-            let tmp = EXHIBITS_ENDPOINTS.exhibits.grid_records.put.endpoint.replace(':exhibit_id', exhibit_id);
-            let endpoint = tmp.replace(':grid_id', grid_id);
-            const token = authModule.get_user_token();
-            const response = await httpModule.req({
-                method: 'PUT',
-                url: endpoint,
-                data: data,
-                headers: {
-                    'Content-Type': 'application/json',
-                    'x-access-token': token
-                }
+            const endpoint = endpointsModule.build(EXHIBITS_ENDPOINTS.exhibits.grid_records.put.endpoint, {
+                exhibit_id: exhibit_id,
+                grid_id: grid_id
             });
 
-            if (response !== undefined && response.status === 201) {
+            if (!endpoint) {
+                domModule.set_alert(document.querySelector('#message'), 'warning', 'Unable to update grid record.');
+                return false;
+            }
+
+            const response = await httpModule.api({
+                method: 'PUT',
+                url: endpoint,
+                data: data
+            });
+
+            if (response && response.status === 201) {
 
                 window.scrollTo(0, 0);
                 domModule.set_alert(document.querySelector('#message'), 'success', 'Grid record updated');
@@ -158,15 +151,8 @@ const itemsEditGridFormModule = (function () {
             itemsCommonStandardGridFormModule.set_item_style(record.styles);
         }
 
-        const set_element_value = (selector, value) => {
-            const el = document.querySelector(selector);
-            if (el) {
-                el.value = value;
-            }
-        };
-        
-        set_element_value('#margins', record.margins ?? 'medium');
-        set_element_value('#text-align', record.text_alignment ?? 'left');
+        domModule.set_value('#margins', record.margins ?? 'medium');
+        domModule.set_value('#text-align', record.text_alignment ?? 'left');
 
         /*
         let styles = JSON.parse(record.styles);

@@ -20,52 +20,12 @@ const itemsDetailsVerticalTimelineModule = (function () {
 
     'use strict';
 
-    const APP_PATH = endpointsModule.get_app_path();
     const EXHIBITS_ENDPOINTS = endpointsModule.get_exhibits_endpoints();
     let obj = {};
 
     async function get_timeline_record() {
         // Cache DOM element
         const message_element = document.querySelector('#message');
-
-        /**
-         * Display status message to user (XSS-safe)
-         */
-        const display_message = (element, type, message) => {
-            if (!element) {
-                return;
-            }
-
-            const valid_types = ['info', 'success', 'danger', 'warning'];
-            const alert_type = valid_types.includes(type) ? type : 'danger';
-
-            const alert_div = document.createElement('div');
-            alert_div.className = `alert alert-${alert_type}`;
-            alert_div.setAttribute('role', 'alert');
-
-            const icon = document.createElement('i');
-            icon.className = get_icon_class(alert_type);
-            alert_div.appendChild(icon);
-
-            const text_node = document.createTextNode(` ${message}`);
-            alert_div.appendChild(text_node);
-
-            element.textContent = '';
-            element.appendChild(alert_div);
-        };
-
-        /**
-         * Get icon class for alert type
-         */
-        const get_icon_class = (alert_type) => {
-            const icon_map = {
-                'info': 'fa fa-info',
-                'success': 'fa fa-check',
-                'danger': 'fa fa-exclamation',
-                'warning': 'fa fa-exclamation-triangle'
-            };
-            return icon_map[alert_type] || 'fa fa-exclamation';
-        };
 
         /**
          * Validate required parameters
@@ -96,44 +56,25 @@ const itemsDetailsVerticalTimelineModule = (function () {
 
             const validation = validate_parameters(exhibit_id, timeline_id);
             if (!validation.valid) {
-                display_message(message_element, 'danger', validation.error);
-                return null;
-            }
-
-            // Get and validate authentication
-            const token = authModule.get_user_token();
-
-            if (!token || token === false) {
-                display_message(message_element, 'danger', 'Authentication required. Redirecting...');
-
-                setTimeout(() => {
-                    const auth_url = `${APP_PATH}/exhibits-dashboard/auth`;
-                    window.location.replace(auth_url);
-                }, 3000);
-
+                domModule.set_alert(message_element, 'danger', validation.error);
                 return null;
             }
 
             // Validate endpoint configuration
             if (!EXHIBITS_ENDPOINTS?.exhibits?.timeline_records?.get?.endpoint) {
-                display_message(message_element, 'danger', 'API endpoint configuration missing');
+                domModule.set_alert(message_element, 'danger', 'API endpoint configuration missing');
                 return null;
             }
 
-            // Construct endpoint with URL encoding
-            const endpoint = EXHIBITS_ENDPOINTS.exhibits.timeline_records.get.endpoint
-                .replace(':exhibit_id', encodeURIComponent(exhibit_id))
-                .replace(':timeline_id', encodeURIComponent(timeline_id));
+            const endpoint = endpointsModule.build(EXHIBITS_ENDPOINTS.exhibits.timeline_records.get.endpoint, {
+                exhibit_id: exhibit_id,
+                timeline_id: timeline_id
+            });
 
-            // Make API request with timeout
-            const response = await httpModule.req({
+            /* null = missing token; httpModule.api has alerted and scheduled the logout */
+            const response = await httpModule.api({
                 method: 'GET',
-                url: endpoint,
-                headers: {
-                    'Content-Type': 'application/json',
-                    'x-access-token': token
-                },
-                timeout: 30000
+                url: endpoint
             });
 
             // Validate response structure
@@ -157,7 +98,7 @@ const itemsDetailsVerticalTimelineModule = (function () {
 
             // Display error message (use user_message from Axios interceptor if available)
             const error_message = error.user_message || 'Unable to load the timeline record. Please try again.';
-            display_message(message_element, 'danger', error_message);
+            domModule.set_alert(message_element, 'danger', error_message);
 
             return null;
         }
@@ -246,31 +187,6 @@ const itemsDetailsVerticalTimelineModule = (function () {
             return date instanceof Date && !isNaN(date.getTime());
         };
 
-        /**
-         * Display error message
-         */
-        const display_error_message = (message) => {
-            const message_element = document.querySelector('#message');
-
-            if (!message_element) {
-                return;
-            }
-
-            const alert_div = document.createElement('div');
-            alert_div.className = 'alert alert-danger';
-            alert_div.setAttribute('role', 'alert');
-
-            const icon = document.createElement('i');
-            icon.className = 'fa fa-exclamation';
-            alert_div.appendChild(icon);
-
-            const text_node = document.createTextNode(` ${message}`);
-            alert_div.appendChild(text_node);
-
-            message_element.textContent = '';
-            message_element.appendChild(alert_div);
-        };
-
         try {
             // Fetch record data
             const record = await get_timeline_record();
@@ -293,7 +209,7 @@ const itemsDetailsVerticalTimelineModule = (function () {
 
         } catch (error) {
             console.error('Error in display_details_record:', error);
-            display_error_message('Unable to display the timeline record. Please try again.');
+            domModule.set_alert('#message', 'danger', 'Unable to display the timeline record. Please try again.');
             return false;
         }
     }

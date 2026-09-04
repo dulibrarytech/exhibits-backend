@@ -23,6 +23,7 @@ const ES_CONFIG = require('../config/elasticsearch_config')();
 const WEBSERVICES_CONFIG = require('../config/webservices_config')();
 const APP_CONFIG = require('../config/app_config')();
 const LOGGER = require('../libs/log4');
+const { is_valid_uuid } = require('../libs/uuid');
 
 // IIIF base URL used to construct manifest/image URLs at index time.
 // Resolved once per indexer run so a host change is a single env var flip + reindex.
@@ -67,22 +68,12 @@ const VALID_RECORD_TYPES = ['exhibit', 'collection', 'object', 'item'];
 
 // ─── Validation helpers ─────────────────────────────────────────────────────
 
-/**
- * Validates UUID format
- * @param {string} uuid - UUID to validate
- * @returns {boolean}
+/*
+ * is_valid_uuid comes from libs/uuid (strict RFC shape) and is re-exported
+ * below. The former local copy once carried a `|| uuid.length > 0` that made
+ * it a no-op — any non-empty string passed. Every caller validates a genuine
+ * record/exhibit UUID (never a user id).
  */
-const is_valid_uuid = (uuid) => {
-    if (!uuid || typeof uuid !== 'string') {
-        return false;
-    }
-    // Format check only. The previous `|| uuid.length > 0` made this a no-op — any
-    // non-empty string passed. Every caller validates a genuine record/exhibit UUID
-    // (never a user id). Strict RFC shape (version 1-5, variant 8-b), consistent with
-    // Base_tasks and the media-library validators.
-    const uuid_regex = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
-    return uuid_regex.test(uuid);
-};
 
 /**
  * Validates record type against allowed list

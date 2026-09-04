@@ -69,6 +69,149 @@ const httpModule = (function() {
         }
     };
 
+    /* Dominant missing-token behaviour across the ~30 per-call guards: alert
+     * in #message, then authModule.logout() after 1000 ms. */
+    const MISSING_TOKEN_MESSAGE = 'Session expired. Please log in again.';
+    const MISSING_TOKEN_LOGOUT_DELAY_MS = 1000;
+    const DEFAULT_TIMEOUT_MS = 30000;
+
+    /*
+     * Permissive status predicate: 2xx-5xx resolve normally so callers keep
+     * branching on response.status instead of catching.
+     */
+    const accept_any_status = (status) => status >= 200 && status < 600;
+
+    /*
+     * Reads the session token through authModule (a global loaded after this
+     * module — resolved at call time, never at load time).
+     */
+    const resolve_token = () => {
+
+        try {
+
+            if (typeof authModule === 'undefined' || typeof authModule.get_user_token !== 'function') {
+                return null;
+            }
+
+            const token = authModule.get_user_token();
+            return (typeof token === 'string' && token.length > 0) ? token : null;
+
+        } catch (error) {
+            console.error('httpModule.api: unable to resolve token', error);
+            return null;
+        }
+    };
+
+    const handle_missing_token = () => {
+
+        try {
+
+            if (typeof domModule !== 'undefined'
+                && typeof domModule.set_alert === 'function'
+                && document.querySelector('#message')) {
+                domModule.set_alert('#message', 'danger', MISSING_TOKEN_MESSAGE);
+            }
+
+        } catch (error) {
+            console.error('httpModule.api: unable to render session alert', error);
+        }
+
+        setTimeout(() => {
+            if (typeof authModule !== 'undefined' && typeof authModule.logout === 'function') {
+                authModule.logout();
+            }
+        }, MISSING_TOKEN_LOGOUT_DELAY_MS);
+    };
+
+    /**
+     * Token-injecting wrapper over obj.req for the dashboard's authenticated
+     * JSON API calls. Replaces the envelope most modules copy per call:
+     *
+     *   const token = authModule.get_user_token();
+     *   if (!token) { <alert>; setTimeout(() => authModule.logout(), 1000); return false; }
+     *   httpModule.req({ method, url, data, headers: {...}, timeout: 30000, validateStatus });
+     *
+     * Behaviour:
+     *   - Resolves the token via authModule.get_user_token(). When missing:
+     *     writes "Session expired. Please log in again." as a danger alert
+     *     into #message (when domModule and #message exist), schedules
+     *     authModule.logout() after 1000 ms, and resolves to null. Pass
+     *     options.logout_on_missing_token === false to resolve to null
+     *     silently instead (callers that report their own {success:false}).
+     *   - Injects 'Content-Type: application/json' and 'x-access-token';
+     *     caller-supplied headers are merged over those defaults.
+     *   - Defaults timeout to 30000 ms and validateStatus to the permissive
+     *     2xx-5xx predicate. Never throws on an HTTP status.
+     *   - Every other axios config key (params, responseType, signal, ...)
+     *     passes through untouched. `data` is passed as given (object or
+     *     pre-serialised JSON string both work with axios).
+     *   - Returns the axios response unchanged; undefined on network failure
+     *     or after a 401 (redirect_to_auth is called whether the 401 rejected
+     *     or resolved under the permissive validateStatus).
+     *
+     * @param {Object} options
+     * @param {string} [options.method='GET']
+     * @param {string} options.url
+     * @param {*} [options.data]
+     * @param {number} [options.timeout=30000]
+     * @param {Object} [options.headers]
+     * @param {Function} [options.validateStatus]
+     * @param {boolean} [options.logout_on_missing_token=true]
+     * @returns {Promise<Object|null|undefined>}
+     */
+    obj.api = async function(options) {
+
+        const config = Object.assign({}, options || {});
+        const method = config.method || 'GET';
+        const timeout = (typeof config.timeout === 'number') ? config.timeout : DEFAULT_TIMEOUT_MS;
+        const caller_headers = config.headers || {};
+        const validate_status = (typeof config.validateStatus === 'function')
+            ? config.validateStatus
+            : accept_any_status;
+        const logout_on_missing_token = config.logout_on_missing_token !== false;
+
+        delete config.logout_on_missing_token;
+
+        const token = resolve_token();
+
+        if (!token) {
+
+            if (logout_on_missing_token) {
+                handle_missing_token();
+            }
+
+            return null;
+        }
+
+        const request = Object.assign(config, {
+            method: method,
+            timeout: timeout,
+            headers: Object.assign({
+                'Content-Type': 'application/json',
+                'x-access-token': token
+            }, caller_headers),
+            validateStatus: validate_status
+        });
+
+        const response = await obj.req(request);
+
+        /*
+         * With the permissive validateStatus a 401 resolves instead of
+         * rejecting, so obj.req's catch-block redirect never fires. Keep the
+         * session-expired contract every caller relied on before migrating:
+         * redirect and resolve undefined, exactly as obj.req does on a
+         * rejected 401.
+         */
+        if (response && response.status === 401) {
+            if (typeof authModule !== 'undefined' && typeof authModule.redirect_to_auth === 'function') {
+                authModule.redirect_to_auth();
+            }
+            return undefined;
+        }
+
+        return response;
+    };
+
     return obj;
 
 })();

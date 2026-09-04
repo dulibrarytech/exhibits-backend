@@ -95,38 +95,9 @@ const mediaModalsModule = (function() {
         }
     };
 
-    /**
-     * Display status message in card
-     * @param {HTMLElement} card - The card element
-     * @param {string} type - Message type ('success', 'danger', 'warning')
-     * @param {string} message - Message text
-     */
+    /* Card-level status messages — shared helper (success auto-clears after 3 s) */
     const display_card_message = (card, type, message) => {
-        // Find or create message container
-        let message_container = card.querySelector('.card-message');
-        
-        if (!message_container) {
-            message_container = document.createElement('div');
-            message_container.className = 'card-message mt-2';
-            const card_body = card.querySelector('.card-body');
-            if (card_body) {
-                card_body.appendChild(message_container);
-            }
-        }
-
-        message_container.innerHTML = '<div class="alert alert-' + type + ' mb-0" role="alert">' + 
-            '<i class="fa fa-' + (type === 'success' ? 'check' : type === 'danger' ? 'exclamation-circle' : 'warning') + '" style="margin-right: 6px;"></i>' +
-            escape_html(message) + 
-            '</div>';
-
-        // Auto-hide success messages
-        if (type === 'success') {
-            setTimeout(() => {
-                if (message_container.parentNode) {
-                    message_container.innerHTML = '';
-                }
-            }, 3000);
-        }
+        helperMediaLibraryModule.display_card_message(card, type, message, { success_hide_ms: 3000 });
     };
 
     // ========================================
@@ -185,19 +156,6 @@ const mediaModalsModule = (function() {
 
         try {
 
-            // Validate authentication
-            const token = authModule.get_user_token();
-
-            if (!token || token === false) {
-                display_card_message(card, 'danger', 'Session expired. Please log in again.');
-
-                setTimeout(() => {
-                    authModule.logout();
-                }, 2000);
-
-                return false;
-            }
-
             // Validate endpoint configuration
             if (!EXHIBITS_ENDPOINTS?.media_records?.post?.endpoint) {
                 display_card_message(card, 'danger', 'API endpoint configuration missing');
@@ -219,17 +177,10 @@ const mediaModalsModule = (function() {
                 }
             };
 
-            // Make API request with JSON data
-            const response = await httpModule.req({
+            const response = await httpModule.api({
                 method: 'POST',
                 url: endpoint,
-                data: JSON.stringify(data),
-                headers: {
-                    'Content-Type': 'application/json',
-                    'x-access-token': token
-                },
-                timeout: 30000,
-                validateStatus: (status) => status >= 200 && status < 600
+                data: JSON.stringify(data)
             });
 
             // Handle undefined response (network/server error)
@@ -595,15 +546,10 @@ const mediaModalsModule = (function() {
         if (confirm_btn) { confirm_btn.disabled = true; confirm_btn.textContent = 'Removing...'; }
 
         try {
-            const response = await httpModule.req({
+            const response = await httpModule.api({
                 method: 'DELETE',
                 url: endpoint,
-                data: JSON.stringify({ storage_path: storage_path, thumbnail_path: thumbnail_path || null }),
-                headers: {
-                    'Content-Type': 'application/json',
-                    'x-access-token': token
-                },
-                validateStatus: (status) => status >= 200 && status < 600
+                data: JSON.stringify({ storage_path: storage_path, thumbnail_path: thumbnail_path || null })
             });
 
             if (response && response.status === 200 && response.data?.success) {

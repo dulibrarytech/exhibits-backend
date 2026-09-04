@@ -488,6 +488,56 @@ const domModule = (function () {
     };
 
     /**
+     * One-call replacement for the local `show_error(message, field_selector)`
+     * closures: writes a danger alert (with aria-live/aria-atomic, via
+     * set_alert) into the message container and, when a field is named,
+     * marks it invalid with a linked error message via set_field_error.
+     *
+     * The error node id is derived the same way the copies (and their
+     * matching clear_field_error calls) do: '#item-text-input' →
+     * 'item-text-input-error'. For a non-id selector or an Element the
+     * field's own id is used; with no usable id the field step is skipped.
+     * Does not move focus (none of the copies did).
+     *
+     * @param {string}          message
+     * @param {string|Element}  [field_selector]   - field to mark invalid
+     * @param {string|Element}  [container_selector='#message']
+     * @returns {string|null} the error node id that was set, or null when no
+     *          field was marked
+     */
+    obj.show_field_error = function(message, field_selector, container_selector = '#message') {
+        const text = message == null ? '' : String(message);
+        const container = (typeof container_selector === 'string')
+            ? document.querySelector(container_selector)
+            : container_selector;
+
+        if (container) {
+            obj.set_alert(container, 'danger', text);
+        }
+
+        if (!field_selector) return null;
+
+        const field = (typeof field_selector === 'string')
+            ? document.querySelector(field_selector)
+            : field_selector;
+
+        if (!field) return null;
+
+        let base_id = '';
+        if (typeof field_selector === 'string' && field_selector.charAt(0) === '#') {
+            base_id = field_selector.slice(1);
+        } else {
+            base_id = field.id || '';
+        }
+
+        if (!base_id) return null;
+
+        const error_id = base_id + '-error';
+        obj.set_field_error(field, error_id, text);
+        return error_id;
+    };
+
+    /**
      * Renders a spinner / loading indicator into a container using safe DOM
      * construction (no innerHTML). Used for in-progress status messages.
      *

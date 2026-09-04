@@ -562,6 +562,62 @@ const endpointsModule = (function() {
     /**
      * Refresh cache (force reload from localStorage)
      */
+    const escape_regex = (value) => String(value).replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+
+    /**
+     * Substitutes `:name` placeholders in an endpoint template string with
+     * URL-encoded parameter values. Promoted from lockModule's private
+     * build_endpoint_url so every `.replace(':x_id', …)` site can share it.
+     *
+     * The registry is nested (EXHIBITS_ENDPOINTS.grid_records.get.endpoint),
+     * so this takes the template STRING, not a registry key.
+     *
+     * Behaviour:
+     *   - Each params[name] is coerced with String() and encodeURIComponent()
+     *     and replaces EVERY `:name` occurrence. Matching is prefix-safe:
+     *     `:item` never touches `:item_id`.
+     *   - A param whose value is undefined, null or '' logs a console.error
+     *     and makes the call return null (0 and false are accepted values).
+     *   - A non-string / empty template returns null.
+     *   - A missing/non-object `params` is treated as {}.
+     *   - Placeholders still present after substitution log a console.warn;
+     *     the partially-built string is still returned.
+     *
+     * @param {string} template - e.g. '/exhibits-dashboard/api/v1/exhibits/:exhibit_id/items/:item_id'
+     * @param {Object} params   - { exhibit_id: 'abc', item_id: 'def' }
+     * @returns {string|null}
+     */
+    obj.build = function(template, params) {
+
+        if (typeof template !== 'string' || template.length === 0) {
+            console.error('endpointsModule.build: template must be a non-empty string');
+            return null;
+        }
+
+        const values = (params && typeof params === 'object') ? params : {};
+        let endpoint = template;
+
+        for (const [key, value] of Object.entries(values)) {
+
+            if (value === undefined || value === null || value === '') {
+                console.error(`endpointsModule.build: missing required parameter: ${key}`);
+                return null;
+            }
+
+            const placeholder = new RegExp(`:${escape_regex(key)}(?![A-Za-z0-9_])`, 'g');
+            const encoded_value = encodeURIComponent(String(value));
+            endpoint = endpoint.replace(placeholder, () => encoded_value);
+        }
+
+        const unresolved = endpoint.match(/:[A-Za-z_][A-Za-z0-9_]*/g);
+
+        if (unresolved) {
+            console.warn(`endpointsModule.build: unresolved placeholders: ${unresolved.join(', ')}`);
+        }
+
+        return endpoint;
+    };
+
     obj.refresh_cache = function() {
         clear_cache();
         console.debug('Endpoints cache cleared');

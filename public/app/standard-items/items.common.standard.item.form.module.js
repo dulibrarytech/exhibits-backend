@@ -279,15 +279,11 @@ const itemsCommonStandardItemFormModule = (function () {
      */
     function handle_item_media_selected(media) {
         const previous_media_uuid = (document.querySelector('#item-media-uuid') || {}).value || '';
-        const set_val = (sel, val) => {
-            const el = document.querySelector(sel);
-            if (el) el.value = val;
-        };
 
-        set_val('#item-media-uuid', media.uuid || '');
-        set_val('#item-media-uuid-prev', media.uuid || '');
-        set_val('#item-media-type', media.media_type || '');
-        set_val('#item-mime-type', media.mime_type || '');
+        domModule.set_value('#item-media-uuid', media.uuid || '');
+        domModule.set_value('#item-media-uuid-prev', media.uuid || '');
+        domModule.set_value('#item-media-type', media.media_type || '');
+        domModule.set_value('#item-mime-type', media.mime_type || '');
 
         update_media_preview(
             '#item-media-display',
@@ -307,13 +303,9 @@ const itemsCommonStandardItemFormModule = (function () {
      * Handles media asset selection from the picker for Thumbnail
      */
     function handle_thumbnail_selected(media) {
-        const set_val = (sel, val) => {
-            const el = document.querySelector(sel);
-            if (el) el.value = val;
-        };
 
-        set_val('#thumbnail-media-uuid', media.uuid || '');
-        set_val('#thumbnail-media-uuid-prev', media.uuid || '');
+        domModule.set_value('#thumbnail-media-uuid', media.uuid || '');
+        domModule.set_value('#thumbnail-media-uuid-prev', media.uuid || '');
 
         update_media_preview(
             '#thumbnail-image-display',
@@ -328,10 +320,6 @@ const itemsCommonStandardItemFormModule = (function () {
      */
     function clear_item_media() {
         const previous_media_uuid = (document.querySelector('#item-media-uuid') || {}).value || '';
-        const set_val = (sel, val) => {
-            const el = document.querySelector(sel);
-            if (el) el.value = val;
-        };
 
         // Remove exhibit association from the media record being cleared (fire-and-forget)
         const exhibit_uuid = helperModule.get_parameter_by_name('exhibit_id');
@@ -342,10 +330,10 @@ const itemsCommonStandardItemFormModule = (function () {
             mediaPickerModule.remove_exhibit_association(prev_uuid, exhibit_uuid, 'item_media');
         }
 
-        set_val('#item-media-uuid', '');
-        set_val('#item-media-uuid-prev', '');
-        set_val('#item-media-type', '');
-        set_val('#item-mime-type', '');
+        domModule.set_value('#item-media-uuid', '');
+        domModule.set_value('#item-media-uuid-prev', '');
+        domModule.set_value('#item-media-type', '');
+        domModule.set_value('#item-mime-type', '');
 
         reset_media_preview(
             '#item-media-display',
@@ -500,13 +488,6 @@ const itemsCommonStandardItemFormModule = (function () {
             return;
         }
 
-        const token = authModule.get_user_token();
-
-        if (!token) {
-            console.warn('[styles] No auth token available');
-            return;
-        }
-
         const EXHIBITS_ENDPOINTS = endpointsModule.get_exhibits_endpoints();
 
         if (!EXHIBITS_ENDPOINTS?.exhibits?.exhibit_records?.endpoints?.get?.endpoint) {
@@ -517,19 +498,22 @@ const itemsCommonStandardItemFormModule = (function () {
             return;
         }
 
-        const endpoint = EXHIBITS_ENDPOINTS.exhibits.exhibit_records.endpoints.get.endpoint
-            .replace(':exhibit_id', encodeURIComponent(exhibit_id));
+        const endpoint = endpointsModule.build(EXHIBITS_ENDPOINTS.exhibits.exhibit_records.endpoints.get.endpoint, {
+            exhibit_id: exhibit_id
+        });
 
         try {
 
-            const response = await httpModule.req({
+            const response = await httpModule.api({
                 method: 'GET',
                 url: endpoint,
-                headers: {
-                    'Content-Type': 'application/json',
-                    'x-access-token': token
-                }
+                logout_on_missing_token: false
             });
+
+            if (response === null) {
+                console.warn('[styles] No auth token available');
+                return;
+            }
 
             if (!response || response.status !== 200 || !response.data?.data) {
                 console.warn('[styles] Exhibit API response invalid. Status:', response?.status, 'Data:', response?.data);
@@ -604,15 +588,11 @@ const itemsCommonStandardItemFormModule = (function () {
 
         // Item Media preview
         if (record.media_uuid) {
-            const set_val = (sel, val) => {
-                const el = document.querySelector(sel);
-                if (el) el.value = val;
-            };
 
-            set_val('#item-media-uuid', record.media_uuid);
-            set_val('#item-media-uuid-prev', record.media_uuid);
-            set_val('#item-media-type', record.item_type || '');
-            set_val('#item-mime-type', record.mime_type || '');
+            domModule.set_value('#item-media-uuid', record.media_uuid);
+            domModule.set_value('#item-media-uuid-prev', record.media_uuid);
+            domModule.set_value('#item-media-type', record.item_type || '');
+            domModule.set_value('#item-mime-type', record.mime_type || '');
 
             // Build a minimal media object for the preview renderer
             // Fields like ingest_method, kaltura_thumbnail_url, repo_uuid, and
@@ -652,13 +632,9 @@ const itemsCommonStandardItemFormModule = (function () {
 
         // Thumbnail preview
         if (record.thumbnail_media_uuid) {
-            const set_val = (sel, val) => {
-                const el = document.querySelector(sel);
-                if (el) el.value = val;
-            };
 
-            set_val('#thumbnail-media-uuid', record.thumbnail_media_uuid);
-            set_val('#thumbnail-media-uuid-prev', record.thumbnail_media_uuid);
+            domModule.set_value('#thumbnail-media-uuid', record.thumbnail_media_uuid);
+            domModule.set_value('#thumbnail-media-uuid-prev', record.thumbnail_media_uuid);
 
             const thumb_obj = {
                 uuid: record.thumbnail_media_uuid,
@@ -711,17 +687,6 @@ const itemsCommonStandardItemFormModule = (function () {
                 return el?.value?.trim() ?? defaultValue;
             };
 
-            const showError = (message, field_selector) => {
-                const messageEl = document.querySelector('#message');
-                if (messageEl) {
-                    domModule.set_alert(messageEl, 'danger', message);
-                }
-                if (field_selector) {
-                    const error_id = field_selector.replace('#', '') + '-error';
-                    domModule.set_field_error(field_selector, error_id, message);
-                }
-            };
-
             ['#item-text-input', '#item-media-uuid'].forEach(s => {
                 domModule.clear_field_error(s, s.replace('#', '') + '-error');
             });
@@ -731,7 +696,7 @@ const itemsCommonStandardItemFormModule = (function () {
 
             // Validate text content for text paths
             if (isTextPath && item.text.length === 0) {
-                showError('Please enter "Text" for this item', '#item-text-input');
+                domModule.show_field_error('Please enter "Text" for this item', '#item-text-input');
                 return false;
             }
 
@@ -784,7 +749,7 @@ const itemsCommonStandardItemFormModule = (function () {
 
                 // Validate media content
                 if (!item.media_uuid) {
-                    showError('Please select a media item', '#item-media-uuid');
+                    domModule.show_field_error('Please select a media item', '#item-media-uuid');
                     return false;
                 }
 

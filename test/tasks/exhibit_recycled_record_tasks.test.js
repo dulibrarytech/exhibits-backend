@@ -14,6 +14,7 @@
 'use strict';
 
 const Recycled_record_tasks = require('../../exhibits/tasks/exhibit_recycled_record_tasks');
+const { make_query, make_db } = require('./helpers/mock_knex');
 
 jest.mock('../../libs/log4', () => ({
     module: () => ({
@@ -40,18 +41,14 @@ describe('Recycled_record_tasks', () => {
         timeline_records: 'tbl_timelines'
     };
 
-    const createMockQuery = () => ({
-        select: jest.fn().mockReturnThis(),
-        where: jest.fn().mockReturnThis(),
-        andWhere: jest.fn().mockReturnThis(),
-        delete: jest.fn().mockReturnThis(),
-        update: jest.fn().mockReturnThis(),
-        timeout: jest.fn().mockResolvedValue([])
+    const createMockQuery = () => make_query({
+        chain: ['select', 'where', 'andWhere', 'delete', 'update'],
+        resolves: { timeout: [] }
     });
 
     beforeEach(() => {
         mockQuery = createMockQuery();
-        mockDB = jest.fn(() => mockQuery);
+        mockDB = make_db(mockQuery, { fn_now: false });
         tasks = new Recycled_record_tasks(mockDB, TABLES);
     });
 

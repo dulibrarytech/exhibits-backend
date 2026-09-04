@@ -38,14 +38,7 @@
 require('dotenv').config();
 
 // Silence the application logger pulled in transitively by Auth_tasks.
-jest.mock('../../libs/log4', () => ({
-    module: () => ({
-        error: jest.fn(),
-        warn: jest.fn(),
-        info: jest.fn(),
-        debug: jest.fn()
-    })
-}));
+jest.mock('../../libs/log4', () => require('./helpers/mocks').log4_factory());
 
 const knexLib = require('knex');
 const Auth_tasks = require('../../auth/tasks/auth_tasks');

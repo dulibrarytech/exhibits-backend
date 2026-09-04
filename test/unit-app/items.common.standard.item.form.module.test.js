@@ -10,13 +10,8 @@
 
 'use strict';
 
-const { readFileSync } = require('node:fs');
-const { resolve } = require('node:path');
-
-const MODULE_PATH = resolve(
-    __dirname,
-    '../../public/app/standard-items/items.common.standard.item.form.module.js',
-);
+const { load_browser_module } = require('./helpers/load_module');
+const { dom_stub_with_set_value, endpoints_fixed_stub, helper_stub, rte_stub } = require('./helpers/stubs');
 
 function navigate(pathname) {
     window.history.pushState({}, '', pathname);
@@ -70,56 +65,19 @@ describe('itemsCommonStandardItemFormModule', () => {
     beforeAll(() => {
         // The IIFE reads endpointsModule.get_app_path() at eval time —
         // stub it before loading the module.
-        globalThis.endpointsModule = {
-            get_app_path: () => '/exhibits-dashboard',
-        };
-        const src = readFileSync(MODULE_PATH, 'utf8');
-        const patched = src.replace(
-            /^const\s+itemsCommonStandardItemFormModule\s*=/m,
-            'globalThis.itemsCommonStandardItemFormModule =',
+        globalThis.endpointsModule = endpoints_fixed_stub('/exhibits-dashboard');
+        load_browser_module(
+            'public/app/standard-items/items.common.standard.item.form.module.js',
+            'itemsCommonStandardItemFormModule',
         );
-        // eslint-disable-next-line no-eval
-        (0, eval)(patched);
     });
 
     beforeEach(() => {
-        globalThis.rteModule = {
-            get_html: (id) => document.getElementById(id)?.value?.trim() ?? '',
-            set_html: (id, html) => {
-                const el = document.getElementById(id);
-                if (el) el.value = html;
-            },
-            is_empty: (id) => (document.getElementById(id)?.value?.trim() ?? '') === '',
-            init: () => null,
-            init_all: () => {},
-            set_enabled: () => {},
-            set_all_enabled: () => {},
-            on_change: () => {},
-            is_dirty: () => false,
-        };
+        globalThis.rteModule = rte_stub();
         vi.spyOn(console, 'warn').mockImplementation(() => {});
         vi.spyOn(console, 'error').mockImplementation(() => {});
-        globalThis.domModule = {
-            set_alert: vi.fn(),
-            set_field_error: vi.fn(),
-            clear_field_error: vi.fn(),
-        };
-        globalThis.helperModule = {
-            get_checked_radio_button: (radios) => {
-                if (!radios || !radios.length) return null;
-                const checked = Array.from(radios).find((b) => b && b.checked);
-                if (!checked) return null;
-                const v = String(checked.value);
-                return v === '' || v === 'undefined' ? null : v;
-            },
-            check_item_style_option: (value) => {
-                const radios = document.getElementsByName('styles');
-                if (!radios || !radios.length) return;
-                const target = value || '';
-                for (const r of radios) { if (r.value === target) { r.checked = true; return; } }
-                for (const r of radios) { if (r.value === '') { r.checked = true; return; } }
-            },
-        };
+        globalThis.domModule = dom_stub_with_set_value();
+        globalThis.helperModule = helper_stub();
         navigate('/items/standard/text');
         build_form();
     });
@@ -149,15 +107,9 @@ describe('itemsCommonStandardItemFormModule', () => {
                 .get_common_standard_item_form_fields();
 
             expect(result).toBe(false);
-            expect(globalThis.domModule.set_alert).toHaveBeenCalledWith(
-                document.querySelector('#message'),
-                'danger',
+            expect(globalThis.domModule.show_field_error).toHaveBeenCalledWith(
                 'Please enter "Text" for this item',
-            );
-            expect(globalThis.domModule.set_field_error).toHaveBeenCalledWith(
                 '#item-text-input',
-                'item-text-input-error',
-                'Please enter "Text" for this item',
             );
         });
 
@@ -200,10 +152,9 @@ describe('itemsCommonStandardItemFormModule', () => {
                 .get_common_standard_item_form_fields();
 
             expect(result).toBe(false);
-            expect(globalThis.domModule.set_alert).toHaveBeenCalledWith(
-                document.querySelector('#message'),
-                'danger',
+            expect(globalThis.domModule.show_field_error).toHaveBeenCalledWith(
                 'Please select a media item',
+                '#item-media-uuid',
             );
         });
 

@@ -30,32 +30,22 @@ const itemsEditStandardItemFormModule = (function () {
             const EXHIBITS_ENDPOINTS = endpointsModule.get_exhibits_endpoints();
             const exhibit_id = helperModule.get_parameter_by_name('exhibit_id');
             const item_id = helperModule.get_parameter_by_name('item_id');
-            const token = authModule.get_user_token();
             const profile = authModule.get_user_profile_data();
-            let tmp = EXHIBITS_ENDPOINTS.exhibits.item_records.get.endpoint.replace(':exhibit_id', exhibit_id);
-            let endpoint = tmp.replace(':item_id', item_id);
-
-            if (token === false) {
-
-                domModule.set_alert('#message', 'danger', 'Unable to get API endpoints');
-
-                setTimeout(() => {
-                    authModule.redirect_to_auth();
-                }, 1000);
-
-                return false;
-            }
-
-            let response = await httpModule.req({
-                method: 'GET',
-                url: endpoint + '?type=edit&uid=' + profile.uid,
-                headers: {
-                    'Content-Type': 'application/json',
-                    'x-access-token': token
-                }
+            const endpoint = endpointsModule.build(EXHIBITS_ENDPOINTS.exhibits.item_records.get.endpoint, {
+                exhibit_id: exhibit_id,
+                item_id: item_id
             });
 
-            if (response !== undefined && response.status === 200) {
+            if (!endpoint) {
+                throw new Error('Missing required parameters: exhibit_id or item_id');
+            }
+
+            const response = await httpModule.api({
+                method: 'GET',
+                url: endpoint + '?type=edit&uid=' + profile.uid
+            });
+
+            if (response && response.status === 200) {
                 return response.data.data;
             }
 
@@ -65,107 +55,6 @@ const itemsEditStandardItemFormModule = (function () {
     }
 
     async function display_edit_record() {
-
-        // Helper function to check if current user is an administrator
-        const is_user_administrator = async () => {
-
-            try {
-
-                const profile = authModule.get_user_profile_data();
-                if (!profile || !profile.uid) {
-                    return false;
-                }
-
-                const user_id = parseInt(profile.uid, 10);
-                if (isNaN(user_id)) {
-                    return false;
-                }
-
-                const user_role = await authModule.get_user_role(user_id);
-                return user_role === 'Administrator';
-
-            } catch (error) {
-                console.error('Error checking user role:', error);
-                return false;
-            }
-        };
-
-        // Helper function to disable all form fields
-        const disable_form_fields = async (is_admin) => {
-
-            // Get all form elements
-            const form_elements = document.querySelectorAll(
-                'input:not([type="hidden"]), textarea, select, button[type="submit"], button[type="button"]'
-            );
-
-            // Rich text editors are div-based and not caught by the selector above
-            if (typeof rteModule !== 'undefined') {
-                rteModule.set_all_enabled(false);
-            }
-
-            let disabled_count = 0;
-
-            form_elements.forEach(element => {
-                // Skip the unlock button if user is an administrator
-                if (is_admin && element.id === 'unlock-record') {
-                    console.debug('Preserving unlock button for administrator');
-                    return;
-                }
-
-                // Don't disable already disabled elements or read-only elements
-                if (!element.disabled && !element.readOnly) {
-                    element.disabled = true;
-                    element.style.cursor = 'not-allowed';
-                    element.style.opacity = '0.6';
-                    disabled_count++;
-                }
-            });
-
-            // Also disable file upload areas and custom buttons (except unlock button for admins)
-            const custom_buttons = document.querySelectorAll('.btn:not([disabled])');
-            custom_buttons.forEach(button => {
-                // Skip the unlock button if user is an administrator
-                if (is_admin && button.id === 'unlock-record') {
-                    return;
-                }
-
-                button.disabled = true;
-                button.style.cursor = 'not-allowed';
-                button.style.opacity = '0.6';
-            });
-
-            console.debug(`Disabled ${disabled_count} form elements (record locked by another user)`);
-        };
-
-        // Helper function to check if record is locked by another user
-        const is_locked_by_other_user = (record) => {
-
-            // Check if record is locked
-            if (!record || record.is_locked !== 1) {
-                return false;
-            }
-
-            // Get current user profile
-            const profile = authModule.get_user_profile_data();
-
-            if (!profile || !profile.uid) {
-                console.warn('Unable to get user profile data');
-                return false;
-            }
-
-            // Parse user IDs safely
-            const user_id = parseInt(profile.uid, 10);
-            const locked_by_user = parseInt(record.locked_by_user, 10);
-
-            // Check for valid numbers
-            if (isNaN(user_id) || isNaN(locked_by_user)) {
-                console.error('Invalid user ID values');
-                return false;
-            }
-
-            // Return true if locked by someone else
-            return user_id !== locked_by_user;
-        };
 
         try {
 
@@ -180,12 +69,9 @@ const itemsEditStandardItemFormModule = (function () {
             await lockModule.check_if_locked(record, '#exhibit-submit-card');
 
             // Disable form fields if locked by another user
-            if (is_locked_by_other_user(record)) {
-                // Check if current user is an administrator
-                const is_admin = await is_user_administrator();
-
-                // Disable form fields, but preserve unlock button for admins
-                await disable_form_fields(is_admin);
+            if (lockModule.is_locked_by_other_user(record)) {
+                const is_admin = await lockModule.is_user_administrator();
+                lockModule.disable_form_fields({ preserve_selectors: is_admin ? ['#unlock-record'] : [] });
             }
 
             // Setup automatic unlock when user navigates away (only if current user has it locked)
@@ -193,14 +79,6 @@ const itemsEditStandardItemFormModule = (function () {
             lockModule.setup_auto_unlock(record);
 
             const is_media_path = window.location.pathname.split('/').filter(Boolean).includes('media');
-
-            // Helper function for safe DOM queries
-            const set_element_value = (selector, value) => {
-                const el = document.querySelector(selector);
-                if (el) {
-                    el.value = value;
-                }
-            };
 
             const set_element_checked = (selector, checked) => {
                 const el = document.querySelector(selector);
@@ -284,8 +162,8 @@ const itemsEditStandardItemFormModule = (function () {
                 itemsCommonStandardItemFormModule.set_item_style(record.styles);
             }
 
-            set_element_value('#margins', record.margins ?? 'medium');
-            set_element_value('#text-align', record.text_alignment ?? 'left');
+            domModule.set_value('#margins', record.margins ?? 'medium');
+            domModule.set_value('#text-align', record.text_alignment ?? 'left');
 
             return false;
 
@@ -308,66 +186,6 @@ const itemsEditStandardItemFormModule = (function () {
         // Cache DOM element and constants
         const message_element = document.querySelector('#message');
         const MESSAGE_CLEAR_DELAY = 3000;
-        const FADE_DURATION = 300;
-
-        /**
-         * Display status message to user (XSS-safe)
-         */
-        const display_message = (element, type, message) => {
-            if (!element) {
-                return;
-            }
-
-            const valid_types = ['info', 'success', 'danger', 'warning'];
-            const alert_type = valid_types.includes(type) ? type : 'danger';
-
-            const alert_div = document.createElement('div');
-            alert_div.className = `alert alert-${alert_type}`;
-            alert_div.setAttribute('role', 'alert');
-
-            const icon = document.createElement('i');
-            icon.className = get_icon_class(alert_type);
-            alert_div.appendChild(icon);
-
-            const text_node = document.createTextNode(` ${message}`);
-            alert_div.appendChild(text_node);
-
-            element.style.opacity = '1';
-            element.style.transition = '';
-            element.textContent = '';
-            element.appendChild(alert_div);
-        };
-
-        /**
-         * Clear message with smooth fade effect
-         */
-        const clear_message_smoothly = () => {
-            if (!message_element) {
-                return;
-            }
-
-            message_element.style.transition = `opacity ${FADE_DURATION}ms ease-out`;
-            message_element.style.opacity = '0';
-
-            setTimeout(() => {
-                message_element.textContent = '';
-                message_element.style.opacity = '1';
-                message_element.style.transition = '';
-            }, FADE_DURATION);
-        };
-
-        /**
-         * Get icon class for alert type
-         */
-        const get_icon_class = (alert_type) => {
-            const icon_map = {
-                'info': 'fa fa-info',
-                'success': 'fa fa-check',
-                'danger': 'fa fa-exclamation',
-                'warning': 'fa fa-exclamation-triangle'
-            };
-            return icon_map[alert_type] || 'fa fa-exclamation';
-        };
 
         /**
          * Validate parameters
@@ -436,20 +254,7 @@ const itemsEditStandardItemFormModule = (function () {
 
             const validation = validate_parameters(exhibit_id, item_id);
             if (!validation.valid) {
-                display_message(message_element, 'danger', validation.error);
-                return false;
-            }
-
-            // Validate authentication
-            const token = authModule.get_user_token();
-
-            if (!token || token === false) {
-                display_message(message_element, 'danger', 'Session expired. Please log in again.');
-
-                timeout_id = setTimeout(() => {
-                    authModule.logout();
-                }, 1000);
-
+                domModule.set_alert(message_element, 'danger', validation.error);
                 return false;
             }
 
@@ -468,32 +273,32 @@ const itemsEditStandardItemFormModule = (function () {
             }
 
             // Show loading state
-            display_message(message_element, 'info', 'Updating item record...');
+            domModule.set_alert(message_element, 'info', 'Updating item record...');
 
             // Get API endpoints
             const EXHIBITS_ENDPOINTS = endpointsModule.get_exhibits_endpoints();
 
             if (!EXHIBITS_ENDPOINTS?.exhibits?.item_records?.put?.endpoint) {
-                display_message(message_element, 'danger', 'API endpoint configuration missing');
+                domModule.set_alert(message_element, 'danger', 'API endpoint configuration missing');
                 return false;
             }
 
-            // Construct endpoint with URL encoding
-            const endpoint = EXHIBITS_ENDPOINTS.exhibits.item_records.put.endpoint
-                .replace(':exhibit_id', encodeURIComponent(exhibit_id))
-                .replace(':item_id', encodeURIComponent(item_id));
+            const endpoint = endpointsModule.build(EXHIBITS_ENDPOINTS.exhibits.item_records.put.endpoint, {
+                exhibit_id: exhibit_id,
+                item_id: item_id
+            });
 
-            // Make API request
-            const response = await httpModule.req({
+            // Make API request (null = missing token; httpModule.api has
+            // already alerted and scheduled the logout)
+            const response = await httpModule.api({
                 method: 'PUT',
                 url: endpoint,
-                data: form_data,
-                headers: {
-                    'Content-Type': 'application/json',
-                    'x-access-token': token
-                },
-                timeout: 30000
+                data: form_data
             });
+
+            if (response === null) {
+                return false;
+            }
 
             // Validate response
             if (!response || response.status !== 201) {
@@ -501,14 +306,14 @@ const itemsEditStandardItemFormModule = (function () {
             }
 
             // Show success message
-            display_message(message_element, 'success', 'Item record updated successfully');
+            domModule.set_alert(message_element, 'success', 'Item record updated successfully');
 
             // Refresh the display with updated data
             await refresh_record_display();
 
             // Smoothly clear success message after delay
             timeout_id = setTimeout(() => {
-                clear_message_smoothly();
+                helperModule.clear_status_message(message_element);
             }, MESSAGE_CLEAR_DELAY);
 
             return true;
@@ -524,7 +329,7 @@ const itemsEditStandardItemFormModule = (function () {
 
             // Display error message (use user_message from Axios interceptor if available)
             const error_message = error.user_message || error.message || 'Unable to update item record. Please try again.';
-            display_message(message_element, 'danger', error_message);
+            domModule.set_alert(message_element, 'danger', error_message);
 
             return false;
 

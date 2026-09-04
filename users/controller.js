@@ -21,6 +21,24 @@
 const MODEL = require('../users/model');
 const LOGGER = require("../libs/log4");
 const AUTHORIZE = require("../auth/authorize");
+const GATE = require('../auth/permission_gate');
+
+/*
+ * Every gate in this controller is a user-management check (`users: true`,
+ * no ownership lookup) answering in this module's `{message}` envelope.
+ * @param {Object} req - Express request object
+ * @param {Object} res - Express response object
+ * @param {Array<string>} permissions - Required permissions
+ * @param {string} deny_log - Warning logged when denied
+ * @returns {Promise<boolean>} True when authorized; false after the 403 was sent
+ */
+const authorize_users_request = (req, res, permissions, deny_log) => {
+    return GATE.authorize_request(req, res, permissions, {
+        users: true,
+        envelope: 'message',
+        deny_log
+    });
+};
 
 /**
  * Gets all users
@@ -32,24 +50,12 @@ exports.get_users = async function (req, res) {
     try {
 
         // Check authorization to view users
-        const auth_options = {
-            req,
-            permissions: ['view_users'],
-            record_type: null,
-            parent_id: null,
-            child_id: null,
-            users: true
-        };
-
-        const is_authorized = await AUTHORIZE.check_permission(auth_options);
+        const is_authorized = await authorize_users_request(req, res, ['view_users'],
+            `WARNING: [/user/controller (get_users)] unauthorized attempt to view users by ${req.decoded?.sub || 'unknown'}`
+        );
 
         if (!is_authorized) {
-            LOGGER.module().warn(
-                `WARNING: [/user/controller (get_users)] unauthorized attempt to view users by ${req.decoded?.sub || 'unknown'}`
-            );
-            return res.status(403).json({
-                message: 'Unauthorized request'
-            });
+            return;
         }
 
         // Fetch users from model
@@ -131,22 +137,12 @@ exports.get_user = async function (req, res) {
          * Same gate as get_users: reading a profile is a view_users action.
          * This handler had no permission check at all (code review 2026-09-02, C2).
          */
-        const is_authorized = await AUTHORIZE.check_permission({
-            req,
-            permissions: ['view_users'],
-            record_type: null,
-            parent_id: null,
-            child_id: null,
-            users: true
-        });
+        const is_authorized = await authorize_users_request(req, res, ['view_users'],
+            `WARNING: [/user/controller (get_user)] unauthorized attempt to view user ${parsed_user_id} by ${req.decoded?.sub || 'unknown'}`
+        );
 
         if (!is_authorized) {
-            LOGGER.module().warn(
-                `WARNING: [/user/controller (get_user)] unauthorized attempt to view user ${parsed_user_id} by ${req.decoded?.sub || 'unknown'}`
-            );
-            return res.status(403).json({
-                message: 'Unauthorized request'
-            });
+            return;
         }
 
         // Fetch user from model
@@ -285,19 +281,14 @@ exports.update_user = async function (req, res) {
             LOGGER.module().warn(
                 `WARNING: [/user/controller (update_user)] unable to resolve actor for ${req.decoded?.sub || 'unknown'}`
             );
-            return res.status(403).json({
-                message: 'Unauthorized request'
-            });
+            return GATE.send_unauthorized(res, 'message');
         }
 
-        const permission_options = (permission) => ({
-            req,
-            permissions: [permission],
-            record_type: null,
-            parent_id: null,
-            child_id: null,
-            users: true
-        });
+        /*
+         * Two-step decision, so the tuple is built here and check_permission
+         * is called directly rather than through authorize_request.
+         */
+        const permission_options = (permission) => GATE.build_auth_options(req, [permission], { users: true });
 
         let is_authorized = await AUTHORIZE.check_permission(permission_options('update_users'));
 
@@ -309,9 +300,7 @@ exports.update_user = async function (req, res) {
             LOGGER.module().warn(
                 `WARNING: [/user/controller (update_user)] unauthorized attempt to update user ${parsed_user_id} by ${req.decoded?.sub || 'unknown'}`
             );
-            return res.status(403).json({
-                message: 'Unauthorized request'
-            });
+            return GATE.send_unauthorized(res, 'message');
         }
 
         /*
@@ -327,15 +316,12 @@ exports.update_user = async function (req, res) {
 
             if (is_role_change) {
 
-                const can_change_role = await AUTHORIZE.check_permission(permission_options('update_user_role'));
+                const can_change_role = await authorize_users_request(req, res, ['update_user_role'],
+                    `WARNING: [/user/controller (update_user)] unauthorized role change on user ${parsed_user_id} (${current_role_id} -> ${requested_role_id}) by ${req.decoded?.sub || 'unknown'}`
+                );
 
                 if (!can_change_role) {
-                    LOGGER.module().warn(
-                        `WARNING: [/user/controller (update_user)] unauthorized role change on user ${parsed_user_id} (${current_role_id} -> ${requested_role_id}) by ${req.decoded?.sub || 'unknown'}`
-                    );
-                    return res.status(403).json({
-                        message: 'Unauthorized request'
-                    });
+                    return;
                 }
             }
         }
@@ -428,24 +414,12 @@ exports.save_user = async function (req, res) {
         }
 
         // Check authorization to add users
-        const auth_options = {
-            req,
-            permissions: ['add_users'],
-            record_type: null,
-            parent_id: null,
-            child_id: null,
-            users: true
-        };
-
-        const is_authorized = await AUTHORIZE.check_permission(auth_options);
+        const is_authorized = await authorize_users_request(req, res, ['add_users'],
+            `WARNING: [/user/controller (save_user)] unauthorized attempt to add user by ${req.decoded?.sub || 'unknown'}`
+        );
 
         if (!is_authorized) {
-            LOGGER.module().warn(
-                `WARNING: [/user/controller (save_user)] unauthorized attempt to add user by ${req.decoded?.sub || 'unknown'}`
-            );
-            return res.status(403).json({
-                message: 'Unauthorized request'
-            });
+            return;
         }
 
         /*
@@ -463,9 +437,7 @@ exports.save_user = async function (req, res) {
                 LOGGER.module().warn(
                     `WARNING: [/user/controller (save_user)] unauthorized role assignment (role_id: ${user_data.role_id}) by ${req.decoded?.sub || 'unknown'}`
                 );
-                return res.status(403).json({
-                    message: 'Unauthorized request'
-                });
+                return GATE.send_unauthorized(res, 'message');
             }
         }
 
@@ -545,24 +517,12 @@ exports.delete_user = async function (req, res) {
         }
 
         // Check authorization to delete users
-        const auth_options = {
-            req,
-            permissions: ['delete_users'],
-            record_type: null,
-            parent_id: null,
-            child_id: null,
-            users: true
-        };
-
-        const is_authorized = await AUTHORIZE.check_permission(auth_options);
+        const is_authorized = await authorize_users_request(req, res, ['delete_users'],
+            `WARNING: [/user/controller (delete_user)] unauthorized attempt to delete user ${parsed_user_id} by ${req.decoded?.sub || 'unknown'}`
+        );
 
         if (!is_authorized) {
-            LOGGER.module().warn(
-                `WARNING: [/user/controller (delete_user)] unauthorized attempt to delete user ${parsed_user_id} by ${req.decoded?.sub || 'unknown'}`
-            );
-            return res.status(403).json({
-                message: 'Unauthorized request'
-            });
+            return;
         }
 
         // Delete user from database
@@ -661,24 +621,12 @@ exports.update_status = async function (req, res) {
         }
 
         // Check authorization to update user status
-        const auth_options = {
-            req,
-            permissions: ['update_users', 'update_user_status'],
-            record_type: null,
-            parent_id: null,
-            child_id: null,
-            users: true
-        };
-
-        const is_authorized = await AUTHORIZE.check_permission(auth_options);
+        const is_authorized = await authorize_users_request(req, res, ['update_users', 'update_user_status'],
+            `WARNING: [/user/controller (update_status)] unauthorized attempt to update status for user ${parsed_user_id} by ${req.decoded?.sub || 'unknown'}`
+        );
 
         if (!is_authorized) {
-            LOGGER.module().warn(
-                `WARNING: [/user/controller (update_status)] unauthorized attempt to update status for user ${parsed_user_id} by ${req.decoded?.sub || 'unknown'}`
-            );
-            return res.status(403).json({
-                message: 'Unauthorized request'
-            });
+            return;
         }
 
         // Update user status in database

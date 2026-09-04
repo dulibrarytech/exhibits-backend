@@ -85,24 +85,11 @@ const repoSubjectsModule = (function() {
                 return null;
             }
 
-            const token = authModule.get_user_token();
-
-            if (!token || token === false) {
-                console.error('Session expired');
-                return null;
-            }
-
-            const endpoint = MEDIA_ENDPOINTS.repo_subjects.get.endpoint;
-
-            const response = await httpModule.req({
+            /* Vocabulary pre-fetch — a missing session must not trigger a logout here */
+            const response = await httpModule.api({
                 method: 'GET',
-                url: endpoint,
-                headers: {
-                    'Content-Type': 'application/json',
-                    'x-access-token': token
-                },
-                timeout: 30000,
-                validateStatus: (status) => status >= 200 && status < 600
+                url: MEDIA_ENDPOINTS.repo_subjects.get.endpoint,
+                logout_on_missing_token: false
             });
 
             if (!response) {
@@ -143,24 +130,11 @@ const repoSubjectsModule = (function() {
                 return null;
             }
 
-            const token = authModule.get_user_token();
-
-            if (!token || token === false) {
-                console.error('Session expired');
-                return null;
-            }
-
-            const endpoint = MEDIA_ENDPOINTS.repo_resource_types.get.endpoint;
-
-            const response = await httpModule.req({
+            /* Vocabulary pre-fetch — a missing session must not trigger a logout here */
+            const response = await httpModule.api({
                 method: 'GET',
-                url: endpoint,
-                headers: {
-                    'Content-Type': 'application/json',
-                    'x-access-token': token
-                },
-                timeout: 30000,
-                validateStatus: (status) => status >= 200 && status < 600
+                url: MEDIA_ENDPOINTS.repo_resource_types.get.endpoint,
+                logout_on_missing_token: false
             });
 
             if (!response) {
@@ -1100,9 +1074,7 @@ const repoSubjectsModule = (function() {
             console.error('Error initializing repo subjects module:', error);
             const message_element = document.querySelector('#message');
 
-            if (message_element) {
-                message_element.innerHTML = '<div class="alert alert-danger">Error initializing repo subjects module. Please refresh the page.</div>';
-            }
+            domModule.set_alert(message_element, 'danger', 'Error initializing repo subjects module. Please refresh the page.');
         }
     };
 

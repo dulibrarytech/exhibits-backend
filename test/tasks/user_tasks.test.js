@@ -8,6 +8,7 @@
 'use strict';
 
 const User_tasks = require('../../users/tasks/user_tasks');
+const { make_query, make_db } = require('./helpers/mock_knex');
 
 // Mock dependencies - MUST be identical across all test files to avoid conflicts
 jest.mock('../../libs/log4', () => {
@@ -42,18 +43,7 @@ describe('User_tasks', () => {
     let userTasks;
 
     // Helper to create fresh mock query with proper chaining
-    const createMockQuery = () => {
-        const query = {
-            select: jest.fn().mockReturnThis(),
-            where: jest.fn().mockReturnThis(),
-            insert: jest.fn().mockReturnThis(),
-            update: jest.fn().mockReturnThis(),
-            del: jest.fn().mockReturnThis(),
-            count: jest.fn().mockReturnThis(),
-            first: jest.fn().mockReturnThis()
-        };
-        return query;
-    };
+    const createMockQuery = () => make_query({ chain: ['select', 'where', 'insert', 'update', 'del', 'count', 'first'] });
 
     // Helper to create mock user matching schema
     const createMockUser = (overrides = {}) => ({
@@ -74,7 +64,7 @@ describe('User_tasks', () => {
         jest.resetModules();
 
         mockQuery = createMockQuery();
-        mockDB = jest.fn(() => mockQuery);
+        mockDB = make_db(mockQuery, { fn_now: false });
         mockTABLE = 'tbl_users';
 
         userTasks = new User_tasks(mockDB, mockTABLE);

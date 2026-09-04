@@ -170,3 +170,25 @@
         font-size: 0.8rem;
     }
 }
+
+/* ── Listing table row font size ── */
+
+/*
+ * One size for every listing table in the dashboard: the exhibit, item,
+ * grid item, timeline item, media library, user, and recycle-bin lists.
+ * `class="display"` is the DataTables hook every one of those tables
+ * already carries, and no other table in views/ uses it.
+ *
+ * Previously only the media library set this, through an unscoped
+ * `#items td` rule in media.library.css. That file is concatenated into
+ * dashboard.min.css and therefore loads everywhere, so the rule also hit
+ * the exhibit Item List (same table id) and left it a step smaller than
+ * the exhibit, grid item, and timeline item lists.
+ *
+ * This also covers the Order column, which style.css sets to `small`
+ * (td.item-order); the item list already overrode that, and matching it
+ * everywhere keeps the reorder column consistent across lists too.
+ */
+table.display td {
+    font-size: 0.875rem;
+}

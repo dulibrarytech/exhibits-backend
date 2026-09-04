@@ -22,24 +22,21 @@
 const express = require('express');
 const request = require('supertest');
 
+const { mock_model } = require('./helpers/mocks');
+
 const EX = '550e8400-e29b-41d4-a716-446655440000';
 const PID = '660e8400-e29b-41d4-a716-446655440001'; // grid_id / timeline_id
 const IID = '770e8400-e29b-41d4-a716-446655440002'; // grid_item_id / timeline_item_id
 
-jest.mock('../../libs/log4', () => ({
-    module: () => ({ error: jest.fn(), warn: jest.fn(), info: jest.fn(), debug: jest.fn() })
-}));
+jest.mock('../../libs/log4', () => require('./helpers/mocks').log4_factory());
 
-const mockGridModel = {
-    publish_grid_item_record: jest.fn(),
-    suppress_grid_item_record: jest.fn()
-};
+const mockGridModel = mock_model(['publish_grid_item_record', 'suppress_grid_item_record']);
 jest.mock('../../exhibits/grid_model', () => mockGridModel);
 
-const mockTimelinesModel = {
-    publish_timeline_item_record: jest.fn(),
-    suppress_timeline_item_record: jest.fn()
-};
+const mockTimelinesModel = mock_model([
+    'publish_timeline_item_record',
+    'suppress_timeline_item_record'
+]);
 jest.mock('../../exhibits/timelines_model', () => mockTimelinesModel);
 
 // Bypass auth/validation; let handle_error resolve to a 500 so a thrown error

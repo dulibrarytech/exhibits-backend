@@ -111,13 +111,6 @@ const kalturaServiceModule = (function() {
                 return { success: false, message: 'Endpoint not configured' };
             }
 
-            // Validate authentication
-            const token = authModule.get_user_token();
-            if (!token || token === false) {
-                display_message('danger', 'Session expired. Please log in again.');
-                return { success: false, message: 'Authentication required' };
-            }
-
             show_loading();
             clear_message();
             hide_thumbnail();
@@ -128,15 +121,9 @@ const kalturaServiceModule = (function() {
                     const dup_endpoint = EXHIBITS_ENDPOINTS.media_duplicate_check.get.endpoint +
                         '?field=kaltura_entry_id&value=' + encodeURIComponent(trimmed_id);
 
-                    const dup_response = await httpModule.req({
+                    const dup_response = await httpModule.api({
                         method: 'GET',
-                        url: dup_endpoint,
-                        headers: {
-                            'Content-Type': 'application/json',
-                            'x-access-token': token
-                        },
-                        timeout: 10000,
-                        validateStatus: (status) => status >= 200 && status < 600
+                        url: dup_endpoint
                     });
 
                     if (dup_response && dup_response.status === HTTP_STATUS.OK &&
@@ -158,19 +145,11 @@ const kalturaServiceModule = (function() {
                 }
             }
 
-            // Build endpoint URL - replace :entry_id placeholder with actual entry ID
-            const endpoint = EXHIBITS_ENDPOINTS.kaltura_media.get.endpoint.replace(':entry_id', encodeURIComponent(trimmed_id));
+            const endpoint = endpointsModule.build(EXHIBITS_ENDPOINTS.kaltura_media.get.endpoint, { entry_id: trimmed_id });
 
-            // Make API request
-            const response = await httpModule.req({
+            const response = await httpModule.api({
                 method: 'GET',
-                url: endpoint,
-                headers: {
-                    'Content-Type': 'application/json',
-                    'x-access-token': token
-                },
-                timeout: 30000,
-                validateStatus: (status) => status >= 200 && status < 600
+                url: endpoint
             });
 
             hide_loading();

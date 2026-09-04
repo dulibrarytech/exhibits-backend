@@ -33,7 +33,7 @@ const itemsAddHeadingFormModule = (function () {
             console.debug('item_id:', item_id);
 
             const message_element = document.querySelector('#message');
-            display_status_message(message_element, 'warning', 'Already in edit mode.');
+            domModule.set_alert(message_element, 'warning', 'Already in edit mode.');
             return false;
         }
 
@@ -58,25 +58,12 @@ const itemsAddHeadingFormModule = (function () {
             const exhibit_id = helperModule.get_parameter_by_name('exhibit_id');
 
             if (!exhibit_id) {
-                display_status_message(message_element, 'warning', 'Missing exhibit ID. Cannot create heading record.');
+                domModule.set_alert(message_element, 'warning', 'Missing exhibit ID. Cannot create heading record.');
                 return false;
             }
 
             // Show loading state
-            display_status_message(message_element, 'info', 'Creating item heading record...');
-
-            // Validate authentication
-            const token = authModule.get_user_token();
-
-            if (!token || token === false) {
-                display_status_message(message_element, 'danger', 'Session expired. Please log in again.');
-
-                setTimeout(() => {
-                    authModule.logout();
-                }, 1000);
-
-                return false;
-            }
+            domModule.set_alert(message_element, 'info', 'Creating item heading record...');
 
             // Get and validate form data
             const form_data = itemsCommonHeadingFormModule.get_common_heading_form_fields();
@@ -101,8 +88,13 @@ const itemsAddHeadingFormModule = (function () {
             // Construct endpoint with URL encoding
             const endpoint = construct_create_endpoint(exhibit_id);
 
-            // Make API request
-            const response = await make_create_request(endpoint, form_data, token);
+            // Make API request (null = missing token; httpModule.api has
+            // already alerted and scheduled the logout)
+            const response = await make_create_request(endpoint, form_data);
+
+            if (response === null) {
+                return false;
+            }
 
             // Handle successful response
             if (response && response.status === 201) {
@@ -115,7 +107,7 @@ const itemsAddHeadingFormModule = (function () {
                 console.debug('✅ Heading record created successfully, ID:', new_item_id);
 
                 // Show success message
-                display_status_message(message_element, 'success', 'Heading record created successfully. Redirecting to edit page...');
+                domModule.set_alert(message_element, 'success', 'Heading record created successfully. Redirecting to edit page...');
 
                 // Scroll to top to show success message
                 window.scrollTo({ top: 0, left: 0, behavior: 'instant' });
@@ -128,7 +120,7 @@ const itemsAddHeadingFormModule = (function () {
                 return true;
 
             } else if (!response) {
-                display_status_message(message_element, 'danger', 'Permission denied. You do not have access to add items to this exhibit.');
+                domModule.set_alert(message_element, 'danger', 'Permission denied. You do not have access to add items to this exhibit.');
                 return false;
             } else {
                 throw new Error('Unexpected response from server');
@@ -139,7 +131,7 @@ const itemsAddHeadingFormModule = (function () {
 
             const message_element = document.querySelector('#message');
             const error_message = get_user_friendly_error_message(error);
-            display_status_message(message_element, 'danger', error_message);
+            domModule.set_alert(message_element, 'danger', error_message);
 
             return false;
 
@@ -179,94 +171,30 @@ const itemsAddHeadingFormModule = (function () {
             throw new Error('API endpoint configuration missing');
         }
 
-        const endpoint_template = EXHIBITS_ENDPOINTS.exhibits.heading_records.post.endpoint;
+        const endpoint = endpointsModule.build(EXHIBITS_ENDPOINTS.exhibits.heading_records.post.endpoint, {
+            exhibit_id: exhibit_id
+        });
 
-        return endpoint_template.replace(':exhibit_id', encodeURIComponent(exhibit_id));
+        if (!endpoint) {
+            throw new Error('Missing exhibit ID. Cannot create heading record.');
+        }
+
+        return endpoint;
     }
 
     /**
      * Make the create request to the API
      */
-    async function make_create_request(endpoint, data, token) {
-        if (!httpModule?.req) {
+    async function make_create_request(endpoint, data) {
+        if (!httpModule?.api) {
             throw new Error('HTTP module not available');
         }
 
-        const response = await httpModule.req({
+        return httpModule.api({
             method: 'POST',
             url: endpoint,
-            data: data,
-            headers: {
-                'Content-Type': 'application/json',
-                'x-access-token': token
-            },
-            timeout: 30000
+            data: data
         });
-
-        return response;
-    }
-
-    /**
-     * Display status message to user (XSS-safe)
-     */
-    function display_status_message(element, type, message) {
-        if (!element) {
-            return;
-        }
-
-        // Validate message type
-        const valid_types = ['info', 'success', 'danger', 'warning'];
-        const alert_type = valid_types.includes(type) ? type : 'info';
-
-        // Create alert container
-        const alert_div = document.createElement('div');
-        alert_div.className = `alert alert-${alert_type}`;
-        alert_div.setAttribute('role', 'alert');
-
-        // Add icon based on type
-        const icon = document.createElement('i');
-        icon.className = get_icon_class(alert_type);
-        alert_div.appendChild(icon);
-
-        // Add message text
-        const text_node = document.createTextNode(` ${message}`);
-        alert_div.appendChild(text_node);
-
-        // Clear and set new content
-        element.textContent = '';
-        element.appendChild(alert_div);
-    }
-
-    /**
-     * Clear status message with fade effect
-     */
-    function clear_status_message(element) {
-        if (!element) {
-            return;
-        }
-
-        // Fade out effect
-        element.style.transition = 'opacity 0.3s ease-out';
-        element.style.opacity = '0';
-
-        setTimeout(() => {
-            element.textContent = '';
-            element.style.opacity = '1';
-        }, 300);
-    }
-
-    /**
-     * Get appropriate icon class for alert type
-     */
-    function get_icon_class(alert_type) {
-        const icon_map = {
-            'info': 'fa fa-info',
-            'success': 'fa fa-check',
-            'danger': 'fa fa-exclamation',
-            'warning': 'fa fa-exclamation-triangle'
-        };
-
-        return icon_map[alert_type] || 'fa fa-info';
     }
 
     /**

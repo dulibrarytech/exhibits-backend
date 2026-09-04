@@ -90,21 +90,33 @@ Integration tests mock external dependencies while still exercising the real rou
 
 ## Test Utilities
 
-Provided by `jest.integration.setup.js`:
+Shared scaffolding lives in `helpers/mocks.js`; `jest.integration.setup.js` only sets the timeout and the global mock-reset hooks.
 
-### Globals
+### Constants
 ```javascript
-global.TEST_UUID                       // valid test UUID
-global.TEST_USER_UID                   // valid test user UID
-global.generateTestExhibit(overrides)  // exhibit test-data factory
-global.generateTestUser(overrides)     // user test-data factory
+const { APP_PATH, TEST_UUID, TEST_USER_UID } = require('./helpers/mocks');
 ```
+Requiring the helper also pins `process.env.APP_PATH` (the real endpoints modules read it at require time), so require it before any source module in suites that mount real routers.
 
-### Custom Matchers
+### jest.mock factories
+Plain functions, callable from inside a hoisted `jest.mock` factory (which may only reference `mock`-prefixed locals or things it requires itself):
 ```javascript
-expect(response).toBeSuccessResponse()
-expect(response).toBeErrorResponse(404)
-expect(uuid).toBeValidUUID()
+jest.mock('../../libs/log4', () => require('./helpers/mocks').log4_factory());
+jest.mock('../../libs/tokens', () => require('./helpers/mocks').tokens_factory({ decoded: { sub: 'curator' }, require_header: true }));
+jest.mock('../../auth/authorize', () => require('./helpers/mocks').authorize_factory({ check_permission: (...args) => mockCheckPermission(...args) }));
+jest.mock('../../config/rate_limits_loader', () => require('./helpers/mocks').rate_limits_factory(['read_operations', 'write_operations']));
+jest.mock('../../config/db_tables_config', () => require('./helpers/mocks').db_tables_factory({ exhibit_records: 'tbl_exhibits' }));
+```
+`tokens_factory` options: `decoded` (default `{ sub: TEST_USER_UID }`, `null` to leave the request untouched), `user` (sets `req.user` instead), `require_header` (401 without `x-access-token`), `methods` (default `['verify']`), `wrap` (default `true` — `jest.fn` so tests can `mockImplementation`), `extra` (merged members such as `create`, `verify_shared`). `rate_limits_factory()` with no list answers every limiter name through a Proxy.
+
+### Test-side helpers
+```javascript
+const { path_for, mock_model } = require('./helpers/mocks');
+
+path_for(ENDPOINTS.grid_records.get.endpoint, { exhibit_id, grid_id });   // ':param' substitution, segment-anchored
+mock_model(['get_record', 'update_record']);                                // one jest.fn() per name
+mock_model(['get_record'], { update_record: true }, { create_uuid: 'x' }); // resolves / returns maps
+mock_model({ get_record: {}, update_record: true });                        // every method resolves
 ```
 
 ## Skipped Tests

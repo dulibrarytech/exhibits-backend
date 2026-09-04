@@ -12,34 +12,28 @@
 
 'use strict';
 
-jest.mock('../../libs/log4', () => ({
-    module: () => ({ error: jest.fn(), warn: jest.fn(), info: jest.fn(), debug: jest.fn() })
-}));
+const { mock_model } = require('./helpers/mocks');
+
+jest.mock('../../libs/log4', () => require('./helpers/mocks').log4_factory());
 
 jest.mock('../../config/db_config', () => () => jest.fn());
 
-jest.mock('../../config/db_tables_config', () => () => ({
-    exhibits: {
-        user_records: 'tbl_users',
-        users_roles: 'ctbl_user_roles'
-    }
+jest.mock('../../config/db_tables_config', () => require('./helpers/mocks').db_tables_factory({
+    user_records: 'tbl_users',
+    users_roles: 'ctbl_user_roles'
 }));
 
-const mockUserTasks = {
-    get_users: jest.fn(),
-    get_user: jest.fn(),
-    update_user: jest.fn(),
-    save_user: jest.fn(),
-    check_username: jest.fn(),
-    delete_user: jest.fn(),
-    update_status: jest.fn()
-};
+const mockUserTasks = mock_model([
+    'get_users',
+    'get_user',
+    'update_user',
+    'save_user',
+    'check_username',
+    'delete_user',
+    'update_status'
+]);
 
-const mockRoleTasks = {
-    get_user_role: jest.fn(),
-    save_user_role: jest.fn(),
-    update_user_role: jest.fn()
-};
+const mockRoleTasks = mock_model(['get_user_role', 'save_user_role', 'update_user_role']);
 
 jest.mock('../../users/tasks/user_tasks', () => jest.fn().mockImplementation(() => mockUserTasks));
 jest.mock('../../auth/tasks/roles_tasks', () => jest.fn().mockImplementation(() => mockRoleTasks));

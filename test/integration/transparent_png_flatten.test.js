@@ -21,9 +21,7 @@ const TMP_STORAGE = FS.mkdtempSync(PATH.join(OS.tmpdir(), 'pw-flatten-'));
 process.env.STORAGE_PATH = TMP_STORAGE;
 process.env.ELASTICSEARCH_HOST = process.env.ELASTICSEARCH_HOST || 'http://es.test:9200';
 
-jest.mock('../../libs/log4', () => ({
-    module: () => ({ info: jest.fn(), error: jest.fn(), warn: jest.fn(), debug: jest.fn() })
-}));
+jest.mock('../../libs/log4', () => require('./helpers/mocks').log4_factory());
 
 jest.mock('../../media-library/model', () => ({
     get_media_record: jest.fn()

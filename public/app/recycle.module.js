@@ -33,10 +33,6 @@ const recycleModule = (function () {
         return document.getElementById(id);
     }
 
-    function set_alert(type, message) {
-        domModule.set_alert(document.querySelector('#message'), type, message);
-    }
-
     function close_modal(selector) {
         if (window.jQuery) {
             try { window.jQuery(selector).modal('hide'); } catch (e) { /* manual fallback not required */ }
@@ -295,31 +291,25 @@ const recycleModule = (function () {
 
     async function load_records() {
 
-        const token = authModule.get_user_token();
-        if (token === false) {
-            return;
-        }
-
         try {
 
-            const response = await httpModule.req({
+            const response = await httpModule.api({
                 method: 'GET',
-                url: LIST_ENDPOINT,
-                headers: { 'x-access-token': token }
+                url: LIST_ENDPOINT
             });
 
             if (response !== undefined && response.status === 200 && response.data) {
                 set_records(response.data.data || []);
             } else if (response !== undefined && response.status === 403) {
-                set_alert('danger', 'You are not authorized to view the recycle bin.');
+                domModule.set_alert('#message', 'danger', 'You are not authorized to view the recycle bin.');
                 set_records([]);
             } else {
-                set_alert('danger', 'Unable to load recycled records.');
+                domModule.set_alert('#message', 'danger', 'Unable to load recycled records.');
                 set_records([]);
             }
 
         } catch (error) {
-            set_alert('danger', 'Unable to load recycled records.');
+            domModule.set_alert('#message', 'danger', 'Unable to load recycled records.');
             set_records([]);
         }
     }
@@ -330,33 +320,27 @@ const recycleModule = (function () {
 
     async function restore_record(exhibit_id, uuid, type) {
 
-        const token = authModule.get_user_token();
-        if (token === false) {
-            return;
-        }
-
         try {
 
-            const response = await httpModule.req({
+            const response = await httpModule.api({
                 method: 'PUT',
-                url: record_url(exhibit_id, uuid, type),
-                headers: { 'x-access-token': token }
+                url: record_url(exhibit_id, uuid, type)
             });
 
             if (response !== undefined && (response.status === 200 || response.status === 204)) {
-                set_alert('success', 'Record restored.');
+                domModule.set_alert('#message', 'success', 'Record restored.');
                 await load_records();
             } else if (response !== undefined && response.status === 403) {
-                set_alert('danger', 'You are not authorized to restore this record.');
+                domModule.set_alert('#message', 'danger', 'You are not authorized to restore this record.');
             } else if (response !== undefined && response.status === 404) {
-                set_alert('warning', 'Record not found — it may already have been restored or deleted.');
+                domModule.set_alert('#message', 'warning', 'Record not found — it may already have been restored or deleted.');
                 await load_records();
             } else {
-                set_alert('danger', 'Unable to restore record.');
+                domModule.set_alert('#message', 'danger', 'Unable to restore record.');
             }
 
         } catch (error) {
-            set_alert('danger', 'Unable to restore record.');
+            domModule.set_alert('#message', 'danger', 'Unable to restore record.');
         }
     }
 
@@ -380,10 +364,6 @@ const recycleModule = (function () {
         }
 
         const { exhibit_id, uuid, type } = pending_delete;
-        const token = authModule.get_user_token();
-        if (token === false) {
-            return;
-        }
 
         const confirm_btn = el('delete-confirm-btn');
 
@@ -394,26 +374,25 @@ const recycleModule = (function () {
                 confirm_btn.textContent = 'Deleting…';
             }
 
-            const response = await httpModule.req({
+            const response = await httpModule.api({
                 method: 'DELETE',
-                url: record_url(exhibit_id, uuid, type),
-                headers: { 'x-access-token': token }
+                url: record_url(exhibit_id, uuid, type)
             });
 
             if (response !== undefined && (response.status === 200 || response.status === 204)) {
-                set_alert('success', 'Record permanently deleted.');
+                domModule.set_alert('#message', 'success', 'Record permanently deleted.');
                 await load_records();
             } else if (response !== undefined && response.status === 403) {
-                set_alert('danger', 'You are not authorized to delete this record.');
+                domModule.set_alert('#message', 'danger', 'You are not authorized to delete this record.');
             } else if (response !== undefined && response.status === 404) {
-                set_alert('warning', 'Record not found — it may already have been deleted.');
+                domModule.set_alert('#message', 'warning', 'Record not found — it may already have been deleted.');
                 await load_records();
             } else {
-                set_alert('danger', 'Unable to delete record.');
+                domModule.set_alert('#message', 'danger', 'Unable to delete record.');
             }
 
         } catch (error) {
-            set_alert('danger', 'Unable to delete record.');
+            domModule.set_alert('#message', 'danger', 'Unable to delete record.');
         } finally {
             if (confirm_btn) {
                 confirm_btn.disabled = false;
@@ -435,11 +414,6 @@ const recycleModule = (function () {
 
     async function empty_bin() {
 
-        const token = authModule.get_user_token();
-        if (token === false) {
-            return;
-        }
-
         const confirm_btn = el('empty-confirm-btn');
 
         try {
@@ -449,23 +423,22 @@ const recycleModule = (function () {
                 confirm_btn.textContent = 'Emptying…';
             }
 
-            const response = await httpModule.req({
+            const response = await httpModule.api({
                 method: 'DELETE',
-                url: `${LIST_ENDPOINT}/all`,
-                headers: { 'x-access-token': token }
+                url: `${LIST_ENDPOINT}/all`
             });
 
             if (response !== undefined && (response.status === 200 || response.status === 204)) {
-                set_alert('success', 'Recycle bin emptied.');
+                domModule.set_alert('#message', 'success', 'Recycle bin emptied.');
                 await load_records();
             } else if (response !== undefined && response.status === 403) {
-                set_alert('danger', 'You are not authorized to empty the recycle bin.');
+                domModule.set_alert('#message', 'danger', 'You are not authorized to empty the recycle bin.');
             } else {
-                set_alert('danger', 'Unable to empty the recycle bin.');
+                domModule.set_alert('#message', 'danger', 'Unable to empty the recycle bin.');
             }
 
         } catch (error) {
-            set_alert('danger', 'Unable to empty the recycle bin.');
+            domModule.set_alert('#message', 'danger', 'Unable to empty the recycle bin.');
         } finally {
             if (confirm_btn) {
                 confirm_btn.textContent = 'Empty Recycle Bin';

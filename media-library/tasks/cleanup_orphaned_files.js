@@ -93,6 +93,7 @@ const DB_TABLES = require('../../config/db_tables_config')();
 const MEDIA_TABLE = DB_TABLES.exhibits.media_library_records;
 const STORAGE_CONFIG = require('../../media-library/storage_config')();
 const LOGGER = require('../../libs/log4');
+const UUID_LIB = require('../../libs/uuid');
 
 // Reconfigure log4js to file-only output (suppress stdout appender).
 // This keeps console.log output (the cleanup report) as the only thing
@@ -144,8 +145,12 @@ const SCANNED_DIRS = [...PRIMARY_DIRS, THUMBNAIL_DIR];
 // UUID no longer has a DB record.
 const IIIF_CACHE_DIR = 'iiif_cache';
 
-// UUID pattern: standard v1–v5 UUID in a filename
-const UUID_REGEX = /^([0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12})/i;
+/*
+ * UUID at the START of a filename (capture group 1), e.g. "<uuid>_thumb.jpg".
+ * Derived from the shared strict pattern in libs/uuid with its ^...$ anchors
+ * replaced by a leading anchor only, so the shape has one definition.
+ */
+const UUID_REGEX = new RegExp(`^(${UUID_LIB.UUID_REGEX.source.slice(1, -1)})`, 'i');
 
 // Minimum file age before it is eligible for cleanup (in hours)
 // Protects files that are mid-upload or awaiting metadata entry

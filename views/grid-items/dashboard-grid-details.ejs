@@ -6,49 +6,7 @@
     <main id="main" class="content" tabindex="-1">
         <div id="message"></div>
         <h1><span id="exhibit-title"></span> - Grid</h1>
-        <div id="grid-data-card" class="card">
-            <div class="card-header">
-                <strong class="card-title mb-3">Item Data</strong>
-                <div class="btn-group float-right">
-                    <span id="created" style="text-align: right; font-size: x-small"></span>
-                </div>
-            </div>
-            <div class="card-body">
-                <div class="row">
-                    <div class="col-8 col-md-8">
-                        <div class="row form-group">
-                            <div class="col-12">
-                                <div class="form-text text-muted" style="font-size: 17px">Text
-
-                                </div>
-                                <div id="grid-text-input" class="rte-container" data-rte="full" data-rte-disabled="true"></div>
-                            </div>
-                        </div>
-                        <div class="row form-group">
-                            <div class="col-12">
-                                <label for="grid-internal-name-input" class="form-text text-muted" style="font-size: 17px">Internal Name
-                                </label>
-                                <small id="grid-internal-name-hint" class="form-text text-muted"><i class="fa fa-exclamation-circle" aria-hidden="true"></i> <em>Does not display on the exhibit; for internal use only.</em></small>
-                                <input disabled type="text" id="grid-internal-name-input" name="grid_internal_name"
-                                       class="form-control" aria-describedby="grid-internal-name-hint">
-                            </div>
-                        </div>
-                    </div>
-                    <div class="col-4 col-md-4">
-                        <div class="row form-group">
-                            <div class="col-12">
-                                <div class="form-text text-muted" style="font-size: 17px">
-                                    Grid Columns
-                                </div>
-                                <input disabled type="number" id="grid-columns" name="grid_columns"
-                                       class="form-control" min="1"
-                                       style="width: 150px" value="4"><small class="form-text text-muted"></small>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
+        <%- include('partials/item-grid-data-card.ejs', { is_details: true }); %>
         <div id="item-submit-card" class="card">
              <div class="card-body">
                  <button class="btn btn-primary" type="button" id="edit-item-btn">
@@ -76,13 +34,9 @@
     navModule.wire_nav_links();
     itemsCommonStandardGridFormModule.init();
     itemsDetailsGridFormModule.init();
-    document.querySelector('#edit-item-btn').addEventListener('click', (event) => {
-        event.preventDefault();
-        document.querySelector('.content').style.visibility = 'hidden';
-        const exhibit_id = helperModule.get_parameter_by_name('exhibit_id');
-        const item_id = helperModule.get_parameter_by_name('item_id');
-        window.location.replace(`/exhibits-dashboard/items/grid/edit?exhibit_id=${exhibit_id}&item_id=${item_id}`);
-        return false;
+    pageActionsModule.wire_edit_button({
+        edit_path: '/items/grid/edit',
+        params: ['exhibit_id', 'item_id']
     });
 </script>
 </body>

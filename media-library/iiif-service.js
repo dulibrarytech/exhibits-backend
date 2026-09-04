@@ -27,6 +27,8 @@ const IIIF_CACHE = require('../media-library/iiif-cache');
 const APP_CONFIG = require('../config/app_config')();
 const KALTURA_CONFIG = require('../config/kaltura_config')();
 const LOGGER = require('../libs/log4');
+const { is_valid_uuid } = require('../libs/uuid');
+const { decode_html_entities } = require('./helper');
 
 // ---------------------------------------------------------------------------
 // Configuration
@@ -116,38 +118,6 @@ const build_response = (success, message, data = null) => {
         message,
         ...data
     };
-};
-
-/**
- * Decodes HTML entities in a string
- * Handles common entities that may be injected by XSS sanitization middleware
- * @param {string} str - String to decode
- * @returns {string} Decoded string
- */
-const decode_html_entities = (str) => {
-    if (!str || typeof str !== 'string') {
-        return str;
-    }
-    return str
-        .replace(/&#x2F;/gi, '/')
-        .replace(/&#x27;/gi, "'")
-        .replace(/&quot;/gi, '"')
-        .replace(/&lt;/gi, '<')
-        .replace(/&gt;/gi, '>')
-        .replace(/&amp;/gi, '&');
-};
-
-/**
- * Validates if a string is a valid UUID format
- * @param {string} uuid - String to validate
- * @returns {boolean} Whether string is valid UUID
- */
-const is_valid_uuid = (uuid) => {
-    if (!uuid || typeof uuid !== 'string') {
-        return false;
-    }
-    const uuid_regex = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
-    return uuid_regex.test(uuid);
 };
 
 /**

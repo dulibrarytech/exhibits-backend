@@ -24,6 +24,7 @@ const ENDPOINTS = require('../auth/endpoints');
 const TOKENS = require('../libs/tokens');
 const SSO_GUARD = require('../auth/sso_guard');
 const {rate_limits} = require('../config/rate_limits_loader');
+const { async_handler } = require('../libs/http');
 const APP_PATH = APP_CONFIG.app_path;
 
 module.exports = function (app) {
@@ -39,17 +40,17 @@ module.exports = function (app) {
     // allowlist) so the body-only auth cannot be replayed by an arbitrary
     // client. Fails closed in production when unconfigured. See auth/sso_guard.js.
     app.route(`${APP_PATH}/auth/sso`)
-        .post(SSO_GUARD, rate_limits.auth_identity_operations, CONTROLLER.sso);
+        .post(SSO_GUARD, rate_limits.auth_identity_operations, async_handler(CONTROLLER.sso));
 
     app.route(`${APP_PATH}/auth/permissions`)
-        .post(TOKENS.verify, CONTROLLER.check_permissions);
+        .post(TOKENS.verify, async_handler(CONTROLLER.check_permissions));
 
     app.route(`${APP_PATH}/auth/roles`)
-        .get(TOKENS.verify, CONTROLLER.get_roles);
+        .get(TOKENS.verify, async_handler(CONTROLLER.get_roles));
 
     app.route(`${APP_PATH}/auth/role`)
-        .get(TOKENS.verify, CONTROLLER.get_user_role);
+        .get(TOKENS.verify, async_handler(CONTROLLER.get_user_role));
 
     app.route(ENDPOINTS().auth.authentication.endpoint)
-        .get(TOKENS.verify, CONTROLLER.get_auth_user_data);
+        .get(TOKENS.verify, async_handler(CONTROLLER.get_auth_user_data));
 };

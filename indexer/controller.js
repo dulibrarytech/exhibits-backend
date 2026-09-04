@@ -21,46 +21,18 @@
 const MODEL = require('../indexer/model');
 const SERVICE = require('../indexer/service');
 const LOGGER = require('../libs/log4');
-const AUTHORIZE = require('../auth/authorize');
+const GATE = require('../auth/permission_gate');
 const {is_valid_uuid, is_valid_record_type} = require('../indexer/indexer_helper');
 
-/**
+/*
  * Route middleware: requires the `manage_index` permission.
  * Runs after TOKEN.verify (which sets req.decoded), so an unauthenticated
  * caller is already rejected; this gates the destructive index create/rebuild
  * to roles that hold `manage_index` (Administrator only, per the RBAC matrix).
- * @param {Object} req - Express request object
- * @param {Object} res - Express response object
- * @param {Function} next - Express next middleware function
  */
-exports.require_manage_index_permission = async (req, res, next) => {
-
-    try {
-
-        const is_authorized = await AUTHORIZE.check_permission({
-            req,
-            permissions: ['manage_index']
-        });
-
-        if (is_authorized !== true) {
-            return res.status(403).json({
-                success: false,
-                message: 'Unauthorized request',
-                data: null
-            });
-        }
-
-        return next();
-
-    } catch (error) {
-        LOGGER.module().error(`ERROR: [/indexer/controller (require_manage_index_permission)] ${error.message}`);
-        return res.status(403).json({
-            success: false,
-            message: 'Unauthorized request',
-            data: null
-        });
-    }
-};
+exports.require_manage_index_permission = GATE.require_permission(['manage_index'], {
+    context: '/indexer/controller (require_manage_index_permission)'
+});
 
 /**
  * Creates a new search index

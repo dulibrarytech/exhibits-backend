@@ -30,14 +30,9 @@ const userModule = (function () {
 
         try {
 
-            const token = authModule.get_user_token();
-            const response = await httpModule.req({
+            const response = await httpModule.api({
                 method: 'GET',
-                url: USER_ENDPOINTS.users.endpoint,
-                headers: {
-                    'Content-Type': 'application/json',
-                    'x-access-token': token
-                }
+                url: USER_ENDPOINTS.users.endpoint
             });
 
             if (response !== undefined && response.status === 200) {
@@ -61,14 +56,9 @@ const userModule = (function () {
                 return false;
             }
 
-            const token = authModule.get_user_token();
-            const response = await httpModule.req({
+            const response = await httpModule.api({
                 method: 'GET',
-                url: USER_ENDPOINTS.users.get_user.endpoint.replace(':user_id', user_id),
-                headers: {
-                    'Content-Type': 'application/json',
-                    'x-access-token': token
-                }
+                url: endpointsModule.build(USER_ENDPOINTS.users.get_user.endpoint, { user_id: user_id })
             });
 
             if (response.status === 200) {
@@ -84,14 +74,9 @@ const userModule = (function () {
 
         try {
 
-            const token = authModule.get_user_token();
-            const response = await httpModule.req({
+            const response = await httpModule.api({
                 method: 'GET',
-                url: '/exhibits-dashboard/auth/role?user_id=' + user_id,
-                headers: {
-                    'Content-Type': 'application/json',
-                    'x-access-token': token
-                }
+                url: '/exhibits-dashboard/auth/role?user_id=' + user_id
             });
 
             if (response.status === 200) {
@@ -156,28 +141,19 @@ const userModule = (function () {
         }
 
         /**
-         * Display message to user
-         */
-        function show_message(message_text, type = 'danger') {
-            const message_el = get_element(CONFIG.message_selector);
-            if (!message_el) return;
-            domModule.set_alert(message_el, type, message_text);
-        }
-
-        /**
          * Get current user from session storage
          */
         function get_current_user() {
             try {
                 const user_data = sessionStorage.getItem('exhibits_user');
                 if (!user_data) {
-                    show_message('Unable to get your user id', 'danger');
+                    domModule.set_alert(CONFIG.message_selector, 'danger', 'Unable to get your user id');
                     return null;
                 }
                 return JSON.parse(user_data);
             } catch (error) {
                 console.error('Failed to parse user data:', error);
-                show_message('Unable to parse user data', 'danger');
+                domModule.set_alert(CONFIG.message_selector, 'danger', 'Unable to parse user data');
                 return null;
             }
         }
@@ -375,13 +351,13 @@ const userModule = (function () {
                 // Handle empty or unauthorized response
                 if (!users || users === false) {
                     get_element(CONFIG.add_user_selector).style.display = 'none';
-                    show_message('You do not have permission to view users.', 'danger');
+                    domModule.set_alert(CONFIG.message_selector, 'danger', 'You do not have permission to view users.');
                     return false;
                 }
 
                 if (!Array.isArray(users) || users.length === 0) {
                     get_element(CONFIG.card_selector).innerHTML = '';
-                    show_message('No User Profiles found.', 'info');
+                    domModule.set_alert(CONFIG.message_selector, 'info', 'No User Profiles found.');
                     return false;
                 }
 
@@ -413,7 +389,7 @@ const userModule = (function () {
 
             } catch (error) {
                 console.error('Error displaying user records:', error);
-                show_message(error.message || 'An error occurred while loading users', 'danger');
+                domModule.set_alert(CONFIG.message_selector, 'danger', error.message || 'An error occurred while loading users');
                 return false;
             }
         }
@@ -491,16 +467,6 @@ const userModule = (function () {
             const element = get_element(selector);
             if (element) {
                 element.style.display = visible ? 'block' : 'none';
-            }
-        }
-
-        /**
-         * Show error message
-         */
-        function show_error(message) {
-            const message_el = get_element(CONFIG.message_selector);
-            if (message_el) {
-                domModule.set_alert(message_el, 'danger', message);
             }
         }
 
@@ -596,14 +562,14 @@ const userModule = (function () {
                 // Fetch required data
                 const profile = authModule.get_user_profile_data();
                 if (!profile || !profile.uid) {
-                    show_error('Unable to retrieve profile data');
+                    domModule.set_alert(CONFIG.message_selector, 'danger', 'Unable to retrieve profile data');
                     return false;
                 }
 
                 const user = await get_user_record();
 
                 if (!user || typeof user !== 'object') {
-                    show_error('Unable to retrieve user record');
+                    domModule.set_alert(CONFIG.message_selector, 'danger', 'Unable to retrieve user record');
                     setTimeout(() => {
                         window.location.replace(`${APP_PATH}/users`)
                     }, 1000)
@@ -615,12 +581,12 @@ const userModule = (function () {
                 const profile_role = await get_user_role(profile.uid); // to determine if is_admin
 
                 if (!role) {
-                    show_error('Unable to retrieve user role');
+                    domModule.set_alert(CONFIG.message_selector, 'danger', 'Unable to retrieve user role');
                     return false;
                 }
 
                 if (!profile_role) {
-                    show_error('Unable to retrieve profile role');
+                    domModule.set_alert(CONFIG.message_selector, 'danger', 'Unable to retrieve profile role');
                     return false;
                 }
 
@@ -637,7 +603,7 @@ const userModule = (function () {
 
             } catch (error) {
                 console.error('Error displaying user record:', error);
-                show_error(error.message || 'An error occurred while loading the user record');
+                domModule.set_alert(CONFIG.message_selector, 'danger', error.message || 'An error occurred while loading the user record');
                 return false;
             }
         }
@@ -720,19 +686,9 @@ const userModule = (function () {
             event.preventDefault();
             const user_id = helperModule.get_parameter_by_name('user_id');
             const data = get_user_form_data();
-            const token = authModule.get_user_token();
 
             if (user_id === undefined) {
                 domModule.set_alert(document.querySelector(MESSAGE_SELECTOR), 'danger', 'Unable to get user ID');
-                return false;
-            }
-
-            if (token === false) {
-                setTimeout(() => {
-                    domModule.set_alert(document.querySelector(MESSAGE_SELECTOR), 'danger', 'Unable to get session token');
-                    authModule.logout();
-                }, 1000);
-
                 return false;
             }
 
@@ -745,15 +701,11 @@ const userModule = (function () {
 
             domModule.set_alert(document.querySelector(MESSAGE_SELECTOR), 'info', 'Updating user record...');
 
-            const endpoint = USER_ENDPOINTS.users.update_user.put.endpoint.replace(':user_id', user_id);
-            const response = await httpModule.req({
+            const endpoint = endpointsModule.build(USER_ENDPOINTS.users.update_user.put.endpoint, { user_id: user_id });
+            const response = await httpModule.api({
                 method: 'PUT',
                 url: endpoint,
-                data: data,
-                headers: {
-                    'Content-Type': 'application/json',
-                    'x-access-token': token
-                }
+                data: data
             });
 
             if (response !== undefined && response.status === 201) {
@@ -780,25 +732,10 @@ const userModule = (function () {
             event?.preventDefault();
             window.scrollTo(0, 0);
 
-            const show_message = (message, type = 'danger') => {
-                domModule.set_alert(document.querySelector(MESSAGE_SELECTOR), type, message);
-            };
-
             // Validate required modules exist
             if (!authModule || !httpModule) {
                 console.error('Required modules are not available');
-                show_message('System configuration error.');
-                return false;
-            }
-
-            // Get authentication token
-            const token = authModule.get_user_token();
-
-            if (!token || token === false) {
-                show_message('Session expired. Redirecting to login...');
-                setTimeout(() => {
-                    authModule.logout();
-                }, 1000);
+                domModule.set_alert(MESSAGE_SELECTOR, 'danger', 'System configuration error.');
                 return false;
             }
 
@@ -806,7 +743,7 @@ const userModule = (function () {
             const user_data = get_user_form_data();
 
             if (user_data === undefined) {
-                show_message('Unable to retrieve form field values.');
+                domModule.set_alert(MESSAGE_SELECTOR, 'danger', 'Unable to retrieve form field values.');
                 return false;
             }
 
@@ -817,38 +754,32 @@ const userModule = (function () {
 
             // Validate user data is an object
             if (typeof user_data !== 'object') {
-                show_message('Invalid form data format.');
+                domModule.set_alert(MESSAGE_SELECTOR, 'danger', 'Invalid form data format.');
                 return false;
             }
 
             // Show saving message
-            show_message('Saving user record...', 'info');
+            domModule.set_alert(MESSAGE_SELECTOR, 'info', 'Saving user record...');
 
             // Validate endpoint exists
             if (!USER_ENDPOINTS?.users?.endpoint) {
                 console.error('User endpoint not configured');
-                show_message('System configuration error.');
+                domModule.set_alert(MESSAGE_SELECTOR, 'danger', 'System configuration error.');
                 return false;
             }
 
             const endpoint = USER_ENDPOINTS.users.endpoint;
 
-            // Make API request to save user
-            const response = await httpModule.req({
+            const response = await httpModule.api({
                 method: 'POST',
                 url: endpoint,
-                data: user_data,
-                headers: {
-                    'Content-Type': 'application/json',
-                    'x-access-token': token
-                },
-                timeout: 10000
+                data: user_data
             });
 
             // Validate response structure
             if (!response || typeof response !== 'object') {
                 console.error('Invalid response from server');
-                show_message('Server communication error.');
+                domModule.set_alert(MESSAGE_SELECTOR, 'danger', 'Server communication error.');
                 return false;
             }
 
@@ -857,7 +788,7 @@ const userModule = (function () {
                 // Validate response contains user data
                 if (!response.data || !response.data.data || !response.data.data.id) {
                     console.error('Invalid user data in response');
-                    show_message('User saved but unable to retrieve user ID.');
+                    domModule.set_alert(MESSAGE_SELECTOR, 'danger', 'User saved but unable to retrieve user ID.');
                     return false;
                 }
 
@@ -866,11 +797,11 @@ const userModule = (function () {
                 // Validate user ID
                 if (!Number.isInteger(user_id) || user_id <= 0) {
                     console.error('Invalid user ID in response:', user_id);
-                    show_message('User saved but invalid user ID received.');
+                    domModule.set_alert(MESSAGE_SELECTOR, 'danger', 'User saved but invalid user ID received.');
                     return false;
                 }
 
-                show_message('User record saved successfully.', 'success');
+                domModule.set_alert(MESSAGE_SELECTOR, 'success', 'User record saved successfully.');
 
                 setTimeout(() => {
                     window.location.replace(`${APP_PATH}/users/edit?user_id=${user_id}`);
@@ -882,13 +813,13 @@ const userModule = (function () {
             // Handle conflict — user already exists
             if (response.status === 409) {
                 const message = response.data?.message || 'User already exists.';
-                show_message(message);
+                domModule.set_alert(MESSAGE_SELECTOR, 'danger', message);
                 return false;
             }
 
             // Handle authentication failures
             if (response.status === 401 || response.status === 403) {
-                show_message('You do not have permission to create users.');
+                domModule.set_alert(MESSAGE_SELECTOR, 'danger', 'You do not have permission to create users.');
                 setTimeout(() => {
                     authModule.logout();
                 }, 2000);
@@ -898,14 +829,14 @@ const userModule = (function () {
             // Handle validation errors
             if (response.status === 400) {
                 const message = response.data?.message || 'Invalid user data provided.';
-                show_message(message);
+                domModule.set_alert(MESSAGE_SELECTOR, 'danger', message);
                 return false;
             }
 
             // Handle other HTTP errors
             console.error(`Unexpected response status: ${response.status}`);
             const error_message = response.data?.message || 'Failed to save user record.';
-            show_message(error_message);
+            domModule.set_alert(MESSAGE_SELECTOR, 'danger', error_message);
             return false;
 
         } catch (error) {
@@ -938,23 +869,13 @@ const userModule = (function () {
 
         try {
 
-            const show_message = (message, type = 'danger', selector = MESSAGE_SELECTOR) => {
-                const message_el = document.querySelector(selector);
-                if (!message_el) return;
-                if (type === 'loading') {
-                    domModule.set_loading(message_el, message);
-                } else {
-                    domModule.set_alert(message_el, type, message);
-                }
-            };
-
             // Show loading message
-            show_message('Deleting user...', 'loading', '#delete-message');
+            domModule.set_loading('#delete-message', 'Deleting user...');
 
             // Validate required modules exist
             if (!helperModule || !authModule || !httpModule) {
                 console.error('Required modules are not available');
-                show_message('System configuration error.');
+                domModule.set_alert(MESSAGE_SELECTOR, 'danger', 'System configuration error.');
                 return false;
             }
 
@@ -963,7 +884,7 @@ const userModule = (function () {
 
             if (!user_id) {
                 console.warn('Missing user_id parameter');
-                show_message('Invalid user ID.', 'danger', '#exhibit-no-delete');
+                domModule.set_alert('#exhibit-no-delete', 'danger', 'Invalid user ID.');
                 return false;
             }
 
@@ -971,46 +892,28 @@ const userModule = (function () {
             const parsed_user_id = Number(user_id);
             if (!Number.isInteger(parsed_user_id) || parsed_user_id <= 0) {
                 console.warn(`Invalid user_id format: ${user_id}`);
-                show_message('Invalid user ID format.', 'danger', '#exhibit-no-delete');
-                return false;
-            }
-
-            // Get and validate authentication token
-            const token = authModule.get_user_token();
-
-            if (!token || token === false) {
-                console.warn('No authentication token available');
-                show_message('Session expired. Please log in again.');
-                setTimeout(() => {
-                    authModule.logout();
-                }, 2000);
+                domModule.set_alert('#exhibit-no-delete', 'danger', 'Invalid user ID format.');
                 return false;
             }
 
             // Validate endpoint exists and build URL
             if (!USER_ENDPOINTS?.users?.delete_user?.delete?.endpoint) {
                 console.error('Delete user endpoint not configured');
-                show_message('System configuration error.');
+                domModule.set_alert(MESSAGE_SELECTOR, 'danger', 'System configuration error.');
                 return false;
             }
 
-            const endpoint = USER_ENDPOINTS.users.delete_user.delete.endpoint.replace(':user_id', parsed_user_id);
+            const endpoint = endpointsModule.build(USER_ENDPOINTS.users.delete_user.delete.endpoint, { user_id: parsed_user_id });
 
-            // Make delete request
-            const response = await httpModule.req({
+            const response = await httpModule.api({
                 method: 'DELETE',
-                url: endpoint,
-                headers: {
-                    'Content-Type': 'application/json',
-                    'x-access-token': token
-                },
-                timeout: 10000
+                url: endpoint
             });
 
             // Validate response structure
             if (!response || typeof response !== 'object') {
                 console.error('Invalid response from server');
-                show_message('Server communication error.', 'danger', '#exhibit-no-delete');
+                domModule.set_alert('#exhibit-no-delete', 'danger', 'Server communication error.');
                 return false;
             }
 
@@ -1018,7 +921,7 @@ const userModule = (function () {
             if (response.status === 204) {
 
                 domModule.empty('#delete-card');
-                show_message('User deleted successfully.', 'success', '#message');
+                domModule.set_alert('#message', 'success', 'User deleted successfully.');
 
                 setTimeout(() => {
                     window.location.replace(`${APP_PATH}/users`);
@@ -1030,7 +933,7 @@ const userModule = (function () {
             // Handle authentication failures
             if (response.status === 401 || response.status === 403) {
                 const message = response.data?.message || 'You do not have permission to delete users.';
-                show_message(message, 'danger', '#exhibit-no-delete');
+                domModule.set_alert('#exhibit-no-delete', 'danger', message);
 
                 if (response.status === 401) {
                     setTimeout(() => {
@@ -1044,21 +947,21 @@ const userModule = (function () {
             // Handle not found
             if (response.status === 404) {
                 const message = response.data?.message || 'User not found.';
-                show_message(message, 'danger', '#exhibit-no-delete');
+                domModule.set_alert('#exhibit-no-delete', 'danger', message);
                 return false;
             }
 
             // Handle conflict (e.g., user cannot be deleted due to dependencies)
             if (response.status === 409) {
                 const message = response.data?.message || 'User cannot be deleted due to existing dependencies.';
-                show_message(message, 'danger', '#exhibit-no-delete');
+                domModule.set_alert('#exhibit-no-delete', 'danger', message);
                 return false;
             }
 
             // Handle other errors
             console.error(`Unexpected response status: ${response.status}`);
             const error_message = response.data?.message || 'Failed to delete user.';
-            show_message(error_message, 'danger', '#exhibit-no-delete');
+            domModule.set_alert('#exhibit-no-delete', 'danger', error_message);
             return false;
 
         } catch (error) {
@@ -1159,22 +1062,14 @@ const userModule = (function () {
          */
         async function update_user_status_api(user_id, is_active) {
             try {
-                const token = authModule.get_user_token();
-                if (!token) {
-                    throw new Error('Authentication token not available');
-                }
+                const endpoint = endpointsModule.build(
+                    USER_ENDPOINTS.users.user_status.endpoint,
+                    { id: user_id, is_active: is_active }
+                );
 
-                const endpoint = USER_ENDPOINTS.users.user_status.endpoint
-                    .replace(':id', user_id)
-                    .replace(':is_active', is_active);
-
-                const response = await httpModule.req({
+                const response = await httpModule.api({
                     method: 'PUT',
-                    url: endpoint,
-                    headers: {
-                        'Content-Type': 'application/json',
-                        'x-access-token': token
-                    }
+                    url: endpoint
                 });
 
                 return response?.status === 200;
@@ -1279,8 +1174,23 @@ const userModule = (function () {
 
             if (!element) return;
 
-            // Clone to remove all existing listeners
-            const new_element = element.cloneNode(false);
+            /*
+             * Deep clone. A shallow clone (cloneNode(false)) drops the icon and
+             * label that update_status_display just rendered into this link,
+             * leaving an empty zero-size anchor that no one can click — the row
+             * looked blank after activating or deactivating a user. This path
+             * was dead code until the list stopped using the innerHTML version,
+             * so the bug never surfaced before.
+             */
+            const new_element = element.cloneNode(true);
+
+            /* The link's accessible name announces the action a click performs,
+               which is the state the row is moving to, not the one it left. */
+            new_element.setAttribute(
+                'aria-label',
+                next_action === 'deactivate' ? 'Deactivate user' : 'Activate user'
+            );
+
             if (element.parentNode) {
                 element.parentNode.replaceChild(new_element, element);
             }
@@ -1367,47 +1277,22 @@ const userModule = (function () {
 
         try {
 
-            const show_error = (message) => {
-                const message_el = document.querySelector(MESSAGE_SELECTOR);
-                if (message_el) {
-                    domModule.set_alert(message_el, 'danger', message);
-                }
-            };
-
             // Validate required modules exist
             if (!authModule || !httpModule) {
                 console.error('Required modules are not available');
-                show_error('System configuration error.');
+                domModule.set_alert(MESSAGE_SELECTOR, 'danger', 'System configuration error.');
                 return null;
             }
 
-            // Get and validate authentication token
-            const token = authModule.get_user_token();
-
-            if (!token || token === false) {
-                console.warn('No authentication token available');
-                show_error('Session expired. Please log in again.');
-                setTimeout(() => {
-                    authModule.logout();
-                }, 2000);
-                return null;
-            }
-
-            // Make API request to get roles
-            const response = await httpModule.req({
+            const response = await httpModule.api({
                 method: 'GET',
-                url: '/exhibits-dashboard/auth/roles',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'x-access-token': token
-                },
-                timeout: 10000
+                url: '/exhibits-dashboard/auth/roles'
             });
 
             // Validate response structure
             if (!response || typeof response !== 'object') {
                 console.error('Invalid response from server');
-                show_error('Server communication error.');
+                domModule.set_alert(MESSAGE_SELECTOR, 'danger', 'Server communication error.');
                 return null;
             }
 
@@ -1422,7 +1307,7 @@ const userModule = (function () {
                 // Validate response data is an array
                 if (!Array.isArray(response.data)) {
                     console.error('Invalid roles data format - expected array');
-                    show_error('Invalid server response format.');
+                    domModule.set_alert(MESSAGE_SELECTOR, 'danger', 'Invalid server response format.');
                     return null;
                 }
 
@@ -1432,7 +1317,7 @@ const userModule = (function () {
             // Handle authentication failures
             if (response.status === 401 || response.status === 403) {
                 console.warn(`Authorization failed with status ${response.status}`);
-                show_error('You do not have permission to access roles.');
+                domModule.set_alert(MESSAGE_SELECTOR, 'danger', 'You do not have permission to access roles.');
 
                 if (response.status === 401) {
                     setTimeout(() => {
@@ -1446,14 +1331,14 @@ const userModule = (function () {
             // Handle not found
             if (response.status === 404) {
                 console.warn('Roles endpoint not found');
-                show_error('Roles service not available.');
+                domModule.set_alert(MESSAGE_SELECTOR, 'danger', 'Roles service not available.');
                 return null;
             }
 
             // Handle other HTTP errors
             console.error(`Unexpected response status: ${response.status}`);
             const error_message = response.data?.message || 'Failed to retrieve roles.';
-            show_error(error_message);
+            domModule.set_alert(MESSAGE_SELECTOR, 'danger', error_message);
             return null;
 
         } catch (error) {
@@ -1486,17 +1371,10 @@ const userModule = (function () {
 
         try {
 
-            const show_error = (message) => {
-                const message_el = document.querySelector(MESSAGE_SELECTOR);
-                if (message_el) {
-                    domModule.set_alert(message_el, 'danger', message);
-                }
-            };
-
             // Validate get_roles function exists
             if (typeof get_roles !== 'function') {
                 console.error('get_roles function is not available');
-                show_error('System configuration error.');
+                domModule.set_alert(MESSAGE_SELECTOR, 'danger', 'System configuration error.');
                 return false;
             }
 
@@ -1506,13 +1384,13 @@ const userModule = (function () {
             // Validate roles data
             if (roles === null) {
                 console.error('Failed to retrieve roles');
-                show_error('Unable to load roles. Please refresh the page.');
+                domModule.set_alert(MESSAGE_SELECTOR, 'danger', 'Unable to load roles. Please refresh the page.');
                 return false;
             }
 
             if (!Array.isArray(roles)) {
                 console.error('Invalid roles data format');
-                show_error('Invalid roles data received.');
+                domModule.set_alert(MESSAGE_SELECTOR, 'danger', 'Invalid roles data received.');
                 return false;
             }
 
@@ -1521,7 +1399,7 @@ const userModule = (function () {
 
             if (!select_element) {
                 console.error('User roles select element not found');
-                show_error('Form element not found.');
+                domModule.set_alert(MESSAGE_SELECTOR, 'danger', 'Form element not found.');
                 return false;
             }
 
@@ -1609,17 +1487,10 @@ const userModule = (function () {
 
         try {
 
-            const show_error = (message) => {
-                const message_el = document.querySelector(MESSAGE_SELECTOR);
-                if (message_el) {
-                    domModule.set_alert(message_el, 'danger', message);
-                }
-            };
-
             // Validate required modules exist
             if (!authModule) {
                 console.error('authModule is not available');
-                show_error('System configuration error.');
+                domModule.set_alert(MESSAGE_SELECTOR, 'danger', 'System configuration error.');
                 return false;
             }
 
@@ -1629,7 +1500,7 @@ const userModule = (function () {
             // Validate profile exists
             if (!profile) {
                 console.warn('No user profile found');
-                show_error('User profile not found. Please log in again.');
+                domModule.set_alert(MESSAGE_SELECTOR, 'danger', 'User profile not found. Please log in again.');
                 authModule.redirect_to_auth();
                 return false;
             }
@@ -1637,14 +1508,14 @@ const userModule = (function () {
             // Validate profile has required fields
             if (!profile.uid || typeof profile.uid !== 'string') {
                 console.warn('Invalid user profile structure');
-                show_error('Invalid user profile data.');
+                domModule.set_alert(MESSAGE_SELECTOR, 'danger', 'Invalid user profile data.');
                 return false;
             }
 
             // Validate get_user_role function exists
             if (typeof get_user_role !== 'function') {
                 console.error('get_user_role function is not available');
-                show_error('System configuration error.');
+                domModule.set_alert(MESSAGE_SELECTOR, 'danger', 'System configuration error.');
                 return false;
             }
 
@@ -1654,14 +1525,14 @@ const userModule = (function () {
             // Validate role data exists
             if (!role_data) {
                 console.warn(`No role data found for user: ${profile.uid}`);
-                show_error('Unable to verify user permissions.');
+                domModule.set_alert(MESSAGE_SELECTOR, 'danger', 'Unable to verify user permissions.');
                 return false;
             }
 
             // Validate role data structure
             if (typeof role_data !== 'object' || !role_data.role) {
                 console.warn('Invalid role data structure');
-                show_error('Invalid role data.');
+                domModule.set_alert(MESSAGE_SELECTOR, 'danger', 'Invalid role data.');
                 return false;
             }
 

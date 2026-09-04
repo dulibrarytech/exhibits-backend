@@ -34,24 +34,9 @@ const exhibitsModule = (function () {
             throw new Error('Exhibits endpoint configuration not available');
         }
 
-        // Get authentication token
-        const token = authModule.get_user_token();
-
-        // Validate token before making request
-        if (!token || typeof token !== 'string') {
-            throw new Error('Authentication token not available');
-        }
-
-        // Make API request with timeout and validateStatus
-        const response = await httpModule.req({
+        const response = await httpModule.api({
             method: 'GET',
-            url: EXHIBITS_ENDPOINTS.exhibits.exhibit_records.endpoint,
-            headers: {
-                'Content-Type': 'application/json',
-                'x-access-token': token
-            },
-            timeout: 30000,
-            validateStatus: (status) => status >= 200 && status < 600
+            url: EXHIBITS_ENDPOINTS.exhibits.exhibit_records.endpoint
         });
 
         // Handle 403 Forbidden
@@ -891,16 +876,10 @@ const exhibitsModule = (function () {
     obj.get_exhibit_title = async function (uuid) {
 
         const EXHIBITS_ENDPOINTS = endpointsModule.get_exhibits_endpoints();
-        const token = authModule.get_user_token();
 
-        const response = await httpModule.req({
+        const response = await httpModule.api({
             method: 'GET',
-            url: EXHIBITS_ENDPOINTS.exhibits.exhibit_records.endpoints.get.endpoint.replace(':exhibit_id', uuid),
-            headers: {
-                'Content-Type': 'application/json',
-                'x-access-token': token
-            },
-            validateStatus: (status) => status >= 200 && status < 600
+            url: endpointsModule.build(EXHIBITS_ENDPOINTS.exhibits.exhibit_records.endpoints.get.endpoint, { exhibit_id: uuid })
         });
 
         // Handle 403 Forbidden
@@ -967,16 +946,10 @@ const exhibitsModule = (function () {
 
         const EXHIBITS_ENDPOINTS = endpointsModule.get_exhibits_endpoints();
         const uuid = helperModule.get_parameter_by_name('exhibit_id');
-        const token = authModule.get_user_token();
 
-        const response = await httpModule.req({
+        const response = await httpModule.api({
             method: 'DELETE',
-            url: EXHIBITS_ENDPOINTS.exhibits.exhibit_records.endpoints.delete.endpoint.replace(':exhibit_id', uuid),
-            headers: {
-                'Content-Type': 'application/json',
-                'x-access-token': token
-            },
-            validateStatus: (status) => status >= 200 && status < 600
+            url: endpointsModule.build(EXHIBITS_ENDPOINTS.exhibits.exhibit_records.endpoints.delete.endpoint, { exhibit_id: uuid })
         });
 
         // Handle 403 Forbidden
@@ -1082,32 +1055,15 @@ const exhibitsModule = (function () {
     }
 
     /**
-     * Validates authentication token
-     * @param {string} token - The token to validate
-     * @throws {Error} - If token is not available
-     */
-    function validate_token(token) {
-        if (!token) {
-            throw new Error('Authentication token not available');
-        }
-    }
-
-    /**
      * Makes an API request to change exhibit state
      * @param {string} endpoint - The API endpoint
      * @param {string} clean_uuid - The cleaned exhibit UUID
-     * @param {string} token - Authentication token
      * @returns {Promise<Object>} - API response
      */
-    async function make_exhibit_state_request(endpoint, clean_uuid, token) {
-        return await httpModule.req({
+    async function make_exhibit_state_request(endpoint, clean_uuid) {
+        return await httpModule.api({
             method: 'POST',
-            url: endpoint.replace(':exhibit_id', clean_uuid),
-            headers: {
-                'Content-Type': 'application/json',
-                'x-access-token': token
-            },
-            validateStatus: (status) => status >= 200 && status < 600
+            url: endpointsModule.build(endpoint, { exhibit_id: clean_uuid })
         });
     }
 
@@ -1200,16 +1156,12 @@ const exhibitsModule = (function () {
             // Validate and clean UUID
             const clean_uuid = validate_and_clean_uuid(uuid);
 
-            // Get endpoints and token
             const exhibits_endpoints = endpointsModule.get_exhibits_endpoints();
-            const token = authModule.get_user_token();
-            validate_token(token);
 
             // Make API request
             const response = await make_exhibit_state_request(
                 exhibits_endpoints.exhibits.exhibit_publish.post.endpoint,
-                clean_uuid,
-                token
+                clean_uuid
             );
 
             // Handle 403 Forbidden
@@ -1265,16 +1217,12 @@ const exhibitsModule = (function () {
             // Validate and clean UUID
             const clean_uuid = validate_and_clean_uuid(uuid);
 
-            // Get endpoints and token
             const exhibits_endpoints = endpointsModule.get_exhibits_endpoints();
-            const token = authModule.get_user_token();
-            validate_token(token);
 
             // Make API request
             const response = await make_exhibit_state_request(
                 exhibits_endpoints.exhibits.exhibit_suppress.post.endpoint,
-                clean_uuid,
-                token
+                clean_uuid
             );
 
             // Handle 403 Forbidden
@@ -1315,7 +1263,6 @@ const exhibitsModule = (function () {
      */
     obj.create_shared_preview_url = async function (uuid) {
         // Constants
-        const TOKEN_ERROR_DELAY = 1000;
         const SUCCESS_DISPLAY_DELAY = 900;
         const SHARED_URL_EXPIRY_DAYS = 7;
         const HTTP_CREATED = 201;
@@ -1335,31 +1282,14 @@ const exhibitsModule = (function () {
         // Show loading state
         domModule.set_alert('#shared-url', 'info', 'Generating Shared URL...');
 
-        // Get endpoints and token
         const exhibits_endpoints = endpointsModule.get_exhibits_endpoints();
-        const token = authModule.get_user_token();
-
-        // Validate token
-        if (!token || token === false) {
-            setTimeout(() => {
-                domModule.set_alert('#message', 'info', 'Unable to get session token');
-                authModule.logout();
-            }, TOKEN_ERROR_DELAY);
-            return false;
-        }
 
         // Encode UUID for URL safety
         const encoded_uuid = encodeURIComponent(uuid);
 
-        // Make API request
-        const response = await httpModule.req({
+        const response = await httpModule.api({
             method: 'POST',
-            url: `${exhibits_endpoints.exhibits.exhibit_shared.get.endpoint}?uuid=${encoded_uuid}`,
-            headers: {
-                'Content-Type': 'application/json',
-                'x-access-token': token
-            },
-            validateStatus: (status) => status >= 200 && status < 600
+            url: `${exhibits_endpoints.exhibits.exhibit_shared.get.endpoint}?uuid=${encoded_uuid}`
         });
 
         // Handle 403 Forbidden

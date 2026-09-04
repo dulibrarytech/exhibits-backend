@@ -10,30 +10,16 @@
 
 'use strict';
 
-const { readFileSync } = require('node:fs');
-const { resolve } = require('node:path');
-
-const MODULE_PATH = resolve(
-    __dirname,
-    '../../public/app/grid-items/items.grid.module.js',
-);
+const { load_browser_module } = require('./helpers/load_module');
+const { endpoints_fixed_stub } = require('./helpers/stubs');
 
 describe('itemsGridModule.build_min_items_notice', () => {
 
     beforeAll(() => {
         // The IIFE reads the endpoints module at load time.
-        globalThis.endpointsModule = {
-            get_app_path: () => '/exhibits-dashboard',
-            get_exhibits_endpoints: () => ({}),
-        };
+        globalThis.endpointsModule = endpoints_fixed_stub('/exhibits-dashboard', { get_exhibits_endpoints: () => ({}) });
 
-        const src = readFileSync(MODULE_PATH, 'utf8');
-        const patched = src.replace(
-            /^const\s+itemsGridModule\s*=/m,
-            'globalThis.itemsGridModule =',
-        );
-        // eslint-disable-next-line no-eval
-        (0, eval)(patched);
+        load_browser_module('public/app/grid-items/items.grid.module.js', 'itemsGridModule');
     });
 
     it('returns null when the item count meets the column count', () => {

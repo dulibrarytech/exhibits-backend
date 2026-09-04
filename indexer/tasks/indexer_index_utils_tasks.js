@@ -4,6 +4,7 @@ const FS = require('fs').promises; // Use promises API for async operations
 const FS_SYNC = require('fs'); // Keep sync for validation only
 const PATH = require('path');
 const LOGGER = require('../../libs/log4');
+const Es_base_tasks = require('../../libs/es_base_tasks');
 
 /**
  * Object contains tasks used to create and manage Elasticsearch indices
@@ -12,11 +13,13 @@ const LOGGER = require('../../libs/log4');
  * @param {Object} CONFIG - Index configuration object
  * @type {Indexer_index_utils_tasks}
  */
-const Indexer_index_utils_tasks = class {
+const Indexer_index_utils_tasks = class extends Es_base_tasks {
 
     constructor(INDEX_NAME, CLIENT, CONFIG) {
+        super(CLIENT, INDEX_NAME, {log_prefix: '/indexer/indexer_index_utils_tasks'});
+
+        /* INDEX_NAME is this class's historical alias for the base INDEX */
         this.INDEX_NAME = INDEX_NAME;
-        this.CLIENT = CLIENT;
         this.CONFIG = CONFIG;
 
         // Configuration constants
@@ -106,71 +109,6 @@ const Indexer_index_utils_tasks = class {
         if (/[:"\*+\/\\|?#><\s]/.test(trimmed_name)) {
             throw new Error('Index name contains invalid characters');
         }
-    }
-
-    /**
-     * Wraps an Elasticsearch operation with timeout protection
-     * @param {Promise} operation - Elasticsearch operation promise
-     * @param {number} timeout - Timeout in milliseconds
-     * @returns {Promise} Operation result or timeout error
-     * @private
-     */
-    async _with_timeout(operation, timeout) {
-        return Promise.race([
-            operation,
-            new Promise((_, reject) =>
-                setTimeout(() => reject(new Error('Elasticsearch operation timeout')), timeout)
-            )
-        ]);
-    }
-
-    /**
-     * Handles error logging with context
-     * @param {Error} error - Error to handle
-     * @param {string} method_name - Name of the method where error occurred
-     * @param {Object} context - Additional context for logging
-     * @private
-     */
-    _handle_error(error, method_name, context = {}) {
-        const error_context = {
-            method: method_name,
-            index: this.INDEX_NAME,
-            ...context,
-            timestamp: new Date().toISOString(),
-            message: error.message,
-            error_type: error.name
-        };
-
-        // Extract Elasticsearch-specific error details
-        if (error.meta) {
-            error_context.status_code = error.meta.statusCode;
-            error_context.elasticsearch_error = error.meta.body?.error?.type;
-            error_context.reason = error.meta.body?.error?.reason;
-        }
-
-        // Add stack trace in non-production environments
-        if (process.env.NODE_ENV !== 'production') {
-            error_context.stack = error.stack;
-        }
-
-        LOGGER.module().error(
-            `ERROR: [/indexer/indexer_index_utils_tasks (${method_name})] Failed to ${method_name.replace(/_/g, ' ')}`,
-            error_context
-        );
-    }
-
-    /**
-     * Logs successful operation
-     * @param {string} message - Success message
-     * @param {Object} context - Context for logging
-     * @private
-     */
-    _log_success(message, context = {}) {
-        LOGGER.module().info(message, {
-            index: this.INDEX_NAME,
-            ...context,
-            timestamp: new Date().toISOString()
-        });
     }
 
     // ==================== MAPPINGS MANAGEMENT ====================

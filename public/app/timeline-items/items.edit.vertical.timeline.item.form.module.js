@@ -28,45 +28,6 @@ const itemsEditVerticalTimelineItemFormModule = (function () {
         const message_element = document.querySelector('#message');
 
         /**
-         * Display status message to user (XSS-safe)
-         */
-        const display_message = (element, type, message) => {
-            if (!element) {
-                return;
-            }
-
-            const valid_types = ['info', 'success', 'danger', 'warning'];
-            const alert_type = valid_types.includes(type) ? type : 'danger';
-
-            const alert_div = document.createElement('div');
-            alert_div.className = `alert alert-${alert_type}`;
-            alert_div.setAttribute('role', 'alert');
-
-            const icon = document.createElement('i');
-            icon.className = get_icon_class(alert_type);
-            alert_div.appendChild(icon);
-
-            const text_node = document.createTextNode(` ${message}`);
-            alert_div.appendChild(text_node);
-
-            element.textContent = '';
-            element.appendChild(alert_div);
-        };
-
-        /**
-         * Get icon class for alert type
-         */
-        const get_icon_class = (alert_type) => {
-            const icon_map = {
-                'info': 'fa fa-info',
-                'success': 'fa fa-check',
-                'danger': 'fa fa-exclamation',
-                'warning': 'fa fa-exclamation-triangle'
-            };
-            return icon_map[alert_type] || 'fa fa-exclamation';
-        };
-
-        /**
          * Validate required parameters
          */
         const validate_parameters = (exhibit_id, timeline_id, item_id) => {
@@ -96,20 +57,7 @@ const itemsEditVerticalTimelineItemFormModule = (function () {
 
             const validation = validate_parameters(exhibit_id, timeline_id, item_id);
             if (!validation.valid) {
-                display_message(message_element, 'danger', validation.error);
-                return null;
-            }
-
-            // Get and validate authentication
-            const token = authModule.get_user_token();
-
-            if (!token || token === false) {
-                display_message(message_element, 'danger', 'Authentication required. Redirecting...');
-
-                setTimeout(() => {
-                    authModule.redirect_to_auth();
-                }, 1000);
-
+                domModule.set_alert(message_element, 'danger', validation.error);
                 return null;
             }
 
@@ -117,21 +65,21 @@ const itemsEditVerticalTimelineItemFormModule = (function () {
             const profile = authModule.get_user_profile_data();
 
             if (!profile?.uid) {
-                display_message(message_element, 'danger', 'Invalid user profile data');
+                domModule.set_alert(message_element, 'danger', 'Invalid user profile data');
                 return null;
             }
 
             // Validate endpoint configuration
             if (!EXHIBITS_ENDPOINTS?.exhibits?.timeline_item_record?.get?.endpoint) {
-                display_message(message_element, 'danger', 'API endpoint configuration missing');
+                domModule.set_alert(message_element, 'danger', 'API endpoint configuration missing');
                 return null;
             }
 
-            // Construct endpoint with URL encoding
-            const endpoint = EXHIBITS_ENDPOINTS.exhibits.timeline_item_record.get.endpoint
-                .replace(':exhibit_id', encodeURIComponent(exhibit_id))
-                .replace(':timeline_id', encodeURIComponent(timeline_id))
-                .replace(':item_id', encodeURIComponent(item_id));
+            const endpoint = endpointsModule.build(EXHIBITS_ENDPOINTS.exhibits.timeline_item_record.get.endpoint, {
+                exhibit_id: exhibit_id,
+                timeline_id: timeline_id,
+                item_id: item_id
+            });
 
             // Construct URL with query parameters safely
             const params = new URLSearchParams({
@@ -140,15 +88,10 @@ const itemsEditVerticalTimelineItemFormModule = (function () {
             });
             const full_url = `${endpoint}?${params.toString()}`;
 
-            // Make API request with timeout
-            const response = await httpModule.req({
+            /* null = missing token; httpModule.api has alerted and scheduled the logout */
+            const response = await httpModule.api({
                 method: 'GET',
-                url: full_url,
-                headers: {
-                    'Content-Type': 'application/json',
-                    'x-access-token': token
-                },
-                timeout: 30000
+                url: full_url
             });
 
             // Validate response structure
@@ -172,108 +115,13 @@ const itemsEditVerticalTimelineItemFormModule = (function () {
 
             // Display error message (use user_message from Axios interceptor if available)
             const error_message = error.user_message || 'Unable to load the timeline item record. Please try again.';
-            display_message(message_element, 'danger', error_message);
+            domModule.set_alert(message_element, 'danger', error_message);
 
             return null;
         }
     }
 
     async function display_edit_record() {
-
-        /**
-         * Check if current user is an administrator
-         */
-        const is_user_administrator = async () => {
-
-            try {
-                const profile = authModule.get_user_profile_data();
-                if (!profile?.uid) {
-                    return false;
-                }
-
-                const user_id = parseInt(profile.uid, 10);
-                if (isNaN(user_id)) {
-                    return false;
-                }
-
-                const user_role = await authModule.get_user_role(user_id);
-                return user_role === 'Administrator';
-
-            } catch (error) {
-                console.error('Error checking user role:', error);
-                return false;
-            }
-        };
-
-        /**
-         * Disable all form fields (except unlock button for admins)
-         */
-        const disable_form_fields = (is_admin) => {
-            const form_elements = document.querySelectorAll(
-                'input:not([type="hidden"]), textarea, select, button[type="submit"], button[type="button"]'
-            );
-
-            // Rich text editors are div-based and not caught by the selector above
-            if (typeof rteModule !== 'undefined') {
-                rteModule.set_all_enabled(false);
-            }
-
-            let disabled_count = 0;
-
-            form_elements.forEach(element => {
-                // Skip unlock button for administrators
-                if (is_admin && element.id === 'unlock-record') {
-                    return;
-                }
-
-                // Only disable enabled, non-readonly elements
-                if (!element.disabled && !element.readOnly) {
-                    element.disabled = true;
-                    element.style.cursor = 'not-allowed';
-                    element.style.opacity = '0.6';
-                    disabled_count++;
-                }
-            });
-
-            // Disable custom buttons
-            const custom_buttons = document.querySelectorAll('.btn:not([disabled])');
-            custom_buttons.forEach(button => {
-                if (is_admin && button.id === 'unlock-record') {
-                    return;
-                }
-
-                button.disabled = true;
-                button.style.cursor = 'not-allowed';
-                button.style.opacity = '0.6';
-            });
-
-            console.debug(`Disabled ${disabled_count} form elements (record locked by another user)`);
-        };
-
-        /**
-         * Check if record is locked by another user
-         */
-        const is_locked_by_other_user = (record) => {
-            if (!record || record.is_locked !== 1) {
-                return false;
-            }
-
-            const profile = authModule.get_user_profile_data();
-            if (!profile?.uid) {
-                console.warn('Unable to get user profile data');
-                return false;
-            }
-
-            const user_id = parseInt(profile.uid, 10);
-            const locked_by_user = parseInt(record.locked_by_user, 10);
-
-            if (isNaN(user_id) || isNaN(locked_by_user)) {
-                console.error('Invalid user ID values');
-                return false;
-            }
-
-            return user_id !== locked_by_user;
-        };
 
         /**
          * Cache all required DOM elements
@@ -421,31 +269,6 @@ const itemsEditVerticalTimelineItemFormModule = (function () {
             return date instanceof Date && !isNaN(date.getTime());
         };
 
-        /**
-         * Display error message
-         */
-        const display_error_message = (message) => {
-            const message_element = document.querySelector('#message');
-
-            if (!message_element) {
-                return;
-            }
-
-            const alert_div = document.createElement('div');
-            alert_div.className = 'alert alert-danger';
-            alert_div.setAttribute('role', 'alert');
-
-            const icon = document.createElement('i');
-            icon.className = 'fa fa-exclamation';
-            alert_div.appendChild(icon);
-
-            const text_node = document.createTextNode(` ${message}`);
-            alert_div.appendChild(text_node);
-
-            message_element.textContent = '';
-            message_element.appendChild(alert_div);
-        };
-
         try {
             // Fetch record data
             const record = await get_timeline_item_record();
@@ -458,9 +281,9 @@ const itemsEditVerticalTimelineItemFormModule = (function () {
             await lockModule.check_if_locked(record, '#item-submit-card');
 
             // Disable form fields if locked by another user
-            if (is_locked_by_other_user(record)) {
-                const is_admin = await is_user_administrator();
-                disable_form_fields(is_admin);
+            if (lockModule.is_locked_by_other_user(record)) {
+                const is_admin = await lockModule.is_user_administrator();
+                lockModule.disable_form_fields({ preserve_selectors: is_admin ? ['#unlock-record'] : [] });
             }
 
             // Setup automatic unlock when user navigates away
@@ -494,7 +317,7 @@ const itemsEditVerticalTimelineItemFormModule = (function () {
 
         } catch (error) {
             console.error('Error in display_edit_record:', error);
-            display_error_message('Unable to display the timeline item record. Please try again.');
+            domModule.set_alert('#message', 'danger', 'Unable to display the timeline item record. Please try again.');
             return false;
         }
     }
@@ -511,66 +334,6 @@ const itemsEditVerticalTimelineItemFormModule = (function () {
         // Cache DOM element and constants
         const message_element = document.querySelector('#message');
         const MESSAGE_CLEAR_DELAY = 3000;
-        const FADE_DURATION = 300;
-
-        /**
-         * Display status message to user (XSS-safe)
-         */
-        const display_message = (element, type, message) => {
-            if (!element) {
-                return;
-            }
-
-            const valid_types = ['info', 'success', 'danger', 'warning'];
-            const alert_type = valid_types.includes(type) ? type : 'danger';
-
-            const alert_div = document.createElement('div');
-            alert_div.className = `alert alert-${alert_type}`;
-            alert_div.setAttribute('role', 'alert');
-
-            const icon = document.createElement('i');
-            icon.className = get_icon_class(alert_type);
-            alert_div.appendChild(icon);
-
-            const text_node = document.createTextNode(` ${message}`);
-            alert_div.appendChild(text_node);
-
-            element.style.opacity = '1';
-            element.style.transition = '';
-            element.textContent = '';
-            element.appendChild(alert_div);
-        };
-
-        /**
-         * Clear message with smooth fade effect
-         */
-        const clear_message_smoothly = () => {
-            if (!message_element) {
-                return;
-            }
-
-            message_element.style.transition = `opacity ${FADE_DURATION}ms ease-out`;
-            message_element.style.opacity = '0';
-
-            setTimeout(() => {
-                message_element.textContent = '';
-                message_element.style.opacity = '1';
-                message_element.style.transition = '';
-            }, FADE_DURATION);
-        };
-
-        /**
-         * Get icon class for alert type
-         */
-        const get_icon_class = (alert_type) => {
-            const icon_map = {
-                'info': 'fa fa-info',
-                'success': 'fa fa-check',
-                'danger': 'fa fa-exclamation',
-                'warning': 'fa fa-exclamation-triangle'
-            };
-            return icon_map[alert_type] || 'fa fa-exclamation';
-        };
 
         /**
          * Validate parameters
@@ -639,31 +402,18 @@ const itemsEditVerticalTimelineItemFormModule = (function () {
 
             const validation = validate_parameters(exhibit_id, timeline_id, item_id);
             if (!validation.valid) {
-                display_message(message_element, 'warning', validation.error);
+                domModule.set_alert(message_element, 'warning', validation.error);
                 return false;
             }
 
             // Show loading state
-            display_message(message_element, 'info', 'Updating timeline item record...');
-
-            // Validate authentication
-            const token = authModule.get_user_token();
-
-            if (!token || token === false) {
-                display_message(message_element, 'danger', 'Session expired. Please log in again.');
-
-                timeout_id = setTimeout(() => {
-                    authModule.logout();
-                }, 1000);
-
-                return false;
-            }
+            domModule.set_alert(message_element, 'info', 'Updating timeline item record...');
 
             // Get and validate form data
             const form_data = itemsCommonVerticalTimelineItemFormModule.get_common_timeline_item_form_fields();
 
             if (!form_data || form_data === false || form_data === undefined) {
-                display_message(message_element, 'danger', 'Unable to get form field values. Please check all required fields.');
+                domModule.set_alert(message_element, 'danger', 'Unable to get form field values. Please check all required fields.');
                 return false;
             }
 
@@ -675,27 +425,27 @@ const itemsEditVerticalTimelineItemFormModule = (function () {
 
             // Validate endpoint configuration
             if (!EXHIBITS_ENDPOINTS?.exhibits?.timeline_item_records?.put?.endpoint) {
-                display_message(message_element, 'danger', 'API endpoint configuration missing');
+                domModule.set_alert(message_element, 'danger', 'API endpoint configuration missing');
                 return false;
             }
 
-            // Construct endpoint with URL encoding
-            const endpoint = EXHIBITS_ENDPOINTS.exhibits.timeline_item_records.put.endpoint
-                .replace(':exhibit_id', encodeURIComponent(exhibit_id))
-                .replace(':timeline_id', encodeURIComponent(timeline_id))
-                .replace(':item_id', encodeURIComponent(item_id));
+            const endpoint = endpointsModule.build(EXHIBITS_ENDPOINTS.exhibits.timeline_item_records.put.endpoint, {
+                exhibit_id: exhibit_id,
+                timeline_id: timeline_id,
+                item_id: item_id
+            });
 
-            // Make API request
-            const response = await httpModule.req({
+            // Make API request (null = missing token; httpModule.api has
+            // already alerted and scheduled the logout)
+            const response = await httpModule.api({
                 method: 'PUT',
                 url: endpoint,
-                data: form_data,
-                headers: {
-                    'Content-Type': 'application/json',
-                    'x-access-token': token
-                },
-                timeout: 30000
+                data: form_data
             });
+
+            if (response === null) {
+                return false;
+            }
 
             // Validate response
             if (!response || response.status !== 201) {
@@ -703,14 +453,14 @@ const itemsEditVerticalTimelineItemFormModule = (function () {
             }
 
             // Show success message
-            display_message(message_element, 'success', 'Timeline item record updated successfully');
+            domModule.set_alert(message_element, 'success', 'Timeline item record updated successfully');
 
             // Refresh the display with updated data
             await refresh_record_display();
 
             // Smoothly clear success message after delay
             timeout_id = setTimeout(() => {
-                clear_message_smoothly();
+                helperModule.clear_status_message(message_element);
             }, MESSAGE_CLEAR_DELAY);
 
             return true;
@@ -726,7 +476,7 @@ const itemsEditVerticalTimelineItemFormModule = (function () {
 
             // Display error message (use user_message from Axios interceptor if available)
             const error_message = error.user_message || error.message || 'Unable to update timeline item record. Please try again.';
-            display_message(message_element, 'danger', error_message);
+            domModule.set_alert(message_element, 'danger', error_message);
 
             return false;
 

@@ -14,13 +14,7 @@
 
 'use strict';
 
-const { readFileSync } = require('node:fs');
-const { resolve } = require('node:path');
-
-const MODULE_PATH = resolve(
-    __dirname,
-    '../../public/app/utils/endpoints.module.js',
-);
+const { load_browser_module } = require('./helpers/load_module');
 
 const APP_PATH = '/exhibits-dashboard';
 const VERSION_KEY = 'exhibits_endpoints_version';
@@ -77,13 +71,7 @@ describe('endpointsModule — registry version stamp', () => {
         install_storage();
         set_location('/exhibits-dashboard/items');
 
-        const src = readFileSync(MODULE_PATH, 'utf8');
-        const patched = src.replace(
-            /^const\s+endpointsModule\s*=/m,
-            'globalThis.endpointsModule =',
-        );
-        // eslint-disable-next-line no-eval
-        (0, eval)(patched);
+        load_browser_module('public/app/utils/endpoints.module.js', 'endpointsModule');
     });
 
     beforeEach(() => {

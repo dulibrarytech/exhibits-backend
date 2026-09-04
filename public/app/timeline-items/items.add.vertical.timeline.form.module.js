@@ -33,7 +33,7 @@ const itemsAddVerticalTimelineFormModule = (function () {
             console.debug('item_id:', item_id);
 
             const message_element = document.querySelector('#message');
-            display_status_message(message_element, 'warning', 'Already in edit mode.');
+            domModule.set_alert(message_element, 'warning', 'Already in edit mode.');
             return false;
         }
 
@@ -58,31 +58,18 @@ const itemsAddVerticalTimelineFormModule = (function () {
             const exhibit_id = helperModule.get_parameter_by_name('exhibit_id');
 
             if (!exhibit_id) {
-                display_status_message(message_element, 'warning', 'Missing exhibit ID. Cannot create timeline record.');
+                domModule.set_alert(message_element, 'warning', 'Missing exhibit ID. Cannot create timeline record.');
                 return false;
             }
 
             // Show loading state
-            display_status_message(message_element, 'info', 'Creating timeline record...');
-
-            // Validate authentication
-            const token = authModule.get_user_token();
-
-            if (!token || token === false) {
-                display_status_message(message_element, 'danger', 'Session expired. Please log in again.');
-
-                setTimeout(() => {
-                    authModule.logout();
-                }, 1000);
-
-                return false;
-            }
+            domModule.set_alert(message_element, 'info', 'Creating timeline record...');
 
             // Get and validate form data
             const form_data = itemsCommonVerticalTimelineFormModule.get_common_timeline_form_fields();
 
             if (!form_data || form_data === false) {
-                // display_status_message(message_element, 'danger', 'Unable to get form field values. Please check all required fields.');
+                // domModule.set_alert(message_element, 'danger', 'Unable to get form field values. Please check all required fields.');
                 return false;
             }
 
@@ -100,30 +87,30 @@ const itemsAddVerticalTimelineFormModule = (function () {
 
             // Validate endpoint configuration
             if (!EXHIBITS_ENDPOINTS?.exhibits?.timeline_records?.post?.endpoint) {
-                display_status_message(message_element, 'danger', 'API endpoint configuration missing');
+                domModule.set_alert(message_element, 'danger', 'API endpoint configuration missing');
                 return false;
             }
 
-            // Construct endpoint with URL encoding
-            const endpoint = EXHIBITS_ENDPOINTS.exhibits.timeline_records.post.endpoint
-                .replace(':exhibit_id', encodeURIComponent(exhibit_id));
+            const endpoint = endpointsModule.build(EXHIBITS_ENDPOINTS.exhibits.timeline_records.post.endpoint, {
+                exhibit_id: exhibit_id
+            });
 
-            // Make API request
-            const response = await httpModule.req({
+            // Make API request (null = missing token; httpModule.api has
+            // already alerted and scheduled the logout)
+            const response = await httpModule.api({
                 method: 'POST',
                 url: endpoint,
-                data: form_data,
-                headers: {
-                    'Content-Type': 'application/json',
-                    'x-access-token': token
-                },
-                timeout: 30000
+                data: form_data
             });
+
+            if (response === null) {
+                return false;
+            }
 
             // Validate response
             if (!response || response.status !== 201) {
                 if (!response) {
-                    display_status_message(message_element, 'danger', 'Permission denied. You do not have access to add items to this exhibit.');
+                    domModule.set_alert(message_element, 'danger', 'Permission denied. You do not have access to add items to this exhibit.');
                     return false;
                 }
                 throw new Error('Failed to create timeline record');
@@ -138,7 +125,7 @@ const itemsAddVerticalTimelineFormModule = (function () {
             console.debug('✅ Timeline record created successfully, ID:', new_timeline_id);
 
             // Show success message
-            display_status_message(message_element, 'success', 'Timeline record created successfully. Redirecting to edit page...');
+            domModule.set_alert(message_element, 'success', 'Timeline record created successfully. Redirecting to edit page...');
 
             // Scroll to top to show success message
             window.scrollTo({ top: 0, left: 0, behavior: 'instant' });
@@ -155,7 +142,7 @@ const itemsAddVerticalTimelineFormModule = (function () {
 
             const message_element = document.querySelector('#message');
             const error_message = error.user_message || error.message || 'Unable to create timeline record. Please try again.';
-            display_status_message(message_element, 'danger', error_message);
+            domModule.set_alert(message_element, 'danger', error_message);
 
             return false;
 
@@ -185,51 +172,6 @@ const itemsAddVerticalTimelineFormModule = (function () {
 
         // Use window.location.replace() to prevent back button to create page
         window.location.replace(edit_url);
-    }
-
-    /**
-     * Display status message to user (XSS-safe)
-     */
-    function display_status_message(element, type, message) {
-        if (!element) {
-            return;
-        }
-
-        // Validate message type
-        const valid_types = ['info', 'success', 'danger', 'warning'];
-        const alert_type = valid_types.includes(type) ? type : 'info';
-
-        // Create alert container
-        const alert_div = document.createElement('div');
-        alert_div.className = `alert alert-${alert_type}`;
-        alert_div.setAttribute('role', 'alert');
-
-        // Add icon based on type
-        const icon = document.createElement('i');
-        icon.className = get_icon_class(alert_type);
-        alert_div.appendChild(icon);
-
-        // Add message text
-        const text_node = document.createTextNode(` ${message}`);
-        alert_div.appendChild(text_node);
-
-        // Clear and set new content
-        element.textContent = '';
-        element.appendChild(alert_div);
-    }
-
-    /**
-     * Get appropriate icon class for alert type
-     */
-    function get_icon_class(alert_type) {
-        const icon_map = {
-            'info': 'fa fa-info',
-            'success': 'fa fa-check',
-            'danger': 'fa fa-exclamation',
-            'warning': 'fa fa-exclamation-triangle'
-        };
-
-        return icon_map[alert_type] || 'fa fa-info';
     }
 
     obj.init = async function () {

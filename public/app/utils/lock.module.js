@@ -22,6 +22,202 @@ const lockModule = (function () {
 
     let obj = {};
 
+    /*
+     * Coerces a user id (numeric string or number) to an integer; NaN when
+     * absent or non-numeric. Number() is stricter than the parseInt() the
+     * per-form copies used ('12abc' is rejected instead of read as 12).
+     */
+    const to_user_id = (value) => {
+
+        if (value === undefined || value === null || value === '') {
+            return NaN;
+        }
+
+        const parsed = Number(value);
+        return Number.isInteger(parsed) ? parsed : NaN;
+    };
+
+    /**
+     * Shared replacement for the per-form `is_user_administrator` copies.
+     * Delegates to authModule.is_administrator() (quiet: no redirect, no
+     * alert, case-insensitive role match). Falls back to the copies' own
+     * profile → get_user_role() logic only if that export is absent.
+     * Never throws.
+     * @returns {Promise<boolean>}
+     */
+    obj.is_user_administrator = async function () {
+
+        try {
+
+            if (typeof authModule.is_administrator === 'function') {
+                return (await authModule.is_administrator()) === true;
+            }
+
+            const profile = authModule.get_user_profile_data();
+            const user_id = to_user_id(profile && profile.uid);
+
+            if (Number.isNaN(user_id)) {
+                return false;
+            }
+
+            const user_role = await authModule.get_user_role(user_id);
+            return user_role === 'Administrator';
+
+        } catch (error) {
+            console.error('Error checking user role:', error);
+            return false;
+        }
+    };
+
+    /**
+     * Shared replacement for the per-form `is_locked_by_other_user` copies.
+     * True only when the record is locked (is_locked === 1 or true) AND
+     * locked_by_user resolves to a different integer than the current user.
+     * Ids are normalised with Number(), so '12' and 12 compare equal.
+     *
+     * @param {Object} record            - { is_locked, locked_by_user, ... }
+     * @param {string|number} [current_user_id] - defaults to
+     *        authModule.get_user_profile_data().uid (which redirects to auth
+     *        when the session profile is missing, as the copies did)
+     * @returns {boolean} false for a missing/unlocked record, a missing
+     *          profile, or a non-numeric id on either side
+     */
+    obj.is_locked_by_other_user = function (record, current_user_id) {
+
+        if (!record || typeof record !== 'object') {
+            return false;
+        }
+
+        const is_locked = record.is_locked === 1 || record.is_locked === true;
+
+        if (!is_locked) {
+            return false;
+        }
+
+        let uid = current_user_id;
+
+        if (uid === undefined || uid === null) {
+
+            const profile = authModule.get_user_profile_data();
+
+            if (!profile || !profile.uid) {
+                console.warn('Unable to get user profile data');
+                return false;
+            }
+
+            uid = profile.uid;
+        }
+
+        const user_id = to_user_id(uid);
+        const locked_by_user = to_user_id(record.locked_by_user);
+
+        if (Number.isNaN(user_id) || Number.isNaN(locked_by_user)) {
+            console.error('Invalid user ID values');
+            return false;
+        }
+
+        return user_id !== locked_by_user;
+    };
+
+    /**
+     * Shared replacement for the per-form `disable_form_fields` copies.
+     * Disables (and greys out: cursor not-allowed, opacity 0.6) every
+     * interactive control so a record locked by someone else is read-only.
+     * Defaults match the most common copy (5 of 6 forms).
+     *
+     * @param {Object}   [options]
+     * @param {string|null} [options.form_selector=null] - root to scope the
+     *        sweeps to; null = whole document (what every copy did)
+     * @param {boolean}  [options.include_submit=true] - also match
+     *        button[type="submit"] (styles form omitted it)
+     * @param {boolean}  [options.disable_rte=true] - call
+     *        rteModule.set_all_enabled(false) when rteModule is loaded
+     *        (styles form omitted it)
+     * @param {boolean}  [options.disable_custom_buttons=true] - second sweep
+     *        over `.btn:not([disabled])` (every copy did it)
+     * @param {string[]} [options.preserve_selectors=[]] - CSS selectors whose
+     *        matches are skipped in both sweeps; the copies passed
+     *        is_admin ? ['#unlock-record'] : []
+     * @returns {number} count of elements this call disabled
+     */
+    obj.disable_form_fields = function (options = {}) {
+
+        const settings = options || {};
+        const form_selector = (typeof settings.form_selector === 'string' && settings.form_selector.length > 0)
+            ? settings.form_selector
+            : null;
+        const include_submit = settings.include_submit !== false;
+        const disable_rte = settings.disable_rte !== false;
+        const disable_custom_buttons = settings.disable_custom_buttons !== false;
+        const preserve_selectors = Array.isArray(settings.preserve_selectors)
+            ? settings.preserve_selectors.filter((selector) => typeof selector === 'string' && selector.length > 0)
+            : [];
+
+        const root = form_selector ? document.querySelector(form_selector) : document;
+
+        if (!root) {
+            console.warn(`disable_form_fields: root "${form_selector}" not found`);
+            return 0;
+        }
+
+        const is_preserved = (element) => preserve_selectors.some((selector) => {
+            try {
+                return element.matches(selector);
+            } catch (error) {
+                return false;
+            }
+        });
+
+        const disable = (element) => {
+            element.disabled = true;
+            element.style.cursor = 'not-allowed';
+            element.style.opacity = '0.6';
+        };
+
+        const selectors = ['input:not([type="hidden"])', 'textarea', 'select'];
+
+        if (include_submit) {
+            selectors.push('button[type="submit"]');
+        }
+
+        selectors.push('button[type="button"]');
+
+        /* Rich text editors are div-based and not caught by the selectors */
+        if (disable_rte && typeof rteModule !== 'undefined' && typeof rteModule.set_all_enabled === 'function') {
+            rteModule.set_all_enabled(false);
+        }
+
+        let disabled_count = 0;
+
+        root.querySelectorAll(selectors.join(', ')).forEach((element) => {
+
+            if (is_preserved(element)) {
+                return;
+            }
+
+            if (!element.disabled && !element.readOnly) {
+                disable(element);
+                disabled_count++;
+            }
+        });
+
+        if (disable_custom_buttons) {
+
+            root.querySelectorAll('.btn:not([disabled])').forEach((button) => {
+
+                if (is_preserved(button)) {
+                    return;
+                }
+
+                disable(button);
+                disabled_count++;
+            });
+        }
+
+        console.debug(`Disabled ${disabled_count} form elements (record locked by another user)`);
+        return disabled_count;
+    };
+
     obj.check_if_locked = async function (record, card_id) {
 
         // Helper function to safely display messages (prevents XSS)
@@ -286,24 +482,6 @@ const lockModule = (function () {
             message_el.appendChild(alert_div);
         };
 
-        // Helper function to build endpoint URL with parameter replacement
-        const build_endpoint_url = (template, params) => {
-            if (!template || !params) return null;
-
-            let endpoint = template;
-
-            for (const [key, value] of Object.entries(params)) {
-                if (!value) {
-                    console.error(`Missing required parameter: ${key}`);
-                    return null;
-                }
-                const encoded_value = encodeURIComponent(value);
-                endpoint = endpoint.replace(`:${key}`, encoded_value);
-            }
-
-            return endpoint;
-        };
-
         // Helper function to find matching endpoint configuration
         const find_endpoint_config = (pathname, config_map) => {
             for (const config of config_map) {
@@ -355,7 +533,9 @@ const lockModule = (function () {
                 }
             }
 
-            const endpoint = build_endpoint_url(endpoint_template, endpoint_params);
+            /* Placeholder substitution lives in endpointsModule.build (promoted
+             * from this module); the loop above already rejects empty params. */
+            const endpoint = endpointsModule.build(endpoint_template, endpoint_params);
             if (!endpoint) {
                 throw new Error('Failed to build endpoint URL');
             }

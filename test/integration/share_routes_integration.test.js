@@ -15,18 +15,20 @@
 
 'use strict';
 
-process.env.APP_PATH = process.env.APP_PATH || '/exhibits-dashboard';
-
 const express = require('express');
 const request = require('supertest');
+
+/*
+ * Requiring the shared mocks pins APP_PATH before any endpoints module is
+ * loaded; the jest.mock factories below are hoisted and resolve it lazily.
+ */
+const { mock_model } = require('./helpers/mocks');
 
 const EXHIBIT_A = '550e8400-e29b-41d4-a716-446655440000';
 const EXHIBIT_B = '660e8400-e29b-41d4-a716-446655440001';
 const SHARED_TOKEN = 'header.payload.signature';
 
-jest.mock('../../libs/log4', () => ({
-    module: () => ({ error: jest.fn(), warn: jest.fn(), info: jest.fn(), debug: jest.fn() })
-}));
+jest.mock('../../libs/log4', () => require('./helpers/mocks').log4_factory());
 
 jest.mock('../../config/app_config', () => () => ({ app_path: process.env.APP_PATH }));
 
@@ -35,34 +37,25 @@ jest.mock('../../config/webservices_config', () => () => ({
     exhibit_preview_api_key: 'preview-key'
 }));
 
-jest.mock('../../libs/tokens', () => ({
-    verify: jest.fn((req, res, next) => {
-        req.decoded = { sub: 'editor.user', type: 'session' };
-        next();
-    }),
-    verify_shared: jest.fn((req, res, next) => {
-        /* Default: a share token minted for EXHIBIT_A. */
-        req.decoded = { sub: '550e8400-e29b-41d4-a716-446655440000', type: 'shared' };
-        next();
-    }),
-    create_shared: jest.fn(() => 'header.payload.signature')
-}));
-
-jest.mock('../../auth/authorize', () => ({
-    check_permission: jest.fn().mockResolvedValue(true)
-}));
-
-jest.mock('../../config/rate_limits_loader', () => ({
-    rate_limits: {
-        public_media_access: (req, res, next) => next(),
-        write_operations: (req, res, next) => next()
+jest.mock('../../libs/tokens', () => require('./helpers/mocks').tokens_factory({
+    decoded: { sub: 'editor.user', type: 'session' },
+    extra: {
+        verify_shared: jest.fn((req, res, next) => {
+            /* Default: a share token minted for EXHIBIT_A. */
+            req.decoded = { sub: '550e8400-e29b-41d4-a716-446655440000', type: 'shared' };
+            next();
+        }),
+        create_shared: jest.fn(() => 'header.payload.signature')
     }
 }));
 
-const mockExhibitsModel = {
-    check_preview: jest.fn(),
-    build_exhibit_preview: jest.fn()
-};
+jest.mock('../../auth/authorize', () => require('./helpers/mocks').authorize_factory());
+
+jest.mock('../../config/rate_limits_loader', () => require('./helpers/mocks').rate_limits_factory([
+    'public_media_access', 'write_operations'
+]));
+
+const mockExhibitsModel = mock_model(['check_preview', 'build_exhibit_preview']);
 
 jest.mock('../../exhibits/exhibits_model', () => mockExhibitsModel);
 

@@ -59,42 +59,15 @@ describe('Permissions_tasks', () => {
         });
     });
 
-    describe('get_role_permissions', () => {
-
-        beforeEach(() => {
-            permissions_tasks = new Permissions_tasks(mockDB, mockTable);
-        });
-
-        // get_role_permissions is a TODO stub. It must not leak the role to
-        // stdout via console.log (OWASP A09 — removed). These tests assert the
-        // stub resolves without throwing and writes nothing to the console.
-        it('should not log the role parameter to the console', async () => {
-            const consoleSpy = jest.spyOn(console, 'log').mockImplementation();
-
-            await permissions_tasks.get_role_permissions('admin');
-
-            expect(consoleSpy).not.toHaveBeenCalled();
-
-            consoleSpy.mockRestore();
-        });
-
-        it('should handle null role without throwing', async () => {
-            await expect(permissions_tasks.get_role_permissions(null)).resolves.not.toThrow();
-        });
-
-        it('should handle undefined role without throwing', async () => {
-            await expect(permissions_tasks.get_role_permissions(undefined)).resolves.not.toThrow();
-        });
-
-        it('should handle numeric role without throwing', async () => {
-            await expect(permissions_tasks.get_role_permissions(1)).resolves.not.toThrow();
-        });
-
-        it('should handle object role without throwing', async () => {
-            const roleObj = { id: 1, name: 'admin' };
-            await expect(permissions_tasks.get_role_permissions(roleObj)).resolves.not.toThrow();
-        });
-    });
+    /*
+     * `get_role_permissions` was an unimplemented TODO stub with no callers.
+     * It was deleted from auth/tasks/permissions_tasks.js in 1642df92
+     * ("Cleaned up code comments in auth module"), which left its five tests
+     * calling a method that no longer exists — they failed with "not a
+     * function" and blocked the predeploy gate at the unit step. The tests
+     * only asserted that the empty stub resolved and logged nothing, so
+     * nothing is lost by removing them with it.
+     */
 
     describe('get_auth_user_data', () => {
 

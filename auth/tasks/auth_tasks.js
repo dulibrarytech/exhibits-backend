@@ -19,6 +19,7 @@
 'use strict';
 
 const LOGGER = require('../../libs/log4');
+const { is_valid_uuid } = require('../../libs/uuid');
 
 /**
  * Auth record tasks
@@ -244,8 +245,7 @@ const Auth_tasks = class {
                 return 0;
             }
 
-            const uuid_pattern = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
-            if (!uuid_pattern.test(parent_id)) {
+            if (!is_valid_uuid(parent_id)) {
                 LOGGER.module().warn(`WARNING: [/auth/tasks (check_ownership)] invalid parent_id UUID: ${parent_id}`);
                 return 0;
             }
@@ -254,7 +254,7 @@ const Auth_tasks = class {
             const is_child_provided = child_id !== null && child_id !== undefined && child_id !== '';
 
             if (is_child_provided) {
-                if (typeof child_id !== 'string' || !uuid_pattern.test(child_id)) {
+                if (!is_valid_uuid(child_id)) {
                     LOGGER.module().warn(`WARNING: [/auth/tasks (check_ownership)] invalid child_id UUID: ${child_id}`);
                     return 0;
                 }

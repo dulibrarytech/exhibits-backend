@@ -67,40 +67,11 @@ const mediaEditModalModule = (function() {
 
     let obj = {};
 
-    /**
-     * Display message in edit modal
-     * @param {string} type - Message type ('success', 'danger', 'warning')
-     * @param {string} message - Message text
-     */
-    const display_edit_modal_message = (type, message) => {
-        const message_container = document.getElementById('edit-media-message');
-        
-        if (!message_container) return;
-
-        message_container.innerHTML = '<div class="alert alert-' + type + ' mb-0" role="alert">' + 
-            '<i class="fa fa-' + (type === 'success' ? 'check' : type === 'danger' ? 'exclamation-circle' : 'warning') + '" style="margin-right: 6px;"></i>' +
-            escape_html(message) + 
-            '</div>';
-
-        // Auto-hide success messages
-        if (type === 'success') {
-            setTimeout(() => {
-                if (message_container) {
-                    message_container.innerHTML = '';
-                }
-            }, 3000);
-        }
-    };
-
-    /**
-     * Clear edit modal message
-     */
-    const clear_edit_modal_message = () => {
-        const message_container = document.getElementById('edit-media-message');
-        if (message_container) {
-            message_container.innerHTML = '';
-        }
-    };
+    /* Modal message area — shared helper bound to #edit-media-message */
+    const {
+        display_message: display_edit_modal_message,
+        clear_message: clear_edit_modal_message
+    } = helperMediaLibraryModule.create_message_helper('edit-media-message');
 
     /**
      * Update a media record
@@ -125,28 +96,19 @@ const mediaEditModalModule = (function() {
                 return { success: false, message: 'Update endpoint not configured' };
             }
 
-            // Validate authentication
-            const token = authModule.get_user_token();
+            const endpoint = endpointsModule.build(EXHIBITS_ENDPOINTS.media_records.put.endpoint, { media_id: uuid });
 
-            if (!token || token === false) {
-                return { success: false, message: 'Session expired. Please log in again.' };
-            }
-
-            // Construct endpoint with media_id
-            const endpoint = EXHIBITS_ENDPOINTS.media_records.put.endpoint.replace(':media_id', uuid);
-
-            // Make API request
-            const response = await httpModule.req({
+            /* The modal reports its own session failure; no page-level logout here */
+            const response = await httpModule.api({
                 method: 'PUT',
                 url: endpoint,
                 data: JSON.stringify(data),
-                headers: {
-                    'Content-Type': 'application/json',
-                    'x-access-token': token
-                },
-                timeout: 30000,
-                validateStatus: (status) => status >= 200 && status < 600
+                logout_on_missing_token: false
             });
+
+            if (response === null) {
+                return { success: false, message: 'Session expired. Please log in again.' };
+            }
 
             // Handle response
             if (!response) {
@@ -602,8 +564,7 @@ const mediaEditModalModule = (function() {
             } else {
                 message = 'Failed to load media record. Please try again.';
             }
-            form_container.innerHTML = '<div class="alert alert-danger">' +
-                helperMediaLibraryModule.escape_html(message) + '</div>';
+            domModule.set_alert(form_container, 'danger', message);
             return;
         }
 

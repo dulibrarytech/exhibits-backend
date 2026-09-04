@@ -12,15 +12,13 @@
 
 'use strict';
 
-jest.mock('../../libs/log4', () => ({
-    module: () => ({ error: jest.fn(), warn: jest.fn(), info: jest.fn(), debug: jest.fn() })
-}));
+const { mock_model } = require('./helpers/mocks');
+
+jest.mock('../../libs/log4', () => require('./helpers/mocks').log4_factory());
 
 jest.mock('../../config/db_config', () => () => jest.fn());
 
-jest.mock('../../config/db_tables_config', () => () => ({
-    exhibits: { user_records: 'tbl_users', roles_records: 'tbl_user_roles' }
-}));
+jest.mock('../../config/db_tables_config', () => require('./helpers/mocks').db_tables_factory({ user_records: 'tbl_users', roles_records: 'tbl_user_roles' }));
 
 /* Endpoint registries read APP_PATH/config at require time — stub them. */
 jest.mock('../../exhibits/endpoints/index', () => () => ({ exhibits: 'EXHIBITS_ENDPOINTS' }));
@@ -28,15 +26,9 @@ jest.mock('../../users/endpoints', () => () => ({ users: 'USERS_ENDPOINTS' }));
 jest.mock('../../indexer/endpoints', () => () => ({ indexer: 'INDEXER_ENDPOINTS' }));
 jest.mock('../../media-library/endpoints', () => () => ({ media_library: 'MEDIA_ENDPOINTS' }));
 
-const mockAuthTasks = {
-    check_auth_user: jest.fn(),
-    get_auth_user_data: jest.fn()
-};
+const mockAuthTasks = mock_model(['check_auth_user', 'get_auth_user_data']);
 
-const mockRolesTasks = {
-    get_roles: jest.fn(),
-    get_user_role: jest.fn()
-};
+const mockRolesTasks = mock_model(['get_roles', 'get_user_role']);
 
 jest.mock('../../auth/tasks/auth_tasks', () => jest.fn().mockImplementation(() => mockAuthTasks));
 jest.mock('../../auth/tasks/roles_tasks', () => jest.fn().mockImplementation(() => mockRolesTasks));

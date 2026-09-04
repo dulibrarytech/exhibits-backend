@@ -479,7 +479,7 @@ const itemsListDisplayModule = (function() {
 
             const delete_url = `${APP_PATH}/items/delete?exhibit_id=${exhibit_id}&item_id=${item_id}&type=item`;
 
-            tr.appendChild(build_actions_cell({
+            tr.appendChild(create_actions_td({
                 actions_id: `${item.uuid}-item-actions`,
                 edit_url: edit_url,
                 edit_label: item.is_published === 1 ? 'Details' : 'Edit',
@@ -549,7 +549,7 @@ const itemsListDisplayModule = (function() {
                 : `${APP_PATH}/items/heading/edit?exhibit_id=${exhibit_id}&item_id=${item_id}`;
             const delete_url = `${APP_PATH}/items/delete?exhibit_id=${exhibit_id}&item_id=${item_id}&type=heading`;
 
-            tr.appendChild(build_actions_cell({
+            tr.appendChild(create_actions_td({
                 actions_id: `${item.uuid}-item-actions`,
                 edit_url: edit_url,
                 edit_label: item.is_published === 1 ? 'Details' : 'Edit',
@@ -621,7 +621,7 @@ const itemsListDisplayModule = (function() {
                 : `${APP_PATH}/items/grid/edit?exhibit_id=${exhibit_id}&item_id=${item_id}`;
             const delete_url = `${APP_PATH}/items/delete?exhibit_id=${exhibit_id}&item_id=${item_id}&type=grid`;
 
-            tr.appendChild(build_actions_cell({
+            tr.appendChild(create_actions_td({
                 actions_id: `${item.uuid}-item-actions`,
                 edit_url: edit_url,
                 edit_label: item.is_published === 1 ? 'Details' : 'Edit',
@@ -807,7 +807,7 @@ const itemsListDisplayModule = (function() {
 
             const delete_url = `${APP_PATH}/items/grid/item/delete?exhibit_id=${exhibit_id}&grid_id=${grid_id}&item_id=${item_id}`;
 
-            tr.appendChild(build_actions_cell({
+            tr.appendChild(create_actions_td({
                 actions_id: `${item.uuid}-item-actions`,
                 edit_url: edit_url,
                 edit_label: item.is_published === 1 ? 'Details' : 'Edit',
@@ -880,7 +880,7 @@ const itemsListDisplayModule = (function() {
                 : `${APP_PATH}/items/vertical-timeline/edit?exhibit_id=${exhibit_id}&item_id=${item_id}`;
             const delete_url = `${APP_PATH}/items/delete?exhibit_id=${exhibit_id}&item_id=${item_id}&type=vertical_timeline`;
 
-            tr.appendChild(build_actions_cell({
+            tr.appendChild(create_actions_td({
                 actions_id: `${item.uuid}-item-actions`,
                 edit_url: edit_url,
                 edit_label: item.is_published === 1 ? 'Details' : 'Edit',
@@ -1086,7 +1086,7 @@ const itemsListDisplayModule = (function() {
 
             const delete_url = `${APP_PATH}/items/timeline/item/delete?exhibit_id=${exhibit_id}&timeline_id=${timeline_id}&item_id=${item_id}`;
 
-            tr.appendChild(build_actions_cell({
+            tr.appendChild(create_actions_td({
                 actions_id: `${item.uuid}-item-actions`,
                 edit_url: edit_url,
                 edit_label: item.is_published === 1 ? 'Details' : 'Edit',
@@ -1402,12 +1402,317 @@ const itemsListDisplayModule = (function() {
      * @param {Object} opts - Same as build_item_actions_dropdown_html
      * @returns {HTMLElement} Table cell
      */
-    const build_actions_cell = (opts) => {
+    const create_actions_td = (opts) => {
         const td = document.createElement('td');
         td.id = opts.actions_id || '';
         td.className = 'text-center';
         td.innerHTML = build_item_actions_dropdown_html(opts);
         return td;
+    };
+
+    /*
+     * Row-type vocabulary shared by get_row_type / build_actions_cell /
+     * update_actions_cell. Each maps to the <tr id> convention the display_*
+     * builders emit:
+     *   standard      <uuid>_<item_type>_item
+     *   heading       <uuid>_heading  (or _subheading)
+     *   grid          <uuid>_grid
+     *   timeline      <uuid>_vertical_timeline
+     *   grid_item     <uuid>_griditem_<item_type>
+     *   timeline_item <uuid>_timelineitem_<item_type>
+     */
+    const classify_row_id_parts = (parts) => {
+
+        if (!Array.isArray(parts) || parts.length === 0) {
+            return null;
+        }
+
+        const first = parts[0];
+        const rest = parts.slice(1).join('_');
+
+        if (first === 'griditem') {
+            return { row_type: 'grid_item', item_type: rest || null };
+        }
+
+        if (first === 'timelineitem') {
+            return { row_type: 'timeline_item', item_type: rest || null };
+        }
+
+        if (parts.length === 1 && (first === 'heading' || first === 'subheading')) {
+            return { row_type: 'heading', item_type: null };
+        }
+
+        if (parts.length === 1 && first === 'grid') {
+            return { row_type: 'grid', item_type: null };
+        }
+
+        if (parts.length === 2 && first === 'vertical' && parts[1] === 'timeline') {
+            return { row_type: 'timeline', item_type: null };
+        }
+
+        if (parts.length >= 2 && parts[parts.length - 1] === 'item') {
+            return { row_type: 'standard', item_type: parts.slice(0, -1).join('_') };
+        }
+
+        return null;
+    };
+
+    /**
+     * Finds the list row for a uuid and classifies it from its <tr id>.
+     * Replaces the "scan every <tr> and split on '_'" loops in the list
+     * modules' publish/suppress handlers.
+     *
+     * @param {string} uuid
+     * @returns {{row_type: string, item_type: (string|null), tr: HTMLElement}|null}
+     *          row_type ∈ standard|heading|grid|timeline|grid_item|timeline_item;
+     *          item_type is 'text' or the media type for standard/grid_item/
+     *          timeline_item rows, null otherwise; null when no row matches
+     */
+    obj.get_row_type = function(uuid) {
+
+        if (typeof uuid !== 'string' || uuid.length === 0) {
+            return null;
+        }
+
+        const prefix = `${uuid}_`;
+        const rows = document.querySelectorAll('tr[id]');
+
+        for (const tr of rows) {
+
+            if (!tr.id.startsWith(prefix)) {
+                continue;
+            }
+
+            const descriptor = classify_row_id_parts(tr.id.slice(prefix.length).split('_'));
+
+            if (descriptor) {
+                return { row_type: descriptor.row_type, item_type: descriptor.item_type, tr: tr };
+            }
+        }
+
+        return null;
+    };
+
+    /*
+     * Edit/Details + Delete URLs per row type, byte-for-byte what the
+     * display_* builders emit at initial render.
+     */
+    const build_action_urls = (opts, is_published) => {
+
+        if (!opts.uuid || !opts.exhibit_id) {
+            console.error('build_actions_cell: uuid and exhibit_id are required');
+            return null;
+        }
+
+        const exhibit_id = encodeURIComponent(opts.exhibit_id);
+        const item_id = encodeURIComponent(opts.uuid);
+        const mode = is_published ? 'details' : 'edit';
+        const kind = opts.item_type === 'text' ? 'text' : 'media';
+
+        switch (opts.row_type) {
+
+            case 'standard':
+                return {
+                    edit_url: `${APP_PATH}/items/standard/${kind}/${mode}?exhibit_id=${exhibit_id}&item_id=${item_id}`,
+                    delete_url: `${APP_PATH}/items/delete?exhibit_id=${exhibit_id}&item_id=${item_id}&type=item`
+                };
+
+            case 'heading':
+                return {
+                    edit_url: `${APP_PATH}/items/heading/${mode}?exhibit_id=${exhibit_id}&item_id=${item_id}`,
+                    delete_url: `${APP_PATH}/items/delete?exhibit_id=${exhibit_id}&item_id=${item_id}&type=heading`
+                };
+
+            case 'grid':
+                return {
+                    edit_url: `${APP_PATH}/items/grid/${mode}?exhibit_id=${exhibit_id}&item_id=${item_id}`,
+                    delete_url: `${APP_PATH}/items/delete?exhibit_id=${exhibit_id}&item_id=${item_id}&type=grid`
+                };
+
+            case 'timeline':
+                return {
+                    edit_url: `${APP_PATH}/items/vertical-timeline/${mode}?exhibit_id=${exhibit_id}&item_id=${item_id}`,
+                    delete_url: `${APP_PATH}/items/delete?exhibit_id=${exhibit_id}&item_id=${item_id}&type=vertical_timeline`
+                };
+
+            case 'grid_item': {
+
+                if (!opts.grid_id) {
+                    console.error('build_actions_cell: grid_id is required for grid_item rows');
+                    return null;
+                }
+
+                const grid_id = encodeURIComponent(opts.grid_id);
+
+                return {
+                    edit_url: `${APP_PATH}/items/grid/item/${kind}/${mode}?exhibit_id=${exhibit_id}&grid_id=${grid_id}&item_id=${item_id}`,
+                    delete_url: `${APP_PATH}/items/grid/item/delete?exhibit_id=${exhibit_id}&grid_id=${grid_id}&item_id=${item_id}`
+                };
+            }
+
+            case 'timeline_item': {
+
+                if (!opts.timeline_id) {
+                    console.error('build_actions_cell: timeline_id is required for timeline_item rows');
+                    return null;
+                }
+
+                const timeline_id = encodeURIComponent(opts.timeline_id);
+
+                return {
+                    edit_url: `${APP_PATH}/items/vertical-timeline/item/${kind}/${mode}?exhibit_id=${exhibit_id}&timeline_id=${timeline_id}&item_id=${item_id}`,
+                    delete_url: `${APP_PATH}/items/timeline/item/delete?exhibit_id=${exhibit_id}&timeline_id=${timeline_id}&item_id=${item_id}`
+                };
+            }
+
+            default:
+                console.error(`build_actions_cell: unknown row_type "${opts.row_type}"`);
+                return null;
+        }
+    };
+
+    /**
+     * Builds the full actions-dropdown HTML for a list row from its identity
+     * and publish state — the innerHTML of the `<uuid>-item-actions` cell.
+     * Same markup the display_* builders render initially (Edit/Details,
+     * Move Up / Move Down, aria-disabled Delete when published), so the
+     * post-publish/suppress rebuilds no longer hand-roll it.
+     *
+     * @param {Object} opts
+     * @param {string} opts.row_type    standard|heading|grid|timeline|grid_item|timeline_item
+     * @param {string} [opts.item_type] 'text' → text routes; anything else → media routes
+     *                                  (only consulted for standard/grid_item/timeline_item)
+     * @param {string} opts.uuid
+     * @param {string} opts.exhibit_id
+     * @param {string} [opts.grid_id]      required for grid_item
+     * @param {string} [opts.timeline_id]  required for timeline_item
+     * @param {number|boolean} opts.is_published  1/true = published
+     * @param {string} [opts.item_title]   for the Move aria-labels (default 'item')
+     * @param {boolean} [opts.show_move]   default false for timeline_item
+     *                                     (date-ordered), true otherwise
+     * @returns {string} dropdown HTML, or '' when opts are invalid
+     */
+    obj.build_actions_cell = function(opts) {
+
+        const settings = opts || {};
+        const is_published = settings.is_published === 1 || settings.is_published === true;
+        const urls = build_action_urls(settings, is_published);
+
+        if (!urls) {
+            return '';
+        }
+
+        const show_move = (typeof settings.show_move === 'boolean')
+            ? settings.show_move
+            : settings.row_type !== 'timeline_item';
+
+        return build_item_actions_dropdown_html({
+            edit_url: urls.edit_url,
+            edit_label: is_published ? 'Details' : 'Edit',
+            edit_icon: is_published ? 'fa-folder-open' : 'fa-edit',
+            delete_url: urls.delete_url,
+            is_published: is_published ? 1 : 0,
+            item_title: settings.item_title,
+            show_move: show_move
+        });
+    };
+
+    /*
+     * Recovers the row title for the Move aria-labels from the rendered row
+     * (compact cell's .item-title), falling back to the current move-up
+     * aria-label ("Move <title> up").
+     */
+    const read_row_title = (cell) => {
+
+        const tr = cell.closest('tr');
+        const title_el = tr ? tr.querySelector('.item-title') : null;
+
+        if (title_el && title_el.textContent.trim().length > 0) {
+            return title_el.textContent.trim();
+        }
+
+        const move_up = cell.querySelector('[data-action="move-up"]');
+        const label = move_up ? (move_up.getAttribute('aria-label') || '') : '';
+        const match = label.match(/^Move (.*) up$/);
+
+        return match ? match[1] : undefined;
+    };
+
+    /**
+     * Rebuilds the `<uuid>-item-actions` cell in place after a publish /
+     * suppress toggle and re-wires the dropdown + reorder button states.
+     *
+     * row_type / item_type default from get_row_type(uuid); item_title
+     * defaults from the rendered row. The five call sites therefore only
+     * need: update_actions_cell(uuid, { exhibit_id, grid_id?, timeline_id?,
+     * is_published }).
+     *
+     * @param {string} uuid
+     * @param {Object} opts - same as build_actions_cell minus uuid, plus
+     *        [opts.table_selector] for reorderModule.update_reorder_button_states
+     *        (defaults to '#<table id>' of the enclosing table when it has one)
+     * @returns {boolean} true when the cell was rebuilt
+     */
+    obj.update_actions_cell = function(uuid, opts) {
+
+        const cell = document.getElementById(`${uuid}-item-actions`);
+
+        if (!cell) {
+            console.warn(`update_actions_cell: no actions cell for ${uuid}`);
+            return false;
+        }
+
+        const settings = Object.assign({}, opts || {}, { uuid: uuid });
+
+        if (!settings.row_type || settings.item_type === undefined) {
+
+            const found = obj.get_row_type(uuid);
+
+            if (!settings.row_type) {
+
+                if (!found) {
+                    console.error(`update_actions_cell: unable to determine row type for ${uuid}`);
+                    return false;
+                }
+
+                settings.row_type = found.row_type;
+            }
+
+            if (settings.item_type === undefined && found) {
+                settings.item_type = found.item_type;
+            }
+        }
+
+        if (settings.item_title === undefined) {
+            settings.item_title = read_row_title(cell);
+        }
+
+        const html = obj.build_actions_cell(settings);
+
+        if (!html) {
+            return false;
+        }
+
+        cell.className = 'text-center';
+        cell.innerHTML = html;
+
+        obj.setup_item_action_handlers();
+
+        if (typeof reorderModule !== 'undefined' && typeof reorderModule.update_reorder_button_states === 'function') {
+
+            let table_selector = settings.table_selector;
+
+            if (!table_selector) {
+                const table = cell.closest('table');
+                table_selector = (table && table.id) ? `#${table.id}` : null;
+            }
+
+            if (table_selector) {
+                reorderModule.update_reorder_button_states(table_selector);
+            }
+        }
+
+        return true;
     };
 
     /**

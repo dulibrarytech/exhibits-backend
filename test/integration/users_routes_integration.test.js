@@ -12,68 +12,42 @@
 
 'use strict';
 
-/*
- * The real endpoints modules build paths from APP_PATH at require time —
- * ensure it is defined before anything is loaded.
- */
-process.env.APP_PATH = process.env.APP_PATH || '/exhibits-dashboard';
-
 const express = require('express');
 const request = require('supertest');
 
+/*
+ * Requiring the shared mocks pins APP_PATH before any endpoints module is
+ * loaded; the jest.mock factories below are hoisted and resolve it lazily.
+ */
+const { TEST_USER_UID, path_for, mock_model } = require('./helpers/mocks');
+
 const TEST_USER_ID = 42;
-const TEST_USER_UID = '660e8400-e29b-41d4-a716-446655440001';
 
-jest.mock('../../libs/log4', () => ({
-    module: () => ({
-        error: jest.fn(),
-        warn: jest.fn(),
-        info: jest.fn(),
-        debug: jest.fn()
-    })
+jest.mock('../../libs/log4', () => require('./helpers/mocks').log4_factory());
+
+jest.mock('../../libs/tokens', () => require('./helpers/mocks').tokens_factory());
+
+jest.mock('../../auth/authorize', () => require('./helpers/mocks').authorize_factory({
+    extra: { get_actor_id: jest.fn(), can_assign_role: jest.fn() }
 }));
 
-jest.mock('../../libs/tokens', () => ({
-    verify: jest.fn((req, res, next) => {
-        req.decoded = { sub: TEST_USER_UID };
-        next();
-    })
-}));
+jest.mock('../../config/rate_limits_loader', () => require('./helpers/mocks').rate_limits_factory([
+    'read_operations', 'write_operations'
+]));
 
-jest.mock('../../auth/authorize', () => ({
-    check_permission: jest.fn().mockResolvedValue(true),
-    get_actor_id: jest.fn(),
-    can_assign_role: jest.fn()
-}));
-
-jest.mock('../../config/rate_limits_loader', () => ({
-    rate_limits: {
-        read_operations: (req, res, next) => next(),
-        write_operations: (req, res, next) => next()
-    }
-}));
-
-const mockUsersModel = {
-    get_users: jest.fn(),
-    get_user: jest.fn(),
-    save_user: jest.fn(),
-    update_user: jest.fn(),
-    get_user_role_id: jest.fn(),
-    delete_user: jest.fn(),
-    update_status: jest.fn()
-};
+const mockUsersModel = mock_model([
+    'get_users',
+    'get_user',
+    'save_user',
+    'update_user',
+    'get_user_role_id',
+    'delete_user',
+    'update_status'
+]);
 
 jest.mock('../../users/model', () => mockUsersModel);
 
 const ENDPOINTS = require('../../users/endpoints')().users;
-
-const path_for = (template, params = {}) => {
-    let path = template;
-    for (const [key, value] of Object.entries(params)) {
-        path = path.replace(new RegExp(`:${key}(?=/|$)`, 'g'), value);
-    }
-    return path;
-};
 
 const VALID_USER = {
     du_id: '871234567',

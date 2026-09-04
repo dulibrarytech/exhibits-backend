@@ -12,47 +12,32 @@
 const express = require('express');
 const request = require('supertest');
 
+const { TEST_UUID, TEST_USER_UID, mock_model } = require('./helpers/mocks');
+
 // ==================== MOCK SETUP ====================
 // All mocks must be defined before requiring the modules
 
-// Valid test UUIDs
-const TEST_UUID = '550e8400-e29b-41d4-a716-446655440000';
-const TEST_USER_UID = '660e8400-e29b-41d4-a716-446655440001';
-
 // Mock Logger
-jest.mock('../../libs/log4', () => ({
-    module: () => ({
-        error: jest.fn(),
-        warn: jest.fn(),
-        info: jest.fn(),
-        debug: jest.fn()
-    })
-}));
+jest.mock('../../libs/log4', () => require('./helpers/mocks').log4_factory());
 
 // Mock Token verification
-jest.mock('../../libs/tokens', () => ({
-    verify: jest.fn((req, res, next) => {
-        req.user = { id: TEST_USER_UID, role: 'admin' };
-        next();
-    })
-}));
+jest.mock('../../libs/tokens', () => {
+    const mocks = require('./helpers/mocks');
+    return mocks.tokens_factory({ user: { id: mocks.TEST_USER_UID, role: 'admin' } });
+});
 
 // Mock Authorization
-jest.mock('../../auth/authorize', () => ({
-    check_permission: jest.fn().mockResolvedValue(true)
-}));
+jest.mock('../../auth/authorize', () => require('./helpers/mocks').authorize_factory());
 
 // Mock Rate Limits
-jest.mock('../../config/rate_limits_loader', () => ({
-    rate_limits: {
-        read_operations: (req, res, next) => next(),
-        write_operations: (req, res, next) => next(),
-        media_operations: (req, res, next) => next(),
-        state_change_operations: (req, res, next) => next(),
-        preview_operations: (req, res, next) => next(),
-        public_media_access: (req, res, next) => next()
-    }
-}));
+jest.mock('../../config/rate_limits_loader', () => require('./helpers/mocks').rate_limits_factory([
+    'read_operations',
+    'write_operations',
+    'media_operations',
+    'state_change_operations',
+    'preview_operations',
+    'public_media_access'
+]));
 
 // Mock Webservices Config
 jest.mock('../../config/webservices_config', () => () => ({
@@ -73,20 +58,20 @@ jest.mock('fs', () => ({
 }));
 
 // Mock Exhibits Model
-const mockExhibitsModel = {
-    create_exhibit_record: jest.fn(),
-    get_exhibit_records: jest.fn(),
-    get_exhibit_record: jest.fn(),
-    get_exhibit_edit_record: jest.fn(),
-    update_exhibit_record: jest.fn(),
-    delete_exhibit_record: jest.fn(),
-    publish_exhibit: jest.fn(),
-    suppress_exhibit: jest.fn(),
-    check_preview: jest.fn(),
-    delete_exhibit_preview: jest.fn(),
-    build_exhibit_preview: jest.fn(),
-    unlock_exhibit_record: jest.fn()
-};
+const mockExhibitsModel = mock_model([
+    'create_exhibit_record',
+    'get_exhibit_records',
+    'get_exhibit_record',
+    'get_exhibit_edit_record',
+    'update_exhibit_record',
+    'delete_exhibit_record',
+    'publish_exhibit',
+    'suppress_exhibit',
+    'check_preview',
+    'delete_exhibit_preview',
+    'build_exhibit_preview',
+    'unlock_exhibit_record'
+]);
 
 jest.mock('../../exhibits/exhibits_model', () => mockExhibitsModel);
 

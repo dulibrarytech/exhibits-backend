@@ -31,32 +31,22 @@ const itemsDetailsGridItemModule = (function () {
             const exhibit_id = helperModule.get_parameter_by_name('exhibit_id');
             const grid_id = helperModule.get_parameter_by_name('grid_id');
             const item_id = helperModule.get_parameter_by_name('item_id');
-            const token = authModule.get_user_token();
-            let tmp = EXHIBITS_ENDPOINTS.exhibits.grid_item_record.get.endpoint.replace(':exhibit_id', exhibit_id);
-            tmp = tmp.replace(':grid_id', grid_id);
-            let endpoint = tmp.replace(':item_id', item_id);
-
-            if (token === false) {
-
-                domModule.set_alert('#message', 'danger', 'Unable to get API endpoints');
-
-                setTimeout(() => {
-                    authModule.redirect_to_auth();
-                }, 1000);
-
-                return false;
-            }
-
-            let response = await httpModule.req({
-                method: 'GET',
-                url: endpoint + '?type=details',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'x-access-token': token
-                }
+            const endpoint = endpointsModule.build(EXHIBITS_ENDPOINTS.exhibits.grid_item_record.get.endpoint, {
+                exhibit_id: exhibit_id,
+                grid_id: grid_id,
+                item_id: item_id
             });
 
-            if (response !== undefined && response.status === 200) {
+            if (!endpoint) {
+                throw new Error('Missing required parameters: exhibit_id, grid_id or item_id');
+            }
+
+            const response = await httpModule.api({
+                method: 'GET',
+                url: endpoint + '?type=details'
+            });
+
+            if (response && response.status === 200) {
                 return response.data.data;
             }
 
@@ -106,12 +96,6 @@ const itemsDetailsGridItemModule = (function () {
             console.error('No record returned from get_item_record()');
             return false;
         }
-
-        // Helper for safe DOM value setting
-        const set_element_value = (selector, value) => {
-            const el = document.querySelector(selector);
-            if (el) el.value = value;
-        };
 
         // Format and display creation/update metadata
         const create_datetime = helperModule.format_date(new Date(record.created));

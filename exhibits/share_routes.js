@@ -23,14 +23,11 @@ const ENDPOINTS = require('../exhibits/endpoints/index');
 const TOKEN = require('../libs/tokens');
 const {rate_limits} = require('../config/rate_limits_loader');
 
-// Wrap an async handler so a rejected promise reaches the global error handler.
-// Security headers, request logging, and 404/error handling are applied once,
-// globally, in config/express.js — not per route file.
-const async_handler = (fn) => {
-    return (req, res, next) => {
-        Promise.resolve(fn(req, res, next)).catch(next);
-    };
-};
+/*
+ * Security headers, request logging, and 404/error handling are applied once,
+ * globally, in config/express.js — not per route file.
+ */
+const { async_handler } = require('../libs/http');
 
 module.exports = function (app) {
 

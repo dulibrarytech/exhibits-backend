@@ -13,22 +13,18 @@
 
 'use strict';
 
+const { mock_model } = require('./helpers/mocks');
+
 const EXHIBIT_UUID = '550e8400-e29b-41d4-a716-446655440000';
 const ITEM_UUID = '660e8400-e29b-41d4-a716-446655440001';
 
-jest.mock('../../libs/log4', () => ({
-    module: () => ({ error: jest.fn(), warn: jest.fn(), info: jest.fn(), debug: jest.fn() })
-}));
+jest.mock('../../libs/log4', () => require('./helpers/mocks').log4_factory());
 
 jest.mock('../../config/elasticsearch_config', () => () => ({ elasticsearch_index: 'exhibits_test' }));
 jest.mock('../../config/db_config', () => () => jest.fn());
-jest.mock('../../config/db_tables_config', () => () => ({ exhibits: {} }));
+jest.mock('../../config/db_tables_config', () => require('./helpers/mocks').db_tables_factory({}));
 
-const mockIndexTasks = {
-    index_record: jest.fn(),
-    get_indexed_record: jest.fn(),
-    delete_record: jest.fn()
-};
+const mockIndexTasks = mock_model(['index_record', 'get_indexed_record', 'delete_record']);
 jest.mock('../../indexer/tasks/indexer_index_tasks', () => jest.fn().mockImplementation(() => mockIndexTasks));
 
 const mockExhibitTasks = { get_exhibit_record: jest.fn(), get_exhibit_records: jest.fn() };

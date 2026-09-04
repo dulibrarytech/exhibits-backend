@@ -10,13 +10,8 @@
 
 'use strict';
 
-const { readFileSync } = require('node:fs');
-const { resolve } = require('node:path');
-
-const MODULE_PATH = resolve(
-    __dirname,
-    '../../public/app/timeline-items/items.common.vertical.timeline.item.form.module.js',
-);
+const { load_browser_module } = require('./helpers/load_module');
+const { dom_stub_with_set_value, endpoints_fixed_stub, rte_stub } = require('./helpers/stubs');
 
 function navigate(pathname) {
     window.history.pushState({}, '', pathname);
@@ -49,40 +44,18 @@ describe('itemsCommonVerticalTimelineItemFormModule', () => {
     beforeAll(() => {
         // The IIFE reads endpointsModule.get_app_path() at eval time —
         // stub it before loading the module.
-        globalThis.endpointsModule = {
-            get_app_path: () => '/exhibits-dashboard',
-        };
-        const src = readFileSync(MODULE_PATH, 'utf8');
-        const patched = src.replace(
-            /^const\s+itemsCommonVerticalTimelineItemFormModule\s*=/m,
-            'globalThis.itemsCommonVerticalTimelineItemFormModule =',
+        globalThis.endpointsModule = endpoints_fixed_stub('/exhibits-dashboard');
+        load_browser_module(
+            'public/app/timeline-items/items.common.vertical.timeline.item.form.module.js',
+            'itemsCommonVerticalTimelineItemFormModule',
         );
-        // eslint-disable-next-line no-eval
-        (0, eval)(patched);
     });
 
     beforeEach(() => {
-        globalThis.rteModule = {
-            get_html: (id) => document.getElementById(id)?.value?.trim() ?? '',
-            set_html: (id, html) => {
-                const el = document.getElementById(id);
-                if (el) el.value = html;
-            },
-            is_empty: (id) => (document.getElementById(id)?.value?.trim() ?? '') === '',
-            init: () => null,
-            init_all: () => {},
-            set_enabled: () => {},
-            set_all_enabled: () => {},
-            on_change: () => {},
-            is_dirty: () => false,
-        };
+        globalThis.rteModule = rte_stub();
         vi.spyOn(console, 'warn').mockImplementation(() => {});
         vi.spyOn(console, 'error').mockImplementation(() => {});
-        globalThis.domModule = {
-            set_alert: vi.fn(),
-            set_field_error: vi.fn(),
-            clear_field_error: vi.fn(),
-        };
+        globalThis.domModule = dom_stub_with_set_value();
         navigate('/items/timeline/item/text');
         build_form();
     });
@@ -96,15 +69,9 @@ describe('itemsCommonVerticalTimelineItemFormModule', () => {
                 .get_common_timeline_item_form_fields();
 
             expect(result).toBe(false);
-            expect(globalThis.domModule.set_alert).toHaveBeenCalledWith(
-                document.querySelector('#message'),
-                'danger',
+            expect(globalThis.domModule.show_field_error).toHaveBeenCalledWith(
                 'Please enter a timeline date',
-            );
-            expect(globalThis.domModule.set_field_error).toHaveBeenCalledWith(
                 '#item-date-input',
-                'item-date-input-error',
-                'Please enter a timeline date',
             );
         });
 
@@ -130,10 +97,9 @@ describe('itemsCommonVerticalTimelineItemFormModule', () => {
 
                 expect(result, `expected '${bad}' to be rejected`).toBe(false);
             }
-            expect(globalThis.domModule.set_alert).toHaveBeenCalledWith(
-                expect.anything(),
-                'danger',
+            expect(globalThis.domModule.show_field_error).toHaveBeenCalledWith(
                 'Please enter a valid date format (YYYY-MM-DD)',
+                '#item-date-input',
             );
         });
 
@@ -144,10 +110,9 @@ describe('itemsCommonVerticalTimelineItemFormModule', () => {
                 .get_common_timeline_item_form_fields();
 
             expect(result).toBe(false);
-            expect(globalThis.domModule.set_alert).toHaveBeenCalledWith(
-                expect.anything(),
-                'danger',
+            expect(globalThis.domModule.show_field_error).toHaveBeenCalledWith(
                 'Please enter a valid date',
+                '#item-date-input',
             );
         });
 
@@ -204,15 +169,9 @@ describe('itemsCommonVerticalTimelineItemFormModule', () => {
                 .get_common_timeline_item_form_fields();
 
             expect(result).toBe(false);
-            expect(globalThis.domModule.set_alert).toHaveBeenCalledWith(
-                document.querySelector('#message'),
-                'danger',
+            expect(globalThis.domModule.show_field_error).toHaveBeenCalledWith(
                 'Please select a media item',
-            );
-            expect(globalThis.domModule.set_field_error).toHaveBeenCalledWith(
                 '#item-media-uuid',
-                'item-media-uuid-error',
-                'Please select a media item',
             );
         });
 

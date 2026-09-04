@@ -43,14 +43,7 @@ jest.mock('../../config/webservices_config', () => () => ({
     sso_response_url: 'https://app.test.du.edu/exhibits-dashboard/auth/sso'
 }));
 
-jest.mock('../../libs/log4', () => ({
-    module: () => ({
-        error: jest.fn(),
-        warn: jest.fn(),
-        info: jest.fn(),
-        debug: jest.fn()
-    })
-}));
+jest.mock('../../libs/log4', () => require('./helpers/mocks').log4_factory());
 
 const TOKENS = require('../../libs/tokens');
 

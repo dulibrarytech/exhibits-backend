@@ -90,55 +90,6 @@ const mediaUploadsModule = (function() {
     };
 
     /**
-     * Display error message safely
-     */
-    const display_upload_error = (element, error_message) => {
-        if (!element) {
-            console.error('Error element not found:', error_message);
-            return;
-        }
-        const alert_div = document.createElement('div');
-        alert_div.className = 'alert alert-danger d-flex align-items-center';
-        alert_div.setAttribute('role', 'alert');
-        const icon = document.createElement('i');
-        icon.className = 'fa fa-exclamation-circle me-2';
-        icon.setAttribute('aria-hidden', 'true');
-        alert_div.appendChild(icon);
-        const text = document.createTextNode(error_message);
-        alert_div.appendChild(text);
-        element.textContent = '';
-        element.appendChild(alert_div);
-    };
-
-    /**
-     * Display success message
-     */
-    const display_upload_success = (element, message) => {
-        if (!element) return;
-        const alert_div = document.createElement('div');
-        alert_div.className = 'alert alert-success d-flex align-items-center';
-        alert_div.setAttribute('role', 'alert');
-        const icon = document.createElement('i');
-        icon.className = 'fa fa-check-circle mr-2';
-        icon.setAttribute('aria-hidden', 'true');
-        icon.style.marginRight = '8px';
-        alert_div.appendChild(icon);
-        const text = document.createTextNode(message);
-        alert_div.appendChild(text);
-        element.textContent = '';
-        element.appendChild(alert_div);
-    };
-
-    /**
-     * Clear message from element
-     */
-    const clear_message = (element) => {
-        if (element) {
-            element.textContent = '';
-        }
-    };
-
-    /**
      * Show element
      */
     const show_element = (element, display = 'inline') => {
@@ -209,8 +160,8 @@ const mediaUploadsModule = (function() {
             const message_element = document.getElementById('upload-media-message');
             if (message_element) {
                 const file_word = saved_count === 1 ? 'file' : 'files';
-                display_upload_success(message_element, 'Media details saved successfully for ' + saved_count + ' ' + file_word);
-                setTimeout(function() { clear_message(message_element); }, 5000);
+                domModule.set_alert(message_element, 'success', 'Media details saved successfully for ' + saved_count + ' ' + file_word);
+                setTimeout(function() { domModule.empty(message_element); }, 5000);
             }
         }
     };
@@ -277,7 +228,7 @@ const mediaUploadsModule = (function() {
                 });
 
                 this.on('addedfile', function(file) {
-                    clear_message(document.querySelector('.upload-error'));
+                    domModule.empty(document.querySelector('.upload-error'));
                     console.debug('File added: ' + file.name + ' (' + this.files.length + '/' + MAX_FILES + ' files)');
                 });
 
@@ -300,7 +251,7 @@ const mediaUploadsModule = (function() {
 
                 this.on('maxfilesexceeded', function(file) {
                     const error_element = document.querySelector('.upload-error');
-                    display_upload_error(error_element, 'Maximum ' + MAX_FILES + ' files allowed. Remove some files to add more.');
+                    domModule.set_alert(error_element, 'danger', 'Maximum ' + MAX_FILES + ' files allowed. Remove some files to add more.');
                     this.removeFile(file);
                 });
             },
@@ -315,7 +266,7 @@ const mediaUploadsModule = (function() {
                 const message = typeof error_message === 'object' 
                     ? (error_message.error || 'Upload failed')
                     : error_message;
-                display_upload_error(error_element, message);
+                domModule.set_alert(error_element, 'danger', message);
                 this.removeFile(file);
             }
         };
@@ -369,7 +320,7 @@ const mediaUploadsModule = (function() {
                 };
 
                 if (!response || !response.success || !response.files || response.files.length === 0) {
-                    display_upload_error(elements.error, 'Upload failed - invalid server response');
+                    domModule.set_alert(elements.error, 'danger', 'Upload failed - invalid server response');
                     this.removeFile(file);
                     return;
                 }
@@ -382,7 +333,7 @@ const mediaUploadsModule = (function() {
                 const thumbnail_path = uploaded_file.thumbnail_path;
 
                 if (!uuid || !storage_path) {
-                    display_upload_error(elements.error, 'Upload failed - missing file identifiers');
+                    domModule.set_alert(elements.error, 'danger', 'Upload failed - missing file identifiers');
                     this.removeFile(file);
                     return;
                 }
@@ -402,7 +353,7 @@ const mediaUploadsModule = (function() {
                     uploaded_at: uploaded_file.uploaded_at || new Date().toISOString()
                 });
 
-                clear_message(elements.error);
+                domModule.empty(elements.error);
 
                 if (elements.media_type) {
                     elements.media_type.value = media_type;
@@ -441,11 +392,11 @@ const mediaUploadsModule = (function() {
                 }, 500);
 
                 const success_count = uploaded_files_data.length;
-                display_upload_success(elements.error, success_count + ' file(s) uploaded successfully');
+                domModule.set_alert(elements.error, 'success', success_count + ' file(s) uploaded successfully');
 
                 // Remove success message after 4 seconds
                 setTimeout(function() {
-                    clear_message(elements.error);
+                    domModule.empty(elements.error);
                 }, 4000);
 
                 console.debug('Item media uploaded: ' + uuid + ' (' + media_type + ')');

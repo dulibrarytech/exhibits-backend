@@ -38,20 +38,6 @@ const itemsCommonHeadingFormModule = (function () {
                 return el?.value?.trim() ?? default_value;
             };
 
-            const show_error = (message, field_selector) => {
-
-                const message_el = document.querySelector('#message');
-
-                if (message_el) {
-                    domModule.set_alert(message_el, 'danger', message);
-                }
-
-                if (field_selector) {
-                    const error_id = field_selector.replace('#', '') + '-error';
-                    domModule.set_field_error(field_selector, error_id, message);
-                }
-            };
-
             ['#item-heading-text-input', '#item-heading-type-input'].forEach(s => {
                 domModule.clear_field_error(s, s.replace('#', '') + '-error');
             });
@@ -61,7 +47,7 @@ const itemsCommonHeadingFormModule = (function () {
 
             // Validate required heading text
             if (!item_heading.text || item_heading.text.length === 0) {
-                show_error('Please enter heading text', '#item-heading-text-input');
+                domModule.show_field_error('Please enter heading text', '#item-heading-text-input');
                 return false;
             }
 
@@ -70,7 +56,7 @@ const itemsCommonHeadingFormModule = (function () {
 
             // Validate required heading type
             if (!item_heading.type || item_heading.type.length === 0) {
-                show_error('Please select heading type', '#item-heading-type-input');
+                domModule.show_field_error('Please select heading type', '#item-heading-type-input');
                 return false;
             }
 
@@ -140,13 +126,6 @@ const itemsCommonHeadingFormModule = (function () {
             return;
         }
 
-        const token = authModule.get_user_token();
-
-        if (!token) {
-            console.warn('[heading-styles] No auth token available');
-            return;
-        }
-
         const EXHIBITS_ENDPOINTS = endpointsModule.get_exhibits_endpoints();
 
         if (!EXHIBITS_ENDPOINTS?.exhibits?.exhibit_records?.endpoints?.get?.endpoint) {
@@ -154,19 +133,22 @@ const itemsCommonHeadingFormModule = (function () {
             return;
         }
 
-        const endpoint = EXHIBITS_ENDPOINTS.exhibits.exhibit_records.endpoints.get.endpoint
-            .replace(':exhibit_id', encodeURIComponent(exhibit_id));
+        const endpoint = endpointsModule.build(EXHIBITS_ENDPOINTS.exhibits.exhibit_records.endpoints.get.endpoint, {
+            exhibit_id: exhibit_id
+        });
 
         try {
 
-            const response = await httpModule.req({
+            const response = await httpModule.api({
                 method: 'GET',
                 url: endpoint,
-                headers: {
-                    'Content-Type': 'application/json',
-                    'x-access-token': token
-                }
+                logout_on_missing_token: false
             });
+
+            if (response === null) {
+                console.warn('[heading-styles] No auth token available');
+                return;
+            }
 
             if (!response || response.status !== 200 || !response.data?.data) {
                 console.warn('[heading-styles] Exhibit API response invalid. Status:', response?.status);

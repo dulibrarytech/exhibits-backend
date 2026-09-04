@@ -54,13 +54,6 @@ const kalturaModalsModule = (function() {
 
         try {
 
-            const token = authModule.get_user_token();
-
-            if (!token || token === false) {
-                console.error('Cannot fetch Kaltura config: no auth token');
-                return null;
-            }
-
             // Build endpoint URL
             let config_endpoint = '';
 
@@ -71,15 +64,9 @@ const kalturaModalsModule = (function() {
                 config_endpoint = APP_PATH + '/api/v1/media/library/kaltura/config/player';
             }
 
-            const response = await httpModule.req({
+            const response = await httpModule.api({
                 method: 'GET',
-                url: config_endpoint,
-                headers: {
-                    'Content-Type': 'application/json',
-                    'x-access-token': token
-                },
-                timeout: 15000,
-                validateStatus: (status) => status >= 200 && status < 600
+                url: config_endpoint
             });
 
             if (response && response.status === HTTP_STATUS.OK && response.data?.success && response.data?.data) {
@@ -378,13 +365,6 @@ const kalturaModalsModule = (function() {
                 return;
             }
 
-            // Validate authentication
-            const token = authModule.get_user_token();
-            if (!token || token === false) {
-                display_card_message(card, 'danger', 'Session expired. Please log in again.');
-                return;
-            }
-
             // Validate endpoint
             if (!EXHIBITS_ENDPOINTS?.media_records?.post?.endpoint) {
                 display_card_message(card, 'danger', 'Create endpoint not configured');
@@ -416,17 +396,10 @@ const kalturaModalsModule = (function() {
                 media_duration: ms_duration ? (parseFloat(ms_duration) / 1000) : null
             };
 
-            // Make API request to create media record
-            const response = await httpModule.req({
+            const response = await httpModule.api({
                 method: 'POST',
                 url: EXHIBITS_ENDPOINTS.media_records.post.endpoint,
-                headers: {
-                    'Content-Type': 'application/json',
-                    'x-access-token': token
-                },
-                data: record_data,
-                timeout: 30000,
-                validateStatus: (status) => status >= 200 && status < 600
+                data: record_data
             });
 
             // Helper to reset the save button on error paths
@@ -534,39 +507,9 @@ const kalturaModalsModule = (function() {
         return select?.value || '';
     };
 
-    /**
-     * Display status message in card
-     * @param {HTMLElement} card - The card element
-     * @param {string} type - Message type ('success', 'danger', 'warning')
-     * @param {string} message - Message text
-     */
+    /* Card-level status messages — shared helper (success auto-clears after 5 s) */
     const display_card_message = (card, type, message) => {
-        let message_container = card.querySelector('.card-message');
-
-        if (!message_container) {
-            message_container = document.createElement('div');
-            message_container.className = 'card-message mt-2';
-            const card_body = card.querySelector('.card-body');
-            if (card_body) {
-                card_body.appendChild(message_container);
-            }
-        }
-
-        const icon = type === 'success' ? 'fa-check' : type === 'danger' ? 'fa-exclamation-circle' : 'fa-exclamation-triangle';
-
-        message_container.innerHTML = '<div class="alert alert-' + type + ' mb-0" role="alert">' +
-            '<i class="fa ' + icon + '" style="margin-right: 6px;" aria-hidden="true"></i>' +
-            escape_html(message) +
-            '</div>';
-
-        // Auto-hide success messages
-        if (type === 'success') {
-            setTimeout(() => {
-                if (message_container) {
-                    message_container.innerHTML = '';
-                }
-            }, 5000);
-        }
+        helperMediaLibraryModule.display_card_message(card, type, message, { success_hide_ms: 5000 });
     };
 
     /**
@@ -924,10 +867,7 @@ const kalturaModalsModule = (function() {
                 if (loading_el) loading_el.style.display = 'none';
                 if (error_el) {
                     error_el.style.display = 'block';
-                    error_el.innerHTML = '<div class="alert alert-danger mb-0" role="alert">' +
-                        '<i class="fa fa-exclamation-circle" style="margin-right: 8px;" aria-hidden="true"></i>' +
-                        'Unable to load the media player. Please try again.' +
-                        '</div>';
+                    domModule.set_alert(error_el, 'danger', 'Unable to load the media player. Please try again.');
                 }
             };
 

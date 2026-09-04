@@ -23,8 +23,7 @@ const ENDPOINTS = require('../exhibits/endpoints/index');
 const TOKEN = require('../libs/tokens');
 const { rate_limits } = require('../config/rate_limits_loader');
 
-// Surface a rejected handler promise to Express' error handling.
-const async_handler = (fn) => (req, res, next) => Promise.resolve(fn(req, res, next)).catch(next);
+const { async_handler } = require('../libs/http');
 
 module.exports = function (app) {
 

@@ -40,17 +40,6 @@ const itemsCommonStandardGridFormModule = (function () {
                 return el?.value?.trim() ?? default_value;
             };
 
-            const show_error = (message, field_selector) => {
-                const message_el = document.querySelector('#message');
-                if (message_el) {
-                    domModule.set_alert(message_el, 'danger', message);
-                }
-                if (field_selector) {
-                    const error_id = field_selector.replace('#', '') + '-error';
-                    domModule.set_field_error(field_selector, error_id, message);
-                }
-            };
-
             // Clear any prior field-level error state.
             domModule.clear_field_error('#grid-columns', 'grid-columns-error');
             domModule.clear_field_error('#grid-internal-name-input', 'grid-internal-name-input-error');
@@ -63,7 +52,7 @@ const itemsCommonStandardGridFormModule = (function () {
             const internal_name_value = get_element_value('#grid-internal-name-input');
 
             if (internal_name_value === '') {
-                show_error('Please enter an internal name', '#grid-internal-name-input');
+                domModule.show_field_error('Please enter an internal name', '#grid-internal-name-input');
                 return false;
             }
 
@@ -73,12 +62,12 @@ const itemsCommonStandardGridFormModule = (function () {
 
             // Validate columns against the dropdown's allowed set
             if (!columns_value || columns_value === '') {
-                show_error('Please select the number of columns', '#grid-columns');
+                domModule.show_field_error('Please select the number of columns', '#grid-columns');
                 return false;
             }
 
             if (!ALLOWED_COLUMN_VALUES.includes(columns_value)) {
-                show_error('Please select 2, 3, or 4 columns', '#grid-columns');
+                domModule.show_field_error('Please select 2, 3, or 4 columns', '#grid-columns');
                 return false;
             }
 
@@ -143,13 +132,6 @@ const itemsCommonStandardGridFormModule = (function () {
             return;
         }
 
-        const token = authModule.get_user_token();
-
-        if (!token) {
-            console.warn('[styles] No auth token available');
-            return;
-        }
-
         const EXHIBITS_ENDPOINTS = endpointsModule.get_exhibits_endpoints();
 
         if (!EXHIBITS_ENDPOINTS?.exhibits?.exhibit_records?.endpoints?.get?.endpoint) {
@@ -160,19 +142,22 @@ const itemsCommonStandardGridFormModule = (function () {
             return;
         }
 
-        const endpoint = EXHIBITS_ENDPOINTS.exhibits.exhibit_records.endpoints.get.endpoint
-            .replace(':exhibit_id', encodeURIComponent(exhibit_id));
+        const endpoint = endpointsModule.build(EXHIBITS_ENDPOINTS.exhibits.exhibit_records.endpoints.get.endpoint, {
+            exhibit_id: exhibit_id
+        });
 
         try {
 
-            const response = await httpModule.req({
+            const response = await httpModule.api({
                 method: 'GET',
                 url: endpoint,
-                headers: {
-                    'Content-Type': 'application/json',
-                    'x-access-token': token
-                }
+                logout_on_missing_token: false
             });
+
+            if (response === null) {
+                console.warn('[styles] No auth token available');
+                return;
+            }
 
             if (!response || response.status !== 200 || !response.data?.data) {
                 console.warn('[styles] Exhibit API response invalid. Status:', response?.status, 'Data:', response?.data);

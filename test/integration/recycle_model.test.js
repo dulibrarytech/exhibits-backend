@@ -13,41 +13,34 @@
 
 'use strict';
 
-const TEST_UUID = '550e8400-e29b-41d4-a716-446655440000';
+const { TEST_UUID, mock_model } = require('./helpers/mocks');
+
 const TEST_OWNER = 'owner-du-id';
 const EXHIBIT_UUID = '770e8400-e29b-41d4-a716-446655440002';
 
-jest.mock('../../libs/log4', () => ({
-    module: () => ({
-        error: jest.fn(),
-        warn: jest.fn(),
-        info: jest.fn(),
-        debug: jest.fn()
-    })
-}));
+jest.mock('../../libs/log4', () => require('./helpers/mocks').log4_factory());
 
 jest.mock('../../config/db_config', () => () => jest.fn());
 
-jest.mock('../../config/db_tables_config', () => () => ({
-    exhibits: {
-        exhibit_records: 'tbl_exhibits',
-        heading_records: 'tbl_heading_items',
-        item_records: 'tbl_standard_items',
-        grid_records: 'tbl_grids',
-        timeline_records: 'tbl_timelines'
-    }
+jest.mock('../../config/db_tables_config', () => require('./helpers/mocks').db_tables_factory({
+    exhibit_records: 'tbl_exhibits',
+    heading_records: 'tbl_heading_items',
+    item_records: 'tbl_standard_items',
+    grid_records: 'tbl_grids',
+    timeline_records: 'tbl_timelines'
 }));
 
-const mockRecycledTasks = {
-    get_recycled_exhibit_records: jest.fn().mockResolvedValue([]),
-    get_recycled_heading_records: jest.fn().mockResolvedValue([]),
-    get_recycled_item_records: jest.fn().mockResolvedValue([]),
-    get_recycled_grid_records: jest.fn().mockResolvedValue([]),
-    get_recycled_timeline_records: jest.fn().mockResolvedValue([]),
-    delete_recycled_record: jest.fn(),
-    delete_all_recycled_records: jest.fn(),
-    restore_recycled_record: jest.fn()
-};
+const mockRecycledTasks = mock_model([
+    'delete_recycled_record',
+    'delete_all_recycled_records',
+    'restore_recycled_record'
+], {
+    get_recycled_exhibit_records: [],
+    get_recycled_heading_records: [],
+    get_recycled_item_records: [],
+    get_recycled_grid_records: [],
+    get_recycled_timeline_records: []
+});
 
 jest.mock('../../exhibits/tasks/exhibit_recycled_record_tasks', () => {
     return jest.fn().mockImplementation(() => mockRecycledTasks);

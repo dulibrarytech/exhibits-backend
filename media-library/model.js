@@ -28,6 +28,7 @@ const IIIF_CACHE = require('./iiif-cache');
 const REINDEX_COALESCER = require('../exhibits/reindex_coalescer');
 const PATH = require('path');
 const LOGGER = require('../libs/log4');
+const { is_valid_uuid } = require('../libs/uuid');
 const VALIDATOR = require('../libs/validate');
 const MEDIA_CREATE_SCHEMA = require('./schemas/media_create_record_schema')();
 // Initialize task instances
@@ -129,19 +130,6 @@ const format_subjects_for_display = (record) => {
     }
 
     return record;
-};
-
-/**
- * Validates if a string is a valid UUID format
- * @param {string} uuid - String to validate
- * @returns {boolean} Whether string is valid UUID
- */
-const is_valid_uuid = (uuid) => {
-    if (!uuid || typeof uuid !== 'string') {
-        return false;
-    }
-    const uuid_regex = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
-    return uuid_regex.test(uuid);
 };
 
 /**

@@ -15,102 +15,78 @@
 
 'use strict';
 
-/*
- * The real endpoints modules build paths from APP_PATH at require time —
- * ensure it is defined before anything is loaded.
- */
-process.env.APP_PATH = process.env.APP_PATH || '/exhibits-dashboard';
-
 const express = require('express');
 const request = require('supertest');
 const FS = require('fs');
 const OS = require('os');
 const PATH = require('path');
 
+/*
+ * Requiring the shared mocks pins APP_PATH before any endpoints module is
+ * loaded; the jest.mock factories below are hoisted and resolve it lazily.
+ */
+const { APP_PATH, TEST_USER_UID, path_for, mock_model } = require('./helpers/mocks');
+
 const TEST_MEDIA_ID = '550e8400-e29b-41d4-a716-446655440000';
 const TEST_EXHIBIT_ID = '660e8400-e29b-41d4-a716-446655440100';
 const TEST_REPO_UUID = '770e8400-e29b-41d4-a716-446655440200';
-const TEST_USER_UID = '660e8400-e29b-41d4-a716-446655440001';
 
-jest.mock('../../libs/log4', () => ({
-    module: () => ({
-        error: jest.fn(),
-        warn: jest.fn(),
-        info: jest.fn(),
-        debug: jest.fn()
-    })
-}));
+jest.mock('../../libs/log4', () => require('./helpers/mocks').log4_factory());
 
-jest.mock('../../libs/tokens', () => ({
-    verify: jest.fn((req, res, next) => {
-        req.decoded = { sub: '660e8400-e29b-41d4-a716-446655440001' };
-        next();
-    }),
-    verify_with_query: jest.fn((req, res, next) => {
-        req.decoded = { sub: '660e8400-e29b-41d4-a716-446655440001' };
-        next();
-    })
-}));
+jest.mock('../../libs/tokens', () => require('./helpers/mocks').tokens_factory({ methods: ['verify', 'verify_with_query'] }));
 
-jest.mock('../../auth/authorize', () => ({
-    check_permission: jest.fn().mockResolvedValue(true)
-}));
+jest.mock('../../auth/authorize', () => require('./helpers/mocks').authorize_factory());
 
-jest.mock('../../config/rate_limits_loader', () => ({
-    rate_limits: {
-        read_operations: (req, res, next) => next(),
-        write_operations: (req, res, next) => next(),
-        media_operations: (req, res, next) => next(),
-        iiif_image_operations: (req, res, next) => next()
-    }
-}));
+jest.mock('../../config/rate_limits_loader', () => require('./helpers/mocks').rate_limits_factory([
+    'read_operations',
+    'write_operations',
+    'media_operations',
+    'iiif_image_operations'
+]));
 
 jest.mock('../../config/kaltura_config', () => () => ({
     kaltura_partner_id: '1234567',
     kaltura_conf_ui_id: '7654321'
 }));
 
-const mockMediaModel = {
-    get_media_records: jest.fn(),
-    get_media_records_browse: jest.fn(),
-    get_media_record: jest.fn(),
-    create_media_record: jest.fn(),
-    update_media_record: jest.fn(),
-    replace_media_file: jest.fn(),
-    delete_media_record: jest.fn(),
-    delete_uploaded_file: jest.fn(),
-    check_duplicate: jest.fn(),
-    add_exhibit_to_media_record: jest.fn(),
-    remove_exhibit_from_media_record: jest.fn()
-};
+const mockMediaModel = mock_model([
+    'get_media_records',
+    'get_media_records_browse',
+    'get_media_record',
+    'create_media_record',
+    'update_media_record',
+    'replace_media_file',
+    'delete_media_record',
+    'delete_uploaded_file',
+    'check_duplicate',
+    'add_exhibit_to_media_record',
+    'remove_exhibit_from_media_record'
+]);
 
 jest.mock('../../media-library/model', () => mockMediaModel);
 
-const mockRepoService = {
-    search_repository: jest.fn(),
-    get_repo_tn: jest.fn(),
-    get_subjects: jest.fn(),
-    get_resource_types: jest.fn()
-};
+const mockRepoService = mock_model([
+    'search_repository',
+    'get_repo_tn',
+    'get_subjects',
+    'get_resource_types'
+]);
 
 jest.mock('../../media-library/repo-service', () => mockRepoService);
 
-const mockKalturaService = {
-    get_kaltura_media: jest.fn(),
-    get_kaltura_original_filename: jest.fn(),
-    assign_kaltura_category: jest.fn(),
-    remove_kaltura_category: jest.fn()
-};
+const mockKalturaService = mock_model([
+    'get_kaltura_media',
+    'get_kaltura_original_filename',
+    'assign_kaltura_category',
+    'remove_kaltura_category'
+]);
 
 jest.mock('../../media-library/kaltura-service', () => mockKalturaService);
 
-const mockIiifService = {
-    derive_iiif_base: jest.fn().mockReturnValue('http://test.host/exhibits-dashboard/iiif'),
-    derive_file_base: jest.fn().mockReturnValue('http://test.host/exhibits-dashboard/iiif'),
-    build_manifest_for_uuid: jest.fn(),
-    get_info: jest.fn(),
-    get_image: jest.fn()
-};
+const mockIiifService = mock_model(['build_manifest_for_uuid', 'get_info', 'get_image'], {}, {
+    derive_iiif_base: 'http://test.host/exhibits-dashboard/iiif',
+    derive_file_base: 'http://test.host/exhibits-dashboard/iiif'
+});
 
 jest.mock('../../media-library/iiif-service', () => mockIiifService);
 
@@ -142,15 +118,6 @@ const mockUploads = {
 jest.mock('../../media-library/uploads', () => mockUploads);
 
 const ENDPOINTS = require('../../media-library/endpoints')();
-const APP_PATH = process.env.APP_PATH;
-
-const path_for = (template, params = {}) => {
-    let path = template;
-    for (const [key, value] of Object.entries(params)) {
-        path = path.replace(new RegExp(`:${key}(?=/|$)`, 'g'), value);
-    }
-    return path;
-};
 
 describe('Media Library Routes Integration (real router)', () => {
     let app;

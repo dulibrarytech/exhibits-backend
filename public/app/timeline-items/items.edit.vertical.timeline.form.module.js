@@ -30,45 +30,6 @@ const itemsEditVerticalTimelineFormModule = (function () {
         const message_element = document.querySelector('#message');
 
         /**
-         * Display status message to user (XSS-safe)
-         */
-        const display_message = (element, type, message) => {
-            if (!element) {
-                return;
-            }
-
-            const valid_types = ['info', 'success', 'danger', 'warning'];
-            const alert_type = valid_types.includes(type) ? type : 'danger';
-
-            const alert_div = document.createElement('div');
-            alert_div.className = `alert alert-${alert_type}`;
-            alert_div.setAttribute('role', 'alert');
-
-            const icon = document.createElement('i');
-            icon.className = get_icon_class(alert_type);
-            alert_div.appendChild(icon);
-
-            const text_node = document.createTextNode(` ${message}`);
-            alert_div.appendChild(text_node);
-
-            element.textContent = '';
-            element.appendChild(alert_div);
-        };
-
-        /**
-         * Get icon class for alert type
-         */
-        const get_icon_class = (alert_type) => {
-            const icon_map = {
-                'info': 'fa fa-info',
-                'success': 'fa fa-check',
-                'danger': 'fa fa-exclamation',
-                'warning': 'fa fa-exclamation-triangle'
-            };
-            return icon_map[alert_type] || 'fa fa-exclamation';
-        };
-
-        /**
          * Validate required parameters
          */
         const validate_parameters = (exhibit_id, timeline_id) => {
@@ -97,43 +58,25 @@ const itemsEditVerticalTimelineFormModule = (function () {
 
             const validation = validate_parameters(exhibit_id, timeline_id);
             if (!validation.valid) {
-                display_message(message_element, 'danger', validation.error);
-                return null;
-            }
-
-            // Get and validate authentication
-            const token = authModule.get_user_token();
-
-            if (!token || token === false) {
-                display_message(message_element, 'danger', 'Authentication required. Redirecting...');
-
-                setTimeout(() => {
-                    authModule.redirect_to_auth();
-                }, 3000);
-
+                domModule.set_alert(message_element, 'danger', validation.error);
                 return null;
             }
 
             // Validate endpoint configuration
             if (!EXHIBITS_ENDPOINTS?.exhibits?.timeline_records?.get?.endpoint) {
-                display_message(message_element, 'danger', 'API endpoint configuration missing');
+                domModule.set_alert(message_element, 'danger', 'API endpoint configuration missing');
                 return null;
             }
 
-            // Construct endpoint with URL encoding
-            const endpoint = EXHIBITS_ENDPOINTS.exhibits.timeline_records.get.endpoint
-                .replace(':exhibit_id', encodeURIComponent(exhibit_id))
-                .replace(':timeline_id', encodeURIComponent(timeline_id));
+            const endpoint = endpointsModule.build(EXHIBITS_ENDPOINTS.exhibits.timeline_records.get.endpoint, {
+                exhibit_id: exhibit_id,
+                timeline_id: timeline_id
+            });
 
-            // Make API request with timeout
-            const response = await httpModule.req({
+            /* null = missing token; httpModule.api has alerted and scheduled the logout */
+            const response = await httpModule.api({
                 method: 'GET',
-                url: endpoint,
-                headers: {
-                    'Content-Type': 'application/json',
-                    'x-access-token': token
-                },
-                timeout: 30000
+                url: endpoint
             });
 
             // Validate response structure
@@ -157,7 +100,7 @@ const itemsEditVerticalTimelineFormModule = (function () {
 
             // Display error message (use user_message from Axios interceptor if available)
             const error_message = error.user_message || 'Unable to load the timeline record. Please try again.';
-            display_message(message_element, 'danger', error_message);
+            domModule.set_alert(message_element, 'danger', error_message);
 
             return null;
         }
@@ -175,66 +118,6 @@ const itemsEditVerticalTimelineFormModule = (function () {
         // Cache DOM element and constants
         const message_element = document.querySelector('#message');
         const MESSAGE_CLEAR_DELAY = 3000;
-        const FADE_DURATION = 300;
-
-        /**
-         * Display status message to user (XSS-safe)
-         */
-        const display_message = (element, type, message) => {
-            if (!element) {
-                return;
-            }
-
-            const valid_types = ['info', 'success', 'danger', 'warning'];
-            const alert_type = valid_types.includes(type) ? type : 'danger';
-
-            const alert_div = document.createElement('div');
-            alert_div.className = `alert alert-${alert_type}`;
-            alert_div.setAttribute('role', 'alert');
-
-            const icon = document.createElement('i');
-            icon.className = get_icon_class(alert_type);
-            alert_div.appendChild(icon);
-
-            const text_node = document.createTextNode(` ${message}`);
-            alert_div.appendChild(text_node);
-
-            element.style.opacity = '1';
-            element.style.transition = '';
-            element.textContent = '';
-            element.appendChild(alert_div);
-        };
-
-        /**
-         * Clear message with smooth fade effect
-         */
-        const clear_message_smoothly = () => {
-            if (!message_element) {
-                return;
-            }
-
-            message_element.style.transition = `opacity ${FADE_DURATION}ms ease-out`;
-            message_element.style.opacity = '0';
-
-            setTimeout(() => {
-                message_element.textContent = '';
-                message_element.style.opacity = '1';
-                message_element.style.transition = '';
-            }, FADE_DURATION);
-        };
-
-        /**
-         * Get icon class for alert type
-         */
-        const get_icon_class = (alert_type) => {
-            const icon_map = {
-                'info': 'fa fa-info',
-                'success': 'fa fa-check',
-                'danger': 'fa fa-exclamation',
-                'warning': 'fa fa-exclamation-triangle'
-            };
-            return icon_map[alert_type] || 'fa fa-exclamation';
-        };
 
         /**
          * Validate parameters
@@ -302,25 +185,12 @@ const itemsEditVerticalTimelineFormModule = (function () {
 
             const validation = validate_parameters(exhibit_id, timeline_id);
             if (!validation.valid) {
-                display_message(message_element, 'warning', validation.error);
+                domModule.set_alert(message_element, 'warning', validation.error);
                 return false;
             }
 
             // Show loading state
-            display_message(message_element, 'info', 'Updating timeline record...');
-
-            // Validate authentication
-            const token = authModule.get_user_token();
-
-            if (!token || token === false) {
-                display_message(message_element, 'danger', 'Session expired. Please log in again.');
-
-                timeout_id = setTimeout(() => {
-                    authModule.logout();
-                }, 1000);
-
-                return false;
-            }
+            domModule.set_alert(message_element, 'info', 'Updating timeline record...');
 
             // Get and validate form data
             const form_data = itemsCommonVerticalTimelineFormModule.get_common_timeline_form_fields();
@@ -339,26 +209,26 @@ const itemsEditVerticalTimelineFormModule = (function () {
 
             // Validate endpoint configuration
             if (!EXHIBITS_ENDPOINTS?.exhibits?.timeline_records?.put?.endpoint) {
-                display_message(message_element, 'danger', 'API endpoint configuration missing');
+                domModule.set_alert(message_element, 'danger', 'API endpoint configuration missing');
                 return false;
             }
 
-            // Construct endpoint with URL encoding
-            const endpoint = EXHIBITS_ENDPOINTS.exhibits.timeline_records.put.endpoint
-                .replace(':exhibit_id', encodeURIComponent(exhibit_id))
-                .replace(':timeline_id', encodeURIComponent(timeline_id));
+            const endpoint = endpointsModule.build(EXHIBITS_ENDPOINTS.exhibits.timeline_records.put.endpoint, {
+                exhibit_id: exhibit_id,
+                timeline_id: timeline_id
+            });
 
-            // Make API request
-            const response = await httpModule.req({
+            // Make API request (null = missing token; httpModule.api has
+            // already alerted and scheduled the logout)
+            const response = await httpModule.api({
                 method: 'PUT',
                 url: endpoint,
-                data: form_data,
-                headers: {
-                    'Content-Type': 'application/json',
-                    'x-access-token': token
-                },
-                timeout: 30000
+                data: form_data
             });
+
+            if (response === null) {
+                return false;
+            }
 
             // Validate response
             if (!response || response.status !== 201) {
@@ -369,14 +239,14 @@ const itemsEditVerticalTimelineFormModule = (function () {
             window.scrollTo({ top: 0, left: 0, behavior: 'instant' });
 
             // Show success message
-            display_message(message_element, 'success', 'Timeline record updated successfully');
+            domModule.set_alert(message_element, 'success', 'Timeline record updated successfully');
 
             // Refresh the display with updated data
             await refresh_record_display();
 
             // Smoothly clear success message after delay
             timeout_id = setTimeout(() => {
-                clear_message_smoothly();
+                helperModule.clear_status_message(message_element);
             }, MESSAGE_CLEAR_DELAY);
 
             return true;
@@ -392,7 +262,7 @@ const itemsEditVerticalTimelineFormModule = (function () {
 
             // Display error message (use user_message from Axios interceptor if available)
             const error_message = error.user_message || error.message || 'Unable to update timeline record. Please try again.';
-            display_message(message_element, 'danger', error_message);
+            domModule.set_alert(message_element, 'danger', error_message);
 
             return false;
 
@@ -595,31 +465,6 @@ const itemsEditVerticalTimelineFormModule = (function () {
             return date instanceof Date && !isNaN(date.getTime());
         };
 
-        /**
-         * Display error message
-         */
-        const display_error_message = (message) => {
-            const message_element = document.querySelector('#message');
-
-            if (!message_element) {
-                return;
-            }
-
-            const alert_div = document.createElement('div');
-            alert_div.className = 'alert alert-danger';
-            alert_div.setAttribute('role', 'alert');
-
-            const icon = document.createElement('i');
-            icon.className = 'fa fa-exclamation';
-            alert_div.appendChild(icon);
-
-            const text_node = document.createTextNode(` ${message}`);
-            alert_div.appendChild(text_node);
-
-            message_element.textContent = '';
-            message_element.appendChild(alert_div);
-        };
-
         try {
             // Fetch record data
             const record = await get_timeline_record();
@@ -650,21 +495,14 @@ const itemsEditVerticalTimelineFormModule = (function () {
                 itemsCommonVerticalTimelineFormModule.set_item_style(record.styles);
             }
 
-            const set_element_value = (selector, value) => {
-                const el = document.querySelector(selector);
-                if (el) {
-                    el.value = value;
-                }
-            };
-
-            set_element_value('#margins', record.margins ?? 'medium');
-            set_element_value('#text-align', record.text_alignment ?? 'left');
+            domModule.set_value('#margins', record.margins ?? 'medium');
+            domModule.set_value('#text-align', record.text_alignment ?? 'left');
 
             return false;
 
         } catch (error) {
             console.error('Error in display_edit_record:', error);
-            display_error_message('Unable to display the timeline record. Please try again.');
+            domModule.set_alert('#message', 'danger', 'Unable to display the timeline record. Please try again.');
             return false;
         }
     }

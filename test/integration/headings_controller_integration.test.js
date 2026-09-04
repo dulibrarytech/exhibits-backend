@@ -17,19 +17,19 @@
 const express = require('express');
 const request = require('supertest');
 
+const { mock_model } = require('./helpers/mocks');
+
 const EX = '550e8400-e29b-41d4-a716-446655440000';
 const HID = '660e8400-e29b-41d4-a716-446655440001';
 
-jest.mock('../../libs/log4', () => ({
-    module: () => ({ error: jest.fn(), warn: jest.fn(), info: jest.fn(), debug: jest.fn() })
-}));
+jest.mock('../../libs/log4', () => require('./helpers/mocks').log4_factory());
 
-const mockHeadingsModel = {
-    create_heading_record: jest.fn(),
-    get_heading_record: jest.fn(),
-    get_heading_edit_record: jest.fn(),
-    update_heading_record: jest.fn()
-};
+const mockHeadingsModel = mock_model([
+    'create_heading_record',
+    'get_heading_record',
+    'get_heading_edit_record',
+    'update_heading_record'
+]);
 jest.mock('../../exhibits/headings_model', () => mockHeadingsModel);
 
 const mockAuthorize = { check_permission: jest.fn().mockResolvedValue(true) };

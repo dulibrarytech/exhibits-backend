@@ -12,9 +12,7 @@
  */
 
 jest.mock('axios', () => ({ get: jest.fn() }));
-jest.mock('../../libs/log4', () => ({
-    module: () => ({ info: jest.fn(), error: jest.fn(), warn: jest.fn(), debug: jest.fn() })
-}));
+jest.mock('../../libs/log4', () => require('./helpers/mocks').log4_factory());
 
 process.env.ELASTICSEARCH_HOST = process.env.ELASTICSEARCH_HOST || 'http://es.test:9200';
 process.env.REPO_ELASTICSEARCH_INDEX = process.env.REPO_ELASTICSEARCH_INDEX || 'repo-test';

@@ -19,23 +19,20 @@
 'use strict';
 
 const LOGGER = require('../../libs/log4');
+const Es_base_tasks = require('../../libs/es_base_tasks');
 
 /**
  * Object contains tasks used to index record(s) in Elasticsearch
- * @param {Object} DB - Knex database instance
- * @param {string} TABLE - Database table name
  * @param {Object} CLIENT - Elasticsearch client instance
  * @param {string} INDEX - Elasticsearch index name
  * @type {Indexer_index_tasks}
  */
-const Indexer_index_tasks = class {
+const Indexer_index_tasks = class extends Es_base_tasks {
 
     constructor(CLIENT, INDEX) {
-        this.CLIENT = CLIENT;
-        this.INDEX = INDEX;
+        super(CLIENT, INDEX, {log_prefix: '/indexer/indexer_index_tasks'});
 
         // Configuration constants
-        this.UUID_REGEX = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
         this.INDEX_TIMEOUT = 30000; // 30 seconds for index operations
         this.GET_TIMEOUT = 10000;    // 10 seconds for get operations
         this.BULK_CHUNK_SIZE = 100;  // docs per bulk request (caps payload size on large exhibits)
@@ -50,42 +47,6 @@ const Indexer_index_tasks = class {
     }
 
     // ==================== VALIDATION HELPERS ====================
-
-    /**
-     * Validates constructor dependencies
-     * @private
-     */
-    _validate_dependencies() {
-
-        if (!this.CLIENT) {
-            throw new Error('Valid Elasticsearch client is required');
-        }
-
-        if (!this.INDEX || typeof this.INDEX !== 'string') {
-            throw new Error('Valid index name is required');
-        }
-    }
-
-    /**
-     * Validates a UUID string
-     * @param {string} uuid - UUID to validate
-     * @param {string} field_name - Name of the field for error message
-     * @returns {string} Trimmed UUID
-     * @private
-     */
-    _validate_uuid(uuid, field_name = 'UUID') {
-        if (!uuid || typeof uuid !== 'string' || !uuid.trim()) {
-            throw new Error(`Valid ${field_name} is required`);
-        }
-
-        const trimmed_uuid = uuid.trim();
-
-        if (!this.UUID_REGEX.test(trimmed_uuid)) {
-            throw new Error(`Invalid ${field_name} format: ${trimmed_uuid}`);
-        }
-
-        return trimmed_uuid;
-    }
 
     /**
      * Validates a record object
@@ -141,71 +102,6 @@ const Indexer_index_tasks = class {
         remove_dangerous_keys(sanitized);
 
         return sanitized;
-    }
-
-    /**
-     * Wraps an Elasticsearch operation with timeout protection
-     * @param {Promise} operation - Elasticsearch operation promise
-     * @param {number} timeout - Timeout in milliseconds
-     * @returns {Promise} Operation result or timeout error
-     * @private
-     */
-    async _with_timeout(operation, timeout) {
-        return Promise.race([
-            operation,
-            new Promise((_, reject) =>
-                setTimeout(() => reject(new Error('Elasticsearch operation timeout')), timeout)
-            )
-        ]);
-    }
-
-    /**
-     * Handles error logging with context
-     * @param {Error} error - Error to handle
-     * @param {string} method_name - Name of the method where error occurred
-     * @param {Object} context - Additional context for logging
-     * @private
-     */
-    _handle_error(error, method_name, context = {}) {
-        const error_context = {
-            method: method_name,
-            index: this.INDEX,
-            ...context,
-            timestamp: new Date().toISOString(),
-            message: error.message,
-            error_type: error.name
-        };
-
-        // Extract Elasticsearch-specific error details
-        if (error.meta) {
-            error_context.status_code = error.meta.statusCode;
-            error_context.elasticsearch_error = error.meta.body?.error?.type;
-            error_context.reason = error.meta.body?.error?.reason;
-        }
-
-        // Add stack trace in non-production environments
-        if (process.env.NODE_ENV !== 'production') {
-            error_context.stack = error.stack;
-        }
-
-        LOGGER.module().error(
-            `ERROR: [/indexer/indexer_index_tasks (${method_name})] Failed to ${method_name.replace(/_/g, ' ')}`,
-            error_context
-        );
-    }
-
-    /**
-     * Logs successful operation
-     * @param {string} message - Success message
-     * @param {Object} context - Context for logging
-     * @private
-     */
-    _log_success(message, context = {}) {
-        LOGGER.module().info(message, {
-            index: this.INDEX,
-            ...context,
-            timestamp: new Date().toISOString()
-        });
     }
 
     // ==================== PUBLIC METHODS ====================

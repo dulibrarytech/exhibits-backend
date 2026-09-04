@@ -9,6 +9,8 @@
 
 'use strict';
 
+const { mock_model } = require('./helpers/mocks');
+
 // ==================== TEST CONSTANTS ====================
 const TEST_EXHIBIT_UUID = '550e8400-e29b-41d4-a716-446655440000';
 const TEST_TIMELINE_UUID = '660e8400-e29b-41d4-a716-446655440001';
@@ -31,14 +33,7 @@ jest.mock('../../libs/rte_vocabulary', () => ({
     sanitize_plain: jest.fn((value) => value),
 }));
 
-jest.mock('../../libs/log4', () => ({
-    module: () => ({
-        error: jest.fn(),
-        warn: jest.fn(),
-        info: jest.fn(),
-        debug: jest.fn()
-    })
-}));
+jest.mock('../../libs/log4', () => require('./helpers/mocks').log4_factory());
 
 // Mock DB Config
 jest.mock('../../config/db_config', () => () => ({
@@ -46,12 +41,10 @@ jest.mock('../../config/db_config', () => () => ({
 }));
 
 // Mock DB Tables Config
-jest.mock('../../config/db_tables_config', () => () => ({
-    exhibits: {
-        exhibit_records: 'tbl_exhibits_exhibit_records',
-        timeline_records: 'tbl_exhibits_timeline_records',
-        timeline_item_records: 'tbl_exhibits_timeline_item_records'
-    }
+jest.mock('../../config/db_tables_config', () => require('./helpers/mocks').db_tables_factory({
+    exhibit_records: 'tbl_exhibits_exhibit_records',
+    timeline_records: 'tbl_exhibits_timeline_records',
+    timeline_item_records: 'tbl_exhibits_timeline_item_records'
 }));
 
 // Mock Helper instance
@@ -70,53 +63,51 @@ jest.mock('../../libs/helper', () => {
 });
 
 // Mock Timeline Record Tasks
-const mockTimelineRecordTask = {
-    create_timeline_record: jest.fn().mockResolvedValue(true),
-    update_timeline_record: jest.fn().mockResolvedValue(true),
-    get_timeline_record: jest.fn().mockResolvedValue({}),
-    get_timeline_records: jest.fn().mockResolvedValue([]),
-    create_timeline_item_record: jest.fn().mockResolvedValue(true),
-    get_timeline_item_records: jest.fn().mockResolvedValue([]),
-    get_timeline_item_record: jest.fn().mockResolvedValue({}),
-    get_timeline_item_edit_record: jest.fn().mockResolvedValue({}),
-    update_timeline_item_record: jest.fn().mockResolvedValue(true),
-    delete_timeline_item_record: jest.fn().mockResolvedValue(true),
-    set_timeline_to_publish: jest.fn().mockResolvedValue(true),
-    set_timeline_to_suppress: jest.fn().mockResolvedValue(true),
-    set_to_suppressed_timeline_items: jest.fn().mockResolvedValue(true),
-    reorder_timelines: jest.fn().mockResolvedValue(true),
-    reorder_timeline_items: jest.fn().mockResolvedValue(true)
-};
+const mockTimelineRecordTask = mock_model({
+    create_timeline_record: true,
+    update_timeline_record: true,
+    get_timeline_record: {},
+    get_timeline_records: [],
+    create_timeline_item_record: true,
+    get_timeline_item_records: [],
+    get_timeline_item_record: {},
+    get_timeline_item_edit_record: {},
+    update_timeline_item_record: true,
+    delete_timeline_item_record: true,
+    set_timeline_to_publish: true,
+    set_timeline_to_suppress: true,
+    set_to_suppressed_timeline_items: true,
+    reorder_timelines: true,
+    reorder_timeline_items: true
+});
 
 jest.mock('../../exhibits/tasks/exhibit_timeline_record_tasks', () => {
     return jest.fn().mockImplementation(() => mockTimelineRecordTask);
 });
 
 // Mock Exhibit Record Tasks
-const mockExhibitRecordTask = {
-    update_exhibit_timestamp: jest.fn().mockResolvedValue(true),
-    get_exhibit_record: jest.fn().mockResolvedValue({ is_published: 1 })
-};
+const mockExhibitRecordTask = mock_model({
+    update_exhibit_timestamp: true,
+    get_exhibit_record: { is_published: 1 }
+});
 
 jest.mock('../../exhibits/tasks/exhibit_record_tasks', () => {
     return jest.fn().mockImplementation(() => mockExhibitRecordTask);
 });
 
 // Mock Indexer Model
-const mockIndexerModel = {
-    index_timeline_record: jest.fn().mockResolvedValue(true),
-    index_timeline_item_record: jest.fn().mockResolvedValue(true),
-    index_record: jest.fn().mockResolvedValue(true),
-    delete_record: jest.fn().mockResolvedValue({ status: 204 }),
-    get_indexed_record: jest.fn().mockResolvedValue({ status: 200, data: { source: { items: [] } } })
-};
+const mockIndexerModel = mock_model({
+    index_timeline_record: true,
+    index_timeline_item_record: true,
+    index_record: true,
+    delete_record: { status: 204 },
+    get_indexed_record: { status: 200, data: { source: { items: [] } } }
+});
 
 jest.mock('../../indexer/model', () => mockIndexerModel);
 
 // Mock Reindex Coalescer (post-edit republish of published timeline items)
-const mockReindexCoalescer = {
-    schedule_reindex: jest.fn()
-};
+const mockReindexCoalescer = mock_model(['schedule_reindex']);
 
 jest.mock('../../exhibits/reindex_coalescer', () => mockReindexCoalescer);
 

@@ -24,6 +24,7 @@ const TOKEN = require('../libs/tokens');
 const MODEL = require('../auth/model');
 const LOGGER = require('../libs/log4');
 const AUTHORIZE = require('./authorize');
+const { is_valid_uuid } = require('../libs/uuid');
 const APP_PATH = APP_CONFIG.app_path;
 
 exports.get_auth_landing = function (req, res) {
@@ -314,9 +315,8 @@ exports.check_permissions = async function (req, res) {
             });
         }
 
-        // Validate parent_id is a valid UUID
-        const uuid_pattern = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
-        if (!parent_id || typeof parent_id !== 'string' || !uuid_pattern.test(parent_id)) {
+        // Validate parent_id is a valid UUID (strict RFC shape, see libs/uuid)
+        if (!is_valid_uuid(parent_id)) {
             return res.status(400).json({
                 message: 'Invalid or missing parent_id parameter.'
             });
@@ -324,7 +324,7 @@ exports.check_permissions = async function (req, res) {
 
         // Validate child_id is a valid UUID if provided
         if (child_id !== null && child_id !== undefined && child_id !== '') {
-            if (typeof child_id !== 'string' || !uuid_pattern.test(child_id)) {
+            if (!is_valid_uuid(child_id)) {
                 return res.status(400).json({
                     message: 'Invalid child_id parameter.'
                 });

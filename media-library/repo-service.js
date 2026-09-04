@@ -23,6 +23,7 @@ const ES_CONFIG = require('../config/elasticsearch_config')();
 const WEBSERVICES_CONFIG = require('../config/webservices_config')();
 const HTTP = require('axios');
 const LOGGER = require('../libs/log4');
+const { is_valid_uuid } = require('../libs/uuid');
 const REPO_SERVICE_TASKS = require("../media-library/tasks/repo_service_tasks");
 const CLIENT = new Client({
     node: ES_CONFIG.elasticsearch_host
@@ -107,19 +108,6 @@ const validate_search_term = (term) => {
         valid: true,
         term: trimmed_term
     };
-};
-
-/**
- * Validates if a string is a valid UUID format
- * @param {string} uuid - String to validate
- * @returns {boolean} Whether string is valid UUID
- */
-const is_valid_uuid = (uuid) => {
-    if (!uuid || typeof uuid !== 'string') {
-        return false;
-    }
-    const uuid_regex = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
-    return uuid_regex.test(uuid);
 };
 
 /**

@@ -19,7 +19,6 @@ const mediaDeleteModalModule = (function() {
     'use strict';
 
     // Shared helpers
-    const escape_html = helperMediaLibraryModule.escape_html;
     const decode_html_entities = helperMediaLibraryModule.decode_html_entities;
     const HTTP_STATUS = helperMediaLibraryModule.HTTP_STATUS;
     const get_delete_icon_class = helperMediaLibraryModule.get_media_type_icon;
@@ -44,31 +43,11 @@ const mediaDeleteModalModule = (function() {
     // DELETE MODAL FUNCTIONS
     // ========================================
 
-    /**
-     * Display message in delete modal
-     * @param {string} type - Message type ('success', 'danger', 'warning')
-     * @param {string} message - Message text
-     */
-    const display_delete_modal_message = (type, message) => {
-        const message_container = document.getElementById('delete-media-message');
-        
-        if (!message_container) return;
-
-        message_container.innerHTML = '<div class="alert alert-' + type + ' mb-3" role="alert">' + 
-            '<i class="fa fa-' + (type === 'success' ? 'check' : type === 'danger' ? 'exclamation-circle' : 'warning') + '" style="margin-right: 6px;"></i>' +
-            escape_html(message) + 
-            '</div>';
-    };
-
-    /**
-     * Clear delete modal message
-     */
-    const clear_delete_modal_message = () => {
-        const message_container = document.getElementById('delete-media-message');
-        if (message_container) {
-            message_container.innerHTML = '';
-        }
-    };
+    /* Modal message area — shared helper bound to #delete-media-message */
+    const {
+        display_message: display_delete_modal_message,
+        clear_message: clear_delete_modal_message
+    } = helperMediaLibraryModule.create_message_helper('delete-media-message');
 
     /**
      * Close the delete media modal
@@ -118,27 +97,11 @@ const mediaDeleteModalModule = (function() {
                 return;
             }
 
-            // Validate authentication
-            const token = authModule.get_user_token();
+            const endpoint = endpointsModule.build(EXHIBITS_ENDPOINTS.media_records.delete.endpoint, { media_id: uuid });
 
-            if (!token || token === false) {
-                display_delete_modal_message('danger', 'Session expired. Please log in again.');
-                return;
-            }
-
-            // Construct endpoint with media_id
-            const endpoint = EXHIBITS_ENDPOINTS.media_records.delete.endpoint.replace(':media_id', uuid);
-
-            // Make API request
-            const response = await httpModule.req({
+            const response = await httpModule.api({
                 method: 'DELETE',
-                url: endpoint,
-                headers: {
-                    'Content-Type': 'application/json',
-                    'x-access-token': token
-                },
-                timeout: 30000,
-                validateStatus: (status) => status >= 200 && status < 600
+                url: endpoint
             });
 
             // Handle undefined response (network/server error)

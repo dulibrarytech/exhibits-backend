@@ -109,22 +109,11 @@
     mediaPickerModule.init();
     navModule.wire_nav_links();
 
-    const cancel_exhibit_btn = document.getElementById('cancel-exhibit-btn');
-
-    cancel_exhibit_btn.addEventListener('click', function () {
-        const has_unsaved_changes = check_for_unsaved_changes();
-        if (has_unsaved_changes) {
-            const confirm_cancel = confirm('Discard unsaved changes and return to the exhibits list?');
-            if (!confirm_cancel) return;
-        }
-        // Redirect (customize as needed)
-        window.location.href = '/exhibits-dashboard/exhibits';
+    pageActionsModule.wire_cancel_button({
+        redirect_path: '/exhibits',
+        params: [],
+        confirm_message: 'Discard unsaved changes and return to the exhibits list?'
     });
-
-    function check_for_unsaved_changes() {
-        const inputs = document.querySelectorAll('input, textarea, select');
-        return Array.from(inputs).some(input => input.defaultValue !== input.value);
-    }
 
 </script>
 </body>

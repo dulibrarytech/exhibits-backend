@@ -93,30 +93,6 @@ const exhibitsCommonFormModule = (function () {
             return isNaN(num) ? default_value : num;
         };
 
-        // Helper function to display error messages safely (prevents XSS)
-        const show_error = (selector, message) => {
-            const element = document.querySelector(selector);
-            if (!element) {
-                console.error(`Error element ${selector} not found`);
-                return;
-            }
-
-            const alert_div = document.createElement('div');
-            alert_div.className = 'alert alert-danger';
-            alert_div.setAttribute('role', 'alert');
-
-            const icon = document.createElement('i');
-            icon.className = 'fa fa-exclamation';
-
-            const text = document.createTextNode(` ${message}`);
-
-            alert_div.appendChild(icon);
-            alert_div.appendChild(text);
-
-            element.innerHTML = '';
-            element.appendChild(alert_div);
-        };
-
         try {
             // Clear any previous title validation state.
             const title_el = document.querySelector(selectors.title);
@@ -224,7 +200,7 @@ const exhibitsCommonFormModule = (function () {
             console.error('Error getting form fields:', error);
 
             // Display safe error message
-            show_error(selectors.message, 'An error occurred while processing form data');
+            domModule.set_alert(selectors.message, 'danger', 'An error occurred while processing form data');
 
             return false;
         }
@@ -236,32 +212,7 @@ const exhibitsCommonFormModule = (function () {
     obj.delete_hero_image = async function () {
 
         // Constants
-        const REQUEST_TIMEOUT = 30000; // 30 seconds
         const MESSAGE_CLEAR_DELAY = 3000; // 3 seconds
-
-        // Helper function to safely display messages (prevents XSS)
-        const show_message = (message, type = 'success', icon = 'fa-info') => {
-            const message_el = document.querySelector(message_selector);
-            if (!message_el) {
-                console.error('Message element not found');
-                return;
-            }
-
-            const alert_div = document.createElement('div');
-            alert_div.className = `alert alert-${type}`;
-            alert_div.setAttribute('role', 'alert');
-
-            const icon_el = document.createElement('i');
-            icon_el.className = `fa ${icon}`;
-
-            const text = document.createTextNode(` ${message}`);
-
-            alert_div.appendChild(icon_el);
-            alert_div.appendChild(text);
-
-            message_el.innerHTML = '';
-            message_el.appendChild(alert_div);
-        };
 
         // Helper function to safely clear element content
         const clear_element = (selector) => {
@@ -320,14 +271,7 @@ const exhibitsCommonFormModule = (function () {
 
             const hero_image = hero_image_el.value?.trim();
             if (!hero_image) {
-                show_message('No hero image to delete', 'warning', 'fa-exclamation');
-                return false;
-            }
-
-            // Get and validate authentication token
-            const token = authModule.get_user_token();
-            if (!token) {
-                show_message('Authentication error: Please log in again', 'danger', 'fa-lock');
+                domModule.set_alert(message_selector, 'warning', 'No hero image to delete');
                 return false;
             }
 
@@ -342,17 +286,11 @@ const exhibitsCommonFormModule = (function () {
             const endpoint = `${endpoint_base}?${query_string}`;
 
             // Show loading state
-            show_message('Deleting hero image...', 'info');
+            domModule.set_alert(message_selector, 'info', 'Deleting hero image...');
 
-            // Make DELETE request with timeout
-            const response = await httpModule.req({
+            const response = await httpModule.api({
                 method: 'DELETE',
-                url: endpoint,
-                headers: {
-                    'Content-Type': 'application/json',
-                    'x-access-token': token
-                },
-                timeout: REQUEST_TIMEOUT
+                url: endpoint
             });
 
             // Validate response
@@ -368,7 +306,7 @@ const exhibitsCommonFormModule = (function () {
             clear_hero_image_ui();
 
             // Show success message
-            show_message('Hero image deleted successfully', 'success', 'fa-check');
+            domModule.set_alert(message_selector, 'success', 'Hero image deleted successfully');
 
             // Clear message after delay
             timeout_id = setTimeout(() => {
@@ -388,7 +326,7 @@ const exhibitsCommonFormModule = (function () {
 
             // Display user-friendly error message
             const error_message = error.message || 'An unexpected error occurred while deleting the hero image';
-            show_message(error_message, 'danger', 'fa-exclamation');
+            domModule.set_alert(message_selector, 'danger', error_message);
 
             return false;
         }
@@ -397,32 +335,7 @@ const exhibitsCommonFormModule = (function () {
     obj.delete_thumbnail_image = async function () {
 
         // Constants
-        const REQUEST_TIMEOUT = 30000; // 30 seconds
         const MESSAGE_CLEAR_DELAY = 3000; // 3 seconds
-
-        // Helper function to safely display messages (prevents XSS)
-        const show_message = (message, type = 'success', icon = 'fa-info') => {
-            const message_el = document.querySelector(message_selector);
-            if (!message_el) {
-                console.error('Message element not found');
-                return;
-            }
-
-            const alert_div = document.createElement('div');
-            alert_div.className = `alert alert-${type}`;
-            alert_div.setAttribute('role', 'alert');
-
-            const icon_el = document.createElement('i');
-            icon_el.className = `fa ${icon}`;
-
-            const text = document.createTextNode(` ${message}`);
-
-            alert_div.appendChild(icon_el);
-            alert_div.appendChild(text);
-
-            message_el.innerHTML = '';
-            message_el.appendChild(alert_div);
-        };
 
         // Helper function to safely clear element content
         const clear_element = (selector) => {
@@ -481,14 +394,7 @@ const exhibitsCommonFormModule = (function () {
 
             const thumbnail_image = thumbnail_image_el.value?.trim();
             if (!thumbnail_image) {
-                show_message('No thumbnail image to delete', 'warning', 'fa-exclamation');
-                return false;
-            }
-
-            // Get and validate authentication token
-            const token = authModule.get_user_token();
-            if (!token) {
-                show_message('Authentication error: Please log in again', 'danger', 'fa-lock');
+                domModule.set_alert(message_selector, 'warning', 'No thumbnail image to delete');
                 return false;
             }
 
@@ -503,17 +409,11 @@ const exhibitsCommonFormModule = (function () {
             const endpoint = `${endpoint_base}?${query_string}`;
 
             // Show loading state
-            show_message('Deleting thumbnail image...', 'info');
+            domModule.set_alert(message_selector, 'info', 'Deleting thumbnail image...');
 
-            // Make DELETE request with timeout
-            const response = await httpModule.req({
+            const response = await httpModule.api({
                 method: 'DELETE',
-                url: endpoint,
-                headers: {
-                    'Content-Type': 'application/json',
-                    'x-access-token': token
-                },
-                timeout: REQUEST_TIMEOUT
+                url: endpoint
             });
 
             // Validate response
@@ -529,7 +429,7 @@ const exhibitsCommonFormModule = (function () {
             clear_thumbnail_ui();
 
             // Show success message
-            show_message('Thumbnail image deleted successfully', 'success', 'fa-check');
+            domModule.set_alert(message_selector, 'success', 'Thumbnail image deleted successfully');
 
             // Clear success message after delay
             timeout_id = setTimeout(() => {
@@ -549,37 +449,13 @@ const exhibitsCommonFormModule = (function () {
 
             // Display user-friendly error message
             const error_message = error.message || 'An unexpected error occurred while deleting the thumbnail image';
-            show_message(error_message, 'danger', 'fa-exclamation');
+            domModule.set_alert(message_selector, 'danger', error_message);
 
             return false;
         }
     };
 
     obj.init = async function () {
-
-        // Helper function to safely display error messages (prevents XSS)
-        const show_error = (message) => {
-            const message_el = document.querySelector(message_selector);
-            if (!message_el) {
-                console.error('Message element not found');
-                return;
-            }
-
-            const alert_div = document.createElement('div');
-            alert_div.className = 'alert alert-danger';
-            alert_div.setAttribute('role', 'alert');
-
-            const icon = document.createElement('i');
-            icon.className = 'fa fa-exclamation';
-
-            const text = document.createTextNode(` ${message}`);
-
-            alert_div.appendChild(icon);
-            alert_div.appendChild(text);
-
-            message_el.innerHTML = '';
-            message_el.appendChild(alert_div);
-        };
 
         // Helper function to safely set element display
         const set_element_display = (selector, display_value) => {
@@ -623,7 +499,7 @@ const exhibitsCommonFormModule = (function () {
 
             // Display user-friendly error message
             const error_message = error.message || 'An error occurred during initialization';
-            show_error(error_message);
+            domModule.set_alert(message_selector, 'danger', error_message);
 
             return false;
         }

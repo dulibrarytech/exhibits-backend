@@ -19,7 +19,6 @@ const mediaReplaceModalModule = (function() {
     'use strict';
 
     // Shared helpers
-    const escape_html = helperMediaLibraryModule.escape_html;
     const decode_html_entities = helperMediaLibraryModule.decode_html_entities;
     const get_media_type_icon = helperMediaLibraryModule.get_media_type_icon;
     const get_thumbnail_url_for_media = helperMediaLibraryModule.get_thumbnail_url_for_media;
@@ -52,31 +51,11 @@ const mediaReplaceModalModule = (function() {
 
     let obj = {};
 
-    /**
-     * Display message in replace modal
-     * @param {string} type - Message type ('success', 'danger', 'warning')
-     * @param {string} message - Message text
-     */
-    const display_replace_modal_message = (type, message) => {
-        const message_container = document.getElementById('replace-media-message');
-
-        if (!message_container) return;
-
-        message_container.innerHTML = '<div class="alert alert-' + type + ' mb-3" role="alert">' +
-            '<i class="fa fa-' + (type === 'success' ? 'check' : type === 'danger' ? 'exclamation-circle' : 'warning') + '" style="margin-right: 6px;"></i>' +
-            escape_html(message) +
-            '</div>';
-    };
-
-    /**
-     * Clear replace modal message
-     */
-    const clear_replace_modal_message = () => {
-        const message_container = document.getElementById('replace-media-message');
-        if (message_container) {
-            message_container.innerHTML = '';
-        }
-    };
+    /* Modal message area — shared helper bound to #replace-media-message */
+    const {
+        display_message: display_replace_modal_message,
+        clear_message: clear_replace_modal_message
+    } = helperMediaLibraryModule.create_message_helper('replace-media-message');
 
     /**
      * Resolves the accepted-type config for a record. Falls back through the
@@ -198,8 +177,7 @@ const mediaReplaceModalModule = (function() {
 
         destroy_dropzone();
 
-        const endpoint = EXHIBITS_ENDPOINTS.media_file_replace.post.endpoint
-            .replace(':media_id', encodeURIComponent(record.uuid));
+        const endpoint = endpointsModule.build(EXHIBITS_ENDPOINTS.media_file_replace.post.endpoint, { media_id: record.uuid });
 
         new Dropzone('#replace-media-dropzone', {
             url: endpoint,

@@ -14,13 +14,7 @@
 
 'use strict';
 
-const { readFileSync } = require('node:fs');
-const { resolve } = require('node:path');
-
-const MODULE_PATH = resolve(
-    __dirname,
-    '../../public/app/exhibits/exhibits.styles.module.js',
-);
+const { load_browser_module } = require('./helpers/load_module');
 
 // 'template' ("Exhibit") section removed 2026-07-02 — mirrors STYLE_SECTIONS /
 // REQUIRED_SECTIONS in exhibits.styles.module.js.
@@ -108,16 +102,10 @@ function fill_required_sections() {
 describe('exhibitsStylesModule', () => {
 
     beforeAll(() => {
-        const src = readFileSync(MODULE_PATH, 'utf8');
-        // The module is a top-level `const exhibitsStylesModule = (function () {...}());`
-        // — `const` would be scoped to the eval block and discarded, so rewrite
-        // to attach the IIFE result to globalThis instead.
-        const patched = src.replace(
-            /^const\s+exhibitsStylesModule\s*=/m,
-            'globalThis.exhibitsStylesModule =',
+        load_browser_module(
+            'public/app/exhibits/exhibits.styles.module.js',
+            'exhibitsStylesModule',
         );
-        // eslint-disable-next-line no-eval
-        (0, eval)(patched);
     });
 
     beforeEach(() => {

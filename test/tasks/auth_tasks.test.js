@@ -386,8 +386,9 @@ describe('Auth_tasks', () => {
             auth_tasks = new Auth_tasks(mockDB, mockTable);
         });
 
-        const validUUID = '12345678-1234-1234-1234-123456789012';
-        const validChildUUID = '87654321-4321-4321-4321-210987654321';
+        /* RFC-shaped (version 1-5, variant 8-b): check_ownership now validates strictly via libs/uuid */
+        const validUUID = '12345678-1234-1234-8234-123456789012';
+        const validChildUUID = '87654321-4321-4321-9321-210987654321';
 
         it('should return 0 for null user_id', async () => {
             const result = await auth_tasks.check_ownership(null, validUUID, validChildUUID, 'item');

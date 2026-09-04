@@ -87,13 +87,9 @@
     itemsCommonStandardItemFormModule.init();
     itemsDetailsStandardItemModule.init();
     navModule.wire_nav_links();
-    document.querySelector('#edit-item-btn').addEventListener('click', (event) => {
-        event.preventDefault();
-        document.querySelector('.content').style.visibility = 'hidden';
-        const exhibit_id = helperModule.get_parameter_by_name('exhibit_id');
-        const item_id = helperModule.get_parameter_by_name('item_id');
-        window.location.replace(`/exhibits-dashboard/items/standard/text/edit?exhibit_id=${exhibit_id}&item_id=${item_id}`);
-        return false;
+    pageActionsModule.wire_edit_button({
+        edit_path: '/items/standard/text/edit',
+        params: ['exhibit_id', 'item_id']
     });
 </script>
 </body>

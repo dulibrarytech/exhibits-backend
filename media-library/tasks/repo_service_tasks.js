@@ -19,6 +19,7 @@
 'use strict';
 
 const LOGGER = require('../../libs/log4');
+const Es_base_tasks = require('../../libs/es_base_tasks');
 
 /**
  * Object contains tasks used to search repository records in Elasticsearch
@@ -26,11 +27,10 @@ const LOGGER = require('../../libs/log4');
  * @param {string} INDEX - Elasticsearch index name
  * @type {Repo_service_tasks}
  */
-const Repo_service_tasks = class {
+const Repo_service_tasks = class extends Es_base_tasks {
 
     constructor(CLIENT, INDEX) {
-        this.CLIENT = CLIENT;
-        this.INDEX = INDEX;
+        super(CLIENT, INDEX, {log_prefix: '/media-library/tasks/repo_service_tasks'});
 
         // Configuration constants
         this.INDEX_TIMEOUT = 30000;  // 30 seconds for index operations
@@ -114,83 +114,15 @@ const Repo_service_tasks = class {
     // ==================== VALIDATION HELPERS ====================
 
     /**
-     * Validates constructor dependencies
-     * @private
-     */
-    _validate_dependencies() {
-
-        if (!this.CLIENT) {
-            throw new Error('Valid Elasticsearch client is required');
-        }
-
-        if (!this.INDEX || typeof this.INDEX !== 'string') {
-            throw new Error('Valid index name is required');
-        }
-    }
-
-    /**
-     * Wraps a promise with a timeout
-     * @param {Promise} promise - Promise to wrap
+     * Keeps this class's historical timeout message (the Es_base_tasks
+     * default is 'Elasticsearch operation timeout'); the text can surface in
+     * API responses via 'Failed to retrieve ...: ' + error.message.
      * @param {number} timeout_ms - Timeout in milliseconds
-     * @returns {Promise} Wrapped promise with timeout
+     * @returns {Error}
      * @private
      */
-    _with_timeout(promise, timeout_ms) {
-        return Promise.race([
-            promise,
-            new Promise((_, reject) =>
-                setTimeout(() => reject(new Error(`Operation timed out after ${timeout_ms}ms`)), timeout_ms)
-            )
-        ]);
-    }
-
-    /**
-     * Handles error logging with context
-     * @param {Error} error - Error to handle
-     * @param {string} method_name - Name of the method where error occurred
-     * @param {Object} context - Additional context for logging
-     * @private
-     */
-    _handle_error(error, method_name, context = {}) {
-        const error_context = {
-            method: method_name,
-            index: this.INDEX,
-            ...context,
-            timestamp: new Date().toISOString(),
-            message: error.message,
-            error_type: error.name
-        };
-
-        // Extract Elasticsearch-specific error details
-        if (error.meta) {
-            error_context.status_code = error.meta.statusCode;
-            error_context.elasticsearch_error = error.meta.body?.error?.type;
-            error_context.reason = error.meta.body?.error?.reason;
-        }
-
-        // Add stack trace in non-production environments
-        if (process.env.NODE_ENV !== 'production') {
-            error_context.stack = error.stack;
-        }
-
-        LOGGER.module().error(
-            `ERROR: [/media-library/tasks/repo_service_tasks (${method_name})] Failed to ${method_name.replace(/_/g, ' ')}`,
-            error_context
-        );
-    }
-
-    /**
-     * Logs successful operation
-     * @param {string} message - Success message
-     * @param {Object} context - Context for logging
-     * @private
-     */
-    _log_success(message, context = {}) {
-        LOGGER.module().info(message, {
-            index: this.INDEX,
-            ...context,
-            timestamp: new Date().toISOString()
-        });
+    _timeout_error(timeout_ms) {
+        return new Error(`Operation timed out after ${timeout_ms}ms`);
     }
 
     /**

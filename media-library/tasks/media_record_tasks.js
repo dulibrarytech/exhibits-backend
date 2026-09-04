@@ -20,20 +20,17 @@
 
 const LOGGER = require('../../libs/log4');
 const KALTURA_THUMBNAIL = require('../kaltura_thumbnail');
+const Base_tasks = require('../../exhibits/tasks/tasks_helper');
 
 /**
- * Object contains tasks used to manage media records
+ * Object contains tasks used to manage media records. Validation, logging
+ * and QUERY_TIMEOUT come from Base_tasks (exhibits/tasks/tasks_helper), the
+ * same base the exhibit task classes extend.
  * @param DB
  * @param TABLE
  * @type {Media_record_tasks}
  */
-const Media_record_tasks = class {
-
-    constructor(DB, TABLE) {
-        this.DB = DB;
-        this.TABLE = TABLE;
-        this.QUERY_TIMEOUT = 10000;
-    }
+const Media_record_tasks = class extends Base_tasks {
 
     /**
      * Derive a record's Kaltura thumbnail URL at read time from its stored
@@ -51,107 +48,6 @@ const Media_record_tasks = class {
             }
         }
         return record;
-    }
-
-    /**
-     * Validates that database connection is available
-     * @private
-     * @throws {Error} If database is not configured
-     */
-    _validate_database() {
-        if (!this.DB) {
-            throw new Error('Database connection not configured');
-        }
-    }
-
-    /**
-     * Validates that a table exists in configuration
-     * @private
-     * @param {string} table_name - Table name to validate
-     * @throws {Error} If table is not configured
-     */
-    _validate_table(table_name) {
-        if (!this.TABLE || !this.TABLE[table_name]) {
-            throw new Error(`Table '${table_name}' not configured`);
-        }
-    }
-
-    /**
-     * Validates UUID format
-     * @private
-     * @param {string} uuid - UUID to validate
-     * @param {string} field_name - Field name for error message
-     * @returns {string} Validated UUID
-     * @throws {Error} If UUID is invalid
-     */
-    _validate_uuid(uuid, field_name = 'UUID') {
-        if (!uuid || typeof uuid !== 'string') {
-            throw new Error(`Invalid ${field_name}: must be a non-empty string`);
-        }
-
-        const trimmed = uuid.trim();
-        const uuid_regex = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
-
-        if (!uuid_regex.test(trimmed)) {
-            throw new Error(`Invalid ${field_name} format`);
-        }
-
-        return trimmed;
-    }
-
-    /**
-     * Validates multiple UUIDs
-     * @private
-     * @param {Object} uuid_map - Map of UUID to field name
-     * @returns {Object} Map of field name to validated UUID
-     */
-    _validate_uuids(uuid_map) {
-        const validated = {};
-        for (const [uuid, field_name] of Object.entries(uuid_map)) {
-            validated[field_name] = this._validate_uuid(uuid, field_name);
-        }
-        return validated;
-    }
-
-    /**
-     * Validates a string field
-     * @private
-     * @param {string} value - Value to validate
-     * @param {string} field_name - Field name for error message
-     * @returns {string} Validated string
-     * @throws {Error} If string is invalid
-     */
-    _validate_string(value, field_name = 'value') {
-        if (!value || typeof value !== 'string' || value.trim() === '') {
-            throw new Error(`Invalid ${field_name}: must be a non-empty string`);
-        }
-        return value.trim();
-    }
-
-    /**
-     * Logs success message with context
-     * @private
-     * @param {string} message - Success message
-     * @param {Object} context - Additional context
-     */
-    _log_success(message, context = {}) {
-        LOGGER.module().info(`INFO: [/media-library/tasks/media_record_tasks] ${message}`, context);
-    }
-
-    /**
-     * Handles and logs errors
-     * @private
-     * @param {Error} error - Error object
-     * @param {string} method - Method name where error occurred
-     * @param {Object} context - Additional context
-     * @throws {Error} Re-throws the error after logging
-     */
-    _handle_error(error, method, context = {}) {
-        LOGGER.module().error(`ERROR: [/media-library/tasks/media_record_tasks (${method})] ${error.message}`, {
-            ...context,
-            stack: error.stack
-        });
-        throw error;
     }
 
     /**

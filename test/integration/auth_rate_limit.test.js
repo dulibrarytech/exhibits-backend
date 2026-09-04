@@ -8,9 +8,7 @@
  * config/rate_limits_loader.js (`auth_identity_operations`).
  */
 
-jest.mock('../../libs/log4', () => ({
-    module: () => ({ warn: jest.fn(), error: jest.fn(), info: jest.fn(), debug: jest.fn() })
-}));
+jest.mock('../../libs/log4', () => require('./helpers/mocks').log4_factory());
 
 const express = require('express');
 const request = require('supertest');

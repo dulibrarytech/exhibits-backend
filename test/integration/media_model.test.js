@@ -13,6 +13,8 @@
 
 'use strict';
 
+const { mock_model } = require('./helpers/mocks');
+
 const MEDIA_UUID = '550e8400-e29b-41d4-a716-446655440000';
 const NEW_UUID = '660e8400-e29b-41d4-a716-446655440001';
 const EXHIBIT_A = '770e8400-e29b-41d4-a716-446655440002';
@@ -20,12 +22,10 @@ const EXHIBIT_B = '880e8400-e29b-41d4-a716-446655440003';
 
 jest.mock('../../libs/rte_vocabulary', () => ({ apply: jest.fn((record) => record) }));
 
-jest.mock('../../libs/log4', () => ({
-    module: () => ({ error: jest.fn(), warn: jest.fn(), info: jest.fn(), debug: jest.fn() })
-}));
+jest.mock('../../libs/log4', () => require('./helpers/mocks').log4_factory());
 
 jest.mock('../../config/db_config', () => () => jest.fn());
-jest.mock('../../config/db_tables_config', () => () => ({ exhibits: { media_library_records: 'tbl_media_library' } }));
+jest.mock('../../config/db_tables_config', () => require('./helpers/mocks').db_tables_factory({ media_library_records: 'tbl_media_library' }));
 
 const mockHelper = { create_uuid: jest.fn() };
 jest.mock('../../libs/helper', () => jest.fn().mockImplementation(() => mockHelper));
@@ -34,18 +34,18 @@ const mockValidate = jest.fn();
 jest.mock('../../libs/validate', () => jest.fn().mockImplementation(() => ({ validate: mockValidate })));
 jest.mock('../../media-library/schemas/media_create_record_schema', () => () => ({}));
 
-const mockMediaTasks = {
-    create_media_record: jest.fn(),
-    get_media_records: jest.fn(),
-    get_media_records_browse: jest.fn(),
-    get_media_record: jest.fn(),
-    update_media_record: jest.fn(),
-    replace_media_file: jest.fn(),
-    get_published_exhibit_uuids: jest.fn(),
-    delete_media_record: jest.fn(),
-    find_by_storage_path: jest.fn(),
-    get_user_by_username: jest.fn()
-};
+const mockMediaTasks = mock_model([
+    'create_media_record',
+    'get_media_records',
+    'get_media_records_browse',
+    'get_media_record',
+    'update_media_record',
+    'replace_media_file',
+    'get_published_exhibit_uuids',
+    'delete_media_record',
+    'find_by_storage_path',
+    'get_user_by_username'
+]);
 jest.mock('../../media-library/tasks/media_record_tasks', () => jest.fn().mockImplementation(() => mockMediaTasks));
 
 jest.mock('../../media-library/uploads', () => ({

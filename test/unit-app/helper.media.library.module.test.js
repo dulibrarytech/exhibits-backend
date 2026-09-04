@@ -25,13 +25,8 @@
 
 'use strict';
 
-const { readFileSync } = require('node:fs');
-const { resolve } = require('node:path');
-
-const MODULE_PATH = resolve(
-    __dirname,
-    '../../public/app/media-library/helper.media.library.module.js',
-);
+const { load_browser_module } = require('./helpers/load_module');
+const { auth_stub, endpoints_stub } = require('./helpers/stubs');
 
 const APP_PATH = '/exhibits-dashboard';
 const MEDIA_BASE = `${APP_PATH}/api/v1/media/library`;
@@ -50,28 +45,29 @@ function fresh_endpoints() {
     };
 }
 
+// Minimal stand-in for endpointsModule.build (see endpoints.module.js):
+// substitutes every :name placeholder with the URL-encoded value.
+function build_endpoint(template, params) {
+    return Object.entries(params || {}).reduce(
+        (url, [key, value]) => url.replace(':' + key, encodeURIComponent(String(value))),
+        template,
+    );
+}
+
 describe('helperMediaLibraryModule', () => {
 
     beforeAll(() => {
         // Initial global stubs — individual tests override as needed.
-        globalThis.endpointsModule = {
+        globalThis.endpointsModule = endpoints_stub({
             get_media_library_endpoints: () => fresh_endpoints(),
-            get_app_path: () => window.localStorage.getItem('exhibits_app_path') || '/exhibits-dashboard',
-        };
-        globalThis.authModule = {
-            get_user_token: () => 'unit-test-token',
-        };
+            build: build_endpoint,
+        });
+        globalThis.authModule = auth_stub('unit-test-token');
 
-        const src = readFileSync(MODULE_PATH, 'utf8');
-        // Top-level `const helperMediaLibraryModule = (…)` would be
-        // scoped to the eval block and discarded; rewrite to attach to
-        // globalThis so the test body can call its methods.
-        const patched = src.replace(
-            /^const\s+helperMediaLibraryModule\s*=/m,
-            'globalThis.helperMediaLibraryModule =',
+        load_browser_module(
+            'public/app/media-library/helper.media.library.module.js',
+            'helperMediaLibraryModule',
         );
-        // eslint-disable-next-line no-eval
-        (0, eval)(patched);
     });
 
     beforeEach(() => {
@@ -82,13 +78,11 @@ describe('helperMediaLibraryModule', () => {
         // Reset endpoints + auth stubs to defaults; tests that need
         // alternate behavior re-stub on the global. URL builders read
         // these on every call, so swapping mid-test is safe.
-        globalThis.endpointsModule = {
+        globalThis.endpointsModule = endpoints_stub({
             get_media_library_endpoints: () => fresh_endpoints(),
-            get_app_path: () => window.localStorage.getItem('exhibits_app_path') || '/exhibits-dashboard',
-        };
-        globalThis.authModule = {
-            get_user_token: () => 'unit-test-token',
-        };
+            build: build_endpoint,
+        });
+        globalThis.authModule = auth_stub('unit-test-token');
         // repoServiceModule is optional — only get_repo_thumbnail_url's
         // delegation branch reads it. Default to undefined so the
         // fallback branch runs.
@@ -305,6 +299,7 @@ describe('helperMediaLibraryModule', () => {
         it('returns null and warns when the endpoint is not configured', () => {
             globalThis.endpointsModule = {
                 get_media_library_endpoints: () => ({}),
+                build: build_endpoint,
             };
             expect(helperMediaLibraryModule.build_thumbnail_url('abc-123')).toBeNull();
             expect(console.warn).toHaveBeenCalled();
@@ -324,6 +319,7 @@ describe('helperMediaLibraryModule', () => {
         it('returns null and warns when the endpoint is not configured', () => {
             globalThis.endpointsModule = {
                 get_media_library_endpoints: () => ({}),
+                build: build_endpoint,
             };
             expect(helperMediaLibraryModule.build_media_url('uuid-1')).toBeNull();
         });

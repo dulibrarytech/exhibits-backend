@@ -12,6 +12,8 @@
 
 'use strict';
 
+const { mock_model } = require('./helpers/mocks');
+
 const EXHIBIT_UUID = '550e8400-e29b-41d4-a716-446655440000';
 const HEADING_UUID = '660e8400-e29b-41d4-a716-446655440001';
 const USER_UID = '1';
@@ -20,24 +22,16 @@ jest.mock('../../libs/rte_vocabulary', () => ({
     apply: jest.fn((record) => record)
 }));
 
-jest.mock('../../libs/log4', () => ({
-    module: () => ({ error: jest.fn(), warn: jest.fn(), info: jest.fn(), debug: jest.fn() })
-}));
+jest.mock('../../libs/log4', () => require('./helpers/mocks').log4_factory());
 
 jest.mock('../../config/db_config', () => () => ({ query: jest.fn() }));
 
-jest.mock('../../config/db_tables_config', () => () => ({
-    exhibits: {
-        exhibit_records: 'tbl_exhibits',
-        heading_records: 'tbl_heading_items'
-    }
+jest.mock('../../config/db_tables_config', () => require('./helpers/mocks').db_tables_factory({
+    exhibit_records: 'tbl_exhibits',
+    heading_records: 'tbl_heading_items'
 }));
 
-const mockHelper = {
-    create_uuid: jest.fn(),
-    order_exhibit_items: jest.fn(),
-    unlock_record: jest.fn()
-};
+const mockHelper = mock_model(['create_uuid', 'order_exhibit_items', 'unlock_record']);
 jest.mock('../../libs/helper', () => jest.fn().mockImplementation(() => mockHelper));
 
 /* Schema validation is unit-tested elsewhere; here it is a switch so the model's
@@ -45,21 +39,18 @@ jest.mock('../../libs/helper', () => jest.fn().mockImplementation(() => mockHelp
 const mockValidate = jest.fn();
 jest.mock('../../libs/validate', () => jest.fn().mockImplementation(() => ({ validate: mockValidate })));
 
-const mockHeadingTasks = {
-    create_heading_record: jest.fn(),
-    get_heading_record: jest.fn(),
-    get_heading_edit_record: jest.fn(),
-    update_heading_record: jest.fn(),
-    set_heading_to_publish: jest.fn(),
-    set_heading_to_suppress: jest.fn(),
-    reorder_headings: jest.fn()
-};
+const mockHeadingTasks = mock_model([
+    'create_heading_record',
+    'get_heading_record',
+    'get_heading_edit_record',
+    'update_heading_record',
+    'set_heading_to_publish',
+    'set_heading_to_suppress',
+    'reorder_headings'
+]);
 jest.mock('../../exhibits/tasks/exhibit_heading_record_tasks', () => jest.fn().mockImplementation(() => mockHeadingTasks));
 
-const mockExhibitTasks = {
-    update_exhibit_timestamp: jest.fn(),
-    get_exhibit_record: jest.fn()
-};
+const mockExhibitTasks = mock_model(['update_exhibit_timestamp', 'get_exhibit_record']);
 jest.mock('../../exhibits/tasks/exhibit_record_tasks', () => jest.fn().mockImplementation(() => mockExhibitTasks));
 
 jest.mock('../../indexer/model', () => ({

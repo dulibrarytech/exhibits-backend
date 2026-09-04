@@ -233,15 +233,11 @@ const itemsCommonGridItemFormModule = (function () {
      */
     function handle_item_media_selected(media) {
         const previous_media_uuid = (document.querySelector('#item-media-uuid') || {}).value || '';
-        const set_val = (sel, val) => {
-            const el = document.querySelector(sel);
-            if (el) el.value = val;
-        };
 
-        set_val('#item-media-uuid', media.uuid || '');
-        set_val('#item-media-uuid-prev', media.uuid || '');
-        set_val('#item-media-type', media.media_type || '');
-        set_val('#item-mime-type', media.mime_type || '');
+        domModule.set_value('#item-media-uuid', media.uuid || '');
+        domModule.set_value('#item-media-uuid-prev', media.uuid || '');
+        domModule.set_value('#item-media-type', media.media_type || '');
+        domModule.set_value('#item-mime-type', media.mime_type || '');
 
         update_media_preview(
             '#item-media-display',
@@ -259,13 +255,9 @@ const itemsCommonGridItemFormModule = (function () {
      * Handles media asset selection from the picker for Thumbnail
      */
     function handle_thumbnail_selected(media) {
-        const set_val = (sel, val) => {
-            const el = document.querySelector(sel);
-            if (el) el.value = val;
-        };
 
-        set_val('#thumbnail-media-uuid', media.uuid || '');
-        set_val('#thumbnail-media-uuid-prev', media.uuid || '');
+        domModule.set_value('#thumbnail-media-uuid', media.uuid || '');
+        domModule.set_value('#thumbnail-media-uuid-prev', media.uuid || '');
 
         update_media_preview(
             '#thumbnail-image-display',
@@ -280,10 +272,6 @@ const itemsCommonGridItemFormModule = (function () {
      */
     function clear_item_media() {
         const previous_media_uuid = (document.querySelector('#item-media-uuid') || {}).value || '';
-        const set_val = (sel, val) => {
-            const el = document.querySelector(sel);
-            if (el) el.value = val;
-        };
 
         // Remove exhibit association from the media record being cleared (fire-and-forget)
         const exhibit_uuid = helperModule.get_parameter_by_name('exhibit_id');
@@ -294,10 +282,10 @@ const itemsCommonGridItemFormModule = (function () {
             mediaPickerModule.remove_exhibit_association(prev_uuid, exhibit_uuid, 'item_media');
         }
 
-        set_val('#item-media-uuid', '');
-        set_val('#item-media-uuid-prev', '');
-        set_val('#item-media-type', '');
-        set_val('#item-mime-type', '');
+        domModule.set_value('#item-media-uuid', '');
+        domModule.set_value('#item-media-uuid-prev', '');
+        domModule.set_value('#item-media-type', '');
+        domModule.set_value('#item-mime-type', '');
 
         reset_media_preview(
             '#item-media-display',
@@ -421,15 +409,11 @@ const itemsCommonGridItemFormModule = (function () {
 
         // Item Media preview
         if (record.media_uuid) {
-            const set_val = (sel, val) => {
-                const el = document.querySelector(sel);
-                if (el) el.value = val;
-            };
 
-            set_val('#item-media-uuid', record.media_uuid);
-            set_val('#item-media-uuid-prev', record.media_uuid);
-            set_val('#item-media-type', record.item_type || '');
-            set_val('#item-mime-type', record.mime_type || '');
+            domModule.set_value('#item-media-uuid', record.media_uuid);
+            domModule.set_value('#item-media-uuid-prev', record.media_uuid);
+            domModule.set_value('#item-media-type', record.item_type || '');
+            domModule.set_value('#item-mime-type', record.mime_type || '');
 
             const media_obj = {
                 uuid: record.media_uuid,
@@ -456,13 +440,9 @@ const itemsCommonGridItemFormModule = (function () {
 
         // Thumbnail preview
         if (record.thumbnail_media_uuid) {
-            const set_val = (sel, val) => {
-                const el = document.querySelector(sel);
-                if (el) el.value = val;
-            };
 
-            set_val('#thumbnail-media-uuid', record.thumbnail_media_uuid);
-            set_val('#thumbnail-media-uuid-prev', record.thumbnail_media_uuid);
+            domModule.set_value('#thumbnail-media-uuid', record.thumbnail_media_uuid);
+            domModule.set_value('#thumbnail-media-uuid-prev', record.thumbnail_media_uuid);
 
             const thumb_obj = {
                 uuid: record.thumbnail_media_uuid,
@@ -498,17 +478,6 @@ const itemsCommonGridItemFormModule = (function () {
                 return el?.value?.trim() ?? default_value;
             };
 
-            const show_error = (message, field_selector) => {
-                const message_el = document.querySelector('#message');
-                if (message_el) {
-                    domModule.set_alert(message_el, 'danger', message);
-                }
-                if (field_selector) {
-                    const error_id = field_selector.replace('#', '') + '-error';
-                    domModule.set_field_error(field_selector, error_id, message);
-                }
-            };
-
             // Clear any prior field-level error state.
             ['#item-text-input', '#item-media-uuid'].forEach(s => {
                 domModule.clear_field_error(s, s.replace('#', '') + '-error');
@@ -517,7 +486,7 @@ const itemsCommonGridItemFormModule = (function () {
             // Validate required modules exist
             if (!helperModule) {
                 console.error('helperModule is not available');
-                show_error('System configuration error.');
+                domModule.set_alert('#message', 'danger', 'System configuration error.');
                 return false;
             }
 
@@ -527,7 +496,7 @@ const itemsCommonGridItemFormModule = (function () {
 
             // Validate text content for text paths
             if (is_text_path && item.text.length === 0) {
-                show_error('Please enter "Text" for this item', '#item-text-input');
+                domModule.show_field_error('Please enter "Text" for this item', '#item-text-input');
                 return false;
             }
 
@@ -553,7 +522,7 @@ const itemsCommonGridItemFormModule = (function () {
 
                 // Validate media content
                 if (!item.media_uuid) {
-                    show_error('Please select a media item', '#item-media-uuid');
+                    domModule.show_field_error('Please select a media item', '#item-media-uuid');
                     return false;
                 }
 

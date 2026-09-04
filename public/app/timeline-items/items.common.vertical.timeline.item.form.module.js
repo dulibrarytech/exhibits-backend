@@ -224,15 +224,11 @@ const itemsCommonVerticalTimelineItemFormModule = (function () {
      */
     function handle_item_media_selected(media) {
         const previous_media_uuid = (document.querySelector('#item-media-uuid') || {}).value || '';
-        const set_val = (sel, val) => {
-            const el = document.querySelector(sel);
-            if (el) el.value = val;
-        };
 
-        set_val('#item-media-uuid', media.uuid || '');
-        set_val('#item-media-uuid-prev', media.uuid || '');
-        set_val('#item-media-type', media.media_type || '');
-        set_val('#item-mime-type', media.mime_type || '');
+        domModule.set_value('#item-media-uuid', media.uuid || '');
+        domModule.set_value('#item-media-uuid-prev', media.uuid || '');
+        domModule.set_value('#item-media-type', media.media_type || '');
+        domModule.set_value('#item-mime-type', media.mime_type || '');
 
         update_media_preview(
             '#item-media-display',
@@ -250,13 +246,9 @@ const itemsCommonVerticalTimelineItemFormModule = (function () {
      * Handles media asset selection from the picker for Thumbnail
      */
     function handle_thumbnail_selected(media) {
-        const set_val = (sel, val) => {
-            const el = document.querySelector(sel);
-            if (el) el.value = val;
-        };
 
-        set_val('#thumbnail-media-uuid', media.uuid || '');
-        set_val('#thumbnail-media-uuid-prev', media.uuid || '');
+        domModule.set_value('#thumbnail-media-uuid', media.uuid || '');
+        domModule.set_value('#thumbnail-media-uuid-prev', media.uuid || '');
 
         update_media_preview(
             '#thumbnail-image-display',
@@ -271,10 +263,6 @@ const itemsCommonVerticalTimelineItemFormModule = (function () {
      */
     function clear_item_media() {
         const previous_media_uuid = (document.querySelector('#item-media-uuid') || {}).value || '';
-        const set_val = (sel, val) => {
-            const el = document.querySelector(sel);
-            if (el) el.value = val;
-        };
 
         // Remove exhibit association from the media record being cleared (fire-and-forget)
         const exhibit_uuid = helperModule.get_parameter_by_name('exhibit_id');
@@ -285,10 +273,10 @@ const itemsCommonVerticalTimelineItemFormModule = (function () {
             mediaPickerModule.remove_exhibit_association(prev_uuid, exhibit_uuid, 'item_media');
         }
 
-        set_val('#item-media-uuid', '');
-        set_val('#item-media-uuid-prev', '');
-        set_val('#item-media-type', '');
-        set_val('#item-mime-type', '');
+        domModule.set_value('#item-media-uuid', '');
+        domModule.set_value('#item-media-uuid-prev', '');
+        domModule.set_value('#item-media-type', '');
+        domModule.set_value('#item-mime-type', '');
 
         reset_media_preview(
             '#item-media-display',
@@ -412,15 +400,11 @@ const itemsCommonVerticalTimelineItemFormModule = (function () {
 
         // Item Media preview
         if (record.media_uuid) {
-            const set_val = (sel, val) => {
-                const el = document.querySelector(sel);
-                if (el) el.value = val;
-            };
 
-            set_val('#item-media-uuid', record.media_uuid);
-            set_val('#item-media-uuid-prev', record.media_uuid);
-            set_val('#item-media-type', record.item_type || '');
-            set_val('#item-mime-type', record.mime_type || '');
+            domModule.set_value('#item-media-uuid', record.media_uuid);
+            domModule.set_value('#item-media-uuid-prev', record.media_uuid);
+            domModule.set_value('#item-media-type', record.item_type || '');
+            domModule.set_value('#item-mime-type', record.mime_type || '');
 
             // Build a minimal media object for the preview renderer
             const media_obj = {
@@ -446,13 +430,9 @@ const itemsCommonVerticalTimelineItemFormModule = (function () {
 
         // Thumbnail preview
         if (record.thumbnail_media_uuid) {
-            const set_val = (sel, val) => {
-                const el = document.querySelector(sel);
-                if (el) el.value = val;
-            };
 
-            set_val('#thumbnail-media-uuid', record.thumbnail_media_uuid);
-            set_val('#thumbnail-media-uuid-prev', record.thumbnail_media_uuid);
+            domModule.set_value('#thumbnail-media-uuid', record.thumbnail_media_uuid);
+            domModule.set_value('#thumbnail-media-uuid-prev', record.thumbnail_media_uuid);
 
             const thumb_obj = {
                 uuid: record.thumbnail_media_uuid,
@@ -486,17 +466,6 @@ const itemsCommonVerticalTimelineItemFormModule = (function () {
                 return el?.value?.trim() ?? default_value;
             };
 
-            const show_error = (message, field_selector) => {
-                const message_el = document.querySelector('#message');
-                if (message_el) {
-                    domModule.set_alert(message_el, 'danger', message);
-                }
-                if (field_selector) {
-                    const error_id = field_selector.replace('#', '') + '-error';
-                    domModule.set_field_error(field_selector, error_id, message);
-                }
-            };
-
             ['#item-date-input', '#item-media-uuid'].forEach(s => {
                 domModule.clear_field_error(s, s.replace('#', '') + '-error');
             });
@@ -508,21 +477,21 @@ const itemsCommonVerticalTimelineItemFormModule = (function () {
 
             // Validate required date field
             if (!item.date || item.date.length === 0) {
-                show_error('Please enter a timeline date', '#item-date-input');
+                domModule.show_field_error('Please enter a timeline date', '#item-date-input');
                 return false;
             }
 
             // Validate date format (YYYY-MM-DD)
             const date_pattern = /^\d{4}-\d{2}-\d{2}$/;
             if (!date_pattern.test(item.date)) {
-                show_error('Please enter a valid date format (YYYY-MM-DD)', '#item-date-input');
+                domModule.show_field_error('Please enter a valid date format (YYYY-MM-DD)', '#item-date-input');
                 return false;
             }
 
             // Validate date is a real date
             const date_obj = new Date(item.date);
             if (isNaN(date_obj.getTime())) {
-                show_error('Please enter a valid date', '#item-date-input');
+                domModule.show_field_error('Please enter a valid date', '#item-date-input');
                 return false;
             }
 
@@ -537,7 +506,7 @@ const itemsCommonVerticalTimelineItemFormModule = (function () {
 
                 // Validate that a media item has been selected
                 if (!media_uuid || media_uuid.length === 0) {
-                    show_error('Please select a media item', '#item-media-uuid');
+                    domModule.show_field_error('Please select a media item', '#item-media-uuid');
                     return false;
                 }
 

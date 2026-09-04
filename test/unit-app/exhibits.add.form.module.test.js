@@ -8,13 +8,8 @@
 
 'use strict';
 
-const { readFileSync } = require('node:fs');
-const { resolve } = require('node:path');
-
-const MODULE_PATH = resolve(
-    __dirname,
-    '../../public/app/exhibits/exhibits.add.form.module.js',
-);
+const { load_browser_module } = require('./helpers/load_module');
+const { endpoints_stub } = require('./helpers/stubs');
 
 // Style sections cleared by reset_form. Note: this list intentionally
 // excludes 'template' — the add-exhibit modal's styles section starts
@@ -151,18 +146,12 @@ describe('exhibitsAddFormModule.reset_form', () => {
             value: fake_storage,
         });
 
-        globalThis.endpointsModule = {
-            get_exhibits_endpoints: () => ({}),
-            get_app_path: () => window.localStorage.getItem('exhibits_app_path') || '/exhibits-dashboard',
-        };
+        globalThis.endpointsModule = endpoints_stub({ get_exhibits_endpoints: () => ({}) });
 
-        const src = readFileSync(MODULE_PATH, 'utf8');
-        const patched = src.replace(
-            /^const\s+exhibitsAddFormModule\s*=/m,
-            'globalThis.exhibitsAddFormModule =',
+        load_browser_module(
+            'public/app/exhibits/exhibits.add.form.module.js',
+            'exhibitsAddFormModule',
         );
-        // eslint-disable-next-line no-eval
-        (0, eval)(patched);
     });
 
     beforeEach(() => {

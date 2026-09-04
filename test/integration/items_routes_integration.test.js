@@ -15,101 +15,65 @@
 
 'use strict';
 
-/*
- * The real endpoints modules build paths from APP_PATH at require time —
- * ensure it is defined before anything is loaded.
- */
-process.env.APP_PATH = process.env.APP_PATH || '/exhibits-dashboard';
-
 const express = require('express');
 const request = require('supertest');
 
-const TEST_EXHIBIT_ID = '550e8400-e29b-41d4-a716-446655440000';
+/*
+ * Requiring the shared mocks pins APP_PATH before any endpoints module is
+ * loaded; the jest.mock factories below are hoisted and resolve it lazily.
+ */
+const { TEST_UUID, TEST_USER_UID, path_for, mock_model } = require('./helpers/mocks');
+
+const TEST_EXHIBIT_ID = TEST_UUID;
 const TEST_ITEM_ID = '770e8400-e29b-41d4-a716-446655440200';
 const TEST_GRID_ID = '660e8400-e29b-41d4-a716-446655440100';
-const TEST_USER_UID = '660e8400-e29b-41d4-a716-446655440001';
 
-jest.mock('../../libs/log4', () => ({
-    module: () => ({
-        error: jest.fn(),
-        warn: jest.fn(),
-        info: jest.fn(),
-        debug: jest.fn()
-    })
-}));
+jest.mock('../../libs/log4', () => require('./helpers/mocks').log4_factory());
 
-jest.mock('../../libs/tokens', () => ({
-    verify: jest.fn((req, res, next) => {
-        req.decoded = { sub: '660e8400-e29b-41d4-a716-446655440001' };
-        next();
-    })
-}));
+jest.mock('../../libs/tokens', () => require('./helpers/mocks').tokens_factory());
 
-jest.mock('../../auth/authorize', () => ({
-    check_permission: jest.fn().mockResolvedValue(true)
-}));
+jest.mock('../../auth/authorize', () => require('./helpers/mocks').authorize_factory());
 
-jest.mock('../../config/rate_limits_loader', () => ({
-    rate_limits: {
-        read_operations: (req, res, next) => next(),
-        write_operations: (req, res, next) => next(),
-        state_change_operations: (req, res, next) => next()
-    }
-}));
+jest.mock('../../config/rate_limits_loader', () => require('./helpers/mocks').rate_limits_factory([
+    'read_operations',
+    'write_operations',
+    'state_change_operations'
+]));
 
-const mockItemsModel = {
-    create_item_record: jest.fn(),
-    get_item_records: jest.fn(),
-    get_item_record: jest.fn(),
-    get_item_edit_record: jest.fn(),
-    get_item_details_record: jest.fn(),
-    update_item_record: jest.fn(),
-    delete_item_record: jest.fn(),
-    publish_item_record: jest.fn(),
-    suppress_item_record: jest.fn(),
-    reorder_exhibit_items: jest.fn(),
-    schedule_reorder_reindex: jest.fn(),
-    unlock_item_record: jest.fn()
-};
+const mockItemsModel = mock_model([
+    'create_item_record',
+    'get_item_records',
+    'get_item_record',
+    'get_item_edit_record',
+    'get_item_details_record',
+    'update_item_record',
+    'delete_item_record',
+    'publish_item_record',
+    'suppress_item_record',
+    'reorder_exhibit_items',
+    'schedule_reorder_reindex',
+    'unlock_item_record'
+]);
 
 jest.mock('../../exhibits/items_model', () => mockItemsModel);
 
-const mockHeadingsModel = {
-    publish_heading_record: jest.fn(),
-    suppress_heading_record: jest.fn()
-};
+const mockHeadingsModel = mock_model(['publish_heading_record', 'suppress_heading_record']);
 
 jest.mock('../../exhibits/headings_model', () => mockHeadingsModel);
 
-const mockGridsModel = {
-    publish_grid_record: jest.fn(),
-    suppress_grid_record: jest.fn()
-};
+const mockGridsModel = mock_model(['publish_grid_record', 'suppress_grid_record']);
 
 jest.mock('../../exhibits/grid_model', () => mockGridsModel);
 
-const mockTimelinesModel = {
-    publish_timeline_record: jest.fn(),
-    suppress_timeline_record: jest.fn()
-};
+const mockTimelinesModel = mock_model(['publish_timeline_record', 'suppress_timeline_record']);
 
 jest.mock('../../exhibits/timelines_model', () => mockTimelinesModel);
 
-const mockExhibitsModel = {
-    get_exhibit_record: jest.fn()
-};
+const mockExhibitsModel = mock_model(['get_exhibit_record']);
 
 jest.mock('../../exhibits/exhibits_model', () => mockExhibitsModel);
 
 const ENDPOINTS = require('../../exhibits/endpoints/index')().exhibits;
-
-const path_for = (template, params = {}) => {
-    let path = template;
-    for (const [key, value] of Object.entries(params)) {
-        path = path.replace(new RegExp(`:${key}(?=/|$)`, 'g'), value);
-    }
-    return path;
-};
 
 const IDS = {
     exhibit_id: TEST_EXHIBIT_ID,

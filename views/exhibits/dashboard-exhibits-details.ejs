@@ -79,12 +79,9 @@
     exhibitsDetailsModule.init();
     exhibitsCommonFormModule.init();
     navModule.wire_nav_links();
-    document.querySelector('#edit-item-btn').addEventListener('click', (event) => {
-        event.preventDefault();
-        document.querySelector('.content').style.visibility = 'hidden';
-        const exhibit_id = helperModule.get_parameter_by_name('exhibit_id');
-        window.location.replace(`/exhibits-dashboard/exhibits/exhibit/edit?exhibit_id=${exhibit_id}`);
-        return false;
+    pageActionsModule.wire_edit_button({
+        edit_path: '/exhibits/exhibit/edit',
+        params: ['exhibit_id']
     });
 </script>
 </body>

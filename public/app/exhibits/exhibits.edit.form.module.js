@@ -39,33 +39,6 @@ const exhibitsEditFormModule = (function () {
 
     async function get_exhibit_record() {
 
-        // Constants
-        const REQUEST_TIMEOUT = 30000; // 30 seconds
-
-        // Helper function to safely display messages (prevents XSS)
-        const show_message = (message, type = 'danger', icon = 'fa-exclamation') => {
-            const message_el = document.querySelector('#message');
-            if (!message_el) {
-                console.error('Message element not found');
-                return;
-            }
-
-            const alert_div = document.createElement('div');
-            alert_div.className = `alert alert-${type}`;
-            alert_div.setAttribute('role', 'alert');
-
-            const icon_el = document.createElement('i');
-            icon_el.className = `fa ${icon}`;
-
-            const text = document.createTextNode(` ${message}`);
-
-            alert_div.appendChild(icon_el);
-            alert_div.appendChild(text);
-
-            message_el.innerHTML = '';
-            message_el.appendChild(alert_div);
-        };
-
         // Helper function to safely set title
         const set_exhibit_title = async (uuid) => {
             const title_el = document.querySelector('#exhibit-title');
@@ -102,7 +75,7 @@ const exhibitsEditFormModule = (function () {
             // Validate endpoints configuration
             if (!EXHIBITS_ENDPOINTS || typeof EXHIBITS_ENDPOINTS !== 'object') {
                 console.error('EXHIBITS_ENDPOINTS is not available');
-                show_message('Configuration error: API endpoints not available');
+                domModule.set_alert('#message', 'danger', 'Configuration error: API endpoints not available');
                 helperModule.redirect_to_auth();
                 return null;
             }
@@ -111,17 +84,7 @@ const exhibitsEditFormModule = (function () {
             const uuid = helperModule.get_parameter_by_name('exhibit_id');
 
             if (!uuid) {
-                show_message('Missing required parameter: exhibit_id');
-                return null;
-            }
-
-            // Get and validate authentication token
-            const token = authModule.get_user_token();
-
-            if (!token) {
-                console.error('Authentication token not available');
-                show_message('Authentication error: Please log in again', 'warning', 'fa-lock');
-                helperModule.redirect_to_auth();
+                domModule.set_alert('#message', 'danger', 'Missing required parameter: exhibit_id');
                 return null;
             }
 
@@ -130,7 +93,7 @@ const exhibitsEditFormModule = (function () {
 
             if (!profile || !profile.uid) {
                 console.error('User profile not available');
-                show_message('User profile error: Please log in again', 'warning', 'fa-user');
+                domModule.set_alert('#message', 'warning', 'User profile error: Please log in again');
                 helperModule.redirect_to_auth();
                 return null;
             }
@@ -148,8 +111,11 @@ const exhibitsEditFormModule = (function () {
             });
 
             // Build endpoint URL with proper encoding
-            const encoded_uuid = encodeURIComponent(uuid);
-            const endpoint_base = endpoint_config.replace(':exhibit_id', encoded_uuid);
+            const endpoint_base = endpointsModule.build(endpoint_config, { exhibit_id: uuid });
+
+            if (!endpoint_base) {
+                throw new Error('Endpoint configuration not found');
+            }
 
             // Build query parameters safely
             const query_string = build_query_string({
@@ -159,15 +125,9 @@ const exhibitsEditFormModule = (function () {
 
             const endpoint = `${endpoint_base}?${query_string}`;
 
-            // Make request with timeout
-            const response = await httpModule.req({
+            const response = await httpModule.api({
                 method: 'GET',
-                url: endpoint,
-                headers: {
-                    'Content-Type': 'application/json',
-                    'x-access-token': token
-                },
-                timeout: REQUEST_TIMEOUT
+                url: endpoint
             });
 
             // Validate response structure
@@ -191,7 +151,7 @@ const exhibitsEditFormModule = (function () {
 
             // Display user-friendly error message
             const error_message = error.message || 'An unexpected error occurred while loading the exhibit record';
-            show_message(error_message);
+            domModule.set_alert('#message', 'danger', error_message);
 
             return null;
         }
@@ -203,30 +163,6 @@ const exhibitsEditFormModule = (function () {
         const get_element_value = (selector, default_value = '') => {
             const element = document.querySelector(selector);
             return element?.value?.trim() || default_value;
-        };
-
-        // Helper function to safely display error messages (prevents XSS)
-        const show_error = (message) => {
-            const message_el = document.querySelector('#message');
-            if (!message_el) {
-                console.error('Message element not found');
-                return;
-            }
-
-            const alert_div = document.createElement('div');
-            alert_div.className = 'alert alert-danger';
-            alert_div.setAttribute('role', 'alert');
-
-            const icon = document.createElement('i');
-            icon.className = 'fa fa-exclamation';
-
-            const text = document.createTextNode(` ${message}`);
-
-            alert_div.appendChild(icon);
-            alert_div.appendChild(text);
-
-            message_el.innerHTML = '';
-            message_el.appendChild(alert_div);
         };
 
         // Helper function to validate module exists and has required methods
@@ -267,7 +203,7 @@ const exhibitsEditFormModule = (function () {
             // Validate that at least title exists (basic sanity check)
             if (!exhibit.title || exhibit.title.length === 0) {
                 console.error('Exhibit data validation failed: missing title');
-                show_error('Please enter an exhibit title');
+                domModule.set_alert('#message', 'danger', 'Please enter an exhibit title');
                 return false;
             }
 
@@ -279,7 +215,7 @@ const exhibitsEditFormModule = (function () {
 
             // Display user-friendly error message
             const error_message = error.message || 'An error occurred while processing exhibit data';
-            show_error(error_message);
+            domModule.set_alert('#message', 'danger', error_message);
 
             return false;
         }
@@ -334,32 +270,6 @@ const exhibitsEditFormModule = (function () {
             span.style.fontSize = '11px';
             span.textContent = filename;
             return span;
-        };
-
-        // Helper function to display error messages safely
-        const show_error = (message) => {
-
-            const message_el = document.querySelector('#message');
-
-            if (!message_el) {
-                console.error('Message element not found');
-                return;
-            }
-
-            const alert_div = document.createElement('div');
-            alert_div.className = 'alert alert-danger';
-            alert_div.setAttribute('role', 'alert');
-
-            const icon = document.createElement('i');
-            icon.className = 'fa fa-exclamation';
-
-            const text = document.createTextNode(` ${message}`);
-
-            alert_div.appendChild(icon);
-            alert_div.appendChild(text);
-
-            message_el.innerHTML = '';
-            message_el.appendChild(alert_div);
         };
 
         // Helper function to set created/updated information safely
@@ -455,24 +365,21 @@ const exhibitsEditFormModule = (function () {
 
             try {
 
-                const token = authModule.get_user_token();
-                if (!token) return null;
-
                 const endpoint_base = EXHIBITS_ENDPOINTS.exhibits?.exhibit_media_library?.get?.endpoint;
                 if (!endpoint_base) {
                     console.warn('exhibit_media_library GET endpoint not configured');
                     return null;
                 }
 
-                const endpoint = endpoint_base.replace(':exhibit_id', encodeURIComponent(exhibit_uuid));
+                const endpoint = endpointsModule.build(endpoint_base, { exhibit_id: exhibit_uuid });
 
-                const response = await httpModule.req({
+                if (!endpoint) {
+                    return null;
+                }
+
+                const response = await httpModule.api({
                     method: 'GET',
-                    url: endpoint,
-                    headers: {
-                        'Content-Type': 'application/json',
-                        'x-access-token': token
-                    }
+                    url: endpoint
                 });
 
                 if (response && response.data && Array.isArray(response.data.data)) {
@@ -498,105 +405,6 @@ const exhibitsEditFormModule = (function () {
             }
         };
 
-        // Helper function to check if current user is an administrator
-        const is_user_administrator = async () => {
-            try {
-                const profile = authModule.get_user_profile_data();
-                if (!profile || !profile.uid) {
-                    return false;
-                }
-
-                const user_id = parseInt(profile.uid, 10);
-                if (isNaN(user_id)) {
-                    return false;
-                }
-
-                const user_role = await authModule.get_user_role(user_id);
-                return user_role === 'Administrator';
-
-            } catch (error) {
-                console.error('Error checking user role:', error);
-                return false;
-            }
-        };
-
-        // Helper function to disable all form fields
-        const disable_form_fields = async (is_admin) => {
-
-            // Get all form elements
-            const form_elements = document.querySelectorAll(
-                'input:not([type="hidden"]), textarea, select, button[type="submit"], button[type="button"]'
-            );
-
-            // Rich text editors are div-based and not caught by the selector above
-            if (typeof rteModule !== 'undefined') {
-                rteModule.set_all_enabled(false);
-            }
-
-            let disabled_count = 0;
-
-            form_elements.forEach(element => {
-                // Skip the unlock button if user is an administrator
-                if (is_admin && element.id === 'unlock-record') {
-                    console.debug('Preserving unlock button for administrator');
-                    return;
-                }
-
-                // Don't disable already disabled elements or read-only elements
-                if (!element.disabled && !element.readOnly) {
-                    element.disabled = true;
-                    element.style.cursor = 'not-allowed';
-                    element.style.opacity = '0.6';
-                    disabled_count++;
-                }
-            });
-
-            // Also disable file upload areas and custom buttons (except unlock button for admins)
-            const custom_buttons = document.querySelectorAll('.btn:not([disabled])');
-            custom_buttons.forEach(button => {
-                // Skip the unlock button if user is an administrator
-                if (is_admin && button.id === 'unlock-record') {
-                    return;
-                }
-
-                button.disabled = true;
-                button.style.cursor = 'not-allowed';
-                button.style.opacity = '0.6';
-            });
-
-            console.debug(`Disabled ${disabled_count} form elements (record locked by another user)`);
-        };
-
-        // Helper function to check if record is locked by another user
-        const is_locked_by_other_user = (record) => {
-
-            // Check if record is locked
-            if (!record || record.is_locked !== 1) {
-                return false;
-            }
-
-            // Get current user profile
-            const profile = authModule.get_user_profile_data();
-
-            if (!profile || !profile.uid) {
-                console.warn('Unable to get user profile data');
-                return false;
-            }
-
-            // Parse user IDs safely
-            const user_id = parseInt(profile.uid, 10);
-            const locked_by_user = parseInt(record.locked_by_user, 10);
-
-            // Check for valid numbers
-            if (isNaN(user_id) || isNaN(locked_by_user)) {
-                console.error('Invalid user ID values');
-                return false;
-            }
-
-            // Return true if locked by someone else
-            return user_id !== locked_by_user;
-        };
-
         try {
 
             // Get exhibit record
@@ -610,12 +418,12 @@ const exhibitsEditFormModule = (function () {
             await lockModule.check_if_locked(record, '#exhibit-submit-card');
 
             // Disable form fields if locked by another user
-            if (is_locked_by_other_user(record)) {
+            if (lockModule.is_locked_by_other_user(record)) {
                 // Check if current user is an administrator
-                const is_admin = await is_user_administrator();
+                const is_admin = await lockModule.is_user_administrator();
 
                 // Disable form fields, but preserve unlock button for admins
-                await disable_form_fields(is_admin);
+                lockModule.disable_form_fields({ preserve_selectors: is_admin ? ['#unlock-record'] : [] });
             }
 
             // Setup automatic unlock when user navigates away (only if current user has it locked)
@@ -712,7 +520,7 @@ const exhibitsEditFormModule = (function () {
 
             // Display safe error message
             const error_message = error.message || 'An error occurred while loading the exhibit record';
-            show_error(error_message);
+            domModule.set_alert('#message', 'danger', error_message);
 
             return false;
         }
@@ -723,32 +531,6 @@ const exhibitsEditFormModule = (function () {
         // Cache DOM element and constants
         const message_el = document.querySelector('#message');
         const MESSAGE_CLEAR_DELAY = 3000; // 3 seconds
-        const TOKEN_ERROR_DELAY = 1000;
-        const REQUEST_TIMEOUT = 30000; // 30 seconds
-
-        // Helper function to safely display messages (prevents XSS)
-        const show_message = (type, message, icon = 'fa-info') => {
-
-            if (!message_el) {
-                console.error('Message element not found');
-                return;
-            }
-
-            const alert_div = document.createElement('div');
-            alert_div.className = `alert alert-${type}`;
-            alert_div.setAttribute('role', 'alert');
-
-            const icon_el = document.createElement('i');
-            icon_el.className = `fa ${icon}`;
-
-            const text_node = document.createTextNode(` ${message}`);
-
-            alert_div.appendChild(icon_el);
-            alert_div.appendChild(text_node);
-
-            message_el.innerHTML = '';
-            message_el.appendChild(alert_div);
-        };
 
         // Store timeout ID for cleanup
         let timeout_id = null;
@@ -760,19 +542,7 @@ const exhibitsEditFormModule = (function () {
             // Get and validate UUID
             const uuid = helperModule.get_parameter_by_name('exhibit_id');
             if (!uuid) {
-                show_message('danger', 'Unable to get record UUID', 'fa-exclamation');
-                return false;
-            }
-
-            // Validate token early
-            const token = authModule.get_user_token();
-            if (!token) {
-                show_message('danger', 'Unable to get session token', 'fa-exclamation');
-
-                timeout_id = setTimeout(() => {
-                    authModule.logout();
-                }, TOKEN_ERROR_DELAY);
-
+                domModule.set_alert('#message', 'danger', 'Unable to get record UUID');
                 return false;
             }
 
@@ -780,30 +550,29 @@ const exhibitsEditFormModule = (function () {
             const data = get_exhibit_data();
 
             if (!data) {
-                show_message('danger', 'Unable to get exhibit data', 'fa-exclamation');
+                domModule.set_alert('#message', 'danger', 'Unable to get exhibit data');
                 return false;
             }
 
             // Show loading state
-            show_message('info', 'Updating exhibit record...');
+            domModule.set_alert('#message', 'info', 'Updating exhibit record...');
 
             // Add user metadata
             data.updated_by = helperModule.get_user_name();
 
-            // Encode UUID for URL safety
-            const encoded_uuid = encodeURIComponent(uuid);
-            const update_url = EXHIBITS_ENDPOINTS.exhibits.exhibit_records.endpoints.put.endpoint.replace(':exhibit_id', encoded_uuid);
+            const update_url = endpointsModule.build(
+                EXHIBITS_ENDPOINTS.exhibits.exhibit_records.endpoints.put.endpoint,
+                { exhibit_id: uuid }
+            );
 
-            // Make API request with timeout
-            const response = await httpModule.req({
+            if (!update_url) {
+                throw new Error('Failed to update exhibit record');
+            }
+
+            const response = await httpModule.api({
                 method: 'PUT',
                 url: update_url,
-                data: data,
-                headers: {
-                    'Content-Type': 'application/json',
-                    'x-access-token': token
-                },
-                timeout: REQUEST_TIMEOUT
+                data: data
             });
 
             // Validate response
@@ -812,7 +581,7 @@ const exhibitsEditFormModule = (function () {
             }
 
             // Show success message
-            show_message('success', 'Exhibit record updated successfully', 'fa-check');
+            domModule.set_alert('#message', 'success', 'Exhibit record updated successfully');
 
             // Re-render the form with updated data
             try {
@@ -821,7 +590,7 @@ const exhibitsEditFormModule = (function () {
             } catch (render_error) {
                 console.error('Error re-rendering form:', render_error);
                 // Don't fail the whole operation if re-render fails
-                show_message('warning', 'Record updated, but form refresh failed. Please reload the page.', 'fa-exclamation');
+                domModule.set_alert('#message', 'warning', 'Record updated, but form refresh failed. Please reload the page.');
             }
 
             // Clear success message after delay
@@ -844,7 +613,7 @@ const exhibitsEditFormModule = (function () {
 
             // Display user-friendly error message
             const error_message = error.message || 'An unexpected error occurred while updating the exhibit';
-            show_message('danger', error_message, 'fa-exclamation');
+            domModule.set_alert('#message', 'danger', error_message);
 
             return false;
         }
@@ -853,32 +622,7 @@ const exhibitsEditFormModule = (function () {
     async function delete_hero_image() {
 
         // Constants
-        const REQUEST_TIMEOUT = 30000; // 30 seconds
         const MESSAGE_CLEAR_DELAY = 3000; // 3 seconds
-
-        // Helper function to safely display messages (prevents XSS)
-        const show_message = (message, type = 'success', icon = 'fa-info') => {
-            const message_el = document.querySelector('#message');
-            if (!message_el) {
-                console.error('Message element not found');
-                return;
-            }
-
-            const alert_div = document.createElement('div');
-            alert_div.className = `alert alert-${type}`;
-            alert_div.setAttribute('role', 'alert');
-
-            const icon_el = document.createElement('i');
-            icon_el.className = `fa ${icon}`;
-
-            const text = document.createTextNode(` ${message}`);
-
-            alert_div.appendChild(icon_el);
-            alert_div.appendChild(text);
-
-            message_el.innerHTML = '';
-            message_el.appendChild(alert_div);
-        };
 
         // Helper function to safely clear element content
         const clear_element = (selector) => {
@@ -934,14 +678,7 @@ const exhibitsEditFormModule = (function () {
 
             const hero_image = hero_image_el.value?.trim();
             if (!hero_image) {
-                show_message('No hero image to delete', 'warning', 'fa-exclamation');
-                return false;
-            }
-
-            // Get and validate authentication token
-            const token = authModule.get_user_token();
-            if (!token) {
-                show_message('Authentication error: Please log in again', 'danger', 'fa-lock');
+                domModule.set_alert('#message', 'warning', 'No hero image to delete');
                 return false;
             }
 
@@ -951,26 +688,18 @@ const exhibitsEditFormModule = (function () {
                 throw new Error('Endpoint configuration not found');
             }
 
-            // Build endpoint URL with proper encoding
-            const encoded_uuid = encodeURIComponent(uuid);
-            const encoded_media = encodeURIComponent(hero_image);
+            const endpoint = endpointsModule.build(endpoint_template, { exhibit_id: uuid, media: hero_image });
 
-            const endpoint = endpoint_template
-                .replace(':exhibit_id', encoded_uuid)
-                .replace(':media', encoded_media);
+            if (!endpoint) {
+                throw new Error('Endpoint configuration not found');
+            }
 
             // Show loading state
-            show_message('Deleting hero image...', 'info');
+            domModule.set_alert('#message', 'info', 'Deleting hero image...');
 
-            // Make DELETE request with timeout
-            const response = await httpModule.req({
+            const response = await httpModule.api({
                 method: 'DELETE',
-                url: endpoint,
-                headers: {
-                    'Content-Type': 'application/json',
-                    'x-access-token': token
-                },
-                timeout: REQUEST_TIMEOUT
+                url: endpoint
             });
 
             // Validate response
@@ -986,7 +715,7 @@ const exhibitsEditFormModule = (function () {
             clear_hero_image_ui();
 
             // Show success message
-            show_message('Hero image deleted successfully', 'success', 'fa-check');
+            domModule.set_alert('#message', 'success', 'Hero image deleted successfully');
 
             // Clear success message after delay
             timeout_id = setTimeout(() => {
@@ -1006,7 +735,7 @@ const exhibitsEditFormModule = (function () {
 
             // Display user-friendly error message
             const error_message = error.message || 'An unexpected error occurred while deleting the hero image';
-            show_message(error_message, 'danger', 'fa-exclamation');
+            domModule.set_alert('#message', 'danger', error_message);
 
             return false;
         }
@@ -1015,32 +744,7 @@ const exhibitsEditFormModule = (function () {
     async function delete_thumbnail_image() {
 
         // Constants
-        const REQUEST_TIMEOUT = 30000; // 30 seconds
         const MESSAGE_CLEAR_DELAY = 3000; // 3 seconds
-
-        // Helper function to safely display messages (prevents XSS)
-        const show_message = (message, type = 'success', icon = 'fa-info') => {
-            const message_el = document.querySelector('#message');
-            if (!message_el) {
-                console.error('Message element not found');
-                return;
-            }
-
-            const alert_div = document.createElement('div');
-            alert_div.className = `alert alert-${type}`;
-            alert_div.setAttribute('role', 'alert');
-
-            const icon_el = document.createElement('i');
-            icon_el.className = `fa ${icon}`;
-
-            const text = document.createTextNode(` ${message}`);
-
-            alert_div.appendChild(icon_el);
-            alert_div.appendChild(text);
-
-            message_el.innerHTML = '';
-            message_el.appendChild(alert_div);
-        };
 
         // Helper function to safely clear element content
         const clear_element = (selector) => {
@@ -1096,14 +800,7 @@ const exhibitsEditFormModule = (function () {
 
             const thumbnail_image = thumbnail_image_el.value?.trim();
             if (!thumbnail_image) {
-                show_message('No thumbnail image to delete', 'warning', 'fa-exclamation');
-                return false;
-            }
-
-            // Get and validate authentication token
-            const token = authModule.get_user_token();
-            if (!token) {
-                show_message('Authentication error: Please log in again', 'danger', 'fa-lock');
+                domModule.set_alert('#message', 'warning', 'No thumbnail image to delete');
                 return false;
             }
 
@@ -1113,26 +810,18 @@ const exhibitsEditFormModule = (function () {
                 throw new Error('Endpoint configuration not found');
             }
 
-            // Build endpoint URL with proper encoding
-            const encoded_uuid = encodeURIComponent(uuid);
-            const encoded_media = encodeURIComponent(thumbnail_image);
+            const endpoint = endpointsModule.build(endpoint_template, { exhibit_id: uuid, media: thumbnail_image });
 
-            const endpoint = endpoint_template
-                .replace(':exhibit_id', encoded_uuid)
-                .replace(':media', encoded_media);
+            if (!endpoint) {
+                throw new Error('Endpoint configuration not found');
+            }
 
             // Show loading state
-            show_message('Deleting thumbnail image...', 'info');
+            domModule.set_alert('#message', 'info', 'Deleting thumbnail image...');
 
-            // Make DELETE request with timeout
-            const response = await httpModule.req({
+            const response = await httpModule.api({
                 method: 'DELETE',
-                url: endpoint,
-                headers: {
-                    'Content-Type': 'application/json',
-                    'x-access-token': token
-                },
-                timeout: REQUEST_TIMEOUT
+                url: endpoint
             });
 
             // Validate response
@@ -1148,7 +837,7 @@ const exhibitsEditFormModule = (function () {
             clear_thumbnail_ui();
 
             // Show success message
-            show_message('Thumbnail image deleted successfully', 'success', 'fa-check');
+            domModule.set_alert('#message', 'success', 'Thumbnail image deleted successfully');
 
             // Clear success message after delay
             timeout_id = setTimeout(() => {
@@ -1168,37 +857,13 @@ const exhibitsEditFormModule = (function () {
 
             // Display user-friendly error message
             const error_message = error.message || 'An unexpected error occurred while deleting the thumbnail image';
-            show_message(error_message, 'danger', 'fa-exclamation');
+            domModule.set_alert('#message', 'danger', error_message);
 
             return false;
         }
     }
 
     obj.init = async function () {
-
-        // Helper function to safely display error messages (prevents XSS)
-        const show_error = (message) => {
-            const message_el = document.querySelector('#message');
-            if (!message_el) {
-                console.error('Message element not found');
-                return;
-            }
-
-            const alert_div = document.createElement('div');
-            alert_div.className = 'alert alert-danger';
-            alert_div.setAttribute('role', 'alert');
-
-            const icon = document.createElement('i');
-            icon.className = 'fa fa-exclamation';
-
-            const text = document.createTextNode(` ${message}`);
-
-            alert_div.appendChild(icon);
-            alert_div.appendChild(text);
-
-            message_el.innerHTML = '';
-            message_el.appendChild(alert_div);
-        };
 
         // Helper function to safely add event listener
         const add_listener = (selector, event, handler) => {
@@ -1293,23 +958,17 @@ const exhibitsEditFormModule = (function () {
                     if (media_uuid && media_role) {
                         try {
                             const exhibit_uuid = helperModule.get_parameter_by_name('exhibit_id');
-                            const token = authModule.get_user_token();
 
-                            if (exhibit_uuid && token) {
+                            if (exhibit_uuid) {
                                 const endpoint_base = EXHIBITS_ENDPOINTS.exhibits?.exhibit_media_library?.delete?.endpoint;
+                                const endpoint = endpoint_base
+                                    ? endpointsModule.build(endpoint_base, { exhibit_id: exhibit_uuid, media_role: media_role })
+                                    : null;
 
-                                if (endpoint_base) {
-                                    const endpoint = endpoint_base
-                                        .replace(':exhibit_id', encodeURIComponent(exhibit_uuid))
-                                        .replace(':media_role', encodeURIComponent(media_role));
-
-                                    const response = await httpModule.req({
+                                if (endpoint) {
+                                    const response = await httpModule.api({
                                         method: 'DELETE',
-                                        url: endpoint,
-                                        headers: {
-                                            'Content-Type': 'application/json',
-                                            'x-access-token': token
-                                        }
+                                        url: endpoint
                                     });
 
                                     if (response && (response.status === 204 || response.status === 200)) {
@@ -1531,7 +1190,7 @@ const exhibitsEditFormModule = (function () {
 
             // Display user-friendly error message
             const error_message = error.message || 'An error occurred during initialization';
-            show_error(error_message);
+            domModule.set_alert('#message', 'danger', error_message);
 
             return false;
         }

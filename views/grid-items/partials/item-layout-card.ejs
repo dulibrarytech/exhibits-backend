@@ -1,3 +1,14 @@
+<%#
+    Item Layout card (standard, grid and vertical-timeline media items).
+
+    Locals (optional):
+      default_layout - value of the radio pre-selected on a fresh form
+                       (media_right | media_top | media_bottom | media_only |
+                       media_left). Defaults to media_top; standard media items
+                       pass media_right. Edit/details modules overwrite the
+                       selection from the record at runtime.
+-%>
+<% const _default_layout = (typeof default_layout !== 'undefined' && default_layout) || 'media_top'; %>
 <div id="item-layout-card" class="card">
     <div class="card-header">
         <strong class="card-title mb-3">Item Layout</strong>
@@ -11,7 +22,7 @@
                         <input type="radio"
                                name="layout"
                                id="item-layout-media-right"
-                               value="media_right"/>
+                               value="media_right"<%= _default_layout === 'media_right' ? ' checked' : '' %>/>
                     </label>
                 </p>
             </div>
@@ -23,7 +34,7 @@
                         <input type="radio"
                                name="layout"
                                id="item-layout-media-top"
-                               value="media_top" checked/>
+                               value="media_top"<%= _default_layout === 'media_top' ? ' checked' : '' %>/>
                     </label>
                 </p>
             </div>
@@ -35,7 +46,7 @@
                         <input type="radio"
                                name="layout"
                                id="item-layout-media-bottom"
-                               value="media_bottom"/>
+                               value="media_bottom"<%= _default_layout === 'media_bottom' ? ' checked' : '' %>/>
                     </label>
                 </p>
             </div>
@@ -48,7 +59,7 @@
                         <input type="radio"
                                name="layout"
                                id="item-layout-media-only"
-                               value="media_only"/>
+                               value="media_only"<%= _default_layout === 'media_only' ? ' checked' : '' %>/>
                     </label>
                 </p>
             </div>
@@ -59,7 +70,7 @@
                         <input type="radio"
                                name="layout"
                                id="item-layout-media-left"
-                               value="media_left"/>
+                               value="media_left"<%= _default_layout === 'media_left' ? ' checked' : '' %>/>
                     </label>
                 </p>
             </div>

@@ -25,7 +25,7 @@ const sharp = require('sharp');
 const { exiftool } = require('exiftool-vendored');
 const LOGGER = require('../libs/log4');
 const TOKEN = require('../libs/tokens');
-const AUTHORIZE = require('../auth/authorize');
+const GATE = require('../auth/permission_gate');
 const { rate_limits } = require('../config/rate_limits_loader');
 
 // Configuration
@@ -789,88 +789,29 @@ const shutdown_exiftool = async () => {
 // Route Registration
 // ---------------------------------------------------------------------------
 
-/**
+/*
  * Authorization guard for the upload route. Requires the `can_create_media`
  * permission — the same gate the media controller applies to its other create
  * paths. Runs after TOKEN.verify (reads req.decoded) and before multer, so an
  * unauthorized request is rejected before any file is parsed or written to disk.
- * @param {Object} req - Express request object
- * @param {Object} res - Express response object
- * @param {Function} next - Express next middleware function
  */
-const require_create_media_permission = async (req, res, next) => {
+const require_create_media_permission = GATE.require_permission(['can_create_media'], {
+    record_type: 'media',
+    context: '/media-library/uploads (require_create_media_permission)'
+});
 
-    try {
-
-        const is_authorized = await AUTHORIZE.check_permission({
-            req,
-            permissions: ['can_create_media'],
-            record_type: 'media',
-            parent_id: null,
-            child_id: null
-        });
-
-        if (is_authorized !== true) {
-            return res.status(403).json({
-                success: false,
-                message: 'Unauthorized request',
-                data: null
-            });
-        }
-
-        return next();
-
-    } catch (error) {
-        LOGGER.module().error(`ERROR: [/media-library/uploads (require_create_media_permission)] ${error.message}`);
-        return res.status(403).json({
-            success: false,
-            message: 'Unauthorized request',
-            data: null
-        });
-    }
-};
-
-/**
+/*
  * Authorization guard for the replace-file route. Requires the update-media
- * capability (ownership-scoped via parent_id) — replacing the file behind an
- * existing record is an update, not a create. Runs after TOKEN.verify and
- * before multer, so an unauthorized request is rejected before any file is
- * parsed or written to disk.
- * @param {Object} req - Express request object
- * @param {Object} res - Express response object
- * @param {Function} next - Express next middleware function
+ * capability (ownership-scoped via the path media_id) — replacing the file
+ * behind an existing record is an update, not a create. Runs after
+ * TOKEN.verify and before multer, so an unauthorized request is rejected
+ * before any file is parsed or written to disk.
  */
-const require_update_media_permission = async (req, res, next) => {
-
-    try {
-
-        const is_authorized = await AUTHORIZE.check_permission({
-            req,
-            permissions: ['can_update_any_media', 'can_update_media'],
-            record_type: 'media',
-            parent_id: req.params.media_id || null,
-            child_id: null
-        });
-
-        if (is_authorized !== true) {
-            return res.status(403).json({
-                success: false,
-                message: 'Unauthorized request',
-                data: null
-            });
-        }
-
-        return next();
-
-    } catch (error) {
-        LOGGER.module().error(`ERROR: [/media-library/uploads (require_update_media_permission)] ${error.message}`);
-        return res.status(403).json({
-            success: false,
-            message: 'Unauthorized request',
-            data: null
-        });
-    }
-};
+const require_update_media_permission = GATE.require_permission(['can_update_any_media', 'can_update_media'], {
+    record_type: 'media',
+    parent_param: 'media_id',
+    context: '/media-library/uploads (require_update_media_permission)'
+});
 
 /**
  * Register upload routes

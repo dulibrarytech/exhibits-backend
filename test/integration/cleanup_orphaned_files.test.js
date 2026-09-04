@@ -32,13 +32,9 @@ mockDB.destroy = jest.fn();
 
 jest.mock('dotenv', () => ({ config: jest.fn() }));
 jest.mock('log4js', () => ({ configure: jest.fn() }));
-jest.mock('../../libs/log4', () => ({
-    module: () => ({ error: jest.fn(), warn: jest.fn(), info: jest.fn(), debug: jest.fn() })
-}));
+jest.mock('../../libs/log4', () => require('./helpers/mocks').log4_factory());
 jest.mock('../../config/db_config', () => () => mockDB);
-jest.mock('../../config/db_tables_config', () => () => ({
-    exhibits: { media_library_records: 'tbl_media_library' }
-}));
+jest.mock('../../config/db_tables_config', () => require('./helpers/mocks').db_tables_factory({ media_library_records: 'tbl_media_library' }));
 jest.mock('../../media-library/storage_config', () => () => ({
     storage_path: mockStorageRoot,
     media_type_dirs: { image: 'images', pdf: 'documents', video: 'video', audio: 'audio', thumbnails: 'thumbnails' }

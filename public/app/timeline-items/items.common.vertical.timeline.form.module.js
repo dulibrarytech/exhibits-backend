@@ -35,17 +35,6 @@ const itemsCommonVerticalTimelineFormModule = (function () {
                 return el?.value?.trim() ?? default_value;
             };
 
-            const show_error = (message, field_selector) => {
-                const message_el = document.querySelector('#message');
-                if (message_el) {
-                    domModule.set_alert(message_el, 'danger', message);
-                }
-                if (field_selector) {
-                    const error_id = field_selector.replace('#', '') + '-error';
-                    domModule.set_field_error(field_selector, error_id, message);
-                }
-            };
-
             // Clear any prior field-level error state.
             domModule.clear_field_error('#timeline-internal-name-input', 'timeline-internal-name-input-error');
 
@@ -57,7 +46,7 @@ const itemsCommonVerticalTimelineFormModule = (function () {
             const internal_name_value = get_element_value('#timeline-internal-name-input');
 
             if (internal_name_value === '') {
-                show_error('Please enter an internal name', '#timeline-internal-name-input');
+                domModule.show_field_error('Please enter an internal name', '#timeline-internal-name-input');
                 return false;
             }
 
@@ -73,10 +62,7 @@ const itemsCommonVerticalTimelineFormModule = (function () {
 
         } catch (error) {
             console.error('Error in get_common_timeline_form_fields:', error.message);
-            const message_el = document.querySelector('#message');
-            if (message_el) {
-                message_el.innerHTML = `<div class="alert alert-danger" role="alert"><i class="fa fa-exclamation"></i> ${error.message}</div>`;
-            }
+            domModule.set_alert('#message', 'danger', error.message);
             return false;
         }
     };
@@ -122,13 +108,6 @@ const itemsCommonVerticalTimelineFormModule = (function () {
             return;
         }
 
-        const token = authModule.get_user_token();
-
-        if (!token) {
-            console.warn('[styles] No auth token available');
-            return;
-        }
-
         const EXHIBITS_ENDPOINTS = endpointsModule.get_exhibits_endpoints();
 
         if (!EXHIBITS_ENDPOINTS?.exhibits?.exhibit_records?.endpoints?.get?.endpoint) {
@@ -139,19 +118,22 @@ const itemsCommonVerticalTimelineFormModule = (function () {
             return;
         }
 
-        const endpoint = EXHIBITS_ENDPOINTS.exhibits.exhibit_records.endpoints.get.endpoint
-            .replace(':exhibit_id', encodeURIComponent(exhibit_id));
+        const endpoint = endpointsModule.build(EXHIBITS_ENDPOINTS.exhibits.exhibit_records.endpoints.get.endpoint, {
+            exhibit_id: exhibit_id
+        });
 
         try {
 
-            const response = await httpModule.req({
+            const response = await httpModule.api({
                 method: 'GET',
                 url: endpoint,
-                headers: {
-                    'Content-Type': 'application/json',
-                    'x-access-token': token
-                }
+                logout_on_missing_token: false
             });
+
+            if (response === null) {
+                console.warn('[styles] No auth token available');
+                return;
+            }
 
             if (!response || response.status !== 200 || !response.data?.data) {
                 console.warn('[styles] Exhibit API response invalid. Status:', response?.status, 'Data:', response?.data);

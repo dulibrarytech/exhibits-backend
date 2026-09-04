@@ -22,9 +22,7 @@ const exhibitsStylesFormModule = (function () {
 
     const APP_PATH = endpointsModule.get_app_path();
     const EXHIBITS_ENDPOINTS = endpointsModule.get_exhibits_endpoints();
-    const REQUEST_TIMEOUT = 30000;
     const MESSAGE_CLEAR_DELAY = 3000;
-    const TOKEN_ERROR_DELAY = 1000;
 
     let obj = {};
 
@@ -38,39 +36,6 @@ const exhibitsStylesFormModule = (function () {
     let cached_record = null;
 
     // ==================== PRIVATE HELPERS ====================
-
-    /**
-     * Safely displays a message in the #message container (prevents XSS)
-     * @param {string} message - Message text
-     * @param {string} [type='danger'] - Bootstrap alert type
-     * @param {string} [icon='fa-exclamation'] - Font Awesome icon class
-     */
-    const show_message = function (message, type, icon) {
-        type = type || 'danger';
-        icon = icon || 'fa-exclamation';
-
-        const message_el = document.querySelector('#message');
-
-        if (!message_el) {
-            console.error('Message element not found');
-            return;
-        }
-
-        const alert_div = document.createElement('div');
-        alert_div.className = 'alert alert-' + type;
-        alert_div.setAttribute('role', 'alert');
-
-        const icon_el = document.createElement('i');
-        icon_el.className = 'fa ' + icon;
-
-        const text = document.createTextNode(' ' + message);
-
-        alert_div.appendChild(icon_el);
-        alert_div.appendChild(text);
-
-        message_el.innerHTML = '';
-        message_el.appendChild(alert_div);
-    };
 
     /**
      * Clears the #message container after a delay
@@ -147,7 +112,7 @@ const exhibitsStylesFormModule = (function () {
             // Validate endpoints
             if (!EXHIBITS_ENDPOINTS || typeof EXHIBITS_ENDPOINTS !== 'object') {
                 console.error('EXHIBITS_ENDPOINTS is not available');
-                show_message('Configuration error: API endpoints not available');
+                domModule.set_alert('#message', 'danger', 'Configuration error: API endpoints not available');
                 helperModule.redirect_to_auth();
                 return null;
             }
@@ -156,17 +121,7 @@ const exhibitsStylesFormModule = (function () {
             const uuid = helperModule.get_parameter_by_name('exhibit_id');
 
             if (!uuid) {
-                show_message('Missing required parameter: exhibit_id');
-                return null;
-            }
-
-            // Validate auth
-            const token = authModule.get_user_token();
-
-            if (!token) {
-                console.error('Authentication token not available');
-                show_message('Authentication error: Please log in again', 'warning', 'fa-lock');
-                helperModule.redirect_to_auth();
+                domModule.set_alert('#message', 'danger', 'Missing required parameter: exhibit_id');
                 return null;
             }
 
@@ -175,7 +130,7 @@ const exhibitsStylesFormModule = (function () {
 
             if (!profile || !profile.uid) {
                 console.error('User profile not available');
-                show_message('User profile error: Please log in again', 'warning', 'fa-user');
+                domModule.set_alert('#message', 'warning', 'User profile error: Please log in again');
                 helperModule.redirect_to_auth();
                 return null;
             }
@@ -187,23 +142,21 @@ const exhibitsStylesFormModule = (function () {
                 throw new Error('Endpoint configuration not found');
             }
 
-            const encoded_uuid = encodeURIComponent(uuid);
-            const endpoint_base = endpoint_config.replace(':exhibit_id', encoded_uuid);
+            const endpoint_base = endpointsModule.build(endpoint_config, { exhibit_id: uuid });
+
+            if (!endpoint_base) {
+                throw new Error('Endpoint configuration not found');
+            }
+
             const query_string = build_query_string({
                 type: 'edit',
                 uid: profile.uid
             });
             const endpoint = endpoint_base + '?' + query_string;
 
-            // Fetch with timeout
-            const response = await httpModule.req({
+            const response = await httpModule.api({
                 method: 'GET',
-                url: endpoint,
-                headers: {
-                    'Content-Type': 'application/json',
-                    'x-access-token': token
-                },
-                timeout: REQUEST_TIMEOUT
+                url: endpoint
             });
 
             if (!response) {
@@ -226,7 +179,7 @@ const exhibitsStylesFormModule = (function () {
 
         } catch (error) {
             console.error('Error fetching exhibit record:', error);
-            show_message(error.message || 'An unexpected error occurred while loading the exhibit record');
+            domModule.set_alert('#message', 'danger', error.message || 'An unexpected error occurred while loading the exhibit record');
             return null;
         }
     }
@@ -239,97 +192,6 @@ const exhibitsStylesFormModule = (function () {
      * @returns {Promise<boolean>} True if display succeeded
      */
     async function display_styles_record() {
-
-        /**
-         * Checks whether the record is locked by a different user
-         * @param {Object} record - Exhibit record
-         * @returns {boolean}
-         */
-        const is_locked_by_other_user = function (record) {
-
-            if (!record || record.is_locked !== 1) {
-                return false;
-            }
-
-            const profile = authModule.get_user_profile_data();
-
-            if (!profile || !profile.uid) {
-                return false;
-            }
-
-            const user_id = parseInt(profile.uid, 10);
-            const locked_by_user = parseInt(record.locked_by_user, 10);
-
-            if (isNaN(user_id) || isNaN(locked_by_user)) {
-                return false;
-            }
-
-            return user_id !== locked_by_user;
-        };
-
-        /**
-         * Disables all interactive form elements when the record is locked
-         * @param {boolean} is_admin - Whether the current user is an administrator
-         */
-        const disable_form_fields = function (is_admin) {
-            const form_elements = document.querySelectorAll(
-                'input:not([type="hidden"]), textarea, select, button[type="button"]'
-            );
-
-            form_elements.forEach(function (element) {
-
-                if (is_admin && element.id === 'unlock-record') {
-                    return;
-                }
-
-                if (!element.disabled && !element.readOnly) {
-                    element.disabled = true;
-                    element.style.cursor = 'not-allowed';
-                    element.style.opacity = '0.6';
-                }
-            });
-
-            const custom_buttons = document.querySelectorAll('.btn:not([disabled])');
-
-            custom_buttons.forEach(function (button) {
-
-                if (is_admin && button.id === 'unlock-record') {
-                    return;
-                }
-
-                button.disabled = true;
-                button.style.cursor = 'not-allowed';
-                button.style.opacity = '0.6';
-            });
-        };
-
-        /**
-         * Checks if the current user has the Administrator role
-         * @returns {Promise<boolean>}
-         */
-        const is_user_administrator = async function () {
-
-            try {
-                const profile = authModule.get_user_profile_data();
-
-                if (!profile || !profile.uid) {
-                    return false;
-                }
-
-                const user_id = parseInt(profile.uid, 10);
-
-                if (isNaN(user_id)) {
-                    return false;
-                }
-
-                const user_role = await authModule.get_user_role(user_id);
-                return user_role === 'Administrator';
-
-            } catch (error) {
-                console.error('Error checking user role:', error);
-                return false;
-            }
-        };
 
         try {
 
@@ -345,9 +207,13 @@ const exhibitsStylesFormModule = (function () {
             // Record locking
             await lockModule.check_if_locked(record, '#exhibit-submit-card');
 
-            if (is_locked_by_other_user(record)) {
-                const is_admin = await is_user_administrator();
-                disable_form_fields(is_admin);
+            if (lockModule.is_locked_by_other_user(record)) {
+                const is_admin = await lockModule.is_user_administrator();
+                lockModule.disable_form_fields({
+                    include_submit: false,
+                    disable_rte: false,
+                    preserve_selectors: is_admin ? ['#unlock-record'] : []
+                });
             }
 
             lockModule.setup_auto_unlock(record);
@@ -378,7 +244,7 @@ const exhibitsStylesFormModule = (function () {
 
         } catch (error) {
             console.error('Error displaying styles record:', error);
-            show_message(error.message || 'An error occurred while loading styles');
+            domModule.set_alert('#message', 'danger', error.message || 'An error occurred while loading styles');
             return false;
         }
     }
@@ -403,26 +269,13 @@ const exhibitsStylesFormModule = (function () {
             const uuid = helperModule.get_parameter_by_name('exhibit_id');
 
             if (!uuid) {
-                show_message('Unable to get record UUID');
-                return false;
-            }
-
-            // Validate auth token
-            const token = authModule.get_user_token();
-
-            if (!token) {
-                show_message('Unable to get session token');
-
-                timeout_id = setTimeout(function () {
-                    authModule.logout();
-                }, TOKEN_ERROR_DELAY);
-
+                domModule.set_alert('#message', 'danger', 'Unable to get record UUID');
                 return false;
             }
 
             // Validate cached record is available
             if (!cached_record) {
-                show_message('Exhibit record not loaded. Please reload the page.');
+                domModule.set_alert('#message', 'danger', 'Exhibit record not loaded. Please reload the page.');
                 return false;
             }
 
@@ -430,7 +283,7 @@ const exhibitsStylesFormModule = (function () {
             const validation = exhibitsStylesModule.validate_required();
 
             if (!validation.valid) {
-                show_message('Please complete all required style fields', 'warning', 'fa-exclamation');
+                domModule.set_alert('#message', 'warning', 'Please complete all required style fields');
                 return false;
             }
 
@@ -438,7 +291,7 @@ const exhibitsStylesFormModule = (function () {
             const styles = exhibitsStylesModule.get_styles();
 
             if (!styles) {
-                show_message('Unable to gather style values');
+                domModule.set_alert('#message', 'danger', 'Unable to gather style values');
                 return false;
             }
 
@@ -468,22 +321,22 @@ const exhibitsStylesFormModule = (function () {
             }
 
             // Show loading state
-            show_message('Updating exhibit styles...', 'info', 'fa-info');
+            domModule.set_alert('#message', 'info', 'Updating exhibit styles...');
 
             // PUT to the existing exhibit update endpoint
-            const encoded_uuid = encodeURIComponent(uuid);
-            const update_url = EXHIBITS_ENDPOINTS.exhibits.exhibit_records.endpoints.put.endpoint
-                .replace(':exhibit_id', encoded_uuid);
+            const update_url = endpointsModule.build(
+                EXHIBITS_ENDPOINTS.exhibits.exhibit_records.endpoints.put.endpoint,
+                { exhibit_id: uuid }
+            );
 
-            const response = await httpModule.req({
+            if (!update_url) {
+                throw new Error('Failed to update exhibit styles');
+            }
+
+            const response = await httpModule.api({
                 method: 'PUT',
                 url: update_url,
-                data: data,
-                headers: {
-                    'Content-Type': 'application/json',
-                    'x-access-token': token
-                },
-                timeout: REQUEST_TIMEOUT
+                data: data
             });
 
             if (!response || response.status !== 201) {
@@ -491,7 +344,7 @@ const exhibitsStylesFormModule = (function () {
             }
 
             // Success
-            show_message('Exhibit styles updated successfully', 'success', 'fa-check');
+            domModule.set_alert('#message', 'success', 'Exhibit styles updated successfully');
 
             // Re-fetch to refresh cache and confirm round-trip
             try {
@@ -499,7 +352,7 @@ const exhibitsStylesFormModule = (function () {
                 console.debug('Styles form re-rendered with updated data');
             } catch (render_error) {
                 console.error('Error re-rendering styles form:', render_error);
-                show_message('Styles updated, but form refresh failed. Please reload the page.', 'warning', 'fa-exclamation');
+                domModule.set_alert('#message', 'warning', 'Styles updated, but form refresh failed. Please reload the page.');
             }
 
             timeout_id = clear_message_after_delay();
@@ -512,7 +365,7 @@ const exhibitsStylesFormModule = (function () {
             }
 
             console.error('Update styles error:', error);
-            show_message(error.message || 'An unexpected error occurred while updating styles');
+            domModule.set_alert('#message', 'danger', error.message || 'An unexpected error occurred while updating styles');
             return false;
         }
     };
@@ -605,7 +458,7 @@ const exhibitsStylesFormModule = (function () {
 
         } catch (error) {
             console.error('Error initializing styles form module:', error);
-            show_message(error.message || 'An error occurred during initialization');
+            domModule.set_alert('#message', 'danger', error.message || 'An error occurred during initialization');
             return false;
         }
     };

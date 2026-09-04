@@ -26,33 +26,6 @@ const exhibitsDetailsModule = (function () {
 
     async function get_exhibit_details_record() {
 
-        // Constants
-        const REQUEST_TIMEOUT = 30000; // 30 seconds
-
-        // Helper function to safely display messages (prevents XSS)
-        const show_message = (message, type = 'danger', icon = 'fa-exclamation') => {
-            const message_el = document.querySelector('#message');
-            if (!message_el) {
-                console.error('Message element not found');
-                return;
-            }
-
-            const alert_div = document.createElement('div');
-            alert_div.className = `alert alert-${type}`;
-            alert_div.setAttribute('role', 'alert');
-
-            const icon_el = document.createElement('i');
-            icon_el.className = `fa ${icon}`;
-
-            const text = document.createTextNode(` ${message}`);
-
-            alert_div.appendChild(icon_el);
-            alert_div.appendChild(text);
-
-            message_el.innerHTML = '';
-            message_el.appendChild(alert_div);
-        };
-
         // Helper function to safely set title
         const set_exhibit_title = async (uuid) => {
             const title_el = document.querySelector('#exhibit-title');
@@ -88,7 +61,7 @@ const exhibitsDetailsModule = (function () {
             // Validate endpoints configuration
             if (!EXHIBITS_ENDPOINTS || typeof EXHIBITS_ENDPOINTS !== 'object') {
                 console.error('EXHIBITS_ENDPOINTS is not available');
-                show_message('Configuration error: API endpoints not available', 'danger', 'fa-exclamation');
+                domModule.set_alert('#message', 'danger', 'Configuration error: API endpoints not available');
                 authModule.redirect_to_auth();
                 return null;
             }
@@ -96,16 +69,7 @@ const exhibitsDetailsModule = (function () {
             // Get and validate UUID
             const uuid = helperModule.get_parameter_by_name('exhibit_id');
             if (!uuid) {
-                show_message('Missing required parameter: exhibit_id', 'danger', 'fa-exclamation');
-                return null;
-            }
-
-            // Get and validate authentication token
-            const token = authModule.get_user_token();
-            if (!token) {
-                console.error('Authentication token not available');
-                show_message('Authentication error: Please log in again', 'warning', 'fa-lock');
-                authModule.redirect_to_auth();
+                domModule.set_alert('#message', 'danger', 'Missing required parameter: exhibit_id');
                 return null;
             }
 
@@ -113,7 +77,7 @@ const exhibitsDetailsModule = (function () {
             const profile = authModule.get_user_profile_data();
             if (!profile || !profile.uid) {
                 console.error('User profile not available');
-                show_message('User profile error: Please log in again', 'warning', 'fa-user');
+                domModule.set_alert('#message', 'warning', 'User profile error: Please log in again');
                 authModule.redirect_to_auth();
                 return null;
             }
@@ -130,22 +94,19 @@ const exhibitsDetailsModule = (function () {
             });
 
             // Build endpoint URL with proper encoding
-            const encoded_uuid = encodeURIComponent(uuid);
-            const endpoint_base = endpoint_config.replace(':exhibit_id', encoded_uuid);
+            const endpoint_base = endpointsModule.build(endpoint_config, { exhibit_id: uuid });
+
+            if (!endpoint_base) {
+                throw new Error('Endpoint configuration not found');
+            }
 
             // Build query parameters safely
             const query_string = build_query_string({ type: 'details', uid: profile.uid });
             const endpoint = `${endpoint_base}?${query_string}`;
 
-            // Make request with timeout
-            const response = await httpModule.req({
+            const response = await httpModule.api({
                 method: 'GET',
-                url: endpoint,
-                headers: {
-                    'Content-Type': 'application/json',
-                    'x-access-token': token
-                },
-                timeout: REQUEST_TIMEOUT
+                url: endpoint
             });
 
             // Validate response structure
@@ -174,7 +135,7 @@ const exhibitsDetailsModule = (function () {
 
             // Display user-friendly error message
             const error_message = error.message || 'An unexpected error occurred while loading the exhibit record';
-            show_message(error_message, 'danger', 'fa-exclamation');
+            domModule.set_alert('#message', 'danger', error_message);
 
             return null;
         }
@@ -229,30 +190,6 @@ const exhibitsDetailsModule = (function () {
             span.style.fontSize = '11px';
             span.textContent = filename;
             return span;
-        };
-
-        // Helper function to display error messages safely
-        const show_error = (message) => {
-            const message_el = document.querySelector('#message');
-            if (!message_el) {
-                console.error('Message element not found');
-                return;
-            }
-
-            const alert_div = document.createElement('div');
-            alert_div.className = 'alert alert-danger';
-            alert_div.setAttribute('role', 'alert');
-
-            const icon = document.createElement('i');
-            icon.className = 'fa fa-exclamation';
-
-            const text = document.createTextNode(` ${message}`);
-
-            alert_div.appendChild(icon);
-            alert_div.appendChild(text);
-
-            message_el.innerHTML = '';
-            message_el.appendChild(alert_div);
         };
 
         // Helper function to set audit information safely
@@ -337,24 +274,21 @@ const exhibitsDetailsModule = (function () {
 
             try {
 
-                const token = authModule.get_user_token();
-                if (!token) return null;
-
                 const endpoint_base = EXHIBITS_ENDPOINTS.exhibits?.exhibit_media_library?.get?.endpoint;
                 if (!endpoint_base) {
                     console.warn('exhibit_media_library GET endpoint not configured');
                     return null;
                 }
 
-                const endpoint = endpoint_base.replace(':exhibit_id', encodeURIComponent(exhibit_uuid));
+                const endpoint = endpointsModule.build(endpoint_base, { exhibit_id: exhibit_uuid });
 
-                const response = await httpModule.req({
+                if (!endpoint) {
+                    return null;
+                }
+
+                const response = await httpModule.api({
                     method: 'GET',
-                    url: endpoint,
-                    headers: {
-                        'Content-Type': 'application/json',
-                        'x-access-token': token
-                    }
+                    url: endpoint
                 });
 
                 if (response && response.data && Array.isArray(response.data.data)) {
@@ -555,37 +489,13 @@ const exhibitsDetailsModule = (function () {
 
             // Display safe error message
             const error_message = error.message || 'An error occurred while loading the exhibit record';
-            show_error(error_message);
+            domModule.set_alert('#message', 'danger', error_message);
 
             return false;
         }
     }
 
     obj.init = async function () {
-
-        // Helper function to safely display messages (prevents XSS)
-        const show_message = (message, type = 'danger', icon = 'fa-exclamation') => {
-            const message_el = document.querySelector('#message');
-            if (!message_el) {
-                console.error('Message element not found');
-                return;
-            }
-
-            const alert_div = document.createElement('div');
-            alert_div.className = `alert alert-${type}`;
-            alert_div.setAttribute('role', 'alert');
-
-            const icon_el = document.createElement('i');
-            icon_el.className = `fa ${icon}`;
-
-            const text = document.createTextNode(` ${message}`);
-
-            alert_div.appendChild(icon_el);
-            alert_div.appendChild(text);
-
-            message_el.innerHTML = '';
-            message_el.appendChild(alert_div);
-        };
 
         // Helper function to safely add event listener
         const add_listener = (selector, event, handler) => {
@@ -603,7 +513,7 @@ const exhibitsDetailsModule = (function () {
             // Check for permission denied status
             const status = helperModule.get_parameter_by_name('status');
             if (status === '403') {
-                show_message('You do not have permission to edit this record.', 'danger', 'fa-exclamation');
+                domModule.set_alert('#message', 'danger', 'You do not have permission to edit this record.');
             }
 
 
@@ -622,7 +532,7 @@ const exhibitsDetailsModule = (function () {
 
             // Display user-friendly error message
             const error_message = error.message || 'An error occurred during initialization';
-            show_message(error_message, 'danger', 'fa-exclamation');
+            domModule.set_alert('#message', 'danger', error_message);
 
             return false;
         }

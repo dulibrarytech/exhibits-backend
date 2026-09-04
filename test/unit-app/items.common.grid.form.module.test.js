@@ -9,13 +9,8 @@
 
 'use strict';
 
-const { readFileSync } = require('node:fs');
-const { resolve } = require('node:path');
-
-const MODULE_PATH = resolve(
-    __dirname,
-    '../../public/app/grid-items/items.common.grid.form.module.js',
-);
+const { load_browser_module } = require('./helpers/load_module');
+const { dom_stub, helper_stub, rte_stub } = require('./helpers/stubs');
 
 function build_form() {
     document.body.innerHTML = `
@@ -63,32 +58,16 @@ function select_style(value) {
 describe('itemsCommonStandardGridFormModule', () => {
 
     beforeAll(() => {
-        const src = readFileSync(MODULE_PATH, 'utf8');
-        const patched = src.replace(
-            /^const\s+itemsCommonStandardGridFormModule\s*=/m,
-            'globalThis.itemsCommonStandardGridFormModule =',
+        load_browser_module(
+            'public/app/grid-items/items.common.grid.form.module.js',
+            'itemsCommonStandardGridFormModule',
         );
-        // eslint-disable-next-line no-eval
-        (0, eval)(patched);
     });
 
     beforeEach(() => {
         // Rich text fields read through rteModule; back the stub with the
         // same DOM elements the fixtures populate via .value.
-        globalThis.rteModule = {
-            get_html: (id) => document.getElementById(id)?.value?.trim() ?? '',
-            set_html: (id, html) => {
-                const el = document.getElementById(id);
-                if (el) el.value = html;
-            },
-            is_empty: (id) => (document.getElementById(id)?.value?.trim() ?? '') === '',
-            init: () => null,
-            init_all: () => {},
-            set_enabled: () => {},
-            set_all_enabled: () => {},
-            on_change: () => {},
-            is_dirty: () => false,
-        };
+        globalThis.rteModule = rte_stub();
         vi.spyOn(console, 'warn').mockImplementation(() => {});
         vi.spyOn(console, 'error').mockImplementation(() => {});
         // The methods reach for domModule.set_alert when reporting validation
@@ -96,31 +75,12 @@ describe('itemsCommonStandardGridFormModule', () => {
         // Phase 3b) to associate the error message with the offending input
         // via aria-invalid + aria-describedby. All stubbed per-test so we
         // can assert calls.
-        globalThis.domModule = {
-            set_alert: vi.fn(),
-            set_field_error: vi.fn(),
-            clear_field_error: vi.fn(),
-        };
+        globalThis.domModule = dom_stub();
         // The style-preset chooser (swatch radios) is read via
         // helperModule.get_checked_radio_button and written via
         // check_item_style_option. Stub both to mirror the real
         // helper.module implementations.
-        globalThis.helperModule = {
-            get_checked_radio_button: (radios) => {
-                if (!radios || !radios.length) return null;
-                const checked = Array.from(radios).find((b) => b && b.checked);
-                if (!checked) return null;
-                const v = String(checked.value);
-                return v === '' || v === 'undefined' ? null : v;
-            },
-            check_item_style_option: (value) => {
-                const radios = document.getElementsByName('styles');
-                if (!radios || !radios.length) return;
-                const target = value || '';
-                for (const r of radios) { if (r.value === target) { r.checked = true; return; } }
-                for (const r of radios) { if (r.value === '') { r.checked = true; return; } }
-            },
-        };
+        globalThis.helperModule = helper_stub();
         build_form();
     });
 
@@ -142,10 +102,9 @@ describe('itemsCommonStandardGridFormModule', () => {
                 .get_common_grid_form_fields();
 
             expect(result).toBe(false);
-            expect(globalThis.domModule.set_alert).toHaveBeenCalledWith(
-                document.querySelector('#message'),
-                'danger',
+            expect(globalThis.domModule.show_field_error).toHaveBeenCalledWith(
                 'Please select the number of columns',
+                '#grid-columns',
             );
         });
 
@@ -164,10 +123,9 @@ describe('itemsCommonStandardGridFormModule', () => {
 
                 expect(result, `expected '${bad}' to be rejected`).toBe(false);
             }
-            expect(globalThis.domModule.set_alert).toHaveBeenCalledWith(
-                expect.anything(),
-                'danger',
+            expect(globalThis.domModule.show_field_error).toHaveBeenCalledWith(
                 'Please select 2, 3, or 4 columns',
+                '#grid-columns',
             );
         });
 
@@ -213,15 +171,9 @@ describe('itemsCommonStandardGridFormModule', () => {
 
                 expect(result, `expected '${JSON.stringify(empty)}' to be rejected`).toBe(false);
             }
-            expect(globalThis.domModule.set_alert).toHaveBeenCalledWith(
-                expect.anything(),
-                'danger',
+            expect(globalThis.domModule.show_field_error).toHaveBeenCalledWith(
                 'Please enter an internal name',
-            );
-            expect(globalThis.domModule.set_field_error).toHaveBeenCalledWith(
                 '#grid-internal-name-input',
-                'grid-internal-name-input-error',
-                'Please enter an internal name',
             );
         });
 

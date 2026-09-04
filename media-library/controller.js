@@ -26,8 +26,11 @@ const KALTURA_SERVICE = require('../media-library/kaltura-service');
 const IIIF_SERVICE = require('../media-library/iiif-service');
 const KALTURA_CONFIG = require('../config/kaltura_config')();
 const UPLOADS = require('../media-library/uploads');
-const AUTHORIZE = require('../auth/authorize');
+const GATE = require('../auth/permission_gate');
+const { decode_html_entities } = require('./helper');
 const LOGGER = require('../libs/log4');
+const { is_valid_uuid } = require('../libs/uuid');
+const { send_error, send_ok } = require('../libs/http');
 
 // Allowed MIME types for media files
 const ALLOWED_MIME_TYPES = {
@@ -40,39 +43,6 @@ const ALLOWED_MIME_TYPES = {
     '.pdf': 'application/pdf',
     '.tif': 'image/tiff',
     '.tiff': 'image/tiff'
-};
-
-/**
- * Validates if a string is a valid UUID format
- * @param {string} uuid - String to validate
- * @returns {boolean} Whether string is valid UUID
- */
-const is_valid_uuid = (uuid) => {
-    if (!uuid || typeof uuid !== 'string') {
-        return false;
-    }
-    const uuid_regex = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
-    return uuid_regex.test(uuid);
-};
-
-/**
- * Decodes HTML entities in a string
- * Handles common entities that may be injected by XSS sanitization middleware
- * (e.g., &#x2F; → /, &amp; → &, &#x27; → ', &lt; → <, &gt; → >, &quot; → ")
- * @param {string} str - String to decode
- * @returns {string} Decoded string
- */
-const decode_html_entities = (str) => {
-    if (!str || typeof str !== 'string') {
-        return str;
-    }
-    return str
-        .replace(/&#x2F;/gi, '/')
-        .replace(/&#x27;/gi, "'")
-        .replace(/&quot;/gi, '"')
-        .replace(/&lt;/gi, '<')
-        .replace(/&gt;/gi, '>')
-        .replace(/&amp;/gi, '&');
 };
 
 /**
@@ -121,11 +91,7 @@ exports.get_media = async function (req, res) {
         // Validate UUID format
         if (!is_valid_uuid(media_id)) {
             LOGGER.module().warn(`WARNING: [/media-library/controller (get_media)] Invalid media ID: ${media_id}`);
-            res.status(400).json({
-                success: false,
-                message: 'Invalid media ID',
-                data: null
-            });
+            send_error(res, 400, 'Invalid media ID');
             return;
         }
 
@@ -134,11 +100,7 @@ exports.get_media = async function (req, res) {
 
         if (!result || !result.success || !result.record) {
             LOGGER.module().warn(`WARNING: [/media-library/controller (get_media)] Media record not found: ${media_id}`);
-            res.status(404).json({
-                success: false,
-                message: 'Media not found',
-                data: null
-            });
+            send_error(res, 404, 'Media not found');
             return;
         }
 
@@ -147,11 +109,7 @@ exports.get_media = async function (req, res) {
         // Ensure record has a storage path
         if (!record.storage_path) {
             LOGGER.module().warn(`WARNING: [/media-library/controller (get_media)] No storage path for media: ${media_id}`);
-            res.status(404).json({
-                success: false,
-                message: 'File not found',
-                data: null
-            });
+            send_error(res, 404, 'File not found');
             return;
         }
 
@@ -162,11 +120,7 @@ exports.get_media = async function (req, res) {
             resolved_path = await UPLOADS.resolve_storage_path(decode_html_entities(record.storage_path));
         } catch (error) {
             LOGGER.module().warn(`WARNING: [/media-library/controller (get_media)] File not found on disk: ${record.storage_path}`);
-            res.status(404).json({
-                success: false,
-                message: 'File not found',
-                data: null
-            });
+            send_error(res, 404, 'File not found');
             return;
         }
 
@@ -174,11 +128,7 @@ exports.get_media = async function (req, res) {
         const stats = FS.statSync(resolved_path);
 
         if (!stats.isFile()) {
-            res.status(400).json({
-                success: false,
-                message: 'Invalid file type',
-                data: null
-            });
+            send_error(res, 400, 'Invalid file type');
             return;
         }
 
@@ -203,11 +153,7 @@ exports.get_media = async function (req, res) {
         read_stream.on('error', (error) => {
             LOGGER.module().error(`ERROR: [/media-library/controller (get_media)] Stream error: ${error.message}`);
             if (!res.headersSent) {
-                res.status(500).json({
-                    success: false,
-                    message: 'Error reading file',
-                    data: null
-                });
+                send_error(res, 500, 'Error reading file');
             }
         });
 
@@ -215,11 +161,7 @@ exports.get_media = async function (req, res) {
 
     } catch (error) {
         LOGGER.module().error(`ERROR: [/media-library/controller (get_media)] ${error.message}`);
-        res.status(500).json({
-            success: false,
-            message: 'Unable to retrieve media file',
-            data: null
-        });
+        send_error(res, 500, 'Unable to retrieve media file');
     }
 };
 
@@ -242,11 +184,7 @@ exports.get_thumbnail = async function (req, res) {
         // Validate UUID format
         if (!is_valid_uuid(media_id)) {
             LOGGER.module().warn(`WARNING: [/media-library/controller (get_thumbnail)] Invalid media ID: ${media_id}`);
-            res.status(400).json({
-                success: false,
-                message: 'Invalid media ID',
-                data: null
-            });
+            send_error(res, 400, 'Invalid media ID');
             return;
         }
 
@@ -254,11 +192,7 @@ exports.get_thumbnail = async function (req, res) {
         const result = await MEDIA_MODEL.get_media_record(media_id);
 
         if (!result || !result.success || !result.record) {
-            res.status(404).json({
-                success: false,
-                message: 'Media not found',
-                data: null
-            });
+            send_error(res, 404, 'Media not found');
             return;
         }
 
@@ -289,11 +223,7 @@ exports.get_thumbnail = async function (req, res) {
                 LOGGER.module().warn(`WARNING: [/media-library/controller (get_thumbnail)] No thumbnail for media: ${media_id}`);
             }
 
-            res.status(404).json({
-                success: false,
-                message: 'Thumbnail not found',
-                data: null
-            });
+            send_error(res, 404, 'Thumbnail not found');
             return;
         }
 
@@ -304,11 +234,7 @@ exports.get_thumbnail = async function (req, res) {
             resolved_path = await UPLOADS.resolve_storage_path(decode_html_entities(record.thumbnail_path));
         } catch (error) {
             LOGGER.module().warn(`WARNING: [/media-library/controller (get_thumbnail)] Thumbnail file not found on disk: ${record.thumbnail_path}`);
-            res.status(404).json({
-                success: false,
-                message: 'Thumbnail not found',
-                data: null
-            });
+            send_error(res, 404, 'Thumbnail not found');
             return;
         }
 
@@ -328,11 +254,7 @@ exports.get_thumbnail = async function (req, res) {
         read_stream.on('error', (error) => {
             LOGGER.module().error(`ERROR: [/media-library/controller (get_thumbnail)] Stream error: ${error.message}`);
             if (!res.headersSent) {
-                res.status(500).json({
-                    success: false,
-                    message: 'Error reading thumbnail',
-                    data: null
-                });
+                send_error(res, 500, 'Error reading thumbnail');
             }
         });
 
@@ -340,11 +262,7 @@ exports.get_thumbnail = async function (req, res) {
 
     } catch (error) {
         LOGGER.module().error(`ERROR: [/media-library/controller (get_thumbnail)] ${error.message}`);
-        res.status(500).json({
-            success: false,
-            message: 'Unable to retrieve thumbnail',
-            data: null
-        });
+        send_error(res, 500, 'Unable to retrieve thumbnail');
     }
 };
 
@@ -373,20 +291,12 @@ exports.check_duplicate = async function (req, res) {
         const allowed_fields = ['repo_uuid', 'kaltura_entry_id'];
 
         if (!field || !allowed_fields.includes(field)) {
-            return res.status(400).json({
-                success: false,
-                message: 'Invalid or missing field parameter. Allowed: repo_uuid, kaltura_entry_id',
-                data: null
-            });
+            return send_error(res, 400, 'Invalid or missing field parameter. Allowed: repo_uuid, kaltura_entry_id');
         }
 
         // Validate value parameter
         if (!value || typeof value !== 'string' || value.trim().length === 0) {
-            return res.status(400).json({
-                success: false,
-                message: 'Value parameter is required',
-                data: null
-            });
+            return send_error(res, 400, 'Value parameter is required');
         }
 
         LOGGER.module().info(`INFO: [/media-library/controller (check_duplicate)] Checking ${field} = ${value}`);
@@ -394,11 +304,7 @@ exports.check_duplicate = async function (req, res) {
         const result = await MEDIA_MODEL.check_duplicate(field, value.trim());
 
         if (!result || !result.success) {
-            return res.status(200).json({
-                success: false,
-                message: result?.message || 'Duplicate check failed',
-                data: null
-            });
+            return send_error(res, 200, result?.message || 'Duplicate check failed');
         }
 
         return res.status(200).json({
@@ -412,11 +318,7 @@ exports.check_duplicate = async function (req, res) {
 
     } catch (error) {
         LOGGER.module().error('ERROR: [/media-library/controller (check_duplicate)] ' + error.message);
-        return res.status(500).json({
-            success: false,
-            message: 'Internal server error checking for duplicates',
-            data: null
-        });
+        return send_error(res, 500, 'Internal server error checking for duplicates');
     }
 };
 
@@ -433,11 +335,7 @@ exports.create_media_record = async function (req, res) {
 
         // Validate required inputs with comprehensive checks
         if (!data || typeof data !== 'object' || Array.isArray(data) || Object.keys(data).length === 0) {
-            res.status(400).json({
-                success: false,
-                message: 'Bad request. Missing or invalid media data.',
-                data: null
-            });
+            send_error(res, 400, 'Bad request. Missing or invalid media data.');
             return;
         }
 
@@ -461,22 +359,9 @@ exports.create_media_record = async function (req, res) {
             data.original_filename = decode_html_entities(data.original_filename);
         }
 
-        const auth_options = {
-            req,
-            permissions: ['can_create_media'],
-            record_type: 'media',
-            parent_id: null,
-            child_id: null
-        };
+        const is_authorized = await GATE.authorize_request(req, res, ['can_create_media'], { record_type: 'media' });
 
-        const is_authorized = await AUTHORIZE.check_permission(auth_options);
-
-        if (is_authorized !== true) {
-            res.status(403).json({
-                success: false,
-                message: 'Unauthorized request',
-                data: null
-            });
+        if (!is_authorized) {
             return;
         }
 
@@ -503,11 +388,7 @@ exports.create_media_record = async function (req, res) {
 
         if (!result || !result.success) {
             LOGGER.module().error('ERROR: [/media-library/controller (create_media_record)] Model returned unsuccessful result');
-            res.status(400).json({
-                success: false,
-                message: result?.message || 'Failed to create media record.',
-                data: null
-            });
+            send_error(res, 400, result?.message || 'Failed to create media record.');
             return;
         }
 
@@ -533,11 +414,7 @@ exports.create_media_record = async function (req, res) {
 
     } catch (error) {
         LOGGER.module().error('ERROR: [/media-library/controller (create_media_record)] Unable to create media record ' + error.message);
-        res.status(500).json({
-            success: false,
-            message: 'Unable to create media record.',
-            data: null
-        });
+        send_error(res, 500, 'Unable to create media record.');
     }
 };
 
@@ -589,11 +466,7 @@ exports.get_media_records = async function (req, res) {
         const result = await MEDIA_MODEL.get_media_records();
 
         if (!result || !result.success) {
-            res.status(404).json({
-                success: false,
-                message: 'No media records found.',
-                data: null
-            });
+            send_error(res, 404, 'No media records found.');
             return;
         }
 
@@ -605,11 +478,7 @@ exports.get_media_records = async function (req, res) {
 
     } catch (error) {
         LOGGER.module().error('ERROR: [/media-library/controller (get_media_records)] Unable to get media records: ' + error.message);
-        res.status(500).json({
-            success: false,
-            message: 'Unable to get media records.',
-            data: null
-        });
+        send_error(res, 500, 'Unable to get media records.');
     }
 };
 
@@ -626,22 +495,14 @@ exports.get_media_record = async function (req, res) {
 
         // Validate required path parameter
         if (!media_id || typeof media_id !== 'string' || media_id.trim() === '') {
-            res.status(400).json({
-                success: false,
-                message: 'Bad request. Missing or invalid media ID.',
-                data: null
-            });
+            send_error(res, 400, 'Bad request. Missing or invalid media ID.');
             return;
         }
 
         const result = await MEDIA_MODEL.get_media_record(media_id);
 
         if (!result || !result.success) {
-            res.status(404).json({
-                success: false,
-                message: result?.message || 'Media record not found.',
-                data: null
-            });
+            send_error(res, 404, result?.message || 'Media record not found.');
             return;
         }
 
@@ -653,11 +514,7 @@ exports.get_media_record = async function (req, res) {
 
     } catch (error) {
         LOGGER.module().error('ERROR: [/media-library/controller (get_media_record)] Unable to get media record ' + req.params.media_id + ': ' + error.message);
-        res.status(500).json({
-            success: false,
-            message: 'Unable to get media record.',
-            data: null
-        });
+        send_error(res, 500, 'Unable to get media record.');
     }
 };
 
@@ -675,21 +532,13 @@ exports.update_media_record = async function (req, res) {
 
         // Validate required path parameter
         if (!media_id || typeof media_id !== 'string' || media_id.trim() === '') {
-            res.status(400).json({
-                success: false,
-                message: 'Bad request. Missing or invalid media ID.',
-                data: null
-            });
+            send_error(res, 400, 'Bad request. Missing or invalid media ID.');
             return;
         }
 
         // Validate request body
         if (!data || typeof data !== 'object' || Array.isArray(data) || Object.keys(data).length === 0) {
-            res.status(400).json({
-                success: false,
-                message: 'Bad request. Missing or invalid update data.',
-                data: null
-            });
+            send_error(res, 400, 'Bad request. Missing or invalid update data.');
             return;
         }
 
@@ -699,33 +548,19 @@ exports.update_media_record = async function (req, res) {
             data.username = req.decoded.sub;
         }
 
-        const auth_options = {
-            req,
-            permissions: ['can_update_any_media', 'can_update_media'],
+        const is_authorized = await GATE.authorize_request(req, res, ['can_update_any_media', 'can_update_media'], {
             record_type: 'media',
-            parent_id: media_id,
-            child_id: null
-        };
+            parent_id: media_id
+        });
 
-        const is_authorized = await AUTHORIZE.check_permission(auth_options);
-
-        if (is_authorized !== true) {
-            res.status(403).json({
-                success: false,
-                message: 'Unauthorized request',
-                data: null
-            });
+        if (!is_authorized) {
             return;
         }
 
         const result = await MEDIA_MODEL.update_media_record(media_id, data);
 
         if (!result || !result.success) {
-            res.status(400).json({
-                success: false,
-                message: result?.message || 'Failed to update media record.',
-                data: null
-            });
+            send_error(res, 400, result?.message || 'Failed to update media record.');
             return;
         }
 
@@ -737,11 +572,7 @@ exports.update_media_record = async function (req, res) {
 
     } catch (error) {
         LOGGER.module().error('ERROR: [/media-library/controller (update_media_record)] Unable to update media record ' + req.params.media_id + ': ' + error.message);
-        res.status(500).json({
-            success: false,
-            message: 'Unable to update media record.',
-            data: null
-        });
+        send_error(res, 500, 'Unable to update media record.');
     }
 };
 
@@ -760,21 +591,13 @@ exports.replace_media_file = async function (req, res) {
 
         // Validate required path parameter
         if (!media_id || typeof media_id !== 'string' || media_id.trim() === '') {
-            res.status(400).json({
-                success: false,
-                message: 'Bad request. Missing or invalid media ID.',
-                data: null
-            });
+            send_error(res, 400, 'Bad request. Missing or invalid media ID.');
             return;
         }
 
         // Validate uploaded file (multer single-file middleware sets req.file)
         if (!req.file || !req.file.buffer) {
-            res.status(400).json({
-                success: false,
-                message: 'Bad request. No replacement file provided.',
-                data: null
-            });
+            send_error(res, 400, 'Bad request. No replacement file provided.');
             return;
         }
 
@@ -805,11 +628,7 @@ exports.replace_media_file = async function (req, res) {
 
     } catch (error) {
         LOGGER.module().error('ERROR: [/media-library/controller (replace_media_file)] Unable to replace media file ' + req.params.media_id + ': ' + error.message);
-        res.status(500).json({
-            success: false,
-            message: 'Unable to replace media file.',
-            data: null
-        });
+        send_error(res, 500, 'Unable to replace media file.');
     }
 };
 
@@ -826,11 +645,7 @@ exports.delete_media_record = async function (req, res) {
 
         // Validate required path parameter
         if (!media_id || typeof media_id !== 'string' || media_id.trim() === '') {
-            res.status(400).json({
-                success: false,
-                message: 'Bad request. Missing or invalid media ID.',
-                data: null
-            });
+            send_error(res, 400, 'Bad request. Missing or invalid media ID.');
             return;
         }
 
@@ -838,49 +653,27 @@ exports.delete_media_record = async function (req, res) {
         // (req.decoded is set by TOKEN.verify middleware)
         const username = req.decoded?.sub || null;
 
-        const auth_options = {
-            req,
-            permissions: ['can_delete_any_media', 'can_delete_media'],
+        const is_authorized = await GATE.authorize_request(req, res, ['can_delete_any_media', 'can_delete_media'], {
             record_type: 'media',
-            parent_id: media_id,
-            child_id: null
-        };
+            parent_id: media_id
+        });
 
-        const is_authorized = await AUTHORIZE.check_permission(auth_options);
-
-        if (is_authorized !== true) {
-            res.status(403).json({
-                success: false,
-                message: 'Unauthorized request',
-                data: null
-            });
+        if (!is_authorized) {
             return;
         }
 
         const result = await MEDIA_MODEL.delete_media_record(media_id, username);
 
         if (!result || !result.success) {
-            res.status(400).json({
-                success: false,
-                message: result?.message || 'Failed to delete media record.',
-                data: null
-            });
+            send_error(res, 400, result?.message || 'Failed to delete media record.');
             return;
         }
 
-        res.status(200).json({
-            success: true,
-            message: result.message,
-            data: null
-        });
+        send_ok(res, null, result.message);
 
     } catch (error) {
         LOGGER.module().error('ERROR: [/media-library/controller (delete_media_record)] Unable to delete media record ' + req.params.media_id + ': ' + error.message);
-        res.status(500).json({
-            success: false,
-            message: 'Unable to delete media record.',
-            data: null
-        });
+        send_error(res, 500, 'Unable to delete media record.');
     }
 };
 
@@ -904,30 +697,13 @@ exports.delete_uploaded_file = async function (req, res) {
         const { storage_path, thumbnail_path } = req.body || {};
 
         if (!storage_path || typeof storage_path !== 'string' || storage_path.trim() === '') {
-            res.status(400).json({
-                success: false,
-                message: 'Bad request. Missing or invalid storage_path.',
-                data: null
-            });
+            send_error(res, 400, 'Bad request. Missing or invalid storage_path.');
             return;
         }
 
-        const auth_options = {
-            req,
-            permissions: ['can_create_media'],
-            record_type: 'media',
-            parent_id: null,
-            child_id: null
-        };
+        const is_authorized = await GATE.authorize_request(req, res, ['can_create_media'], { record_type: 'media' });
 
-        const is_authorized = await AUTHORIZE.check_permission(auth_options);
-
-        if (is_authorized !== true) {
-            res.status(403).json({
-                success: false,
-                message: 'Unauthorized request',
-                data: null
-            });
+        if (!is_authorized) {
             return;
         }
 
@@ -937,27 +713,15 @@ exports.delete_uploaded_file = async function (req, res) {
         );
 
         if (!result || !result.success) {
-            res.status(400).json({
-                success: false,
-                message: result?.message || 'Failed to remove uploaded file.',
-                data: null
-            });
+            send_error(res, 400, result?.message || 'Failed to remove uploaded file.');
             return;
         }
 
-        res.status(200).json({
-            success: true,
-            message: result.message,
-            data: null
-        });
+        send_ok(res, null, result.message);
 
     } catch (error) {
         LOGGER.module().error('ERROR: [/media-library/controller (delete_uploaded_file)] Unable to remove uploaded file: ' + error.message);
-        res.status(500).json({
-            success: false,
-            message: 'Unable to remove uploaded file.',
-            data: null
-        });
+        send_error(res, 500, 'Unable to remove uploaded file.');
     }
 };
 
@@ -980,11 +744,7 @@ exports.get_uploaded_thumbnail = async function (req, res) {
         const rel = req.query.path;
 
         if (!rel || typeof rel !== 'string' || rel.trim() === '') {
-            res.status(400).json({
-                success: false,
-                message: 'Bad request. Missing or invalid path.',
-                data: null
-            });
+            send_error(res, 400, 'Bad request. Missing or invalid path.');
             return;
         }
 
@@ -994,11 +754,7 @@ exports.get_uploaded_thumbnail = async function (req, res) {
         // resolve_storage_path also hard-guards containment.
         if (p.includes('..') || p.includes('\0') || PATH.isAbsolute(p)) {
             LOGGER.module().warn(`WARNING: [/media-library/controller (get_uploaded_thumbnail)] Rejected path: ${p}`);
-            res.status(400).json({
-                success: false,
-                message: 'Invalid path',
-                data: null
-            });
+            send_error(res, 400, 'Invalid path');
             return;
         }
 
@@ -1008,11 +764,7 @@ exports.get_uploaded_thumbnail = async function (req, res) {
             resolved_path = await UPLOADS.resolve_storage_path(decode_html_entities(p));
         } catch (error) {
             LOGGER.module().warn(`WARNING: [/media-library/controller (get_uploaded_thumbnail)] Staged thumbnail not found: ${p}`);
-            res.status(404).json({
-                success: false,
-                message: 'Thumbnail not found',
-                data: null
-            });
+            send_error(res, 404, 'Thumbnail not found');
             return;
         }
 
@@ -1031,11 +783,7 @@ exports.get_uploaded_thumbnail = async function (req, res) {
         read_stream.on('error', (error) => {
             LOGGER.module().error(`ERROR: [/media-library/controller (get_uploaded_thumbnail)] Stream error: ${error.message}`);
             if (!res.headersSent) {
-                res.status(500).json({
-                    success: false,
-                    message: 'Error reading thumbnail',
-                    data: null
-                });
+                send_error(res, 500, 'Error reading thumbnail');
             }
         });
 
@@ -1043,11 +791,7 @@ exports.get_uploaded_thumbnail = async function (req, res) {
 
     } catch (error) {
         LOGGER.module().error(`ERROR: [/media-library/controller (get_uploaded_thumbnail)] ${error.message}`);
-        res.status(500).json({
-            success: false,
-            message: 'Unable to retrieve thumbnail',
-            data: null
-        });
+        send_error(res, 500, 'Unable to retrieve thumbnail');
     }
 };
 
@@ -1073,31 +817,19 @@ exports.update_media_exhibits = async function (req, res) {
 
         // Validate media_id
         if (!is_valid_uuid(media_id)) {
-            return res.status(400).json({
-                success: false,
-                message: 'Invalid media ID format',
-                data: null
-            });
+            return send_error(res, 400, 'Invalid media ID format');
         }
 
         // Validate exhibit_uuid
         if (!is_valid_uuid(exhibit_uuid)) {
-            return res.status(400).json({
-                success: false,
-                message: 'Invalid or missing exhibit_uuid',
-                data: null
-            });
+            return send_error(res, 400, 'Invalid or missing exhibit_uuid');
         }
 
         // Validate action
         const allowed_actions = ['add', 'remove'];
 
         if (!action || !allowed_actions.includes(action)) {
-            return res.status(400).json({
-                success: false,
-                message: 'Invalid or missing action. Allowed: add, remove',
-                data: null
-            });
+            return send_error(res, 400, 'Invalid or missing action. Allowed: add, remove');
         }
 
         // Sanitize media_role (optional, for logging context)
@@ -1112,11 +844,7 @@ exports.update_media_exhibits = async function (req, res) {
         }
 
         if (!result || !result.success) {
-            return res.status(400).json({
-                success: false,
-                message: result?.message || `Failed to ${action} exhibit association`,
-                data: null
-            });
+            return send_error(res, 400, result?.message || `Failed to ${action} exhibit association`);
         }
 
         return res.status(200).json({
@@ -1129,11 +857,7 @@ exports.update_media_exhibits = async function (req, res) {
 
     } catch (error) {
         LOGGER.module().error('ERROR: [/media-library/controller (update_media_exhibits)] ' + error.message);
-        return res.status(500).json({
-            success: false,
-            message: 'Unable to update media exhibits',
-            data: null
-        });
+        return send_error(res, 500, 'Unable to update media exhibits');
     }
 };
 
@@ -1265,21 +989,13 @@ exports.get_repo_tn = async function (req, res) {
         // Validate UUID is provided
         if (!uuid) {
             LOGGER.module().warn('WARNING: [/media-library/controller (get_repo_tn)] Missing UUID');
-            return res.status(400).json({
-                success: false,
-                message: 'UUID is required. Use ?uuid=your_uuid',
-                data: null
-            });
+            return send_error(res, 400, 'UUID is required. Use ?uuid=your_uuid');
         }
 
         // Validate UUID format
         if (!is_valid_uuid(uuid)) {
             LOGGER.module().warn(`WARNING: [/media-library/controller (get_repo_tn)] Invalid UUID format: ${uuid}`);
-            return res.status(400).json({
-                success: false,
-                message: 'Invalid UUID format',
-                data: null
-            });
+            return send_error(res, 400, 'Invalid UUID format');
         }
 
         LOGGER.module().info(`INFO: [/media-library/controller (get_repo_tn)] Fetching thumbnail for UUID: ${uuid}`);
@@ -1289,11 +1005,7 @@ exports.get_repo_tn = async function (req, res) {
 
         if (!result || !result.success || !result.thumbnail) {
             LOGGER.module().warn(`WARNING: [/media-library/controller (get_repo_tn)] Thumbnail not found for UUID: ${uuid}`);
-            return res.status(404).json({
-                success: false,
-                message: result?.message || 'Thumbnail not found',
-                data: null
-            });
+            return send_error(res, 404, result?.message || 'Thumbnail not found');
         }
 
         // Set response headers for binary image data
@@ -1310,11 +1022,7 @@ exports.get_repo_tn = async function (req, res) {
     } catch (error) {
         LOGGER.module().error(`ERROR: [/media-library/controller (get_repo_tn)] ${error.message}`);
 
-        return res.status(500).json({
-            success: false,
-            message: 'Internal server error retrieving thumbnail',
-            data: null
-        });
+        return send_error(res, 500, 'Internal server error retrieving thumbnail');
     }
 };
 
@@ -1463,11 +1171,7 @@ exports.get_kaltura_media = async function (req, res) {
         // Validate entry_id is provided
         if (!entry_id) {
             LOGGER.module().warn('WARNING: [/media-library/controller (get_kaltura_media)] Missing entry ID');
-            return res.status(400).json({
-                success: false,
-                message: 'Entry ID is required',
-                data: null
-            });
+            return send_error(res, 400, 'Entry ID is required');
         }
 
         LOGGER.module().info(`INFO: [/media-library/controller (get_kaltura_media)] Fetching Kaltura media for entry ID: ${entry_id}`);
@@ -1500,11 +1204,7 @@ exports.get_kaltura_media = async function (req, res) {
     } catch (error) {
         LOGGER.module().error(`ERROR: [/media-library/controller (get_kaltura_media)] ${error.message}`);
 
-        return res.status(500).json({
-            success: false,
-            message: 'Internal server error retrieving Kaltura media',
-            data: null
-        });
+        return send_error(res, 500, 'Internal server error retrieving Kaltura media');
     }
 };
 
@@ -1528,11 +1228,7 @@ exports.get_kaltura_config = async function (req, res) {
 
         if (!partner_id || !uiconf_id) {
             LOGGER.module().warn('WARNING: [/media-library/controller (get_kaltura_config)] Kaltura player config incomplete');
-            return res.status(200).json({
-                success: false,
-                message: 'Kaltura player configuration is incomplete',
-                data: null
-            });
+            return send_error(res, 200, 'Kaltura player configuration is incomplete');
         }
 
         return res.status(200).json({
@@ -1547,11 +1243,7 @@ exports.get_kaltura_config = async function (req, res) {
     } catch (error) {
         LOGGER.module().error(`ERROR: [/media-library/controller (get_kaltura_config)] ${error.message}`);
 
-        return res.status(500).json({
-            success: false,
-            message: 'Internal server error retrieving Kaltura configuration',
-            data: null
-        });
+        return send_error(res, 500, 'Internal server error retrieving Kaltura configuration');
     }
 };
 
@@ -1576,11 +1268,7 @@ exports.assign_kaltura_category = async function (req, res) {
         // Validate entry_id is provided
         if (!entry_id) {
             LOGGER.module().warn('WARNING: [/media-library/controller (assign_kaltura_category)] Missing entry ID');
-            return res.status(400).json({
-                success: false,
-                message: 'Entry ID is required',
-                data: null
-            });
+            return send_error(res, 400, 'Entry ID is required');
         }
 
         LOGGER.module().info(`INFO: [/media-library/controller (assign_kaltura_category)] Assigning entry ID: ${entry_id} to exhibits category`);
@@ -1611,11 +1299,7 @@ exports.assign_kaltura_category = async function (req, res) {
     } catch (error) {
         LOGGER.module().error(`ERROR: [/media-library/controller (assign_kaltura_category)] ${error.message}`);
 
-        return res.status(500).json({
-            success: false,
-            message: 'Internal server error assigning entry to exhibits category',
-            data: null
-        });
+        return send_error(res, 500, 'Internal server error assigning entry to exhibits category');
     }
 };
 
@@ -1640,11 +1324,7 @@ exports.remove_kaltura_category = async function (req, res) {
         // Validate entry_id is provided
         if (!entry_id) {
             LOGGER.module().warn('WARNING: [/media-library/controller (remove_kaltura_category)] Missing entry ID');
-            return res.status(400).json({
-                success: false,
-                message: 'Entry ID is required',
-                data: null
-            });
+            return send_error(res, 400, 'Entry ID is required');
         }
 
         LOGGER.module().info(`INFO: [/media-library/controller (remove_kaltura_category)] Removing entry ID: ${entry_id} from exhibits category`);
@@ -1675,11 +1355,7 @@ exports.remove_kaltura_category = async function (req, res) {
     } catch (error) {
         LOGGER.module().error(`ERROR: [/media-library/controller (remove_kaltura_category)] ${error.message}`);
 
-        return res.status(500).json({
-            success: false,
-            message: 'Internal server error removing entry from exhibits category',
-            data: null
-        });
+        return send_error(res, 500, 'Internal server error removing entry from exhibits category');
     }
 };
 
@@ -1708,22 +1384,14 @@ exports.get_iiif_file = async function (req, res) {
 
         if (!is_valid_uuid(media_id)) {
             LOGGER.module().warn(`WARNING: [/media-library/controller (get_iiif_file)] Invalid media ID: ${media_id}`);
-            return res.status(400).json({
-                success: false,
-                message: 'Invalid media ID',
-                data: null
-            });
+            return send_error(res, 400, 'Invalid media ID');
         }
 
         const result = await MEDIA_MODEL.get_media_record(media_id);
 
         if (!result || !result.success || !result.record) {
             LOGGER.module().warn(`WARNING: [/media-library/controller (get_iiif_file)] Media record not found: ${media_id}`);
-            return res.status(404).json({
-                success: false,
-                message: 'Media not found',
-                data: null
-            });
+            return send_error(res, 404, 'Media not found');
         }
 
         const record = result.record;
@@ -1731,11 +1399,7 @@ exports.get_iiif_file = async function (req, res) {
 
         if (record.ingest_method !== 'upload' || stored_mime !== 'application/pdf' || !record.storage_path) {
             LOGGER.module().warn(`WARNING: [/media-library/controller (get_iiif_file)] File delivery not available for: ${media_id}`);
-            return res.status(404).json({
-                success: false,
-                message: 'File delivery not available for this record',
-                data: null
-            });
+            return send_error(res, 404, 'File delivery not available for this record');
         }
 
         let resolved_path;
@@ -1744,21 +1408,13 @@ exports.get_iiif_file = async function (req, res) {
             resolved_path = await UPLOADS.resolve_storage_path(decode_html_entities(record.storage_path));
         } catch (error) {
             LOGGER.module().warn(`WARNING: [/media-library/controller (get_iiif_file)] File not found on disk: ${record.storage_path}`);
-            return res.status(404).json({
-                success: false,
-                message: 'File not found',
-                data: null
-            });
+            return send_error(res, 404, 'File not found');
         }
 
         const stats = FS.statSync(resolved_path);
 
         if (!stats.isFile()) {
-            return res.status(400).json({
-                success: false,
-                message: 'Invalid file type',
-                data: null
-            });
+            return send_error(res, 400, 'Invalid file type');
         }
 
         res.set({
@@ -1777,11 +1433,7 @@ exports.get_iiif_file = async function (req, res) {
         read_stream.on('error', (error) => {
             LOGGER.module().error(`ERROR: [/media-library/controller (get_iiif_file)] Stream error: ${error.message}`);
             if (!res.headersSent) {
-                res.status(500).json({
-                    success: false,
-                    message: 'Error reading file',
-                    data: null
-                });
+                send_error(res, 500, 'Error reading file');
             }
         });
 
@@ -1791,11 +1443,7 @@ exports.get_iiif_file = async function (req, res) {
         LOGGER.module().error(`ERROR: [/media-library/controller (get_iiif_file)] ${error.message}`);
 
         if (!res.headersSent) {
-            res.status(500).json({
-                success: false,
-                message: 'Unable to retrieve file',
-                data: null
-            });
+            send_error(res, 500, 'Unable to retrieve file');
         }
     }
 };
@@ -1820,11 +1468,7 @@ exports.get_iiif_manifest = async function (req, res) {
         // Validate UUID format
         if (!is_valid_uuid(media_id)) {
             LOGGER.module().warn(`WARNING: [/media-library/controller (get_iiif_manifest)] Invalid media ID: ${media_id}`);
-            return res.status(400).json({
-                success: false,
-                message: 'Invalid media ID',
-                data: null
-            });
+            return send_error(res, 400, 'Invalid media ID');
         }
 
         LOGGER.module().info(`INFO: [/media-library/controller (get_iiif_manifest)] Building manifest for: ${media_id}`);
@@ -1861,11 +1505,7 @@ exports.get_iiif_manifest = async function (req, res) {
     } catch (error) {
         LOGGER.module().error(`ERROR: [/media-library/controller (get_iiif_manifest)] ${error.message}`);
 
-        return res.status(500).json({
-            success: false,
-            message: 'Internal server error retrieving manifest',
-            data: null
-        });
+        return send_error(res, 500, 'Internal server error retrieving manifest');
     }
 };
 
@@ -1886,11 +1526,7 @@ exports.get_iiif_info = async function (req, res) {
 
         if (!is_valid_uuid(media_id)) {
             LOGGER.module().warn(`WARNING: [/media-library/controller (get_iiif_info)] Invalid media ID: ${media_id}`);
-            return res.status(400).json({
-                success: false,
-                message: 'Invalid media ID',
-                data: null
-            });
+            return send_error(res, 400, 'Invalid media ID');
         }
 
         LOGGER.module().info(`INFO: [/media-library/controller (get_iiif_info)] Fetching info.json for: ${media_id}`);
@@ -1924,11 +1560,7 @@ exports.get_iiif_info = async function (req, res) {
     } catch (error) {
         LOGGER.module().error(`ERROR: [/media-library/controller (get_iiif_info)] ${error.message}`);
 
-        return res.status(500).json({
-            success: false,
-            message: 'Internal server error retrieving image info',
-            data: null
-        });
+        return send_error(res, 500, 'Internal server error retrieving image info');
     }
 };
 
@@ -1961,11 +1593,7 @@ exports.get_iiif_image = async function (req, res) {
         // Validate UUID format
         if (!is_valid_uuid(media_id)) {
             LOGGER.module().warn(`WARNING: [/media-library/controller (get_iiif_image)] Invalid media ID: ${media_id}`);
-            return res.status(400).json({
-                success: false,
-                message: 'Invalid media ID',
-                data: null
-            });
+            return send_error(res, 400, 'Invalid media ID');
         }
 
         LOGGER.module().info(`INFO: [/media-library/controller (get_iiif_image)] IIIF image request: ${media_id}/${region}/${size}/${rotation}/${quality_format}`);
@@ -2022,10 +1650,6 @@ exports.get_iiif_image = async function (req, res) {
     } catch (error) {
         LOGGER.module().error(`ERROR: [/media-library/controller (get_iiif_image)] ${error.message}`);
 
-        return res.status(500).json({
-            success: false,
-            message: 'Internal server error processing image',
-            data: null
-        });
+        return send_error(res, 500, 'Internal server error processing image');
     }
 };

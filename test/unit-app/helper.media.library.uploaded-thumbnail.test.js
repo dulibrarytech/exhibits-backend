@@ -12,13 +12,8 @@
 
 'use strict';
 
-const { readFileSync } = require('node:fs');
-const { resolve } = require('node:path');
-
-const MODULE_PATH = resolve(
-    __dirname,
-    '../../public/app/media-library/helper.media.library.module.js',
-);
+const { load_browser_module } = require('./helpers/load_module');
+const { auth_stub } = require('./helpers/stubs');
 
 const UPLOAD_TN_ENDPOINT = '/exhibits-dashboard/api/v1/media/library/upload/thumbnail';
 
@@ -30,22 +25,19 @@ describe('helperMediaLibraryModule.build_uploaded_thumbnail_url', () => {
 
     beforeAll(() => {
         globalThis.endpointsModule = { get_media_library_endpoints: () => endpoints_with_upload() };
-        globalThis.authModule = { get_user_token: () => 'unit-test-token' };
+        globalThis.authModule = auth_stub('unit-test-token');
 
-        const src = readFileSync(MODULE_PATH, 'utf8');
-        const patched = src.replace(
-            /^const\s+helperMediaLibraryModule\s*=/m,
-            'globalThis.helperMediaLibraryModule =',
+        load_browser_module(
+            'public/app/media-library/helper.media.library.module.js',
+            'helperMediaLibraryModule',
         );
-        // eslint-disable-next-line no-eval
-        (0, eval)(patched);
     });
 
     beforeEach(() => {
         vi.spyOn(console, 'warn').mockImplementation(() => {});
         vi.spyOn(console, 'error').mockImplementation(() => {});
         globalThis.endpointsModule = { get_media_library_endpoints: () => endpoints_with_upload() };
-        globalThis.authModule = { get_user_token: () => 'unit-test-token' };
+        globalThis.authModule = auth_stub('unit-test-token');
     });
 
     const REL = 'thumbnails/01/5a/015acaca-7811-470e-b8bf-a1ff0f5ad03b_thumb.jpg';

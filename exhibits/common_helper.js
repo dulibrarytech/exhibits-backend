@@ -19,24 +19,16 @@
 'use strict';
 
 const LOGGER = require('../libs/log4');
+const { is_valid_uuid } = require('../libs/uuid');
 
 // ==================== VALIDATION HELPERS ====================
 
-/**
- * Validates UUID format (8-4-4-4-12 hex). Previously this only checked for a
- * non-empty string, so the validation was a no-op — any string passed.
- * @param {string} uuid - UUID to validate
- * @returns {boolean} True if valid
+/*
+ * is_valid_uuid is re-exported from libs/uuid (strict RFC shape, version 1-5,
+ * variant 8-b). It used to be a length-only no-op here, then a local copy of
+ * the regex; every exhibit model imports it under this name, so the export
+ * stays.
  */
-const is_valid_uuid = (uuid) => {
-    if (!uuid || typeof uuid !== 'string') {
-        return false;
-    }
-    // Strict RFC shape (version 1-5, variant 8-b), consistent with Base_tasks and the
-    // media-library validators.
-    const uuid_regex = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
-    return uuid_regex.test(uuid);
-};
 
 /**
  * Validates a user id — the numeric tbl_users.id (e.g. the record-lock owner /

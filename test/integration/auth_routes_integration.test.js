@@ -13,41 +13,25 @@
 
 'use strict';
 
-/*
- * The real endpoints modules build paths from APP_PATH at require time —
- * ensure it is defined before anything is loaded.
- */
-process.env.APP_PATH = process.env.APP_PATH || '/exhibits-dashboard';
-
 const express = require('express');
 const request = require('supertest');
 
-const APP_PATH = process.env.APP_PATH;
+/*
+ * Requiring the shared mocks pins APP_PATH before any endpoints module is
+ * loaded; the jest.mock factories below are hoisted and resolve it lazily.
+ */
+const { APP_PATH, TEST_USER_UID, mock_model } = require('./helpers/mocks');
+
 const TEST_USER_ID = 42;
-const TEST_USER_UID = '660e8400-e29b-41d4-a716-446655440001';
 const SSO_HOST = 'sso.test.du.edu';
 
-jest.mock('../../libs/log4', () => ({
-    module: () => ({
-        error: jest.fn(),
-        warn: jest.fn(),
-        info: jest.fn(),
-        debug: jest.fn()
-    })
+jest.mock('../../libs/log4', () => require('./helpers/mocks').log4_factory());
+
+jest.mock('../../libs/tokens', () => require('./helpers/mocks').tokens_factory({
+    extra: { create: jest.fn().mockReturnValue('test-token'), set_auth_cookie: jest.fn() }
 }));
 
-jest.mock('../../libs/tokens', () => ({
-    verify: jest.fn((req, res, next) => {
-        req.decoded = { sub: '660e8400-e29b-41d4-a716-446655440001' };
-        next();
-    }),
-    create: jest.fn().mockReturnValue('test-token'),
-    set_auth_cookie: jest.fn()
-}));
-
-jest.mock('../../auth/authorize', () => ({
-    check_permission: jest.fn().mockResolvedValue(true)
-}));
+jest.mock('../../auth/authorize', () => require('./helpers/mocks').authorize_factory());
 
 /*
  * The SSO guard is unit-tested on its own (test/tasks/sso_guard.test.js);
@@ -58,14 +42,12 @@ jest.mock('../../auth/sso_guard', () =>
     jest.fn((req, res, next) => next())
 );
 
-jest.mock('../../config/rate_limits_loader', () => ({
-    rate_limits: {
-        read_operations: (req, res, next) => next(),
-        write_operations: (req, res, next) => next(),
-        auth_operations: (req, res, next) => next(),
-        auth_identity_operations: (req, res, next) => next()
-    }
-}));
+jest.mock('../../config/rate_limits_loader', () => require('./helpers/mocks').rate_limits_factory([
+    'read_operations',
+    'write_operations',
+    'auth_operations',
+    'auth_identity_operations'
+]));
 
 jest.mock('../../config/webservices_config', () => () => ({
     sso_host: 'sso.test.du.edu',
@@ -74,12 +56,12 @@ jest.mock('../../config/webservices_config', () => () => ({
     sso_logout_url: 'https://sso.test.du.edu/logout'
 }));
 
-const mockAuthModel = {
-    check_auth_user: jest.fn(),
-    get_auth_user_data: jest.fn(),
-    get_roles: jest.fn(),
-    get_user_role: jest.fn()
-};
+const mockAuthModel = mock_model([
+    'check_auth_user',
+    'get_auth_user_data',
+    'get_roles',
+    'get_user_role'
+]);
 
 jest.mock('../../auth/model', () => mockAuthModel);
 

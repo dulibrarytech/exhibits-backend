@@ -12,10 +12,7 @@
 
 'use strict';
 
-const { readFileSync } = require('node:fs');
-const { resolve } = require('node:path');
-
-const MODULE_PATH = resolve(__dirname, '../../public/app/utils/dom.module.js');
+const { load_browser_module } = require('./helpers/load_module');
 
 describe('domModule (Phase 0 a11y additions)', () => {
 
@@ -23,10 +20,7 @@ describe('domModule (Phase 0 a11y additions)', () => {
         const createDOMPurify = require('dompurify');
         globalThis.DOMPurify = createDOMPurify(window);
 
-        const src = readFileSync(MODULE_PATH, 'utf8');
-        const patched = src.replace(/^const\s+domModule\s*=/m, 'globalThis.domModule =');
-        // eslint-disable-next-line no-eval
-        (0, eval)(patched);
+        load_browser_module('public/app/utils/dom.module.js', 'domModule');
     });
 
     beforeEach(() => {
@@ -256,5 +250,110 @@ describe('domModule (Phase 0 a11y additions)', () => {
             }).not.toThrow();
             expect(input.hasAttribute('aria-invalid')).toBe(false);
         });
+    });
+});
+
+// ───────────────────────────── show_field_error ─────────────────────────────
+// Phase 1 DRY (cluster C5): one-call replacement for the local
+// `show_error(message, field_selector)` closures.
+
+describe('domModule.show_field_error', () => {
+
+    beforeAll(() => {
+        const createDOMPurify = require('dompurify');
+        globalThis.DOMPurify = createDOMPurify(window);
+
+        load_browser_module('public/app/utils/dom.module.js', 'domModule');
+    });
+
+    beforeEach(() => {
+        document.body.innerHTML = `
+            <div id="message"></div>
+            <div id="other-message"></div>
+            <div class="form-group">
+                <label for="item-text-input">Text</label>
+                <input type="text" id="item-text-input" aria-describedby="hint-1">
+                <small id="hint-1">hint</small>
+            </div>
+            <input type="text" name="no-id">`;
+    });
+
+    it('writes a danger alert into #message and marks the field invalid with <id>-error', () => {
+        const error_id = globalThis.domModule.show_field_error('Please enter "Text" for this item', '#item-text-input');
+
+        expect(error_id).toBe('item-text-input-error');
+
+        const alert = document.querySelector('#message .alert');
+        expect(alert).not.toBeNull();
+        expect(alert.classList.contains('alert-danger')).toBe(true);
+        expect(alert.getAttribute('aria-live')).toBe('assertive');
+        expect(alert.getAttribute('aria-atomic')).toBe('true');
+        expect(alert.textContent).toContain('Please enter "Text" for this item');
+
+        const field = document.getElementById('item-text-input');
+        expect(field.getAttribute('aria-invalid')).toBe('true');
+        expect(field.getAttribute('aria-describedby')).toBe('hint-1 item-text-input-error');
+        const msg = document.getElementById('item-text-input-error');
+        expect(msg).not.toBeNull();
+        expect(msg.textContent).toBe('Please enter "Text" for this item');
+        expect(msg.getAttribute('role')).toBe('alert');
+    });
+
+    it('is cleared by clear_field_error using the same derived id', () => {
+        globalThis.domModule.show_field_error('bad', '#item-text-input');
+        globalThis.domModule.clear_field_error('#item-text-input', 'item-text-input-error');
+        const field = document.getElementById('item-text-input');
+        expect(field.hasAttribute('aria-invalid')).toBe(false);
+        expect(field.getAttribute('aria-describedby')).toBe('hint-1');
+        expect(document.getElementById('item-text-input-error')).toBeNull();
+    });
+
+    it('alert only (returns null) when no field selector is given', () => {
+        const result = globalThis.domModule.show_field_error('System configuration error.');
+        expect(result).toBeNull();
+        expect(document.querySelector('#message .alert-danger')).not.toBeNull();
+        expect(document.querySelectorAll('[aria-invalid]').length).toBe(0);
+    });
+
+    it('alert only (returns null) when the field selector matches nothing', () => {
+        const result = globalThis.domModule.show_field_error('oops', '#does-not-exist');
+        expect(result).toBeNull();
+        expect(document.querySelector('#message .alert-danger')).not.toBeNull();
+    });
+
+    it('honours a custom container selector or element', () => {
+        globalThis.domModule.show_field_error('elsewhere', null, '#other-message');
+        expect(document.querySelector('#message .alert')).toBeNull();
+        expect(document.querySelector('#other-message .alert-danger')).not.toBeNull();
+
+        const el = document.getElementById('message');
+        globalThis.domModule.show_field_error('by element', null, el);
+        expect(document.querySelector('#message .alert-danger')).not.toBeNull();
+    });
+
+    it('accepts a field Element and derives the id from element.id', () => {
+        const field = document.getElementById('item-text-input');
+        const error_id = globalThis.domModule.show_field_error('bad', field);
+        expect(error_id).toBe('item-text-input-error');
+        expect(field.getAttribute('aria-invalid')).toBe('true');
+    });
+
+    it('skips the field step (returns null) when the field has no usable id', () => {
+        const result = globalThis.domModule.show_field_error('bad', 'input[name="no-id"]');
+        expect(result).toBeNull();
+        expect(document.querySelector('input[name="no-id"]').hasAttribute('aria-invalid')).toBe(false);
+        expect(document.querySelector('#message .alert-danger')).not.toBeNull();
+    });
+
+    it('does not throw when the container is missing', () => {
+        document.getElementById('message').remove();
+        expect(() => globalThis.domModule.show_field_error('bad', '#item-text-input')).not.toThrow();
+        expect(document.getElementById('item-text-input').getAttribute('aria-invalid')).toBe('true');
+    });
+
+    it('does not move focus', () => {
+        const field = document.getElementById('item-text-input');
+        globalThis.domModule.show_field_error('bad', '#item-text-input');
+        expect(document.activeElement).not.toBe(field);
     });
 });

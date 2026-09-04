@@ -60,32 +60,15 @@ const itemsTimelineModule = (function () {
                 throw new Error('Timeline item records endpoint not configured');
             }
 
-            // Get authentication token
-            const token = authModule.get_user_token();
-
-            // Validate token
-            if (!token || token === false) {
-                console.error('No authentication token available');
-                authModule.redirect_to_auth();
-                return null;
-            }
-
             // Build endpoint URL with proper encoding
-            const endpoint = build_timeline_endpoint(
+            const endpoint = endpointsModule.build(
                 EXHIBITS_ENDPOINTS.exhibits.timeline_item_records.get.endpoint,
-                exhibit_id,
-                timeline_id
+                { exhibit_id: exhibit_id, timeline_id: timeline_id }
             );
 
-            // Make API request with timeout
-            const response = await httpModule.req({
+            const response = await httpModule.api({
                 method: 'GET',
-                url: endpoint,
-                headers: {
-                    'Content-Type': 'application/json',
-                    'x-access-token': token
-                },
-                timeout: 30000
+                url: endpoint
             });
 
             // Validate response exists
@@ -124,72 +107,10 @@ const itemsTimelineModule = (function () {
             console.error('Error getting timeline items:', error);
 
             // Display safe error message
-            const message_element = document.querySelector('#message');
-            if (message_element) {
-                display_error_message(
-                    message_element,
-                    error.message || 'Unable to retrieve timeline items'
-                );
-            }
+            domModule.set_alert('#message', 'danger', error.message || 'Unable to retrieve timeline items');
 
             return null;
         }
-    }
-
-    /**
-     * Build timeline endpoint URL with proper parameter encoding
-     *
-     * @param {string} endpoint_template - Endpoint template with placeholders
-     * @param {string|number} exhibit_id - Exhibit ID
-     * @param {string|number} timeline_id - Timeline ID
-     * @returns {string} Complete endpoint URL
-     */
-    function build_timeline_endpoint(endpoint_template, exhibit_id, timeline_id) {
-        // Convert IDs to strings
-        const exhibit_id_str = String(exhibit_id);
-        const timeline_id_str = String(timeline_id);
-
-        // Replace placeholders with encoded values
-        let endpoint = endpoint_template
-            .replace(':exhibit_id', encodeURIComponent(exhibit_id_str))
-            .replace(':timeline_id', encodeURIComponent(timeline_id_str));
-
-        return endpoint;
-    }
-
-    /**
-     * Display error message
-     *
-     * @param {HTMLElement} element - The message container element
-     * @param {string} message - The message text
-     */
-    function display_error_message(element, message) {
-
-        if (!element) {
-            console.error('Message element not found');
-            return;
-        }
-
-        // Clear existing content safely
-        element.textContent = '';
-
-        // Create alert container
-        const alert_div = document.createElement('div');
-        alert_div.className = 'alert alert-danger';
-        alert_div.setAttribute('role', 'alert');
-
-        // Create icon
-        const icon = document.createElement('i');
-        icon.className = 'fa fa-exclamation';
-        icon.setAttribute('aria-hidden', 'true');
-        alert_div.appendChild(icon);
-
-        // Add message text safely
-        const text = document.createTextNode(` ${message}`);
-        alert_div.appendChild(text);
-
-        // Append to container
-        element.appendChild(alert_div);
     }
 
     /**
@@ -232,9 +153,7 @@ const itemsTimelineModule = (function () {
             elements.card.style.minHeight = '200px';
         }
 
-        if (elements.message !== null) {
-            elements.message.innerHTML = '<div class="alert alert-info" role="alert"><i class="fa fa-spinner fa-spin"></i> Loading timeline items...</div>';
-        }
+        domModule.set_loading(elements.message, 'Loading timeline items...');
     }
 
     /**
@@ -281,9 +200,7 @@ const itemsTimelineModule = (function () {
             elements.title_heading.style.display = 'none';
         }
 
-        if (elements.message !== null) {
-            elements.message.innerHTML = '<div class="alert alert-info" role="alert">Timeline is empty.</div>';
-        }
+        domModule.set_alert(elements.message, 'info', 'Timeline is empty.');
     }
 
     /**
@@ -315,7 +232,7 @@ const itemsTimelineModule = (function () {
 
         // Validate required parameters
         if (!is_valid_uuid(exhibit_id) || !is_valid_uuid(timeline_id)) {
-            display_error_message(elements.message, 'Invalid exhibit or timeline identifier');
+            domModule.set_alert(elements.message, 'danger', 'Invalid exhibit or timeline identifier');
             return false;
         }
 
@@ -384,7 +301,7 @@ const itemsTimelineModule = (function () {
 
         } catch (error) {
             const safe_message = error instanceof Error ? error.message : 'Failed to load timeline items';
-            display_error_message(elements.message, safe_message);
+            domModule.set_alert(elements.message, 'danger', safe_message);
             return false;
         }
     };
@@ -415,20 +332,15 @@ const itemsTimelineModule = (function () {
 
             const exhibit_id = helperModule.get_parameter_by_name('exhibit_id');
             const timeline_id = helperModule.get_parameter_by_name('timeline_id');
-            const timeline_item_id = uuid;
             const type = 'timeline_item';
             const EXHIBITS_ENDPOINTS = endpointsModule.get_exhibits_endpoints();
-            const etmp = EXHIBITS_ENDPOINTS.exhibits.timeline_item_records.timeline_item_publish.post.endpoint.replace(':exhibit_id', exhibit_id);
-            const gtmp = etmp.replace(':timeline_id', timeline_id);
-            const endpoint = gtmp.replace(':timeline_item_id', timeline_item_id);
-            const token = authModule.get_user_token();
-            const response = await httpModule.req({
+            const endpoint = endpointsModule.build(
+                EXHIBITS_ENDPOINTS.exhibits.timeline_item_records.timeline_item_publish.post.endpoint,
+                { exhibit_id: exhibit_id, timeline_id: timeline_id, timeline_item_id: uuid }
+            );
+            const response = await httpModule.api({
                 method: 'POST',
-                url: endpoint + '?type=' + type,
-                headers: {
-                    'Content-Type': 'application/json',
-                    'x-access-token': token
-                }
+                url: endpoint + '?type=' + type
             });
 
             if (response !== undefined && response.status === 200) {
@@ -450,67 +362,7 @@ const itemsTimelineModule = (function () {
                 }, 0);
 
                 setTimeout(() => {
-
-                    const trIds = Array.from(document.querySelectorAll('tr')).map(tr => tr.id).filter(id => id);
-                    let uuid_found = trIds.find((arr_result) => {
-
-                        let uuid_arr = arr_result.split('_');
-
-                        if (uuid === uuid_arr[0]) {
-                            return true;
-                        } else {
-                            return false;
-                        }
-                    });
-
-                    let type = uuid_found.split('_');
-                    let details_path;
-
-                    if (type[1] === 'timelineitem' && type[2] === 'text') {
-                        details_path = `${APP_PATH}/items/vertical-timeline/item/text/details?exhibit_id=${exhibit_id}&timeline_id=${timeline_id}&item_id=${uuid}`;
-                    } else {
-                        details_path = `${APP_PATH}/items/vertical-timeline/item/media/details?exhibit_id=${exhibit_id}&timeline_id=${timeline_id}&item_id=${uuid}`;
-                    }
-
-                    const delete_url = `${APP_PATH}/items/timeline/item/delete?exhibit_id=${exhibit_id}&timeline_id=${timeline_id}&item_id=${uuid}`;
-
-                    let uuid_actions = `${uuid}-item-actions`;
-                    let elem = document.getElementById(uuid_actions);
-                    elem.className = 'text-center';
-                    elem.innerHTML = `
-                        <div class="dropdown" style="display: inline-block; position: relative;">
-                            <button type="button"
-                                    class="btn btn-link p-0 border-0 item-actions-toggle"
-                                    style="color: #6c757d; font-size: 1.25rem; line-height: 1; background: none;"
-                                    data-toggle="dropdown"
-                                    data-bs-toggle="dropdown"
-                                    aria-haspopup="true"
-                                    aria-expanded="false"
-                                    title="Actions">
-                                <i class="fa fa-ellipsis-v" aria-hidden="true"></i>
-                            </button>
-                            <div class="dropdown-menu item-actions-menu">
-                                <a class="dropdown-item"
-                                   href="${details_path}"
-                                   style="font-size: 0.875rem;">
-                                    <i class="fa fa-folder-open mr-2" aria-hidden="true" style="width: 16px;"></i>
-                                    Details
-                                </a>
-                                <div class="dropdown-divider"></div>
-                                <a class="dropdown-item text-muted disabled"
-                                   href="#"
-                                   style="font-size: 0.875rem; pointer-events: none; opacity: 0.5;"
-                                   title="Can only delete if unpublished">
-                                    <i class="fa fa-trash mr-2" aria-hidden="true" style="width: 16px;"></i>
-                                    Delete
-                                </a>
-                            </div>
-                        </div>
-                    `;
-
-                    if (typeof itemsListDisplayModule !== 'undefined' && typeof itemsListDisplayModule.setup_item_action_handlers === 'function') {
-                        itemsListDisplayModule.setup_item_action_handlers();
-                    }
+                    itemsListDisplayModule.update_actions_cell(uuid, { exhibit_id: exhibit_id, timeline_id: timeline_id, is_published: 1 });
                 }, 0);
             }
 
@@ -543,20 +395,15 @@ const itemsTimelineModule = (function () {
 
             const exhibit_id = helperModule.get_parameter_by_name('exhibit_id');
             const timeline_id = helperModule.get_parameter_by_name('timeline_id');
-            const timeline_item_id = uuid;
             const type = 'timeline_item';
             const EXHIBITS_ENDPOINTS = endpointsModule.get_exhibits_endpoints();
-            const etmp = EXHIBITS_ENDPOINTS.exhibits.timeline_item_records.timeline_item_suppress.post.endpoint.replace(':exhibit_id', exhibit_id);
-            const gtmp = etmp.replace(':timeline_id', timeline_id);
-            const endpoint = gtmp.replace(':timeline_item_id', timeline_item_id);
-            const token = authModule.get_user_token();
-            const response = await httpModule.req({
+            const endpoint = endpointsModule.build(
+                EXHIBITS_ENDPOINTS.exhibits.timeline_item_records.timeline_item_suppress.post.endpoint,
+                { exhibit_id: exhibit_id, timeline_id: timeline_id, timeline_item_id: uuid }
+            );
+            const response = await httpModule.api({
                 method: 'POST',
-                url: endpoint + '?type=' + type,
-                headers: {
-                    'Content-Type': 'application/json',
-                    'x-access-token': token
-                }
+                url: endpoint + '?type=' + type
             });
 
             if (response !== undefined && response.status === 200) {
@@ -578,66 +425,7 @@ const itemsTimelineModule = (function () {
                 }, 0);
 
                 setTimeout(() => {
-
-                    const trIds = Array.from(document.querySelectorAll('tr')).map(tr => tr.id).filter(id => id);
-                    let uuid_found = trIds.find((arr_result) => {
-
-                        let uuid_arr = arr_result.split('_');
-
-                        if (uuid === uuid_arr[0]) {
-                            return true;
-                        } else {
-                            return false;
-                        }
-                    });
-
-                    let type = uuid_found.split('_');
-                    let edit_path;
-
-                    if (type[1] === 'timelineitem' && type[2] === 'text') {
-                        edit_path = `${APP_PATH}/items/vertical-timeline/item/text/edit?exhibit_id=${exhibit_id}&timeline_id=${timeline_id}&item_id=${uuid}`;
-                    } else {
-                        edit_path = `${APP_PATH}/items/vertical-timeline/item/media/edit?exhibit_id=${exhibit_id}&timeline_id=${timeline_id}&item_id=${uuid}`;
-                    }
-
-                    const delete_path = `${APP_PATH}/items/timeline/item/delete?exhibit_id=${exhibit_id}&timeline_id=${timeline_id}&item_id=${uuid}`;
-
-                    let uuid_actions = `${uuid}-item-actions`;
-                    let elem = document.getElementById(uuid_actions);
-                    elem.className = 'text-center';
-                    elem.innerHTML = `
-                        <div class="dropdown" style="display: inline-block; position: relative;">
-                            <button type="button"
-                                    class="btn btn-link p-0 border-0 item-actions-toggle"
-                                    style="color: #6c757d; font-size: 1.25rem; line-height: 1; background: none;"
-                                    data-toggle="dropdown"
-                                    data-bs-toggle="dropdown"
-                                    aria-haspopup="true"
-                                    aria-expanded="false"
-                                    title="Actions">
-                                <i class="fa fa-ellipsis-v" aria-hidden="true"></i>
-                            </button>
-                            <div class="dropdown-menu item-actions-menu">
-                                <a class="dropdown-item"
-                                   href="${edit_path}"
-                                   style="font-size: 0.875rem;">
-                                    <i class="fa fa-edit mr-2" aria-hidden="true" style="width: 16px;"></i>
-                                    Edit
-                                </a>
-                                <div class="dropdown-divider"></div>
-                                <a class="dropdown-item text-danger"
-                                   href="${delete_path}"
-                                   style="font-size: 0.875rem;">
-                                    <i class="fa fa-trash mr-2" aria-hidden="true" style="width: 16px;"></i>
-                                    Delete
-                                </a>
-                            </div>
-                        </div>
-                    `;
-
-                    if (typeof itemsListDisplayModule !== 'undefined' && typeof itemsListDisplayModule.setup_item_action_handlers === 'function') {
-                        itemsListDisplayModule.setup_item_action_handlers();
-                    }
+                    itemsListDisplayModule.update_actions_cell(uuid, { exhibit_id: exhibit_id, timeline_id: timeline_id, is_published: 0 });
                 }, 0);
 
             } else if (response === undefined) {
@@ -712,17 +500,13 @@ const itemsTimelineModule = (function () {
             const timeline_id = helperModule.get_parameter_by_name('timeline_id');
             const timeline_item_id = helperModule.get_parameter_by_name('item_id');
             const type = 'timeline_item';
-            const etmp = EXHIBITS_ENDPOINTS.exhibits.timeline_item_records.delete.endpoint.replace(':exhibit_id', exhibit_id);
-            const gtmp = etmp.replace(':timeline_id', timeline_id);
-            const endpoint = gtmp.replace(':item_id', timeline_item_id);
-            const token = authModule.get_user_token();
-            const response = await httpModule.req({
+            const endpoint = endpointsModule.build(
+                EXHIBITS_ENDPOINTS.exhibits.timeline_item_records.delete.endpoint,
+                { exhibit_id: exhibit_id, timeline_id: timeline_id, item_id: timeline_item_id }
+            );
+            const response = await httpModule.api({
                 method: 'DELETE',
-                url: endpoint + '?type=' + type,
-                headers: {
-                    'Content-Type': 'application/json',
-                    'x-access-token': token
-                }
+                url: endpoint + '?type=' + type
             });
 
             if (response !== undefined && response.status === 204) {

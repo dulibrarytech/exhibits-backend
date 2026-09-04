@@ -9,13 +9,8 @@
 
 'use strict';
 
-const { readFileSync } = require('node:fs');
-const { resolve } = require('node:path');
-
-const MODULE_PATH = resolve(
-    __dirname,
-    '../../public/app/heading-items/items.common.heading.form.module.js',
-);
+const { load_browser_module } = require('./helpers/load_module');
+const { dom_stub, helper_stub, rte_stub } = require('./helpers/stubs');
 
 function build_form() {
     document.body.innerHTML = `
@@ -54,53 +49,18 @@ function select_style(value) {
 describe('itemsCommonHeadingFormModule', () => {
 
     beforeAll(() => {
-        const src = readFileSync(MODULE_PATH, 'utf8');
-        const patched = src.replace(
-            /^const\s+itemsCommonHeadingFormModule\s*=/m,
-            'globalThis.itemsCommonHeadingFormModule =',
+        load_browser_module(
+            'public/app/heading-items/items.common.heading.form.module.js',
+            'itemsCommonHeadingFormModule',
         );
-        // eslint-disable-next-line no-eval
-        (0, eval)(patched);
     });
 
     beforeEach(() => {
-        globalThis.rteModule = {
-            get_html: (id) => document.getElementById(id)?.value?.trim() ?? '',
-            set_html: (id, html) => {
-                const el = document.getElementById(id);
-                if (el) el.value = html;
-            },
-            is_empty: (id) => (document.getElementById(id)?.value?.trim() ?? '') === '',
-            init: () => null,
-            init_all: () => {},
-            set_enabled: () => {},
-            set_all_enabled: () => {},
-            on_change: () => {},
-            is_dirty: () => false,
-        };
+        globalThis.rteModule = rte_stub();
         vi.spyOn(console, 'warn').mockImplementation(() => {});
         vi.spyOn(console, 'error').mockImplementation(() => {});
-        globalThis.domModule = {
-            set_alert: vi.fn(),
-            set_field_error: vi.fn(),
-            clear_field_error: vi.fn(),
-        };
-        globalThis.helperModule = {
-            get_checked_radio_button: (radios) => {
-                if (!radios || !radios.length) return null;
-                const checked = Array.from(radios).find((b) => b && b.checked);
-                if (!checked) return null;
-                const v = String(checked.value);
-                return v === '' || v === 'undefined' ? null : v;
-            },
-            check_item_style_option: (value) => {
-                const radios = document.getElementsByName('styles');
-                if (!radios || !radios.length) return;
-                const target = value || '';
-                for (const r of radios) { if (r.value === target) { r.checked = true; return; } }
-                for (const r of radios) { if (r.value === '') { r.checked = true; return; } }
-            },
-        };
+        globalThis.domModule = dom_stub();
+        globalThis.helperModule = helper_stub();
         build_form();
     });
 
@@ -131,15 +91,9 @@ describe('itemsCommonHeadingFormModule', () => {
                 .get_common_heading_form_fields();
 
             expect(result).toBe(false);
-            expect(globalThis.domModule.set_alert).toHaveBeenCalledWith(
-                document.querySelector('#message'),
-                'danger',
+            expect(globalThis.domModule.show_field_error).toHaveBeenCalledWith(
                 'Please enter heading text',
-            );
-            expect(globalThis.domModule.set_field_error).toHaveBeenCalledWith(
                 '#item-heading-text-input',
-                'item-heading-text-input-error',
-                'Please enter heading text',
             );
         });
 
@@ -150,15 +104,9 @@ describe('itemsCommonHeadingFormModule', () => {
                 .get_common_heading_form_fields();
 
             expect(result).toBe(false);
-            expect(globalThis.domModule.set_alert).toHaveBeenCalledWith(
-                document.querySelector('#message'),
-                'danger',
+            expect(globalThis.domModule.show_field_error).toHaveBeenCalledWith(
                 'Please select heading type',
-            );
-            expect(globalThis.domModule.set_field_error).toHaveBeenCalledWith(
                 '#item-heading-type-input',
-                'item-heading-type-input-error',
-                'Please select heading type',
             );
         });
 

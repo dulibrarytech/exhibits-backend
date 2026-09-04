@@ -170,62 +170,54 @@ const repoServiceModule = (function() {
             // Check for duplicate before allowing selection
             if (EXHIBITS_ENDPOINTS?.media_duplicate_check?.get?.endpoint && uuid) {
                 try {
-                    const token = authModule.get_user_token();
+                    const dup_endpoint = EXHIBITS_ENDPOINTS.media_duplicate_check.get.endpoint +
+                        '?field=repo_uuid&value=' + encodeURIComponent(uuid);
 
-                    if (token) {
-                        const dup_endpoint = EXHIBITS_ENDPOINTS.media_duplicate_check.get.endpoint +
-                            '?field=repo_uuid&value=' + encodeURIComponent(uuid);
+                    /* Advisory check — a missing session skips it rather than logging out */
+                    const dup_response = await httpModule.api({
+                        method: 'GET',
+                        url: dup_endpoint,
+                        logout_on_missing_token: false
+                    });
 
-                        const dup_response = await httpModule.req({
-                            method: 'GET',
-                            url: dup_endpoint,
-                            headers: {
-                                'Content-Type': 'application/json',
-                                'x-access-token': token
-                            },
-                            timeout: 10000,
-                            validateStatus: (status) => status >= 200 && status < 600
-                        });
+                    if (dup_response && dup_response.status === 200 &&
+                        dup_response.data?.success && dup_response.data?.data?.exists) {
 
-                        if (dup_response && dup_response.status === 200 &&
-                            dup_response.data?.success && dup_response.data?.data?.exists) {
+                        // Duplicate found — uncheck and show warning
+                        checkbox.checked = false;
+                        if (card) {
+                            card.classList.remove('selected');
 
-                            // Duplicate found — uncheck and show warning
-                            checkbox.checked = false;
-                            if (card) {
-                                card.classList.remove('selected');
+                            // Remove any existing duplicate badge first
+                            const existing_badge = card.querySelector('.duplicate-warning-badge');
+                            if (existing_badge) existing_badge.remove();
 
-                                // Remove any existing duplicate badge first
-                                const existing_badge = card.querySelector('.duplicate-warning-badge');
-                                if (existing_badge) existing_badge.remove();
+                            // Add a warning badge to the card
+                            const badge = document.createElement('div');
+                            badge.className = 'duplicate-warning-badge alert alert-warning mb-0 mt-2';
+                            badge.style.cssText = 'padding: 6px 12px; font-size: 0.85rem;';
+                            const existing = dup_response.data.data.record;
+                            // strip_html first (the backend may include <strong>/<em>/<br>
+                            // markup in name) then escape_html, because this is injected
+                            // via badge.innerHTML below rather than going through
+                            // display_message (which now handles strip-then-escape itself).
+                            const display_name = existing?.name
+                                ? ' (' + escape_html(helperMediaLibraryModule.strip_html(existing.name)) + ')'
+                                : '';
+                            badge.innerHTML = '<i class="fa fa-exclamation-triangle" style="margin-right: 6px;" aria-hidden="true"></i>' +
+                                'This item already exists in the media library' + display_name + '.';
+                            const card_body = card.querySelector('.card-body');
+                            if (card_body) card_body.appendChild(badge);
 
-                                // Add a warning badge to the card
-                                const badge = document.createElement('div');
-                                badge.className = 'duplicate-warning-badge alert alert-warning mb-0 mt-2';
-                                badge.style.cssText = 'padding: 6px 12px; font-size: 0.85rem;';
-                                const existing = dup_response.data.data.record;
-                                // strip_html first (the backend may include <strong>/<em>/<br>
-                                // markup in name) then escape_html, because this is injected
-                                // via badge.innerHTML below rather than going through
-                                // display_message (which now handles strip-then-escape itself).
-                                const display_name = existing?.name
-                                    ? ' (' + escape_html(helperMediaLibraryModule.strip_html(existing.name)) + ')'
-                                    : '';
-                                badge.innerHTML = '<i class="fa fa-exclamation-triangle" style="margin-right: 6px;" aria-hidden="true"></i>' +
-                                    'This item already exists in the media library' + display_name + '.';
-                                const card_body = card.querySelector('.card-body');
-                                if (card_body) card_body.appendChild(badge);
-
-                                // Auto-hide after 8 seconds
-                                setTimeout(() => {
-                                    if (badge.parentNode) badge.remove();
-                                }, 8000);
-                            }
-
-                            update_import_button();
-                            update_select_all_checkbox();
-                            return;
+                            // Auto-hide after 8 seconds
+                            setTimeout(() => {
+                                if (badge.parentNode) badge.remove();
+                            }, 8000);
                         }
+
+                        update_import_button();
+                        update_select_all_checkbox();
+                        return;
                     }
                 } catch (dup_error) {
                     // Log but don't block — allow the selection if the check itself fails
@@ -592,26 +584,11 @@ const repoServiceModule = (function() {
                 return { success: false, message: 'Endpoint not configured' };
             }
 
-            // Validate authentication
-            const token = authModule.get_user_token();
-            if (!token || token === false) {
-                hide_loading();
-                display_message('danger', 'Session expired. Please log in again.');
-                return { success: false, message: 'Authentication required' };
-            }
-
             const endpoint = EXHIBITS_ENDPOINTS.repo_media_search.get.endpoint;
 
-            // Make search request
-            const response = await httpModule.req({
+            const response = await httpModule.api({
                 method: 'GET',
-                url: endpoint + '?q=' + encodeURIComponent(query.trim()),
-                headers: {
-                    'Content-Type': 'application/json',
-                    'x-access-token': token
-                },
-                timeout: 30000,
-                validateStatus: (status) => status >= 200 && status < 600
+                url: endpoint + '?q=' + encodeURIComponent(query.trim())
             });
 
             hide_loading();

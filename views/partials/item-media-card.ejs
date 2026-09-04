@@ -1,0 +1,100 @@
+<%#
+    "Item Media" card shared by the standard / grid / vertical-timeline media
+    item pages (add form, edit form, details).
+
+    Locals (all optional, default false):
+      is_details            - details page: read-only caption box (passed
+                              through to item-caption.ejs). The media buttons
+                              and trash links are hidden at runtime by the
+                              details modules, so the card markup itself is
+                              identical on forms and details pages.
+      show_pdf_page         - render the "Open PDF to page" group
+                              (standard items only; the client shows it when
+                              the selected media is a PDF).
+      show_standard_fields  - render the standard-item-only field groups
+                              (alt text, wrap text, media padding) that live
+                              under standard-items/partials/.
+
+    Element ids/names are selected by the client modules — keep them stable.
+-%>
+<% const _is_details = typeof is_details !== 'undefined' && is_details; %>
+<% const _show_pdf_page = typeof show_pdf_page !== 'undefined' && show_pdf_page; %>
+<% const _show_standard_fields = typeof show_standard_fields !== 'undefined' && show_standard_fields; %>
+<div id="item-media-card" class="card">
+    <div class="card-header">
+        <strong class="card-title mb-3">Item Media</strong>
+    </div>
+    <div class="card-body">
+        <div class="row">
+            <div class="col-6 col-md-6">
+                <div id="item-media-display" class="media-preview-area">
+                    <div class="media-placeholder">
+                        <i class="fa fa-file-o" aria-hidden="true"></i>
+                        <span>No media selected</span>
+                    </div>
+                </div>
+                <p>
+                    <span id="item-media-filename-display"></span>&nbsp;&nbsp;
+                    <span><a id="item-media-trash" title="Remove media" href="#"
+                             style="display:none"><i class="fa fa-trash" aria-hidden="true"></i></a></span>
+                </p>
+                <input type="hidden" id="item-media-uuid" name="item_media_uuid">
+                <input type="hidden" id="item-media-uuid-prev" name="item_media_uuid_prev">
+                <input type="hidden" id="item-media-type" name="item_media_type">
+                <input type="hidden" id="item-mime-type" name="item_mime_type">
+                <button type="button" class="btn btn-outline-primary"
+                        id="pick-item-media-btn">
+                    <i class="fa fa-file-o" aria-hidden="true"></i>&nbsp;Select Media
+                </button>
+                <%- include('media-name-display.ejs', { input_id: 'item-media-name-display' }); %>
+            </div>
+            <div class="col-6 col-md-6">
+                <div id="thumbnail-image-display" class="media-preview-area">
+                    <div class="media-placeholder">
+                        <i class="fa fa-picture-o" aria-hidden="true"></i>
+                        <span>No image selected</span>
+                    </div>
+                </div>
+                <p>
+                    <span id="thumbnail-filename-display"></span>&nbsp;&nbsp;
+                    <span><a id="thumbnail-trash" title="Remove thumbnail" href="#"
+                             style="display:none"><i class="fa fa-trash" aria-hidden="true"></i></a></span>
+                </p>
+                <input type="hidden" id="thumbnail-media-uuid" name="thumbnail_media_uuid">
+                <input type="hidden" id="thumbnail-media-uuid-prev" name="thumbnail_media_uuid_prev">
+                <button type="button" class="btn btn-outline-primary"
+                        id="pick-thumbnail-btn"
+                        data-media-type-filter="image">
+                    <i class="fa fa-picture-o" aria-hidden="true"></i>&nbsp;Select Thumbnail
+                </button>
+            </div>
+        </div>
+<% if (_show_pdf_page) { %>
+
+        <div id="pdf-open-to-page-group" class="row mt-3" style="display: none;">
+            <div class="col-sm-4">
+                <label class="sr-only" for="pdf-open-to-page">Open PDF to page</label>
+                <div class="input-group">
+                    <div class="input-group-prepend">
+                        <div class="input-group-text">Open PDF to page</div>
+                    </div>
+                    <input type="number" class="form-control" id="pdf-open-to-page" min="1" value="1">
+                </div>
+                <small class="form-text text-muted"><i class="fa fa-exclamation-circle" aria-hidden="true"></i> <em>The viewer will automatically open to the page entered</em></small>
+            </div>
+        </div>
+
+<% } %>
+<% if (_show_standard_fields) { %>
+        <%- include('../standard-items/partials/item-alt-text.ejs'); %>
+<% } %>
+        <%- include('item-caption.ejs', { is_details: _is_details }); %>
+<% if (_show_standard_fields) { %>
+        <%- include('../standard-items/partials/wrap-text-item.ejs'); %>
+<% } %>
+        <%- include('embed-item.ejs'); %>
+<% if (_show_standard_fields) { %>
+        <%- include('../standard-items/partials/media-padding.ejs'); %>
+<% } %>
+    </div>
+</div>

@@ -21,24 +21,17 @@ const path = require('path');
 
 // ==================== MOCKS ====================
 
-jest.mock('../../libs/log4', () => ({
-    module: () => ({ error: jest.fn(), warn: jest.fn(), info: jest.fn(), debug: jest.fn() })
-}));
+jest.mock('../../libs/log4', () => require('./helpers/mocks').log4_factory());
 
 // App path drives the endpoint URL deterministically.
 jest.mock('../../config/app_config', () => () => ({ app_path: '/exhibits-dashboard' }));
 jest.mock('../../config/kaltura_config', () => () => ({}));
 
 // Auth + rate limiting → pass-through middleware.
-jest.mock('../../libs/tokens', () => ({
-    verify_with_query: (req, res, next) => next(),
-    verify: (req, res, next) => next()
-}));
-jest.mock('../../config/rate_limits_loader', () => ({
-    rate_limits: new Proxy({}, { get: () => (req, res, next) => next() })
-}));
+jest.mock('../../libs/tokens', () => require('./helpers/mocks').tokens_factory({ decoded: null, methods: ['verify_with_query', 'verify'], wrap: false }));
+jest.mock('../../config/rate_limits_loader', () => require('./helpers/mocks').rate_limits_factory());
 
-jest.mock('../../auth/authorize', () => ({ check_permission: jest.fn().mockResolvedValue(true) }));
+jest.mock('../../auth/authorize', () => require('./helpers/mocks').authorize_factory());
 
 // Heavy services the controller require()s — intercepted before they load.
 jest.mock('../../media-library/model', () => ({}));

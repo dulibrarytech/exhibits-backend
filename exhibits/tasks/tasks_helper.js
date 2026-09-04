@@ -19,6 +19,7 @@
 'use strict';
 
 const LOGGER = require('../../libs/log4');
+const { UUID_REGEX } = require('../../libs/uuid');
 
 /**
  * Base class providing shared validation, logging, and common database operations
@@ -32,7 +33,7 @@ const Base_tasks = class {
     constructor(DB, TABLE) {
         this.DB = DB;
         this.TABLE = TABLE;
-        this.UUID_REGEX = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
+        this.UUID_REGEX = UUID_REGEX;
         this.QUERY_TIMEOUT = 10000;
     }
 

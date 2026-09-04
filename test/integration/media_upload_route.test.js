@@ -17,9 +17,7 @@ const request = require('supertest');
 
 // ==================== MOCKS ====================
 
-jest.mock('../../libs/log4', () => ({
-    module: () => ({ error: jest.fn(), warn: jest.fn(), info: jest.fn(), debug: jest.fn() })
-}));
+jest.mock('../../libs/log4', () => require('./helpers/mocks').log4_factory());
 
 jest.mock('../../config/app_config', () => () => ({ app_path: '/exhibits-dashboard' }));
 
@@ -37,24 +35,16 @@ jest.mock('sharp', () => jest.fn());
 jest.mock('exiftool-vendored', () => ({ exiftool: { read: jest.fn(), end: jest.fn() } }));
 
 // Rate limiter -> pass-through middleware for any limiter name.
-jest.mock('../../config/rate_limits_loader', () => ({
-    rate_limits: new Proxy({}, { get: () => (req, res, next) => next() })
-}));
+jest.mock('../../config/rate_limits_loader', () => require('./helpers/mocks').rate_limits_factory());
 
 // TOKEN.verify simulates the real contract: 401 unless an x-access-token is present.
-jest.mock('../../libs/tokens', () => ({
-    verify: (req, res, next) => {
-        if (req.headers['x-access-token']) {
-            req.decoded = { sub: 'curator' };
-            return next();
-        }
-        return res.status(401).json({ message: 'Unauthorized request' });
-    }
-}));
+jest.mock('../../libs/tokens', () => require('./helpers/mocks').tokens_factory({ decoded: { sub: 'curator' }, require_header: true, wrap: false }));
 
 // Controllable authorization. (jest requires mock-factory vars to be `mock`-prefixed.)
 const mockCheckPermission = jest.fn();
-jest.mock('../../auth/authorize', () => ({ check_permission: (...args) => mockCheckPermission(...args) }));
+jest.mock('../../auth/authorize', () => require('./helpers/mocks').authorize_factory({
+    check_permission: (...args) => mockCheckPermission(...args)
+}));
 
 const register_upload_route = require('../../media-library/uploads');
 

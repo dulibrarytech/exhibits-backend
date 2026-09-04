@@ -16,13 +16,8 @@
 
 'use strict';
 
-const { readFileSync } = require('node:fs');
-const { resolve } = require('node:path');
-
-const MODULE_PATH = resolve(
-    __dirname,
-    '../../public/app/exhibits/exhibits.module.js',
-);
+const { load_browser_module } = require('./helpers/load_module');
+const { auth_stub, endpoints_stub } = require('./helpers/stubs');
 
 const ENDPOINT_TEMPLATE = '/api/exhibits/:exhibit_id';
 
@@ -51,17 +46,9 @@ describe('exhibitsModule', () => {
 
         // The module captures `const APP_PATH = endpointsModule.get_app_path()` at
         // eval time, before beforeEach re-stubs the full endpointsModule.
-        globalThis.endpointsModule = {
-            get_app_path: () => window.localStorage.getItem('exhibits_app_path') || '/exhibits-dashboard',
-        };
+        globalThis.endpointsModule = endpoints_stub();
 
-        const src = readFileSync(MODULE_PATH, 'utf8');
-        const patched = src.replace(
-            /^const\s+exhibitsModule\s*=/m,
-            'globalThis.exhibitsModule =',
-        );
-        // eslint-disable-next-line no-eval
-        (0, eval)(patched);
+        load_browser_module('public/app/exhibits/exhibits.module.js', 'exhibitsModule');
     });
 
     beforeEach(() => {
@@ -81,11 +68,17 @@ describe('exhibitsModule', () => {
                 },
             }),
             get_app_path: () => window.localStorage.getItem('exhibits_app_path') || '/exhibits-dashboard',
+            // Minimal stand-in for endpointsModule.build (see endpoints.module.js)
+            build: (template, params) => Object.entries(params || {}).reduce(
+                (url, [key, value]) => url.replace(':' + key, encodeURIComponent(String(value))),
+                template,
+            ),
         };
-        globalThis.authModule = {
-            get_user_token: () => 'test-token',
-        };
-        globalThis.httpModule = { req: vi.fn() };
+        globalThis.authModule = auth_stub('test-token');
+        // The module now goes through httpModule.api, which injects the
+        // token / headers / validateStatus itself, so only method + url
+        // are the module's responsibility here.
+        globalThis.httpModule = { api: vi.fn() };
         globalThis.domModule = {
             set_alert: vi.fn(),
             empty: vi.fn(),
@@ -102,7 +95,7 @@ describe('exhibitsModule', () => {
     describe('get_exhibit_title', () => {
 
         it('returns the title from a 200 response, after strip_html(unescape(...))', async () => {
-            globalThis.httpModule.req.mockResolvedValue({
+            globalThis.httpModule.api.mockResolvedValue({
                 status: 200,
                 data: { data: { title: '&lt;b&gt;Real Title&lt;/b&gt;' } },
             });
@@ -113,26 +106,22 @@ describe('exhibitsModule', () => {
             expect(result).toBe('Real Title');
         });
 
-        it('passes the resolved endpoint and auth token to httpModule.req', async () => {
-            globalThis.httpModule.req.mockResolvedValue({
+        it('passes the resolved endpoint to httpModule.api', async () => {
+            globalThis.httpModule.api.mockResolvedValue({
                 status: 200,
                 data: { data: { title: 'X' } },
             });
 
             await globalThis.exhibitsModule.get_exhibit_title('uuid-42');
 
-            expect(globalThis.httpModule.req).toHaveBeenCalledTimes(1);
-            const args = globalThis.httpModule.req.mock.calls[0][0];
+            expect(globalThis.httpModule.api).toHaveBeenCalledTimes(1);
+            const args = globalThis.httpModule.api.mock.calls[0][0];
             expect(args.method).toBe('GET');
             expect(args.url).toBe('/api/exhibits/uuid-42');
-            expect(args.headers['x-access-token']).toBe('test-token');
-            // validateStatus accepts every status in [200, 600)
-            expect(args.validateStatus(404)).toBe(true);
-            expect(args.validateStatus(600)).toBe(false);
         });
 
         it('returns undefined and shows a permission alert on 403', async () => {
-            globalThis.httpModule.req.mockResolvedValue({ status: 403 });
+            globalThis.httpModule.api.mockResolvedValue({ status: 403 });
 
             const result = await globalThis.exhibitsModule.get_exhibit_title('uuid');
 
@@ -145,7 +134,7 @@ describe('exhibitsModule', () => {
         });
 
         it('returns undefined and shows a network alert when the response is undefined', async () => {
-            globalThis.httpModule.req.mockResolvedValue(undefined);
+            globalThis.httpModule.api.mockResolvedValue(undefined);
 
             const result = await globalThis.exhibitsModule.get_exhibit_title('uuid');
 
@@ -158,7 +147,7 @@ describe('exhibitsModule', () => {
         });
 
         it('returns undefined silently for non-200 / non-403 / non-undefined responses', async () => {
-            globalThis.httpModule.req.mockResolvedValue({ status: 500 });
+            globalThis.httpModule.api.mockResolvedValue({ status: 500 });
 
             const result = await globalThis.exhibitsModule.get_exhibit_title('uuid');
 
@@ -170,7 +159,7 @@ describe('exhibitsModule', () => {
     describe('set_exhibit_title', () => {
 
         it('writes the resolved title into #exhibit-title via domModule.set_text', async () => {
-            globalThis.httpModule.req.mockResolvedValue({
+            globalThis.httpModule.api.mockResolvedValue({
                 status: 200,
                 data: { data: { title: 'Resolved Title' } },
             });
@@ -185,7 +174,7 @@ describe('exhibitsModule', () => {
         });
 
         it('forwards undefined when get_exhibit_title resolves to undefined', async () => {
-            globalThis.httpModule.req.mockResolvedValue({ status: 500 });
+            globalThis.httpModule.api.mockResolvedValue({ status: 500 });
 
             await globalThis.exhibitsModule.set_exhibit_title('uuid');
 

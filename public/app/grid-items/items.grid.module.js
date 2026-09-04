@@ -35,35 +35,24 @@ const itemsGridModule = (function () {
         const message_element = document.querySelector('#message');
 
         if (!is_valid_uuid(exhibit_id) || !is_valid_uuid(grid_id)) {
-            display_error_message(message_element, 'Invalid exhibit or grid identifier');
+            domModule.set_alert(message_element, 'danger', 'Invalid exhibit or grid identifier');
             return null;
         }
 
         try {
 
-            const token = authModule.get_user_token();
+            const endpoint = endpointsModule.build(
+                EXHIBITS_ENDPOINTS.exhibits.grid_item_records.get.endpoint,
+                { exhibit_id: exhibit_id, grid_id: grid_id }
+            );
 
-            if (token === null || token.length === 0) {
-                display_error_message(message_element, 'Authentication required');
-                return null;
-            }
-
-            const endpoint = EXHIBITS_ENDPOINTS.exhibits.grid_item_records.get.endpoint
-                .replace(':exhibit_id', encodeURIComponent(exhibit_id))
-                .replace(':grid_id', encodeURIComponent(grid_id));
-
-            const response = await httpModule.req({
+            const response = await httpModule.api({
                 method: 'GET',
-                url: endpoint,
-                headers: {
-                    'Content-Type': 'application/json',
-                    'x-access-token': token
-                },
-                timeout: 30000
+                url: endpoint
             });
 
             if (response === null || response === undefined) {
-                display_error_message(message_element, 'No response received from server');
+                domModule.set_alert(message_element, 'danger', 'No response received from server');
                 return null;
             }
 
@@ -72,21 +61,21 @@ const itemsGridModule = (function () {
             }
 
             if (response.status === 401 || response.status === 403) {
-                display_error_message(message_element, 'You do not have permission to view these grid items');
+                domModule.set_alert(message_element, 'danger', 'You do not have permission to view these grid items');
                 return null;
             }
 
             if (response.status === 404) {
-                display_error_message(message_element, 'Grid items not found');
+                domModule.set_alert(message_element, 'danger', 'Grid items not found');
                 return null;
             }
 
-            display_error_message(message_element, `Unexpected server response: ${response.status}`);
+            domModule.set_alert(message_element, 'danger', `Unexpected server response: ${response.status}`);
             return null;
 
         } catch (error) {
             const safe_message = error instanceof Error ? error.message : 'An unexpected error occurred';
-            display_error_message(message_element, safe_message);
+            domModule.set_alert(message_element, 'danger', safe_message);
             return null;
         }
     }
@@ -103,24 +92,15 @@ const itemsGridModule = (function () {
 
         try {
 
-            const token = authModule.get_user_token();
+            const endpoint = endpointsModule.build(
+                EXHIBITS_ENDPOINTS.exhibits.grid_records.get.endpoint,
+                { exhibit_id: exhibit_id, grid_id: grid_id }
+            );
 
-            if (token === null || token.length === 0) {
-                return null;
-            }
-
-            const endpoint = EXHIBITS_ENDPOINTS.exhibits.grid_records.get.endpoint
-                .replace(':exhibit_id', encodeURIComponent(exhibit_id))
-                .replace(':grid_id', encodeURIComponent(grid_id));
-
-            const response = await httpModule.req({
+            const response = await httpModule.api({
                 method: 'GET',
                 url: endpoint,
-                headers: {
-                    'Content-Type': 'application/json',
-                    'x-access-token': token
-                },
-                timeout: 30000
+                logout_on_missing_token: false
             });
 
             if (response !== undefined && response !== null && response.status === 200) {
@@ -194,45 +174,7 @@ const itemsGridModule = (function () {
             return;
         }
 
-        const alert_div = document.createElement('div');
-        alert_div.className = 'alert alert-warning';
-
-        const icon = document.createElement('i');
-        icon.className = 'fa fa-exclamation-triangle';
-        icon.setAttribute('aria-hidden', 'true');
-
-        alert_div.appendChild(icon);
-        alert_div.appendChild(document.createTextNode(` ${notice}`));
-
-        status_el.textContent = '';
-        status_el.appendChild(alert_div);
-    }
-
-    /**
-     * Displays sanitized error message
-     * @param {Element|null} element - Target DOM element
-     * @param {string} message - Error message to display
-     */
-    function display_error_message(element, message) {
-
-        if (element === null) {
-            return;
-        }
-
-        const sanitized_message = sanitize_html(message);
-        domModule.set_alert(element, 'danger', sanitized_message);
-    }
-
-    /**
-     * Sanitizes string for safe HTML insertion
-     * @param {string} text - Text to sanitize
-     * @returns {string} Sanitized text
-     */
-    function sanitize_html(text) {
-
-        const div = document.createElement('div');
-        div.textContent = String(text);
-        return div.innerHTML;
+        domModule.set_alert(status_el, 'warning', notice);
     }
 
     obj.display_grid_items = async function () {
@@ -383,95 +325,25 @@ const itemsGridModule = (function () {
 
             const exhibit_id = helperModule.get_parameter_by_name('exhibit_id');
             const grid_id = helperModule.get_parameter_by_name('grid_id');
-            const grid_item_id = uuid;
             const type = 'grid_item';
             const EXHIBITS_ENDPOINTS = endpointsModule.get_exhibits_endpoints();
-            const etmp = EXHIBITS_ENDPOINTS.exhibits.grid_item_records.grid_item_publish.post.endpoint.replace(':exhibit_id', exhibit_id);
-            const gtmp = etmp.replace(':grid_id', grid_id);
-            const endpoint = gtmp.replace(':grid_item_id', grid_item_id);
-            const token = authModule.get_user_token();
-            const response = await httpModule.req({
+            const endpoint = endpointsModule.build(
+                EXHIBITS_ENDPOINTS.exhibits.grid_item_records.grid_item_publish.post.endpoint,
+                { exhibit_id: exhibit_id, grid_id: grid_id, grid_item_id: uuid }
+            );
+            const response = await httpModule.api({
                 method: 'POST',
-                url: endpoint + '?type=' + type,
-                headers: {
-                    'Content-Type': 'application/json',
-                    'x-access-token': token
-                },
-                timeout: 10000,
-                validateStatus: function (status) {
-                    return status >= 200 && status < 600; // Accept any status code
-                }
+                url: endpoint + '?type=' + type
             });
 
             if (response.status === 200) {
 
-                let elem = document.getElementById(uuid);
+                const elem = document.getElementById(uuid);
                 elem.classList.remove('publish-item');
                 elem.classList.add('suppress-item');
                 elem.innerHTML = '<span id="suppress" title="published"><i class="fa fa-cloud" style="color: green"></i><br><small>Published</small></span>';
 
-                const trIds = Array.from(document.querySelectorAll('tr')).map(tr => tr.id).filter(id => id);
-                let uuid_found = trIds.find((arr_result) => {
-
-                    let uuid_arr = arr_result.split('_');
-
-                    if (uuid === uuid_arr[0]) {
-                        return true;
-                    } else {
-                        return false;
-                    }
-                });
-
-                let type = uuid_found.split('_');
-                let details_path;
-
-                if (type[1] === 'griditem' && type[2] === 'text') {
-                    details_path = `${APP_PATH}/items/grid/item/text/details?exhibit_id=${exhibit_id}&grid_id=${grid_id}&item_id=${uuid}`;
-                } else {
-                    details_path = `${APP_PATH}/items/grid/item/media/details?exhibit_id=${exhibit_id}&grid_id=${grid_id}&item_id=${uuid}`;
-                }
-
-                const delete_url = `${APP_PATH}/items/grid/item/delete?exhibit_id=${exhibit_id}&grid_id=${grid_id}&item_id=${uuid}`;
-
-                let uuid_actions = `${uuid}-item-actions`;
-                let actions_elem = document.getElementById(uuid_actions);
-                actions_elem.className = 'text-center';
-                actions_elem.innerHTML = `
-                    <div class="dropdown" style="display: inline-block; position: relative;">
-                        <button type="button"
-                                class="btn btn-link p-0 border-0 item-actions-toggle"
-                                style="color: #6c757d; font-size: 1.25rem; line-height: 1; background: none;"
-                                data-toggle="dropdown"
-                                data-bs-toggle="dropdown"
-                                aria-haspopup="true"
-                                aria-expanded="false"
-                                title="Actions">
-                            <i class="fa fa-ellipsis-v" aria-hidden="true"></i>
-                        </button>
-                        <div class="dropdown-menu item-actions-menu">
-                            <a class="dropdown-item"
-                               href="${details_path}"
-                               style="font-size: 0.875rem;">
-                                <i class="fa fa-folder-open mr-2" aria-hidden="true" style="width: 16px;"></i>
-                                Details
-                            </a>
-                            <div class="dropdown-divider"></div>
-                            <a class="dropdown-item text-muted disabled"
-                               href="#"
-                       aria-disabled="true"
-                       tabindex="-1"
-                               style="font-size: 0.875rem; pointer-events: none; opacity: 0.5;"
-                               title="Can only delete if unpublished">
-                                <i class="fa fa-trash mr-2" aria-hidden="true" style="width: 16px;"></i>
-                                Delete
-                            </a>
-                        </div>
-                    </div>
-                `;
-
-                if (typeof itemsListDisplayModule !== 'undefined' && typeof itemsListDisplayModule.setup_item_action_handlers === 'function') {
-                    itemsListDisplayModule.setup_item_action_handlers();
-                }
+                itemsListDisplayModule.update_actions_cell(uuid, { exhibit_id: exhibit_id, grid_id: grid_id, is_published: 1 });
 
             } else if (response.status === 403) {
                 scrollTo(0, 0);
@@ -513,25 +385,16 @@ const itemsGridModule = (function () {
 
             const exhibit_id = helperModule.get_parameter_by_name('exhibit_id');
             const grid_id = helperModule.get_parameter_by_name('grid_id');
-            const grid_item_id = uuid;
             const type = 'grid_item';
             const EXHIBITS_ENDPOINTS = endpointsModule.get_exhibits_endpoints();
-            const etmp = EXHIBITS_ENDPOINTS.exhibits.grid_item_records.grid_item_suppress.post.endpoint.replace(':exhibit_id', exhibit_id);
-            const gtmp = etmp.replace(':grid_id', grid_id);
-            const endpoint = gtmp.replace(':grid_item_id', grid_item_id);
-            const token = authModule.get_user_token();
+            const endpoint = endpointsModule.build(
+                EXHIBITS_ENDPOINTS.exhibits.grid_item_records.grid_item_suppress.post.endpoint,
+                { exhibit_id: exhibit_id, grid_id: grid_id, grid_item_id: uuid }
+            );
 
-            const response = await httpModule.req({
+            const response = await httpModule.api({
                 method: 'POST',
-                url: endpoint + '?type=' + type,
-                headers: {
-                    'Content-Type': 'application/json',
-                    'x-access-token': token
-                },
-                timeout: 10000,
-                validateStatus: function (status) {
-                    return status >= 200 && status < 600; // Accept any status code
-                }
+                url: endpoint + '?type=' + type
             });
 
             if (response !== undefined && response.status === 403) {
@@ -558,70 +421,12 @@ const itemsGridModule = (function () {
 
             if (response !== undefined && response.status === 200) {
 
-                let elem = document.getElementById(uuid);
+                const elem = document.getElementById(uuid);
                 elem.classList.remove('suppress-item');
                 elem.classList.add('publish-item');
                 elem.innerHTML = '<span id="publish" title="suppressed"><i class="fa fa-cloud-upload" style="color: darkred"></i><br><small>Unpublished</small></span>';
 
-                const trIds = Array.from(document.querySelectorAll('tr')).map(tr => tr.id).filter(id => id);
-                let uuid_found = trIds.find((arr_result) => {
-
-                    let uuid_arr = arr_result.split('_');
-
-                    if (uuid === uuid_arr[0]) {
-                        return true;
-                    } else {
-                        return false;
-                    }
-                });
-
-                let type = uuid_found.split('_');
-                let edit_path;
-
-                if (type[1] === 'griditem' && type[2] === 'text') {
-                    edit_path = `${APP_PATH}/items/grid/item/text/edit?exhibit_id=${exhibit_id}&grid_id=${grid_id}&item_id=${uuid}`;
-                } else {
-                    edit_path = `${APP_PATH}/items/grid/item/media/edit?exhibit_id=${exhibit_id}&grid_id=${grid_id}&item_id=${uuid}`;
-                }
-
-                const delete_path = `${APP_PATH}/items/grid/item/delete?exhibit_id=${exhibit_id}&grid_id=${grid_id}&item_id=${uuid}`;
-
-                let uuid_actions = `${uuid}-item-actions`;
-                let actions_elem = document.getElementById(uuid_actions);
-                actions_elem.className = 'text-center';
-                actions_elem.innerHTML = `
-                    <div class="dropdown" style="display: inline-block; position: relative;">
-                        <button type="button"
-                                class="btn btn-link p-0 border-0 item-actions-toggle"
-                                style="color: #6c757d; font-size: 1.25rem; line-height: 1; background: none;"
-                                data-toggle="dropdown"
-                                data-bs-toggle="dropdown"
-                                aria-haspopup="true"
-                                aria-expanded="false"
-                                title="Actions">
-                            <i class="fa fa-ellipsis-v" aria-hidden="true"></i>
-                        </button>
-                        <div class="dropdown-menu item-actions-menu">
-                            <a class="dropdown-item"
-                               href="${edit_path}"
-                               style="font-size: 0.875rem;">
-                                <i class="fa fa-edit mr-2" aria-hidden="true" style="width: 16px;"></i>
-                                Edit
-                            </a>
-                            <div class="dropdown-divider"></div>
-                            <a class="dropdown-item text-danger"
-                               href="${delete_path}"
-                               style="font-size: 0.875rem;">
-                                <i class="fa fa-trash mr-2" aria-hidden="true" style="width: 16px;"></i>
-                                Delete
-                            </a>
-                        </div>
-                    </div>
-                `;
-
-                if (typeof itemsListDisplayModule !== 'undefined' && typeof itemsListDisplayModule.setup_item_action_handlers === 'function') {
-                    itemsListDisplayModule.setup_item_action_handlers();
-                }
+                itemsListDisplayModule.update_actions_cell(uuid, { exhibit_id: exhibit_id, grid_id: grid_id, is_published: 0 });
 
             } else if (response === undefined) {
                 scrollTo(0, 0);
@@ -681,7 +486,7 @@ const itemsGridModule = (function () {
 
         // Validate required parameters
         if (!is_valid_uuid(exhibit_id) || !is_valid_uuid(grid_id) || !is_valid_uuid(grid_item_id)) {
-            display_error_message(elements.message, 'Invalid exhibit, grid, or item identifier');
+            domModule.set_alert(elements.message, 'danger', 'Invalid exhibit, grid, or item identifier');
             return false;
         }
 
@@ -690,40 +495,22 @@ const itemsGridModule = (function () {
             elements.delete_card.style.display = 'none';
         }
 
-        if (elements.message !== null) {
-            elements.message.innerHTML = '<div class="alert alert-info" role="alert"><i class="fa fa-spinner fa-spin"></i> Deleting grid item...</div>';
-        }
+        domModule.set_loading(elements.message, 'Deleting grid item...');
 
         try {
 
-            const token = authModule.get_user_token();
+            const endpoint = endpointsModule.build(
+                EXHIBITS_ENDPOINTS.exhibits.grid_item_records.delete.endpoint,
+                { exhibit_id: exhibit_id, grid_id: grid_id, item_id: grid_item_id }
+            );
 
-            if (token === null || token.length === 0) {
-                display_error_message(elements.message, 'Authentication required');
-                restore_delete_card(elements);
-                return false;
-            }
-
-            const endpoint = EXHIBITS_ENDPOINTS.exhibits.grid_item_records.delete.endpoint
-                .replace(':exhibit_id', encodeURIComponent(exhibit_id))
-                .replace(':grid_id', encodeURIComponent(grid_id))
-                .replace(':item_id', encodeURIComponent(grid_item_id));
-
-            const response = await httpModule.req({
+            const response = await httpModule.api({
                 method: 'DELETE',
-                url: `${endpoint}?type=grid_item`,
-                headers: {
-                    'Content-Type': 'application/json',
-                    'x-access-token': token
-                },
-                timeout: 10000,
-                validateStatus: function (status) {
-                    return status >= 200 && status < 600;
-                }
+                url: `${endpoint}?type=grid_item`
             });
 
             if (response === null || response === undefined) {
-                display_error_message(elements.message, 'No response received from server');
+                domModule.set_alert(elements.message, 'danger', 'No response received from server');
                 restore_delete_card(elements);
                 return false;
             }
@@ -734,31 +521,31 @@ const itemsGridModule = (function () {
             }
 
             if (response.status === 403) {
-                display_error_message(elements.message, 'You do not have permission to delete this item.');
+                domModule.set_alert(elements.message, 'danger', 'You do not have permission to delete this item.');
                 restore_delete_card(elements);
                 return false;
             }
 
             if (response.status === 404) {
-                display_error_message(elements.message, 'Grid item not found.');
+                domModule.set_alert(elements.message, 'danger', 'Grid item not found.');
                 restore_delete_card(elements);
                 return false;
             }
 
             if (response.status === 500) {
                 const error_text = response.data?.message ?? 'Internal server error';
-                display_error_message(elements.message, error_text);
+                domModule.set_alert(elements.message, 'danger', error_text);
                 restore_delete_card(elements);
                 return false;
             }
 
-            display_error_message(elements.message, `Unexpected server response: ${response.status}`);
+            domModule.set_alert(elements.message, 'danger', `Unexpected server response: ${response.status}`);
             restore_delete_card(elements);
             return false;
 
         } catch (error) {
             const safe_message = error instanceof Error ? error.message : 'An unexpected error occurred';
-            display_error_message(elements.message, safe_message);
+            domModule.set_alert(elements.message, 'danger', safe_message);
             restore_delete_card(elements);
             return false;
         }
@@ -772,7 +559,7 @@ const itemsGridModule = (function () {
 
         /*
          * Restores the card only — every caller writes an error message via
-         * display_error_message immediately before this runs, so clearing
+         * domModule.set_alert immediately before this runs, so clearing
          * #message here would erase the explanation the user needs to see.
          */
         if (elements.delete_card !== null) {

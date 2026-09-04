@@ -1,3 +1,4 @@
+<% const _is_details = typeof is_details !== 'undefined' && is_details; %>
 <div id="grid-data-card" class="card">
     <div class="card-header">
         <strong class="card-title mb-3">Item Data</strong>
@@ -13,7 +14,7 @@
                         <div class="form-text text-muted" style="font-size: 17px"><span id="timeline-text-input-label">Text</span>
 
                         </div>
-                        <div id="timeline-text-input" aria-labelledby="timeline-text-input-label" class="rte-container" data-rte="full"></div>
+                        <div id="timeline-text-input" aria-labelledby="timeline-text-input-label" class="rte-container" data-rte="full"<%- _is_details ? ' data-rte-disabled="true"' : '' %>></div>
                     </div>
                 </div>
                 <div class="row form-group">
@@ -21,7 +22,7 @@
                         <label for="timeline-internal-name-input" class="form-text text-muted" style="font-size: 17px">Internal Name <span class="badge badge-required">Required</span>
                         </label>
                         <small id="timeline-internal-name-hint" class="form-text text-muted"><i class="fa fa-exclamation-circle" aria-hidden="true"></i> <em>Does not display on the exhibit; for internal use only.</em></small>
-                        <input type="text" id="timeline-internal-name-input" name="timeline_internal_name" class="form-control"
+                        <input <%= _is_details ? 'disabled ' : '' %>type="text" id="timeline-internal-name-input" name="timeline_internal_name" class="form-control"
                                required maxlength="255" aria-describedby="timeline-internal-name-hint">
                     </div>
                 </div>

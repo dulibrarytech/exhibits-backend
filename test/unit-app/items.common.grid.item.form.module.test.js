@@ -14,13 +14,8 @@
 
 'use strict';
 
-const { readFileSync } = require('node:fs');
-const { resolve } = require('node:path');
-
-const MODULE_PATH = resolve(
-    __dirname,
-    '../../public/app/grid-items/items.common.grid.item.form.module.js',
-);
+const { load_browser_module } = require('./helpers/load_module');
+const { auth_stub, dom_stub_with_set_value, endpoints_stub, rte_stub } = require('./helpers/stubs');
 
 const APP_PATH = '/exhibits-dashboard';
 
@@ -84,45 +79,25 @@ describe('itemsCommonGridItemFormModule', () => {
 
         // The module captures `const APP_PATH = endpointsModule.get_app_path()` at
         // eval time; stub it to resolve from the fake localStorage seeded above.
-        globalThis.endpointsModule = {
-            get_app_path: () => window.localStorage.getItem('exhibits_app_path') || '/exhibits-dashboard',
-        };
+        globalThis.endpointsModule = endpoints_stub();
 
-        const src = readFileSync(MODULE_PATH, 'utf8');
-        const patched = src.replace(
-            /^const\s+itemsCommonGridItemFormModule\s*=/m,
-            'globalThis.itemsCommonGridItemFormModule =',
+        load_browser_module(
+            'public/app/grid-items/items.common.grid.item.form.module.js',
+            'itemsCommonGridItemFormModule',
         );
-        // eslint-disable-next-line no-eval
-        (0, eval)(patched);
     });
 
     beforeEach(() => {
         // Rich text fields read through rteModule; back the stub with the
         // same DOM elements the fixtures populate via .value.
-        globalThis.rteModule = {
-            get_html: (id) => document.getElementById(id)?.value?.trim() ?? '',
-            set_html: (id, html) => {
-                const el = document.getElementById(id);
-                if (el) el.value = html;
-            },
-            is_empty: (id) => (document.getElementById(id)?.value?.trim() ?? '') === '',
-            init: () => null,
-            init_all: () => {},
-            set_enabled: () => {},
-            set_all_enabled: () => {},
-            on_change: () => {},
-            is_dirty: () => false,
-        };
+        globalThis.rteModule = rte_stub();
         vi.spyOn(console, 'warn').mockImplementation(() => {});
         vi.spyOn(console, 'error').mockImplementation(() => {});
 
         // Bare-name dependencies. build_thumbnail_url calls
         // authModule.get_user_token; get_common_grid_item_form_fields uses
         // helperModule.get_checked_radio_button.
-        globalThis.authModule = {
-            get_user_token: () => 'test-token',
-        };
+        globalThis.authModule = auth_stub('test-token');
         globalThis.helperModule = {
             get_checked_radio_button: (els) => {
                 for (const el of els) {
@@ -135,11 +110,7 @@ describe('itemsCommonGridItemFormModule', () => {
         // Phase 3b added set_field_error / clear_field_error calls
         // alongside the existing set_alert summary, so the form-fields
         // method can wire aria-invalid + aria-describedby. Stub all three.
-        globalThis.domModule = {
-            set_alert: vi.fn(),
-            set_field_error: vi.fn(),
-            clear_field_error: vi.fn(),
-        };
+        globalThis.domModule = dom_stub_with_set_value();
 
         navigate('/');
         build_form();
@@ -264,10 +235,9 @@ describe('itemsCommonGridItemFormModule', () => {
                 .get_common_grid_item_form_fields();
 
             expect(result).toBe(false);
-            expect(globalThis.domModule.set_alert).toHaveBeenCalledWith(
-                expect.anything(),
-                'danger',
+            expect(globalThis.domModule.show_field_error).toHaveBeenCalledWith(
                 'Please enter "Text" for this item',
+                '#item-text-input',
             );
         });
 
@@ -278,10 +248,9 @@ describe('itemsCommonGridItemFormModule', () => {
                 .get_common_grid_item_form_fields();
 
             expect(result).toBe(false);
-            expect(globalThis.domModule.set_alert).toHaveBeenCalledWith(
-                expect.anything(),
-                'danger',
+            expect(globalThis.domModule.show_field_error).toHaveBeenCalledWith(
                 'Please select a media item',
+                '#item-media-uuid',
             );
         });
 

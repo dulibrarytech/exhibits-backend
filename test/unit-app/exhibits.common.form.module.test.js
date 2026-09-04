@@ -10,13 +10,7 @@
 
 'use strict';
 
-const { readFileSync } = require('node:fs');
-const { resolve } = require('node:path');
-
-const MODULE_PATH = resolve(
-    __dirname,
-    '../../public/app/exhibits/exhibits.common.form.module.js',
-);
+const { load_browser_module } = require('./helpers/load_module');
 
 function build_form() {
     document.body.innerHTML = `
@@ -74,13 +68,10 @@ describe('exhibitsCommonFormModule', () => {
             get_exhibits_endpoints: () => ({}),
         };
 
-        const src = readFileSync(MODULE_PATH, 'utf8');
-        const patched = src.replace(
-            /^const\s+exhibitsCommonFormModule\s*=/m,
-            'globalThis.exhibitsCommonFormModule =',
+        load_browser_module(
+            'public/app/exhibits/exhibits.common.form.module.js',
+            'exhibitsCommonFormModule',
         );
-        // eslint-disable-next-line no-eval
-        (0, eval)(patched);
     });
 
     beforeEach(() => {
@@ -116,11 +107,23 @@ describe('exhibitsCommonFormModule', () => {
         };
         // Phase 3b refactored exhibits.common.form.module to use
         // domModule.set_field_error / clear_field_error for title
-        // validation, and to use domModule.set_alert via the local
-        // show_error helper for catch-path summaries. Stub all three
+        // validation, and domModule.set_alert directly for catch-path
+        // summaries (the local show_error wrapper is gone). Stub all three
         // before each test so individual cases can assert on calls.
         globalThis.domModule = {
-            set_alert: vi.fn(),
+            // Mirror the real helper's output shape so DOM-shape assertions
+            // (".alert.alert-danger" rendered into the message container)
+            // keep working now that the module calls set_alert directly.
+            set_alert: vi.fn((target, type, message) => {
+                const el = typeof target === 'string' ? document.querySelector(target) : target;
+                if (!el) return;
+                el.innerHTML = '';
+                const alert_div = document.createElement('div');
+                alert_div.className = 'alert alert-' + (type || 'danger');
+                alert_div.setAttribute('role', 'alert');
+                alert_div.textContent = ' ' + (message || '');
+                el.appendChild(alert_div);
+            }),
             set_field_error: vi.fn((field, error_id, message) => {
                 // Mirror the real helper closely enough that existing
                 // assertions ("title-validation-feedback creates a node
