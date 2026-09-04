@@ -32,9 +32,13 @@
     font-size: 0.875rem;
 }
 
-#items td {
-    font-size: 0.875rem;
-}
+/* The media list table's cell font size now comes from the shared
+   `table.display td` rule in datatables.overrides.css, which gives every
+   dashboard listing table the same size. The rule that used to live here
+   was written as an unscoped `#items td`; because this file is
+   concatenated into the global dashboard.min.css, it also reached the
+   exhibit Item List (same table id) and left that one list smaller than
+   the rest. */
 
 /* Truncate long media names in the Name column */
 .media-name-cell .media-name {
