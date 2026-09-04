@@ -324,27 +324,9 @@ const exhibitsAddFormModule = (function () {
             }
 
             // ── Media preview areas — restore placeholders ──
-            const media_displays = ['#hero-image-display', '#thumbnail-image-display'];
-
-            for (const sel of media_displays) {
-                const display_el = document.querySelector(sel);
-                if (!display_el) continue;
-
-                display_el.innerHTML = '';
-
-                const placeholder = document.createElement('div');
-                placeholder.className = 'media-placeholder';
-
-                const icon = document.createElement('i');
-                icon.className = 'fa fa-picture-o';
-                placeholder.appendChild(icon);
-
-                const span = document.createElement('span');
-                span.textContent = 'No image selected';
-                placeholder.appendChild(span);
-
-                display_el.appendChild(placeholder);
-            }
+            ['#hero-image-display', '#thumbnail-image-display'].forEach(function (sel) {
+                exhibitsCommonFormModule.restore_media_placeholder(sel);
+            });
 
             // ── Filename displays ──
             const filename_el_hero = document.querySelector('#hero-image-filename-display');
@@ -361,43 +343,10 @@ const exhibitsAddFormModule = (function () {
                 if (el) el.style.display = 'none';
             }
 
-            // ── Style fields — clear all color inputs, pickers, font sizes, font selects ──
-            const style_sections = [
-                'introduction', 'navigation', 'heading1', 'item1',
-                'heading2', 'heading3', 'item2', 'item3'
-            ];
-
-            for (const key of style_sections) {
-
-                // Background color text + picker
-                const bg_input = document.querySelector('#' + key + '-background-color');
-                if (bg_input) bg_input.value = '';
-
-                const bg_picker = document.querySelector('#' + key + '-background-color-picker');
-                if (bg_picker) bg_picker.value = '#ffffff';
-
-                // Font color text + picker
-                const font_input = document.querySelector('#' + key + '-font-color');
-                if (font_input) font_input.value = '';
-
-                const font_picker = document.querySelector('#' + key + '-font-color-picker');
-                if (font_picker) font_picker.value = '#ffffff';
-
-                // Font size
-                const font_size = document.querySelector('#' + key + '-font-size');
-                if (font_size) font_size.value = '';
-
-                // Font select
-                const font_select = document.querySelector('#' + key + '-font');
-                if (font_select) font_select.selectedIndex = 0;
-
-                // Color swatches — reset to default checkerboard (clear inline bg)
-                const swatch_bg = document.querySelector('#swatch-' + key + '-bg');
-                if (swatch_bg) swatch_bg.style.backgroundColor = '';
-
-                const swatch_font = document.querySelector('#swatch-' + key + '-font');
-                if (swatch_font) swatch_font.style.backgroundColor = '';
-            }
+            // ── Style fields — cleared by the styles module, which owns the
+            //    section x property tables (was a hard-coded copy of the
+            //    section list here) ──
+            exhibitsStylesModule.reset();
 
             // ── Collapse all open accordion panels ──
             const open_panels = document.querySelectorAll('#add-exhibit-modal .collapse.show');
@@ -445,124 +394,13 @@ const exhibitsAddFormModule = (function () {
             }
         };
 
-        // Helper function to render a media preview thumbnail from a media library asset
-        const render_media_preview = (selector, media) => {
-            const container = document.querySelector(selector);
-            if (!container) return;
-
-            container.innerHTML = '';
-
-            // Same-origin thumbnail requests authenticate via the HttpOnly
-            // exhibits_token cookie; no JWT is embedded in <img src>.
-            let thumb_url = '';
-
-            if (media.ingest_method === 'kaltura' && media.kaltura_thumbnail_url) {
-                thumb_url = media.kaltura_thumbnail_url;
-            } else if (media.ingest_method === 'repository' && media.repo_uuid) {
-                thumb_url = `${APP_PATH}/api/v1/media/library/repo/thumbnail?uuid=${encodeURIComponent(media.repo_uuid)}`;
-            } else if (media.uuid && media.thumbnail_path) {
-                thumb_url = `${APP_PATH}/api/v1/media/library/thumbnail/${media.uuid}`;
-            }
-
-            if (thumb_url) {
-                const img = document.createElement('img');
-                img.src = thumb_url;
-                img.alt = media.alt_text || media.name || '';
-                container.appendChild(img);
-            }
-        };
-
-        // Helper function to render filename display
-        const render_filename = (selector, name) => {
-            const el = document.querySelector(selector);
-            if (!el) return;
-            el.textContent = name || '';
-        };
-
-        // Helper function to show an element
-        const show_element = (selector) => {
-            const el = document.querySelector(selector);
-            if (el) el.style.display = 'inline';
-        };
-
         /*
-         * Populates (or hides, when name is empty) a read-only Media Name display.
-         * input_selector targets the input; its wrapper is `${input_selector}-group`.
+         * Client-side clear for one media slot (no API call on the add form —
+         * nothing is bound until the exhibit exists).
          */
-        const set_media_name_display = (input_selector, name) => {
-            const group = document.querySelector(`${input_selector}-group`);
-            const input_el = document.querySelector(input_selector);
-            const decoded = helperModule.unescape(name || '').trim();
-
-            if (input_el) input_el.value = decoded;
-            if (group) group.style.display = decoded.length > 0 ? '' : 'none';
-        };
-
-        // Helper function to restore placeholder inside a media preview area
-        const restore_placeholder = (display_selector) => {
-            const display_el = document.querySelector(display_selector);
-            if (!display_el) return;
-
-            display_el.innerHTML = '';
-
-            const placeholder = document.createElement('div');
-            placeholder.className = 'media-placeholder';
-
-            const icon = document.createElement('i');
-            icon.className = 'fa fa-picture-o';
-            placeholder.appendChild(icon);
-
-            const span = document.createElement('span');
-            span.textContent = 'No image selected';
-            placeholder.appendChild(span);
-
-            display_el.appendChild(placeholder);
-        };
-
-        // Client-side clear for hero image slot (no API call on add form)
-        const clear_hero_image = function (e) {
+        const clear_media_slot = (role) => function (e) {
             e.preventDefault();
-            restore_placeholder('#hero-image-display');
-
-            const hero_input = document.querySelector('#hero-image');
-            if (hero_input) hero_input.value = '';
-
-            const hero_uuid = document.querySelector('#hero-image-media-uuid');
-            if (hero_uuid) hero_uuid.value = '';
-
-            const hero_prev = document.querySelector('#hero-image-media-uuid-prev');
-            if (hero_prev) hero_prev.value = '';
-
-            const filename_el = document.querySelector('#hero-image-filename-display');
-            if (filename_el) filename_el.textContent = '';
-
-            set_media_name_display('#hero-image-media-name-display', '');
-
-            const trash_el = document.querySelector('#hero-trash');
-            if (trash_el) trash_el.style.display = 'none';
-        };
-
-        // Client-side clear for thumbnail slot (no API call on add form)
-        const clear_thumbnail = function (e) {
-            e.preventDefault();
-            restore_placeholder('#thumbnail-image-display');
-
-            const thumb_input = document.querySelector('#thumbnail-image');
-            if (thumb_input) thumb_input.value = '';
-
-            const thumb_uuid = document.querySelector('#thumbnail-media-uuid');
-            if (thumb_uuid) thumb_uuid.value = '';
-
-            const thumb_prev = document.querySelector('#thumbnail-media-uuid-prev');
-            if (thumb_prev) thumb_prev.value = '';
-
-            const filename_el = document.querySelector('#thumbnail-filename-display');
-            if (filename_el) filename_el.textContent = '';
-
-            set_media_name_display('#thumbnail-media-name-display', '');
-
-            const trash_el = document.querySelector('#thumbnail-trash');
-            if (trash_el) trash_el.style.display = 'none';
+            exhibitsCommonFormModule.clear_media_slot_ui(role);
         };
 
         try {
@@ -591,13 +429,13 @@ const exhibitsAddFormModule = (function () {
                 {
                     selector: '#hero-trash',
                     event: 'click',
-                    handler: clear_hero_image,
+                    handler: clear_media_slot('hero_image'),
                     name: 'clear_hero_image'
                 },
                 {
                     selector: '#thumbnail-trash',
                     event: 'click',
-                    handler: clear_thumbnail,
+                    handler: clear_media_slot('thumbnail'),
                     name: 'clear_thumbnail'
                 }
             ];
@@ -621,50 +459,20 @@ const exhibitsAddFormModule = (function () {
                 }
             }
 
-            // Wire media picker buttons
-            const pick_hero_btn = document.querySelector('#pick-hero-image-btn');
-            if (pick_hero_btn) {
-                pick_hero_btn.addEventListener('click', function () {
-                    const prev_el = document.querySelector('#hero-image-media-uuid-prev');
-                    mediaPickerModule.open({
-                        role: 'hero_image',
-                        exhibit_uuid: null, // null on add form — binding created after exhibit create
-                        previous_media_uuid: prev_el ? prev_el.value || null : null,
-                        media_type_filter: 'image',
-                        on_select: function (media) {
-                            domModule.set_value('#hero-image-media-uuid', media.uuid);
-                            const prev_track = document.querySelector('#hero-image-media-uuid-prev');
-                            if (prev_track) prev_track.value = media.uuid;
-                            render_media_preview('#hero-image-display', media);
-                            render_filename('#hero-image-filename-display', media.name || media.original_filename);
-                            set_media_name_display('#hero-image-media-name-display', media.name);
-                            show_element('#hero-trash');
-                        }
-                    });
-                });
+            // Wire media picker buttons — shared with the edit form
+            if (exhibitsCommonFormModule.wire_media_picker({
+                button_selector: '#pick-hero-image-btn',
+                role: 'hero_image',
+                exhibit_uuid: null // null on add form — binding created after exhibit create
+            })) {
                 attached_count++;
             }
 
-            const pick_thumbnail_btn = document.querySelector('#pick-thumbnail-btn');
-            if (pick_thumbnail_btn) {
-                pick_thumbnail_btn.addEventListener('click', function () {
-                    const prev_el = document.querySelector('#thumbnail-media-uuid-prev');
-                    mediaPickerModule.open({
-                        role: 'thumbnail',
-                        exhibit_uuid: null,
-                        previous_media_uuid: prev_el ? prev_el.value || null : null,
-                        media_type_filter: 'image',
-                        on_select: function (media) {
-                            domModule.set_value('#thumbnail-media-uuid', media.uuid);
-                            const prev_track = document.querySelector('#thumbnail-media-uuid-prev');
-                            if (prev_track) prev_track.value = media.uuid;
-                            render_media_preview('#thumbnail-image-display', media);
-                            render_filename('#thumbnail-filename-display', media.name || media.original_filename);
-                            set_media_name_display('#thumbnail-media-name-display', media.name);
-                            show_element('#thumbnail-trash');
-                        }
-                    });
-                });
+            if (exhibitsCommonFormModule.wire_media_picker({
+                button_selector: '#pick-thumbnail-btn',
+                role: 'thumbnail',
+                exhibit_uuid: null
+            })) {
                 attached_count++;
             }
 

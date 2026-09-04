@@ -148,6 +148,22 @@ describe('exhibitsAddFormModule.reset_form', () => {
 
         globalThis.endpointsModule = endpoints_stub({ get_exhibits_endpoints: () => ({}) });
 
+        /*
+         * reset_form now delegates the style-field reset to
+         * exhibitsStylesModule.reset() and the media placeholders to
+         * exhibitsCommonFormModule.restore_media_placeholder(); load the real
+         * modules so the assertions still exercise the production behaviour.
+         */
+        load_browser_module(
+            'public/app/exhibits/exhibits.styles.module.js',
+            'exhibitsStylesModule',
+        );
+
+        load_browser_module(
+            'public/app/exhibits/exhibits.common.form.module.js',
+            'exhibitsCommonFormModule',
+        );
+
         load_browser_module(
             'public/app/exhibits/exhibits.add.form.module.js',
             'exhibitsAddFormModule',

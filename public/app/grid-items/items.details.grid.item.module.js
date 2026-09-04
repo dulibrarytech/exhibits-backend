@@ -20,117 +20,47 @@ const itemsDetailsGridItemModule = (function () {
 
     'use strict';
 
-    // const APP_PATH = window.localStorage.getItem('exhibits_app_path');
-    const EXHIBITS_ENDPOINTS = endpointsModule.get_exhibits_endpoints();
     let obj = {};
 
-    async function get_item_record() {
+    /**
+     * Checks the radio in `name` whose value matches.
+     */
+    function set_radio_value(name, value) {
 
-        try {
+        const elements = document.getElementsByName(name);
 
-            const exhibit_id = helperModule.get_parameter_by_name('exhibit_id');
-            const grid_id = helperModule.get_parameter_by_name('grid_id');
-            const item_id = helperModule.get_parameter_by_name('item_id');
-            const endpoint = endpointsModule.build(EXHIBITS_ENDPOINTS.exhibits.grid_item_record.get.endpoint, {
-                exhibit_id: exhibit_id,
-                grid_id: grid_id,
-                item_id: item_id
-            });
-
-            if (!endpoint) {
-                throw new Error('Missing required parameters: exhibit_id, grid_id or item_id');
+        for (const element of elements) {
+            if (element.value === value) {
+                element.checked = true;
+                break;
             }
-
-            const response = await httpModule.api({
-                method: 'GET',
-                url: endpoint + '?type=details'
-            });
-
-            if (response && response.status === 200) {
-                return response.data.data;
-            }
-
-        } catch (error) {
-            domModule.set_alert(document.querySelector('#message'), 'danger', error.message);
         }
     }
 
     /**
-     * Disables all interactive form fields on the page.
-     * Called after record data is populated so the details page is read-only.
+     * Populates the read-only grid item details page from a record.
+     * @param {Object} record
      */
-    function disable_all_fields() {
+    function populate(record) {
 
-        const form_elements = document.querySelectorAll(
-            'input:not([type="hidden"]), textarea, select, button[type="button"]:not(#edit-item-btn)'
-        );
-
-        // Rich text editors are div-based and not caught by the selector above
-        if (typeof rteModule !== 'undefined') {
-            rteModule.set_all_enabled(false);
-        }
-
-        form_elements.forEach(element => {
-            if (!element.disabled && !element.readOnly) {
-                element.disabled = true;
-            }
-        });
-
-        // Hide media picker buttons and trash links (not applicable on details view)
-        const picker_buttons = document.querySelectorAll('#pick-item-media-btn, #pick-thumbnail-btn');
-        picker_buttons.forEach(btn => {
-            btn.style.display = 'none';
-        });
-
-        const trash_links = document.querySelectorAll('#item-media-trash, #thumbnail-trash');
-        trash_links.forEach(link => {
-            link.style.display = 'none';
-        });
-    }
-
-    async function display_details_record() {
-
-        const record = await get_item_record();
-
-        if (!record) {
-            console.error('No record returned from get_item_record()');
-            return false;
-        }
-
-        // Format and display creation/update metadata
-        const create_datetime = helperModule.format_date(new Date(record.created));
-        const update_datetime = helperModule.format_date(new Date(record.updated));
-        const metadata_parts = [];
-
-        if (record.created_by) {
-            metadata_parts.push(`<em>Created by ${record.created_by} on ${create_datetime}</em>`);
-        }
-        if (record.updated_by) {
-            metadata_parts.push(`<em>Last updated by ${record.updated_by} on ${update_datetime}</em>`);
-        }
-
-        const created_el = document.querySelector('#created');
-        if (created_el) {
-            created_el.innerHTML = metadata_parts.join(' | ');
-        }
-
-        // Set published status
+        /* Set published status */
         const published_el = document.querySelector('#is-published');
+
         if (published_el) {
             published_el.value = record.is_published === 1;
         }
 
-        // Set basic item data
         rteModule.render_static('item-title-input', helperModule.unescape(record.title));
         rteModule.render_static('item-text-input', helperModule.unescape(record.text));
 
-        // Populate media previews using the shared common module
+        /* Populate media previews using the shared common module */
         if (window.location.pathname.indexOf('media') !== -1) {
+
             itemsCommonGridItemFormModule.populate_media_previews(record);
 
-            // Surface the popup-related fields read-only. The common form module
-            // (also init'd on this page) reveals/relocates them; here we fill in
-            // their values and gate the Embed Item control to audio/video media.
+            /* Surface the popup-related fields read-only. The common form module
+             * (also init'd on this page) reveals/relocates them; here we fill in
+             * their values and gate the Embed Item control to audio/video media. */
             rteModule.render_static('item-description-input', helperModule.unescape(record.description));
             rteModule.render_static('item-caption-input', helperModule.unescape(record.caption));
 
@@ -138,46 +68,19 @@ const itemsDetailsGridItemModule = (function () {
             if (embed_item_el) embed_item_el.checked = record.is_embedded === 1;
         }
 
-        // Set radio button selections
-        const set_radio_value = (name, value) => {
-            const elements = document.getElementsByName(name);
-            for (const el of elements) {
-                if (el.value === value) {
-                    const target = document.querySelector('#' + el.id);
-                    if (target) target.checked = true;
-                    break;
-                }
-            }
-        };
-
         set_radio_value('layout', record.layout);
         set_radio_value('media_width', String(record.media_width));
-
-        // Disable all form fields after population (details view is read-only)
-        disable_all_fields();
-
-        return false;
     }
 
-    obj.init = async function () {
+    const form = itemFormBaseModule.create({
+        record_type: 'grid_item',
+        mode: 'details',
+        populate: populate,
+        disable_fields: true,
+        show_denied_banner: true
+    });
 
-        try {
-
-            const status = helperModule.get_parameter_by_name('status');
-
-            if (status !== null && status === '403') {
-                window.scrollTo(0, 0);
-                domModule.set_alert(document.querySelector('#message'), 'danger', 'You do not have permission to edit this record.');
-            }
-
-            const exhibit_id = helperModule.get_parameter_by_name('exhibit_id');
-            exhibitsModule.set_exhibit_title(exhibit_id);
-            await display_details_record();
-
-        } catch (error) {
-            domModule.set_alert(document.querySelector('#message'), 'danger', error.message);
-        }
-    };
+    obj.init = form.init;
 
     return obj;
 

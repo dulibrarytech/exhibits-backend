@@ -48,6 +48,56 @@ const build_response = (success, message, data = null) => {
     };
 };
 
+/*
+ * Failure envelopes carry the HTTP status the controller should answer with,
+ * the way iiif-service already did. Until the DRY review (2026-09-03, cluster
+ * O6) the controller recovered the status by string-matching this service's
+ * messages — `message.includes('not found') ? 404 : 500`, plus a 422 for the
+ * unsupported-media-type case in get_kaltura_media. The rules below are those
+ * same rules, applied where the failure is raised: a fixed status for every
+ * fixed message, and the message test kept only for the two messages that are
+ * not fixed (a Kaltura API exception's text, and a caught error's text).
+ */
+const STATUS_NOT_FOUND = 404;
+const STATUS_UNSUPPORTED = 422;
+const STATUS_ERROR = 500;
+
+/**
+ * Derives the status for a failure whose message is not known ahead of time
+ * @param {string} message - Failure message
+ * @param {Object} [options={}]
+ * @param {boolean} [options.allow_unsupported=false] - Honour the 422 rule (get_kaltura_media only)
+ * @returns {number} HTTP status
+ */
+const status_for_message = (message, {allow_unsupported = false} = {}) => {
+
+    const text = typeof message === 'string' ? message : '';
+
+    if (allow_unsupported && text.includes('Unsupported media type')) {
+        return STATUS_UNSUPPORTED;
+    }
+
+    if (text.includes('not found')) {
+        return STATUS_NOT_FOUND;
+    }
+
+    return STATUS_ERROR;
+};
+
+/**
+ * Builds a failure response tagged with the HTTP status the controller answers with
+ * @param {string} message - Failure message
+ * @param {Object} data - Payload keys the caller always returns (e.g. `{media: null}`)
+ * @param {number} [status=STATUS_ERROR] - HTTP status for this failure
+ * @returns {Object} Failure response object
+ */
+const build_failure = (message, data, status = STATUS_ERROR) => {
+    return build_response(false, message, {
+        ...data,
+        status
+    });
+};
+
 // Thumbnail URL derivation lives in a dependency-free module (media-library/
 // kaltura_thumbnail.js, reads process.env directly) so read-path query builders can
 // require it without pulling in this service's Kaltura SDK + config-validator load.
@@ -151,9 +201,8 @@ exports.get_kaltura_media = async function (entry_id) {
 
         if (!validation.valid) {
             LOGGER.module().warn(`WARNING: [/media-library/kaltura-service (get_kaltura_media)] ${validation.message}`);
-            return build_response(false, validation.message, {
-                media: null
-            });
+            /* a malformed entry id has always answered 500 here, not 400 — preserved */
+            return build_failure(validation.message, { media: null });
         }
 
         LOGGER.module().info(`INFO: [/media-library/kaltura-service (get_kaltura_media)] Fetching media for entry ID: ${validation.entry_id}`);
@@ -169,17 +218,14 @@ exports.get_kaltura_media = async function (entry_id) {
         // Check for Kaltura API exceptions
         if (response && response.objectType === 'KalturaAPIException') {
             LOGGER.module().warn(`WARNING: [/media-library/kaltura-service (get_kaltura_media)] Kaltura API exception for entry ID: ${validation.entry_id} - ${response.message}`);
-            return build_response(false, response.message || 'Kaltura API error', {
-                media: null
-            });
+            const api_message = response.message || 'Kaltura API error';
+            return build_failure(api_message, { media: null }, status_for_message(api_message, {allow_unsupported: true}));
         }
 
         // Validate response has required media type
         if (!response || response.mediaType === undefined) {
             LOGGER.module().warn(`WARNING: [/media-library/kaltura-service (get_kaltura_media)] No media metadata found for entry ID: ${validation.entry_id}`);
-            return build_response(false, 'Media metadata not found', {
-                media: null
-            });
+            return build_failure('Media metadata not found', { media: null }, STATUS_NOT_FOUND);
         }
 
         // Look up item type from media type (video and audio only)
@@ -187,9 +233,7 @@ exports.get_kaltura_media = async function (entry_id) {
 
         if (!item_type) {
             LOGGER.module().warn(`WARNING: [/media-library/kaltura-service (get_kaltura_media)] Unsupported media type ${response.mediaType} for entry ID: ${validation.entry_id}`);
-            return build_response(false, 'Unsupported media type. Only video and audio are supported', {
-                media: null
-            });
+            return build_failure('Unsupported media type. Only video and audio are supported', { media: null }, STATUS_UNSUPPORTED);
         }
 
         LOGGER.module().info(`INFO: [/media-library/kaltura-service (get_kaltura_media)] Media retrieved successfully for entry ID: ${validation.entry_id} (${item_type})`);
@@ -212,9 +256,8 @@ exports.get_kaltura_media = async function (entry_id) {
             entry_id,
             stack: error.stack
         });
-        return build_response(false, 'Error retrieving Kaltura media: ' + error.message, {
-            media: null
-        });
+        const failure_message = 'Error retrieving Kaltura media: ' + error.message;
+        return build_failure(failure_message, { media: null }, status_for_message(failure_message, {allow_unsupported: true}));
     }
 };
 
@@ -234,9 +277,7 @@ exports.assign_kaltura_category = async function (entry_id) {
 
         if (!validation.valid) {
             LOGGER.module().warn(`WARNING: [/media-library/kaltura-service (assign_kaltura_category)] ${validation.message}`);
-            return build_response(false, validation.message, {
-                category_entry: null
-            });
+            return build_failure(validation.message, { category_entry: null });
         }
 
         LOGGER.module().info(`INFO: [/media-library/kaltura-service (assign_kaltura_category)] Adding entry ID: ${validation.entry_id} to exhibits category`);
@@ -256,17 +297,14 @@ exports.assign_kaltura_category = async function (entry_id) {
         // Check for Kaltura API exceptions
         if (response && response.objectType === 'KalturaAPIException') {
             LOGGER.module().warn(`WARNING: [/media-library/kaltura-service (assign_kaltura_category)] Kaltura API exception for entry ID: ${validation.entry_id} - ${response.message}`);
-            return build_response(false, response.message || 'Kaltura API error', {
-                category_entry: null
-            });
+            const api_message = response.message || 'Kaltura API error';
+            return build_failure(api_message, { category_entry: null }, status_for_message(api_message));
         }
 
         // Validate response
         if (!response || !response.entryId) {
             LOGGER.module().warn(`WARNING: [/media-library/kaltura-service (assign_kaltura_category)] Unexpected response when adding entry ID: ${validation.entry_id} to exhibits category`);
-            return build_response(false, 'Failed to add entry to exhibits gallery', {
-                category_entry: null
-            });
+            return build_failure('Failed to add entry to exhibits gallery', { category_entry: null });
         }
 
         LOGGER.module().info(`INFO: [/media-library/kaltura-service (assign_kaltura_category)] Entry ID: ${validation.entry_id} assigned to exhibits category successfully`);
@@ -285,9 +323,8 @@ exports.assign_kaltura_category = async function (entry_id) {
             entry_id,
             stack: error.stack
         });
-        return build_response(false, 'Error assigning entry to exhibits category: ' + error.message, {
-            category_entry: null
-        });
+        const failure_message = 'Error assigning entry to exhibits category: ' + error.message;
+        return build_failure(failure_message, { category_entry: null }, status_for_message(failure_message));
     }
 };
 
@@ -307,9 +344,7 @@ exports.remove_kaltura_category = async function (entry_id) {
 
         if (!validation.valid) {
             LOGGER.module().warn(`WARNING: [/media-library/kaltura-service (remove_kaltura_category)] ${validation.message}`);
-            return build_response(false, validation.message, {
-                category_entry: null
-            });
+            return build_failure(validation.message, { category_entry: null });
         }
 
         LOGGER.module().info(`INFO: [/media-library/kaltura-service (remove_kaltura_category)] Removing entry ID: ${validation.entry_id} from exhibits category`);
@@ -326,9 +361,8 @@ exports.remove_kaltura_category = async function (entry_id) {
         // Check for Kaltura API exceptions
         if (response && response.objectType === 'KalturaAPIException') {
             LOGGER.module().warn(`WARNING: [/media-library/kaltura-service (remove_kaltura_category)] Kaltura API exception for entry ID: ${validation.entry_id} - ${response.message}`);
-            return build_response(false, response.message || 'Kaltura API error', {
-                category_entry: null
-            });
+            const api_message = response.message || 'Kaltura API error';
+            return build_failure(api_message, { category_entry: null }, status_for_message(api_message));
         }
 
         LOGGER.module().info(`INFO: [/media-library/kaltura-service (remove_kaltura_category)] Entry ID: ${validation.entry_id} removed from exhibits category successfully`);
@@ -345,9 +379,8 @@ exports.remove_kaltura_category = async function (entry_id) {
             entry_id,
             stack: error.stack
         });
-        return build_response(false, 'Error removing entry from exhibits category: ' + error.message, {
-            category_entry: null
-        });
+        const failure_message = 'Error removing entry from exhibits category: ' + error.message;
+        return build_failure(failure_message, { category_entry: null }, status_for_message(failure_message));
     }
 };
 
@@ -413,18 +446,14 @@ exports.get_kaltura_original_filename = async function (entry_id) {
 
         if (!validation.valid) {
             LOGGER.module().warn(`WARNING: [/media-library/kaltura-service (get_kaltura_original_filename)] ${validation.message}`);
-            return build_response(false, validation.message, {
-                original_filename: null
-            });
+            return build_failure(validation.message, { original_filename: null });
         }
 
         const profile_id = KALTURA_CONFIG.kaltura_metadata_profile_id;
 
         if (!profile_id) {
             LOGGER.module().warn(`WARNING: [/media-library/kaltura-service (get_kaltura_original_filename)] Metadata profile id is not configured (KALTURA_METADATA_PROFILE_ID)`);
-            return build_response(false, 'Kaltura metadata profile id is not configured', {
-                original_filename: null
-            });
+            return build_failure('Kaltura metadata profile id is not configured', { original_filename: null });
         }
 
         LOGGER.module().info(`INFO: [/media-library/kaltura-service (get_kaltura_original_filename)] Fetching original filename for entry ID: ${validation.entry_id}`);
@@ -488,8 +517,7 @@ exports.get_kaltura_original_filename = async function (entry_id) {
             entry_id,
             stack: error.stack
         });
-        return build_response(false, 'Error retrieving Kaltura original filename: ' + error.message, {
-            original_filename: null
-        });
+        const failure_message = 'Error retrieving Kaltura original filename: ' + error.message;
+        return build_failure(failure_message, { original_filename: null }, status_for_message(failure_message));
     }
 };

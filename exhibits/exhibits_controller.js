@@ -22,13 +22,142 @@ const WEBSERVICES_CONFIG = require('../config/webservices_config')();
 const EXHIBITS_MODEL = require('../exhibits/exhibits_model');
 const AUTHORIZE = require('../auth/authorize');
 const LOGGER = require('../libs/log4');
+const { send_error } = require('../libs/http');
 const {
     validate_string_param,
     has_path_traversal,
     validate_request_body,
-    validate_model_result,
+    is_valid_model_result,
     validate_status_code
-} = require('../exhibits/exhibits_helper');
+} = require('../exhibits/controller_helper');
+
+/*
+ * This controller speaks the {success, message, data} envelope, so it uses the
+ * shared helper's PURE validators (which return a verdict) rather than the
+ * response-sending ones the item-type controllers use. Unifying the envelopes
+ * across the module is Phase 3 work — they are client-visible.
+ *
+ * Two failure envelopes coexist here today and both are preserved verbatim:
+ *   send_error  -> {success: false, message, data: null}   (libs/http)
+ *   send_fail   -> {success: false, message}               (no data key)
+ * The split is not principled; it is what the endpoints already return.
+ */
+
+const CONTROLLER_LABEL = '/exhibits/controller';
+
+/**
+ * Sends the failure envelope that carries no `data` key
+ * @param {Object} res - Express response
+ * @param {number} status - HTTP status code
+ * @param {string} message - Staff-facing message
+ * @returns {Object} The response
+ */
+const send_fail = (res, status, message) => {
+    return res.status(status).json({
+        success: false,
+        message
+    });
+};
+
+const log_error = (context, message) => LOGGER.module().error(`ERROR: [${CONTROLLER_LABEL} (${context})] ${message}`);
+const log_warn = (context, message) => LOGGER.module().warn(`WARNING: [${CONTROLLER_LABEL} (${context})] ${message}`);
+const log_info = (context, message) => LOGGER.module().info(`INFO: [${CONTROLLER_LABEL} (${context})] ${message}`);
+
+const actor = (req) => req.decoded?.sub || 'unknown';
+
+/**
+ * Forwards a model response whose `status` is the HTTP status to send.
+ * @param {Object} res - Express response
+ * @param {string} context - Controller function name for logging
+ * @param {*} data - Model response
+ * @param {Function} [on_success] - Called with the status code before a 2xx send
+ * @returns {Object} The response
+ * @throws {Error} When the model returned something other than an object
+ */
+const send_model_response = (res, context, data, on_success) => {
+
+    if (!data || typeof data !== 'object') {
+        throw new Error('Invalid response from database');
+    }
+
+    const { valid: is_valid_status, status_code } = validate_status_code(data.status);
+
+    if (!is_valid_status) {
+        log_error(context, `Invalid status code received: ${data.status}`);
+        return send_error(res, 500, 'Internal server error');
+    }
+
+    if (typeof on_success === 'function') {
+        on_success(status_code);
+    }
+
+    return res.status(status_code).json(data);
+};
+
+/**
+ * Validates a required string parameter, sending the 400 this controller uses
+ * @param {Object} res - Express response
+ * @param {*} value - Value to validate
+ * @param {string} field_name - Human-readable field name
+ * @param {Function} send - send_fail or send_error
+ * @returns {string|null} The sanitized value, or null when a 400 was sent
+ */
+const sanitize_param = (res, value, field_name, send) => {
+
+    const check = validate_string_param(value, field_name);
+
+    if (!check.valid) {
+        send(res, 400, check.error_message);
+        return null;
+    }
+
+    return check.sanitized;
+};
+
+/**
+ * Rejects a value carrying path traversal sequences.
+ *
+ * NOT redundant with the validation above: `validate_string_param` only
+ * enforces "non-empty string, at most 255 characters" — it does not check UUID
+ * shape — so this is the only gate stopping `../../etc/passwd` reaching a
+ * filesystem-backed preview path. Pinned by the traversal specs in
+ * test/integration/exhibits_integration.test.js.
+ *
+ * @param {Object} res - Express response
+ * @param {string} context - Controller function name for logging
+ * @param {string} value - Sanitized value to check
+ * @param {string} label - Label for the log line ('UUID' / 'UID')
+ * @param {string} message - 400 message
+ * @returns {boolean} True when a 400 was sent
+ */
+const rejected_for_traversal = (res, context, value, label, message) => {
+
+    if (!has_path_traversal(value)) {
+        return false;
+    }
+
+    log_warn(context, `Path traversal attempt detected${label ? ' in ' + label : ''}: ${value}`);
+    send_error(res, 400, message);
+    return true;
+};
+
+/**
+ * Runs the RBAC check for an exhibit-scoped operation
+ * @param {Object} req - Express request
+ * @param {Array<string>} permissions - Required permissions
+ * @param {string} exhibit_uuid - Exhibit uuid the operation targets
+ * @returns {Promise<boolean>} True when authorized
+ */
+const is_authorized_for_exhibit = async (req, permissions, exhibit_uuid) => {
+
+    return await AUTHORIZE.check_permission({
+        req,
+        permissions,
+        record_type: 'exhibit',
+        parent_id: exhibit_uuid,
+        child_id: null
+    }) === true;
+};
 
 /**
  * Creates a new exhibit record
@@ -41,53 +170,31 @@ exports.create_exhibit_record = async (req, res) => {
     try {
 
         if (!validate_request_body(req.body)) {
-            return res.status(400).json({
-                success: false,
-                message: 'Request body is required'
-            });
+            return send_fail(res, 400, 'Request body is required');
         }
 
-        const authOptions = {
-            req,
-            permissions: ['add_exhibit'],
-            record_type: 'exhibit',
-            parent_id: null,
-            child_id: null
-        };
-
-        const isAuthorized = await AUTHORIZE.check_permission(authOptions);
-
-        if (!isAuthorized) {
-            return res.status(403).json({
-                success: false,
-                message: 'Unauthorized request'
-            });
+        if (!await is_authorized_for_exhibit(req, ['add_exhibit'], null)) {
+            return send_fail(res, 403, 'Unauthorized request');
         }
 
-        // Create exhibit record
         const result = await EXHIBITS_MODEL.create_exhibit_record(req.body);
 
-        // Validate result structure
-        if (!validate_model_result(result)) {
+        if (!is_valid_model_result(result)) {
             throw new Error('Invalid response from model');
         }
 
         return res.status(result.status).json(result);
 
     } catch (error) {
-        // Log detailed error internally
-        LOGGER.module().error('ERROR: [/exhibits/controller (create_exhibit_record)]', {
+
+        LOGGER.module().error(`ERROR: [${CONTROLLER_LABEL} (create_exhibit_record)]`, {
             error: error.message,
             stack: error.stack,
-            userId: req.decoded?.sub // Log user context if available
+            userId: req.decoded?.sub
         });
 
-        // Send generic error to client
         if (!res.headersSent) {
-            return res.status(500).json({
-                success: false,
-                message: 'Unable to create exhibit record'
-            });
+            return send_fail(res, 500, 'Unable to create exhibit record');
         }
     }
 };
@@ -96,41 +203,15 @@ exports.get_exhibit_records = async function (req, res) {
 
     try {
 
-        // Validate model exists
-        if (!EXHIBITS_MODEL || typeof EXHIBITS_MODEL.get_exhibit_records !== 'function') {
-            throw new Error('Exhibit model not properly initialized');
-        }
-
-        // Call model to get exhibit records
         const data = await EXHIBITS_MODEL.get_exhibit_records();
 
-        // Validate response structure
-        if (!data || typeof data !== 'object') {
-            throw new Error('Invalid response from database');
-        }
-
-        // Validate status code
-        const { valid: is_valid_status, status_code } = validate_status_code(data.status);
-        if (!is_valid_status) {
-            LOGGER.module().error(`ERROR: [/exhibits/controller (get_exhibit_records)] Invalid status code received: ${data.status}`);
-            return res.status(500).json({
-                success: false,
-                message: 'Internal server error',
-                data: null
-            });
-        }
-
-        return res.status(status_code).json(data);
+        return send_model_response(res, 'get_exhibit_records', data);
 
     } catch (error) {
 
-        LOGGER.module().error(`ERROR: [/exhibits/controller (get_exhibit_records)] ${error.message}`);
+        log_error('get_exhibit_records', error.message);
 
-        return res.status(500).json({
-            success: false,
-            message: 'Unable to retrieve exhibit records',
-            data: null
-        });
+        return send_error(res, 500, 'Unable to retrieve exhibit records');
     }
 };
 
@@ -139,99 +220,36 @@ exports.get_exhibit_record = async function (req, res) {
     try {
 
         const type = req.query.type;
-        const exhibit_uuid = req.params.exhibit_id;
-        const user_uid = req.query.uid;
 
-        // Validate exhibit UUID
-        const uuid_check = validate_string_param(exhibit_uuid, 'exhibit ID');
-        if (!uuid_check.valid) {
-            return res.status(400).json({
-                success: false,
-                message: uuid_check.error_message,
-                data: null
-            });
-        }
-
-        const sanitized_exhibit_uuid = uuid_check.sanitized;
-
-        // Validate model exists
-        if (!EXHIBITS_MODEL) {
-            throw new Error('Exhibit model not properly initialized');
-        }
+        const sanitized_exhibit_uuid = sanitize_param(res, req.params.exhibit_id, 'exhibit ID', send_error);
+        if (sanitized_exhibit_uuid === null) return;
 
         let data;
 
-        // Handle 'edit' type request
         if (type === 'edit') {
-            // Validate user UID for edit requests
-            const uid_check = validate_string_param(user_uid, 'user ID');
-            if (!uid_check.valid) {
-                return res.status(400).json({
-                    success: false,
-                    message: uid_check.error_message,
-                    data: null
-                });
-            }
 
-            const sanitized_user_uid = uid_check.sanitized;
+            /* Edit mode locks the record, so it needs the acting user's uid. */
+            const sanitized_user_uid = sanitize_param(res, req.query.uid, 'user ID', send_error);
+            if (sanitized_user_uid === null) return;
 
-            // Validate model method exists
-            if (typeof EXHIBITS_MODEL.get_exhibit_edit_record !== 'function') {
-                throw new Error('get_exhibit_edit_record method not available');
-            }
-
-            // Get edit record
             data = await EXHIBITS_MODEL.get_exhibit_edit_record(sanitized_user_uid, sanitized_exhibit_uuid);
 
         } else if (type === 'details' || type === undefined || type === null || type === '') {
-            // Handle standard/details exhibit record request (no record locking)
 
-            // Validate model method exists
-            if (typeof EXHIBITS_MODEL.get_exhibit_record !== 'function') {
-                throw new Error('get_exhibit_record method not available');
-            }
-
-            // Get exhibit record
+            /* Standard/details request — no record locking. */
             data = await EXHIBITS_MODEL.get_exhibit_record(sanitized_exhibit_uuid);
 
         } else {
-            // Invalid type parameter
-            return res.status(400).json({
-                success: false,
-                message: 'Invalid request type',
-                data: null
-            });
+            return send_error(res, 400, 'Invalid request type');
         }
 
-        // Validate response structure
-        if (!data || typeof data !== 'object') {
-            throw new Error('Invalid response from database');
-        }
-
-        // Validate status code
-        const { valid: is_valid_status, status_code } = validate_status_code(data.status);
-        if (!is_valid_status) {
-            LOGGER.module().error(`ERROR: [/exhibits/controller (get_exhibit_record)] Invalid status code received: ${data.status}`);
-            return res.status(500).json({
-                success: false,
-                message: 'Internal server error',
-                data: null
-            });
-        }
-
-        // Send successful response
-        return res.status(status_code).json(data);
+        return send_model_response(res, 'get_exhibit_record', data);
 
     } catch (error) {
 
-        LOGGER.module().error(`ERROR: [/exhibits/controller (get_exhibit_record)] ${error.message}`);
+        log_error('get_exhibit_record', error.message);
 
-        // Send sanitized error response
-        return res.status(500).json({
-            success: false,
-            message: 'Unable to retrieve exhibit record',
-            data: null
-        });
+        return send_error(res, 500, 'Unable to retrieve exhibit record');
     }
 };
 
@@ -245,68 +263,45 @@ exports.update_exhibit_record = async (req, res) => {
 
     try {
 
+        /*
+         * The raw path parameter, not the trimmed one, is what this handler has
+         * always forwarded to the authorization check and the model; only the
+         * 400 comes from the validator. Kept verbatim.
+         */
         const { exhibit_id: uuid } = req.params;
-
-        // Validate UUID format
         const uuid_check = validate_string_param(uuid, 'exhibit ID');
+
         if (!uuid_check.valid) {
-            return res.status(400).json({
-                success: false,
-                message: uuid_check.error_message
-            });
+            return send_fail(res, 400, uuid_check.error_message);
         }
 
-        // Validate request body exists and contains data
         if (!validate_request_body(req.body)) {
-            return res.status(400).json({
-                success: false,
-                message: 'Request body with update data is required'
-            });
+            return send_fail(res, 400, 'Request body with update data is required');
         }
 
-        // Check authorization
-        const authOptions = {
-            req,
-            permissions: ['update_exhibit', 'update_any_exhibit'],
-            record_type: 'exhibit',
-            parent_id: uuid,
-            child_id: null
-        };
-
-        const isAuthorized = await AUTHORIZE.check_permission(authOptions);
-
-        if (!isAuthorized) {
-            return res.status(403).json({
-                success: false,
-                message: 'Unauthorized request'
-            });
+        if (!await is_authorized_for_exhibit(req, ['update_exhibit', 'update_any_exhibit'], uuid)) {
+            return send_fail(res, 403, 'Unauthorized request');
         }
 
-        // Update exhibit record
         const result = await EXHIBITS_MODEL.update_exhibit_record(uuid, req.body);
 
-        // Validate result structure
-        if (!validate_model_result(result)) {
+        if (!is_valid_model_result(result)) {
             throw new Error('Invalid response from model');
         }
 
         return res.status(result.status).json(result);
 
     } catch (error) {
-        // Log detailed error internally
-        LOGGER.module().error('ERROR: [/exhibits/controller (update_exhibit_record)]', {
+
+        LOGGER.module().error(`ERROR: [${CONTROLLER_LABEL} (update_exhibit_record)]`, {
             error: error.message,
             stack: error.stack,
             exhibitId: req.params.exhibit_id,
             userId: req.decoded?.sub
         });
 
-        // Send generic error to client
         if (!res.headersSent) {
-            return res.status(500).json({
-                success: false,
-                message: 'Unable to update exhibit record'
-            });
+            return send_fail(res, 500, 'Unable to update exhibit record');
         }
     }
 };
@@ -315,224 +310,83 @@ exports.delete_exhibit_record = async function (req, res) {
 
     try {
 
-        const exhibit_uuid = req.params.exhibit_id;
+        const sanitized_exhibit_uuid = sanitize_param(res, req.params.exhibit_id, 'exhibit ID', send_error);
+        if (sanitized_exhibit_uuid === null) return;
 
-        // Validate exhibit UUID
-        const uuid_check = validate_string_param(exhibit_uuid, 'exhibit ID');
-        if (!uuid_check.valid) {
-            return res.status(400).json({
-                success: false,
-                message: uuid_check.error_message,
-                data: null
-            });
+        if (!await is_authorized_for_exhibit(req, ['delete_exhibit', 'delete_any_exhibit'], sanitized_exhibit_uuid)) {
+            log_warn('delete_exhibit_record', `Unauthorized delete attempt for exhibit: ${sanitized_exhibit_uuid} by user: ${actor(req)}`);
+            return send_error(res, 403, 'Unauthorized request');
         }
 
-        const sanitized_exhibit_uuid = uuid_check.sanitized;
-
-        // Validate authorization module exists
-        if (!AUTHORIZE || typeof AUTHORIZE.check_permission !== 'function') {
-            LOGGER.module().error(`ERROR: [/exhibits/controller (delete_exhibit_record)] Authorization module not properly initialized`);
-            return res.status(500).json({
-                success: false,
-                message: 'Internal server error',
-                data: null
-            });
-        }
-
-        // Check permissions
-        const authorization_options = {
-            req: req,
-            permissions: ['delete_exhibit', 'delete_any_exhibit'],
-            record_type: 'exhibit',
-            parent_id: sanitized_exhibit_uuid,
-            child_id: null
-        };
-
-        const is_authorized = await AUTHORIZE.check_permission(authorization_options);
-
-        if (!is_authorized) {
-            // Log unauthorized access attempt
-            LOGGER.module().warn(`WARNING: [/exhibits/controller (delete_exhibit_record)] Unauthorized delete attempt for exhibit: ${sanitized_exhibit_uuid} by user: ${req.decoded?.sub || 'unknown'}`);
-
-            return res.status(403).json({
-                success: false,
-                message: 'Unauthorized request',
-                data: null
-            });
-        }
-
-        // Validate model exists
-        if (!EXHIBITS_MODEL || typeof EXHIBITS_MODEL.delete_exhibit_record !== 'function') {
-            LOGGER.module().error(`ERROR: [/exhibits/controller (delete_exhibit_record)] Exhibit model not properly initialized`);
-            return res.status(500).json({
-                success: false,
-                message: 'Internal server error',
-                data: null
-            });
-        }
-
-        // Delete exhibit record
         const result = await EXHIBITS_MODEL.delete_exhibit_record(sanitized_exhibit_uuid);
 
-        // Validate response structure
-        if (!result || typeof result !== 'object') {
-            throw new Error('Invalid response from database');
-        }
-
-        // Validate status code
-        const { valid: is_valid_status, status_code } = validate_status_code(result.status);
-        if (!is_valid_status) {
-            LOGGER.module().error(`ERROR: [/exhibits/controller (delete_exhibit_record)] Invalid status code received: ${result.status}`);
-            return res.status(500).json({
-                success: false,
-                message: 'Internal server error',
-                data: null
-            });
-        }
-
-        // Log successful deletion
-        if (status_code >= 200 && status_code < 300) {
-            LOGGER.module().info(`INFO: [/exhibits/controller (delete_exhibit_record)] Successfully deleted exhibit: ${sanitized_exhibit_uuid} by user: ${req.decoded?.sub || 'unknown'}`);
-        }
-
-        // Send successful response
-        return res.status(status_code).json(result);
+        return send_model_response(res, 'delete_exhibit_record', result, (status_code) => {
+            if (status_code >= 200 && status_code < 300) {
+                log_info('delete_exhibit_record', `Successfully deleted exhibit: ${sanitized_exhibit_uuid} by user: ${actor(req)}`);
+            }
+        });
 
     } catch (error) {
 
-        LOGGER.module().error(`ERROR: [/exhibits/controller (delete_exhibit_record)] ${error.message}`);
+        log_error('delete_exhibit_record', error.message);
 
-        return res.status(500).json({
-            success: false,
-            message: 'Unable to delete exhibit record',
-            data: null
-        });
+        return send_error(res, 500, 'Unable to delete exhibit record');
     }
 };
 
 exports.build_exhibit_preview = async function (req, res) {
 
     try {
-        const exhibit_uuid = req.query.uuid;
 
-        // Validate UUID
-        const uuid_check = validate_string_param(exhibit_uuid, 'exhibit UUID');
-        if (!uuid_check.valid) {
-            return res.status(400).json({
-                success: false,
-                message: uuid_check.error_message,
-                data: null
-            });
-        }
+        const sanitized_uuid = sanitize_param(res, req.query.uuid, 'exhibit UUID', send_error);
+        if (sanitized_uuid === null) return;
 
-        const sanitized_uuid = uuid_check.sanitized;
+        if (rejected_for_traversal(res, 'build_exhibit_preview', sanitized_uuid, '', 'Invalid exhibit UUID format')) return;
 
-        // Check for path traversal attempts
-        if (has_path_traversal(sanitized_uuid)) {
-            LOGGER.module().warn(`WARNING: [/exhibits/controller (build_exhibit_preview)] Path traversal attempt detected: ${sanitized_uuid}`);
-            return res.status(400).json({
-                success: false,
-                message: 'Invalid exhibit UUID format',
-                data: null
-            });
-        }
+        /*
+         * TODO: this path has no authorization gate. Minting a SHARE url does
+         * (see exhibits/share_controller.js, which checks update_exhibit before
+         * it builds), so the gap is a preview built by an authenticated user
+         * without edit rights, not an anonymous one.
+         */
 
-        // Validate model exists
-        if (!EXHIBITS_MODEL ||
-            typeof EXHIBITS_MODEL.check_preview !== 'function' ||
-            typeof EXHIBITS_MODEL.delete_exhibit_preview !== 'function' ||
-            typeof EXHIBITS_MODEL.build_exhibit_preview !== 'function') {
-            LOGGER.module().error(`ERROR: [/exhibits/controller (build_exhibit_preview)] Exhibit model not properly initialized`);
-            return res.status(500).json({
-                success: false,
-                message: 'Internal server error',
-                data: null
-            });
-        }
-
-        /* TODO
-        // Check authorization
-        if (!AUTHORIZE || typeof AUTHORIZE.check_permission !== 'function') {
-            LOGGER.module().error(`ERROR: [/exhibits/controller (build_exhibit_preview)] Authorization module not properly initialized`);
-            return res.status(500).json({
-                success: false,
-                message: 'Internal server error',
-                data: null
-            });
-        }
-
-        const authorization_options = {
-            req: req,
-            permissions: ['build_preview', 'edit_exhibit'],
-            record_type: 'exhibit',
-            parent_id: sanitized_uuid,
-            child_id: null
-        };
-
-        const is_authorized = await AUTHORIZE.check_permission(authorization_options);
-
-        if (!is_authorized) {
-            LOGGER.module().warn(`WARNING: [/exhibits/controller (build_exhibit_preview)] Unauthorized preview build attempt for exhibit: ${sanitized_uuid} by user: ${req.decoded?.sub || 'unknown'}`);
-            return res.status(403).json({
-                success: false,
-                message: 'Unauthorized request',
-                data: null
-            });
-        }
-        */
-
-        // Check if preview exists
         const preview_exists = await EXHIBITS_MODEL.check_preview(sanitized_uuid);
 
-        // Delete old preview if it exists
         if (preview_exists === true) {
-            LOGGER.module().info(`INFO: [/exhibits/controller (build_exhibit_preview)] Deleting existing preview for exhibit: ${sanitized_uuid}`);
+
+            log_info('build_exhibit_preview', `Deleting existing preview for exhibit: ${sanitized_uuid}`);
 
             const delete_result = await EXHIBITS_MODEL.delete_exhibit_preview(sanitized_uuid);
 
             if (!delete_result || delete_result.status === false) {
-                LOGGER.module().error(`ERROR: [/exhibits/controller (build_exhibit_preview)] Failed to delete existing preview for exhibit: ${sanitized_uuid}`);
-                return res.status(500).json({
-                    success: false,
-                    message: 'Unable to remove existing preview',
-                    data: null
-                });
+                log_error('build_exhibit_preview', `Failed to delete existing preview for exhibit: ${sanitized_uuid}`);
+                return send_error(res, 500, 'Unable to remove existing preview');
             }
 
-            LOGGER.module().info(`INFO: [/exhibits/controller (build_exhibit_preview)] Successfully deleted existing preview for exhibit: ${sanitized_uuid}`);
+            log_info('build_exhibit_preview', `Successfully deleted existing preview for exhibit: ${sanitized_uuid}`);
         }
 
-        // Build new preview
-        LOGGER.module().info(`INFO: [/exhibits/controller (build_exhibit_preview)] Building new preview for exhibit: ${sanitized_uuid}`);
+        log_info('build_exhibit_preview', `Building new preview for exhibit: ${sanitized_uuid}`);
 
         const build_result = await EXHIBITS_MODEL.build_exhibit_preview(sanitized_uuid);
 
         if (!build_result || build_result.status !== true) {
-            LOGGER.module().error(`ERROR: [/exhibits/controller (build_exhibit_preview)] Failed to build preview for exhibit: ${sanitized_uuid}`);
-            return res.status(500).json({
-                success: false,
-                message: 'Unable to build exhibit preview',
-                data: null
-            });
+            log_error('build_exhibit_preview', `Failed to build preview for exhibit: ${sanitized_uuid}`);
+            return send_error(res, 500, 'Unable to build exhibit preview');
         }
 
-        // Validate webservices configuration
+        /* Config guard, unlike the deleted model guards, can genuinely fail:
+           these two values come from the environment. */
         if (!WEBSERVICES_CONFIG ||
             !WEBSERVICES_CONFIG.exhibit_preview_url ||
             !WEBSERVICES_CONFIG.exhibit_preview_api_key) {
-            LOGGER.module().error(`ERROR: [/exhibits/controller (build_exhibit_preview)] Webservices configuration not properly initialized`);
-            return res.status(500).json({
-                success: false,
-                message: 'Internal server error',
-                data: null
-            });
+            log_error('build_exhibit_preview', 'Webservices configuration not properly initialized');
+            return send_error(res, 500, 'Internal server error');
         }
 
-        // Build preview URL
         const preview_url = `${WEBSERVICES_CONFIG.exhibit_preview_url}${sanitized_uuid}?key=${WEBSERVICES_CONFIG.exhibit_preview_api_key}`;
-        LOGGER.module().info(`INFO: [/exhibits/controller (build_exhibit_preview)] Successfully built preview for exhibit: ${sanitized_uuid} by user: ${req.decoded?.sub || 'unknown'}`);
+        log_info('build_exhibit_preview', `Successfully built preview for exhibit: ${sanitized_uuid} by user: ${actor(req)}`);
 
-        // Render preview page
         return res.render('preview', {
             preview_url: preview_url,
             exhibit_uuid: sanitized_uuid
@@ -540,446 +394,199 @@ exports.build_exhibit_preview = async function (req, res) {
 
     } catch (error) {
 
-        LOGGER.module().error(`ERROR: [/exhibits/controller (build_exhibit_preview)] ${error.message}`);
+        log_error('build_exhibit_preview', error.message);
 
-        // Send sanitized error response
-        return res.status(500).json({
-            success: false,
-            message: 'Unable to build exhibit preview',
-            data: null
-        });
+        return send_error(res, 500, 'Unable to build exhibit preview');
     }
 };
 
-exports.publish_exhibit = async function (req, res) {
+/*
+ * publish_exhibit and suppress_exhibit were ~90% identical. What actually
+ * differs is captured in this table; `refusals` maps a non-boolean model
+ * status to the graceful 422 it earns (publish alone has any — the grid
+ * minimum-items rule and the empty-exhibit rule both refuse there).
+ */
+const EXHIBIT_STATE_CHANGES = {
 
-    try {
-
-        const exhibit_uuid = req.params.exhibit_id;
-
-        // Validate UUID
-        const uuid_check = validate_string_param(exhibit_uuid, 'exhibit UUID');
-        if (!uuid_check.valid) {
-            return res.status(400).json({
-                success: false,
-                message: uuid_check.error_message,
-                data: null
-            });
+    publish: {
+        context: 'publish_exhibit',
+        permissions: ['publish_exhibit', 'publish_any_exhibit'],
+        model_method: 'publish_exhibit',
+        action: 'publish',
+        past_tense: 'published',
+        timestamp_key: 'published_at',
+        success_message: 'Exhibit published successfully',
+        failure_message: 'Unable to publish exhibit',
+        refusals: {
+            no_items: {
+                log: 'Publish failed - no items in exhibit',
+                message: () => 'Exhibit must have at least one item to be published'
+            },
+            under_filled_grids: {
+                log: 'Publish failed - grids below minimum items',
+                message: (result) => result.message
+            }
         }
+    },
 
-        const sanitized_uuid = uuid_check.sanitized;
-
-        // Check for path traversal attempts
-        if (has_path_traversal(sanitized_uuid)) {
-            LOGGER.module().warn(`WARNING: [/exhibits/controller (publish_exhibit)] Path traversal attempt detected: ${sanitized_uuid}`);
-            return res.status(400).json({
-                success: false,
-                message: 'Invalid exhibit UUID format',
-                data: null
-            });
-        }
-
-        // Validate authorization module exists
-        if (!AUTHORIZE || typeof AUTHORIZE.check_permission !== 'function') {
-            LOGGER.module().error(`ERROR: [/exhibits/controller (publish_exhibit)] Authorization module not properly initialized`);
-            return res.status(500).json({
-                success: false,
-                message: 'Internal server error',
-                data: null
-            });
-        }
-
-        // Check permissions
-        const authorization_options = {
-            req: req,
-            permissions: ['publish_exhibit', 'publish_any_exhibit'],
-            record_type: 'exhibit',
-            parent_id: sanitized_uuid,
-            child_id: null
-        };
-
-        const is_authorized = await AUTHORIZE.check_permission(authorization_options);
-
-        if (!is_authorized) {
-            LOGGER.module().warn(`WARNING: [/exhibits/controller (publish_exhibit)] Unauthorized publish attempt for exhibit: ${sanitized_uuid} by user: ${req.decoded?.sub || 'unknown'}`);
-            return res.status(403).json({
-                success: false,
-                message: 'Unauthorized request',
-                data: null
-            });
-        }
-
-        // Validate model exists
-        if (!EXHIBITS_MODEL || typeof EXHIBITS_MODEL.publish_exhibit !== 'function') {
-            LOGGER.module().error(`ERROR: [/exhibits/controller (publish_exhibit)] Exhibit model not properly initialized`);
-            return res.status(500).json({
-                success: false,
-                message: 'Internal server error',
-                data: null
-            });
-        }
-
-        // Attempt to publish exhibit
-        const result = await EXHIBITS_MODEL.publish_exhibit(sanitized_uuid);
-
-        // Validate response structure
-        if (!result || typeof result !== 'object') {
-            throw new Error('Invalid response from database');
-        }
-
-        // Handle different result statuses
-        if (result.status === 'no_items') {
-            LOGGER.module().info(`INFO: [/exhibits/controller (publish_exhibit)] Publish failed - no items in exhibit: ${sanitized_uuid}`);
-            return res.status(422).json({
-                success: false,
-                message: 'Exhibit must have at least one item to be published',
-                data: null
-            });
-        }
-
-        if (result.status === 'under_filled_grids') {
-            LOGGER.module().info(`INFO: [/exhibits/controller (publish_exhibit)] Publish failed - grids below minimum items: ${sanitized_uuid}`);
-            return res.status(422).json({
-                success: false,
-                message: result.message,
-                data: null
-            });
-        }
-
-        if (result.status === true) {
-            LOGGER.module().info(`INFO: [/exhibits/controller (publish_exhibit)] Successfully published exhibit: ${sanitized_uuid} by user: ${req.decoded?.sub || 'unknown'}`);
-            return res.status(200).json({
-                success: true,
-                message: 'Exhibit published successfully',
-                data: {
-                    exhibit_uuid: sanitized_uuid,
-                    published_at: new Date().toISOString()
-                }
-            });
-        }
-
-        // Handle failure case
-        LOGGER.module().error(`ERROR: [/exhibits/controller (publish_exhibit)] Failed to publish exhibit: ${sanitized_uuid}`);
-        return res.status(500).json({
-            success: false,
-            message: 'Unable to publish exhibit',
-            data: null
-        });
-
-    } catch (error) {
-
-        LOGGER.module().error(`ERROR: [/exhibits/controller (publish_exhibit)] ${error.message}`);
-
-        // Send sanitized error response
-        return res.status(500).json({
-            success: false,
-            message: 'Unable to publish exhibit',
-            data: null
-        });
+    suppress: {
+        context: 'suppress_exhibit',
+        permissions: ['suppress_exhibit', 'suppress_any_exhibit'],
+        model_method: 'suppress_exhibit',
+        action: 'suppress',
+        past_tense: 'suppressed',
+        timestamp_key: 'suppressed_at',
+        success_message: 'Exhibit suppressed successfully',
+        failure_message: 'Unable to suppress exhibit',
+        refusals: {}
     }
 };
 
-exports.suppress_exhibit = async function (req, res) {
+/**
+ * Builds the publish or suppress handler from the table above
+ * @param {Object} config - One EXHIBIT_STATE_CHANGES entry
+ * @returns {Function} async (req, res) Express handler
+ */
+const make_exhibit_state_change_handler = (config) => {
 
-    try {
+    const { context, permissions, model_method, action, past_tense, timestamp_key, success_message, failure_message, refusals } = config;
 
-        const exhibit_uuid = req.params.exhibit_id;
+    return async function (req, res) {
 
-        // Validate UUID
-        const uuid_check = validate_string_param(exhibit_uuid, 'exhibit UUID');
-        if (!uuid_check.valid) {
-            return res.status(400).json({
-                success: false,
-                message: uuid_check.error_message,
-                data: null
-            });
+        try {
+
+            const sanitized_uuid = sanitize_param(res, req.params.exhibit_id, 'exhibit UUID', send_error);
+            if (sanitized_uuid === null) return;
+
+            if (rejected_for_traversal(res, context, sanitized_uuid, '', 'Invalid exhibit UUID format')) return;
+
+            if (!await is_authorized_for_exhibit(req, permissions, sanitized_uuid)) {
+                log_warn(context, `Unauthorized ${action} attempt for exhibit: ${sanitized_uuid} by user: ${actor(req)}`);
+                return send_error(res, 403, 'Unauthorized request');
+            }
+
+            const result = await EXHIBITS_MODEL[model_method](sanitized_uuid);
+
+            if (!result || typeof result !== 'object') {
+                throw new Error('Invalid response from database');
+            }
+
+            const refusal = Object.hasOwn(refusals, result.status) ? refusals[result.status] : null;
+
+            if (refusal !== null) {
+                log_info(context, `${refusal.log}: ${sanitized_uuid}`);
+                return send_error(res, 422, refusal.message(result));
+            }
+
+            if (result.status === true) {
+                log_info(context, `Successfully ${past_tense} exhibit: ${sanitized_uuid} by user: ${actor(req)}`);
+                return res.status(200).json({
+                    success: true,
+                    message: success_message,
+                    data: {
+                        exhibit_uuid: sanitized_uuid,
+                        [timestamp_key]: new Date().toISOString()
+                    }
+                });
+            }
+
+            log_error(context, `Failed to ${action} exhibit: ${sanitized_uuid}`);
+            return send_error(res, 500, failure_message);
+
+        } catch (error) {
+
+            log_error(context, error.message);
+
+            return send_error(res, 500, failure_message);
         }
-
-        const sanitized_uuid = uuid_check.sanitized;
-
-        // Check for path traversal attempts
-        if (has_path_traversal(sanitized_uuid)) {
-            LOGGER.module().warn(`WARNING: [/exhibits/controller (suppress_exhibit)] Path traversal attempt detected: ${sanitized_uuid}`);
-            return res.status(400).json({
-                success: false,
-                message: 'Invalid exhibit UUID format',
-                data: null
-            });
-        }
-
-        // Validate authorization module exists
-        if (!AUTHORIZE || typeof AUTHORIZE.check_permission !== 'function') {
-            LOGGER.module().error(`ERROR: [/exhibits/controller (suppress_exhibit)] Authorization module not properly initialized`);
-            return res.status(500).json({
-                success: false,
-                message: 'Internal server error',
-                data: null
-            });
-        }
-
-        // Check permissions
-        const authorization_options = {
-            req: req,
-            permissions: ['suppress_exhibit', 'suppress_any_exhibit'],
-            record_type: 'exhibit',
-            parent_id: sanitized_uuid,
-            child_id: null
-        };
-
-        const is_authorized = await AUTHORIZE.check_permission(authorization_options);
-
-        if (!is_authorized) {
-            LOGGER.module().warn(`WARNING: [/exhibits/controller (suppress_exhibit)] Unauthorized suppress attempt for exhibit: ${sanitized_uuid} by user: ${req.decoded?.sub || 'unknown'}`);
-            return res.status(403).json({
-                success: false,
-                message: 'Unauthorized request',
-                data: null
-            });
-        }
-
-        // Validate model exists
-        if (!EXHIBITS_MODEL || typeof EXHIBITS_MODEL.suppress_exhibit !== 'function') {
-            LOGGER.module().error(`ERROR: [/exhibits/controller (suppress_exhibit)] Exhibit model not properly initialized`);
-            return res.status(500).json({
-                success: false,
-                message: 'Internal server error',
-                data: null
-            });
-        }
-
-        // Attempt to suppress exhibit
-        const result = await EXHIBITS_MODEL.suppress_exhibit(sanitized_uuid);
-
-        // Validate response structure
-        if (!result || typeof result !== 'object') {
-            throw new Error('Invalid response from database');
-        }
-
-        if (result.status === true) {
-            LOGGER.module().info(`INFO: [/exhibits/controller (suppress_exhibit)] Successfully suppressed exhibit: ${sanitized_uuid} by user: ${req.decoded?.sub || 'unknown'}`);
-            return res.status(200).json({
-                success: true,
-                message: 'Exhibit suppressed successfully',
-                data: {
-                    exhibit_uuid: sanitized_uuid,
-                    suppressed_at: new Date().toISOString()
-                }
-            });
-        }
-
-        // Handle failure case
-        LOGGER.module().error(`ERROR: [/exhibits/controller (suppress_exhibit)] Failed to suppress exhibit: ${sanitized_uuid}`);
-        return res.status(500).json({
-            success: false,
-            message: 'Unable to suppress exhibit',
-            data: null
-        });
-
-    } catch (error) {
-
-        LOGGER.module().error(`ERROR: [/exhibits/controller (suppress_exhibit)] ${error.message}`);
-
-        // Send sanitized error response
-        return res.status(500).json({
-            success: false,
-            message: 'Unable to suppress exhibit',
-            data: null
-        });
-    }
+    };
 };
+
+exports.publish_exhibit = make_exhibit_state_change_handler(EXHIBIT_STATE_CHANGES.publish);
+exports.suppress_exhibit = make_exhibit_state_change_handler(EXHIBIT_STATE_CHANGES.suppress);
 
 exports.unlock_exhibit_record = async function (req, res) {
 
     try {
 
-        const exhibit_uuid = req.params.exhibit_id;
-        const user_uid = req.query.uid;
         const force_unlock = req.query.force;
 
-        // Validate exhibit UUID
-        const uuid_check = validate_string_param(exhibit_uuid, 'exhibit UUID');
-        if (!uuid_check.valid) {
-            return res.status(400).json({
-                success: false,
-                message: uuid_check.error_message,
-                data: null
-            });
-        }
+        const sanitized_uuid = sanitize_param(res, req.params.exhibit_id, 'exhibit UUID', send_error);
+        if (sanitized_uuid === null) return;
 
-        // Validate user UID
-        const uid_check = validate_string_param(user_uid, 'user UID');
-        if (!uid_check.valid) {
-            return res.status(400).json({
-                success: false,
-                message: uid_check.error_message,
-                data: null
-            });
-        }
+        const sanitized_uid = sanitize_param(res, req.query.uid, 'user UID', send_error);
+        if (sanitized_uid === null) return;
 
-        const sanitized_uuid = uuid_check.sanitized;
-        const sanitized_uid = uid_check.sanitized;
+        if (rejected_for_traversal(res, 'unlock_exhibit_record', sanitized_uuid, 'UUID', 'Invalid exhibit UUID format')) return;
+        if (rejected_for_traversal(res, 'unlock_exhibit_record', sanitized_uid, 'UID', 'Invalid user UID format')) return;
 
-        // Check for path traversal attempts in UUID
-        if (has_path_traversal(sanitized_uuid)) {
-            LOGGER.module().warn(`WARNING: [/exhibits/controller (unlock_exhibit_record)] Path traversal attempt detected in UUID: ${sanitized_uuid}`);
-            return res.status(400).json({
-                success: false,
-                message: 'Invalid exhibit UUID format',
-                data: null
-            });
-        }
-
-        // Check for path traversal attempts in UID
-        if (has_path_traversal(sanitized_uid)) {
-            LOGGER.module().warn(`WARNING: [/exhibits/controller (unlock_exhibit_record)] Path traversal attempt detected in UID: ${sanitized_uid}`);
-            return res.status(400).json({
-                success: false,
-                message: 'Invalid user UID format',
-                data: null
-            });
-        }
-
-        // Parse and validate force parameter
         let is_force_unlock = false;
+
         if (force_unlock !== undefined && force_unlock !== null) {
+
             const force_string = String(force_unlock).toLowerCase().trim();
+
             if (force_string === 'true' || force_string === '1') {
                 is_force_unlock = true;
             } else if (force_string === 'false' || force_string === '0') {
                 is_force_unlock = false;
             } else {
-                return res.status(400).json({
-                    success: false,
-                    message: 'Invalid force parameter. Must be true or false',
-                    data: null
-                });
+                return send_error(res, 400, 'Invalid force parameter. Must be true or false');
             }
         }
 
-        /* TODO
-        // Validate authorization module exists
-        if (!AUTHORIZE || typeof AUTHORIZE.check_permission !== 'function') {
-            LOGGER.module().error(`ERROR: [/exhibits/controller (unlock_exhibit_record)] Authorization module not properly initialized`);
-            return res.status(500).json({
-                success: false,
-                message: 'Internal server error',
-                data: null
-            });
-        }
-
-        // Determine required permissions based on force unlock
-        const required_permissions = is_force_unlock
-            ? ['force_unlock_exhibit', 'unlock_any_exhibit']
-            : ['unlock_exhibit', 'update_exhibit', 'update_any_exhibit'];
-
-        // Check permissions
-        const authorization_options = {
-            req: req,
-            permissions: required_permissions,
-            record_type: 'exhibit',
-            parent_id: sanitized_uuid,
-            child_id: null
-        };
-
-        const is_authorized = await AUTHORIZE.check_permission(authorization_options);
-
-        if (!is_authorized) {
-            LOGGER.module().warn(`WARNING: [/exhibits/controller (unlock_exhibit_record)] Unauthorized unlock attempt for exhibit: ${sanitized_uuid} by user: ${req.decoded?.sub || 'unknown'}, force: ${is_force_unlock}`);
-            return res.status(403).json({
-                success: false,
-                message: 'Unauthorized request',
-                data: null
-            });
-        }
-        */
-
-        // Additional check: verify user is unlocking their own lock or has force permission.
-        //
-        // NOTE (OWASP A09/H5): this guard is intentionally NOT migrated to
-        // req.decoded.sub. It is currently inert — req.user is never populated,
-        // so the condition is always false — and it belongs with the authorization
-        // block above (commented out as a TODO). Beyond that, the comparison is
-        // against a NUMERIC user id: locks are stored as `locked_by_user =
-        // Number(uid)` (see exhibit_item_record_tasks), and `sanitized_uid` is that
-        // numeric id. req.decoded.sub is the du_id STRING (e.g. "jdoe"), so
-        // swapping it in here would make `sanitized_uid !== req.decoded.sub` always
-        // true and block every non-force unlock. Correctly activating this guard
-        // requires resolving du_id -> numeric user id (a DB lookup) as part of
-        // finishing the unlock authorization, which is out of scope for the audit-
-        // attribution fix. The actual audit lines that DO run (above/below) use
-        // req.decoded.sub.
+        /*
+         * TODO: no authorization gate on this path either — see the note below
+         * on why the "own lock" guard cannot simply be pointed at req.decoded.
+         *
+         * NOTE (OWASP A09/H5): this guard is intentionally NOT migrated to
+         * req.decoded.sub. It is currently inert — req.user is never populated,
+         * so the condition is always false. Beyond that, the comparison is
+         * against a NUMERIC user id: locks are stored as `locked_by_user =
+         * Number(uid)` (see exhibit_item_record_tasks), and `sanitized_uid` is
+         * that numeric id. req.decoded.sub is the du_id STRING (e.g. "jdoe"), so
+         * swapping it in here would make `sanitized_uid !== req.decoded.sub`
+         * always true and block every non-force unlock. Correctly activating it
+         * requires resolving du_id -> numeric user id (a DB lookup) as part of
+         * finishing the unlock authorization. The audit lines that DO run use
+         * req.decoded.sub.
+         */
         if (!is_force_unlock && req.user?.id && sanitized_uid !== req.user.id.toString()) {
-            LOGGER.module().warn(`WARNING: [/exhibits/controller (unlock_exhibit_record)] User ${req.user.id} attempted to unlock exhibit ${sanitized_uuid} locked by user ${sanitized_uid} without force permission`);
-            return res.status(403).json({
-                success: false,
-                message: 'Cannot unlock another user\'s lock without force permission',
-                data: null
-            });
+            log_warn('unlock_exhibit_record', `User ${req.user.id} attempted to unlock exhibit ${sanitized_uuid} locked by user ${sanitized_uid} without force permission`);
+            return send_error(res, 403, 'Cannot unlock another user\'s lock without force permission');
         }
 
-        // Validate model exists
-        if (!EXHIBITS_MODEL || typeof EXHIBITS_MODEL.unlock_exhibit_record !== 'function') {
-            LOGGER.module().error(`ERROR: [/exhibits/controller (unlock_exhibit_record)] Exhibit model not properly initialized`);
-            return res.status(500).json({
-                success: false,
-                message: 'Internal server error',
-                data: null
-            });
-        }
-
-        // Prepare options for model
-        const unlock_options = {
+        const result = await EXHIBITS_MODEL.unlock_exhibit_record(sanitized_uid, sanitized_uuid, {
             force: is_force_unlock
-        };
+        });
 
-        // Attempt to unlock exhibit
-        const result = await EXHIBITS_MODEL.unlock_exhibit_record(sanitized_uid, sanitized_uuid, unlock_options);
-
-        // Validate response structure
         if (!result || typeof result !== 'object') {
-            LOGGER.module().error(`ERROR: [/exhibits/controller (unlock_exhibit_record)] Invalid response from model for exhibit: ${sanitized_uuid}`);
-            return res.status(500).json({
-                success: false,
-                message: 'Unable to unlock exhibit record',
-                data: null
-            });
+            log_error('unlock_exhibit_record', `Invalid response from model for exhibit: ${sanitized_uuid}`);
+            return send_error(res, 500, 'Unable to unlock exhibit record');
         }
 
-        // Check for specific error conditions
         if (result.status === false) {
-            // Handle specific error cases
+
             if (result.error === 'not_locked') {
-                return res.status(409).json({
-                    success: false,
-                    message: 'Exhibit is not currently locked',
-                    data: null
-                });
+                return send_error(res, 409, 'Exhibit is not currently locked');
             }
 
             if (result.error === 'locked_by_other') {
-                return res.status(409).json({
-                    success: false,
-                    message: 'Exhibit is locked by another user',
-                    data: null
-                });
+                return send_error(res, 409, 'Exhibit is locked by another user');
             }
 
-            LOGGER.module().error(`ERROR: [/exhibits/controller (unlock_exhibit_record)] Failed to unlock exhibit: ${sanitized_uuid}`);
-            return res.status(500).json({
-                success: false,
-                message: 'Unable to unlock exhibit record',
-                data: null
-            });
+            log_error('unlock_exhibit_record', `Failed to unlock exhibit: ${sanitized_uuid}`);
+            return send_error(res, 500, 'Unable to unlock exhibit record');
         }
 
-        LOGGER.module().info(`INFO: [/exhibits/controller (unlock_exhibit_record)] Successfully unlocked exhibit: ${sanitized_uuid} by user: ${req.decoded?.sub || 'unknown'}, force: ${is_force_unlock}`);
+        log_info('unlock_exhibit_record', `Successfully unlocked exhibit: ${sanitized_uuid} by user: ${actor(req)}, force: ${is_force_unlock}`);
 
         return res.status(200).json({
             success: true,
             message: 'Exhibit record unlocked successfully',
             data: {
                 exhibit_uuid: sanitized_uuid,
-                unlocked_by: req.decoded?.sub || 'unknown',
+                unlocked_by: actor(req),
                 force_unlock: is_force_unlock,
                 unlocked_at: new Date().toISOString()
             }
@@ -987,20 +594,18 @@ exports.unlock_exhibit_record = async function (req, res) {
 
     } catch (error) {
 
-        LOGGER.module().error(`ERROR: [/exhibits/controller (unlock_exhibit_record)] ${error.message}`);
+        log_error('unlock_exhibit_record', error.message);
 
-        // Send sanitized error response
-        return res.status(500).json({
-            success: false,
-            message: 'Unable to unlock exhibit record',
-            data: null
-        });
+        return send_error(res, 500, 'Unable to unlock exhibit record');
     }
 };
 
-// ========================================
-// EXHIBIT MEDIA LIBRARY BINDINGS
-// ========================================
+/* ========================================
+   EXHIBIT MEDIA LIBRARY BINDINGS
+   ======================================== */
+
+const VALID_MEDIA_ROLES = ['hero_image', 'thumbnail'];
+const INVALID_MEDIA_ROLE_MESSAGE = `Invalid media_role. Must be one of: ${VALID_MEDIA_ROLES.join(', ')}`;
 
 /**
  * Binds a media library asset to an exhibit
@@ -1012,85 +617,41 @@ exports.bind_exhibit_media = async (req, res) => {
 
     try {
 
-        const exhibit_uuid = req.params.exhibit_id;
+        const sanitized_exhibit_uuid = sanitize_param(res, req.params.exhibit_id, 'exhibit ID', send_fail);
+        if (sanitized_exhibit_uuid === null) return;
 
-        // Validate exhibit UUID
-        const uuid_check = validate_string_param(exhibit_uuid, 'exhibit ID');
-        if (!uuid_check.valid) {
-            return res.status(400).json({
-                success: false,
-                message: uuid_check.error_message
-            });
-        }
-
-        const sanitized_exhibit_uuid = uuid_check.sanitized;
-
-        // Validate request body
         if (!validate_request_body(req.body)) {
-            return res.status(400).json({
-                success: false,
-                message: 'Request body is required'
-            });
+            return send_fail(res, 400, 'Request body is required');
         }
 
         const { media_uuid, media_role } = req.body;
 
-        // Validate media_uuid
-        const media_uuid_check = validate_string_param(media_uuid, 'media_uuid');
-        if (!media_uuid_check.valid) {
-            return res.status(400).json({
-                success: false,
-                message: media_uuid_check.error_message
-            });
+        if (sanitize_param(res, media_uuid, 'media_uuid', send_fail) === null) return;
+
+        if (!media_role || !VALID_MEDIA_ROLES.includes(media_role)) {
+            return send_fail(res, 400, INVALID_MEDIA_ROLE_MESSAGE);
         }
 
-        // Validate media_role
-        const valid_roles = ['hero_image', 'thumbnail'];
-        if (!media_role || !valid_roles.includes(media_role)) {
-            return res.status(400).json({
-                success: false,
-                message: `Invalid media_role. Must be one of: ${valid_roles.join(', ')}`
-            });
+        if (!await is_authorized_for_exhibit(req, ['update_exhibit', 'update_any_exhibit'], sanitized_exhibit_uuid)) {
+            return send_fail(res, 403, 'Unauthorized request');
         }
 
-        // Check authorization
-        const authOptions = {
-            req,
-            permissions: ['update_exhibit', 'update_any_exhibit'],
-            record_type: 'exhibit',
-            parent_id: sanitized_exhibit_uuid,
-            child_id: null
-        };
-
-        const isAuthorized = await AUTHORIZE.check_permission(authOptions);
-
-        if (!isAuthorized) {
-            return res.status(403).json({
-                success: false,
-                message: 'Unauthorized request'
-            });
-        }
-
-        // Get created_by from user profile
-        const created_by = req.decoded?.sub || 'unknown';
-
-        // Bind media
         const result = await EXHIBITS_MODEL.bind_exhibit_media(
             sanitized_exhibit_uuid,
             media_uuid.trim(),
             media_role,
-            created_by
+            actor(req)
         );
 
-        // Validate result structure
-        if (!validate_model_result(result)) {
+        if (!is_valid_model_result(result)) {
             throw new Error('Invalid response from model');
         }
 
         return res.status(result.status).json(result);
 
     } catch (error) {
-        LOGGER.module().error('ERROR: [/exhibits/controller (bind_exhibit_media)]', {
+
+        LOGGER.module().error(`ERROR: [${CONTROLLER_LABEL} (bind_exhibit_media)]`, {
             error: error.message,
             stack: error.stack,
             exhibitId: req.params.exhibit_id,
@@ -1098,10 +659,7 @@ exports.bind_exhibit_media = async (req, res) => {
         });
 
         if (!res.headersSent) {
-            return res.status(500).json({
-                success: false,
-                message: 'Unable to bind media to exhibit'
-            });
+            return send_fail(res, 500, 'Unable to bind media to exhibit');
         }
     }
 };
@@ -1116,51 +674,18 @@ exports.get_exhibit_media_bindings = async (req, res) => {
 
     try {
 
-        const exhibit_uuid = req.params.exhibit_id;
-
-        // Validate exhibit UUID
-        const uuid_check = validate_string_param(exhibit_uuid, 'exhibit ID');
-        if (!uuid_check.valid) {
-            return res.status(400).json({
-                success: false,
-                message: uuid_check.error_message,
-                data: null
-            });
-        }
-
-        const sanitized_exhibit_uuid = uuid_check.sanitized;
-
-        // Validate model method exists
-        if (!EXHIBITS_MODEL || typeof EXHIBITS_MODEL.get_exhibit_media_bindings !== 'function') {
-            throw new Error('Exhibit model not properly initialized');
-        }
+        const sanitized_exhibit_uuid = sanitize_param(res, req.params.exhibit_id, 'exhibit ID', send_error);
+        if (sanitized_exhibit_uuid === null) return;
 
         const data = await EXHIBITS_MODEL.get_exhibit_media_bindings(sanitized_exhibit_uuid);
 
-        // Validate response structure
-        if (!data || typeof data !== 'object') {
-            throw new Error('Invalid response from database');
-        }
-
-        const { valid: is_valid_status, status_code } = validate_status_code(data.status);
-        if (!is_valid_status) {
-            return res.status(500).json({
-                success: false,
-                message: 'Internal server error',
-                data: null
-            });
-        }
-
-        return res.status(status_code).json(data);
+        return send_model_response(res, 'get_exhibit_media_bindings', data);
 
     } catch (error) {
-        LOGGER.module().error(`ERROR: [/exhibits/controller (get_exhibit_media_bindings)] ${error.message}`);
 
-        return res.status(500).json({
-            success: false,
-            message: 'Unable to retrieve exhibit media bindings',
-            data: null
-        });
+        log_error('get_exhibit_media_bindings', error.message);
+
+        return send_error(res, 500, 'Unable to retrieve exhibit media bindings');
     }
 };
 
@@ -1174,45 +699,17 @@ exports.unbind_exhibit_media = async (req, res) => {
 
     try {
 
-        const exhibit_uuid = req.params.exhibit_id;
         const media_role = req.params.media_role;
 
-        // Validate exhibit UUID
-        const uuid_check = validate_string_param(exhibit_uuid, 'exhibit ID');
-        if (!uuid_check.valid) {
-            return res.status(400).json({
-                success: false,
-                message: uuid_check.error_message
-            });
+        const sanitized_exhibit_uuid = sanitize_param(res, req.params.exhibit_id, 'exhibit ID', send_fail);
+        if (sanitized_exhibit_uuid === null) return;
+
+        if (!media_role || !VALID_MEDIA_ROLES.includes(media_role)) {
+            return send_fail(res, 400, INVALID_MEDIA_ROLE_MESSAGE);
         }
 
-        const sanitized_exhibit_uuid = uuid_check.sanitized;
-
-        // Validate media_role
-        const valid_roles = ['hero_image', 'thumbnail'];
-        if (!media_role || !valid_roles.includes(media_role)) {
-            return res.status(400).json({
-                success: false,
-                message: `Invalid media_role. Must be one of: ${valid_roles.join(', ')}`
-            });
-        }
-
-        // Check authorization
-        const authOptions = {
-            req,
-            permissions: ['update_exhibit', 'update_any_exhibit'],
-            record_type: 'exhibit',
-            parent_id: sanitized_exhibit_uuid,
-            child_id: null
-        };
-
-        const isAuthorized = await AUTHORIZE.check_permission(authOptions);
-
-        if (!isAuthorized) {
-            return res.status(403).json({
-                success: false,
-                message: 'Unauthorized request'
-            });
+        if (!await is_authorized_for_exhibit(req, ['update_exhibit', 'update_any_exhibit'], sanitized_exhibit_uuid)) {
+            return send_fail(res, 403, 'Unauthorized request');
         }
 
         const result = await EXHIBITS_MODEL.unbind_exhibit_media(
@@ -1220,11 +717,11 @@ exports.unbind_exhibit_media = async (req, res) => {
             media_role
         );
 
-        if (!validate_model_result(result)) {
+        if (!is_valid_model_result(result)) {
             throw new Error('Invalid response from model');
         }
 
-        // 204 responses should not have a body
+        /* 204 responses must not carry a body */
         if (result.status === 204) {
             return res.status(204).end();
         }
@@ -1232,7 +729,8 @@ exports.unbind_exhibit_media = async (req, res) => {
         return res.status(result.status).json(result);
 
     } catch (error) {
-        LOGGER.module().error('ERROR: [/exhibits/controller (unbind_exhibit_media)]', {
+
+        LOGGER.module().error(`ERROR: [${CONTROLLER_LABEL} (unbind_exhibit_media)]`, {
             error: error.message,
             stack: error.stack,
             exhibitId: req.params.exhibit_id,
@@ -1240,10 +738,7 @@ exports.unbind_exhibit_media = async (req, res) => {
         });
 
         if (!res.headersSent) {
-            return res.status(500).json({
-                success: false,
-                message: 'Unable to unbind media from exhibit'
-            });
+            return send_fail(res, 500, 'Unable to unbind media from exhibit');
         }
     }
 };

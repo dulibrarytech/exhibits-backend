@@ -329,43 +329,24 @@ const mediaEditModalModule = (function() {
         html += '<div class="invalid-feedback">Please provide a description.</div>';
         html += '</div></div>';
         
-        // Subjects section — Topics, Genre/Form, Places, Item Type. A single instruction
-        // introduces the group and is programmatically associated with it (role="group"
-        // + aria-describedby) so assistive tech announces it and sighted users see it
-        // (WCAG 1.3.1 / 3.3.2), consistent with the upload and import modals.
-        html += '<div role="group" aria-label="Subjects" aria-describedby="edit-subjects-help">';
-        html += '<p id="edit-subjects-help" class="form-text text-muted mt-0 mb-2">Choose 2–4 of the following tags to support search.</p>';
-
-        // Row 3: Topics, Genre/Form dropdowns
-        html += '<div class="row">';
-        html += '<div class="col-md-6 mb-3">';
-        html += '<label class="form-label" for="edit-file-topics">Topics</label>';
-        html += '<select class="form-control form-select custom-select" id="edit-file-topics" name="topics_subjects" data-selected="' + escape_html(record.topics_subjects || '') + '">';
-        html += '<option value="">Select a topic...</option>';
-        html += '</select>';
-        html += '</div>';
-        html += '<div class="col-md-6 mb-3">';
-        html += '<label class="form-label" for="edit-file-genre-form">Genre/Form <span class="badge badge-required">Required</span></label>';
-        html += '<select class="form-control form-select custom-select" id="edit-file-genre-form" name="genre_form_subjects" data-selected="' + escape_html(record.genre_form_subjects || '') + '">';
-        html += '<option value="">Select genre/form...</option>';
-        html += '</select>';
-        html += '</div></div>';
-        
-        // Row 4: Places, Item Type dropdowns
-        html += '<div class="row">';
-        html += '<div class="col-md-6 mb-3">';
-        html += '<label class="form-label" for="edit-file-places">Places</label>';
-        html += '<select class="form-control form-select custom-select" id="edit-file-places" name="places_subjects" data-selected="' + escape_html(record.places_subjects || '') + '">';
-        html += '<option value="">Select a place...</option>';
-        html += '</select>';
-        html += '</div>';
-        html += '<div class="col-md-6 mb-3">';
-        html += '<label class="form-label" for="edit-file-item-type">Item Type <span class="badge badge-required">Required</span></label>';
-        html += '<select class="form-control form-select custom-select" id="edit-file-item-type" name="item_type" required data-selected="' + escape_html(record.item_type || '') + '">';
-        html += '<option value="">Select item type...</option>';
-        html += '</select>';
-        html += '</div></div>';
-        html += '</div>'; // close Subjects group
+        // Subjects section — Topics, Genre/Form, Places, Item Type; built by the
+        // shared helper, which also emits the role="group" + aria-describedby
+        // instruction block (WCAG 1.3.1 / 3.3.2). Topics is optional here,
+        // unlike the upload and import modals.
+        html += repoSubjectsModule.build_subjects_html('edit-file', null, {
+            help_id: 'edit-subjects-help',
+            required: { topics_subjects: false },
+            placeholders: {
+                topics_subjects: 'Select a topic...',
+                places_subjects: 'Select a place...'
+            },
+            selected: {
+                topics_subjects: record.topics_subjects,
+                genre_form_subjects: record.genre_form_subjects,
+                places_subjects: record.places_subjects,
+                item_type: record.item_type
+            }
+        });
 
         // Hidden fields
         html += '<input type="hidden" id="edit-file-uuid" name="uuid" value="' + escape_html(record.uuid || '') + '">';

@@ -27,6 +27,8 @@
 <%- include('../partials/exhibits-libs-common.ejs'); %>
 <!-- app -->
 <%- include('../partials/exhibits-app-common.ejs'); %>
+<!-- Shared exhibit record fetch / form helpers (must load before the styles form module) -->
+<script src="/exhibits-dashboard/static/app/dist/exhibits.common.form.module.min.js?<%=build_version%>"></script>
 <script src="/exhibits-dashboard/static/app/dist/exhibits.styles.module.min.js?<%=build_version%>"></script>
 <script src="/exhibits-dashboard/static/app/dist/exhibits.styles.form.module.min.js?<%=build_version%>"></script>
 <script>

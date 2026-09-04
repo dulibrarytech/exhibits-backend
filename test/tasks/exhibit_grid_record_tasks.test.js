@@ -434,7 +434,19 @@ describe('Exhibit_grid_record_tasks', () => {
             const count = await gridTasks.get_grid_item_count(exhibitUUID, gridUUID, { published_only: true });
 
             expect(count).toBe(2);
-            expect(mockQuery.where).toHaveBeenCalledWith({ is_published: 1 });
+            /*
+             * The published_only filter used to be a second chained .where();
+             * the shared _get_record_count takes one WHERE object, so it now
+             * rides along with the scope. Same SQL, one call.
+             */
+            expect(mockQuery.where).toHaveBeenCalledWith(
+                expect.objectContaining({
+                    is_member_of_exhibit: exhibitUUID,
+                    is_member_of_grid: gridUUID,
+                    is_deleted: 0,
+                    is_published: 1
+                })
+            );
         });
 
         test('should return 0 for null result', async () => {

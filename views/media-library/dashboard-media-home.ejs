@@ -152,6 +152,9 @@
 <script src="/exhibits-dashboard/static/app/dist/helper.repo.subjects.module.min.js?<%=build_version%>"></script>
 
 <!-- Modals Module -->
+<!-- Shared view-media modal (must load before modals.upload / modals.repo, which delegate to it) -->
+<script src="/exhibits-dashboard/static/app/dist/modals.view.media.module.min.js?<%=build_version%>"></script>
+
 <!-- Edit Modal Module (must load before modals.upload which delegates to it) -->
 <script src="/exhibits-dashboard/static/app/dist/modals.edit.module.min.js?<%=build_version%>"></script>
 

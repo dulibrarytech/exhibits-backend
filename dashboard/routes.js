@@ -32,160 +32,21 @@ const PAGE_AUTH = TOKENS.verify_page;
 
 module.exports = function (app) {
 
-    //============Exhibits============//
-    app.route(APP_PATH + '/exhibits')
-        .get(PAGE_AUTH, CONTROLLER.get_dashboard_exhibits);
+    /*
+     * One registration per PAGES entry (dashboard/controller.js). The table is
+     * the single source of truth for a page's path, view, nav and auth posture;
+     * this file used to repeat the path and handler name for all 49 of them
+     * (DRY review 2026-09-03, cluster O5).
+     */
+    for (const page of CONTROLLER.PAGES) {
 
-    app.route(APP_PATH + '/exhibits/exhibit')
-        .get(PAGE_AUTH, CONTROLLER.get_dashboard_exhibits_add_form);
+        const handler = CONTROLLER[page.handler];
 
-    app.route(APP_PATH + '/exhibits/exhibit/details')
-        .get(PAGE_AUTH, CONTROLLER.get_dashboard_exhibits_details);
-
-    app.route(APP_PATH + '/exhibits/exhibit/edit')
-        .get(PAGE_AUTH, CONTROLLER.get_dashboard_exhibits_edit_form);
-
-    app.route(APP_PATH + '/exhibits/exhibit/delete')
-        .get(PAGE_AUTH, CONTROLLER.get_dashboard_exhibits_delete_form);
-
-    //============Standard Items============//
-    app.route(APP_PATH + '/items')
-        .get(PAGE_AUTH, CONTROLLER.get_dashboard_items);
-
-    app.route(APP_PATH + '/items/standard/media')
-        .get(PAGE_AUTH, CONTROLLER.get_dashboard_items_standard_media_add_form);
-
-    app.route(APP_PATH + '/items/standard/text')
-        .get(PAGE_AUTH, CONTROLLER.get_dashboard_items_standard_text_add_form);
-
-    app.route(APP_PATH + '/items/standard/media/edit')
-        .get(PAGE_AUTH, CONTROLLER.get_dashboard_items_standard_media_edit_form);
-
-    app.route(APP_PATH + '/items/standard/text/edit')
-        .get(PAGE_AUTH, CONTROLLER.get_dashboard_items_standard_text_edit_form);
-
-    app.route(APP_PATH + '/items/standard/media/details')
-        .get(PAGE_AUTH, CONTROLLER.get_dashboard_items_standard_media_details);
-
-    app.route(APP_PATH + '/items/standard/text/details')
-        .get(PAGE_AUTH, CONTROLLER.get_dashboard_items_standard_text_details);
-
-    //============Headings============//
-    app.route(APP_PATH + '/items/heading')
-        .get(PAGE_AUTH, CONTROLLER.get_dashboard_item_heading_add_form);
-
-    app.route(APP_PATH + '/items/heading/details')
-        .get(PAGE_AUTH, CONTROLLER.get_dashboard_item_heading_details);
-
-    app.route(APP_PATH + '/items/heading/edit')
-        .get(PAGE_AUTH, CONTROLLER.get_dashboard_items_heading_edit_form);
-
-    //============Grids============//
-    app.route(APP_PATH + '/items/grid')
-        .get(PAGE_AUTH, CONTROLLER.get_dashboard_grid_add_form);
-
-    app.route(APP_PATH + '/items/grid/details')
-        .get(PAGE_AUTH, CONTROLLER.get_dashboard_grid_details);
-
-    app.route(APP_PATH + '/items/grid/edit')
-        .get(PAGE_AUTH, CONTROLLER.get_dashboard_grid_edit_form);
-
-    app.route(APP_PATH + '/items/grid/item/media')
-        .get(PAGE_AUTH, CONTROLLER.get_dashboard_grid_add_media_item_form);
-
-    app.route(APP_PATH + '/items/grid/item/text')
-        .get(PAGE_AUTH, CONTROLLER.get_dashboard_grid_add_text_item_form);
-
-    app.route(APP_PATH + '/items/grid/item/media/details')
-        .get(PAGE_AUTH, CONTROLLER.get_dashboard_grid_item_media_details);
-
-    app.route(APP_PATH + '/items/grid/item/text/details')
-        .get(PAGE_AUTH, CONTROLLER.get_dashboard_grid_item_text_details);
-
-    app.route(APP_PATH + '/items/grid/item/media/edit')
-        .get(PAGE_AUTH, CONTROLLER.get_dashboard_grid_edit_media_item_form);
-
-    app.route(APP_PATH + '/items/grid/item/text/edit')
-        .get(PAGE_AUTH, CONTROLLER.get_dashboard_grid_edit_text_item_form);
-
-    app.route(APP_PATH + '/items/grid/items')
-        .get(PAGE_AUTH, CONTROLLER.get_dashboard_item_grid_items);
-
-    app.route(APP_PATH + '/items/grid/item/delete')
-        .get(PAGE_AUTH, CONTROLLER.get_dashboard_grid_items_delete_form);
-
-    //============Timelines============//
-    app.route(APP_PATH + '/items/vertical-timeline')
-        .get(PAGE_AUTH, CONTROLLER.get_dashboard_vertical_timeline_add_form);
-
-    app.route(APP_PATH + '/items/vertical-timeline/details')
-        .get(PAGE_AUTH, CONTROLLER.get_dashboard_vertical_timeline_details);
-
-    app.route(APP_PATH + '/items/vertical-timeline/edit')
-        .get(PAGE_AUTH, CONTROLLER.get_dashboard_vertical_timeline_edit_form);
-
-    app.route(APP_PATH + '/items/vertical-timeline/item/media')
-        .get(PAGE_AUTH, CONTROLLER.get_dashboard_vertical_timeline_item_media_add_form);
-
-    app.route(APP_PATH + '/items/vertical-timeline/item/media/edit')
-        .get(PAGE_AUTH, CONTROLLER.get_dashboard_vertical_timeline_item_media_edit_form);
-
-    app.route(APP_PATH + '/items/vertical-timeline/item/text')
-        .get(PAGE_AUTH, CONTROLLER.get_dashboard_vertical_timeline_item_text_add_form);
-
-    app.route(APP_PATH + '/items/vertical-timeline/item/text/edit')
-        .get(PAGE_AUTH, CONTROLLER.get_dashboard_vertical_timeline_item_text_edit_form);
-
-    app.route(APP_PATH + '/items/vertical-timeline/item/media/details')
-        .get(PAGE_AUTH, CONTROLLER.get_dashboard_vertical_timeline_item_media_details);
-
-    app.route(APP_PATH + '/items/vertical-timeline/item/text/details')
-        .get(PAGE_AUTH, CONTROLLER.get_dashboard_vertical_timeline_item_text_details);
-
-    app.route(APP_PATH + '/items/timeline/items')
-        .get(PAGE_AUTH, CONTROLLER.get_dashboard_item_timeline_items);
-
-    app.route(APP_PATH + '/items/timeline/item/delete')
-        .get(PAGE_AUTH, CONTROLLER.get_dashboard_timeline_items_delete_form);
-
-    app.route(APP_PATH + '/items/delete')
-        .get(PAGE_AUTH, CONTROLLER.get_dashboard_items_delete_form);
-
-    //============Users============//
-    app.route(APP_PATH + '/users')
-        .get(PAGE_AUTH, CONTROLLER.get_dashboard_users);
-
-    app.route(APP_PATH + '/users/add')
-        .get(PAGE_AUTH, CONTROLLER.get_dashboard_users_add_form);
-
-    app.route(APP_PATH + '/users/edit')
-        .get(PAGE_AUTH, CONTROLLER.get_dashboard_users_edit_form);
-
-    app.route(APP_PATH + '/users/delete')
-        .get(PAGE_AUTH, CONTROLLER.get_dashboard_users_delete_form);
-
-    app.route(APP_PATH + '/session')
-        .get(CONTROLLER.get_dashboard_session_out);
-
-    app.route(APP_PATH + '/logout')
-        .get(CONTROLLER.get_dashboard_logout);
-
-    app.route(APP_PATH + '/access-denied')
-        .get(CONTROLLER.get_dashboard_access_denied);
-
-    app.route(APP_PATH + '/recycle')
-        .get(PAGE_AUTH, CONTROLLER.get_dashboard_recycle);
-
-    //============Media============//
-    app.route(APP_PATH + '/media/library')
-        .get(PAGE_AUTH, CONTROLLER.get_dashboard_media);
-
-    //============Styles============//
-    app.route(APP_PATH + '/styles')
-        .get(PAGE_AUTH, CONTROLLER.get_dashboard_styles);
-
-    //============Index Management============//
-    app.route(APP_PATH + '/index-management')
-        .get(PAGE_AUTH, CONTROLLER.get_dashboard_index_management);
+        if (page.public === true) {
+            app.route(APP_PATH + page.path).get(handler);
+        } else {
+            app.route(APP_PATH + page.path).get(PAGE_AUTH, handler);
+        }
+    }
 
 };

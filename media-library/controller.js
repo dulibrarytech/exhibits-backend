@@ -74,6 +74,122 @@ const build_content_disposition = (filename, disposition = 'inline') => {
     return `${disposition}; filename="${ascii_safe}"; filename*=UTF-8''${encoded}`;
 };
 
+/*
+ * Shared handler steps. The media-id guard, record lookup, storage-path
+ * resolution, stat/stream/pipe sequence and IIIF CORS header set each existed
+ * in three to six drifting copies below (DRY review 2026-09-03, cluster O6).
+ * The guard/lookup/resolve helpers send the failure response themselves and
+ * return `null` / `false`, so the caller's next line is a bare `return`.
+ */
+
+/** CORS headers every public IIIF response carries (manifest, info.json, image, PDF) */
+const IIIF_CORS_HEADERS = {
+    'Access-Control-Allow-Origin': '*',
+    'Access-Control-Allow-Methods': 'GET, OPTIONS',
+    'Access-Control-Allow-Headers': 'Origin, Content-Type, Accept'
+};
+
+/**
+ * Rejects a media id that is not a UUID with 400
+ * @param {Object} res - Express response object
+ * @param {string} media_id - Candidate media UUID
+ * @param {string} method - Handler name, for the log line
+ * @param {string} [message='Invalid media ID'] - Staff-facing message
+ * @returns {boolean} True when the id is valid; false when the response has been sent
+ */
+const require_valid_media_id = (res, media_id, method, message = 'Invalid media ID') => {
+
+    if (!is_valid_uuid(media_id)) {
+        LOGGER.module().warn(`WARNING: [/media-library/controller (${method})] Invalid media ID: ${media_id}`);
+        send_error(res, 400, message);
+        return false;
+    }
+
+    return true;
+};
+
+/**
+ * Loads a media record, answering 404 when there is none
+ * @param {Object} res - Express response object
+ * @param {string} media_id - Media UUID
+ * @param {string} method - Handler name, for the log line
+ * @returns {Promise<Object|null>} The record, or null when the response has been sent
+ */
+const load_media_record = async (res, media_id, method) => {
+
+    const result = await MEDIA_MODEL.get_media_record(media_id);
+
+    if (!result || !result.success || !result.record) {
+        LOGGER.module().warn(`WARNING: [/media-library/controller (${method})] Media record not found: ${media_id}`);
+        send_error(res, 404, 'Media not found');
+        return null;
+    }
+
+    return result.record;
+};
+
+/**
+ * Resolves a storage-relative path to an absolute one (with the traversal
+ * protection resolve_storage_path enforces), answering 404 when it is gone
+ * @param {Object} res - Express response object
+ * @param {string} relative_path - Stored path, possibly HTML-encoded
+ * @param {Object} options
+ * @param {string} options.method - Handler name, for the log line
+ * @param {string} options.log_label - What is missing, e.g. 'File not found on disk'
+ * @param {string} options.message - Staff-facing 404 message
+ * @returns {Promise<string|null>} Absolute path, or null when the response has been sent
+ */
+const resolve_stored_path = async (res, relative_path, {method, log_label, message}) => {
+
+    try {
+        return await UPLOADS.resolve_storage_path(decode_html_entities(relative_path));
+    } catch (error) {
+        LOGGER.module().warn(`WARNING: [/media-library/controller (${method})] ${log_label}: ${relative_path}`);
+        send_error(res, 404, message);
+        return null;
+    }
+};
+
+/**
+ * Streams a stored file to the response: stat, headers, pipe. `Content-Length`
+ * comes from the stat, so callers pass every other header. A read error after
+ * the headers are on the wire can only be logged — the response is already
+ * committed — which is why the 500 is guarded by `headersSent`.
+ * @param {Object} res - Express response object
+ * @param {string} abs_path - Absolute path to the file
+ * @param {Object} headers - Response headers (Content-Length is added here)
+ * @param {Object} log_ctx
+ * @param {string} log_ctx.method - Handler name, for the log lines
+ * @param {string} log_ctx.read_error_message - Staff-facing message for a read failure
+ * @param {boolean} [log_ctx.require_regular_file=false] - Reject anything that is not a file with 400
+ * @returns {void}
+ */
+const stream_stored_file = (res, abs_path, headers, {method, read_error_message, require_regular_file = false}) => {
+
+    const stats = FS.statSync(abs_path);
+
+    if (require_regular_file && !stats.isFile()) {
+        send_error(res, 400, 'Invalid file type');
+        return;
+    }
+
+    res.set({
+        ...headers,
+        'Content-Length': stats.size
+    });
+
+    const read_stream = FS.createReadStream(abs_path);
+
+    read_stream.on('error', (error) => {
+        LOGGER.module().error(`ERROR: [/media-library/controller (${method})] Stream error: ${error.message}`);
+        if (!res.headersSent) {
+            send_error(res, 500, read_error_message);
+        }
+    });
+
+    read_stream.pipe(res);
+};
+
 /**
  * Gets a media file from storage by UUID
  * Looks up the storage_path in the database and resolves through the
@@ -88,23 +204,16 @@ exports.get_media = async function (req, res) {
 
         const media_id = req.params.media_id;
 
-        // Validate UUID format
-        if (!is_valid_uuid(media_id)) {
-            LOGGER.module().warn(`WARNING: [/media-library/controller (get_media)] Invalid media ID: ${media_id}`);
-            send_error(res, 400, 'Invalid media ID');
+        if (!require_valid_media_id(res, media_id, 'get_media')) {
             return;
         }
 
         // Look up the media record to get storage_path
-        const result = await MEDIA_MODEL.get_media_record(media_id);
+        const record = await load_media_record(res, media_id, 'get_media');
 
-        if (!result || !result.success || !result.record) {
-            LOGGER.module().warn(`WARNING: [/media-library/controller (get_media)] Media record not found: ${media_id}`);
-            send_error(res, 404, 'Media not found');
+        if (record === null) {
             return;
         }
-
-        const record = result.record;
 
         // Ensure record has a storage path
         if (!record.storage_path) {
@@ -113,22 +222,13 @@ exports.get_media = async function (req, res) {
             return;
         }
 
-        // Resolve relative path to absolute path with traversal protection
-        let resolved_path;
+        const resolved_path = await resolve_stored_path(res, record.storage_path, {
+            method: 'get_media',
+            log_label: 'File not found on disk',
+            message: 'File not found'
+        });
 
-        try {
-            resolved_path = await UPLOADS.resolve_storage_path(decode_html_entities(record.storage_path));
-        } catch (error) {
-            LOGGER.module().warn(`WARNING: [/media-library/controller (get_media)] File not found on disk: ${record.storage_path}`);
-            send_error(res, 404, 'File not found');
-            return;
-        }
-
-        // Get file stats
-        const stats = FS.statSync(resolved_path);
-
-        if (!stats.isFile()) {
-            send_error(res, 400, 'Invalid file type');
+        if (resolved_path === null) {
             return;
         }
 
@@ -138,26 +238,16 @@ exports.get_media = async function (req, res) {
         const stored_mime = record.mime_type ? decode_html_entities(record.mime_type) : null;
         const mime_type = extension_mime || stored_mime || 'application/octet-stream';
 
-        // Set response headers
-        res.set({
+        stream_stored_file(res, resolved_path, {
             'Content-Type': mime_type,
-            'Content-Length': stats.size,
             'Content-Disposition': build_content_disposition(record.original_filename || record.filename || 'download'),
             'Cache-Control': 'public, max-age=86400',
             'X-Content-Type-Options': 'nosniff'
+        }, {
+            method: 'get_media',
+            read_error_message: 'Error reading file',
+            require_regular_file: true
         });
-
-        // Stream file to response
-        const read_stream = FS.createReadStream(resolved_path);
-
-        read_stream.on('error', (error) => {
-            LOGGER.module().error(`ERROR: [/media-library/controller (get_media)] Stream error: ${error.message}`);
-            if (!res.headersSent) {
-                send_error(res, 500, 'Error reading file');
-            }
-        });
-
-        read_stream.pipe(res);
 
     } catch (error) {
         LOGGER.module().error(`ERROR: [/media-library/controller (get_media)] ${error.message}`);
@@ -181,22 +271,16 @@ exports.get_thumbnail = async function (req, res) {
 
         const media_id = req.params.media_id;
 
-        // Validate UUID format
-        if (!is_valid_uuid(media_id)) {
-            LOGGER.module().warn(`WARNING: [/media-library/controller (get_thumbnail)] Invalid media ID: ${media_id}`);
-            send_error(res, 400, 'Invalid media ID');
+        if (!require_valid_media_id(res, media_id, 'get_thumbnail')) {
             return;
         }
 
         // Look up the media record to get thumbnail_path
-        const result = await MEDIA_MODEL.get_media_record(media_id);
+        const record = await load_media_record(res, media_id, 'get_thumbnail');
 
-        if (!result || !result.success || !result.record) {
-            send_error(res, 404, 'Media not found');
+        if (record === null) {
             return;
         }
-
-        const record = result.record;
 
         // Check for thumbnail path — if absent, try repo thumbnail fallback
         if (!record.thumbnail_path) {
@@ -227,38 +311,25 @@ exports.get_thumbnail = async function (req, res) {
             return;
         }
 
-        // Resolve relative path to absolute path with traversal protection
-        let resolved_path;
+        const resolved_path = await resolve_stored_path(res, record.thumbnail_path, {
+            method: 'get_thumbnail',
+            log_label: 'Thumbnail file not found on disk',
+            message: 'Thumbnail not found'
+        });
 
-        try {
-            resolved_path = await UPLOADS.resolve_storage_path(decode_html_entities(record.thumbnail_path));
-        } catch (error) {
-            LOGGER.module().warn(`WARNING: [/media-library/controller (get_thumbnail)] Thumbnail file not found on disk: ${record.thumbnail_path}`);
-            send_error(res, 404, 'Thumbnail not found');
+        if (resolved_path === null) {
             return;
         }
 
-        // Set response headers — thumbnails are always JPEG
-        const stats = FS.statSync(resolved_path);
-
-        res.set({
+        // Thumbnails are always JPEG
+        stream_stored_file(res, resolved_path, {
             'Content-Type': 'image/jpeg',
-            'Content-Length': stats.size,
             'Cache-Control': 'public, max-age=86400',
             'X-Content-Type-Options': 'nosniff'
+        }, {
+            method: 'get_thumbnail',
+            read_error_message: 'Error reading thumbnail'
         });
-
-        // Stream thumbnail to response
-        const read_stream = FS.createReadStream(resolved_path);
-
-        read_stream.on('error', (error) => {
-            LOGGER.module().error(`ERROR: [/media-library/controller (get_thumbnail)] Stream error: ${error.message}`);
-            if (!res.headersSent) {
-                send_error(res, 500, 'Error reading thumbnail');
-            }
-        });
-
-        read_stream.pipe(res);
 
     } catch (error) {
         LOGGER.module().error(`ERROR: [/media-library/controller (get_thumbnail)] ${error.message}`);
@@ -494,8 +565,7 @@ exports.get_media_record = async function (req, res) {
         const media_id = req.params.media_id;
 
         // Validate required path parameter
-        if (!media_id || typeof media_id !== 'string' || media_id.trim() === '') {
-            send_error(res, 400, 'Bad request. Missing or invalid media ID.');
+        if (!require_valid_media_id(res, media_id, 'get_media_record', 'Bad request. Missing or invalid media ID.')) {
             return;
         }
 
@@ -531,8 +601,7 @@ exports.update_media_record = async function (req, res) {
         const data = req.body;
 
         // Validate required path parameter
-        if (!media_id || typeof media_id !== 'string' || media_id.trim() === '') {
-            send_error(res, 400, 'Bad request. Missing or invalid media ID.');
+        if (!require_valid_media_id(res, media_id, 'update_media_record', 'Bad request. Missing or invalid media ID.')) {
             return;
         }
 
@@ -590,8 +659,7 @@ exports.replace_media_file = async function (req, res) {
         const media_id = req.params.media_id;
 
         // Validate required path parameter
-        if (!media_id || typeof media_id !== 'string' || media_id.trim() === '') {
-            send_error(res, 400, 'Bad request. Missing or invalid media ID.');
+        if (!require_valid_media_id(res, media_id, 'replace_media_file', 'Bad request. Missing or invalid media ID.')) {
             return;
         }
 
@@ -644,8 +712,7 @@ exports.delete_media_record = async function (req, res) {
         const media_id = req.params.media_id;
 
         // Validate required path parameter
-        if (!media_id || typeof media_id !== 'string' || media_id.trim() === '') {
-            send_error(res, 400, 'Bad request. Missing or invalid media ID.');
+        if (!require_valid_media_id(res, media_id, 'delete_media_record', 'Bad request. Missing or invalid media ID.')) {
             return;
         }
 
@@ -758,36 +825,25 @@ exports.get_uploaded_thumbnail = async function (req, res) {
             return;
         }
 
-        let resolved_path;
+        const resolved_path = await resolve_stored_path(res, p, {
+            method: 'get_uploaded_thumbnail',
+            log_label: 'Staged thumbnail not found',
+            message: 'Thumbnail not found'
+        });
 
-        try {
-            resolved_path = await UPLOADS.resolve_storage_path(decode_html_entities(p));
-        } catch (error) {
-            LOGGER.module().warn(`WARNING: [/media-library/controller (get_uploaded_thumbnail)] Staged thumbnail not found: ${p}`);
-            send_error(res, 404, 'Thumbnail not found');
+        if (resolved_path === null) {
             return;
         }
 
         // Staged thumbnails are always JPEG (generated by uploads.js).
-        const stats = FS.statSync(resolved_path);
-
-        res.set({
+        stream_stored_file(res, resolved_path, {
             'Content-Type': 'image/jpeg',
-            'Content-Length': stats.size,
             'Cache-Control': 'private, max-age=300',
             'X-Content-Type-Options': 'nosniff'
+        }, {
+            method: 'get_uploaded_thumbnail',
+            read_error_message: 'Error reading thumbnail'
         });
-
-        const read_stream = FS.createReadStream(resolved_path);
-
-        read_stream.on('error', (error) => {
-            LOGGER.module().error(`ERROR: [/media-library/controller (get_uploaded_thumbnail)] Stream error: ${error.message}`);
-            if (!res.headersSent) {
-                send_error(res, 500, 'Error reading thumbnail');
-            }
-        });
-
-        read_stream.pipe(res);
 
     } catch (error) {
         LOGGER.module().error(`ERROR: [/media-library/controller (get_uploaded_thumbnail)] ${error.message}`);
@@ -1027,6 +1083,65 @@ exports.get_repo_tn = async function (req, res) {
 };
 
 /**
+ * Answers one of the corpus-wide repository aggregate reads (subjects,
+ * resource types). Both used the same envelope — a 200 carrying
+ * `success: false` when the service fails (the repo picker degrades rather
+ * than erroring), and a 500 with the same empty payload on an exception —
+ * differing only in the noun and the payload key (DRY review 2026-09-03,
+ * cluster O7).
+ *
+ * @param {Object} res - Express response object
+ * @param {Object} options
+ * @param {string} options.method - Handler name, for the log lines
+ * @param {string} options.label - Noun for the log and message strings
+ * @param {string} options.payload_key - Envelope key carrying the payload
+ * @param {*} options.empty_payload - Payload value used on every failure path
+ * @param {Function} options.run - Zero-arg call returning the service envelope
+ * @param {Function} options.project - (result) => `{message, data}` for the success body
+ * @returns {Promise<Object>} The Express response
+ */
+const handle_repo_aggregate = async (res, {method, label, payload_key, empty_payload, run, project}) => {
+
+    const empty_data = {
+        data: {
+            [payload_key]: empty_payload,
+            total: 0
+        }
+    };
+
+    try {
+
+        LOGGER.module().info(`INFO: [/media-library/controller (${method})] Fetching ${label}`);
+
+        const result = await run();
+
+        if (!result || !result.success) {
+            LOGGER.module().warn(`WARNING: [/media-library/controller (${method})] Failed: ${result?.message}`);
+
+            return res.status(200).json({
+                success: false,
+                message: result?.message || `Failed to retrieve ${label}`,
+                ...empty_data
+            });
+        }
+
+        return res.status(200).json({
+            success: true,
+            ...project(result)
+        });
+
+    } catch (error) {
+        LOGGER.module().error(`ERROR: [/media-library/controller (${method})] ${error.message}`);
+
+        return res.status(500).json({
+            success: false,
+            message: `Internal server error retrieving ${label}`,
+            ...empty_data
+        });
+    }
+};
+
+/**
  * Gets all unique subjects from the digital repository, grouped by type
  * Optionally filters to a single type via query parameter
  * GET /api/v1/media/library/repo/subjects
@@ -1040,63 +1155,41 @@ exports.get_repo_tn = async function (req, res) {
  * @returns {Promise<void>}
  */
 exports.get_subjects = async function (req, res) {
+    return handle_repo_aggregate(res, {
+        method: 'get_subjects',
+        label: 'subjects',
+        payload_key: 'subjects',
+        empty_payload: {},
+        run: () => REPO_SERVICE.get_subjects(),
+        /* read inside project() so a malformed ?type= is still caught by the
+           shared try/catch, as it was when this body was inline */
+        project: (result) => {
 
-    try {
+            // If a type filter is provided, return only that type
+            const type_filter = req.query.type ? req.query.type.trim().toLowerCase() : null;
 
-        LOGGER.module().info('INFO: [/media-library/controller (get_subjects)] Fetching subjects');
+            if (type_filter) {
 
-        const result = await REPO_SERVICE.get_subjects();
+                const filtered_subjects = result.subjects[type_filter] || [];
 
-        if (!result || !result.success) {
-            LOGGER.module().warn(`WARNING: [/media-library/controller (get_subjects)] Failed: ${result?.message}`);
-            return res.status(200).json({
-                success: false,
-                message: result?.message || 'Failed to retrieve subjects',
-                data: {
-                    subjects: {},
-                    total: 0
-                }
-            });
-        }
-
-        // If a type filter is provided, return only that type
-        const type_filter = req.query.type ? req.query.type.trim().toLowerCase() : null;
-
-        if (type_filter) {
-
-            const filtered_subjects = result.subjects[type_filter] || [];
-
-            return res.status(200).json({
-                success: true,
-                message: `Found ${filtered_subjects.length} unique ${type_filter} subject(s)`,
-                data: {
-                    subjects: { [type_filter]: filtered_subjects },
-                    total: filtered_subjects.length
-                }
-            });
-        }
-
-        return res.status(200).json({
-            success: true,
-            message: result.message,
-            data: {
-                subjects: result.subjects,
-                total: result.total
+                return {
+                    message: `Found ${filtered_subjects.length} unique ${type_filter} subject(s)`,
+                    data: {
+                        subjects: { [type_filter]: filtered_subjects },
+                        total: filtered_subjects.length
+                    }
+                };
             }
-        });
 
-    } catch (error) {
-        LOGGER.module().error(`ERROR: [/media-library/controller (get_subjects)] ${error.message}`);
-
-        return res.status(500).json({
-            success: false,
-            message: 'Internal server error retrieving subjects',
-            data: {
-                subjects: {},
-                total: 0
-            }
-        });
-    }
+            return {
+                message: result.message,
+                data: {
+                    subjects: result.subjects,
+                    total: result.total
+                }
+            };
+        }
+    });
 };
 
 /**
@@ -1108,45 +1201,85 @@ exports.get_subjects = async function (req, res) {
  * @returns {Promise<void>}
  */
 exports.get_resource_types = async function (req, res) {
-
-    try {
-
-        LOGGER.module().info('INFO: [/media-library/controller (get_resource_types)] Fetching resource types');
-
-        const result = await REPO_SERVICE.get_resource_types();
-
-        if (!result || !result.success) {
-            LOGGER.module().warn(`WARNING: [/media-library/controller (get_resource_types)] Failed: ${result?.message}`);
-            return res.status(200).json({
-                success: false,
-                message: result?.message || 'Failed to retrieve resource types',
-                data: {
-                    resource_types: [],
-                    total: 0
-                }
-            });
-        }
-
-        return res.status(200).json({
-            success: true,
+    return handle_repo_aggregate(res, {
+        method: 'get_resource_types',
+        label: 'resource types',
+        payload_key: 'resource_types',
+        empty_payload: [],
+        run: () => REPO_SERVICE.get_resource_types(),
+        project: (result) => ({
             message: result.message,
             data: {
                 resource_types: result.resource_types,
                 total: result.total
             }
+        })
+    });
+};
+
+/**
+ * Runs one of the entry-scoped Kaltura service calls and answers with the
+ * shared envelope: 400 when the entry id is missing, the status the service
+ * tagged on the failure (defaulting to 500 — a service failure must not be
+ * reported as 200 OK), or the success payload.
+ *
+ * The three handlers below were the same 40 lines apart from the log wording,
+ * the payload key and the success status (DRY review 2026-09-03, cluster O6).
+ * The failure status used to be recovered here by string-matching the
+ * service's message; kaltura-service now tags `status` itself, the way
+ * iiif-service already did.
+ *
+ * @param {Object} req - Express request object
+ * @param {Object} res - Express response object
+ * @param {Object} options
+ * @param {string} options.method - Handler name, for the log lines
+ * @param {Function} options.describe - (entry_id) => the INFO log sentence
+ * @param {Function} options.run - (entry_id) => Promise of the service envelope
+ * @param {string} options.data_key - Envelope key holding the success payload
+ * @param {number} options.success_status - HTTP status for the success response
+ * @param {string} options.failure_message - Fallback message when the service sent none
+ * @param {string} options.error_message - Message for an unhandled exception
+ * @returns {Promise<Object>} The Express response
+ */
+const handle_kaltura_entry_action = async (req, res, options) => {
+
+    const {method, describe, run, data_key, success_status, failure_message, error_message} = options;
+
+    try {
+
+        const entry_id = req.params.entry_id;
+
+        if (!entry_id) {
+            LOGGER.module().warn(`WARNING: [/media-library/controller (${method})] Missing entry ID`);
+            return send_error(res, 400, 'Entry ID is required');
+        }
+
+        LOGGER.module().info(`INFO: [/media-library/controller (${method})] ${describe(entry_id)}`);
+
+        const result = await run(entry_id);
+
+        if (!result || !result.success) {
+            LOGGER.module().warn(`WARNING: [/media-library/controller (${method})] Failed: ${result?.message}`);
+
+            const status_code = result?.status || 500;
+
+            return res.status(status_code).json({
+                success: false,
+                message: result?.message || failure_message,
+                data: null
+            });
+        }
+
+        return res.status(success_status).json({
+            success: true,
+            message: result.message,
+            data: result[data_key]
         });
 
     } catch (error) {
-        LOGGER.module().error(`ERROR: [/media-library/controller (get_resource_types)] ${error.message}`);
+        LOGGER.module().error(`ERROR: [/media-library/controller (${method})] ${error.message}`);
 
-        return res.status(500).json({
-            success: false,
-            message: 'Internal server error retrieving resource types',
-            data: {
-                resource_types: [],
-                total: 0
-            }
-        });
+        return send_error(res, 500, error_message);
     }
 };
 
@@ -1162,50 +1295,15 @@ exports.get_resource_types = async function (req, res) {
  * @returns {Promise<void>}
  */
 exports.get_kaltura_media = async function (req, res) {
-
-    try {
-
-        // Extract entry_id from path parameter
-        const entry_id = req.params.entry_id;
-
-        // Validate entry_id is provided
-        if (!entry_id) {
-            LOGGER.module().warn('WARNING: [/media-library/controller (get_kaltura_media)] Missing entry ID');
-            return send_error(res, 400, 'Entry ID is required');
-        }
-
-        LOGGER.module().info(`INFO: [/media-library/controller (get_kaltura_media)] Fetching Kaltura media for entry ID: ${entry_id}`);
-
-        // Call Kaltura service to get media metadata
-        const result = await KALTURA_SERVICE.get_kaltura_media(entry_id);
-
-        if (!result || !result.success) {
-            LOGGER.module().warn(`WARNING: [/media-library/controller (get_kaltura_media)] Failed: ${result?.message}`);
-
-            // Determine appropriate status code based on failure reason
-            // (default 500 — a service failure must not be reported as 200 OK)
-            const status_code = result?.message?.includes('Unsupported media type') ? 422
-                : result?.message?.includes('not found') ? 404
-                : 500;
-
-            return res.status(status_code).json({
-                success: false,
-                message: result?.message || 'Failed to retrieve Kaltura media metadata',
-                data: null
-            });
-        }
-
-        return res.status(200).json({
-            success: true,
-            message: result.message,
-            data: result.media
-        });
-
-    } catch (error) {
-        LOGGER.module().error(`ERROR: [/media-library/controller (get_kaltura_media)] ${error.message}`);
-
-        return send_error(res, 500, 'Internal server error retrieving Kaltura media');
-    }
+    return handle_kaltura_entry_action(req, res, {
+        method: 'get_kaltura_media',
+        describe: (entry_id) => `Fetching Kaltura media for entry ID: ${entry_id}`,
+        run: (entry_id) => KALTURA_SERVICE.get_kaltura_media(entry_id),
+        data_key: 'media',
+        success_status: 200,
+        failure_message: 'Failed to retrieve Kaltura media metadata',
+        error_message: 'Internal server error retrieving Kaltura media'
+    });
 };
 
 /**
@@ -1259,48 +1357,15 @@ exports.get_kaltura_config = async function (req, res) {
  * @returns {Promise<void>}
  */
 exports.assign_kaltura_category = async function (req, res) {
-
-    try {
-
-        // Extract entry_id from path parameter
-        const entry_id = req.params.entry_id;
-
-        // Validate entry_id is provided
-        if (!entry_id) {
-            LOGGER.module().warn('WARNING: [/media-library/controller (assign_kaltura_category)] Missing entry ID');
-            return send_error(res, 400, 'Entry ID is required');
-        }
-
-        LOGGER.module().info(`INFO: [/media-library/controller (assign_kaltura_category)] Assigning entry ID: ${entry_id} to exhibits category`);
-
-        // Call Kaltura service to assign entry to exhibits category
-        const result = await KALTURA_SERVICE.assign_kaltura_category(entry_id);
-
-        if (!result || !result.success) {
-            LOGGER.module().warn(`WARNING: [/media-library/controller (assign_kaltura_category)] Failed: ${result?.message}`);
-
-            // Determine appropriate status code based on failure reason
-            // (default 500 — a service failure must not be reported as 200 OK)
-            const status_code = result?.message?.includes('not found') ? 404 : 500;
-
-            return res.status(status_code).json({
-                success: false,
-                message: result?.message || 'Failed to assign entry to exhibits category',
-                data: null
-            });
-        }
-
-        return res.status(201).json({
-            success: true,
-            message: result.message,
-            data: result.category_entry
-        });
-
-    } catch (error) {
-        LOGGER.module().error(`ERROR: [/media-library/controller (assign_kaltura_category)] ${error.message}`);
-
-        return send_error(res, 500, 'Internal server error assigning entry to exhibits category');
-    }
+    return handle_kaltura_entry_action(req, res, {
+        method: 'assign_kaltura_category',
+        describe: (entry_id) => `Assigning entry ID: ${entry_id} to exhibits category`,
+        run: (entry_id) => KALTURA_SERVICE.assign_kaltura_category(entry_id),
+        data_key: 'category_entry',
+        success_status: 201,
+        failure_message: 'Failed to assign entry to exhibits category',
+        error_message: 'Internal server error assigning entry to exhibits category'
+    });
 };
 
 /**
@@ -1315,48 +1380,15 @@ exports.assign_kaltura_category = async function (req, res) {
  * @returns {Promise<void>}
  */
 exports.remove_kaltura_category = async function (req, res) {
-
-    try {
-
-        // Extract entry_id from path parameter
-        const entry_id = req.params.entry_id;
-
-        // Validate entry_id is provided
-        if (!entry_id) {
-            LOGGER.module().warn('WARNING: [/media-library/controller (remove_kaltura_category)] Missing entry ID');
-            return send_error(res, 400, 'Entry ID is required');
-        }
-
-        LOGGER.module().info(`INFO: [/media-library/controller (remove_kaltura_category)] Removing entry ID: ${entry_id} from exhibits category`);
-
-        // Call Kaltura service to remove entry from exhibits category
-        const result = await KALTURA_SERVICE.remove_kaltura_category(entry_id);
-
-        if (!result || !result.success) {
-            LOGGER.module().warn(`WARNING: [/media-library/controller (remove_kaltura_category)] Failed: ${result?.message}`);
-
-            // Determine appropriate status code based on failure reason
-            // (default 500 — a service failure must not be reported as 200 OK)
-            const status_code = result?.message?.includes('not found') ? 404 : 500;
-
-            return res.status(status_code).json({
-                success: false,
-                message: result?.message || 'Failed to remove entry from exhibits category',
-                data: null
-            });
-        }
-
-        return res.status(200).json({
-            success: true,
-            message: result.message,
-            data: result.category_entry
-        });
-
-    } catch (error) {
-        LOGGER.module().error(`ERROR: [/media-library/controller (remove_kaltura_category)] ${error.message}`);
-
-        return send_error(res, 500, 'Internal server error removing entry from exhibits category');
-    }
+    return handle_kaltura_entry_action(req, res, {
+        method: 'remove_kaltura_category',
+        describe: (entry_id) => `Removing entry ID: ${entry_id} from exhibits category`,
+        run: (entry_id) => KALTURA_SERVICE.remove_kaltura_category(entry_id),
+        data_key: 'category_entry',
+        success_status: 200,
+        failure_message: 'Failed to remove entry from exhibits category',
+        error_message: 'Internal server error removing entry from exhibits category'
+    });
 };
 
 // ========================================
@@ -1382,19 +1414,16 @@ exports.get_iiif_file = async function (req, res) {
 
         const media_id = req.params.media_id;
 
-        if (!is_valid_uuid(media_id)) {
-            LOGGER.module().warn(`WARNING: [/media-library/controller (get_iiif_file)] Invalid media ID: ${media_id}`);
-            return send_error(res, 400, 'Invalid media ID');
+        if (!require_valid_media_id(res, media_id, 'get_iiif_file')) {
+            return;
         }
 
-        const result = await MEDIA_MODEL.get_media_record(media_id);
+        const record = await load_media_record(res, media_id, 'get_iiif_file');
 
-        if (!result || !result.success || !result.record) {
-            LOGGER.module().warn(`WARNING: [/media-library/controller (get_iiif_file)] Media record not found: ${media_id}`);
-            return send_error(res, 404, 'Media not found');
+        if (record === null) {
+            return;
         }
 
-        const record = result.record;
         const stored_mime = record.mime_type ? decode_html_entities(record.mime_type) : null;
 
         if (record.ingest_method !== 'upload' || stored_mime !== 'application/pdf' || !record.storage_path) {
@@ -1402,42 +1431,27 @@ exports.get_iiif_file = async function (req, res) {
             return send_error(res, 404, 'File delivery not available for this record');
         }
 
-        let resolved_path;
+        const resolved_path = await resolve_stored_path(res, record.storage_path, {
+            method: 'get_iiif_file',
+            log_label: 'File not found on disk',
+            message: 'File not found'
+        });
 
-        try {
-            resolved_path = await UPLOADS.resolve_storage_path(decode_html_entities(record.storage_path));
-        } catch (error) {
-            LOGGER.module().warn(`WARNING: [/media-library/controller (get_iiif_file)] File not found on disk: ${record.storage_path}`);
-            return send_error(res, 404, 'File not found');
+        if (resolved_path === null) {
+            return;
         }
 
-        const stats = FS.statSync(resolved_path);
-
-        if (!stats.isFile()) {
-            return send_error(res, 400, 'Invalid file type');
-        }
-
-        res.set({
+        stream_stored_file(res, resolved_path, {
             'Content-Type': 'application/pdf',
-            'Content-Length': stats.size,
             'Content-Disposition': build_content_disposition(record.original_filename || record.filename || 'download.pdf'),
             'Cache-Control': 'public, max-age=86400',
             'X-Content-Type-Options': 'nosniff',
-            'Access-Control-Allow-Origin': '*',
-            'Access-Control-Allow-Methods': 'GET, OPTIONS',
-            'Access-Control-Allow-Headers': 'Origin, Content-Type, Accept'
+            ...IIIF_CORS_HEADERS
+        }, {
+            method: 'get_iiif_file',
+            read_error_message: 'Error reading file',
+            require_regular_file: true
         });
-
-        const read_stream = FS.createReadStream(resolved_path);
-
-        read_stream.on('error', (error) => {
-            LOGGER.module().error(`ERROR: [/media-library/controller (get_iiif_file)] Stream error: ${error.message}`);
-            if (!res.headersSent) {
-                send_error(res, 500, 'Error reading file');
-            }
-        });
-
-        read_stream.pipe(res);
 
     } catch (error) {
         LOGGER.module().error(`ERROR: [/media-library/controller (get_iiif_file)] ${error.message}`);
@@ -1465,10 +1479,8 @@ exports.get_iiif_manifest = async function (req, res) {
 
         const media_id = req.params.media_id;
 
-        // Validate UUID format
-        if (!is_valid_uuid(media_id)) {
-            LOGGER.module().warn(`WARNING: [/media-library/controller (get_iiif_manifest)] Invalid media ID: ${media_id}`);
-            return send_error(res, 400, 'Invalid media ID');
+        if (!require_valid_media_id(res, media_id, 'get_iiif_manifest')) {
+            return;
         }
 
         LOGGER.module().info(`INFO: [/media-library/controller (get_iiif_manifest)] Building manifest for: ${media_id}`);
@@ -1494,9 +1506,7 @@ exports.get_iiif_manifest = async function (req, res) {
         // Serve manifest with IIIF-compliant content type and CORS headers
         res.set({
             'Content-Type': 'application/ld+json;profile="http://iiif.io/api/presentation/3/context.json"',
-            'Access-Control-Allow-Origin': '*',
-            'Access-Control-Allow-Methods': 'GET, OPTIONS',
-            'Access-Control-Allow-Headers': 'Origin, Content-Type, Accept',
+            ...IIIF_CORS_HEADERS,
             'Cache-Control': 'public, max-age=3600'
         });
 
@@ -1524,9 +1534,8 @@ exports.get_iiif_info = async function (req, res) {
 
         const media_id = req.params.media_id;
 
-        if (!is_valid_uuid(media_id)) {
-            LOGGER.module().warn(`WARNING: [/media-library/controller (get_iiif_info)] Invalid media ID: ${media_id}`);
-            return send_error(res, 400, 'Invalid media ID');
+        if (!require_valid_media_id(res, media_id, 'get_iiif_info')) {
+            return;
         }
 
         LOGGER.module().info(`INFO: [/media-library/controller (get_iiif_info)] Fetching info.json for: ${media_id}`);
@@ -1549,9 +1558,7 @@ exports.get_iiif_info = async function (req, res) {
         // Serve info.json with IIIF-compliant content type and CORS headers
         res.set({
             'Content-Type': 'application/ld+json;profile="http://iiif.io/api/image/3/context.json"',
-            'Access-Control-Allow-Origin': '*',
-            'Access-Control-Allow-Methods': 'GET, OPTIONS',
-            'Access-Control-Allow-Headers': 'Origin, Content-Type, Accept',
+            ...IIIF_CORS_HEADERS,
             'Cache-Control': 'public, max-age=86400'
         });
 
@@ -1590,10 +1597,8 @@ exports.get_iiif_image = async function (req, res) {
         const rotation = req.params.rotation;
         const quality_format = req.params.quality_format;
 
-        // Validate UUID format
-        if (!is_valid_uuid(media_id)) {
-            LOGGER.module().warn(`WARNING: [/media-library/controller (get_iiif_image)] Invalid media ID: ${media_id}`);
-            return send_error(res, 400, 'Invalid media ID');
+        if (!require_valid_media_id(res, media_id, 'get_iiif_image')) {
+            return;
         }
 
         LOGGER.module().info(`INFO: [/media-library/controller (get_iiif_image)] IIIF image request: ${media_id}/${region}/${size}/${rotation}/${quality_format}`);
@@ -1621,9 +1626,7 @@ exports.get_iiif_image = async function (req, res) {
         // derived from the record version + IIIF params, so it changes when (and
         // only when) the derivative's bytes change — making the long max-age safe.
         const cache_headers = {
-            'Access-Control-Allow-Origin': '*',
-            'Access-Control-Allow-Methods': 'GET, OPTIONS',
-            'Access-Control-Allow-Headers': 'Origin, Content-Type, Accept',
+            ...IIIF_CORS_HEADERS,
             'Cache-Control': 'public, max-age=86400',
             'X-Content-Type-Options': 'nosniff'
         };

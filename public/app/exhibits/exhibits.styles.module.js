@@ -471,6 +471,67 @@ const exhibitsStylesModule = (function () {
     };
 
     /**
+     * Clears every style field back to its default, for every section.
+     *
+     * Table-driven over STYLE_SECTIONS x STYLE_PROPERTIES: text inputs and
+     * number inputs are emptied, `<select>`s go back to their first option,
+     * colour pickers to '#ffffff', and the header swatches to the default
+     * checkerboard. Replaces the hard-coded eight-section list the
+     * add-exhibit modal's reset_form carried, so a new section or property
+     * added to the tables above is reset without a second edit.
+     *
+     * Also clears any validation state left over from a previous open.
+     */
+    obj.reset = function () {
+
+        try {
+
+            for (let i = 0; i < STYLE_SECTIONS.length; i++) {
+                const key = STYLE_SECTIONS[i];
+
+                for (const config of Object.values(STYLE_PROPERTIES)) {
+
+                    const field_el = document.getElementById(key + config.suffix);
+
+                    if (field_el) {
+
+                        if (field_el.tagName === 'SELECT') {
+                            field_el.selectedIndex = 0;
+                        } else {
+                            field_el.value = '';
+                        }
+                    }
+
+                    if (config.picker_suffix) {
+                        const picker_el = document.getElementById(key + config.picker_suffix);
+
+                        if (picker_el) {
+                            picker_el.value = '#ffffff';
+                        }
+                    }
+
+                    if (config.swatch_role) {
+                        const swatch = document.getElementById('swatch-' + key + '-' + config.swatch_role);
+
+                        if (swatch) {
+                            swatch.style.backgroundColor = '';
+                            swatch.style.backgroundImage = '';
+                        }
+                    }
+                }
+            }
+
+            obj.clear_validation();
+
+            return true;
+
+        } catch (error) {
+            console.error('Error resetting exhibit styles:', error);
+            return false;
+        }
+    };
+
+    /**
      * Initializes the styles module:
      * - Sets up bidirectional color picker ↔ text input sync for all sections
      * - Wires swatch updates on color field changes

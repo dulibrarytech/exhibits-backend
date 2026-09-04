@@ -2,7 +2,7 @@
  * Route-mounting Integration Tests for Grid Routes
  *
  * Mounts the REAL exhibits/grid_routes.js (real endpoints module, real
- * controller, real grid_helper validation/authorization chain) with the
+ * controller, real controller_helper validation/authorization chain) with the
  * model mocked. Verifies route registration, path-param mapping, and
  * middleware ordering (token verify -> validation -> authorize -> model)
  * for every registered grid endpoint — coverage the hand-rolled

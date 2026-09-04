@@ -311,13 +311,13 @@ const mediaLibraryModule = (function() {
         const close_btn = document.getElementById('view-kaltura-media-close-btn');
         const cancel_btn = document.getElementById('view-kaltura-media-cancel-btn');
 
+        /*
+         * Routed through the shared helper so the backdrop, `modal-open` and
+         * body padding cleanup runs — the inline BS4/BS5 chain this replaced
+         * could leave a stuck backdrop behind.
+         */
         const close_modal = () => {
-            if (typeof $ !== 'undefined' && typeof $.fn.modal !== 'undefined') {
-                $(modal).modal('hide');
-            } else if (typeof bootstrap !== 'undefined' && bootstrap.Modal) {
-                const bs_modal = bootstrap.Modal.getInstance(modal);
-                if (bs_modal) bs_modal.hide();
-            }
+            helperMediaLibraryModule.hide_bootstrap_modal(modal);
         };
 
         if (close_btn) close_btn.addEventListener('click', close_modal);

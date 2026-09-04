@@ -952,46 +952,122 @@ const repoSubjectsModule = (function() {
     // ========================================
 
     /**
-     * Build subject dropdown HTML for Topics, Genre/Form, Places, and Item Type
+     * Default placeholder (and therefore first-option) text per field.
+     * The Kaltura modal shipped with its own wording; the upload / import /
+     * edit modals with another, so callers pass the strings they render.
+     */
+    const DEFAULT_SUBJECT_PLACEHOLDERS = {
+        topics_subjects: 'Select topics...',
+        genre_form_subjects: 'Select genre/form...',
+        places_subjects: 'Select places...',
+        item_type: 'Select item type...'
+    };
+
+    /**
+     * Build subject dropdown HTML for Topics, Genre/Form, Places and Item Type.
      *
-     * Topics, Genre/Form, and Places render as multi-select widgets.
-     * Item Type renders as a standard single select.
+     * Emits native `<select>` elements; populate_subjects_dropdowns() upgrades
+     * the three multi-value fields to `.ms-widget`s in place, carrying over the
+     * `required` flag, the placeholder and any `data-selected` value. This is
+     * the single builder behind what were four hand-rolled copies (upload,
+     * repository import, edit and Kaltura modals).
      *
      * @param {string} prefix - ID/class prefix for the form elements
      * @param {number|null|undefined} index - Optional numeric index for multi-form contexts
+     * @param {Object} [options]
+     * @param {Object} [options.selected] - field name -> pre-selected value
+     *     (emitted as `data-selected`; omitted when empty)
+     * @param {Object} [options.required] - field name -> boolean. Topics
+     *     defaults to required; Places never is; Genre/Form and Item Type
+     *     always are.
+     * @param {Object} [options.placeholders] - field name -> first-option text
+     * @param {string} [options.help_id] - when given, the block is wrapped in
+     *     `role="group" aria-label="Subjects"` described by a help paragraph
+     *     with this id (WCAG 1.3.1 / 3.3.2)
+     * @param {string} [options.help_text] - the help paragraph's text
      * @returns {string} HTML string containing the two rows of dropdown fields
      */
-    obj.build_subjects_html = function(prefix, index) {
+    obj.build_subjects_html = function(prefix, index, options) {
+
+        const opts = options || {};
+        const selected = opts.selected || {};
+        const required = opts.required || {};
+        const placeholders = Object.assign({}, DEFAULT_SUBJECT_PLACEHOLDERS, opts.placeholders || {});
 
         const has_index = (typeof index !== 'undefined' && index !== null);
         const id_suffix = has_index ? '-' + index : '';
 
+        const field_id = (slug) => prefix + '-' + slug + id_suffix;
+
+        const is_required = (name, fallback) => (
+            typeof required[name] === 'boolean' ? required[name] : fallback
+        );
+
+        const selected_attr = (name) => {
+            const value = selected[name];
+            return value ? ' data-selected="' + escape_html(String(value)) + '"' : '';
+        };
+
+        /*
+         * One labelled column holding a native <select>.
+         *
+         * `badge` and `attr` are separate on purpose: Genre/Form always shows
+         * the Required badge but never carries the HTML `required` attribute
+         * — upgrade_select_to_widget forces it required by name, and leaving
+         * the attribute off keeps checkValidity() from blocking the form in
+         * the window before the widget upgrade runs. That is what all four
+         * hand-rolled copies did.
+         */
+        const build_field = (name, slug, label_text, badge, attr) => {
+
+            const id = field_id(slug);
+
+            let field = '<div class="col-md-6 mb-3">';
+            field += '<label class="form-label" for="' + escape_html(id) + '">' + label_text;
+
+            if (badge) {
+                field += ' <span class="badge badge-required">Required</span>';
+            }
+
+            field += '</label>';
+            field += '<select class="form-control form-select custom-select ' + escape_html(prefix + '-' + slug) + '"'
+                + ' id="' + escape_html(id) + '"'
+                + ' name="' + name + '"'
+                + (attr ? ' required' : '')
+                + selected_attr(name) + '>';
+            field += '<option value="">' + escape_html(placeholders[name]) + '</option>';
+            field += '</select>';
+            field += '</div>';
+
+            return field;
+        };
+
         let html = '';
 
-        // Row: Topics (multi-select), Genre/Form (multi-select)
-        html += '<div class="row">';
-        html += '<div class="col-md-6 mb-3">';
-        html += '<label class="form-label">Topics <span class="badge badge-required">Required</span></label>';
-        html += build_widget_html('topics_subjects', 'Select topics...', prefix + '-topics' + id_suffix, true);
-        html += '<small class="form-text text-muted">Recommended to choose 2-3</small>';
-        html += '</div>';
-        html += '<div class="col-md-6 mb-3">';
-        html += '<label class="form-label">Genre/Form <span class="badge badge-required">Required</span></label>';
-        html += build_widget_html('genre_form_subjects', 'Select genre/form...', prefix + '-genre-form' + id_suffix, true);
-        html += '</div></div>';
+        if (opts.help_id) {
+            const help_text = opts.help_text || 'Choose 2–4 of the following tags to support search.';
+            html += '<div role="group" aria-label="Subjects" aria-describedby="' + escape_html(opts.help_id) + '">';
+            html += '<p id="' + escape_html(opts.help_id) + '" class="form-text text-muted mt-0 mb-2">' + escape_html(help_text) + '</p>';
+        }
 
-        // Row: Places (multi-select), Item Type (single select)
+        const topics_required = is_required('topics_subjects', true);
+        const places_required = is_required('places_subjects', false);
+
+        // Row: Topics, Genre/Form
         html += '<div class="row">';
-        html += '<div class="col-md-6 mb-3">';
-        html += '<label class="form-label">Places</label>';
-        html += build_widget_html('places_subjects', 'Select places...', prefix + '-places' + id_suffix);
+        html += build_field('topics_subjects', 'topics', 'Topics', topics_required, topics_required);
+        html += build_field('genre_form_subjects', 'genre-form', 'Genre/Form', true, false);
         html += '</div>';
-        html += '<div class="col-md-6 mb-3">';
-        html += '<label class="form-label" for="' + prefix + '-item-type' + id_suffix + '">Item Type <span class="badge badge-required">Required</span></label>';
-        html += '<select class="form-control form-select custom-select ' + prefix + '-item-type" id="' + prefix + '-item-type' + id_suffix + '" name="item_type" required>';
-        html += '<option value="">Select item type...</option>';
-        html += '</select>';
-        html += '</div></div>';
+
+        // Row: Places, Item Type
+        html += '<div class="row">';
+        html += build_field('places_subjects', 'places', 'Places', places_required, places_required);
+        html += build_field('item_type', 'item-type', 'Item Type', true, true);
+        html += '</div>';
+
+        if (opts.help_id) {
+            html += '</div>'; // close Subjects group
+        }
 
         return html;
     };

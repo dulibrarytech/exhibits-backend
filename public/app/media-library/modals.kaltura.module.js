@@ -254,29 +254,7 @@ const kalturaModalsModule = (function() {
         html += '</div></div>';
 
         // Subjects and Item Type dropdowns (two-column layout via helper module)
-        if (typeof repoSubjectsModule !== 'undefined' && typeof repoSubjectsModule.build_subjects_html === 'function') {
-            html += repoSubjectsModule.build_subjects_html('kaltura', 0);
-        } else {
-            // Fallback: manual two-column layout if helper not available
-            html += '<div class="row">';
-            html += '<div class="col-md-6 mb-3">';
-            html += '<label class="form-label">Topics</label>';
-            html += '<select class="form-control" name="topics_subjects"><option value="">Select a topic...</option></select>';
-            html += '</div>';
-            html += '<div class="col-md-6 mb-3">';
-            html += '<label class="form-label">Genre/Form <span class="badge badge-required">Required</span></label>';
-            html += '<select class="form-control" name="genre_form_subjects"><option value="">Select genre/form...</option></select>';
-            html += '</div></div>';
-            html += '<div class="row">';
-            html += '<div class="col-md-6 mb-3">';
-            html += '<label class="form-label">Places</label>';
-            html += '<select class="form-control" name="places_subjects"><option value="">Select a place...</option></select>';
-            html += '</div>';
-            html += '<div class="col-md-6 mb-3">';
-            html += '<label class="form-label">Item Type <span class="badge badge-required">Required</span></label>';
-            html += '<select class="form-control" name="item_type" required><option value="">Select item type...</option></select>';
-            html += '</div></div>';
-        }
+        html += repoSubjectsModule.build_subjects_html('kaltura', 0);
 
         // Hidden fields for Kaltura data
         html += '<input type="hidden" class="kaltura-entry-id" name="entry_id" value="' + entry_id + '">';
@@ -365,19 +343,6 @@ const kalturaModalsModule = (function() {
                 return;
             }
 
-            // Validate endpoint
-            if (!EXHIBITS_ENDPOINTS?.media_records?.post?.endpoint) {
-                display_card_message(card, 'danger', 'Create endpoint not configured');
-                return;
-            }
-
-            // Disable save button
-            const save_btn = card.querySelector('.btn-save-kaltura-item');
-            if (save_btn) {
-                save_btn.disabled = true;
-                save_btn.innerHTML = '<i class="fa fa-spinner fa-spin" style="margin-right: 6px;" aria-hidden="true"></i>Saving...';
-            }
-
             // Build record data
             const record_data = {
                 name: name,
@@ -396,78 +361,51 @@ const kalturaModalsModule = (function() {
                 media_duration: ms_duration ? (parseFloat(ms_duration) / 1000) : null
             };
 
-            const response = await httpModule.api({
-                method: 'POST',
-                url: EXHIBITS_ENDPOINTS.media_records.post.endpoint,
-                data: record_data
+            await helperMediaLibraryModule.save_media_record(card, record_data, {
+                save_button_selector: '.btn-save-kaltura-item',
+                message: display_card_message,
+                error_log_label: 'Kaltura media record',
+                missing_endpoint_message: 'Create endpoint not configured',
+                /* The create endpoint may answer 200 as well as 201 here. */
+                accept_ok: true,
+                require_item_id: false,
+                on_success: () => {
+
+                    /*
+                     * The Kaltura modal shows a single card and marks it saved
+                     * with its own palette (and disables, rather than makes
+                     * read-only, every control including the multi-select
+                     * widgets), so it does not use mark_card_saved.
+                     */
+                    const card_header = card.querySelector('.card-header');
+                    if (card_header) {
+                        card_header.style.backgroundColor = '#d1e7dd';
+                    }
+
+                    const item_number = card.querySelector('.kaltura-item-number');
+                    if (item_number) {
+                        item_number.style.backgroundColor = '#198754';
+                    }
+
+                    // Update save button to "Saved" state (matches repo modal)
+                    const save_btn = card.querySelector('.btn-save-kaltura-item');
+                    if (save_btn) {
+                        save_btn.disabled = true;
+                        save_btn.classList.remove('btn-primary');
+                        save_btn.classList.add('btn-success');
+                        save_btn.innerHTML = '<i class="fa fa-check" style="margin-right: 6px;" aria-hidden="true"></i>Saved';
+                    }
+
+                    // Disable all form fields
+                    card.querySelectorAll('input, textarea, select').forEach(input => { input.disabled = true; });
+
+                    // Disable multi-select widgets
+                    card.querySelectorAll('.ms-widget').forEach(w => w.classList.add('disabled'));
+
+                    // Update modal footer
+                    update_modal_status(true);
+                }
             });
-
-            // Helper to reset the save button on error paths
-            const reset_save_btn = () => {
-                if (save_btn) {
-                    save_btn.disabled = false;
-                    save_btn.innerHTML = '<i class="fa fa-save" style="margin-right: 6px;" aria-hidden="true"></i>Save';
-                }
-            };
-
-            // Handle undefined response (network/server error)
-            if (!response) {
-                display_card_message(card, 'danger', 'Unable to save Kaltura media record. Please check your connection and try again.');
-                reset_save_btn();
-                return;
-            }
-
-            // Handle 403 Forbidden
-            if (response.status === HTTP_STATUS.FORBIDDEN) {
-                display_card_message(card, 'danger', response.data?.message || 'You do not have permission to create media records.');
-                reset_save_btn();
-                return;
-            }
-
-            // Handle 400 Bad Request
-            if (response.status === HTTP_STATUS.BAD_REQUEST) {
-                display_card_message(card, 'danger', response.data?.message || 'Invalid media data. Please check the form and try again.');
-                reset_save_btn();
-                return;
-            }
-
-            if ((response.status === HTTP_STATUS.CREATED || response.status === HTTP_STATUS.OK) && response.data?.success) {
-
-                // Mark card as saved
-                const card_header = card.querySelector('.card-header');
-                if (card_header) {
-                    card_header.style.backgroundColor = '#d1e7dd';
-                }
-
-                const item_number = card.querySelector('.kaltura-item-number');
-                if (item_number) {
-                    item_number.style.backgroundColor = '#198754';
-                }
-
-                // Update save button to "Saved" state (matches repo modal)
-                if (save_btn) {
-                    save_btn.disabled = true;
-                    save_btn.classList.remove('btn-primary');
-                    save_btn.classList.add('btn-success');
-                    save_btn.innerHTML = '<i class="fa fa-check" style="margin-right: 6px;" aria-hidden="true"></i>Saved';
-                }
-
-                // Disable all form fields
-                const inputs = card.querySelectorAll('input, textarea, select');
-                inputs.forEach(input => { input.disabled = true; });
-
-                // Disable multi-select widgets
-                const widgets = card.querySelectorAll('.ms-widget');
-                widgets.forEach(w => w.classList.add('disabled'));
-
-                // Update modal footer
-                update_modal_status(true);
-
-            } else {
-                const error_message = response.data?.message || 'Failed to save Kaltura media record';
-                display_card_message(card, 'danger', error_message);
-                reset_save_btn();
-            }
 
         } catch (error) {
             // Catch block is reserved for truly unexpected errors (runtime exceptions, not HTTP failures)
@@ -476,12 +414,7 @@ const kalturaModalsModule = (function() {
             const card = document.getElementById('kaltura-form-card');
             if (card) {
                 display_card_message(card, 'danger', 'An unexpected error occurred while saving the media record.');
-
-                const save_btn = card.querySelector('.btn-save-kaltura-item');
-                if (save_btn) {
-                    save_btn.disabled = false;
-                    save_btn.innerHTML = '<i class="fa fa-save" style="margin-right: 6px;" aria-hidden="true"></i>Save';
-                }
+                helperMediaLibraryModule.reset_save_button(card.querySelector('.btn-save-kaltura-item'));
             }
         }
     };
@@ -1029,16 +962,11 @@ const kalturaModalsModule = (function() {
                     return;
                 }
 
-                // Close the view modal first
-                const view_modal_el = document.getElementById('view-kaltura-media-modal');
-
-                if (typeof bootstrap !== 'undefined' && bootstrap.Modal &&
-                    typeof bootstrap.Modal.getInstance === 'function') {
-                    const view_modal = bootstrap.Modal.getInstance(view_modal_el);
-                    if (view_modal) view_modal.hide();
-                } else if (typeof $ !== 'undefined' && typeof $.fn.modal !== 'undefined') {
-                    $(view_modal_el).modal('hide');
-                }
+                // Close the view modal first — through the shared helper, so
+                // the backdrop / `modal-open` / body padding cleanup runs.
+                helperMediaLibraryModule.hide_bootstrap_modal(
+                    document.getElementById('view-kaltura-media-modal')
+                );
 
                 // Open player modal after a brief delay for view modal to close
                 setTimeout(async () => {

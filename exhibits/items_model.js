@@ -30,35 +30,10 @@ const EXHIBIT_RECORD_TASKS = require('./tasks/exhibit_record_tasks');
 const INDEXER_MODEL = require('../indexer/model');
 const LOGGER = require('../libs/log4');
 const REINDEX_COALESCER = require('./reindex_coalescer');
-const {
-    is_valid_uuid,
-    is_valid_user_id,    build_response,
-    prepare_styles
-} = require('../exhibits/common_helper');
+const {is_valid_uuid, build_response} = require('../exhibits/common_helper');
+const {make_component_model, STATUS_CODES} = require('./component_model_factory');
 
-// Constants
-const CONSTANTS = {
-    STATUS_CODES: {
-        OK: 200,
-        CREATED: 201,
-        NO_CONTENT: 204,
-        BAD_REQUEST: 400,
-        NOT_FOUND: 404,
-        INTERNAL_SERVER_ERROR: 500
-    },
-    ITEM_TYPES: {
-        TEXT: 'text',
-        AUDIO: 'audio',
-        VIDEO: 'video'
-    },
-    MIME_TYPES: {
-        TEXT_PLAIN: 'text/plain'
-    },
-    PUBLICATION_STATUS: {
-        PUBLISHED: 1,
-        UNPUBLISHED: 0
-    }
-};
+const NOT_FOUND = 404;
 
 // Initialize task instances
 const helper_task = new HELPER();
@@ -67,6 +42,116 @@ const item_task = new EXHIBIT_ITEM_RECORD_TASKS(DB, TABLES);
 const heading_task = new EXHIBIT_HEADING_RECORD_TASKS(DB, TABLES);
 const grid_task = new EXHIBIT_GRID_RECORD_TASKS(DB, TABLES);
 const timeline_task = new EXHIBIT_TIMELINE_RECORD_TASKS(DB, TABLES);
+
+/*
+ * Field → rich-text profile map enforced on create/update. Mirrors the
+ * dashboard editor configuration (public/app/utils/rte.module.js).
+ */
+const ITEM_RTE_PROFILES = {
+    text: 'full',
+    description: 'full',
+    caption: 'full',
+    alt_text: 'plain'
+};
+
+/*
+ * The standard item's create / update / read / publish / suppress / reorder /
+ * unlock family is generated — see exhibits/component_model_factory.js.
+ *
+ * Field-level validation happens in the task layer:
+ * exhibit_item_record_tasks whitelists updatable fields (_sanitize_data +
+ * UPDATABLE_FIELDS), validates UUIDs, and checks lock/exists state. The
+ * former ajv schemas were removed: the create one only re-checked
+ * is_member_of_exhibit (injected from an already-validated route param) and
+ * the update one had been emptied to a no-op, because the wrapper requires
+ * every listed property and cannot model the text-vs-media form variants.
+ */
+const item_model = make_component_model({
+    module_name: 'items_model',
+    label: 'Item',
+    db: DB,
+    helper: helper_task,
+    task: item_task,
+    exhibit_task: exhibit_tasks,
+    indexer: INDEXER_MODEL,
+    coalescer: REINDEX_COALESCER,
+    rte_profiles: ITEM_RTE_PROFILES,
+    republish_key: 'item',
+    order_fn: (data) => helper_task.order_exhibit_items(data.is_member_of_exhibit, DB, TABLES),
+    index_fn: (exhibit_id, uuid) => INDEXER_MODEL.index_item_record(exhibit_id, uuid),
+    task_methods: {
+        create: 'create_item_record',
+        create_public_name: 'create_item_record',
+        update: 'update_item_record',
+        update_public_name: 'update_item_record',
+        get: 'get_item_record',
+        set_publish: 'set_item_to_publish',
+        publish_public_name: 'publish_item_record',
+        set_suppress: 'set_item_to_suppress',
+        suppress_public_name: 'suppress_item_record'
+    },
+    messages: {
+        /* standard items and headings say "record", not "item record" */
+        create_error_prefix: 'Unable to create record',
+        update_error_prefix: 'Unable to update record',
+        update_failure_status: STATUS_CODES.BAD_REQUEST,
+        update_returns_uuid: false
+    },
+    reads: [
+        {
+            name: 'get_item_record',
+            task_method: 'get_item_record',
+            label: 'Item record',
+            params: ['is_member_of_exhibit', 'uuid']
+        },
+        {
+            name: 'get_item_edit_record',
+            task_method: 'get_item_edit_record',
+            label: 'Item edit record',
+            params: ['uid', 'is_member_of_exhibit', 'uuid']
+        },
+        {
+            /* media-library metadata, no lock */
+            name: 'get_item_details_record',
+            task_method: 'get_item_details_record',
+            label: 'Item details record',
+            params: ['is_member_of_exhibit', 'uuid']
+        }
+    ],
+    reorder: [
+        {
+            name: 'reorder_items',
+            task_method: 'reorder_items',
+            id_label: 'exhibit',
+            data_label: 'item'
+        }
+    ],
+    unlock: [
+        {
+            name: 'unlock_item_record',
+            table: TABLES.item_records
+        }
+    ]
+});
+
+exports.create_item_record = item_model.create_record;
+exports.update_item_record = item_model.update_record;
+exports.get_item_record = item_model.reads.get_item_record;
+exports.get_item_edit_record = item_model.reads.get_item_edit_record;
+exports.get_item_details_record = item_model.reads.get_item_details_record;
+exports.publish_item_record = item_model.publish_record;
+exports.suppress_item_record = item_model.suppress_record;
+exports.reorder_items = item_model.reorder.reorder_items;
+exports.unlock_item_record = item_model.unlock.unlock_item_record;
+
+/* ==================== EXHIBIT-WIDE OPERATIONS ==================== */
+
+/*
+ * The rest of this file is the exhibit-wide work that has no per-type
+ * analogue: aggregating every component type into one ordered list, the
+ * standard item's own delete (which owns an ES doc, unlike grid/timeline
+ * items), and the atomic cross-table reorder plus its targeted re-index.
+ */
 
 /**
  * Fetches grid items for grids in parallel
@@ -132,26 +217,13 @@ const fetch_timeline_items = async (is_member_of_exhibit, timelines) => {
  * @param {string} is_member_of_exhibit - Exhibit UUID
  * @returns {Promise<Object>} Response object with records
  */
-const RTE_VOCABULARY = require('../libs/rte_vocabulary');
-
-/*
- * Field → rich-text profile map enforced on create/update. Mirrors the
- * dashboard editor configuration (public/app/utils/rte.module.js).
- */
-const ITEM_RTE_PROFILES = {
-    text: 'full',
-    description: 'full',
-    caption: 'full',
-    alt_text: 'plain'
-};
-
 exports.get_item_records = async (is_member_of_exhibit) => {
 
     try {
 
         if (!is_valid_uuid(is_member_of_exhibit)) {
             return build_response(
-                CONSTANTS.STATUS_CODES.BAD_REQUEST,
+                STATUS_CODES.BAD_REQUEST,
                 'Invalid exhibit UUID provided'
             );
         }
@@ -201,7 +273,7 @@ exports.get_item_records = async (is_member_of_exhibit) => {
         }
 
         return build_response(
-            CONSTANTS.STATUS_CODES.OK,
+            STATUS_CODES.OK,
             'Exhibit item records',
             records
         );
@@ -213,322 +285,7 @@ exports.get_item_records = async (is_member_of_exhibit) => {
         });
 
         return build_response(
-            CONSTANTS.STATUS_CODES.BAD_REQUEST,
-            error.message
-        );
-    }
-};
-
-/**
- * Creates item record
- * @param {string} is_member_of_exhibit - Exhibit UUID
- * @param {Object} data - Item data
- * @returns {Promise<Object>} Response object
- */
-exports.create_item_record = async (is_member_of_exhibit, data) => {
-
-    RTE_VOCABULARY.apply(data, ITEM_RTE_PROFILES);
-
-    try {
-        // Validate inputs
-        if (!is_valid_uuid(is_member_of_exhibit)) {
-            return build_response(
-                CONSTANTS.STATUS_CODES.BAD_REQUEST,
-                'Invalid exhibit UUID provided'
-            );
-        }
-
-        if (!data || typeof data !== 'object') {
-            return build_response(
-                CONSTANTS.STATUS_CODES.BAD_REQUEST,
-                'Invalid data provided'
-            );
-        }
-
-        // Prepare data
-        data.uuid = helper_task.create_uuid();
-        data.is_member_of_exhibit = is_member_of_exhibit;
-
-        // The former ajv create schema only re-checked is_member_of_exhibit,
-        // injected above from the already-validated route param — provably
-        // unreachable as a guard — so it was removed (same rationale as the
-        // update-schema removals; field-level protection lives in the task
-        // layer and the client form gates).
-
-        // Prepare styles and get order
-        data.styles = prepare_styles(data.styles);
-        data.order = await helper_task.order_exhibit_items(data.is_member_of_exhibit, DB, TABLES);
-
-        // Create record
-        const result = await item_task.create_item_record(data);
-
-        if (result === false) {
-            LOGGER.module().error('ERROR: [/exhibits/items_model (create_item_record)] Database operation failed');
-            return build_response(
-                CONSTANTS.STATUS_CODES.INTERNAL_SERVER_ERROR,
-                'Unable to create item record'
-            );
-        }
-
-        const is_updated = await exhibit_tasks.update_exhibit_timestamp(is_member_of_exhibit);
-
-        if (is_updated === true) {
-            LOGGER.module().info('INFO: [/exhibits/items_model - Exhibit timestamp updated successfully.');
-        }
-
-        return build_response(
-            CONSTANTS.STATUS_CODES.CREATED,
-            'Item record created',
-            data.uuid
-        );
-
-    } catch (error) {
-        LOGGER.module().error(`ERROR: [/exhibits/items_model (create_item_record)] ${error.message}`, {
-            is_member_of_exhibit,
-            stack: error.stack
-        });
-
-        return build_response(
-            CONSTANTS.STATUS_CODES.INTERNAL_SERVER_ERROR,
-            `Unable to create record: ${error.message}`
-        );
-    }
-};
-
-/**
- * Handles post-update republishing for item
- * @param {string} is_member_of_exhibit - Exhibit UUID
- * @param {string} item_id - Item UUID
- * @returns {Promise<void>}
- */
-const handle_item_republish = async (is_member_of_exhibit, item_id) => {
-
-    try {
-
-        // Re-index just this item in place — no suppress. ES index upserts by id, so
-        // re-indexing overwrites; suppressing would only blank the item from public
-        // search for the delay window. (publish_item_record re-indexes just this item.)
-        // Coalesced per item: a burst of edits collapses to one near-real-time
-        // re-index (was a flat 5s delay + one independent timer per edit).
-        REINDEX_COALESCER.schedule_reindex(`item:${item_id}`, async () => {
-            const publish_result = await publish_item_record(is_member_of_exhibit, item_id);
-
-            if (publish_result && publish_result.status === true) {
-                LOGGER.module().info('INFO: [/exhibits/items_model (handle_item_republish)] Item re-indexed after edit.');
-            } else {
-                LOGGER.module().error('ERROR: [/exhibits/items_model (handle_item_republish)] Failed to re-index item');
-            }
-        });
-    } catch (error) {
-        LOGGER.module().error(`ERROR: [/exhibits/items_model (handle_item_republish)] ${error.message}`, {
-            is_member_of_exhibit,
-            item_id,
-            stack: error.stack
-        });
-    }
-};
-
-/**
- * Updates item record
- * @param {string} is_member_of_exhibit - Exhibit UUID
- * @param {string} item_id - Item UUID
- * @param {Object} data - Update data
- * @returns {Promise<Object>} Response object
- */
-exports.update_item_record = async (is_member_of_exhibit, item_id, data) => {
-
-    RTE_VOCABULARY.apply(data, ITEM_RTE_PROFILES);
-
-    try {
-        // Validate inputs
-        if (!is_valid_uuid(is_member_of_exhibit) || !is_valid_uuid(item_id)) {
-            return build_response(
-                CONSTANTS.STATUS_CODES.BAD_REQUEST,
-                'Invalid UUID provided'
-            );
-        }
-
-        if (!data || typeof data !== 'object') {
-            return build_response(
-                CONSTANTS.STATUS_CODES.BAD_REQUEST,
-                'Invalid data provided'
-            );
-        }
-
-        // Prepare data
-        data.is_member_of_exhibit = is_member_of_exhibit;
-        data.uuid = item_id;
-
-        // Extract is_published (handled separately from the record update)
-        const is_published = data.is_published;
-        delete data.is_published;
-
-        // Field-level validation happens in the task layer:
-        // exhibit_item_record_tasks.update_item_record whitelists updatable
-        // fields (_sanitize_data + UPDATABLE_FIELDS), validates UUIDs, and
-        // checks lock/exists state. The former ajv schema for updates
-        // (exhibit_item_update_record_schema) had been emptied to a no-op —
-        // the wrapper requires every listed property, which can't model the
-        // text-vs-media form variants — so it was removed rather than left
-        // as dead weight.
-
-        // Prepare styles
-        data.styles = prepare_styles(data.styles);
-
-        // Update record
-        const result = await item_task.update_item_record(data);
-
-        if (result === false) {
-            return build_response(
-                CONSTANTS.STATUS_CODES.BAD_REQUEST,
-                'Unable to update item record'
-            );
-        }
-
-        // Handle republishing if needed (check for truthy values)
-        if (is_published === 'true' || is_published === true || is_published === 1) {
-            setImmediate(() => handle_item_republish(is_member_of_exhibit, item_id));
-        }
-
-        const is_updated = await exhibit_tasks.update_exhibit_timestamp(is_member_of_exhibit);
-
-        if (is_updated === true) {
-            LOGGER.module().info('INFO: [/exhibits/items_model - Exhibit timestamp updated successfully.');
-        }
-
-        return build_response(
-            CONSTANTS.STATUS_CODES.CREATED,
-            'Item record updated'
-        );
-
-    } catch (error) {
-        LOGGER.module().error(`ERROR: [/exhibits/items_model (update_item_record)] ${error.message}`, {
-            is_member_of_exhibit,
-            item_id,
-            stack: error.stack
-        });
-
-        return build_response(
-            CONSTANTS.STATUS_CODES.BAD_REQUEST,
-            `Unable to update record: ${error.message}`
-        );
-    }
-};
-
-/**
- * Gets item record by UUID
- * @param {string} is_member_of_exhibit - Exhibit UUID
- * @param {string} uuid - Item UUID
- * @returns {Promise<Object>} Response object
- */
-exports.get_item_record = async (is_member_of_exhibit, uuid) => {
-
-    try {
-
-        if (!is_valid_uuid(is_member_of_exhibit) || !is_valid_uuid(uuid)) {
-            return build_response(
-                CONSTANTS.STATUS_CODES.BAD_REQUEST,
-                'Invalid UUID provided'
-            );
-        }
-
-        const record = await item_task.get_item_record(is_member_of_exhibit, uuid);
-
-        return build_response(
-            CONSTANTS.STATUS_CODES.OK,
-            'Item record',
-            record
-        );
-
-    } catch (error) {
-        LOGGER.module().error(`ERROR: [/exhibits/items_model (get_item_record)] ${error.message}`, {
-            is_member_of_exhibit,
-            uuid,
-            stack: error.stack
-        });
-
-        return build_response(
-            CONSTANTS.STATUS_CODES.BAD_REQUEST,
-            error.message
-        );
-    }
-};
-
-/**
- * Gets item edit record
- * @param {string} uid - User ID
- * @param {string} is_member_of_exhibit - Exhibit UUID
- * @param {string} uuid - Item UUID
- * @returns {Promise<Object>} Response object
- */
-exports.get_item_edit_record = async (uid, is_member_of_exhibit, uuid) => {
-
-    try {
-
-        if (!is_valid_user_id(uid) || !is_valid_uuid(is_member_of_exhibit) || !is_valid_uuid(uuid)) {
-            return build_response(
-                CONSTANTS.STATUS_CODES.BAD_REQUEST,
-                'Invalid UUID provided'
-            );
-        }
-
-        const record = await item_task.get_item_edit_record(uid, is_member_of_exhibit, uuid);
-
-        return build_response(
-            CONSTANTS.STATUS_CODES.OK,
-            'Item edit record',
-            record
-        );
-
-    } catch (error) {
-        LOGGER.module().error(`ERROR: [/exhibits/items_model (get_item_edit_record)] ${error.message}`, {
-            uid,
-            is_member_of_exhibit,
-            uuid,
-            stack: error.stack
-        });
-
-        return build_response(
-            CONSTANTS.STATUS_CODES.BAD_REQUEST,
-            error.message
-        );
-    }
-};
-
-/**
- * Gets item details record with media library metadata (no lock)
- * @param {string} is_member_of_exhibit - Exhibit UUID
- * @param {string} uuid - Item UUID
- * @returns {Promise<Object>} Response object
- */
-exports.get_item_details_record = async (is_member_of_exhibit, uuid) => {
-
-    try {
-
-        if (!is_valid_uuid(is_member_of_exhibit) || !is_valid_uuid(uuid)) {
-            return build_response(
-                CONSTANTS.STATUS_CODES.BAD_REQUEST,
-                'Invalid UUID provided'
-            );
-        }
-
-        const record = await item_task.get_item_details_record(is_member_of_exhibit, uuid);
-
-        return build_response(
-            CONSTANTS.STATUS_CODES.OK,
-            'Item details record',
-            record
-        );
-
-    } catch (error) {
-        LOGGER.module().error(`ERROR: [/exhibits/items_model (get_item_details_record)] ${error.message}`, {
-            is_member_of_exhibit,
-            uuid,
-            stack: error.stack
-        });
-
-        return build_response(
-            CONSTANTS.STATUS_CODES.BAD_REQUEST,
+            STATUS_CODES.BAD_REQUEST,
             error.message
         );
     }
@@ -536,6 +293,11 @@ exports.get_item_details_record = async (is_member_of_exhibit, uuid) => {
 
 /**
  * Deletes item record
+ *
+ * Not generated: a standard item owns its own index doc (grid and timeline
+ * items are embedded in their container's), and the caller supplies the
+ * record `type`.
+ *
  * @param {string} is_member_of_exhibit - Exhibit UUID
  * @param {string} item_id - Item UUID
  * @param {string} type - Item type
@@ -547,7 +309,7 @@ exports.delete_item_record = async (is_member_of_exhibit, item_id, type) => {
 
         if (!is_valid_uuid(is_member_of_exhibit) || !is_valid_uuid(item_id)) {
             return build_response(
-                CONSTANTS.STATUS_CODES.BAD_REQUEST,
+                STATUS_CODES.BAD_REQUEST,
                 'Invalid UUID provided'
             );
         }
@@ -555,10 +317,10 @@ exports.delete_item_record = async (is_member_of_exhibit, item_id, type) => {
         // Check if item exists in index
         const index_record = await INDEXER_MODEL.get_indexed_record(item_id);
 
-        if (index_record.status !== CONSTANTS.STATUS_CODES.NOT_FOUND) {
+        if (index_record.status !== NOT_FOUND) {
             const delete_result = await INDEXER_MODEL.delete_record(item_id);
 
-            if (delete_result.status === CONSTANTS.STATUS_CODES.NO_CONTENT) {
+            if (delete_result.status === STATUS_CODES.NO_CONTENT) {
                 LOGGER.module().info('INFO: [/exhibits/items_model (delete_item_record)] Item record deleted from index');
             } else {
                 LOGGER.module().info('INFO: [/exhibits/items_model (delete_item_record)] Record not found in index');
@@ -570,11 +332,11 @@ exports.delete_item_record = async (is_member_of_exhibit, item_id, type) => {
         const is_updated = await exhibit_tasks.update_exhibit_timestamp(is_member_of_exhibit);
 
         if (is_updated === true) {
-            LOGGER.module().info('INFO: [/exhibits/items_model - Exhibit timestamp updated successfully.');
+            LOGGER.module().info('INFO: [/exhibits/items_model] Exhibit timestamp updated successfully.');
         }
 
         return build_response(
-            CONSTANTS.STATUS_CODES.NO_CONTENT,
+            STATUS_CODES.NO_CONTENT,
             'Record deleted',
             result
         );
@@ -588,199 +350,9 @@ exports.delete_item_record = async (is_member_of_exhibit, item_id, type) => {
         });
 
         return build_response(
-            CONSTANTS.STATUS_CODES.BAD_REQUEST,
+            STATUS_CODES.BAD_REQUEST,
             error.message
         );
-    }
-};
-
-/**
- * Publishes item record
- * @param {string} exhibit_id - Exhibit UUID
- * @param {string} item_id - Item UUID
- * @returns {Promise<Object>} Response object
- */
-const publish_item_record = async (exhibit_id, item_id) => {
-
-    try {
-
-        if (!is_valid_uuid(exhibit_id) || !is_valid_uuid(item_id)) {
-            return {
-                status: false,
-                message: 'Invalid UUID provided'
-            };
-        }
-
-        // Check if exhibit is published
-        const exhibit_record = await exhibit_tasks.get_exhibit_record(exhibit_id);
-
-        if (!exhibit_record || exhibit_record.is_published === CONSTANTS.PUBLICATION_STATUS.UNPUBLISHED) {
-            LOGGER.module().error('ERROR: [/exhibits/items_model (publish_item_record)] Exhibit not published');
-
-            return {
-                status: false,
-                message: 'Unable to publish item. Exhibit must be published first'
-            };
-        }
-
-        // Set item to published
-        /*
-         * The item must belong to THIS exhibit before it is flagged or indexed: set_item_to_publish keys on uuid alone.
-         * (code review 2026-09-02, H3)
-         */
-        const member_item_record = await item_task.get_item_record(exhibit_id, item_id);
-
-        if (!member_item_record) {
-            return {
-                status: false,
-                message: 'Item not found in exhibit'
-            };
-        }
-
-        const is_item_published = await item_task.set_item_to_publish(item_id);
-
-        if (is_item_published === false) {
-            LOGGER.module().error('ERROR: [/exhibits/items_model (publish_item_record)] Unable to set item to published');
-
-            return {
-                status: false,
-                message: 'Unable to publish item'
-            };
-        }
-
-        // Index item
-        const is_indexed = await INDEXER_MODEL.index_item_record(exhibit_id, item_id);
-
-        if (is_indexed === false) {
-            LOGGER.module().error('ERROR: [/exhibits/items_model (publish_item_record)] Unable to index item');
-
-            return {
-                status: false,
-                message: 'Unable to publish item'
-            };
-        }
-
-        return {
-            status: true,
-            message: 'Item published'
-        };
-
-    } catch (error) {
-        LOGGER.module().error(`ERROR: [/exhibits/items_model (publish_item_record)] ${error.message}`, {
-            exhibit_id,
-            item_id,
-            stack: error.stack
-        });
-
-        return {
-            status: false,
-            message: error.message
-        };
-    }
-};
-
-/**
- * Suppresses item record
- * @param {string} exhibit_id - Exhibit UUID
- * @param {string} item_id - Item UUID
- * @returns {Promise<Object>} Response object
- */
-const suppress_item_record = async (exhibit_id, item_id) => {
-
-    try {
-
-        if (!is_valid_uuid(exhibit_id) || !is_valid_uuid(item_id)) {
-            return {
-                status: false,
-                message: 'Invalid UUID provided'
-            };
-        }
-
-        // Delete from index
-        /*
-         * Membership guard BEFORE the index delete: the item must belong to THIS exhibit.
-         * (code review 2026-09-02, H3)
-         */
-        const member_item_record = await item_task.get_item_record(exhibit_id, item_id);
-
-        if (!member_item_record) {
-            return {
-                status: false,
-                message: 'Item not found in exhibit'
-            };
-        }
-
-        const delete_result = await INDEXER_MODEL.delete_record(item_id);
-
-        if (delete_result.status !== CONSTANTS.STATUS_CODES.NO_CONTENT) {
-            LOGGER.module().error('ERROR: [/exhibits/items_model (suppress_item_record)] Unable to delete from index');
-
-            return {
-                status: false,
-                message: 'Unable to suppress item'
-            };
-        }
-
-        // Set item to suppressed
-        const is_item_suppressed = await item_task.set_item_to_suppress(item_id);
-
-        if (is_item_suppressed === false) {
-            LOGGER.module().error('ERROR: [/exhibits/items_model (suppress_item_record)] Unable to set item to suppressed');
-
-            return {
-                status: false,
-                message: 'Unable to suppress item'
-            };
-        }
-
-        return {
-            status: true,
-            message: 'Item suppressed'
-        };
-
-    } catch (error) {
-        LOGGER.module().error(`ERROR: [/exhibits/items_model (suppress_item_record)] ${error.message}`, {
-            exhibit_id,
-            item_id,
-            stack: error.stack
-        });
-
-        return {
-            status: false,
-            message: error.message
-        };
-    }
-};
-
-/**
- * Reorders items in exhibit
- * @param {string} exhibit_id - Exhibit UUID
- * @param {Object} item - Item order data
- * @returns {Promise<*>} Result from task
- */
-exports.reorder_items = async (exhibit_id, item) => {
-
-    try {
-
-        if (!is_valid_uuid(exhibit_id)) {
-            LOGGER.module().error('ERROR: [/exhibits/items_model (reorder_items)] Invalid exhibit UUID provided');
-            return false;
-        }
-
-        if (!item || typeof item !== 'object') {
-            LOGGER.module().error('ERROR: [/exhibits/items_model (reorder_items)] Invalid item data provided');
-            return false;
-        }
-
-        return await item_task.reorder_items(exhibit_id, item);
-
-    } catch (error) {
-        LOGGER.module().error(`ERROR: [/exhibits/items_model (reorder_items)] ${error.message}`, {
-            exhibit_id,
-            stack: error.stack
-        });
-
-        return false;
     }
 };
 
@@ -968,35 +540,3 @@ exports.schedule_reorder_reindex = (exhibit_id, updated_order) => {
         });
     }
 };
-
-/**
- * Unlocks item record for editing
- * @param {string} uid - User ID
- * @param {string} uuid - Item UUID
- * @param {object} options - {force: true/false}
- * @returns {Promise<*>} Unlock result
- */
-exports.unlock_item_record = async (uid, uuid, options) => {
-
-    try {
-
-        if (!is_valid_user_id(uid) || !is_valid_uuid(uuid)) {
-            LOGGER.module().error('ERROR: [/exhibits/items_model (unlock_item_record)] Invalid UUID provided');
-            return false;
-        }
-
-        return await helper_task.unlock_record(uid, uuid, DB, TABLES.item_records, options);
-
-    } catch (error) {
-        LOGGER.module().error(`ERROR: [/exhibits/items_model (unlock_item_record)] ${error.message}`, {
-            uid,
-            uuid,
-            stack: error.stack
-        });
-
-        return false;
-    }
-};
-
-exports.publish_item_record = publish_item_record;
-exports.suppress_item_record = suppress_item_record;

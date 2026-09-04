@@ -500,20 +500,25 @@ describe('Exhibit_item_record_tasks', () => {
             expect(count).toBe(0);
         });
 
-        test('should return 0 on error', async () => {
+        /*
+         * Errors THROW, matching the heading, grid and timeline counts.
+         * Standard items used to swallow them and return 0; all four run under
+         * one Promise.all in the exhibit publish gate, so the odd one out
+         * could only ever have fed the gate a wrong count (DRY review S6,
+         * reconciled in Phase 2 item 12).
+         */
+        test('should throw on a query error rather than reporting 0', async () => {
             mockQuery.count.mockReturnThis();
             mockQuery.where.mockReturnThis();
             mockQuery.timeout.mockRejectedValue(new Error('DB Error'));
 
-            // Source returns 0 on error, doesn't throw
-            const count = await itemTasks.get_record_count(exhibitUUID);
-            expect(count).toBe(0);
+            await expect(itemTasks.get_record_count(exhibitUUID))
+                .rejects.toThrow('DB Error');
         });
 
-        test('should return 0 for invalid UUID', async () => {
-            // Source returns 0 on error, doesn't throw
-            const count = await itemTasks.get_record_count('invalid');
-            expect(count).toBe(0);
+        test('should throw for invalid UUID rather than reporting 0', async () => {
+            await expect(itemTasks.get_record_count('invalid'))
+                .rejects.toThrow('Invalid exhibit UUID format');
         });
     });
 

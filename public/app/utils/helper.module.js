@@ -953,6 +953,232 @@ const helperModule = (function () {
         }
     };
 
+    /*
+     * Style-preset loader shared by the four item/heading common form modules.
+     *
+     * Each of standard-items / grid-items / timeline-items / heading-items
+     * carried a byte-equivalent `fetch_and_populate_styles` +
+     * `has_style_values` + `STYLE_KEY_LABELS` block (~130 lines each). The
+     * only real differences were the exhibit-styles key prefix ('item' vs
+     * 'heading'), the derived human labels, and the console log tag.
+     */
+
+    /**
+     * True when a style object holds at least one non-empty property.
+     * @param {Object} style_obj
+     * @returns {boolean}
+     */
+    function has_style_values(style_obj) {
+
+        if (!style_obj || typeof style_obj !== 'object') {
+            return false;
+        }
+
+        return Object.values(style_obj).some(function (v) {
+            return v !== undefined && v !== null && v !== '';
+        });
+    }
+
+    /**
+     * Derives the human label for a preset key: 'item1' -> 'Item Style 1',
+     * 'heading2' -> 'Heading Style 2'. Replaces the hard-coded
+     * STYLE_KEY_LABELS maps the four copies each carried.
+     * @param {string} key
+     * @param {string} prefix
+     * @returns {string}
+     */
+    function build_style_label(key, prefix) {
+        const suffix = String(key).slice(prefix.length);
+        const heading = prefix.charAt(0).toUpperCase() + prefix.slice(1);
+        return `${heading} Style ${suffix}`.trim();
+    }
+
+    /**
+     * Fetches the parent exhibit record and renders its style presets as the
+     * item Styles radio/swatch chooser, then reveals the styles card.
+     *
+     * Resolves (never rejects) so callers can keep a module-level
+     * `styles_promise` and await it before pre-selecting a saved value.
+     *
+     * @param {Object} [options]
+     * @param {string} [options.prefix='item'] - exhibit style key prefix
+     *     ('item' for standard/grid/timeline items, 'heading' for headings)
+     * @param {string} [options.container_selector='#item-style-options']
+     * @param {string} [options.card_selector='#item-styles-card']
+     * @param {Object} [options.labels] - explicit key -> label overrides
+     * @returns {Promise<Object|null>} the discovered key -> style map, or null
+     *     when the exhibit defines no usable presets
+     */
+    obj.load_style_presets = async function (options = {}) {
+
+        const opts = options || {};
+        const prefix = (typeof opts.prefix === 'string' && opts.prefix.length > 0) ? opts.prefix : 'item';
+        const container_selector = opts.container_selector || '#item-style-options';
+        const card_selector = opts.card_selector || '#item-styles-card';
+        const log_tag = prefix === 'item' ? '[styles]' : `[${prefix}-styles]`;
+
+        const exhibit_id = obj.get_parameter_by_name('exhibit_id');
+
+        if (!exhibit_id) {
+            console.warn(`${log_tag} No exhibit_id in URL params`);
+            return null;
+        }
+
+        const EXHIBITS_ENDPOINTS = endpointsModule.get_exhibits_endpoints();
+        const endpoint_template = EXHIBITS_ENDPOINTS?.exhibits?.exhibit_records?.endpoints?.get?.endpoint;
+
+        if (!endpoint_template) {
+            console.warn(`${log_tag} Exhibit GET endpoint not found in endpoints config.`);
+            return null;
+        }
+
+        const endpoint = endpointsModule.build(endpoint_template, { exhibit_id: exhibit_id });
+
+        try {
+
+            const response = await httpModule.api({
+                method: 'GET',
+                url: endpoint,
+                logout_on_missing_token: false
+            });
+
+            if (response === null) {
+                console.warn(`${log_tag} No auth token available`);
+                return null;
+            }
+
+            if (!response || response.status !== 200 || !response.data?.data) {
+                console.warn(`${log_tag} Exhibit API response invalid. Status:`, response?.status);
+                return null;
+            }
+
+            let styles_raw = response.data.data.styles;
+
+            if (!styles_raw) {
+                console.warn(`${log_tag} Exhibit record has no styles field`);
+                return null;
+            }
+
+            if (typeof styles_raw === 'string') {
+
+                try {
+                    styles_raw = JSON.parse(styles_raw);
+                } catch (parse_error) {
+                    console.warn(`${log_tag} Failed to parse exhibit styles JSON:`, parse_error.message);
+                    return null;
+                }
+            }
+
+            /* Navigate into the "exhibit" wrapper when present. */
+            const style_root = styles_raw.exhibit || styles_raw;
+            const style_map = {};
+
+            for (const [key, value] of Object.entries(style_root)) {
+
+                if (!key.startsWith(prefix)) {
+                    continue;
+                }
+
+                if (!has_style_values(value)) {
+                    continue;
+                }
+
+                style_map[key] = value;
+            }
+
+            if (Object.keys(style_map).length === 0) {
+                console.warn(`${log_tag} No ${prefix} style presets found in exhibit styles`);
+                return null;
+            }
+
+            const sorted_keys = Object.keys(style_map).sort();
+            const labels = {};
+
+            sorted_keys.forEach(function (key) {
+                labels[key] = (opts.labels && opts.labels[key]) || build_style_label(key, prefix);
+            });
+
+            obj.build_item_style_swatch_options(container_selector, sorted_keys, style_map, labels);
+
+            const card_el = document.querySelector(card_selector);
+
+            if (card_el) {
+                card_el.style.display = '';
+            }
+
+            return style_map;
+
+        } catch (error) {
+            console.error(`${log_tag} Failed to fetch exhibit styles:`, error.message);
+            return null;
+        }
+    };
+
+    /**
+     * Renders the "Created by X on DATE | Last updated by Y on DATE" audit
+     * line into a container, building DOM nodes rather than interpolating
+     * into innerHTML — the fourteen call sites this replaces were split
+     * between a safe-DOM variant and an innerHTML variant that dropped
+     * `created_by` / `updated_by` into markup unescaped.
+     *
+     * A half of the line is rendered only when both its actor and its
+     * timestamp are present AND the timestamp parses; the innerHTML copies
+     * rendered "Invalid Date" for a missing/unparsable value.
+     *
+     * @param {string|Element} element_or_selector - target container (e.g. '#created')
+     * @param {Object} record - record carrying created_by/created/updated_by/updated
+     * @returns {boolean} true when the container was found and written
+     */
+    obj.render_record_meta = function (element_or_selector, record) {
+
+        const el = (typeof element_or_selector === 'string')
+            ? document.querySelector(element_or_selector)
+            : element_or_selector;
+
+        if (!el) {
+            return false;
+        }
+
+        const fragments = [];
+        const data = record || {};
+
+        const push_part = function (actor, timestamp, template) {
+
+            if (!actor || !timestamp) {
+                return;
+            }
+
+            const parsed = new Date(timestamp);
+
+            if (isNaN(parsed.getTime())) {
+                return;
+            }
+
+            if (fragments.length > 0) {
+                fragments.push(document.createTextNode(' | '));
+            }
+
+            const em = document.createElement('em');
+            em.textContent = template(actor, obj.format_date(parsed));
+            fragments.push(em);
+        };
+
+        push_part(data.created_by, data.created, function (actor, when) {
+            return `Created by ${actor} on ${when}`;
+        });
+
+        push_part(data.updated_by, data.updated, function (actor, when) {
+            return `Last updated by ${actor} on ${when}`;
+        });
+
+        el.textContent = '';
+        fragments.forEach(function (fragment) {
+            el.appendChild(fragment);
+        });
+
+        return true;
+    };
+
     /**
      * Checks the item-style radio matching the saved value. Empty/unknown
      * values (legacy records saved before presets were required) fall back to

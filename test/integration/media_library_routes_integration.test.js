@@ -332,6 +332,33 @@ describe('Media Library Routes Integration (real router)', () => {
             expect(response.status).toBe(403);
             expect(mockMediaModel.delete_media_record).not.toHaveBeenCalled();
         });
+
+        /*
+         * The record routes used to accept any non-empty string as a media id and
+         * let the model decide, while the file / thumbnail / IIIF routes required a
+         * UUID — the same path parameter, two rules (DRY review 2026-09-03, bug #7).
+         * They now share libs/uuid, so a malformed id is rejected before the model
+         * and before authorization runs.
+         */
+        test('the record routes reject a malformed media id with 400, ahead of the model and the gate', async () => {
+            const requests = [
+                () => request(app).get(path_for(ENDPOINTS.media_record.get.endpoint, { media_id: 'not-a-uuid' })),
+                () => request(app).put(path_for(ENDPOINTS.media_records.put.endpoint, { media_id: 'not-a-uuid' })).send({ name: 'x' }),
+                () => request(app).delete(path_for(ENDPOINTS.media_records.delete.endpoint, { media_id: 'not-a-uuid' }))
+            ];
+
+            for (const send of requests) {
+                const response = await send();
+
+                expect(response.status).toBe(400);
+                expect(response.body.message).toBe('Bad request. Missing or invalid media ID.');
+            }
+
+            expect(mockMediaModel.get_media_record).not.toHaveBeenCalled();
+            expect(mockMediaModel.update_media_record).not.toHaveBeenCalled();
+            expect(mockMediaModel.delete_media_record).not.toHaveBeenCalled();
+            expect(AUTHORIZE.check_permission).not.toHaveBeenCalled();
+        });
     });
 
     // ==================== DUPLICATE CHECK (registration order) ====================
@@ -731,19 +758,28 @@ describe('Media Library Routes Integration (real router)', () => {
             expect(mockKalturaService.get_kaltura_media).toHaveBeenCalledWith('1_abc123');
         });
 
-        test('GET Kaltura media tags failures with 404 / 422 / 500 by reason', async () => {
+        /*
+         * kaltura-service tags its failures with a `status` (the reasons it maps
+         * to 404 / 422 / 500 are pinned in test/tasks/kaltura_service_status.test.js);
+         * the controller passes that through and defaults to 500 so a service
+         * failure is never reported as a 200. It used to re-derive the code here
+         * by string-matching the message (DRY review 2026-09-03, cluster O6).
+         */
+        test('GET Kaltura media answers with the status the service tagged, defaulting to 500', async () => {
             const cases = [
-                ['Entry not found', 404],
-                ['Unsupported media type: document', 422],
-                ['Kaltura session failed', 500]
+                [{ success: false, message: 'Entry not found', status: 404 }, 404],
+                [{ success: false, message: 'Unsupported media type: document', status: 422 }, 422],
+                [{ success: false, message: 'Kaltura session failed', status: 500 }, 500],
+                [{ success: false, message: 'An untagged failure' }, 500]
             ];
-            for (const [message, expected_status] of cases) {
-                mockKalturaService.get_kaltura_media.mockResolvedValue({ success: false, message });
+            for (const [result, expected_status] of cases) {
+                mockKalturaService.get_kaltura_media.mockResolvedValue(result);
 
                 const response = await request(app)
                     .get(path_for(ENDPOINTS.kaltura_media.get.endpoint, { entry_id: '1_abc123' }));
 
                 expect(response.status).toBe(expected_status);
+                expect(response.body.message).toBe(result.message);
             }
         });
 
@@ -769,7 +805,7 @@ describe('Media Library Routes Integration (real router)', () => {
             expect(ok.status).toBe(200);
 
             mockKalturaService.remove_kaltura_category.mockResolvedValue({
-                success: false, message: 'Category entry not found'
+                success: false, message: 'Category entry not found', status: 404
             });
 
             const missing = await request(app)

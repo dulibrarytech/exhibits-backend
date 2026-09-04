@@ -37,7 +37,7 @@ const GRIDS_MODEL = require('../exhibits/grid_model');
 const TIMELINES_MODEL = require('../exhibits/timelines_model');
 const LOGGER = require('../libs/log4');
 const REINDEX_COALESCER = require('./reindex_coalescer');
-const { validate_string_param } = require('../exhibits/exhibits_helper');
+const { validate_string_param } = require('../exhibits/controller_helper');
 const { build_response, validate_input, prepare_styles } = require('../exhibits/common_helper');
 
 // Constants
@@ -450,41 +450,68 @@ exports.update_exhibit_record = async (uuid, data) => {
     }
 };
 
+/*
+ * Cascade config for the two container types (DRY review 2026-09-03, cluster
+ * S8). `delete_grid_items` and `delete_timeline_items` were the same 45-line
+ * function differing only in the model, the two method names, the membership
+ * column and the log noun.
+ */
+const CONTAINER_CASCADES = Object.freeze({
+    grid: Object.freeze({
+        noun: 'grid item',
+        parent_key: 'is_member_of_grid',
+        list: (exhibit_id, container_id) => GRIDS_MODEL.get_grid_item_records(exhibit_id, container_id),
+        remove: (exhibit_id, container_id, item_id) =>
+            GRIDS_MODEL.delete_grid_item_record(exhibit_id, container_id, item_id)
+    }),
+    timeline: Object.freeze({
+        noun: 'timeline item',
+        parent_key: 'is_member_of_timeline',
+        list: (exhibit_id, container_id) => TIMELINES_MODEL.get_timeline_item_records(exhibit_id, container_id),
+        remove: (exhibit_id, container_id, item_id) =>
+            TIMELINES_MODEL.delete_timeline_item_record(exhibit_id, container_id, item_id)
+    })
+});
+
 /**
- * Deletes grid items for an exhibit item
- * @param {Object} item - Exhibit item
+ * Deletes every nested item of one container (a grid or a timeline).
+ *
+ * Best effort: a single failed child is logged and the rest still run, which
+ * is what both originals did.
+ *
+ * @param {Object} item - The container record from the exhibit item list
+ * @param {Object} cascade - One CONTAINER_CASCADES entry
  * @returns {Promise<void>}
  */
-const delete_grid_items = async (item) => {
+const delete_container_items = async (item, cascade) => {
 
     try {
 
-        const grid_items = await GRIDS_MODEL.get_grid_item_records(
-            item.is_member_of_exhibit,
-            item.uuid
-        );
+        const child_items = await cascade.list(item.is_member_of_exhibit, item.uuid);
 
-        if (!grid_items.data || grid_items.data.length === 0) {
+        if (!child_items.data || child_items.data.length === 0) {
             return;
         }
 
-        const delete_promises = grid_items.data.map(async (grid_item) => {
+        const delete_promises = child_items.data.map(async (child) => {
+
             try {
-                const delete_result = await GRIDS_MODEL.delete_grid_item_record(
-                    grid_item.is_member_of_exhibit,
-                    grid_item.is_member_of_grid,
-                    grid_item.uuid
+
+                const delete_result = await cascade.remove(
+                    child.is_member_of_exhibit,
+                    child[cascade.parent_key],
+                    child.uuid
                 );
 
                 if (delete_result.data !== true) {
                     LOGGER.module().error(
-                        `ERROR: [/exhibits/model (delete_grid_items)] Unable to delete grid item ${grid_item.uuid}`
+                        `ERROR: [/exhibits/model (delete_container_items)] Unable to delete ${cascade.noun} ${child.uuid}`
                     );
                 }
             } catch (error) {
                 LOGGER.module().error(
-                    `ERROR: [/exhibits/model (delete_grid_items)] ${error.message}`,
-                    { grid_item_uuid: grid_item.uuid, stack: error.stack }
+                    `ERROR: [/exhibits/model (delete_container_items)] ${error.message}`,
+                    { [`${cascade.noun.replace(' ', '_')}_uuid`]: child.uuid, stack: error.stack }
                 );
             }
         });
@@ -492,58 +519,7 @@ const delete_grid_items = async (item) => {
         await Promise.allSettled(delete_promises);
 
     } catch (error) {
-        LOGGER.module().error(`ERROR: [/exhibits/model (delete_grid_items)] ${error.message}`, {
-            item_uuid: item.uuid,
-            stack: error.stack
-        });
-    }
-};
-
-/**
- * Deletes timeline items for an exhibit item
- * @param {Object} item - Exhibit item
- * @returns {Promise<void>}
- */
-const delete_timeline_items = async (item) => {
-
-    try {
-
-        const timeline_items = await TIMELINES_MODEL.get_timeline_item_records(
-            item.is_member_of_exhibit,
-            item.uuid
-        );
-
-        if (!timeline_items.data || timeline_items.data.length === 0) {
-            return;
-        }
-
-        const delete_promises = timeline_items.data.map(async (timeline_item) => {
-
-            try {
-
-                const delete_result = await TIMELINES_MODEL.delete_timeline_item_record(
-                    timeline_item.is_member_of_exhibit,
-                    timeline_item.is_member_of_timeline,
-                    timeline_item.uuid
-                );
-
-                if (delete_result.data !== true) {
-                    LOGGER.module().error(
-                        `ERROR: [/exhibits/model (delete_timeline_items)] Unable to delete timeline item ${timeline_item.uuid}`
-                    );
-                }
-            } catch (error) {
-                LOGGER.module().error(
-                    `ERROR: [/exhibits/model (delete_timeline_items)] ${error.message}`,
-                    { timeline_item_uuid: timeline_item.uuid, stack: error.stack }
-                );
-            }
-        });
-
-        await Promise.allSettled(delete_promises);
-
-    } catch (error) {
-        LOGGER.module().error(`ERROR: [/exhibits/model (delete_timeline_items)] ${error.message}`, {
+        LOGGER.module().error(`ERROR: [/exhibits/model (delete_container_items)] ${error.message}`, {
             item_uuid: item.uuid,
             stack: error.stack
         });
@@ -577,12 +553,12 @@ const delete_all_exhibit_items = async (uuid) => {
             try {
                 // Handle grid items
                 if (item.type === CONSTANTS.RECORD_TYPES.GRID) {
-                    await delete_grid_items(item);
+                    await delete_container_items(item, CONTAINER_CASCADES.grid);
                 }
 
                 // Handle timeline items
                 if (item.type === CONSTANTS.RECORD_TYPES.VERTICAL_TIMELINE) {
-                    await delete_timeline_items(item);
+                    await delete_container_items(item, CONTAINER_CASCADES.timeline);
                     item.type = CONSTANTS.RECORD_TYPES.TIMELINE;
                 }
 
@@ -919,31 +895,37 @@ const get_all_exhibit_records = async (uuid) => {
 };
 
 /**
- * Deletes items from index
- * @param {Array} items - Array of items to delete
+ * Drops a list of component records from the public index.
+ *
+ * Replaces delete_{items,grids,timelines,headings}_from_index, which were
+ * four copies of this function differing only in the log noun (DRY review
+ * 2026-09-03, cluster S8). Best effort per record, as before.
+ *
+ * @param {Array} records - Component records ({uuid, ...})
+ * @param {string} noun - Log noun: 'item' | 'grid' | 'timeline' | 'heading'
  * @returns {Promise<void>}
  */
-const delete_items_from_index = async (items) => {
+const delete_records_from_index = async (records, noun) => {
 
-    if (!items || items.length === 0) {
+    if (!records || records.length === 0) {
         return;
     }
 
-    const delete_promises = items.map(async (item) => {
+    const delete_promises = records.map(async (record) => {
 
         try {
 
-            const delete_result = await INDEXER_MODEL.delete_record(item.uuid);
+            const delete_result = await INDEXER_MODEL.delete_record(record.uuid);
 
             if (delete_result.status !== CONSTANTS.STATUS_CODES.NO_CONTENT) {
                 LOGGER.module().error(
-                    `ERROR: [/exhibits/model (delete_items_from_index)] Unable to delete item ${item.uuid} from index`
+                    `ERROR: [/exhibits/model (delete_records_from_index)] Unable to delete ${noun} ${record.uuid} from index`
                 );
             }
         } catch (error) {
             LOGGER.module().error(
-                `ERROR: [/exhibits/model (delete_items_from_index)] ${error.message}`,
-                { item_uuid: item.uuid, stack: error.stack }
+                `ERROR: [/exhibits/model (delete_records_from_index)] ${error.message}`,
+                { [`${noun}_uuid`]: record.uuid, stack: error.stack }
             );
         }
     });
@@ -952,102 +934,18 @@ const delete_items_from_index = async (items) => {
 };
 
 /**
- * Deletes grids from index
- * @param {Array} grids - Array of grids to delete
+ * Drops every component of an exhibit from the public index, in parallel.
+ * Shared by suppress_exhibit and delete_exhibit_preview.
+ * @param {Object} records - {items, grids, timelines, headings}
  * @returns {Promise<void>}
  */
-const delete_grids_from_index = async (grids) => {
-
-    if (!grids || grids.length === 0) {
-        return;
-    }
-
-    const delete_promises = grids.map(async (grid) => {
-
-        try {
-
-            const delete_result = await INDEXER_MODEL.delete_record(grid.uuid);
-
-            if (delete_result.status !== CONSTANTS.STATUS_CODES.NO_CONTENT) {
-                LOGGER.module().error(
-                    `ERROR: [/exhibits/model (delete_grids_from_index)] Unable to delete grid ${grid.uuid} from index`
-                );
-            }
-        } catch (error) {
-            LOGGER.module().error(
-                `ERROR: [/exhibits/model (delete_grids_from_index)] ${error.message}`,
-                { grid_uuid: grid.uuid, stack: error.stack }
-            );
-        }
-    });
-
-    await Promise.allSettled(delete_promises);
-};
-
-/**
- * Deletes timelines from index
- * @param {Array} timelines - Array of timelines to delete
- * @returns {Promise<void>}
- */
-const delete_timelines_from_index = async (timelines) => {
-
-    if (!timelines || timelines.length === 0) {
-        return;
-    }
-
-    const delete_promises = timelines.map(async (timeline) => {
-
-        try {
-
-            const delete_result = await INDEXER_MODEL.delete_record(timeline.uuid);
-
-            if (delete_result.status !== CONSTANTS.STATUS_CODES.NO_CONTENT) {
-                LOGGER.module().error(
-                    `ERROR: [/exhibits/model (delete_timelines_from_index)] Unable to delete timeline ${timeline.uuid} from index`
-                );
-            }
-        } catch (error) {
-            LOGGER.module().error(
-                `ERROR: [/exhibits/model (delete_timelines_from_index)] ${error.message}`,
-                { timeline_uuid: timeline.uuid, stack: error.stack }
-            );
-        }
-    });
-
-    await Promise.allSettled(delete_promises);
-};
-
-/**
- * Deletes headings from index
- * @param {Array} headings - Array of headings to delete
- * @returns {Promise<void>}
- */
-const delete_headings_from_index = async (headings) => {
-
-    if (!headings || headings.length === 0) {
-        return;
-    }
-
-    const delete_promises = headings.map(async (heading) => {
-
-        try {
-
-            const delete_result = await INDEXER_MODEL.delete_record(heading.uuid);
-
-            if (delete_result.status !== CONSTANTS.STATUS_CODES.NO_CONTENT) {
-                LOGGER.module().error(
-                    `ERROR: [/exhibits/model (delete_headings_from_index)] Unable to delete heading ${heading.uuid} from index`
-                );
-            }
-        } catch (error) {
-            LOGGER.module().error(
-                `ERROR: [/exhibits/model (delete_headings_from_index)] ${error.message}`,
-                { heading_uuid: heading.uuid, stack: error.stack }
-            );
-        }
-    });
-
-    await Promise.allSettled(delete_promises);
+const delete_all_components_from_index = async (records) => {
+    await Promise.all([
+        delete_records_from_index(records.items, 'item'),
+        delete_records_from_index(records.grids, 'grid'),
+        delete_records_from_index(records.timelines, 'timeline'),
+        delete_records_from_index(records.headings, 'heading')
+    ]);
 };
 
 /**
@@ -1096,12 +994,7 @@ const suppress_exhibit = async (uuid) => {
         }
 
         // Delete all components from index in parallel
-        await Promise.all([
-            delete_items_from_index(records.items),
-            delete_grids_from_index(records.grids),
-            delete_timelines_from_index(records.timelines),
-            delete_headings_from_index(records.headings)
-        ]);
+        await delete_all_components_from_index(records);
 
         return {
             status: true,
@@ -1164,12 +1057,7 @@ exports.delete_exhibit_preview = async (uuid) => {
         }
 
         // Delete all components from index in parallel
-        await Promise.all([
-            delete_items_from_index(records.items),
-            delete_grids_from_index(records.grids),
-            delete_timelines_from_index(records.timelines),
-            delete_headings_from_index(records.headings)
-        ]);
+        await delete_all_components_from_index(records);
 
         return {
             status: true,

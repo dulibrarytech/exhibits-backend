@@ -65,6 +65,7 @@ describe('exhibitsCommonFormModule', () => {
         // Required globals — the module reaches for these by bare name
         // both at IIFE-definition time and inside method bodies.
         globalThis.endpointsModule = {
+            get_app_path: () => '/exhibits-dashboard',
             get_exhibits_endpoints: () => ({}),
         };
 

@@ -378,356 +378,127 @@ const NAV_CONFIGS = {
     }
 };
 
-//======================== Exhibits ========================//
-exports.get_dashboard_exhibits = function (req, res) {
-    res.render('dist/exhibits/dashboard-exhibits', {
-        ...template_config,
-        nav: NAV_CONFIGS.exhibits_list
-    });
+/**
+ * Every dashboard page in one table.
+ *
+ * Each entry carries the route path (appended to APP_PATH by dashboard/routes.js),
+ * the view to render, the nav config for that view, and the name the handler is
+ * exported under. The controller previously held 49 six-line render functions and
+ * routes.js 49 matching registrations; both are now generated from this table, so
+ * a new page is one row instead of two hand-kept copies (DRY review 2026-09-03,
+ * cluster O5).
+ *
+ * - `public: true` marks the pages served without page auth — logout, session-out
+ *   and access-denied have to render for a visitor whose session is already gone.
+ * - `locals` supplies per-render extras; it is called on every request so the
+ *   returned values never accumulate on the shared `template_config`.
+ */
+const PAGES = [
+
+    //======================== Exhibits ========================//
+    { handler: 'get_dashboard_exhibits', path: '/exhibits', view: 'dist/exhibits/dashboard-exhibits', nav: NAV_CONFIGS.exhibits_list },
+    { handler: 'get_dashboard_exhibits_add_form', path: '/exhibits/exhibit', view: 'dist/exhibits/dashboard-exhibits-add-form', nav: NAV_CONFIGS.exhibits_add_form },
+    { handler: 'get_dashboard_exhibits_details', path: '/exhibits/exhibit/details', view: 'dist/exhibits/dashboard-exhibits-details', nav: NAV_CONFIGS.exhibits_details },
+    { handler: 'get_dashboard_exhibits_edit_form', path: '/exhibits/exhibit/edit', view: 'dist/exhibits/dashboard-exhibits-edit-form', nav: NAV_CONFIGS.exhibits_edit_form },
+    { handler: 'get_dashboard_exhibits_delete_form', path: '/exhibits/exhibit/delete', view: 'dist/exhibits/dashboard-exhibits-delete-form', nav: NAV_CONFIGS.exhibits_delete_form },
+
+    //======================== Standard items ========================//
+    { handler: 'get_dashboard_items', path: '/items', view: 'dist/standard-items/dashboard-items', nav: NAV_CONFIGS.items_list },
+    { handler: 'get_dashboard_items_standard_media_add_form', path: '/items/standard/media', view: 'dist/standard-items/dashboard-item-standard-media-add-form', nav: NAV_CONFIGS.standard_item_form },
+    { handler: 'get_dashboard_items_standard_text_add_form', path: '/items/standard/text', view: 'dist/standard-items/dashboard-item-standard-text-add-form', nav: NAV_CONFIGS.standard_item_form },
+    { handler: 'get_dashboard_items_standard_media_edit_form', path: '/items/standard/media/edit', view: 'dist/standard-items/dashboard-item-standard-media-edit-form', nav: NAV_CONFIGS.standard_item_form },
+    { handler: 'get_dashboard_items_standard_text_edit_form', path: '/items/standard/text/edit', view: 'dist/standard-items/dashboard-item-standard-text-edit-form', nav: NAV_CONFIGS.standard_item_form },
+    { handler: 'get_dashboard_items_standard_media_details', path: '/items/standard/media/details', view: 'dist/standard-items/dashboard-item-standard-media-details', nav: NAV_CONFIGS.standard_item_form },
+    { handler: 'get_dashboard_items_standard_text_details', path: '/items/standard/text/details', view: 'dist/standard-items/dashboard-item-standard-text-details', nav: NAV_CONFIGS.standard_item_form },
+
+    //======================== Heading items ========================//
+    { handler: 'get_dashboard_item_heading_add_form', path: '/items/heading', view: 'dist/heading-items/dashboard-item-heading-add-form', nav: NAV_CONFIGS.standard_item_form },
+    { handler: 'get_dashboard_item_heading_details', path: '/items/heading/details', view: 'dist/heading-items/dashboard-item-heading-details', nav: NAV_CONFIGS.standard_item_form },
+    { handler: 'get_dashboard_items_heading_edit_form', path: '/items/heading/edit', view: 'dist/heading-items/dashboard-item-heading-edit-form', nav: NAV_CONFIGS.standard_item_form },
+
+    //======================== Grids ========================//
+    { handler: 'get_dashboard_grid_add_form', path: '/items/grid', view: 'dist/grid-items/dashboard-grid-add-form', nav: NAV_CONFIGS.grid_add_form },
+    { handler: 'get_dashboard_grid_details', path: '/items/grid/details', view: 'dist/grid-items/dashboard-grid-details', nav: NAV_CONFIGS.grid_details },
+    { handler: 'get_dashboard_grid_edit_form', path: '/items/grid/edit', view: 'dist/grid-items/dashboard-grid-edit-form', nav: NAV_CONFIGS.grid_edit_form },
+    { handler: 'get_dashboard_grid_add_media_item_form', path: '/items/grid/item/media', view: 'dist/grid-items/dashboard-grid-add-media-item-form', nav: NAV_CONFIGS.grid_item_form },
+    { handler: 'get_dashboard_grid_add_text_item_form', path: '/items/grid/item/text', view: 'dist/grid-items/dashboard-grid-add-text-item-form', nav: NAV_CONFIGS.grid_item_form },
+    { handler: 'get_dashboard_grid_item_media_details', path: '/items/grid/item/media/details', view: 'dist/grid-items/dashboard-grid-item-media-details', nav: NAV_CONFIGS.grid_item_details },
+    { handler: 'get_dashboard_grid_item_text_details', path: '/items/grid/item/text/details', view: 'dist/grid-items/dashboard-grid-item-text-details', nav: NAV_CONFIGS.grid_item_details },
+    { handler: 'get_dashboard_grid_edit_media_item_form', path: '/items/grid/item/media/edit', view: 'dist/grid-items/dashboard-grid-edit-media-item-form', nav: NAV_CONFIGS.grid_item_form },
+    { handler: 'get_dashboard_grid_edit_text_item_form', path: '/items/grid/item/text/edit', view: 'dist/grid-items/dashboard-grid-edit-text-item-form', nav: NAV_CONFIGS.grid_item_form },
+    { handler: 'get_dashboard_item_grid_items', path: '/items/grid/items', view: 'dist/grid-items/dashboard-grid-items', nav: NAV_CONFIGS.grid_items_list },
+    { handler: 'get_dashboard_grid_items_delete_form', path: '/items/grid/item/delete', view: 'dist/grid-items/dashboard-grid-items-delete-form', nav: NAV_CONFIGS.grid_items_delete_form },
+
+    //======================== Timelines ========================//
+    { handler: 'get_dashboard_vertical_timeline_add_form', path: '/items/vertical-timeline', view: 'dist/timeline-items/dashboard-vertical-timeline-add-form', nav: NAV_CONFIGS.timeline_add_form },
+    { handler: 'get_dashboard_vertical_timeline_details', path: '/items/vertical-timeline/details', view: 'dist/timeline-items/dashboard-vertical-timeline-details', nav: NAV_CONFIGS.timeline_details },
+    { handler: 'get_dashboard_vertical_timeline_edit_form', path: '/items/vertical-timeline/edit', view: 'dist/timeline-items/dashboard-vertical-timeline-edit-form', nav: NAV_CONFIGS.timeline_edit_form },
+    { handler: 'get_dashboard_vertical_timeline_item_media_add_form', path: '/items/vertical-timeline/item/media', view: 'dist/timeline-items/dashboard-vertical-timeline-item-media-add-form', nav: NAV_CONFIGS.timeline_item_form },
+    { handler: 'get_dashboard_vertical_timeline_item_media_edit_form', path: '/items/vertical-timeline/item/media/edit', view: 'dist/timeline-items/dashboard-vertical-timeline-item-media-edit-form', nav: NAV_CONFIGS.timeline_item_form },
+    { handler: 'get_dashboard_vertical_timeline_item_text_add_form', path: '/items/vertical-timeline/item/text', view: 'dist/timeline-items/dashboard-vertical-timeline-item-text-add-form', nav: NAV_CONFIGS.timeline_item_form },
+    { handler: 'get_dashboard_vertical_timeline_item_text_edit_form', path: '/items/vertical-timeline/item/text/edit', view: 'dist/timeline-items/dashboard-vertical-timeline-item-text-edit-form', nav: NAV_CONFIGS.timeline_item_form },
+    { handler: 'get_dashboard_vertical_timeline_item_media_details', path: '/items/vertical-timeline/item/media/details', view: 'dist/timeline-items/dashboard-vertical-timeline-item-media-details', nav: NAV_CONFIGS.timeline_item_details },
+    { handler: 'get_dashboard_vertical_timeline_item_text_details', path: '/items/vertical-timeline/item/text/details', view: 'dist/timeline-items/dashboard-vertical-timeline-item-text-details', nav: NAV_CONFIGS.timeline_item_details },
+    { handler: 'get_dashboard_item_timeline_items', path: '/items/timeline/items', view: 'dist/timeline-items/dashboard-timeline-items', nav: NAV_CONFIGS.timeline_items_list },
+    { handler: 'get_dashboard_timeline_items_delete_form', path: '/items/timeline/item/delete', view: 'dist/timeline-items/dashboard-timeline-items-delete-form', nav: NAV_CONFIGS.timeline_items_delete_form },
+
+    { handler: 'get_dashboard_items_delete_form', path: '/items/delete', view: 'dist/standard-items/dashboard-items-delete-form', nav: NAV_CONFIGS.items_delete_form },
+
+    //======================== Users ========================//
+    { handler: 'get_dashboard_users', path: '/users', view: 'dist/users/dashboard-users', nav: NAV_CONFIGS.users_list },
+    { handler: 'get_dashboard_users_add_form', path: '/users/add', view: 'dist/users/dashboard-add-user', nav: NAV_CONFIGS.users_add_form },
+    { handler: 'get_dashboard_users_edit_form', path: '/users/edit', view: 'dist/users/dashboard-edit-user', nav: NAV_CONFIGS.users_edit_form },
+    { handler: 'get_dashboard_users_delete_form', path: '/users/delete', view: 'dist/users/dashboard-delete-user-form', nav: NAV_CONFIGS.users_edit_form },
+
+    //======================== Auth ========================//
+    { handler: 'get_dashboard_session_out', path: '/session', view: 'dist/dashboard-session-out', nav: NAV_CONFIGS.minimal, public: true },
+    {
+        handler: 'get_dashboard_logout',
+        path: '/logout',
+        view: 'dist/dashboard-logout',
+        nav: NAV_CONFIGS.minimal,
+        public: true,
+        // Per-render, not folded into template_config: assigning it there leaked
+        // sso_logout_url into every page rendered after the first logout.
+        locals: () => ({ sso_logout_url: SSO_CONFIG.sso_logout_url })
+    },
+    { handler: 'get_dashboard_access_denied', path: '/access-denied', view: 'dist/dashboard-access-denied', nav: NAV_CONFIGS.access_denied, public: true },
+    { handler: 'get_dashboard_recycle', path: '/recycle', view: 'dist/dashboard-recycle', nav: NAV_CONFIGS.recycle },
+
+    //======================== Media Library ========================//
+    { handler: 'get_dashboard_media', path: '/media/library', view: 'dist/media-library/dashboard-media-home.ejs', nav: NAV_CONFIGS.media_library },
+
+    //======================== Styles ========================//
+    { handler: 'get_dashboard_styles', path: '/styles', view: 'dist/exhibits/dashboard-styles-form.ejs', nav: NAV_CONFIGS.styles_form },
+
+    //======================== Index Management ========================//
+    { handler: 'get_dashboard_index_management', path: '/index-management', view: 'dist/dashboard-index-management', nav: NAV_CONFIGS.index_management }
+];
+
+/**
+ * Builds the Express handler for one PAGES entry
+ * @param {Object} page - PAGES entry
+ * @returns {Function} Express request handler
+ */
+const render_page = (page) => {
+
+    return function (req, res) {
+        res.render(page.view, {
+            ...template_config,
+            ...(typeof page.locals === 'function' ? page.locals() : {}),
+            nav: page.nav
+        });
+    };
 };
 
-exports.get_dashboard_exhibits_add_form = function (req, res) {
-    res.render('dist/exhibits/dashboard-exhibits-add-form', {
-        ...template_config,
-        nav: NAV_CONFIGS.exhibits_add_form
-    });
-};
+/*
+ * The per-page named exports (get_dashboard_exhibits, ...) are generated so the
+ * module keeps the surface it had before the table existed — dashboard/routes.js
+ * resolves handlers through PAGES, but any other caller referencing a page by
+ * name still works.
+ */
+for (const page of PAGES) {
+    exports[page.handler] = render_page(page);
+}
 
-exports.get_dashboard_exhibits_details = function (req, res) {
-    res.render('dist/exhibits/dashboard-exhibits-details', {
-        ...template_config,
-        nav: NAV_CONFIGS.exhibits_details
-    });
-};
-
-exports.get_dashboard_exhibits_edit_form = function (req, res) {
-    res.render('dist/exhibits/dashboard-exhibits-edit-form', {
-        ...template_config,
-        nav: NAV_CONFIGS.exhibits_edit_form
-    });
-};
-
-exports.get_dashboard_exhibits_delete_form = function (req, res) {
-    res.render('dist/exhibits/dashboard-exhibits-delete-form', {
-        ...template_config,
-        nav: NAV_CONFIGS.exhibits_delete_form
-    });
-};
-
-//======================== Heading items ========================//
-exports.get_dashboard_item_heading_add_form = function (req, res) {
-    res.render('dist/heading-items/dashboard-item-heading-add-form', {
-        ...template_config,
-        nav: NAV_CONFIGS.standard_item_form
-    });
-};
-
-exports.get_dashboard_item_heading_details = function (req, res) {
-    res.render('dist/heading-items/dashboard-item-heading-details', {
-        ...template_config,
-        nav: NAV_CONFIGS.standard_item_form
-    });
-};
-
-exports.get_dashboard_items_heading_edit_form = function (req, res) {
-    res.render('dist/heading-items/dashboard-item-heading-edit-form', {
-        ...template_config,
-        nav: NAV_CONFIGS.standard_item_form
-    });
-};
-
-//======================== Standard items ========================//
-exports.get_dashboard_items = function (req, res) {
-    res.render('dist/standard-items/dashboard-items', {
-        ...template_config,
-        nav: NAV_CONFIGS.items_list
-    });
-};
-
-exports.get_dashboard_items_standard_media_details = function (req, res) {
-    res.render('dist/standard-items/dashboard-item-standard-media-details', {
-        ...template_config,
-        nav: NAV_CONFIGS.standard_item_form
-    });
-};
-
-exports.get_dashboard_items_standard_text_details = function (req, res) {
-    res.render('dist/standard-items/dashboard-item-standard-text-details', {
-        ...template_config,
-        nav: NAV_CONFIGS.standard_item_form
-    });
-};
-
-exports.get_dashboard_items_delete_form = function (req, res) {
-    res.render('dist/standard-items/dashboard-items-delete-form', {
-        ...template_config,
-        nav: NAV_CONFIGS.items_delete_form
-    });
-};
-
-exports.get_dashboard_items_standard_media_add_form = function (req, res) {
-    res.render('dist/standard-items/dashboard-item-standard-media-add-form', {
-        ...template_config,
-        nav: NAV_CONFIGS.standard_item_form
-    });
-};
-
-exports.get_dashboard_items_standard_media_edit_form = function (req, res) {
-    res.render('dist/standard-items/dashboard-item-standard-media-edit-form', {
-        ...template_config,
-        nav: NAV_CONFIGS.standard_item_form
-    });
-};
-
-exports.get_dashboard_items_standard_text_add_form = function (req, res) {
-    res.render('dist/standard-items/dashboard-item-standard-text-add-form', {
-        ...template_config,
-        nav: NAV_CONFIGS.standard_item_form
-    });
-};
-
-exports.get_dashboard_items_standard_text_edit_form = function (req, res) {
-    res.render('dist/standard-items/dashboard-item-standard-text-edit-form', {
-        ...template_config,
-        nav: NAV_CONFIGS.standard_item_form
-    });
-};
-
-//======================== Grids ========================//
-exports.get_dashboard_grid_add_form = function (req, res) {
-    res.render('dist/grid-items/dashboard-grid-add-form', {
-        ...template_config,
-        nav: NAV_CONFIGS.grid_add_form
-    });
-};
-
-exports.get_dashboard_grid_details = function (req, res) {
-    res.render('dist/grid-items/dashboard-grid-details', {
-        ...template_config,
-        nav: NAV_CONFIGS.grid_details
-    });
-};
-
-exports.get_dashboard_grid_edit_form = function (req, res) {
-    res.render('dist/grid-items/dashboard-grid-edit-form', {
-        ...template_config,
-        nav: NAV_CONFIGS.grid_edit_form
-    });
-};
-
-exports.get_dashboard_grid_add_media_item_form = function (req, res) {
-    res.render('dist/grid-items/dashboard-grid-add-media-item-form', {
-        ...template_config,
-        nav: NAV_CONFIGS.grid_item_form
-    });
-};
-
-exports.get_dashboard_grid_add_text_item_form = function (req, res) {
-    res.render('dist/grid-items/dashboard-grid-add-text-item-form', {
-        ...template_config,
-        nav: NAV_CONFIGS.grid_item_form
-    });
-};
-
-exports.get_dashboard_grid_edit_media_item_form = function (req, res) {
-    res.render('dist/grid-items/dashboard-grid-edit-media-item-form', {
-        ...template_config,
-        nav: NAV_CONFIGS.grid_item_form
-    });
-};
-
-exports.get_dashboard_grid_edit_text_item_form = function (req, res) {
-    res.render('dist/grid-items/dashboard-grid-edit-text-item-form', {
-        ...template_config,
-        nav: NAV_CONFIGS.grid_item_form
-    });
-};
-
-exports.get_dashboard_grid_item_media_details = function (req, res) {
-    res.render('dist/grid-items/dashboard-grid-item-media-details', {
-        ...template_config,
-        nav: NAV_CONFIGS.grid_item_details
-    });
-};
-
-exports.get_dashboard_grid_item_text_details = function (req, res) {
-    res.render('dist/grid-items/dashboard-grid-item-text-details', {
-        ...template_config,
-        nav: NAV_CONFIGS.grid_item_details
-    });
-};
-
-exports.get_dashboard_item_grid_items = function (req, res) {
-    res.render('dist/grid-items/dashboard-grid-items', {
-        ...template_config,
-        nav: NAV_CONFIGS.grid_items_list
-    });
-};
-
-exports.get_dashboard_grid_items_delete_form = function (req, res) {
-    res.render('dist/grid-items/dashboard-grid-items-delete-form', {
-        ...template_config,
-        nav: NAV_CONFIGS.grid_items_delete_form
-    });
-};
-
-//======================== Timelines ========================//
-exports.get_dashboard_vertical_timeline_add_form = function (req, res) {
-    res.render('dist/timeline-items/dashboard-vertical-timeline-add-form', {
-        ...template_config,
-        nav: NAV_CONFIGS.timeline_add_form
-    });
-};
-
-exports.get_dashboard_vertical_timeline_details = function (req, res) {
-    res.render('dist/timeline-items/dashboard-vertical-timeline-details', {
-        ...template_config,
-        nav: NAV_CONFIGS.timeline_details
-    });
-};
-
-exports.get_dashboard_vertical_timeline_edit_form = function (req, res) {
-    res.render('dist/timeline-items/dashboard-vertical-timeline-edit-form', {
-        ...template_config,
-        nav: NAV_CONFIGS.timeline_edit_form
-    });
-};
-
-exports.get_dashboard_vertical_timeline_item_media_add_form = function (req, res) {
-    res.render('dist/timeline-items/dashboard-vertical-timeline-item-media-add-form', {
-        ...template_config,
-        nav: NAV_CONFIGS.timeline_item_form
-    });
-};
-
-exports.get_dashboard_vertical_timeline_item_media_edit_form = function (req, res) {
-    res.render('dist/timeline-items/dashboard-vertical-timeline-item-media-edit-form', {
-        ...template_config,
-        nav: NAV_CONFIGS.timeline_item_form
-    });
-};
-
-exports.get_dashboard_vertical_timeline_item_text_add_form = function (req, res) {
-    res.render('dist/timeline-items/dashboard-vertical-timeline-item-text-add-form', {
-        ...template_config,
-        nav: NAV_CONFIGS.timeline_item_form
-    });
-};
-
-exports.get_dashboard_vertical_timeline_item_text_edit_form = function (req, res) {
-    res.render('dist/timeline-items/dashboard-vertical-timeline-item-text-edit-form', {
-        ...template_config,
-        nav: NAV_CONFIGS.timeline_item_form
-    });
-};
-
-exports.get_dashboard_vertical_timeline_item_media_details = function (req, res) {
-    res.render('dist/timeline-items/dashboard-vertical-timeline-item-media-details', {
-        ...template_config,
-        nav: NAV_CONFIGS.timeline_item_details
-    });
-};
-
-exports.get_dashboard_vertical_timeline_item_text_details = function (req, res) {
-    res.render('dist/timeline-items/dashboard-vertical-timeline-item-text-details', {
-        ...template_config,
-        nav: NAV_CONFIGS.timeline_item_details
-    });
-};
-
-exports.get_dashboard_item_timeline_items = function (req, res) {
-    res.render('dist/timeline-items/dashboard-timeline-items', {
-        ...template_config,
-        nav: NAV_CONFIGS.timeline_items_list
-    });
-};
-
-exports.get_dashboard_timeline_items_delete_form = function (req, res) {
-    res.render('dist/timeline-items/dashboard-timeline-items-delete-form', {
-        ...template_config,
-        nav: NAV_CONFIGS.timeline_items_delete_form
-    });
-};
-
-//======================== Auth ========================//
-exports.get_dashboard_session_out = function (req, res) {
-    res.render('dist/dashboard-session-out', {
-        ...template_config,
-        nav: NAV_CONFIGS.minimal
-    });
-};
-
-exports.get_dashboard_logout = function (req, res) {
-    template_config.sso_logout_url = SSO_CONFIG.sso_logout_url;
-    res.render('dist/dashboard-logout', {
-        ...template_config,
-        nav: NAV_CONFIGS.minimal
-    });
-};
-
-//======================== Users ========================//
-exports.get_dashboard_users = function (req, res) {
-    res.render('dist/users/dashboard-users', {
-        ...template_config,
-        nav: NAV_CONFIGS.users_list
-    });
-};
-
-exports.get_dashboard_users_add_form = function (req, res) {
-    res.render('dist/users/dashboard-add-user', {
-        ...template_config,
-        nav: NAV_CONFIGS.users_add_form
-    });
-};
-
-exports.get_dashboard_users_edit_form = function (req, res) {
-    res.render('dist/users/dashboard-edit-user', {
-        ...template_config,
-        nav: NAV_CONFIGS.users_edit_form
-    });
-};
-
-exports.get_dashboard_users_delete_form = function (req, res) {
-    res.render('dist/users/dashboard-delete-user-form', {
-        ...template_config,
-        nav: NAV_CONFIGS.users_edit_form
-    });
-};
-
-exports.get_dashboard_access_denied = function (req, res) {
-    res.render('dist/dashboard-access-denied', {
-        ...template_config,
-        nav: NAV_CONFIGS.access_denied
-    });
-};
-
-exports.get_dashboard_recycle = function (req, res) {
-    res.render('dist/dashboard-recycle', {
-        ...template_config,
-        nav: NAV_CONFIGS.recycle
-    });
-};
-
-//======================== Media Library ========================//
-exports.get_dashboard_media = function (req, res) {
-    res.render('dist/media-library/dashboard-media-home.ejs', {
-        ...template_config,
-        nav: NAV_CONFIGS.media_library
-    });
-};
-
-//======================== Index Management ========================//
-exports.get_dashboard_index_management = function (req, res) {
-    res.render('dist/dashboard-index-management', {
-        ...template_config,
-        nav: NAV_CONFIGS.index_management
-    });
-};
-
-//======================== Styles ========================//
-exports.get_dashboard_styles = function (req, res) {
-    res.render('dist/exhibits/dashboard-styles-form.ejs', {
-        ...template_config,
-        nav: NAV_CONFIGS.styles_form
-    });
-};
+exports.PAGES = PAGES;

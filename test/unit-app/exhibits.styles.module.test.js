@@ -407,4 +407,61 @@ describe('exhibitsStylesModule', () => {
             expect(swatch.style.backgroundColor).toBe('');
         });
     });
+    describe('reset', () => {
+
+        it('clears text/number inputs and returns selects to their first option, in every section', () => {
+            for (const key of STYLE_SECTIONS) {
+                set_value(`#${key}-background-color`, '#aabbcc');
+                set_value(`#${key}-font-color`, '#112233');
+                set_value(`#${key}-font-size`, '22');
+                set_value(`#${key}-font`, 'Georgia');
+                set_value(`#${key}-margins`, 'large');
+                set_value(`#${key}-text-align`, 'right');
+            }
+
+            expect(exhibitsStylesModule.reset()).toBe(true);
+
+            for (const key of STYLE_SECTIONS) {
+                expect(document.querySelector(`#${key}-background-color`).value).toBe('');
+                expect(document.querySelector(`#${key}-font-color`).value).toBe('');
+                expect(document.querySelector(`#${key}-font-size`).value).toBe('');
+                expect(document.querySelector(`#${key}-font`).selectedIndex).toBe(0);
+                expect(document.querySelector(`#${key}-margins`).selectedIndex).toBe(0);
+                expect(document.querySelector(`#${key}-text-align`).selectedIndex).toBe(0);
+            }
+        });
+
+        it('returns the colour pickers to #ffffff and clears the header swatches', () => {
+            for (const key of STYLE_SECTIONS) {
+                document.querySelector(`#${key}-background-color-picker`).value = '#123456';
+                document.querySelector(`#${key}-font-color-picker`).value = '#654321';
+                document.getElementById(`swatch-${key}-bg`).style.backgroundColor = 'rgb(1, 2, 3)';
+                document.getElementById(`swatch-${key}-font`).style.backgroundImage = 'none';
+            }
+
+            exhibitsStylesModule.reset();
+
+            for (const key of STYLE_SECTIONS) {
+                expect(document.querySelector(`#${key}-background-color-picker`).value).toBe('#ffffff');
+                expect(document.querySelector(`#${key}-font-color-picker`).value).toBe('#ffffff');
+                expect(document.getElementById(`swatch-${key}-bg`).style.backgroundColor).toBe('');
+                expect(document.getElementById(`swatch-${key}-font`).style.backgroundImage).toBe('');
+            }
+        });
+
+        it('clears leftover validation state', () => {
+            exhibitsStylesModule.validate_required();
+            expect(document.querySelectorAll('#exhibit-styles-card .is-invalid').length).toBeGreaterThan(0);
+
+            exhibitsStylesModule.reset();
+
+            expect(document.querySelectorAll('#exhibit-styles-card .is-invalid')).toHaveLength(0);
+            expect(document.querySelectorAll('#exhibit-styles-card .style-validation-feedback')).toHaveLength(0);
+        });
+
+        it('is a no-op (still true) when the style fields are not on the page', () => {
+            document.body.innerHTML = '';
+            expect(exhibitsStylesModule.reset()).toBe(true);
+        });
+    });
 });

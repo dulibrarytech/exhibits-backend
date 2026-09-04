@@ -28,29 +28,9 @@ const HELPER = require('../libs/helper');
 const VALIDATOR = require('../libs/validate');
 const EXHIBIT_RECORD_TASKS = require('./tasks/exhibit_record_tasks');
 const INDEXER_MODEL = require('../indexer/model');
-const LOGGER = require('../libs/log4');
 const REINDEX_COALESCER = require('./reindex_coalescer');
-const {
-    is_valid_uuid,
-    is_valid_user_id,    build_response,
-    validate_input,
-    prepare_styles
-} = require('../exhibits/common_helper');
-
-// Constants
-const CONSTANTS = {
-    STATUS_CODES: {
-        OK: 200,
-        CREATED: 201,
-        NO_CONTENT: 204,
-        BAD_REQUEST: 400,
-        INTERNAL_SERVER_ERROR: 500
-    },
-    PUBLICATION_STATUS: {
-        PUBLISHED: 1,
-        UNPUBLISHED: 0
-    }
-};
+const {validate_input, build_response} = require('../exhibits/common_helper');
+const {make_component_model, STATUS_CODES} = require('./component_model_factory');
 
 // Initialize task instances
 const helper_task = new HELPER();
@@ -59,510 +39,111 @@ const validate_heading_update_task = new VALIDATOR(EXHIBITS_UPDATE_HEADING_SCHEM
 const heading_record_task = new EXHIBIT_HEADING_RECORD_TASKS(DB, TABLES);
 const exhibit_tasks = new EXHIBIT_RECORD_TASKS(DB, TABLES);
 
-/**
- * Handles post-update republishing for heading
- * @param {string} is_member_of_exhibit - Exhibit UUID
- * @param {string} uuid - Heading UUID
- * @returns {Promise<void>}
- */
-const handle_heading_republish = async (is_member_of_exhibit, uuid) => {
-
-    try {
-
-        // Re-index just this heading in place — no suppress. ES index upserts by id,
-        // so re-indexing overwrites; suppressing would only blank it from public
-        // search for the delay window. (publish_heading_record re-indexes just this.)
-        // Coalesced per heading: a burst of edits collapses to one near-real-time
-        // re-index (was a flat 5s delay + one independent timer per edit).
-        REINDEX_COALESCER.schedule_reindex(`heading:${uuid}`, async () => {
-            const publish_result = await publish_heading_record(is_member_of_exhibit, uuid);
-
-            if (publish_result && publish_result.status === true) {
-                LOGGER.module().info('INFO: [/exhibits/headings_model (handle_heading_republish)] Heading record re-indexed after edit.');
-            } else {
-                LOGGER.module().error('ERROR: [/exhibits/headings_model (handle_heading_republish)] Failed to re-index heading');
-            }
-        });
-    } catch (error) {
-        LOGGER.module().error(`ERROR: [/exhibits/headings_model (handle_heading_republish)] ${error.message}`, {
-            is_member_of_exhibit,
-            uuid,
-            stack: error.stack
-        });
-    }
-};
-
-/**
- * Creates heading record
- * @param {string} is_member_of_exhibit - Exhibit UUID
- * @param {Object} data - Heading data
- * @returns {Promise<Object>} Response object
- */
-const RTE_VOCABULARY = require('../libs/rte_vocabulary');
-
 /* heading text renders inside <h2>/<h3> on the public site — inline formats only */
 const HEADING_RTE_PROFILES = {
     text: 'reduced'
 };
 
-exports.create_heading_record = async (is_member_of_exhibit, data) => {
+/**
+ * Runs a heading payload through its ajv schema.
+ *
+ * Headings are the only component type that still has create/update schemas;
+ * the other three had theirs removed as provably-unreachable guards, so the
+ * factory takes schema validation as an optional hook rather than a step.
+ *
+ * @param {Object} validator - VALIDATOR instance
+ * @param {string} context - Module/function context for the error log
+ * @returns {Function} (data) => error response | null
+ */
+const schema_gate = (validator, context) => {
 
-    RTE_VOCABULARY.apply(data, HEADING_RTE_PROFILES);
+    return (data) => {
 
-    try {
-        // Validate inputs
-        if (!is_valid_uuid(is_member_of_exhibit)) {
-            return build_response(
-                CONSTANTS.STATUS_CODES.BAD_REQUEST,
-                'Invalid exhibit UUID provided'
-            );
-        }
-
-        if (!data || typeof data !== 'object') {
-            return build_response(
-                CONSTANTS.STATUS_CODES.BAD_REQUEST,
-                'Invalid data provided'
-            );
-        }
-
-        // Prepare data
-        data.uuid = helper_task.create_uuid();
-        data.is_member_of_exhibit = is_member_of_exhibit;
-
-        // Validate
-        const validation_result = validate_input(data, validate_create_heading_task, 'headings_model (create_heading_record)');
+        const validation_result = validate_input(data, validator, context);
 
         if (validation_result !== true) {
-            return build_response(
-                CONSTANTS.STATUS_CODES.BAD_REQUEST,
-                validation_result
-            );
+            return build_response(STATUS_CODES.BAD_REQUEST, validation_result);
         }
 
-        // Get order and prepare styles
-        data.order = await helper_task.order_exhibit_items(data.is_member_of_exhibit, DB, TABLES);
-        data.styles = prepare_styles(data.styles);
-
-        // Create record
-        const result = await heading_record_task.create_heading_record(data);
-
-        if (result === false) {
-            LOGGER.module().error('ERROR: [/exhibits/headings_model (create_heading_record)] Database operation failed');
-            return build_response(
-                CONSTANTS.STATUS_CODES.INTERNAL_SERVER_ERROR,
-                'Unable to create heading record'
-            );
-        }
-
-        const is_updated = await exhibit_tasks.update_exhibit_timestamp(is_member_of_exhibit);
-
-        if (is_updated === true) {
-            LOGGER.module().info('INFO: [/exhibits/items_model - Exhibit timestamp updated successfully.');
-        }
-
-        return build_response(
-            CONSTANTS.STATUS_CODES.CREATED,
-            'Heading record created',
-            data.uuid
-        );
-
-    } catch (error) {
-        LOGGER.module().error(`ERROR: [/exhibits/headings_model (create_heading_record)] ${error.message}`, {
-            is_member_of_exhibit,
-            stack: error.stack
-        });
-
-        return build_response(
-            CONSTANTS.STATUS_CODES.INTERNAL_SERVER_ERROR,
-            `Unable to create record: ${error.message}`
-        );
-    }
+        return null;
+    };
 };
 
-/**
- * Gets heading record
- * @param {string} is_member_of_exhibit - Exhibit UUID
- * @param {string} uuid - Heading UUID
- * @returns {Promise<Object>} Response object
+/*
+ * Everything below is generated from this one declaration — see
+ * exhibits/component_model_factory.js. Headings are the simplest type: no
+ * media, no nested items, no container.
  */
-exports.get_heading_record = async (is_member_of_exhibit, uuid) => {
-
-    try {
-
-        if (!is_valid_uuid(is_member_of_exhibit) || !is_valid_uuid(uuid)) {
-            return build_response(
-                CONSTANTS.STATUS_CODES.BAD_REQUEST,
-                'Invalid UUID provided'
-            );
+const heading_model = make_component_model({
+    module_name: 'headings_model',
+    label: 'Heading',
+    db: DB,
+    helper: helper_task,
+    task: heading_record_task,
+    exhibit_task: exhibit_tasks,
+    indexer: INDEXER_MODEL,
+    coalescer: REINDEX_COALESCER,
+    rte_profiles: HEADING_RTE_PROFILES,
+    republish_key: 'heading',
+    order_fn: (data) => helper_task.order_exhibit_items(data.is_member_of_exhibit, DB, TABLES),
+    index_fn: (exhibit_id, uuid) => INDEXER_MODEL.index_heading_record(exhibit_id, uuid),
+    task_methods: {
+        create: 'create_heading_record',
+        create_public_name: 'create_heading_record',
+        update: 'update_heading_record',
+        update_public_name: 'update_heading_record',
+        get: 'get_heading_record',
+        set_publish: 'set_heading_to_publish',
+        publish_public_name: 'publish_heading_record',
+        set_suppress: 'set_heading_to_suppress',
+        suppress_public_name: 'suppress_heading_record'
+    },
+    messages: {
+        /* headings and standard items say "record", not "heading record" */
+        create_error_prefix: 'Unable to create record',
+        update_error_prefix: 'Unable to update record',
+        update_failure_status: STATUS_CODES.BAD_REQUEST,
+        update_returns_uuid: false
+    },
+    hooks: {
+        validate_create: schema_gate(validate_create_heading_task, 'headings_model (create_heading_record)'),
+        validate_update: schema_gate(validate_heading_update_task, 'headings_model (update_heading_record)')
+    },
+    reads: [
+        {
+            name: 'get_heading_record',
+            task_method: 'get_heading_record',
+            label: 'Heading record',
+            params: ['is_member_of_exhibit', 'uuid']
+        },
+        {
+            name: 'get_heading_edit_record',
+            task_method: 'get_heading_edit_record',
+            label: 'Heading edit record',
+            params: ['uid', 'is_member_of_exhibit', 'uuid']
         }
-
-        const record = await heading_record_task.get_heading_record(is_member_of_exhibit, uuid);
-
-        return build_response(
-            CONSTANTS.STATUS_CODES.OK,
-            'Heading record',
-            record
-        );
-
-    } catch (error) {
-        LOGGER.module().error(`ERROR: [/exhibits/headings_model (get_heading_record)] ${error.message}`, {
-            is_member_of_exhibit,
-            uuid,
-            stack: error.stack
-        });
-
-        return build_response(
-            CONSTANTS.STATUS_CODES.BAD_REQUEST,
-            error.message
-        );
-    }
-};
-
-/**
- * Gets heading edit record
- * @param {string} uid - User ID
- * @param {string} is_member_of_exhibit - Exhibit UUID
- * @param {string} uuid - Heading UUID
- * @returns {Promise<Object>} Response object
- */
-exports.get_heading_edit_record = async (uid, is_member_of_exhibit, uuid) => {
-
-    try {
-
-        if (!is_valid_user_id(uid) || !is_valid_uuid(is_member_of_exhibit) || !is_valid_uuid(uuid)) {
-            return build_response(
-                CONSTANTS.STATUS_CODES.BAD_REQUEST,
-                'Invalid UUID provided'
-            );
+    ],
+    reorder: [
+        {
+            name: 'reorder_headings',
+            task_method: 'reorder_headings',
+            id_label: 'exhibit',
+            data_label: 'heading'
         }
-
-        const record = await heading_record_task.get_heading_edit_record(uid, is_member_of_exhibit, uuid);
-
-        return build_response(
-            CONSTANTS.STATUS_CODES.OK,
-            'Heading edit record',
-            record
-        );
-
-    } catch (error) {
-        LOGGER.module().error(`ERROR: [/exhibits/headings_model (get_heading_edit_record)] ${error.message}`, {
-            uid,
-            is_member_of_exhibit,
-            uuid,
-            stack: error.stack
-        });
-
-        return build_response(
-            CONSTANTS.STATUS_CODES.BAD_REQUEST,
-            error.message
-        );
-    }
-};
-
-/**
- * Updates heading record
- * @param {string} is_member_of_exhibit - Exhibit UUID
- * @param {string} uuid - Heading UUID
- * @param {Object} data - Update data
- * @returns {Promise<Object>} Response object
- */
-exports.update_heading_record = async (is_member_of_exhibit, uuid, data) => {
-
-    RTE_VOCABULARY.apply(data, HEADING_RTE_PROFILES);
-
-    try {
-        // Validate inputs
-        if (!is_valid_uuid(is_member_of_exhibit) || !is_valid_uuid(uuid)) {
-            return build_response(
-                CONSTANTS.STATUS_CODES.BAD_REQUEST,
-                'Invalid UUID provided'
-            );
+    ],
+    unlock: [
+        {
+            name: 'unlock_heading_record',
+            table: TABLES.heading_records
         }
+    ]
+});
 
-        if (!data || typeof data !== 'object') {
-            return build_response(
-                CONSTANTS.STATUS_CODES.BAD_REQUEST,
-                'Invalid data provided'
-            );
-        }
-
-        // Prepare data
-        data.is_member_of_exhibit = is_member_of_exhibit;
-        data.uuid = uuid;
-
-        // Extract is_published before validation
-        const is_published = data.is_published;
-        delete data.is_published;
-
-        // Validate
-        const validation_result = validate_input(data, validate_heading_update_task, 'headings_model (update_heading_record)');
-
-        if (validation_result !== true) {
-            return build_response(
-                CONSTANTS.STATUS_CODES.BAD_REQUEST,
-                validation_result
-            );
-        }
-
-        // Prepare styles
-        data.styles = prepare_styles(data.styles);
-
-        // Update record
-        const result = await heading_record_task.update_heading_record(data);
-
-        if (result === false) {
-            return build_response(
-                CONSTANTS.STATUS_CODES.BAD_REQUEST,
-                'Unable to update heading record'
-            );
-        }
-
-        // Handle republishing if needed (check for truthy values)
-        if (is_published === 'true' || is_published === true || is_published === 1) {
-            setImmediate(() => handle_heading_republish(is_member_of_exhibit, uuid));
-        }
-
-        const is_updated = await exhibit_tasks.update_exhibit_timestamp(is_member_of_exhibit);
-
-        if (is_updated === true) {
-            LOGGER.module().info('INFO: [/exhibits/items_model - Exhibit timestamp updated successfully.');
-        }
-
-        return build_response(
-            CONSTANTS.STATUS_CODES.CREATED,
-            'Heading record updated'
-        );
-
-    } catch (error) {
-        LOGGER.module().error(`ERROR: [/exhibits/headings_model (update_heading_record)] ${error.message}`, {
-            is_member_of_exhibit,
-            uuid,
-            stack: error.stack
-        });
-
-        return build_response(
-            CONSTANTS.STATUS_CODES.BAD_REQUEST,
-            `Unable to update record: ${error.message}`
-        );
-    }
-};
-
-/**
- * Publishes heading record
- * @param {string} exhibit_id - Exhibit UUID
- * @param {string} heading_id - Heading UUID
- * @returns {Promise<Object>} Response object
- */
-const publish_heading_record = async (exhibit_id, heading_id) => {
-
-    try {
-
-        if (!is_valid_uuid(exhibit_id) || !is_valid_uuid(heading_id)) {
-            return {
-                status: false,
-                message: 'Invalid UUID provided'
-            };
-        }
-
-        // Check if exhibit is published
-        const exhibit_record = await exhibit_tasks.get_exhibit_record(exhibit_id);
-
-        if (!exhibit_record || exhibit_record.is_published === CONSTANTS.PUBLICATION_STATUS.UNPUBLISHED) {
-            LOGGER.module().error('ERROR: [/exhibits/headings_model (publish_heading_record)] Exhibit not published');
-
-            return {
-                status: false,
-                message: 'Unable to publish heading. Exhibit must be published first'
-            };
-        }
-
-        // Set heading to published and index (order matters: publish first, then index)
-        /*
-         * The heading must belong to THIS exhibit before it is flagged or indexed.
-         * (code review 2026-09-02, H3)
-         */
-        const member_heading_record = await heading_record_task.get_heading_record(exhibit_id, heading_id);
-
-        if (!member_heading_record) {
-            return {
-                status: false,
-                message: 'Heading not found in exhibit'
-            };
-        }
-
-        const is_heading_published = await heading_record_task.set_heading_to_publish(heading_id);
-        const is_indexed = await INDEXER_MODEL.index_heading_record(exhibit_id, heading_id);
-
-        if (is_indexed === false) {
-            LOGGER.module().error('ERROR: [/exhibits/headings_model (publish_heading_record)] Unable to index heading');
-
-            return {
-                status: false,
-                message: 'Unable to publish heading'
-            };
-        }
-
-        if (is_heading_published === false) {
-            LOGGER.module().error('ERROR: [/exhibits/headings_model (publish_heading_record)] Unable to set heading to published');
-
-            return {
-                status: false,
-                message: 'Unable to publish heading'
-            };
-        }
-
-        return {
-            status: true,
-            message: 'Heading published'
-        };
-
-    } catch (error) {
-        LOGGER.module().error(`ERROR: [/exhibits/headings_model (publish_heading_record)] ${error.message}`, {
-            exhibit_id,
-            heading_id,
-            stack: error.stack
-        });
-
-        return {
-            status: false,
-            message: error.message
-        };
-    }
-};
-
-/**
- * Suppresses heading record
- * @param {string} exhibit_id - Exhibit UUID
- * @param {string} item_id - Heading UUID
- * @returns {Promise<Object>} Response object
- */
-const suppress_heading_record = async (exhibit_id, item_id) => {
-
-    try {
-
-        if (!is_valid_uuid(exhibit_id) || !is_valid_uuid(item_id)) {
-            return {
-                status: false,
-                message: 'Invalid UUID provided'
-            };
-        }
-
-        // Delete from index
-        /*
-         * Membership guard BEFORE the index delete: the heading must belong to THIS exhibit.
-         * (code review 2026-09-02, H3)
-         */
-        const member_heading_record = await heading_record_task.get_heading_record(exhibit_id, item_id);
-
-        if (!member_heading_record) {
-            return {
-                status: false,
-                message: 'Heading not found in exhibit'
-            };
-        }
-
-        const delete_result = await INDEXER_MODEL.delete_record(item_id);
-
-        if (delete_result.status !== CONSTANTS.STATUS_CODES.NO_CONTENT) {
-            LOGGER.module().error('ERROR: [/exhibits/headings_model (suppress_heading_record)] Unable to delete from index');
-
-            return {
-                status: false,
-                message: 'Unable to suppress heading'
-            };
-        }
-
-        // Set heading to suppressed
-        const is_heading_suppressed = await heading_record_task.set_heading_to_suppress(item_id);
-
-        if (is_heading_suppressed === false) {
-            LOGGER.module().error('ERROR: [/exhibits/headings_model (suppress_heading_record)] Unable to set heading to suppressed');
-
-            return {
-                status: false,
-                message: 'Unable to suppress heading'
-            };
-        }
-
-        return {
-            status: true,
-            message: 'Heading suppressed'
-        };
-
-    } catch (error) {
-        LOGGER.module().error(`ERROR: [/exhibits/headings_model (suppress_heading_record)] ${error.message}`, {
-            exhibit_id,
-            item_id,
-            stack: error.stack
-        });
-
-        return {
-            status: false,
-            message: error.message
-        };
-    }
-};
-
-/**
- * Reorders headings in exhibit
- * @param {string} exhibit_id - Exhibit UUID
- * @param {Object} heading - Heading order data
- * @returns {Promise<*>} Result from task
- */
-exports.reorder_headings = async (exhibit_id, heading) => {
-
-    try {
-
-        if (!is_valid_uuid(exhibit_id)) {
-            LOGGER.module().error('ERROR: [/exhibits/headings_model (reorder_headings)] Invalid exhibit UUID provided');
-            return false;
-        }
-
-        if (!heading || typeof heading !== 'object') {
-            LOGGER.module().error('ERROR: [/exhibits/headings_model (reorder_headings)] Invalid heading data provided');
-            return false;
-        }
-
-        return await heading_record_task.reorder_headings(exhibit_id, heading);
-
-    } catch (error) {
-        LOGGER.module().error(`ERROR: [/exhibits/headings_model (reorder_headings)] ${error.message}`, {
-            exhibit_id,
-            stack: error.stack
-        });
-
-        return false;
-    }
-};
-
-/**
- * Unlocks heading record for editing
- * @param {string} uid - User ID
- * @param {string} uuid - Heading UUID
- * @param {object} options - {force: true/false}
- * @returns {Promise<*>} Unlock result
- */
-exports.unlock_heading_record = async (uid, uuid, options) => {
-
-    try {
-
-        if (!is_valid_user_id(uid) || !is_valid_uuid(uuid)) {
-            LOGGER.module().error('ERROR: [/exhibits/headings_model (unlock_heading_record)] Invalid UUID provided');
-            return false;
-        }
-
-        return await helper_task.unlock_record(uid, uuid, DB, TABLES.heading_records, options);
-
-    } catch (error) {
-        LOGGER.module().error(`ERROR: [/exhibits/headings_model (unlock_heading_record)] ${error.message}`, {
-            uid,
-            uuid,
-            stack: error.stack
-        });
-
-        return false;
-    }
-};
-
-exports.publish_heading_record = publish_heading_record;
-exports.suppress_heading_record = suppress_heading_record;
+exports.create_heading_record = heading_model.create_record;
+exports.update_heading_record = heading_model.update_record;
+exports.get_heading_record = heading_model.reads.get_heading_record;
+exports.get_heading_edit_record = heading_model.reads.get_heading_edit_record;
+exports.publish_heading_record = heading_model.publish_record;
+exports.suppress_heading_record = heading_model.suppress_record;
+exports.reorder_headings = heading_model.reorder.reorder_headings;
+exports.unlock_heading_record = heading_model.unlock.unlock_heading_record;

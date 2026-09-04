@@ -19,175 +19,130 @@
 'use strict';
 
 const HEADINGS_MODEL = require('../exhibits/headings_model');
-const AUTHORIZE = require('../auth/authorize');
 
-exports.create_heading_record = async function (req, res) {
+/*
+ * This controller used to inline the RBAC tuple and the 403 twice, and hand
+ * write every 400/500. It now speaks the same 'plain' wire format through the
+ * shared helper as timelines_controller — bare 'Bad request.' on 400,
+ * {message: 'Unable to ... <error.message>'} on 500 — with
+ * AUTHORIZE.check_permission still the single decision point behind
+ * check_authorization. See exhibits/controller_helper.js.
+ */
+const {
+    validate_id: validate_param,
+    check_authorization,
+    with_handler
+} = require('../exhibits/controller_helper').create_controller_helper({
+    format: 'plain',
+    log_prefix: '/headings/controller'
+});
 
-    try {
+exports.create_heading_record = with_handler(async function (req, res) {
 
-        const is_member_of_exhibit = req.params.exhibit_id;
-        const data = req.body;
+    const is_member_of_exhibit = req.params.exhibit_id;
+    const data = req.body;
 
-        if (data === undefined || is_member_of_exhibit === undefined) {
-            res.status(400).send('Bad request.');
-            return false;
-        }
+    if (!validate_param(res, data)) return false;
+    if (!validate_param(res, is_member_of_exhibit)) return false;
 
-        const permissions = ['add_item', 'add_item_to_any_exhibit'];
-        let options = {};
-        options.req = req;
-        options.permissions = permissions;
-        options.record_type = 'heading';
-        options.parent_id = is_member_of_exhibit;
-        options.child_id = null;
+    const is_authorized = await check_authorization(
+        req, res,
+        ['add_item', 'add_item_to_any_exhibit'],
+        'heading', is_member_of_exhibit, null
+    );
+    if (!is_authorized) return false;
 
-        const is_authorized = await AUTHORIZE.check_permission(options);
+    const result = await HEADINGS_MODEL.create_heading_record(is_member_of_exhibit, data);
+    res.status(result.status).send(result);
 
-        if (is_authorized === false) {
-            res.status(403).send({
-                message: 'Unauthorized request'
-            });
+}, {
+    context: 'create_heading_record',
+    message: 'Unable to create heading record.'
+});
 
-            return false;
-        }
+exports.get_heading_record = with_handler(async function (req, res) {
 
-        const result = await HEADINGS_MODEL.create_heading_record(is_member_of_exhibit, data);
-        res.status(result.status).send(result);
+    const is_member_of_exhibit = req.params.exhibit_id;
+    const uuid = req.params.heading_id;
+    const type = req.query.type;
 
-    } catch (error) {
-        res.status(500).send({message: `Unable to create heading record. ${error.message}`});
+    if (!validate_param(res, uuid)) return false;
+    if (!validate_param(res, is_member_of_exhibit)) return false;
+
+    if (type === undefined || type === 'details') {
+        const data = await HEADINGS_MODEL.get_heading_record(is_member_of_exhibit, uuid);
+        res.status(data.status).send(data);
+        return false;
     }
-};
 
-exports.get_heading_record = async function (req, res) {
+    if (type === 'edit') {
 
-    try {
-
-        const is_member_of_exhibit = req.params.exhibit_id;
-        const uuid = req.params.heading_id;
         const uid = req.query.uid;
-        const type = req.query.type;
 
-        if (uuid === undefined || uuid.length === 0 && is_member_of_exhibit === undefined || is_member_of_exhibit.length === 0) {
-            res.status(400).send('Bad request.');
-            return false;
-        }
+        if (!validate_param(res, uid)) return false;
 
-        if (type === undefined) {
-            const data = await HEADINGS_MODEL.get_heading_record(is_member_of_exhibit, uuid);
-            res.status(data.status).send(data);
-            return false;
-        }
-
-        if (type === 'details') {
-            const data = await HEADINGS_MODEL.get_heading_record(is_member_of_exhibit, uuid);
-            res.status(data.status).send(data);
-            return false;
-        }
-
-        if (type === 'edit') {
-
-            const uid = req.query.uid;
-
-            if (uid === undefined || uid.length === 0) {
-                res.status(400).send('Bad request.');
-                return false;
-            }
-
-            const data = await HEADINGS_MODEL.get_heading_edit_record(uid, is_member_of_exhibit, uuid);
-            res.status(data.status).send(data);
-            return false;
-        }
-
-    } catch (error) {
-        res.status(500).send({message: `Unable to get heading record. ${error.message}`});
+        const data = await HEADINGS_MODEL.get_heading_edit_record(uid, is_member_of_exhibit, uuid);
+        res.status(data.status).send(data);
+        return false;
     }
-};
 
-exports.update_heading_record = async function (req, res) {
+}, {
+    context: 'get_heading_record',
+    message: 'Unable to get heading record.'
+});
 
-    try {
+exports.update_heading_record = with_handler(async function (req, res) {
 
-        const is_member_of_exhibit = req.params.exhibit_id;
-        const heading_id = req.params.heading_id;
-        const data = req.body;
+    const is_member_of_exhibit = req.params.exhibit_id;
+    const heading_id = req.params.heading_id;
+    const data = req.body;
 
-        if (heading_id === undefined || heading_id.length === 0 && is_member_of_exhibit === undefined || is_member_of_exhibit.length === 0) {
-            res.status(400).send('Bad request.');
-            return false;
-        }
+    if (!validate_param(res, heading_id)) return false;
+    if (!validate_param(res, is_member_of_exhibit)) return false;
+    if (!validate_param(res, data)) return false;
 
-        if (data === undefined) {
-            res.status(400).send('Bad request.');
-            return false;
-        }
+    const is_authorized = await check_authorization(
+        req, res,
+        ['update_item', 'update_any_item'],
+        'heading', is_member_of_exhibit, heading_id
+    );
+    if (!is_authorized) return false;
 
-        const permissions = ['update_item', 'update_any_item'];
-        let options = {};
-        options.req = req;
-        options.permissions = permissions;
-        options.record_type = 'heading';
-        options.parent_id = is_member_of_exhibit;
-        options.child_id = heading_id;
+    const result = await HEADINGS_MODEL.update_heading_record(is_member_of_exhibit, heading_id, data);
+    res.status(result.status).send(result);
 
-        const is_authorized = await AUTHORIZE.check_permission(options);
+}, {
+    context: 'update_heading_record',
+    message: 'Unable to update heading record.'
+});
 
-        if (is_authorized === false) {
-            res.status(403).send({
-                message: 'Unauthorized request'
-            });
+exports.unlock_heading_record = with_handler(async function (req, res) {
 
-            return false;
-        }
+    const heading_id = req.params.heading_id;
+    const uid = req.query.uid;
+    const force = req.query.force;
 
-        const result = await HEADINGS_MODEL.update_heading_record(is_member_of_exhibit, heading_id, data);
-        res.status(result.status).send(result);
+    if (!validate_param(res, heading_id)) return false;
+    if (!validate_param(res, uid)) return false;
 
-    } catch (error) {
-        res.status(500).send({message: `Unable to update heading record. ${error.message}`});
+    const options = {
+        force: force === 'true'
+    };
+
+    const result = await HEADINGS_MODEL.unlock_heading_record(uid, heading_id, options);
+
+    /* helper unlock_record resolves to the unlocked record row, not a boolean */
+    if (result && typeof result === 'object') {
+        res.status(200).send({
+            message: 'Heading record unlocked.'
+        });
+    } else {
+        res.status(400).send({
+            message: 'Unable to unlock heading record'
+        });
     }
-};
 
-exports.unlock_heading_record = async function (req, res) {
-
-    try {
-
-        const exhibit_id = req.params.exhibit_id;
-        const heading_id = req.params.heading_id;
-        const uid = req.query.uid;
-        const force = req.query.force;
-        let options = {};
-
-        if (heading_id === undefined || heading_id.length === 0) {
-            res.status(400).send('Bad request.');
-            return false;
-        }
-
-        if (uid === undefined || uid.length === 0) {
-            res.status(400).send('Bad request.');
-            return false;
-        }
-
-        if (force !== undefined && force === 'true') {
-            options.force = true;
-        } else {
-            options.force = false;
-        }
-
-        const result = await HEADINGS_MODEL.unlock_heading_record(uid, heading_id, options);
-
-        /* helper unlock_record resolves to the unlocked record row, not a boolean */
-        if (result && typeof result === 'object') {
-            res.status(200).send({
-                message: 'Heading record unlocked.'
-            });
-        } else {
-            res.status(400).send({
-                message: 'Unable to unlock heading record'
-            });
-        }
-
-    } catch (error) {
-        res.status(500).send({message: `Unable to unlock heading record. ${error.message}`});
-    }
-};
+}, {
+    context: 'unlock_heading_record',
+    message: 'Unable to unlock heading record.'
+});

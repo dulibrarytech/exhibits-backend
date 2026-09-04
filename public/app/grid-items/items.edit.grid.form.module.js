@@ -20,131 +20,24 @@ const itemsEditGridFormModule = (function () {
 
     'use strict';
 
-    // const APP_PATH = window.localStorage.getItem('exhibits_app_path');
-    const EXHIBITS_ENDPOINTS = endpointsModule.get_exhibits_endpoints();
     let obj = {};
 
-    async function get_grid_record () {
+    /**
+     * Populates the grid (container) edit form from a fetched record.
+     * @param {Object} record
+     */
+    async function populate(record) {
 
-        try {
-
-            const exhibit_id = helperModule.get_parameter_by_name('exhibit_id');
-            const grid_id = helperModule.get_parameter_by_name('item_id');
-            const endpoint = endpointsModule.build(EXHIBITS_ENDPOINTS.exhibits.grid_records.get.endpoint, {
-                exhibit_id: exhibit_id,
-                grid_id: grid_id
-            });
-
-            if (!endpoint) {
-                throw new Error('Missing required parameters: exhibit_id or item_id');
-            }
-
-            const response = await httpModule.api({
-                method: 'GET',
-                url: endpoint
-            });
-
-            if (response && response.status === 200) {
-                return response.data.data;
-            }
-
-        } catch (error) {
-            domModule.set_alert(document.querySelector('#message'), 'danger', error.message);
-        }
-    }
-
-    obj.update_grid_record = async function () {
-
-        try {
-
-            window.scrollTo(0, 0);
-            const exhibit_id = helperModule.get_parameter_by_name('exhibit_id');
-            const grid_id = helperModule.get_parameter_by_name('item_id');
-            const data = itemsCommonStandardGridFormModule.get_common_grid_form_fields();
-
-            // Validation failure — the common module has already rendered the
-            // field-level error and #message alert; bail before clobbering it.
-            if (data === false) {
-                return false;
-            }
-
-            if (exhibit_id === undefined || grid_id === undefined) {
-                domModule.set_alert(document.querySelector('#message'), 'warning', 'Unable to update grid record.');
-                return false;
-            }
-
-            domModule.set_alert(document.querySelector('#message'), 'info', 'Updating grid record...');
-
-            data.updated_by = helperModule.get_user_name();
-
-            const endpoint = endpointsModule.build(EXHIBITS_ENDPOINTS.exhibits.grid_records.put.endpoint, {
-                exhibit_id: exhibit_id,
-                grid_id: grid_id
-            });
-
-            if (!endpoint) {
-                domModule.set_alert(document.querySelector('#message'), 'warning', 'Unable to update grid record.');
-                return false;
-            }
-
-            const response = await httpModule.api({
-                method: 'PUT',
-                url: endpoint,
-                data: data
-            });
-
-            if (response && response.status === 201) {
-
-                window.scrollTo(0, 0);
-                domModule.set_alert(document.querySelector('#message'), 'success', 'Grid record updated');
-
-                // Refresh the display with updated data instead of reloading
-                await display_edit_record();
-
-                // Auto-dismiss success message after a delay
-                setTimeout(() => {
-                    const message_el = document.querySelector('#message');
-                    if (message_el) {
-                        message_el.innerHTML = '';
-                    }
-                }, 3000);
-            }
-
-        } catch (error) {
-            domModule.set_alert(document.querySelector('#message'), 'danger', error.message);
-        }
-    };
-
-    async function display_edit_record () {
-
-        let record = await get_grid_record();
-        let created_by = record.created_by;
-        let created = record.created;
-        let create_date = new Date(created);
-        let updated_by = record.updated_by;
-        let updated = record.updated;
-        let update_date = new Date(updated);
-        let item_created = '';
-        let create_date_time = helperModule.format_date(create_date);
-        let update_date_time = helperModule.format_date(update_date);
-
-        if (created_by !== null) {
-            item_created += `<em>Created by ${created_by} on ${create_date_time}</em>`;
-        }
-
-        if (updated_by !== null) {
-            item_created += ` | <em>Last updated by ${updated_by} on ${update_date_time}</em>`;
-        }
-
-        domModule.html('#created', item_created);
         rteModule.set_html('grid-text-input', helperModule.unescape(record.text));
-        // Legacy grids predate internal_name (nullable column) — leave the
-        // required field empty so the save-time validation forces a value.
+
+        /* Legacy grids predate internal_name (nullable column) — leave the
+         * required field empty so the save-time validation forces a value. */
         domModule.set_value('#grid-internal-name-input', helperModule.unescape(record.internal_name || ''));
         itemsCommonStandardGridFormModule.set_grid_columns(record.columns);
 
-        // Set saved style selection after dropdown is populated
-        // Style keys are simple strings like "item1"; skip "{}" (prepare_styles default) and legacy JSON blobs
+        /* Set saved style selection after the chooser is populated. Style keys
+         * are simple strings like "item1"; skip "{}" (prepare_styles default)
+         * and legacy JSON blobs. */
         if (record.styles && typeof record.styles === 'string'
             && record.styles.trim() !== '' && !record.styles.startsWith('{')) {
             await itemsCommonStandardGridFormModule.wait_for_styles();
@@ -153,56 +46,33 @@ const itemsEditGridFormModule = (function () {
 
         domModule.set_value('#margins', record.margins ?? 'medium');
         domModule.set_value('#text-align', record.text_alignment ?? 'left');
-
-        /*
-        let styles = JSON.parse(record.styles);
-
-        if (Object.keys(styles).length !== 0) {
-
-            if (styles.backgroundColor !== undefined) {
-                document.querySelector('#grid-background-color').value = styles.backgroundColor;
-                document.querySelector('#grid-background-color-picker').value = styles.backgroundColor;
-            } else {
-                document.querySelector('#grid-background-color').value = '';
-            }
-
-            if (styles.color !== undefined) {
-                document.querySelector('#grid-font-color').value = styles.color;
-                document.querySelector('#grid-font-color-picker').value = styles.color;
-            } else {
-                document.querySelector('#grid-font-color').value = '';
-            }
-
-            let font_values = document.querySelector('#grid-font');
-
-            for (let i=0;i<font_values.length;i++) {
-                if (font_values[i].value === styles.fontFamily) {
-                    document.querySelector('#grid-font').value = styles.fontFamily;
-                }
-            }
-
-            if (styles.fontSize !== undefined) {
-                document.querySelector('#grid-font-size').value = styles.fontSize.replace('px', '');
-            } else {
-                document.querySelector('#grid-font-size').value = '';
-            }
-        }
-
-         */
-
-        return false;
     }
 
-    obj.init = async function () {
+    const form = itemFormBaseModule.create({
+        record_type: 'grid',
+        mode: 'edit',
+        /* Container edit forms do not request `?type=edit`, so the server never
+         * locks the record for them and there is no lock state to honour. */
+        lock: false,
+        query: { type: null, uid: false },
+        populate: populate,
+        collect: function () {
+            return itemsCommonStandardGridFormModule.get_common_grid_form_fields();
+        },
+        submit_selector: '#save-item-btn',
+        permissions: ['update_item', 'update_any_item'],
+        redirect_path: function (ids) {
+            return `/items/grid/details?exhibit_id=${ids.exhibit_id}&item_id=${ids.record_id}&status=403`;
+        }
+    });
 
-        const exhibit_id = helperModule.get_parameter_by_name('exhibit_id');
-        const item_id = helperModule.get_parameter_by_name('item_id');
-        const redirect = '/items/grid/details?exhibit_id=' + exhibit_id + '&item_id=' + item_id + '&status=403';
-        await authModule.check_permissions(['update_item', 'update_any_item'], 'grid', exhibit_id, item_id, redirect);
-        exhibitsModule.set_exhibit_title(exhibit_id);
-        domModule.on('#save-item-btn', 'click', itemsEditGridFormModule.update_grid_record);
-        await display_edit_record();
-    };
+    /**
+     * Update grid record
+     * @returns {Promise<boolean>}
+     */
+    obj.update_grid_record = form.submit_record;
+
+    obj.init = form.init;
 
     return obj;
 

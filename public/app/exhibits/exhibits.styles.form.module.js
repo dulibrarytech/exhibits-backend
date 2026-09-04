@@ -55,23 +55,6 @@ const exhibitsStylesFormModule = (function () {
     };
 
     /**
-     * Builds a URLSearchParams query string from a plain object
-     * @param {Object} params - Key/value pairs
-     * @returns {string} Encoded query string
-     */
-    const build_query_string = function (params) {
-        const query_params = new URLSearchParams();
-
-        for (const key in params) {
-            if (params.hasOwnProperty(key) && params[key] != null) {
-                query_params.append(key, params[key]);
-            }
-        }
-
-        return query_params.toString();
-    };
-
-    /**
      * Safely sets the text content of an element
      * @param {string} selector - CSS selector
      * @param {string} text - Text to set
@@ -99,91 +82,6 @@ const exhibitsStylesFormModule = (function () {
         }
     };
 
-    // ==================== RECORD FETCH ====================
-
-    /**
-     * Fetches the exhibit record from the API (type=edit to acquire lock)
-     * @returns {Promise<Object|null>} The exhibit record, or null on failure
-     */
-    async function fetch_exhibit_record() {
-
-        try {
-
-            // Validate endpoints
-            if (!EXHIBITS_ENDPOINTS || typeof EXHIBITS_ENDPOINTS !== 'object') {
-                console.error('EXHIBITS_ENDPOINTS is not available');
-                domModule.set_alert('#message', 'danger', 'Configuration error: API endpoints not available');
-                helperModule.redirect_to_auth();
-                return null;
-            }
-
-            // Get exhibit_id from URL
-            const uuid = helperModule.get_parameter_by_name('exhibit_id');
-
-            if (!uuid) {
-                domModule.set_alert('#message', 'danger', 'Missing required parameter: exhibit_id');
-                return null;
-            }
-
-            // Get user profile for uid (needed for ?type=edit lock)
-            const profile = authModule.get_user_profile_data();
-
-            if (!profile || !profile.uid) {
-                console.error('User profile not available');
-                domModule.set_alert('#message', 'warning', 'User profile error: Please log in again');
-                helperModule.redirect_to_auth();
-                return null;
-            }
-
-            // Resolve endpoint
-            const endpoint_config = EXHIBITS_ENDPOINTS.exhibits?.exhibit_records?.endpoints?.get?.endpoint;
-
-            if (!endpoint_config) {
-                throw new Error('Endpoint configuration not found');
-            }
-
-            const endpoint_base = endpointsModule.build(endpoint_config, { exhibit_id: uuid });
-
-            if (!endpoint_base) {
-                throw new Error('Endpoint configuration not found');
-            }
-
-            const query_string = build_query_string({
-                type: 'edit',
-                uid: profile.uid
-            });
-            const endpoint = endpoint_base + '?' + query_string;
-
-            const response = await httpModule.api({
-                method: 'GET',
-                url: endpoint
-            });
-
-            if (!response) {
-                throw new Error('No response received from server');
-            }
-
-            if (response.status !== 200) {
-                throw new Error('Server returned status ' + response.status);
-            }
-
-            if (!response.data || !response.data.data) {
-                throw new Error('Invalid response structure from server');
-            }
-
-            if (response.data.data.length === 0) {
-                throw new Error('Exhibit record not found');
-            }
-
-            return response.data.data;
-
-        } catch (error) {
-            console.error('Error fetching exhibit record:', error);
-            domModule.set_alert('#message', 'danger', error.message || 'An unexpected error occurred while loading the exhibit record');
-            return null;
-        }
-    }
-
     // ==================== DISPLAY ====================
 
     /**
@@ -195,7 +93,10 @@ const exhibitsStylesFormModule = (function () {
 
         try {
 
-            const record = await fetch_exhibit_record();
+            const record = await exhibitsCommonFormModule.get_exhibit_record({
+                type: 'edit',
+                set_title: false
+            });
 
             if (!record) {
                 throw new Error('Failed to retrieve exhibit record');

@@ -222,6 +222,57 @@ exports.get_repo_tn = async function (uuid) {
     }
 };
 
+/*
+ * The two corpus-wide aggregate reads below (subjects, resource types) are the
+ * same passthrough: log, call the task, re-wrap the envelope, and turn a throw
+ * into a failure envelope with an empty payload. They differed only in the noun
+ * used in the log strings and the key carrying the payload, so the body lives
+ * once in `aggregate_read` (DRY review 2026-09-03, cluster O7).
+ */
+
+/**
+ * Runs a repo_tasks aggregate read and re-wraps its result in this service's
+ * standard envelope.
+ * @param {Object} options
+ * @param {string} options.method_name - Exported name, used in the log prefix
+ * @param {string} options.label - Noun for the log and error strings, e.g. 'subjects'
+ * @param {string} options.unit - Counted noun for the success log, e.g. 'subject(s)'
+ * @param {string} options.payload_key - Envelope key carrying the payload
+ * @param {*} options.empty_payload - Payload value used on every failure path
+ * @param {Function} options.run - Zero-arg call returning the task's envelope
+ * @returns {Promise<Object>} Standardized response object
+ */
+const aggregate_read = async ({method_name, label, unit, payload_key, empty_payload, run}) => {
+
+    const empty_fields = {
+        [payload_key]: empty_payload,
+        total: 0
+    };
+
+    try {
+
+        LOGGER.module().info(`INFO: [/media-library/repo-service (${method_name})] Fetching ${label}`);
+
+        const response = await run();
+
+        if (!response || !response.success) {
+            LOGGER.module().warn(`WARNING: [/media-library/repo-service (${method_name})] Failed to retrieve ${label}`);
+            return build_response(false, response?.message || `Failed to retrieve ${label}`, empty_fields);
+        }
+
+        LOGGER.module().info(`INFO: [/media-library/repo-service (${method_name})] Retrieved ${response.total} unique ${unit}`);
+
+        return build_response(true, response.message, {
+            [payload_key]: response[payload_key],
+            total: response.total
+        });
+
+    } catch (error) {
+        LOGGER.module().error(`ERROR: [/media-library/repo-service (${method_name})] ${error.message}`);
+        return build_response(false, `Error retrieving ${label}: ` + error.message, empty_fields);
+    }
+};
+
 /**
  * Gets all unique subjects from the digital repository, grouped by type
  * Queries across all documents in a single pass and returns deduplicated subjects
@@ -229,35 +280,14 @@ exports.get_repo_tn = async function (uuid) {
  * @returns {Promise<Object>} Result object with subjects grouped by type
  */
 exports.get_subjects = async function () {
-
-    try {
-
-        LOGGER.module().info('INFO: [/media-library/repo-service (get_subjects)] Fetching all subjects');
-
-        const response = await repo_tasks.get_subjects();
-
-        if (!response || !response.success) {
-            LOGGER.module().warn('WARNING: [/media-library/repo-service (get_subjects)] Failed to retrieve subjects');
-            return build_response(false, response?.message || 'Failed to retrieve subjects', {
-                subjects: {},
-                total: 0
-            });
-        }
-
-        LOGGER.module().info(`INFO: [/media-library/repo-service (get_subjects)] Retrieved ${response.total} unique subject(s)`);
-
-        return build_response(true, response.message, {
-            subjects: response.subjects,
-            total: response.total
-        });
-
-    } catch (error) {
-        LOGGER.module().error(`ERROR: [/media-library/repo-service (get_subjects)] ${error.message}`);
-        return build_response(false, 'Error retrieving subjects: ' + error.message, {
-            subjects: {},
-            total: 0
-        });
-    }
+    return aggregate_read({
+        method_name: 'get_subjects',
+        label: 'subjects',
+        unit: 'subject(s)',
+        payload_key: 'subjects',
+        empty_payload: {},
+        run: () => repo_tasks.get_subjects()
+    });
 };
 
 /**
@@ -266,33 +296,12 @@ exports.get_subjects = async function () {
  * @returns {Promise<Object>} Result object with resource types array
  */
 exports.get_resource_types = async function () {
-
-    try {
-
-        LOGGER.module().info('INFO: [/media-library/repo-service (get_resource_types)] Fetching resource types');
-
-        const response = await repo_tasks.get_resource_types();
-
-        if (!response || !response.success) {
-            LOGGER.module().warn('WARNING: [/media-library/repo-service (get_resource_types)] Failed to retrieve resource types');
-            return build_response(false, response?.message || 'Failed to retrieve resource types', {
-                resource_types: [],
-                total: 0
-            });
-        }
-
-        LOGGER.module().info(`INFO: [/media-library/repo-service (get_resource_types)] Retrieved ${response.total} unique resource type(s)`);
-
-        return build_response(true, response.message, {
-            resource_types: response.resource_types,
-            total: response.total
-        });
-
-    } catch (error) {
-        LOGGER.module().error(`ERROR: [/media-library/repo-service (get_resource_types)] ${error.message}`);
-        return build_response(false, 'Error retrieving resource types: ' + error.message, {
-            resource_types: [],
-            total: 0
-        });
-    }
+    return aggregate_read({
+        method_name: 'get_resource_types',
+        label: 'resource types',
+        unit: 'resource type(s)',
+        payload_key: 'resource_types',
+        empty_payload: [],
+        run: () => repo_tasks.get_resource_types()
+    });
 };

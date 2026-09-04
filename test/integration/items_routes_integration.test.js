@@ -2,7 +2,7 @@
  * Route-mounting Integration Tests for Items Routes
  *
  * Mounts the REAL exhibits/items_routes.js (real endpoints module, real
- * controller, real items_helper validation/authorization chain) with the
+ * controller, real controller_helper validation/authorization chain) with the
  * models mocked. Verifies route registration, path-param mapping,
  * middleware ordering, the publish/suppress type-dispatch to the four
  * container models, reorder payload validation, and the conditional

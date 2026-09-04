@@ -18,9 +18,9 @@
 
 'use strict';
 
-const HELPER = require('../../libs/helper');
 const LOGGER = require('../../libs/log4');
 const Base_tasks = require('./tasks_helper');
+const FIELDS = require('../../config/exhibit_fields');
 const KALTURA_THUMBNAIL = require('../../media-library/kaltura_thumbnail');
 
 /**
@@ -33,20 +33,15 @@ const Exhibit_record_tasks = class extends Base_tasks {
 
     constructor(DB, TABLE) {
         super(DB, TABLE);
-        this.FIELDS = [
-            'uuid', 'type', 'title', 'subtitle', 'banner_template', 'about_the_curators',
-            'alert_text', 'hero_image', 'thumbnail', 'description', 'page_layout',
-            'exhibit_template', 'exhibit_subjects', 'styles', 'order', 'is_published', 'is_preview',
-            'is_featured', 'is_locked', 'locked_by_user', 'is_student_curated',
-            'owner', 'created', 'updated', 'created_by', 'updated_by'
-        ];
-        this.UPDATE_FIELDS = [
-            'type', 'title', 'subtitle', 'banner_template', 'about_the_curators',
-            'alert_text', 'hero_image', 'thumbnail', 'description', 'page_layout',
-            'exhibit_template', 'exhibit_subjects', 'styles', 'order', 'is_published',
-            'is_preview', 'is_featured', 'is_locked', 'is_student_curated', 'owner'
-        ];
-        this.PROTECTED_FIELDS = ['uuid', 'created', 'created_by', 'is_deleted'];
+        /*
+         * Exhibit records are the third field-list convention in this module:
+         * instance members rather than method-local consts. The lists moved to
+         * config/exhibit_fields.js with the other seven; the members stay so
+         * callers and tests keep reading them off `this`.
+         */
+        this.FIELDS = FIELDS.EXHIBIT_SELECT_FIELDS;
+        this.UPDATE_FIELDS = FIELDS.EXHIBIT_UPDATE_FIELDS;
+        this.PROTECTED_FIELDS = FIELDS.EXHIBIT_PROTECTED_FIELDS;
     }
 
     // _validate_database, _validate_table, _validate_uuid, _validate_data_object,
@@ -543,8 +538,7 @@ const Exhibit_record_tasks = class extends Base_tasks {
             // Record is not locked, attempt to lock it
             if (record.is_locked === 0) {
                 try {
-                    const HELPER_TASK = new HELPER();
-                    await HELPER_TASK.lock_record(
+                    await this.HELPER.lock_record(
                         sanitized_uid,
                         uuid_validated,
                         this.DB,

@@ -23,383 +23,367 @@ const HEADINGS_MODEL = require('../exhibits/headings_model');
 const GRIDS_MODEL = require('../exhibits/grid_model');
 const TIMELINES_MODEL = require('../exhibits/timelines_model');
 const EXHIBITS_MODEL = require('./exhibits_model');
-const LOGGER = require('../libs/log4');
+
+/*
+ * 'labeled' is this controller's wire format: a 400 body of
+ * {message: 'Bad request. Missing or invalid <label>.'} and a 500 of
+ * {message}. See exhibits/controller_helper.js.
+ */
 const {
-    validate_param,
+    validate_id: validate_param,
     validate_body,
     check_authorization,
-    handle_error
-} = require('../exhibits/items_helper');
+    with_handler
+} = require('../exhibits/controller_helper').create_controller_helper({
+    format: 'labeled',
+    log_prefix: '/items/controller'
+});
 
-// A reorder of a published exhibit re-indexes only the reordered components
-// (ITEMS_MODEL.schedule_reorder_reindex), coalesced per component by reindex_coalescer.
+/* A reorder of a published exhibit re-indexes only the reordered components
+   (ITEMS_MODEL.schedule_reorder_reindex), coalesced per component by reindex_coalescer. */
 
-exports.create_item_record = async function (req, res) {
+/* Log detail builders, evaluated only when a handler throws. */
+const for_exhibit = (req) => 'for exhibit ' + req.params.exhibit_id;
+const item_for_exhibit = (req) => req.params.item_id + ' for exhibit ' + req.params.exhibit_id;
 
-    try {
+exports.create_item_record = with_handler(async function (req, res) {
 
-        const exhibit_id = req.params.exhibit_id;
-        const data = req.body;
+    const exhibit_id = req.params.exhibit_id;
+    const data = req.body;
 
-        if (!validate_param(res, exhibit_id, 'exhibit ID')) return;
-        if (!validate_body(res, data, 'item data')) return;
+    if (!validate_param(res, exhibit_id, 'exhibit ID')) return;
+    if (!validate_body(res, data, 'item data')) return;
 
-        const is_authorized = await check_authorization(
-            req, res,
-            ['add_item', 'add_item_to_any_exhibit'],
-            'item', exhibit_id, null
-        );
-        if (!is_authorized) return;
+    const is_authorized = await check_authorization(
+        req, res,
+        ['add_item', 'add_item_to_any_exhibit'],
+        'item', exhibit_id, null
+    );
+    if (!is_authorized) return;
 
-        const result = await ITEMS_MODEL.create_item_record(exhibit_id, data);
-        res.status(result.status).send(result);
+    const result = await ITEMS_MODEL.create_item_record(exhibit_id, data);
+    res.status(result.status).send(result);
 
-    } catch (error) {
-        handle_error(res, 'create_item_record', error,
-            'Unable to create item record.',
-            'for exhibit ' + req.params.exhibit_id);
-    }
-};
+}, {
+    context: 'create_item_record',
+    message: 'Unable to create item record.',
+    meta: for_exhibit
+});
 
-exports.get_item_records = async function (req, res) {
+exports.get_item_records = with_handler(async function (req, res) {
 
-    try {
+    const exhibit_id = req.params.exhibit_id;
 
-        const exhibit_id = req.params.exhibit_id;
+    if (!validate_param(res, exhibit_id, 'exhibit ID')) return;
 
-        if (!validate_param(res, exhibit_id, 'exhibit ID')) return;
+    const data = await ITEMS_MODEL.get_item_records(exhibit_id);
+    res.status(data.status).send(data);
 
-        const data = await ITEMS_MODEL.get_item_records(exhibit_id);
+}, {
+    context: 'get_item_records',
+    message: 'Unable to get item records.',
+    meta: for_exhibit
+});
+
+exports.get_item_record = with_handler(async function (req, res) {
+
+    const exhibit_id = req.params.exhibit_id;
+    const item_id = req.params.item_id;
+    const type = req.query.type;
+
+    if (!validate_param(res, exhibit_id, 'exhibit ID')) return;
+    if (!validate_param(res, item_id, 'item ID')) return;
+
+    /* Default: return standard item record */
+    if (type === undefined || type === null) {
+        const data = await ITEMS_MODEL.get_item_record(exhibit_id, item_id);
         res.status(data.status).send(data);
-
-    } catch (error) {
-        handle_error(res, 'get_item_records', error,
-            'Unable to get item records.',
-            'for exhibit ' + req.params.exhibit_id);
+        return;
     }
-};
 
-exports.get_item_record = async function (req, res) {
-
-    try {
-
-        const exhibit_id = req.params.exhibit_id;
-        const item_id = req.params.item_id;
-        const type = req.query.type;
-
-        if (!validate_param(res, exhibit_id, 'exhibit ID')) return;
-        if (!validate_param(res, item_id, 'item ID')) return;
-
-        // Default: return standard item record
-        if (type === undefined || type === null) {
-            const data = await ITEMS_MODEL.get_item_record(exhibit_id, item_id);
-            res.status(data.status).send(data);
-            return;
-        }
-
-        // Edit mode: requires additional uid parameter
-        if (type === 'edit') {
-            const uid = req.query.uid;
-
-            if (!validate_param(res, uid, 'user ID for edit mode')) return;
-
-            const data = await ITEMS_MODEL.get_item_edit_record(uid, exhibit_id, item_id);
-            res.status(data.status).send(data);
-            return;
-        }
-
-        // Details mode: media library JOIN without record locking
-        if (type === 'details') {
-            const data = await ITEMS_MODEL.get_item_details_record(exhibit_id, item_id);
-            res.status(data.status).send(data);
-            return;
-        }
-
-        // Reject unrecognized type values
-        res.status(400).send({
-            message: 'Bad request. Invalid type parameter.'
-        });
-
-    } catch (error) {
-        handle_error(res, 'get_item_record', error,
-            'Unable to get item record.',
-            req.params.item_id + ' for exhibit ' + req.params.exhibit_id);
-    }
-};
-
-exports.update_item_record = async function (req, res) {
-
-    try {
-
-        const exhibit_id = req.params.exhibit_id;
-        const item_id = req.params.item_id;
-        const data = req.body;
-
-        if (!validate_param(res, exhibit_id, 'exhibit ID')) return;
-        if (!validate_param(res, item_id, 'item ID')) return;
-        if (!validate_body(res, data, 'item data')) return;
-
-        const is_authorized = await check_authorization(
-            req, res,
-            ['update_item', 'update_any_item'],
-            'item', exhibit_id, item_id
-        );
-        if (!is_authorized) return;
-
-        const result = await ITEMS_MODEL.update_item_record(exhibit_id, item_id, data);
-        res.status(result.status).send(result);
-
-    } catch (error) {
-        handle_error(res, 'update_item_record', error,
-            'Unable to update item record.',
-            req.params.item_id + ' for exhibit ' + req.params.exhibit_id);
-    }
-};
-
-exports.delete_item_record = async function (req, res) {
-
-    try {
-
-        const exhibit_id = req.params.exhibit_id;
-        const item_id = req.params.item_id;
-        const record_type = req.query.type;
-
-        if (!validate_param(res, exhibit_id, 'exhibit ID')) return;
-        if (!validate_param(res, item_id, 'item ID')) return;
-
-        const is_authorized = await check_authorization(
-            req, res,
-            ['delete_item', 'delete_any_item'],
-            record_type || 'item', exhibit_id, item_id
-        );
-        if (!is_authorized) return;
-
-        const result = await ITEMS_MODEL.delete_item_record(exhibit_id, item_id, record_type);
-        res.status(result.status).send(result);
-
-    } catch (error) {
-        handle_error(res, 'delete_item_record', error,
-            'Unable to delete item record.',
-            req.params.item_id + ' for exhibit ' + req.params.exhibit_id);
-    }
-};
-
-exports.publish_item_record = async function (req, res) {
-
-    try {
-
-        const exhibit_id = req.params.exhibit_id;
-        const item_id = req.params.item_id;
-        const type = req.query.type;
-
-        if (!validate_param(res, exhibit_id, 'exhibit ID')) return;
-        if (!validate_param(res, item_id, 'item ID')) return;
-
-        // Define publish handlers map
-        const publish_handlers = {
-            item: ITEMS_MODEL.publish_item_record,
-            heading: HEADINGS_MODEL.publish_heading_record,
-            grid: GRIDS_MODEL.publish_grid_record,
-            timeline: TIMELINES_MODEL.publish_timeline_record
-        };
-
-        // Validate type parameter against whitelist
-        if (!type || typeof type !== 'string' || !Object.hasOwn(publish_handlers, type)) {
-            res.status(400).send({
-                message: 'Bad request. Missing or invalid type parameter.'
-            });
-            return;
-        }
-
-        const is_authorized = await check_authorization(
-            req, res,
-            ['publish_item', 'publish_any_item'],
-            type, exhibit_id, item_id
-        );
-        if (!is_authorized) return;
-
-        // Execute the appropriate publish handler
-        const result = await publish_handlers[type](exhibit_id, item_id);
-
-        if (result.status === true) {
-            res.status(200).send({
-                message: 'Item published.'
-            });
-        } else {
-            res.status(422).send({
-                message: result.message
-            });
-        }
-
-    } catch (error) {
-        handle_error(res, 'publish_item_record', error,
-            'Unable to publish item record.',
-            req.params.item_id + ' for exhibit ' + req.params.exhibit_id);
-    }
-};
-
-exports.suppress_item_record = async function (req, res) {
-
-    try {
-
-        const exhibit_id = req.params.exhibit_id;
-        const item_id = req.params.item_id;
-        const type = req.query.type;
-
-        if (!validate_param(res, exhibit_id, 'exhibit ID')) return;
-        if (!validate_param(res, item_id, 'item ID')) return;
-
-        // Define suppress handlers map
-        const suppress_handlers = {
-            item: ITEMS_MODEL.suppress_item_record,
-            heading: HEADINGS_MODEL.suppress_heading_record,
-            grid: GRIDS_MODEL.suppress_grid_record,
-            timeline: TIMELINES_MODEL.suppress_timeline_record
-        };
-
-        // Validate type parameter against whitelist
-        if (!type || typeof type !== 'string' || !Object.hasOwn(suppress_handlers, type)) {
-            res.status(400).send({
-                message: 'Bad request. Missing or invalid type parameter.'
-            });
-            return;
-        }
-
-        const is_authorized = await check_authorization(
-            req, res,
-            ['suppress_item', 'suppress_any_item'],
-            type, exhibit_id, item_id
-        );
-        if (!is_authorized) return;
-
-        // Execute the appropriate suppress handler
-        const result = await suppress_handlers[type](exhibit_id, item_id);
-
-        if (result.status === true) {
-            res.status(200).send({
-                message: 'Item suppressed.'
-            });
-        } else {
-            res.status(422).send({
-                message: 'Unable to suppress item.'
-            });
-        }
-
-    } catch (error) {
-        handle_error(res, 'suppress_item_record', error,
-            'Unable to suppress item record.',
-            req.params.item_id + ' for exhibit ' + req.params.exhibit_id);
-    }
-};
-
-exports.reorder_items = async function (req, res) {
-
-    try {
-
-        const exhibit_id = req.params.exhibit_id;
-        const updated_order = req.body;
-
-        if (!validate_param(res, exhibit_id, 'exhibit ID')) return;
-
-        // Validate request body is a non-empty array
-        if (!Array.isArray(updated_order) || updated_order.length === 0) {
-            res.status(400).send({
-                message: 'Bad request. Missing or invalid order data.'
-            });
-            return;
-        }
-
-        const valid_types = ['item', 'grid', 'heading', 'subheading', 'timeline', 'griditem'];
-
-        // Validate all items before processing
-        for (const item of updated_order) {
-
-            if (!item || typeof item !== 'object' || Array.isArray(item)) {
-                res.status(400).send({
-                    message: 'Bad request. Invalid item in order data.'
-                });
-                return;
-            }
-
-            if (!item.type || typeof item.type !== 'string' || !valid_types.includes(item.type)) {
-                res.status(400).send({
-                    message: 'Bad request. Missing or invalid item type.'
-                });
-                return;
-            }
-
-            if (item.type === 'griditem' && (!item.grid_id || typeof item.grid_id !== 'string' || item.grid_id.trim() === '')) {
-                res.status(400).send({
-                    message: 'Bad request. Missing or invalid grid ID for grid item.'
-                });
-                return;
-            }
-        }
-
-        // Apply the entire reorder atomically — one transaction, one bulk CASE update
-        // per table — instead of N non-atomic single-row UPDATEs. A mid-batch failure
-        // rolls back, so the exhibit is never left half-reordered.
-        const is_reordered = await ITEMS_MODEL.reorder_exhibit_items(exhibit_id, updated_order);
-
-        if (is_reordered !== true) {
-            res.status(422).send({
-                message: 'Unable to reorder exhibit items.'
-            });
-            return;
-        }
-
-        // Re-index if the exhibit is published.
-        const exhibit_data = await EXHIBITS_MODEL.get_exhibit_record(exhibit_id);
-
-        if (exhibit_data.data && exhibit_data.data.is_published === 1) {
-            ITEMS_MODEL.schedule_reorder_reindex(exhibit_id, updated_order);
-        }
-
-        res.status(200).send({
-            message: 'Exhibit items reordered.'
-        });
-
-    } catch (error) {
-        handle_error(res, 'reorder_items', error,
-            'Unable to reorder items.',
-            'for exhibit ' + req.params.exhibit_id);
-    }
-};
-
-exports.unlock_item_record = async function (req, res) {
-
-    try {
-
-        const exhibit_id = req.params.exhibit_id;
-        const item_id = req.params.item_id;
+    /* Edit mode: requires additional uid parameter */
+    if (type === 'edit') {
         const uid = req.query.uid;
-        const force = req.query.force;
 
-        if (!validate_param(res, exhibit_id, 'exhibit ID')) return;
-        if (!validate_param(res, item_id, 'item ID')) return;
-        if (!validate_param(res, uid, 'user ID')) return;
+        if (!validate_param(res, uid, 'user ID for edit mode')) return;
 
-        // Build unlock options
-        const unlock_options = {
-            force: force === 'true'
-        };
-
-        const result = await ITEMS_MODEL.unlock_item_record(uid, item_id, unlock_options);
-
-        if (result && typeof result === 'object') {
-            res.status(200).send({
-                message: 'Item record unlocked.'
-            });
-        } else {
-            res.status(422).send({
-                message: 'Unable to unlock item record.'
-            });
-        }
-
-    } catch (error) {
-        handle_error(res, 'unlock_item_record', error,
-            'Unable to unlock item record.',
-            req.params.item_id + ' for user ' + req.query.uid);
+        const data = await ITEMS_MODEL.get_item_edit_record(uid, exhibit_id, item_id);
+        res.status(data.status).send(data);
+        return;
     }
+
+    /* Details mode: media library JOIN without record locking */
+    if (type === 'details') {
+        const data = await ITEMS_MODEL.get_item_details_record(exhibit_id, item_id);
+        res.status(data.status).send(data);
+        return;
+    }
+
+    /* Reject unrecognized type values */
+    res.status(400).send({
+        message: 'Bad request. Invalid type parameter.'
+    });
+
+}, {
+    context: 'get_item_record',
+    message: 'Unable to get item record.',
+    meta: item_for_exhibit
+});
+
+exports.update_item_record = with_handler(async function (req, res) {
+
+    const exhibit_id = req.params.exhibit_id;
+    const item_id = req.params.item_id;
+    const data = req.body;
+
+    if (!validate_param(res, exhibit_id, 'exhibit ID')) return;
+    if (!validate_param(res, item_id, 'item ID')) return;
+    if (!validate_body(res, data, 'item data')) return;
+
+    const is_authorized = await check_authorization(
+        req, res,
+        ['update_item', 'update_any_item'],
+        'item', exhibit_id, item_id
+    );
+    if (!is_authorized) return;
+
+    const result = await ITEMS_MODEL.update_item_record(exhibit_id, item_id, data);
+    res.status(result.status).send(result);
+
+}, {
+    context: 'update_item_record',
+    message: 'Unable to update item record.',
+    meta: item_for_exhibit
+});
+
+exports.delete_item_record = with_handler(async function (req, res) {
+
+    const exhibit_id = req.params.exhibit_id;
+    const item_id = req.params.item_id;
+    const record_type = req.query.type;
+
+    if (!validate_param(res, exhibit_id, 'exhibit ID')) return;
+    if (!validate_param(res, item_id, 'item ID')) return;
+
+    const is_authorized = await check_authorization(
+        req, res,
+        ['delete_item', 'delete_any_item'],
+        record_type || 'item', exhibit_id, item_id
+    );
+    if (!is_authorized) return;
+
+    const result = await ITEMS_MODEL.delete_item_record(exhibit_id, item_id, record_type);
+    res.status(result.status).send(result);
+
+}, {
+    context: 'delete_item_record',
+    message: 'Unable to delete item record.',
+    meta: item_for_exhibit
+});
+
+/*
+ * publish_item_record and suppress_item_record are the top-level dispatchers:
+ * ?type= selects the component model. The handler tables live at module scope
+ * so the two bodies stay a single validate -> authorize -> call -> send pass.
+ */
+const PUBLISH_HANDLERS = {
+    item: (...args) => ITEMS_MODEL.publish_item_record(...args),
+    heading: (...args) => HEADINGS_MODEL.publish_heading_record(...args),
+    grid: (...args) => GRIDS_MODEL.publish_grid_record(...args),
+    timeline: (...args) => TIMELINES_MODEL.publish_timeline_record(...args)
 };
 
+const SUPPRESS_HANDLERS = {
+    item: (...args) => ITEMS_MODEL.suppress_item_record(...args),
+    heading: (...args) => HEADINGS_MODEL.suppress_heading_record(...args),
+    grid: (...args) => GRIDS_MODEL.suppress_grid_record(...args),
+    timeline: (...args) => TIMELINES_MODEL.suppress_timeline_record(...args)
+};
+
+exports.publish_item_record = with_handler(async function (req, res) {
+
+    const exhibit_id = req.params.exhibit_id;
+    const item_id = req.params.item_id;
+    const type = req.query.type;
+
+    if (!validate_param(res, exhibit_id, 'exhibit ID')) return;
+    if (!validate_param(res, item_id, 'item ID')) return;
+
+    /* Validate type parameter against whitelist */
+    if (!type || typeof type !== 'string' || !Object.hasOwn(PUBLISH_HANDLERS, type)) {
+        res.status(400).send({
+            message: 'Bad request. Missing or invalid type parameter.'
+        });
+        return;
+    }
+
+    const is_authorized = await check_authorization(
+        req, res,
+        ['publish_item', 'publish_any_item'],
+        type, exhibit_id, item_id
+    );
+    if (!is_authorized) return;
+
+    const result = await PUBLISH_HANDLERS[type](exhibit_id, item_id);
+
+    if (result.status === true) {
+        res.status(200).send({
+            message: 'Item published.'
+        });
+    } else {
+        res.status(422).send({
+            message: result.message
+        });
+    }
+
+}, {
+    context: 'publish_item_record',
+    message: 'Unable to publish item record.',
+    meta: item_for_exhibit
+});
+
+exports.suppress_item_record = with_handler(async function (req, res) {
+
+    const exhibit_id = req.params.exhibit_id;
+    const item_id = req.params.item_id;
+    const type = req.query.type;
+
+    if (!validate_param(res, exhibit_id, 'exhibit ID')) return;
+    if (!validate_param(res, item_id, 'item ID')) return;
+
+    /* Validate type parameter against whitelist */
+    if (!type || typeof type !== 'string' || !Object.hasOwn(SUPPRESS_HANDLERS, type)) {
+        res.status(400).send({
+            message: 'Bad request. Missing or invalid type parameter.'
+        });
+        return;
+    }
+
+    const is_authorized = await check_authorization(
+        req, res,
+        ['suppress_item', 'suppress_any_item'],
+        type, exhibit_id, item_id
+    );
+    if (!is_authorized) return;
+
+    const result = await SUPPRESS_HANDLERS[type](exhibit_id, item_id);
+
+    if (result.status === true) {
+        res.status(200).send({
+            message: 'Item suppressed.'
+        });
+    } else {
+        res.status(422).send({
+            message: 'Unable to suppress item.'
+        });
+    }
+
+}, {
+    context: 'suppress_item_record',
+    message: 'Unable to suppress item record.',
+    meta: item_for_exhibit
+});
+
+exports.reorder_items = with_handler(async function (req, res) {
+
+    const exhibit_id = req.params.exhibit_id;
+    const updated_order = req.body;
+
+    if (!validate_param(res, exhibit_id, 'exhibit ID')) return;
+
+    /* Validate request body is a non-empty array */
+    if (!Array.isArray(updated_order) || updated_order.length === 0) {
+        res.status(400).send({
+            message: 'Bad request. Missing or invalid order data.'
+        });
+        return;
+    }
+
+    const valid_types = ['item', 'grid', 'heading', 'subheading', 'timeline', 'griditem'];
+
+    /* Validate all items before processing */
+    for (const item of updated_order) {
+
+        if (!item || typeof item !== 'object' || Array.isArray(item)) {
+            res.status(400).send({
+                message: 'Bad request. Invalid item in order data.'
+            });
+            return;
+        }
+
+        if (!item.type || typeof item.type !== 'string' || !valid_types.includes(item.type)) {
+            res.status(400).send({
+                message: 'Bad request. Missing or invalid item type.'
+            });
+            return;
+        }
+
+        if (item.type === 'griditem' && (!item.grid_id || typeof item.grid_id !== 'string' || item.grid_id.trim() === '')) {
+            res.status(400).send({
+                message: 'Bad request. Missing or invalid grid ID for grid item.'
+            });
+            return;
+        }
+    }
+
+    /* Apply the entire reorder atomically — one transaction, one bulk CASE update
+       per table — instead of N non-atomic single-row UPDATEs. A mid-batch failure
+       rolls back, so the exhibit is never left half-reordered. */
+    const is_reordered = await ITEMS_MODEL.reorder_exhibit_items(exhibit_id, updated_order);
+
+    if (is_reordered !== true) {
+        res.status(422).send({
+            message: 'Unable to reorder exhibit items.'
+        });
+        return;
+    }
+
+    /* Re-index if the exhibit is published. */
+    const exhibit_data = await EXHIBITS_MODEL.get_exhibit_record(exhibit_id);
+
+    if (exhibit_data.data && exhibit_data.data.is_published === 1) {
+        ITEMS_MODEL.schedule_reorder_reindex(exhibit_id, updated_order);
+    }
+
+    res.status(200).send({
+        message: 'Exhibit items reordered.'
+    });
+
+}, {
+    context: 'reorder_items',
+    message: 'Unable to reorder items.',
+    meta: for_exhibit
+});
+
+exports.unlock_item_record = with_handler(async function (req, res) {
+
+    const exhibit_id = req.params.exhibit_id;
+    const item_id = req.params.item_id;
+    const uid = req.query.uid;
+    const force = req.query.force;
+
+    if (!validate_param(res, exhibit_id, 'exhibit ID')) return;
+    if (!validate_param(res, item_id, 'item ID')) return;
+    if (!validate_param(res, uid, 'user ID')) return;
+
+    const unlock_options = {
+        force: force === 'true'
+    };
+
+    const result = await ITEMS_MODEL.unlock_item_record(uid, item_id, unlock_options);
+
+    if (result && typeof result === 'object') {
+        res.status(200).send({
+            message: 'Item record unlocked.'
+        });
+    } else {
+        res.status(422).send({
+            message: 'Unable to unlock item record.'
+        });
+    }
+
+}, {
+    context: 'unlock_item_record',
+    message: 'Unable to unlock item record.',
+    meta: (req) => req.params.item_id + ' for user ' + req.query.uid
+});

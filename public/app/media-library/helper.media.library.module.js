@@ -553,6 +553,225 @@ const helperMediaLibraryModule = (function() {
     // ========================================
 
     /**
+     * Determine media type from a filename extension.
+     * @param {string} filename
+     * @returns {string} 'image', 'pdf', or 'unknown'
+     */
+    obj.get_media_type_from_filename = (filename) => {
+
+        if (!filename || typeof filename !== 'string') {
+            return 'unknown';
+        }
+
+        const ext = filename.toLowerCase().substring(filename.lastIndexOf('.'));
+        const image_extensions = ['.jpg', '.jpeg', '.png', '.gif', '.webp', '.svg'];
+        const pdf_extensions = ['.pdf'];
+
+        if (image_extensions.includes(ext)) {
+            return 'image';
+        }
+
+        if (pdf_extensions.includes(ext)) {
+            return 'pdf';
+        }
+
+        return 'unknown';
+    };
+
+    /* Save-button states shared by every per-card save flow. */
+    const SAVE_BTN_IDLE_HTML = '<i class="fa fa-save" style="margin-right: 6px;" aria-hidden="true"></i>Save';
+    const SAVE_BTN_BUSY_HTML = '<i class="fa fa-spinner fa-spin" style="margin-right: 6px;" aria-hidden="true"></i>Saving...';
+    const SAVE_BTN_DONE_HTML = '<i class="fa fa-check" style="margin-right: 6px;" aria-hidden="true"></i>Saved';
+
+    /**
+     * Puts a per-card save button back into its idle state.
+     * @param {HTMLElement|null} save_btn
+     */
+    obj.reset_save_button = (save_btn) => {
+
+        if (!save_btn) {
+            return;
+        }
+
+        save_btn.disabled = false;
+        save_btn.innerHTML = SAVE_BTN_IDLE_HTML;
+    };
+
+    /**
+     * Applies the shared "record saved" presentation to a form card: green
+     * header, check-mark badge, read-only fields and a disabled Saved button.
+     *
+     * @param {HTMLElement} card
+     * @param {Object} [options]
+     * @param {string} [options.number_selector] - the card's ordinal badge
+     *     (e.g. '.file-number', '.item-number')
+     * @param {string} [options.save_button_selector='.btn-save-file']
+     * @param {string[]} [options.hide_selectors] - extra elements to hide
+     *     (the upload modal hides its Remove control once committed)
+     */
+    obj.mark_card_saved = (card, options = {}) => {
+
+        if (!card) {
+            return;
+        }
+
+        const opts = options || {};
+
+        card.classList.add('saved');
+
+        (opts.hide_selectors || []).forEach((selector) => {
+            const el = card.querySelector(selector);
+            if (el) el.style.display = 'none';
+        });
+
+        const card_header = card.querySelector('.card-header');
+
+        if (card_header) {
+            card_header.classList.remove('bg-light');
+            card_header.classList.add('bg-success', 'text-white');
+        }
+
+        if (opts.number_selector) {
+            const number_el = card.querySelector(opts.number_selector);
+
+            if (number_el) {
+                number_el.innerHTML = '<i class="fa fa-check"></i>';
+                number_el.style.backgroundColor = '#fff';
+                number_el.style.color = '#198754';
+            }
+        }
+
+        const form = card.querySelector('form') || card;
+
+        form.querySelectorAll('input, textarea').forEach((input) => {
+            input.setAttribute('readonly', true);
+            input.classList.add('bg-light');
+        });
+
+        form.querySelectorAll('select').forEach((select) => {
+            select.setAttribute('disabled', true);
+            select.classList.add('bg-light');
+        });
+
+        const save_btn = card.querySelector(opts.save_button_selector || '.btn-save-file');
+
+        if (save_btn) {
+            save_btn.disabled = true;
+            save_btn.classList.remove('btn-primary');
+            save_btn.classList.add('btn-success');
+            save_btn.innerHTML = SAVE_BTN_DONE_HTML;
+        }
+    };
+
+    /**
+     * Creates one media library record from a per-card form.
+     *
+     * Owns the flow the upload / repository / Kaltura modals each carried:
+     * resolve the create endpoint, put the card's Save button into its busy
+     * state, POST the payload, then map the response — no response / 403 /
+     * 400 / non-201 / missing id — onto a card-level message with the button
+     * restored. Success is handed to the caller, because the three modals
+     * present a saved card differently.
+     *
+     * @param {HTMLElement} card - the form card being saved
+     * @param {Object|string} payload - request body (object or JSON string)
+     * @param {Object} options
+     * @param {Function} options.message - (card, type, text) card-level message sink
+     * @param {string} [options.save_button_selector='.btn-save-file']
+     * @param {Function} [options.on_success] - (card, new_item_id, response)
+     * @param {boolean} [options.accept_ok=false] - also treat 200 as created
+     *     (the Kaltura create endpoint may answer either)
+     * @param {boolean} [options.require_item_id=true] - fail when the server
+     *     returned no record id
+     * @param {string} [options.missing_endpoint_message='API endpoint configuration missing']
+     * @param {string} [options.error_log_label='media record']
+     * @returns {Promise<boolean>} true only when the record was created
+     */
+    obj.save_media_record = async (card, payload, options = {}) => {
+
+        const opts = options || {};
+        const message = typeof opts.message === 'function'
+            ? opts.message
+            : (target, type, text) => obj.display_card_message(target, type, text);
+        const save_btn = card ? card.querySelector(opts.save_button_selector || '.btn-save-file') : null;
+        const accept_ok = opts.accept_ok === true;
+        const require_item_id = opts.require_item_id !== false;
+        const log_label = opts.error_log_label || 'media record';
+
+        const endpoints = endpointsModule.get_media_library_endpoints();
+        const endpoint = endpoints?.media_records?.post?.endpoint;
+
+        if (!endpoint) {
+            message(card, 'danger', opts.missing_endpoint_message || 'API endpoint configuration missing');
+            obj.reset_save_button(save_btn);
+            return false;
+        }
+
+        if (save_btn) {
+            save_btn.disabled = true;
+            save_btn.innerHTML = SAVE_BTN_BUSY_HTML;
+        }
+
+        try {
+
+            const response = await httpModule.api({
+                method: 'POST',
+                url: endpoint,
+                data: payload
+            });
+
+            /* No response at all — network or server error. */
+            if (!response) {
+                message(card, 'danger', 'Unable to save media record. Please check your connection and try again.');
+                obj.reset_save_button(save_btn);
+                return false;
+            }
+
+            if (response.status === obj.HTTP_STATUS.FORBIDDEN) {
+                message(card, 'danger', response.data?.message || 'You do not have permission to create media records.');
+                obj.reset_save_button(save_btn);
+                return false;
+            }
+
+            if (response.status === obj.HTTP_STATUS.BAD_REQUEST) {
+                message(card, 'danger', response.data?.message || 'Invalid media data. Please check the form and try again.');
+                obj.reset_save_button(save_btn);
+                return false;
+            }
+
+            const created = response.status === obj.HTTP_STATUS.CREATED
+                || (accept_ok && response.status === obj.HTTP_STATUS.OK);
+
+            if (!created || !response.data?.success) {
+                message(card, 'danger', response.data?.message || 'Failed to create media record.');
+                obj.reset_save_button(save_btn);
+                return false;
+            }
+
+            const new_item_id = response.data?.data;
+
+            if (require_item_id && !new_item_id) {
+                message(card, 'danger', 'Server did not return a valid item ID.');
+                obj.reset_save_button(save_btn);
+                return false;
+            }
+
+            if (typeof opts.on_success === 'function') {
+                opts.on_success(card, new_item_id, response);
+            }
+
+            return true;
+
+        } catch (error) {
+            /* Reserved for truly unexpected errors (runtime exceptions, not HTTP failures) */
+            console.error(`Error saving ${log_label}:`, error);
+            obj.reset_save_button(save_btn);
+            message(card, 'danger', 'An unexpected error occurred while saving the media record.');
+            return false;
+        }
+    };
+
+    /**
      * Show a Bootstrap modal with BS5 -> BS4/jQuery -> manual fallback chain
      * @param {HTMLElement} modal_element - The modal DOM element
      * @param {Object} [options] - Modal options (default: static backdrop, no keyboard dismiss)

@@ -20,14 +20,12 @@ const mediaModalsModule = (function() {
 
     // Shared helpers
     const escape_html = helperMediaLibraryModule.escape_html;
-    const decode_html_entities = helperMediaLibraryModule.decode_html_entities;
     const get_media_type_icon = helperMediaLibraryModule.get_media_type_icon;
     const get_media_type_label = helperMediaLibraryModule.get_media_type_label;
     const format_file_size = helperMediaLibraryModule.format_file_size;
     const clean_filename_for_title = helperMediaLibraryModule.clean_filename_for_title;
     const build_media_url = helperMediaLibraryModule.build_media_url;
     const get_thumbnail_url_for_media = helperMediaLibraryModule.get_thumbnail_url_for_media;
-    const HTTP_STATUS = helperMediaLibraryModule.HTTP_STATUS;
     const EXHIBITS_ENDPOINTS = endpointsModule.get_media_library_endpoints();
 
     /**
@@ -146,142 +144,29 @@ const mediaModalsModule = (function() {
             data.exif_data = JSON.stringify(uploaded_files_data[index].metadata);
         }
 
-        const save_btn = card.querySelector('.btn-save-file');
+        return helperMediaLibraryModule.save_media_record(card, JSON.stringify(data), {
+            save_button_selector: '.btn-save-file',
+            message: display_card_message,
+            error_log_label: 'file',
+            on_success: () => {
 
-        // Show loading state
-        if (save_btn) {
-            save_btn.disabled = true;
-            save_btn.innerHTML = '<i class="fa fa-spinner fa-spin"></i> Saving...';
-        }
+                helperMediaLibraryModule.mark_card_saved(card, {
+                    number_selector: '.file-number',
+                    save_button_selector: '.btn-save-file',
+                    /*
+                     * The file is now a committed library record — Remove no
+                     * longer applies here (deleting a saved record is the
+                     * Media Library's own delete flow).
+                     */
+                    hide_selectors: ['.file-remove-area']
+                });
 
-        try {
+                saved_files_count++;
+                update_modal_status();
 
-            // Validate endpoint configuration
-            if (!EXHIBITS_ENDPOINTS?.media_records?.post?.endpoint) {
-                display_card_message(card, 'danger', 'API endpoint configuration missing');
-                if (save_btn) {
-                    save_btn.disabled = false;
-                    save_btn.innerHTML = '<i class="fa fa-save" style="margin-right: 6px;" aria-hidden="true"></i>Save';
-                }
-                return false;
+                display_card_message(card, 'success', 'Media record created successfully');
             }
-
-            // Construct endpoint
-            const endpoint = EXHIBITS_ENDPOINTS.media_records.post.endpoint;
-
-            // Helper to reset the save button on error paths
-            const reset_save_btn = () => {
-                if (save_btn) {
-                    save_btn.disabled = false;
-                    save_btn.innerHTML = '<i class="fa fa-save" style="margin-right: 6px;" aria-hidden="true"></i>Save';
-                }
-            };
-
-            const response = await httpModule.api({
-                method: 'POST',
-                url: endpoint,
-                data: JSON.stringify(data)
-            });
-
-            // Handle undefined response (network/server error)
-            if (!response) {
-                display_card_message(card, 'danger', 'Unable to save media record. Please check your connection and try again.');
-                reset_save_btn();
-                return false;
-            }
-
-            // Handle 403 Forbidden
-            if (response.status === HTTP_STATUS.FORBIDDEN) {
-                display_card_message(card, 'danger', response.data?.message || 'You do not have permission to create media records.');
-                reset_save_btn();
-                return false;
-            }
-
-            // Handle 400 Bad Request
-            if (response.status === HTTP_STATUS.BAD_REQUEST) {
-                display_card_message(card, 'danger', response.data?.message || 'Invalid media data. Please check the form and try again.');
-                reset_save_btn();
-                return false;
-            }
-
-            // Handle success - expect 201 Created
-            if (response.status !== HTTP_STATUS.CREATED || !response.data?.success) {
-                const error_message = response.data?.message || 'Failed to create media record.';
-                display_card_message(card, 'danger', error_message);
-                reset_save_btn();
-                return false;
-            }
-
-            const response_data = response.data;
-            const new_item_id = response_data?.data;
-
-            if (!new_item_id) {
-                display_card_message(card, 'danger', 'Server did not return a valid item ID.');
-                reset_save_btn();
-                return false;
-            }
-
-            // SUCCESS: Update UI to saved state
-            card.classList.add('saved');
-
-            // The file is now a committed library record — Remove no longer
-            // applies here (deleting a saved record is the Media Library's
-            // own delete flow).
-            const saved_remove_area = card.querySelector('.file-remove-area');
-            if (saved_remove_area) saved_remove_area.style.display = 'none';
-
-            const card_header = card.querySelector('.card-header');
-            if (card_header) {
-                card_header.classList.remove('bg-light');
-                card_header.classList.add('bg-success', 'text-white');
-            }
-
-            const file_number = card.querySelector('.file-number');
-            if (file_number) {
-                file_number.innerHTML = '<i class="fa fa-check"></i>';
-                file_number.style.backgroundColor = '#fff';
-                file_number.style.color = '#198754';
-            }
-
-            // Disable inputs, textareas, and selects
-            const inputs = form.querySelectorAll('input, textarea');
-            inputs.forEach(input => {
-                input.setAttribute('readonly', true);
-                input.classList.add('bg-light');
-            });
-
-            const selects = form.querySelectorAll('select');
-            selects.forEach(select => {
-                select.setAttribute('disabled', true);
-                select.classList.add('bg-light');
-            });
-
-            if (save_btn) {
-                save_btn.disabled = true;
-                save_btn.classList.remove('btn-primary');
-                save_btn.classList.add('btn-success');
-                save_btn.innerHTML = '<i class="fa fa-check" style="margin-right: 6px;" aria-hidden="true"></i>Saved';
-            }
-
-            saved_files_count++;
-            update_modal_status();
-
-            // Show success message
-            display_card_message(card, 'success', 'Media record created successfully');
-
-        } catch (error) {
-            // Catch block is reserved for truly unexpected errors (runtime exceptions, not HTTP failures)
-            console.error('Error saving file:', error);
-
-            // Revert button state
-            if (save_btn) {
-                save_btn.disabled = false;
-                save_btn.innerHTML = '<i class="fa fa-save" style="margin-right: 6px;" aria-hidden="true"></i>Save';
-            }
-
-            // Show error feedback to user
-            display_card_message(card, 'danger', 'An unexpected error occurred while saving the media record.');
-        }
+        });
     };
 
     /**
@@ -381,44 +266,20 @@ const mediaModalsModule = (function() {
         html += '<div class="invalid-feedback">Please provide a description.</div>';
         html += '</div></div>';
         
-        // Subjects section — Topics, Genre/Form, Places, Item Type. A single instruction
-        // introduces the group and is programmatically associated with it (role="group"
-        // + aria-describedby) so assistive tech announces it and sighted users see it
-        // (WCAG 1.3.1 / 3.3.2).
-        html += '<div role="group" aria-label="Subjects" aria-describedby="file-subjects-help-' + index + '">';
-        html += '<p id="file-subjects-help-' + index + '" class="form-text text-muted mt-0 mb-2">Choose 2–4 of the following tags to support search.</p>';
+        // Subjects section — Topics, Genre/Form, Places, Item Type; built by the
+        // shared helper, which also emits the role="group" + aria-describedby
+        // instruction block (WCAG 1.3.1 / 3.3.2).
+        html += repoSubjectsModule.build_subjects_html('file', index, {
+            help_id: 'file-subjects-help-' + index,
+            placeholders: {
+                topics_subjects: 'Select a topic...',
+                places_subjects: 'Select a place...'
+            },
+            selected: {
+                item_type: default_item_type
+            }
+        });
 
-        // Row 3: Topics, Genre/Form dropdowns
-        html += '<div class="row">';
-        html += '<div class="col-md-6 mb-3">';
-        html += '<label class="form-label" for="file-topics-' + index + '">Topics <span class="badge badge-required">Required</span></label>';
-        html += '<select class="form-control form-select custom-select file-topics" id="file-topics-' + index + '" name="topics_subjects" required>';
-        html += '<option value="">Select a topic...</option>';
-        html += '</select>';
-        html += '</div>';
-        html += '<div class="col-md-6 mb-3">';
-        html += '<label class="form-label" for="file-genre-form-' + index + '">Genre/Form <span class="badge badge-required">Required</span></label>';
-        html += '<select class="form-control form-select custom-select file-genre-form" id="file-genre-form-' + index + '" name="genre_form_subjects">';
-        html += '<option value="">Select genre/form...</option>';
-        html += '</select>';
-        html += '</div></div>';
-        
-        // Row 4: Places, Item Type dropdowns
-        html += '<div class="row">';
-        html += '<div class="col-md-6 mb-3">';
-        html += '<label class="form-label" for="file-places-' + index + '">Places</label>';
-        html += '<select class="form-control form-select custom-select file-places" id="file-places-' + index + '" name="places_subjects">';
-        html += '<option value="">Select a place...</option>';
-        html += '</select>';
-        html += '</div>';
-        html += '<div class="col-md-6 mb-3">';
-        html += '<label class="form-label" for="file-item-type-' + index + '">Item Type <span class="badge badge-required">Required</span></label>';
-        html += '<select class="form-control form-select custom-select file-item-type" id="file-item-type-' + index + '" name="item_type" required' + (default_item_type ? ' data-selected="' + escape_html(default_item_type) + '"' : '') + '>';
-        html += '<option value="">Select item type...</option>';
-        html += '</select>';
-        html += '</div></div>';
-        html += '</div>'; // close Subjects group
-        
         // Hidden fields
         html += '<input type="hidden" class="file-storage-path" name="storage_path" value="' + escape_html(file_data.storage_path || '') + '">';
         html += '<input type="hidden" class="file-thumbnail-path" name="thumbnail_path" value="' + escape_html(file_data.thumbnail_path || '') + '">';
@@ -790,104 +651,11 @@ const mediaModalsModule = (function() {
     // ============================================
 
     /**
-     * Close the view media modal
-     */
-    const close_view_modal = () => {
-        const modal_element = document.getElementById('view-media-modal');
-        if (!modal_element) return;
-
-        helperMediaLibraryModule.hide_bootstrap_modal(modal_element, () => {
-            // Reset media elements
-            const image_el = document.getElementById('view-media-image');
-            const pdf_el = document.getElementById('view-media-pdf');
-            if (image_el) {
-                image_el.src = '';
-                image_el.style.display = 'none';
-                image_el.style.cursor = '';
-                image_el.title = '';
-                image_el.onclick = null;
-            }
-            if (pdf_el) {
-                pdf_el.src = '';
-            }
-
-            // Remove repo handle hint if present
-            const container = document.getElementById('view-media-container');
-            if (container && container.parentNode) {
-                const hint = container.parentNode.querySelector('.repo-handle-hint');
-                if (hint) {
-                    hint.remove();
-                }
-            }
-        });
-    };
-
-    /**
-     * Setup view modal event handlers
-     */
-    const setup_view_modal_handlers = () => {
-        // Close button (X) handler
-        const close_btn = document.getElementById('view-media-close-btn');
-        if (close_btn) {
-            const new_close_btn = close_btn.cloneNode(true);
-            close_btn.parentNode.replaceChild(new_close_btn, close_btn);
-            new_close_btn.addEventListener('click', close_view_modal);
-        }
-
-        // Cancel button handler
-        const cancel_btn = document.getElementById('view-media-cancel-btn');
-        if (cancel_btn) {
-            const new_cancel_btn = cancel_btn.cloneNode(true);
-            cancel_btn.parentNode.replaceChild(new_cancel_btn, cancel_btn);
-            new_cancel_btn.addEventListener('click', close_view_modal);
-        }
-
-        // Edit button: closes the preview and opens the edit form for the
-        // currently-displayed record. The uuid is stashed on the modal element's
-        // dataset by the opener, so a single shared handler works regardless of
-        // which dispatch (repo or upload) populated the modal.
-        const edit_btn = document.getElementById('view-media-edit-btn');
-        if (edit_btn) {
-            const new_edit_btn = edit_btn.cloneNode(true);
-            edit_btn.parentNode.replaceChild(new_edit_btn, edit_btn);
-            new_edit_btn.addEventListener('click', () => {
-                const modal_el = document.getElementById('view-media-modal');
-                const uuid = modal_el && modal_el.dataset ? modal_el.dataset.uuid : '';
-                close_view_modal();
-                if (uuid && typeof mediaEditModalModule !== 'undefined' && typeof mediaEditModalModule.open_edit_media_modal === 'function') {
-                    // Small delay so the preview modal's close animation finishes
-                    // before the edit modal opens.
-                    setTimeout(() => { mediaEditModalModule.open_edit_media_modal(uuid); }, 200);
-                }
-            });
-        }
-    };
-
-    /**
-     * Determine media type from filename extension
-     * @param {string} filename - Filename to check
-     * @returns {string} Media type ('image', 'pdf', or 'unknown')
-     */
-    const get_media_type_from_filename = (filename) => {
-        if (!filename || typeof filename !== 'string') {
-            return 'unknown';
-        }
-        
-        const ext = filename.toLowerCase().substring(filename.lastIndexOf('.'));
-        const image_extensions = ['.jpg', '.jpeg', '.png', '.gif', '.webp', '.svg'];
-        const pdf_extensions = ['.pdf'];
-        
-        if (image_extensions.includes(ext)) {
-            return 'image';
-        }
-        if (pdf_extensions.includes(ext)) {
-            return 'pdf';
-        }
-        return 'unknown';
-    };
-
-    /**
-     * Open the view media modal
+     * Open the view media modal for an uploaded (or Kaltura-less local) asset.
+     *
+     * The dialog itself lives in viewMediaModalModule; only the two
+     * upload-specific decisions are passed in here.
+     *
      * @param {string} uuid - Media record UUID
      * @param {string} name - Media record name for header
      * @param {string} filename - Original filename for display
@@ -897,167 +665,57 @@ const mediaModalsModule = (function() {
      * @param {Object} [record] - Full row record (for audit fields)
      */
     obj.open_view_media_modal = function(uuid, name, filename, size, media_type, ingest_method, record) {
-        const modal_element = document.getElementById('view-media-modal');
 
-        // Decode HTML entities in name to prevent double-encoding
-        name = decode_html_entities(name);
+        viewMediaModalModule.open({
+            uuid: uuid,
+            name: name,
+            filename: filename,
+            size: size,
+            media_type: media_type,
+            ingest_method: ingest_method,
+            record: record,
+            strategy: {
 
-        if (!modal_element) {
-            console.error('View media modal not found');
-            return;
-        }
+                /* Full edit-form parity: Name / Filename / File Size, then the shared tail. */
+                build_info_html: (ctx) => {
 
-        // Stash the uuid on the modal element so the Edit button click handler
-        // can read it back without needing closure capture (the handler is wired
-        // once in setup_view_modal_handlers and serves every open of this modal).
-        if (uuid) {
-            modal_element.dataset.uuid = uuid;
-        } else {
-            delete modal_element.dataset.uuid;
-        }
+                    const rows = [
+                        ['Name', ctx.name || '-'],
+                        ['Filename', ctx.filename || '-'],
+                        ['File Size', ctx.size || '-']
+                    ].concat(viewMediaModalModule.build_tail_rows(ctx));
 
-        // Determine display type - use passed media_type, fallback to filename detection
-        const display_type = (media_type && media_type !== 'N/A')
-            ? media_type.toLowerCase()
-            : get_media_type_from_filename(filename);
+                    return viewMediaModalModule.render_info_rows(rows);
+                },
 
-        // Update modal title
-        const title_el = document.getElementById('view-media-modal-title');
-        if (title_el) {
-            title_el.textContent = name || 'View Media';
-        }
+                /*
+                 * UUID-based file endpoint, versioned by the record's updated
+                 * timestamp so a freshly replaced file isn't served from the
+                 * browser's long-lived cache of the previous one.
+                 */
+                resolve_media_url: (ctx) => {
 
-        // Update file info — full edit-form parity. Row collection then render
-        // so mb-0 lands on the actual last visible row regardless of which
-        // optional audit fields are present.
-        const info_el = document.getElementById('view-media-info');
-        if (info_el) {
-            const rows = [
-                ['Name', name || '-'],
-                ['Filename', filename || '-'],
-                ['File Size', size || '-']
-            ];
-            const media_type_for_view = (record && record.media_type) || media_type;
-            if (media_type_for_view && media_type_for_view !== 'N/A') rows.push(['Media Type', media_type_for_view]);
+                    const url = helperMediaLibraryModule.append_cache_version(
+                        build_media_url(ctx.uuid),
+                        ctx.record?.updated
+                    );
 
-            const ingest_method_cap = ingest_method
-                ? ingest_method.charAt(0).toUpperCase() + ingest_method.slice(1)
-                : 'N/A';
-            rows.push(['Ingest Method', ingest_method_cap]);
-
-            // Exhibit associations (resolved to titles by the list module) — shown as a
-            // stacked list beneath the label; special-cased in the render below. Only
-            // shown when the media has been added to at least one exhibit.
-            if (record && Array.isArray(record.exhibit_names) && record.exhibit_names.length > 0) {
-                rows.push(['__exhibits__', record.exhibit_names]);
-            }
-
-            // Audit rows — only when the full record was passed through
-            if (record && record.created_display) rows.push(['Date Created', record.created_display]);
-            if (record && record.created_by) rows.push(['Added By', record.created_by]);
-            if (record && record.updated_by) {
-                const ub = String(record.updated_by).trim();
-                const ubl = ub.toLowerCase();
-                if (ub && ubl !== 'n/a' && ubl !== 'migration_script') {
-                    rows.push(['Updated By', ub]);
-                }
-            }
-
-            info_el.innerHTML = rows.map((row, idx) => {
-                const cls = idx === rows.length - 1 ? 'mb-0' : 'mb-1';
-                if (row[0] === '__exhibits__') {
-                    const names_html = row[1]
-                        .map(n => '<div>' + escape_html(String(n)) + '</div>')
-                        .join('');
-                    return '<p class="mb-1"><strong>Exhibit(s):</strong></p>'
-                        + '<div class="' + cls + '">' + names_html + '</div>';
-                }
-                return '<p class="' + cls + '"><strong>' + row[0] + ':</strong> <span>' + escape_html(String(row[1])) + '</span></p>';
-            }).join('');
-        }
-
-        // Get elements
-        const image_el = document.getElementById('view-media-image');
-        const pdf_container = document.getElementById('view-media-pdf-container');
-        const pdf_el = document.getElementById('view-media-pdf');
-        const loading_el = document.getElementById('view-media-loading');
-        const error_el = document.getElementById('view-media-error');
-
-        // Reset display states
-        if (image_el) image_el.style.display = 'none';
-        if (pdf_container) pdf_container.style.display = 'none';
-        if (loading_el) loading_el.style.display = 'block';
-        if (error_el) error_el.style.display = 'none';
-
-        // Build media URL using UUID (versioned by the record's updated
-        // timestamp so a freshly replaced file isn't served from the
-        // browser's long-lived cache of the previous one)
-        const media_url = helperMediaLibraryModule.append_cache_version(build_media_url(uuid), record?.updated);
-        
-        if (!media_url) {
-            if (loading_el) loading_el.style.display = 'none';
-            if (error_el) {
-                error_el.style.display = 'block';
-                const error_text = document.getElementById('view-media-error-text');
-                if (error_text) error_text.textContent = 'Unable to build media URL.';
-            }
-            return;
-        }
-
-        // Add token for authentication
-        const token = authModule.get_user_token();
-        const authenticated_url = media_url + (media_url.includes('?') ? '&' : '?') + 'token=' + encodeURIComponent(token || '');
-
-        // Setup event handlers
-        setup_view_modal_handlers();
-
-        // Show modal (dismissible)
-        helperMediaLibraryModule.show_bootstrap_modal(modal_element, { backdrop: true, keyboard: true });
-
-        // Load media based on detected type
-        if (display_type === 'image') {
-            // Load image
-            if (image_el) {
-                image_el.onload = function() {
-                    if (loading_el) loading_el.style.display = 'none';
-                    image_el.style.display = 'block';
-                };
-                image_el.onerror = function() {
-                    if (loading_el) loading_el.style.display = 'none';
-                    if (error_el) {
-                        error_el.style.display = 'block';
-                        const error_text = document.getElementById('view-media-error-text');
-                        if (error_text) error_text.textContent = 'Unable to load image.';
+                    if (!url) {
+                        return null;
                     }
-                };
-                image_el.src = authenticated_url;
-                image_el.alt = 'Preview of ' + (name || filename);
-            }
-        } else if (display_type === 'pdf') {
-            // Load PDF in iframe
-            if (pdf_el && pdf_container) {
-                if (loading_el) loading_el.style.display = 'none';
-                pdf_container.style.display = 'block';
-                pdf_el.src = authenticated_url;
-            }
-        } else {
-            // Unsupported type
-            if (loading_el) loading_el.style.display = 'none';
-            if (error_el) {
-                error_el.style.display = 'block';
-                const error_text = document.getElementById('view-media-error-text');
-                if (error_text) error_text.textContent = 'This media type cannot be previewed.';
-            }
-        }
 
-        console.debug('View media modal opened for: ' + name);
+                    const token = authModule.get_user_token();
+                    return url + (url.includes('?') ? '&' : '?') + 'token=' + encodeURIComponent(token || '');
+                }
+            }
+        });
     };
 
     /**
      * Close the view media modal (public method)
      */
     obj.close_view_media_modal = function() {
-        close_view_modal();
+        viewMediaModalModule.close();
     };
 
     /**

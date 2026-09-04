@@ -39,17 +39,28 @@ const mockTimelinesModel = mock_model([
 ]);
 jest.mock('../../exhibits/timelines_model', () => mockTimelinesModel);
 
-// Bypass auth/validation; let handle_error resolve to a 500 so a thrown error
-// still produces a response (none of these tests trip it — models resolve).
-jest.mock('../../exhibits/grid_helper', () => ({
-    validate_id: jest.fn(() => true),
-    check_authorization: jest.fn().mockResolvedValue(true),
-    handle_error: jest.fn((res) => res.status(500).send({ message: 'error' }))
-}));
-jest.mock('../../exhibits/timelines_helper', () => ({
-    validate_param: jest.fn(() => true),
-    check_authorization: jest.fn().mockResolvedValue(true),
-    handle_error: jest.fn((res) => res.status(500).send({ message: 'error' }))
+/*
+ * Bypass auth/validation; let handle_error resolve to a 500 so a thrown error
+ * still produces a response (none of these tests trip it — models resolve).
+ * Both controllers now build their API from the one shared
+ * exhibits/controller_helper (DRY review Phase 2, item 13), so one mock of the
+ * factory covers the grid and timeline paths that used to need two.
+ */
+jest.mock('../../exhibits/controller_helper', () => ({
+    create_controller_helper: () => ({
+        validate_id: jest.fn(() => true),
+        validate_body: jest.fn(() => true),
+        check_authorization: jest.fn().mockResolvedValue(true),
+        validate_model_result: jest.fn(() => true),
+        handle_error: jest.fn((res) => res.status(500).send({ message: 'error' })),
+        with_handler: (fn) => async function (req, res) {
+            try {
+                return await fn(req, res);
+            } catch (error) {
+                return res.status(500).send({ message: 'error' });
+            }
+        }
+    })
 }));
 
 describe('Publish/Suppress item endpoints — consistent error statuses', () => {

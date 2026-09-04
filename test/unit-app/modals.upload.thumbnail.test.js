@@ -78,10 +78,17 @@ describe('mediaModalsModule — staged thumbnail preview', () => {
         globalThis.helperMediaLibraryModule = fresh_helper();
         globalThis.authModule = auth_stub('unit-test-token', { logout: () => {} });
         globalThis.httpModule = { req: () => Promise.resolve({ status: 200, data: { success: true } }) };
-        globalThis.repoSubjectsModule = {
-            populate_subjects_dropdowns: () => {},
-            validate_required_fields: () => true,
-        };
+        /*
+         * The subjects block is built by the real repoSubjectsModule now, so
+         * load it rather than stub the builder. Its network-bound members are
+         * not reached by build_subjects_html.
+         */
+        load_browser_module(
+            'public/app/media-library/helper.repo.subjects.module.js',
+            'repoSubjectsModule',
+        );
+        globalThis.repoSubjectsModule.populate_subjects_dropdowns = () => {};
+        globalThis.repoSubjectsModule.validate_required_fields = () => true;
 
         load_browser_module(
             'public/app/media-library/modals.upload.module.js',
@@ -101,10 +108,8 @@ describe('mediaModalsModule — staged thumbnail preview', () => {
         globalThis.helperMediaLibraryModule = fresh_helper();
         globalThis.authModule = auth_stub('unit-test-token', { logout: () => {} });
         globalThis.httpModule = { req: () => Promise.resolve({ status: 200, data: { success: true } }) };
-        globalThis.repoSubjectsModule = {
-            populate_subjects_dropdowns: () => {},
-            validate_required_fields: () => true,
-        };
+        globalThis.repoSubjectsModule.populate_subjects_dropdowns = () => {};
+        globalThis.repoSubjectsModule.validate_required_fields = () => true;
         document.body.innerHTML = MODAL_DOM;
     });
 

@@ -614,6 +614,128 @@ const Repo_service_tasks = class extends Es_base_tasks {
         }
     }
 
+    // ==================== SCROLL HELPERS ====================
+
+    /**
+     * Walks every document matching an `exists` query with the scroll API and
+     * folds each page into a caller-owned accumulator.
+     *
+     * `get_subjects` and `get_resource_types` each carried their own copy of
+     * this loop; the copies differed only in the field they filtered on, the
+     * `_source` projection and the per-page extractor (DRY review 2026-09-03,
+     * cluster O7). Failure handling stays with the callers because each of
+     * them returns a differently-shaped envelope — this method throws and
+     * `_scroll_failure` turns the throw into that envelope.
+     *
+     * @param {Object} options
+     * @param {string} options.exists_field - Field that must exist on a document
+     * @param {Array} options._source - Source projection for the search
+     * @param {Function} options.extract - (hits) => void, called once per page
+     * @param {string} options.method_name - Caller name, used in the log lines
+     * @returns {Promise<Object>} `{success: true}`, or `{success: false, message}`
+     *   when Elasticsearch answers without a hits envelope
+     * @private
+     */
+    async _scroll_all({exists_field, _source, extract, method_name}) {
+
+        const SCROLL_DURATION = '30s';
+        const SCROLL_SIZE = 1000;
+
+        /* Initial search - get all documents that have the field */
+        const initial_response = await this._with_timeout(
+            this.CLIENT.search({
+                index: this.INDEX,
+                scroll: SCROLL_DURATION,
+                size: SCROLL_SIZE,
+                body: {
+                    query: {
+                        exists: {
+                            field: exists_field
+                        }
+                    },
+                    _source: _source
+                }
+            }),
+            this.SEARCH_TIMEOUT
+        );
+
+        if (!initial_response || !initial_response.hits) {
+            return {
+                success: false,
+                message: 'Empty response from Elasticsearch'
+            };
+        }
+
+        /* Process initial batch */
+        extract(initial_response.hits.hits);
+
+        let scroll_id = initial_response._scroll_id;
+        let hits = initial_response.hits.hits;
+
+        /* Continue scrolling until no more results */
+        while (hits.length > 0) {
+
+            const scroll_response = await this._with_timeout(
+                this.CLIENT.scroll({
+                    scroll_id: scroll_id,
+                    scroll: SCROLL_DURATION
+                }),
+                this.SEARCH_TIMEOUT
+            );
+
+            hits = scroll_response.hits.hits;
+
+            if (hits.length > 0) {
+                extract(hits);
+            }
+
+            scroll_id = scroll_response._scroll_id;
+        }
+
+        /* Clear scroll context */
+        if (scroll_id) {
+            try {
+                await this.CLIENT.clearScroll({ scroll_id: scroll_id });
+            } catch (clear_error) {
+                LOGGER.module().warn(`WARNING: [${this.LOG_PREFIX} (${method_name})] Failed to clear scroll: ${clear_error.message}`);
+            }
+        }
+
+        return { success: true };
+    }
+
+    /**
+     * Turns a thrown scroll failure into the caller's failure envelope. A
+     * missing index is a warning with a fixed message; anything else is logged
+     * as an error and reported with the underlying message appended.
+     * @param {Error} error - Thrown error
+     * @param {string} method_name - Caller name, used in the log lines
+     * @param {string} label - Noun used in the message, e.g. 'subjects'
+     * @param {Object} empty_fields - Payload keys the caller always returns
+     * @returns {Object} Failure envelope
+     * @private
+     */
+    _scroll_failure(error, method_name, label, empty_fields) {
+
+        if (error.meta?.statusCode === 404) {
+            LOGGER.module().warn(`WARNING: [${this.LOG_PREFIX} (${method_name})] Index not found: ${this.INDEX}`);
+
+            return {
+                success: false,
+                message: 'Search index not found',
+                ...empty_fields
+            };
+        }
+
+        this._handle_error(error, method_name);
+
+        return {
+            success: false,
+            message: `Failed to retrieve ${label}: ${error.message}`,
+            ...empty_fields
+        };
+    }
+
     /**
      * Retrieves all unique subjects from display_record.subjects across all documents,
      * grouped by term type (geographic, topical, genre_form, temporal, etc.)
@@ -623,72 +745,25 @@ const Repo_service_tasks = class extends Es_base_tasks {
      */
     async get_subjects() {
 
+        const empty_fields = { subjects: {}, total: 0 };
+
         try {
 
             const subjects_by_type = {};
-            const SCROLL_DURATION = '30s';
-            const SCROLL_SIZE = 1000;
 
-            // Initial search - get all documents that have subjects with terms
-            const initial_response = await this._with_timeout(
-                this.CLIENT.search({
-                    index: this.INDEX,
-                    scroll: SCROLL_DURATION,
-                    size: SCROLL_SIZE,
-                    body: {
-                        query: {
-                            exists: {
-                                field: 'display_record.subjects.terms.type'
-                            }
-                        },
-                        _source: ['display_record.subjects']
-                    }
-                }),
-                this.SEARCH_TIMEOUT
-            );
+            const scrolled = await this._scroll_all({
+                method_name: 'get_subjects',
+                exists_field: 'display_record.subjects.terms.type',
+                _source: ['display_record.subjects'],
+                extract: (hits) => this._extract_subjects(hits, subjects_by_type)
+            });
 
-            if (!initial_response || !initial_response.hits) {
+            if (!scrolled.success) {
                 return {
                     success: false,
-                    message: 'Empty response from Elasticsearch',
-                    subjects: {},
-                    total: 0
+                    message: scrolled.message,
+                    ...empty_fields
                 };
-            }
-
-            // Process initial batch
-            this._extract_subjects(initial_response.hits.hits, subjects_by_type);
-
-            let scroll_id = initial_response._scroll_id;
-            let hits = initial_response.hits.hits;
-
-            // Continue scrolling until no more results
-            while (hits.length > 0) {
-
-                const scroll_response = await this._with_timeout(
-                    this.CLIENT.scroll({
-                        scroll_id: scroll_id,
-                        scroll: SCROLL_DURATION
-                    }),
-                    this.SEARCH_TIMEOUT
-                );
-
-                hits = scroll_response.hits.hits;
-
-                if (hits.length > 0) {
-                    this._extract_subjects(hits, subjects_by_type);
-                }
-
-                scroll_id = scroll_response._scroll_id;
-            }
-
-            // Clear scroll context
-            if (scroll_id) {
-                try {
-                    await this.CLIENT.clearScroll({ scroll_id: scroll_id });
-                } catch (clear_error) {
-                    LOGGER.module().warn(`WARNING: [/media-library/tasks/repo_service_tasks (get_subjects)] Failed to clear scroll: ${clear_error.message}`);
-                }
             }
 
             // Convert each type's Map to a sorted array and calculate totals
@@ -714,26 +789,7 @@ const Repo_service_tasks = class extends Es_base_tasks {
             };
 
         } catch (error) {
-
-            if (error.meta?.statusCode === 404) {
-                LOGGER.module().warn(`WARNING: [/media-library/tasks/repo_service_tasks (get_subjects)] Index not found: ${this.INDEX}`);
-
-                return {
-                    success: false,
-                    message: 'Search index not found',
-                    subjects: {},
-                    total: 0
-                };
-            }
-
-            this._handle_error(error, 'get_subjects');
-
-            return {
-                success: false,
-                message: 'Failed to retrieve subjects: ' + error.message,
-                subjects: {},
-                total: 0
-            };
+            return this._scroll_failure(error, 'get_subjects', 'subjects', empty_fields);
         }
     }
 
@@ -797,72 +853,25 @@ const Repo_service_tasks = class extends Es_base_tasks {
      */
     async get_resource_types() {
 
+        const empty_fields = { resource_types: [], total: 0 };
+
         try {
 
             const resource_types = new Map();
-            const SCROLL_DURATION = '30s';
-            const SCROLL_SIZE = 1000;
 
-            // Initial search - get all documents that have a resource_type value
-            const initial_response = await this._with_timeout(
-                this.CLIENT.search({
-                    index: this.INDEX,
-                    scroll: SCROLL_DURATION,
-                    size: SCROLL_SIZE,
-                    body: {
-                        query: {
-                            exists: {
-                                field: 'display_record.resource_type'
-                            }
-                        },
-                        _source: ['display_record.resource_type']
-                    }
-                }),
-                this.SEARCH_TIMEOUT
-            );
+            const scrolled = await this._scroll_all({
+                method_name: 'get_resource_types',
+                exists_field: 'display_record.resource_type',
+                _source: ['display_record.resource_type'],
+                extract: (hits) => this._extract_resource_types(hits, resource_types)
+            });
 
-            if (!initial_response || !initial_response.hits) {
+            if (!scrolled.success) {
                 return {
                     success: false,
-                    message: 'Empty response from Elasticsearch',
-                    resource_types: [],
-                    total: 0
+                    message: scrolled.message,
+                    ...empty_fields
                 };
-            }
-
-            // Process initial batch
-            this._extract_resource_types(initial_response.hits.hits, resource_types);
-
-            let scroll_id = initial_response._scroll_id;
-            let hits = initial_response.hits.hits;
-
-            // Continue scrolling until no more results
-            while (hits.length > 0) {
-
-                const scroll_response = await this._with_timeout(
-                    this.CLIENT.scroll({
-                        scroll_id: scroll_id,
-                        scroll: SCROLL_DURATION
-                    }),
-                    this.SEARCH_TIMEOUT
-                );
-
-                hits = scroll_response.hits.hits;
-
-                if (hits.length > 0) {
-                    this._extract_resource_types(hits, resource_types);
-                }
-
-                scroll_id = scroll_response._scroll_id;
-            }
-
-            // Clear scroll context
-            if (scroll_id) {
-                try {
-                    await this.CLIENT.clearScroll({ scroll_id: scroll_id });
-                } catch (clear_error) {
-                    LOGGER.module().warn(`WARNING: [/media-library/tasks/repo_service_tasks (get_resource_types)] Failed to clear scroll: ${clear_error.message}`);
-                }
             }
 
             // Convert Map to sorted array
@@ -881,26 +890,7 @@ const Repo_service_tasks = class extends Es_base_tasks {
             };
 
         } catch (error) {
-
-            if (error.meta?.statusCode === 404) {
-                LOGGER.module().warn(`WARNING: [/media-library/tasks/repo_service_tasks (get_resource_types)] Index not found: ${this.INDEX}`);
-
-                return {
-                    success: false,
-                    message: 'Search index not found',
-                    resource_types: [],
-                    total: 0
-                };
-            }
-
-            this._handle_error(error, 'get_resource_types');
-
-            return {
-                success: false,
-                message: 'Failed to retrieve resource types: ' + error.message,
-                resource_types: [],
-                total: 0
-            };
+            return this._scroll_failure(error, 'get_resource_types', 'resource types', empty_fields);
         }
     }
 

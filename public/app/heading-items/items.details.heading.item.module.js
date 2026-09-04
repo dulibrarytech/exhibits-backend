@@ -20,96 +20,32 @@ const itemsDetailsHeadingModule = (function () {
 
     'use strict';
 
-    // const APP_PATH = endpointsModule.get_app_path();
-    const EXHIBITS_ENDPOINTS = endpointsModule.get_exhibits_endpoints();
     let obj = {};
 
-    async function get_item_heading_record () {
+    /**
+     * Populates the read-only heading details page from a fetched record.
+     * @param {Object} record
+     */
+    function populate(record) {
 
-        try {
-
-            const exhibit_id = helperModule.get_parameter_by_name('exhibit_id');
-            const item_id = helperModule.get_parameter_by_name('item_id');
-            const endpoint = endpointsModule.build(EXHIBITS_ENDPOINTS.exhibits.heading_records.get.endpoint, {
-                exhibit_id: exhibit_id,
-                heading_id: item_id
-            });
-
-            if (!endpoint) {
-                throw new Error('Missing required parameters: exhibit_id or item_id');
-            }
-
-            const response = await httpModule.api({
-                method: 'GET',
-                url: endpoint + '?type=details'
-            });
-
-            if (response && response.status === 200) {
-                return response.data.data;
-            }
-
-        } catch (error) {
-            domModule.set_alert(document.querySelector('#message'), 'danger', error.message);
-        }
-    }
-
-    async function display_edit_record () {
-
-        let record = await get_item_heading_record();
-        let is_published = record.is_published;
-        let created_by = record.created_by;
-        let created = record.created;
-        let create_date = new Date(created);
-        let updated_by = record.updated_by;
-        let updated = record.updated;
-        let update_date = new Date(updated);
-        let item_created = '';
-        let create_date_time = helperModule.format_date(create_date);
-        let update_date_time = helperModule.format_date(update_date);
-
-        // lockModule.check_if_locked(record, '#item-submit-card');
-
-        if (created_by !== null) {
-            item_created += `<em>Created by ${created_by} on ${create_date_time}</em>`;
-        }
-
-        if (updated_by !== null) {
-            item_created += ` | <em>Last updated by ${updated_by} on ${update_date_time}</em>`;
-        }
-
-        domModule.html('#created', item_created);
         rteModule.set_html('item-heading-text-input', helperModule.unescape(record.text));
         domModule.set_value('#item-heading-type-input', record.type);
 
-        if (is_published === 1) {
+        if (record.is_published === 1) {
             domModule.set_value('#is-published', true);
-        } else if (is_published === 0) {
+        } else if (record.is_published === 0) {
             domModule.set_value('#is-published', false);
         }
-
-        return false;
     }
 
-    obj.init = async function () {
+    const form = itemFormBaseModule.create({
+        record_type: 'heading',
+        mode: 'details',
+        populate: populate,
+        show_denied_banner: true
+    });
 
-        try {
-
-            const status = helperModule.get_parameter_by_name('status');
-
-            if (status !== null && status === '403') {
-                window.scrollTo(0, 0);
-                domModule.set_alert(document.querySelector('#message'), 'danger', 'You do not have permission to edit this record.');
-            }
-
-            const exhibit_id = helperModule.get_parameter_by_name('exhibit_id');
-            await exhibitsModule.set_exhibit_title(exhibit_id);
-
-            await display_edit_record();
-
-        } catch (error) {
-            domModule.set_alert(document.querySelector('#message'), 'danger', error.message);
-        }
-    };
+    obj.init = form.init;
 
     return obj;
 

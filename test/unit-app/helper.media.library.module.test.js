@@ -495,4 +495,245 @@ describe('helperMediaLibraryModule', () => {
             expect(() => helperMediaLibraryModule.hide_bootstrap_modal(null)).not.toThrow();
         });
     });
+    describe('get_media_type_from_filename', () => {
+
+        it('maps image and pdf extensions, case-insensitively', () => {
+            expect(helperMediaLibraryModule.get_media_type_from_filename('a.JPG')).toBe('image');
+            expect(helperMediaLibraryModule.get_media_type_from_filename('a.jpeg')).toBe('image');
+            expect(helperMediaLibraryModule.get_media_type_from_filename('a.png')).toBe('image');
+            expect(helperMediaLibraryModule.get_media_type_from_filename('a.gif')).toBe('image');
+            expect(helperMediaLibraryModule.get_media_type_from_filename('a.webp')).toBe('image');
+            expect(helperMediaLibraryModule.get_media_type_from_filename('a.svg')).toBe('image');
+            expect(helperMediaLibraryModule.get_media_type_from_filename('doc.PDF')).toBe('pdf');
+        });
+
+        it('returns "unknown" for other extensions and bad input', () => {
+            expect(helperMediaLibraryModule.get_media_type_from_filename('a.mp4')).toBe('unknown');
+            expect(helperMediaLibraryModule.get_media_type_from_filename('noext')).toBe('unknown');
+            expect(helperMediaLibraryModule.get_media_type_from_filename('')).toBe('unknown');
+            expect(helperMediaLibraryModule.get_media_type_from_filename(null)).toBe('unknown');
+            expect(helperMediaLibraryModule.get_media_type_from_filename(42)).toBe('unknown');
+        });
+    });
+
+    describe('reset_save_button / mark_card_saved', () => {
+
+        function build_card() {
+            document.body.innerHTML = `
+                <div class="file-form-card">
+                    <div class="card-header bg-light">
+                        <span class="file-number">1</span>
+                    </div>
+                    <div class="file-remove-area"></div>
+                    <form class="file-details-form">
+                        <input name="name" />
+                        <textarea name="description"></textarea>
+                        <select name="item_type"><option value="a">a</option></select>
+                        <button type="button" class="btn btn-primary btn-save-file">Save</button>
+                    </form>
+                </div>`;
+            return document.querySelector('.file-form-card');
+        }
+
+        it('reset_save_button re-enables and restores the idle label', () => {
+            const card = build_card();
+            const btn = card.querySelector('.btn-save-file');
+            btn.disabled = true;
+            btn.innerHTML = 'busy';
+
+            helperMediaLibraryModule.reset_save_button(btn);
+
+            expect(btn.disabled).toBe(false);
+            expect(btn.innerHTML).toContain('fa-save');
+            expect(btn.textContent).toBe('Save');
+        });
+
+        it('reset_save_button tolerates a null button', () => {
+            expect(() => helperMediaLibraryModule.reset_save_button(null)).not.toThrow();
+        });
+
+        it('mark_card_saved greens the header, badges the number and locks the fields', () => {
+            const card = build_card();
+
+            helperMediaLibraryModule.mark_card_saved(card, {
+                number_selector: '.file-number',
+                save_button_selector: '.btn-save-file',
+                hide_selectors: ['.file-remove-area'],
+            });
+
+            expect(card.classList.contains('saved')).toBe(true);
+            expect(card.querySelector('.file-remove-area').style.display).toBe('none');
+
+            const header = card.querySelector('.card-header');
+            expect(header.classList.contains('bg-light')).toBe(false);
+            expect(header.classList.contains('bg-success')).toBe(true);
+            expect(header.classList.contains('text-white')).toBe(true);
+
+            expect(card.querySelector('.file-number').innerHTML).toContain('fa-check');
+
+            expect(card.querySelector('input').getAttribute('readonly')).toBe('true');
+            expect(card.querySelector('textarea').getAttribute('readonly')).toBe('true');
+            expect(card.querySelector('select').getAttribute('disabled')).toBe('true');
+
+            const btn = card.querySelector('.btn-save-file');
+            expect(btn.disabled).toBe(true);
+            expect(btn.classList.contains('btn-success')).toBe(true);
+            expect(btn.textContent).toBe('Saved');
+        });
+
+        it('mark_card_saved is a no-op for a null card', () => {
+            expect(() => helperMediaLibraryModule.mark_card_saved(null)).not.toThrow();
+        });
+    });
+
+    describe('save_media_record', () => {
+
+        let api_calls;
+        let api_response;
+        let message;
+        let card;
+
+        beforeEach(() => {
+            api_calls = [];
+            api_response = { status: 201, data: { success: true, data: 'new-uuid' } };
+            message = vi.fn();
+
+            globalThis.httpModule = {
+                api: (options) => {
+                    api_calls.push(options);
+                    return Promise.resolve(api_response);
+                },
+            };
+
+            globalThis.endpointsModule = endpoints_stub({
+                get_media_library_endpoints: () => ({
+                    media_records: { post: { endpoint: `${MEDIA_BASE}/record` } },
+                }),
+                build: build_endpoint,
+            });
+
+            document.body.innerHTML = `
+                <div class="file-form-card">
+                    <button class="btn btn-primary btn-save-file">Save</button>
+                </div>`;
+            card = document.querySelector('.file-form-card');
+        });
+
+        const btn = () => card.querySelector('.btn-save-file');
+
+        it('POSTs the payload to the create endpoint and reports success', async () => {
+            const on_success = vi.fn();
+
+            const ok = await helperMediaLibraryModule.save_media_record(
+                card, { name: 'x' }, { message, on_success },
+            );
+
+            expect(ok).toBe(true);
+            expect(api_calls[0].method).toBe('POST');
+            expect(api_calls[0].url).toBe(`${MEDIA_BASE}/record`);
+            expect(api_calls[0].data).toEqual({ name: 'x' });
+            expect(on_success).toHaveBeenCalledWith(card, 'new-uuid', api_response);
+            expect(message).not.toHaveBeenCalled();
+        });
+
+        it('puts the button into its busy state before the request', async () => {
+            let busy_label = null;
+
+            globalThis.httpModule.api = () => {
+                busy_label = btn().innerHTML;
+                return Promise.resolve(api_response);
+            };
+
+            await helperMediaLibraryModule.save_media_record(card, {}, { message });
+
+            expect(busy_label).toContain('fa-spinner');
+        });
+
+        it('reports and restores the button when the endpoint is not configured', async () => {
+            globalThis.endpointsModule = endpoints_stub({
+                get_media_library_endpoints: () => ({}),
+                build: build_endpoint,
+            });
+
+            const ok = await helperMediaLibraryModule.save_media_record(card, {}, { message });
+
+            expect(ok).toBe(false);
+            expect(message).toHaveBeenCalledWith(card, 'danger', 'API endpoint configuration missing');
+            expect(api_calls).toHaveLength(0);
+            expect(btn().disabled).toBe(false);
+        });
+
+        it('honours a caller-supplied missing-endpoint message', async () => {
+            globalThis.endpointsModule = endpoints_stub({
+                get_media_library_endpoints: () => ({}),
+                build: build_endpoint,
+            });
+
+            await helperMediaLibraryModule.save_media_record(card, {}, {
+                message,
+                missing_endpoint_message: 'Create endpoint not configured',
+            });
+
+            expect(message).toHaveBeenCalledWith(card, 'danger', 'Create endpoint not configured');
+        });
+
+        it('maps no-response, 403, 400 and a non-created status onto card messages', async () => {
+            api_response = undefined;
+            expect(await helperMediaLibraryModule.save_media_record(card, {}, { message })).toBe(false);
+            expect(message).toHaveBeenLastCalledWith(
+                card, 'danger', 'Unable to save media record. Please check your connection and try again.',
+            );
+
+            api_response = { status: 403, data: {} };
+            await helperMediaLibraryModule.save_media_record(card, {}, { message });
+            expect(message).toHaveBeenLastCalledWith(
+                card, 'danger', 'You do not have permission to create media records.',
+            );
+
+            api_response = { status: 400, data: { message: 'Bad name' } };
+            await helperMediaLibraryModule.save_media_record(card, {}, { message });
+            expect(message).toHaveBeenLastCalledWith(card, 'danger', 'Bad name');
+
+            api_response = { status: 500, data: {} };
+            await helperMediaLibraryModule.save_media_record(card, {}, { message });
+            expect(message).toHaveBeenLastCalledWith(card, 'danger', 'Failed to create media record.');
+
+            expect(btn().disabled).toBe(false);
+        });
+
+        it('treats a 201 without data.success as a failure', async () => {
+            api_response = { status: 201, data: { success: false } };
+            expect(await helperMediaLibraryModule.save_media_record(card, {}, { message })).toBe(false);
+        });
+
+        it('accept_ok lets a 200 count as created', async () => {
+            api_response = { status: 200, data: { success: true } };
+
+            expect(await helperMediaLibraryModule.save_media_record(card, {}, { message })).toBe(false);
+            expect(await helperMediaLibraryModule.save_media_record(card, {}, {
+                message, accept_ok: true, require_item_id: false,
+            })).toBe(true);
+        });
+
+        it('rejects a created response with no record id unless require_item_id is false', async () => {
+            api_response = { status: 201, data: { success: true } };
+
+            expect(await helperMediaLibraryModule.save_media_record(card, {}, { message })).toBe(false);
+            expect(message).toHaveBeenLastCalledWith(card, 'danger', 'Server did not return a valid item ID.');
+
+            expect(await helperMediaLibraryModule.save_media_record(card, {}, {
+                message, require_item_id: false,
+            })).toBe(true);
+        });
+
+        it('catches an unexpected throw, restores the button and reports it', async () => {
+            globalThis.httpModule.api = () => Promise.reject(new Error('boom'));
+
+            expect(await helperMediaLibraryModule.save_media_record(card, {}, { message })).toBe(false);
+            expect(message).toHaveBeenLastCalledWith(
+                card, 'danger', 'An unexpected error occurred while saving the media record.',
+            );
+            expect(btn().disabled).toBe(false);
+        });
+    });
 });

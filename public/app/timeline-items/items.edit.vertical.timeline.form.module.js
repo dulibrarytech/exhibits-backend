@@ -20,504 +20,172 @@ const itemsEditVerticalTimelineFormModule = (function () {
 
     'use strict';
 
-    const APP_PATH = endpointsModule.get_app_path();
-    const EXHIBITS_ENDPOINTS = endpointsModule.get_exhibits_endpoints();
     let obj = {};
 
-    async function get_timeline_record() {
-
-        // Cache DOM element
-        const message_element = document.querySelector('#message');
-
-        /**
-         * Validate required parameters
-         */
-        const validate_parameters = (exhibit_id, timeline_id) => {
-            if (!exhibit_id || !timeline_id) {
-                return {
-                    valid: false,
-                    error: 'Missing required parameters: exhibit_id or timeline_id'
-                };
-            }
-
-            // Validate reasonable string lengths
-            if (exhibit_id.length > 255 || timeline_id.length > 255) {
-                return {
-                    valid: false,
-                    error: 'Invalid parameter length'
-                };
-            }
-
-            return { valid: true };
+    /**
+     * Cache all required DOM elements
+     */
+    function cache_dom_elements() {
+        return {
+            timeline_text: document.querySelector('#timeline-text-input'),
+            timeline_internal_name: document.querySelector('#timeline-internal-name-input'),
+            timeline_bg_color: document.querySelector('#timeline-background-color'),
+            timeline_bg_color_picker: document.querySelector('#timeline-background-color-picker'),
+            timeline_font_color: document.querySelector('#timeline-font-color'),
+            timeline_font_color_picker: document.querySelector('#timeline-font-color-picker'),
+            timeline_font: document.querySelector('#timeline-font'),
+            timeline_font_size: document.querySelector('#timeline-font-size')
         };
+    }
 
-        try {
-            // Get and validate required parameters
-            const exhibit_id = helperModule.get_parameter_by_name('exhibit_id');
-            const timeline_id = helperModule.get_parameter_by_name('item_id');
+    /**
+     * Set timeline text input value. The text field is a rich text editor;
+     * internal name is a plain input.
+     */
+    function set_timeline_text(text, element) {
 
-            const validation = validate_parameters(exhibit_id, timeline_id);
-            if (!validation.valid) {
-                domModule.set_alert(message_element, 'danger', validation.error);
-                return null;
-            }
+        if (!element) {
+            return;
+        }
 
-            // Validate endpoint configuration
-            if (!EXHIBITS_ENDPOINTS?.exhibits?.timeline_records?.get?.endpoint) {
-                domModule.set_alert(message_element, 'danger', 'API endpoint configuration missing');
-                return null;
-            }
+        const unescaped_text = text ? helperModule.unescape(text) : '';
 
-            const endpoint = endpointsModule.build(EXHIBITS_ENDPOINTS.exhibits.timeline_records.get.endpoint, {
-                exhibit_id: exhibit_id,
-                timeline_id: timeline_id
-            });
-
-            /* null = missing token; httpModule.api has alerted and scheduled the logout */
-            const response = await httpModule.api({
-                method: 'GET',
-                url: endpoint
-            });
-
-            // Validate response structure
-            if (!response) {
-                throw new Error('No response received from server');
-            }
-
-            if (response.status !== 200) {
-                throw new Error(`Server returned status ${response.status}`);
-            }
-
-            if (!response.data?.data) {
-                throw new Error('Invalid response structure');
-            }
-
-            return response.data.data;
-
-        } catch (error) {
-            // Log error for debugging
-            console.error('Error in get_timeline_record:', error);
-
-            // Display error message (use user_message from Axios interceptor if available)
-            const error_message = error.user_message || 'Unable to load the timeline record. Please try again.';
-            domModule.set_alert(message_element, 'danger', error_message);
-
-            return null;
+        if (element.dataset.rte !== undefined) {
+            rteModule.set_html(element.id, unescaped_text);
+        } else {
+            element.value = unescaped_text;
         }
     }
 
-    obj.update_timeline_record = async function() {
+    /**
+     * Apply color value to input and picker
+     */
+    function apply_color_setting(color_value, input_element, picker_element) {
 
-        // Prevent duplicate submissions
-        if (this._is_updating_timeline) {
-            return false;
+        const value = color_value ? String(color_value).trim() : '';
+
+        if (input_element) {
+            input_element.value = value;
         }
 
-        this._is_updating_timeline = true;
-
-        // Cache DOM element and constants
-        const message_element = document.querySelector('#message');
-        const MESSAGE_CLEAR_DELAY = 3000;
-
-        /**
-         * Validate parameters
-         */
-        const validate_parameters = (exhibit_id, timeline_id) => {
-            if (!exhibit_id || !timeline_id) {
-                return {
-                    valid: false,
-                    error: 'Missing required parameters: exhibit_id or timeline_id'
-                };
-            }
-
-            if (exhibit_id.length > 255 || timeline_id.length > 255) {
-                return {
-                    valid: false,
-                    error: 'Invalid parameter length'
-                };
-            }
-
-            return { valid: true };
-        };
-
-        /**
-         * Refresh the record display without reloading
-         */
-        const refresh_record_display = async () => {
-            try {
-                if (typeof display_edit_record === 'function') {
-                    await display_edit_record();
-                }
-
-                reset_form_state();
-            } catch (error) {
-                console.error('Error refreshing display:', error);
-            }
-        };
-
-        /**
-         * Reset form state after update
-         */
-        const reset_form_state = () => {
-            // Temporarily disable submit button
-            const submit_button = document.querySelector('#item-submit-card button[type="submit"], button[type="submit"]');
-            if (submit_button) {
-                submit_button.disabled = true;
-                setTimeout(() => {
-                    submit_button.disabled = false;
-                }, 1000);
-            }
-
-            // Clear unsaved changes warning
-            window.onbeforeunload = null;
-        };
-
-        // Store timeout ID for cleanup
-        let timeout_id = null;
-
-        try {
-            // Scroll to top for user feedback
-            window.scrollTo({ top: 0, left: 0, behavior: 'instant' });
-
-            // Get and validate parameters
-            const exhibit_id = helperModule.get_parameter_by_name('exhibit_id');
-            const timeline_id = helperModule.get_parameter_by_name('item_id');
-
-            const validation = validate_parameters(exhibit_id, timeline_id);
-            if (!validation.valid) {
-                domModule.set_alert(message_element, 'warning', validation.error);
-                return false;
-            }
-
-            // Show loading state
-            domModule.set_alert(message_element, 'info', 'Updating timeline record...');
-
-            // Get and validate form data
-            const form_data = itemsCommonVerticalTimelineFormModule.get_common_timeline_form_fields();
-
-            // Validation failure — the common module has already rendered the
-            // field-level error and #message alert; bail before clobbering it.
-            if (!form_data || form_data === false) {
-                return false;
-            }
-
-            // Add metadata
-            const user_name = helperModule.get_user_name();
-            if (user_name) {
-                form_data.updated_by = user_name;
-            }
-
-            // Validate endpoint configuration
-            if (!EXHIBITS_ENDPOINTS?.exhibits?.timeline_records?.put?.endpoint) {
-                domModule.set_alert(message_element, 'danger', 'API endpoint configuration missing');
-                return false;
-            }
-
-            const endpoint = endpointsModule.build(EXHIBITS_ENDPOINTS.exhibits.timeline_records.put.endpoint, {
-                exhibit_id: exhibit_id,
-                timeline_id: timeline_id
-            });
-
-            // Make API request (null = missing token; httpModule.api has
-            // already alerted and scheduled the logout)
-            const response = await httpModule.api({
-                method: 'PUT',
-                url: endpoint,
-                data: form_data
-            });
-
-            if (response === null) {
-                return false;
-            }
-
-            // Validate response
-            if (!response || response.status !== 201) {
-                throw new Error('Failed to update timeline record');
-            }
-
-            // Scroll to top for success message
-            window.scrollTo({ top: 0, left: 0, behavior: 'instant' });
-
-            // Show success message
-            domModule.set_alert(message_element, 'success', 'Timeline record updated successfully');
-
-            // Refresh the display with updated data
-            await refresh_record_display();
-
-            // Smoothly clear success message after delay
-            timeout_id = setTimeout(() => {
-                helperModule.clear_status_message(message_element);
-            }, MESSAGE_CLEAR_DELAY);
-
-            return true;
-
-        } catch (error) {
-            // Clear any pending timeouts
-            if (timeout_id) {
-                clearTimeout(timeout_id);
-            }
-
-            // Log error for debugging
-            console.error('Error updating timeline record:', error);
-
-            // Display error message (use user_message from Axios interceptor if available)
-            const error_message = error.user_message || error.message || 'Unable to update timeline record. Please try again.';
-            domModule.set_alert(message_element, 'danger', error_message);
-
-            return false;
-
-        } finally {
-            // Reset submission flag
-            this._is_updating_timeline = false;
-        }
-    };
-
-    async function display_edit_record() {
-
-        /**
-         * Cache all required DOM elements
-         */
-        const cache_dom_elements = () => {
-            return {
-                created: document.querySelector('#created'),
-                timeline_text: document.querySelector('#timeline-text-input'),
-                timeline_internal_name: document.querySelector('#timeline-internal-name-input'),
-                timeline_bg_color: document.querySelector('#timeline-background-color'),
-                timeline_bg_color_picker: document.querySelector('#timeline-background-color-picker'),
-                timeline_font_color: document.querySelector('#timeline-font-color'),
-                timeline_font_color_picker: document.querySelector('#timeline-font-color-picker'),
-                timeline_font: document.querySelector('#timeline-font'),
-                timeline_font_size: document.querySelector('#timeline-font-size')
-            };
-        };
-
-        /**
-         * Display creation and update metadata securely
-         */
-        const display_metadata_info = (record, created_element) => {
-            if (!created_element || !record) {
-                return;
-            }
-
-            const metadata_parts = [];
-
-            // Add creation info
-            if (record.created_by && record.created) {
-                const create_date = new Date(record.created);
-
-                if (is_valid_date(create_date)) {
-                    const create_date_time = helperModule.format_date(create_date);
-                    const created_em = document.createElement('em');
-                    created_em.textContent = `Created by ${record.created_by} on ${create_date_time}`;
-                    metadata_parts.push(created_em);
-                }
-            }
-
-            // Add update info
-            if (record.updated_by && record.updated) {
-                const update_date = new Date(record.updated);
-
-                if (is_valid_date(update_date)) {
-                    const update_date_time = helperModule.format_date(update_date);
-                    const updated_em = document.createElement('em');
-                    updated_em.textContent = `Last updated by ${record.updated_by} on ${update_date_time}`;
-                    metadata_parts.push(updated_em);
-                }
-            }
-
-            // Clear and append content safely
-            created_element.textContent = '';
-
-            metadata_parts.forEach((part, index) => {
-                if (index > 0) {
-                    created_element.appendChild(document.createTextNode(' | '));
-                }
-                created_element.appendChild(part);
-            });
-        };
-
-        /**
-         * Set timeline text input value
-         */
-        const set_timeline_text = (text, element) => {
-            if (!element) {
-                return;
-            }
-
-            const unescaped_text = text ? helperModule.unescape(text) : '';
-
-            /* the text field is a rich text editor; internal name is a plain input */
-            if (element.dataset.rte !== undefined) {
-                rteModule.set_html(element.id, unescaped_text);
-            } else {
-                element.value = unescaped_text;
-            }
-        };
-
-        /**
-         * Apply style settings
-         */
-        const apply_style_settings = (styles_data, elements) => {
-            if (!styles_data) {
-                return;
-            }
-
-            let styles;
-
-            // Safely parse styles JSON
-            try {
-                styles = typeof styles_data === 'string'
-                    ? JSON.parse(styles_data)
-                    : styles_data;
-            } catch (error) {
-                console.error('Failed to parse styles JSON:', error);
-                return;
-            }
-
-            if (!styles || typeof styles !== 'object' || Object.keys(styles).length === 0) {
-                return;
-            }
-
-            // Apply background color
-            apply_color_setting(
-                styles.backgroundColor,
-                elements.timeline_bg_color,
-                elements.timeline_bg_color_picker
-            );
-
-            // Apply font color
-            apply_color_setting(
-                styles.color,
-                elements.timeline_font_color,
-                elements.timeline_font_color_picker
-            );
-
-            // Apply font size
-            apply_font_size(styles.fontSize, elements.timeline_font_size);
-
-            // Apply font family
-            apply_font_family(styles.fontFamily, elements.timeline_font);
-        };
-
-        /**
-         * Apply color value to input and picker
-         */
-        const apply_color_setting = (color_value, input_element, picker_element) => {
-            if (color_value) {
-                const sanitized_color = String(color_value).trim();
-
-                if (input_element) {
-                    input_element.value = sanitized_color;
-                }
-
-                if (picker_element) {
-                    picker_element.value = sanitized_color;
-                }
-            } else {
-                if (input_element) {
-                    input_element.value = '';
-                }
-                if (picker_element) {
-                    picker_element.value = '';
-                }
-            }
-        };
-
-        /**
-         * Apply font size setting
-         */
-        const apply_font_size = (font_size_value, element) => {
-            if (!element) {
-                return;
-            }
-
-            if (font_size_value) {
-                const size_numeric = String(font_size_value).replace(/px$/i, '').trim();
-                element.value = size_numeric;
-            } else {
-                element.value = '';
-            }
-        };
-
-        /**
-         * Apply font family if it exists in options
-         */
-        const apply_font_family = (font_family_value, element) => {
-            if (!font_family_value || !element || !element.options) {
-                return;
-            }
-
-            const sanitized_font = String(font_family_value).trim();
-
-            // Check if font exists in options
-            const options = Array.from(element.options);
-            const has_match = options.some(option => option.value === sanitized_font);
-
-            if (has_match) {
-                element.value = sanitized_font;
-            }
-        };
-
-        /**
-         * Validate if a date is valid
-         */
-        const is_valid_date = (date) => {
-            return date instanceof Date && !isNaN(date.getTime());
-        };
-
-        try {
-            // Fetch record data
-            const record = await get_timeline_record();
-
-            if (!record) {
-                throw new Error('Failed to load timeline record data');
-            }
-
-            // Cache all DOM elements
-            const elements = cache_dom_elements();
-
-            // Display metadata (creation/update info)
-            display_metadata_info(record, elements.created);
-
-            // Set timeline form fields
-            set_timeline_text(record.text, elements.timeline_text);
-            // Legacy timelines predate the internal_name column — the required field stays empty so the save-time validation forces a value.
-            set_timeline_text(record.internal_name, elements.timeline_internal_name);
-
-            // Apply style settings
-            apply_style_settings(record.styles, elements);
-
-            // Set saved style selection after dropdown is populated
-            // Style keys are simple strings like "item1"; skip "{}" (prepare_styles default) and legacy JSON blobs
-            if (record.styles && typeof record.styles === 'string'
-                && record.styles.trim() !== '' && !record.styles.startsWith('{')) {
-                await itemsCommonVerticalTimelineFormModule.wait_for_styles();
-                itemsCommonVerticalTimelineFormModule.set_item_style(record.styles);
-            }
-
-            domModule.set_value('#margins', record.margins ?? 'medium');
-            domModule.set_value('#text-align', record.text_alignment ?? 'left');
-
-            return false;
-
-        } catch (error) {
-            console.error('Error in display_edit_record:', error);
-            domModule.set_alert('#message', 'danger', 'Unable to display the timeline record. Please try again.');
-            return false;
+        if (picker_element) {
+            picker_element.value = value;
         }
     }
 
-    obj.init = async function () {
+    /**
+     * Apply font size setting
+     */
+    function apply_font_size(font_size_value, element) {
 
-        const exhibit_id = helperModule.get_parameter_by_name('exhibit_id');
-        const item_id = helperModule.get_parameter_by_name('item_id');
-        const redirect = '/items/vertical-timeline/details?exhibit_id=' + exhibit_id + '&item_id=' + item_id + '&status=403';
-        await authModule.check_permissions(['update_item', 'update_any_item'], 'timeline', exhibit_id, item_id, redirect);
+        if (!element) {
+            return;
+        }
 
-        exhibitsModule.set_exhibit_title(exhibit_id);
-        domModule.on('#save-timeline-btn', 'click', itemsEditVerticalTimelineFormModule.update_timeline_record);
-        await display_edit_record();
-    };
+        element.value = font_size_value
+            ? String(font_size_value).replace(/px$/i, '').trim()
+            : '';
+    }
+
+    /**
+     * Apply font family if it exists in options
+     */
+    function apply_font_family(font_family_value, element) {
+
+        if (!font_family_value || !element || !element.options) {
+            return;
+        }
+
+        const sanitized_font = String(font_family_value).trim();
+        const has_match = Array.from(element.options).some(option => option.value === sanitized_font);
+
+        if (has_match) {
+            element.value = sanitized_font;
+        }
+    }
+
+    /**
+     * Apply the legacy per-field style settings carried on the record.
+     */
+    function apply_style_settings(styles_data, elements) {
+
+        if (!styles_data) {
+            return;
+        }
+
+        let styles;
+
+        try {
+            styles = typeof styles_data === 'string' ? JSON.parse(styles_data) : styles_data;
+        } catch (error) {
+            console.error('Failed to parse styles JSON:', error);
+            return;
+        }
+
+        if (!styles || typeof styles !== 'object' || Object.keys(styles).length === 0) {
+            return;
+        }
+
+        apply_color_setting(styles.backgroundColor, elements.timeline_bg_color, elements.timeline_bg_color_picker);
+        apply_color_setting(styles.color, elements.timeline_font_color, elements.timeline_font_color_picker);
+        apply_font_size(styles.fontSize, elements.timeline_font_size);
+        apply_font_family(styles.fontFamily, elements.timeline_font);
+    }
+
+    /**
+     * Populates the timeline (container) edit form from a fetched record.
+     * @param {Object} record
+     */
+    async function populate(record) {
+
+        const elements = cache_dom_elements();
+
+        set_timeline_text(record.text, elements.timeline_text);
+
+        /* Legacy timelines predate the internal_name column — the required
+         * field stays empty so the save-time validation forces a value. */
+        set_timeline_text(record.internal_name, elements.timeline_internal_name);
+
+        apply_style_settings(record.styles, elements);
+
+        /* Set saved style selection after the chooser is populated. Style keys
+         * are simple strings like "item1"; skip "{}" (prepare_styles default)
+         * and legacy JSON blobs. */
+        if (record.styles && typeof record.styles === 'string'
+            && record.styles.trim() !== '' && !record.styles.startsWith('{')) {
+            await itemsCommonVerticalTimelineFormModule.wait_for_styles();
+            itemsCommonVerticalTimelineFormModule.set_item_style(record.styles);
+        }
+
+        domModule.set_value('#margins', record.margins ?? 'medium');
+        domModule.set_value('#text-align', record.text_alignment ?? 'left');
+    }
+
+    const form = itemFormBaseModule.create({
+        record_type: 'timeline',
+        mode: 'edit',
+        /* Container edit forms do not request `?type=edit`, so the server never
+         * locks the record for them and there is no lock state to honour. */
+        lock: false,
+        query: { type: null, uid: false },
+        populate: populate,
+        collect: function () {
+            return itemsCommonVerticalTimelineFormModule.get_common_timeline_form_fields();
+        },
+        submit_selector: '#save-timeline-btn',
+        permissions: ['update_item', 'update_any_item'],
+        redirect_path: function (ids) {
+            return `/items/vertical-timeline/details?exhibit_id=${ids.exhibit_id}&item_id=${ids.record_id}&status=403`;
+        }
+    });
+
+    /**
+     * Update timeline record
+     * @returns {Promise<boolean>}
+     */
+    obj.update_timeline_record = form.submit_record;
+
+    obj.init = form.init;
 
     return obj;
 
